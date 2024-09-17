@@ -1,0 +1,147 @@
+﻿using Microsoft.Management.Infrastructure.Options;
+using Newtonsoft.Json;
+using System.Collections.ObjectModel;
+using System.Data;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Management.Automation;
+using System.Management.Automation.Language;
+using System.Management.Automation.Provider;
+using System.Reflection;
+using System.Reflection.PortableExecutable;
+using System.Security.Cryptography;
+using UiPath.OrchAPI;
+using UiPath.PowerShell.Commands;
+using UiPath.PowerShell.Entities;
+
+
+namespace UiPath.PowerShell.Core
+{
+    //[CmdletProvider("UiPathOrchBkt", ProviderCapabilities.ShouldProcess)]
+    class BucketProvider : NavigationCmdletProvider
+    {
+        #region CmdletProvider overrides
+
+        protected override ProviderInfo Start(ProviderInfo providerInfo)
+        {
+            ProviderInfo ret = base.Start(providerInfo);
+            OrchDriveInfo.SessionState = base.SessionState;
+            return ret;
+        }
+
+        protected BucketDriveInfo BucketDriveInfo => (BucketDriveInfo)this.PSDriveInfo;
+        protected OrchDriveInfo OrchDriveInfo => ((BucketDriveInfo)this.PSDriveInfo).OrchDriveInfo;
+
+        #endregion CmdletProvider overrides
+
+        #region DriveCmdletProvider overrides
+
+        protected override PSDriveInfo RemoveDrive(PSDriveInfo drive)
+        {
+            return base.RemoveDrive(drive);
+        }
+
+        #endregion DriveCmdletProvider overrides
+
+        #region ItemCmdletProvider overrides
+
+        protected override void GetItem(string path)
+        {
+        }
+
+        // TODO: これ何か実装した方が良いのでは？ でも呼ばれたことがないような気がする。。
+        protected override bool IsValidPath(string path)
+        {
+            return true;
+        }
+
+        // ItemExists メソッドは、ワイルドカードを処理する必要はないっぽい。
+        protected override bool ItemExists(string path)
+        {
+            return true;
+        }
+
+        #endregion ItemCmdletProvider overrides
+
+        #region ContainerCmdletProvider overrides
+
+        protected override void GetChildItems(string path, bool recurse)
+        {
+            GetChildItems(path, recurse, 0);
+        }
+
+        protected override void GetChildItems(string path, bool recurse, uint depth)
+        {
+            Console.WriteLine(path);
+//            OrchDriveInfo.GetBucketFiles();
+
+        }
+
+        // GetChildnames は、オブジェクトでなく名前の string 値のみを WriteObject する必要がある。
+        // このメソッドは、Get-ChildItem -Name を実行すると呼び出される。
+        protected override void GetChildNames(string path, ReturnContainers returnContainers)
+        {
+        }
+
+        protected override bool HasChildItems(string path)
+        {
+            // path がルートの場合に限り、ファイルが存在すれば true を返す
+            return IsItemContainer(path);
+        }
+
+        protected override void CopyItem(string path, string copyPath, bool recurse)
+        {
+            base.CopyItem(path, copyPath, recurse);
+        }
+
+        protected override void RenameItem(string path, string newName)
+        {
+            base.RenameItem(path, newName);
+        }
+
+        protected override object RenameItemDynamicParameters(string path, string newName)
+        {
+            return base.RenameItemDynamicParameters(path, newName);
+        }
+
+        protected override void RemoveItem(string path, bool recurse)
+        {
+            base.RemoveItem(path, recurse);
+        }
+
+        #endregion
+
+        #region NavigationCmdletProvider overrides
+
+        protected override bool IsItemContainer(string path)
+        {
+            int colonIndex = path.IndexOf(':');
+
+            if (colonIndex != -1)
+            {
+                path = path.Substring(colonIndex + 1);
+            }
+
+            return path == "\\";
+        }
+
+        protected override string MakePath(string parent, string child)
+        {
+            string ret = base.MakePath(parent, child);
+            return ret;
+            //string retNew = base.MakePath(parent, child);
+            //if (retNew.EndsWith("\\") && retNew.Length > 1 && retNew[retNew.Length-2] != ':')
+            //{
+            //    retNew = retNew.Substring(0, retNew.Length - 1);
+            //}
+            //return retNew;
+        }
+
+        protected override void MoveItem(string path, string destination)
+        {
+            base.MoveItem(path, destination);
+        }
+
+        #endregion
+    }
+}

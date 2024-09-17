@@ -1,0 +1,29 @@
+﻿using UiPath.OrchAPI;
+using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
+using System.Management.Automation;
+using UiPath.PowerShell.Entities;
+using Job = UiPath.PowerShell.Entities.Job;
+using System.Reflection.PortableExecutable;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using UiPath.PowerShell.Commands;
+using System;
+
+namespace UiPath.PowerShell.Core
+{
+    public class BucketDriveInfo : PSDriveInfo
+    {
+        public OrchDriveInfo OrchDriveInfo { get; }
+        public OrchAPISession OrchAPISession => OrchDriveInfo.OrchAPISession;
+
+        public ProviderInfo ProviderInfo { get; private set; }
+
+        public BucketDriveInfo(OrchDriveInfo parentDrive, ProviderInfo provider)
+            : base(parentDrive.Name + "Bkt", provider, parentDrive.Name + "Bkt:\\", $"Storage Buckets of {parentDrive.Name}", null, "")
+        {
+            OrchDriveInfo = parentDrive;
+            ProviderInfo = provider;
+        }
+    }
+}

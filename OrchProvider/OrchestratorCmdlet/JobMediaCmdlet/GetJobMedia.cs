@@ -1,0 +1,71 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Management.Automation;
+using System.Management.Automation.Language;
+using UiPath.PowerShell.Commands;
+using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
+using UiPath.PowerShell.Completer;
+using UiPath.PowerShell.Positional;
+
+namespace UiPath.PowerShell.Commands
+{
+    [Cmdlet(VerbsCommon.Get, "OrchJobMedia")]
+    [OutputType(typeof(Entities.ExecutionMedia))]
+    public class GetJobMediaCommand : OrchestratorPSCmdlet
+    {
+        [Parameter]
+        public ulong? Skip { get; set; }
+
+        [Parameter]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<Item10>))]
+        public ulong? First { get; set; }
+
+        [Parameter]
+        [SupportsWildcards]
+        public string[]? Path { get; set; }
+
+        [Parameter]
+        public SwitchParameter Recurse { get; set; }
+
+        [Parameter]
+        public uint Depth { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            ulong skip = Skip ?? 0;
+            ulong first = First ?? ulong.MaxValue;
+
+            var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+
+            //using var results = new OrchThreadPool<ICollection<ExecutionMedia>>(drivesFolders.Count);
+            //results.RunForEach(drivesFolders,
+            //    df => df.folder.GetPSPath(),
+            //    df => df.folder,
+            //    df => df.drive.GetExecutionMedia(df.folder, skip, first));
+
+            using var results = OrchThreadPool.RunForEach(drivesFolders,
+                df => df.folder.GetPSPath(),
+                df => df.folder,
+                df => df.drive.GetExecutionMedia(df.folder, skip, first));
+
+            using var cancelHandler = new ConsoleCancelHandler();
+            foreach (var result in results)
+            {
+                try
+                {
+                    var recordings = result.GetResult(cancelHandler.Token);
+                    if (recordings == null) continue;
+
+                    WriteObject(recordings, true);
+                }
+                catch (OrchException ex)
+                {
+                    WriteError(new ErrorRecord(ex, "GetJobMediaError", ErrorCategory.InvalidOperation, ex.Target));
+                }
+            }
+        }
+    }
+}

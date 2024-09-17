@@ -1,0 +1,1849 @@
+﻿using Newtonsoft.Json.Linq;
+using System;
+using System.Collections;
+using System.Data;
+using System.Management.Automation;
+using System.Management.Automation.Language;
+using System.Net.Sockets;
+using System.Reflection.PortableExecutable;
+using System.Runtime.InteropServices;
+using System.Security;
+using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using UiPath.OrchAPI;
+using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
+using UiPath.PowerShell.Positional;
+using Path = System.IO.Path;
+using Session = UiPath.PowerShell.Entities.Session;
+using User = UiPath.PowerShell.Entities.User;
+
+namespace UiPath.PowerShell.Completer
+{
+    public abstract partial class OrchArgumentCompleter : IArgumentCompleter
+    {
+        protected static SessionState? SessionState => OrchDriveInfo.SessionState;
+
+        public abstract IEnumerable<CompletionResult> CompleteArgument(string commandName, string parameterName, string wordToComplete, CommandAst commandAst, IDictionary fakeBoundParameters);
+
+        protected static string? GetFakeBoundParameter(IDictionary fakeBoundParameters, string parameterName)
+        {
+            if (fakeBoundParameters != null && fakeBoundParameters.Contains(parameterName))
+            {
+                return fakeBoundParameters[parameterName]!.ToString()!;
+            }
+            return null;
+        }
+
+        protected static bool GetFakeBoundParameterAsBool(IDictionary fakeBoundParameters, string parameterName)
+        {
+            if (fakeBoundParameters != null && fakeBoundParameters.Contains(parameterName))
+            {
+                if (bool.TryParse(fakeBoundParameters[parameterName]!.ToString()!, out bool ret))
+                    return ret;
+                return false;
+            }
+            return false;
+        }
+
+        protected static IEnumerable<string> GetFakeBoundParameters(IDictionary fakeBoundParameters, string parameterName)
+        {
+            if (fakeBoundParameters == null || !fakeBoundParameters.Contains(parameterName))
+                yield break;
+
+            object values = fakeBoundParameters[parameterName];
+            if (values is object[] valueArray)
+            {
+                foreach (var v in valueArray)
+                {
+                    yield return v.ToString()!;
+                }
+                yield break;
+            }
+            yield return values!.ToString()!;
+        }
+
+        protected static IEnumerable<string> SplitCommaSeparatedText(string? input)
+        {
+            if (input == null)
+                yield break;
+
+            var matches = MyRegex().Matches(input);
+            foreach (Match match in matches.Cast<Match>())
+            {
+                string value = match.Value.Trim();
+                if (!string.IsNullOrEmpty(value))
+                    yield return PathTools.UnescapePSText(value);
+            }
+        }
+
+        public static string ExtractValueFromCommandElement(CommandElementAst element)
+        {
+            string ret = element switch
+            {
+                StringConstantExpressionAst stringAst => stringAst.Value,
+                VariableExpressionAst variableAst => variableAst.VariablePath.UserPath,
+                ErrorExpressionAst errorAst => errorAst.ToString(),// ErrorExpressionAstの場合、適切な情報を取得するか、エラーメッセージを返す
+                _ => element.ToString(),// 未知のCommandElementAstのサブタイプの場合、その情報を取得するか、
+                                        // 適切なデフォルトの動作を定義します。
+            };
+            return ret.Trim().TrimEnd(',');
+        }
+
+        public static bool GetSwitchParameterValue(CommandAst commandAst, string parameterName)
+        {
+            string[] knownSwitchParameters = {
+                "ExpandEntity",
+                "ExpandPermission",
+                "ExpandUserValue",
+                "ExportCredentialCsv",
+                "ExportCsv",
+                "ExportTemplateCsv",
+                "Force",
+                "IncludeInherited",
+                "Reload",
+                "Recurse",
+                "Confirm",
+                "WhatIf"
+            };
+
+            if (!knownSwitchParameters.Contains(parameterName))
+            {
+                return false;
+            }
+
+            // コマンドの各要素を反復処理し、指定されたパラメータ名を探す
+            foreach (var element in commandAst.CommandElements)
+            {
+                // パラメータ名をチェック
+                if (element is CommandParameterAst param &&
+                    param.ParameterName.Equals(parameterName, StringComparison.OrdinalIgnoreCase) &&
+                    param.Argument == null) // スイッチパラメータには引数がない
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // TODO: スイッチパラメータに値が指定されていた場合の処理が正しくない気がする
+        public static string? GetParameterValue(CommandAst commandAst, string parameterName, string[]? positionalParams = null)
+        {
+            var elements = commandAst.CommandElements.Skip(1).Select(e => e.ToString()).ToList();
+            int positionIndex;
+            if (positionalParams != null)
+                positionIndex = Array.IndexOf(positionalParams, parameterName);
+            else
+                positionIndex = -1;
+
+            for (int i = 0; i < elements.Count; i++)
+            {
+                if (elements[i].StartsWith('-'))
+                {
+                    string currentParamName = elements[i].TrimStart('-').Split(':')[0];
+                    bool isPositionalParam = positionalParams != null && Array.IndexOf(positionalParams, currentParamName) >= 0;
+                    bool isSwitchParam = GetSwitchParameterValue(commandAst, currentParamName);
+
+                    if (currentParamName.Equals(parameterName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // 現在のパラメータが取り出したいパラメータの場合の処理
+                        if (elements[i].Contains(':'))
+                        {
+                            return elements[i].Substring(elements[i].IndexOf(':') + 1).Trim();
+                        }
+                        if (elements.Count > i + 1 && !elements[i + 1].StartsWith('-'))
+                            return elements[i + 1];
+                        else
+                            return "";
+                    }
+                    else if (isSwitchParam)
+                    {
+                        // スイッチパラメータの場合、単に削除する
+                        elements.RemoveAt(i);
+                        i--;
+                        if (isPositionalParam && positionIndex > i)
+                        {
+                            positionIndex--;
+                        }
+                    }
+                    else
+                    {
+                        // 通常のパラメータの場合、パラメータ名と値を削除
+                        elements.RemoveAt(i); // パラメータ名を削除
+                        if (i < elements.Count && !elements[i].StartsWith("-"))
+                        {
+                            elements.RemoveAt(i); // パラメータ値を削除
+                        }
+                        i--;
+                    }
+                }
+            }
+
+            // 残った要素から位置パラメータの値を取得
+            if (0 <= positionIndex && positionIndex < elements.Count)
+            {
+                return elements[positionIndex];
+            }
+
+            return null;
+        }
+
+        public static IEnumerable<string> GetParameterValues(CommandAst commandAst, string paramName, string[]? precedingPositionalParameterNames = null, string? wordToComplete = null)
+        {
+            string value = GetParameterValue(commandAst, paramName, precedingPositionalParameterNames);
+            foreach (var i in SplitCommaSeparatedText(value?.RemoveEnd(wordToComplete)))
+            {
+                yield return i;
+            }
+        }
+
+        protected static List<OrchDriveInfo> ResolveDrives(IDictionary fakeBoundParameters)
+        {
+            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+            return OrchDriveInfo.EnumOrchDrives(paramPath);
+        }
+
+        protected static List<(OrchDriveInfo drive, Folder folder)> ResolvePath(CommandAst commandAst, IDictionary fakeBoundParameters, bool includeRoot = false)
+        {
+            var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+            var paramDepth = GetParameterValue(commandAst, "Depth");
+            _ = uint.TryParse(paramDepth, out uint depth);
+
+            var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+            return OrchDriveInfo.EnumFolders(paramPath, recurse, depth, includeRoot);
+        }
+
+        protected static List<(OrchDriveInfo drive, Folder folder)> ResolvePathWithoutPersonalWorkspace(CommandAst commandAst, IDictionary fakeBoundParameters)
+        {
+            var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+            var paramDepth = GetParameterValue(commandAst, "Depth");
+            _ = uint.TryParse(paramDepth, out uint depth);
+
+            var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+            return OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
+        }
+
+        protected static List<WildcardPattern>? CreateWPListFromParameter(CommandAst commandAst, string parameterName, string[]? positionalParams, string? wordToComplete)
+        {
+            var param = GetParameterValues(commandAst, parameterName, positionalParams, wordToComplete);
+            return param.ConvertToWildcardPatternList();
+        }
+
+        protected static List<WildcardPattern>? CreateWPListFromOtherParameters(CommandAst commandAst, string parameterName, string[] positionalParams)
+        {
+            var param = GetParameterValues(commandAst, parameterName, positionalParams);
+            return param.ConvertToWildcardPatternList();
+        }
+
+        protected static WildcardPattern CreateWPFromWordToComplete(string? wordToComplete)
+        {
+            wordToComplete ??= "*";
+            if (!wordToComplete.EndsWith('*') && !wordToComplete.EndsWith('?'))
+                wordToComplete += '*';
+            return new WildcardPattern(wordToComplete, WildcardOptions.IgnoreCase);
+        }
+
+        protected static string TipHelp(OrchDriveInfo drive)
+        {
+            string tiphelp = drive.DisplayRoot;
+            if (!string.IsNullOrEmpty(drive.Description))
+                tiphelp += $" ({drive.Description})";
+            return tiphelp;
+        }
+
+        protected static string TipHelp(NuLicensedGroupMember member)
+        {
+            string tiphelp = member.GetPSPath();
+            if (!string.IsNullOrEmpty(member.displayName))
+                tiphelp += $" ({member.displayName})";
+            return tiphelp;
+        }
+
+        protected static string TipHelp(Session entity)
+        {
+            //string driveName = drive.NameColon;
+            //string tiphelp = drive.DisplayRoot;
+            //if (!string.IsNullOrEmpty(drive.Description))
+            //    tiphelp += $" ({drive.Description})";
+            //return tiphelp;
+            return entity.GetPSPath();
+        }
+
+        protected static string TipHelp(DirectoryObject entity)
+        {
+            string tiphelp = entity.type switch
+            {
+                0 => "DirectoryUser: ",
+                1 => "DirectoryGroup: ",
+                2 => "DirectoryMachine: ", // これ正しい？
+                3 => "DirectoryRobot: ",
+                4 => "DirectoryExternalApplication: ",
+                _ => "unknown: "
+            };
+                
+            tiphelp += entity.identityName ?? entity.identifier!;
+            if (!string.IsNullOrEmpty(entity.displayName))
+                tiphelp += $" ({entity.displayName})";
+            return tiphelp;
+        }
+
+        protected static string TipHelp(Member entity)
+        {
+            string tiphelp = $"{entity.name} ({entity.displayName})";
+            return tiphelp;
+        }
+
+        protected static string TipHelp(MachineSessionRuntime entity)
+        {
+            string tiphelp = $"SID: {Path.Combine(entity.Path!, entity.SessionId?.ToString()!)}  HMN: '{entity.HostMachineName}'  SUN: '{entity.ServiceUserName}'";
+            return tiphelp;
+        }
+
+        protected static string TipHelp(Webhook entity)
+        {
+            string tiphelp = entity.GetPSPath();
+            //if (!string.IsNullOrEmpty(library.Description))
+            //{
+            //    tiphelp += $" ({library.Description})";
+            //}
+            return tiphelp;
+        }
+
+        protected static string TipHelp(Library library)
+        {
+            string tiphelp = library.GetPSPath();
+            //if (!string.IsNullOrEmpty(library.Description))
+            //{
+            //    tiphelp += $" ({library.Description})";
+            //}
+            return tiphelp;
+        }
+
+        protected static string TipHelp(LibraryVersion version)
+        {
+            string tiphelp = $"{version.GetPSPath()}:{version.Version}";
+            //if (!string.IsNullOrEmpty(version.Description))
+            //{
+            //    tiphelp += $" ({version.Description})";
+            //}
+            return tiphelp;
+        }
+
+        protected static string TipHelp(Package package)
+        {
+            string tiphelp = $"{Path.Combine(package.Path!, package.Id!)}";
+            //if (!string.IsNullOrEmpty(package.Description))
+            //{
+            //    tiphelp += $" ({package.Description})";
+            //}
+            return tiphelp;
+        }
+
+        protected static string TipHelp(ExtendedMachine machine)
+        {
+            string tiphelp = $"{machine.Type} (UA{machine.UnattendedSlots} NP{machine.NonProductionSlots} TA{machine.TestAutomationSlots}) {Path.Combine(machine.Path!, machine.Name!)}";
+            return tiphelp;
+        }
+
+        protected static string TipHelp(User user)
+        {
+            return (user.Type! + ":").PadRight(30) + Path.Combine(user.Path!, user.UserName!) + " (" + user.FullName + ")";
+        }
+
+        protected static string TipHelp(Robot robot)
+        {
+            //string tiphelp = $"{robot.User!.FullName} ({robot.Type})";
+            string tiphelp = Path.Combine(robot.Path!, robot.User!.FullName!);
+            //if (!string.IsNullOrEmpty(robot.User.Type))
+            //{
+            //    tiphelp += $" ({robot.User.Type})";
+            //}
+            return tiphelp;
+        }
+
+        protected static string TipHelp(PersonalWorkspace personalWorkspace)
+        {
+            string tiphelp = Path.Combine(personalWorkspace.Path!, personalWorkspace.Name!);
+            //if (!string.IsNullOrEmpty(personalWorkspace.OwnerName))
+            //{
+            //    tiphelp += $" ({personalWorkspace.OwnerName})";
+            //}
+            return tiphelp;
+        }
+        
+        protected static string TipHelp(Role role)
+        {
+            string tiphelp = role.GetPSPath();
+            //if (!string.IsNullOrEmpty(role.Type))
+            //{
+            //    tiphelp += $" ({role.Type})";
+            //}
+            return tiphelp;
+        }
+
+        protected static string TipHelp(TestCaseDefinition entities)
+        {
+            string tiphelp = entities.GetPSPath();
+            //if (!string.IsNullOrEmpty(entities.PackageIdentifier))
+            //{
+            //    tiphelp += $" ({entities.PackageIdentifier})";
+            //}
+            return tiphelp;
+        }
+
+        // planned to be obsoleted
+        protected static string TipHelp(MachineFolder machine)
+        {
+            //string tiphelp = $"(UA{machine.UnattendedSlots} NP{machine.NonProductionSlots} TA{machine.TestAutomationSlots}) {Path.Combine(machine.Path!, machine.Name!)}";
+            string tiphelp = Path.Combine(machine.Path!, machine.Name!);
+            return tiphelp;
+        }
+
+        protected static string TipHelp(UserRoles userRoles)
+        {
+            //string tiphelp = $"{userRoles.Id} {userRoles.UserEntity!.FullName} ({userRoles.UserEntity.UserName})";
+            string tiphelp = $"{Path.Combine(userRoles.Path!, userRoles.UserEntity!.UserName!)}";
+            //if (!string.IsNullOrEmpty(userRoles.UserEntity.FullName))
+            //{
+            //    tiphelp += $" ({userRoles.UserEntity.FullName})";
+            //}
+            return tiphelp;
+        }
+
+        protected static string TipHelp(Release release)
+        {
+            string tiphelp = release.GetPSPath();
+            //if (!string.IsNullOrEmpty(release.Description))
+            //{
+            //    tiphelp += $" ({release.Description})";
+            //}
+            return tiphelp;
+        }
+
+        protected static string TipHelp(QueueDefinition queue)
+        {
+            string tiphelp = Path.Combine(queue.Path!, queue.Name!);
+            //if (!string.IsNullOrEmpty(queue.Description))
+            //{
+            //    tiphelp += $" ({queue.Description})";
+            //}
+            return tiphelp;
+        }
+
+        protected static string TipHelp(Asset asset)
+        {
+            string tiphelp = Path.Combine(asset.Path!, asset.Name!);
+            //if (!string.IsNullOrEmpty(asset.Description))
+            //{
+            //    tiphelp += $" ({asset.Description})";
+            //}
+            return tiphelp;
+        }
+
+        protected static string TipHelp(CredentialStore credentialStore)
+        {
+            string tiphelp = credentialStore.GetPSPath();
+            return tiphelp;
+        }
+
+        protected static string TipHelp(TestSet entity)
+        {
+            string tiphelp = entity.GetPSPath();
+            //if (!string.IsNullOrEmpty(entity.Description))
+            //{
+            //    tiphelp += $" ({entity.Description})";
+            //}
+            return tiphelp;
+        }
+
+        protected static string TipHelp(TestSetExecution entity)
+        {
+            string tiphelp = entity.GetPSPath();
+            //if (!string.IsNullOrEmpty(entity?.TestSet?.Description))
+            //{
+            //    tiphelp += $" ({entity?.TestSet?.Description})";
+            //}
+            return tiphelp;
+        }
+
+        protected static string TipHelp(TestSetSchedule entity)
+        {
+            string tiphelp = entity.GetPSPath();
+            return tiphelp;
+        }
+
+        protected static string TipHelp(TestDataQueue entity)
+        {
+            string tiphelp = entity.GetPSPath();
+            //if (!string.IsNullOrEmpty(entity?.Description))
+            //{
+            //    tiphelp += $" ({entity.Description})";
+            //}
+            return tiphelp;
+        }
+
+        protected static string TipHelp(ProcessSchedule entity)
+        {
+            string tiphelp = entity.GetPSPath();
+            //if (!string.IsNullOrEmpty(entity?.PackageName))
+            //{
+            //    tiphelp += $" ({entity?.PackageName})";
+            //}
+            return tiphelp;
+        }
+
+        protected static string TipHelp(BlobFile entity)
+        {
+            string tiphelp = entity.GetPSPath();
+            return tiphelp;
+        }
+
+        protected static string TipHelp(PmUser entity)
+        {
+            string tiphelp = entity.GetPSPath();
+            string username = (string.Join(" ", [entity.name, entity.surname])).Trim();
+            if (!string.IsNullOrEmpty(username))
+                tiphelp += $" ({username})";
+            return tiphelp;
+        }
+
+        protected static string TipHelp(PmRobotAccount entity)
+        {
+            string tiphelp = entity.GetPSPath();
+            return tiphelp;
+        }
+
+        protected static string TipHelp(PmDirectoryEntityInfo entity)
+        {
+            string tiphelp = entity.identityName!;
+            if (!string.IsNullOrEmpty(entity.displayName))
+            {
+                tiphelp += $" ({entity.displayName})";
+            }
+            return tiphelp;
+        }
+
+        protected static string TipHelp(DirectoryUser entity)
+        {
+            string tiphelp = entity.GetPSPath();
+            if (!string.IsNullOrEmpty(entity.displayName))
+                tiphelp += $" ({entity.displayName})";
+            return tiphelp;
+        }
+
+        [GeneratedRegex(@"(?:[^',]+|'[^']*')+")]
+        private static partial Regex MyRegex();
+    }
+
+    internal class ActionCatalogNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetTaskCatalogs(df.folder));
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var catalog in entities!
+                    .Where(b => wp.IsMatch(b.Name))
+                    .ExcludeByWildcards(e => e?.Name, wpName)
+                    .OrderBy(e => e.Name))
+                {
+                    string tooltip = catalog.GetPSPath();
+                    yield return new CompletionResult(PathTools.EscapePSText(catalog.Name), catalog.Name, CompletionResultType.Text, tooltip);
+                }
+            }
+        }
+    }
+
+    internal class ApiTriggerNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetHttpTriggers(df.folder));
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var trigger in entities!
+                    .Where(t => wp.IsMatch(t.Name))
+                    .ExcludeByWildcards(t => t?.Name, wpName))
+                {
+                    string tooltip = trigger.GetPSPath();
+                    yield return new CompletionResult(PathTools.EscapePSText(trigger.Name), trigger.Name, CompletionResultType.Text, tooltip);
+                }
+            }
+        }
+    }
+
+    internal class AssetNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            // パラメータで選択された ValueType のみ対象とする
+            var wpValueType = CreateWPListFromOtherParameters(commandAst, "ValueType", TPositional.Parameters);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetAssets(df.folder));
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var asset in entities!
+                    .Where(a => wp.IsMatch(a.Name))
+                    .FilterByWildcards(a => a?.ValueType, wpValueType)
+                    .ExcludeByWildcards(a => a?.Name, wpName)
+                    .OrderBy(a => a.Name))
+                {
+                    string toolhelp = asset.GetPSPath();
+                    yield return new CompletionResult(PathTools.EscapePSText(asset.Name), asset.Name, CompletionResultType.Text, toolhelp);
+                }
+            }
+        }
+    }
+
+    internal class AssetValueTypeCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+            var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
+            var wpValueType = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetAssets(df.folder));
+
+            HashSet<string> valueTypes = [];
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+                foreach (var asset in entities!.FilterByWildcards(a => a?.Name, wpName))
+                {
+                    valueTypes.Add(asset.ValueType!);
+                }
+            }
+
+            foreach (var valueType in valueTypes
+                .Where(v => wp.IsMatch(v))
+                .ExcludeByWildcards(v => v, wpValueType)
+                .OrderBy(v => v))
+            {
+                yield return new CompletionResult(valueType);
+            }
+        }
+    }
+
+    internal class BucketNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetBuckets(df.folder));
+
+            bool bFound = false;
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var bucket in entities!
+                    .Where(b => wp.IsMatch(b.Name))
+                    .ExcludeByWildcards(b => b?.Name, wpName)
+                    .OrderBy(b => b.Name))
+                {
+                    bFound = true;
+                    string tooltip = bucket.GetPSPath();
+                    yield return new CompletionResult(PathTools.EscapePSText(bucket.Name), bucket.Name, CompletionResultType.Text, tooltip);
+                }
+            }
+            if (!bFound)
+            {
+                yield return new CompletionResult("'(No buckets found)'");
+            }
+        }
+    }
+
+    internal class CalendarNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            var drives = ResolveDrives(fakeBoundParameters);
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drives, drive => drive.GetCalendars());
+
+            bool bFound = false;
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var calendar in entities!
+                    .Where(c => wp.IsMatch(c.Name))
+                    .ExcludeByWildcards(c => c?.Name, wpName)
+                    .OrderBy(b => b.Name))
+                {
+                    bFound = true;
+                    string tooltip = calendar.GetPSPath();
+                    yield return new CompletionResult(PathTools.EscapePSText(calendar.Name), calendar.Name, CompletionResultType.Text, tooltip);
+                }
+            }
+            if (!bFound)
+            {
+                yield return new CompletionResult("'(No calendars found)'");
+            }
+        }
+    }
+
+    internal class CredentialStoreNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = ResolveDrives(fakeBoundParameters);
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drives, drive => drive.GetCredentialStores());
+
+            bool bFound = false;
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var credentialStore in entities!
+                    .Where(c => wp.IsMatch(c.Name))
+                    .ExcludeByWildcards(c => c?.Name, wpName)
+                    .OrderBy(c => c.Name!))
+                {
+                    bFound = true;
+                    string tiphelp = TipHelp(credentialStore);
+                    yield return new CompletionResult(PathTools.EscapePSText(credentialStore.Name), credentialStore.Name, CompletionResultType.ParameterValue, tiphelp);
+                }
+            }
+            if (!bFound)
+            {
+                yield return new CompletionResult("'(No credential stores found)'");
+            }
+        }
+    }
+
+    internal class MachineNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = ResolveDrives(fakeBoundParameters);
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drives, drive => drive.GetMachines());
+
+            bool bFound = false;
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var machine in entities!
+                    .Where(m => wp.IsMatch(m.Name))
+                    .ExcludeByWildcards(m => m?.Name, wpName)
+                    .OrderBy(m => m.Name!))
+                {
+                    bFound = true;
+                    string tiphelp = TipHelp(machine);
+                    yield return new CompletionResult(PathTools.EscapePSText(machine.Name), machine.Name, CompletionResultType.ParameterValue, tiphelp);
+                }
+            }
+            if (!bFound)
+            {
+                yield return new CompletionResult("'(No credential stores found)'");
+            }
+        }
+    }
+
+    internal class PackageIdCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+
+            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+            var drivesFolders = OrchDriveInfo.EnumPackageFeedFolders(paramPath, recurse); ////////////////////////TODO★
+
+            // パラメータで選択済みの Id は、候補から除外する
+            var wpId = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetPackages(df.folder));
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var e in entities!
+                    .Where(m => wp.IsMatch(m.Id))
+                    .ExcludeByWildcards(p => p?.Id, wpId)
+                    .OrderBy(l => l.Id))
+                {
+                    string tiphelp = TipHelp(e);
+                    yield return new CompletionResult(PathTools.EscapePSText(e.Id), e.Id, CompletionResultType.ParameterValue, tiphelp);
+                }
+            }
+        }
+    }
+
+    internal class PackageVersionCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+
+            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+            var drivesFolders = OrchDriveInfo.EnumPackageFeedFolders(paramPath, recurse);
+
+            // パラメータで選択された Id のみ対象とする
+            var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
+
+            // パラメータで選択済みの Version は、候補から除外する
+            var wpVersion = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drivesFolders, df =>
+            {
+                var packages = df.drive.GetPackages(df.folder).FilterByWildcards(p => p?.Id, wpId); ;
+                return ParallelResults.ForEach(packages, package => df.drive.GetPackageVersions(df.folder, package.Id!));
+            });
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var packages)) continue;
+
+                foreach (var results2 in packages!)
+                {
+                    if (!results2.TryGetValue(out var versions)) continue;
+
+                    foreach (var version in versions!
+                        .Where(v => wp.IsMatch(v.Version))
+                        .ExcludeByWildcards(v => v?.Version, wpVersion))
+                        //.OrderBy(v => v.Version!, VersionComparer.Instance))
+                    {
+                        string tiphelp = TipHelp(version);
+                        yield return new CompletionResult(PathTools.EscapePSText(version.Version), version.Version, CompletionResultType.ParameterValue, tiphelp);
+                    }
+                }
+            }
+        }
+    }
+
+    internal class ProcessNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+            // パラメータで選択済みのライブラリ名は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetReleases(df.folder));
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var release in entities!
+                    .Where(p => wp.IsMatch(p.Name))
+                    .ExcludeByWildcards(p => p?.Name, wpName)
+                    .OrderBy(p => p.Name))
+                {
+                    string tiphelp = TipHelp(release);
+                    yield return new CompletionResult(PathTools.EscapePSText(release.Name), release.Name, CompletionResultType.ParameterValue, tiphelp);
+                }
+            }
+        }
+    }
+
+    internal class QueueNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetQueues(df.folder));
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var e in entities!
+                    .Where(q => wp.IsMatch(q.Name))
+                    .ExcludeByWildcards(q => q?.Name, wpName)
+                    .OrderBy(q => q.Name))
+                {
+                    string tiphelp = TipHelp(e);
+                    yield return new CompletionResult(PathTools.EscapePSText(e.Name), e.Name, CompletionResultType.ParameterValue, tiphelp);
+                }
+            }
+        }
+    }
+
+    internal class ListReleasesCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+            // パラメータで選択済みの Process は、候補から除外する
+            var paramName = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var wpName = paramName.ConvertToWildcardPatternList();
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+
+            // ListReleases は非公開の API のようだから、GetReleases を使った方が良さそうだ。
+            // ApiVersion == 13 のとき、ListReleases は動作しなかった。
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetReleases(df.folder));
+
+            // こっちの方が、Orchestrator に対する負荷が少ないとか、処理が早いとか、あるのかもしれない。。
+            // var results = ParallelResults.ForEach(drivesFolders, df => df.drive.ListReleases(df.folder));
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var release in entities!
+                    .Where(r => wp.IsMatch(r.Name))
+                    .ExcludeByWildcards(r => r?.Name, wpName)
+                    .OrderBy(r => r.Name))
+                {
+                    string tooltip = TipHelp(release);
+                    yield return new CompletionResult(PathTools.EscapePSText(release.Name), release.Name, CompletionResultType.Text, tooltip);
+                }
+            }
+        }
+    }
+
+    internal class RoleNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = ResolveDrives(fakeBoundParameters);
+
+            // パラメータで選択済みのライブラリ名は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drives, drive => drive.GetRoles());
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var role in entities!
+                    .Where(r => wp.IsMatch(r.Name))
+                    .ExcludeByWildcards(r => r?.Name, wpName)
+                    .OrderBy(role => role.Name))
+                {
+                    string tiphelp = TipHelp(role);
+                    yield return new CompletionResult(PathTools.EscapePSText(role.Name), role.Name, CompletionResultType.ParameterValue, tiphelp);
+                }
+            }
+        }
+    }
+
+    internal class StaticRoleNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = ResolveDrives(fakeBoundParameters);
+
+            // パラメータで選択済みのライブラリ名は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drives, drive => drive.GetRoles());
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var role in entities!
+                    .Where(r => !r.IsStatic.GetValueOrDefault())
+                    .Where(r => wp.IsMatch(r.Name))
+                    .ExcludeByWildcards(r => r?.Name, wpName)
+                    .OrderBy(role => role.Name))
+                {
+                    string tiphelp = TipHelp(role);
+                    yield return new CompletionResult(PathTools.EscapePSText(role.Name), role.Name, CompletionResultType.ParameterValue, tiphelp);
+                }
+            }
+        }
+    }
+
+    public class TenantUserNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = ResolveDrives(fakeBoundParameters);
+
+            // パラメータで選択済みのユーザー名は、候補から除外する
+            var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
+
+            // パラメータで選択された FullName のみ対象とする
+            var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drives, drive => drive.GetUsers());
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var e in entities!
+                    .Where(u => wp.IsMatch(u.UserName))
+                    .ExcludeByWildcards(u => u?.UserName, wpUserName)
+                    .FilterByWildcards(u => u?.FullName, wpFullName)
+                    .OrderBy(u => u.UserName))
+                {
+                    string tiphelp = TipHelp(e);
+                    yield return new CompletionResult(PathTools.EscapePSText(e.UserName), e.UserName, CompletionResultType.ParameterValue, tiphelp);
+                }
+            }
+        }
+    }
+
+    internal class TriggerNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetProcessSchedules(df.folder));
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var e in entities!
+                    .Where(t => wp.IsMatch(t.Name))
+                    .ExcludeByWildcards(t => t?.Name, wpName)
+                    .OrderBy(t => t.Name))
+                {
+                    string tiphelp = TipHelp(e);
+                    yield return new CompletionResult(PathTools.EscapePSText(e.Name), e.Name, CompletionResultType.Text, tiphelp);
+                }
+            }
+        }
+    }
+
+    internal class WebhookNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = ResolveDrives(fakeBoundParameters);
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drives, drive => drive.GetWebhooks());
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var e in entities!
+                    .Where(e => wp.IsMatch(e.Name))
+                    .ExcludeByWildcards(e => e?.Name, wpName)
+                    .OrderBy(e => e.Name!))
+                {
+                    string tiphelp = TipHelp(e);
+                    yield return new CompletionResult(PathTools.EscapePSText(e.Name), e.Name, CompletionResultType.ParameterValue, tiphelp);
+                }
+            }
+        }
+    }
+
+    internal class TestCaseNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+            var paramDepth = GetParameterValue(commandAst, "Depth");
+            uint.TryParse(paramDepth, out uint depth);
+
+            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+            var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth); ///////// ★TODO
+            
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetTestCases(df.folder));
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var testCase in entities!
+                    .Where(tc => wp.IsMatch(tc.Name!))
+                    .ExcludeByWildcards(tc => tc?.Name, wpName)
+                    .OrderBy(tc => tc.Name))
+                {
+                    string tiphelp = TipHelp(testCase);
+                    yield return new CompletionResult(PathTools.EscapePSText(testCase.Name), testCase.Name, CompletionResultType.ParameterValue, tiphelp);
+                }
+            }
+        }
+    }
+
+    internal class TestDataQueueNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+            var paramDepth = GetParameterValue(commandAst, "Depth");
+            uint.TryParse(paramDepth, out uint depth);
+
+            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+            var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetTestDataQueues(df.folder));
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var testDataQueue in entities!
+                    .Where(e => wp.IsMatch(e.Name!))
+                    .ExcludeByWildcards(e => e?.Name, wpName)
+                    .OrderBy(e => e.Name))
+                {
+                    string tiphelp = TipHelp(testDataQueue);
+                    yield return new CompletionResult(PathTools.EscapePSText(testDataQueue.Name), testDataQueue.Name, CompletionResultType.ParameterValue, tiphelp);
+                }
+            }
+        }
+    }
+
+    internal class TestScheduleNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+            var paramDepth = GetParameterValue(commandAst, "Depth");
+            uint.TryParse(paramDepth, out uint depth);
+
+            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+            var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetTestSetSchedules(df.folder));
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var testSet in entities!
+                    .Where(tc => wp.IsMatch(tc.Name!))
+                    .ExcludeByWildcards(tc => tc?.Name, wpName)
+                    .OrderBy(tc => tc.Name))
+                {
+                    string tiphelp = TipHelp(testSet);
+                    yield return new CompletionResult(PathTools.EscapePSText(testSet.Name), testSet.Name, CompletionResultType.ParameterValue, tiphelp);
+                }
+            }
+        }
+    }
+
+    internal class TestSetNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+            var paramDepth = GetParameterValue(commandAst, "Depth");
+            uint.TryParse(paramDepth, out uint depth);
+
+            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+            var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetTestSets(df.folder));
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var testSet in entities!
+                    .Where(te => wp.IsMatch(te.Name!))
+                    .ExcludeByWildcards(te => te?.Name, wpName)
+                    .OrderBy(te => te.Name))
+                {
+                    string tiphelp = TipHelp(testSet);
+                    yield return new CompletionResult(PathTools.EscapePSText(testSet!.Name), testSet.Name, CompletionResultType.ParameterValue, tiphelp);
+                }
+            }
+        }
+    }
+
+    #region Completers for Platform Management cmdlets
+    internal class PmGroupNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = ResolveDrives(fakeBoundParameters);
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drives, drive => drive.GetPmGroups());
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var e in entities!.Values
+                    .Where(g => wp.IsMatch(g?.name))
+                    .ExcludeByWildcards(g => g?.name!, wpName)
+                    .OrderBy(g => g?.name))
+                {
+                    string tiphelp = e?.GetPSPath();
+                    yield return new CompletionResult(PathTools.EscapePSText(e?.name), e?.name, CompletionResultType.Text, tiphelp);
+                }
+            }
+        }
+    }
+
+    internal class PmRobotAccountNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = ResolveDrives(fakeBoundParameters);
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drives, drive => drive.GetPmRobotAccounts());
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var e in entities!.Values
+                    .Where(r => r != null)
+                    .Where(r => wp.IsMatch(r!.name!))
+                    .ExcludeByWildcards(r => r!.name!, wpName)
+                    .OrderBy(r => r!.name))
+                {
+                    string tiphelp = e.GetPSPath();
+                    yield return new CompletionResult(PathTools.EscapePSText(e.name), e.name, CompletionResultType.Text, tiphelp);
+                }
+            }
+        }
+    }
+
+    internal class PmUserNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = ResolveDrives(fakeBoundParameters);
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drives, drive => drive.GetPmUsers());
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var user in entities!.Values
+                    .Where(g => wp.IsMatch(g?.userName))
+                    .ExcludeByWildcards(u => u?.userName!, wpUserName)
+                    .OrderBy(u => u?.userName))
+                {
+                    string tooltip = user.GetPSPath();
+                    yield return new CompletionResult(PathTools.EscapePSText(user?.userName), user?.userName, CompletionResultType.Text, tooltip);
+                }
+            }
+        }
+    }
+
+    internal class PmLicenseGroupNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = ResolveDrives(fakeBoundParameters);
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpGroupName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drives, drive => drive.GetPmUserLicenseGroups());
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var e in entities!
+                    .Where(g => wp.IsMatch(g?.name))
+                    .ExcludeByWildcards(g => g?.name!, wpGroupName)
+                    .OrderBy(g => g?.name))
+                {
+                    string tiphelp = e?.GetPSPath();
+                    yield return new CompletionResult(PathTools.EscapePSText(e?.name), e?.name, CompletionResultType.Text, tiphelp);
+                }
+            }
+        }
+    }
+
+    #endregion
+
+    #region Completers for Test Manager cmdlets
+    internal class TmRequirementNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+
+            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+            var drivesFolders = OrchTmDriveInfo.EnumFolders(paramPath, recurse);
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drivesFolders, dp => dp.drive.GetTmRequirements(dp.project));
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var e in entities!
+                    .Where(e => wp.IsMatch(e.name))
+                    .ExcludeByWildcards(e => e?.name, wpName)
+                    .OrderBy(e => e.name))
+                {
+                    string tooltip = e.GetPSPath();
+                    yield return new CompletionResult(PathTools.EscapePSText(e.name), e.name, CompletionResultType.Text, tooltip);
+                }
+            }
+        }
+    }
+
+    internal class TmTestSetNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+
+            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+            var drivesFolders = OrchTmDriveInfo.EnumFolders(paramPath, recurse);
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drivesFolders, dp => dp.drive.GetTmTestSets(dp.project));
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var e in entities!
+                    .Where(e => wp.IsMatch(e.name))
+                    .ExcludeByWildcards(e => e?.name, wpName)
+                    .OrderBy(e => e.name))
+                {
+                    string tooltip = e.GetPSPath();
+                    yield return new CompletionResult(PathTools.EscapePSText(e.name), e.name, CompletionResultType.Text, tooltip);
+                }
+            }
+        }
+    }
+
+    internal class TmTestCaseNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+
+            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+            var drivesFolders = OrchTmDriveInfo.EnumFolders(paramPath, recurse);
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drivesFolders, dp => dp.drive.GetTmTestCases(dp.project));
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var e in entities!
+                    .Where(e => wp.IsMatch(e.name))
+                    .ExcludeByWildcards(e => e?.name, wpName)
+                    .OrderBy(e => e.name))
+                {
+                    string tooltip = e.GetPSPath();
+                    yield return new CompletionResult(PathTools.EscapePSText(e.name), e.name, CompletionResultType.Text, tooltip);
+                }
+            }
+        }
+    }
+
+    #endregion
+
+    // このパラメータは、どうせ値をひとつしか受け入れないから、positional param を考慮する必要もない。。
+
+    internal class StaticTextsCompleter<TItems> : OrchArgumentCompleter where TItems : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var wpParam = CreateWPListFromParameter(commandAst, parameterName, null, wordToComplete);
+
+            if (!wordToComplete.EndsWith('?')) wordToComplete += '*';
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            foreach (var candidate in TItems.Parameters
+                .Where(c => wp.IsMatch(c))
+                .ExcludeByWildcards(c => c, wpParam))
+            {
+                yield return new CompletionResult(candidate);
+            }
+        }
+    }
+
+    // key は必ず string
+    internal class KeyOfDictionaryCompleter<TItems, TValue> : OrchArgumentCompleter where TItems : IDictionaryItems<TValue>
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var wpParam = CreateWPListFromParameter(commandAst, parameterName, null, wordToComplete);
+
+            if (!wordToComplete.EndsWith('?')) wordToComplete += '*';
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            foreach (var candidate in TItems.Items
+                .Where(c => wp.IsMatch(c.Key))
+                .ExcludeByWildcards(c => c.Key, wpParam))
+            {
+                var key = candidate.Key;
+                if (string.IsNullOrEmpty(key)) continue;
+                yield return new CompletionResult(key);
+            }
+        }
+    }
+
+    // ほとんどの場合で、IKeyValuePairItems で十分なんだけど
+    // KeyOfDictionaryCompleter が便利な場合があるので、全部こっちで統一しておくか。。
+
+    // key は必ず string
+    //internal interface IKeyValuePairItems<TValue>
+    //{
+    //    static abstract KeyValuePair<string, TValue>[] Items { get; }
+    //}
+
+    // key は必ず string
+    //internal class KeyOfKeyValuePairCompleter<TItems, TValue> : OrchArgumentCompleter where TItems : IKeyValuePairItems<TValue>
+    //{
+    //    public override IEnumerable<CompletionResult> CompleteArgument(
+    //        string commandName,
+    //        string parameterName,
+    //        string wordToComplete,
+    //        CommandAst commandAst,
+    //        IDictionary fakeBoundParameters)
+    //    {
+    //        var wpParam = CreateWPListFromParameter(commandAst, parameterName, null, wordToComplete);
+
+    //        if (!wordToComplete.EndsWith('?')) wordToComplete += '*';
+    //        var wp = CreateWPFromWordToComplete(wordToComplete);
+
+    //        foreach (var candidate in TItems.Items
+    //            .Where(c => wp.IsMatch(c.Key))
+    //            .ExcludeByWildcards(c => c.Key, wpParam))
+    //        {
+    //            var key = candidate.Key;
+    //            if (string.IsNullOrEmpty(key)) continue;
+    //            yield return new CompletionResult(key);
+    //        }
+    //    }
+    //}
+
+    // このパラメータは、どうせ値をひとつしか受け入れないから、positional param を考慮する必要もない。。
+    internal class TimeAfterCompleter : OrchArgumentCompleter
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            DateTime dt = DateTime.Today;
+            yield return new CompletionResult("'" + dt.ToShortDateString() + " " + dt.ToLongTimeString() + "'");
+        }
+    }
+
+    // このパラメータは、どうせ値をひとつしか受け入れないから、positional param を考慮する必要もない。。
+    internal class TimeBeforeCompleter : OrchArgumentCompleter
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            DateTime dt = DateTime.Now;
+            yield return new CompletionResult("'" + dt.ToShortDateString() + " " + dt.ToLongTimeString() + "'");
+        }
+    }
+
+    internal class OneWeekAfterCompleter : OrchArgumentCompleter
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            string format = "yyyy-MM-ddTHH:mm:ss";
+            DateTime dt = DateTime.Today.AddDays(7);
+            yield return new CompletionResult("'" + dt.ToString(format) + "Z'");
+        }
+    }
+
+    public class DriveCompleter<T> : OrchArgumentCompleter where T : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = OrchDriveInfo.EnumAllOrchDrives();
+
+            // パラメータで選択済みのドライブは、候補から除外する
+            //var paramPath = GetParameterValues(commandAst, ParameterName(), T.Parameters, wordToComplete).Select(p => p.TrimEnd(':'));
+            var paramPath = GetParameterValues(commandAst, parameterName, T.Parameters, wordToComplete).Select(p => p.TrimEnd(':'));
+            var wpPath = paramPath.Select(p => new WildcardPattern(p, WildcardOptions.IgnoreCase)).ToList();
+            var matchingDrives = drives.ExcludeByWildcards(d => d?.Name, wpPath);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            foreach (var drive in matchingDrives
+                .Where(d => wp.IsMatch(d.NameColon)))
+            {
+                string driveName = drive.NameColon;
+                string tiphelp = drive.DisplayRoot;
+                if (!string.IsNullOrEmpty(drive.Description))
+                    tiphelp += $" ({drive.Description})";
+                yield return new CompletionResult(PathTools.EscapePSText(driveName), driveName, CompletionResultType.ParameterValue, tiphelp);
+            }
+        }
+    }
+
+    internal class TmDriveCompleter<T> : OrchArgumentCompleter where T : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = OrchTmDriveInfo.EnumAllOrchDrives();
+
+            // パラメータで選択済みのドライブは、候補から除外する
+            //var paramPath = GetParameterValues(commandAst, ParameterName(), T.Parameters, wordToComplete).Select(p => p.TrimEnd(':'));
+            var paramPath = GetParameterValues(commandAst, parameterName, T.Parameters, wordToComplete).Select(p => p.TrimEnd(':'));
+            var wpPath = paramPath.Select(p => new WildcardPattern(p, WildcardOptions.IgnoreCase)).ToList();
+            var matchingDrives = drives.ExcludeByWildcards(d => d?.Name, wpPath);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            foreach (var drive in matchingDrives
+                .Where(d => wp.IsMatch(d.NameColon)))
+            {
+                string driveName = drive.NameColon;
+                string tiphelp = drive.DisplayRoot;
+                if (!string.IsNullOrEmpty(drive.Description))
+                    tiphelp += $" ({drive.Description})";
+                yield return new CompletionResult(PathTools.EscapePSText(driveName), driveName, CompletionResultType.ParameterValue, tiphelp);
+            }
+        }
+    }
+
+    internal class EncodingCompleter : OrchArgumentCompleter
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            //System.Text.Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            EncodingInfo[] encodings = System.Text.Encoding.GetEncodings();
+
+            foreach (EncodingInfo ei in encodings
+                .Where(e => wp.IsMatch(e.Name)))
+            {
+                string tooltip = $"CodePage:{ei.CodePage}  {ei.DisplayName}";
+                yield return new CompletionResult(PathTools.EscapePSText($"{ei.Name}"), ei.Name, CompletionResultType.Text, tooltip);
+            }
+        }
+    }
+}

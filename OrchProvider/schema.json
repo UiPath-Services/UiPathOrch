@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "PSDrives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "Name": { "type": "string" },
+          "Provider": { "type": "string" },
+          "Root": { "type": "string" },
+          "Description": { "type": "string" },
+          "IsConfidential": { "type": "boolean" },
+          "Credential": {
+            "type": "object",
+            "properties": {
+              "AppId": { "type": "string" },
+              "AppCredential": { "type": "string" }
+            },
+            "required": ["AppId"]
+          }
+        },
+        "required": ["Name", "Provider", "Root", "IsConfidential", "Credential"]
+      }
+    }
+  },
+  "required": ["PSDrives"]
+}

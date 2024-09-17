@@ -1,0 +1,100 @@
+﻿using System.Collections;
+using System.Collections.Concurrent;
+using System.Management.Automation;
+using System.Management.Automation.Language;
+using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
+
+namespace UiPath.PowerShell.Commands
+{
+    //[Cmdlet(VerbsData.Mount, "OrchBucket")]
+    [OutputType(typeof(PSDrive))]
+    class MountBucketCommand : OrchestratorPSCmdlet
+    {
+        private static readonly string[] positionalParams = ["Name"];
+
+        [Parameter(Position = 0)]
+        [ArgumentCompleter(typeof(NameCompleter))]
+        [SupportsWildcards]
+        public string[]? Name { get; set; }
+
+        [Parameter]
+        [SupportsWildcards]
+        public string[]? Path { get; set; }
+
+        [Parameter]
+        public SwitchParameter Recurse { get; set; }
+
+        [Parameter]
+        public uint Depth { get; set; }
+
+        private class NameCompleter : OrchArgumentCompleter
+        {
+            public override IEnumerable<CompletionResult> CompleteArgument(
+                string commandName,
+                string parameterName,
+                string wordToComplete,
+                CommandAst commandAst,
+                IDictionary fakeBoundParameters)
+            {
+                var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+                var paramDepth = GetParameterValue(commandAst, "Depth");
+                uint.TryParse(paramDepth, out uint depth);
+
+                // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+                var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+                var drivesFolders = OrchDriveInfo.EnumFolders(paramPath, recurse, depth);
+
+                // パラメータで選択済みの Name は、候補から除外する
+                var wpName = CreateWPListFromParameter(commandAst, "Name", positionalParams, wordToComplete);
+
+                var wp = CreateWPFromWordToComplete(wordToComplete);
+
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetBuckets(df.folder));
+
+                foreach (var result in results)
+                {
+                    if (!result.TryGetValue(out var entities)) continue;
+
+                    foreach (var bucket in entities!
+                        .Where(b => wp.IsMatch(b.Name))
+                        .ExcludeByWildcards(b => b.Name!, wpName)
+                        .OrderBy(b => b.Name))
+                    {
+                        string tooltip = bucket.GetPSPath();
+                        yield return new CompletionResult(PathTools.EscapePSText(bucket.Name), bucket.Name, CompletionResultType.Text, tooltip);
+                    }
+                }
+            }
+        }
+
+        protected override void ProcessRecord()
+        {
+            var drivesFolders = OrchDriveInfo.EnumFolders(Path);
+            var wpName = Name.ConvertToWildcardPatternList();
+
+            var providerInfo = this.SessionState.Provider.GetOne("UiPathOrchBkt");
+            foreach (var (drive, folder) in drivesFolders)
+            {
+                var buckets = drive.GetBuckets(folder);
+                foreach (var bucket in buckets
+                    .FilterByWildcards(b => b.Name!, wpName)
+                    .OrderBy(b => b.Name))
+                {
+                    var items = drive.OrchAPISession.GetBucketFiles(folder.Id!.Value, bucket.Id!.Value).ToList();
+
+                    PSDriveInfo bucketDrive;
+                    try
+                    {
+                        bucketDrive = SessionState.Drive.Get(drive.Name + "Bkt");
+                    }
+                    catch
+                    {
+                        bucketDrive = new BucketDriveInfo((drive as OrchDriveInfo)!, providerInfo);
+                        SessionState.Drive.New(bucketDrive, scope: "Global");
+                    }
+                }
+            }
+        }
+    }
+}

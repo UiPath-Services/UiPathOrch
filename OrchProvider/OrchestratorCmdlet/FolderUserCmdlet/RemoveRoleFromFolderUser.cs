@@ -1,0 +1,270 @@
+﻿using System.Collections;
+using System.Management.Automation;
+using System.Management.Automation.Language;
+using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
+using UiPath.PowerShell.Completer;
+
+using Positional = UiPath.PowerShell.Positional.UserName_Roles;
+
+namespace UiPath.PowerShell.Commands
+{
+    [Cmdlet(VerbsCommon.Remove, "OrchRoleFromFolderUser", SupportsShouldProcess = true)]
+    public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
+    {
+        [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(UserNameCompleter))]
+        public string[]? UserName { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(FullNameCompleter))]
+        [SupportsWildcards]
+        public string[]? FullName { get; set; }
+
+        [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+        [Alias("FolderRoles")]
+        [ArgumentCompleter(typeof(RolesCompleter))]
+        public string[]? Roles { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [SupportsWildcards]
+        public string[]? Path { get; set; }
+
+        [Parameter]
+        public SwitchParameter Recurse { get; set; }
+
+        [Parameter]
+        public uint Depth { get; set; }
+
+        // TODO: これは共通化できる気がする
+        private class UserNameCompleter : OrchArgumentCompleter
+        {
+            public override IEnumerable<CompletionResult> CompleteArgument(
+                string commandName,
+                string parameterName,
+                string wordToComplete,
+                CommandAst commandAst,
+                IDictionary fakeBoundParameters)
+            {
+                var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+                var paramDepth = GetParameterValue(commandAst, "Depth");
+                uint.TryParse(paramDepth, out uint depth);
+
+                // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+                var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+                var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
+
+                // パラメータで選択済みの UserName は、候補から除外する
+                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", Positional.UserName_Roles.Parameters, wordToComplete);
+
+                // パラメータで選択された FullName のみ対象とする
+                var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", Positional.UserName_Roles.Parameters);
+
+                var wp = CreateWPFromWordToComplete(wordToComplete);
+
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
+
+                foreach (var result in results)
+                {
+                    if (!result.TryGetValue(out var entities)) continue;
+
+                    foreach (var e in entities!
+                        .Where(eu => wp.IsMatch(eu.UserEntity!.UserName!))
+                        .ExcludeByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
+                        .FilterByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
+                        .OrderBy(u => u.UserEntity!.UserName))
+                    {
+                        string tiphelp = TipHelp(e);
+                        var ret = new CompletionResult(PathTools.EscapePSText(e.UserEntity!.UserName), e.UserEntity.UserName, CompletionResultType.ParameterValue, tiphelp);
+                        yield return ret;
+                    }
+                }
+            }
+        }
+
+        private class FullNameCompleter : OrchArgumentCompleter
+        {
+            public override IEnumerable<CompletionResult> CompleteArgument(
+                string commandName,
+                string parameterName,
+                string wordToComplete,
+                CommandAst commandAst,
+                IDictionary fakeBoundParameters)
+            {
+                var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+                var paramDepth = GetParameterValue(commandAst, "Depth");
+                uint.TryParse(paramDepth, out uint depth);
+
+                // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+                var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+                var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
+
+                // パラメータで選択された UserName のみ対象とする
+                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", Positional.UserName_Roles.Parameters);
+
+                // パラメータで選択済みの FullName は、候補から除外する
+                var wpFullName = CreateWPListFromParameter(commandAst, "FullName", Positional.UserName_Roles.Parameters, wordToComplete);
+
+                var wp = CreateWPFromWordToComplete(wordToComplete);
+
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
+
+                foreach (var result in results)
+                {
+                    if (!result.TryGetValue(out var entities)) continue;
+
+                    foreach (var e in entities!
+                        .Where(eu => wp.IsMatch(eu.UserEntity?.FullName))
+                        .ExcludeByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
+                        .FilterByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
+                        .OrderBy(u => u.UserEntity!.FullName))
+                    {
+                        string tiphelp = TipHelp(e);
+                        var ret = new CompletionResult(PathTools.EscapePSText(e.UserEntity!.FullName), e.UserEntity.FullName, CompletionResultType.ParameterValue, tiphelp);
+                        yield return ret;
+                    }
+                }
+            }
+        }
+
+        private class RolesCompleter : OrchArgumentCompleter
+        {
+            public override IEnumerable<CompletionResult> CompleteArgument(
+                string commandName,
+                string parameterName,
+                string wordToComplete,
+                CommandAst commandAst,
+                IDictionary fakeBoundParameters)
+            {
+                var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+                var paramDepth = GetParameterValue(commandAst, "Depth");
+                uint.TryParse(paramDepth, out uint depth);
+
+                // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+                var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+                var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
+
+                var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", Positional.UserName_Roles.Parameters);
+                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", Positional.UserName_Roles.Parameters);
+                var wpRoles = CreateWPListFromParameter(commandAst, parameterName, Positional.UserName_Roles.Parameters, wordToComplete);
+
+                var wp = CreateWPFromWordToComplete(wordToComplete);
+
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
+
+                foreach (var result in results)
+                {
+                    if (!result.TryGetValue(out var entities)) continue;
+
+                    foreach (var e in entities!
+                        .FilterByWildcards(u => u?.UserEntity?.FullName, wpFullName)
+                        .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName))
+                    {
+                        if (e.Roles != null)
+                        {
+                            foreach (var role in e.Roles
+                                .Where(r => wp.IsMatch(r.Name))
+                                .ExcludeByWildcards(role => role?.Name, wpRoles)
+                                .OrderBy(role => role.Name))
+                            {
+                                string tiphelp = TipHelp(e);
+                                var ret = new CompletionResult(PathTools.EscapePSText(role.Name), role.Name, CompletionResultType.ParameterValue, tiphelp);
+                                yield return ret;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // もともとマルチスレッドにしていなかった
+        protected override void ProcessRecord()
+        {
+            if (UserName?.Length == 0 || string.IsNullOrEmpty(UserName?[0])) UserName = null;
+            if (FullName?.Length == 0 || string.IsNullOrEmpty(FullName?[0])) FullName = null;
+
+            if (UserName == null && FullName == null)
+            {
+                WriteError(new ErrorRecord(new ArgumentException("Please make sure to specify either -UserName or -FullName."), "RemoveRoleFromFolderUserError", ErrorCategory.InvalidOperation, this));
+                return;
+            }
+
+            var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
+
+            var wpFullName = FullName?.Select(fn => new WildcardPattern(fn, WildcardOptions.IgnoreCase)).ToList();
+            var wpUserName = UserName?.Select(un => new WildcardPattern(un, WildcardOptions.IgnoreCase)).ToList();
+
+            // 先頭の要素は CSV から入力されている可能性があるので、先頭の要素についてはカンマで区切る
+            //if (Roles != null && Roles.Length > 0) Roles = Roles[0].Split(',').Concat(Roles.Skip(1)).ToArray();
+            Roles = Roles.Split1stValueByUnescapedCommas()?.ToArray();
+
+            var wpRoles = Roles?.Select(role => new WildcardPattern(role, WildcardOptions.IgnoreCase)).ToList();
+
+            using var cancelHandler = new ConsoleCancelHandler();
+            foreach (var (drive, folder) in drivesFolders)
+            {
+                try
+                {
+                    var tenantRoles = drive.GetRoles().Where(role => role.Type != "Tenant").FilterByWildcards(role => role?.DisplayName, wpRoles);
+                    try
+                    {
+                        // 編集対象のユーザーを抽出する
+                        var existingUsers = drive.GetUsersForFolder(folder, false);
+                        List<UserRoles> editingUsers = existingUsers
+                            .FilterByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
+                            .FilterByWildcards(eu => eu?.UserEntity?.UserName, wpUserName).ToList();
+
+                        foreach (var user in editingUsers.OrderBy(user => user.UserEntity!.FullName))
+                        {
+                            cancelHandler.Token.ThrowIfCancellationRequested();
+
+                            IEnumerable<SimpleRole> existingRoles = user.Roles;
+
+                            // 削除するロールを抽出
+                            IEnumerable<SimpleRole> targetRoles = existingRoles!.FilterByWildcards(role => role?.Name, wpRoles);
+                            if (!targetRoles.Any()) continue;
+                            string strTargetRoles = string.Join(", ", targetRoles.Select(role => role.Name));
+
+                            // 削除するロールを除去
+                            IEnumerable<SimpleRole> keepingRoles = existingRoles!.ExcludeByWildcards(role => role?.Name, wpRoles!);
+
+                            string targetUser = user.GetPSPath();
+                            try
+                            {
+                                if (ShouldProcess(targetUser, $"Remove Roles {strTargetRoles}"))
+                                {
+                                    drive.OrchAPISession.AssignUser(folder.Id ?? 0, user.Id ?? 0, keepingRoles.Select(role => role.Id ?? 0));
+                                    drive._dicUserRoles?.TryRemove((folder.Id ?? 0, true), out List<UserRoles>? _);
+                                    drive._dicUserRoles?.TryRemove((folder.Id ?? 0, false), out List<UserRoles>? _);
+                                    drive.ClearFolderCache(folder);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                var errorRecord = new ErrorRecord(new OrchException(targetUser, ex), "RemoveRoleFromFolderUserError", ErrorCategory.InvalidOperation, user);
+                                WriteError(errorRecord);
+                            }
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        string targetFolder = folder.GetPSPath();
+                        WriteError(new ErrorRecord(new OrchException(targetFolder, ex), "RemoveRoleFromFolderUserError", ErrorCategory.InvalidOperation, targetFolder));
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "RemoveRoleFromFolderUserError", ErrorCategory.InvalidOperation, drive));
+                }
+            }
+        }
+    }
+}

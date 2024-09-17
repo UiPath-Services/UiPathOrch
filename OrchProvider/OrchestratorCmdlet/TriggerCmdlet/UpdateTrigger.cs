@@ -1,0 +1,420 @@
+﻿using System.Collections;
+using System.Management.Automation;
+using System.Management.Automation.Language;
+using System.Text.Json;
+using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
+using UiPath.PowerShell.Completer;
+
+using UiPath.PowerShell.Positional;
+
+using BoolCompleter = UiPath.PowerShell.Completer.StaticTextsCompleter<UiPath.PowerShell.Positional.True_False>;
+using Positional = UiPath.PowerShell.Positional.Name;
+
+namespace UiPath.PowerShell.Commands
+{
+    [Cmdlet(VerbsData.Update, "OrchTrigger", SupportsShouldProcess = true)]
+    [OutputType(typeof(Entities.ProcessSchedule))]
+    public class UpdateTriggerCommand : OrchestratorPSCmdlet
+    {
+        [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(TriggerNameCompleter<Name>))]
+        [SupportsWildcards]
+        public string[]? Name { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public string? NewName { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? Enabled { get; set; }
+
+        // このパラメータはコマンドラインでの指定を受け付けない
+        // CSV で "" が指定されたら 45 にしてしまえば良いので、この型は int にする
+        [Parameter(DontShow = true, ValueFromPipelineByPropertyName = true)]
+        public int? SpecificPriorityValue { get; set; }
+
+        // このパラメータは CSV インポートを受け付けない
+        [Parameter]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<JobPriorityItems>))]
+        public string? Priority { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public int? StartStrategy { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<SoftStop_Kill>))]
+        public string? StopStrategy { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public string? StopProcessExpression { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public string? KillProcessExpression { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public string? AlertPendingExpression { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public string? AlertRunningExpression { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public int? ConsecutiveJobFailuresThreshold { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public int? JobFailuresGracePeriodInHours { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<RuntimeTypes>))]
+        public string? RuntimeType { get; set; }
+
+        // TODO: completer がほしい
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public string? InputArguments { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? ResumeOnSameContext { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? RunAsMe { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? IsConnected { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(CalendarNameCompleter<Name>))]
+        [SupportsWildcards]
+        public string? CalendarName { get; set; }
+
+        // After completing jobs, reassess conditions and start new jobs if possible
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? ActivateOnJobComplete { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public int? ItemsActivationThreshold { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public int? ItemsPerJobActivationTarget { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public int? MaxJobsForActivation { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public string? StartProcessCronDetails { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public string? StartProcessCron { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(ProcessNameCompleter<Name>))]
+        [SupportsWildcards]
+        public string? ReleaseName { get; set; }
+
+        //QueueDefinitionId
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(QueueNameCompleter<Name>))]
+        [SupportsWildcards]
+        public string? QueueDefinitionName { get; set; }
+
+        [Parameter]
+        [ArgumentCompleter(typeof(TimeZoneCompleter))]
+        [SupportsWildcards]
+        public string? TimeZone { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true, DontShow = true)]
+        [SupportsWildcards]
+        public string? TimeZoneId { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(OneWeekAfterCompleter))]
+        public DateTime? StopProcessDate { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(MachineRobotsCompleter))]
+        public string? MachineRobots { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [SupportsWildcards]
+        public string[]? Path { get; set; }
+
+        [Parameter]
+        public SwitchParameter Recurse { get; set; }
+
+        [Parameter]
+        public uint Depth { get; set; }
+
+        internal class TimeZoneCompleter : OrchArgumentCompleter
+        {
+            public override IEnumerable<CompletionResult> CompleteArgument(
+                string commandName,
+                string parameterName,
+                string wordToComplete,
+                CommandAst commandAst,
+                IDictionary fakeBoundParameters)
+            {
+                if (!wordToComplete.EndsWith('?')) wordToComplete += '*';
+                var wp = CreateWPFromWordToComplete(wordToComplete);
+
+                foreach (var timeZone in TimeZoneInfo.GetSystemTimeZones()
+                    .Where(t => wp.IsMatch(t.DisplayName)))
+                {
+                    string tiphelp = $"{timeZone.DisplayName} (Id = '{timeZone.Id}')";
+                    yield return new CompletionResult(PathTools.EscapePSText(timeZone.DisplayName), timeZone.DisplayName, CompletionResultType.ParameterValue, tiphelp);
+                }
+            }
+        }
+
+        internal class MachineRobotsCompleter : OrchArgumentCompleter
+        {
+            public override IEnumerable<CompletionResult> CompleteArgument(
+                string commandName,
+                string parameterName,
+                string wordToComplete,
+                CommandAst commandAst,
+                IDictionary fakeBoundParameters)
+            {
+                var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+                // パラメータで選択済みの Name は、候補から除外する
+                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Positional.Name.Parameters);
+
+                var wp = CreateWPFromWordToComplete(wordToComplete);
+
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetProcessSchedules(df.folder));
+
+                bool bExists = false;
+                foreach (var result in results)
+                {
+                    if (!result.TryGetValue(out var entities)) continue;
+
+                    var (drive, folder) = result.Source;
+
+                    foreach (var trigger in entities!
+                        .Where(t => t.MachineRobots != null)
+                        .FilterByWildcards(e => e?.Name, wpName)
+                        .Where(e => e?.MachineRobots != null)
+                        .OrderBy(a => a.Name))
+                    {
+                        bExists = true;
+                        string tiphelp = trigger.GetPSPath();
+                        string machineRobots = SerializeMachineRobotSessionArray(drive, folder!, trigger.MachineRobots);
+                        if (string.IsNullOrEmpty(machineRobots)) continue;
+
+                        yield return new CompletionResult("'" + machineRobots + "'", machineRobots, CompletionResultType.Text, tiphelp);
+                    }
+                }
+                if (!bExists)
+                {
+                    yield return new CompletionResult("'[{\"RobotName\":\"\",\"MachineName\":\"\",\"HostMachineName\":\"\"}]'");
+                }
+            }
+        }
+
+        protected override void ProcessRecord()
+        {
+            var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+            var wpName = Name?.Select(id => new WildcardPattern(id, WildcardOptions.IgnoreCase)).ToList();
+
+            int? specificPriorityValue = ConvertPriorityToSpecificPriorityValue(Priority);
+
+            if (StopProcessDate != null)
+            {
+                StopProcessDate = StopProcessDate.Value.ToUniversalTime();
+                //DateTime.SpecifyKind(StopProcessDate.Value, DateTimeKind.Utc);
+            }
+
+            using var cancelHandler = new ConsoleCancelHandler();
+            foreach (var (drive, folder) in drivesFolders)
+            {
+                IEnumerable<ProcessSchedule> triggers = null;
+                try
+                {
+                    triggers = drive.GetProcessSchedules(folder);
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "GetTriggerError", ErrorCategory.InvalidOperation, folder));
+                }
+                if (triggers == null) continue;
+
+                var targetTriggers = triggers.SelectByWildcards(t => t?.Name, wpName);
+
+                foreach (var trigger in targetTriggers)
+                {
+                    cancelHandler.Token.ThrowIfCancellationRequested();
+
+                    string target = trigger.GetPSPath();
+
+                    ProcessSchedule postTrigger = OrchCollectionExtensions.DeepCopy(trigger);
+
+                    postTrigger.AssignString(NewName, (s, v) => s.Name = v);
+
+                    postTrigger.AssignBool(Enabled, (s, v) => s.Enabled = v);
+                    postTrigger.Enabled ??= true;
+
+                    postTrigger.AssignNumber(StartStrategy, (s, v) => s.StartStrategy = v);
+                    postTrigger.StartStrategy ??= 1;
+
+                    postTrigger.AssignString(StopStrategy,                    (s, v) => s.StopStrategy = v);
+                    postTrigger.AssignString(StopProcessExpression,           (s, v) => s.StopProcessExpression = v);
+                    postTrigger.AssignString(KillProcessExpression,           (s, v) => s.KillProcessExpression = v);
+                    postTrigger.AssignString(AlertPendingExpression,          (s, v) => s.AlertPendingExpression = v);
+                    postTrigger.AssignString(AlertRunningExpression,          (s, v) => s.AlertRunningExpression = v);
+                    postTrigger.AssignNumber(ConsecutiveJobFailuresThreshold, (s, v) => s.ConsecutiveJobFailuresThreshold = v);
+                    postTrigger.AssignNumber(JobFailuresGracePeriodInHours,   (s, v) => s.JobFailuresGracePeriodInHours = v);
+
+                    postTrigger.AssignString(RuntimeType,       (s, v) => s.RuntimeType = v);
+                    postTrigger.RuntimeType ??= "Unattended";
+
+                    postTrigger.AssignString(InputArguments,    (s, v) => postTrigger.InputArguments = v);
+
+                    postTrigger.AssignBool(ResumeOnSameContext, (s, v) => s.ResumeOnSameContext = v);
+                    postTrigger.ResumeOnSameContext ??= false;
+
+                    postTrigger.AssignBool(RunAsMe, (s, v) => s.RunAsMe = v);
+                    postTrigger.RunAsMe ??= false;
+
+                    postTrigger.AssignBool(IsConnected, (s, v) => s.IsConnected = v);
+
+                    #region // CalendarName を CalendarId に変換
+                    postTrigger.AssignIdFromName(
+                        CalendarName,
+                        drive.GetCalendars!,
+                        e => e.Name!,
+                        e => e.Id!,
+                        (s, v) => s.CalendarId = v,
+                        this, target, "Calendar");
+
+                    postTrigger.UseCalendar = (postTrigger.CalendarId != null);
+                    #endregion
+
+                    postTrigger.AssignNumber(ItemsActivationThreshold,    (s, v) => s.ItemsActivationThreshold = v);
+                    postTrigger.AssignNumber(ItemsPerJobActivationTarget, (s, v) => s.ItemsPerJobActivationTarget = v);
+                    postTrigger.AssignNumber(MaxJobsForActivation,        (s, v) => s.MaxJobsForActivation = v);
+                    postTrigger.AssignBool(ActivateOnJobComplete,         (s, v) => s.ActivateOnJobComplete = v);
+
+                    postTrigger.AssignString(StartProcessCron,            (s, v) => s.StartProcessCron = v);
+                    postTrigger.StartProcessCron ??= "0 0/1 * 1/1 * ? *";
+
+                    postTrigger.AssignString(StartProcessCronDetails,     (s, v) => s.StartProcessCronDetails = v);
+                    postTrigger.StartProcessCronDetails ??= $"\"{{advancedCron\":\"{postTrigger.StartProcessCron}\"}}";
+
+                    // SpecificPriorityValue を先に適用、specificPriorityValue が非 null ならそれで上書き
+                    postTrigger.AssignNumber(SpecificPriorityValue, (s, v) => s.SpecificPriorityValue = v);
+                    postTrigger.AssignNumber(specificPriorityValue, (s, v) => s.SpecificPriorityValue = v);
+
+                    if (postTrigger.SpecificPriorityValue != null)
+                    {
+                        postTrigger.JobPriority = null;
+                    }
+
+                    //schedule.AssignString(ExecutorRobots, (s, v) => s.ExecutorRobots = v);
+                    // schedule.ExecutorRobots = []; // TODO
+
+                    #region ReleaseName を ReleaseId に変換
+                    postTrigger.AssignIdFromName(
+                        ReleaseName,
+                        () => drive.GetReleases(folder),
+                        e => e.Name!,
+                        e => e.Id!,
+                        (s, v) => s.ReleaseId = v,
+                        this, target, "Release");
+                    #endregion
+
+                    #region QueueDefinitionName を QueueDefinitionId に変換
+                    postTrigger.AssignIdFromName(
+                        QueueDefinitionName,
+                        () => drive.GetQueues(folder),
+                        e => e.Name!,
+                        e => e.Id!,
+                        (s, v) => s.QueueDefinitionId = v,
+                        this, target, "Queue");
+                    #endregion
+
+                    #region TimeZone を TimeZoneId に変換
+                    postTrigger.AssignString(TimeZoneId, (s, v) => s.TimeZoneId = v);
+
+                    postTrigger.AssignIdFromName(
+                        TimeZone,
+                        TimeZoneInfo.GetSystemTimeZones,
+                        e => e.DisplayName,
+                        e => e.Id!,
+                        (s, v) => s.TimeZoneId = v,
+                        this, target, "TimeZone");
+
+                    postTrigger.TimeZoneId ??= TimeZoneInfo.Local.Id;
+                    #endregion
+
+                    postTrigger.AssignDateTime(StopProcessDate, (s, v) => s.StopProcessDate = v, false);
+
+                    #region MachineRobots をデシリアライズ
+                    if (!string.IsNullOrEmpty(MachineRobots))
+                    {
+                        var mrss = JsonSerializer.Deserialize<MachineRobotSessionForSerialize[]>(MachineRobots);
+
+                        List<MachineRobotSession> targets = [];
+
+                        var robots = drive.GetRobots();
+                        var machines = drive.GetMachines();
+                        var sessions = drive.GetMachineSessionRuntimesByFolderId(folder);
+
+                        foreach (var mrs in mrss ?? [])
+                        {
+                            MachineRobotSession elem = new();
+
+                            // RobotName を変換
+                            if (!string.IsNullOrEmpty(mrs.RobotName))
+                            {
+                                elem.RobotId = robots.FirstOrDefault(r => r.Name == mrs.RobotName)?.Id;
+                            }
+
+                            // MachineName を変換
+                            if (mrs.MachineName != null)
+                            {
+                                elem.MachineId = machines.FirstOrDefault(m => m.Name == mrs.MachineName)?.Id;
+                            }
+
+                            // HostMachineName を変換
+                            if (mrs.MachineName != null)
+                            {
+                                elem.SessionId = sessions.FirstOrDefault(s => s.HostMachineName == mrs.HostMachineName)?.SessionId;
+                            }
+                            targets.Add(elem);
+                        }
+                        postTrigger.MachineRobots = targets.ToArray();
+
+                        postTrigger.ExecutorRobots = postTrigger.MachineRobots?
+                            .Select(m => new RobotExecutor() { Id = m.RobotId }).ToArray();
+                    }
+                    #endregion
+
+                    postTrigger.EnvironmentId = null;
+                    postTrigger.CalendarName = null; // CalendarId があるので、CalendarName は不要
+                    postTrigger.Key = null;
+                    postTrigger.TimeZoneIana = null;
+                    postTrigger.Tags = null;
+
+                    if (ShouldProcess(target, "Update Trigger"))
+                    {
+                        try
+                        {
+                            drive.OrchAPISession.PutProcessSchedule(folder.Id!.Value, postTrigger);
+                            drive._dicProcessSchedules?.TryRemove(folder.Id ?? 0, out _);
+                            drive._dicProcessSchedules_Exceptions.ClearCache();
+                            drive._dicProcessScheduleDetailed?.TryRemove(folder.Id ?? 0, out _);
+                            drive._dicProcessScheduleDetailed_Exceptions.ClearCache();
+                        }
+                        catch (Exception ex)
+                        {
+                            WriteError(new ErrorRecord(new OrchException(target, ex), "UpdateTriggerError", ErrorCategory.InvalidOperation, folder));
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

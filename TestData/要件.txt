@@ -1,0 +1,48 @@
+次の要件を満たす c# のメソッドを書いて下さい
+このメソッドは、CSV ファイルをパースして、ヘッダ列の一覧、続く行に含まれる列の一覧、パースに失敗したエラーの情報の一覧を返します。
+このメソッドのシグニチャは次の通りです。
+bool ParseCsvContent(string csvContent, out List<string> headers, out List<List<string>> contents, out List<CSVParseError> errorInfo)
+
+パースエラーが一件でも発生した場合はfalseを、すべての行のパースに成功した場合はtrueを返します。
+falseを返す場合には、errorInfo にひとつ以上のCSVParseErrorが入ります。trueを返す場合には、errorInfo は null もしくは空です。
+
+CSV ファイル全体の内容を先頭のパラメータで受け取ります。
+先頭の行は、ヘッダ行です。
+先頭以外にある空白行は、読み飛ばします。
+各列値は、前後をダブルクォートで括られていても構いません。その場合には、ダブルクォート内部のカンマはその列値の一部と解釈して下さい。ダブルクォート内部のカンマを列の区切りとして解釈してはいけません。また、ダブルクォート内部のふたつ連続したダブルクォート（""）はエスケープされたダブルクォートなので、やはり列値の一部と解釈して下さい。
+ダブルクォート内部の改行は、改行文字のまま保持して下さい。
+列値に含まれるダブルクォートは \ でエスケープして、\" として下さい。
+前後がダブルクォートでない列値の処理に注意して下さい。たとえば、次のような CSV 行をパースするとき
+header1,header2
+value1, "value2"
+この例では、先頭行はヘッダ行であり、コンテンツは1行だけです。便宜上列値をシングルクォートでくくって説明しますが、このコンテンツ行のheader1の値は 'value1' であり、header2の値は ' \"value2\"' となります。このheader2の値は'value2'ではないことに注意して下さい。
+
+パースに失敗した行があれば、その行のエラーについてエラー情報を三番目の引数に入れて下さい。また、エラーが発生した行は読み飛ばして、次の行からパースを継続して下さい。
+CSVParseError の定義は次の通りです。CSVRow はエラーが発生した行の番号、CSVFieldはエラーが発生した列の名前です。列の名前がエラーで読み取れなかった場合には、CSVField には "N/A" を入れて下さい。
+    class CSVParseError
+    {
+        public int CSVRow { get; set; }
+        public string ErrorType { get; set; }
+        public string CSVField { get; set; } = "N/A";
+        public string ErrorCode { get; set; }
+
+        public CSVParseError(int csvRow, string errorType, string csvField, string errorCode)
+        {
+            CSVRow = csvRow;
+            ErrorType = errorType;
+            CSVField = csvField;
+            ErrorCode = errorCode;
+        }
+    }
+
+ある行に、ヘッダ列の数よりも多い列数が含まれていた場合は、エラーとして下さい。このときの CSVParserError の値は次の通りです。
+CSVRow = (エラーが発生した csv の行番号)
+ErrorType = "Fields Mismatch"
+CSVField = (エラーが発生した列名)
+ErrorCode = "Too Many Fields"
+
+ある行で、ダブルクォートの対応が正しくなくパースできなかった場合もエラーとして下さい。このときの CSVParserError の値は次の通りです。
+CSVRow = (エラーが発生した csv の行番号)
+ErrorType = "Quotes"
+CSVField = (エラーが発生した列名)
+ErrorCode = "Invalid Quotes"

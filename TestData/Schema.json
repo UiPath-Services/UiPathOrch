@@ -1,0 +1,329 @@
+{
+  "entities": [
+    {
+      "name": "TestExecMonit",
+      "displayName": "TestExecMonit",
+      "entityTypeId": 0,
+      "entityType": "Entity",
+      "description": "",
+      "fields": [
+        {
+          "name": "TestSetName",
+          "isPrimaryKey": false,
+          "isForeignKey": false,
+          "isUnique": false,
+          "referenceType": "ManyToOne",
+          "sqlType": {
+            "name": "NVARCHAR",
+            "lengthLimit": 200
+          },
+          "isRequired": true,
+          "displayName": "テストセット名",
+          "description": "",
+          "isSystemField": false,
+          "fieldDisplayType": "Basic",
+          "isAttachment": false,
+          "isRbacEnabled": false
+        },
+        {
+          "name": "Start",
+          "isPrimaryKey": false,
+          "isForeignKey": false,
+          "isUnique": false,
+          "referenceType": "ManyToOne",
+          "sqlType": {
+            "name": "BIT",
+            "lengthLimit": 200
+          },
+          "isRequired": true,
+          "displayName": "実行開始通知",
+          "description": "",
+          "isSystemField": false,
+          "fieldDisplayType": "Basic",
+          "isAttachment": false,
+          "isRbacEnabled": false
+        },
+        {
+          "name": "End",
+          "isPrimaryKey": false,
+          "isForeignKey": false,
+          "isUnique": false,
+          "referenceType": "ManyToOne",
+          "sqlType": {
+            "name": "BIT",
+            "lengthLimit": 200
+          },
+          "isRequired": true,
+          "displayName": "実行終了通知",
+          "description": "",
+          "isSystemField": false,
+          "fieldDisplayType": "Basic",
+          "isAttachment": false,
+          "isRbacEnabled": false
+        },
+        {
+          "name": "Error",
+          "isPrimaryKey": false,
+          "isForeignKey": false,
+          "isUnique": false,
+          "referenceType": "ManyToOne",
+          "sqlType": {
+            "name": "BIT",
+            "lengthLimit": 200
+          },
+          "isRequired": true,
+          "displayName": "エラー通知",
+          "description": "",
+          "isSystemField": false,
+          "fieldDisplayType": "Basic",
+          "isAttachment": false,
+          "isRbacEnabled": false
+        },
+        {
+          "name": "ExecutionMedia",
+          "isPrimaryKey": false,
+          "isForeignKey": false,
+          "isUnique": false,
+          "referenceType": "ManyToOne",
+          "sqlType": {
+            "name": "BIT",
+            "lengthLimit": 200
+          },
+          "isRequired": true,
+          "displayName": "エラー時画像通知",
+          "description": "",
+          "isSystemField": false,
+          "fieldDisplayType": "Basic",
+          "isAttachment": false,
+          "isRbacEnabled": false
+        },
+        {
+          "name": "AssertionFailed",
+          "isPrimaryKey": false,
+          "isForeignKey": false,
+          "isUnique": false,
+          "referenceType": "ManyToOne",
+          "sqlType": {
+            "name": "BIT",
+            "lengthLimit": 200
+          },
+          "isRequired": true,
+          "displayName": "検証失敗通知",
+          "description": "",
+          "isSystemField": false,
+          "fieldDisplayType": "Basic",
+          "isAttachment": false,
+          "isRbacEnabled": false
+        },
+        {
+          "name": "AssertionFailedScreenShot",
+          "isPrimaryKey": false,
+          "isForeignKey": false,
+          "isUnique": false,
+          "referenceType": "ManyToOne",
+          "sqlType": {
+            "name": "BIT",
+            "lengthLimit": 200
+          },
+          "isRequired": true,
+          "displayName": "検証失敗時画像通知",
+          "description": "",
+          "isSystemField": false,
+          "fieldDisplayType": "Basic",
+          "isAttachment": false,
+          "isRbacEnabled": false
+        },
+        {
+          "name": "Mail",
+          "isPrimaryKey": false,
+          "isForeignKey": false,
+          "isUnique": false,
+          "referenceType": "ManyToOne",
+          "sqlType": {
+            "name": "BIT",
+            "lengthLimit": 200
+          },
+          "isRequired": true,
+          "displayName": "メール通知",
+          "description": "",
+          "isSystemField": false,
+          "fieldDisplayType": "Basic",
+          "isAttachment": false,
+          "isRbacEnabled": false
+        },
+        {
+          "name": "MailAddress",
+          "isPrimaryKey": false,
+          "isForeignKey": false,
+          "isUnique": false,
+          "referenceType": "ManyToOne",
+          "sqlType": {
+            "name": "NVARCHAR",
+            "lengthLimit": 200
+          },
+          "isRequired": false,
+          "displayName": "メールアドレス",
+          "description": "",
+          "isSystemField": false,
+          "fieldDisplayType": "Basic",
+          "isAttachment": false,
+          "isRbacEnabled": false
+        },
+        {
+          "name": "MessageApp",
+          "isPrimaryKey": false,
+          "isForeignKey": false,
+          "isUnique": false,
+          "referenceType": "ManyToOne",
+          "sqlType": {
+            "name": "BIT",
+            "lengthLimit": 200
+          },
+          "isRequired": true,
+          "displayName": "メッセージアプリ通知",
+          "description": "",
+          "isSystemField": false,
+          "fieldDisplayType": "Basic",
+          "isAttachment": false,
+          "isRbacEnabled": false
+        },
+        {
+          "name": "MessageAppAsset",
+          "isPrimaryKey": false,
+          "isForeignKey": false,
+          "isUnique": false,
+          "referenceType": "ManyToOne",
+          "sqlType": {
+            "name": "NVARCHAR",
+            "lengthLimit": 200
+          },
+          "isRequired": false,
+          "displayName": "通知先情報のアセット名",
+          "description": "",
+          "isSystemField": false,
+          "fieldDisplayType": "Basic",
+          "isAttachment": false,
+          "isRbacEnabled": false
+        },
+        {
+          "name": "TenantName",
+          "isPrimaryKey": false,
+          "isForeignKey": false,
+          "isUnique": false,
+          "referenceType": "ManyToOne",
+          "sqlType": {
+            "name": "NVARCHAR",
+            "lengthLimit": 200
+          },
+          "isRequired": true,
+          "displayName": "テナント名",
+          "description": "",
+          "isSystemField": false,
+          "fieldDisplayType": "Basic",
+          "isAttachment": false,
+          "isRbacEnabled": false
+        },
+        {
+          "name": "TenantId",
+          "isPrimaryKey": false,
+          "isForeignKey": false,
+          "isUnique": false,
+          "referenceType": "ManyToOne",
+          "sqlType": {
+            "name": "NVARCHAR",
+            "lengthLimit": 200
+          },
+          "isRequired": true,
+          "displayName": "テナントID",
+          "description": "",
+          "isSystemField": false,
+          "fieldDisplayType": "Basic",
+          "isAttachment": false,
+          "isRbacEnabled": false
+        },
+        {
+          "name": "FolderName",
+          "isPrimaryKey": false,
+          "isForeignKey": false,
+          "isUnique": false,
+          "referenceType": "ManyToOne",
+          "sqlType": {
+            "name": "NVARCHAR",
+            "lengthLimit": 200
+          },
+          "isRequired": true,
+          "displayName": "フォルダー名",
+          "description": "",
+          "isSystemField": false,
+          "fieldDisplayType": "Basic",
+          "isAttachment": false,
+          "isRbacEnabled": false
+        },
+        {
+          "name": "FolderId",
+          "isPrimaryKey": false,
+          "isForeignKey": false,
+          "isUnique": false,
+          "referenceType": "ManyToOne",
+          "sqlType": {
+            "name": "NVARCHAR",
+            "lengthLimit": 200
+          },
+          "isRequired": true,
+          "displayName": "フォルダーID",
+          "description": "",
+          "isSystemField": false,
+          "fieldDisplayType": "Basic",
+          "isAttachment": false,
+          "isRbacEnabled": false
+        },
+        {
+          "name": "ProcessType",
+          "isPrimaryKey": false,
+          "isForeignKey": false,
+          "isUnique": false,
+          "referenceChoiceSet": {
+            "name": "ProcessType",
+            "entityTypeId": 0,
+            "entityType": "Entity",
+            "isRbacEnabled": false
+          },
+          "referenceType": "ManyToOne",
+          "sqlType": {
+            "name": "INT",
+            "lengthLimit": 200,
+            "maxValue": 1000000000000,
+            "minValue": -1000000000000
+          },
+          "isRequired": true,
+          "displayName": "プロセスタイプ",
+          "description": "",
+          "isSystemField": false,
+          "fieldDisplayType": "ChoiceSetSingle",
+          "isAttachment": false,
+          "isRbacEnabled": false
+        }
+      ],
+      "isRbacEnabled": false
+    }
+  ],
+  "choicesets": [
+    {
+      "name": "ProcessType",
+      "displayName": "プロセスタイプ",
+      "description": "",
+      "data": [
+        {
+          "DisplayName": "テストセット",
+          "Name": "TestSet",
+          "NumberId": 0
+        },
+        {
+          "DisplayName": "プロセス",
+          "Name": "Process",
+          "NumberId": 1
+        }
+      ]
+    }
+  ]
+}
