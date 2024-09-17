@@ -1,0 +1,95 @@
+﻿using System.Collections;
+using System.Management.Automation;
+using System.Management.Automation.Language;
+using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
+using UiPath.PowerShell.Completer;
+
+using UiPath.PowerShell.Positional;
+using Positional = UiPath.PowerShell.Positional.Name;
+
+namespace UiPath.PowerShell.Commands
+{
+    [Cmdlet(VerbsCommon.Get, "OrchClassicEnvironment")]
+    [OutputType(typeof(Entities.Environment))]
+    public class GetClassicEnvironmentCommand : OrchestratorPSCmdlet
+    {
+        [Parameter(Position = 0)]
+        [ArgumentCompleter(typeof(NameCompleter))]
+        [SupportsWildcards]
+        public string[]? Name { get; set; }
+
+        [Parameter]
+        [SupportsWildcards]
+        public string[]? Path { get; set; }
+
+        [Parameter]
+        public SwitchParameter Recurse { get; set; }
+
+        [Parameter]
+        public uint Depth { get; set; }
+
+        private class NameCompleter : OrchArgumentCompleter
+        {
+            public override IEnumerable<CompletionResult> CompleteArgument(
+                string commandName,
+                string parameterName,
+                string wordToComplete,
+                CommandAst commandAst,
+                IDictionary fakeBoundParameters)
+            {
+                var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+                var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Parameters, wordToComplete);
+                var wp = CreateWPFromWordToComplete(wordToComplete);
+
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetEnvironments(df.folder));
+
+                foreach (var result in results)
+                {
+                    if (!result.TryGetValue(out var entities)) continue;
+
+                    foreach (var s in entities!
+                        .Where(s => wp.IsMatch(s.Name))
+                        .ExcludeByWildcards(s => s?.Name, wpName)
+                        .OrderBy(s => s.Name))
+                    {
+                        string tiphelp = s.GetPSPath();
+                        yield return new CompletionResult(PathTools.EscapePSText(s?.Name), s?.Name, CompletionResultType.ParameterValue, tiphelp);
+                    }
+                }
+            }
+        }
+
+        protected override void ProcessRecord()
+        {
+            var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+            var wpName = Name?.Select(fn => new WildcardPattern(fn, WildcardOptions.IgnoreCase)).ToList();
+
+            using var results = OrchThreadPool.RunForEach(
+                drivesFolders.Where(df => df.folder.ProvisionType == "Manual"),
+                df => df.folder.GetPSPath(),
+                df => df.folder,
+                df => df.drive.GetEnvironments(df.folder));
+
+            using var cancelHandler = new ConsoleCancelHandler();
+            foreach (var result in results)
+            {
+                try
+                {
+                    var env = result.GetResult(cancelHandler.Token);
+                    if (env == null) continue;
+
+                    WriteObject(env
+                        .FilterByWildcards(s => s?.Name, wpName)
+                        .OrderBy(s => s.Name),
+                        true);
+                }
+                catch (OrchException ex)
+                {
+                    WriteError(new ErrorRecord(ex, "GetClassicEnvironmentError", ErrorCategory.InvalidOperation, ex.Target));
+                }
+            }
+        }
+    }
+}

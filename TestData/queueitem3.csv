@@ -1,0 +1,21 @@
+ID,Name,Age,DateOfBirth,Comments
+1,John Doe,30,1989-05-23,Regular customer
+2,"Jane Smith",27,1992-11-12,"Requires special handling"
+3,"O'Connor, Liam",34,1985-03-15,"Note: Name contains apostrophe and comma"
+4,"",,,"Empty fields and missing data"
+5,"Ana ""Annie"" Ruiz",29,1991-07-19,"Double quotes "" in name"
+6,Kimiko Tanaka,22,1997-02-05,
+7,Lars Østergaard,45,1974-08-12,"Name contains non-ASCII character: Ø"
+8,"Smith, John",33,1986-04-24,"Last name, First name"
+10,"Doe, John",30,1989-12-13,"Comma in name"
+11,"",0,0000-00-00,"All missing except ID"
+12,"Multi
+Line
+Name",25,1995-01-01,"Name spans multiple lines"
+13,"Leading and trailing spaces ",35,1985-05-23," Spaces around "
+14,"Embedded, comma",28,1992-08-12,"Name contains comma"
+15,"Quoted ""quote""",32,1988-11-02,"Double quotes in comments"
+16,Sarah O'Neal,29,1991-07-19,"Apostrophe in last name"
+17,"Mixed ""quotes' and apostrophes",31,1989-08-24,"Mixing quotes"
+18, , , , "Only spaces in fields"
+19,"Last, comma,",27,1992-11-12,"Comma at the end of name"

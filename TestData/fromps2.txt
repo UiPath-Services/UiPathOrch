@@ -1,0 +1,55 @@
+
+SpecificData
+------------
+{"DynamicProperties":{"ID":"38","priority":"","reference":"","Name":"XML-like <tag>value</tag>","Age":"36","DateOfBirth":"1987/11/30","Comments":"Comment is XML-like"}}
+{"DynamicProperties":{"ID":"37","priority":"","reference":"","Name":"JSON-like {\"object\":\"value\"}","Age":"35","DateOfBirth":"1988/12/11","Comments":"Comment is JSON-like"}}
+{"DynamicProperties":{"ID":"47","priority":"","reference":"6","Name":"Asterisk * in comments","Age":"45","DateOfBirth":"1978/1/21","Comments":"Comment with asterisk *"}}
+{"DynamicProperties":{"ID":"48","priority":"","reference":"","Name":"Underscore _ in name","Age":"46","DateOfBirth":"1977/12/10","Comments":"Name with underscore_"}}
+{"DynamicProperties":{"ID":"49","priority":"","reference":"4","Name":"Percent % in comments","Age":"47","DateOfBirth":"1976/11/29","Comments":"Comment with percent %"}}
+{"DynamicProperties":{"ID":"50","priority":"","reference":"","Name":"Hash # in name","Age":"48","DateOfBirth":"1975/10/18","Comments":"Name with hash #"}}
+{"DynamicProperties":{"ID":"23","priority":"3","reference":"","Name":"Trailing comma","Age":"","DateOfBirth":"","Comments":"Trailing comma in name, missing fields"}}
+{"DynamicProperties":{"ID":"24","priority":"3","reference":"7","Name":"Unicode 👍 emoji","Age":"40","DateOfBirth":"1980/10/5","Comments":"Contains emoji"}}
+{"DynamicProperties":{"ID":"25","priority":"3","reference":"6","Name":"Newline\nin comments","Age":"22","DateOfBirth":"1998/2/12","Comments":"Comment spans\nmultiple lines"}}
+{"DynamicProperties":{"ID":"26","priority":"3","reference":"76","Name":"Carriage return\\r in name","Age":"27","DateOfBirth":"1993/7/15","Comments":"Name contains CR"}}
+{"DynamicProperties":{"ID":"43","priority":"","reference":"","Name":"Equal signs = in comments","Age":"41","DateOfBirth":"1982/6/6","Comments":"Comment with = sign"}}
+{"DynamicProperties":{"ID":"44","priority":"","reference":"54","Name":"Plus signs + in name","Age":"42","DateOfBirth":"1981/5/26","Comments":"Name with + sign"}}
+{"DynamicProperties":{"ID":"45","priority":"","reference":"6","Name":"Minus signs - in comments","Age":"43","DateOfBirth":"1980/4/15","Comments":"Comment with - sign"}}
+{"DynamicProperties":{"ID":"46","priority":"","reference":"5","Name":"Parentheses ( ) in name","Age":"44","DateOfBirth":"1979/3/4","Comments":"Name with parentheses"}}
+{"DynamicProperties":{"ID":"27","priority":"3","reference":"65","Name":"Tab\\tin name","Age":"30","DateOfBirth":"1990/9/20","Comments":"Name contains tab"}}
+{"DynamicProperties":{"ID":"28","priority":"3","reference":"56","Name":"Multiple \"quotes\" \"in\" name","Age":"32","DateOfBirth":"1988/4/22","Comments":"Multiple quotes in name"}}
+{"DynamicProperties":{"ID":"29","priority":"3","reference":"5","Name":"Comma, quote\", and newline\nin name","Age":"35","DateOfBirth":"1985/7/19","Comments":"Complex name"}}
+{"DynamicProperties":{"ID":"30","priority":"3","reference":"","Name":"Equal signs = in name","Age":"28","DateOfBirth":"1992/8/12","Comments":"Name with = sign"}}
+{"DynamicProperties":{"ID":"31","priority":"3","reference":"","Name":"Space at start ","Age":"29","DateOfBirth":"1994/6/7","Comments":" Leading space in name"}}
+{"DynamicProperties":{"ID":"32","priority":"3","reference":"6","Name":"Space at end","Age":"30","DateOfBirth":"1993/5/16","Comments":"Trailing space in comments "}}
+{"DynamicProperties":{"ID":"33","priority":"3","reference":"","Name":"Newline\\nin name","Age":"31","DateOfBirth":"1992/4/25","Comments":"Name contains newline"}}
+{"DynamicProperties":{"ID":"34","priority":"3","reference":"","Name":"Carriage return\\rin comments","Age":"32","DateOfBirth":"1991/3/14","Comments":"Comment contains CR"}}
+{"DynamicProperties":{"ID":"35","priority":"3","reference":"645645","Name":"Tab\\tin comments","Age":"33","DateOfBirth":"1990/2/3","Comments":"Comment contains tab"}}
+{"DynamicProperties":{"ID":"36","priority":"3","reference":"","Name":"Special chars !@#$%^&*()","Age":"34","DateOfBirth":"1989/1/22","Comments":"Name contains special characters"}}
+{"DynamicProperties":{"ID":"37","priority":"3","reference":"","Name":"JSON-like {\"object\":\"value\"}","Age":"35","DateOfBirth":"1988/12/11","Comments":"Comment is JSON-like"}}
+{"DynamicProperties":{"ID":"38","priority":"","reference":"65","Name":"XML-like <tag>value</tag>","Age":"36","DateOfBirth":"1987/11/30","Comments":"Comment is XML-like"}}
+{"DynamicProperties":{"ID":"39","priority":"","reference":"","Name":"SQL-like 'SELECT * FROM table;'","Age":"37","DateOfBirth":"1986/10/19","Comments":"Comment is SQL-like"}}
+{"DynamicProperties":{"ID":"40","priority":"","reference":"","Name":"Escaped backslash \\\\\\\\","Age":"38","DateOfBirth":"1985/9/8","Comments":"Contains escaped backslash"}}
+{"DynamicProperties":{"ID":"41","priority":"","reference":"4","Name":"Single ' and double \" quotes","Age":"39","DateOfBirth":"1984/8/28","Comments":"Contains both quotes"}}
+{"DynamicProperties":{"ID":"42","priority":"","reference":"6","Name":"Comma, at end,","Age":"40","DateOfBirth":"1983/7/17","Comments":"Trailing comma in name, "}}
+{"DynamicProperties":{"ID":"1","priority":"1","reference":"23","Name":"John Doe","Age":"30","DateOfBirth":"1989/5/23","Comments":"Regular customer"}}
+{"DynamicProperties":{"ID":"2","priority":"1","reference":"4","Name":"Jane Smith","Age":"27","DateOfBirth":"1992/11/12","Comments":"Requires special handling"}}
+{"DynamicProperties":{"ID":"3","priority":"1","reference":"43","Name":"O'Connor, Liam","Age":"34","DateOfBirth":"1985/3/15","Comments":"Note: Name contains apostrophe and comma"}}
+{"DynamicProperties":{"ID":"4","priority":"1","reference":"34","Name":"","Age":"","DateOfBirth":"","Comments":"Empty fields and missing data"}}
+{"DynamicProperties":{"ID":"5","priority":"1","reference":"5354","Name":"Ana \"Annie\" Ruiz","Age":"29","DateOfBirth":"1991/7/19","Comments":"Double quotes \" in name"}}
+{"DynamicProperties":{"ID":"6","priority":"1","reference":"34","Name":"Kimiko Tanaka","Age":"22","DateOfBirth":"1997/2/5","Comments":""}}
+{"DynamicProperties":{"ID":"7","priority":"1","reference":"","Name":"Lars ÁEtergaard","Age":"45","DateOfBirth":"1974/8/12","Comments":"Name contains non-ASCII character: ÁE\n8,Smith"}}
+{"DynamicProperties":{"ID":"9","priority":"1","reference":"2","Name":"Zhang Wei","Age":"29","DateOfBirth":"","Comments":" \"Missing date of birth leading space in comments\""}}
+{"DynamicProperties":{"ID":"10","priority":"1","reference":"4","Name":"Doe, John","Age":"30","DateOfBirth":"1989/12/13","Comments":"Comma in name"}}
+{"DynamicProperties":{"ID":"11","priority":"2","reference":"345","Name":"","Age":"0","DateOfBirth":"0000-00-00","Comments":"All missing except ID"}}
+{"DynamicProperties":{"ID":"12","priority":"2","reference":"4","Name":"Multi\nLine\nName","Age":"25","DateOfBirth":"1995/1/1","Comments":"Name spans multiple lines"}}
+{"DynamicProperties":{"ID":"13","priority":"2","reference":"","Name":"Leading and trailing spaces ","Age":"35","DateOfBirth":"1985/5/23","Comments":" Spaces around "}}
+{"DynamicProperties":{"ID":"14","priority":"2","reference":"654","Name":"Embedded, comma","Age":"28","DateOfBirth":"1992/8/12","Comments":"Name contains comma"}}
+{"DynamicProperties":{"ID":"15","priority":"2","reference":"654","Name":"Quoted \"quote\"","Age":"32","DateOfBirth":"1988/11/2","Comments":"Double quotes in comments"}}
+{"DynamicProperties":{"ID":"16","priority":"2","reference":"","Name":"Sarah O'Neal","Age":"29","DateOfBirth":"1991/7/19","Comments":"Apostrophe in last name"}}
+{"DynamicProperties":{"ID":"17","priority":"2","reference":"76","Name":"Mixed \"quotes' and apostrophes","Age":"31","DateOfBirth":"1989/8/24","Comments":"Mixing quotes"}}
+{"DynamicProperties":{"ID":"18","priority":"2","reference":"","Name":" ","Age":" ","DateOfBirth":" ","Comments":" \"Only spaces in fields\""}}
+{"DynamicProperties":{"ID":"19","priority":"2","reference":"","Name":"Last, comma,","Age":"27","DateOfBirth":"1992/11/12","Comments":"Comma at the end of name"}}
+{"DynamicProperties":{"ID":"20","priority":"2","reference":"","Name":"\"","Age":"33","DateOfBirth":"1986/4/24","Comments":"Single double quote"}}
+{"DynamicProperties":{"ID":"21","priority":"2","reference":"76","Name":"\"\"","Age":"29","DateOfBirth":"1991/7/19","Comments":"Double double quotes"}}
+{"DynamicProperties":{"ID":"22","priority":"3","reference":"","Name":"Comma, at start","Age":"34","DateOfBirth":"1985/3/15","Comments":"Name starts with comma"}}
+

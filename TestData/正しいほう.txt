@@ -1,0 +1,552 @@
+{
+  "queueItems": [
+    {
+      "Priority": "Low",
+      "SpecificContent": {
+        "ID": "1",
+        "Name": "John Doe",
+        "Age": "30",
+        "DateOfBirth": "1989/5/23",
+        "Comments": "Regular customer"
+      },
+      "Reference": "23"
+    },
+    {
+      "Priority": "Low",
+      "SpecificContent": {
+        "ID": "2",
+        "Name": "Jane Smith",
+        "Age": "27",
+        "DateOfBirth": "1992/11/12",
+        "Comments": "Requires special handling"
+      },
+      "Reference": "4"
+    },
+    {
+      "Priority": "Low",
+      "SpecificContent": {
+        "ID": "3",
+        "Name": "O'Connor, Liam",
+        "Age": "34",
+        "DateOfBirth": "1985/3/15",
+        "Comments": "Note: Name contains apostrophe and comma"
+      },
+      "Reference": "43"
+    },
+    {
+      "Priority": "Low",
+      "SpecificContent": {
+        "ID": "4",
+        "Name": "",
+        "Age": "",
+        "DateOfBirth": "",
+        "Comments": "Empty fields and missing data"
+      },
+      "Reference": "34"
+    },
+    {
+      "Priority": "Low",
+      "SpecificContent": {
+        "ID": "5",
+        "Name": "Ana \"Annie\" Ruiz",
+        "Age": "29",
+        "DateOfBirth": "1991/7/19",
+        "Comments": "Double quotes \" in name"
+      },
+      "Reference": "5354"
+    },
+    {
+      "Priority": "Low",
+      "SpecificContent": {
+        "ID": "6",
+        "Name": "Kimiko Tanaka",
+        "Age": "22",
+        "DateOfBirth": "1997/2/5",
+        "Comments": ""
+      },
+      "Reference": "34"
+    },
+    {
+      "Priority": "Low",
+      "SpecificContent": {
+        "ID": "7",
+        "Name": "Lars ÁEtergaard",
+        "Age": "45",
+        "DateOfBirth": "1974/8/12",
+        "Comments": "Name contains non-ASCII character: ÁE\r\n8,Smith"
+      },
+      "Reference": ""
+    },
+    {
+      "Priority": "Low",
+      "SpecificContent": {
+        "ID": "9",
+        "Name": "Zhang Wei",
+        "Age": "29",
+        "DateOfBirth": "",
+        "Comments": " \"Missing date of birth leading space in comments\""
+      },
+      "Reference": "2"
+    },
+    {
+      "Priority": "Low",
+      "SpecificContent": {
+        "ID": "10",
+        "Name": "Doe, John",
+        "Age": "30",
+        "DateOfBirth": "1989/12/13",
+        "Comments": "Comma in name"
+      },
+      "Reference": "4"
+    },
+    {
+      "Priority": "Normal",
+      "SpecificContent": {
+        "ID": "11",
+        "Name": "",
+        "Age": "0",
+        "DateOfBirth": "0000-00-00",
+        "Comments": "All missing except ID"
+      },
+      "Reference": "345"
+    },
+    {
+      "Priority": "Normal",
+      "SpecificContent": {
+        "ID": "12",
+        "Name": "Multi\r\nLine\r\nName",
+        "Age": "25",
+        "DateOfBirth": "1995/1/1",
+        "Comments": "Name spans multiple lines"
+      },
+      "Reference": "4"
+    },
+    {
+      "Priority": "Normal",
+      "SpecificContent": {
+        "ID": "13",
+        "Name": "Leading and trailing spaces ",
+        "Age": "35",
+        "DateOfBirth": "1985/5/23",
+        "Comments": " Spaces around "
+      },
+      "Reference": ""
+    },
+    {
+      "Priority": "Normal",
+      "SpecificContent": {
+        "ID": "14",
+        "Name": "Embedded, comma",
+        "Age": "28",
+        "DateOfBirth": "1992/8/12",
+        "Comments": "Name contains comma"
+      },
+      "Reference": "654"
+    },
+    {
+      "Priority": "Normal",
+      "SpecificContent": {
+        "ID": "15",
+        "Name": "Quoted \"quote\"",
+        "Age": "32",
+        "DateOfBirth": "1988/11/2",
+        "Comments": "Double quotes in comments"
+      },
+      "Reference": "654"
+    },
+    {
+      "Priority": "Normal",
+      "SpecificContent": {
+        "ID": "16",
+        "Name": "Sarah O'Neal",
+        "Age": "29",
+        "DateOfBirth": "1991/7/19",
+        "Comments": "Apostrophe in last name"
+      },
+      "Reference": ""
+    },
+    {
+      "Priority": "Normal",
+      "SpecificContent": {
+        "ID": "17",
+        "Name": "Mixed \"quotes' and apostrophes",
+        "Age": "31",
+        "DateOfBirth": "1989/8/24",
+        "Comments": "Mixing quotes"
+      },
+      "Reference": "76"
+    },
+    {
+      "Priority": "Normal",
+      "SpecificContent": {
+        "ID": "18",
+        "Name": " ",
+        "Age": " ",
+        "DateOfBirth": " ",
+        "Comments": " \"Only spaces in fields\""
+      },
+      "Reference": ""
+    },
+    {
+      "Priority": "Normal",
+      "SpecificContent": {
+        "ID": "19",
+        "Name": "Last, comma,",
+        "Age": "27",
+        "DateOfBirth": "1992/11/12",
+        "Comments": "Comma at the end of name"
+      },
+      "Reference": ""
+    },
+    {
+      "Priority": "Normal",
+      "SpecificContent": {
+        "ID": "20",
+        "Name": "\"",
+        "Age": "33",
+        "DateOfBirth": "1986/4/24",
+        "Comments": "Single double quote"
+      },
+      "Reference": ""
+    },
+    {
+      "Priority": "Normal",
+      "SpecificContent": {
+        "ID": "21",
+        "Name": "\"\"",
+        "Age": "29",
+        "DateOfBirth": "1991/7/19",
+        "Comments": "Double double quotes"
+      },
+      "Reference": "76"
+    },
+    {
+      "Priority": "High",
+      "SpecificContent": {
+        "ID": "22",
+        "Name": "Comma, at start",
+        "Age": "34",
+        "DateOfBirth": "1985/3/15",
+        "Comments": "Name starts with comma"
+      },
+      "Reference": ""
+    },
+    {
+      "Priority": "High",
+      "SpecificContent": {
+        "ID": "23",
+        "Name": "Trailing comma",
+        "Age": "",
+        "DateOfBirth": "",
+        "Comments": "Trailing comma in name, missing fields"
+      },
+      "Reference": ""
+    },
+    {
+      "Priority": "High",
+      "SpecificContent": {
+        "ID": "24",
+        "Name": "Unicode 👍 emoji",
+        "Age": "40",
+        "DateOfBirth": "1980/10/5",
+        "Comments": "Contains emoji"
+      },
+      "Reference": "7"
+    },
+    {
+      "Priority": "High",
+      "SpecificContent": {
+        "ID": "25",
+        "Name": "Newline\r\nin comments",
+        "Age": "22",
+        "DateOfBirth": "1998/2/12",
+        "Comments": "Comment spans\r\nmultiple lines"
+      },
+      "Reference": "6"
+    },
+    {
+      "Priority": "High",
+      "SpecificContent": {
+        "ID": "26",
+        "Name": "Carriage return\\r in name",
+        "Age": "27",
+        "DateOfBirth": "1993/7/15",
+        "Comments": "Name contains CR"
+      },
+      "Reference": "76"
+    },
+    {
+      "Priority": "High",
+      "SpecificContent": {
+        "ID": "27",
+        "Name": "Tab\\tin name",
+        "Age": "30",
+        "DateOfBirth": "1990/9/20",
+        "Comments": "Name contains tab"
+      },
+      "Reference": "65"
+    },
+    {
+      "Priority": "High",
+      "SpecificContent": {
+        "ID": "28",
+        "Name": "Multiple \"quotes\" \"in\" name",
+        "Age": "32",
+        "DateOfBirth": "1988/4/22",
+        "Comments": "Multiple quotes in name"
+      },
+      "Reference": "56"
+    },
+    {
+      "Priority": "High",
+      "SpecificContent": {
+        "ID": "29",
+        "Name": "Comma, quote\", and newline\r\nin name",
+        "Age": "35",
+        "DateOfBirth": "1985/7/19",
+        "Comments": "Complex name"
+      },
+      "Reference": "5"
+    },
+    {
+      "Priority": "High",
+      "SpecificContent": {
+        "ID": "30",
+        "Name": "Equal signs = in name",
+        "Age": "28",
+        "DateOfBirth": "1992/8/12",
+        "Comments": "Name with = sign"
+      },
+      "Reference": ""
+    },
+    {
+      "Priority": "High",
+      "SpecificContent": {
+        "ID": "31",
+        "Name": "Space at start ",
+        "Age": "29",
+        "DateOfBirth": "1994/6/7",
+        "Comments": " Leading space in name"
+      },
+      "Reference": ""
+    },
+    {
+      "Priority": "High",
+      "SpecificContent": {
+        "ID": "32",
+        "Name": "Space at end",
+        "Age": "30",
+        "DateOfBirth": "1993/5/16",
+        "Comments": "Trailing space in comments "
+      },
+      "Reference": "6"
+    },
+    {
+      "Priority": "High",
+      "SpecificContent": {
+        "ID": "33",
+        "Name": "Newline\\nin name",
+        "Age": "31",
+        "DateOfBirth": "1992/4/25",
+        "Comments": "Name contains newline"
+      },
+      "Reference": ""
+    },
+    {
+      "Priority": "High",
+      "SpecificContent": {
+        "ID": "34",
+        "Name": "Carriage return\\rin comments",
+        "Age": "32",
+        "DateOfBirth": "1991/3/14",
+        "Comments": "Comment contains CR"
+      },
+      "Reference": ""
+    },
+    {
+      "Priority": "High",
+      "SpecificContent": {
+        "ID": "35",
+        "Name": "Tab\\tin comments",
+        "Age": "33",
+        "DateOfBirth": "1990/2/3",
+        "Comments": "Comment contains tab"
+      },
+      "Reference": "645645"
+    },
+    {
+      "Priority": "High",
+      "SpecificContent": {
+        "ID": "36",
+        "Name": "Special chars !@#$%^&*()",
+        "Age": "34",
+        "DateOfBirth": "1989/1/22",
+        "Comments": "Name contains special characters"
+      },
+      "Reference": ""
+    },
+    {
+      "Priority": "High",
+      "SpecificContent": {
+        "ID": "37",
+        "Name": "JSON-like {\"object\":\"value\"}",
+        "Age": "35",
+        "DateOfBirth": "1988/12/11",
+        "Comments": "Comment is JSON-like"
+      },
+      "Reference": ""
+    },
+    {
+      "SpecificContent": {
+        "ID": "38",
+        "Name": "XML-like <tag>value</tag>",
+        "Age": "36",
+        "DateOfBirth": "1987/11/30",
+        "Comments": "Comment is XML-like"
+      },
+      "Reference": "65"
+    },
+    {
+      "SpecificContent": {
+        "ID": "39",
+        "Name": "SQL-like 'SELECT * FROM table;'",
+        "Age": "37",
+        "DateOfBirth": "1986/10/19",
+        "Comments": "Comment is SQL-like"
+      },
+      "Reference": ""
+    },
+    {
+      "SpecificContent": {
+        "ID": "40",
+        "Name": "Escaped backslash \\\\\\\\",
+        "Age": "38",
+        "DateOfBirth": "1985/9/8",
+        "Comments": "Contains escaped backslash"
+      },
+      "Reference": ""
+    },
+    {
+      "SpecificContent": {
+        "ID": "41",
+        "Name": "Single ' and double \" quotes",
+        "Age": "39",
+        "DateOfBirth": "1984/8/28",
+        "Comments": "Contains both quotes"
+      },
+      "Reference": "4"
+    },
+    {
+      "SpecificContent": {
+        "ID": "42",
+        "Name": "Comma, at end,",
+        "Age": "40",
+        "DateOfBirth": "1983/7/17",
+        "Comments": "Trailing comma in name, "
+      },
+      "Reference": "6"
+    },
+    {
+      "SpecificContent": {
+        "ID": "43",
+        "Name": "Equal signs = in comments",
+        "Age": "41",
+        "DateOfBirth": "1982/6/6",
+        "Comments": "Comment with = sign"
+      },
+      "Reference": ""
+    },
+    {
+      "SpecificContent": {
+        "ID": "44",
+        "Name": "Plus signs + in name",
+        "Age": "42",
+        "DateOfBirth": "1981/5/26",
+        "Comments": "Name with + sign"
+      },
+      "Reference": "54"
+    },
+    {
+      "SpecificContent": {
+        "ID": "45",
+        "Name": "Minus signs - in comments",
+        "Age": "43",
+        "DateOfBirth": "1980/4/15",
+        "Comments": "Comment with - sign"
+      },
+      "Reference": "6"
+    },
+    {
+      "SpecificContent": {
+        "ID": "46",
+        "Name": "Parentheses ( ) in name",
+        "Age": "44",
+        "DateOfBirth": "1979/3/4",
+        "Comments": "Name with parentheses"
+      },
+      "Reference": "5"
+    },
+    {
+      "SpecificContent": {
+        "ID": "47",
+        "Name": "Asterisk * in comments",
+        "Age": "45",
+        "DateOfBirth": "1978/1/21",
+        "Comments": "Comment with asterisk *"
+      },
+      "Reference": "6"
+    },
+    {
+      "SpecificContent": {
+        "ID": "48",
+        "Name": "Underscore _ in name",
+        "Age": "46",
+        "DateOfBirth": "1977/12/10",
+        "Comments": "Name with underscore_"
+      },
+      "Reference": ""
+    },
+    {
+      "SpecificContent": {
+        "ID": "49",
+        "Name": "Percent % in comments",
+        "Age": "47",
+        "DateOfBirth": "1976/11/29",
+        "Comments": "Comment with percent %"
+      },
+      "Reference": "4"
+    },
+    {
+      "SpecificContent": {
+        "ID": "50",
+        "Name": "Hash # in name",
+        "Age": "48",
+        "DateOfBirth": "1975/10/18",
+        "Comments": "Name with hash #"
+      },
+      "Reference": ""
+    },
+    {
+      "SpecificContent": {
+        "ID": "37",
+        "Name": "JSON-like {\"object\":\"value\"}",
+        "Age": "35",
+        "DateOfBirth": "1988/12/11",
+        "Comments": "Comment is JSON-like"
+      },
+      "Reference": ""
+    },
+    {
+      "SpecificContent": {
+        "ID": "38",
+        "Name": "XML-like <tag>value</tag>",
+        "Age": "36",
+        "DateOfBirth": "1987/11/30",
+        "Comments": "Comment is XML-like"
+      },
+      "Reference": ""
+    }
+  ],
+  "queueName": "FromPS",
+  "commitType": "ProcessAllIndependently"
+}

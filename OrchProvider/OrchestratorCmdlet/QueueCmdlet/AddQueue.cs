@@ -1,0 +1,170 @@
+﻿using System.Management.Automation;
+using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
+
+using UiPath.PowerShell.Completer;
+using BoolCompleter = UiPath.PowerShell.Completer.StaticTextsCompleter<UiPath.PowerShell.Positional.True_False>;
+using RetentionActionCompleter = UiPath.PowerShell.Completer.StaticTextsCompleter<UiPath.PowerShell.Positional.Delete_Archive>;
+
+using Positional = UiPath.PowerShell.Positional.Name;
+
+namespace UiPath.PowerShell.Commands
+{
+    [Cmdlet(VerbsCommon.Add, "OrchQueue", SupportsShouldProcess = true)]
+    [OutputType(typeof(QueueDefinition))]
+    public class AddQueueCommand : OrchestratorPSCmdlet
+    {
+        [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(QueueNameCompleter<Positional.Name>))]
+        public string[]? Name { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public string? Description { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? AcceptAutomaticallyRetry { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? RetryAbandonedItems { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public int? MaxNumberOfRetries { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? EnforceUniqueReference { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? Encrypted { get; set; }
+
+        //ProcessScheduleId": null,
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(ProcessNameCompleter<Positional.Name>))]
+        [SupportsWildcards]
+        public string? Release { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public int? SlaInMinutes { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public int? RiskSlaInMinutes { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public string? SpecificDataJsonSchema { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public string? OutputDataJsonSchema { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public string? AnalyticsDataJsonSchema { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(RetentionActionCompleter))]
+        public string? RetentionAction { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public int? RetentionPeriod { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BucketNameCompleter<Positional.Name>))]
+        [SupportsWildcards]
+        public string? RetentionBucket { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public string? Tags { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [SupportsWildcards]
+        public string[]? Path { get; set; }
+
+        //[Parameter]
+        //public SwitchParameter Recurse { get; set; }
+
+        //[Parameter]
+        //public uint Depth { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            var drivesFolders = OrchDriveInfo.EnumFolders(Path);
+
+            using var cancelHandler = new ConsoleCancelHandler();
+            foreach (var (drive, folder) in drivesFolders)
+            {
+                foreach (var name in Name!)
+                {
+                    cancelHandler.Token.ThrowIfCancellationRequested();
+
+                    string target = System.IO.Path.Combine(folder.GetPSPath(), name);
+
+                    QueueDefinitionPosting newQueue = new()
+                    {
+                        Name = WildcardPattern.Unescape(name),
+                    };
+
+                    newQueue.AssignEmptyString(Description,        (q, v) => q.Description = v);
+                    newQueue.AssignBool(AcceptAutomaticallyRetry,  (q, v) => q.AcceptAutomaticallyRetry = v);
+                    newQueue.AssignBool(RetryAbandonedItems,       (q, v) => q.RetryAbandonedItems = v);
+                    newQueue.AssignNumber(MaxNumberOfRetries,      (q, v) => q.MaxNumberOfRetries = v);
+                    newQueue.AssignBool(EnforceUniqueReference,    (q, v) => q.EnforceUniqueReference = v);
+                    newQueue.AssignBool(Encrypted,                 (q, v) => q.Encrypted = v);
+                    //newQueue.assig  ProcessScheduleId": null,
+                    newQueue.AssignString(SpecificDataJsonSchema,  (q, v) => q.SpecificDataJsonSchema = v);
+                    newQueue.AssignString(OutputDataJsonSchema,    (q, v) => q.OutputDataJsonSchema = v);
+                    newQueue.AssignString(AnalyticsDataJsonSchema, (q, v) => q.AnalyticsDataJsonSchema = v);
+
+                    #region Release を ReleaseId に変換
+                    newQueue.AssignIdFromName(
+                        Release,
+                        () => drive.GetReleases(folder),
+                        e => e.Name!,
+                        e => e.Id!,
+                        (s, v) => s.ReleaseId = v,
+                        this, target, "Release");
+                    #endregion
+
+                    newQueue.AssignNumber(SlaInMinutes,     (q, v) => q.SlaInMinutes = v);
+                    newQueue.AssignNumber(RiskSlaInMinutes, (q, v) => q.RiskSlaInMinutes = v);
+                    newQueue.AssignString(Tags,             (q, v) => q.Tags = v.DeserializeTags());
+
+                    newQueue.AssignString(RetentionAction, (q, v) => q.RetentionAction = v);
+                    newQueue.AssignNumber(RetentionPeriod, (q, v) => q.RetentionPeriod = v);
+
+                    newQueue.RetentionAction ??= "Delete";
+                    newQueue.RetentionPeriod ??= 30;
+
+                    #region RetentionBucket を RetentionBucketId に変換
+                    newQueue.AssignIdFromName(
+                        RetentionBucket,
+                        () => drive.GetBuckets(folder),
+                        e => e.Name!,
+                        e => e.Id!,
+                        (s, v) => s.RetentionBucketId = v,
+                        this, target, "RetentionBucket");
+                    #endregion
+
+                    if (ShouldProcess(target, "Add Queue"))
+                    {
+                        try
+                        {
+                            var createdQueue = drive.OrchAPISession.CreateQueue(folder.Id!.Value, newQueue);
+                            if (createdQueue != null)
+                            {
+                                drive._dicQueueDefinitions = null;
+                                createdQueue.Path = folder.GetPSPath();
+                                WriteObject(createdQueue);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            WriteError(new ErrorRecord(new OrchException(target, ex), "AddQueueError", ErrorCategory.InvalidOperation, folder));
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
