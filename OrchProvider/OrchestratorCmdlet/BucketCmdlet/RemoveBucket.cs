@@ -52,7 +52,7 @@ namespace UiPath.PowerShell.Commands
                         {
                             try
                             {
-                                drive.OrchAPISession.RemoveBucket(folder.Id ?? 0, bucket.Id ?? 0);
+                                drive.OrchAPISession.DeleteBucket(folder.Id ?? 0, bucket.Id ?? 0);
                                 drive._dicBuckets?.TryRemove(folder.Id ?? 0, out _);
                                 drive._dicBucketLinks = null;
                             }

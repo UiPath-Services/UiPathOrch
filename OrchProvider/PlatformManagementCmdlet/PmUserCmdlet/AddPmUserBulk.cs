@@ -7,6 +7,8 @@ using UiPath.PowerShell.Completer;
 using BoolCompleter = UiPath.PowerShell.Completer.StaticTextsCompleter<UiPath.PowerShell.Positional.True_False>;
 
 using Positional = UiPath.PowerShell.Positional.UserName;
+using System.Linq;
+using System.Collections.Concurrent;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -23,9 +25,9 @@ namespace UiPath.PowerShell.Commands
         public bool? invitationAccepted { get; set; } = bool.TryParse(invitationAccepted, out var value) ? value : null;
     }
 
-    internal class DriveGroupIdsComparer : IEqualityComparer<(OrchDriveInfo drive, Guid[] groupIds)>
+    internal class DriveGroupIdsComparer : IEqualityComparer<(OrchDriveInfo drive, string[] groupIds)>
     {
-        public bool Equals((OrchDriveInfo drive, Guid[] groupIds) x, (OrchDriveInfo drive, Guid[] groupIds) y)
+        public bool Equals((OrchDriveInfo drive, string[] groupIds) x, (OrchDriveInfo drive, string[] groupIds) y)
         {
             // drive は単純な参照比較
             if (!ReferenceEquals(x.drive, y.drive))
@@ -37,7 +39,7 @@ namespace UiPath.PowerShell.Commands
             return x.groupIds.SequenceEqual(y.groupIds);
         }
 
-        public int GetHashCode((OrchDriveInfo drive, Guid[] groupIds) obj)
+        public int GetHashCode((OrchDriveInfo drive, string[] groupIds) obj)
         {
             // drive のハッシュコードを使用
             int hash = obj.drive.GetHashCode();
@@ -57,7 +59,7 @@ namespace UiPath.PowerShell.Commands
     public class AddPmUserBulkCommand : OrchestratorPSCmdlet
     {
         // Key: (drive, groupIds) Value: Dictionary<email, csvLine>
-        Dictionary<(OrchDriveInfo drive, Guid[] groupIds), Dictionary<string, CsvLine>> _params = new(new DriveGroupIdsComparer());
+        Dictionary<(OrchDriveInfo drive, string[] groupIds), Dictionary<string, CsvLine>> _params = new(new DriveGroupIdsComparer());
 
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
         [Alias("UserName")]
@@ -111,13 +113,13 @@ namespace UiPath.PowerShell.Commands
                 var groups = drive.GetPmGroups();
                 var groupIds = groups.Values
                     .SelectByWildcards(g => g?.name, wpGroupName)
-                    .Select(g => new Guid(g?.id!))
+                    .Select(g => g!.id)
                     .Distinct()
                     .OrderBy(id => id)
                     .ToArray();
 
                 string target = System.IO.Path.Combine(drive.NameColonSeparator, Email!);
-                if (_params.TryGetValue((drive, groupIds), out var userName_line))
+                if (_params.TryGetValue((drive, groupIds)!, out var userName_line))
                 {
                     if (userName_line.TryGetValue(Email!, out var line))
                     {
@@ -137,7 +139,7 @@ namespace UiPath.PowerShell.Commands
                         userName_line = [];
                         CsvLine line = new(Name, SurName, DisplayName, Type, BypassBasicAuthRestriction, InvitationAccepted);
                         userName_line[Email!] = line;
-                        _params[(drive, groupIds)] = userName_line;
+                        _params[(drive, groupIds)!] = userName_line;
                     }
                 }
             }
@@ -163,19 +165,19 @@ namespace UiPath.PowerShell.Commands
                     var line = userName_line.Value;
                     var user = new CreateUserCommandBase()
                     {
-                        id = Guid.NewGuid(),
+                        id = Guid.NewGuid().ToString(),
                         bypassBasicAuthRestriction = line.bypassBasicAuthRestriction,
                         legacyId = null,
                         invitationAccepted = line.invitationAccepted
                     };
 
                     // userName と email の両方に email を入れる
-                    user.AssignString(email,            (u, v) => u.userName = v);
-                    user.AssignString(email,            (u, v) => u.email = v);
-                    user.AssignString(line.name,        (u, v) => u.name = v);
-                    user.AssignString(line.surname,     (u, v) => u.surname = v);
-                    user.AssignString(line.displayName, (u, v) => u.displayName = v);
-                    user.AssignString(line.type,        (u, v) => u.type = v);
+                    user.AssignStringIfNotNullOrEmpty(email,            (u, v) => u.userName = v);
+                    user.AssignStringIfNotNullOrEmpty(email,            (u, v) => u.email = v);
+                    user.AssignStringIfNotNullOrEmpty(line.name,        (u, v) => u.name = v);
+                    user.AssignStringIfNotNullOrEmpty(line.surname,     (u, v) => u.surname = v);
+                    user.AssignStringIfNotNullOrEmpty(line.displayName, (u, v) => u.displayName = v);
+                    user.AssignStringIfNotNullOrEmpty(line.type,        (u, v) => u.type = v);
 
                     payload.users.Add(user);
                 }
@@ -184,7 +186,12 @@ namespace UiPath.PowerShell.Commands
                 {
                     var response = drive.OrchAPISession.CreatePmUserBulk(payload);
                     drive._dicPmUsers = null;
+                    drive._dicPmUsers_Exception.ClearCache();
                     drive._dicPmGroups = null;
+                    drive._dicPmGroups_Exception.ClearCache();
+                    drive._dicSearchForUsersAndGroups = null;
+                    drive._dicSearchForUsersAndGroups_Exception.ClearCache();
+
                     if (response?.result?.succeeded ?? false)
                     {
                         foreach (var user in response?.users ?? [])

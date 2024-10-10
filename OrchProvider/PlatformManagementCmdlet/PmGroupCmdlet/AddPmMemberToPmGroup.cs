@@ -7,6 +7,7 @@ using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
 
 using Positional = UiPath.PowerShell.Positional.GroupName_Type_UserName;
+using System.Data;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -51,7 +52,7 @@ namespace UiPath.PowerShell.Commands
                 var groups = drive.GetPmGroups().Values
                     .FilterByWildcards(g => g?.name!, wpGroupName)
                     .OrderBy(g => g?.name);
-                return ParallelResults.ForEach(groups, group => drive.GetPmGroup(group!.id!));
+                return ParallelResults.ForEach(groups, group => drive.GetPmGroup(group?.id));
             });
 
             List<string> existingMemberIds = [];
@@ -63,7 +64,7 @@ namespace UiPath.PowerShell.Commands
                 {
                     if (!group.TryGetValue(out var detailedGroup)) continue;
 
-                    existingMemberIds.AddRange(detailedGroup!.members?.Select(m => m.identifier ?? "") ?? []);
+                    existingMemberIds.AddRange(detailedGroup!.members?.Select(m => m.identifier!) ?? []);
                 }
             }
             return existingMemberIds;
@@ -163,6 +164,11 @@ namespace UiPath.PowerShell.Commands
         // 全部、SearchPmDirectoryUsers() /api/Directory/Search/{partitionGlobalId} で検索すれば良いじゃない。
         protected override void ProcessRecord()
         {
+            GroupName = GroupName.Split1stValueByUnescapedCommas()?.ToArray();
+            Type = Type.Split1stValueByUnescapedCommas()?.ToArray();
+            UserName = UserName.Split1stValueByUnescapedCommas()?.ToArray();
+            // TODO: Path も分割する必要があるのではないか？
+
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
             var wpGroupName = GroupName.ConvertToWildcardPatternList();
             var wpType = Type.ConvertToWildcardPatternList();
@@ -180,7 +186,7 @@ namespace UiPath.PowerShell.Commands
 
                 foreach (var groupSummary in updatingGroups.Where(g => g != null))
                 {
-                    var group = drive.GetPmGroup(groupSummary!.id!);
+                    var group = drive.GetPmGroup(groupSummary?.id);
 
                     if (!_parameterSets.TryGetValue((drive, group!), out var members))
                     {
@@ -286,7 +292,7 @@ namespace UiPath.PowerShell.Commands
 
                     try
                     {
-                        var newGroup = drive.OrchAPISession.PutPmGroup(group.id!, updateGroupCommand);
+                        var newGroup = drive.OrchAPISession.PutPmGroup(group.id, updateGroupCommand);
                         if (newGroup != null)
                         {
                             newGroup.Path = drive.NameColonSeparator;

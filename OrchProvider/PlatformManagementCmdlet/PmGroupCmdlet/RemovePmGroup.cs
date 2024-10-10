@@ -43,8 +43,8 @@ namespace UiPath.PowerShell.Commands
                         {
                             try
                             {
-                                drive.OrchAPISession.RemovePmGroup(partitionGlobalId!, group!.id!);
-                                drive._dicPmGroups?.TryRemove(group.id!, out _);
+                                drive.OrchAPISession.RemovePmGroup(partitionGlobalId!, group?.id);
+                                drive._dicPmGroups?.TryRemove(group!.id!, out _);
                             }
                             catch (Exception ex)
                             {

@@ -131,12 +131,14 @@ namespace UiPath.PowerShell.Commands
                                 try
                                 {
                                     var newRobot = dstDrive.OrchAPISession.CreatePmRobot(cmd);
-                                    if (newRobot != null)
-                                    {
-                                        //newRobot.Path = dstDrive.NameColonSeparator;
-                                        //WriteObject(newRobot);
-                                        dstDrive._dicPmRobotAccounts![newRobot.id!] = newRobot;
-                                    }
+                                    dstDrive._dicPmRobotAccounts = null;
+                                    //if (newRobot != null)
+                                    //{
+                                    //    //newRobot.Path = dstDrive.NameColonSeparator;
+                                    //    //WriteObject(newRobot);
+                                    //    newRobot.Path = dstDrive.NameColonSeparator;
+                                    //    dstDrive._dicPmRobotAccounts![newRobot.id!] = newRobot;
+                                    //}
                                 }
                                 catch (Exception ex)
                                 {

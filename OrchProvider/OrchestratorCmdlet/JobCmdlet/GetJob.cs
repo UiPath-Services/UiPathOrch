@@ -18,45 +18,50 @@ namespace UiPath.PowerShell.Commands
     [OutputType(typeof(Entities.Job))]
     public class GetJobCommand : OrchestratorPSCmdlet
     {
-        [Parameter(Position = 0, ParameterSetName = "JobId")]
+        [Parameter(Position = 0, ParameterSetName = "JobId", ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(IdCompleter))]
         public Int64[]? JobId { get; set; }
 
-        [Parameter(ParameterSetName = "Filter")]
+        [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(StaticTextsCompleter<LastItems>))]
         public string? Last { get; set; }
 
-        [Parameter(ParameterSetName = "Filter")]
+        [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(TimeAfterCompleter))]
         public DateTime? CreationTimeAfter { get; set; }
 
-        [Parameter(ParameterSetName = "Filter")]
+        [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(TimeBeforeCompleter))]
         public DateTime? CreationTimeBefore { get; set; }
 
-        [Parameter(ParameterSetName = "Filter")]
+        [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(PriorityCompleter))]
         public string? Priority { get; set; }
 
-        [Parameter(ParameterSetName = "Filter")]
+        [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(ListReleasesCompleter<Id>))]
         [SupportsWildcards]
         public string[]? ReleaseName { get; set; }
 
-        [Parameter(ParameterSetName = "Filter")]
+        [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<JobSourceTypeItems, int>))]
         [SupportsWildcards]
         public string[]? SourceType { get; set; }
 
-        [Parameter(ParameterSetName = "Filter")]
+        [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<JobStateItems, int>))]
         [SupportsWildcards]
         public string[]? State { get; set; }
 
-        [Parameter(ParameterSetName = "Filter")]
+        [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<JobProcessTypeItems>))]
+        [SupportsWildcards]
+        public string[]? ProcessType { get; set; }
+
+        [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
         public ulong? Skip { get; set; }
 
-        [Parameter(ParameterSetName = "Filter")]
+        [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(StaticTextsCompleter<JobOrderableItems>))]
         public string? OrderBy { get; set; }
 
@@ -67,7 +72,7 @@ namespace UiPath.PowerShell.Commands
         [ArgumentCompleter(typeof(StaticTextsCompleter<Item10>))]
         public ulong? First { get; set; }
 
-        [Parameter]
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
         public string[]? Path { get; set; }
 
@@ -162,7 +167,7 @@ namespace UiPath.PowerShell.Commands
 
         private string? MakeFilter(OrchDriveInfo drive, Folder folder)
         {
-            List<string> filter = ["(ProcessType eq 'Process')"];
+            List<string> filter = [];
 
             #region ReleaseName
             if (ReleaseName != null && ReleaseName.Length > 0 && !ReleaseName.Any(p => p == "*"))
@@ -258,6 +263,13 @@ namespace UiPath.PowerShell.Commands
             }
             #endregion
 
+            #region ProcessType
+            if (ProcessType == null) ProcessType = ["Process"];
+            filter.AddIfNotNull(JobProcessTypeItems.Parameters
+                .SelectByWildcards(i => i, ProcessType)
+                .CreateOrFilter(i => $"ProcessType eq '{i}'"));
+            #endregion
+
             filter.AddIfNotNull(JobSourceTypeItems.Items
                 .SelectByWildcards(i => i.Key, SourceType)
                 .CreateOrFilter(i => $"SourceType eq '{i.Value}'"));
@@ -287,6 +299,7 @@ namespace UiPath.PowerShell.Commands
                 CreationTimeBefore == null &&
                 Priority == null &&
                 ReleaseName == null &&
+                ProcessType == null &&
                 SourceType == null &&
                 State == null &&
                 Skip == null && First == null);
@@ -349,6 +362,7 @@ namespace UiPath.PowerShell.Commands
                 return;
             }
 
+            using var cancelHandler = new ConsoleCancelHandler();
             if (JobId == null || JobId.Length == 0)
             {
                 string msg = $"Get Job";
@@ -356,6 +370,8 @@ namespace UiPath.PowerShell.Commands
                 int index = 0;
                 foreach (var (drive, folder) in drivesFolders)
                 {
+                    cancelHandler.Token.ThrowIfCancellationRequested(); // この行は try の外側に置く必要がある。
+
                     string filter = MakeFilter(drive, folder);
                     if (filter == "null") continue;
                     reporter.WriteProgress(++index, $"{index:D}/{drivesFolders.Count} {folder.GetPSPath()}");
@@ -380,6 +396,7 @@ namespace UiPath.PowerShell.Commands
             {
                 foreach (var jobId in JobId!)
                 {
+                    cancelHandler.Token.ThrowIfCancellationRequested(); // この行は try の外側に置く必要がある。
                     try
                     {
                         var job = drive.GetJob(folder, jobId);

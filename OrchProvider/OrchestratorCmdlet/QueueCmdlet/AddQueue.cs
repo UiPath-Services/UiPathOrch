@@ -75,7 +75,7 @@ namespace UiPath.PowerShell.Commands
         public string? RetentionBucket { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        public string? Tags { get; set; }
+        public string[]? Tags { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
@@ -105,16 +105,16 @@ namespace UiPath.PowerShell.Commands
                         Name = WildcardPattern.Unescape(name),
                     };
 
-                    newQueue.AssignEmptyString(Description,        (q, v) => q.Description = v);
-                    newQueue.AssignBool(AcceptAutomaticallyRetry,  (q, v) => q.AcceptAutomaticallyRetry = v);
-                    newQueue.AssignBool(RetryAbandonedItems,       (q, v) => q.RetryAbandonedItems = v);
-                    newQueue.AssignNumber(MaxNumberOfRetries,      (q, v) => q.MaxNumberOfRetries = v);
-                    newQueue.AssignBool(EnforceUniqueReference,    (q, v) => q.EnforceUniqueReference = v);
-                    newQueue.AssignBool(Encrypted,                 (q, v) => q.Encrypted = v);
+                    newQueue.AssignStringIfNotNull(Description,        (q, v) => q.Description = v);
+                    newQueue.AssignBoolIfNotNull(AcceptAutomaticallyRetry,  (q, v) => q.AcceptAutomaticallyRetry = v);
+                    newQueue.AssignBoolIfNotNull(RetryAbandonedItems,       (q, v) => q.RetryAbandonedItems = v);
+                    newQueue.AssignNumberIfNotNullOrZero(MaxNumberOfRetries,      (q, v) => q.MaxNumberOfRetries = v);
+                    newQueue.AssignBoolIfNotNull(EnforceUniqueReference,    (q, v) => q.EnforceUniqueReference = v);
+                    newQueue.AssignBoolIfNotNull(Encrypted,                 (q, v) => q.Encrypted = v);
                     //newQueue.assig  ProcessScheduleId": null,
-                    newQueue.AssignString(SpecificDataJsonSchema,  (q, v) => q.SpecificDataJsonSchema = v);
-                    newQueue.AssignString(OutputDataJsonSchema,    (q, v) => q.OutputDataJsonSchema = v);
-                    newQueue.AssignString(AnalyticsDataJsonSchema, (q, v) => q.AnalyticsDataJsonSchema = v);
+                    newQueue.AssignStringIfNotNullOrEmpty(SpecificDataJsonSchema,  (q, v) => q.SpecificDataJsonSchema = v);
+                    newQueue.AssignStringIfNotNullOrEmpty(OutputDataJsonSchema,    (q, v) => q.OutputDataJsonSchema = v);
+                    newQueue.AssignStringIfNotNullOrEmpty(AnalyticsDataJsonSchema, (q, v) => q.AnalyticsDataJsonSchema = v);
 
                     #region Release を ReleaseId に変換
                     newQueue.AssignIdFromName(
@@ -126,12 +126,12 @@ namespace UiPath.PowerShell.Commands
                         this, target, "Release");
                     #endregion
 
-                    newQueue.AssignNumber(SlaInMinutes,     (q, v) => q.SlaInMinutes = v);
-                    newQueue.AssignNumber(RiskSlaInMinutes, (q, v) => q.RiskSlaInMinutes = v);
-                    newQueue.AssignString(Tags,             (q, v) => q.Tags = v.DeserializeTags());
+                    newQueue.AssignNumberIfNotNullOrZero(SlaInMinutes,     (q, v) => q.SlaInMinutes = v);
+                    newQueue.AssignNumberIfNotNullOrZero(RiskSlaInMinutes, (q, v) => q.RiskSlaInMinutes = v);
+                    newQueue.AssignTags(Tags, (q, v) => q.Tags = v);
 
-                    newQueue.AssignString(RetentionAction, (q, v) => q.RetentionAction = v);
-                    newQueue.AssignNumber(RetentionPeriod, (q, v) => q.RetentionPeriod = v);
+                    newQueue.AssignStringIfNotNullOrEmpty(RetentionAction, (q, v) => q.RetentionAction = v);
+                    newQueue.AssignNumberIfNotNullOrZero(RetentionPeriod, (q, v) => q.RetentionPeriod = v);
 
                     newQueue.RetentionAction ??= "Delete";
                     newQueue.RetentionPeriod ??= 30;

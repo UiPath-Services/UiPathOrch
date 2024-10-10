@@ -8,15 +8,14 @@ using Positional = UiPath.PowerShell.Positional.Source_Path;
 
 namespace UiPath.PowerShell.Commands
 {
-    // Command for Import-OrchPackage
     [Cmdlet(VerbsData.Import, "OrchPackage", SupportsShouldProcess = true)]
     [OutputType(typeof(Entities.BulkItemDtoOfString))]
     public class ImportPackageCommand : OrchestratorPSCmdlet
     {
-        [Parameter(Position = 0, Mandatory = true)]
+        [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
         public string[]? Source { get; set; }
 
-        [Parameter(Position = 1)]
+        [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
         public string[]? Path { get; set; }
 

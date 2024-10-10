@@ -9,7 +9,6 @@ using Positional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
-    // Command for Get-OrchFolderMachine
     [Cmdlet(VerbsCommon.Get, "OrchFolderMachine")]
     [OutputType(typeof(Entities.MachineFolder))]
     public class GetFolderMachineCommand : OrchestratorPSCmdlet

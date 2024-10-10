@@ -63,66 +63,76 @@ namespace UiPath.PowerShell.Commands
             "Tags"
         ];
 
-        private static void WriteCsvContent(StreamWriter writer, IEnumerable<Entities.QueueDefinition> output)
+        private void WriteCsvContent(StreamWriter writer, IEnumerable<Entities.QueueDefinition> output)
         {
             // 各キューに対してデータ行を書き込む
             foreach (var q in output)
             {
                 var (drive, folder) = OrchDriveInfo.EnumFolders(q.Path).First();
 
-                var line = new StringBuilder();
-
-                line.Append($"{EscapeCsvValue(q.Path, true)},");
-                line.Append($"{EscapeCsvValue(q.Name, true)},");
-                line.Append($"{EscapeCsvValue(q.Description)},");
-                line.Append($"{q.AcceptAutomaticallyRetry},");
-                line.Append($"{q.RetryAbandonedItems},");
-                line.Append($"{q.MaxNumberOfRetries},");
-                line.Append($"{q.EnforceUniqueReference},");
-                line.Append($"{q.Encrypted},");
-
+                string release = null;
                 if (q.ReleaseId != null)
                 {
-                    var releases = drive.GetReleases(folder);
-                    var release = releases.FirstOrDefault(r => r.Id == q.ReleaseId);
-                    line.Append($"{release?.Name},");
+                    try
+                    {
+                        var releases = drive.GetReleases(folder);
+                        release = releases.FirstOrDefault(r => r.Id == q.ReleaseId)?.Name;
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteWarning($"{q.GetPSPath()}: Failed to retrieve Release: {ex.Message}");
+                    }
                 }
-                else
-                {
-                    line.Append($",");
-                }
-
-                line.Append($"{q.SlaInMinutes},");
-                line.Append($"{q.RiskSlaInMinutes},");
-                line.Append($"{EscapeCsvValue(q.SpecificDataJsonSchema)},");
-                line.Append($"{EscapeCsvValue(q.OutputDataJsonSchema)},");
-                line.Append($"{EscapeCsvValue(q.AnalyticsDataJsonSchema)},");
 
                 QueueRetentionSetting retention = null;
-                try
+                if (drive.OrchAPISession.ApiVersion >= 16)
                 {
-                    if (drive.OrchAPISession.ApiVersion >= 16)
+                    try
                     {
                         retention = drive.OrchAPISession.GetQueueRetention(folder.Id ?? 0, q.Id ?? 0);
                     }
+                    catch (Exception ex)
+                    {
+                        WriteWarning($"{q.GetPSPath()}: Failed to retrieve QueueRetention: {ex.Message}");
+                    }
                 }
-                catch { }
-
-                line.Append($"{EscapeCsvValue(retention?.Action)},");
-                line.Append($"{retention?.Period},");
 
                 string retentionBucket = null;
                 if (retention?.BucketId != null)
                 {
-                    var buckets = drive.GetBuckets(folder);
-                    var bucket = buckets.FirstOrDefault(b => b.Id == retention.BucketId);
-                    retentionBucket = bucket?.Name;
+                    try
+                    {
+                        var buckets = drive.GetBuckets(folder);
+                        var bucket = buckets.FirstOrDefault(b => b.Id == retention.BucketId);
+                        retentionBucket = bucket?.Name;
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteWarning($"{q.GetPSPath()}: Failed to retrieve RetentionBucket: {ex.Message}");
+                    }
                 }
-                line.Append($"{EscapeCsvValue(retentionBucket)},");
 
-                line.Append($"{EscapeCsvValue(JsonSerializer.Serialize(q?.Tags, OrchAPISession.jsoWhenWritingNull), false)}");
-
-                writer.WriteLine(line.ToString());
+                string[] line = [
+                    EscapeCsvValue(q.Path, true),
+                    EscapeCsvValue(q.Name, true),
+                    EscapeCsvValue(q.Description),
+                    EscapeCsvValue(q.AcceptAutomaticallyRetry),
+                    EscapeCsvValue(q.RetryAbandonedItems),
+                    EscapeCsvValue(q.MaxNumberOfRetries),
+                    EscapeCsvValue(q.EnforceUniqueReference),
+                    EscapeCsvValue(q.Encrypted),
+                    EscapeCsvValue(release),
+                    EscapeCsvValue(q.SlaInMinutes),
+                    EscapeCsvValue(q.RiskSlaInMinutes),
+                    EscapeCsvValue(q.SpecificDataJsonSchema),
+                    EscapeCsvValue(q.OutputDataJsonSchema),
+                    EscapeCsvValue(q.AnalyticsDataJsonSchema),
+                    EscapeCsvValue(retention?.Action),
+                    EscapeCsvValue(retention?.Period),
+                    EscapeCsvValue(retentionBucket),
+                    EscapeCsvValue(q.Tags)
+                ];
+                WriteCsvLine(writer, line);
             }
         }
 

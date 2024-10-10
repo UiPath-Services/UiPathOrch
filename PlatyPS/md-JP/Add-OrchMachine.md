@@ -15,8 +15,8 @@ schema: 2.0.0
 ```
 Add-OrchMachine [-Name] <String[]> [-Description <String>] [-Type <String>] [-UnattendedSlots <Int32>]
  [-NonProductionSlots <Int32>] [-TestAutomationSlots <Int32>] [-AutomationType <String>]
- [-TargetFramework <String>] [-Path <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+ [-TargetFramework <String>] [-Tags <String[]>] [-Path <String[]>] [-ProgressAction <ActionPreference>]
+ [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -218,6 +218,21 @@ Required: False
 Position: Named
 Default value: None
 Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Tags
+{{ Fill Tags Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 

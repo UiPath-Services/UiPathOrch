@@ -20,7 +20,7 @@ namespace UiPath.PowerShell.Commands
         private Dictionary<(OrchDriveInfo drive, NuLicensedGroup group), HashSet<string>>? _parameterSets;
 
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PmLicenseGroupNameCompleter<GroupName_License>))]
+        [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter<GroupName_License>))]
         [SupportsWildcards]
         public string[]? GroupName { get; set; }
 
@@ -29,7 +29,7 @@ namespace UiPath.PowerShell.Commands
         [SupportsWildcards]
         public string[]? License { get; set; }
 
-        [Parameter]
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(DriveCompleter<Positional.GroupName_License>))]
         public string[]? Path { get; set; }
 
@@ -49,7 +49,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetPmUserLicenseGroups());
+                var results = ParallelResults.ForEach(drives, drive => drive.GetPmLicensedGroups());
 
                 foreach (var result in results)
                 {
@@ -63,7 +63,7 @@ namespace UiPath.PowerShell.Commands
                     {
                         if (group.userBundleLicenses == null) continue;
 
-                        var availableUserBundles = drive.GetPmUserLicenseGroupsAvailableLicenses(group);
+                        var availableUserBundles = drive.GetPmUserLicenseGroupsAvailableLicenses(group.id, group.name!);
 
                         foreach (var bundle in group.userBundleLicenses
                             .Select(bundle => (bundle, AvailableUserBundlesItems.Items[bundle]))
@@ -96,7 +96,7 @@ namespace UiPath.PowerShell.Commands
 
             foreach (var drive in drives)
             {
-                var licenseGroups = drive.GetPmUserLicenseGroups();
+                var licenseGroups = drive.GetPmLicensedGroups();
                 var targetGroups = licenseGroups.SelectByWildcards(g => g?.name, wpGroupName);
 
                 foreach (var group in targetGroups.OrderBy(g => g.name))
@@ -142,7 +142,7 @@ namespace UiPath.PowerShell.Commands
                             ubls = existingSet.ToArray()
                         };
 
-                        var ret = drive.OrchAPISession.PutUserLicenseGroup(cmd);
+                        var ret = drive.OrchAPISession.PutPmLicenseGroup(cmd);
                         if (ret != null)
                         {
                             ret.Path = drive.NameColonSeparator;
@@ -150,7 +150,7 @@ namespace UiPath.PowerShell.Commands
                             ret.userBundleLicenseNames = ret.userBundleCodes?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
                             WriteObject(ret);
                         }
-                        drive._dicPmUserLicenseGroups = null;
+                        drive._dicPmLicensedGroups = null;
                         drive._dicPmUserLicenseGroupAllocations = null;
                         drive._dicPmAvailableUserBundles = null;
                     }

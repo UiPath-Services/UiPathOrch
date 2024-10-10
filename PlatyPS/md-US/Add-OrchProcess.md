@@ -18,7 +18,7 @@ Add-OrchProcess [-PackageId] <String[]> [[-Version] <String>] [-Name <String>] [
  [-RemoteControlAccess <String>] [-RetentionAction <String>] [-RetentionPeriod <Int32>]
  [-RetentionBucket <String>] [-ErrorRecordingEnabled <String>] [-Quality <Int32>] [-Frequency <Int32>]
  [-Duration <Int32>] [-AutoStartProcess <String>] [-AlwaysRunning <String>] [-VideoRecordingType <String>]
- [-QueueItemVideoRecordingType <String>] [-MaxDurationSeconds <Int32>] [-Tags <String>] [-Path <String[]>]
+ [-QueueItemVideoRecordingType <String>] [-MaxDurationSeconds <Int32>] [-Tags <String[]>] [-Path <String[]>]
  [-Recurse] [-Depth <UInt32>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
@@ -391,7 +391,7 @@ Accept wildcard characters: False
 Specifies the Tags of the processes to be added.
 
 ```yaml
-Type: String
+Type: String[]
 Parameter Sets: (All)
 Aliases:
 

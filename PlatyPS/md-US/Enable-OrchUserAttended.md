@@ -13,8 +13,8 @@ Enables the users to run automations.
 ## SYNTAX
 
 ```
-Enable-OrchUserAttended [-UserName] <String[]> [-Path <String[]>] [-ProgressAction <ActionPreference>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Enable-OrchUserAttended [-UserName] <SupportsWildcardsAttribute> [-Path <String[]>]
+ [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -71,7 +71,7 @@ Accept wildcard characters: False
 Specifies the UserName of the users whose attended automations are to be enabled.
 
 ```yaml
-Type: String[]
+Type: SupportsWildcardsAttribute
 Parameter Sets: (All)
 Aliases:
 
@@ -79,7 +79,7 @@ Required: True
 Position: 0
 Default value: None
 Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
+Accept wildcard characters: False
 ```
 
 ### -WhatIf

@@ -54,7 +54,7 @@ namespace UiPath.PowerShell.Commands
                 }
                 catch (OrchException ex)
                 {
-                    WriteError(new ErrorRecord(ex, "GetPackageUserError", ErrorCategory.InvalidOperation, ex.Target));
+                    WriteError(new ErrorRecord(ex, "GetPackageError", ErrorCategory.InvalidOperation, ex.Target));
                 }
             }
         }

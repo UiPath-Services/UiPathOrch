@@ -1,5 +1,5 @@
----
-external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
+﻿---
+external help file: UiPathOrch-help.xml
 Module Name: UiPathOrch
 online version:
 schema: 2.0.0
@@ -8,28 +8,22 @@ schema: 2.0.0
 # Get-OrchJobVideo
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+Gets jobs with video recordings attached.
 
 ## SYNTAX
 
 ```
-Get-OrchJobVideo [-Skip <UInt64>] [-First <UInt64>] [-Path <String[]>] [-Recurse] [-Depth <UInt32>]
+Get-OrchJobVideo [[-Path] <String[]>] [-Recurse] [[-Skip] <UInt64>] [[-First] <UInt64>]
  [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-Primary Endpoint:
-
-OAuth required scopes:
-
-Required permissions:
-
 ## EXAMPLES
 
 ### Example 1
-```powershell
+```
 PS C:\> {{ Add example code here }}
 ```
 
@@ -37,16 +31,17 @@ PS C:\> {{ Add example code here }}
 
 ## PARAMETERS
 
-### -Depth
-Specifies the depth for recursion into the target folders. A depth of 0 indicates the current location only, with no subfolders included.
+### -First
+Gets only the specified number of objects.
+Enter the number of objects to get.
 
 ```yaml
-Type: UInt32
+Type: UInt64
 Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: Named
+Position: 2
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -61,10 +56,41 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
+Position: 0
+Default value: None
+Accept pipeline input: True (ByValue)
+Accept wildcard characters: False
+```
+
+### -Recurse
+Specifies that the operation should include the target folder and all its subfolders.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
 Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Skip
+Ignores the specified number of objects and then gets the remaining objects.
+Enter the number of objects to skip.
+
+```yaml
+Type: UInt64
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 1
 Default value: None
 Accept pipeline input: False
-Accept wildcard characters: True
+Accept wildcard characters: False
 ```
 
 ### -ProgressAction
@@ -82,59 +108,12 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -Recurse
-Specifies that the operation should include the target folder and all its subfolders.
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -Skip
-Ignores the specified number of objects and then gets the remaining objects.
-Enter the number of objects to skip.
-
-```yaml
-Type: UInt64
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -First
-Gets only the specified number of objects.
-Enter the number of objects to get.
-
-```yaml
-Type: UInt64
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
-### None
+### System.String[]
 ## OUTPUTS
 
 ### System.Object

@@ -8,8 +8,6 @@ using UiPath.PowerShell.Completer;
 
 using UiPath.PowerShell.Positional;
 
-using Positional = UiPath.PowerShell.Positional.Type_UserName_Roles;
-
 namespace UiPath.PowerShell.Commands
 {
     [Cmdlet(VerbsCommon.Add, "OrchFolderUser", SupportsShouldProcess = true)]
@@ -81,8 +79,8 @@ namespace UiPath.PowerShell.Commands
                     foreach (var e in ret
                         .Where(e => e.type == objectType)
                         //.ExcludeByTexts(e => e.identityName!, assignedUsers?.Select(u => u.Id.ToString()!) ?? [])
-                        .ExcludeByClassValues(e => e?.identityName, paramUserName))
-                        //.OrderBy(e => e.identityName))
+                        .ExcludeByClassValues(e => e?.identityName, paramUserName)
+                        .OrderBy(e => e.identityName))
                     {
                         bFound = true;
                         string tiphelp = e.identityName;
@@ -197,17 +195,29 @@ namespace UiPath.PowerShell.Commands
                 // ここで考慮する必要はない
                 //if (folder.FolderType == "Personal") continue;
 
+                var existingRoles = drive.GetRoles().Where(r => r.Type != "Tenant");
+
+                // 指定された Roles に、既存のロールに合致しないパターンがあれば警告
+                // 微妙に無駄な処理があるが、まあいいか。。
+                foreach (var role in Roles ?? [])
+                {
+                    var wpRole = new WildcardPattern(role, WildcardOptions.IgnoreCase);
+                    if (!existingRoles.Any(r => wpRole.IsMatch(r.Name)))
+                    {
+                        WriteWarning($"'{role}': No matching role found in {drive.NameColonSeparator}.");
+                    }
+                }
+
                 // ロールを検索
-                var addingRoles = drive.GetRoles()
-                    .Where(r => r.Type != "Tenant")
-                    .SelectByWildcards(role => role?.Name, wpRoles);
+                var addingRoles = existingRoles.SelectByWildcards(role => role?.Name, wpRoles);
 
                 // ディレクトリから、追加すべき名前を検索
                 // bulk で検索すると、ユーザーに対して親切なメッセージを表示できないため
                 // ひとりずつ検索する
-                cancelHandler.Token.ThrowIfCancellationRequested();
                 foreach (var userName in UserName!)
                 {
+                    cancelHandler.Token.ThrowIfCancellationRequested();
+
                     var member = SearchDirectory(drive, userName, objectType);
                     if (member == null)
                     {

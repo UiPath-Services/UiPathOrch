@@ -13,8 +13,8 @@ schema: 2.0.0
 ## SYNTAX
 
 ```
-Enable-OrchUserAttended [-UserName] <String[]> [-Path <String[]>] [-ProgressAction <ActionPreference>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Enable-OrchUserAttended [-UserName] <SupportsWildcardsAttribute> [-Path <String[]>]
+ [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -71,7 +71,7 @@ Accept wildcard characters: False
 オートメーションの実行を有効にするユーザーの UserName を指定します。
 
 ```yaml
-Type: String[]
+Type: SupportsWildcardsAttribute
 Parameter Sets: (All)
 Aliases:
 
@@ -79,7 +79,7 @@ Required: True
 Position: 0
 Default value: None
 Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
+Accept wildcard characters: False
 ```
 
 ### -WhatIf

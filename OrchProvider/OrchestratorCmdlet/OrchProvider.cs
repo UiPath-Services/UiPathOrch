@@ -486,19 +486,19 @@ namespace UiPath.PowerShell.Core
             using var writer = new StreamWriter(exportCsv!, false, encoding);
 
             // ヘッダ行を書き込む
-            writer.WriteLine(string.Join(",", headers));
+            //writer.WriteLine(string.Join(",", headers));
+            OrchestratorPSCmdlet.WriteCsvLine(writer, headers);
 
             // 各フォルダに対してデータ行を書き込む
             foreach (var folder in output.Where(f => f.FolderType != "Personal"))
             {
-                var line = new StringBuilder();
-
-                line.Append($"{OrchestratorPSCmdlet.EscapeCsvValue(folder.Path)},");
-                line.Append($"{OrchestratorPSCmdlet.EscapeCsvValue(folder.DisplayName!)},");
-                line.Append($"{OrchestratorPSCmdlet.EscapeCsvValue(folder.Description)},");
-                line.Append($"{folder.FeedType}");
-
-                writer.WriteLine(line.ToString());
+                string[] line = [
+                    OrchestratorPSCmdlet.EscapeCsvValue(folder.Path),
+                    OrchestratorPSCmdlet.EscapeCsvValue(folder.DisplayName!),
+                    OrchestratorPSCmdlet.EscapeCsvValue(folder.Description),
+                    OrchestratorPSCmdlet.EscapeCsvValue(folder.FeedType)
+                ];
+                OrchestratorPSCmdlet.WriteCsvLine(writer, line);
             }
 
             return exportCsv;
@@ -711,6 +711,8 @@ namespace UiPath.PowerShell.Core
 
         protected override void NewItem(string path, string itemTypeName, object newItemValue)
         {
+            //path = UnescapeWildcard(path);
+
             var dynamicParameters = DynamicParameters as NewItem_DynamicParameters;
             if (dynamicParameters != null && string.IsNullOrEmpty(dynamicParameters.FeedType))
             {
@@ -722,6 +724,8 @@ namespace UiPath.PowerShell.Core
                 string name = (newItemValue as PSObject)?.Properties["Name"]?.Value as string;
                 if (name != null)
                 {
+                    // TODO: Unescape() は必要か？？ ★★★★★★
+                    //path = System.IO.Path.Combine(path, WildcardPattern.Unescape(name));
                     path = System.IO.Path.Combine(path, name);
                 }
             }
@@ -791,6 +795,7 @@ namespace UiPath.PowerShell.Core
 
         protected override void RenameItem(string path, string newName)
         {
+            //path = UnescapeWildcard(path);
             var drive = GetOrchDriveInfo(path);
             if (drive == null)
             {

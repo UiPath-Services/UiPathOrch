@@ -258,7 +258,7 @@
             <Label>TimeZoneId</Label>
           </TableColumnHeader>
           <TableColumnHeader>
-            <Label>ExcludedDates</Label>
+            <Label>Key</Label>
           </TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
@@ -275,7 +275,7 @@
                 <PropertyName>TimeZoneId</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>ExcludedDates</PropertyName>
+                <PropertyName>Key</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -290,10 +290,13 @@
       </ViewSelectedBy>
       <GroupBy>
         <Label>Calendar</Label>
-        <PropertyName>Path</PropertyName>
+        <PropertyName>PathName</PropertyName>
       </GroupBy>
       <TableControl>
         <TableHeaders>
+          <TableColumnHeader>
+            <Label>Path</Label>
+          </TableColumnHeader>
           <TableColumnHeader>
             <Label>Name</Label>
           </TableColumnHeader>
@@ -305,10 +308,15 @@
           <TableRowEntry>
             <TableColumnItems>
               <TableColumnItem>
+                <PropertyName>Path</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
                 <PropertyName>Name</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>ExcludedDate</PropertyName>
+                <ScriptBlock>
+                  $_.ExcludedDate.ToShortDateString()
+                </ScriptBlock>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -392,8 +400,8 @@
         <TypeName>UiPath.PowerShell.Entities.Log</TypeName>
       </ViewSelectedBy>
       <GroupBy>
-        <Label>JobId</Label>
-        <PropertyName>PathJobId</PropertyName>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
       </GroupBy>
       <TableControl>
         <TableHeaders>
@@ -402,6 +410,9 @@
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>Level</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>ProcessName</Label>
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>HostMachineName</Label>
@@ -423,6 +434,9 @@
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>Level</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>ProcessName</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>HostMachineName</PropertyName>
@@ -1581,16 +1595,16 @@
             <Label>Reference</Label>
           </TableColumnHeader>
           <TableColumnHeader>
-            <Label>Revision</Label>
+            <Label>ReviewStatus</Label>
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>Priority</Label>
           </TableColumnHeader>
           <TableColumnHeader>
-            <Label>Deadline</Label>
+            <Label>DueDate</Label>
           </TableColumnHeader>
           <TableColumnHeader>
-            <Label>Postpone</Label>
+            <Label>DeferDate</Label>
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>StartProcessing</Label>
@@ -1613,19 +1627,19 @@
                 <PropertyName>Reference</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>Revision</PropertyName>
+                <PropertyName>ReviewStatus</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>Priority</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <ScriptBlock>
-                  $_.Deadline.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
+                  $_.DueDate.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
                 </ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
                 <ScriptBlock>
-                  $_.Postpone.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
+                  $_.DeferDate.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
                 </ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
@@ -1851,9 +1865,6 @@
             <Label>ReleaseName</Label>
           </TableColumnHeader>
           <TableColumnHeader>
-            <Label>PackageName</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
             <Label>QueueDefinitionName</Label>
           </TableColumnHeader>
           <TableColumnHeader>
@@ -1878,9 +1889,6 @@
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>ReleaseName</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>PackageName</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>QueueDefinitionName</PropertyName>
@@ -1982,10 +1990,10 @@
             <Label>Type</Label>
           </TableColumnHeader>
           <TableColumnHeader>
-            <Label>Username</Label>
+            <Label>User.LicenseType</Label>
           </TableColumnHeader>
           <TableColumnHeader>
-            <Label>User.EmailAddress</Label>
+            <Label>Username</Label>
           </TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
@@ -2009,12 +2017,12 @@
                 <PropertyName>Type</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>Username</PropertyName>
+                <ScriptBlock>
+                  $_.User.LicenseType
+                </ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.User.EmailAddress
-                </ScriptBlock>
+                <PropertyName>Username</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -2794,6 +2802,9 @@
             <Label>Name</Label>
           </TableColumnHeader>
           <TableColumnHeader>
+            <Label>Description</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
             <Label>StorageProvider</Label>
           </TableColumnHeader>
           <TableColumnHeader>
@@ -2815,6 +2826,9 @@
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>Name</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Description</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>StorageProvider</PropertyName>
@@ -2902,25 +2916,25 @@
             <Label>Id</Label>
           </TableColumnHeader>
           <TableColumnHeader>
+            <Label>Robot.Name</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
             <Label>HostMachineName</Label>
           </TableColumnHeader>
           <TableColumnHeader>
-            <Label>ReportingTime</Label>
+            <Label>Robot.Username</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Robot.Type</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Robot.RobotEnvironments</Label>
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>State</Label>
           </TableColumnHeader>
           <TableColumnHeader>
-            <Label>IsUnresponsive</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>RobotSessionType</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>Platform</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>Version</Label>
+            <Label>Enabled</Label>
           </TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
@@ -2931,27 +2945,85 @@
                 <Alignment>right</Alignment>
               </TableColumnItem>
               <TableColumnItem>
+                <ScriptBlock>
+                  $_.Robot.Name
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
                 <PropertyName>HostMachineName</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <ScriptBlock>
-                  $_.ReportingTime.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
+                  $_.Robot.Username
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  $_.Robot.Type
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  $_.Robot.RobotEnvironments
                 </ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>State</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>IsUnresponsive</PropertyName>
+                <ScriptBlock>
+                  $_.Robot.Enabled
+                </ScriptBlock>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>Environment</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.Environment</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Id</Label>
+            <Alignment>right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Name</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Description</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Robots.Username</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>Id</PropertyName>
+                <Alignment>right</Alignment>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>RobotSessionType</PropertyName>
+                <PropertyName>Name</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>Platform</PropertyName>
+                <PropertyName>Description</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>Version</PropertyName>
+                <ScriptBlock>
+                  $robotUsernames = @($_.Robots | ForEach-Object { $_.Username }) -join ', '
+                  $robotUsernames
+               </ScriptBlock>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -3373,7 +3445,7 @@
       <TableControl>
         <TableHeaders>
           <TableColumnHeader>
-            <Label>displayName</Label>
+            <Label>name</Label>
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>creationTime</Label>
@@ -3389,7 +3461,7 @@
           <TableRowEntry>
             <TableColumnItems>
               <TableColumnItem>
-                <PropertyName>displayName</PropertyName>
+                <PropertyName>name</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <ScriptBlock>
@@ -3422,12 +3494,6 @@
       <TableControl>
         <TableHeaders>
           <TableColumnHeader>
-            <Label>Path</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>displayName</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
             <Label>groupId</Label>
           </TableColumnHeader>
           <TableColumnHeader>
@@ -3437,12 +3503,6 @@
         <TableRowEntries>
           <TableRowEntry>
             <TableColumnItems>
-              <TableColumnItem>
-                <PropertyName>Path</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>displayName</PropertyName>
-              </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>groupId</PropertyName>
               </TableColumnItem>
@@ -3467,13 +3527,13 @@
       <TableControl>
         <TableHeaders>
           <TableColumnHeader>
+            <Label>userName</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
             <Label>name</Label>
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>surname</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>email</Label>
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>isActive</Label>
@@ -3489,13 +3549,13 @@
           <TableRowEntry>
             <TableColumnItems>
               <TableColumnItem>
+                <PropertyName>userName</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
                 <PropertyName>name</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>surname</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>email</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>isActive</PropertyName>
@@ -3587,6 +3647,9 @@
       <TableControl>
         <TableHeaders>
           <TableColumnHeader>
+            <Label>name</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
             <Label>displayName</Label>
           </TableColumnHeader>
           <TableColumnHeader>
@@ -3603,6 +3666,9 @@
           <TableRowEntry>
             <TableColumnItems>
               <TableColumnItem>
+                <PropertyName>name</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
                 <PropertyName>displayName</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
@@ -3613,6 +3679,196 @@
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>source</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>NuLicensedGroup</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.NuLicensedGroup</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>name</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>userBundleLicenseNames</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>useExternalLicense</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>orphan</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>name</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>userBundleLicenseNames</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>useExternalLicense</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>orphan</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>PmUserNuLicensedGroupMember</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.NuLicensedGroupMember</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>PmLicenseGroup</Label>
+        <PropertyName>PathGroupName</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>name</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>displayName</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>email</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>lastInUse</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>name</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>displayName</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>email</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  $_.lastInUse.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
+                </ScriptBlock>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>PmUserNuLicensedUser</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.NuLicensedUser</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>name</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>surname</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>displayName</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>email</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>lastInUse</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>userBundleLicenseNames</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>name</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>surname</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>displayName</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>email</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  $_.lastInUse.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>userBundleLicenseNames</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>UpdateLicensedGroupResponse</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.UpdateLicensedGroupResponse</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>GroupName</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>useExternalLicense</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>userBundleLicenseNames</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>GroupName</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>useExternalLicense</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>userBundleLicenseNames</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>

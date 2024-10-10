@@ -9,10 +9,10 @@
 @{
 
 # Script module or binary module file associated with this manifest.
-RootModule = 'UiPath.PowerShell.OrchProvider.dll'
+RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.5.12'
+ModuleVersion = '0.9.7.7'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -30,7 +30,7 @@ CompanyName = 'UiPath'
 Copyright = '(c) UiPath All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'A PowerShell provider for managing UiPath Orchestrator entities via cmdlets.'
+Description = 'PowerShell providers for managing UiPath Orchestrator entities via cmdlets.'
 
 # Minimum version of the PowerShell engine required by this module
 PowerShellVersion = '7.4.2'
@@ -67,10 +67,20 @@ FormatsToProcess = @('OrchProvider.Format.ps1xml')
 
 
 # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
-NestedModules = @('UiPathOrch.psm1')
+NestedModules = @('UiPath.PowerShell.OrchProvider.dll')
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = @('Get-OrchTestDataQueueItemTable')
+FunctionsToExport = @(
+'Get-OrchTestDataQueueItemTable',
+'Enable-OrchUserAttended',
+'Disable-OrchUserAttended',
+'Enable-OrchPersonalWorkspace',
+'Disable-OrchPersonalWorkspace',
+'Find-OrchFolderNoUserAssigned',
+'Copy-OrchFolderWithoutEntity',
+'Get-OrchJobVideo'
+)
+
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @(
@@ -100,8 +110,6 @@ CmdletsToExport = @(
 'Export-OrchJobMedia',
 'Remove-OrchJobMedia',
 
-'Get-OrchJobVideo',
-
 'Get-OrchProcess',
 'Add-OrchProcess',
 'Update-OrchProcess',
@@ -115,18 +123,27 @@ CmdletsToExport = @(
 
 'Get-OrchUser',
 'Add-OrchUser',
+'Update-OrchUser',
 'Copy-OrchUser',
 'Remove-OrchUser',
 'Remove-OrchRoleFromUser',
 'Get-OrchCurrentUser',
 'Update-OrchCurrentUserURPassword',
-'Enable-OrchUserAttended',
-'Disable-OrchUserAttended',
 
 'Get-OrchLicenseNamedUser',
 'Get-OrchLicenseRuntime',
 'Enable-OrchLicenseRuntime',
 'Disable-OrchLicenseRuntime',
+
+'Get-OrchPmLicensedUser',
+
+'Get-OrchPmLicensedGroup',
+'Add-OrchPmLicenseToPmLicensedGroup',
+'Remove-OrchPmAllocationFromPmLicensedGroup',
+'Remove-OrchPmLicenseFromPmLicensedGroup',
+
+'Get-OrchClassicRobot',
+'Get-OrchClassicEnvironment',
 
 'Get-OrchUserSession',
 'Get-OrchMachineSession',
@@ -146,6 +163,9 @@ CmdletsToExport = @(
 'Remove-OrchCalendar',
 'Copy-OrchCalendar',
 
+'Add-OrchCalendarDate',
+'Remove-OrchCalendarDate',
+
 'Get-OrchPersonalWorkspace',
 'Remove-OrchPersonalWorkspace',
 'Get-OrchFolderUsage',
@@ -159,6 +179,7 @@ CmdletsToExport = @(
 'Remove-OrchRoleFromFolderUser',
 
 'Get-OrchMachine',
+'Update-OrchMachine',
 'Add-OrchMachine',
 'Remove-OrchMachine',
 'Copy-OrchMachine',
@@ -183,6 +204,8 @@ CmdletsToExport = @(
 'Add-OrchAssetLink',
 
 'Get-OrchTrigger',
+'Add-OrchTrigger',
+'Update-OrchTrigger',
 'Remove-OrchTrigger',
 'Copy-OrchTrigger',
 'Enable-OrchTrigger',
@@ -195,6 +218,8 @@ CmdletsToExport = @(
 'Disable-OrchApiTrigger',
 
 'Get-OrchQueue',
+'Add-OrchQueue',
+'Update-OrchQueue',
 'Copy-OrchQueue',
 'Remove-OrchQueue',
 
@@ -229,6 +254,7 @@ CmdletsToExport = @(
 'Get-OrchAlert',
 
 'Get-OrchBucket',
+'Add-OrchBucket',
 'Copy-OrchBucket',
 'Remove-OrchBucket',
 
@@ -254,7 +280,9 @@ CmdletsToExport = @(
 'Remove-OrchActionCatalog',
 
 'Get-OrchPmUser',
+'Update-OrchPmUser',
 'Remove-OrchPmUser',
+'Add-OrchPmUserBulk',
 
 'Get-OrchPmRobotAccount',
 'Set-OrchPmRobotAccount',
@@ -298,7 +326,7 @@ CmdletsToExport = @(
 VariablesToExport = '*'
 
 # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
-AliasesToExport = @('job', 'log', 'stop')
+#AliasesToExport = @('job', 'log', 'stop')
 
 # DSC resources to export from this module
 # DscResourcesToExport = @()
@@ -327,7 +355,10 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        # ReleaseNotes = ''
+        ReleaseNotes = '- Updated the progress bars in the Copy-OrchLibrary and Copy-OrchPackage cmdlets to display overall progress.
+- Added the -ProcessType filter parameter to the Get-OrchJob cmdlet.
+- Removed the Get-OrchJobVideo cmdlet and replaced it with a function of the same name. The new function achieves the same functionality by calling the Get-OrchJob cmdlet, reducing code duplication and minimizing the module''s footprint.
+'
 
         # Prerelease string of this module
         # Prerelease = ''

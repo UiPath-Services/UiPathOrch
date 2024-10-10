@@ -14,7 +14,7 @@ Gets the users.
 
 ```
 Get-OrchUser [[-UserName] <String[]>] [[-FullName] <String[]>] [-ExpandDetails] [-Path <String[]>]
- [-ProgressAction <ActionPreference>] [<CommonParameters>]
+ [-ExportCsv <String>] [-CsvEncoding <Encoding>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -102,6 +102,36 @@ Accept wildcard characters: True
 
 ```yaml
 Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -CsvEncoding
+{{ Fill CsvEncoding Description }}
+
+```yaml
+Type: Encoding
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ExportCsv
+{{ Fill ExportCsv Description }}
+
+```yaml
+Type: String
 Parameter Sets: (All)
 Aliases:
 

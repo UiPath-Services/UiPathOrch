@@ -18,13 +18,7 @@ Add-OrchPmLicenseToPmLicensedGroup [-GroupName] <String[]> [-License] <String[]>
 ```
 
 ## DESCRIPTION
-このコマンドレットは非公開の API を呼び出すことで実現されています。そのため、将来は動作しなくなる可能性があることに留意してください。
-
-主に呼び出すエンドポイント: PUT /api/license/accountant/UserLicense/group
-
-OAuth に必要なスコープ:
-
-必要な権限:
+{{ Fill in the Description }}
 
 ## EXAMPLES
 
@@ -38,7 +32,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+Prompts you for confirmation before running the cmdlet.
 
 ```yaml
 Type: SwitchParameter
@@ -83,7 +77,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+{{ Fill Path Description }}
 
 ```yaml
 Type: String[]
@@ -93,13 +87,13 @@ Aliases:
 Required: False
 Position: Named
 Default value: None
-Accept pipeline input: False
+Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
-コマンドレットは実行されません。
+Shows what would happen if the cmdlet runs.
+The cmdlet is not run.
 
 ```yaml
 Type: SwitchParameter
@@ -134,11 +128,9 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.UpdateLicensedGroupResponse
-
 ## NOTES
 
 ## RELATED LINKS

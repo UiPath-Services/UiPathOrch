@@ -6,6 +6,7 @@ using UiPath.OrchAPI;
 using UiPath.PowerShell.Positional;
 using UiPath.PowerShell.Entities.JsonConverter;
 using UiPath.PowerShell.Core;
+using System.Security.Policy;
 
 #pragma warning disable IDE1006 // 命名スタイル
 
@@ -400,32 +401,77 @@ namespace UiPath.PowerShell.Entities
     }
 
     // MachineVpnSettingsDto
-    public class MachineVpnSettings
+    public class MachineVpnSettings : IEquatable<MachineVpnSettings>
     {
         public string? cidr { get; set; }
+
+        // IEquatable<MachineVpnSettings> の実装
+        public bool Equals(MachineVpnSettings? other)
+        {
+            if (other is null)
+                return false;
+
+            return cidr == other.cidr;
+        }
+
+        // Object.Equals のオーバーライド
+        public override bool Equals(object? obj) => Equals(obj as MachineVpnSettings);
+
+        // GetHashCode のオーバーライド
+        public override int GetHashCode()
+        {
+            return cidr != null ? cidr.GetHashCode() : 0;
+        }
     }
 
     // UpdateInfoDto
     // TODO: confirm case
-    public class UpdateInfo
+    public class UpdateInfo : IEquatable<UpdateInfo>
     {
         public string? updateStatus { get; set; }
         public string? reason { get; set; }
         public string? targetUpdateVersion { get; set; }
         public bool? isCommunity { get; set; }
         public string? statusInfo { get; set; }
+
+        // IEquatable<UpdateInfo> の実装
+        public bool Equals(UpdateInfo? other)
+        {
+            if (other is null)
+                return false;
+
+            return updateStatus == other.updateStatus &&
+                   reason == other.reason &&
+                   targetUpdateVersion == other.targetUpdateVersion &&
+                   isCommunity == other.isCommunity &&
+                   statusInfo == other.statusInfo;
+        }
+
+        // Object.Equals のオーバーライド
+        public override bool Equals(object? obj) => Equals(obj as UpdateInfo);
+
+        // GetHashCode のオーバーライド
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(
+                updateStatus,
+                reason,
+                targetUpdateVersion,
+                isCommunity,
+                statusInfo
+            );
+        }
     }
 
-    // ExtendedMachineDto
-    public class ExtendedMachine
+    public class ExtendedMachine : IEquatable<ExtendedMachine>
     {
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public string? Path { get; set; } // added by UiPathOrch
-        public Int64? Id { get; set; }
+        public long? Id { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
         public string? Type { get; set; }
-        public string? LicenseKey { get; set; }
+        public Guid? LicenseKey { get; set; }
         public string? ClientSecret { get; set; }
         public string? Scope { get; set; }
         public int? NonProductionSlots { get; set; }
@@ -445,6 +491,76 @@ namespace UiPath.PowerShell.Entities
         public MaintenanceWindow? MaintenanceWindow { get; set; }
         public MachineVpnSettings? VpnSettings { get; set; }
         public UpdateInfo? UpdateInfo { get; set; }
+
+        // IEquatable<ExtendedMachine> の実装
+        public bool Equals(ExtendedMachine? other)
+        {
+            if (other is null)
+                return false;
+
+            return Id == other.Id &&
+                   Name == other.Name &&
+                   Description == other.Description &&
+                   Type == other.Type &&
+                   LicenseKey == other.LicenseKey &&
+                   ClientSecret == other.ClientSecret &&
+                   Scope == other.Scope &&
+                   NonProductionSlots == other.NonProductionSlots &&
+                   UnattendedSlots == other.UnattendedSlots &&
+                   HeadlessSlots == other.HeadlessSlots &&
+                   TestAutomationSlots == other.TestAutomationSlots &&
+                   AutomationCloudSlots == other.AutomationCloudSlots &&
+                   AutomationCloudTestAutomationSlots == other.AutomationCloudTestAutomationSlots &&
+                   Key == other.Key &&
+                   EndpointDetectionStatus == other.EndpointDetectionStatus &&
+                   // RobotVersions の比較
+                   ((RobotVersions == null && other.RobotVersions == null) ||
+                    (RobotVersions != null && other.RobotVersions != null &&
+                     RobotVersions.SequenceEqual(other.RobotVersions))) &&
+                   // RobotUsers の比較
+                   ((RobotUsers == null && other.RobotUsers == null) ||
+                    (RobotUsers != null && other.RobotUsers != null &&
+                     RobotUsers.SequenceEqual(other.RobotUsers))) &&
+                   AutomationType == other.AutomationType &&
+                   TargetFramework == other.TargetFramework &&
+                   Equals(UpdatePolicy, other.UpdatePolicy) &&
+                   // Tags の比較
+                   ((Tags == null && other.Tags == null) ||
+                    (Tags != null && other.Tags != null &&
+                     Tags.SequenceEqual(other.Tags))) &&
+                   Equals(MaintenanceWindow, other.MaintenanceWindow) &&
+                   Equals(VpnSettings, other.VpnSettings) &&
+                   Equals(UpdateInfo, other.UpdateInfo);
+        }
+
+        // Object.Equals のオーバーライド
+        public override bool Equals(object? obj) => Equals(obj as ExtendedMachine);
+
+        // GetHashCode のオーバーライド
+        public override int GetHashCode()
+        {
+            // 分割してハッシュ計算
+            var hash1 = HashCode.Combine(Id, Name, Description, Type, LicenseKey, ClientSecret, Scope, NonProductionSlots);
+            var hash2 = HashCode.Combine(UnattendedSlots, HeadlessSlots, TestAutomationSlots, AutomationCloudSlots,
+                                         AutomationCloudTestAutomationSlots, Key, EndpointDetectionStatus,
+                                         RobotVersions != null ? GetSequenceHashCode(RobotVersions) : 0);
+            var hash3 = HashCode.Combine(RobotUsers != null ? GetSequenceHashCode(RobotUsers) : 0, AutomationType,
+                                         TargetFramework, UpdatePolicy, Tags != null ? GetSequenceHashCode(Tags) : 0,
+                                         MaintenanceWindow, VpnSettings, UpdateInfo);
+
+            return HashCode.Combine(hash1, hash2, hash3);
+        }
+
+        // シーケンスのハッシュコードを計算するヘルパーメソッド
+        private static int GetSequenceHashCode<T>(IEnumerable<T> sequence)
+        {
+            var hashCode = new HashCode();
+            foreach (var item in sequence)
+            {
+                hashCode.Add(item);
+            }
+            return hashCode.ToHashCode();
+        }
     }
 
     // CreatedMachine // added by UiPathOrch
@@ -452,6 +568,35 @@ namespace UiPath.PowerShell.Entities
     public class CreatedMachine : ExtendedMachine
     {
     }
+
+    // SecretKey 作成時に、API から結果を受け取る
+    public class MachineClientSecretResponse // added by UiPathOrch
+    {
+        public Int64? id { get; set; }
+        public string? secret { get; set; }
+        [JsonConverter(typeof(LocalDateTimeConverter))]
+        public DateTime? creationTime { get; set; }
+    }
+
+    // AddMachineSecretKeyResponse を cmdlet で出力する
+    public class MachineSecretKey // added by UiPathOrch
+    {
+        public string? Path { get; set; }
+        public string? Name { get; set; }
+        public Guid? ClientId { get; set; }
+        public Int64? SecretId { get; set; }
+        public string? ClientSecret { get; set; }
+        public DateTime? CreationTime { get; set; }
+        public string? Description { get; set; }
+        public string? Type { get; set; }
+        public string? Scope { get; set; }
+    }
+
+    //public class CreatedMachineSecretKey : ExtendedMachine
+    //{
+    //    public Int64? SecretId { get; set; }
+    //    public DateTime? SecretCreationTime { get; set; }
+    //}
 
     // UserRobotsDto
     public class UserRobots
@@ -483,14 +628,7 @@ namespace UiPath.PowerShell.Entities
         }
 
         // object.Equals のオーバーライド
-        public override bool Equals(object? obj)
-        {
-            if (obj is UserRole otherRole)
-            {
-                return Equals(otherRole);
-            }
-            return false;
-        }
+        public override bool Equals(object? obj) => Equals(obj as UserRole);
 
         // GetHashCode のオーバーライド
         public override int GetHashCode()
@@ -521,14 +659,7 @@ namespace UiPath.PowerShell.Entities
         }
 
         // object.Equals のオーバーライド
-        public override bool Equals(object? obj)
-        {
-            if (obj is OrganizationUnit otherUnit)
-            {
-                return Equals(otherUnit);
-            }
-            return false;
-        }
+        public override bool Equals(object? obj) => Equals(obj as OrganizationUnit);
 
         // GetHashCode のオーバーライド
         public override int GetHashCode()
@@ -556,14 +687,7 @@ namespace UiPath.PowerShell.Entities
         }
 
         // object.Equals のオーバーライド
-        public override bool Equals(object? obj)
-        {
-            if (obj is AttendedRobot otherRobot)
-            {
-                return Equals(otherRobot);
-            }
-            return false;
-        }
+        public override bool Equals(object? obj) => Equals(obj as AttendedRobot);
 
         // GetHashCode のオーバーライド
         public override int GetHashCode()
@@ -609,14 +733,7 @@ namespace UiPath.PowerShell.Entities
         }
 
         // object.Equals のオーバーライド
-        public override bool Equals(object? obj)
-        {
-            if (obj is ExecutionSettings otherSettings)
-            {
-                return Equals(otherSettings);
-            }
-            return false;
-        }
+        public override bool Equals(object? obj) => Equals(obj as ExecutionSettings);
 
         // GetHashCode のオーバーライド
         public override int GetHashCode()
@@ -664,14 +781,7 @@ namespace UiPath.PowerShell.Entities
         }
 
         // object.Equals のオーバーライド
-        public override bool Equals(object? obj)
-        {
-            if (obj is UnattendedRobot otherRobot)
-            {
-                return Equals(otherRobot);
-            }
-            return false;
-        }
+        public override bool Equals(object? obj) => Equals(obj as UnattendedRobot);
 
         // GetHashCode のオーバーライド
         public override int GetHashCode()
@@ -732,14 +842,7 @@ namespace UiPath.PowerShell.Entities
         }
 
         // object.Equals のオーバーライド
-        public override bool Equals(object? obj)
-        {
-            if (obj is UserNotificationSubscription otherSubscription)
-            {
-                return Equals(otherSubscription);
-            }
-            return false;
-        }
+        public override bool Equals(object? obj) => Equals(obj as UserNotificationSubscription);
 
         // GetHashCode のオーバーライド
         public override int GetHashCode()
@@ -786,7 +889,7 @@ namespace UiPath.PowerShell.Entities
         public string? Surname { get; set; }
         public string? UserName { get; set; }
         public string? Domain { get; set; }
-        public string? DirectoryIdentifier { get; set; }
+        public string? DirectoryIdentifier { get; set; } // Guid
         public string? FullName { get; set; }
         public string? EmailAddress { get; set; }
         public bool? IsEmailConfirmed { get; set; }
@@ -812,7 +915,7 @@ namespace UiPath.PowerShell.Entities
         public AttendedRobot? RobotProvision { get; set; }
         public UnattendedRobot? UnattendedRobot { get; set; }
         public UserNotificationSubscription? NotificationSubscription { get; set; }
-        public string? Key { get; set; }
+        public string? Key { get; set; } // Guid
         public bool? MayHaveUserSession { get; set; }
         public bool? MayHaveRobotSession { get; set; }
         public bool? MayHaveUnattendedSession { get; set; }
@@ -876,14 +979,7 @@ namespace UiPath.PowerShell.Entities
         }
 
         // object.Equals のオーバーライド
-        public override bool Equals(object? obj)
-        {
-            if (obj is User otherUser)
-            {
-                return Equals(otherUser);
-            }
-            return false;
-        }
+        public override bool Equals(object? obj) => Equals(obj as User);
 
         // GetHashCode のオーバーライド
         public override int GetHashCode()
@@ -902,11 +998,14 @@ namespace UiPath.PowerShell.Entities
     // DirectoryObjectDto
     public class DirectoryObject
     {
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        public string? Path { get; set; } // added by UiPathOrch
+
         //  0: User, 1: Group, 2: Machine, 3: Robot, 4: ExternalApplication
         public int? type { get; set; }
         public string? source { get; set; }
         public string? domain { get; set; }
-        public string? identifier { get; set; }
+        public string? identifier { get; set; } // "source|guid"
         public string? identityName { get; set; }
         public string? displayName { get; set; }
     }
@@ -914,8 +1013,10 @@ namespace UiPath.PowerShell.Entities
     // DirectoryEntityInfo
     public class PmDirectoryEntityInfo
     {
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        public string? Path { get; set; } // added by UiPathOrch
         public string? source { get; set; }
-        public string? identifier { get; set; }
+        public string? identifier { get; set; } // Guid
         public string? identityName { get; set; }
         public string? displayName { get; set; }
         public string? email { get; set; }
@@ -954,16 +1055,35 @@ namespace UiPath.PowerShell.Entities
         public Int64? Id { get; set; }
     }
 
-    // MachinesRobotVersionDto
-    public class MachinesRobotVersion
+    public class MachinesRobotVersion : IEquatable<MachinesRobotVersion>
     {
-        public Int64? Count { get; set; }
+        public long? Count { get; set; }
         public string? Version { get; set; }
-        public Int64? MachineId { get; set; }
+        public long? MachineId { get; set; }
+
+        // IEquatable<MachinesRobotVersion> の実装
+        public bool Equals(MachinesRobotVersion? other)
+        {
+            if (other is null)
+                return false;
+
+            return Count == other.Count &&
+                   Version == other.Version &&
+                   MachineId == other.MachineId;
+        }
+
+        // Object.Equals のオーバーライド
+        public override bool Equals(object? obj) => Equals(obj as MachinesRobotVersion);
+
+        // GetHashCode のオーバーライド
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Count, Version, MachineId);
+        }
     }
 
     // RobotUserDto
-    public class RobotUser
+    public class RobotUser : IEquatable<RobotUser>
     {
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public string? Path { get; set; } // added by UiPathOrch
@@ -974,7 +1094,25 @@ namespace UiPath.PowerShell.Entities
         public string? UserName { get; set; }
         public Int64? RobotId { get; set; }
         public bool? HasTriggers { get; set; }
+
+        public bool Equals(RobotUser? other)
+        {
+            if (other is null)
+                return false;
+
+            return UserName == other.UserName &&
+                   RobotId == other.RobotId &&
+                   HasTriggers == other.HasTriggers;
+        }
+
+        public override bool Equals(object? obj) => Equals(obj as RobotUser);
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(UserName, RobotId, HasTriggers);
+        }
     }
+
 
     // UpdatePolicyDto
     public class UpdatePolicy : IEquatable<UpdatePolicy>
@@ -991,14 +1129,7 @@ namespace UiPath.PowerShell.Entities
         }
 
         // object.Equals のオーバーライド
-        public override bool Equals(object? obj)
-        {
-            if (obj is UpdatePolicy otherPolicy)
-            {
-                return Equals(otherPolicy);
-            }
-            return false;
-        }
+        public override bool Equals(object? obj) => Equals(obj as UpdatePolicy);
 
         // GetHashCode のオーバーライド
         public override int GetHashCode()
@@ -1018,7 +1149,7 @@ namespace UiPath.PowerShell.Entities
     }
 
     // MaintenanceWindowDto
-    public class MaintenanceWindow
+    public class MaintenanceWindow : IEquatable<MaintenanceWindow>
     {
         public bool? Enabled { get; set; }
         public string? JobStopStrategy { get; set; }
@@ -1027,6 +1158,36 @@ namespace UiPath.PowerShell.Entities
         public int? Duration { get; set; }
         //[JsonConverter(typeof(LocalDateTimeConverter))]
         public DateTime? NextExecutionTime { get; set; }
+
+        // IEquatable<MaintenanceWindow> の実装
+        public bool Equals(MaintenanceWindow? other)
+        {
+            if (other is null)
+                return false;
+
+            return Enabled == other.Enabled &&
+                   JobStopStrategy == other.JobStopStrategy &&
+                   CronExpression == other.CronExpression &&
+                   TimezoneId == other.TimezoneId &&
+                   Duration == other.Duration &&
+                   NextExecutionTime == other.NextExecutionTime;
+        }
+
+        // Object.Equals のオーバーライド
+        public override bool Equals(object? obj) => Equals(obj as MaintenanceWindow);
+
+        // GetHashCode のオーバーライド
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(
+                Enabled,
+                JobStopStrategy,
+                CronExpression,
+                TimezoneId,
+                Duration,
+                NextExecutionTime
+            );
+        }
     }
 
     // MachineFolderDto
@@ -1119,7 +1280,7 @@ namespace UiPath.PowerShell.Entities
         public string? Groups { get; set; }
         public bool? IsStatic { get; set; }
         public bool? IsEditable { get; set; }
-        public Permission[]? Permissions { get; set; }
+        public List<Permission>? Permissions { get; set; }
     }
 
     // UserRolesDto
@@ -1216,6 +1377,105 @@ namespace UiPath.PowerShell.Entities
         public int? Available { get; set; }
     }
 
+    // AutopilotForRobotsSettingsDto
+    public class AutopilotForRobotsSettings
+    {
+        public bool? Enabled { get; set; }
+        public bool? HealingEnabled { get; set; }
+    }
+
+    // MachineDto
+    public class Machine
+    {
+        public long? Id { get; set; } // integer with format int64
+        public string? LicenseKey { get; set; } // string with minLength = 0, maxLength = 255
+        public string? Name { get; set; } // string with minLength = 0, maxLength = 450
+        public string? Description { get; set; } // string with minLength = 0, maxLength = 500
+
+        // Enum for Machine Type (Standard / Template)
+        public string? Type { get; set; }
+
+        // Enum for Machine Scope (Default / Shared / PW / Cloud / Serverless)
+        public string? Scope { get; set; }
+
+        public int? NonProductionSlots { get; set; } // integer with format int32
+        public int? UnattendedSlots { get; set; } // integer with format int32
+        public int? HeadlessSlots { get; set; } // integer with format int32
+        public int? TestAutomationSlots { get; set; } // integer with format int32
+        public int? AutomationCloudSlots { get; set; } // integer with format int32
+        public int? AutomationCloudTestAutomationSlots { get; set; } // integer with format int32
+
+        public Guid? Key { get; set; } // UUID format for the key
+
+        // Enum for Endpoint Detection Status (NotAvailable / Mixed / Enabled)
+        public string? EndpointDetectionStatus { get; set; }
+
+        public MachinesRobotVersion[]? RobotVersions { get; set; } // Array of MachinesRobotVersionDto
+        public RobotUser[]? RobotUsers { get; set; } // Array of RobotUserDto
+
+        // Enum for Automation Type (Any / Foreground / Background)
+        public string? AutomationType { get; set; }
+
+        // Enum for Target Framework (Any / Windows / Portable)
+        public string? TargetFramework { get; set; }
+
+        // Enum for Serverless Licensing Model (RobotUnits / LicenseSlots), readOnly
+        public string? ServerlessLicensingModel { get; set; }
+
+        public UpdatePolicy? UpdatePolicy { get; set; } // Reference to UpdatePolicyDto
+        public string? ClientSecret { get; set; } // string for client secret
+
+        public Tag[]? Tags { get; set; } // Array of TagDto
+        public MaintenanceWindow? MaintenanceWindow { get; set; } // Reference to MaintenanceWindowDto
+        public MachineVpnSettings? VpnSettings { get; set; } // Reference to MachineVpnSettingsDto
+    }
+
+    // SimpleReleaseDto
+    public class SimpleRelease
+    {
+        public long? Id { get; set; }
+        public string? Key { get; set; }
+        public string? ProcessKey { get; set; }
+        public string? ProcessVersion { get; set; }
+        public bool? IsLatestVersion { get; set; }
+        public bool? IsProcessDeleted { get; set; }
+        public string? Description { get; set; }
+        public string? Name { get; set; }
+        public long? EnvironmentId { get; set; }
+        public string? EnvironmentName { get; set; }
+        public Environment?  Environment { get; set; }
+        public long? EntryPointId { get; set; }
+        public string? EntryPointPath { get; set; }
+        public EntryPoint? EntryPoint { get; set; }
+        public string? InputArguments { get; set; }
+        public string? ProcessType { get; set; }
+        public bool? SupportsMultipleEntryPoints { get; set; }
+        public bool? RequiresUserInteraction { get; set; }
+        public bool? IsAttended { get; set; }
+        public bool? IsCompiled { get; set; }
+        public string? AutomationHubIdeaUrl { get; set; }
+        public ReleaseVersion? CurrentVersion { get; set; }
+        public ReleaseVersion[]? ReleaseVersions { get; set; }
+        public ArgumentMetadata? Arguments { get; set; }
+        public ProcessSettings? ProcessSettings { get; set; }
+        public VideoRecordingSettings? VideoRecordingSettings { get; set; }
+        public bool? AutoUpdate { get; set; }
+        public bool? HiddenForAttendedUser { get; set; }
+        public Guid? FeedId { get; set; }
+        public string? JobPriority { get; set; }
+        public int? SpecificPriorityValue { get; set; }
+        public long? OrganizationUnitId { get; set; }
+        public string? OrganizationUnitFullyQualifiedName { get; set; }
+        public string? TargetFramework { get; set; }
+        public string? RobotSize { get; set; }
+        public Tag[]? Tags { get; set; }
+        public string? RemoteControlAccess { get; set; }
+        public DateTime? LastModificationTime { get; set; }
+        public long? LastModifierUserId { get; set; }
+        public DateTime? CreationTime { get; set; }
+        public long? CreatorUserId { get; set; }
+    }
+
     // JobDto
     public class Job
     {
@@ -1223,19 +1483,21 @@ namespace UiPath.PowerShell.Entities
         public string? Path { get; set; } // added by UiPathOrch
         public Int64? Id { get; set; }
         public string? Key { get; set; }
-        //[JsonConverter(typeof(LocalDateTimeConverter))]
+        [JsonConverter(typeof(LocalDateTimeConverter))]
         public DateTime? StartTime { get; set; }
-        //[JsonConverter(typeof(LocalDateTimeConverter))]
+        [JsonConverter(typeof(LocalDateTimeConverter))]
         public DateTime? EndTime { get; set; }
         public string? State { get; set; }
         public string? JobPriority { get; set; }
         public int? SpecificPriorityValue { get; set; }
+        public SimpleRobot? Robot { get; set; }
+        public SimpleRelease? Release { get; set; }
         public string? ResourceOverwrites { get; set; }
         public string? Source { get; set; }
         public string? SourceType { get; set; }
         public string? BatchExecutionKey { get; set; }
         public string? Info { get; set; }
-        //[JsonConverter(typeof(LocalDateTimeConverter))]
+        [JsonConverter(typeof(LocalDateTimeConverter))]
         public DateTime? CreationTime { get; set; }
         public Int64? StartingScheduleId { get; set; }
         public string? ReleaseName { get; set; }
@@ -1256,13 +1518,23 @@ namespace UiPath.PowerShell.Entities
         public string? OrganizationUnitFullyQualifiedName { get; set; }
         public string? Reference { get; set; }
         public string? ProcessType { get; set; }
+        public Machine? Machine { get; set; }
         public string? ProfilingOptions { get; set; }
         public bool? ResumeOnSameContext { get; set; }
         public string? LocalSystemAccount { get; set; }
         public string? OrchestratorUserIdentity { get; set; }
         public string? RemoteControlAccess { get; set; }
-        public string? MaxExpectedRunningTimeSeconds { get; set; }
+        public Guid? StartingTriggerId { get; set; }
+        public Int64? MaxExpectedRunningTimeSeconds { get; set; }
         public string? ServerlessJobType { get; set; }
+        [JsonConverter(typeof(LocalDateTimeConverter))]
+        public DateTime? ResumeTime { get; set; }
+        [JsonConverter(typeof(LocalDateTimeConverter))]
+        public DateTime? LastModificationTime { get; set; }
+        public Guid? ProjectKey { get; set; }
+        public Int64? ParentOperationId { get; set; } // undocumented
+        public AutopilotForRobotsSettings? AutopilotForRobots { get; set; }
+        //public bool? EnableAutopilotHealing { get; set; } // deprecated
     }
 
     public enum _RuntimeType
@@ -1277,7 +1549,7 @@ namespace UiPath.PowerShell.Entities
         public string? Level { get; set; }
         public string? WindowsIdentity { get; set; }
         public string? ProcessName { get; set; }
-        //[JsonConverter(typeof(LocalDateTimeConverter))]
+        [JsonConverter(typeof(LocalDateTimeConverter))]
         public DateTime? TimeStamp { get; set; }
         public string? Message { get; set; }
         public string? JobKey { get; set; }
@@ -1345,7 +1617,7 @@ namespace UiPath.PowerShell.Entities
         public string? ServiceName { get; set; }
         public string? MethodName { get; set; }
         public string? Parameters { get; set; }
-        //[JsonConverter(typeof(LocalDateTimeConverter))]
+        [JsonConverter(typeof(LocalDateTimeConverter))]
         public DateTime? ExecutionTime { get; set; }
         public string? Component { get; set; }
         public string? DisplayName { get; set; }
@@ -1697,12 +1969,12 @@ namespace UiPath.PowerShell.Entities
     // ReleaseVersionDto
     public class ReleaseVersion
     {
+        public Int64? Id { get; set; }
         public Int64? ReleaseId { get; set; }
         public string? VersionNumber { get; set; }
         //[JsonConverter(typeof(LocalDateTimeConverter))]
         public DateTime? CreationTime { get; set; }
         public string? ReleaseName { get; set; }
-        public Int64? Id { get; set; }
     }
 
     public class ArgumentMetadata
@@ -1760,6 +2032,8 @@ namespace UiPath.PowerShell.Entities
         public int? Quality { get; set; }
         public int? Frequency { get; set; }
         public int? Duration { get; set; }
+        public AutopilotForRobotsSettings? AutopilotForRobots { get; set; }
+        // public bool? EnableAutopilotHealing { get; set; } // deprecated
     }
 
     // VideoRecordingSettingsDto
@@ -1788,7 +2062,7 @@ namespace UiPath.PowerShell.Entities
         public Environment? Environment { get; set; }
         public Int64? EntryPointId { get; set; }
         public string? EntryPointPath { get; set; }
-        public EntryPoint? EntryPoint { get; set; }
+        public EntryPoint? EntryPoint { get; set; } // swagger doc には記載があるが、返ってこないようだ。。一応残しておく。
         public string? InputArguments { get; set; }
         public string? ProcessType { get; set; }
         public bool? SupportsMultipleEntryPoints { get; set; }
@@ -1900,10 +2174,11 @@ namespace UiPath.PowerShell.Entities
         public string? DisplayName { get; set; }
         public string? Value { get; set; }
         public string? DisplayValue { get; set; }
-        public override string ToString()
+        public override string? ToString()
         {
-            //return JsonSerializer.Serialize(this, OrchAPISession.jsoWhenWritingNull);
-            return JsonSerializer.Serialize(this);
+            if (string.IsNullOrEmpty(DisplayName)) return null;
+            if (string.IsNullOrEmpty(Value)) return DisplayName;
+            return $"{DisplayName}={DisplayValue}";
         }
     }
 
@@ -2043,7 +2318,7 @@ namespace UiPath.PowerShell.Entities
         public AttendedRobot? RobotProvision { get; set; }
         public UnattendedRobot? UnattendedRobot { get; set; }
         public UserNotificationSubscription? NotificationSubscription { get; set; }
-        public Guid? Key { get; set; } ////////////////////////////////////////////////////////////////////
+        public string? Key { get; set; } // Guid
         public bool? MayHaveUserSession { get; set; }
         public bool? MayHaveRobotSession { get; set; }
         public bool? MayHaveUnattendedSession { get; set; }
@@ -2722,14 +2997,14 @@ namespace UiPath.PowerShell.Entities
         public Int64? Id { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
-        public string? Identifier { get; set; }
+        public Guid? Identifier { get; set; }
         public string? StorageProvider { get; set; }
-        public string? StorageParameters { get; set; }
         public string? StorageContainer { get; set; }
-        public string? Options { get; set; }
+        public string? StorageParameters { get; set; }
         public Int64? CredentialStoreId { get; set; }
-        public string? ExternalName { get; set; }
         public string? Password { get; set; }
+        public string? ExternalName { get; set; }
+        public string? Options { get; set; }
         public int? FoldersCount { get; set; }
         public Tag[]? Tags { get; set; }
     }
@@ -2840,7 +3115,7 @@ namespace UiPath.PowerShell.Entities
         public DateTime? creationTime { get; set; }
         //[JsonConverter(typeof(LocalDateTimeConverter))]
         public DateTime? lastLoginTime { get; set; }
-        public string[]? groupIds { get; set; }
+        public string[]? groupIds { get; set; } // Guid
     }
 
     public class PmRobotAccountExpanded // added by UiPathOrch
@@ -2848,7 +3123,7 @@ namespace UiPath.PowerShell.Entities
         public string? Path { get; set; }
         public string? RobotAccount { get; set; }
         public string? PathRobotAccount { get; set; }
-        public string? groupId { get; set; }
+        public string? groupId { get; set; } // Guid
         public string? groupName { get; set; }
     }
 
@@ -2858,7 +3133,7 @@ namespace UiPath.PowerShell.Entities
         public string? partitionGlobalId { get; set; }
         public string? name { get; set; }
         public string? displayName { get; set; }
-        public List<string>? groupIDsToAdd { get; set; }
+        public List<string>? groupIDsToAdd { get; set; } // Guid
     }
 
     // UpdateRobotAccountCommand
@@ -2866,14 +3141,14 @@ namespace UiPath.PowerShell.Entities
     {
         public string? partitionGlobalId { get; set; }
         public string? displayName { get; set; }
-        public List<string>? groupIDsToAdd { get; set; }
-        public List<string>? groupIDsToRemove { get; set; }
+        public List<string>? groupIDsToAdd { get; set; } // Guid
+        public List<string>? groupIDsToRemove { get; set; } // Guid
     }
 
     // CreateUserCommandBase
     public class CreateUserCommandBase
     {
-        public Guid? id { get; set; }
+        public string? id { get; set; } // Guid
         public string? userName { get; set; }
         public string? email { get; set; }
         public string? name { get; set; }
@@ -2890,7 +3165,7 @@ namespace UiPath.PowerShell.Entities
     {
         public List<CreateUserCommandBase>? users { get; set; }
         public string? partitionGlobalId { get; set; }
-        public Guid[]? groupIDs { get; set; }
+        public string[]? groupIDs { get; set; } // Guid
     }
 
     public class BulkCreateResult
@@ -2946,8 +3221,8 @@ namespace UiPath.PowerShell.Entities
         public string? email { get; set; }
         public bool? isActive { get; set; }
         public string? password { get; set; }
-        public Guid[]? groupIDsToAdd { get; set; }
-        public Guid[]? groupIDsToRemove { get; set; }
+        public string[]? groupIDsToAdd { get; set; } // Guid
+        public string[]? groupIDsToRemove { get; set; } // Guid
         public bool? bypassBasicAuthRestriction { get; set; }
         public bool? invitationAccepted { get; set; }
         public Dictionary<string, string>? extensionUserAttributesToAddOrUpdate { get; set; }
@@ -2959,7 +3234,7 @@ namespace UiPath.PowerShell.Entities
     {
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public string? Path { get; set; } // added by UiPathOrch
-        public Guid? id { get; set; }
+        public string? id { get; set; } // Guid
         public string? name { get; set; }
         public string[]? userBundleLicenses { get; set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
@@ -2969,16 +3244,10 @@ namespace UiPath.PowerShell.Entities
     }
 
     // added by UiPathOrch
-    public class NuLicensedGroupMember // 適切なクラス名が不明。。
+    public class NuLicensedUser // 適切なクラス名が不明。。
     {
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public string? Path { get; set; } // added by UiPathOrch
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-        public string? GroupName { get; set; } // added by UiPathOrch
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-        public string? PathGroupName { get; set; } // added by UiPathOrch
 
         public string? id { get; set; }
         public string? email { get; set; }
@@ -2989,6 +3258,18 @@ namespace UiPath.PowerShell.Entities
         public DateTime? lastInUse { get; set; }
         public string[]? userBundleLicenses { get; set; }
         public bool? orphan { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        public string[]? userBundleLicenseNames { get; set; } // added by UiPathOrch
+    }
+
+    // added by UiPathOrch
+    public class NuLicensedGroupMember : NuLicensedUser
+    {
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        public string? GroupName { get; set; } // added by UiPathOrch
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        public string? PathGroupName { get; set; } // added by UiPathOrch
     }
 
     // added by UiPathOrch
@@ -3022,7 +3303,7 @@ namespace UiPath.PowerShell.Entities
     public class UpdateLicensedGroupCommand // 適切なクラス名が不明。。
     {
         public string[]? ubls { get; set; }
-        public Guid? id { get; set; }
+        public string? id { get; set; } // Guid
         public bool? useExternalLicense { get; set; }
     }
 
@@ -3035,8 +3316,8 @@ namespace UiPath.PowerShell.Entities
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public string? GroupName { get; set; }// added by UiPathOrch
 
-        public Guid? groupId { get; set; }
-        public Guid? organizationId { get; set; }
+        public string? groupId { get; set; } // Guid
+        public string? organizationId { get; set; } // Guid
         public bool? useExternalLicense { get; set; }
         public string[]? userBundleCodes { get; set; }
 
@@ -3049,7 +3330,7 @@ namespace UiPath.PowerShell.Entities
     {
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public string? Path { get; set; } // added by UiPathOrch
-        public string? id { get; set; }
+        public string? id { get; set; } // Guid
         public string? name { get; set; }
         public string? displayName { get; set; }
         public int? type { get; set; }
@@ -3060,6 +3341,14 @@ namespace UiPath.PowerShell.Entities
         public Member[]? members { get; set; }
         public string? mappingRole { get; set; }
         public string? scope { get; set; }
+        public string[]? userBundleLicenses { get; set; } // undocumented
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        public string[]? userBundleLicenseNames { get; set; } // added by UiPathOrch
+
+        // public string? userBundleLeases { get; set; } // undocumented これ中身が分からない。
+        public bool? useExternalLicense { get; set; } // undocumented
+        public bool? orphan { get; set; } // undocumented
     }
 
     // CreateGroupCommand
@@ -3076,8 +3365,8 @@ namespace UiPath.PowerShell.Entities
     {
         public string? partitionGlobalId { get; set; }
         public string? name { get; set; }
-        public string[]? directoryUserIDsToAdd { get; set; }
-        public string[]? directoryUserIDsToRemove { get; set; }
+        public string[]? directoryUserIDsToAdd { get; set; } // Guid
+        public string[]? directoryUserIDsToRemove { get; set; } // Guid
     }
 
     // BulkResolveByNameCommand
@@ -3098,7 +3387,7 @@ namespace UiPath.PowerShell.Entities
         public string? groupName { get; set; } // added by UiPathOrch
 
         public string? objectType { get; set; }
-        public string? identifier { get; set; }
+        public string? identifier { get; set; } // Guid
         public string? name { get; set; }
         public string? displayName { get; set; }
     }

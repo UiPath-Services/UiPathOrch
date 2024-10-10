@@ -23,30 +23,30 @@ namespace UiPath.PowerShell.Commands
     [OutputType(typeof(Log))]
     public class GetLogCommand : OrchestratorPSCmdlet
     {
-        [Parameter]
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(IdCompleter))]
         public Int64[]? JobId { get; set; }
 
-        [Parameter]
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(StaticTextsCompleter<LastItems>))]
         public string? Last { get; set; }
 
-        [Parameter]
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(TimeAfterCompleter))]
         public DateTime? TimeStampAfter { get; set; }
 
-        [Parameter]
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(TimeBeforeCompleter))]
         public DateTime? TimeStampBefore { get; set; }
 
-        [Parameter]
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(LevelCompleter))]
         public string? Level { get; set; }
 
         // OC API の制限？不具合？で、複数のマシンを指定したフィルターが機能しない。
         // 本当は、配列にしてワイルドカードもサポートしたいが、動かない。
         // そのため、配列での指定はできないようにしておく。
-        [Parameter]
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(MachineCompleter))]
         public string? Machine { get; set; }
 
@@ -54,32 +54,32 @@ namespace UiPath.PowerShell.Commands
         // "((ProcessName eq 'OpenAvidemux') or (ProcessName eq 'OrchestratorManager'))" とか。
         // 本当は、配列にしてワイルドカードもサポートしたいが、動かない。
         // そのため、配列での指定はできないようにしておく。
-        [Parameter]
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(ListReleasesCompleter<Id_Level>))]
         public string? ProcessName { get; set; }
 
         // なぜか、これは複数の Identity を or で連結したフィルターが動作する。
         // ワイルドカードをサポートできるのでうれしい。
-        [Parameter]
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(WindowsIdentityCompleter))]
         [SupportsWildcards]
         public string[]? WindowsIdentity { get; set; }
 
-        [Parameter]
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         public ulong? Skip { get; set; }
 
-        [Parameter]
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(StaticTextsCompleter<Item10>))]
         public ulong? First { get; set; }
 
-        [Parameter]
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(StaticTextsCompleter<LogOrderableItems>))]
         public string? OrderBy { get; set; }
 
-        [Parameter]
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         public SwitchParameter OrderAscending { get; set; }
 
-        [Parameter]
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         public string[]? Path { get; set; }
 
         [Parameter]

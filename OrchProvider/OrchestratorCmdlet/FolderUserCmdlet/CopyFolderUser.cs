@@ -92,6 +92,8 @@ namespace UiPath.PowerShell.Commands
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (_, srcFolder) in srcDrivesFolders)
             {
+                cancelHandler.Token.ThrowIfCancellationRequested();
+
                 // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
                 srcDrive!._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, true), out var _);
                 srcDrive!._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, false), out var _);

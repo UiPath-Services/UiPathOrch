@@ -9,6 +9,7 @@ using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
+using UiPath.PowerShell.Positional;
 
 namespace OrchProvider.AssetCmdlet
 {
@@ -35,8 +36,6 @@ namespace OrchProvider.AssetCmdlet
         private const string Default = "DefaultParameterSet";
         private const string Plain = "SpecifyPlainPasswordParameterSet";
         //private const string Export = "ExportTemplateParameterSet";
-
-        private static readonly string[] positionalParams = ["Name", "UserName", "MachineName", "CredentialUsername", "CredentialPassword"];
 
         [Parameter(ParameterSetName = Default, Position = 0, Mandatory = true)]
         [Parameter(ParameterSetName = Plain, Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
@@ -78,7 +77,7 @@ namespace OrchProvider.AssetCmdlet
 
         [Parameter(ParameterSetName = Default)]
         [Parameter(ParameterSetName = Plain, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(CredentialStoreCompleter))]
+        [ArgumentCompleter(typeof(CredentialStoreNameCompleter<Name_UserName_MachineName_CredentialUsername_CredentialPassword>))]
         [SupportsWildcards]
         public string? CredentialStore { get; set; }
 
@@ -86,15 +85,6 @@ namespace OrchProvider.AssetCmdlet
         [Parameter(ParameterSetName = Plain, ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
         public string[]? Path { get; set; }
-
-        //[Parameter(ParameterSetName = Export, Mandatory = true)]
-        //public SwitchParameter ExportTemplateCsv { get; set; }
-
-        //[Parameter(ParameterSetName = Export, Position = 0)]
-        //public Encoding? CsvEncoding { get; set; }
-
-        //[Parameter(ParameterSetName = Export, Position = 1)]
-        //public string? TemplateCsvPath { get; set; }
 
         // 存在しないアセットを "New asset name here" として表示するので、これは共通化できない
         private class NameCompleter : OrchArgumentCompleter
@@ -109,7 +99,7 @@ namespace OrchProvider.AssetCmdlet
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの Name は、候補から除外する
-                var wpName = CreateWPListFromParameter(commandAst, "Name", positionalParams, wordToComplete);
+                var wpName = CreateWPListFromParameter(commandAst, "Name", Name_UserName_MachineName_CredentialUsername_CredentialPassword.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -137,36 +127,6 @@ namespace OrchProvider.AssetCmdlet
             }
         }
 
-        private class CredentialStoreCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var drives = ResolveDrives(fakeBoundParameters);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                var results = ParallelResults.ForEach(drives, drive => drive.GetCredentialStores());
-
-                foreach (var result in results)
-                {
-                    if (!result.TryGetValue(out var entities)) continue;
-
-                    foreach (var credentialStore in entities!
-                        .Where(c => wp.IsMatch(c.Name))
-                        .OrderBy(c => c.Name!))
-                    {
-                        string tiphelp = TipHelp(credentialStore);
-                        yield return new CompletionResult(PathTools.EscapePSText(credentialStore.Name), credentialStore.Name, CompletionResultType.ParameterValue, tiphelp);
-                    }
-                }
-            }
-        }
-
         private class UserNameCompleter : OrchArgumentCompleter
         {
             public override IEnumerable<CompletionResult> CompleteArgument(
@@ -179,10 +139,10 @@ namespace OrchProvider.AssetCmdlet
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの UserName は、候補から除外する
-                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", positionalParams);
+                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Name_UserName_MachineName_CredentialUsername_CredentialPassword.Parameters);
 
                 // パラメータで選択済みの UserName は、候補から除外する
-                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", positionalParams, wordToComplete);
+                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", Name_UserName_MachineName_CredentialUsername_CredentialPassword.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -217,7 +177,7 @@ namespace OrchProvider.AssetCmdlet
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの MachineName は、候補から除外する
-                var wpMachineName = CreateWPListFromParameter(commandAst, "MachineName", positionalParams, wordToComplete);
+                var wpMachineName = CreateWPListFromParameter(commandAst, "MachineName", Name_UserName_MachineName_CredentialUsername_CredentialPassword.Parameters, wordToComplete);
 
                 // TODO: 既存のユーザー名とマシン名の組み合わせは、候補に表示しないようにする
                 // ややこしいから、いいか。。
@@ -281,7 +241,7 @@ namespace OrchProvider.AssetCmdlet
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの Name は、候補から除外する
-                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", positionalParams);
+                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Name_UserName_MachineName_CredentialUsername_CredentialPassword.Parameters);
 
                 //var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -312,36 +272,35 @@ namespace OrchProvider.AssetCmdlet
             }
         }
 
-        // TODO: CopyItem.cs に同じものがなかったっけ？
-        long FindCredentialStoreId(string target, OrchDriveInfo drive, WildcardPattern? wpCredentialStore)
-        {
-            var credentialStores = drive.GetCredentialStores();
-            CredentialStore cs = null;
-            if (wpCredentialStore != null)
-            {
-                var matchingCredentialStores = credentialStores.Where(cs => wpCredentialStore.IsMatch(cs.Name));
-                if (!matchingCredentialStores.Any())
-                {
-                    Exception e = new Exception($"CredentialStore '{CredentialStore}' does not exist.");
-                    WriteError(new ErrorRecord(new OrchException(target, e), "SetCredentialAssetError", ErrorCategory.InvalidOperation, target));
-                    return 0;
-                }
-                if (matchingCredentialStores.Take(2).Count() == 2)
-                {
-                    Exception e = new Exception($"CredentialStore '{CredentialStore}' resolved to multiple credential stores. Ignored.");
-                    WriteError(new ErrorRecord(new OrchException(target, e), "SetCredentialAssetError", ErrorCategory.InvalidOperation, target));
-                    return 0;
-                }
-                // assert(matchingCredentialStores.Couint() == 1)
-                cs = matchingCredentialStores.First();
-            }
-            else
-            {
-                //cs = credentialStores.Where(cs => string.Equals(cs.Name, "Orchestrator Database", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-                //cs ??= credentialStores.First();
-            }
-            return cs?.Id ?? 0;
-        }
+        //long FindCredentialStoreId(string target, OrchDriveInfo drive, WildcardPattern? wpCredentialStore)
+        //{
+        //    var credentialStores = drive.GetCredentialStores();
+        //    CredentialStore cs = null;
+        //    if (wpCredentialStore != null)
+        //    {
+        //        var matchingCredentialStores = credentialStores.Where(cs => wpCredentialStore.IsMatch(cs.Name));
+        //        if (!matchingCredentialStores.Any())
+        //        {
+        //            Exception e = new Exception($"CredentialStore '{CredentialStore}' does not exist.");
+        //            WriteError(new ErrorRecord(new OrchException(target, e), "SetCredentialAssetError", ErrorCategory.InvalidOperation, target));
+        //            return 0;
+        //        }
+        //        if (matchingCredentialStores.Take(2).Count() == 2)
+        //        {
+        //            Exception e = new Exception($"CredentialStore '{CredentialStore}' resolved to multiple credential stores. Ignored.");
+        //            WriteError(new ErrorRecord(new OrchException(target, e), "SetCredentialAssetError", ErrorCategory.InvalidOperation, target));
+        //            return 0;
+        //        }
+        //        // assert(matchingCredentialStores.Couint() == 1)
+        //        cs = matchingCredentialStores.First();
+        //    }
+        //    else
+        //    {
+        //        //cs = credentialStores.Where(cs => string.Equals(cs.Name, "Orchestrator Database", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+        //        //cs ??= credentialStores.First();
+        //    }
+        //    return cs?.Id ?? 0;
+        //}
 
         protected override void ProcessRecord()
         {
@@ -644,7 +603,7 @@ namespace OrchProvider.AssetCmdlet
                 {
                     string targetFolder = $"{folder.GetPSPath()}";
 
-                    long credentialStoreId = FindCredentialStoreId(targetFolder, drive, wpCredentialStore);
+                    long credentialStoreId = FindCredentialStoreId(targetFolder, drive, wpCredentialStore)?.Id ?? 0;
 
                     IEnumerable<User> specifiedUsers = null;
                     IEnumerable<ExtendedMachine?> specifiedMachines = null;

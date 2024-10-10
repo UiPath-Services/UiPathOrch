@@ -14,6 +14,9 @@ Locale: en-US
 ### [Add-OrchAssetLink](Add-OrchAssetLink.md)
 Adds links to the specified assets.
 
+### [Add-OrchBucket](Add-OrchBucket.md)
+Adds storage buckets.
+
 ### [Add-OrchCalendarDate](Add-OrchCalendarDate.md)
 Adds dates to the Non-Working Days calendars.
 
@@ -25,6 +28,9 @@ Assigns the users to folders.
 
 ### [Add-OrchMachine](Add-OrchMachine.md)
 Adds machines.
+
+### [Add-OrchMachineClientSecret](Add-OrchMachineClientSecret.md)
+{{ Fill in the Synopsis }}
 
 ### [Add-OrchPmGroup](Add-OrchPmGroup.md)
 Adds groups to the Identity server.
@@ -264,7 +270,7 @@ Gets jobs.
 Gets job statistics.
 
 ### [Get-OrchJobVideo](Get-OrchJobVideo.md)
-{{ Fill in the Synopsis }}
+Gets jobs with video recordings attached.
 
 ### [Get-OrchLibrary](Get-OrchLibrary.md)
 Gets the library packages.
@@ -313,6 +319,9 @@ Gets the personal workspaces.
 
 ### [Get-OrchPmLicensedGroup](Get-OrchPmLicensedGroup.md)
 Gets the group assigned with the User named license.
+
+### [Get-OrchPmLicensedUser](Get-OrchPmLicensedUser.md)
+{{ Fill in the Synopsis }}
 
 ### [Get-OrchPmRobotAccount](Get-OrchPmRobotAccount.md)
 {{ Fill in the Synopsis }}
@@ -455,6 +464,9 @@ Removes the library packages.
 ### [Remove-OrchMachine](Remove-OrchMachine.md)
 Remove the machines.
 
+### [Remove-OrchMachineClientSecret](Remove-OrchMachineClientSecret.md)
+Removes the machine's client secret.
+
 ### [Remove-OrchPackage](Remove-OrchPackage.md)
 Removes the process packages.
 
@@ -465,6 +477,9 @@ Removes the personal workspace folders.
 Removes license allocations from users within license groups.
 
 ### [Remove-OrchPmGroup](Remove-OrchPmGroup.md)
+{{ Fill in the Synopsis }}
+
+### [Remove-OrchPmLicensedGroup](Remove-OrchPmLicensedGroup.md)
 {{ Fill in the Synopsis }}
 
 ### [Remove-OrchPmLicenseFromPmLicensedGroup](Remove-OrchPmLicenseFromPmLicensedGroup.md)
@@ -556,6 +571,9 @@ Creates or updates robot accounts in the Identity server.
 
 ### [Update-OrchCurrentUserURPassword](Update-OrchCurrentUserURPassword.md)
 {{ Fill in the Synopsis }}
+
+### [Update-OrchMachine](Update-OrchMachine.md)
+Updates machines.
 
 ### [Update-OrchPmUser](Update-OrchPmUser.md)
 Updates users.

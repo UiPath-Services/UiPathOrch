@@ -26,6 +26,7 @@ namespace UiPath.PowerShell.Commands
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(DriveCompleter<Positional.Name_Destination>))]
+        [SupportsWildcards]
         public string? Path { get; set; }
 
         public class DestinationCompleter : OrchArgumentCompleter
@@ -161,8 +162,11 @@ namespace UiPath.PowerShell.Commands
                                 }
 
                                 var addedMachine = dstDrive.OrchAPISession.AddMachine(newMachine);
-                                //addedMachine.Path = dstDrive.NameColonSeparator;
-                                //WriteObject(addedMachine);
+                                if (addedMachine != null)
+                                {
+                                    addedMachine.Path = dstDrive.NameColonSeparator;
+                                    WriteObject(addedMachine);
+                                }
                                 dstDrive._dicExtendedMachines = null;
                                 dstDrive._dicMachinesAssignable = null;
                             }

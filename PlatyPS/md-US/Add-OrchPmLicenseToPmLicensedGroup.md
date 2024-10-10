@@ -18,13 +18,7 @@ Add-OrchPmLicenseToPmLicensedGroup [-GroupName] <String[]> [-License] <String[]>
 ```
 
 ## DESCRIPTION
-This cmdlet is implemented by calling a private API. Therefore, please be aware that it may stop working in the future.
-
-Primary Endpoint: PUT /api/license/accountant/UserLicense/group
-
-OAuth required scopes:
-
-Required permissions:
+{{ Fill in the Description }}
 
 ## EXAMPLES
 
@@ -83,7 +77,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the name of the target drives. If not specified, the current drive will be targeted.
+{{ Fill Path Description }}
 
 ```yaml
 Type: String[]
@@ -93,7 +87,7 @@ Aliases:
 Required: False
 Position: Named
 Default value: None
-Accept pipeline input: False
+Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
@@ -134,11 +128,9 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.UpdateLicensedGroupResponse
-
 ## NOTES
 
 ## RELATED LINKS

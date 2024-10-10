@@ -1,21 +1,245 @@
 ﻿using System.Collections;
-using System.Collections.ObjectModel;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
 using UiPath.PowerShell.Positional;
-using Positional = UiPath.PowerShell.Positional.Type_UserName_Roles;
+using BoolCompleter = UiPath.PowerShell.Completer.StaticTextsCompleter<UiPath.PowerShell.Positional.True_False>;
+using System.Data;
 
 namespace UiPath.PowerShell.Commands
 {
+    // UserName を case-insensitive に比較するために必要
+    // OrchComparer.cs に移動した方が良いか？
+    internal class CsvLineComparer : IEqualityComparer<(OrchDriveInfo drive, int type, string userName)>
+    {
+        public bool Equals((OrchDriveInfo drive, int type, string userName) x, (OrchDriveInfo drive, int type, string userName) y)
+        {
+            return EqualityComparer<OrchDriveInfo>.Default.Equals(x.drive, y.drive) &&
+                   x.type == y.type &&
+                   string.Equals(x.userName, y.userName, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public int GetHashCode((OrchDriveInfo drive, int type, string userName) obj)
+        {
+            return HashCode.Combine(
+                EqualityComparer<OrchDriveInfo>.Default.GetHashCode(obj.drive),
+                obj.type,
+                StringComparer.OrdinalIgnoreCase.GetHashCode(obj.userName)
+            );
+        }
+    }
+
     [Cmdlet(VerbsCommon.Add, "OrchUser", SupportsShouldProcess = true)]
     [OutputType(typeof(Entities.User))]
     public class AddUserCommand : OrchestratorPSCmdlet
     {
-        Dictionary<(OrchDriveInfo drive, DirectoryObject user), HashSet<Role>>? _params = null;
+        Dictionary<(OrchDriveInfo drive, int type, string userName), CsvLine>? _csvLines = null;
+
+        // TODO: 近いうち、これのベースクラスを作るべきだ。
+        private class CsvLine
+        {
+            // Expression<T> を使えば、もうすこし簡潔に書けそうだけど、そこまでするのもなあ。。
+            private static void AssignStringValue(IWritableHost host, OrchDriveInfo drive, string identityName, string? currentValue, string? newValue, Action<string?> setter)
+            {
+                if (!string.IsNullOrEmpty(newValue) && currentValue != newValue)
+                {
+                    host.WriteWarning($"'{drive.NameColonSeparator}{identityName}': '{nameof(newValue)}' has been specified multiple times. Using the previously specified value '{currentValue}'.");
+                }
+                else
+                {
+                    setter(newValue);
+                }
+            }
+
+            private static void AssignIntValue(IWritableHost host, OrchDriveInfo drive, string identityName, int? currentValue, int? newValue, Action<int?> setter)
+            {
+                if (newValue != null && newValue != 0 && currentValue != newValue)
+                {
+                    host.WriteWarning($"'{drive.NameColonSeparator}{identityName}': '{nameof(newValue)}' has been specified multiple times. Using the previously specified value {currentValue}.");
+                }
+                else
+                {
+                    setter(newValue);
+                }
+            }
+
+            private static void AssignBoolValue(IWritableHost host, OrchDriveInfo drive, string identityName, bool? currentValue, string? newValue, Action<bool?> setter)
+            {
+                if (string.IsNullOrEmpty(newValue)) return;
+                if (!bool.TryParse(newValue, out var boolValue)) return;
+                if (currentValue != boolValue)
+                {
+                    host.WriteWarning($"'{drive.NameColonSeparator}{identityName}': '{nameof(newValue)}' has been specified multiple times. Using the previously specified value {currentValue}.");
+                }
+                else
+                {
+                    setter(boolValue);
+                }
+            }
+
+            public bool? MayHaveUserSession { get; set; }
+            public bool? MayHaveRobotSession { get; set; }
+            public bool? MayHaveUnattendedSession { get; set; }
+            public bool? MayHavePersonalWorkspace { get; set; }
+            public bool? RestrictToPersonalWorkspace { get; set; }
+
+            public string? UpdatePolicyType { get; set; }
+            public string? UpdatePolicyVersion { get; set; }
+
+            public string? UR_UserName { get; set; }
+            public string? UR_CredentialStore { get; set; }
+            public string? UR_Password { get; set; }
+            public string? UR_CredentialType { get; set; }
+            public bool? UR_LimitConcurrentExecution { get; set; }
+
+            public string? ES_TracingLevel { get; set; }
+            public bool? ES_StudioNotifyServer { get; set; }
+            public bool? ES_LoginToConsole { get; set; }
+            public int? ES_ResolutionWidth { get; set; }
+            public int? ES_ResolutionHeight { get; set; }
+            public int? ES_ResolutionDepth { get; set; }
+            public bool? ES_FontSmoothing { get; set; }
+            public bool? ES_AutoDownloadProcess { get; set; }
+
+            public HashSet<string>? Roles { get; set; }
+
+            public CsvLine(AddUserCommand cmdlet)
+            {
+                MayHaveUserSession = TryParse(cmdlet.MayHaveUserSession);
+                MayHaveRobotSession = TryParse(cmdlet.MayHaveRobotSession);
+                MayHaveUnattendedSession = TryParse(cmdlet.MayHaveUnattendedSession);
+                MayHavePersonalWorkspace = TryParse(cmdlet.MayHavePersonalWorkspace);
+                RestrictToPersonalWorkspace = TryParse(cmdlet.RestrictToPersonalWorkspace);
+
+                UpdatePolicyType = cmdlet.UpdatePolicyType;
+                UpdatePolicyVersion = cmdlet.UpdatePolicyVersion;
+
+                UR_UserName = cmdlet.UR_UserName;
+                UR_CredentialStore = cmdlet.UR_CredentialStore;
+                UR_Password = cmdlet.UR_Password;
+                UR_CredentialType = cmdlet.UR_CredentialType;
+                UR_LimitConcurrentExecution = TryParse(cmdlet.UR_LimitConcurrentExecution);
+
+                ES_TracingLevel = cmdlet.ES_TracingLevel;
+                ES_StudioNotifyServer = TryParse(cmdlet.ES_StudioNotifyServer);
+                ES_LoginToConsole = TryParse(cmdlet.ES_LoginToConsole);
+                ES_ResolutionWidth = cmdlet.ES_ResolutionWidth;
+                ES_ResolutionHeight = cmdlet.ES_ResolutionHeight;
+                ES_ResolutionDepth = cmdlet.ES_ResolutionDepth;
+                ES_FontSmoothing = TryParse(cmdlet.ES_FontSmoothing);
+                ES_AutoDownloadProcess = TryParse(cmdlet.ES_AutoDownloadProcess);
+
+                Roles = new HashSet<string>(cmdlet.Roles?.Where(r => !string.IsNullOrEmpty(r)) ?? []);
+            }
+
+            public void Update(AddUserCommand cmdl, OrchDriveInfo drive, string identityName)
+            {
+                AssignBoolValue(cmdl, drive, identityName,
+                    this.MayHaveUserSession,
+                    cmdl.MayHaveUserSession, v =>
+                    this.MayHaveUserSession = v);
+
+                AssignBoolValue(cmdl, drive, identityName,
+                    this.MayHaveRobotSession,
+                    cmdl.MayHaveRobotSession, v =>
+                    this.MayHaveRobotSession = v);
+
+                AssignBoolValue(cmdl, drive, identityName,
+                    this.MayHaveUnattendedSession,
+                    cmdl.MayHaveUnattendedSession, v =>
+                    this.MayHaveUnattendedSession = v);
+
+                AssignBoolValue(cmdl, drive, identityName,
+                    this.MayHavePersonalWorkspace,
+                    cmdl.MayHavePersonalWorkspace, v =>
+                    this.MayHavePersonalWorkspace = v);
+
+                AssignBoolValue(cmdl, drive, identityName,
+                    this.RestrictToPersonalWorkspace,
+                    cmdl.RestrictToPersonalWorkspace, v =>
+                    this.RestrictToPersonalWorkspace = v);
+
+                AssignStringValue(cmdl, drive, identityName,
+                    this.UpdatePolicyType,
+                    cmdl.UpdatePolicyType, v =>
+                    this.UpdatePolicyType = v);
+
+                AssignStringValue(cmdl, drive, identityName,
+                    this.UpdatePolicyVersion,
+                    cmdl.UpdatePolicyVersion, v =>
+                    this.UpdatePolicyVersion = v);
+
+                AssignStringValue(cmdl, drive, identityName,
+                    this.UR_UserName,
+                    cmdl.UR_UserName, v =>
+                    this.UR_UserName = v);
+
+                AssignStringValue(cmdl, drive, identityName,
+                    this.UR_CredentialStore,
+                    cmdl.UR_CredentialStore, v =>
+                    this.UR_CredentialStore = v);
+
+                AssignStringValue(cmdl, drive, identityName,
+                    this.UR_Password,
+                    cmdl.UR_Password, v =>
+                    this.UR_Password = v);
+
+                AssignStringValue(cmdl, drive, identityName,
+                    this.UR_CredentialType,
+                    cmdl.UR_CredentialType, v =>
+                    this.UR_CredentialType = v);
+
+                AssignBoolValue(cmdl, drive, identityName,
+                    this.UR_LimitConcurrentExecution,
+                    cmdl.UR_LimitConcurrentExecution, v =>
+                    this.UR_LimitConcurrentExecution = v);
+
+                AssignStringValue(cmdl, drive, identityName,
+                    this.ES_TracingLevel,
+                    cmdl.ES_TracingLevel, v =>
+                    this.ES_TracingLevel = v);
+
+                AssignBoolValue(cmdl, drive, identityName,
+                    this.ES_StudioNotifyServer,
+                    cmdl.ES_StudioNotifyServer, v =>
+                    this.ES_StudioNotifyServer = v);
+
+                AssignBoolValue(cmdl, drive, identityName,
+                    this.ES_LoginToConsole,
+                    cmdl.ES_LoginToConsole, v =>
+                    this.ES_LoginToConsole = v);
+
+                AssignIntValue(cmdl, drive, identityName,
+                    this.ES_ResolutionWidth,
+                    cmdl.ES_ResolutionWidth, v =>
+                    this.ES_ResolutionWidth = v);
+
+                AssignIntValue(cmdl, drive, identityName,
+                    this.ES_ResolutionHeight,
+                    cmdl.ES_ResolutionHeight, v =>
+                    this.ES_ResolutionHeight = v);
+
+                AssignIntValue(cmdl, drive, identityName,
+                    this.ES_ResolutionDepth,
+                    cmdl.ES_ResolutionDepth, v =>
+                    this.ES_ResolutionDepth = v);
+
+                AssignBoolValue(cmdl, drive, identityName,
+                    this.ES_FontSmoothing,
+                    cmdl.ES_FontSmoothing, v =>
+                    this.ES_FontSmoothing = v);
+
+                AssignBoolValue(cmdl, drive, identityName,
+                    this.ES_AutoDownloadProcess,
+                    cmdl.ES_AutoDownloadProcess, v =>
+                    this.ES_AutoDownloadProcess = v);
+
+                this.Roles ??= [];
+                this.Roles.UnionWith(cmdl.Roles?.Where(r => !string.IsNullOrEmpty(r)) ?? []);
+            }
+        }
 
         // Key: DirectoryObject.type;  Value: エンティティ内の Type
         private static readonly Dictionary<int, string> Types = new() {
@@ -38,6 +262,82 @@ namespace UiPath.PowerShell.Commands
         [Alias("TenantRoles")]
         [ArgumentCompleter(typeof(RolesCompleter))]
         public string[]? Roles { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? MayHaveUserSession { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? MayHaveRobotSession { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? MayHaveUnattendedSession { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? MayHavePersonalWorkspace { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? RestrictToPersonalWorkspace { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<UserUpdatePolicyItems>))]
+        public string? UpdatePolicyType { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(UpdatePolicyVersionCompleter))]
+        public string? UpdatePolicyVersion { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public string? UR_UserName { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(CredentialStoreNameCompleter<UserName>))]
+        //[SupportsWildcards] // 面倒なのでいっか
+        public string? UR_CredentialStore { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public string? UR_Password { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<UserCredentialTypeItems>))]
+        public string? UR_CredentialType { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? UR_LimitConcurrentExecution { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<ExecutionSettingsTraceLevelItems>))]
+        public string? ES_TracingLevel { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? ES_StudioNotifyServer { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? ES_LoginToConsole { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public int? ES_ResolutionWidth { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public int? ES_ResolutionHeight { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public int? ES_ResolutionDepth { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? ES_FontSmoothing { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? ES_AutoDownloadProcess { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(DriveCompleter<Type_UserName_Roles>))]
@@ -152,315 +452,352 @@ namespace UiPath.PowerShell.Commands
             }
         }
 
+        // TODO: これ、どこか共通な部分で書いた気がする
+        // 探して置き換えないと。
+        private static bool? TryParse(string? value)
+        {
+            if (bool.TryParse(value, out var boolValue))
+            {
+                return boolValue;
+            }
+            return null;
+        }
+
         protected override void ProcessRecord()
         {
+            _csvLines ??= new Dictionary<(OrchDriveInfo drive, int type, string userName), CsvLine>(new CsvLineComparer());
+
             // 先頭の要素は CSV から入力されている可能性があるので、先頭の要素についてはカンマで区切る
+            Path = Path.Split1stValueByUnescapedCommas()?.ToArray();
+            Type = Type.Split1stValueByUnescapedCommas()?.ToArray();
+            UserName = UserName.Split1stValueByUnescapedCommas()?.ToArray();
             Roles = Roles.Split1stValueByUnescapedCommas()?.ToArray();
 
-            _params ??= [];
-
+            var drives = OrchDriveInfo.EnumOrchDrives(Path);
             var wpType = Type.ConvertToWildcardPatternList();
             var specifiedTypes = Types.SelectByWildcards(t => t.Value, wpType).Select(t => t.Key);
 
-            var wpRoles = Roles.ConvertToWildcardPatternList();
-
-            var drives = OrchDriveInfo.EnumOrchDrives(Path);
-
-            // 指定されたドライブに対して、既存のユーザーをキャッシュする
-            // と思ったけど、どうせ初回にキャッシュされるし、毎回スレッドを起こす方が無駄かな。。
-            //ParallelResults.ForEach(drives, drive => drive.GetUsers());
-
-            // Roles が指定されていれば、あらかじめキャッシュする
-            // と思ったけど、どうせ初回にキャッシュされるし、毎回スレッドを起こす方が無駄かな。。
-            //if (Roles != null && !Roles.All(r => !string.IsNullOrEmpty(r)))
-            //{
-            //    ParallelResults.ForEach(drives, drive => drive.GetRoles());
-            //}
-
-            HashSet<(OrchDriveInfo, string)> warnedUsers = [];
             foreach (var drive in drives)
             {
-                ICollection<User> existingUsers;
-                try
+                foreach (var specifiedType in specifiedTypes)
                 {
-                    existingUsers = drive.GetUsers();
-                }
-                catch (Exception ex)
-                {
-                    WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetUserError", ErrorCategory.InvalidOperation, drive));
-                    continue;
-                }
-
-                HashSet<Entities.Role> targetRoles = null;
-                if (Roles != null && Roles.Any(r => !string.IsNullOrEmpty(r)))
-                {
-                    try
+                    foreach (var userName in UserName!)
                     {
-                        targetRoles = drive.GetRoles()
-                            .Where(r => r.Type != "Folder")
-                            .SelectByWildcards(r => r?.Name, wpRoles)
-                            .ToHashSet();
-                    }
-                    catch (Exception ex)
-                    {
-                        WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetRoleError", ErrorCategory.InvalidOperation, drive));
-                        continue;
-                    }
-                }
-
-                foreach (var identityName in UserName!)
-                {
-                    DirectoryObject[]? users;
-                    try
-                    {
-                        users = drive.SearchForUsersAndGroups(identityName);
-                    }
-                    catch (Exception ex)
-                    {
-                        WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "SearchForUsersAndGroupsError", ErrorCategory.InvalidOperation, drive));
-                        continue;
-                    }
-
-                    var targetUsers = users?
-                        .Where(u => string.Compare(u.identityName, identityName, StringComparison.OrdinalIgnoreCase) == 0)
-                        .FilterByStructValues(u => u.type ?? -1, specifiedTypes);
-
-                    if (targetUsers == null || !targetUsers.Any())
-                    {
-                        if (warnedUsers.Add((drive, identityName)))
+                        if (!_csvLines.TryGetValue((drive, specifiedType, userName), out var line))
                         {
-                            WriteWarning($"No match found for user '{System.IO.Path.Combine(drive.NameColonSeparator, identityName)}' ({string.Join(", ", Type ?? [])}).");
-                        }
-                        continue;
-                    }
-
-                    foreach (var targetUser in targetUsers)
-                    {
-                        var existingUser = existingUsers.FirstOrDefault(u => u.DirectoryIdentifier == targetUser.identifier);
-                        if (existingUser != null)
-                        {
-                            if (warnedUsers.Add((drive, identityName)))
-                            {
-                                WriteWarning($"The user '{System.IO.Path.Combine(drive.NameColonSeparator, identityName)}' ({string.Join(", ", Type ?? [])}) already exists.");
-                            }
-                            continue;
-                        }
-
-                        if (!_params.TryGetValue((drive, targetUser), out var rolesToAdd))
-                        {
-                            _params[(drive, targetUser)] = targetRoles ?? [];
+                            _csvLines[(drive, specifiedType, userName)] = new CsvLine(this);
                         }
                         else
                         {
-                            foreach (var role in targetRoles ?? [])
-                            {
-                                rolesToAdd.Add(role);
-                            }
+                            line.Update(this, drive, userName);
                         }
                     }
                 }
             }
         }
 
+        private IEnumerable<string> ExcludeFolderRoles(OrchDriveInfo drive, IEnumerable<string>? roles, HashSet<(OrchDriveInfo drive, string roleName)> warnedNoMatchingRoles)
+        {
+            if (roles == null) return [];
+            try
+            {
+                var existingRoles = drive.GetRoles();
+
+                foreach (var specifiedRole in roles)
+                {
+                    #region 存在しないロールが指定された場合には警告する
+                    var wpRole = new WildcardPattern(specifiedRole, WildcardOptions.IgnoreCase);
+                    if (!existingRoles.Any(r => wpRole.IsMatch(r.Name)))
+                    {
+                        warnedNoMatchingRoles ??= [];
+                        if (warnedNoMatchingRoles.Add((drive, specifiedRole.ToLower())))
+                        {
+                            WriteError(new ErrorRecord(
+                                new OrchException(drive.NameColonSeparator, $"No matching role found for '{specifiedRole}'. Ignored."),
+                                "NoMatchedRoleError",
+                                ErrorCategory.ObjectNotFound,
+                                drive));
+                        }
+                    }
+                    #endregion
+
+                    #region フォルダーロールが指定された場合には警告する
+                    foreach (var role in existingRoles
+                        .Where(r => r.Type == "Folder" && wpRole.IsMatch(r.Name))
+                        .OrderBy(r => r.Name))
+                    {
+                        WriteWarning($"\"{role.GetPSPath()}\": Folder role detected. Ignored.");
+                    }
+                    #endregion
+                }
+
+                var wpRoles = roles.ConvertToWildcardPatternList();
+                return existingRoles
+                    .Where(r => r.Type != "Folder")
+                    .SelectByWildcards(r => r?.Name, wpRoles)
+                    .Select(r => r.Name!)
+                    .Distinct();
+            }
+            catch (Exception ex)
+            {
+                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetRoleError", ErrorCategory.InvalidOperation, drive));
+            }
+            return [];
+        }
+
+        private IEnumerable<DirectoryObject> SearchUser(OrchDriveInfo drive, string userName, int type, HashSet<(OrchDriveInfo drive, string userName)> warnedNoExistingUsers)
+        {
+            IEnumerable<DirectoryObject> users;
+            try
+            {
+                users = drive.SearchForUsersAndGroups(userName);
+            }
+            catch (Exception ex)
+            {
+                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "SearchForUsersAndGroupsError", ErrorCategory.InvalidOperation, drive));
+                return [];
+            }
+
+            var targetUsers = users?
+                .Where(u => string.Compare(u.identityName, userName, StringComparison.OrdinalIgnoreCase) == 0 && u.type == type);
+                //.FilterByStructValues(u => u.type ?? -1, types);
+
+            if (targetUsers == null || !targetUsers.Any())
+            {
+                if (warnedNoExistingUsers.Add((drive, userName.ToLower())))
+                {
+                    WriteWarning($"No match found for user '{System.IO.Path.Combine(drive.NameColonSeparator, userName)}' ({string.Join(", ", Type ?? [])}) in your organization.");
+                }
+                return [];
+            }
+            return targetUsers;
+        }
+
+        private bool userAlreadyExists(Dictionary<OrchDriveInfo, Dictionary<string, Entities.User>> existingUsersPerDrive, OrchDriveInfo drive, string userName)
+        {
+            // まだキャッシュを未作成なら作成する
+            if (!existingUsersPerDrive.TryGetValue(drive, out var existingUsers))
+            {
+                var eusers = drive.GetUsers();
+                existingUsers = eusers
+                    .Where(u => !string.IsNullOrEmpty(u.UserName))
+                    .ToDictionary(u => u.UserName!, u => u, StringComparer.OrdinalIgnoreCase);
+
+                existingUsersPerDrive[drive] = existingUsers;
+            }
+
+            // キャッシュを検索する
+            if (existingUsers.TryGetValue(userName, out var existingUser))
+            {
+                // このユーザーが、すでにテナントに追加済みなら警告してスキップ
+                string existingUserName = $"{existingUser.UserName}";
+                if (!string.IsNullOrEmpty(existingUser.FullName))
+                {
+                    existingUserName += $" ({existingUser.FullName})";
+                }
+                WriteWarning($"'{drive.NameColonSeparator}{existingUserName}' already exists in this tenant.");
+                return true;
+            }
+
+            return false;
+        }
+
         protected override void EndProcessing()
         {
-            var drives = OrchDriveInfo.EnumOrchDrives(Path);
-
-            var wpType = Type.ConvertToWildcardPatternList();
-            var specifiedTypes = Types.SelectByWildcards(t => t.Value, wpType).Select(t => t.Key);
-
-            var wpRoles = Roles.ConvertToWildcardPatternList();
+            if (_csvLines == null) return;
 
             using var cancelHandler = new ConsoleCancelHandler();
 
-            foreach (var p in _params?
-                .OrderBy(p => p.Key.drive.NameColon)
-                .ThenBy(p => p.Key.user.identityName).ToList() ?? [])
+            HashSet<(OrchDriveInfo drive, string roleName)> warnedNoMatchingRoles = [];
+            HashSet<(OrchDriveInfo drive, string userName)> warnedNoExistingUsers = [];
+
+            Dictionary<OrchDriveInfo, Dictionary<string, Entities.User>> existingUsersPerDrive = [];
+
+            int index = 0;
+            string msg = "Add users... ";
+            using var reporter = new ProgressReporter(this, 1, _csvLines.Count, msg, msg);
+            foreach (var key_line in _csvLines
+                .OrderBy(kl => kl.Key.drive.NameColon)
+                .ThenBy(kl => kl.Key.userName)
+                .ThenBy(kl => kl.Key.type))
             {
-                var (drive, user) = p.Key;
-                var roles = p.Value;
+                var drive = key_line.Key.drive;
+                var type = key_line.Key.type;
+                var userName = key_line.Key.userName;
+                var line = key_line.Value;
 
-                string target = System.IO.Path.Combine(drive.NameColonSeparator, user.identityName ?? user.identifier ?? "");
-                if (!string.IsNullOrEmpty(user.displayName))
-                    target += $" ({user.displayName})";
-                string target2 = roles?.Count != 0 ? $"{target} with {string.Join(", ", roles!.Select(r => $"'{r.Name}'"))}" : target;
+                var targetRoles = ExcludeFolderRoles(drive, line.Roles, warnedNoMatchingRoles);
 
-                if (ShouldProcess(target2, $"Add {Types[user.type ?? 0]}"))
+                //var existingUsers = drive.GetUsers();
+
+                var users = SearchUser(drive, userName, type, warnedNoExistingUsers);
+
+                // ユーザーが見つからない場合でも、progress bar が進捗するようにしておく
+                if (!users.Any())
                 {
-                    User postingUser = new()
-                    {
-                        DirectoryIdentifier = user.identifier,
-                        Domain = "autogen",
-                        RolesList = roles?.Select(r => r.Name!).ToArray(),
-                        Type = Types[user.type ?? 0],
-                        NotificationSubscription = new()
-                        {
-                            Queues = true,
-                            QueueItems = true,
-                            Robots = true,
-                            Jobs = true,
-                            Tasks = true,
-                            Schedules = true,
-                            Insights = true,
-                            CloudRobots = true,
-                            Export = true,
-                            RateLimitsDaily = true,
-                            RateLimitsRealTime = false
-                        },
-                        MayHaveRobotSession = false,
-                        MayHaveUnattendedSession = false,
-                        MayHavePersonalWorkspace = false,
-                        IsExternalLicensed = false,
-                        RestrictToPersonalWorkspace = false,
-                        UpdatePolicy = new()
-                        {
-                            Type = "None"
-                        }
-                    };
-
-                    if (user.type == 3) // robot の場合
-                    {
-                        postingUser.MayHaveUserSession = false; // prohibit 'Standard Interface'
-                        postingUser.MayHaveUnattendedSession = true;
-                        postingUser.UnattendedRobot = new()
-                        {
-                            CredentialType = "NoCredential",
-                            LimitConcurrentExecution = false,
-                        };
-                    }
-                    else if (user.type == 4) // application の場合
-                    {
-                        postingUser.MayHaveUserSession = false; // prohibit 'Standard Interface'
-                    }
-
-                    try
-                    {
-                        drive.OrchAPISession.PostUser(postingUser);
-                        drive._dicUsers = null;
-                        drive._dicUsersDetailed = null;
-                    }
-                    catch (Exception ex)
-                    {
-                        WriteError(new ErrorRecord(new OrchException(target, ex), "AddUserError", ErrorCategory.InvalidOperation, drive));
-                    }
-
+                    string target = System.IO.Path.Combine(drive.NameColonSeparator, userName);
+                    reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {target}");
+                    continue;
                 }
 
+                // SearchUser() は、一人しか返してこないはずだが念のため。
+                foreach (var user in users)
+                {
+                    cancelHandler.Token.ThrowIfCancellationRequested();
 
+                    string target = System.IO.Path.Combine(drive.NameColonSeparator, user.identityName ?? user.identifier!);
+                    if (!string.IsNullOrEmpty(user.displayName))
+                        target += $" ({user.displayName})";
 
-                //foreach (var drive in drives)
-                //{
-                //    List<Entities.Role> roles;
-                //    try
-                //    {
-                //        roles = drive.GetRoles()
-                //            .Where(r => r.Type != "Folder")
-                //            .SelectByWildcards(r => r?.Name, wpRoles)
-                //            .ToList();
-                //    }
-                //    catch (Exception ex)
-                //    {
-                //        WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetRoleError", ErrorCategory.InvalidOperation, drive));
-                //        continue;
-                //    }
+                    reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {target}");
 
-                //    var strRolesToAdd = string.Join(", ", roles.Select(r => "'" + r.Name + "'"));
+                    if (userAlreadyExists(existingUsersPerDrive, drive, userName))
+                    {
+                        continue;
+                    }
 
-                //    foreach (var identityName in UserName!)
-                //    {
-                //        cancelHandler.Token.ThrowIfCancellationRequested();
+                    if (ShouldProcess(target, $"Add {Types[type]}"))
+                    {
+                        Entities.User postingUser = new()
+                        {
+                            DirectoryIdentifier = user.identifier!,
+                            Domain = "autogen",
+                            //FullName = "",
+                            Type = Types[user.type ?? 0],
+                            NotificationSubscription = new()
+                            {
+                                Queues = true,
+                                QueueItems = true,
+                                Robots = true,
+                                Jobs = true,
+                                Tasks = true,
+                                Schedules = true,
+                                Insights = true,
+                                CloudRobots = true,
+                                Export = true,
+                                RateLimitsDaily = true,
+                                RateLimitsRealTime = false
+                            },
+                            RolesList = targetRoles.ToArray()
+                        };
 
-                //        DirectoryObject[]? users;
-                //        try
-                //        {
-                //            users = drive.SearchForUsersAndGroups(identityName);
-                //        }
-                //        catch (Exception ex)
-                //        {
-                //            WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "SearchForUsersAndGroupsError", ErrorCategory.InvalidOperation, drive));
-                //            continue;
-                //        }
+                        //postingUser.RolesList ??= [];
 
-                //        var targetUsers = users?
-                //            .Where(u => string.Compare(u.identityName, identityName, StringComparison.OrdinalIgnoreCase) == 0)
-                //            .FilterByStructValues(u => u.type ?? -1, specifiedTypes);
+                        postingUser.AssignBoolIfNotNull(line.MayHaveUserSession, (u, v) => u.MayHaveUserSession = v);
+                        postingUser.AssignBoolIfNotNull(line.MayHaveRobotSession, (u, v) => u.MayHaveRobotSession = v);
+                        postingUser.AssignBoolIfNotNull(line.MayHaveUnattendedSession, (u, v) => u.MayHaveUnattendedSession = v);
+                        postingUser.AssignBoolIfNotNull(line.MayHavePersonalWorkspace, (u, v) => u.MayHavePersonalWorkspace = v);
 
-                //        if (WarnOnNoMatch.IsPresent && (targetUsers == null || !targetUsers.Any()))
-                //        {
-                //            WriteWarning($"No match found for UserName '{System.IO.Path.Combine(drive.NameColonSeparator, identityName)}' ({string.Join(", ", Type ?? [])}).");
-                //            continue;
-                //        }
+                        //postingUser.IsExternalLicensed = false;
+                        //postingUser.AssignBoolIfNotNull(IsExternalLicensed, (u, v) => u.IsExternalLicensed = v);
+                        postingUser.AssignBoolIfNotNull(line.RestrictToPersonalWorkspace, (u, v) => u.RestrictToPersonalWorkspace = v);
 
-                //        // この時点で、targetUsers は一人だけになっているはず
-                //        foreach (var user in targetUsers ?? [])
-                //        {
-                //            cancelHandler.Token.ThrowIfCancellationRequested();
+                        postingUser.AssignUpdatePolicy(UpdatePolicyType, UpdatePolicyVersion);
 
-                //            string target = System.IO.Path.Combine(drive.NameColonSeparator, user.identityName ?? user.identifier ?? "");
-                //            if (!string.IsNullOrEmpty(user.displayName))
-                //                target += $" ({user.displayName})";
-                //            string target2 = roles?.Count != 0 ? $"{target} with {strRolesToAdd}" : target;
+                        if (!string.IsNullOrEmpty(line.UR_UserName) ||
+                            !string.IsNullOrEmpty(line.UR_CredentialStore) ||
+                            !string.IsNullOrEmpty(line.UR_Password) ||
+                            !string.IsNullOrEmpty(line.UR_CredentialType) ||
+                            line.UR_LimitConcurrentExecution != null)
+                        {
+                            postingUser.UnattendedRobot = new();
+                            postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(line.UR_UserName, (u, v) => u.UserName = v);
+                            postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(line.UR_Password, (u, v) => u.Password = v);
+                            postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(line.UR_CredentialType, (u, v) => u.CredentialType = v);
+                            postingUser.UnattendedRobot.AssignBoolIfNotNull(line.UR_LimitConcurrentExecution, (u, v) => u.LimitConcurrentExecution = v);
 
-                //            if (ShouldProcess(target2, $"Add {Types[user.type ?? 0]}"))
-                //            {
-                //                User postingUser = new()
-                //                {
-                //                    DirectoryIdentifier = user.identifier,
-                //                    Domain = "autogen",
-                //                    RolesList = roles?.Select(r => r.Name!).ToArray(),
-                //                    Type = Types[user.type ?? 0],
-                //                    NotificationSubscription = new()
-                //                    {
-                //                        Queues = true,
-                //                        QueueItems = true,
-                //                        Robots = true,
-                //                        Jobs = true,
-                //                        Tasks = true,
-                //                        Schedules = true,
-                //                        Insights = true,
-                //                        CloudRobots = true,
-                //                        Export = true,
-                //                        RateLimitsDaily = true,
-                //                        RateLimitsRealTime = false
-                //                    },
-                //                    MayHaveRobotSession = false,
-                //                    MayHaveUnattendedSession = false,
-                //                    MayHavePersonalWorkspace = false,
-                //                    IsExternalLicensed = false,
-                //                    RestrictToPersonalWorkspace = false,
-                //                    UpdatePolicy = new()
-                //                    {
-                //                        Type = "None"
-                //                    }
-                //                };
+                            if (line.UR_CredentialStore != null)
+                            {
+                                var credentialStores = drive.GetCredentialStores();
+                                var targetStore = credentialStores.FirstOrDefault(cs => string.Compare(cs.Name, line.UR_CredentialStore, true) == 0);
+                                postingUser.UnattendedRobot.CredentialStoreId = targetStore?.Id;
+                            }
 
-                //                if (user.type == 3) // robot の場合
-                //                {
-                //                    postingUser.MayHaveUserSession = false; // prohibit 'Standard Interface'
-                //                    postingUser.MayHaveUnattendedSession = true;
-                //                    postingUser.UnattendedRobot = new()
-                //                    {
-                //                        CredentialType = "NoCredential",
-                //                        LimitConcurrentExecution = false,
-                //                    };
-                //                }
-                //                else if (user.type == 4) // application の場合
-                //                {
-                //                    postingUser.MayHaveUserSession = false; // prohibit 'Standard Interface'
-                //                }
+                            // パスワードが指定されていれば、CredentialStoreId を埋めておく
+                            if (postingUser.UnattendedRobot.Password != null && postingUser.UnattendedRobot.CredentialStoreId == null)
+                            {
+                                var credentialStores = drive.GetCredentialStores();
+                                var defaultStore = credentialStores.FirstOrDefault(cs => string.Compare(cs.Name, "Orchestrator Database", true) == 0);
+                                postingUser.UnattendedRobot.CredentialStoreId = defaultStore?.Id;
+                            }
+                        }
 
-                //                try
-                //                {
-                //                    drive.OrchAPISession.PostUser(postingUser);
-                //                    drive._dicUsers = null;
-                //                }
-                //                catch (Exception ex)
-                //                {
-                //                    WriteError(new ErrorRecord(new OrchException(target, ex), "AddUserError", ErrorCategory.InvalidOperation, drive));
-                //                }
-                //            }
-                //        }
-                //    }
+                        if (!string.IsNullOrEmpty(line.ES_TracingLevel) ||
+                            line.ES_StudioNotifyServer != null ||
+                            line.ES_LoginToConsole != null ||
+                            (line.ES_ResolutionWidth != null && line.ES_ResolutionWidth != 0) ||
+                            (line.ES_ResolutionHeight != null && line.ES_ResolutionHeight != 0) ||
+                            (line.ES_ResolutionDepth != null && line.ES_ResolutionDepth != 0) ||
+                            line.ES_FontSmoothing != null ||
+                            line.ES_AutoDownloadProcess != null)
+                        {
+                            postingUser.UnattendedRobot ??= new();
+
+                            postingUser.UnattendedRobot.ExecutionSettings ??= new();
+
+                            postingUser.UnattendedRobot.ExecutionSettings.AssignStringIfNotNullOrEmpty(line.
+                                ES_TracingLevel, (es, v) =>
+                                es.TracingLevel = v);
+
+                            postingUser.UnattendedRobot.ExecutionSettings.AssignBoolIfNotNull(line.
+                                ES_StudioNotifyServer, (es, v) =>
+                                es.StudioNotifyServer = v);
+
+                            postingUser.UnattendedRobot.ExecutionSettings.AssignBoolIfNotNull(line.
+                                ES_LoginToConsole, (es, v) =>
+                                es.LoginToConsole = v);
+
+                            postingUser.UnattendedRobot.ExecutionSettings.AssignNumberIfNotNull(line.
+                                ES_ResolutionWidth, (es, v) =>
+                                es.ResolutionWidth = v);
+
+                            postingUser.UnattendedRobot.ExecutionSettings.AssignNumberIfNotNull(line.
+                                ES_ResolutionHeight, (es, v) =>
+                                es.ResolutionHeight = v);
+
+                            postingUser.UnattendedRobot.ExecutionSettings.AssignNumberIfNotNull(line.
+                                ES_ResolutionDepth, (es, v) =>
+                                es.ResolutionDepth = v);
+
+                            postingUser.UnattendedRobot.ExecutionSettings.AssignBoolIfNotNull(line.
+                                ES_FontSmoothing, (es, v) =>
+                                es.FontSmoothing = v);
+
+                            postingUser.UnattendedRobot.ExecutionSettings.AssignBoolIfNotNull(line.
+                                ES_AutoDownloadProcess, (es, v) =>
+                                es.AutoDownloadProcess = v);
+                        }
+
+                        if (user.type == 3) // robot の場合
+                        {
+                            postingUser.MayHaveUserSession ??= false; // prohibit 'Standard Interface'
+                            postingUser.MayHaveUnattendedSession ??= true;
+                            postingUser.UnattendedRobot ??= new();
+                            postingUser.UnattendedRobot.CredentialType ??= "NoCredential";
+                            postingUser.UnattendedRobot.LimitConcurrentExecution ??= false;
+                        }
+                        else if (user.type == 4) // application の場合
+                        {
+                            postingUser.MayHaveUserSession ??= false; // prohibit 'Standard Interface'
+                        }
+
+                        try
+                        {
+                            var createdUser = drive.OrchAPISession.PostUser(postingUser);
+                            if (createdUser != null)
+                            {
+                                createdUser.Path = drive.NameColonSeparator;
+                                WriteObject(createdUser);
+                            }
+                            drive._dicUsers = null;
+                            drive._dicUsersDetailed = null;
+                        }
+                        catch (Exception ex)
+                        {
+                            WriteError(new ErrorRecord(new OrchException(target, ex), "AddUserError", ErrorCategory.InvalidOperation, drive));
+                        }
+                    }
+                }
             }
         }
     }

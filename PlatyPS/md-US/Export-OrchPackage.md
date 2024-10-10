@@ -13,7 +13,7 @@ schema: 2.0.0
 ## SYNTAX
 
 ```
-Export-OrchPackage [[-Id] <String[]>] [[-Version] <String[]>] [[-Destination] <String>] [-Path <String[]>]
+Export-OrchPackage [-Id] <String[]> [[-Version] <String[]>] [[-Destination] <String>] [-Path <String[]>]
  [-Recurse] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
@@ -60,7 +60,7 @@ Type: String[]
 Parameter Sets: (All)
 Aliases:
 
-Required: False
+Required: True
 Position: 0
 Default value: None
 Accept pipeline input: True (ByPropertyName)

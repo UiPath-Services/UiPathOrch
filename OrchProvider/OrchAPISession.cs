@@ -91,7 +91,6 @@ namespace UiPath.OrchAPI
         // 1秒間の間に送出できるリクエスト数を15に制限
         private readonly RateLimiter limitter = new(15);
 
-        //private int http_call_num = 0; // for debug log
         private HttpResponseMessage HttpClient_Send(HttpRequestMessage message, CancellationToken cancellationToken = default)
         {
             //limitter.WaitAsync(cancellationToken).GetAwaiter().GetResult();
@@ -99,8 +98,6 @@ namespace UiPath.OrchAPI
             try
             {
                 // すべての HTTP リクエストをコンソールにログ出力
-                //int num = Interlocked.Increment(ref http_call_num);
-                //Console.WriteLine($"HTTP#{num} {message.Method} {message.RequestUri}");
 
                 var ret = HttpClient!.Send(message, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
@@ -1068,6 +1065,27 @@ namespace UiPath.OrchAPI
             return HttpRequest<CreatedMachine>(HttpMethod.Post, "/odata/Machines", null, machine);
         }
 
+        public MachineClientSecretResponse[]? GetMachineClientSecret(Guid licenseKey)
+        {
+            return HttpRequest<MachineClientSecretResponse[]>(HttpMethod.Get, $"/api/clientsecrets/{licenseKey}");
+        }
+
+        public MachineClientSecretResponse? AddMachineClientSecret(Guid licenseKey)
+        {
+            return HttpRequest<MachineClientSecretResponse>(HttpMethod.Post, $"/api/clientsecrets/{licenseKey}");
+        }
+
+        public void DeleteMachineClientSecret(string secretId)
+        {
+            HttpRequest(HttpMethod.Delete, $"/api/clientsecrets/{secretId}");
+        }
+
+        public void PatchMachine(ExtendedMachine machine)
+        {
+            // 空文字列が返る
+            HttpRequest(HttpMethod.Patch, $"/odata/Machines({machine.Id!.Value})", null, machine);
+        }
+
         public void RemoveMachine(Int64 machineId)
         {
             HttpRequest(HttpMethod.Delete, $"/odata/Machines({machineId})");
@@ -1450,12 +1468,12 @@ namespace UiPath.OrchAPI
             return GetEnumerable<Bucket>("/odata/Buckets", folderId);
         }
 
-        public Bucket? CreateBucket(Int64 folderId, Bucket bucket)
+        public Bucket? PostBucket(Int64 folderId, Bucket bucket)
         {
             return HttpRequest<Bucket>(HttpMethod.Post, "/odata/Buckets", folderId, bucket);
         }
 
-        public void RemoveBucket(Int64 folderId, Int64 bucketId)
+        public void DeleteBucket(Int64 folderId, Int64 bucketId)
         {
             string body = HttpRequest(HttpMethod.Delete, $"/odata/Buckets({bucketId})", folderId);
         }
@@ -1615,7 +1633,7 @@ namespace UiPath.OrchAPI
 
         public User? PostUser(User user)
         {
-            return HttpRequest<User>(HttpMethod.Post, $"/odata/Users", null, user);
+            return HttpRequest<User>(HttpMethod.Post, "/odata/Users", null, user);
         }
 
         public void PutUser(User user)
@@ -1628,12 +1646,7 @@ namespace UiPath.OrchAPI
             HttpRequest(HttpMethod.Patch, $"/odata/Users({user.Id ?? 0})", null, user);
         }
 
-        public User? CreateUser(User user)
-        {
-            return HttpRequest<User>(HttpMethod.Post, "/odata/Users", null, user);
-        }
-
-        public void RemoveUser(Int64 userId)
+        public void DeleteUser(Int64 userId)
         {
             HttpRequest(HttpMethod.Delete, $"/odata/Users({userId})");
         }
@@ -2376,7 +2389,14 @@ namespace UiPath.OrchAPI
 
         public PmDirectoryEntityInfo[]? SearchPmDirectoryUsers(string partitionGlobalId, string userName)
         {
-            return GetEnumerableWithoutPagingIdentity<PmDirectoryEntityInfo>($"/api/Directory/Search/{partitionGlobalId}", null, $"&startsWith={userName}&sourceFilter=localUsers&sourceFilter=directoryUsers&sourceFilter=directoryGroups&sourceFilter=robotAccounts&sourceFilter=applications");
+            return GetEnumerableWithoutPagingIdentity<PmDirectoryEntityInfo>($"/api/Directory/Search/{partitionGlobalId}", null, $"&startsWith={userName}" +
+                "&sourceFilter=localUsers" +
+                "&sourceFilter=localGroups" +
+                "&sourceFilter=directoryUsers" +
+                "&sourceFilter=directoryGroups" +
+                "&sourceFilter=robotAccounts" +
+                "&sourceFilter=applications");
+            //return GetEnumerableWithoutPagingIdentity<PmDirectoryEntityInfo>($"/api/Directory/Search/{partitionGlobalId}", null, $"&startsWith={userName}&sourceFilter=localUsers&sourceFilter=directoryUsers&sourceFilter=directoryGroups&sourceFilter=robotAccounts&sourceFilter=applications");
         }
 
         // undocumented API
@@ -2413,35 +2433,70 @@ namespace UiPath.OrchAPI
             return GetEnumerableWithoutPagingIdentity<PmGroup>($"/api/Group/{partitionGlobalId}");
         }
 
+        public PmGroup[]? GetPmGroups2(string partitionGlobalId)
+        {
+            return GetEnumerableWithoutPagingPortal<PmGroup>($"/api/identity/Group/{partitionGlobalId}/licenses");
+        }
+
+        // 非公開の API だな。。なんじゃこりゃ簡単に URL を構築できない。
+        // "/portal_/api/orchestrator/tags/yotsuda/svc3?skip=0&take=10&startsWith=&type=Label"
+        //public void GetTags()
+        //{
+        //    string body = HttpRequestPortal(HttpMethod.Get, "/api/orchestrator/tags");
+        //}
+
         // 非公開の API だな。。
-        public AvailableUserBundles? GetPmUserLicenseGroupsAvailableLicenses(Guid? groupId)
+        public AvailableUserBundles? GetPmLicensedGroupsAvailableLicenses(string? groupId)
         {
             if (groupId == null) return null;
             return HttpRequestPortal<AvailableUserBundles>(HttpMethod.Get, $"/api/license/accountant/UserLicense/group/?id={groupId}");
         }
 
         // 非公開の API だな。。
-        public IEnumerable<NuLicensedGroup> GetPmUserLicenseGroups()
+        public IEnumerable<NuLicensedGroup> GetPmLicensedGroups()
         {
             return GetEnumerablePortal<NuLicensedGroup>("/api/license/accountant/UserLicense/group/page");
         }
 
+        private class RemovePmLicensedGroupCommand
+        {
+            public string? id { get; set; }
+        }
+
         // 非公開の API だな。。
-        public IEnumerable<NuLicensedGroupMember> GetPmUserLicenseGroupAllocations(Guid groupId)
+        public void RemovePmLicensedGroup(string? groupId)
+        {
+            if (groupId == null) return;
+            var removeGroup = new RemovePmLicensedGroupCommand
+            {
+                id = groupId
+            };
+            // nothing returns
+            HttpRequestPortal(HttpMethod.Delete, "/api/license/accountant/UserLicense/group", null, removeGroup);
+        }
+
+        // 非公開の API だな。。
+        public IEnumerable<NuLicensedGroupMember> GetPmLicenseGroupAllocations(string? groupId)
         {
             return GetEnumerablePortal<NuLicensedGroupMember>($"/api/license/accountant/UserLicense/group/{groupId}/allocations");
         }
 
         // 非公開の API だな。。
-        public UpdateLicensedGroupResponse? PutUserLicenseGroup(UpdateLicensedGroupCommand command)
+        public UpdateLicensedGroupResponse? PutPmLicenseGroup(UpdateLicensedGroupCommand command)
         {
             return HttpRequestPortal<UpdateLicensedGroupResponse>(HttpMethod.Put, "/api/license/accountant/UserLicense/group", null, command);
         }
 
         // 非公開の API だな。。
-        public void DeletePmUserLicenseGroupAllocations(Guid? groupId, string userId)
+        public void DeletePmLicenseGroupAllocations(string? groupId, string userId)
         {
             HttpRequestPortal(HttpMethod.Delete, $"/api/license/accountant/UserLicense/group/{groupId}/user/{userId}");
+        }
+
+        // 非公開の API だな。。
+        public IEnumerable<NuLicensedUser> GetPmLicensedUsers()
+        {
+            return GetEnumerablePortal<NuLicensedUser>("/portal_/api/license/accountant/UserLicense/user/page");
         }
 
         private static readonly JsonSerializerOptions jsoMemberConverter = new()
@@ -2449,9 +2504,11 @@ namespace UiPath.OrchAPI
             Converters = { new MemberConverter() }
         };
 
-        public PmGroup? GetPmGroup(string partitionGlobalId, string groupId)
+        public PmGroup? GetPmGroup(string partitionGlobalId, string? groupId)
         {
-            string body = HttpRequestIdentity(HttpMethod.Get, $"/api/Group/{partitionGlobalId}/{groupId}", null, (object?)null);
+            if (groupId == null) return null;
+            //string body = HttpRequestIdentity(HttpMethod.Get, $"/api/Group/{partitionGlobalId}/{groupId}", null, (object?)null);
+            string body = HttpRequestIdentity(HttpMethod.Get, $"/api/Group/{partitionGlobalId}/{groupId}");
             return JsonSerializer.Deserialize<PmGroup>(body, jsoMemberConverter);
         }
 
@@ -2461,8 +2518,9 @@ namespace UiPath.OrchAPI
             return JsonSerializer.Deserialize<PmGroup>(body, jsoMemberConverter);
         }
 
-        public PmGroup? PutPmGroup(string groupId, UpdateGroupCommand updateGroup)
+        public PmGroup? PutPmGroup(string? groupId, UpdateGroupCommand updateGroup)
         {
+            if (groupId == null) return null;
             string body = HttpRequestIdentity(HttpMethod.Put, $"/api/Group/{groupId}", null, updateGroup);
             return JsonSerializer.Deserialize<PmGroup>(body, jsoMemberConverter);
         }
@@ -2472,8 +2530,9 @@ namespace UiPath.OrchAPI
             public string[]? groupIDs { get; set; }
         }
 
-        public void RemovePmGroup(string partitionGlobalId, string groupId)
+        public void RemovePmGroup(string partitionGlobalId, string? groupId)
         {
+            if (groupId == null) return;
             var removeGroup = new RemovePmGroupsInfo
             {
                 groupIDs = [groupId]
@@ -2620,6 +2679,19 @@ namespace UiPath.OrchAPI
         {
             var body = HttpRequest<DuGetExtractorsResponse>(HttpMethod.Get, $"/du_/api/framework/projects/{projectId}/extractors?api-version=1");
             return body?.extractors;
+        }
+
+        public void GetDuUsers(string? partitionGlobalId, string? projectId)
+        {
+            Uri uri = new Uri(_base_url);
+
+            // スキームとホスト部分を結合してベースURLを取得
+            string baseUrl = $"{uri.Scheme}://{uri.Host}/{partitionGlobalId}" +
+                $"/pap_/api/userroleassignments?scope=/tenant/85f39347-04e5-4a38-b97a-ab854d2b1049/DocumentUnderstanding/projects/ca705b98-4803-ed11-b47a-a04a5e8591ac&serviceName=DocumentUnderstanding" +
+                $"" +
+                $"";
+
+            //HttpRequest(HttpMethod.Get, );
         }
 
         #endregion

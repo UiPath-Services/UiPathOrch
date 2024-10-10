@@ -12,7 +12,7 @@ namespace UiPath.PowerShell.Commands
     public class RemoveAllocationFromUserLicenseGroup: OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PmLicenseGroupNameCompleter<GroupName_UserName>))]
+        [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter<GroupName_UserName>))]
         [SupportsWildcards]
         public string[]? GroupName { get; set; }
 
@@ -44,7 +44,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetPmUserLicenseGroups());
+                var results = ParallelResults.ForEach(drives, drive => drive.GetPmLicensedGroups());
 
                 foreach (var result in results)
                 {
@@ -56,7 +56,7 @@ namespace UiPath.PowerShell.Commands
                         .FilterByWildcards(g => g?.name!, wpGroupName)
                         .OrderBy(g => g?.name))
                     {
-                        var users = drive.GetPmUserLicenseGroupAllocations(e);
+                        var users = drive.GetPmLicensedGroupAllocations(e);
                         foreach (var user in users
                             .Where(u => wp.IsMatch(u?.name))
                             .ExcludeByWildcards(u => u?.name!, wpUserName)
@@ -80,7 +80,7 @@ namespace UiPath.PowerShell.Commands
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var drive in drives)
             {
-                var groups = drive.GetPmUserLicenseGroups();
+                var groups = drive.GetPmLicensedGroups();
 
                 var targetGroups = groups.FilterByWildcards(g => g?.name, wpGroupName);
 
@@ -95,7 +95,7 @@ namespace UiPath.PowerShell.Commands
                 foreach (var group in targetGroups.OrderBy(g => g?.name))
                 {
                     cancelHandler.Token.ThrowIfCancellationRequested();
-                    var users = drive.GetPmUserLicenseGroupAllocations(group);
+                    var users = drive.GetPmLicensedGroupAllocations(group);
 
                     var targetUsers = users.FilterByWildcards(u => u?.name, wpUserName);
 
@@ -121,7 +121,7 @@ namespace UiPath.PowerShell.Commands
                         {
                             try
                             {
-                                drive.OrchAPISession.DeletePmUserLicenseGroupAllocations(group.id, user.id!);
+                                drive.OrchAPISession.DeletePmLicenseGroupAllocations(group.id, user.id!);
                                 drive._dicPmUserLicenseGroupAllocations = null;
                                 drive._dicPmUserLicenseGroupAllocations_Exceptions.ClearCache();
                             }

@@ -147,27 +147,6 @@ namespace UiPath.PowerShell.Commands
         //[Parameter]
         //public uint Depth { get; set; }
 
-        internal class TimeZoneCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                if (!wordToComplete.EndsWith('?')) wordToComplete += '*';
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                foreach (var timeZone in TimeZoneInfo.GetSystemTimeZones()
-                    .Where(t => wp.IsMatch(t.DisplayName)))
-                {
-                    string tiphelp = $"{timeZone.DisplayName} (Id = '{timeZone.Id}')";
-                    yield return new CompletionResult(PathTools.EscapePSText(timeZone.DisplayName), timeZone.DisplayName, CompletionResultType.ParameterValue, tiphelp);
-                }
-            }
-        }
-
         protected override void ProcessRecord()
         {
             var drivesFolders = OrchDriveInfo.EnumFolders(Path);
@@ -199,38 +178,38 @@ namespace UiPath.PowerShell.Commands
                         Name = WildcardPattern.Unescape(name)
                     };
 
-                    schedule.AssignBool(Enabled, (s, v) => s.Enabled = v);
+                    schedule.AssignBoolIfNotNull(Enabled, (s, v) => s.Enabled = v);
                     schedule.Enabled ??= true;
 
-                    schedule.AssignNumber(StartStrategy, (s, v) => s.StartStrategy = v);
+                    schedule.AssignNumberIfNotNullOrZero(StartStrategy, (s, v) => s.StartStrategy = v);
                     schedule.StartStrategy ??= 1;
 
-                    schedule.AssignString(StopStrategy,                    (s, v) => s.StopStrategy = v);
-                    schedule.AssignString(StopProcessExpression,           (s, v) => s.StopProcessExpression = v);
-                    schedule.AssignString(KillProcessExpression,           (s, v) => s.KillProcessExpression = v);
-                    schedule.AssignString(AlertPendingExpression,          (s, v) => s.AlertPendingExpression = v);
-                    schedule.AssignString(AlertRunningExpression,          (s, v) => s.AlertRunningExpression = v);
-                    schedule.AssignNumber(ConsecutiveJobFailuresThreshold, (s, v) => s.ConsecutiveJobFailuresThreshold = v);
-                    schedule.AssignNumber(JobFailuresGracePeriodInHours,   (s, v) => s.JobFailuresGracePeriodInHours = v);
+                    schedule.AssignStringIfNotNullOrEmpty(StopStrategy,                    (s, v) => s.StopStrategy = v);
+                    schedule.AssignStringIfNotNullOrEmpty(StopProcessExpression,           (s, v) => s.StopProcessExpression = v);
+                    schedule.AssignStringIfNotNullOrEmpty(KillProcessExpression,           (s, v) => s.KillProcessExpression = v);
+                    schedule.AssignStringIfNotNullOrEmpty(AlertPendingExpression,          (s, v) => s.AlertPendingExpression = v);
+                    schedule.AssignStringIfNotNullOrEmpty(AlertRunningExpression,          (s, v) => s.AlertRunningExpression = v);
+                    schedule.AssignNumberIfNotNullOrZero(ConsecutiveJobFailuresThreshold, (s, v) => s.ConsecutiveJobFailuresThreshold = v);
+                    schedule.AssignNumberIfNotNullOrZero(JobFailuresGracePeriodInHours,   (s, v) => s.JobFailuresGracePeriodInHours = v);
 
                     #region SpecificPriorityValue
                     // SpecificPriorityValue を先に適用、specificPriorityValue が非 null ならそれで上書き
-                    schedule.AssignNumber(SpecificPriorityValue,           (s, v) => s.SpecificPriorityValue = v);
-                    schedule.AssignNumber(specificPriorityValue,           (s, v) => s.SpecificPriorityValue = v);
+                    schedule.AssignNumberIfNotNullOrZero(SpecificPriorityValue,           (s, v) => s.SpecificPriorityValue = v);
+                    schedule.AssignNumberIfNotNullOrZero(specificPriorityValue,           (s, v) => s.SpecificPriorityValue = v);
                     #endregion
 
-                    schedule.AssignString(RuntimeType,       (s, v) => s.RuntimeType = v);
+                    schedule.AssignStringIfNotNullOrEmpty(RuntimeType,       (s, v) => s.RuntimeType = v);
                     schedule.RuntimeType ??= "Unattended";
 
-                    schedule.AssignString(InputArguments,    (s, v) => schedule.InputArguments = v);
+                    schedule.AssignStringIfNotNullOrEmpty(InputArguments,    (s, v) => schedule.InputArguments = v);
 
-                    schedule.AssignBool(ResumeOnSameContext, (s, v) => s.ResumeOnSameContext = v);
+                    schedule.AssignBoolIfNotNull(ResumeOnSameContext, (s, v) => s.ResumeOnSameContext = v);
                     schedule.ResumeOnSameContext ??= false;
 
-                    schedule.AssignBool(RunAsMe,             (s, v) => s.RunAsMe = v);
+                    schedule.AssignBoolIfNotNull(RunAsMe,             (s, v) => s.RunAsMe = v);
                     schedule.RunAsMe ??= false;
 
-                    schedule.AssignBool(IsConnected,         (s, v) => s.IsConnected = v);
+                    schedule.AssignBoolIfNotNull(IsConnected,         (s, v) => s.IsConnected = v);
 
                     #region // CalendarName を CalendarId に変換
                     schedule.AssignIdFromName(
@@ -244,15 +223,15 @@ namespace UiPath.PowerShell.Commands
                     schedule.UseCalendar = (schedule.CalendarId != null);
                     #endregion
 
-                    schedule.AssignNumber(ItemsActivationThreshold,    (s, v) => s.ItemsActivationThreshold = v);
-                    schedule.AssignNumber(ItemsPerJobActivationTarget, (s, v) => s.ItemsPerJobActivationTarget = v);
-                    schedule.AssignNumber(MaxJobsForActivation,        (s, v) => s.MaxJobsForActivation = v);
-                    schedule.AssignBool(ActivateOnJobComplete,         (s, v) => s.ActivateOnJobComplete = v);
+                    schedule.AssignNumberIfNotNullOrZero(ItemsActivationThreshold,    (s, v) => s.ItemsActivationThreshold = v);
+                    schedule.AssignNumberIfNotNullOrZero(ItemsPerJobActivationTarget, (s, v) => s.ItemsPerJobActivationTarget = v);
+                    schedule.AssignNumberIfNotNullOrZero(MaxJobsForActivation,        (s, v) => s.MaxJobsForActivation = v);
+                    schedule.AssignBoolIfNotNull(ActivateOnJobComplete,         (s, v) => s.ActivateOnJobComplete = v);
 
-                    schedule.AssignString(StartProcessCron,            (s, v) => s.StartProcessCron = v);
+                    schedule.AssignStringIfNotNullOrEmpty(StartProcessCron,            (s, v) => s.StartProcessCron = v);
                     schedule.StartProcessCron ??= "0 0/1 * 1/1 * ? *";
 
-                    schedule.AssignString(StartProcessCronDetails,     (s, v) => s.StartProcessCronDetails = v);
+                    schedule.AssignStringIfNotNullOrEmpty(StartProcessCronDetails,     (s, v) => s.StartProcessCronDetails = v);
                     schedule.StartProcessCronDetails ??= $"{{\"advancedCron\":\"{schedule.StartProcessCron}\"}}";
 
                     #region ReleaseName を ReleaseId に変換
@@ -276,7 +255,7 @@ namespace UiPath.PowerShell.Commands
                     #endregion
 
                     #region TimeZone を TimeZoneId に変換
-                    schedule.AssignString(TimeZoneId, (s, v) => s.TimeZoneId = v);
+                    schedule.AssignStringIfNotNullOrEmpty(TimeZoneId, (s, v) => s.TimeZoneId = v);
 
                     schedule.AssignIdFromName(
                         TimeZone,
@@ -289,7 +268,7 @@ namespace UiPath.PowerShell.Commands
                     schedule.TimeZoneId ??= TimeZoneInfo.Local.Id;
                     #endregion
 
-                    schedule.AssignDateTime(StopProcessDate, (s, v) => s.StopProcessDate = v);
+                    schedule.AssignDateTimeIfNotNull(StopProcessDate, (s, v) => s.StopProcessDate = v);
 
                     #region MachineRobots をデシリアライズ
                     if (!string.IsNullOrEmpty(MachineRobots))

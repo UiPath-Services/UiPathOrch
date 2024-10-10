@@ -21,6 +21,8 @@ using Item40 = UiPath.PowerShell.Positional.Item40;
 using Item100 = UiPath.PowerShell.Positional.Item100;
 using Item180 = UiPath.PowerShell.Positional.Item180;
 using Item500 = UiPath.PowerShell.Positional.Item500;
+using System.Globalization;
+using System.Diagnostics;
 
 
 namespace UiPath.PowerShell.Commands
@@ -139,7 +141,7 @@ namespace UiPath.PowerShell.Commands
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(TagsCompleter))]
-        public string? Tags { get; set; }
+        public string[]? Tags { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
@@ -281,14 +283,9 @@ namespace UiPath.PowerShell.Commands
             }
         }
 
+        // プロセスの Tags 専用
         private class TagsCompleter : OrchArgumentCompleter
         {
-            public class SimpleTag(Tag tag)
-            {
-                public string? Name { get; set; } = tag.Name;
-                public string? Value { get; set; } = string.IsNullOrEmpty(tag.Value) ? null : tag.Value;
-            }
-
             public override IEnumerable<CompletionResult> CompleteArgument(
                 string commandName,
                 string parameterName,
@@ -313,15 +310,11 @@ namespace UiPath.PowerShell.Commands
                     {
                         if (release?.Tags == null) continue;
 
-                        var filteredTags = release.Tags
-                            .Where(tag => !string.IsNullOrEmpty(tag.Name))
-                            .Select(tag => new SimpleTag(tag));
-
-                        // Serialize the result back to JSON
-                        string outputJson = JsonSerializer.Serialize(filteredTags, OrchAPISession.jsoWhenWritingNull);
+                        var values = release.Tags.ConvertToString();
+                        if (string.IsNullOrEmpty(values)) continue;
 
                         string tiphelp = TipHelp(release);
-                        yield return new CompletionResult($"'{outputJson}'", outputJson, CompletionResultType.ParameterValue, tiphelp);
+                        yield return new CompletionResult(PathTools.EscapePSText(values), values, CompletionResultType.Text, tiphelp);
                     }
                 }
             }
@@ -351,13 +344,25 @@ namespace UiPath.PowerShell.Commands
 
                 var targetProcesses = processes.SelectByWildcards(p => p?.Name, wpName);
 
-                foreach (var process in targetProcesses)
+                // GetReleaseById() は、繰り返し処理に入る前に実行する必要がある。
+                // (繰り返し処理の中で呼び出すと、繰り返しが壊れてしまう)
+                // どうせその必要があるのだから、スレッド起こして実行した方が良いな。
+                using var results = OrchThreadPool.RunForEach(targetProcesses,
+                    proc => proc.GetPSPath(),
+                    proc => proc,
+                    proc => drive.GetReleaseById(folder, proc.Id!.Value));
+
+                foreach (var result in results)
                 {
                     cancelHandler.Token.ThrowIfCancellationRequested();
+
+                    var process = result.GetResult(cancelHandler.Token);
+                    if (process == null) continue;
 
                     string target = process.GetPSPath();
 
                     #region 既存のプロセスの内容から、post data を作成
+
                     Release newRelease = OrchCollectionExtensions.DeepCopy(process)!;
                     try
                     {
@@ -372,14 +377,14 @@ namespace UiPath.PowerShell.Commands
 
                     #region パラメータで指定された値を設定
 
-                    newRelease.AssignString(NewName,               (r, v) => r.Name = v);
-                    newRelease.AssignEmptyString(Description,      (r, v) => r.Description = v);
-                    newRelease.AssignString(InputArguments,        (r, v) => r.InputArguments = v);
-                    newRelease.AssignNumber(SpecificPriorityValue, (r, v) => r.SpecificPriorityValue = v);
-                    newRelease.AssignBool(HiddenForAttendedUser,   (r, v) => r.HiddenForAttendedUser = v);
-                    newRelease.AssignString(RemoteControlAccess,   (r, v) => r.RemoteControlAccess = v);
-                    newRelease.AssignString(RetentionAction,       (r, v) => r.RetentionAction = v);
-                    newRelease.AssignNumber(RetentionPeriod,       (r, v) => r.RetentionPeriod = v);
+                    newRelease.AssignStringIfNotNullOrEmpty(NewName,               (r, v) => r.Name = v);
+                    newRelease.AssignStringIfNotNull(Description,                  (r, v) => r.Description = v);
+                    newRelease.AssignStringIfNotNullOrEmpty(InputArguments,        (r, v) => r.InputArguments = v);
+                    newRelease.AssignNumberIfNotNullOrZero(SpecificPriorityValue,  (r, v) => r.SpecificPriorityValue = v);
+                    newRelease.AssignBoolIfNotNull(HiddenForAttendedUser,          (r, v) => r.HiddenForAttendedUser = v);
+                    newRelease.AssignStringIfNotNullOrEmpty(RemoteControlAccess,   (r, v) => r.RemoteControlAccess = v);
+                    newRelease.AssignStringIfNotNullOrEmpty(RetentionAction,       (r, v) => r.RetentionAction = v);
+                    newRelease.AssignNumberIfNotNullOrZero(RetentionPeriod,        (r, v) => r.RetentionPeriod = v);
 
                     #region RetentionBucket を RetentionBucketId に変換する
                     newRelease.AssignIdFromName(
@@ -391,25 +396,25 @@ namespace UiPath.PowerShell.Commands
                         this, target, "RetentionBucket");
                     #endregion
 
-                    newRelease.AssignString(Tags,                  (r, v) => r.Tags = v.DeserializeTags());
+                    newRelease.AssignTags(Tags, (r, v) => r.Tags = v);
 
                     newRelease.ProcessSettings ??= new();
-                    newRelease.ProcessSettings.AssignBool(ErrorRecordingEnabled, (r, v) => r.ErrorRecordingEnabled = v);
-                    newRelease.ProcessSettings.AssignNumber(Duration,            (r, v) => r.Duration = v);
-                    newRelease.ProcessSettings.AssignNumber(Frequency,           (r, v) => r.Frequency = v);
-                    newRelease.ProcessSettings.AssignNumber(Quality,             (r, v) => r.Quality = v);
-                    newRelease.ProcessSettings.AssignBool(AutoStartProcess,      (r, v) => r.AutoStartProcess = v);
-                    newRelease.ProcessSettings.AssignBool(AlwaysRunning,         (r, v) => r.AlwaysRunning = v);
+                    newRelease.ProcessSettings.AssignBoolIfNotNull(ErrorRecordingEnabled, (r, v) => r.ErrorRecordingEnabled = v);
+                    newRelease.ProcessSettings.AssignNumberIfNotNullOrZero(Duration,      (r, v) => r.Duration = v);
+                    newRelease.ProcessSettings.AssignNumberIfNotNullOrZero(Frequency,     (r, v) => r.Frequency = v);
+                    newRelease.ProcessSettings.AssignNumberIfNotNullOrZero(Quality,       (r, v) => r.Quality = v);
+                    newRelease.ProcessSettings.AssignBoolIfNotNull(AutoStartProcess,      (r, v) => r.AutoStartProcess = v);
+                    newRelease.ProcessSettings.AssignBoolIfNotNull(AlwaysRunning,         (r, v) => r.AlwaysRunning = v);
 
                     newRelease.VideoRecordingSettings ??= new();
-                    newRelease.VideoRecordingSettings.AssignString(VideoRecordingType,          (r, v) => r.VideoRecordingType = v);
-                    newRelease.VideoRecordingSettings.AssignString(QueueItemVideoRecordingType, (r, v) => r.QueueItemVideoRecordingType = v);
-                    newRelease.VideoRecordingSettings.AssignNumber(MaxDurationSeconds,          (r, v) => r.MaxDurationSeconds = v);
+                    newRelease.VideoRecordingSettings.AssignStringIfNotNullOrEmpty(VideoRecordingType,          (r, v) => r.VideoRecordingType = v);
+                    newRelease.VideoRecordingSettings.AssignStringIfNotNullOrEmpty(QueueItemVideoRecordingType, (r, v) => r.QueueItemVideoRecordingType = v);
+                    newRelease.VideoRecordingSettings.AssignNumberIfNotNullOrZero(MaxDurationSeconds,           (r, v) => r.MaxDurationSeconds = v);
                     #endregion
 
                     // ProcessVersion を変更した場合には、EntryPointId をつけかえないといけない
                     string currentProcessVersion = newRelease.ProcessVersion;
-                    newRelease.AssignString(Version, (r, v) => r.ProcessVersion = v);
+                    newRelease.AssignStringIfNotNullOrEmpty(Version, (r, v) => r.ProcessVersion = v);
                     bool bVersionChanged = (currentProcessVersion != newRelease.ProcessVersion);
 
                     #region EntryPoint を EntryPointId に変換する

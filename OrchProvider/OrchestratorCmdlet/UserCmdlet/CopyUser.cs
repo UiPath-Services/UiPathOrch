@@ -8,9 +8,7 @@ using UiPath.PowerShell.Completer;
 
 using OrchCollectionExtensions = UiPath.PowerShell.Core.OrchCollectionExtensions;
 using User = UiPath.PowerShell.Entities.User;
-
-using Positional = UiPath.PowerShell.Positional.UserName_Destination;
-using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
+using System.Data;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -34,6 +32,7 @@ namespace UiPath.PowerShell.Commands
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(DriveCompleter<Positional.UserName_Destination>))]
+        [SupportsWildcards]
         public string? Path { get; set; }
 
         private class UserNameCompleter : OrchArgumentCompleter
@@ -67,7 +66,7 @@ namespace UiPath.PowerShell.Commands
                         .FilterByWildcards(u => u?.FullName, wpFullName)
                         .OrderBy(u => u.UserName))
                     {
-                        string tiphelp = TipHelp(e);
+                        string tiphelp = TipHelp2(e);
                         yield return new CompletionResult(PathTools.EscapePSText(e.UserName), e.UserName, CompletionResultType.ParameterValue, tiphelp);
                     }
                 }
@@ -105,7 +104,7 @@ namespace UiPath.PowerShell.Commands
                         .FilterByWildcards(u => u?.UserName, wpUserName)
                         .OrderBy(u => u.FullName))
                     {
-                        string tiphelp = TipHelp(e);
+                        string tiphelp = TipHelp2(e);
                         yield return new CompletionResult(PathTools.EscapePSText(e.FullName), e.FullName, CompletionResultType.ParameterValue, tiphelp);
                     }
                 }
@@ -168,7 +167,7 @@ namespace UiPath.PowerShell.Commands
             var srcUsers = srcDrive.GetUsers()
                 .FilterByWildcards(user => user?.UserName, wpUserName)
                 .FilterByWildcards(user => user?.FullName, wpFullName)
-                .OrderBy(role => role.UserName)
+                .OrderBy(user => user.UserName)
                 .ToList();
 
             string msg = "Copying users";
@@ -188,7 +187,7 @@ namespace UiPath.PowerShell.Commands
 
                     if (dstDrive.NameColonSeparator == srcUser.Path) continue;
 
-                    var target = $"Item: {srcUser.GetPSPath()} Destination: {dstDrive.NameColonSeparator}";
+                    var target = $"Item: {srcDrive.NameColonSeparator}{OrchArgumentCompleter.TipHelp(srcUser)} Destination: {dstDrive.NameColonSeparator}";
 
                     reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {srcUser.GetPSPath()} to {dstDrive.NameColonSeparator}");
 
@@ -209,6 +208,7 @@ namespace UiPath.PowerShell.Commands
                             User newUser = OrchCollectionExtensions.DeepCopy(detailedUser);
 
                             if (newUser.DirectoryIdentifier == null && srcPartitionGlobalId == dstPartitionGlobalId)
+                            //if (false)
                             {
                                 newUser.DirectoryIdentifier = newUser.Key;
                                 newUser.UserName = null;
@@ -216,6 +216,9 @@ namespace UiPath.PowerShell.Commands
                             }
                             else
                             {
+                                // TODO: ディレクトリを検索しなければ。★★★★★
+                                // dstDrive.SearchForUsersAndGroups();
+                                // dstDrive.SearchPmDirectoryUsers();
                                 newUser.DirectoryIdentifier = null;
                                 // in this case, respect UserName.
                             }
@@ -235,6 +238,46 @@ namespace UiPath.PowerShell.Commands
                             newUser.LoginProviders = null; // not sure it need to be removed
                             newUser.ProvisionType = null; // need to be removed
                             newUser.UserRoles = null; // ロール名の一覧が RolesList に入っているので、UserRoles は不要
+
+                            var dstRoles = dstDrive.GetRoles();
+                            List<string> rolesToBeRemoved = null;
+                            foreach (var role in newUser.RolesList ?? [])
+                            {
+                                var destinationRole = dstRoles.FirstOrDefault(r => string.Compare(r.Name, role, StringComparison.OrdinalIgnoreCase) == 0);
+
+                                string? targetUser = null;
+                                #region コピー先に存在しないロールは警告して除外する
+                                if (destinationRole == null)
+                                {
+                                    rolesToBeRemoved ??= [];
+                                    rolesToBeRemoved.Add(role);
+                                    targetUser = System.IO.Path.Combine(dstDrive.NameColonSeparator, srcUser.UserName!);
+
+                                    WriteError(new ErrorRecord(
+                                        new OrchException(
+                                            System.IO.Path.Combine(srcDrive.NameColonSeparator, srcUser.UserName!), $"No role with the same name exists for '{role}' in {dstDrive.NameColonSeparator}. This role will be ignored."),
+                                        "NoMatchedRoleError",
+                                        ErrorCategory.ObjectNotFound,
+                                        dstDrive));
+                                }
+                                #endregion
+
+                                #region フォルダロールは警告して除外する
+                                else if (destinationRole.Type == "Folder")
+                                {
+                                    rolesToBeRemoved ??= [];
+                                    rolesToBeRemoved.Add(role);
+                                    targetUser ??= System.IO.Path.Combine(dstDrive.NameColonSeparator, OrchArgumentCompleter.TipHelp(srcUser));
+                                    WriteWarning($"{targetUser}: Folder role '{destinationRole.Name}' will be removed.");
+                                }
+                                #endregion
+                            }
+
+                            if (rolesToBeRemoved != null)
+                            {
+                                newUser.RolesList = newUser.RolesList?.Except(rolesToBeRemoved).ToArray();
+                            }
+
 
                             if (newUser.RobotProvision != null)
                             {
@@ -295,7 +338,7 @@ namespace UiPath.PowerShell.Commands
                             }
                             #endregion
 
-                            var createdUser = dstDrive.OrchAPISession.CreateUser(newUser);
+                            var createdUser = dstDrive.OrchAPISession.PostUser(newUser);
                             if (createdUser != null)
                             {
                                 createdUser.Path = dstDrive.NameColonSeparator;
@@ -303,7 +346,7 @@ namespace UiPath.PowerShell.Commands
                                 //WriteObject(createdUser);
                                 if (newUser.UnattendedRobot != null && !string.IsNullOrEmpty(newUser.UnattendedRobot.Password))
                                 {
-                                    WriteWarning($"{createdUser.GetPSPath()}: Please update URPassword manually.");
+                                    WriteWarning($"{System.IO.Path.Combine(dstDrive.NameColonSeparator, OrchArgumentCompleter.TipHelp(srcUser))}: Please update -UR_Password with Update-OrchUser cmdlet.");
                                 }
                                 dstDrive._dicUsers = null;
                                 dstDrive._dicUsersDetailed = null;

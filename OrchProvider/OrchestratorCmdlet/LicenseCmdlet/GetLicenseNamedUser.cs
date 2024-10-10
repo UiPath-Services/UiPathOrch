@@ -10,6 +10,7 @@ using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
 
 using Positional = UiPath.PowerShell.Positional.RobotType;
+using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -17,29 +18,8 @@ namespace UiPath.PowerShell.Commands
     [OutputType(typeof(LicenseNamedUser))]
     public class GetLicenseNamedUserCommand : OrchestratorPSCmdlet
     {
-        private static string[] robotTypes = [
-            "Attended",
-            "AttendedStudioWeb",
-            "AutomationCloud",
-            "AutomationCloudTestAutomation",
-            "AutomationKit",
-            "Development",
-            "Headless",
-            "NonProduction",
-            "Serverless",
-            "ServerlessTestAutomation",
-            "StudioPro",
-            "StudioX",
-            "TestAutomation",
-            "Unattended",
-            //"CitizenDeveloper",
-            //"RpaDeveloper",
-            //"RpaDeveloperPro",
-            //"Studio",
-        ];
-
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(RobotTypeCompleter))]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<LicenseRobotTypeItems>))]
         [SupportsWildcards]
         public string[]? RobotType { get; set; }
 
@@ -47,37 +27,12 @@ namespace UiPath.PowerShell.Commands
         [ArgumentCompleter(typeof(DriveCompleter<Positional.RobotType>))]
         public string[]? Path { get; set; }
 
-        // TODO: StaticTextCompleter で書き直す
-        private class RobotTypeCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                // パラメータで選択済みの RobotType は、候補から除外する
-                var wpRobotTypes = CreateWPListFromParameter(commandAst, "RobotType", Positional.RobotType.Parameters, wordToComplete);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                foreach (var robotType in robotTypes
-                    .Where(wp.IsMatch)
-                    .ExcludeByWildcards(rt => rt, wpRobotTypes)
-                    .OrderBy(rt => rt))
-                {
-                    yield return new CompletionResult(robotType);
-                }
-            }
-        }
-
         protected override void ProcessRecord()
         {
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
             var wpRobotType = RobotType.ConvertToWildcardPatternList();
 
-            var specifiedRobotType = robotTypes
+            var specifiedRobotType = Positional.LicenseRobotTypeItems.Parameters
                 .FilterByWildcards(rt => rt, wpRobotType)
                 .OrderBy(rt => rt)
                 .ToList();

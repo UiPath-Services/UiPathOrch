@@ -17,7 +17,7 @@ namespace UiPath.PowerShell.Commands
     public class GetUserLicenseGroup: OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(PmLicenseGroupNameCompleter<GroupName_UserName>))]
+        [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter<GroupName_UserName>))]
         [SupportsWildcards]
         public string[]? GroupName { get; set; }
 
@@ -45,7 +45,14 @@ namespace UiPath.PowerShell.Commands
         public Encoding? CsvEncoding { get; set; }
 
         private static readonly string DefaultCsvName = "ExportedPmUserLicenseGroups.csv";
-        private static readonly string[] CsvHeaders = ["Path", "GroupName", "UserName", "DisplayName", "Email", "LastInUse"];
+        private static readonly string[] CsvHeaders = [
+            "Path",
+            "GroupName",
+            "UserName",
+            "DisplayName",
+            "Email",
+            "LastInUse"
+        ];
 
         // この CSV は、Remove-OrchPmAllocationFromPmUserLicenseGroup にインポートすることを意図したものなので
         // これで良い。
@@ -53,14 +60,15 @@ namespace UiPath.PowerShell.Commands
         {
             foreach (var member in output)
             {
-                var line = new StringBuilder();
-                line.Append($"{EscapeCsvValue(member.Path, true)},");
-                line.Append($"{EscapeCsvValue(member.GroupName, true)},");
-                line.Append($"{EscapeCsvValue(member.name)},");
-                line.Append($"{EscapeCsvValue(member.displayName)},");
-                line.Append($"{EscapeCsvValue(member.email)},");
-                line.Append($"{member.lastInUse?.ToLocalTime()}");
-                writer.WriteLine(line.ToString());
+                string[] line = [
+                    EscapeCsvValue(member.Path, true),
+                    EscapeCsvValue(member.GroupName, true),
+                    EscapeCsvValue(member.name),
+                    EscapeCsvValue(member.displayName),
+                    EscapeCsvValue(member.email),
+                    EscapeCsvValue(member.lastInUse?.ToLocalTime())
+                ];
+                WriteCsvLine(writer, line);
             }
         }
 
@@ -80,7 +88,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetPmUserLicenseGroups());
+                var results = ParallelResults.ForEach(drives, drive => drive.GetPmLicensedGroups());
 
                 foreach (var result in results)
                 {
@@ -92,7 +100,7 @@ namespace UiPath.PowerShell.Commands
                         .FilterByWildcards(g => g?.name!, wpGroupName)
                         .OrderBy(g => g?.name))
                     {
-                        var users = drive.GetPmUserLicenseGroupAllocations(e);
+                        var users = drive.GetPmLicensedGroupAllocations(e);
                         foreach (var user in users
                             .Where(u => wp.IsMatch(u?.name))
                             .ExcludeByWildcards(u => u?.name!, wpUserName)
@@ -122,7 +130,7 @@ namespace UiPath.PowerShell.Commands
                 IEnumerable<NuLicensedGroup> groups = null;
                 try
                 {
-                    groups = drive.GetPmUserLicenseGroups()
+                    groups = drive.GetPmLicensedGroups()
                         .FilterByWildcards(g => g?.name, wpGroupName)
                         .OrderBy(g => g?.name);
                 }
@@ -135,9 +143,9 @@ namespace UiPath.PowerShell.Commands
                 if (ExpandAllocation.IsPresent || writer != null)
                 {
                         using var results = OrchThreadPool.RunForEach(groups,
-                        group => group.GetPSPath(),
-                        group => group,
-                        group => drive.GetPmUserLicenseGroupAllocations(group));
+                            group => group.GetPSPath(),
+                            group => group,
+                            group => drive.GetPmLicensedGroupAllocations(group));
 
                     foreach (var result in results)
                     {
@@ -161,7 +169,7 @@ namespace UiPath.PowerShell.Commands
                         }
                         catch (OrchException ex)
                         {
-                            WriteError(new ErrorRecord(ex, "GetPmUserLicenseGroupError", ErrorCategory.InvalidOperation, ex.Target));
+                            WriteError(new ErrorRecord(ex, "GetPmLicensedGroupError", ErrorCategory.InvalidOperation, ex.Target));
                         }
                     }
                 }

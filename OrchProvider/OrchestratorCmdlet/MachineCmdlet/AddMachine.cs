@@ -48,6 +48,9 @@ namespace UiPath.PowerShell.Commands
         public string? TargetFramework { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
+        public string[]? Tags { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(DriveCompleter<Positional.Name>))]
         public string[]? Path { get; set; }
 
@@ -83,6 +86,8 @@ namespace UiPath.PowerShell.Commands
                                 AutomationType = AutomationType,
                                 TargetFramework = TargetFramework,
                             };
+
+                            machine.AssignTags(Tags, (m, v) => m.Tags = v);
 
                             var newMachine = drive.OrchAPISession.AddMachine(machine);
                             drive._dicExtendedMachines = null;
