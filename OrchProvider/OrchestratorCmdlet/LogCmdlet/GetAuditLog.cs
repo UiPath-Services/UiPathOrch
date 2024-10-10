@@ -227,7 +227,7 @@ namespace UiPath.PowerShell.Commands
                         .ExcludeByWildcards(user => user?.UserName, wpUserName)
                         .OrderBy(user => user.UserName))
                     {
-                        string tiphelp = TipHelp(e);
+                        string tiphelp = TipHelp2(e);
                         yield return new CompletionResult(PathTools.EscapePSText(e.UserName), e.UserName, CompletionResultType.Text, tiphelp);
                     }
                 }

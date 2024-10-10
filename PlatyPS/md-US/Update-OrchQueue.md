@@ -17,7 +17,7 @@ Update-OrchQueue [-Name] <String[]> [-NewName <String>] [-Description <String>]
  [-AcceptAutomaticallyRetry <String>] [-RetryAbandonedItems <String>] [-MaxNumberOfRetries <Int32>]
  [-Release <String>] [-SlaInMinutes <Int32>] [-RiskSlaInMinutes <Int32>] [-SpecificDataJsonSchema <String>]
  [-OutputDataJsonSchema <String>] [-AnalyticsDataJsonSchema <String>] [-RetentionAction <String>]
- [-RetentionPeriod <Int32>] [-RetentionBucket <String>] [-Tags <String>] [-Path <String[]>] [-Recurse]
+ [-RetentionPeriod <Int32>] [-RetentionBucket <String>] [-Tags <String[]>] [-Path <String[]>] [-Recurse]
  [-Depth <UInt32>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
@@ -315,7 +315,7 @@ Accept wildcard characters: False
 Specifies the Tags of the queues to be updated.
 
 ```yaml
-Type: String
+Type: String[]
 Parameter Sets: (All)
 Aliases:
 

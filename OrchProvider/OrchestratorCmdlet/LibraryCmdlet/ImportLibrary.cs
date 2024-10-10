@@ -1,12 +1,6 @@
 ﻿using System.Management.Automation;
-using System.Text.RegularExpressions;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Source_Path;
-using UiPath.PowerShell.Entities;
-using System;
-using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands
 {

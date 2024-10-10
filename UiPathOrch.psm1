@@ -6,8 +6,18 @@
 # Generated on: 2023/08/28
 #
 
+#Set-Alias -Name job -Value Get-OrchJob
+#Set-Alias -Name log -Value Get-OrchLog
+#Set-Alias -Name stop -Value Stop-OrchJob
 
-Set-Alias -Name job -Value Get-OrchJob
-Set-Alias -Name log -Value Get-OrchLog
-Set-Alias -Name stop -Value Stop-OrchJob
+. $PSScriptRoot\Functions\Get-OrchTestDataQueueItemTable.ps1
 
+. $PSScriptRoot\Functions\Enable-OrchUserAttended.ps1
+. $PSScriptRoot\Functions\Disable-OrchUserAttended.ps1
+
+. $PSScriptRoot\Functions\Enable-OrchPersonalWorkspace.ps1
+. $PSScriptRoot\Functions\Disable-OrchPersonalWorkspace.ps1
+
+. $PSScriptRoot\Functions\Find-OrchFolderNoUserAssigned.ps1
+
+. $PSScriptRoot\Functions\Get-OrchJobVideo.ps1

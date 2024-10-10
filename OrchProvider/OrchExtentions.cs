@@ -25,61 +25,62 @@ namespace UiPath.PowerShell.Core
             return OrchDriveInfo.GetTopParentPath(folder.FullyQualifiedName!);
         }
 
-        public static string GetPSPath(this Folder entity)                 => Path.Combine(entity?.Path ?? "", entity?.DisplayName ?? "");
+        public static string GetPSPath(this Folder entity) => Path.Combine(entity?.Path ?? "", entity?.DisplayName ?? "");
 
-        public static string GetPSPath(this Entities.Environment entity)   => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-        public static string GetPSPath(this Library entity)                => Path.Combine(entity?.Path ?? "", entity?.Id ?? "");
-        public static string GetPSPath(this LibraryVersion entity)         => Path.Combine(entity?.Path ?? "", entity?.Id ?? "");
-        public static string GetPSPath(this Package entity)                => Path.Combine(entity?.Path ?? "", entity?.Id ?? "");
-        public static string GetPSPath(this User entity)                   => Path.Combine(entity?.Path ?? "", entity?.UserName ?? "");
-        public static string GetPSPath(this UserRoles entity)              => Path.Combine(entity?.Path ?? "", entity?.UserEntity?.UserName ?? "");
-        public static string GetPSPath(this Role entity)                   => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-        public static string GetPSPath(this Webhook entity)                => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-        public static string GetPSPath(this Robot entity)                  => Path.Combine(entity?.Path ?? "", entity?.User?.Name ?? "");
-        public static string GetPSPath(this RobotsFromFolderModel entity)  => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-        public static string GetPSPath(this ExtendedCalendar entity)       => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-        public static string GetPSPath(this MachineFolder entity)          => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-        public static string GetPSPath(this ExtendedMachine entity)        => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-        public static string GetPSPath(this CredentialStore entity)        => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-        public static string GetPSPath(this QueueDefinition entity)        => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-        public static string GetPSPath(this Asset entity)                  => Path.Combine(entity?.Path ?? "", WildcardPattern.Escape(entity?.Name ?? ""));
-        public static string GetPSPath(this Release entity)                => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-        public static string GetPSPath(this PersonalWorkspace entity)      => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-        public static string GetPSPath(this ProcessSchedule entity)        => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-        public static string GetPSPath(this HttpTrigger entity)            => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-        public static string GetPSPath(this Session entity)                => Path.Combine(entity?.Path ?? "", entity?.Robot?.Name ?? "");
-        public static string GetPSPath(this TestSet entity)                => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-        public static string GetPSPath(this TestCaseDefinition entity)     => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-        public static string GetPSPath(this TestSetExecution entity)       => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-        public static string GetPSPath(this TestSetSchedule entity)        => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-        public static string GetPSPath(this TestDataQueue entity)          => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-        public static string GetPSPath(this TaskCatalog entity)            => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-        public static string GetPSPath(this Settings entity)               => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-        public static string GetPSPath(this Bucket entity)                 => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-        public static string GetPSPath(this BlobFile entity)               => Path.Combine(entity?.PathBucket ?? "", entity?.FullPath?? "");
-        public static string GetPSPath(this ResponseDictionaryItem entity) => Path.Combine(entity?.Path?? "", entity?.Key ?? "");
-        public static string GetPSPath(this AuditLog entity)               => Path.Combine(entity?.Path ?? "", entity?.Id.ToString() ?? "");
+        public static string GetPSPath(this Entities.Environment entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+        public static string GetPSPath(this Library entity) => Path.Combine(entity?.Path ?? "", entity?.Id ?? "");
+        public static string GetPSPath(this LibraryVersion entity) => Path.Combine(entity?.Path ?? "", entity?.Id ?? "");
+        public static string GetPSPath(this Package entity) => Path.Combine(entity?.Path ?? "", entity?.Id ?? "");
+        public static string GetPSPath(this User entity) => Path.Combine(entity?.Path ?? "", entity?.UserName ?? "");
+        public static string GetPSPath(this UserRoles entity) => Path.Combine(entity?.Path ?? "", entity?.UserEntity?.UserName ?? "");
+        public static string GetPSPath(this Role entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+        public static string GetPSPath(this Webhook entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+        public static string GetPSPath(this Robot entity) => Path.Combine(entity?.Path ?? "", entity?.User?.Name ?? "");
+        public static string GetPSPath(this RobotsFromFolderModel entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+        public static string GetPSPath(this ExtendedCalendar entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+        public static string GetPSPath(this MachineFolder entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+        public static string GetPSPath(this ExtendedMachine entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+        public static string GetPSPath(this CredentialStore entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+        public static string GetPSPath(this QueueDefinition entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+        public static string GetPSPath(this Asset entity) => Path.Combine(entity?.Path ?? "", WildcardPattern.Escape(entity?.Name ?? ""));
+        public static string GetPSPath(this Release entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+        public static string GetPSPath(this PersonalWorkspace entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+        public static string GetPSPath(this ProcessSchedule entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+        public static string GetPSPath(this HttpTrigger entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+        public static string GetPSPath(this Session entity) => Path.Combine(entity?.Path ?? "", entity?.Robot?.Name ?? "");
+        public static string GetPSPath(this TestSet entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+        public static string GetPSPath(this TestCaseDefinition entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+        public static string GetPSPath(this TestSetExecution entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+        public static string GetPSPath(this TestSetSchedule entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+        public static string GetPSPath(this TestDataQueue entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+        public static string GetPSPath(this TaskCatalog entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+        public static string GetPSPath(this Settings entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+        public static string GetPSPath(this Bucket entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+        public static string GetPSPath(this BlobFile entity) => Path.Combine(entity?.PathBucket ?? "", entity?.FullPath ?? "");
+        public static string GetPSPath(this ResponseDictionaryItem entity) => Path.Combine(entity?.Path ?? "", entity?.Key ?? "");
+        public static string GetPSPath(this AuditLog entity) => Path.Combine(entity?.Path ?? "", entity?.Id.ToString() ?? "");
 
-        public static string GetPSPath(this PmUser entity)               => Path.Combine(entity?.Path ?? "", entity?.userName ?? "");
-        public static string GetPSPath(this PmRobotAccount entity)       => Path.Combine(entity?.Path ?? "", entity?.name?? "");
-        public static string GetPSPath(this PmGroup entity)              => Path.Combine(entity?.Path ?? "", entity?.name?? "");
-        public static string GetPSPath(this ExternalResource entity)     => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-        public static string GetPSPath(this ExternalClient entity)       => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+        public static string GetPSPath(this PmUser entity)                => Path.Combine(entity?.Path ?? "", entity?.userName ?? "");
+        public static string GetPSPath(this PmRobotAccount entity)        => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+        public static string GetPSPath(this PmGroup entity)               => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+        public static string GetPSPath(this PmDirectoryEntityInfo entity) => Path.Combine(entity?.Path ?? "", entity?.identityName ?? "");
+        public static string GetPSPath(this ExternalResource entity)      => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+        public static string GetPSPath(this ExternalClient entity)        => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
         public static string GetPSPath(this NuLicensedGroup entity)       => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
         public static string GetPSPath(this NuLicensedGroupMember entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
 
-        public static string GetPSPath(this DirectoryUser entity)        => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-        public static string GetPSPath(this DirectoryRobotUser entity)   => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+        public static string GetPSPath(this DirectoryUser entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+        public static string GetPSPath(this DirectoryRobotUser entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
         public static string GetPSPath(this DirectoryApplication entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
 
-        public static string GetPSPath(this DuProject entity)      => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+        public static string GetPSPath(this DuProject entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
         public static string GetPSPath(this DuDocumentType entity) => Path.Combine(entity?.PathProject ?? "", entity?.name ?? "");
-        public static string GetPSPath(this DuClassifier entity)   => Path.Combine(entity?.PathProject ?? "", entity?.name ?? "");
+        public static string GetPSPath(this DuClassifier entity) => Path.Combine(entity?.PathProject ?? "", entity?.name ?? "");
 
-        public static string GetPSPath(this TmProject entity)     => Path.Combine(entity?.Path ?? "", entity?.projectPrefix ?? "");
+        public static string GetPSPath(this TmProject entity) => Path.Combine(entity?.Path ?? "", entity?.projectPrefix ?? "");
         public static string GetPSPath(this TmRequirement entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-        public static string GetPSPath(this TmTestCase entity)    => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-        public static string GetPSPath(this TmTestSet entity)     => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+        public static string GetPSPath(this TmTestCase entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+        public static string GetPSPath(this TmTestSet entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
     }
 
     public static class OrchCollectionExtensions
@@ -300,6 +301,7 @@ namespace UiPath.PowerShell.Core
     public static class OrchStringExtensions
     {
         public delegate bool TryParseHandler<T>(string str, out T result);
+
         public static T? ToNullable<T>(this string? str, TryParseHandler<T> tryParse) where T : struct
         {
             if (str != null && tryParse(str, out var result))
@@ -318,8 +320,14 @@ namespace UiPath.PowerShell.Core
             return value;
         }
 
+        public static WildcardPattern? ConvertToWildcardPattern(this string? src)
+        {
+            if (string.IsNullOrEmpty(src)) return null;
+            return new WildcardPattern(src, WildcardOptions.IgnoreCase);
+        }
+
         // Method for string properties
-        public static void AssignEmptyString<T>(this T target, string? value, Action<T, string?> setter)
+        public static void AssignStringIfNotNull<T>(this T target, string? value, Action<T, string?> setter)
         {
             if (value != null)
             {
@@ -327,7 +335,7 @@ namespace UiPath.PowerShell.Core
             }
         }
 
-        public static void AssignString<T>(this T target, string? value, Action<T, string?> setter)
+        public static void AssignStringIfNotNullOrEmpty<T>(this T target, string? value, Action<T, string?> setter)
         {
             if (!string.IsNullOrEmpty(value))
             {
@@ -336,7 +344,9 @@ namespace UiPath.PowerShell.Core
         }
 
         // Generic method for nullable numeric types
-        public static void AssignNumber<T, N>(this T target, N? value, Action<T, N?> setter) where N : struct, IComparable
+        // ゼロは設定しない。CSV の空列を int? のパラメータで受け取ると、ゼロになってしまうため。
+        // このメソッドを使えば、CSV で int のパラメータに空欄を指定してもゼロで既存データを上書きすることはない。
+        public static void AssignNumberIfNotNullOrZero<T, N>(this T target, N? value, Action<T, N?> setter) where N : struct, IComparable
         {
             if (value.HasValue && !value.Value.Equals(default(N)))
             {
@@ -344,8 +354,19 @@ namespace UiPath.PowerShell.Core
             }
         }
 
+        // ゼロを受け付けるメンバの場合には、こちらを使う。
+        // CSV で空列を指定した場合には、パラメータにゼロが渡されるので注意が必要。
+        // 既存の値が不明な場合には、CSV からその列を削除しておく。そうすれば、その列の int 型パラメータには null が渡される。
+        public static void AssignNumberIfNotNull<T, N>(this T target, N? value, Action<T, N?> setter) where N : struct, IComparable
+        {
+            if (value.HasValue)
+            {
+                setter(target, value);
+            }
+        }
+
         // Method for bool properties
-        public static void AssignBool<T>(this T target, string? value, Action<T, bool?> setter)
+        public static void AssignBoolIfNotNull<T>(this T target, string? value, Action<T, bool?> setter)
         {
             if (value != null && bool.TryParse(value, out var result))
             {
@@ -353,8 +374,16 @@ namespace UiPath.PowerShell.Core
             }
         }
 
+        public static void AssignBoolIfNotNull<T>(this T target, bool? value, Action<T, bool?> setter)
+        {
+            if (value != null)
+            {
+                setter(target, value);
+            }
+        }
+
         // 現在の値が null であれば、false を代入しないように工夫されたバージョン
-        public static void AssignBool2<T>(this T target, string? value, Func<T, bool?> getter, Action<T, bool?> setter)
+        public static void AssignBoolIfNotFalse<T>(this T target, string? value, Func<T, bool?> getter, Action<T, bool?> setter)
         {
             if (value != null && bool.TryParse(value, out var result))
             {
@@ -365,7 +394,7 @@ namespace UiPath.PowerShell.Core
             }
         }
 
-        public static void AssignDateTime<T>(this T target, DateTime? value, Action<T, DateTime?> setter, bool convertToUniversalTime = true)
+        public static void AssignDateTimeIfNotNull<T>(this T target, DateTime? value, Action<T, DateTime?> setter, bool convertToUniversalTime = true)
         {
             if (value != null)
             {
@@ -418,23 +447,121 @@ namespace UiPath.PowerShell.Core
             }
         }
 
-        public static Tag[]? DeserializeTags(this string? jsonText)
+        private static string? ReplaceLastPartWithAsterisk(string? input)
         {
-            if (string.IsNullOrWhiteSpace(jsonText))
-            {
-                //return Array.Empty<Tag>();
-                return null;
-            }
+            if (input == null) return null;
 
-            try
+            // ピリオドで分割
+            string[] parts = input.Split('.');
+
+            if (parts.Length >= 3)
             {
-                return JsonSerializer.Deserialize<Tag[]>(jsonText);
+                parts[2] = "*";
+                return string.Join(".", parts.Take(3));
             }
-            //catch (JsonException)
-            catch
+            return input;
+        }
+
+        // 次のふたつのメソッドは、ラムダ式を使って実装を完全に共通にすることもできるが、とても使いにくくなってしまう。
+        // ReplaceLastNumberWithAsterisk() の実装を共通にしたことで良しとするか。。
+        public static void AssignUpdatePolicy(this User target, string? typeValue, string? versionValue)
+        {
+            if (!string.IsNullOrEmpty(typeValue) || !string.IsNullOrEmpty(versionValue))
             {
-                return null;
+                target.UpdatePolicy ??= new();
+                target.UpdatePolicy.AssignStringIfNotNullOrEmpty(typeValue, (u, v) => u.Type = v);
+                if (typeValue == "None" || typeValue == "LatestVersion")
+                {
+                    target.UpdatePolicy.SpecificVersion = null;
+                }
+                else
+                {
+                    if (typeValue == "LatestPatch")
+                    {
+                        versionValue = ReplaceLastPartWithAsterisk(versionValue);
+                    }
+                    target.UpdatePolicy.AssignStringIfNotNullOrEmpty(versionValue, (u, v) => u.SpecificVersion = v);
+                }
+                //postingUser.UpdatePolicy.Type ??= "None";
             }
         }
-    }
+
+        public static void AssignUpdatePolicy(this ExtendedMachine target, string? typeValue, string? versionValue)
+        {
+            if (!string.IsNullOrEmpty(typeValue) || !string.IsNullOrEmpty(versionValue))
+            {
+                target.UpdatePolicy ??= new();
+                target.UpdatePolicy.AssignStringIfNotNullOrEmpty(typeValue, (u, v) => u.Type = v);
+                if (typeValue == "None" || typeValue == "LatestVersion")
+                {
+                    target.UpdatePolicy.SpecificVersion = null;
+                }
+                else
+                {
+                    if (typeValue == "LatestPatch")
+                    {
+                        versionValue = ReplaceLastPartWithAsterisk(versionValue);
+                    }
+                    target.UpdatePolicy.AssignStringIfNotNullOrEmpty(versionValue, (u, v) => u.SpecificVersion = v);
+                }
+            }
+        }
+
+        public static void AssignTags<T>(this T target, string[]? value, Action<T, Tag[]?> setter)
+        {
+            if (value != null && value.Length != 0)
+            {
+                Tag[] tags = value.ConvertToTags().ToArray();
+                if (tags != null) setter(target, tags);
+            }
+        }
+
+        // keyValues は = で区切られた key と value。"tag1" とか "tag2=value" とか。
+        // Add-OrchHoge とか、Update-OrchHoge の中で使う。
+        public static IEnumerable<Tag> ConvertToTags(this string[]? keyValues)
+        {
+            foreach (var keyValue in keyValues?.SelectMany(elem => elem.Split(',')) ?? [])
+            {
+                if (string.IsNullOrEmpty(keyValue)) continue;
+                string[] parts = keyValue.Split('=', 2);
+
+                // キーと値を取得
+                string key = parts[0];
+                string value = parts.Length > 1 ? parts[1] : null;
+                Tag tag = new()
+                {
+                    Name = key,
+                    Value = value
+                };
+                yield return tag;
+            }
+        }
+
+        // これは、WriteCsvContent() の中から呼び出す。
+        internal static string? ConvertToString(this Tag[]? tags)
+        {
+            if (tags == null) return null;
+            return string.Join(',', tags.Select(t => t.ToString()));
+        }
+
+        // obsoleted: ConvertToTags() を使うべし
+        //public static Tag[]? DeserializeFromJson(this string? jsonText)
+        //{
+        //    if (string.IsNullOrWhiteSpace(jsonText))
+        //    {
+        //        //return Array.Empty<Tag>();
+        //        return null;
+        //    }
+
+        //    try
+        //    {
+        //        return JsonSerializer.Deserialize<Tag[]>(jsonText);
+        //    }
+        //    //catch (JsonException)
+        //    catch
+        //    {
+        //        return null;
+        //    }
+        //}
+    } 
 }

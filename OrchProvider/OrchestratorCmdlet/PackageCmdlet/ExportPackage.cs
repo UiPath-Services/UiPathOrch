@@ -14,7 +14,7 @@ namespace UiPath.PowerShell.Commands
     [Cmdlet(VerbsData.Export, "OrchPackage", SupportsShouldProcess = true)]
     public class ExportPackageCommand : OrchestratorPSCmdlet
     {
-        [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
+        [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
         [ArgumentCompleter(typeof(IdCompleter))]
         public string[]? Id { get; set; }
@@ -354,6 +354,8 @@ namespace UiPath.PowerShell.Commands
                         .FilterByWildcards(p => p?.Id, wpId)
                         .OrderBy(p => p.Id!.ToLower()))
                     {
+                        cancelHandler.Token.ThrowIfCancellationRequested();
+
                         try
                         {
                             var versions = drive.GetPackageVersions(folder, package.Id!)

@@ -251,34 +251,34 @@ namespace UiPath.PowerShell.Commands
 
                     ProcessSchedule postTrigger = OrchCollectionExtensions.DeepCopy(trigger);
 
-                    postTrigger.AssignString(NewName, (s, v) => s.Name = v);
+                    postTrigger.AssignStringIfNotNullOrEmpty(NewName, (s, v) => s.Name = v);
 
-                    postTrigger.AssignBool(Enabled, (s, v) => s.Enabled = v);
+                    postTrigger.AssignBoolIfNotNull(Enabled, (s, v) => s.Enabled = v);
                     postTrigger.Enabled ??= true;
 
-                    postTrigger.AssignNumber(StartStrategy, (s, v) => s.StartStrategy = v);
+                    postTrigger.AssignNumberIfNotNullOrZero(StartStrategy, (s, v) => s.StartStrategy = v);
                     postTrigger.StartStrategy ??= 1;
 
-                    postTrigger.AssignString(StopStrategy,                    (s, v) => s.StopStrategy = v);
-                    postTrigger.AssignString(StopProcessExpression,           (s, v) => s.StopProcessExpression = v);
-                    postTrigger.AssignString(KillProcessExpression,           (s, v) => s.KillProcessExpression = v);
-                    postTrigger.AssignString(AlertPendingExpression,          (s, v) => s.AlertPendingExpression = v);
-                    postTrigger.AssignString(AlertRunningExpression,          (s, v) => s.AlertRunningExpression = v);
-                    postTrigger.AssignNumber(ConsecutiveJobFailuresThreshold, (s, v) => s.ConsecutiveJobFailuresThreshold = v);
-                    postTrigger.AssignNumber(JobFailuresGracePeriodInHours,   (s, v) => s.JobFailuresGracePeriodInHours = v);
+                    postTrigger.AssignStringIfNotNullOrEmpty(StopStrategy,                    (s, v) => s.StopStrategy = v);
+                    postTrigger.AssignStringIfNotNullOrEmpty(StopProcessExpression,           (s, v) => s.StopProcessExpression = v);
+                    postTrigger.AssignStringIfNotNullOrEmpty(KillProcessExpression,           (s, v) => s.KillProcessExpression = v);
+                    postTrigger.AssignStringIfNotNullOrEmpty(AlertPendingExpression,          (s, v) => s.AlertPendingExpression = v);
+                    postTrigger.AssignStringIfNotNullOrEmpty(AlertRunningExpression,          (s, v) => s.AlertRunningExpression = v);
+                    postTrigger.AssignNumberIfNotNullOrZero(ConsecutiveJobFailuresThreshold, (s, v) => s.ConsecutiveJobFailuresThreshold = v);
+                    postTrigger.AssignNumberIfNotNullOrZero(JobFailuresGracePeriodInHours,   (s, v) => s.JobFailuresGracePeriodInHours = v);
 
-                    postTrigger.AssignString(RuntimeType,       (s, v) => s.RuntimeType = v);
+                    postTrigger.AssignStringIfNotNullOrEmpty(RuntimeType,       (s, v) => s.RuntimeType = v);
                     postTrigger.RuntimeType ??= "Unattended";
 
-                    postTrigger.AssignString(InputArguments,    (s, v) => postTrigger.InputArguments = v);
+                    postTrigger.AssignStringIfNotNullOrEmpty(InputArguments,    (s, v) => postTrigger.InputArguments = v);
 
-                    postTrigger.AssignBool(ResumeOnSameContext, (s, v) => s.ResumeOnSameContext = v);
+                    postTrigger.AssignBoolIfNotNull(ResumeOnSameContext, (s, v) => s.ResumeOnSameContext = v);
                     postTrigger.ResumeOnSameContext ??= false;
 
-                    postTrigger.AssignBool(RunAsMe, (s, v) => s.RunAsMe = v);
+                    postTrigger.AssignBoolIfNotNull(RunAsMe, (s, v) => s.RunAsMe = v);
                     postTrigger.RunAsMe ??= false;
 
-                    postTrigger.AssignBool(IsConnected, (s, v) => s.IsConnected = v);
+                    postTrigger.AssignBoolIfNotNull(IsConnected, (s, v) => s.IsConnected = v);
 
                     #region // CalendarName を CalendarId に変換
                     postTrigger.AssignIdFromName(
@@ -292,20 +292,20 @@ namespace UiPath.PowerShell.Commands
                     postTrigger.UseCalendar = (postTrigger.CalendarId != null);
                     #endregion
 
-                    postTrigger.AssignNumber(ItemsActivationThreshold,    (s, v) => s.ItemsActivationThreshold = v);
-                    postTrigger.AssignNumber(ItemsPerJobActivationTarget, (s, v) => s.ItemsPerJobActivationTarget = v);
-                    postTrigger.AssignNumber(MaxJobsForActivation,        (s, v) => s.MaxJobsForActivation = v);
-                    postTrigger.AssignBool(ActivateOnJobComplete,         (s, v) => s.ActivateOnJobComplete = v);
+                    postTrigger.AssignNumberIfNotNullOrZero(ItemsActivationThreshold,    (s, v) => s.ItemsActivationThreshold = v);
+                    postTrigger.AssignNumberIfNotNullOrZero(ItemsPerJobActivationTarget, (s, v) => s.ItemsPerJobActivationTarget = v);
+                    postTrigger.AssignNumberIfNotNullOrZero(MaxJobsForActivation,        (s, v) => s.MaxJobsForActivation = v);
+                    postTrigger.AssignBoolIfNotNull(ActivateOnJobComplete,         (s, v) => s.ActivateOnJobComplete = v);
 
-                    postTrigger.AssignString(StartProcessCron,            (s, v) => s.StartProcessCron = v);
+                    postTrigger.AssignStringIfNotNullOrEmpty(StartProcessCron,            (s, v) => s.StartProcessCron = v);
                     postTrigger.StartProcessCron ??= "0 0/1 * 1/1 * ? *";
 
-                    postTrigger.AssignString(StartProcessCronDetails,     (s, v) => s.StartProcessCronDetails = v);
+                    postTrigger.AssignStringIfNotNullOrEmpty(StartProcessCronDetails,     (s, v) => s.StartProcessCronDetails = v);
                     postTrigger.StartProcessCronDetails ??= $"\"{{advancedCron\":\"{postTrigger.StartProcessCron}\"}}";
 
                     // SpecificPriorityValue を先に適用、specificPriorityValue が非 null ならそれで上書き
-                    postTrigger.AssignNumber(SpecificPriorityValue, (s, v) => s.SpecificPriorityValue = v);
-                    postTrigger.AssignNumber(specificPriorityValue, (s, v) => s.SpecificPriorityValue = v);
+                    postTrigger.AssignNumberIfNotNullOrZero(SpecificPriorityValue, (s, v) => s.SpecificPriorityValue = v);
+                    postTrigger.AssignNumberIfNotNullOrZero(specificPriorityValue, (s, v) => s.SpecificPriorityValue = v);
 
                     if (postTrigger.SpecificPriorityValue != null)
                     {
@@ -336,7 +336,7 @@ namespace UiPath.PowerShell.Commands
                     #endregion
 
                     #region TimeZone を TimeZoneId に変換
-                    postTrigger.AssignString(TimeZoneId, (s, v) => s.TimeZoneId = v);
+                    postTrigger.AssignStringIfNotNullOrEmpty(TimeZoneId, (s, v) => s.TimeZoneId = v);
 
                     postTrigger.AssignIdFromName(
                         TimeZone,
@@ -349,7 +349,7 @@ namespace UiPath.PowerShell.Commands
                     postTrigger.TimeZoneId ??= TimeZoneInfo.Local.Id;
                     #endregion
 
-                    postTrigger.AssignDateTime(StopProcessDate, (s, v) => s.StopProcessDate = v, false);
+                    postTrigger.AssignDateTimeIfNotNull(StopProcessDate, (s, v) => s.StopProcessDate = v, false);
 
                     #region MachineRobots をデシリアライズ
                     if (!string.IsNullOrEmpty(MachineRobots))

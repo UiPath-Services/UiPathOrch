@@ -6,8 +6,7 @@ using System.Security.Cryptography;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name_Destination;
+using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands
 {

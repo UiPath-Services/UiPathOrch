@@ -48,6 +48,14 @@ namespace UiPath.PowerShell.Commands
         public string? RestrictToPersonalWorkspace { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<UserUpdatePolicyItems>))]
+        public string? UpdatePolicyType { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(UpdatePolicyVersionCompleter))]
+        public string? UpdatePolicyVersion { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         public string? UR_UserName { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -67,12 +75,33 @@ namespace UiPath.PowerShell.Commands
         public string? UR_LimitConcurrentExecution { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(StaticTextsCompleter<UserUpdatePolicyItems>))]
-        public string? UpdatePolicyType { get; set; }
+        [ArgumentCompleter(typeof(StaticTextsCompleter<ExecutionSettingsTraceLevelItems>))]
+        public string? ES_TracingLevel { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(UpdatePolicyVersionCompleter))]
-        public string? UpdatePolicyVersion { get; set; }
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? ES_StudioNotifyServer { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? ES_LoginToConsole { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public int? ES_ResolutionWidth { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public int? ES_ResolutionHeight { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        public int? ES_ResolutionDepth { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? ES_FontSmoothing { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? ES_AutoDownloadProcess { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(DriveCompleter<UserName>))]
@@ -115,46 +144,6 @@ namespace UiPath.PowerShell.Commands
                     }
                 }
             }
-        }
-
-        private class UpdatePolicyVersionCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-                var drives = OrchDriveInfo.EnumOrchDrives(paramPath);
-
-                foreach (var drive in drives)
-                {
-                    var versions = drive.GetAvailableVersions();
-
-                    foreach (var version in versions ?? [])
-                    {
-                        string tiphelp = System.IO.Path.Combine(drive.NameColonSeparator, version);
-                        yield return new CompletionResult(PathTools.EscapePSText(version), version, CompletionResultType.ParameterValue, tiphelp);
-                    }
-                }
-            }
-        }
-
-        private static string? ReplaceLastNumberWithAsterisk(string? input)
-        {
-            if (input == null) return null;
-
-            // ピリオドで分割
-            string[] parts = input.Split('.');
-
-            if (parts.Length >= 3)
-            {
-                parts[2] = "*";
-                return string.Join(".", parts.Take(3));
-            }
-            return input;
         }
 
         protected override void ProcessRecord()
@@ -209,11 +198,11 @@ namespace UiPath.PowerShell.Commands
                         {
                             postingUser.UnattendedRobot.Password = null;
                         }
-                        postingUser.AssignBool2(MayHaveUserSession,          u => u.MayHaveUserSession,          (u, v) => u.MayHaveUserSession = v);
-                        postingUser.AssignBool2(MayHaveRobotSession,         u => u.MayHaveRobotSession,         (u, v) => u.MayHaveRobotSession = v);
-                        postingUser.AssignBool2(MayHavePersonalWorkspace,    u => u.MayHavePersonalWorkspace,    (u, v) => u.MayHavePersonalWorkspace = v);
-                        postingUser.AssignBool2(MayHaveUnattendedSession,    u => u.MayHaveUnattendedSession,    (u, v) => u.MayHaveUnattendedSession = v);
-                        postingUser.AssignBool2(RestrictToPersonalWorkspace, u => u.RestrictToPersonalWorkspace, (u, v) => u.RestrictToPersonalWorkspace = v);
+                        postingUser.AssignBoolIfNotFalse(MayHaveUserSession,          u => u.MayHaveUserSession,          (u, v) => u.MayHaveUserSession = v);
+                        postingUser.AssignBoolIfNotFalse(MayHaveRobotSession,         u => u.MayHaveRobotSession,         (u, v) => u.MayHaveRobotSession = v);
+                        postingUser.AssignBoolIfNotFalse(MayHavePersonalWorkspace,    u => u.MayHavePersonalWorkspace,    (u, v) => u.MayHavePersonalWorkspace = v);
+                        postingUser.AssignBoolIfNotFalse(MayHaveUnattendedSession,    u => u.MayHaveUnattendedSession,    (u, v) => u.MayHaveUnattendedSession = v);
+                        postingUser.AssignBoolIfNotFalse(RestrictToPersonalWorkspace, u => u.RestrictToPersonalWorkspace, (u, v) => u.RestrictToPersonalWorkspace = v);
 
                         #region RolesList
                         if (Roles != null && Roles.Any(r => !string.IsNullOrEmpty(r)))
@@ -244,10 +233,10 @@ namespace UiPath.PowerShell.Commands
                             !string.IsNullOrEmpty(UR_LimitConcurrentExecution))
                         {
                             postingUser.UnattendedRobot ??= new();
-                            postingUser.UnattendedRobot.AssignString(UR_UserName,       (u, v) => u.UserName = v);
-                            postingUser.UnattendedRobot.AssignString(UR_Password,       (u, v) => u.Password = v);
-                            postingUser.UnattendedRobot.AssignString(UR_CredentialType, (u, v) => u.CredentialType = v);
-                            postingUser.UnattendedRobot.AssignBool2(UR_LimitConcurrentExecution, u => u.LimitConcurrentExecution, (u, v) => u.LimitConcurrentExecution = v);
+                            postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(UR_UserName,       (u, v) => u.UserName = v);
+                            postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(UR_Password,       (u, v) => u.Password = v);
+                            postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(UR_CredentialType, (u, v) => u.CredentialType = v);
+                            postingUser.UnattendedRobot.AssignBoolIfNotFalse(UR_LimitConcurrentExecution, u => u.LimitConcurrentExecution, (u, v) => u.LimitConcurrentExecution = v);
 
                             if (!string.IsNullOrEmpty(UR_CredentialStore))
                             {
@@ -266,23 +255,52 @@ namespace UiPath.PowerShell.Commands
                             }
                         }
 
-                        if (!string.IsNullOrEmpty(UpdatePolicyType) ||
-                            !string.IsNullOrEmpty(UpdatePolicyVersion))
+                        postingUser.AssignUpdatePolicy(UpdatePolicyType, UpdatePolicyVersion);
+
+                        if (!string.IsNullOrEmpty(ES_TracingLevel) ||
+                            ES_StudioNotifyServer != null ||
+                            ES_LoginToConsole != null ||
+                            (ES_ResolutionWidth != null && ES_ResolutionWidth != 0) ||
+                            (ES_ResolutionHeight != null && ES_ResolutionHeight != 0) ||
+                            (ES_ResolutionDepth != null && ES_ResolutionDepth != 0) ||
+                            ES_FontSmoothing != null ||
+                            ES_AutoDownloadProcess != null)
                         {
-                            postingUser.UpdatePolicy ??= new();
-                            postingUser.UpdatePolicy.AssignString(UpdatePolicyType, (u, v) => u.Type = v);
-                            if (UpdatePolicyType == "None" || UpdatePolicyType == "LatestVersion")
-                            {
-                                postingUser.UpdatePolicy.SpecificVersion = null;
-                            }
-                            else
-                            {
-                                if (UpdatePolicyType == "LatestPatch")
-                                {
-                                    UpdatePolicyVersion = ReplaceLastNumberWithAsterisk(UpdatePolicyVersion);
-                                }
-                                postingUser.UpdatePolicy.AssignString(UpdatePolicyVersion, (u, v) => u.SpecificVersion = v);
-                            }
+                            postingUser.UnattendedRobot ??= new();
+
+                            postingUser.UnattendedRobot.ExecutionSettings ??= new();
+
+                            postingUser.UnattendedRobot.ExecutionSettings.AssignStringIfNotNullOrEmpty(
+                                ES_TracingLevel, (es, v) => 
+                                es.TracingLevel = v);
+
+                            postingUser.UnattendedRobot.ExecutionSettings.AssignBoolIfNotNull(
+                                ES_StudioNotifyServer, (es, v) => 
+                                es.StudioNotifyServer = v);
+
+                            postingUser.UnattendedRobot.ExecutionSettings.AssignBoolIfNotNull(
+                                ES_LoginToConsole, (es, v) => 
+                                es.LoginToConsole = v);
+
+                            postingUser.UnattendedRobot.ExecutionSettings.AssignNumberIfNotNull(
+                                ES_ResolutionWidth, (es, v) =>
+                                es.ResolutionWidth = v);
+
+                            postingUser.UnattendedRobot.ExecutionSettings.AssignNumberIfNotNull(
+                                ES_ResolutionHeight, (es, v) => 
+                                es.ResolutionHeight = v);
+
+                            postingUser.UnattendedRobot.ExecutionSettings.AssignNumberIfNotNull(
+                                ES_ResolutionDepth, (es, v) => 
+                                es.ResolutionDepth = v);
+
+                            postingUser.UnattendedRobot.ExecutionSettings.AssignBoolIfNotNull(
+                                ES_FontSmoothing, (es, v) =>
+                                es.FontSmoothing = v);
+
+                            postingUser.UnattendedRobot.ExecutionSettings.AssignBoolIfNotNull(
+                                ES_AutoDownloadProcess, (es, v) => 
+                                es.AutoDownloadProcess = v);
                         }
 
                         // こういうエラー処理は、API 側に任せた方が良いか。。

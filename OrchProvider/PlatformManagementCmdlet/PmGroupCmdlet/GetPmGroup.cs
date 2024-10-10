@@ -50,12 +50,13 @@ namespace UiPath.PowerShell.Commands
                 .ThenBy(m => m.objectType)
                 .ThenBy(m => m.name))
             {
-                var line = new StringBuilder();
-                line.Append($"{EscapeCsvValue(member.Path, true)},");
-                line.Append($"{EscapeCsvValue(member.groupName, true)},");
-                line.Append($"{member.objectType},"); ////////// TODO: これ変換しないと。
-                line.Append($"{EscapeCsvValue(member.name)}");
-                writer.WriteLine(line.ToString());
+                string[] line = [
+                    EscapeCsvValue(member.Path, true),
+                    EscapeCsvValue(member.groupName, true),
+                    EscapeCsvValue(member.objectType), ////////// TODO: これ変換必要だっけ？
+                    EscapeCsvValue(member.name)
+                ];
+                WriteCsvLine(writer, line);
             }
         }
 
@@ -63,6 +64,14 @@ namespace UiPath.PowerShell.Commands
         {
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
             var wpGroupName = GroupName.ConvertToWildcardPatternList();
+
+            //foreach (var drive in drives)
+            //{
+            //    var pg = drive.GetPartitionGlobalId();
+            //    WriteObject(drive.OrchAPISession.GetPmGroups2(pg), true);
+            //}
+
+            //return;
 
             ExportCsv = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
             using var writer = WriteCsvHeader(ExportCsv, CsvEncoding, CsvHeaders);
@@ -80,7 +89,7 @@ namespace UiPath.PowerShell.Commands
                             .FilterByWildcards(g => g?.name!, wpGroupName);
                         foreach (var group in groups)
                         {
-                            drive.GetPmGroup(group!.id!);
+                            drive.GetPmGroup(group?.id);
                         }
                         ret = drive.GetPmGroups().Values;
                     }

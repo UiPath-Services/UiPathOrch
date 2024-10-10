@@ -56,23 +56,6 @@ namespace UiPath.PowerShell.Commands
             "FolderRoles",
         ];
 
-        private static void WriteCsvContent(StreamWriter writer, IEnumerable<Entities.UserRoles> output)
-        {
-            // 各プロセスに対してデータ行を書き込む
-            foreach (var p in output)
-            {
-                var line = new StringBuilder();
-
-                line.Append($"{EscapeCsvValue(p.Path, true)},");
-                line.Append($"{EscapeCsvValue(p?.UserEntity?.Type)},");
-                line.Append($"{EscapeCsvValue(p?.UserEntity?.UserName, true)},");
-                line.Append($"{EscapeCsvValue(p?.UserEntity?.FullName)},");
-                line.Append($"{EscapeCsvValue(string.Join(",", p?.Roles?.Select(r => WildcardPattern.Escape(r.Name))!))}");
-
-                writer.WriteLine(line.ToString());
-            }
-        }
-
         private class UserNameCompleter : OrchArgumentCompleter
         {
             public override IEnumerable<CompletionResult> CompleteArgument(
@@ -153,6 +136,22 @@ namespace UiPath.PowerShell.Commands
                         yield return new CompletionResult(PathTools.EscapePSText(e.UserEntity!.FullName), e.UserEntity.FullName, CompletionResultType.ParameterValue, tiphelp);
                     }
                 }
+            }
+        }
+
+        private static void WriteCsvContent(StreamWriter writer, IEnumerable<Entities.UserRoles> output)
+        {
+            // 各フォルダーユーザーに対してデータ行を書き込む
+            foreach (var p in output)
+            {
+                string[] line = [
+                    EscapeCsvValue(p.Path, true),
+                    EscapeCsvValue(p?.UserEntity?.Type),
+                    EscapeCsvValue(p?.UserEntity?.UserName),
+                    EscapeCsvValue(p?.UserEntity?.FullName),
+                    EscapeCsvValue(string.Join(",", p?.Roles?.Select(r => WildcardPattern.Escape(r.Name))!))
+                ];
+                WriteCsvLine(writer, line);
             }
         }
 

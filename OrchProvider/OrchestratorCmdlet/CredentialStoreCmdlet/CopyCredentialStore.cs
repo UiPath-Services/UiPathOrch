@@ -35,6 +35,7 @@ namespace UiPath.PowerShell.Commands
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(DriveCompleter<Positional.Name_Destination>))]
+        [SupportsWildcards]
         public string? Path { get; set; }
 
         // DriveCompleter と良く似ているのだけど、これはコピー元のドライブを除外する機能がある。

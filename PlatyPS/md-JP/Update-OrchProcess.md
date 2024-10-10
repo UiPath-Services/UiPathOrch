@@ -18,7 +18,7 @@ Update-OrchProcess [-Name] <String[]> [-NewName <String>] [-Description <String>
  [-RemoteControlAccess <String>] [-RetentionAction <String>] [-RetentionPeriod <Int32>]
  [-RetentionBucket <String>] [-ErrorRecordingEnabled <String>] [-Quality <Int32>] [-Frequency <Int32>]
  [-Duration <Int32>] [-AutoStartProcess <String>] [-AlwaysRunning <String>] [-VideoRecordingType <String>]
- [-QueueItemVideoRecordingType <String>] [-MaxDurationSeconds <Int32>] [-Tags <String>] [-Path <String[]>]
+ [-QueueItemVideoRecordingType <String>] [-MaxDurationSeconds <Int32>] [-Tags <String[]>] [-Path <String[]>]
  [-Recurse] [-Depth <UInt32>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
@@ -376,7 +376,7 @@ Accept wildcard characters: False
 更新するプロセスの Tags を指定します。
 
 ```yaml
-Type: String
+Type: String[]
 Parameter Sets: (All)
 Aliases:
 

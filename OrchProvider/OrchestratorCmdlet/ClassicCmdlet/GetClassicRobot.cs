@@ -84,18 +84,17 @@ namespace UiPath.PowerShell.Commands
                 //}
                 #endregion
 
-                var line = new StringBuilder();
-
-                line.Append($"{EscapeCsvValue(r.Path, true)},");
-                line.Append($"{EscapeCsvValue(r.Robot?.MachineName)},");
-                line.Append($"{EscapeCsvValue(r.Robot?.Name)},");
-                line.Append($"{EscapeCsvValue(r.Robot?.Description)},");
-                line.Append($"{EscapeCsvValue(r.Robot?.Type)},");
-                //line.Append($"{EscapeCsvValue(credentialStoreName)},");
-                line.Append($"{EscapeCsvValue(r.Robot?.Username)},");
-                line.Append($"{EscapeCsvValue(r.Robot?.RobotEnvironments)}");
-
-                writer.WriteLine(line.ToString());
+                string[] line = [
+                    EscapeCsvValue(r.Path, true),
+                    EscapeCsvValue(r.Robot?.MachineName),
+                    EscapeCsvValue(r.Robot?.Name),
+                    EscapeCsvValue(r.Robot?.Description),
+                    EscapeCsvValue(r.Robot?.Type),
+                    //EscapeCsvValue(credentialStoreName),
+                    EscapeCsvValue(r.Robot?.Username),
+                    EscapeCsvValue(r.Robot?.RobotEnvironments)
+                ];
+                WriteCsvLine(writer, line);
             }
         }
 

@@ -76,7 +76,8 @@ namespace UiPath.PowerShell.Commands
         public string? RetentionBucket { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        public string? Tags { get; set; }
+        [ArgumentCompleter(typeof(TagsCompleter))]
+        public string[]? Tags { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
@@ -87,6 +88,43 @@ namespace UiPath.PowerShell.Commands
 
         [Parameter]
         public uint Depth { get; set; }
+
+        // キューの Tags 専用
+        private class TagsCompleter : OrchArgumentCompleter
+        {
+            public override IEnumerable<CompletionResult> CompleteArgument(
+                string commandName,
+                string parameterName,
+                string wordToComplete,
+                CommandAst commandAst,
+                IDictionary fakeBoundParameters)
+            {
+                var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+                // パラメータで選択済みの Id は、候補から除外する
+                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Positional.Name.Parameters);
+
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetQueues(df.folder));
+
+                foreach (var result in results)
+                {
+                    if (!result.TryGetValue(out var entities)) continue;
+
+                    foreach (var release in entities!
+                        .FilterByWildcards(p => p?.Name, wpName)
+                        .OrderBy(p => p.Name))
+                    {
+                        if (release?.Tags == null) continue;
+
+                        var values = release.Tags.ConvertToString();
+                        if (string.IsNullOrEmpty(values)) continue;
+
+                        string tiphelp = TipHelp(release);
+                        yield return new CompletionResult(PathTools.EscapePSText(values), values, CompletionResultType.Text, tiphelp);
+                    }
+                }
+            }
+        }
 
         protected override void ProcessRecord()
         {
@@ -137,8 +175,8 @@ namespace UiPath.PowerShell.Commands
                     }
                     #endregion
 
-                    newQueue.AssignString(RetentionAction,   (q, v) => q.RetentionAction = v);
-                    newQueue.AssignNumber(RetentionPeriod,   (q, v) => q.RetentionPeriod = v);
+                    newQueue.AssignStringIfNotNullOrEmpty(RetentionAction,   (q, v) => q.RetentionAction = v);
+                    newQueue.AssignNumberIfNotNullOrZero(RetentionPeriod,   (q, v) => q.RetentionPeriod = v);
 
                     #region RetentionBucket を RetentionBucketId に変換
                     newQueue.AssignIdFromName(
@@ -155,17 +193,17 @@ namespace UiPath.PowerShell.Commands
                         newQueue.RetentionBucketId = null;
                     }
 
-                    newQueue.AssignString(NewName,                 (q, v) => q.Name = v);
-                    newQueue.AssignEmptyString(Description,        (q, v) => q.Description = v);
-                    newQueue.AssignBool(AcceptAutomaticallyRetry,  (q, v) => q.AcceptAutomaticallyRetry = v);
-                    newQueue.AssignBool(RetryAbandonedItems,       (q, v) => q.RetryAbandonedItems = v);
-                    newQueue.AssignNumber(MaxNumberOfRetries,      (q, v) => q.MaxNumberOfRetries = v);
+                    newQueue.AssignStringIfNotNullOrEmpty(NewName,                 (q, v) => q.Name = v);
+                    newQueue.AssignStringIfNotNull(Description,                    (q, v) => q.Description = v);
+                    newQueue.AssignBoolIfNotNull(AcceptAutomaticallyRetry,         (q, v) => q.AcceptAutomaticallyRetry = v);
+                    newQueue.AssignBoolIfNotNull(RetryAbandonedItems,              (q, v) => q.RetryAbandonedItems = v);
+                    newQueue.AssignNumberIfNotNullOrZero(MaxNumberOfRetries,       (q, v) => q.MaxNumberOfRetries = v);
                     //newQueue.assig  ProcessScheduleId": null,
-                    newQueue.AssignString(SpecificDataJsonSchema,  (q, v) => q.SpecificDataJsonSchema = v);
-                    newQueue.AssignString(OutputDataJsonSchema,    (q, v) => q.OutputDataJsonSchema = v);
-                    newQueue.AssignString(AnalyticsDataJsonSchema, (q, v) => q.AnalyticsDataJsonSchema = v);
-                    newQueue.AssignNumber(SlaInMinutes,            (q, v) => q.SlaInMinutes = v);
-                    newQueue.AssignNumber(RiskSlaInMinutes,        (q, v) => q.RiskSlaInMinutes= v);
+                    newQueue.AssignStringIfNotNullOrEmpty(SpecificDataJsonSchema,  (q, v) => q.SpecificDataJsonSchema = v);
+                    newQueue.AssignStringIfNotNullOrEmpty(OutputDataJsonSchema,    (q, v) => q.OutputDataJsonSchema = v);
+                    newQueue.AssignStringIfNotNullOrEmpty(AnalyticsDataJsonSchema, (q, v) => q.AnalyticsDataJsonSchema = v);
+                    newQueue.AssignNumberIfNotNullOrZero(SlaInMinutes,             (q, v) => q.SlaInMinutes = v);
+                    newQueue.AssignNumberIfNotNullOrZero(RiskSlaInMinutes,         (q, v) => q.RiskSlaInMinutes= v);
 
                     #region Release を ReleaseId に変換する
                     newQueue.AssignIdFromName(
@@ -177,7 +215,7 @@ namespace UiPath.PowerShell.Commands
                         this, target, "Release");
                     #endregion
 
-                    newQueue.AssignString(Tags,                    (r, v) => r.Tags = v.DeserializeTags());
+                    newQueue.AssignTags(Tags, (r, v) => r.Tags = v);
 
                     if (ShouldProcess(target, "Update Queue"))
                     {

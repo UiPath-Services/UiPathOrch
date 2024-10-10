@@ -78,49 +78,56 @@ namespace UiPath.PowerShell.Commands
             "MachineRobots"
         ];
 
-        private static void WriteCsvContent(StreamWriter writer, ProcessSchedule t)
+        private void WriteCsvContent(StreamWriter writer, ProcessSchedule t)
         {
-            var line = new StringBuilder();
-
-            line.Append($"{EscapeCsvValue(t.Path, true)},");
-            line.Append($"{EscapeCsvValue(t.Name, true)},");
-            line.Append($"{EscapeCsvValue(t.ReleaseName)},");
-            line.Append($"{t.Enabled},");
-            line.Append($"{t.SpecificPriorityValue},");
-            line.Append($"{t.StartStrategy},");
-            line.Append($"{t.StopStrategy},");
-            line.Append($"{EscapeCsvValue(t.StopProcessExpression)},");
-            line.Append($"{EscapeCsvValue(t.KillProcessExpression)},");
-            line.Append($"{EscapeCsvValue(t.AlertPendingExpression)},");
-            line.Append($"{EscapeCsvValue(t.AlertRunningExpression)},");
-            line.Append($"{t.ConsecutiveJobFailuresThreshold},");
-            line.Append($"{t.JobFailuresGracePeriodInHours},");
-            line.Append($"{EscapeCsvValue(t.RuntimeType)},");
-            line.Append($"{EscapeCsvValue(t.InputArguments)},");
-            line.Append($"{t.ResumeOnSameContext},");
-            line.Append($"{t.RunAsMe},");
-            line.Append($"{t.IsConnected},");
-            line.Append($"{EscapeCsvValue(t.CalendarName)},");
-            line.Append($"{t.ActivateOnJobComplete},");
-            line.Append($"{t.ItemsActivationThreshold},");
-            line.Append($"{t.ItemsPerJobActivationTarget},");
-            line.Append($"{t.MaxJobsForActivation},");
-            line.Append($"{EscapeCsvValue(t.StartProcessCron)},");
-            line.Append($"{EscapeCsvValue(t.StartProcessCronDetails)},");
-            line.Append($"{EscapeCsvValue(t.QueueDefinitionName)},");
-            line.Append($"{EscapeCsvValue(t.TimeZoneId)},");
-            line.Append($"{FormatDateTimeWithKind(t.StopProcessDate)},");
-
             #region MachineRobots の Id を Name に変換して出力
+            string machineRobots = null;
             if (t.MachineRobots != null && t.MachineRobots.Length != 0)
             {
-                var (drive, folder) = OrchDriveInfo.EnumFolders(t.Path).FirstOrDefault();
-                string machineRobots = SerializeMachineRobotSessionArray(drive, folder!, t.MachineRobots);
-                line.Append($"{EscapeCsvValue(machineRobots)}");
+                try
+                {
+                    var (drive, folder) = OrchDriveInfo.EnumFolders(t.Path).FirstOrDefault();
+                    machineRobots = SerializeMachineRobotSessionArray(drive, folder!, t.MachineRobots);
+                }
+                catch (Exception ex)
+                {
+                    WriteWarning($"{t.GetPSPath()}: Failed to retrieve MachineRobots: {ex.Message}");
+                }
             }
             #endregion
 
-            writer.WriteLine(line.ToString());
+            string[] line = [
+                EscapeCsvValue(t.Path, true),
+                EscapeCsvValue(t.Name, true),
+                EscapeCsvValue(t.ReleaseName),
+                EscapeCsvValue(t.Enabled),
+                EscapeCsvValue(t.SpecificPriorityValue),
+                EscapeCsvValue(t.StartStrategy),
+                EscapeCsvValue(t.StopStrategy),
+                EscapeCsvValue(t.StopProcessExpression),
+                EscapeCsvValue(t.KillProcessExpression),
+                EscapeCsvValue(t.AlertPendingExpression),
+                EscapeCsvValue(t.AlertRunningExpression),
+                EscapeCsvValue(t.ConsecutiveJobFailuresThreshold),
+                EscapeCsvValue(t.JobFailuresGracePeriodInHours),
+                EscapeCsvValue(t.RuntimeType),
+                EscapeCsvValue(t.InputArguments),
+                EscapeCsvValue(t.ResumeOnSameContext),
+                EscapeCsvValue(t.RunAsMe),
+                EscapeCsvValue(t.IsConnected),
+                EscapeCsvValue(t.CalendarName),
+                EscapeCsvValue(t.ActivateOnJobComplete),
+                EscapeCsvValue(t.ItemsActivationThreshold),
+                EscapeCsvValue(t.ItemsPerJobActivationTarget),
+                EscapeCsvValue(t.MaxJobsForActivation),
+                EscapeCsvValue(t.StartProcessCron),
+                EscapeCsvValue(t.StartProcessCronDetails),
+                EscapeCsvValue(t.QueueDefinitionName),
+                EscapeCsvValue(t.TimeZoneId),
+                EscapeCsvValue(FormatDateTimeWithKind(t.StopProcessDate)),
+                EscapeCsvValue(machineRobots)
+            ];
+            WriteCsvLine(writer, line);
         }
 
         private void Output(StreamWriter? writer, ProcessSchedule? trigger)

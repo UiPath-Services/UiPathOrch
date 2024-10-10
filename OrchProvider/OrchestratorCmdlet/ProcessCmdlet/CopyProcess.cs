@@ -39,7 +39,7 @@ namespace UiPath.PowerShell.Commands
             var dstDrivesFolders = OrchDriveInfo.EnumFolders(Destination);
             var wpName = Name.ConvertToWildcardPatternList();
 
-            string msg = "Copying process(es)...";
+            string msg = "Copying processes...";
             using var reporterProcesses = new ProgressReporter(this, 500, Int32.MaxValue, msg, msg);
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (dstDrive, dstFolder) in dstDrivesFolders)

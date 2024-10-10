@@ -48,13 +48,12 @@ namespace UiPath.PowerShell.Commands
         private static void WriteCsvContent(StreamWriter writer, ExcludedDateNamed output)
         {
             // 各カレンダーに対してデータ行を書き込む
-            var line = new StringBuilder();
-
-            line.Append($"{EscapeCsvValue(output.Path)},");
-            line.Append($"{EscapeCsvValue(output.Name, true)},");
-            line.Append($"{output.ExcludedDate!.Value.ToShortDateString()}");
-
-            writer.WriteLine(line.ToString());
+            string[] line = [
+                EscapeCsvValue(output.Path, true),
+                EscapeCsvValue(output.Name, true),
+                EscapeCsvValue(output.ExcludedDate?.ToShortDateString())
+            ];
+            WriteCsvLine(writer, line);
         }
 
         protected override void ProcessRecord()

@@ -139,7 +139,7 @@ namespace UiPath.PowerShell.Commands
         #endregion
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        public string? Tags { get; set; }
+        public string[]? Tags { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
@@ -337,7 +337,7 @@ namespace UiPath.PowerShell.Commands
                         Name = WildcardPattern.Unescape(name),
                     };
 
-                    release.AssignEmptyString(Description, (r, v) => r.Description = v);
+                    release.AssignStringIfNotNull(Description, (r, v) => r.Description = v);
                     // Description をパッケージから継承する
                     if (string.IsNullOrEmpty(Description))
                     {
@@ -350,11 +350,11 @@ namespace UiPath.PowerShell.Commands
                         }
                     }
 
-                    release.AssignBool(HiddenForAttendedUser,   (r, v) => r.HiddenForAttendedUser = v);
-                    release.AssignString(RemoteControlAccess,   (r, v) => r.RemoteControlAccess = v);
-                    release.AssignString(InputArguments,        (r, v) => r.InputArguments = v);
-                    release.AssignString(Tags,                  (r, v) => r.Tags = v.DeserializeTags());
-                    release.AssignNumber(SpecificPriorityValue, (r, v) => r.SpecificPriorityValue = v);
+                    release.AssignBoolIfNotNull(HiddenForAttendedUser,   (r, v) => r.HiddenForAttendedUser = v);
+                    release.AssignStringIfNotNullOrEmpty(RemoteControlAccess,   (r, v) => r.RemoteControlAccess = v);
+                    release.AssignStringIfNotNullOrEmpty(InputArguments,        (r, v) => r.InputArguments = v);
+                    release.AssignNumberIfNotNullOrZero(SpecificPriorityValue, (r, v) => r.SpecificPriorityValue = v);
+                    release.AssignTags(Tags, (r, v) => r.Tags = v);
 
                     #region EntryPoint を EntryPointid に変換
                     var feedId = drive.GetFolderFeedId(folder);
@@ -382,17 +382,17 @@ namespace UiPath.PowerShell.Commands
                     }
 
                     release.ProcessSettings = new();
-                    release.ProcessSettings.AssignBool(AlwaysRunning, (p, v) => p.AlwaysRunning = v);
-                    release.ProcessSettings.AssignBool(AutoStartProcess, (p, v) => p.AutoStartProcess = v);
-                    release.ProcessSettings.AssignBool(ErrorRecordingEnabled, (p, v) => p.ErrorRecordingEnabled = v);
-                    release.ProcessSettings.AssignNumber(Quality, (p, v) => p.Quality = v);
-                    release.ProcessSettings.AssignNumber(Frequency, (p, v) => p.Frequency = v);
-                    release.ProcessSettings.AssignNumber(Duration, (p, v) => p.Duration = v);
+                    release.ProcessSettings.AssignBoolIfNotNull(AlwaysRunning, (p, v) => p.AlwaysRunning = v);
+                    release.ProcessSettings.AssignBoolIfNotNull(AutoStartProcess, (p, v) => p.AutoStartProcess = v);
+                    release.ProcessSettings.AssignBoolIfNotNull(ErrorRecordingEnabled, (p, v) => p.ErrorRecordingEnabled = v);
+                    release.ProcessSettings.AssignNumberIfNotNullOrZero(Quality, (p, v) => p.Quality = v);
+                    release.ProcessSettings.AssignNumberIfNotNullOrZero(Frequency, (p, v) => p.Frequency = v);
+                    release.ProcessSettings.AssignNumberIfNotNullOrZero(Duration, (p, v) => p.Duration = v);
 
                     release.VideoRecordingSettings = new();
-                    release.VideoRecordingSettings.AssignString(VideoRecordingType, (s, v) => s.VideoRecordingType = v);
-                    release.VideoRecordingSettings.AssignString(QueueItemVideoRecordingType, (s, v) => s.QueueItemVideoRecordingType = v);
-                    release.VideoRecordingSettings.AssignNumber(MaxDurationSeconds, (s, v) => s.MaxDurationSeconds = v);
+                    release.VideoRecordingSettings.AssignStringIfNotNullOrEmpty(VideoRecordingType, (s, v) => s.VideoRecordingType = v);
+                    release.VideoRecordingSettings.AssignStringIfNotNullOrEmpty(QueueItemVideoRecordingType, (s, v) => s.QueueItemVideoRecordingType = v);
+                    release.VideoRecordingSettings.AssignNumberIfNotNullOrZero(MaxDurationSeconds, (s, v) => s.MaxDurationSeconds = v);
 
                     release.RetentionAction = (string.IsNullOrEmpty(RetentionAction)) ? "Delete" : RetentionAction;
                     release.RetentionPeriod = (RetentionPeriod == null || RetentionPeriod == 0) ? 30 : RetentionPeriod;

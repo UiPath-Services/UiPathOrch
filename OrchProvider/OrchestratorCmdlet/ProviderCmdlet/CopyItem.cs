@@ -10,6 +10,7 @@ using System.Text;
 using System.Xml.Linq;
 using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
 using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
@@ -26,10 +27,18 @@ namespace UiPath.PowerShell.Core
         //public void WriteObject(object sendToPipeline);
     }
 
+    public class CopyItem_DynamicParameters
+    {
+        [Parameter]
+        public SwitchParameter ExcludeEntities { get; set; }
+    }
+
     // Copy-Item cmdlet
     // TODO: フォルダの Description を更新する手段として、Set-ItemProperty を実装したい。
     public partial class OrchProvider : NavigationCmdletProvider, IWritableHost  //, IPropertyCmdletProvider TODO
     {
+        private bool ExcludeEntities = false;
+
         // テナントパッケージのキャッシュは、一度だけクリアしたいがどうやって実装できるか、、
         //private ReadOnlyCollection<Package> tenantPackagesCache = null;
 
@@ -610,8 +619,6 @@ namespace UiPath.PowerShell.Core
                     Release srcRelease = null;
                     try
                     {
-                        // GetReleaseById() は、キャッシュを使わずに必ず OC に最新情報を問い合わせるので
-                        // キャッシュのクリアは不要
                         srcRelease = srcDrive.GetReleaseById(srcFolder, process.Id ?? 0);
                     }
                     catch (Exception ex)
@@ -822,58 +829,58 @@ namespace UiPath.PowerShell.Core
 
         // TODO: List<IdGroup> を返すようにした方が、コード保守が安全になるような気がする
         internal static IEnumerable<PmGroup>? FindDstIdGroups(IWritableHost _this,
-            OrchDriveInfo srcDrive, IEnumerable<string>? srcIdGroupIds,
+            OrchDriveInfo srcDrive, IEnumerable<string>? srcPmGroupIds,
             OrchDriveInfo dstDrive, string msg)
         {
-            if (srcIdGroupIds == null) yield break;
+            if (srcPmGroupIds == null) yield break;
 
             string target = srcDrive.NameColonSeparator;
-            ICollection<PmGroup?>? srcIdGroups = null;
+            ICollection<PmGroup>? srcPmGroups = null;
             try
             {
-                srcIdGroups = srcDrive.GetPmGroups()?.Values;
+                srcPmGroups = srcDrive.GetPmGroups()?.Values;
             }
             catch (Exception ex)
             {
-                _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "GetIdGroupError", ErrorCategory.InvalidOperation, dstDrive));
+                _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "GetPmGroupError", ErrorCategory.InvalidOperation, dstDrive));
                 yield break;
             }
-            if (srcIdGroups == null)
+            if (srcPmGroups == null)
             {
-                _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: Failed to retrieve IdGroup."), "GetIdGroupError", ErrorCategory.InvalidOperation, dstDrive));
+                _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: Failed to retrieve PmGroup."), "GetPmGroupError", ErrorCategory.InvalidOperation, dstDrive));
                 yield break;
             }
 
             target = dstDrive.NameColonSeparator;
-            ICollection<PmGroup?>? dstIdGroups = null;
+            ICollection<PmGroup>? dstPmGroups = null;
             try
             {
-                dstIdGroups = dstDrive.GetPmGroups()?.Values;
+                dstPmGroups = dstDrive.GetPmGroups()?.Values;
             }
             catch (Exception ex)
             {
-                _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "GetIdGroupError", ErrorCategory.InvalidOperation, dstDrive));
+                _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "GetPmGroupError", ErrorCategory.InvalidOperation, dstDrive));
                 yield break;
             }
-            if (dstIdGroups == null)
+            if (dstPmGroups == null)
             {
-                _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: Failed to retrieve IdGroup."), "GetIdGroupError", ErrorCategory.InvalidOperation, dstDrive));
+                _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: Failed to retrieve PmGroup."), "GetPmGroupError", ErrorCategory.InvalidOperation, dstDrive));
                 yield break;
             }
 
-            foreach (var srcIdGroupId in srcIdGroupIds)
+            foreach (var srcPmGroupId in srcPmGroupIds)
             {
-                var srcIdGroup = srcIdGroups.FirstOrDefault(g => g?.id == srcIdGroupId);
-                if (srcIdGroup == null)
+                var srcPmGroup = srcPmGroups.FirstOrDefault(g => g?.id == srcPmGroupId);
+                if (srcPmGroup == null)
                 {
-                    _this.WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, $"{msg}: {srcDrive.NameColon} does not have IdGroup with id = {srcIdGroupId}."), "GetGroupIdError", ErrorCategory.InvalidOperation, srcDrive));
+                    _this.WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, $"{msg}: {srcDrive.NameColon} does not have IdGroup with id = {srcPmGroupId}."), "GetGroupIdError", ErrorCategory.InvalidOperation, srcDrive));
                     continue;
                 }
 
-                var dstIdGroup = dstIdGroups.FirstOrDefault(g => string.Compare(g!.displayName, srcIdGroup.displayName, StringComparison.OrdinalIgnoreCase) == 0);
+                var dstIdGroup = dstPmGroups.FirstOrDefault(g => string.Compare(g!.displayName, srcPmGroup.displayName, StringComparison.OrdinalIgnoreCase) == 0);
                 if (dstIdGroup == null)
                 {
-                    _this.WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, $"{msg}: {dstDrive.NameColon} does not have IdGroup with name = {srcIdGroup.displayName}."), "GetGroupIdError", ErrorCategory.InvalidOperation, dstDrive));
+                    _this.WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, $"{msg}: {dstDrive.NameColon} does not have IdGroup with name = {srcPmGroup.displayName}."), "GetGroupIdError", ErrorCategory.InvalidOperation, dstDrive));
                     continue;
                 }
                 yield return dstIdGroup;
@@ -1027,8 +1034,7 @@ namespace UiPath.PowerShell.Core
                 srcSession = srcSessions.FirstOrDefault(s => s.SessionId == srcSessionId);
                 if (srcSession == null)
                 {
-                    // 見つからなくてもいいことにしとくか。。
-                    //_this.WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), $"{msg}: The session not found with SessionId {srcSessionId}."), "MigrateSessionIdError", ErrorCategory.InvalidOperation, srcFolder));
+                    _this.WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), $"{msg}: The session not found with SessionId {srcSessionId}."), "MigrateSessionIdError", ErrorCategory.InvalidOperation, srcFolder));
                     return null;
                 }
             }
@@ -1046,13 +1052,12 @@ namespace UiPath.PowerShell.Core
             {
                 var dstSessions = dstDrive.OrchAPISession.GetMachineSessionRuntimesByFolderId(dstFolder.Id ?? 0);
                 var dstSession = dstSessions.FirstOrDefault(s => 
-                    (s.ServiceUserName == srcServiceUserName) && 
-                    (s.MachineName     == srcMachineName) &&
-                    (s.HostMachineName == srcHostMachineName));
+                    (string.Compare(s.ServiceUserName, srcServiceUserName, true) == 0 && 
+                    (string.Compare(s.MachineName, srcMachineName, true) == 0) &&
+                    (string.Compare(s.HostMachineName, srcHostMachineName, true) == 0)));
                 if (dstSession == null)
                 {
-                    // 見つからなくてもいいことにしとくか。。
-                    // _this.WriteError(new ErrorRecord(new OrchException(dstFolder.GetPSPath(), $"{msg}: The session not found with ServiceUserName = '{srcServiceUserName}' and MachineName ='{srcMachineName}' and HostMachineName = '{srcHostMachineName}'."), "MigrateSessionIdError", ErrorCategory.InvalidOperation, dstFolder));
+                    _this.WriteError(new ErrorRecord(new OrchException(dstFolder.GetPSPath(), $"{msg}: The session not found with ServiceUserName = '{srcServiceUserName}', MachineName ='{srcMachineName}' and HostMachineName = '{srcHostMachineName}'."), "MigrateSessionIdError", ErrorCategory.InvalidOperation, dstFolder));
                 }
                 return dstSession;
             }
@@ -1455,7 +1460,7 @@ namespace UiPath.PowerShell.Core
                         if (bCredentailWarningNeeded && !bCredentialWarningDone)
                         {
                             target = System.IO.Path.Combine(newFolder.GetPSPath(), created?.Name ?? "");
-                            _this.WriteWarning($"'{target}': Please update credential asset passwords manually.");
+                            _this.WriteWarning($"'{target}': Please update credential asset passwords with Set-OrchCredentialAsset cmdlet.");
                             bCredentialWarningDone = true;
                         }
 
@@ -1715,7 +1720,7 @@ namespace UiPath.PowerShell.Core
                     postingTrigger.Key = null;
                     postingTrigger.ReleaseKey = null;
                     // postingTrigger.Path = null; // JsonIgnore 属性がついているので不要
-                    postingTrigger.TimeZoneIana = null;
+                    //postingTrigger.TimeZoneIana = null;
                     postingTrigger.ExternalJobKeyScheduler = null;
                     postingTrigger.StartProcessCronSummary = null;
                     postingTrigger.PackageName = null;
@@ -1736,6 +1741,8 @@ namespace UiPath.PowerShell.Core
                         dstDrive, newFolder, srcTrigger.ReleaseId, msg)?.Id;
                     if (postingTrigger.ReleaseId == null)
                     {
+                        // ReleaseId は埋まっていないと API がエラーを返すため、処理を続行できない
+                        // エラーは FindDstRelease() が出力済み
                         continue;
                     }
 
@@ -1749,10 +1756,7 @@ namespace UiPath.PowerShell.Core
                             var robot = FindDstRobot(_this,
                                 srcDrive,
                                 dstDrive, newFolder, machineRobot.RobotId, msg);
-                            if (robot == null)
-                            {
-                                continue;
-                            }
+                            // 見つからず、robot == null でもコピー処理を続行
 
                             machineRobot.RobotId = robot?.Id;
                             //machineRobot.RobotUserName = robot?.Username;
@@ -1767,7 +1771,8 @@ namespace UiPath.PowerShell.Core
                                     srcDrive, srcFolder,
                                     dstDrive, newFolder, machineRobot.MachineId, msg);
                                 machineRobot.MachineId = dstMachineFolder?.Id;
-                                if (machineRobot.MachineId == null) continue;
+
+                                // 見つからず、machineRobot.MachineId == null でもコピー処理を続行
                             }
 
                             //machineRobot.MachineName = machine?.Name;
@@ -2042,7 +2047,7 @@ namespace UiPath.PowerShell.Core
                     postingBucket.Id = null;
                     // postingBucket.Path = null; // JsonIgnore 属性がついているので不要
                     postingBucket.FoldersCount = null;
-                    postingBucket.Identifier = Guid.NewGuid().ToString();
+                    postingBucket.Identifier = Guid.NewGuid();
 
                     bool bPasswordExists = !string.IsNullOrEmpty(postingBucket.Password);
                     if (bPasswordExists)
@@ -2054,7 +2059,7 @@ namespace UiPath.PowerShell.Core
 
                     try
                     {
-                        var created = dstDrive.OrchAPISession.CreateBucket(newFolder.Id ?? 0, postingBucket);
+                        var created = dstDrive.OrchAPISession.PostBucket(newFolder.Id ?? 0, postingBucket);
 
                         // 画面が乱れるから、この表示はしなくて良いか。。
                         //if (!shouldProcess && created != null)
@@ -2503,6 +2508,8 @@ namespace UiPath.PowerShell.Core
         {
             if (srcFolder.FolderType == "Personal")
             {
+                if (ExcludeEntities) return false;
+
                 if (srcDrive == dstDrive)
                 {
                     WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(),
@@ -2573,98 +2580,101 @@ namespace UiPath.PowerShell.Core
                         dstDrive._dicReleases?.TryRemove(dstFolder.Id ?? 0, out _);
                         dstDrive._dicMachinesAssigned?.TryRemove(dstFolder.Id ?? 0, out _);
 
-                        // #1 フォルダーユーザーをコピー
-                        msg = "Copying assigned users...    ";
-                        reporter.WriteProgress(1);
-                        srcDrive!._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, true), out var _);
-                        srcDrive!._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, false), out var _);
-                        using var reporterFolderUsers = new ProgressReporter(this, 100, Int32.MaxValue, msg, msg);
-                        CopyFolderUsers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterFolderUsers, cancelHandler.Token, true);
+                        if (!ExcludeEntities)
+                        {
+                            // #1 フォルダーユーザーをコピー
+                            msg = "Copying assigned users...    ";
+                            reporter.WriteProgress(1);
+                            srcDrive!._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, true), out var _);
+                            srcDrive!._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, false), out var _);
+                            using var reporterFolderUsers = new ProgressReporter(this, 100, Int32.MaxValue, msg, msg);
+                            CopyFolderUsers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterFolderUsers, cancelHandler.Token, true);
 
-                        // #2 フォルダーマシンをコピー
-                        msg = "Copying assigned machines... ";
-                        reporter.WriteProgress(2);
-                        srcDrive._dicMachinesAssigned?.TryRemove(srcFolder.Id ?? 0, out _);
-                        using var reporterFolderMachines = new ProgressReporter(this, 200, Int32.MaxValue, msg, msg);
-                        CopyFolderMachines(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterFolderMachines, cancelHandler.Token, true);
+                            // #2 フォルダーマシンをコピー
+                            msg = "Copying assigned machines... ";
+                            reporter.WriteProgress(2);
+                            srcDrive._dicMachinesAssigned?.TryRemove(srcFolder.Id ?? 0, out _);
+                            using var reporterFolderMachines = new ProgressReporter(this, 200, Int32.MaxValue, msg, msg);
+                            CopyFolderMachines(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterFolderMachines, cancelHandler.Token, true);
 
-                        // #3 バケットをコピー
-                        // プロセスをコピーする前に、先にバケットをコピーしておく必要がある
-                        msg = "Copying buckets...           ";
-                        reporter.WriteProgress(3);
-                        using var reporterBuckets = new ProgressReporter(this, 300, Int32.MaxValue, msg, msg);
-                        CopyBuckets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterBuckets, cancelHandler.Token, true);
+                            // #3 バケットをコピー
+                            // プロセスをコピーする前に、先にバケットをコピーしておく必要がある
+                            msg = "Copying buckets...           ";
+                            reporter.WriteProgress(3);
+                            using var reporterBuckets = new ProgressReporter(this, 300, Int32.MaxValue, msg, msg);
+                            CopyBuckets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterBuckets, cancelHandler.Token, true);
 
-                        // #4 フォルダーパッケージをコピー
-                        msg = "Copying packages...          ";
-                        reporter.WriteProgress(4);
-                        using var reporterPackages = new ProgressReporter(this, 400, Int32.MaxValue, msg, msg);
-                        CopyPackages(this, srcDrive, srcFolder, dstDrive, newFolder, reporterPackages, cancelHandler.Token);
+                            // #4 フォルダーパッケージをコピー
+                            msg = "Copying packages...          ";
+                            reporter.WriteProgress(4);
+                            using var reporterPackages = new ProgressReporter(this, 400, Int32.MaxValue, msg, msg);
+                            CopyPackages(this, srcDrive, srcFolder, dstDrive, newFolder, reporterPackages, cancelHandler.Token);
 
-                        // #5 プロセスをコピー
-                        msg = "Copying processes...         ";
-                        reporter.WriteProgress(5);
-                        using var reporterProcesses = new ProgressReporter(this, 500, Int32.MaxValue, msg, msg);
-                        CopyProcesses(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterProcesses, cancelHandler.Token, true);
+                            // #5 プロセスをコピー
+                            msg = "Copying processes...         ";
+                            reporter.WriteProgress(5);
+                            using var reporterProcesses = new ProgressReporter(this, 500, Int32.MaxValue, msg, msg);
+                            CopyProcesses(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterProcesses, cancelHandler.Token, true);
 
-                        // #6 アセットをコピー
-                        msg = "Copying assets...            ";
-                        reporter.WriteProgress(6);
-                        srcDrive._dicAssets?.TryRemove(srcFolder.Id ?? 0, out _);
-                        using var reporterAssets = new ProgressReporter(this, 600, Int32.MaxValue, msg, msg);
-                        CopyAssets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterAssets, cancelHandler.Token, true);
+                            // #6 アセットをコピー
+                            msg = "Copying assets...            ";
+                            reporter.WriteProgress(6);
+                            srcDrive._dicAssets?.TryRemove(srcFolder.Id ?? 0, out _);
+                            using var reporterAssets = new ProgressReporter(this, 600, Int32.MaxValue, msg, msg);
+                            CopyAssets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterAssets, cancelHandler.Token, true);
 
-                        // #7 キューをコピー
-                        msg = "Copying queues...            ";
-                        reporter.WriteProgress(7);
-                        using var reporterQueues = new ProgressReporter(this, 700, Int32.MaxValue, msg, msg);
-                        CopyQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterQueues, cancelHandler.Token, true);
+                            // #7 キューをコピー
+                            msg = "Copying queues...            ";
+                            reporter.WriteProgress(7);
+                            using var reporterQueues = new ProgressReporter(this, 700, Int32.MaxValue, msg, msg);
+                            CopyQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterQueues, cancelHandler.Token, true);
 
-                        // #8 トリガーをコピー
-                        msg = "Copying triggers...          ";
-                        reporter.WriteProgress(8);
-                        srcDrive._dicProcessSchedules?.TryRemove(srcFolder.Id ?? 0, out _);
-                        using var reporterTriggers = new ProgressReporter(this, 800, Int32.MaxValue, msg, msg);
-                        CopyTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTriggers, cancelHandler.Token, true);
+                            // #8 トリガーをコピー
+                            msg = "Copying triggers...          ";
+                            reporter.WriteProgress(8);
+                            srcDrive._dicProcessSchedules?.TryRemove(srcFolder.Id ?? 0, out _);
+                            using var reporterTriggers = new ProgressReporter(this, 800, Int32.MaxValue, msg, msg);
+                            CopyTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTriggers, cancelHandler.Token, true);
 
-                        // #8 APIトリガーをコピー
-                        msg = "Copying API triggers...      ";
-                        reporter.WriteProgress(9);
-                        srcDrive._dicHttpTriggers?.TryRemove(srcFolder.Id ?? 0, out _);
-                        using var reporterApiTriggers = new ProgressReporter(this, 900, Int32.MaxValue, msg, msg);
-                        CopyApiTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterApiTriggers, cancelHandler.Token, true);
+                            // #8 APIトリガーをコピー
+                            msg = "Copying API triggers...      ";
+                            reporter.WriteProgress(9);
+                            srcDrive._dicHttpTriggers?.TryRemove(srcFolder.Id ?? 0, out _);
+                            using var reporterApiTriggers = new ProgressReporter(this, 900, Int32.MaxValue, msg, msg);
+                            CopyApiTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterApiTriggers, cancelHandler.Token, true);
 
-                        // #xx テストケースはコピーする必要がない。
-                        // パッケージとプロセスをコピーすれば、自動で出てくる。
-                        //msg = "Copying test cases...      ";
-                        //reporter.WriteProgress();
-                        //using var reporterTestCases = new ProgressReporter(this, 1100, Int32.MaxValue, msg, msg);
-                        //CopyTestCases(this, srcDrive, srcFolder, dstDrive, newFolder, reporterTestCases);
+                            // #xx テストケースはコピーする必要がない。
+                            // パッケージとプロセスをコピーすれば、自動で出てくる。
+                            //msg = "Copying test cases...      ";
+                            //reporter.WriteProgress();
+                            //using var reporterTestCases = new ProgressReporter(this, 1100, Int32.MaxValue, msg, msg);
+                            //CopyTestCases(this, srcDrive, srcFolder, dstDrive, newFolder, reporterTestCases);
 
-                        // #10 テストセットをコピー
-                        msg = "Copying test sets...         ";
-                        reporter.WriteProgress(10);
-                        using var reporterTestSets = new ProgressReporter(this, 1000, Int32.MaxValue, msg, msg);
-                        CopyTestSets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestSets, cancelHandler.Token, true);
+                            // #10 テストセットをコピー
+                            msg = "Copying test sets...         ";
+                            reporter.WriteProgress(10);
+                            using var reporterTestSets = new ProgressReporter(this, 1000, Int32.MaxValue, msg, msg);
+                            CopyTestSets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestSets, cancelHandler.Token, true);
 
-                        // #11 テストセットスケジュールをコピー
-                        msg = "Copying test schedules...    ";
-                        reporter.WriteProgress(11);
-                        using var reporterTestSchedules = new ProgressReporter(this, 1100, Int32.MaxValue, msg, msg);
-                        CopyTestSetSchedules(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestSchedules, cancelHandler.Token, true);
+                            // #11 テストセットスケジュールをコピー
+                            msg = "Copying test schedules...    ";
+                            reporter.WriteProgress(11);
+                            using var reporterTestSchedules = new ProgressReporter(this, 1100, Int32.MaxValue, msg, msg);
+                            CopyTestSetSchedules(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestSchedules, cancelHandler.Token, true);
 
-                        // #12 テストデータキューをコピー
-                        msg = "Copying test data queues...  ";
-                        reporter.WriteProgress(12);
-                        using var reporterTestDataQueues = new ProgressReporter(this, 1200, Int32.MaxValue, msg, msg);
-                        CopyTestDataQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestDataQueues, cancelHandler.Token, true);
+                            // #12 テストデータキューをコピー
+                            msg = "Copying test data queues...  ";
+                            reporter.WriteProgress(12);
+                            using var reporterTestDataQueues = new ProgressReporter(this, 1200, Int32.MaxValue, msg, msg);
+                            CopyTestDataQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestDataQueues, cancelHandler.Token, true);
 
-                        // #13 アクションカタログをコピー
-                        msg = "Copying test data queues...  ";
-                        reporter.WriteProgress(12);
-                        using var reporterActionCatalogs = new ProgressReporter(this, 1300, Int32.MaxValue, msg, msg);
-                        srcDrive._dicTaskCatalog?.TryRemove(srcFolder.Id ?? 0, out _);
-                        CopyActionCatalogs(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestDataQueues, cancelHandler.Token, true);
+                            // #13 アクションカタログをコピー
+                            msg = "Copying action catalogs...  ";
+                            reporter.WriteProgress(12);
+                            using var reporterActionCatalogs = new ProgressReporter(this, 1300, Int32.MaxValue, msg, msg);
+                            srcDrive._dicTaskCatalog?.TryRemove(srcFolder.Id ?? 0, out _);
+                            CopyActionCatalogs(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestDataQueues, cancelHandler.Token, true);
+                        }
                     }
 
                     if (recurse)
@@ -2691,8 +2701,19 @@ namespace UiPath.PowerShell.Core
             return false;
         }
 
+        protected override object CopyItemDynamicParameters(string path, string destination, bool recurse)
+        {
+            return new CopyItem_DynamicParameters();
+        }
+
         protected override void CopyItem(string path, string copyPath, bool recurse)
         {
+            var dynamicParameters = DynamicParameters as CopyItem_DynamicParameters;
+            if (dynamicParameters != null && dynamicParameters.ExcludeEntities.IsPresent)
+            {
+                ExcludeEntities = true;
+            }
+
             OrchDriveInfo srcDrive = ExtractOrchDriveInfo(path);
             OrchDriveInfo dstDrive = ExtractOrchDriveInfo(copyPath);
 
@@ -2732,6 +2753,7 @@ namespace UiPath.PowerShell.Core
             // ルートフォルダーを recursive copy する場合には特別扱いする
             if (srcFolder == srcDrive.RootFolder)
             {
+                bool isDirty = false;
                 if (recurse)
                 {
                     // 個人用ワークスペースとルート直下のフォルダをすべて列挙する。
@@ -2739,8 +2761,12 @@ namespace UiPath.PowerShell.Core
                     var foldersToBeCopied = srcDrive.GetFolders().Where((f => f.ParentId == null && f != srcDrive.RootFolder));
                     foreach (var folderToBeCopied in foldersToBeCopied)
                     {
-                        CopyItemRecurse(srcDrive, folderToBeCopied, dstDrive, dstFolder ?? dstDrive.RootFolder!, true);
+                        isDirty = CopyItemRecurse(srcDrive, folderToBeCopied, dstDrive, dstFolder ?? dstDrive.RootFolder!, true);
                     }
+                }
+                if (isDirty)
+                {
+                    dstDrive._dicFolders = null;
                 }
                 return;
             }
@@ -2765,26 +2791,5 @@ namespace UiPath.PowerShell.Core
                 }
             }
         }
-
-        //protected override object CopyItemDynamicParameters(string path, string destination, bool recurse)
-        //{
-        //    return null;
-        //            var runtimeDefinedParameterDictionary = new RuntimeDefinedParameterDictionary();
-
-        //            var attributeCollection = new Collection<Attribute>
-        //            {
-        //                new ParameterAttribute
-        //                {
-        ////                    Position = 1,
-        // //                   Mandatory = true,
-        //                    HelpMessage = "Specify the destination path"
-        //                }
-        //            };
-
-        //            var destinationDriveParameter = new RuntimeDefinedParameter("Destination2", typeof(string), attributeCollection);
-        //            runtimeDefinedParameterDictionary.Add("Destination2", destinationDriveParameter);
-
-        //            return runtimeDefinedParameterDictionary;
-        //        }
     }
 }

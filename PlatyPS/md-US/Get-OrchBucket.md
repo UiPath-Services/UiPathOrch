@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -13,8 +13,8 @@ Gets storage buckets.
 ## SYNTAX
 
 ```
-Get-OrchBucket [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-Depth <UInt32>]
- [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-OrchBucket [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-Depth <UInt32>] [-ExportCsv <String>]
+ [-CsvEncoding <Encoding>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -102,6 +102,36 @@ Specifies that the operation should include the target folder and all its subfol
 
 ```yaml
 Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -CsvEncoding
+{{ Fill CsvEncoding Description }}
+
+```yaml
+Type: Encoding
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ExportCsv
+{{ Fill ExportCsv Description }}
+
+```yaml
+Type: String
 Parameter Sets: (All)
 Aliases:
 

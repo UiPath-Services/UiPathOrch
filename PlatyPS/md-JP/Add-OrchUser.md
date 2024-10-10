@@ -13,8 +13,14 @@ schema: 2.0.0
 ## SYNTAX
 
 ```
-Add-OrchUser [[-Type] <String[]>] [-UserName] <String[]> [[-Roles] <String[]>] [-Path <String[]>]
- [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Add-OrchUser [[-Type] <String[]>] [-UserName] <String[]> [[-Roles] <String[]>] [-MayHaveUserSession <String>]
+ [-MayHaveRobotSession <String>] [-MayHaveUnattendedSession <String>] [-MayHavePersonalWorkspace <String>]
+ [-RestrictToPersonalWorkspace <String>] [-UpdatePolicyType <String>] [-UpdatePolicyVersion <String>]
+ [-UR_UserName <String>] [-UR_CredentialStore <String>] [-UR_Password <String>] [-UR_CredentialType <String>]
+ [-UR_LimitConcurrentExecution <String>] [-ES_TracingLevel <String>] [-ES_StudioNotifyServer <String>]
+ [-ES_LoginToConsole <String>] [-ES_ResolutionWidth <Int32>] [-ES_ResolutionHeight <Int32>]
+ [-ES_ResolutionDepth <Int32>] [-ES_FontSmoothing <String>] [-ES_AutoDownloadProcess <String>]
+ [-Path <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -140,6 +146,306 @@ Required: False
 Position: Named
 Default value: None
 Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ES_AutoDownloadProcess
+{{ Fill ES_AutoDownloadProcess Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -ES_FontSmoothing
+{{ Fill ES_FontSmoothing Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -ES_LoginToConsole
+{{ Fill ES_LoginToConsole Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -ES_ResolutionDepth
+{{ Fill ES_ResolutionDepth Description }}
+
+```yaml
+Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -ES_ResolutionHeight
+{{ Fill ES_ResolutionHeight Description }}
+
+```yaml
+Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -ES_ResolutionWidth
+{{ Fill ES_ResolutionWidth Description }}
+
+```yaml
+Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -ES_StudioNotifyServer
+{{ Fill ES_StudioNotifyServer Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -ES_TracingLevel
+{{ Fill ES_TracingLevel Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -MayHavePersonalWorkspace
+{{ Fill MayHavePersonalWorkspace Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -MayHaveRobotSession
+{{ Fill MayHaveRobotSession Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -MayHaveUnattendedSession
+{{ Fill MayHaveUnattendedSession Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -MayHaveUserSession
+{{ Fill MayHaveUserSession Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -RestrictToPersonalWorkspace
+{{ Fill RestrictToPersonalWorkspace Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -UpdatePolicyType
+{{ Fill UpdatePolicyType Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -UpdatePolicyVersion
+{{ Fill UpdatePolicyVersion Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -UR_CredentialStore
+{{ Fill UR_CredentialStore Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -UR_CredentialType
+{{ Fill UR_CredentialType Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -UR_LimitConcurrentExecution
+{{ Fill UR_LimitConcurrentExecution Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -UR_Password
+{{ Fill UR_Password Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -UR_UserName
+{{ Fill UR_UserName Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 

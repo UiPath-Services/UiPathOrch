@@ -66,7 +66,7 @@ namespace UiPath.PowerShell.Commands
                 var groups = drive.GetPmGroups().Values
                     .FilterByWildcards(g => g?.name!, wpGroupName)
                     .OrderBy(g => g?.name);
-                return ParallelResults.ForEach(groups, group => drive.GetPmGroup(group!.id!));
+                return ParallelResults.ForEach(groups, group => drive.GetPmGroup(group?.id));
             });
 
             List<Member> existingMembers = [];
@@ -144,7 +144,7 @@ namespace UiPath.PowerShell.Commands
                     var groups = drive.GetPmGroups().Values
                         .FilterByWildcards(g => g?.name!, wpGroupName)
                         .OrderBy(g => g?.name);
-                    return ParallelResults.ForEach(groups, group => drive.GetPmGroup(group!.id!));
+                    return ParallelResults.ForEach(groups, group => drive.GetPmGroup(group?.id));
                 });
 
                 // グループのメンバーとなっている DirectoryUser を収集する
@@ -216,7 +216,7 @@ namespace UiPath.PowerShell.Commands
                 foreach (var group in targetGroups)
                 {
                     // このグループのメンバを取得
-                    var detailedGroup = drive.GetPmGroup(group!.id!);
+                    var detailedGroup = drive.GetPmGroup(group?.id);
 
                     var targetMembers = detailedGroup?.members?
                         .FilterByWildcards(m => m?.objectType, wpType)
@@ -226,10 +226,10 @@ namespace UiPath.PowerShell.Commands
                     {
                         _visitedUserPatterns ??= [];
                         // ちょっと雑だけど、CSV を処理する場合は配列にひとつの要素しかないのでこれで十分か。
-                        if (!_visitedUserPatterns.Add((drive, group, Type![0], UserName![0])))
+                        if (!_visitedUserPatterns.Add((drive, group!, Type![0], UserName![0])))
                             continue;
 
-                        WriteWarning($"No match found for UserName '{UserName![0]}' ({Type![0]}) in GroupName '{group.GetPSPath()}'.");
+                        WriteWarning($"No match found for UserName '{UserName![0]}' ({Type![0]}) in GroupName '{group?.GetPSPath()}'.");
 
                         continue;
                     }
@@ -250,7 +250,7 @@ namespace UiPath.PowerShell.Commands
                             continue;
                         }
 
-                        string target = $"{member.name} ({member.displayName}) from {group.GetPSPath()}";
+                        string target = $"{member.name} ({member.displayName}) from {group?.GetPSPath()}";
                         if (ShouldProcess(target, $"Remove Member From Group"))
                         {
                             _parameterSets ??= [];
@@ -294,7 +294,7 @@ namespace UiPath.PowerShell.Commands
                         directoryUserIDsToRemove = toBeRemoved.Select(m => m.identifier).ToArray()!
                     };
 
-                    drive.OrchAPISession.PutPmGroup(group.id!, updateGroupCommand);
+                    drive.OrchAPISession.PutPmGroup(group.id, updateGroupCommand);
                     drive._dicPmGroups = null;
                     drive._dicPmGroups_Exception.ClearCache();
                 }

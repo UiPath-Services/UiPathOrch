@@ -62,7 +62,7 @@ namespace UiPath.PowerShell.Commands
                         .FilterByWildcards(u => u?.FullName, wpFullName)
                         .OrderBy(u => u.UserName))
                     {
-                        string tiphelp = TipHelp(e);
+                        string tiphelp = TipHelp2(e);
                         yield return new CompletionResult(PathTools.EscapePSText(e.UserName), e.UserName, CompletionResultType.ParameterValue, tiphelp);
                     }
                 }
@@ -100,7 +100,7 @@ namespace UiPath.PowerShell.Commands
                         .ExcludeByWildcards(u => u?.FullName, wpFullName)
                         .OrderBy(u => u.FullName))
                     {
-                        string tiphelp = TipHelp(e);
+                        string tiphelp = TipHelp2(e);
                         yield return new CompletionResult(PathTools.EscapePSText(e.FullName), e.FullName, CompletionResultType.ParameterValue, tiphelp);
                     }
                 }
@@ -154,7 +154,7 @@ namespace UiPath.PowerShell.Commands
                         {
                             try
                             {
-                                drive.OrchAPISession.RemoveUser(user.Id ?? 0);
+                                drive.OrchAPISession.DeleteUser(user.Id ?? 0);
                                 drive._dicUsers = null;
                                 drive._dicUsersDetailed = null;
                             }

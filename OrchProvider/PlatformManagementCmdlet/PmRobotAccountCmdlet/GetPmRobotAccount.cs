@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Management.Automation;
 using System.Management.Automation.Language;
@@ -42,7 +43,7 @@ namespace UiPath.PowerShell.Commands
         private static readonly string[] CsvHeaders = 
             ["Path", "UserName", "GroupName0", "GroupName1", "GroupName2", "GroupName3", "GroupName4", "GroupName5", "GroupName6", "GroupName7", "GroupName8", "GroupName9"];
 
-        private static void WriteCsvContent(StreamWriter writer, IEnumerable<PmRobotAccount> robotAccounts, ConcurrentDictionary<string, PmGroup?> groups)
+        private static void WriteCsvContent(StreamWriter writer, IEnumerable<PmRobotAccount> robotAccounts, ConcurrentDictionary<string, PmGroup> groups)
         {
             // データ行を書き込む
             foreach (var robotAccount in robotAccounts

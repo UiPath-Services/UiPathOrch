@@ -340,7 +340,7 @@ namespace UiPath.PowerShell.Core
         }
 
         // TODO: このメソッドを参照する completer はすべてきれいに書き直せる
-        public static List<(OrchDriveInfo drive, Folder folder)> EnumPackageFeedFolders(IEnumerable<string>? path, bool recurse = false)
+        public static List<(OrchDriveInfo drive, Folder folder)> EnumPackageFeedFolders(IEnumerable<string?>? path, bool recurse = false)
         {
             var paths = ResolveOrchDrivePaths(path);
 
@@ -388,6 +388,32 @@ namespace UiPath.PowerShell.Core
                 throw new Exception("Use Set-Location (cd) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.");
             }
             return ret;
+        }
+
+        //public static List<(OrchDriveInfo drive, Folder folder)> ResolveToSingleFeedFolder(string? path)
+        public static (OrchDriveInfo drive, Folder folder) ResolveToSingleFeedFolder(string? path)
+        {
+            // まず、単一のフォルダに解決する
+            var ret = EnumPackageFeedFolders([path], false);
+            if (ret.Count == 0)
+            {
+                throw new Exception($"Cannot find path '{path}'.");
+            }
+            else if (ret.Count > 1)
+            {
+                throw new Exception($"Path '{path}' resolved to multiple folders.");
+            }
+
+            // recurse で、かつ解決したフォルダがルートフォルダであれば、サブフォルダも取得
+            //if (recurse)
+            //{
+            //    var (drive, folder) = ret[0];
+            //    if (folder == drive.RootFolder)
+            //    {
+            //        ret = EnumPackageFeedFolders([folder.GetPSPath()], true);
+            //    }
+            //}
+            return ret.First();
         }
 
         protected internal Folder? RootFolder;
@@ -477,6 +503,9 @@ namespace UiPath.PowerShell.Core
             _dicMachinesAssigned = null;
             _dicMachinesAssigned_Exceptions?.ClearCache();
 
+            _dicMachineClientSecrets = null;
+            _dicMachineClientSecrets_Exception.ClearCache();
+
             _dicMachineSessionRuntimes = null;
             _dicMachineSessionRuntimes_Exception?.ClearCache();
 
@@ -513,6 +542,9 @@ namespace UiPath.PowerShell.Core
 
             _dicReleases = null;
             _dicReleases_Exceptions?.ClearCache();
+                    
+            _dicReleasesDetailed = null;
+            _dicReleasesDetailed_Exceptions.ClearCache();
 
             _dicReviewer = null;
             _dicReviewer_Exceptions?.ClearCache();
@@ -522,6 +554,8 @@ namespace UiPath.PowerShell.Core
 
             _dicRobotsFromFolder = null;
             _dicRobotsFromFolder_Exceptions.ClearCache();
+
+            _dicRobotLogs = null;
 
             _dicRoles = null;
             _dicRoles_Exception?.ClearCache();
@@ -603,8 +637,11 @@ namespace UiPath.PowerShell.Core
             _dicPmUsers = null;
             _dicPmUsers_Exception?.ClearCache();
 
-            _dicPmUserLicenseGroups = null;
-            _dicPmUserLicenseGroups_Exceptions.ClearCache();
+            _dicPmLicensedUsers = null;
+            _dicPmLicensedUsers_Exceptions.ClearCache();
+
+            _dicPmLicensedGroups = null;
+            _dicPmLicensedGroups_Exceptions.ClearCache();
 
             _dicPmUserLicenseGroupAllocations = null;
             _dicPmUserLicenseGroupAllocations_Exceptions.ClearCache();
@@ -1335,7 +1372,6 @@ namespace UiPath.PowerShell.Core
             return detailedTrigger;
         }
 
-
         #region OrchHttpTrigger cache
         internal ConcurrentDictionary<Int64, List<HttpTrigger>>? _dicHttpTriggers = null;
         internal ExceptionsCachePer<Int64> _dicHttpTriggers_Exceptions = new();
@@ -1715,10 +1751,10 @@ namespace UiPath.PowerShell.Core
         #endregion
 
         #region OrchProcess cache
-        // Key: folderId
-        internal ConcurrentDictionary<Int64, List<Release>>? _dicReleases = null;
+        // Key: folderId, release.Id
+        internal ConcurrentDictionary<Int64, Dictionary<Int64, Release>>? _dicReleases = null;
         internal ExceptionsCachePer<Int64> _dicReleases_Exceptions = new();
-        public ReadOnlyCollection<Release> GetReleases(Folder folder)
+        public ICollection<Release> GetReleases(Folder folder)
         {
             _dicReleases_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
 
@@ -1726,11 +1762,17 @@ namespace UiPath.PowerShell.Core
             {
                 lock (_dicReleases_Exceptions)
                 {
-                    _dicReleases ??= new ConcurrentDictionary<Int64, List<Release>>();
+                    _dicReleases ??= [];
                 }
             }
-            if (!_dicReleases.TryGetValue(folder.Id ?? 0, out var releases))
+            if (!_dicReleases.TryGetValue(folder.Id!.Value, out var releasesPerFolder))
             {
+                lock (_dicReleases)
+                {
+                    releasesPerFolder ??= [];
+                    _dicReleases[folder.Id.Value] = releasesPerFolder;
+                }
+
                 try
                 {
                     string query = null;
@@ -1742,13 +1784,14 @@ namespace UiPath.PowerShell.Core
                     {
                         query = "&$expand=Environment,CurrentVersion,ReleaseVersions";
                     }
-                    releases = OrchAPISession.GetReleases(folder.Id ?? 0, query).ToList();
+                    var releases = OrchAPISession.GetReleases(folder.Id.Value, query).ToList();
                     string folderPath = folder.GetPSPath();
                     foreach (var release in releases)
                     {
                         release.Path = folderPath;
+                        releasesPerFolder[release.Id!.Value] = release;
                     }
-                    _dicReleases[folder.Id ?? 0] = releases;
+                    return releases;
                 }
                 catch (HttpResponseException ex)
                 {
@@ -1756,46 +1799,48 @@ namespace UiPath.PowerShell.Core
                     throw;
                 }
             }
-            return releases.AsReadOnly();
+            return releasesPerFolder.Values;
         }
 
-        // このメソッドは、キャッシュを使わずに必ず OC に問い合わせを行う
-        // その結果は、キャッシュに入れる（キャッシュ済みの同じ ID の Release があれば削除する）
+        internal ConcurrentDictionary<Int64, Dictionary<Int64, Release>>? _dicReleasesDetailed = null;
+        internal ExceptionsCachePer<(Int64, Int64)> _dicReleasesDetailed_Exceptions = new();
         public Release? GetReleaseById(Folder folder, Int64 releaseId)
         {
-            _dicReleases_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
+            _dicReleasesDetailed_Exceptions.ThrowCachedExceptionIfAny((folder.Id!.Value, releaseId));
 
-            if (_dicReleases == null)
+            if (_dicReleasesDetailed == null)
             {
-                lock (this)
+                lock (_dicReleasesDetailed_Exceptions)
                 {
-                    _dicReleases ??= new ConcurrentDictionary<Int64, List<Release>>();
+                    _dicReleasesDetailed ??= [];
                 }
             }
-            if (!_dicReleases.TryGetValue(folder.Id ?? 0, out var releases))
+            if (!_dicReleasesDetailed.TryGetValue(folder.Id!.Value, out var releasesDetailedPerFolder))
             {
-                releases = [];
-                _dicReleases[folder.Id ?? 0] = releases;
+                lock (_dicReleasesDetailed)
+                {
+                    releasesDetailedPerFolder ??= [];
+                    _dicReleasesDetailed[folder.Id!.Value] = releasesDetailedPerFolder;
+                }
             }
             try
             {
                 //var release = OrchAPISession.GetReleaseById(folder.Id ?? 0, releaseId, "?$expand=Environment,CurrentVersion,ReleaseVersions,EntryPoint");
-                var release = OrchAPISession.GetReleaseById(folder.Id ?? 0, releaseId);
+                var release = OrchAPISession.GetReleaseById(folder.Id ?? 0, releaseId, "?$expand=ReleaseVersions,EntryPoint");
                 if (release != null)
                 {
                     release.Path = folder.GetPSPath();
-                    var releaseInCache = releases.FirstOrDefault(release => release.Id == releaseId);
-                    if (releaseInCache != null)
+                    releasesDetailedPerFolder[release.Id!.Value] = release;
+                    if (_dicReleases != null && _dicReleases.TryGetValue(folder.Id!.Value, out var releasesPerFolder))
                     {
-                        releases.Remove(releaseInCache);
+                        releasesPerFolder[release.Id.Value] = release;
                     }
                 }
-                releases.Add(release!);
                 return release;
             }
             catch (HttpResponseException ex)
             {
-                _dicReleases_Exceptions.CacheException(folder.Id ?? 0, ex);
+                _dicReleasesDetailed_Exceptions.CacheException((folder.Id.Value, releaseId), ex);
                 throw;
             }
         }
@@ -2082,6 +2127,35 @@ namespace UiPath.PowerShell.Core
                 }
             }
             return _dicExtendedMachines.AsReadOnly();
+        }
+        #endregion
+
+        #region OrchMachineClientSecret cache
+        internal Dictionary<Guid, MachineClientSecretResponse[]?>? _dicMachineClientSecrets = null;
+        internal readonly ExceptionsCachePer<Guid> _dicMachineClientSecrets_Exception = new();
+        public MachineClientSecretResponse[]? GetMachineClientSecret(Guid licenseKey)
+        {
+            _dicMachineClientSecrets_Exception.ThrowCachedExceptionIfAny(licenseKey);
+
+            if (_dicMachineClientSecrets == null || !_dicMachineClientSecrets.TryGetValue(licenseKey, out var secrets))
+            {
+                lock (_dicMachineClientSecrets_Exception)
+                {
+                    try
+                    {
+                        var secretValues = OrchAPISession.GetMachineClientSecret(licenseKey);
+                        _dicMachineClientSecrets ??= [];
+                        _dicMachineClientSecrets[licenseKey] = secretValues;
+                        return secretValues;
+                    }
+                    catch (HttpResponseException ex)
+                    {
+                        _dicMachineClientSecrets_Exception.CacheException(licenseKey, ex);
+                        throw;
+                    }
+                }
+            }
+            return secrets;
         }
         #endregion
 
@@ -3266,10 +3340,10 @@ namespace UiPath.PowerShell.Core
                 {
                     var partitionGlobalId = GetPartitionGlobalId();
                     ret = OrchAPISession.SearchPmDirectoryUsers(partitionGlobalId!, key);
-                    //foreach (var user in users)
-                    //{
-                    //    user.Path = NameColonSeparator;
-                    //}
+                    foreach (var user in ret ?? [])
+                    {
+                        user.Path = NameColonSeparator;
+                    }
                     _dicPmDirectoryUsers[key] = ret;
                 }
                 catch (HttpResponseException ex)
@@ -3332,9 +3406,14 @@ namespace UiPath.PowerShell.Core
         // key: name
         internal ConcurrentDictionary<string, DirectoryObject[]?>? _dicSearchForUsersAndGroups = null;
         internal readonly ExceptionsCachePer<string>_dicSearchForUsersAndGroups_Exception = new();
-        public DirectoryObject[]? SearchForUsersAndGroups(string name)
+        public IEnumerable<DirectoryObject> SearchForUsersAndGroups(string name)
         {
-            _dicSearchForUsersAndGroups_Exception.ThrowCachedExceptionIfAny(name);
+            // この API は、'+' を含むユーザー名を検索できないようだ。
+            // 念のため、+ のほか '-' と '_' についても検索ワードから除いて処理する
+            int index = name.IndexOfAny(['+', '-', '_']);
+            string searchWord = index >= 0 ? name.Substring(0, index) : name;
+
+            _dicSearchForUsersAndGroups_Exception.ThrowCachedExceptionIfAny(searchWord);
 
             if (_dicSearchForUsersAndGroups == null)
             {
@@ -3343,20 +3422,25 @@ namespace UiPath.PowerShell.Core
                     _dicSearchForUsersAndGroups ??= [];
                 }
             }
-            if (!_dicSearchForUsersAndGroups.TryGetValue(name, out var value))
+            if (!_dicSearchForUsersAndGroups.TryGetValue(searchWord, out var value))
             {
                 try
                 {
-                    value = OrchAPISession.SearchForUsersAndGroups(name);
-                    _dicSearchForUsersAndGroups[name] = value;
+                    value = OrchAPISession.SearchForUsersAndGroups(searchWord);
+                    foreach (var v in value ?? [])
+                    {
+                        v.Path = NameColonSeparator;
+                    }
+                    _dicSearchForUsersAndGroups[searchWord] = value;
                 }
                 catch (HttpResponseException ex)
                 {
-                    _dicSearchForUsersAndGroups_Exception.CacheException(name, ex);
+                    _dicSearchForUsersAndGroups_Exception.CacheException(searchWord, ex);
                     throw;
                 }
             }
-            return value;
+
+            return value?.Where(obj => obj.identityName?.StartsWith(name) ?? false) ?? [];
         }
 
         #region PmRobot Cache
@@ -3401,9 +3485,9 @@ namespace UiPath.PowerShell.Core
         // key: groupId
         // 機密アプリの場合、繰り返し API call することを避けるためにキャッシュに null を入れた方が良いか？
         // TODO: ConcurrentDictionary ではなく PmGroup[] で良いのではないか？
-        internal ConcurrentDictionary<string, PmGroup?>? _dicPmGroups = null;
+        internal ConcurrentDictionary<string, PmGroup>? _dicPmGroups = null;
         internal readonly ExceptionCachePerTenant _dicPmGroups_Exception = new();
-        public ConcurrentDictionary<string, PmGroup?> GetPmGroups()
+        public ConcurrentDictionary<string, PmGroup> GetPmGroups()
         {
             _dicPmGroups_Exception.ThrowCachedExceptionIfAny();
 
@@ -3413,7 +3497,7 @@ namespace UiPath.PowerShell.Core
                 {
                     if (_dicPmGroups == null)
                     {
-                        _dicPmGroups = new ConcurrentDictionary<string, PmGroup?>();
+                        _dicPmGroups = new();
                         var partitionGlobalId = GetPartitionGlobalId();
 
                         try
@@ -3446,7 +3530,7 @@ namespace UiPath.PowerShell.Core
                             foreach (var group in groups ?? [])
                             {
                                 group.Path = NameColonSeparator;
-                                _dicPmGroups[group.id ?? ""] = group;
+                                _dicPmGroups[group.id!] = group;
                                 if (group.members != null && group.members.Length == 0)
                                 {
                                     group.members = null;
@@ -3465,13 +3549,15 @@ namespace UiPath.PowerShell.Core
             return _dicPmGroups;
         }
 
-        public PmGroup? GetPmGroup(string groupId)
+        public PmGroup? GetPmGroup(string? groupId)
         {
+            if (groupId == null) return null;
+
             if (_dicPmGroups == null)
             {
                 lock (this)
                 {
-                    _dicPmGroups ??= new ConcurrentDictionary<string, PmGroup?>();
+                    _dicPmGroups ??= new();
                 }
             }
 
@@ -3528,22 +3614,54 @@ namespace UiPath.PowerShell.Core
 
         #endregion
 
-        #region PmUserLicenseGroups Cache
-        internal List<NuLicensedGroup>? _dicPmUserLicenseGroups = null;
-        internal readonly ExceptionCachePerTenant _dicPmUserLicenseGroups_Exceptions = new();
-        public ReadOnlyCollection<NuLicensedGroup> GetPmUserLicenseGroups()
+        #region PmUserLicensedUsers Cache
+        internal List<NuLicensedUser>? _dicPmLicensedUsers = null;
+        internal readonly ExceptionCachePerTenant _dicPmLicensedUsers_Exceptions = new();
+        public ReadOnlyCollection<NuLicensedUser> GetPmLicensedUsers()
         {
-            _dicPmUserLicenseGroups_Exceptions.ThrowCachedExceptionIfAny();
+            _dicPmLicensedUsers_Exceptions.ThrowCachedExceptionIfAny();
 
-            if (_dicPmUserLicenseGroups == null)
+            if (_dicPmLicensedUsers == null)
             {
-                lock (_dicPmUserLicenseGroups_Exceptions)
+                lock (_dicPmLicensedUsers_Exceptions)
                 {
                     try
                     {
-                        _dicPmUserLicenseGroups = OrchAPISession.GetPmUserLicenseGroups().ToList();
+                        _dicPmLicensedUsers = OrchAPISession.GetPmLicensedUsers().ToList();
 
-                        foreach (var group in _dicPmUserLicenseGroups)
+                        foreach (var user in _dicPmLicensedUsers)
+                        {
+                            user.Path = NameColonSeparator;
+                            user.userBundleLicenseNames = user.userBundleLicenses?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
+                        }
+                    }
+                    catch (HttpResponseException ex)
+                    {
+                        _dicPmLicensedUsers_Exceptions.CacheException(ex);
+                        throw;
+                    }
+                }
+            }
+            return _dicPmLicensedUsers.AsReadOnly();
+        }
+        #endregion
+
+        #region PmUserLicenseGroups Cache
+        internal List<NuLicensedGroup>? _dicPmLicensedGroups = null;
+        internal readonly ExceptionCachePerTenant _dicPmLicensedGroups_Exceptions = new();
+        public ReadOnlyCollection<NuLicensedGroup> GetPmLicensedGroups()
+        {
+            _dicPmLicensedGroups_Exceptions.ThrowCachedExceptionIfAny();
+
+            if (_dicPmLicensedGroups == null)
+            {
+                lock (_dicPmLicensedGroups_Exceptions)
+                {
+                    try
+                    {
+                        _dicPmLicensedGroups = OrchAPISession.GetPmLicensedGroups().ToList();
+
+                        foreach (var group in _dicPmLicensedGroups)
                         {
                             group.Path = NameColonSeparator;
                             group.userBundleLicenseNames = group.userBundleLicenses?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
@@ -3551,22 +3669,23 @@ namespace UiPath.PowerShell.Core
                     }
                     catch (HttpResponseException ex)
                     {
-                        _dicPmUserLicenseGroups_Exceptions.CacheException(ex);
+                        _dicPmLicensedGroups_Exceptions.CacheException(ex);
                         throw;
                     }
                 }
             }
-            return _dicPmUserLicenseGroups.AsReadOnly();
+            return _dicPmLicensedGroups.AsReadOnly();
         }
         #endregion
 
-        internal ConcurrentDictionary<Guid, AvailableUserBundles>? _dicPmAvailableUserBundles = null;
-        internal readonly ExceptionsCachePer<Guid> _dicPmAvailableUserBundles_Exceptions = new();
-        public AvailableUserBundles? GetPmUserLicenseGroupsAvailableLicenses(NuLicensedGroup? group)
+        internal ConcurrentDictionary<string, AvailableUserBundles>? _dicPmAvailableUserBundles = null;
+        internal readonly ExceptionsCachePer<string> _dicPmAvailableUserBundles_Exceptions = new();
+        //public AvailableUserBundles? GetPmUserLicenseGroupsAvailableLicenses(NuLicensedGroup? group)
+        public AvailableUserBundles? GetPmUserLicenseGroupsAvailableLicenses(string? groupId, string groupName)
         {
-            if (group == null || group.id == null) return null;
+            if (groupId == null) return null;
 
-            _dicPmAvailableUserBundles_Exceptions.ThrowCachedExceptionIfAny(group.id.Value);
+            _dicPmAvailableUserBundles_Exceptions.ThrowCachedExceptionIfAny(groupId);
 
             if (_dicPmAvailableUserBundles == null)
             {
@@ -3576,16 +3695,16 @@ namespace UiPath.PowerShell.Core
                 }
             }
 
-            if (!_dicPmAvailableUserBundles.TryGetValue(group.id.Value, out var ret))
+            if (!_dicPmAvailableUserBundles.TryGetValue(groupId, out var ret))
             {
                 try
                 {
-                    ret = OrchAPISession.GetPmUserLicenseGroupsAvailableLicenses(group.id.Value);
+                    ret = OrchAPISession.GetPmLicensedGroupsAvailableLicenses(groupId);
                     if (ret != null)
                     {
                         ret.Path = NameColonSeparator;
-                        ret.GroupName = group.name;
-                        ret.PathGroupName = group.GetPSPath();
+                        ret.GroupName = groupName;
+                        ret.PathGroupName = System.IO.Path.Combine(NameColonSeparator, groupName);
                         foreach (var bundle in ret.availableUserBundles ?? [])
                         {
                             if (AvailableUserBundlesItems.Items.TryGetValue(bundle.code ?? "", out var name))
@@ -3593,12 +3712,12 @@ namespace UiPath.PowerShell.Core
                                 bundle.name = name;
                             }
                         }
-                        _dicPmAvailableUserBundles[group.id.Value] = ret;
+                        _dicPmAvailableUserBundles[groupId] = ret;
                     }
                 }
                 catch (HttpResponseException ex)
                 {
-                    _dicPmAvailableUserBundles_Exceptions.CacheException(group.id.Value, ex);
+                    _dicPmAvailableUserBundles_Exceptions.CacheException(groupId, ex);
                     throw;
                 }
             }
@@ -3606,11 +3725,11 @@ namespace UiPath.PowerShell.Core
         }
 
         #region GetPmUserLicenseGroupAllocations Cache
-        internal ConcurrentDictionary<Guid, List<NuLicensedGroupMember>>? _dicPmUserLicenseGroupAllocations = null;
-        internal readonly ExceptionsCachePer<Guid> _dicPmUserLicenseGroupAllocations_Exceptions = new();
-        public ReadOnlyCollection<NuLicensedGroupMember> GetPmUserLicenseGroupAllocations(NuLicensedGroup group)
+        internal ConcurrentDictionary<string, List<NuLicensedGroupMember>>? _dicPmUserLicenseGroupAllocations = null;
+        internal readonly ExceptionsCachePer<string> _dicPmUserLicenseGroupAllocations_Exceptions = new();
+        public ReadOnlyCollection<NuLicensedGroupMember> GetPmLicensedGroupAllocations(NuLicensedGroup group)
         {
-            _dicPmUserLicenseGroupAllocations_Exceptions.ThrowCachedExceptionIfAny(group.id!.Value);
+            _dicPmUserLicenseGroupAllocations_Exceptions.ThrowCachedExceptionIfAny(group.id!);
 
             if (_dicPmUserLicenseGroupAllocations == null)
             {
@@ -3620,22 +3739,22 @@ namespace UiPath.PowerShell.Core
                 }
             }
 
-            if (!_dicPmUserLicenseGroupAllocations.TryGetValue(group.id.Value, out var ret))
+            if (!_dicPmUserLicenseGroupAllocations.TryGetValue(group.id!, out var ret))
             {
                 try
                 {
-                    ret = OrchAPISession.GetPmUserLicenseGroupAllocations(group.id.Value).ToList();
+                    ret = OrchAPISession.GetPmLicenseGroupAllocations(group.id).ToList();
                     foreach (var user in ret)
                     {
                         user.Path = NameColonSeparator;
                         user.GroupName = group?.name;
                         user.PathGroupName = System.IO.Path.Combine(NameColonSeparator, group?.name ?? "");
                     }
-                    _dicPmUserLicenseGroupAllocations[group!.id.Value] = ret;
+                    _dicPmUserLicenseGroupAllocations[group!.id!] = ret;
                 }
                 catch (HttpResponseException ex)
                 {
-                    _dicPmUserLicenseGroupAllocations_Exceptions.CacheException(group.id.Value, ex);
+                    _dicPmUserLicenseGroupAllocations_Exceptions.CacheException(group.id!, ex);
                     throw;
                 }
             }
@@ -3831,7 +3950,8 @@ namespace UiPath.PowerShell.Core
                     user.PersonalWorkspace.ParentId = null; // なぜか値が入っていることがあるので修正
                     user.PersonalWorkspace.Path = NameColonSeparator;
                     user.PersonalWorkspace.FeedType = "FolderHierarchy"; // なぜか "Processes" が入っているので修正
-                    user.PersonalWorkspace.FullName = NameColonSeparator + WildcardPattern.Escape(user.PersonalWorkspace.DisplayName);
+                    //user.PersonalWorkspace.FullName = NameColonSeparator + WildcardPattern.Escape(user.PersonalWorkspace.DisplayName);
+                    user.PersonalWorkspace.FullName = NameColonSeparator + user.PersonalWorkspace.DisplayName;
                     _dicFolders = [user.PersonalWorkspace];
                 }
 
@@ -3878,13 +3998,15 @@ namespace UiPath.PowerShell.Core
                     {
                         string orchPath = OrchDriveInfo.OrchProviderPathToPSPath(folder.FullyQualifiedName.Substring(0, idx));
                         folder.Path = NameColon + orchPath;
-                        folder.FullName = NameColon + WildcardPattern.Escape(Path.Combine(orchPath, folder.DisplayName ?? ""));
+                        folder.FullName = NameColon + Path.Combine(orchPath, folder.DisplayName ?? "");
+                        //folder.FullName = NameColon + WildcardPattern.Escape(Path.Combine(orchPath, folder.DisplayName ?? ""));
                     }
                     else
                     {
                         string orchPath = OrchDriveInfo.OrchProviderPathToPSPath(folder.FullyQualifiedName);
                         folder.Path = NameColonSeparator;
-                        folder.FullName = NameColon + WildcardPattern.Escape(orchPath);
+                        folder.FullName = NameColon + orchPath;
+                        //folder.FullName = NameColon + WildcardPattern.Escape(orchPath);
                     }
                 }
                 _dicFolders ??= [];

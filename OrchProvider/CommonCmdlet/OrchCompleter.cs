@@ -1,17 +1,9 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Data;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using System.Net.Sockets;
-using System.Reflection.PortableExecutable;
-using System.Runtime.InteropServices;
-using System.Security;
 using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
-using UiPath.OrchAPI;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
@@ -240,6 +232,14 @@ namespace UiPath.PowerShell.Completer
 
         protected static WildcardPattern CreateWPFromWordToComplete(string? wordToComplete)
         {
+            if (!string.IsNullOrEmpty(wordToComplete))
+            {
+                if (wordToComplete.StartsWith('\'') && wordToComplete.EndsWith('\''))
+                {
+                    wordToComplete = wordToComplete.Substring(1, wordToComplete.Length - 2).Replace("''", "'");
+                }
+            }
+
             wordToComplete ??= "*";
             if (!wordToComplete.EndsWith('*') && !wordToComplete.EndsWith('?'))
                 wordToComplete += '*';
@@ -283,8 +283,8 @@ namespace UiPath.PowerShell.Completer
                 4 => "DirectoryExternalApplication: ",
                 _ => "unknown: "
             };
-                
-            tiphelp += entity.identityName ?? entity.identifier!;
+
+            tiphelp += (entity.Path + entity.identityName ?? entity.identifier);
             if (!string.IsNullOrEmpty(entity.displayName))
                 tiphelp += $" ({entity.displayName})";
             return tiphelp;
@@ -348,7 +348,17 @@ namespace UiPath.PowerShell.Completer
             return tiphelp;
         }
 
-        protected static string TipHelp(User user)
+        internal static string TipHelp(User user)
+        {
+            string tiphelp = user.UserName;
+            if (!string.IsNullOrEmpty(user.FullName))
+            {
+                tiphelp += $" ({user.FullName})";
+            }
+            return tiphelp!;
+        }
+
+        protected static string TipHelp2(User user)
         {
             return (user.Type! + ":").PadRight(30) + Path.Combine(user.Path!, user.UserName!) + " (" + user.FullName + ")";
         }
@@ -518,7 +528,7 @@ namespace UiPath.PowerShell.Completer
 
         protected static string TipHelp(PmDirectoryEntityInfo entity)
         {
-            string tiphelp = entity.identityName!;
+            string tiphelp = entity.GetPSPath();
             if (!string.IsNullOrEmpty(entity.displayName))
             {
                 tiphelp += $" ({entity.displayName})";
@@ -785,12 +795,13 @@ namespace UiPath.PowerShell.Completer
             {
                 if (!result.TryGetValue(out var entities)) continue;
 
+                if (entities?.Count != 0) bFound = true;
+
                 foreach (var credentialStore in entities!
                     .Where(c => wp.IsMatch(c.Name))
                     .ExcludeByWildcards(c => c?.Name, wpName)
                     .OrderBy(c => c.Name!))
                 {
-                    bFound = true;
                     string tiphelp = TipHelp(credentialStore);
                     yield return new CompletionResult(PathTools.EscapePSText(credentialStore.Name), credentialStore.Name, CompletionResultType.ParameterValue, tiphelp);
                 }
@@ -837,7 +848,7 @@ namespace UiPath.PowerShell.Completer
             }
             if (!bFound)
             {
-                yield return new CompletionResult("'(No credential stores found)'");
+                yield return new CompletionResult("'(No machines found)'");
             }
         }
     }
@@ -1096,7 +1107,7 @@ namespace UiPath.PowerShell.Completer
                 if (!result.TryGetValue(out var entities)) continue;
 
                 foreach (var role in entities!
-                    .Where(r => !r.IsStatic.GetValueOrDefault())
+                    //.Where(r => !r.IsStatic.GetValueOrDefault())
                     .Where(r => wp.IsMatch(r.Name))
                     .ExcludeByWildcards(r => r?.Name, wpName)
                     .OrderBy(role => role.Name))
@@ -1139,9 +1150,30 @@ namespace UiPath.PowerShell.Completer
                     .FilterByWildcards(u => u?.FullName, wpFullName)
                     .OrderBy(u => u.UserName))
                 {
-                    string tiphelp = TipHelp(e);
+                    string tiphelp = TipHelp2(e);
                     yield return new CompletionResult(PathTools.EscapePSText(e.UserName), e.UserName, CompletionResultType.ParameterValue, tiphelp);
                 }
+            }
+        }
+    }
+
+    internal class TimeZoneCompleter : OrchArgumentCompleter
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            if (!wordToComplete.EndsWith('?')) wordToComplete += '*';
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            foreach (var timeZone in TimeZoneInfo.GetSystemTimeZones()
+                .Where(t => wp.IsMatch(t.DisplayName)))
+            {
+                string tiphelp = $"{timeZone.DisplayName} (Id = '{timeZone.Id}')";
+                yield return new CompletionResult(PathTools.EscapePSText(timeZone.DisplayName), timeZone.DisplayName, CompletionResultType.ParameterValue, tiphelp);
             }
         }
     }
@@ -1175,6 +1207,31 @@ namespace UiPath.PowerShell.Completer
                 {
                     string tiphelp = TipHelp(e);
                     yield return new CompletionResult(PathTools.EscapePSText(e.Name), e.Name, CompletionResultType.Text, tiphelp);
+                }
+            }
+        }
+    }
+
+    internal class UpdatePolicyVersionCompleter : OrchArgumentCompleter
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+            var drives = OrchDriveInfo.EnumOrchDrives(paramPath);
+
+            foreach (var drive in drives)
+            {
+                var versions = drive.GetAvailableVersions();
+
+                foreach (var version in versions ?? [])
+                {
+                    string tiphelp = System.IO.Path.Combine(drive.NameColonSeparator, version);
+                    yield return new CompletionResult(PathTools.EscapePSText(version), version, CompletionResultType.ParameterValue, tiphelp);
                 }
             }
         }
@@ -1375,7 +1432,7 @@ namespace UiPath.PowerShell.Completer
     }
 
     #region Completers for Platform Management cmdlets
-    internal class PmGroupNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    public class PmGroupNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
             string commandName,
@@ -1478,7 +1535,7 @@ namespace UiPath.PowerShell.Completer
         }
     }
 
-    internal class PmLicenseGroupNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    internal class PmLicensedGroupNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
             string commandName,
@@ -1494,7 +1551,7 @@ namespace UiPath.PowerShell.Completer
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.GetPmUserLicenseGroups());
+            var results = ParallelResults.ForEach(drives, drive => drive.GetPmLicensedGroups());
 
             foreach (var result in results)
             {
@@ -1824,7 +1881,7 @@ namespace UiPath.PowerShell.Completer
         }
     }
 
-    internal class EncodingCompleter : OrchArgumentCompleter
+    public class EncodingCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
             string commandName,

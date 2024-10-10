@@ -46,9 +46,53 @@ namespace UiPath.PowerShell.Positional
         public static string[] Parameters { get; } = ["Text", "Integer", "Bool"];
     }
 
+    internal class BucketOptionsItems : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["ReadOnly", "AuditReadAccess"];
+    }
+
+    internal class BucketStorageProviderItems : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["Azure", "Amazon"];
+    }
+
+    internal class ExecutionSettingsTraceLevelItems : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["Verbose", "Trace", "Information", "Warning", "Error", "Critical", "Off"];
+    }
+
+    internal class JobProcessTypeItems : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["Undefined", "Process", "TestAutomationProcess"];
+    }
+
     internal class JobOrderableItems : IPositionalParameters
     {
         public static string[] Parameters { get; } = ["CreationTime", "Release/Name", "State", "SpecificPriorityValue", "StartTime", "EndTime", "SourceType"];
+    }
+
+    internal class LicenseRobotTypeItems : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = [
+            "Attended",
+            "AttendedStudioWeb",
+            "AutomationCloud",
+            "AutomationCloudTestAutomation",
+            "AutomationKit",
+            "Development",
+            "Headless",
+            "NonProduction",
+            "Serverless",
+            "ServerlessTestAutomation",
+            "StudioPro",
+            "StudioX",
+            "TestAutomation",
+            "Unattended",
+            //"CitizenDeveloper",
+            //"RpaDeveloper",
+            //"RpaDeveloperPro",
+            //"Studio",
+        ];
     }
 
     internal class LogOrderableItems : IPositionalParameters
@@ -283,6 +327,16 @@ namespace UiPath.PowerShell.Positional
         public static string[] Parameters { get; } = ["MachineName", "HostMachineName", "ServiceUserName", "SessionId"];
     }
 
+    internal class Name_Email : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["Name", "Email"];
+    }
+
+    internal class Name_UserName_MachineName_CredentialUsername_CredentialPassword : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["Name", "UserName", "MachineName", "CredentialUsername", "CredentialPassword"];
+    }
+
     internal class Processes_FolderHierarchy : IPositionalParameters
     {
         public static string[] Parameters { get; } = ["Processes", "FolderHierarchy"];
@@ -343,6 +397,11 @@ namespace UiPath.PowerShell.Positional
         public static string[] Parameters { get; } = ["Name", "RuntimeType", "JobsCount"];
     }
 
+    internal class Name_SecretId : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["Name", "SecretId"];
+    }
+
     internal class FullName_Username : IPositionalParameters
     {
         public static string[] Parameters { get; } = ["FullName", "Username"];
@@ -381,6 +440,11 @@ namespace UiPath.PowerShell.Positional
     internal class Source_Path: IPositionalParameters
     {
         public static string[] Parameters { get; } = ["Source", "Path"];
+    }
+
+    public class SourceGroupName_UserName_DestinationGroupName : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["SourceGroupName", "UserName", "DestinationGroupName"];
     }
 
     internal class Type_UserName_Roles : IPositionalParameters

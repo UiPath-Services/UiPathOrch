@@ -173,7 +173,7 @@ namespace UiPath.PowerShell.Commands
                                 try
                                 {
                                     drive.OrchAPISession.UpdateReleaseToLatestVersion(folder.Id ?? 0, release.Id ?? 0);
-                                    drive._dicReleases?.TryRemove(folder.Id ?? 0, out List<Release>? _);
+                                    drive._dicReleases?.TryRemove(folder.Id ?? 0, out _);
                                 }
                                 catch (Exception ex)
                                 {
@@ -195,7 +195,7 @@ namespace UiPath.PowerShell.Commands
                                 try
                                 {
                                     drive.OrchAPISession.UpdateReleaseToSpecificVersion(folder.Id ?? 0, release.Id ?? 0, toVersion);
-                                    drive._dicReleases?.TryRemove(folder.Id ?? 0, out List<Release>? _);
+                                    drive._dicReleases?.TryRemove(folder.Id ?? 0, out _);
                                 }
                                 catch (Exception ex)
                                 {

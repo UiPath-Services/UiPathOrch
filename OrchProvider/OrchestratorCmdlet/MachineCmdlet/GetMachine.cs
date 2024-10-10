@@ -38,25 +38,36 @@ namespace UiPath.PowerShell.Commands
         public Encoding? CsvEncoding { get; set; }
 
         private static readonly string DefaultCsvName = "ExportedMachines.csv";
-        private static readonly string[] CsvHeaders = ["Path", "Name", "Description", "Type", "UnattendedSlots", "NonProductionSlots", "TestAutomationSlots", "AutomationType", "TargetFramework"];
+        private static readonly string[] CsvHeaders = [
+            "Path", 
+            "Name", 
+            "Description", 
+            "Type", 
+            "UnattendedSlots",
+            "NonProductionSlots",
+            "TestAutomationSlots", 
+            "AutomationType", 
+            "TargetFramework", 
+            "Tags"
+        ];
 
         private static void WriteCsvContent(StreamWriter writer, IEnumerable<ExtendedMachine> machines)
         {
             foreach (var machine in machines)
             {
-                var line = new StringBuilder();
-
-                line.Append($"{EscapeCsvValue(machine.Path, true)},");
-                line.Append($"{EscapeCsvValue(machine.Name, true)},");
-                line.Append($"{EscapeCsvValue(machine.Description)},");
-                line.Append($"{machine.UnattendedSlots},");
-                line.Append($"{machine.NonProductionSlots},");
-                line.Append($"{machine.TestAutomationSlots},");
-                line.Append($"{EscapeCsvValue(machine.Type)},");
-                line.Append($"{EscapeCsvValue(machine.AutomationType)},");
-                line.Append($"{EscapeCsvValue(machine.TargetFramework)}");
-
-                writer.WriteLine(line.ToString());
+                string[] line = [
+                    EscapeCsvValue(machine.Path, true),
+                    EscapeCsvValue(machine.Name, true),
+                    EscapeCsvValue(machine.Description),
+                    EscapeCsvValue(machine.UnattendedSlots),
+                    EscapeCsvValue(machine.NonProductionSlots),
+                    EscapeCsvValue(machine.TestAutomationSlots),
+                    EscapeCsvValue(machine.Type),
+                    EscapeCsvValue(machine.AutomationType),
+                    EscapeCsvValue(machine.TargetFramework),
+                    EscapeCsvValue(machine.Tags)
+                ];
+                WriteCsvLine(writer, line);
             }
         }
 

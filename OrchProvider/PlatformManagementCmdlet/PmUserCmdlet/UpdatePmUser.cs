@@ -91,11 +91,11 @@ namespace UiPath.PowerShell.Commands
                             bypassBasicAuthRestriction = user.bypassBasicAuthRestriction
                         };
 
-                        dst.AssignString(Name, (u, v) => u.name = v);
-                        dst.AssignString(Surname, (u, v) => u.surname = v);
-                        dst.AssignString(Email, (u, v) => u.email = v);
-                        dst.AssignString(Password, (u, v) => u.password = v);
-                        dst.AssignBool(BypassBasicAuthRestriction, (u, v) => u.bypassBasicAuthRestriction = v);
+                        dst.AssignStringIfNotNullOrEmpty(Name, (u, v) => u.name = v);
+                        dst.AssignStringIfNotNullOrEmpty(Surname, (u, v) => u.surname = v);
+                        dst.AssignStringIfNotNullOrEmpty(Email, (u, v) => u.email = v);
+                        dst.AssignStringIfNotNullOrEmpty(Password, (u, v) => u.password = v);
+                        dst.AssignBoolIfNotNull(BypassBasicAuthRestriction, (u, v) => u.bypassBasicAuthRestriction = v);
 
                         // 更新があれば API を call する
                         if (src.name != dst.name ||

@@ -17,7 +17,7 @@ Add-OrchQueue [-Name] <String[]> [-Description <String>] [-AcceptAutomaticallyRe
  [-RetryAbandonedItems <String>] [-MaxNumberOfRetries <Int32>] [-EnforceUniqueReference <String>]
  [-Encrypted <String>] [-Release <String>] [-SlaInMinutes <Int32>] [-RiskSlaInMinutes <Int32>]
  [-SpecificDataJsonSchema <String>] [-OutputDataJsonSchema <String>] [-AnalyticsDataJsonSchema <String>]
- [-RetentionAction <String>] [-RetentionPeriod <Int32>] [-RetentionBucket <String>] [-Tags <String>]
+ [-RetentionAction <String>] [-RetentionPeriod <Int32>] [-RetentionBucket <String>] [-Tags <String[]>]
  [-Path <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
@@ -315,7 +315,7 @@ Accept wildcard characters: False
 追加するキューの Tags を指定します。
 
 ```yaml
-Type: String
+Type: String[]
 Parameter Sets: (All)
 Aliases:
 

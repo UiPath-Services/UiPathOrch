@@ -96,7 +96,7 @@ namespace UiPath.PowerShell.Commands
                             try
                             {
                                 drive.OrchAPISession.RollbackReleaseVersion(folder.Id!.Value, release.Id!.Value);
-                                drive._dicReleases?.TryRemove(folder.Id.Value, out List<Release>? _);
+                                drive._dicReleases?.TryRemove(folder.Id.Value, out _);
                             }
                             catch (Exception ex)
                             {

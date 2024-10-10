@@ -228,7 +228,7 @@ namespace UiPath.PowerShell.Commands
                 {
                     groupIdsToSet = existingGroups?.Values
                         .SelectByWildcards(g => g?.name!, wpGroupName)
-                        .Select(g => g?.id!)
+                        .Select(g => g!.id!)
                         .ToList();
                 }
 

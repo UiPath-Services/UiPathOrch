@@ -84,6 +84,46 @@ namespace UiPath.PowerShell.Commands
             return value;
         }
 
+        internal static string EscapeCsvValue(int? value)
+        {
+            return value?.ToString() ?? "";
+        }
+
+        internal static string EscapeCsvValue(long? value)
+        {
+            return value?.ToString() ?? "";
+        }
+
+        internal static string EscapeCsvValue(bool? value)
+        {
+            return value?.ToString() ?? "";
+        }
+
+        internal static string EscapeCsvValue(DateTime? value)
+        {
+            return value?.ToString() ?? "";
+        }
+
+        internal static string EscapeCsvValue(IEnumerable<string>? values, bool escapeWildcard = false)
+        {
+            if (values == null) return "";
+            if (escapeWildcard)
+            {
+                return EscapeCsvValue(string.Join(',', values
+                    .OrderBy(r => r)
+                    .Select(r => WildcardPattern.Escape(r)) ?? []));
+            }
+            else
+            {
+                return EscapeCsvValue(string.Join(',', values.OrderBy(r => r)));
+            }
+        }
+
+        internal static string EscapeCsvValue(Tag[]? value)
+        {
+            return EscapeCsvValue(value?.ConvertToString());
+        }
+
         internal static string? FormatDateTimeWithKind(DateTime? dateTime)
         {
             if (dateTime == null) return null;
@@ -163,13 +203,57 @@ namespace UiPath.PowerShell.Commands
 
             encoding ??= Encoding.Default;
 
+            // utf-8 の場合には、BOM を追加する
+            if (encoding is UTF8Encoding)
+            {
+                encoding = new UTF8Encoding(true);
+            }
+            // utf-16 or utf-16BE が指定された場合にも BOM を追加する
+            else if (encoding is UnicodeEncoding unicodeEncoding)
+            {
+                // エンディアンをバイト配列から確認する
+                byte[] testBytes = unicodeEncoding.GetBytes("A");
+
+                // ビッグエンディアンの場合、"A" (U+0041) のバイト配列は [0x00, 0x41] になる
+                bool isBigEndian = testBytes[0] == 0x00 && testBytes[1] == 0x41;
+
+                // BOM 付きの UnicodeEncoding に変換
+                encoding = new UnicodeEncoding(isBigEndian, true);
+            }
+            else if (encoding is UTF32Encoding utf32Encoding)
+            {
+                // UTF-32 エンコーディングの場合、エンディアンをバイト配列から確認する
+                byte[] testBytes = utf32Encoding.GetBytes("A");
+
+                // ビッグエンディアンの場合、"A" (U+0041) のバイト配列は [0x00, 0x00, 0x00, 0x41] になる
+                bool isBigEndian = testBytes[0] == 0x00 && testBytes[1] == 0x00 && testBytes[2] == 0x00 && testBytes[3] == 0x41;
+
+                // BOM 付きの UTF32Encoding に変換
+                encoding = new UTF32Encoding(isBigEndian, true);
+            }
+
             var writer = new StreamWriter(filePath, false, encoding);
-            writer.WriteLine(string.Join(",", headers));
+            WriteCsvLine(writer, headers);
 
             return writer;
         }
 
-        protected Folder? GetRelativeDstFolder(Folder srcRootFolder, Folder srcFolder, OrchDriveInfo dstDrive, Folder dstRootFolder)
+        // writer.WriteLine(string.Join(',', values) とすると、内部で string を連結してしまう。
+        // 逐次 writer.Write() を呼ぶ方が効率的だ。
+        internal static void WriteCsvLine(TextWriter writer, string[] values)
+        {
+            for (int i = 0; i < values.Length; i++)
+            {
+                writer.Write(values[i]); // 各値を直接書き込む
+                if (i < values.Length - 1)
+                {
+                    writer.Write(','); // フィールド間のカンマを挿入
+                }
+            }
+            writer.WriteLine(); // 最後に改行を追加
+        }
+
+        protected Folder? GetRelativeDstFolder(Folder srcRootFolder, Folder srcFolder, OrchDriveInfo dstDrive, Folder dstRootFolder, bool includeRoot = false)
         {
             var strDstRootFolder = dstRootFolder.FullyQualifiedName;
             //if (strDstRootFolder != "") strDstRootFolder += '/';
@@ -181,7 +265,7 @@ namespace UiPath.PowerShell.Commands
             string strDstFolder = null;
             if (strDstRootFolder == "")
             {
-                if (relativePath == "")
+                if (!includeRoot && relativePath == "")
                 {
                     WriteError(new ErrorRecord(
                         new OrchException(dstDrive.NameColonSeparator, $"Folder entities cannot be copied to {dstDrive.NameColonSeparator}."),
@@ -197,7 +281,12 @@ namespace UiPath.PowerShell.Commands
                 strDstFolder = (strDstRootFolder + '/' + relativePath).Trim('/');
             }
 
-            var dstFolder = dstDrive._dicFolders!.FirstOrDefault(f => string.Compare(f.FullyQualifiedName, strDstFolder, StringComparison.OrdinalIgnoreCase) == 0);
+            if (string.IsNullOrEmpty(strDstFolder))
+            {
+                return dstDrive.RootFolder;
+            }
+
+            var dstFolder = dstDrive.GetFolders().FirstOrDefault(f => string.Compare(f.FullyQualifiedName, strDstFolder, StringComparison.OrdinalIgnoreCase) == 0);
             if (dstFolder == null)
             {
                 strDstFolder = strDstFolder.Replace('/', '\\');
@@ -281,6 +370,30 @@ namespace UiPath.PowerShell.Commands
                 return (id, version);
             }
             return (null, null);
+        }
+
+        internal CredentialStore? FindCredentialStoreId(string target, OrchDriveInfo drive, WildcardPattern? wpCredentialStore)
+        {
+            var credentialStores = drive.GetCredentialStores();
+            if (wpCredentialStore != null)
+            {
+                var matchingCredentialStores = credentialStores.Where(cs => wpCredentialStore.IsMatch(cs.Name));
+                if (!matchingCredentialStores.Any())
+                {
+                    Exception e = new($"CredentialStore '{wpCredentialStore}' does not exist.");
+                    WriteError(new ErrorRecord(new OrchException(target, e), "ResolveCredentialStoreError", ErrorCategory.InvalidOperation, target));
+                    return null;
+                }
+                if (matchingCredentialStores.Take(2).Count() == 2)
+                {
+                    Exception e = new($"CredentialStore '{wpCredentialStore}' resolved to multiple credential stores. Ignored.");
+                    WriteError(new ErrorRecord(new OrchException(target, e), "ResolveCredentialStoreError", ErrorCategory.InvalidOperation, target));
+                    return null;
+                }
+                // assert(matchingCredentialStores.Couint() == 1)
+                return matchingCredentialStores.First();
+            }
+            return null;
         }
 
         internal void WriteCSVExportedMessage(IWritableHost _this, string? filePath)

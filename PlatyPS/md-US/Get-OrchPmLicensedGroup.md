@@ -149,13 +149,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### None
-
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.NuLicensedGroup
-
 ### UiPath.PowerShell.Entities.NuLicensedGroupMember
-
 ## NOTES
 
 ## RELATED LINKS

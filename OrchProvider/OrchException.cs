@@ -96,62 +96,49 @@ namespace UiPath.PowerShell.Commands
     {
         public object? Target;
 
-        //internal static string? ExtractMessage(Exception ex)
+        //internal static string? ExtractMessage(string msg)
         //{
         //    string ret = null;
         //    try
         //    {
-        //        using JsonDocument doc = JsonDocument.Parse(ex.Message);
+        //        using JsonDocument doc = JsonDocument.Parse(msg);
         //        JsonElement root = doc.RootElement;
 
         //        // Helper method to get property value safely
         //        static JsonElement GetPropertyValue(JsonElement element, string propertyName)
         //        {
-        //            element!.TryGetProperty(propertyName, out JsonElement value);
+        //            element.TryGetProperty(propertyName, out JsonElement value);
         //            return value;
         //        }
 
-        //        // Attempt to get the main error message from different possible locations
-        //        string message = null;
+        //        // Extract the main error message
+        //        string title = GetPropertyValue(root, "title").ToString();
+        //        if (string.IsNullOrEmpty(title)) title = GetPropertyValue(root, "message").ToString();
+        //        if (string.IsNullOrEmpty(title)) title = GetPropertyValue(root, "Message").ToString();
+        //        if (string.IsNullOrEmpty(title)) title = GetPropertyValue(root, "errorMessage").ToString();
+        //        if (string.IsNullOrEmpty(title)) title = GetPropertyValue(root, "error").ToString();
 
-        //        try
+        //        // Extract specific errors
+        //        List<string> errorMessages = [];
+        //        if (root.TryGetProperty("errors", out JsonElement errorsElement) && errorsElement.ValueKind == JsonValueKind.Object)
         //        {
-        //            // error 要素が string でない場合は、例外がスローされてしまう
-        //            JsonElement je = GetPropertyValue(root, "error");
-        //            message = GetPropertyValue(je, "message").ToString();
-        //        }
-        //        catch { }
-        //        if (string.IsNullOrEmpty(message)) message = GetPropertyValue(root, "message").ToString();
-        //        if (string.IsNullOrEmpty(message)) message = GetPropertyValue(root, "Message").ToString();
-        //        if (string.IsNullOrEmpty(message)) message = GetPropertyValue(root, "errorMessage").ToString();
-        //        if (string.IsNullOrEmpty(message)) message = GetPropertyValue(root, "title").ToString();
-        //        try
-        //        {
-        //            if (string.IsNullOrEmpty(message)) message = GetPropertyValue(root, "error").ToString();
-        //        }
-        //        catch { }
-
-        //        // Extract details messages
-        //        List<string> detailMessages = new List<string>();
-        //        try
-        //        {
-        //            var e = GetPropertyValue(root, "error");
-        //            if (e.TryGetProperty("details", out JsonElement detailsElement) && detailsElement.ValueKind == JsonValueKind.Array)
+        //            foreach (JsonProperty errorProperty in errorsElement.EnumerateObject())
         //            {
-        //                foreach (JsonElement detail in detailsElement.EnumerateArray())
+        //                string propertyName = errorProperty.Name;
+        //                JsonElement errorMessagesArray = errorProperty.Value;
+
+        //                if (errorMessagesArray.ValueKind == JsonValueKind.Array)
         //                {
-        //                    string detailMessage = GetPropertyValue(detail, "message").ToString();
-        //                    if (!string.IsNullOrEmpty(detailMessage) && detailMessage != message)
+        //                    foreach (JsonElement errorMessage in errorMessagesArray.EnumerateArray())
         //                    {
-        //                        detailMessages.Add(detailMessage);
+        //                        errorMessages.Add($"{propertyName}: {errorMessage.ToString()}");
         //                    }
         //                }
         //            }
         //        }
-        //        catch { }
 
-        //        // Combine the main message and the details without duplicates
-        //        ret = string.Join(' ', new[] { message }.Concat(detailMessages).Distinct());
+        //        // Combine the main message and the specific errors
+        //        ret = string.Join(' ', new[] { title }.Concat(errorMessages).Distinct());
         //    }
         //    catch { }
 
@@ -161,7 +148,7 @@ namespace UiPath.PowerShell.Commands
         //    }
 
         //    // Return original message if parsing fails
-        //    return ex.Message;
+        //    return msg;
         //}
 
         internal static string? ExtractMessage(string msg)
@@ -179,15 +166,38 @@ namespace UiPath.PowerShell.Commands
                     return value;
                 }
 
-                // Extract the main error message
+                // Extract the main error message from the root or from the "error" object
                 string title = GetPropertyValue(root, "title").ToString();
                 if (string.IsNullOrEmpty(title)) title = GetPropertyValue(root, "message").ToString();
                 if (string.IsNullOrEmpty(title)) title = GetPropertyValue(root, "Message").ToString();
                 if (string.IsNullOrEmpty(title)) title = GetPropertyValue(root, "errorMessage").ToString();
                 if (string.IsNullOrEmpty(title)) title = GetPropertyValue(root, "error").ToString();
 
+                // Check if there's an "error" object containing the message
+                if (root.TryGetProperty("error", out JsonElement errorElement) && errorElement.ValueKind == JsonValueKind.Object)
+                {
+                    string errorMessage = GetPropertyValue(errorElement, "message").ToString();
+                    if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        title = errorMessage;
+                    }
+
+                    // Check for nested error details
+                    if (errorElement.TryGetProperty("details", out JsonElement detailsElement) && detailsElement.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (JsonElement detail in detailsElement.EnumerateArray())
+                        {
+                            string detailMessage = GetPropertyValue(detail, "message").ToString();
+                            if (!string.IsNullOrEmpty(detailMessage))
+                            {
+                                title = detailMessage; // If there are multiple details, the last one will be used.
+                            }
+                        }
+                    }
+                }
+
                 // Extract specific errors
-                List<string> errorMessages = [];
+                List<string> errorMessages = new();
                 if (root.TryGetProperty("errors", out JsonElement errorsElement) && errorsElement.ValueKind == JsonValueKind.Object)
                 {
                     foreach (JsonProperty errorProperty in errorsElement.EnumerateObject())
