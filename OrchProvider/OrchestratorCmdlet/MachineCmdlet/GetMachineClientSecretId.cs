@@ -7,23 +7,20 @@ using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
 
-using Positional = UiPath.PowerShell.Positional.Name;
-using Template = UiPath.PowerShell.Positional.Template;
-using Any_Foreground_Background = UiPath.PowerShell.Positional.Any_Foreground_Background;
-using Any_Windows_Portable  = UiPath.PowerShell.Positional.Any_Windows_Portable;
 using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands
 {
-    [Cmdlet(VerbsCommon.Remove, "OrchMachineClientSecret", SupportsShouldProcess = true)]
-    public class RemoveMachineClientSecretCommand : OrchestratorPSCmdlet
+    [Cmdlet(VerbsCommon.Get, "OrchMachineClientSecretId")]
+    [OutputType(typeof(Entities.MachineSecretKey))]
+    public class GetMachineClientSecretIdCommand : OrchestratorPSCmdlet
     {
-        [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+        [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(MachineNameCompleter<Name_SecretId>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 
-        [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+        [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(SecretIdCompleter))]
         [SupportsWildcards]
         public string[]? SecretId { get; set; }
@@ -152,46 +149,48 @@ namespace UiPath.PowerShell.Commands
 
                 var targetMachines = machines
                     .Where(m => m.Scope != "PersonalWorkspace" && m.Scope != "AutomationCloudRobot")
+                    .Where(m => m?.LicenseKey != null)
                     .FilterByWildcards(m => m?.Name, wpName)
                     .OrderBy(m => m.Name);
 
-                foreach (var m in targetMachines)
+                using var results = OrchThreadPool.RunForEach(targetMachines,
+                    machine => machine.GetPSPath(),
+                    machine => machine,
+                    machine => drive.GetMachineClientSecret(machine.LicenseKey!.Value));
+
+                foreach (var result in results)
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
-                    if (m.LicenseKey == null) continue;
-
-                    MachineClientSecretResponse[] secrets = null;
                     try
                     {
-                        secrets = drive.GetMachineClientSecret(m.LicenseKey.Value);
+                        var secrets = result.GetResult(cancelHandler.Token);
+                        if (secrets == null) continue;
+
+                        var machine = result.Source;
+
+                        foreach (var secret in secrets
+                            .Select(s => (secret: s, strId: s?.id.ToString()))
+                            .FilterByWildcards(s => s.strId, wpSecretId)
+                            .OrderBy(s => s.strId))
+                        {
+                            MachineSecretKey output = new()
+                            {
+                                Path = drive.NameColonSeparator,
+                                Name = machine!.Name,
+                                ClientId = machine.LicenseKey,
+                                SecretId = secret.secret.id,
+                                ClientSecret = secret.secret.secret,
+                                CreationTime = secret.secret.creationTime,
+                                Description = machine.Description,
+                                Type = machine.Type,
+                                Scope = machine.Scope
+                            };
+                            WriteObject(output);
+                        }
                     }
                     catch (Exception ex)
                     {
                         WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetMachineClientSecretsError", ErrorCategory.InvalidOperation, drive));
                         continue;
-                    }
-                    if (secrets == null) continue;
-
-                    foreach (var secret in secrets
-                        .Select(secret => (secret, secret.id.ToString()))
-                        .FilterByWildcards(secret_id => secret_id.Item2, wpSecretId)
-                        .OrderBy(secret_id => secret_id.Item2))
-                    {
-                        string target = System.IO.Path.Combine(m.GetPSPath(), secret.Item2!);
-
-                        if (ShouldProcess(target, "Remove ClientSecret"))
-                        {
-                            try
-                            {
-                                drive.OrchAPISession.DeleteMachineClientSecret(secret.Item2!);
-                                drive._dicMachineClientSecrets = null;
-                            }
-                            catch (Exception ex)
-                            {
-                                WriteError(new ErrorRecord(new OrchException(m.GetPSPath(), ex), "AddMachineSecretKeyError", ErrorCategory.InvalidOperation, m));
-                            }
-                        }
                     }
                 }
             }

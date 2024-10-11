@@ -8,7 +8,7 @@ schema: 2.0.0
 # Add-OrchMachineClientSecret
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+マシンのクライアントシークレットを追加します。
 
 ## SYNTAX
 
