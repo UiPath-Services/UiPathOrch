@@ -5,52 +5,51 @@ online version:
 schema: 2.0.0
 ---
 
-# Remove-OrchMachineClientSecret
+# Get-OrchMachineClientSecretId
 
 ## SYNOPSIS
-Removes the machine's client secrets.
+マシンのクライアントシークレットの作成日時を取得します。
 
 ## SYNTAX
 
 ```
-Remove-OrchMachineClientSecret [-Name] <String[]> [-SecretId] <String[]> [-Path <String[]>]
- [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Get-OrchMachineClientSecretId [[-Name] <String[]>] [[-SecretId] <String[]>] [-Path <String[]>]
+ [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-Primary Endpoint: DELETE /api/clientsecrets/{secretId}
+主に呼び出すエンドポイント: GET /api/clientsecrets/{licenseKey}
 
-OAuth required scopes: OR.Machines
+OAuth に必要なスコープ: OR.Machines
 
-Required permissions:
+必要な権限:
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Get-OrchMachineClientSecretId
 ```
 
-{{ Add example description here }}
+このテナントにあるマシンすべてについて、クライアントシークレットが払い出された日時を出力します。
+
+### Example 2
+```powershell
+PS Orch1:\> Get-OrchMachineClientSecretId <machine names>
+```
+
+指定したマシンについて、クライアントシークレットが払い出された日時を出力します。
+
+### Example 3
+```powershell
+PS Orch1:\> Get-OrchMachineClientSecretId | ? CreationTime -LT '2024/10/01' | Remove-OrchMachineClientSecret
+```
+
+このテナントにあるマシンすべてについて、2024/10/01 より前に払い出されたクライアントシークレットをすべて削除します。
 
 ## PARAMETERS
-
-### -Confirm
-Prompts you for confirmation before running the cmdlet.
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases: cf
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
 
 ### -Name
 {{ Fill Name Description }}
@@ -60,7 +59,7 @@ Type: String[]
 Parameter Sets: (All)
 Aliases:
 
-Required: True
+Required: False
 Position: 0
 Default value: None
 Accept pipeline input: True (ByPropertyName)
@@ -68,7 +67,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the name of the target drives. If not specified, the current drive will be targeted.
+{{ Fill Path Description }}
 
 ```yaml
 Type: String[]
@@ -90,27 +89,11 @@ Type: String[]
 Parameter Sets: (All)
 Aliases:
 
-Required: True
+Required: False
 Position: 1
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
-```
-
-### -WhatIf
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases: wi
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
 ```
 
 ### -ProgressAction
@@ -134,9 +117,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
+
 ## OUTPUTS
 
-### System.Object
+### UiPath.PowerShell.Entities.MachineSecretKey
+
 ## NOTES
 
 ## RELATED LINKS
