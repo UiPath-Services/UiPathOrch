@@ -48,7 +48,7 @@ namespace UiPath.PowerShell.Commands
                 drive => drive,
                 drive =>
                 {
-                    var tenantId = drive.GetTenantId();
+                    var (tenantId, _) = drive.GetTenantId();
                     return drive.OrchAPISession.GetLicenseStats(tenantId ?? 0, days).ToList();
                 });
 

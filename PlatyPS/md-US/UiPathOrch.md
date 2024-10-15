@@ -200,6 +200,12 @@ Gets document types of Document Understanding.
 ### [Get-DuExtractor](Get-DuExtractor.md)
 Gets extractors of Document Understanding.
 
+### [Get-DuRole](Get-DuRole.md)
+{{ Fill in the Synopsis }}
+
+### [Get-DuUser](Get-DuUser.md)
+{{ Fill in the Synopsis }}
+
 ### [Get-OrchActionCatalog](Get-OrchActionCatalog.md)
 Gets the action catalogs.
 
@@ -295,6 +301,9 @@ Gets the execution logs of the robots.
 
 ### [Get-OrchMachine](Get-OrchMachine.md)
 Get the machines.
+
+### [Get-OrchMachineClientSecretId](Get-OrchMachineClientSecretId.md)
+Retrieves the creation date and time of client secrets from multiple machines.
 
 ### [Get-OrchMachineSession](Get-OrchMachineSession.md)
 Gets machine runtime sessions.
@@ -465,7 +474,7 @@ Removes the library packages.
 Remove the machines.
 
 ### [Remove-OrchMachineClientSecret](Remove-OrchMachineClientSecret.md)
-Removes the machine's client secret.
+Removes the machine's client secrets.
 
 ### [Remove-OrchPackage](Remove-OrchPackage.md)
 Removes the process packages.

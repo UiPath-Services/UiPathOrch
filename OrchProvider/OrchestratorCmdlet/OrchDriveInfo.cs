@@ -16,6 +16,13 @@ using User = UiPath.PowerShell.Entities.User;
 
 namespace UiPath.PowerShell.Core
 {
+    // OrchDriveInfo, OrchDuDriveInfo, OrchTmDriveInfo に共通のベースクラスを作成したいが
+    // ちょっと大変。。いったん先延ばし。
+    // 
+    //public class OrchDriveInfoBase : PSDriveInfo
+    //{
+    //}
+
     public partial class OrchDriveInfo : PSDriveInfo
     {
         internal readonly PSDrive _psDrive;
@@ -133,12 +140,13 @@ namespace UiPath.PowerShell.Core
         }
 
         // paths を指定しない場合、カレントドライブのみを返す
-        public static List<OrchDriveInfo> EnumOrchDrives(IEnumerable<string?>? path = null)
+        // T には OrchDriveInfo, OrchDuDriveInfo などを指定できる
+        public static List<T> EnumOrchDrivesImpl<T>(IEnumerable<string?>? path = null) where T : PSDriveInfo
         {
-            var drives = new List<OrchDriveInfo>();
+            var drives = new List<T>();
             if (path == null || !path.Any() || path.All(p => p == null))
             {
-                if (SessionState!.Path.CurrentLocation.Drive is OrchDriveInfo orchDrive)
+                if (SessionState!.Path.CurrentLocation.Drive is T orchDrive)
                     drives.Add(orchDrive);
             }
             else
@@ -146,11 +154,23 @@ namespace UiPath.PowerShell.Core
                 var psPaths = path.Select(p => SessionState!.Path.GetResolvedPSPathFromPSPath(p)).SelectMany(p => p);
                 foreach (var p in psPaths)
                 {
-                    if (p.Drive is OrchDriveInfo orchDrive)
+                    if (p.Drive is T orchDrive)
                         drives.Add(orchDrive);
                 }
             }
             return drives.Distinct().ToList();
+        }
+
+        // paths を指定しない場合、カレントドライブのみを返す
+        public static List<OrchDriveInfo> EnumOrchDrives(IEnumerable<string?>? path = null)
+        {
+            return EnumOrchDrivesImpl<OrchDriveInfo>(path);
+        }
+
+        // paths を指定しない場合、カレントドライブのみを返す
+        public static List<OrchDuDriveInfo> EnumDuDrives(IEnumerable<string?>? path = null)
+        {
+            return EnumOrchDrivesImpl<OrchDuDriveInfo>(path);
         }
 
         public static OrchDriveInfo GetOrchDrive(string? path = null)
@@ -573,6 +593,7 @@ namespace UiPath.PowerShell.Core
             _dicTaskCatalog_Exceptions?.ClearCache();
 
             _dicTenantId = null;
+            _dicTenantKey = null;
 
             _dicTestCases = null;
             _dicTestCases_Exceptions?.ClearCache();
@@ -1014,6 +1035,7 @@ namespace UiPath.PowerShell.Core
                     else
                         _dicPartitionGlobalId = exUser?.TenantKey; // 恐らくオンプレではこっち。
                     _dicTenantId = exUser?.TenantId;
+                    _dicTenantKey = exUser?.TenantKey;
                     if (exUser != null && exUser.PersonalWorkspace != null)
                     {
                         exUser.PersonalWorkspace.Path = NameColon;
@@ -1051,12 +1073,15 @@ namespace UiPath.PowerShell.Core
             {
                 // ここを実行するときは、必ず機密アプリの場合になっている
                 // 非機密アプリでは、ログイン時に GetCurrentUser() を実行しているはず。
+                // ただし、OrchProvider より先に OrchDmProvider か OrchTmProvider でログインした場合には
+                // GetCurrentUser() を実行していないので、非機密アプリになっている可能性もある。
                 var users = GetUsers();
                 foreach (var user in users)
                 {
                     var detailedUser = OrchAPISession.GetUser(user.Id ?? 0);
                     _dicPartitionGlobalId = detailedUser?.AccountId ?? detailedUser?.TenantKey;
                     _dicTenantId = detailedUser?.TenantId;
+                    _dicTenantKey = detailedUser?.TenantKey;
                     if (_dicPartitionGlobalId != null) break;
                 }
             }
@@ -1064,10 +1089,11 @@ namespace UiPath.PowerShell.Core
         }
 
         internal int? _dicTenantId = null;
+        internal string? _dicTenantKey = null; // これは Guid なのか？ オンプレと AC で違うのか？
         internal object _dicTenantIdLock = new();
-        internal int? GetTenantId()
+        internal (int? id, string? key) GetTenantId()
         {
-            if (_dicTenantId != null) return _dicTenantId;
+            if (_dicTenantId != null) return (_dicTenantId, _dicTenantKey);
 
             lock (_dicPartitionGlobalIdLock)
             {
@@ -1081,6 +1107,7 @@ namespace UiPath.PowerShell.Core
                         var detailedUser = OrchAPISession.GetUser(user.Id ?? 0);
                         _dicPartitionGlobalId = detailedUser?.AccountId ?? "";
                         _dicTenantId = detailedUser?.TenantId;
+                        _dicTenantKey = detailedUser?.TenantKey;
                         if (detailedUser?.TenantId != null) break;
                     }
                 }
@@ -1089,7 +1116,7 @@ namespace UiPath.PowerShell.Core
                     throw new OrchException(NameColonSeparator, ex);
                 }
             }
-            return _dicTenantId;
+            return (_dicTenantId, _dicTenantKey);
         }
 
         #region GetAvailableVersions cache

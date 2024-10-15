@@ -30,7 +30,7 @@ Locale: en-US
 マシンを追加します。
 
 ### [Add-OrchMachineClientSecret](Add-OrchMachineClientSecret.md)
-{{ Fill in the Synopsis }}
+マシンのクライアントシークレットを追加します。
 
 ### [Add-OrchPmGroup](Add-OrchPmGroup.md)
 Identity Server にグループを追加します。
@@ -200,6 +200,12 @@ Document Understanding のドキュメントの種類を取得します。
 ### [Get-DuExtractor](Get-DuExtractor.md)
 Document Understanding の抽出器を取得します。
 
+### [Get-DuRole](Get-DuRole.md)
+{{ Fill in the Synopsis }}
+
+### [Get-DuUser](Get-DuUser.md)
+{{ Fill in the Synopsis }}
+
 ### [Get-OrchActionCatalog](Get-OrchActionCatalog.md)
 アクションカタログを取得します。
 
@@ -295,6 +301,9 @@ API トリガーを取得します。
 
 ### [Get-OrchMachine](Get-OrchMachine.md)
 マシンを取得します。
+
+### [Get-OrchMachineClientSecretId](Get-OrchMachineClientSecretId.md)
+マシンのクライアントシークレットの作成日時を取得します。
 
 ### [Get-OrchMachineSession](Get-OrchMachineSession.md)
 マシンのランタイムセッションを取得します。

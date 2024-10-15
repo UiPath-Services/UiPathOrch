@@ -156,23 +156,80 @@ namespace UiPath.PowerShell.Core
 
         public void ClearAllCache()
         {
-            #region DU cache
-            _dicDuProjects = null;
-            _dicDuDocumentTypes = null;
-            _dicDuClassifier = null;
+            ParentDrive._dicTenantId = null;
+            ParentDrive._dicTenantKey = null;
 
-            _dicDuProjectsException.ClearCache();
-            _dicDuDocumentTypeExceptions.ClearCache();
-            _dicDuClassifierExceptions.ClearCache();
+            #region DU cache
+            _dicDuClassifier = null;
+            _dicDuClassifier_Exceptions.ClearCache();
+
+            _dicDuDocumentTypes = null;
+            _dicDuDocumentTypes_Exceptions.ClearCache();
+
+            _dicDuProjects = null;
+            _dicDuProjects_Exception.ClearCache();
+
+            _dicDuRoles = null;
+            _dicDuRoles_Exception.ClearCache();
+
+            _dicDuUsers = null;
+            _dicDuUsers_Exceptions.ClearCache();
+
             #endregion
         }
 
         #region Document Understanding cache
+
+        // このエンティティは、テナントではなく組織に所属している。
+        // あるべきでいえば、ドライブの static なメンバに partitionGlobalId をキーとして保持すべきだ。
+        // ドライブごとにキャッシュをもつのは非効率なんだけど、とりあえず良いか。。
+        // TODO: static メンバにして、partitionGlobalId をキーにする形に書き直す。
+        // でも、書き直すと Path の形式が不自然になってしまうな。。
+        internal DuRole[]? _dicDuRoles = null;
+        internal readonly ExceptionCachePerTenant _dicDuRoles_Exception = new();
+        public DuRole[]? GetDuRoles(string? partitionGlobalId)
+        {
+            if (string.IsNullOrEmpty(partitionGlobalId)) return null;
+
+            _dicDuRoles_Exception.ThrowCachedExceptionIfAny();
+
+            if (_dicDuRoles == null)
+            {
+                lock (_dicDuRoles_Exception)
+                {
+                    if (_dicDuRoles == null)
+                    {
+                        try
+                        {
+                            _dicDuRoles = OrchAPISession.GetDuRoles(partitionGlobalId);
+                            if (_dicDuRoles == null)
+                            {
+                                _dicDuRoles = [];
+                            }
+                            else
+                            {
+                                foreach (var role in _dicDuRoles)
+                                {
+                                    role.Path = NameColonSeparator;
+                                }
+                            }
+                        }
+                        catch (HttpResponseException ex)
+                        {
+                            _dicDuRoles_Exception.CacheException(ex);
+                            throw;
+                        }
+                    }
+                }
+            }
+            return _dicDuRoles;
+        }
+
         internal DuProject[]? _dicDuProjects = null;
-        internal readonly ExceptionCachePerTenant _dicDuProjectsException = new();
+        internal readonly ExceptionCachePerTenant _dicDuProjects_Exception = new();
         public DuProject[]? GetDuProjects()
         {
-            _dicDuProjectsException.ThrowCachedExceptionIfAny();
+            _dicDuProjects_Exception.ThrowCachedExceptionIfAny();
 
             if (_dicDuProjects == null)
             {
@@ -198,7 +255,7 @@ namespace UiPath.PowerShell.Core
                         }
                         catch (HttpResponseException ex)
                         {
-                            _dicDuProjectsException.CacheException(ex);
+                            _dicDuProjects_Exception.CacheException(ex);
                             throw;
                         }
                     }
@@ -207,12 +264,58 @@ namespace UiPath.PowerShell.Core
             return _dicDuProjects;
         }
 
+        internal Dictionary<(string partitionGlobalId, string tenantKey, string projectId), DuUser[]>? _dicDuUsers = null;
+        internal readonly ExceptionsCachePer<(string partitionGlobalId, string tenantKey, string projectId)> _dicDuUsers_Exceptions = new();
+        public DuUser[] GetDuUsers(string? partitionGlobalId, string? tenantKey, DuProject? project)
+        {
+            if (partitionGlobalId == null || tenantKey == null || project == null || project.id == null) return [];
+
+            _dicDuUsers_Exceptions.ThrowCachedExceptionIfAny((partitionGlobalId, tenantKey, project.id));
+
+            if (_dicDuUsers == null)
+            {
+                lock (_dicDuUsers_Exceptions)
+                {
+                    _dicDuUsers ??= [];
+                }
+            }
+
+            if (!_dicDuUsers.TryGetValue((partitionGlobalId, tenantKey, project.id), out var users))
+            {
+                try
+                {
+                    users = OrchAPISession.GetDuUsers(partitionGlobalId, tenantKey, project.id);
+                    if (users == null)
+                    {
+                        return [];
+                    }
+                    else
+                    {
+                        string pathProject = project.GetPSPath();
+                        foreach (var user in users)
+                        {
+                            user.Path = NameColonSeparator;
+                            user.PathProject = pathProject;
+                            user.Project = project.name;
+                        }
+                        _dicDuUsers[(partitionGlobalId, tenantKey, project.id)] = users;
+                    }
+                }
+                catch (HttpResponseException ex)
+                {
+                    _dicDuUsers_Exceptions.CacheException((partitionGlobalId, tenantKey, project.id), ex);
+                    throw;
+                }
+            }
+            return users;
+        }
+
         // key: projectId
         internal Dictionary<string, DuDocumentType[]>? _dicDuDocumentTypes = null;
-        internal readonly ExceptionsCachePer<string> _dicDuDocumentTypeExceptions = new();
+        internal readonly ExceptionsCachePer<string> _dicDuDocumentTypes_Exceptions = new();
         public DuDocumentType[]? GetDuDocumentTypes(DuProject project)
         {
-            _dicDuDocumentTypeExceptions.ThrowCachedExceptionIfAny(project.id!);
+            _dicDuDocumentTypes_Exceptions.ThrowCachedExceptionIfAny(project.id!);
 
             if (_dicDuDocumentTypes == null)
             {
@@ -245,7 +348,7 @@ namespace UiPath.PowerShell.Core
                 }
                 catch (HttpResponseException ex)
                 {
-                    _dicDuDocumentTypeExceptions.CacheException(project.id!, ex);
+                    _dicDuDocumentTypes_Exceptions.CacheException(project.id!, ex);
                     throw;
                 }
             }
@@ -254,10 +357,10 @@ namespace UiPath.PowerShell.Core
 
         // key: projectId
         internal Dictionary<string, DuClassifier[]>? _dicDuClassifier = null;
-        internal readonly ExceptionsCachePer<string> _dicDuClassifierExceptions = new();
+        internal readonly ExceptionsCachePer<string> _dicDuClassifier_Exceptions = new();
         public DuClassifier[]? GetDuClassifiers(DuProject project)
         {
-            _dicDuClassifierExceptions.ThrowCachedExceptionIfAny(project.id!);
+            _dicDuClassifier_Exceptions.ThrowCachedExceptionIfAny(project.id!);
 
             if (_dicDuClassifier == null)
             {
@@ -290,7 +393,7 @@ namespace UiPath.PowerShell.Core
                 }
                 catch (HttpResponseException ex)
                 {
-                    _dicDuClassifierExceptions.CacheException(project.id!, ex);
+                    _dicDuClassifier_Exceptions.CacheException(project.id!, ex);
                     throw;
                 }
             }

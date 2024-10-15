@@ -198,6 +198,13 @@ namespace UiPath.PowerShell.Completer
             return OrchDriveInfo.EnumOrchDrives(paramPath);
         }
 
+        protected static List<OrchDuDriveInfo> ResolveDuDrives(IDictionary fakeBoundParameters)
+        {
+            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+            return OrchDriveInfo.EnumDuDrives(paramPath);
+        }
+
         protected static List<(OrchDriveInfo drive, Folder folder)> ResolvePath(CommandAst commandAst, IDictionary fakeBoundParameters, bool includeRoot = false)
         {
             var recurse = GetSwitchParameterValue(commandAst, "Recurse");

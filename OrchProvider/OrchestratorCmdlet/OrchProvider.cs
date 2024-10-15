@@ -288,7 +288,7 @@ namespace UiPath.PowerShell.Core
             string orchPath = OrchDriveInfo.PSPathToOrchPath(path);
             Folder folder = drive.GetFolder(orchPath);
 
-            int? tenantId = drive.GetTenantId();
+            var (tenantId, _) = drive.GetTenantId();
             bool bQuery = false;
             if (drive.OrchAPISession.ApiVersion < 12 && tenantId.HasValue)
             {
