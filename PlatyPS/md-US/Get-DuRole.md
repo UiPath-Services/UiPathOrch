@@ -5,24 +5,23 @@ online version:
 schema: 2.0.0
 ---
 
-# Get-OrchMachineClientSecretId
+# Get-DuRole
 
 ## SYNOPSIS
-Retrieves the creation date and time of client secrets from multiple machines.
+{{ Fill in the Synopsis }}
 
 ## SYNTAX
 
 ```
-Get-OrchMachineClientSecretId [[-Name] <String[]>] [[-SecretId] <String[]>] [-Path <String[]>]
- [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-DuRole [[-Name] <String[]>] [-Path <String[]>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-Primary Endpoint: GET /api/clientsecrets/{licenseKey}
+Primary Endpoint: GET /{partitionGlobalId}/pap_/api/roles?scopeType=project&serviceName=DocumentUnderstanding
 
-OAuth required scopes: OR.Machines
+OAuth required scopes:
 
 Required permissions:
 
@@ -30,24 +29,10 @@ Required permissions:
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-OrchMachineClientSecretId
+PS C:\> {{ Add example code here }}
 ```
 
-Outputs the issuance date and time of client secrets for all machines in this tenant.
-
-### Example 2
-```powershell
-PS Orch1:\> Get-OrchMachineClientSecretId <machine names>
-```
-
-Outputs the issuance date and time of client secrets for the specified machines.
-
-### Example 3
-```powershell
-PS Orch1:\> Get-OrchMachineClientSecretId | ? CreationTime -LT '2024/10/01' | Remove-OrchMachineClientSecret
-```
-
-Deletes all client secrets issued before 2024/10/01 for all machines in this tenant.
+{{ Add example description here }}
 
 ## PARAMETERS
 
@@ -67,7 +52,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-{{ Fill Path Description }}
+Specifies the name of the target drives. If not specified, the current drive will be targeted.
 
 ```yaml
 Type: String[]
@@ -76,21 +61,6 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: False
-```
-
-### -SecretId
-{{ Fill SecretId Description }}
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 1
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
@@ -117,9 +87,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
+
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.MachineSecretKey
+### UiPath.PowerShell.Entities.DuRole
+
 ## NOTES
 
 ## RELATED LINKS

@@ -1,30 +1,30 @@
 ﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
-Module Name: UiPathOrch
+Module Name: uiPathOrch
 online version:
 schema: 2.0.0
 ---
 
-# Get-OrchBucket
+# Get-DuUser
 
 ## SYNOPSIS
-Gets storage buckets.
+{{ Fill in the Synopsis }}
 
 ## SYNTAX
 
 ```
-Get-OrchBucket [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-Depth <UInt32>] [-ExportCsv <String>]
- [-CsvEncoding <Encoding>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-DuUser [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-ProgressAction <ActionPreference>]
+ [<CommonParameters>]
 ```
 
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-Primary Endpoint: GET /odata/Buckets
+Primary Endpoint: GET /{partitionGlobalId}/pap_/api/userroleassignments?scope=/tenant/{tenantKey}/DocumentUnderstanding/projects/{projectId}&serviceName=DocumentUnderstanding
 
-OAuth required scopes: OR.Administration or OR.Administration.Read
+OAuth required scopes:
 
-Required permissions: Buckets.View
+Required permissions:
 
 ## EXAMPLES
 
@@ -37,23 +37,8 @@ PS C:\> {{ Add example code here }}
 
 ## PARAMETERS
 
-### -Depth
-Specifies the depth for recursion into the target folders. A depth of 0 indicates the current location only, with no subfolders included.
-
-```yaml
-Type: UInt32
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -Name
-Specifies the Name of the storage buckets to be retrieved.
+{{ Fill Name Description }}
 
 ```yaml
 Type: String[]
@@ -82,21 +67,6 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
 ```
 
-### -ProgressAction
-{{ Fill ProgressAction Description }}
-
-```yaml
-Type: ActionPreference
-Parameter Sets: (All)
-Aliases: proga
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -Recurse
 Specifies that the operation should include the target folder and all its subfolders.
 
@@ -112,28 +82,13 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -CsvEncoding
-{{ Fill CsvEncoding Description }}
+### -ProgressAction
+{{ Fill ProgressAction Description }}
 
 ```yaml
-Type: Encoding
+Type: ActionPreference
 Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -ExportCsv
-{{ Fill ExportCsv Description }}
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
+Aliases: proga
 
 Required: False
 Position: Named
@@ -147,10 +102,12 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.Bucket
+### UiPath.PowerShell.Entities.DuUser
+
 ## NOTES
 
 ## RELATED LINKS

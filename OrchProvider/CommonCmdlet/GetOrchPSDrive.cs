@@ -24,79 +24,80 @@ namespace UiPath.PowerShell.Commands
         [Parameter]
         public SwitchParameter Force { get; set; }
 
-        //public class NameCompleter : OrchArgumentCompleter
+        // OrchDriveInfoBase クラスを作成できれば、ここをいい感じで実装できそうだが。。
+        //private void EnumDrives<T>() where T : OrchDriveInfoBase
         //{
-        //    public override IEnumerable<CompletionResult> CompleteArgument(
-        //        string commandName,
-        //        string parameterName,
-        //        string wordToComplete,
-        //        CommandAst commandAst,
-        //        IDictionary fakeBoundParameters)
+        //    IEnumerable<T> drives = null;
+        //    if (Path == null)
         //    {
-        //        var drives = OrchDriveInfo.EnumAllOrchDrives();
-
-        //        // パラメータで選択済みのドライブは、候補から除外する
-        //        var paramName = GetParameterValues(commandAst, "Name", positionalParams, wordToComplete).Select(p => p.TrimEnd(':'));
-        //        var wpName = paramName.Select(p => new WildcardPattern(p, WildcardOptions.IgnoreCase)).ToList();
-
-        //        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        //        foreach (var drive in drives
-        //            .ExcludeByWildcards(d => d.Name, wpName)
-        //            .Where(d => wp.IsMatch(d.Name)))
-        //        {
-        //            string tiphelp = drive.DisplayRoot;
-        //            if (!string.IsNullOrEmpty(drive.Description))
-        //                tiphelp += $" ({drive.Description})";
-        //            yield return new CompletionResult(PathTools.EscapePSText(drive.Name), drive.Name, CompletionResultType.ParameterValue, tiphelp);
-        //        }
+        //        drives = T.EnumAllOrchDrives();
+        //    }
+        //    else
+        //    {
+        //        drives = T.EnumOrchDrives(Path);
         //    }
         //}
 
-        protected override void ProcessRecord()
+        private void ConnectToOrchDrive(OrchDriveInfo drive)
         {
-            IEnumerable<OrchDriveInfo> drives = null;
-            if (Path == null)
+            if (Force.IsPresent)
             {
-                drives = OrchDriveInfo.EnumAllOrchDrives();
+                try
+                {
+                    drive.OrchAPISession.EnsureAuthenticated();
+                    drive.GetPartitionGlobalId();
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(new OrchException(drive.NameColon, ex), "GetActivitySettingsError", ErrorCategory.InvalidOperation, drive));
+                }
             }
-            else
-            {
-                drives = OrchDriveInfo.EnumOrchDrives(Path);
-            }
+        }
+
+        private void WriteOrchProviderInfo()
+        {
+            IEnumerable<OrchDriveInfo> drives;
+            if (Path == null) drives = OrchDriveInfo.EnumAllOrchDrives();
+            else              drives = OrchDriveInfo.EnumOrchDrives(Path);
 
             foreach (var drive in drives)
             {
-                if (Force.IsPresent)
-                {
-                    try
-                    {
-                        drive.OrchAPISession.EnsureAuthenticated();
-                        drive.GetPartitionGlobalId();
-                        drive.GetTenantId();
-                    }
-                    catch (Exception ex)
-                    {
-                        WriteError(new ErrorRecord(new OrchException(drive.NameColon, ex), "GetActivitySettingsError", ErrorCategory.InvalidOperation, drive));
-                    }
-                }
-
-                OrchPSDrive info = new()
-                {
-                    Name = drive.Name,
-                    Root = drive.DisplayRoot,
-                    ApiVersion = drive.OrchAPISession.ApiVersion,
-                    IsConfidential = drive.OrchAPISession.AuthManager.IsConfidentialApp,
-                    CurrentUser = drive.OrchAPISession.AuthManager.IsConfidentialApp ? "N/A" : drive._dicCurrentUser?.UserName,
-                    Description = drive.Description,
-                    CurrentLocation = drive.CurrentLocation,
-                    PartitionGlobalId = drive._dicPartitionGlobalId,
-                    TenantId = drive._dicTenantId,
-                    BearerToken = drive.OrchAPISession.AuthManager.AccessToken
-                };
-
-                WriteObject(info);
+                ConnectToOrchDrive(drive);
+                WriteObject(new OrchPSDrive(drive));
             }
+        }
+
+        private void WriteDuProviderInfo()
+        {
+            IEnumerable<OrchDuDriveInfo> drives;
+            if (Path == null) drives = OrchDuDriveInfo.EnumAllOrchDrives();
+            else              drives = OrchDuDriveInfo.EnumOrchDrives(Path);
+
+            foreach (var drive in drives)
+            {
+                ConnectToOrchDrive(drive.ParentDrive);
+                WriteObject(new OrchPSDrive(drive));
+            }
+        }
+
+        private void WriteTmProviderInfo()
+        {
+            IEnumerable<OrchTmDriveInfo> drives;
+            if (Path == null) drives = OrchTmDriveInfo.EnumAllOrchDrives();
+            else              drives = OrchTmDriveInfo.EnumOrchDrives(Path);
+
+            foreach (var drive in drives)
+            {
+                ConnectToOrchDrive(drive.ParentDrive);
+                WriteObject(new OrchPSDrive(drive));
+            }
+        }
+
+        protected override void ProcessRecord()
+        {
+            WriteOrchProviderInfo();
+            WriteDuProviderInfo();
+            WriteTmProviderInfo();
         }
     }
 }

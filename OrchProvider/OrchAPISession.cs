@@ -184,7 +184,6 @@ namespace UiPath.OrchAPI
 
                         if (ApiVersion == null)
                         {
-                            // これはキャッシュできないのだけど、仕方がない。。
                             var activitySettings = GetActivitySettings();
                             if (double.TryParse(activitySettings?.ApiVersion, out var version))
                             {
@@ -2681,17 +2680,26 @@ namespace UiPath.OrchAPI
             return body?.extractors;
         }
 
-        public void GetDuUsers(string? partitionGlobalId, string? projectId)
+        // TODO: paging をサポートしないといけないのではないか？
+        public DuUser[]? GetDuUsers(string? partitionGlobalId, string? tenantKey, string? projectId)
         {
-            Uri uri = new Uri(_base_url);
+            Uri uri = new(_base_url);
+            string baseUrl = $"{uri.Scheme}://{uri.Host}/{partitionGlobalId}/pap_/api/userroleassignments?scope=/tenant/{tenantKey}/DocumentUnderstanding/projects/{projectId}&serviceName=DocumentUnderstanding";
 
-            // スキームとホスト部分を結合してベースURLを取得
-            string baseUrl = $"{uri.Scheme}://{uri.Host}/{partitionGlobalId}" +
-                $"/pap_/api/userroleassignments?scope=/tenant/85f39347-04e5-4a38-b97a-ab854d2b1049/DocumentUnderstanding/projects/ca705b98-4803-ed11-b47a-a04a5e8591ac&serviceName=DocumentUnderstanding" +
-                $"" +
-                $"";
+            string body = HttpRequestImpl(HttpMethod.Get, baseUrl, "");
+            var results = JsonSerializer.Deserialize<HttpBodyResults<DuUser>>(body);
+            return results?.results;
+        }
 
-            //HttpRequest(HttpMethod.Get, );
+        // TODO: paging をサポートしないといけないのではないか？
+        public DuRole[]? GetDuRoles(string? partitionGlobalId)
+        {
+            Uri uri = new(_base_url);
+            string baseUrl = $"{uri.Scheme}://{uri.Host}/{partitionGlobalId}/pap_/api/roles?scopeType=project&serviceName=DocumentUnderstanding";
+
+            string body = HttpRequestImpl(HttpMethod.Get, baseUrl, "");
+            var results = JsonSerializer.Deserialize<HttpBodyResults<DuRole>>(body);
+            return results?.results;
         }
 
         #endregion

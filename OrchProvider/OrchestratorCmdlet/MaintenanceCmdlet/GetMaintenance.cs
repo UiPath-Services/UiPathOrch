@@ -28,7 +28,7 @@ namespace UiPath.PowerShell.Commands
 
             foreach (var drive in drives)
             {
-                var tenantId = drive.GetTenantId();
+                var (tenantId, _) = drive.GetTenantId();
                 try
                 {
                     MaintenanceSetting? ms = drive.OrchAPISession.GetMaintenance(tenantId);

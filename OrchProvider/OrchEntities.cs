@@ -33,8 +33,9 @@ namespace UiPath.PowerShell.Entities
         public T[]? results { get; set; }
     }
 
-    public class OrchPSDrive // added by UiPathOrch for Get-OrchPSDrive cmdlet
+    public class OrchPSDrive
     {
+        public string? Provider { get; set; }
         public string? Name { get; set; }
         public string? Root { get; set; }
         public double? ApiVersion { get; set; }
@@ -44,7 +45,38 @@ namespace UiPath.PowerShell.Entities
         public string? CurrentLocation { get; set; }
         public string? PartitionGlobalId { get; set; }
         public int? TenantId { get; set; }
+        public string? TenantKey { get; set; }
         public string? BearerToken { get; set; }
+
+        public OrchPSDrive(OrchDriveInfo drive)
+        {
+            Provider = "UiPathOrch";
+            Name = drive.Name;
+            Root = drive.DisplayRoot;
+            ApiVersion = drive.OrchAPISession.ApiVersion;
+            IsConfidential = drive.OrchAPISession.AuthManager.IsConfidentialApp;
+            Description = drive.Description;
+            CurrentUser = drive.OrchAPISession.AuthManager.IsConfidentialApp ? "N/A" : drive._dicCurrentUser?.UserName;
+            CurrentLocation = drive.CurrentLocation;
+            PartitionGlobalId = drive._dicPartitionGlobalId;
+            TenantId = drive._dicTenantId;
+            TenantKey = drive._dicTenantKey;
+            BearerToken = drive.OrchAPISession.AuthManager.AccessToken;
+        }
+
+        public OrchPSDrive(OrchDuDriveInfo drive) : this(drive.ParentDrive)
+        {
+            Provider = "UiPathOrchDu";
+            Name = drive.Name;
+            CurrentLocation = drive.CurrentLocation;
+        }
+
+        public OrchPSDrive(OrchTmDriveInfo drive) : this(drive.ParentDrive)
+        {
+            Provider = "UiPathOrchTm";
+            Name = drive.Name;
+            CurrentLocation = drive.CurrentLocation;
+        }
     }
 
     public class RemoteControlStart
@@ -3516,6 +3548,66 @@ namespace UiPath.PowerShell.Entities
 
 
     #region Document Understanding
+
+    public class ActionDetail // added by UiPathOrch swagger doc にない。
+    {
+        public string? id { get; set; }
+        public string? name { get; set; }
+        public string? @namespace { get; set; }
+        public string? serviceDisplayName { get; set; }
+        public string? esourceType { get; set; }
+        public string? resourceAction { get; set; }
+        public string? resourceGroup { get; set; }
+        public string? description { get; set; }
+    }
+
+    public class DuRole // added by UiPathOrch swagger doc にない。
+    {
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        public string? Path { get; set; } // added by UiPathOrch
+        public string? id { get; set; }
+        public string? name { get; set; }
+        public string? description { get; set; }
+        public string? type { get; set; }
+        public string? createdBy { get; set; }
+        [JsonConverter(typeof(LocalDateTimeConverter))]
+        public DateTime? createdOn { get; set; }
+        public string? tenantId { get; set; }
+        public ActionDetail[]? actionDetails { get; set; }
+    }
+
+    public class RoleAssignmentDto // added by UiPathOrch swagger doc にない。
+    {
+        public string? id { get; set; }
+        public string? securityPrincipalId { get; set; }
+        public string? securityPrincipalType { get; set; }
+        public string? type { get; set; }
+        public string? scope { get; set; }
+        public string? roleId { get; set; }
+        public string? roleName { get; set; }
+        public string? roleType { get; set; }
+        public string? createdBy { get; set; }
+        public DateTime? createdOn { get; set; }
+        public bool? inherited { get; set; }
+        public bool? mutable { get; set; }
+    }
+
+    public class DuUser // added by UiPathOrch swagger doc にない。
+    {
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        public string? Path { get; set; } // added by UiPathOrch
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        public string? Project { get; set; } // added by UiPathOrch
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        public string? PathProject { get; set; } // added by UiPathOrch
+
+        public string? securityPrincipalId { get; set; }
+        public RoleAssignmentDto[]? roleAssignmentDtos { get; set; }
+        public string? displayName { get; set; }
+        public string? email { get; set; }
+        public string? type { get; set; }
+        public string? source { get; set; }
+    }
 
     // UiPath.DocumentUnderstanding.Framework.Api.Controllers.Model.Discovery.Project
     public class DuProject
