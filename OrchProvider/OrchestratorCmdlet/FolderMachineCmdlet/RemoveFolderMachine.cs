@@ -7,8 +7,6 @@ using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
 
-using Positional = UiPath.PowerShell.Positional.Name;
-
 namespace UiPath.PowerShell.Commands
 {
     [Cmdlet(VerbsCommon.Remove, "OrchFolderMachine", SupportsShouldProcess = true)]
@@ -75,23 +73,27 @@ namespace UiPath.PowerShell.Commands
                     var entities = drive.GetMachinesAssignedToFolder(folder);
 
                     var removingMachines = entities.FilterByWildcards(m => m?.Name, wpName);
-                    if (!removingMachines.Any()) continue;
 
-                    var machineIds = removingMachines.Select(m => m.Id ?? 0);
-
-                    string targetMachines = string.Join(", ", removingMachines.Select(m => m.Name!));
-                    if (ShouldProcess(folder.GetPSPath(), "Remove Folder Machines " + targetMachines))
+                    List<Int64> machineIdsToRemove = [];
+                    foreach (var machine in removingMachines.OrderBy(m => m.Name))
                     {
-                        try
+                        if (ShouldProcess(machine.GetPSPath(), "Remove FolderMachine"))
                         {
-                            drive.OrchAPISession.UnassignMachinesFromFolder(folder.Id ?? 0, machineIds);
-                            drive._dicMachinesAssigned?.TryRemove(folder.Id ?? 0, out var _);
-                            drive._dicAssignedMachines?.TryRemove(folder.Id ?? 0, out var _);
+                            machineIdsToRemove.Add(machine.Id!.Value);
                         }
-                        catch (Exception ex)
-                        {
-                            WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "RemoveFolderMachineError", ErrorCategory.InvalidOperation, folder));
-                        }
+                    }
+
+                    if (machineIdsToRemove.Count == 0) continue;
+
+                    try
+                    {
+                        drive.OrchAPISession.UnassignMachinesFromFolder(folder.Id ?? 0, machineIdsToRemove);
+                        drive._dicMachinesAssigned?.TryRemove(folder.Id ?? 0, out var _);
+                        drive._dicAssignedMachines?.TryRemove(folder.Id ?? 0, out var _);
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "RemoveFolderMachineError", ErrorCategory.InvalidOperation, folder));
                     }
                 }
                 catch (OperationCanceledException)

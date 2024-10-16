@@ -88,7 +88,9 @@ namespace UiPath.PowerShell.Commands
             {
                 // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
                 srcDrive._dicMachinesAssigned?.TryRemove(srcFolder.Id ?? 0, out _);
-                var srcEntities = srcDrive.GetMachinesAssignedToFolder(srcFolder).FilterByWildcards(e => e?.Name, wpName);
+                var srcEntities = srcDrive.GetMachinesAssignedToFolder(srcFolder)
+                    .Where(e => e.IsAssignedToFolder.GetValueOrDefault())
+                    .FilterByWildcards(e => e?.Name, wpName);
                 if (!srcEntities.Any()) continue;
 
                 Folder? dstFolder = GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);

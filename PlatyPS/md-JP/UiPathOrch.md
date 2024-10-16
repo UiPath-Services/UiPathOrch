@@ -128,6 +128,9 @@ Webhook をコピーします。
 ### [Disable-OrchApiTrigger](Disable-OrchApiTrigger.md)
 API トリガーを無効にします。
 
+### [Disable-OrchFolderMachineInherit](Disable-OrchFolderMachineInherit.md)
+{{ Fill in the Synopsis }}
+
 ### [Disable-OrchLicenseRuntime](Disable-OrchLicenseRuntime.md)
 ランタイムライセンスを無効にします。
 
@@ -157,6 +160,9 @@ UiPathOrch の設定ファイルを、テキストエディタで開きます。
 
 ### [Enable-OrchApiTrigger](Enable-OrchApiTrigger.md)
 API トリガーを有効にします。
+
+### [Enable-OrchFolderMachineInherit](Enable-OrchFolderMachineInherit.md)
+{{ Fill in the Synopsis }}
 
 ### [Enable-OrchLicenseRuntime](Enable-OrchLicenseRuntime.md)
 ランタイムライセンスを有効にします。

@@ -128,6 +128,9 @@ Copy the test schedules.
 ### [Disable-OrchApiTrigger](Disable-OrchApiTrigger.md)
 Disables the API triggers.
 
+### [Disable-OrchFolderMachineInherit](Disable-OrchFolderMachineInherit.md)
+{{ Fill in the Synopsis }}
+
 ### [Disable-OrchLicenseRuntime](Disable-OrchLicenseRuntime.md)
 Disables the runtime licenses.
 
@@ -157,6 +160,9 @@ Disables the webhooks.
 
 ### [Enable-OrchApiTrigger](Enable-OrchApiTrigger.md)
 Enables the API triggers.
+
+### [Enable-OrchFolderMachineInherit](Enable-OrchFolderMachineInherit.md)
+{{ Fill in the Synopsis }}
 
 ### [Enable-OrchLicenseRuntime](Enable-OrchLicenseRuntime.md)
 Enables the runtime licenses.

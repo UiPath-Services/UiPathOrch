@@ -917,6 +917,21 @@ namespace UiPath.OrchAPI
                 $"/odata/Machines/UiPath.Server.Configuration.OData.GetAssignedMachines(folderId={folderId})");
         }
 
+        // FolderMachineInheritDto
+        private class FolderMachineInherit(long? machineId, long? folderId, bool? inheritEnabled)
+        {
+            public Int64? MachineId { get; set; } = machineId;
+            public Int64? FolderId { get; set; } = folderId;
+            public bool? InheritEnabled { get; set; } = inheritEnabled;
+        }
+
+        public void SetFolderMachineInherit(Int64 folderId, Int64 machineId, bool enabled)
+        {
+            FolderMachineInherit payload = new(machineId, folderId, enabled);
+            // "" が返る
+            HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.ToggleFolderMachineInherit", folderId, payload);
+        }
+
         public IEnumerable<UserRobots> GetUserRobots(Int64 folderId)
         {
             return GetEnumerable<UserRobots>("/odata/Sessions/UiPath.Server.Configuration.OData.GetUserRobots", folderId, "&$filter=startswith(Robot/Username,'autogen\\') eq false and Robot/Username ne ''");
