@@ -1,0 +1,110 @@
+﻿using System.Collections;
+using System.Collections.Concurrent;
+using System.Management.Automation;
+using System.Management.Automation.Language;
+using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
+using UiPath.PowerShell.Completer;
+using Positional = UiPath.PowerShell.Positional.Name;
+using UiPath.PowerShell.Positional;
+
+namespace UiPath.PowerShell.Commands
+{
+    public class EnableFolderMachineInheritCommandBase<EnableInherit> : OrchestratorPSCmdlet where EnableInherit : IBoolParameters
+    {
+        public virtual string[]? Name { get; set; }
+
+        [Parameter]
+        [SupportsWildcards]
+        public string[]? Path { get; set; }
+
+        internal class FolderMachineNameCompleter : OrchArgumentCompleter
+        {
+            public override IEnumerable<CompletionResult> CompleteArgument(
+                string commandName,
+                string parameterName,
+                string wordToComplete,
+                CommandAst commandAst,
+                IDictionary fakeBoundParameters)
+            {
+                var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+                // パラメータで選択済みの Name は、候補から除外する
+                var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Parameters, wordToComplete);
+
+                var wp = CreateWPFromWordToComplete(wordToComplete);
+
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetMachinesAssignedToFolder(df.folder));
+
+                foreach (var result in results)
+                {
+                    if (!result.TryGetValue(out var entities)) continue;
+
+                    foreach (var e in entities!
+                        .Where(m => wp.IsMatch(m.Name))
+                        .Where(m => m.IsAssignedToFolder.GetValueOrDefault())
+                        .Where(m => EnableInherit.Parameter
+                            ? !m.PropagateToSubFolders.GetValueOrDefault()
+                            : m.PropagateToSubFolders.GetValueOrDefault())
+                        .ExcludeByWildcards(m => m?.Name, wpName)
+                        .OrderBy(m => m.Name))
+                    {
+                        yield return new CompletionResult(PathTools.EscapePSText(e.Name), e.Name, CompletionResultType.ParameterValue, TipHelp(e));
+                    }
+                }
+            }
+        }
+
+        protected override void ProcessRecord()
+        {
+            var drivesFolders = OrchDriveInfo.EnumFolders(Path);
+            var wpName = Name.ConvertToWildcardPatternList();
+
+            using var results = OrchThreadPool.RunForEach(drivesFolders,
+                df => df.folder.GetPSPath(),
+                df => df.folder,
+                df => df.drive.GetMachinesAssignedToFolder(df.folder));
+
+            using var cancelHandler = new ConsoleCancelHandler();
+            foreach (var result in results)
+            {
+                try
+                {
+                    var machines = result.GetResult(cancelHandler.Token);
+                    if (machines == null) continue;
+
+                    var (drive, folder) = result.Source;
+
+                    foreach (var machine in machines
+                        .Where(m => m.IsAssignedToFolder.GetValueOrDefault())
+                        .Where(m => EnableInherit.Parameter
+                            ? !m.PropagateToSubFolders.GetValueOrDefault()
+                            : m.PropagateToSubFolders.GetValueOrDefault())
+                        .FilterByWildcards(m => m?.Name, wpName)
+                        .OrderBy(m => m.Name))
+                    {
+                        string action = $"{(EnableInherit.Parameter ? "Enable" : "Disable")} FolderMachineInherit";
+
+                        if (ShouldProcess(machine.GetPSPath(), action))
+                        {
+                            try
+                            {
+                                drive.OrchAPISession.SetFolderMachineInherit(folder.Id!.Value, machine.Id!.Value, EnableInherit.Parameter);
+                                drive._dicMachinesAssigned?.TryRemove(folder.Id.Value, out _);
+                            }
+                            catch (Exception ex)
+                            {
+                                string errorId = $"{(EnableInherit.Parameter ? "Enable" : "Disable")}FolderMachineInheritError";
+                                WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), errorId, ErrorCategory.InvalidOperation, folder));
+                            }
+                        }
+                    }
+                }
+                catch (OrchException ex)
+                {
+                    WriteError(new ErrorRecord(ex, "GetFolderMachineError", ErrorCategory.InvalidOperation, ex.Target));
+                }
+            }
+        }
+    }
+}

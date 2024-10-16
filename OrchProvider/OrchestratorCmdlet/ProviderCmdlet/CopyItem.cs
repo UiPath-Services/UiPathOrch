@@ -197,7 +197,7 @@ namespace UiPath.PowerShell.Core
                 //reporter.WriteProgress(++index, $"{index:D}/{srcFolderUsers.Count} {userRole.UserEntity!.UserName}");
                 reporter.WriteProgress(++index, $"{index:D}/{srcFolderUsers.Count}");
 
-                if (shouldProcess || _this.ShouldProcess($"Item: '{userRole.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy Assigned User"))
+                if (shouldProcess || _this.ShouldProcess($"Item: '{userRole.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy FolderUser"))
                 {
                     string userName = userRole.UserEntity?.UserName ?? "";
                     string msg = $"Assigning the {userRole.UserEntity?.Type} \"{userName}\"";
@@ -364,6 +364,7 @@ namespace UiPath.PowerShell.Core
             try
             {
                 srcMachines = srcDrive.GetMachinesAssignedToFolder(srcFolder)
+                    .Where(e => e.IsAssignedToFolder.GetValueOrDefault())
                     .FilterByWildcards(m => m?.Name, wpNames);
             }
             catch (Exception ex)
@@ -378,63 +379,79 @@ namespace UiPath.PowerShell.Core
 
             cancelToken.ThrowIfCancellationRequested();
 
-            // バルクでまとめて追加するので、ユーザーに訊くのは一度だけ
-            if (shouldProcess || _this.ShouldProcess($"Item: '{srcFolder.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy assigned machines"))
+            string targetFolder = newFolder.GetPSPath();
+
+            var machinesToBeAdded = new List<MachineFolder>();
+            var dstTenantMachines = dstDrive
+                .GetMachinesAssignableToFolder(newFolder)
+                .ToDictionary(m => m.Name!, StringComparer.OrdinalIgnoreCase);
+
+            // 宛先が同じドライブでも、名前で Id を探した方がいいかな。。
+            //if (srcDrive == dstDrive)
+            //{
+            //    reporter.TotalNum = srcMachines.Count;
+            //    reporter.WriteProgress(srcMachines.Count, $"{srcMachines.Count}/{srcMachines.Count}");
+
+            //    //string machineNames = string.Join(", ", srcMachines.Select(m => m.Name));
+            //    try
+            //    {
+            //        dstDrive.OrchAPISession.AddMachinesToFolder(newFolder.Id ?? 0, srcMachines.Select(m => m.Id ?? 0));
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        WriteError(new ErrorRecord(new OrchException(target, ex), "CopyFolderMachineError", ErrorCategory.InvalidOperation, target));
+            //    }
+            //}
+            //else
+
+            foreach (var srcMachine in srcMachines.OrderBy(m => m.Name))
             {
-                string targetFolder = newFolder.GetPSPath();
-                // 宛先が同じドライブでも、名前で Id を探した方がいいかな。。
-                //if (srcDrive == dstDrive)
-                //{
-                //    reporter.TotalNum = srcMachines.Count;
-                //    reporter.WriteProgress(srcMachines.Count, $"{srcMachines.Count}/{srcMachines.Count}");
-
-                //    //string machineNames = string.Join(", ", srcMachines.Select(m => m.Name));
-                //    try
-                //    {
-                //        dstDrive.OrchAPISession.AddMachinesToFolder(newFolder.Id ?? 0, srcMachines.Select(m => m.Id ?? 0));
-                //    }
-                //    catch (Exception ex)
-                //    {
-                //        WriteError(new ErrorRecord(new OrchException(target, ex), "CopyFolderMachineError", ErrorCategory.InvalidOperation, target));
-                //    }
-                //}
-                //else
+                if (dstTenantMachines.TryGetValue(srcMachine.Name!, out var dstMachine))
                 {
-                    var dstTenantMachines = dstDrive.GetMachinesAssignableToFolder(newFolder).ToDictionary(m => m.Name!);
-                    var machinesToBeAdded = new List<MachineFolder>();
-
-                    string msg1 = "Assigning machines";
-                    foreach (var machine in srcMachines)
+                    if (shouldProcess || _this.ShouldProcess($"Item: '{srcMachine.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy FolderMachine"))
                     {
-                        string msg2 = $"Assigning the machine \"{machine.Name}\"";
-                        if (dstTenantMachines!.TryGetValue(machine.Name!, out var matchedMachine))
-                        {
-                            // dstから一致する要素を取り出し、処理
-                            machinesToBeAdded.Add(matchedMachine);
-                        }
-                        else
-                        {
-                            _this.WriteError(new ErrorRecord(new OrchException(targetFolder, $"{msg2}: {dstDrive.Name}: does not have the machine \"{machine.Name}\"."), "AssignFolderMachineError", ErrorCategory.InvalidOperation, targetFolder));
-                        }
+                        machinesToBeAdded.Add(dstMachine);
                     }
+                }
+                else
+                {
+                    string msg = $"Copying folder machine \"{srcMachine.Name}\"";
+                    _this.WriteError(new ErrorRecord(new OrchException(targetFolder, $"{msg}: {dstDrive.Name}: does not have the machine named \"{srcMachine.Name}\"."), "AssignFolderMachineError", ErrorCategory.InvalidOperation, targetFolder));
+                }
+            }
 
-                    if (machinesToBeAdded.Count == 0)
-                    {
-                        return;
-                    }
+            if (machinesToBeAdded.Count == 0) return;
+            
+            reporter.TotalNum = machinesToBeAdded.Count;
+            reporter.WriteProgress(machinesToBeAdded.Count, $"{machinesToBeAdded.Count}/{machinesToBeAdded.Count}");
+            try
+            {
+                dstDrive.OrchAPISession.AddMachinesToFolder(newFolder.Id ?? 0, machinesToBeAdded.Select(m => m.Id ?? 0));
+            }
+            catch (Exception ex)
+            {
+                _this.WriteError(new ErrorRecord(new OrchException(targetFolder, "Assigning machines failed.", ex), "AssignFolderMachineError", ErrorCategory.InvalidOperation, targetFolder));
+            }
 
-                    reporter.TotalNum = machinesToBeAdded.Count;
-                    reporter.WriteProgress(machinesToBeAdded.Count, $"{machinesToBeAdded.Count}/{machinesToBeAdded.Count}");
+            #region srcMachine の PropagateToSubFolders が true なら、dstMachine でも true にする
+            foreach (var dstMachine in machinesToBeAdded)
+            {
+                var srcMachine = srcMachines.FirstOrDefault(m => string.Compare(m.Name, dstMachine.Name, true) == 0);
+                if (srcMachine == null) continue; // null のはずはないが念のため
+
+                if (srcMachine.PropagateToSubFolders.GetValueOrDefault())
+                {
                     try
                     {
-                        dstDrive.OrchAPISession.AddMachinesToFolder(newFolder.Id ?? 0, machinesToBeAdded.Select(m => m.Id ?? 0));
+                        dstDrive.OrchAPISession.SetFolderMachineInherit(newFolder.Id!.Value, dstMachine.Id!.Value, true);
                     }
                     catch (Exception ex)
                     {
-                        _this.WriteError(new ErrorRecord(new OrchException(targetFolder, msg1, ex), "AssignFolderMachineError", ErrorCategory.InvalidOperation, targetFolder));
+                        _this.WriteError(new ErrorRecord(new OrchException(targetFolder, "Enable FolderMachineInherited failed.", ex), "EnableFolderMachineInheritedError", ErrorCategory.InvalidOperation, targetFolder));
                     }
                 }
             }
+            #endregion
         }
 
         internal static void CopyPackages(IWritableHost _this,
@@ -450,7 +467,7 @@ namespace UiPath.PowerShell.Core
                 return;
             }
 
-            string msg = "Copying the packages";
+            string msg = "Copying packages";
             string srcFeedId;
             try
             {
@@ -604,7 +621,7 @@ namespace UiPath.PowerShell.Core
                 cancelToken.ThrowIfCancellationRequested();
                 
                 string target = $"Item: '{process.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'";
-                if (shouldProcess || _this.ShouldProcess(target, "Copy process(es)"))
+                if (shouldProcess || _this.ShouldProcess(target, "Copy Process"))
                 {
                     msg = $"Copying process {process.GetPSPath()}";
 
@@ -1854,7 +1871,7 @@ namespace UiPath.PowerShell.Core
             {
                 cancelToken.ThrowIfCancellationRequested();
 
-                if (shouldProcess || _this.ShouldProcess($"Item: '{trigger.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy API Trigger"))
+                if (shouldProcess || _this.ShouldProcess($"Item: '{trigger.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy ApiTrigger"))
                 {
                     msg = $"Copying API trigger {trigger.GetPSPath()}";
                     //reporter.WriteProgress(++index, $"{index:D}/{srcTriggers.Count} {trigger.Name}");
@@ -2297,7 +2314,7 @@ namespace UiPath.PowerShell.Core
                 cancelToken.ThrowIfCancellationRequested();
 
                 string target = $"Item: '{testSetSchedule.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'";
-                if (shouldProcess || _this.ShouldProcess(target, "Copy TestSchedule"))
+                if (shouldProcess || _this.ShouldProcess(target, "Copy TestSetSchedule"))
                 {
                     msg = $"Copying test schedule {System.IO.Path.Combine(srcFolder.GetPSPath(), testSetSchedule.Name!)}";
                     //reporter.WriteProgress(++index, $"{index:D}/{srcTestSetSchedules.Count} {testSetSchedule.Name}");

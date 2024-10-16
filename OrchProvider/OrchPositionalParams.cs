@@ -6,6 +6,21 @@ namespace UiPath.PowerShell.Positional
     // これらのクラスは、型パラメータとして使用する。}
     // code bloat を抑止するため、同じ定義に対しては同じクラスを使う必要がある。そのため、ここでまとめて定義しておく。
 
+    public interface IBoolParameters
+    {
+        public static abstract bool Parameter { get; }
+    }
+
+    public class True : IBoolParameters
+    {
+        public static bool Parameter => true;
+    }
+
+    public class False : IBoolParameters
+    {
+        public static bool Parameter => false;
+    }
+
     public interface IPositionalParameters
     {
         static abstract string[] Parameters { get; }

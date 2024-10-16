@@ -8,11 +8,12 @@ using UiPath.PowerShell.Completer;
 using OrchCollectionExtensions = UiPath.PowerShell.Core.OrchCollectionExtensions;
 
 using Positional = UiPath.PowerShell.Positional.Name_Destination;
+using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands
 {
     [Cmdlet(VerbsCommon.Copy, "OrchMachine", SupportsShouldProcess = true)]
-    [OutputType(typeof(Entities.ExtendedMachine))]
+    [OutputType(typeof(Entities.CreatedMachine))]
     public class CopyMachineCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
@@ -135,28 +136,38 @@ namespace UiPath.PowerShell.Commands
                                     foreach (var robotUser in machine.RobotUsers)
                                     {
                                         // TODO: ユーザーとロボットの Id の移行を、OrchFolderProvider の static method で行うように統一。
+                                        var srcRobots = srcDrive.GetRobots();
+                                        var srcRobot = srcRobots.FirstOrDefault(r => r.Id == robotUser.RobotId);
 
-                                        // UserName
-                                        var newRobotUser = new RobotUser();
-                                        newRobotUser.UserName = robotUser.UserName!;
-
-                                        // RobotId
-                                        var newRobotIds = dstRobots.Where(r => r.Username == robotUser.UserName);
-                                        if (!newRobotIds.Any())
+                                        if (srcRobot == null)
                                         {
-                                            throw new Exception($"There is no robot with the UserName set to {robotUser.UserName}.");
+                                            WriteError(
+                                                new ErrorRecord(new OrchException(machine.GetPSPath(), $"Robot does not exist with Id = {robotUser.RobotId}."),
+                                                "FindRobotError",
+                                                ErrorCategory.InvalidArgument,
+                                                machine));
+                                            continue;
                                         }
-                                        if (newRobotIds.Take(2).Count() == 2)
+                                        else
                                         {
-                                            throw new Exception($"There are multiple robots with the UserName set to {robotUser.UserName}.");
+                                            var dstRobot = dstRobots.FirstOrDefault(r => string.Compare(r.Name, srcRobot.Name, true) == 0);
+                                            if (dstRobot == null)
+                                            {
+                                                WriteError(
+                                                    new ErrorRecord(new OrchException(machine.GetPSPath(), $"Robot does not exist with name = {srcRobot.Name} in {dstDrive.NameColonSeparator}."),
+                                                    "FindRobotError",
+                                                    ErrorCategory.InvalidArgument,
+                                                    machine));
+                                                continue;
+                                            }
+                                            else
+                                            {
+                                                var newRobotUser = new RobotUser();
+                                                newRobotUser.UserName = robotUser.UserName!;
+                                                newRobotUser.RobotId = dstRobot.Id!;
+                                                robotUsers.Add(newRobotUser);
+                                            }
                                         }
-                                        newRobotUser.RobotId = newRobotIds.First().Id!;
-
-                                        // HasTriggers
-                                        // need to set "HasTriggers"? Not sure, not set for now..
-                                        newRobotUser.HasTriggers = false; // robotUser.HasTriggers;
-
-                                        robotUsers.Add(newRobotUser);
                                     }
                                     newMachine.RobotUsers = robotUsers;
                                 }
@@ -173,8 +184,7 @@ namespace UiPath.PowerShell.Commands
                             catch (Exception ex)
                             {
                                 string dstTarget = $"{dstDrive.NameColonSeparator}{machine.Name}";
-                                var errorRecord = new ErrorRecord(new OrchException(dstTarget, ex), "CopyMachineError", ErrorCategory.InvalidOperation, dstTarget);
-                                WriteError(errorRecord);
+                                WriteError(new ErrorRecord(new OrchException(dstTarget, ex), "CopyMachineError", ErrorCategory.InvalidOperation, dstTarget));
                             }
                         }
                     }
