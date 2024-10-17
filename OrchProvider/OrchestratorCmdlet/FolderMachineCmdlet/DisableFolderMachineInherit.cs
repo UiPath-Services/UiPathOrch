@@ -15,7 +15,7 @@ namespace UiPath.PowerShell.Commands
     {
         [Parameter(Position = 0)]
         [SupportsWildcards]
-        [ArgumentCompleter(typeof(EnableFolderMachineInheritCommandBase<False>.FolderMachineNameCompleter))]
+        [ArgumentCompleter(typeof(FolderMachineNameCompleter))]
         public override string[]? Name { get; set; }
     }
 }

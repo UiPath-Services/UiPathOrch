@@ -772,9 +772,18 @@ namespace UiPath.PowerShell.Commands
                         {
                             postingUser.MayHaveUserSession ??= false; // prohibit 'Standard Interface'
                             postingUser.MayHaveUnattendedSession ??= true;
+                            postingUser.MayHavePersonalWorkspace ??= false;
+                            postingUser.MayHaveRobotSession ??= false; // これがないと失敗する
+
                             postingUser.UnattendedRobot ??= new();
                             postingUser.UnattendedRobot.CredentialType ??= "NoCredential";
                             postingUser.UnattendedRobot.LimitConcurrentExecution ??= false;
+
+                            postingUser.RestrictToPersonalWorkspace ??= false;
+                            //postingUser.UnattendedRobot.ExecutionSettings ??= new();
+
+                            //postingUser.UpdatePolicy ??= new();
+                            //postingUser.UpdatePolicy.Type ??= "None";
                         }
                         else if (user.type == 4) // application の場合
                         {

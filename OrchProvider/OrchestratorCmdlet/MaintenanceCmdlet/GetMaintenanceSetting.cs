@@ -14,9 +14,9 @@ namespace UiPath.PowerShell.Commands
     // host only
     // host って何や？
 
-    //[Cmdlet(VerbsCommon.Get, "OrchMaintenance")]
+    //[Cmdlet(VerbsCommon.Get, "OrchMaintenanceSetting")]
     [OutputType(typeof(Entities.MaintenanceSetting))]
-    class GetMaintenanceCommand : OrchestratorPSCmdlet
+    class GetMaintenanceSettingCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
         [ArgumentCompleter(typeof(DriveCompleter<Positional.Path>))]

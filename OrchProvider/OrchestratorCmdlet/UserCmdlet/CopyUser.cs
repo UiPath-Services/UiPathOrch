@@ -9,6 +9,8 @@ using UiPath.PowerShell.Completer;
 using OrchCollectionExtensions = UiPath.PowerShell.Core.OrchCollectionExtensions;
 using User = UiPath.PowerShell.Entities.User;
 using System.Data;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -198,6 +200,16 @@ namespace UiPath.PowerShell.Commands
                             string srcPartitionGlobalId = srcDrive.GetPartitionGlobalId();
                             string dstPartitionGlobalId = dstDrive.GetPartitionGlobalId();
 
+                            // 同じ組織なら DirectoryIdentifier をそのまま使っても良さそうだけど
+                            // Domain は "autogen" で良いのだろうか。
+                            //if (newUser.DirectoryIdentifier == null && srcPartitionGlobalId == dstPartitionGlobalId)
+                            ////if (false)
+                            //{
+                            //    newUser.DirectoryIdentifier = newUser.Key;
+                            //    newUser.UserName = null;
+                            //    newUser.Domain = "autogen";
+                            //}
+                            //else
                             User detailedUser = srcDrive.GetUser(srcUser);
                             if (detailedUser == null)
                             {
@@ -207,27 +219,39 @@ namespace UiPath.PowerShell.Commands
 
                             User newUser = OrchCollectionExtensions.DeepCopy(detailedUser);
 
-                            if (newUser.DirectoryIdentifier == null && srcPartitionGlobalId == dstPartitionGlobalId)
-                            //if (false)
+                            // 組織の PmUser の中に見つかれば、その identifier を DirectoryIdentifier を設定しておく
+                            if (DirectoryTypeItems.Items.TryGetValue(detailedUser.Type ?? "DirectoryUser", out var srcType))
                             {
-                                newUser.DirectoryIdentifier = newUser.Key;
+                                var dstPmUser = dstDrive.SearchForUsersAndGroups(newUser.UserName!)
+                                    .Where(u => string.Compare(u.identityName, newUser.UserName, true) == 0 && u.type == srcType)
+                                    .FirstOrDefault();
+                                if (dstPmUser != null)
+                                {
+                                    //WriteError(new ErrorRecord(new OrchException(srcUser.GetPSPath(), $"A user with the same name does not exist in the organization of {dstDrive.NameColonSeparator}."), "SearchUserError", ErrorCategory.InvalidOperation, srcUser));
+                                    newUser.DirectoryIdentifier = dstPmUser?.identifier;
+                                    newUser.Domain = dstPmUser?.domain;
+                                }
+                            }
+
+                            if (!string.IsNullOrEmpty(newUser.DirectoryIdentifier))
+                            {
                                 newUser.UserName = null;
-                                newUser.Domain = "autogen";
+                                newUser.FullName = null;
+                                newUser.Name = null;
+                                newUser.Surname = null;
+                                newUser.EmailAddress = null;
                             }
-                            else
-                            {
-                                // TODO: ディレクトリを検索しなければ。★★★★★
-                                // dstDrive.SearchForUsersAndGroups();
-                                // dstDrive.SearchPmDirectoryUsers();
-                                newUser.DirectoryIdentifier = null;
-                                // in this case, respect UserName.
-                            }
+                            newUser.Domain ??= "autogen";
+
+                            newUser.AccountId = null;
+                            newUser.AuthenticationSource = null;
                             newUser.Key = null;
                             newUser.Id = null;
                             newUser.IsEmailConfirmed = null;
                             // newUser.Path = null; // JsonIgnore 属性がついているので不要
                             newUser.TenantId = null;
                             newUser.TenantKey = null;
+                            newUser.TenancyName = null;
                             newUser.TenantDisplayName = null;
                             newUser.LastLoginTime = null;
                             newUser.LastModificationTime = null;
@@ -278,7 +302,6 @@ namespace UiPath.PowerShell.Commands
                                 newUser.RolesList = newUser.RolesList?.Except(rolesToBeRemoved).ToArray();
                             }
 
-
                             if (newUser.RobotProvision != null)
                             {
                                 // たぶん RobotProvision.RobotId は null にしておけば良い
@@ -301,6 +324,9 @@ namespace UiPath.PowerShell.Commands
                                 //newUser.UnattendedRobot.RobotId = OrchFolderProvider.FindDstRobot(
                                 //    this, srcDrive, dstDrive, dstDrive.RootFolder!,
                                 //    newUser.UnattendedRobot.CredentialStoreId, srcUser.GetPSPath())?.Id;
+                                newUser.UnattendedRobot.Password = null;
+
+                                // TODO: UR のパスワードを更新してくれ、という警告出した方がいいのでは。
                             }
 
                             // migrating classic folders list. I am not sure this is needed;
