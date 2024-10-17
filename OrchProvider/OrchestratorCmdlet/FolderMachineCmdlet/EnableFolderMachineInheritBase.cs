@@ -10,7 +10,7 @@ using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands
 {
-    public class EnableFolderMachineInheritCommandBase<EnableInherit> : OrchestratorPSCmdlet where EnableInherit : IBoolParameters
+    public class EnableFolderMachineInheritCommandBase<EnableInherit> : OrchestratorPSCmdlet where EnableInherit : IBoolParameter
     {
         public virtual string[]? Name { get; set; }
 
@@ -43,7 +43,7 @@ namespace UiPath.PowerShell.Commands
                     foreach (var e in entities!
                         .Where(m => wp.IsMatch(m.Name))
                         .Where(m => m.IsAssignedToFolder.GetValueOrDefault())
-                        .Where(m => EnableInherit.Parameter
+                        .Where(m => EnableInherit.Value
                             ? !m.PropagateToSubFolders.GetValueOrDefault()
                             : m.PropagateToSubFolders.GetValueOrDefault())
                         .ExcludeByWildcards(m => m?.Name, wpName)
@@ -77,24 +77,24 @@ namespace UiPath.PowerShell.Commands
 
                     foreach (var machine in machines
                         .Where(m => m.IsAssignedToFolder.GetValueOrDefault())
-                        .Where(m => EnableInherit.Parameter
+                        .Where(m => EnableInherit.Value
                             ? !m.PropagateToSubFolders.GetValueOrDefault()
                             : m.PropagateToSubFolders.GetValueOrDefault())
                         .FilterByWildcards(m => m?.Name, wpName)
                         .OrderBy(m => m.Name))
                     {
-                        string action = $"{(EnableInherit.Parameter ? "Enable" : "Disable")} FolderMachineInherit";
+                        string action = $"{(EnableInherit.Value ? "Enable" : "Disable")} FolderMachineInherit";
 
                         if (ShouldProcess(machine.GetPSPath(), action))
                         {
                             try
                             {
-                                drive.OrchAPISession.SetFolderMachineInherit(folder.Id!.Value, machine.Id!.Value, EnableInherit.Parameter);
+                                drive.OrchAPISession.SetFolderMachineInherit(folder.Id!.Value, machine.Id!.Value, EnableInherit.Value);
                                 drive._dicMachinesAssigned?.TryRemove(folder.Id.Value, out _);
                             }
                             catch (Exception ex)
                             {
-                                string errorId = $"{(EnableInherit.Parameter ? "Enable" : "Disable")}FolderMachineInheritError";
+                                string errorId = $"{(EnableInherit.Value ? "Enable" : "Disable")}FolderMachineInheritError";
                                 WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), errorId, ErrorCategory.InvalidOperation, folder));
                             }
                         }

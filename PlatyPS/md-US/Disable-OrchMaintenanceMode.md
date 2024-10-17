@@ -1,6 +1,6 @@
 ﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
-Module Name: UiPathOrch
+Module Name: uiPathOrch
 online version:
 schema: 2.0.0
 ---
@@ -14,7 +14,7 @@ Disables maintenance mode of unattended sessions.
 
 ```
 Disable-OrchMaintenanceMode [[-MachineName] <String[]>] [[-HostMachineName] <String[]>]
- [[-ServiceUserName] <String[]>] [[-SessionId] <Int64[]>] [-Path <String[]>]
+ [[-ServiceUserName] <String[]>] [[-SessionId] <Int64[]>] [-Force] [-Path <String[]>]
  [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
@@ -151,6 +151,21 @@ Accept wildcard characters: False
 Type: ActionPreference
 Parameter Sets: (All)
 Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Force
+{{ Fill Force Description }}
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
 
 Required: False
 Position: Named
