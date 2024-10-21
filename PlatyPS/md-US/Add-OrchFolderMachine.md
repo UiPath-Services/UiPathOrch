@@ -1,6 +1,6 @@
 ﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
-Module Name: UiPathOrch
+Module Name: uiPathOrch
 online version:
 schema: 2.0.0
 ---
@@ -13,8 +13,8 @@ Assigns the machines to folders.
 ## SYNTAX
 
 ```
-Add-OrchFolderMachine [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Depth <UInt32>]
- [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Add-OrchFolderMachine [-Name] <String[]> [-PropagateToSubFolders <String>] [-Path <String[]>] [-Recurse]
+ [-Depth <UInt32>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -134,6 +134,21 @@ Required: False
 Position: Named
 Default value: None
 Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -PropagateToSubFolders
+{{ Fill PropagateToSubFolders Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 

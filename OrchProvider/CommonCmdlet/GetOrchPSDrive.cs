@@ -71,7 +71,7 @@ namespace UiPath.PowerShell.Commands
         {
             IEnumerable<OrchDuDriveInfo> drives;
             if (Path == null) drives = OrchDuDriveInfo.EnumAllOrchDrives();
-            else              drives = OrchDuDriveInfo.EnumOrchDrives(Path);
+            else              drives = OrchDuDriveInfo.EnumOrchDuDrives(Path);
 
             foreach (var drive in drives)
             {
@@ -84,7 +84,7 @@ namespace UiPath.PowerShell.Commands
         {
             IEnumerable<OrchTmDriveInfo> drives;
             if (Path == null) drives = OrchTmDriveInfo.EnumAllOrchDrives();
-            else              drives = OrchTmDriveInfo.EnumOrchDrives(Path);
+            else              drives = OrchTmDriveInfo.EnumOrchTmDrives(Path);
 
             foreach (var drive in drives)
             {

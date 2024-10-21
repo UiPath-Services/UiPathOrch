@@ -125,7 +125,7 @@ namespace UiPath.PowerShell.Core
 
         protected override void InvokeDefaultAction(string path)
         {
-            var drives = OrchTmDriveInfo.EnumOrchDrives([path]);
+            var drives = OrchTmDriveInfo.EnumOrchTmDrives([path]);
             if (drives == null)
             {
                 return;
@@ -202,7 +202,7 @@ namespace UiPath.PowerShell.Core
 
         protected override void RenameItem(string path, string newName)
         {
-            var drives = OrchTmDriveInfo.EnumOrchDrives([path]);
+            var drives = OrchTmDriveInfo.EnumOrchTmDrives([path]);
             if (drives == null)
             {
                 return;
@@ -238,7 +238,7 @@ namespace UiPath.PowerShell.Core
 
         protected override void RemoveItem(string path, bool recurse)
         {
-            var drives = OrchTmDriveInfo.EnumOrchDrives([path]);
+            var drives = OrchTmDriveInfo.EnumOrchTmDrives([path]);
             if (drives == null)
             {
                 return;

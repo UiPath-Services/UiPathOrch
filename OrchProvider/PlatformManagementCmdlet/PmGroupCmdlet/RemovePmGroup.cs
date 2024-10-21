@@ -45,6 +45,8 @@ namespace UiPath.PowerShell.Commands
                             {
                                 drive.OrchAPISession.RemovePmGroup(partitionGlobalId!, group?.id);
                                 drive._dicPmGroups?.TryRemove(group!.id!, out _);
+                                drive._dicPmDirectoryUsers = null;
+                                drive._dicSearchForUsersAndGroups = null;
                             }
                             catch (Exception ex)
                             {

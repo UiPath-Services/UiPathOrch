@@ -3565,7 +3565,7 @@ namespace UiPath.PowerShell.Entities
     {
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public string? Path { get; set; } // added by UiPathOrch
-        public string? id { get; set; }
+        public Guid? id { get; set; }
         public string? name { get; set; }
         public string? description { get; set; }
         public string? type { get; set; }
@@ -3609,6 +3609,20 @@ namespace UiPath.PowerShell.Entities
         public string? source { get; set; }
     }
 
+    public class DuRoleAssignment // added by UiPathOrch
+    {
+        public Guid? roleId { get; set; }
+        public string? scope { get; set; }
+        public string? securityPrincipalId { get; set; } // Guid っぽいけど、user id なので string にしておく。
+        public int? securityPrincipalType { get; set; }
+    }
+
+    public class UserRoleAssignmentsCmd // added by UiPathOrch
+    {
+        public List<DuRoleAssignment>? roleAssignmentsToAdd { get; set; }
+        public List<DuRoleAssignment>? roleAssignmentsToDelete { get; set; }
+    }
+
     // UiPath.DocumentUnderstanding.Framework.Api.Controllers.Model.Discovery.Project
     public class DuProject
     {
@@ -3635,6 +3649,16 @@ namespace UiPath.PowerShell.Entities
         public DuProject[]? projects { get; set; }
     }
 
+    public class CreateDuProjectCmd // added by UiPathOrch
+    {
+        public string? name { get; set; }
+        public string? description { get; set; }
+        public string? ocrMethod { get; set; }
+        public string? ocrUrl { get; set; }
+        public string? forceApplyOcr { get; set; }
+        public string? type { get; set; }
+        public bool? helix { get; set; }
+    }
 
     // UiPath.DocumentUnderstanding.Framework.Api.Controllers.Model.Discovery.DocumentType
     public class DuDocumentType
@@ -4032,9 +4056,9 @@ namespace UiPath.PowerShell.Entities
 
     public class OrchRolePermissionExpanded
     {
-        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-        public string? Path { get; set; } // added by UiPathOrch
+        public string? Path { get; set; }
         public string? DisplayName { get; set; }
+        public string? PathDisplayName { get; set; }
         public string? Type { get; set; }
         public string? Scope { get; set; }
         public string? Name { get; set; }

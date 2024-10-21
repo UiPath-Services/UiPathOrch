@@ -58,7 +58,7 @@ namespace UiPath.PowerShell.Core
         }
 
         // paths を指定しない場合、カレントドライブのみを返す
-        public static List<OrchDuDriveInfo> EnumOrchDrives(IEnumerable<string?>? paths = null)
+        public static List<OrchDuDriveInfo> EnumOrchDuDrives(IEnumerable<string?>? paths = null)
         {
             var drives = new List<OrchDuDriveInfo>();
             if (paths == null || !paths.Any() || paths.All(p => p == null))
@@ -77,6 +77,21 @@ namespace UiPath.PowerShell.Core
             }
             //return drives.DistinctBy(drive => drive.Name).ToList();
             return drives.Distinct().ToList();
+        }
+
+        public static OrchDuDriveInfo GetOrchDuDrive(string? path = null)
+        {
+            var srcDrives = EnumOrchDuDrives([path]);
+            if (srcDrives.Count > 1)
+            {
+                throw new Exception($"'{path}' resolved to multiple containers.");
+            }
+            if (srcDrives.Count == 0)
+            {
+                // たぶん先に EnumOrchDrives() が例外を投げているはずなので、ここは実行されないと思う。
+                throw new Exception($"Cannot find path '{path}' because it does not exist.");
+            }
+            return srcDrives[0];
         }
 
         public static IEnumerable<PathInfo> ResolveOrchDrivePaths(IEnumerable<string?>? paths = null)
@@ -187,10 +202,8 @@ namespace UiPath.PowerShell.Core
         // でも、書き直すと Path の形式が不自然になってしまうな。。
         internal DuRole[]? _dicDuRoles = null;
         internal readonly ExceptionCachePerTenant _dicDuRoles_Exception = new();
-        public DuRole[]? GetDuRoles(string? partitionGlobalId)
+        public DuRole[]? GetDuRoles()
         {
-            if (string.IsNullOrEmpty(partitionGlobalId)) return null;
-
             _dicDuRoles_Exception.ThrowCachedExceptionIfAny();
 
             if (_dicDuRoles == null)
@@ -201,6 +214,7 @@ namespace UiPath.PowerShell.Core
                     {
                         try
                         {
+                            var partitionGlobalId = ParentDrive.GetPartitionGlobalId();
                             _dicDuRoles = OrchAPISession.GetDuRoles(partitionGlobalId);
                             if (_dicDuRoles == null)
                             {

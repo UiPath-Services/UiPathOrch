@@ -91,6 +91,7 @@ namespace UiPath.PowerShell.Commands
             public string? UR_UserName { get; set; }
             public string? UR_CredentialStore { get; set; }
             public string? UR_Password { get; set; }
+            public string? UR_CredentialExternalName { get; set; }
             public string? UR_CredentialType { get; set; }
             public bool? UR_LimitConcurrentExecution { get; set; }
 
@@ -119,6 +120,7 @@ namespace UiPath.PowerShell.Commands
                 UR_UserName = cmdlet.UR_UserName;
                 UR_CredentialStore = cmdlet.UR_CredentialStore;
                 UR_Password = cmdlet.UR_Password;
+                UR_CredentialExternalName = cmdlet.UR_CredentialExternalName;
                 UR_CredentialType = cmdlet.UR_CredentialType;
                 UR_LimitConcurrentExecution = TryParse(cmdlet.UR_LimitConcurrentExecution);
 
@@ -185,6 +187,11 @@ namespace UiPath.PowerShell.Commands
                     this.UR_Password,
                     cmdl.UR_Password, v =>
                     this.UR_Password = v);
+
+                AssignStringValue(cmdl, drive, identityName,
+                    this.UR_CredentialExternalName,
+                    cmdl.UR_CredentialExternalName, v =>
+                    this.UR_CredentialExternalName = v);
 
                 AssignStringValue(cmdl, drive, identityName,
                     this.UR_CredentialType,
@@ -301,6 +308,10 @@ namespace UiPath.PowerShell.Commands
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         public string? UR_Password { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<UserCredentialTypeItems>))]
+        public string? UR_CredentialExternalName { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(StaticTextsCompleter<UserCredentialTypeItems>))]
@@ -697,12 +708,14 @@ namespace UiPath.PowerShell.Commands
                         if (!string.IsNullOrEmpty(line.UR_UserName) ||
                             !string.IsNullOrEmpty(line.UR_CredentialStore) ||
                             !string.IsNullOrEmpty(line.UR_Password) ||
+                            !string.IsNullOrEmpty(line.UR_CredentialExternalName) ||
                             !string.IsNullOrEmpty(line.UR_CredentialType) ||
                             line.UR_LimitConcurrentExecution != null)
                         {
                             postingUser.UnattendedRobot = new();
                             postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(line.UR_UserName, (u, v) => u.UserName = v);
                             postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(line.UR_Password, (u, v) => u.Password = v);
+                            postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(line.UR_CredentialExternalName, (u, v) => u.CredentialExternalName = v);
                             postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(line.UR_CredentialType, (u, v) => u.CredentialType = v);
                             postingUser.UnattendedRobot.AssignBoolIfNotNull(line.UR_LimitConcurrentExecution, (u, v) => u.LimitConcurrentExecution = v);
 

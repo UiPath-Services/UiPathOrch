@@ -314,13 +314,12 @@ namespace UiPath.PowerShell.Commands
                                 {
                                     var updatedRobot = drive.OrchAPISession.UpdatePmRobot(robot.id!, cmd);
                                     drive._dicPmRobotAccounts = null;
+                                    drive._dicPmDirectoryUsers = null;
+                                    drive._dicSearchForUsersAndGroups = null;
+
                                     if (updatedRobot != null)
                                     {
                                         updatedRobot.Path = drive.NameColonSeparator;
-                                        if (drive._dicPmRobotAccounts != null)
-                                        {
-                                            drive._dicPmRobotAccounts[updatedRobot.id!] = updatedRobot;
-                                        }
                                         WriteObject(updatedRobot);
                                     }
                                 }

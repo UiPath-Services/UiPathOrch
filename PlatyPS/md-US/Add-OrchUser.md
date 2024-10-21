@@ -1,6 +1,6 @@
 ﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
-Module Name: UiPathOrch
+Module Name: uiPathOrch
 online version:
 schema: 2.0.0
 ---
@@ -16,11 +16,12 @@ Adds users to tenants.
 Add-OrchUser [[-Type] <String[]>] [-UserName] <String[]> [[-Roles] <String[]>] [-MayHaveUserSession <String>]
  [-MayHaveRobotSession <String>] [-MayHaveUnattendedSession <String>] [-MayHavePersonalWorkspace <String>]
  [-RestrictToPersonalWorkspace <String>] [-UpdatePolicyType <String>] [-UpdatePolicyVersion <String>]
- [-UR_UserName <String>] [-UR_CredentialStore <String>] [-UR_Password <String>] [-UR_CredentialType <String>]
- [-UR_LimitConcurrentExecution <String>] [-ES_TracingLevel <String>] [-ES_StudioNotifyServer <String>]
- [-ES_LoginToConsole <String>] [-ES_ResolutionWidth <Int32>] [-ES_ResolutionHeight <Int32>]
- [-ES_ResolutionDepth <Int32>] [-ES_FontSmoothing <String>] [-ES_AutoDownloadProcess <String>]
- [-Path <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+ [-UR_UserName <String>] [-UR_CredentialStore <String>] [-UR_Password <String>]
+ [-UR_CredentialExternalName <String>] [-UR_CredentialType <String>] [-UR_LimitConcurrentExecution <String>]
+ [-ES_TracingLevel <String>] [-ES_StudioNotifyServer <String>] [-ES_LoginToConsole <String>]
+ [-ES_ResolutionWidth <Int32>] [-ES_ResolutionHeight <Int32>] [-ES_ResolutionDepth <Int32>]
+ [-ES_FontSmoothing <String>] [-ES_AutoDownloadProcess <String>] [-Path <String[]>]
+ [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -436,6 +437,21 @@ Accept wildcard characters: False
 
 ### -UR_UserName
 {{ Fill UR_UserName Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -UR_CredentialExternalName
+{{ Fill UR_CredentialExternalName Description }}
 
 ```yaml
 Type: String

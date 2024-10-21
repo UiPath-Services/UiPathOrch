@@ -12,6 +12,7 @@ using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Entities.JsonConverter;
 using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
+using static System.Formats.Asn1.AsnWriter;
 using Job = UiPath.PowerShell.Entities.Job;
 using Release = UiPath.PowerShell.Entities.Release;
 using Session = UiPath.PowerShell.Entities.Session;
@@ -2677,6 +2678,12 @@ namespace UiPath.OrchAPI
             return body?.projects;
         }
 
+        // どうも動かない。。困ったな
+        public void CreateDuProjects(CreateDuProjectCmd cmd)
+        {
+            var body = HttpRequest(HttpMethod.Post, "/du_/api/app/web/projects?api-version=1.4", null, cmd);
+        }
+
         public DuDocumentType[]? GetDuDocumentTypes(string? projectId)
         {
             var body = HttpRequest<DuGetDocumentTypesResponse>(HttpMethod.Get, $"/du_/api/framework/projects/{projectId}/document-types?api-version=1");
@@ -2717,6 +2724,13 @@ namespace UiPath.OrchAPI
             return results?.results;
         }
 
+        // 残念、この API を呼び出すには非公開の scope が必要？のようだ。。
+        public void SetDuRoleToDuUser(string? partitionGlobalId, string? tenantKey, string? projectId, UserRoleAssignmentsCmd payload)
+        {
+            Uri uri = new(_base_url);
+            string baseUrl = $"{uri.Scheme}://{uri.Host}/{partitionGlobalId}/pap_/api/userroleassignments";
+            HttpRequestImpl(HttpMethod.Get, baseUrl, "", null, payload);
+        }
         #endregion
 
         #region TestManager

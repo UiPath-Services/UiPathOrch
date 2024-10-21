@@ -91,6 +91,7 @@ namespace UiPath.PowerShell.Commands
                             {
                                 drive.OrchAPISession.SetFolderMachineInherit(folder.Id!.Value, machine.Id!.Value, EnableInherit.Value);
                                 drive._dicMachinesAssigned?.TryRemove(folder.Id.Value, out _);
+                                drive._dicAssignedMachines?.TryRemove(folder.Id.Value, out _);
                             }
                             catch (Exception ex)
                             {

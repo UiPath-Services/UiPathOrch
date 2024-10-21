@@ -102,7 +102,8 @@ namespace UiPath.PowerShell.Commands
                         srcDrive, srcFolder, wpName,
                         dstDrive, dstFolder, reporter,
                         cancelHandler.Token, false);
-                    dstDrive._dicMachinesAssigned?.TryRemove(dstFolder.Id ?? 0, out _);
+                    dstDrive._dicMachinesAssigned?.TryRemove(dstFolder.Id!.Value, out _);
+                    dstDrive._dicAssignedMachines?.TryRemove(dstFolder.Id!.Value, out _);
                 }
                 catch (OperationCanceledException)
                 {

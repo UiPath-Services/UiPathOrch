@@ -16,7 +16,7 @@ namespace UiPath.PowerShell.Commands
 
         protected override void ProcessRecord()
         {
-            var drives = OrchTmDriveInfo.EnumOrchDrives(Path);
+            var drives = OrchTmDriveInfo.EnumOrchTmDrives(Path);
 
             //foreach (var drive in drives)
             //{

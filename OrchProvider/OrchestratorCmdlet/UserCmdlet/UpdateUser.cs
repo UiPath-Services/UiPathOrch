@@ -67,6 +67,9 @@ namespace UiPath.PowerShell.Commands
         public string? UR_Password { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
+        public string? UR_CredentialExternalName { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(StaticTextsCompleter<UserCredentialTypeItems>))]
         public string? UR_CredentialType { get; set; }
 
@@ -229,13 +232,15 @@ namespace UiPath.PowerShell.Commands
                         if (!string.IsNullOrEmpty(UR_UserName) ||
                             !string.IsNullOrEmpty(UR_CredentialStore) ||
                             !string.IsNullOrEmpty(UR_Password) ||
+                            !string.IsNullOrEmpty(UR_CredentialExternalName) ||
                             !string.IsNullOrEmpty(UR_CredentialType) ||
                             !string.IsNullOrEmpty(UR_LimitConcurrentExecution))
                         {
                             postingUser.UnattendedRobot ??= new();
-                            postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(UR_UserName,       (u, v) => u.UserName = v);
-                            postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(UR_Password,       (u, v) => u.Password = v);
-                            postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(UR_CredentialType, (u, v) => u.CredentialType = v);
+                            postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(UR_UserName,               (u, v) => u.UserName = v);
+                            postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(UR_Password,               (u, v) => u.Password = v);
+                            postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(UR_CredentialExternalName, (u, v) => u.CredentialExternalName = v);
+                            postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(UR_CredentialType,         (u, v) => u.CredentialType = v);
                             postingUser.UnattendedRobot.AssignBoolIfNotFalse(UR_LimitConcurrentExecution, u => u.LimitConcurrentExecution, (u, v) => u.LimitConcurrentExecution = v);
 
                             if (!string.IsNullOrEmpty(UR_CredentialStore))

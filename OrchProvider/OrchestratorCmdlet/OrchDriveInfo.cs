@@ -3467,7 +3467,7 @@ namespace UiPath.PowerShell.Core
                 }
             }
 
-            return value?.Where(obj => obj.identityName?.StartsWith(name) ?? false) ?? [];
+            return value?.Where(obj => obj.identityName?.StartsWith(name, StringComparison.OrdinalIgnoreCase) ?? false) ?? [];
         }
 
         #region PmRobot Cache

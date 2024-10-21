@@ -59,7 +59,7 @@ namespace UiPath.PowerShell.Core
         }
 
         // paths を指定しない場合、カレントドライブのみを返す
-        public static List<OrchTmDriveInfo> EnumOrchDrives(IEnumerable<string?>? paths = null)
+        public static List<OrchTmDriveInfo> EnumOrchTmDrives(IEnumerable<string?>? paths = null)
         {
             var drives = new List<OrchTmDriveInfo>();
             if (paths == null || !paths.Any() || paths.All(p => p == null))

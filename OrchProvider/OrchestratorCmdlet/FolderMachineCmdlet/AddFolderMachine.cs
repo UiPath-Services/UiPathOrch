@@ -6,8 +6,7 @@ using System.Management.Automation.Language;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name;
+using BoolCompleter = UiPath.PowerShell.Completer.StaticTextsCompleter<UiPath.PowerShell.Positional.True_False>;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -17,6 +16,10 @@ namespace UiPath.PowerShell.Commands
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(NameCompleter))]
         public string[]? Name { get; set; }
+
+        [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(BoolCompleter))]
+        public string? PropagateToSubFolders { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
@@ -110,8 +113,8 @@ namespace UiPath.PowerShell.Commands
                         if (ShouldProcess(target, "Add Folder Machines"))
                         {
                             drive.OrchAPISession.AddMachinesToFolder(folder.Id ?? 0, machineIds);
-                            drive._dicMachinesAssigned?.TryRemove(folder.Id ?? 0, out var _);
-                            drive._dicAssignedMachines?.TryRemove(folder.Id ?? 0, out var _);
+                            drive._dicMachinesAssigned?.TryRemove(folder.Id!.Value, out _);
+                            drive._dicAssignedMachines?.TryRemove(folder.Id!.Value, out _);
                         }
                     }
                     catch (Exception ex)

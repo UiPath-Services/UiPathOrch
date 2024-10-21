@@ -67,8 +67,8 @@ namespace UiPath.PowerShell.Commands
             if (!AllDrives.IsPresent)
             {
                 drives = OrchDriveInfo.EnumOrchDrives(Path).ToList();
-                duDrives = OrchDuDriveInfo.EnumOrchDrives(Path).ToList();
-                tmDrives = OrchTmDriveInfo.EnumOrchDrives(Path).ToList();
+                duDrives = OrchDuDriveInfo.EnumOrchDuDrives(Path).ToList();
+                tmDrives = OrchTmDriveInfo.EnumOrchTmDrives(Path).ToList();
             }
 
             // Path の指定がなく、カレントドライブが OrchDrive でない場合は、すべての OrchDrive のキャッシュをクリアする

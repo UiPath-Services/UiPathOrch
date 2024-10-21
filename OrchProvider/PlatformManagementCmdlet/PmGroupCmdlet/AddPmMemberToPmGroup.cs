@@ -167,7 +167,7 @@ namespace UiPath.PowerShell.Commands
             GroupName = GroupName.Split1stValueByUnescapedCommas()?.ToArray();
             Type = Type.Split1stValueByUnescapedCommas()?.ToArray();
             UserName = UserName.Split1stValueByUnescapedCommas()?.ToArray();
-            // TODO: Path も分割する必要があるのではないか？
+            Path = Path.Split1stValueByUnescapedCommas()?.ToArray();
 
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
             var wpGroupName = GroupName.ConvertToWildcardPatternList();
@@ -299,6 +299,8 @@ namespace UiPath.PowerShell.Commands
                             WriteObject(newGroup);
                             drive._dicPmGroups = null;
                             drive._dicPmGroups_Exception.ClearCache();
+                            drive._dicPmDirectoryUsers = null;
+                            drive._dicSearchForUsersAndGroups = null;
                         }
                     }
                     catch (Exception ex)
