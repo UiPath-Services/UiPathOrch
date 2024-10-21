@@ -1,6 +1,6 @@
 ﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
-Module Name: UiPathOrch
+Module Name: uiPathOrch
 online version:
 schema: 2.0.0
 ---
@@ -12,9 +12,16 @@ schema: 2.0.0
 
 ## SYNTAX
 
+### ReleaseName (Default)
 ```
-Update-OrchProcessVersion [-Name] <String[]> [[-Version] <String>] [-Path <String[]>] [-Recurse]
+Update-OrchProcessVersion [[-Name] <String[]>] [[-Version] <String>] [-Path <String[]>] [-Recurse]
  [-Depth <UInt32>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+```
+
+### ReleaseId
+```
+Update-OrchProcessVersion [-Id <Int64[]>] [[-Version] <String>] [-Path <String[]>] [-Recurse] [-Depth <UInt32>]
+ [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -57,10 +64,10 @@ Specifies the Name of the processes whose versions are to be updated.
 
 ```yaml
 Type: String[]
-Parameter Sets: (All)
+Parameter Sets: ReleaseName
 Aliases:
 
-Required: True
+Required: False
 Position: 0
 Default value: None
 Accept pipeline input: True (ByPropertyName)
@@ -156,6 +163,21 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
+```
+
+### -Id
+{{ Fill Id Description }}
+
+```yaml
+Type: Int64[]
+Parameter Sets: ReleaseId
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
 ```
 
 ### CommonParameters

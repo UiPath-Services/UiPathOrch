@@ -8,16 +8,22 @@ using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
 
 using Positional = UiPath.PowerShell.Positional.Name_Version;
+using Microsoft.VisualBasic;
 
 namespace UiPath.PowerShell.Commands
 {
-    [Cmdlet(VerbsData.Update, "OrchProcessVersion", SupportsShouldProcess = true)]
+    [Cmdlet(VerbsData.Update, "OrchProcessVersion", SupportsShouldProcess = true, DefaultParameterSetName = "ReleaseName")]
     public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
     {
-        [Parameter (Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+        [Parameter (ParameterSetName = "ReleaseName", Position = 0, ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(NameCompleter))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
+
+        [Parameter(ParameterSetName = "ReleaseId", Position = 0, ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(IdCompleter))]
+        [SupportsWildcards]
+        public Int64[]? Id { get; set; }
 
         [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(VersionCompleter))]
@@ -86,6 +92,57 @@ namespace UiPath.PowerShell.Commands
             }
         }
 
+        private class IdCompleter : OrchArgumentCompleter
+        {
+            public override IEnumerable<CompletionResult> CompleteArgument(
+                string commandName,
+                string parameterName,
+                string wordToComplete,
+                CommandAst commandAst,
+                IDictionary fakeBoundParameters)
+            {
+                var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+                // パラメータで選択済みのパッケージ名は、候補から除外する
+                var wpId = CreateWPListFromParameter(commandAst, "Id", Positional.Name_Version.Parameters, wordToComplete);
+
+                var wp = CreateWPFromWordToComplete(wordToComplete);
+
+                var results = ParallelResults.ForEach(drivesFolders, df =>
+                {
+                    var (drive, folder) = df;
+                    var releases = drive.GetReleases(folder)
+                        .Where(r => wp.IsMatch(r.Name))
+                        .Where(r => r.ProcessType != "TestAutomationProcess")
+                        .ExcludeByWildcards(r => r?.Id.ToString(), wpId)
+                        .OrderBy(r => r.Name)
+                        .ToList();
+
+                    // 対象のリリースに対応するパッケージをフィードから取り出す
+                    return ParallelResults.ForEach(releases, release => drive.GetPackageVersions(folder, release.Name!));
+                });
+
+                foreach (var result in results)
+                {
+                    if (!result.TryGetValue(out var releasesPackages)) continue;
+
+                    foreach (var releasePackages in releasesPackages!)
+                    {
+                        if (releasePackages.TryGetValue(out var packages))
+                        {
+                            // パッケージが複数ないプロセスは、update/reset できない
+                            // 最新バージョン以外のバージョンにアップデートする場合もあることに注意
+                            if (packages!.Count <= 1) continue;
+                        }
+
+                        var release = releasePackages.Source;
+                        string tiphelp = TipHelp(release);
+                        yield return new CompletionResult(PathTools.EscapePSText(release.Id.ToString()), release.Id.ToString(), CompletionResultType.ParameterValue, tiphelp);
+                    }
+                }
+            }
+        }
+
         private class VersionCompleter : OrchArgumentCompleter
         {
             public override IEnumerable<CompletionResult> CompleteArgument(
@@ -143,6 +200,12 @@ namespace UiPath.PowerShell.Commands
 
         protected override void ProcessRecord()
         {
+            if (Name == null && Id == null)
+            {
+                WriteError(new ErrorRecord(new ArgumentException("Please make sure to specify either -Name or -Id."), "UpdateProcessVersionError", ErrorCategory.InvalidOperation, this));
+                return;
+            }
+
             var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
             var wpName = Name?.Select(name => new WildcardPattern(name, WildcardOptions.IgnoreCase)).ToList();
             WildcardPattern wpVersion = null;
@@ -156,50 +219,92 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var releases = drive.GetReleases(folder);
-
-                    foreach (var release in releases
-                        .Where(r => r.ProcessType != "TestAutomationProcess")
-                        .FilterByWildcards(r => r?.Name, wpName))
+                    if (Id != null && Id.Length != 0)
                     {
-                        cancelHandler.Token.ThrowIfCancellationRequested();
-
-                        if (wpVersion == null)
+                        foreach (var id in Id)
                         {
-                            if (release.IsLatestVersion ?? false)
-                                continue;
-                            if (ShouldProcess(release.GetPSPath(), "Update Process Version to Latest"))
+                            string target = System.IO.Path.Combine(folder.GetPSPath(), id.ToString());
+                            if (Version == null)
                             {
-                                try
+                                if (ShouldProcess(System.IO.Path.Combine(folder.GetPSPath(), id.ToString()), "Update Process Version to Latest"))
                                 {
-                                    drive.OrchAPISession.UpdateReleaseToLatestVersion(folder.Id ?? 0, release.Id ?? 0);
-                                    drive._dicReleases?.TryRemove(folder.Id ?? 0, out _);
+                                    try
+                                    {
+                                        drive.OrchAPISession.UpdateReleaseToLatestVersion(folder.Id ?? 0, id);
+                                        drive._dicReleases?.TryRemove(folder.Id ?? 0, out _);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        WriteError(new ErrorRecord(new OrchException(target, ex), "UpdateProcessError", ErrorCategory.InvalidOperation, folder));
+                                    }
                                 }
-                                catch (Exception ex)
+                            }
+                            else
+                            {
+                                if (ShouldProcess(target, $"Update Process Version to {Version}"))
                                 {
-                                    WriteError(new ErrorRecord(new OrchException(release.GetPSPath(), ex), "UpdateProcessError", ErrorCategory.InvalidOperation, release));
+                                    try
+                                    {
+                                        drive.OrchAPISession.UpdateReleaseToSpecificVersion(folder.Id ?? 0, id, Version);
+                                        drive._dicReleases?.TryRemove(folder.Id ?? 0, out _);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        WriteError(new ErrorRecord(new OrchException(target, ex), "UpdateProcessError", ErrorCategory.InvalidOperation, folder));
+                                    }
                                 }
                             }
                         }
-                        else
+                    }
+
+                    if (Name != null && Name.Length != 0)
+                    {
+
+                        var releases = drive.GetReleases(folder);
+
+                        foreach (var release in releases
+                            .Where(r => r.ProcessType != "TestAutomationProcess")
+                            .FilterByWildcards(r => r?.Name, wpName))
                         {
-                            // 対象のリリースに対応するパッケージをフィードから取り出す
-                            var packageVersions = drive.GetPackageVersions(folder, release.Name!).Select(p => p.Version!);
+                            cancelHandler.Token.ThrowIfCancellationRequested();
 
-                            var toVersion = packageVersions.Where(v => wpVersion.IsMatch(v)).LastOrDefault();
-                            if (toVersion == null) continue;
-                            if (release.CurrentVersion!.VersionNumber == toVersion) continue;
-
-                            if (ShouldProcess(release.GetPSPath(), $"Update Process Version to {toVersion}"))
+                            if (wpVersion == null)
                             {
-                                try
+                                if (release.IsLatestVersion ?? false)
+                                    continue;
+                                if (ShouldProcess(release.GetPSPath(), "Update Process Version to Latest"))
                                 {
-                                    drive.OrchAPISession.UpdateReleaseToSpecificVersion(folder.Id ?? 0, release.Id ?? 0, toVersion);
-                                    drive._dicReleases?.TryRemove(folder.Id ?? 0, out _);
+                                    try
+                                    {
+                                        drive.OrchAPISession.UpdateReleaseToLatestVersion(folder.Id ?? 0, release.Id ?? 0);
+                                        drive._dicReleases?.TryRemove(folder.Id ?? 0, out _);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        WriteError(new ErrorRecord(new OrchException(release.GetPSPath(), ex), "UpdateProcessError", ErrorCategory.InvalidOperation, release));
+                                    }
                                 }
-                                catch (Exception ex)
+                            }
+                            else
+                            {
+                                // 対象のリリースに対応するパッケージをフィードから取り出す
+                                var packageVersions = drive.GetPackageVersions(folder, release.Name!).Select(p => p.Version!);
+
+                                var toVersion = packageVersions.Where(v => wpVersion.IsMatch(v)).LastOrDefault();
+                                if (toVersion == null) continue;
+                                if (release.CurrentVersion!.VersionNumber == toVersion) continue;
+
+                                if (ShouldProcess(release.GetPSPath(), $"Update Process Version to {toVersion}"))
                                 {
-                                    WriteError(new ErrorRecord(new OrchException(release.GetPSPath(), ex), "UpdateProcessError", ErrorCategory.InvalidOperation, release));
+                                    try
+                                    {
+                                        drive.OrchAPISession.UpdateReleaseToSpecificVersion(folder.Id ?? 0, release.Id ?? 0, toVersion);
+                                        drive._dicReleases?.TryRemove(folder.Id ?? 0, out _);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        WriteError(new ErrorRecord(new OrchException(release.GetPSPath(), ex), "UpdateProcessError", ErrorCategory.InvalidOperation, release));
+                                    }
                                 }
                             }
                         }
