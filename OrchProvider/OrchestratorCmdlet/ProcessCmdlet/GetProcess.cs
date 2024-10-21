@@ -164,10 +164,19 @@ namespace UiPath.PowerShell.Commands
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (drive, folder) in drivesFolders)
             {
-                var releases = drive.GetReleases(folder);
-                var targetReleases = releases
-                    .FilterByWildcards(r => r?.Name, wpName)
-                    .OrderBy(r => r.Name);
+                IEnumerable<Release> targetReleases;
+                try
+                {
+                    var releases = drive.GetReleases(folder);
+                    targetReleases = releases
+                        .FilterByWildcards(r => r?.Name, wpName)
+                        .OrderBy(r => r.Name);
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "GetProcessError", ErrorCategory.InvalidOperation, folder));
+                    continue;
+                }
 
                 if (ExpandDetails.IsPresent || writer != null)
                 {
@@ -226,30 +235,6 @@ namespace UiPath.PowerShell.Commands
                     Output(writer, targetReleases);
                 }
             }
-
-
-            //using var results = OrchThreadPool.RunForEach(drivesFolders,
-            //    df => df.folder.GetPSPath(),
-            //    df => df.folder,
-            //    df => df.drive.GetReleases(df.folder));
-
-            //using var cancelHandler = new ConsoleCancelHandler();
-            //foreach (var result in results)
-            //{
-            //    try
-            //    {
-            //        var releases = result.GetResult(cancelHandler.Token);
-            //        if (releases == null) continue;
-
-            //        Output(writer, releases
-            //            .FilterByWildcards(m => m?.Name, wpName)
-            //            .OrderBy(m => m.Name));
-            //    }
-            //    catch (OrchException ex)
-            //    {
-            //        WriteError(new ErrorRecord(ex, "GetProcessError", ErrorCategory.InvalidOperation, ex.Target));
-            //    }
-            //}
 
             WriteCSVExportedMessage(this, ExportCsv);
         }

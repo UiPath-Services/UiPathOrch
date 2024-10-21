@@ -143,7 +143,7 @@ namespace UiPath.PowerShell.Commands
                         var availableRoles = drive.GetDuRoles();
                         if (availableRoles == null) continue;
 
-                        var targetRoles = availableRoles.FilterByWildcards(r => r.name, wpRole);
+                        var targetRoles = availableRoles.FilterByWildcards(r => r?.name, wpRole);
 
                         var existingRoles = user.roleAssignmentDtos;
 
