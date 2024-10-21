@@ -49,6 +49,8 @@ namespace UiPath.PowerShell.Commands
                                 drive!.OrchAPISession.RemovePmRobot(partitionGlobalId!, robot.id!);
                                 drive._dicPmRobotAccounts?.Remove(robot.id ?? "", out var _);
                                 drive._dicPmGroups = null;
+                                drive._dicPmDirectoryUsers = null;
+                                drive._dicSearchForUsersAndGroups = null;
                             }
                             catch (Exception ex)
                             {

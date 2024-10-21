@@ -407,6 +407,11 @@ namespace UiPath.PowerShell.Positional
         public static string[] Parameters { get; } = ["Name", "OwnerName"];
     }
 
+    internal class Name_Role : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["Name", "Role"];
+    }
+
     internal class Name_RuntimeType_JobsCount : IPositionalParameters
     {
         public static string[] Parameters { get; } = ["Name", "RuntimeType", "JobsCount"];

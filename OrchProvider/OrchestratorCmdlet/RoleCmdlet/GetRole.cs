@@ -95,12 +95,14 @@ namespace UiPath.PowerShell.Commands
                                 Name = item.Key.Name,
                                 Scope = item.Key.Scope,
                                 Type = role.Type,
-                                Path = System.IO.Path.Combine(drive.NameColon, role.Name!)
+                                Path = drive.NameColon,
+                                DisplayName = role.Name,
+                                PathDisplayName = System.IO.Path.Combine(drive.NameColon, role.Name!)
                             };
                             foreach (var s in item)
                             {
-                                if (s.Name!.Contains(".View")) { expanded.View = true; }
-                                else if (s.Name.Contains(".Edit")) { expanded.Edit = true; }
+                                     if (s.Name!.Contains(".View"))  { expanded.View = true; }
+                                else if (s.Name.Contains(".Edit"))   { expanded.Edit = true; }
                                 else if (s.Name.Contains(".Create")) { expanded.Create = true; }
                                 else if (s.Name.Contains(".Delete")) { expanded.Delete = true; }
                             }

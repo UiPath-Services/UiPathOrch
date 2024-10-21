@@ -88,8 +88,8 @@ namespace UiPath.PowerShell.Commands
                     try
                     {
                         drive.OrchAPISession.UnassignMachinesFromFolder(folder.Id ?? 0, machineIdsToRemove);
-                        drive._dicMachinesAssigned?.TryRemove(folder.Id ?? 0, out var _);
-                        drive._dicAssignedMachines?.TryRemove(folder.Id ?? 0, out var _);
+                        drive._dicMachinesAssigned?.TryRemove(folder.Id!.Value, out var _);
+                        drive._dicAssignedMachines?.TryRemove(folder.Id!.Value, out var _);
                     }
                     catch (Exception ex)
                     {

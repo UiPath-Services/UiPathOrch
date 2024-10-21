@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Management.Automation;
+using System.Management.Automation.Language;
 using System.Management.Automation.Provider;
 using System.Text;
 using System.Xml.Linq;
@@ -232,11 +233,15 @@ namespace UiPath.PowerShell.Core
                     try
                     {
                         DomainUserAssignment postingUser = null;
-                        if (userRole.UserEntity?.Type == "DirectoryUser")
+                        if (!DirectoryTypeItems.Items.TryGetValue(userRole.UserEntity?.Type ?? "", out var type))
+                        {
+                            _this.WriteError(new ErrorRecord(new OrchException(userRole.GetPSPath(), $"Invalid Type: '{userRole.UserEntity?.Type}'."), "AssignFolderUserError", ErrorCategory.InvalidOperation, targetFolder));
+                        }
+                        else
                         {
                             // ディレクトリを検索しなければ。。
                             var resolved = dstDrive.SearchForUsersAndGroups(userName)?
-                                .Where(u => u.type == 0)
+                                .Where(u => u.type == type)
                                 .Where(u => string.Compare(u.identityName, userName, true) == 0)
                                 .FirstOrDefault();
                             if (resolved == null)
@@ -249,59 +254,13 @@ namespace UiPath.PowerShell.Core
                             {
                                 Domain = string.IsNullOrEmpty(resolved.domain) ? "autogen" : resolved.domain,
                                 DirectoryIdentifier = resolved.identifier,
-                                UserType = "DirectoryUser",
+                                UserType = userRole.UserEntity?.Type,
                                 RolesPerFolder = newRolesPerFolder
                             };
                             dstDrive.OrchAPISession.AssignDirectoryUser(postingUser);
 
-                            // 以下の実装では不十分だ。
-                            //var dstTenantUsers = dstDrive.GetUsers();
-                            //var user = dstTenantUsers.FirstOrDefault(u => string.Compare(u.UserName, userName, StringComparison.OrdinalIgnoreCase) == 0);
-                            //if (user == null)
-                            //{
-                            //    _this.WriteError(new ErrorRecord(new OrchException(targetFolder, $"{msg}: {dstDrive.Name}: does not have the DirectoryUser \"{userName}\"."), "AssignFolderUserError", ErrorCategory.InvalidOperation, targetFolder));
-                            //    continue;
-                            //}
-
-                            //postingUser = new DomainUserAssignment
-                            //{
-                            //    Domain = string.IsNullOrEmpty(user.Domain) ? "autogen" : user.Domain,
-                            //    DirectoryIdentifier = user.Key,
-                            //    UserType = user.Type,
-                            //    RolesPerFolder = newRolesPerFolder
-                            //};
-                            //dstDrive.OrchAPISession.AssignDirectoryUser(postingUser);
                             dstDrive._dicUserRoles?.TryRemove((newFolder.Id ?? 0, false), out _);
                             dstDrive._dicUserRoles?.TryRemove((newFolder.Id ?? 0, true), out _);
-                        }
-                        else if (userRole.UserEntity?.Type == "DirectoryGroup")
-                        {
-                            var dstTenantGroups = dstDrive.GetPmGroups().Values;
-                            var group = dstTenantGroups
-                                .Where(g => g != null)
-                                .FirstOrDefault(g => string.Compare(g!.displayName, userName, StringComparison.OrdinalIgnoreCase) == 0);
-                            if (group == null)
-                            {
-                                _this.WriteError(new ErrorRecord(new OrchException(targetFolder, $"{msg}: {dstDrive.Name}: does not have the DirectoryGroup \"{userName}\"."), "AssignFolderUserError", ErrorCategory.InvalidOperation, targetFolder));
-                                continue;
-                            }
-
-                            postingUser = new DomainUserAssignment
-                            {
-                                Domain = "autogen",
-                                DirectoryIdentifier = group.id,
-                                UserType = "DirectoryGroup",
-                                RolesPerFolder = newRolesPerFolder
-                            };
-                            dstDrive.OrchAPISession.AssignDirectoryUser(postingUser);
-                            dstDrive._dicUserRoles?.TryRemove((newFolder.Id ?? 0, false), out _);
-                            dstDrive._dicUserRoles?.TryRemove((newFolder.Id ?? 0, true), out _);
-                        }
-                        else
-                        {
-                            // User, Robot, DirectoryRobot, DirectoryExternalApplication 
-                            _this.WriteError(new ErrorRecord(new OrchException(targetFolder, $"{msg}: Type {userRole?.UserEntity?.Type} is not implemented."), "AssignFolderUserError", ErrorCategory.InvalidOperation, targetFolder));
-                            continue;
                         }
                     }
                     catch (Exception ex)
@@ -890,17 +849,17 @@ namespace UiPath.PowerShell.Core
                 var srcPmGroup = srcPmGroups.FirstOrDefault(g => g?.id == srcPmGroupId);
                 if (srcPmGroup == null)
                 {
-                    _this.WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, $"{msg}: {srcDrive.NameColon} does not have IdGroup with id = {srcPmGroupId}."), "GetGroupIdError", ErrorCategory.InvalidOperation, srcDrive));
+                    _this.WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, $"{msg}: {srcDrive.NameColon} does not have PmGroup with id = {srcPmGroupId}. Ignoring this id."), "GetGroupIdError", ErrorCategory.InvalidOperation, srcDrive));
                     continue;
                 }
 
-                var dstIdGroup = dstPmGroups.FirstOrDefault(g => string.Compare(g!.displayName, srcPmGroup.displayName, StringComparison.OrdinalIgnoreCase) == 0);
-                if (dstIdGroup == null)
+                var dstPmGroup = dstPmGroups.FirstOrDefault(g => string.Compare(g!.displayName, srcPmGroup.displayName, StringComparison.OrdinalIgnoreCase) == 0);
+                if (dstPmGroup == null)
                 {
-                    _this.WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, $"{msg}: {dstDrive.NameColon} does not have IdGroup with name = {srcPmGroup.displayName}."), "GetGroupIdError", ErrorCategory.InvalidOperation, dstDrive));
+                    _this.WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, $"{msg}: {dstDrive.NameColon} does not have PmGroup with name = '{srcPmGroup.displayName}'. Ignoring this group."), "GetGroupIdError", ErrorCategory.InvalidOperation, dstDrive));
                     continue;
                 }
-                yield return dstIdGroup;
+                yield return dstPmGroup;
             }
         }
 

@@ -56,6 +56,7 @@ namespace UiPath.PowerShell.Commands
             "UR_UserName",
             "UR_Password",
             "UR_CredentialStore",
+            "UR_CredentialExternalName",
             "UR_CredentialType",
             "UR_LimitConcurrentExecution",
             "ES_TracingLevel",
@@ -134,6 +135,7 @@ namespace UiPath.PowerShell.Commands
                 EscapeCsvValue(p.UnattendedRobot?.UserName),
                 EscapeCsvValue(""), // p.UnattendedRobot?.Password // ここにはごみなテキストが入っているので、出力しないでおく
                 EscapeCsvValue(ur_credentialStore, true),
+                EscapeCsvValue(p.UnattendedRobot?.CredentialExternalName),
                 EscapeCsvValue(p.UnattendedRobot?.CredentialType),
                 EscapeCsvValue(p.UnattendedRobot?.LimitConcurrentExecution),
                 EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.TracingLevel),

@@ -27,7 +27,7 @@ namespace UiPath.PowerShell.Commands
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(DriveCompleter<Positional.Name_Destination>))]
-        public string[]? Path { get; set; }
+        public string? Path { get; set; }
 
         // DriveCompleter と良く似ているのだけど、これはコピー元のドライブを除外する機能がある。
         public class DestinationCompleter : OrchArgumentCompleter
@@ -68,55 +68,54 @@ namespace UiPath.PowerShell.Commands
 
         protected override void ProcessRecord()
         {
-            var srcDrives = OrchDriveInfo.EnumOrchDrives(Path);
+            // TODO: この例外は GetOrchDrive() の中からスローして良いのではないか？
+            var srcDrive = OrchDriveInfo.GetOrchDrive(Path!) ?? throw new Exception("Path is not OrchDrive.");
+
             var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
             var wpDisplayName = Name.ConvertToWildcardPatternList();
 
-            foreach (var srcDrive in srcDrives)
+            srcDrive._dicPmRobotAccounts = null;
+            srcDrive._dicPmRobotAccounts_Exceptions.ClearCache();
+
+            try
             {
-                srcDrive._dicPmRobotAccounts = null;
-                srcDrive._dicPmRobotAccounts_Exceptions.ClearCache();
-            }
+                var srcPartitionGlobalId = srcDrive.GetPartitionGlobalId();
 
-            using var results = OrchThreadPool.RunForEach(srcDrives,
-                drive => drive.NameColonSeparator,
-                drive => drive,
-                drive => drive.GetPmRobotAccounts());
+                var srcRobots = srcDrive.GetPmRobotAccounts();
+                var targetRobots = srcRobots.Values
+                    .Where(r => r != null)
+                    .FilterByWildcards(r => r!.displayName!, wpDisplayName)
+                    .OrderBy(r => r!.displayName)
+                    .ToList();
 
-            string msg = "Copying PmRobotAccount";
-            using var reporter = new ProgressReporter(this, 1, 100, msg, msg);
+                string msg = "Copying PmRobotAccount";
+                using var reporter = new ProgressReporter(this, 1, 100, msg, msg);
 
-            using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var result in results)
-            {
-                try
+                using var cancelHandler = new ConsoleCancelHandler();
+
+                reporter.TotalNum = targetRobots.Count * dstDrives.Count;
+                int index = 0;
+                foreach (var srcRobotAccount in targetRobots.OrderBy(r => r!.displayName))
                 {
-                    var entities = result.GetResult(cancelHandler.Token);
-                    if (entities == null) continue;
-
-                    var srcDrive = result.Source!;
-
-                    int index = 0;
-                    reporter.TotalNum = entities.Count * dstDrives.Count;
-
                     foreach (var dstDrive in dstDrives)
                     {
-                        var srcPartitionGlobalId = srcDrive.GetPartitionGlobalId();
-                        var dstPartitionGlobalId = dstDrive.GetPartitionGlobalId();
-
-                        // コピー元とコピー先が同じ場合は何もしない
-                        if (srcPartitionGlobalId == dstPartitionGlobalId) continue;
-
-                        foreach (var srcRobot in entities.Values
-                            .Where(r => r != null)
-                            .FilterByWildcards(r => r!.displayName!, wpDisplayName)
-                            .OrderBy(r => r!.displayName))
+                        try
                         {
-                            reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {srcRobot.GetPSPath()} to {dstDrive.NameColonSeparator}");
+                            var dstPartitionGlobalId = dstDrive.GetPartitionGlobalId();
 
-                            string target = $"Item: {System.IO.Path.Combine(srcDrive!.NameColon, srcRobot!.displayName!)} Destination: {dstDrive.NameColonSeparator}";
-                            if (ShouldProcess(target, "Copy Identity Robot Account"))
+                            // コピー元とコピー先が同じ場合は何もしない
+                            if (srcPartitionGlobalId == dstPartitionGlobalId)
                             {
+                                index += targetRobots.Count;
+                                continue;
+                            }
+
+                            foreach (var srcRobot in targetRobots)
+                            {
+                                reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {srcRobot.GetPSPath()} to {dstDrive.NameColonSeparator}");
+
+                                string target = $"Item: {System.IO.Path.Combine(srcDrive!.NameColon, srcRobot!.displayName!)} Destination: {dstDrive.NameColonSeparator}";
+
                                 // この名前のロボットを新規追加
                                 var cmd = new CreateRobotAccountCommand()
                                 {
@@ -125,35 +124,41 @@ namespace UiPath.PowerShell.Commands
                                     displayName = srcRobot.displayName,
                                     groupIDsToAdd = Core.OrchProvider.FindDstIdGroups(
                                         this, srcDrive, srcRobot.groupIds,
-                                        dstDrive, "Copying Identity Robot Account")?.Select(group => group.id!).ToList()
+                                        dstDrive, "Copying PmRobotAccount")?.Select(group => group.id!).ToList()
                                 };
 
-                                try
+                                if (ShouldProcess(target, "Copy PmRobotAccount"))
                                 {
-                                    var newRobot = dstDrive.OrchAPISession.CreatePmRobot(cmd);
-                                    dstDrive._dicPmRobotAccounts = null;
-                                    //if (newRobot != null)
-                                    //{
-                                    //    //newRobot.Path = dstDrive.NameColonSeparator;
-                                    //    //WriteObject(newRobot);
-                                    //    newRobot.Path = dstDrive.NameColonSeparator;
-                                    //    dstDrive._dicPmRobotAccounts![newRobot.id!] = newRobot;
-                                    //}
-                                }
-                                catch (Exception ex)
-                                {
-                                    WriteError(new ErrorRecord(new OrchException(target, ex), "CreatePmRobotAccountError", ErrorCategory.InvalidOperation, target));
-                                    continue;
+                                    try
+                                    {
+                                        var newRobot = dstDrive.OrchAPISession.CreatePmRobot(cmd);
+                                        dstDrive._dicPmRobotAccounts = null;
+                                        dstDrive._dicPmDirectoryUsers = null;
+                                        dstDrive._dicSearchForUsersAndGroups = null;
+                                        if (newRobot != null)
+                                        {
+                                            newRobot.Path = dstDrive.NameColonSeparator;
+                                            WriteObject(newRobot);
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        WriteError(new ErrorRecord(new OrchException(target, ex), "CreatePmRobotAccountError", ErrorCategory.InvalidOperation, target));
+                                        continue;
+                                    }
                                 }
                             }
                         }
+                        catch (OrchException ex)
+                        {
+                            WriteError(new ErrorRecord(ex, "GetPmRobotAccountError", ErrorCategory.InvalidOperation, ex.Target));
+                        }
                     }
                 }
-                catch (OrchException ex)
-                {
-                    WriteError(new ErrorRecord(ex, "GetPmRobotAccountError", ErrorCategory.InvalidOperation, ex.Target));
-                    continue;
-                }
+            }
+            catch (OrchException ex)
+            {
+                WriteError(new ErrorRecord(ex, "GetPmRobotAccountError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }

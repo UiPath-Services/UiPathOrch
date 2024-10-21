@@ -1,21 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Diagnostics.Metrics;
+﻿using System.Data;
 using System.Management.Automation;
-using System.Management.Automation.Language;
+using System.Text.Json;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using static UiPath.PowerShell.Commands.AddTriggerCommand;
 using UiPath.PowerShell.Positional;
 using BoolCompleter = UiPath.PowerShell.Completer.StaticTextsCompleter<UiPath.PowerShell.Positional.True_False>;
-
-using Positional = UiPath.PowerShell.Positional.Name;
-using System.Data;
-using Microsoft.VisualBasic;
-using UiPath.OrchAPI;
-using System.Text.Json;
 
 namespace UiPath.PowerShell.Commands
 {

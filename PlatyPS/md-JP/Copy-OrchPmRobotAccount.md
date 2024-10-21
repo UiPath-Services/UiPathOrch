@@ -1,6 +1,6 @@
 ﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
-Module Name: UiPathOrch
+Module Name: uiPathOrch
 online version:
 schema: 2.0.0
 ---
@@ -13,7 +13,7 @@ schema: 2.0.0
 ## SYNTAX
 
 ```
-Copy-OrchPmRobotAccount -Name <String[]> [-Destination] <String[]> [-Path <String[]>]
+Copy-OrchPmRobotAccount -Name <String[]> [-Destination] <String[]> [-Path <String>]
  [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
@@ -71,7 +71,7 @@ Accept wildcard characters: False
 コピー元のドライブの名前を指定します。指定しない場合は、現在のドライブをコピー元とします。
 
 ```yaml
-Type: String[]
+Type: String
 Parameter Sets: (All)
 Aliases:
 

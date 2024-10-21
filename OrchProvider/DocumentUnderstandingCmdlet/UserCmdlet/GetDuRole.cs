@@ -40,10 +40,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => {
-                    var partitionGlobalId = drive.ParentDrive.GetPartitionGlobalId();
-                    return drive.GetDuRoles(partitionGlobalId);
-                });
+                var results = ParallelResults.ForEach(drives, drive => drive.GetDuRoles());
 
                 foreach (var result in results)
                 {
@@ -69,10 +66,7 @@ namespace UiPath.PowerShell.Commands
             using var results = OrchThreadPool.RunForEach(drives,
                 drive => drive.NameColonSeparator,
                 drive => drive,
-                drive => {
-                    var partitionGlobalId = drive.ParentDrive.GetPartitionGlobalId();
-                    return drive.GetDuRoles(partitionGlobalId);
-                });
+                drive => drive.GetDuRoles());
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var result in results)

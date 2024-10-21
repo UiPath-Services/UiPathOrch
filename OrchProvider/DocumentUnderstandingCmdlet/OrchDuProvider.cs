@@ -6,7 +6,12 @@ using System.IO;
 using System.Management.Automation;
 using System.Management.Automation.Provider;
 using System.Text.Json;
+using UiPath.OrchAPI;
+using UiPath.PowerShell.Commands;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Entities;
+using UiPath.PowerShell.Positional;
+using static UiPath.PowerShell.Core.OrchProvider;
 
 namespace UiPath.PowerShell.Core
 {
@@ -15,14 +20,22 @@ namespace UiPath.PowerShell.Core
     [OutputType(typeof(DuProject), ProviderCmdlet = ProviderCmdlet.GetItem)]
     public class OrchDuProvider : NavigationCmdletProvider
     {
+        protected OrchDriveInfo OrchDriveInfo => ((OrchDuDriveInfo)this.PSDriveInfo).ParentDrive;
         protected OrchDuDriveInfo OrchDuDriveInfo => (OrchDuDriveInfo)this.PSDriveInfo;
 
-        protected OrchDriveInfo OrchDriveInfo => ((OrchDuDriveInfo)this.PSDriveInfo).ParentDrive;
-        //protected OrchDriveInfo? GetOrchDriveInfo(string path)
+        protected OrchDuDriveInfo? GetOrchDuDriveInfo(string path)
+        {
+            if (OrchDriveInfo != null)
+            {
+                return OrchDuDriveInfo;
+            }
+            string driveName = OrchDriveInfo.ExtractDriveName(path);
+            return SessionState.Drive.Get(driveName) as OrchDuDriveInfo;
+        }
 
         DuProject? GetProject(string path)
         {
-            var psPath = Path.GetFileName(path);
+            var psPath = System.IO.Path.GetFileName(path);
             if (psPath == "") return null;
 
             var projects = OrchDuDriveInfo.GetDuProjects();
@@ -111,7 +124,7 @@ namespace UiPath.PowerShell.Core
 
         protected override void InvokeDefaultAction(string path)
         {
-            var drives = OrchDuDriveInfo.EnumOrchDrives([path]);
+            var drives = OrchDuDriveInfo.EnumOrchDuDrives([path]);
             if (drives == null)
             {
                 return;
@@ -137,7 +150,7 @@ namespace UiPath.PowerShell.Core
         // ItemExists メソッドは、ワイルドカードを処理する必要はないっぽい。
         protected override bool ItemExists(string path)
         {
-            string path2 = Path.GetFileName(path);
+            string path2 = System.IO.Path.GetFileName(path);
             if (path2 == "") return true;
 
             return GetProject(path) != null;
@@ -182,7 +195,85 @@ namespace UiPath.PowerShell.Core
 
         protected override bool HasChildItems(string path)
         {
+            if (path == OrchDuDriveInfo.NameColonSeparator)
+                return true;
             return false;
+        }
+
+        public class NewItem_DynamicParameters
+        {
+            [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
+            [ArgumentCompleter(typeof(StaticTextsCompleter<DescriptionHere>))]
+            public string? Description { get; set; }
+
+            [Parameter(ValueFromPipelineByPropertyName = true)]
+            //[ArgumentCompleter(typeof(StaticTextsCompleter<Processes_FolderHierarchy>))]
+            public string? OcrMethod { get; set; }
+
+            [Parameter(ValueFromPipelineByPropertyName = true)]
+            public string? OcrUrl { get; set; }
+
+            [Parameter(ValueFromPipelineByPropertyName = true)]
+            public string? ForceApplyOcr { get; set; }
+
+            //[Parameter(ValueFromPipelineByPropertyName = true)]
+            //public string? Type { get; set; }
+
+            [Parameter(ValueFromPipelineByPropertyName = true)]
+            public bool? Helix { get; set; }
+        }
+
+        protected override void NewItem(string path, string itemTypeName, object newItemValue)
+        {
+            if (ShouldProcess(path, "New Project"))
+            {
+                var drive = GetOrchDuDriveInfo(path);
+                if (drive == null) return;
+
+                var dynamicParameters = DynamicParameters as NewItem_DynamicParameters;
+                dynamicParameters ??= new();
+                dynamicParameters.OcrMethod ??= "uipath";
+                dynamicParameters.OcrUrl ??= ""; // TODO
+                dynamicParameters.ForceApplyOcr ??= "Auto";
+                //dynamicParameters.Type ??= "Classic";
+                dynamicParameters.Helix ??= false;
+
+                try
+                {
+                    var projectName = System.IO.Path.GetFileName(path);
+                    CreateDuProjectCmd payload = new()
+                    {
+                        name = projectName,
+                        description = dynamicParameters.Description,
+                        ocrMethod = dynamicParameters.OcrMethod,
+                        ocrUrl = dynamicParameters.OcrUrl,
+                        forceApplyOcr = dynamicParameters.ForceApplyOcr,
+                        type = "Classic", ///////////// TODO
+                        helix = dynamicParameters.Helix
+                    };
+
+                    payload.description ??= "";
+                    payload.ocrUrl = "https://staging.uipath.com/ytsuda/DefaultTenant/ocr_/ocr";
+
+                    drive.OrchAPISession.CreateDuProjects(payload);
+                    //if (f != null)
+                    //{
+                    //    if (parentPath == drive.NameColon) parentPath = drive.NameColonSeparator;
+                    //    f.Path = parentPath;
+                    //    WriteItemObject(f, path, true);
+                    //}
+                    //drive._dicFolders = null;
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(new OrchException(path, ex), "NewProjectError", ErrorCategory.InvalidOperation, path));
+                }
+            }
+        }
+
+        protected override object NewItemDynamicParameters(string path, string itemTypeName, object newItemValue)
+        {
+            return new NewItem_DynamicParameters();
         }
 
         protected override void RenameItem(string path, string newName)
@@ -206,7 +297,7 @@ namespace UiPath.PowerShell.Core
         protected override string MakePath(string parent, string child)
         {
             string retNew = base.MakePath(parent, child);
-            if (retNew.EndsWith(Path.DirectorySeparatorChar) && retNew.Length > 1 && retNew[retNew.Length-2] != Path.VolumeSeparatorChar)
+            if (retNew.EndsWith(System.IO.Path.DirectorySeparatorChar) && retNew.Length > 1 && retNew[retNew.Length-2] != System.IO.Path.VolumeSeparatorChar)
             {
                 retNew = retNew.Substring(0, retNew.Length - 1);
             }

@@ -33,7 +33,7 @@ namespace UiPath.PowerShell.Commands
             {
                 // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
                 var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-                var drives = OrchTmDriveInfo.EnumOrchDrives(paramPath);
+                var drives = OrchTmDriveInfo.EnumOrchTmDrives(paramPath);
 
                 // パラメータで選択済みの Name は、候補から除外する
                 var wpname = CreateWPListFromParameter(commandAst, "name", Positional.Path.Parameters, wordToComplete);
@@ -60,7 +60,7 @@ namespace UiPath.PowerShell.Commands
 
         protected override void ProcessRecord()
         {
-            var drives = OrchTmDriveInfo.EnumOrchDrives(Path);
+            var drives = OrchTmDriveInfo.EnumOrchTmDrives(Path);
             //var wpProjectName = Name.ConvertToWildcardPatternList();
 
             foreach (var drive in drives)

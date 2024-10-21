@@ -1,6 +1,6 @@
 ﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
-Module Name: UiPathOrch
+Module Name: uiPathOrch
 online version:
 schema: 2.0.0
 ---
@@ -13,7 +13,7 @@ schema: 2.0.0
 ## SYNTAX
 
 ```
-Copy-OrchPmRobotAccount -Name <String[]> [-Destination] <String[]> [-Path <String[]>]
+Copy-OrchPmRobotAccount -Name <String[]> [-Destination] <String[]> [-Path <String>]
  [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
@@ -71,7 +71,7 @@ Accept wildcard characters: False
 Specifies the source drive name. If not specified, the current drive will be used as the source.
 
 ```yaml
-Type: String[]
+Type: String
 Parameter Sets: (All)
 Aliases:
 
