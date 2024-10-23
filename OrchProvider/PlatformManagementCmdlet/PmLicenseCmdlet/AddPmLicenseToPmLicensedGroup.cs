@@ -14,7 +14,7 @@ namespace UiPath.PowerShell.Commands
 {
     [Cmdlet(VerbsCommon.Add, "OrchPmLicenseToPmLicensedGroup", SupportsShouldProcess = true)]
     [OutputType(typeof(Entities.UpdateLicensedGroupResponse))]
-    public class AddAllocationToUserLicenseGroup: OrchestratorPSCmdlet
+    public class AddPmLicenseToPmLicenseGroup: OrchestratorPSCmdlet
     {
         // code を管理
         //private Dictionary<(OrchDriveInfo drive, NuLicensedGroup group), HashSet<string>>? _parameterSets;

@@ -1,14 +1,7 @@
-﻿using System.Collections;
-using System.Management.Automation;
-using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
+﻿using System.Management.Automation;
 using UiPath.PowerShell.Completer;
-
+using UiPath.PowerShell.Core;
 using BoolCompleter = UiPath.PowerShell.Completer.StaticTextsCompleter<UiPath.PowerShell.Positional.True_False>;
-
-using Positional = UiPath.PowerShell.Positional.UserName;
-using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -27,8 +20,9 @@ namespace UiPath.PowerShell.Commands
         [Parameter(ValueFromPipelineByPropertyName = true)]
         public string? Surname { get; set; }
 
-        [Parameter(ValueFromPipelineByPropertyName = true)]
-        public string? Email { get; set; }
+        // 既存ユーザーの Email は、API で変更できないようだ。
+        //[Parameter(ValueFromPipelineByPropertyName = true)]
+        //public string? Email { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         public string? Password { get; set; }
@@ -93,14 +87,14 @@ namespace UiPath.PowerShell.Commands
 
                         dst.AssignStringIfNotNullOrEmpty(Name, (u, v) => u.name = v);
                         dst.AssignStringIfNotNullOrEmpty(Surname, (u, v) => u.surname = v);
-                        dst.AssignStringIfNotNullOrEmpty(Email, (u, v) => u.email = v);
+                        //dst.AssignStringIfNotNullOrEmpty(Email, (u, v) => u.email = v);
                         dst.AssignStringIfNotNullOrEmpty(Password, (u, v) => u.password = v);
                         dst.AssignBoolIfNotNull(BypassBasicAuthRestriction, (u, v) => u.bypassBasicAuthRestriction = v);
 
                         // 更新があれば API を call する
                         if (src.name != dst.name ||
                             src.surname != dst.surname ||
-                            src.email != dst.email ||
+                            //src.email != dst.email ||
                             src.bypassBasicAuthRestriction != dst.bypassBasicAuthRestriction ||
                             !string.IsNullOrEmpty(Password))
                         {

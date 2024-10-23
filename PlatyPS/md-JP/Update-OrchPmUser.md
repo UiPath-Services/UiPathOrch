@@ -1,6 +1,6 @@
 ﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
-Module Name: UiPathOrch
+Module Name: uiPathOrch
 online version:
 schema: 2.0.0
 ---
@@ -13,9 +13,9 @@ schema: 2.0.0
 ## SYNTAX
 
 ```
-Update-OrchPmUser [[-UserName] <String[]>] [-Name <String>] [-Surname <String>] [-Email <String>]
- [-Password <String>] [-BypassBasicAuthRestriction <String>] [-Path <String[]>]
- [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Update-OrchPmUser [[-UserName] <String[]>] [-Name <String>] [-Surname <String>] [-Password <String>]
+ [-BypassBasicAuthRestriction <String>] [-Path <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf]
+ [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -65,21 +65,6 @@ Required: False
 Position: Named
 Default value: None
 Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -Email
-ユーザーの新しい email を指定します。
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
