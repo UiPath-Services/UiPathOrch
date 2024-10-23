@@ -1402,8 +1402,16 @@ namespace UiPath.PowerShell.Core
         #region OrchHttpTrigger cache
         internal ConcurrentDictionary<Int64, List<HttpTrigger>>? _dicHttpTriggers = null;
         internal ExceptionsCachePer<Int64> _dicHttpTriggers_Exceptions = new();
+        private ReadOnlyCollection<HttpTrigger>? _dicHttpTriggersEmpty = null;
         public ReadOnlyCollection<HttpTrigger> GetHttpTriggers(Folder folder)
         {
+            // TODO: 16 未満の数字は正しいか？ 15.0 では、取得がエラーになることは確認済みだが、
+            if (OrchAPISession.ApiVersion < 16)
+            {
+                _dicHttpTriggersEmpty ??= new List<HttpTrigger>().AsReadOnly();
+                return _dicHttpTriggersEmpty;
+            }
+
             _dicHttpTriggers_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
 
             if (_dicHttpTriggers == null)
@@ -2378,8 +2386,16 @@ namespace UiPath.PowerShell.Core
         // Key: folderId
         internal ConcurrentDictionary<Int64, List<TestSet>>? _dicTestSets = null;
         internal ExceptionsCachePer<Int64> _dicTestSets_Exceptions = new();
+        private ReadOnlyCollection<TestSet>? _dicTestSetsEmpty = null;
         public ReadOnlyCollection<TestSet> GetTestSets(Folder folder)
         {
+            // TODO: 16 未満の数字は正しいか？ 15.0 では、取得がエラーになることは確認済みだが、
+            if (OrchAPISession.ApiVersion < 16)
+            {
+                _dicTestSetsEmpty ??= new List<TestSet>().AsReadOnly();
+                return _dicTestSetsEmpty;
+            }
+
             _dicTestSets_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
 
             if (_dicTestSets == null)
@@ -2418,8 +2434,16 @@ namespace UiPath.PowerShell.Core
         // Key: folderId
         internal ConcurrentDictionary<Int64, List<TestCaseDefinition>>? _dicTestCases = null;
         internal ExceptionsCachePer<Int64> _dicTestCases_Exceptions = new();
+        private ReadOnlyCollection<TestCaseDefinition>? _dicTestCasesEmpty = null;
         public ReadOnlyCollection<TestCaseDefinition> GetTestCases(Folder folder)
         {
+            // TODO: 16 未満の数字は正しいか？ 15.0 では、取得がエラーになることは確認済みだが、
+            if (OrchAPISession.ApiVersion < 16)
+            {
+                _dicTestCasesEmpty ??= new List<TestCaseDefinition>().AsReadOnly();
+                return _dicTestCasesEmpty;
+            }
+
             _dicTestCases_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
 
             if (_dicTestCases == null)
@@ -2458,8 +2482,16 @@ namespace UiPath.PowerShell.Core
         // Key: folderId
         internal ConcurrentDictionary<Int64, List<TestCaseExecution>>? _dicTestCaseExecutions = null;
         internal ExceptionsCachePer<Int64> _dicTestCaseExecutions_Exceptions = new();
+        private ReadOnlyCollection<TestCaseExecution>? _dicTestCaseExecutionsEmpty = null;
         public ReadOnlyCollection<TestCaseExecution> GetTestCaseExecutions(Folder folder)
         {
+            // TODO: 16 未満の数字は正しいか？ 15.0 では、取得がエラーになることは確認済みだが、
+            if (OrchAPISession.ApiVersion < 16)
+            {
+                _dicTestCaseExecutionsEmpty ??= new List<TestCaseExecution>().AsReadOnly();
+                return _dicTestCaseExecutionsEmpty;
+            }
+
             _dicTestCaseExecutions_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
 
             if (_dicTestCaseExecutions == null)
@@ -2497,8 +2529,16 @@ namespace UiPath.PowerShell.Core
         // Key: <folderId, <TestSetExecutionId, TestSetExecution>>
         internal ConcurrentDictionary<Int64, Dictionary<Int64, TestSetExecution>>? _dicTestSetExecutions = null;
         internal ExceptionsCachePer<Int64> _dicTestSetExecutions_Exceptions = new();
+        private ReadOnlyCollection<TestSetExecution>? _dicTestSetExecutionsEmpty = null;
         public ReadOnlyCollection<TestSetExecution> GetTestSetExecutions(Folder folder, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
         {
+            // TODO: 16 未満の数字は正しいか？ 15.0 では、取得がエラーになることは確認済みだが、
+            if (OrchAPISession.ApiVersion < 16)
+            {
+                _dicTestSetExecutionsEmpty ??= new List<TestSetExecution>().AsReadOnly();
+                return _dicTestSetExecutionsEmpty;
+            }
+
             _dicTestSetExecutions_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
 
             if (_dicTestSetExecutions == null)
@@ -2539,8 +2579,16 @@ namespace UiPath.PowerShell.Core
         // Key: folderId
         internal ConcurrentDictionary<Int64, List<TestSetSchedule>>? _dicTestSetSchedules = null;
         internal ExceptionsCachePer<Int64> _dicTestSetSchedules_Exceptions = new();
+        private ReadOnlyCollection<TestSetSchedule>? _dicTestSetSchedulesEmpty = null;
         public ReadOnlyCollection<TestSetSchedule> GetTestSetSchedules(Folder folder)
         {
+            // TODO: 16 未満の数字は正しいか？ 15.0 では、API トリガー取得がエラーになることは確認済みだが、
+            if (OrchAPISession.ApiVersion < 16)
+            {
+                _dicTestSetSchedulesEmpty ??= new List<TestSetSchedule>().AsReadOnly();
+                return _dicTestSetSchedulesEmpty;
+            }
+
             _dicTestSetSchedules_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
 
             if (_dicTestSetSchedules == null)
@@ -2578,8 +2626,16 @@ namespace UiPath.PowerShell.Core
         // Key: folderId
         internal ConcurrentDictionary<Int64, List<TestDataQueue>>? _dicTestDataQueues = null;
         internal ExceptionsCachePer<Int64> _dicTestDataQueues_Exceptions = new();
+        private ReadOnlyCollection<TestDataQueue>? _dicTestDataQueuesEmpty = null;
         public ReadOnlyCollection<TestDataQueue> GetTestDataQueues(Folder folder)
         {
+            // TODO: 16 未満の数字は正しいか？ 15.0 では、API トリガー取得がエラーになることは確認済みだが、
+            if (OrchAPISession.ApiVersion < 16)
+            {
+                _dicTestDataQueuesEmpty ??= new List<TestDataQueue>().AsReadOnly();
+                return _dicTestDataQueuesEmpty;
+            }
+
             _dicTestDataQueues_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
 
             if (_dicTestDataQueues == null)

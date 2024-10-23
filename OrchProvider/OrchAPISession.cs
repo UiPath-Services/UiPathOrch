@@ -385,6 +385,8 @@ namespace UiPath.OrchAPI
             }
         }
 
+        private static readonly StringContent EmptyContent = new("", Encoding.UTF8, @"application/json");
+
         private IEnumerable<T> GetEnumerablePortal<T>(string endPoint, Int64? folderId = null, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
         {
             ulong total = 0;
@@ -400,10 +402,13 @@ namespace UiPath.OrchAPI
                 // パラメータ名に $ がつかない。$top とか $skip でないので要注意。
                 string url = $"{_base_url_portal}{endPoint}?top={top}&skip={skip}{query}";
 
-                var request = new HttpRequestMessage(HttpMethod.Get, url);
-                //{
-                //    Content = new StringContent("", Encoding.UTF8, @"application/json")
-                //};
+                var request = new HttpRequestMessage(HttpMethod.Get, url)
+                {
+                    // content が空っぽの場合でも、次の行は必要。
+                    // これがないと、Get-OrchPmUser のエンドポイントがエラーを返してしまう。
+                    // ほとんどすべてのエンドポイントでは、次の行がなくても大丈夫なのに、、
+                    Content = EmptyContent
+                };
                 if (folderId.HasValue)
                 {
                     request.Headers.Add("X-UIPATH-OrganizationUnitId", folderId.ToString());
@@ -2380,7 +2385,10 @@ namespace UiPath.OrchAPI
         {
             if (_authManager.IsCloud)
             {
-                return GetEnumerableIdentity<PmUser>($"/api/User/users/{partitionGlobalId}");
+                //return GetEnumerableIdentity<PmUser>($"/api/User/users/{partitionGlobalId}");
+
+                // 現在の Automation Cloud は次を実行しているようだ。
+                return GetEnumerablePortal<PmUser>($"/api/identity/UserPartition/licenses", null, $"&partitionGlobalId={partitionGlobalId}");
             }
             else
             {

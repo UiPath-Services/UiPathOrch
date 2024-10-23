@@ -96,61 +96,6 @@ namespace UiPath.PowerShell.Commands
     {
         public object? Target;
 
-        //internal static string? ExtractMessage(string msg)
-        //{
-        //    string ret = null;
-        //    try
-        //    {
-        //        using JsonDocument doc = JsonDocument.Parse(msg);
-        //        JsonElement root = doc.RootElement;
-
-        //        // Helper method to get property value safely
-        //        static JsonElement GetPropertyValue(JsonElement element, string propertyName)
-        //        {
-        //            element.TryGetProperty(propertyName, out JsonElement value);
-        //            return value;
-        //        }
-
-        //        // Extract the main error message
-        //        string title = GetPropertyValue(root, "title").ToString();
-        //        if (string.IsNullOrEmpty(title)) title = GetPropertyValue(root, "message").ToString();
-        //        if (string.IsNullOrEmpty(title)) title = GetPropertyValue(root, "Message").ToString();
-        //        if (string.IsNullOrEmpty(title)) title = GetPropertyValue(root, "errorMessage").ToString();
-        //        if (string.IsNullOrEmpty(title)) title = GetPropertyValue(root, "error").ToString();
-
-        //        // Extract specific errors
-        //        List<string> errorMessages = [];
-        //        if (root.TryGetProperty("errors", out JsonElement errorsElement) && errorsElement.ValueKind == JsonValueKind.Object)
-        //        {
-        //            foreach (JsonProperty errorProperty in errorsElement.EnumerateObject())
-        //            {
-        //                string propertyName = errorProperty.Name;
-        //                JsonElement errorMessagesArray = errorProperty.Value;
-
-        //                if (errorMessagesArray.ValueKind == JsonValueKind.Array)
-        //                {
-        //                    foreach (JsonElement errorMessage in errorMessagesArray.EnumerateArray())
-        //                    {
-        //                        errorMessages.Add($"{propertyName}: {errorMessage.ToString()}");
-        //                    }
-        //                }
-        //            }
-        //        }
-
-        //        // Combine the main message and the specific errors
-        //        ret = string.Join(' ', new[] { title }.Concat(errorMessages).Distinct());
-        //    }
-        //    catch { }
-
-        //    if (!string.IsNullOrEmpty(ret))
-        //    {
-        //        return ret;
-        //    }
-
-        //    // Return original message if parsing fails
-        //    return msg;
-        //}
-
         internal static string? ExtractMessage(string msg)
         {
             string ret = null;
