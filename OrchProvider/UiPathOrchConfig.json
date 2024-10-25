@@ -1,4 +1,15 @@
 {
+  "Proxy": {
+    "Address": "http://proxy.example.com:8080",
+    "BypassProxyOnLocal": true,
+    "UseDefaultCredentials": false,
+    "Credentials": {
+      "Username": "PROXY_USERNAME",
+      "Password": "PROXY_PASSWORD"
+    },
+    "Enabled": false
+  },
+
   "PSDrives": [
     {
       "Name": "Orch1",
@@ -29,7 +40,7 @@
     },
     {
       "Name": "Orch4",
-      "Description": "For the Orchestrator deployed on Azure App Service, specify the Identity Server URL using the `IdentityUrl` key. For the other keys, refer to the OAuth conf or non-conf settings.",
+      "Description": "For Automation Suite or the Orchestrator deployed on Azure App Service, specify the Identity Server URL using the `IdentityUrl` key. For the other keys, refer to the OAuth conf or non-conf settings.",
       "Root": "https://XXX.azurewebsites.net",
       "IdentityUrl": "https://YYY.azurewebsites.net/identity",
       "AppId": "YOUR_APP_ID",
@@ -37,6 +48,26 @@
       "HttpListener": "http://+:80/Temporary_Listen_Addresses/",
       "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
       "Enabled": false
+    },
+    {
+      "Name": "Orch5",
+      "Description": "This configuration includes proxy settings. The 'Proxy' section within this PSDrive will override the global proxy settings defined at the root level, allowing customized proxy configurations for this specific drive. Note that only the settings you wish to override need to be included in this section; any omitted items will use the global configuration.",
+      "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
+      "AppId": "YOUR_APP_ID",
+      "RedirectUrl": "http://localhost/Temporary_Listen_Addresses",
+      "HttpListener": "http://+:80/Temporary_Listen_Addresses/",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": true,
+      "Proxy": {
+        "Address": "http://proxy.example.com:8081",
+        "BypassProxyOnLocal": true,
+        "UseDefaultCredentials": false,
+        "Credentials": {
+          "Username": "PROXY_USERNAME",
+          "Password": "PROXY_PASSWORD"
+        },
+        "Enabled": true
+      }
     }
   ]
 }
