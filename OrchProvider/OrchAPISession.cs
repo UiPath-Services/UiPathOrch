@@ -11,6 +11,7 @@ using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Entities.JsonConverter;
+using UiPath.PowerShell.Positional;
 using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 using static System.Formats.Asn1.AsnWriter;
 using Job = UiPath.PowerShell.Entities.Job;
@@ -131,9 +132,50 @@ namespace UiPath.OrchAPI
 
         #region Authentication
 
-        public OrchAPISession(PSDrive drive)
+        public OrchAPISession(PSDrive drive, ProxySettings? globalProxy)
         {
-            _httpClient = new HttpClient();
+            // Enabled が設定されていない場合には、true として扱う
+            bool proxyEnabled = drive.Proxy?.Enabled ?? globalProxy?.Enabled ?? true;
+
+            // drive の Proxy と、globalProxy をカスケードして設定する
+            if ((drive.Proxy != null || globalProxy != null) && proxyEnabled)
+            {
+                HttpClientHandler handler;
+                try
+                {
+                    Uri proxyUri = new(drive.Proxy?.Address ?? globalProxy?.Address ?? "");
+
+                    var proxy = new WebProxy
+                    {
+                        Address = proxyUri,
+                        BypassProxyOnLocal = drive.Proxy?.BypassProxyOnLocal ?? globalProxy?.BypassProxyOnLocal ?? true,
+                        UseDefaultCredentials = drive.Proxy?.UseDefaultCredentials ?? globalProxy?.UseDefaultCredentials ?? false
+                    };
+
+                    if ((drive.Proxy?.Credentials != null || globalProxy?.Credentials != null) && !proxy.UseDefaultCredentials)
+                    {
+                        proxy.Credentials = new NetworkCredential(
+                            userName: drive.Proxy?.Credentials?.Username ?? globalProxy?.Credentials?.Username,
+                            password: drive.Proxy?.Credentials?.Password ?? globalProxy?.Credentials?.Password);
+                    }
+
+                    handler = new HttpClientHandler
+                    {
+                        Proxy = proxy,
+                        UseProxy = true
+                    };
+                }
+                catch (Exception ex)
+                {
+                    throw new ArgumentException($"Proxy: {ex.Message}", ex);
+                }
+
+                _httpClient = new HttpClient(handler);
+            }
+            else
+            {
+                _httpClient = new HttpClient();
+            }
 
             var version = Assembly.GetExecutingAssembly().GetName().Version;
             string userAgent = $"UiPathOrch/{version}";

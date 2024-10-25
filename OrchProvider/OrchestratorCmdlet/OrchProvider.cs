@@ -179,7 +179,7 @@ namespace UiPath.PowerShell.Core
                 {
                     if (drive.Enabled == null || drive.Enabled.GetValueOrDefault())
                     {
-                        var orchDrive = new OrchDriveInfo(ProviderInfo, drive);
+                        var orchDrive = new OrchDriveInfo(ProviderInfo, drive, config.Proxy);
                         ret.Add(orchDrive);
                     }
                 }

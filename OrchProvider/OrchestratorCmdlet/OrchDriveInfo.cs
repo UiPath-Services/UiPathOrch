@@ -25,6 +25,7 @@ namespace UiPath.PowerShell.Core
 
     public partial class OrchDriveInfo : PSDriveInfo
     {
+        internal readonly ProxySettings? _globalProxy;
         internal readonly PSDrive _psDrive;
 
         private string? _NameColon = null;
@@ -57,7 +58,7 @@ namespace UiPath.PowerShell.Core
                 {
                     lock (_orchAPISessionLock)
                     {
-                        _orchAPISession ??= new OrchAPISession(_psDrive);
+                        _orchAPISession ??= new OrchAPISession(_psDrive, _globalProxy);
                     }
                 }
                 return _orchAPISession;
@@ -3979,9 +3980,10 @@ namespace UiPath.PowerShell.Core
         #endregion
 
         // このコンストラクタを実行するタイミングでは、NameColonSeparator は利用できない
-        public OrchDriveInfo(ProviderInfo provider, PSDrive drive) :
+        public OrchDriveInfo(ProviderInfo provider, PSDrive drive, ProxySettings? globalProxy) :
             base(drive.Name, provider, drive.Name + ":\\", drive.Description, null, drive.Root)
         {
+            _globalProxy = globalProxy;
             _psDrive = drive;
             _psDrive.Root = _psDrive.Root?.TrimEnd('/');
             RootFolder = new Folder() { DisplayName = "", FullyQualifiedName = "", Path = NameColonSeparator };
