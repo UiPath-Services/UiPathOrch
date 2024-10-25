@@ -10,6 +10,7 @@ using UiPath.PowerShell.Positional;
 using Positional = UiPath.PowerShell.Positional.UserName;
 using BoolCompleter = UiPath.PowerShell.Completer.StaticTextsCompleter<UiPath.PowerShell.Positional.True_False>;
 using System.Data;
+using System.Text.Json;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -187,6 +188,9 @@ namespace UiPath.PowerShell.Commands
                             continue;
                         }
 
+                        // あとで正しく dirty かどうかを確認できるように、RolesList をソートしておく
+                        detailedUser.RolesList = detailedUser.RolesList?.Order().ToArray();
+
                         // サーバーから返る Password には "*****" が入っていたりする。
                         // 間違ってパスワードを "*****" で更新したりしないように、null を入れておく。
                         // 等値性を正しく判断できるようにするためにも有用だ。
@@ -201,6 +205,20 @@ namespace UiPath.PowerShell.Commands
                         {
                             postingUser.UnattendedRobot.Password = null;
                         }
+
+                        // 次のプロパティは、web interface からは POST されていないようだ。
+                        // でもここで null を入れてしまうと、POST 直前の同一性確認(dirty check)が偽陽性になってしまう。
+                        // 入れたままでも特に害はないようなので、そのままにしておく。
+                        //postingUser.DirectoryIdentifier = null;
+                        //postingUser.Domain = null;
+                        //postingUser.Name = null;
+                        //postingUser.Surname = null;
+                        //postingUser.LastModificationTime = null;
+                        //postingUser.LastModifierUserId = null;
+                        //postingUser.LicenseType = null;
+                        //postingUser.OrganizationUnits = null;
+                        //postingUser.LoginProviders = null;
+
                         postingUser.AssignBoolIfNotFalse(MayHaveUserSession,          u => u.MayHaveUserSession,          (u, v) => u.MayHaveUserSession = v);
                         postingUser.AssignBoolIfNotFalse(MayHaveRobotSession,         u => u.MayHaveRobotSession,         (u, v) => u.MayHaveRobotSession = v);
                         postingUser.AssignBoolIfNotFalse(MayHavePersonalWorkspace,    u => u.MayHavePersonalWorkspace,    (u, v) => u.MayHavePersonalWorkspace = v);
@@ -224,7 +242,10 @@ namespace UiPath.PowerShell.Commands
                             }
                             if (roles != null)
                             {
-                                postingUser.RolesList = roles.Select(r => r.Name!).Distinct().ToArray();
+                                postingUser.RolesList = roles.Select(r => r.Name!)
+                                    .Distinct()
+                                    .Order()
+                                    .ToArray();
                             }
                         }
                         #endregion
@@ -263,40 +284,40 @@ namespace UiPath.PowerShell.Commands
                         postingUser.AssignUpdatePolicy(UpdatePolicyType, UpdatePolicyVersion);
 
                         if (!string.IsNullOrEmpty(ES_TracingLevel) ||
-                            ES_StudioNotifyServer != null ||
-                            ES_LoginToConsole != null ||
+                            !string.IsNullOrEmpty(ES_StudioNotifyServer) ||
+                            !string.IsNullOrEmpty(ES_LoginToConsole) ||
                             (ES_ResolutionWidth != null && ES_ResolutionWidth != 0) ||
                             (ES_ResolutionHeight != null && ES_ResolutionHeight != 0) ||
                             (ES_ResolutionDepth != null && ES_ResolutionDepth != 0) ||
-                            ES_FontSmoothing != null ||
-                            ES_AutoDownloadProcess != null)
+                            !string.IsNullOrEmpty(ES_FontSmoothing) ||
+                            !string.IsNullOrEmpty(ES_AutoDownloadProcess))
                         {
                             postingUser.UnattendedRobot ??= new();
 
                             postingUser.UnattendedRobot.ExecutionSettings ??= new();
 
                             postingUser.UnattendedRobot.ExecutionSettings.AssignStringIfNotNullOrEmpty(
-                                ES_TracingLevel, (es, v) => 
+                                ES_TracingLevel, (es, v) =>
                                 es.TracingLevel = v);
 
                             postingUser.UnattendedRobot.ExecutionSettings.AssignBoolIfNotNull(
-                                ES_StudioNotifyServer, (es, v) => 
+                                ES_StudioNotifyServer, (es, v) =>
                                 es.StudioNotifyServer = v);
 
                             postingUser.UnattendedRobot.ExecutionSettings.AssignBoolIfNotNull(
-                                ES_LoginToConsole, (es, v) => 
+                                ES_LoginToConsole, (es, v) =>
                                 es.LoginToConsole = v);
 
-                            postingUser.UnattendedRobot.ExecutionSettings.AssignNumberIfNotNull(
+                            postingUser.UnattendedRobot.ExecutionSettings.AssignNumberIfNotNullOrZero(
                                 ES_ResolutionWidth, (es, v) =>
                                 es.ResolutionWidth = v);
 
-                            postingUser.UnattendedRobot.ExecutionSettings.AssignNumberIfNotNull(
-                                ES_ResolutionHeight, (es, v) => 
+                            postingUser.UnattendedRobot.ExecutionSettings.AssignNumberIfNotNullOrZero(
+                                ES_ResolutionHeight, (es, v) =>
                                 es.ResolutionHeight = v);
 
-                            postingUser.UnattendedRobot.ExecutionSettings.AssignNumberIfNotNull(
-                                ES_ResolutionDepth, (es, v) => 
+                            postingUser.UnattendedRobot.ExecutionSettings.AssignNumberIfNotNullOrZero(
+                                ES_ResolutionDepth, (es, v) =>
                                 es.ResolutionDepth = v);
 
                             postingUser.UnattendedRobot.ExecutionSettings.AssignBoolIfNotNull(
@@ -304,8 +325,14 @@ namespace UiPath.PowerShell.Commands
                                 es.FontSmoothing = v);
 
                             postingUser.UnattendedRobot.ExecutionSettings.AssignBoolIfNotNull(
-                                ES_AutoDownloadProcess, (es, v) => 
+                                ES_AutoDownloadProcess, (es, v) =>
                                 es.AutoDownloadProcess = v);
+
+                            // TODO: RobotProvision.ExecutionSettings も同じように修正する必要はあるか？
+                            //if (postingUser.type == 3) // robot の場合
+                            //{
+
+                            //}
                         }
 
                         // こういうエラー処理は、API 側に任せた方が良いか。。

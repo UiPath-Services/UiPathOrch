@@ -2451,6 +2451,13 @@ namespace UiPath.OrchAPI
             HttpRequestIdentity(HttpMethod.Delete, $"/api/User/{userId}");
         }
 
+        //
+        public void PutPmUserSetting(UpdatePmUserSettingPayload payload)
+        {
+            //HttpRequestPortal(HttpMethod.Put, $"/portal_/api/identity/Setting", null, payload);
+            HttpRequestIdentity(HttpMethod.Put, $"/api/Setting", null, payload);
+        }
+
         public PmGroup[]? GetPmGroups(string partitionGlobalId)
         {
             return GetEnumerableWithoutPagingIdentity<PmGroup>($"/api/Group/{partitionGlobalId}");
