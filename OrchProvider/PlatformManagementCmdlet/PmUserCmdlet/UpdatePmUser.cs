@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands
     [OutputType(typeof(Entities.PmUser))]
     public class UpdatePmUserCommand : OrchestratorPSCmdlet
     {
-        [Parameter(Position = 0)]
+        [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(PmUserNameCompleter<Positional.UserName>))]
         [SupportsWildcards]
         public string[]? UserName { get; set; }

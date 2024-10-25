@@ -3261,6 +3261,19 @@ namespace UiPath.PowerShell.Entities
         public string[]? extensionUserAttributesToRemove { get; set; }
     }
 
+    public class KeyValuePair(string? key, string? value) // added by UiPathOrch
+    {
+        public string? key { get; set; } = key;
+        public string? value { get; set; } = value;
+    }
+
+    public class UpdatePmUserSettingPayload // added by UiPathOrch
+    {
+        public List<KeyValuePair>? settings { get; set; }
+        public string? partitionGlobalId { get; set; }
+        public string? userId { get; set; }
+    }
+
     // added by UiPathOrch
     public class NuLicensedGroup // 適切なクラス名が不明。。
     {
