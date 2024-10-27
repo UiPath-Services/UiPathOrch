@@ -1,6 +1,6 @@
 {
   "Proxy": {
-    "Address": "http://proxy.example.com:8080",
+    "Url": "http://proxy.example.com:8080",
     "BypassProxyOnLocal": true,
     "UseDefaultCredentials": false,
     "Credentials": {
@@ -59,7 +59,7 @@
       "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
       "Enabled": true,
       "Proxy": {
-        "Address": "http://proxy.example.com:8081",
+        "Url": "http://proxy.example.com:8081",
         "BypassProxyOnLocal": true,
         "UseDefaultCredentials": false,
         "Credentials": {

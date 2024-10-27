@@ -1,8 +1,72 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace UiPath.PowerShell.Entities.JsonConverter
 {
+    public class JsonTools
+    {
+        private static List<object?>? ProcessArray(JsonArray? jsonArray)
+        {
+            if (jsonArray == null) return null;
+            var list = new List<object?>();
+
+            foreach (var item in jsonArray)
+            {
+                if (item is JsonObject nestedObject)
+                {
+                    list.Add(ProcessNode(nestedObject));
+                }
+                else if (item is JsonArray nestedArray)
+                {
+                    list.Add(ProcessArray(nestedArray));
+                }
+                else
+                {
+                    list.Add(item?.ToString());
+                }
+            }
+
+            return list;
+        }
+
+        private static Dictionary<string, object?>? ProcessNode(JsonObject? jsonObject)
+        {
+            if (jsonObject == null) return null;
+
+            var result = new Dictionary<string, object?>();
+
+            foreach (var kvp in jsonObject)
+            {
+                if (kvp.Value is JsonObject nestedObject)
+                {
+                    // ネストされたオブジェクトの場合
+                    result[kvp.Key] = ProcessNode(nestedObject);
+                }
+                else if (kvp.Value is JsonArray jsonArray)
+                {
+                    // 配列の場合
+                    result[kvp.Key] = ProcessArray(jsonArray);
+                }
+                else
+                {
+                    // 単純な値の場合
+                    result[kvp.Key] = kvp.Value?.ToString();
+                }
+            }
+
+            return result;
+        }
+
+        public static Dictionary<string, object?>? JsonToDictionary(string? jsonText)
+        {
+            if (jsonText == null) return null;
+            // JSON をパースして JsonNode に変換
+            JsonNode jsonNode = JsonNode.Parse(jsonText);
+            return ProcessNode(jsonNode as JsonObject);
+        }
+    }
+
     // OR から返される JSON テキストの ResolutionWidth などが、文字列だったり数値だったりするので
     // どちらの場合でも数値にデシリアライズできるようにするためのコンバータ。
     public class StringOrIntConverter : JsonConverter<int>
@@ -150,4 +214,5 @@ namespace UiPath.PowerShell.Entities.JsonConverter
             JsonSerializer.Serialize(writer, value, value.GetType(), options);
         }
     }
+
 }

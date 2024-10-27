@@ -1,6 +1,6 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
-Module Name: UiPathOrch
+Module Name: uiPathOrch
 online version:
 schema: 2.0.0
 ---
@@ -14,15 +14,16 @@ schema: 2.0.0
 
 ### Filter (Default)
 ```
-Get-OrchAuditLog [[-Last] <String>] [-ExecutionTimeAfter <DateTime>] [-ExecutionTimeBefore <DateTime>]
- [-ExpandEntity] [-Skip <UInt64>] [-First <UInt64>] [-Path <String[]>] [[-Component] <String[]>]
- [[-UserName] <String[]>] [[-Action] <String[]>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-OrchAuditLog [[-Last] <String>] [[-Component] <String[]>] [[-UserName] <String[]>] [[-Action] <String[]>]
+ [-ExecutionTimeAfter <DateTime>] [-ExecutionTimeBefore <DateTime>] [-ExpandEntity] [-ExpandDetails]
+ [-Skip <UInt64>] [-First <UInt64>] [-Path <String[]>] [-ProgressAction <ActionPreference>]
+ [<CommonParameters>]
 ```
 
 ### Id
 ```
-Get-OrchAuditLog [-ExpandEntity] [-Skip <UInt64>] [-First <UInt64>] [-Path <String[]>] [-Id <String[]>]
- [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-OrchAuditLog [-Id <String[]>] [-ExpandEntity] [-ExpandDetails] [-Skip <UInt64>] [-First <UInt64>]
+ [-Path <String[]>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -217,6 +218,21 @@ Accept wildcard characters: False
 
 ```yaml
 Type: UInt64
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ExpandDetails
+{{ Fill ExpandDetails Description }}
+
+```yaml
+Type: SwitchParameter
 Parameter Sets: (All)
 Aliases:
 

@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Management.Automation;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks.Dataflow;
 using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Entities;
+using UiPath.PowerShell.Entities.JsonConverter;
 using UiPath.PowerShell.Positional;
 using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 using Job = UiPath.PowerShell.Entities.Job;
@@ -459,7 +461,8 @@ namespace UiPath.PowerShell.Core
             _dicAssignedMachines = null;
             _dicAssignedMachines_Exceptions.ClearCache();
 
-            _dicAuditLogs = null; // つど呼び出すので、例外はキャッシュしない
+            _dicAuditLogs = null;
+            _dicAuditLogs_Exceptions.ClearCache();
 
             _dicAuthenticationSettings = null;
             _dicAuthenticationSettings_Exception.ClearCache();
@@ -730,16 +733,32 @@ namespace UiPath.PowerShell.Core
         //    ClearFolderCache(folder);
         //}
 
-        // AuditLog は、一度の OrchAPI.GetAuditLogs() 呼び出しですべてを取得できないため
-        // 呼び出すたびに結果を追加する必要がある。そのため HashSet<AuditLog> を使う
-        internal HashSet<AuditLog>? _dicAuditLogs = null;
+        internal ConcurrentDictionary<Int64, AuditLog>? _dicAuditLogs = null;
+        internal ExceptionCachePerTenant _dicAuditLogs_Exceptions = new();
         public ReadOnlyCollection<AuditLog> GetAuditLogs(string? query, ulong skip, ulong first)
         {
+            _dicAuditLogs_Exceptions.ThrowCachedExceptionIfAny();
+
             if (_dicAuditLogs == null)
             {
-                _dicAuditLogs = new HashSet<AuditLog>(new EntityEqualityComparer<AuditLog, Int64>(log => log.Id ?? 0));
+                // うまく動いていたけど、concurrent な方が安全かな？
+                // ConcurrentDictionary で書き直してしまえ。
+                //_dicAuditLogs = new HashSet<AuditLog>(new EntityEqualityComparer<AuditLog, Int64>(log => log.Id ?? 0));
+                lock (_dicAuditLogs_Exceptions)
+                {
+                    _dicAuditLogs ??= new();
+                }
             }
-            var queriedLogs = OrchAPISession.GetAuditLogs(query, skip, first).ToList();
+            List<AuditLog> queriedLogs;
+            try
+            {
+                queriedLogs = OrchAPISession.GetAuditLogs(query, skip, first).ToList();
+            }
+            catch (HttpResponseException ex)
+            {
+                _dicAuditLogs_Exceptions.CacheException(ex);
+                throw;
+            }
             foreach (var log in queriedLogs)
             {
                 log.Path = NameColonSeparator;
@@ -751,13 +770,35 @@ namespace UiPath.PowerShell.Core
                     {
                         entity.Path = NameColonSeparator;
                         entity.PathId = pathId;
+                        entity.CustomDataExpanded = JsonTools.JsonToDictionary(entity.CustomData);
                     }
                 }
+
+                // Details をキャッシュ取得済みであれば、付け替える
+                if (_dicAuditLogs.TryGetValue(log.Id!.Value, out var cached))
+                {
+                    log.Details = cached?.Details;
+                }
+
+                _dicAuditLogs[log.Id!.Value] = log;
             }
-            _dicAuditLogs.UnionWith(queriedLogs);
 
             // 今回の問い合わせ結果のみを返す
             return queriedLogs.AsReadOnly();
+        }
+
+        // API call が発生したら true を返す
+        public bool GetAuditLogDetails(AuditLog log)
+        {
+            if (log.Id == null || log.Details != null) return false;
+            log.Details = OrchAPISession.GetAuditLogDetails(log.Id.Value)?.ToArray();
+            foreach (var d in log.Details ?? [])
+            {
+                d.Path = NameColonSeparator;
+                d.PathId  = NameColonSeparator + log.Id.ToString();
+                d.CustomDataExpanded = JsonTools.JsonToDictionary(d.CustomData);
+            }
+            return true;
         }
 
         // Job は、一度の OrchAPI.GetJobs() 呼び出しですべてを取得できないため

@@ -1,21 +1,12 @@
 ﻿using System.Collections;
-using System.Diagnostics;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using System.Reflection.PortableExecutable;
-using System.Security.AccessControl;
-using System.Security.Principal;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
 using UiPath.PowerShell.Positional;
 using Job = UiPath.PowerShell.Entities.Job;
-using JobState = UiPath.PowerShell.Entities.JobState;
-
 using LastItems = UiPath.PowerShell.Positional.Hour_Day_Week_Month_3Month_6Month_Year_3Year;
-using Positional = UiPath.PowerShell.Positional.Id_Level;
-using System.Diagnostics.Eventing.Reader;
 
 namespace UiPath.PowerShell.Commands
 {

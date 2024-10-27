@@ -1,20 +1,21 @@
 ﻿using System.Collections;
 using System.Data;
+using System.IO.Compression;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using System.Reflection.PortableExecutable;
+using System.Text.Json.Nodes;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
 using UiPath.PowerShell.Positional;
-
-using Positional = UiPath.PowerShell.Positional.Last_Component_UserName_Action;
 using LastItems = UiPath.PowerShell.Positional.Hour_Day_Week_Month_3Month_6Month_Year_3Year;
 
 namespace UiPath.PowerShell.Commands
 {
     [Cmdlet(VerbsCommon.Get, "OrchAuditLog", DefaultParameterSetName = "Filter")] //, SupportsPaging = true)]
     [OutputType(typeof(AuditLog))]
+    [OutputType(typeof(AuditLogEntity))]
     public class GetAuditLogCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, ParameterSetName = "Filter")]
@@ -23,15 +24,15 @@ namespace UiPath.PowerShell.Commands
 
         [Parameter(Position = 1, ParameterSetName = "Filter")]
         [ArgumentCompleter(typeof(ComponentCompleter))]
-        public string[]? Component;
+        public string[]? Component { get; set; }
 
         [Parameter(Position = 2, ParameterSetName = "Filter")]
         [ArgumentCompleter(typeof(UserNameCompleter))]
-        public string[]? UserName;
+        public string[]? UserName { get; set; }
 
         [Parameter(Position = 3, ParameterSetName = "Filter")]
         [ArgumentCompleter(typeof(ActionCompleter))]
-        public string[]? Action;
+        public string[]? Action { get; set; }
 
         [Parameter(ParameterSetName = "Filter")]
         [ArgumentCompleter(typeof(TimeAfterCompleter))]
@@ -44,7 +45,7 @@ namespace UiPath.PowerShell.Commands
         [Parameter(ParameterSetName = "Id")]
         [ArgumentCompleter(typeof(IdCompleter))]
         [SupportsWildcards]
-        public string[]? Id;
+        public string[]? Id { get; set; }
 
         static readonly string[] ComponentsList = [
             "Assets",
@@ -127,6 +128,9 @@ namespace UiPath.PowerShell.Commands
         public SwitchParameter ExpandEntity { get; set; }
 
         [Parameter]
+        public SwitchParameter ExpandDetails { get; set; }
+
+        [Parameter]
         public ulong? Skip { get; set; }
 
         [Parameter]
@@ -160,7 +164,7 @@ namespace UiPath.PowerShell.Commands
                 {
                     if (drive._dicAuditLogs == null)
                         continue;
-                    results.AddRange(drive._dicAuditLogs
+                    results.AddRange(drive._dicAuditLogs.Values
                         .Where(log => wp.IsMatch(log.Id.ToString()))
                         .ExcludeByWildcards(log => log?.Id.ToString(), wpId));
                 }
@@ -342,15 +346,34 @@ namespace UiPath.PowerShell.Commands
             }
             #endregion
 
+            string order = "&$orderby=ExecutionTime%20desc";
+
             string ret = string.Join("%20and%20", filter);
             if (!string.IsNullOrEmpty(ret))
-                return "&$filter=(" + ret + ")";
+                return "&$filter=(" + ret + ")" + order;
             else
-                return null;
+                return order;
         }
 
-        protected void WriteLog(IEnumerable<AuditLog> logs)
+        // あれ？ どこかにこんなのが必要そうなのがあった気がするが、、
+        //private string DecodeBase64_ExtractGzip(string encodedData)
+        //{
+        //    // Base64 デコード
+        //    byte[] decodedData = Convert.FromBase64String(encodedData);
+
+        //    // GZip 展開
+        //    using (var inputStream = new MemoryStream(decodedData))
+        //    using (var gzipStream = new GZipStream(inputStream, CompressionMode.Decompress))
+        //    using (var reader = new StreamReader(gzipStream))
+        //    {
+        //        return reader.ReadToEnd();
+        //    }
+        //}
+
+        protected void WriteLog(OrchDriveInfo drive, IEnumerable<AuditLog>? logs)
         {
+            if (logs == null) return;
+
             if (ExpandEntity)
             {
                 foreach (var log in logs)
@@ -361,6 +384,50 @@ namespace UiPath.PowerShell.Commands
                     }
                 }
             }
+            else if (ExpandDetails)
+            {
+                using var results = OrchThreadPool.RunForEach(logs,
+                    log => log.GetPSPath(),
+                    log => log,
+                    log => drive.GetAuditLogDetails(log));
+
+                using var cancelHandler = new ConsoleCancelHandler();
+                foreach (var result in results)
+                {
+                    cancelHandler.Token.ThrowIfCancellationRequested();
+
+                    try
+                    {
+                        result.GetResult(cancelHandler.Token);
+                        var logDetailed = result.Source;
+
+                        WriteObject(logDetailed?.Details, true);
+                    }
+                    catch (OrchException ex)
+                    {
+                        WriteError(new ErrorRecord(ex, "GetAuditLogDetailsError", ErrorCategory.InvalidOperation, result.Target));
+                    }
+                }
+
+                // シングルスレッド版
+                //foreach (var log in logs)
+                //{
+                //    try
+                //    {
+                //        var apiCalled = drive.GetAuditLogDetails(log);
+                //        WriteObject(log?.Details, true);
+                //        // Details を取得しようとすると、いつも同じ監査ログでエラーになる。
+                //        // API call rate limit のためにエラーになるのかと思ったけど、
+                //        // web interface でも同じ症状になるので、これは rate limit のせいじゃないな。
+                //        // マルチスレッド化しておいて問題ないようだ。
+                //        if (apiCalled) Thread.Sleep(600); 
+                //    }
+                //    catch (Exception ex)
+                //    {
+                //        WriteError(new ErrorRecord(new OrchException(System.IO.Path.Combine(drive.NameColonSeparator, log.Id!.Value.ToString()), ex), "GetAuditLogDetailsError", ErrorCategory.InvalidOperation, log));
+                //    }
+                //}
+            }
             else
             {
                 WriteObject(logs, true);
@@ -369,38 +436,63 @@ namespace UiPath.PowerShell.Commands
 
         protected override void ProcessRecord()
         {
-            //ulong skip = PagingParameters.Skip;
-            //ulong first = PagingParameters.First;
+            var drives = OrchDriveInfo.EnumOrchDrives(Path);
+
+            // すべてのパラメータが指定されていなければ、キャッシュの内容を返す
+            bool bOutCache = (
+                Last == null &&
+                Component == null &&
+                UserName == null &&
+                Action == null &&
+                ExecutionTimeAfter == null &&
+                ExecutionTimeBefore == null &&
+                Skip == null && First == null);
+
+            if (bOutCache)
+            {
+                WriteWarning("Since no filter parameters were specified, the contents of the cache will be output. To query the Orchestrator, please specify at least one filter parameter.");
+
+                var wpId = Id?.Select(id => new WildcardPattern(id)).ToList();
+                foreach (var drive in drives)
+                {
+                    WriteLog(drive, drive._dicAuditLogs?.Values
+                        .FilterByWildcards(log => (log?.Id ?? 0).ToString(), wpId)
+                        .OrderByDescending(log => log.Id));
+                }
+                return;
+            }
 
             ulong skip = Skip ?? 0;
             ulong first = First ?? ulong.MaxValue;
 
             string filter = MakeFilter();
 
-            var drives = OrchDriveInfo.EnumOrchDrives(Path);
             foreach (var drive in drives)
             {
-                if (ParameterSetName == "Filter")
+                //if (ParameterSetName == "Filter")
                 {
                     try
                     {
-                        WriteLog(drive.GetAuditLogs(filter, skip, first));
+                        // Skip と First をサポートする cmdlet は、ここでソートしてはいけない
+                        // サーバーから返された順を尊重しないと。
+                        WriteLog(drive, drive.GetAuditLogs(filter, skip, first));
                     }
                     catch (Exception ex)
                     {
                         WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetAuditLogError", ErrorCategory.InvalidOperation, drive));
                     }
                 }
-                else // ParameterSetName == "Id"
-                {
-                    if (drive._dicAuditLogs == null)
-                    {
-                        WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, "The -Id parameter searches only within the local cache. Please execute Get-OrchAuditLog without the -Id parameter first."), "GetAuditLogError", ErrorCategory.InvalidOperation, drive));
-                        continue;
-                    }
-                    var wpId = Id?.Select(id => new WildcardPattern(id)).ToList();
-                    WriteLog(drive._dicAuditLogs.FilterByWildcards(log => (log?.Id ?? 0).ToString(), wpId));
-                }
+                //else // ParameterSetName == "Id"
+                //{
+                //    if (drive._dicAuditLogs == null)
+                //    {
+                //        WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, "The -Id parameter searches only within the local cache. Please execute Get-OrchAuditLog without the -Id parameter first."), "GetAuditLogError", ErrorCategory.InvalidOperation, drive));
+                //        continue;
+                //    }
+                //    WriteLog(drive, drive._dicAuditLogs.Values
+                //        .FilterByWildcards(log => (log?.Id ?? 0).ToString(), wpId)
+                //        .OrderByDescending(log => log.Id));
+                //}
             }
         }
     }
