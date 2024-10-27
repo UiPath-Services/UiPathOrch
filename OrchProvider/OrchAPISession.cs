@@ -143,7 +143,7 @@ namespace UiPath.OrchAPI
                 HttpClientHandler handler;
                 try
                 {
-                    Uri proxyUri = new(drive.Proxy?.Address ?? globalProxy?.Address ?? "");
+                    Uri proxyUri = new(drive.Proxy?.Url ?? globalProxy?.Url ?? "");
 
                     var proxy = new WebProxy
                     {
@@ -1628,6 +1628,11 @@ namespace UiPath.OrchAPI
         public IEnumerable<AuditLog> GetAuditLogs(string? query, ulong skip, ulong first)
         {
             return GetEnumerable<AuditLog>("/odata/AuditLogs", null, query, skip, first);
+        }
+
+        public IEnumerable<AuditLogEntity>? GetAuditLogDetails(Int64 auditLogId)
+        {
+            return GetEnumerable<AuditLogEntity>($"/odata/AuditLogs/UiPath.Server.Configuration.OData.GetAuditLogDetails(auditLogId={auditLogId})");
         }
 
         #endregion

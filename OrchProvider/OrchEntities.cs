@@ -1636,6 +1636,10 @@ namespace UiPath.PowerShell.Entities
         public Int64? Id { get; set; }
         public Int64? AuditLogId { get; set; }
         public string? CustomData { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        public Dictionary<string, object?>? CustomDataExpanded { get; set; } // added by UiPathOrch
+
         public Int64? EntityId { get; set; }
         public string? EntityName { get; set; }
         public string? Action { get; set; }
@@ -1658,6 +1662,7 @@ namespace UiPath.PowerShell.Entities
         public string? UserName { get; set; }
         public string? UserType { get; set; }
         public AuditLogEntity[]? Entities { get; set; }
+        public AuditLogEntity[]? Details { get; set; } // added by UiPathOrch
         public string? ExternalClientId { get; set; }
         public Int64? UserId { get; set; }
         public bool? UserIsDeleted { get; set; }
