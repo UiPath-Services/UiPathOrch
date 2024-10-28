@@ -3562,6 +3562,50 @@ namespace UiPath.PowerShell.Entities
         public string? hostConnectionType { get; set; }
     }
 
+    // HashSet<T> で管理するため、IEquatable が必要
+    public class PmAuditLog : IEquatable<PmAuditLog> // added by UiPathOrch 適切なクラス名が不明。。
+    {
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        public string? Path { get; set; } // added by UiPathOrch
+
+        [JsonConverter(typeof(LocalDateTimeConverter))]
+        public DateTime? createdOn { get; set; }
+        public string? category { get; set; }
+        public string? action { get; set; }
+        public string? auditLogDetails { get; set; }
+        public Dictionary<string, object?>? auditLogDetailsExpanded { get; set; } // added by UiPathOrch
+        public string? userName { get; set; }
+        public string? email { get; set; }
+        public string? message { get; set; }
+        public string? detailsVersion { get; set; }
+        public string? source { get; set; }
+
+        // IEquatable<T> の実装
+        public bool Equals(PmAuditLog? other)
+        {
+            if (other == null)
+                return false;
+
+            return createdOn == other.createdOn &&
+                   category == other.category &&
+                   action == other.action &&
+                   auditLogDetails == other.auditLogDetails &&
+                   userName == other.userName &&
+                   email == other.email &&
+                   message == other.message &&
+                   detailsVersion == other.detailsVersion &&
+                   source == other.source;
+        }
+
+        public override bool Equals(object? obj) => Equals(obj as PmAuditLog);
+
+        public override int GetHashCode()
+        {
+            int hash = HashCode.Combine(createdOn, category, action, auditLogDetails, userName, email, message, detailsVersion);
+            return HashCode.Combine(hash, source);
+        }
+    }
+
     #endregion
 
 

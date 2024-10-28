@@ -108,11 +108,10 @@ namespace UiPath.PowerShell.Commands
 
             public CsvLine(AddUserCommand cmdlet)
             {
-                MayHaveUserSession = TryParse(cmdlet.MayHaveUserSession);
-                MayHaveRobotSession = TryParse(cmdlet.MayHaveRobotSession);
-                MayHaveUnattendedSession = TryParse(cmdlet.MayHaveUnattendedSession);
-                MayHavePersonalWorkspace = TryParse(cmdlet.MayHavePersonalWorkspace);
-                RestrictToPersonalWorkspace = TryParse(cmdlet.RestrictToPersonalWorkspace);
+                MayHaveRobotSession = cmdlet.MayHaveRobotSession.ToNullableBool();
+                MayHaveUnattendedSession = cmdlet.MayHaveUnattendedSession.ToNullableBool();
+                MayHavePersonalWorkspace = cmdlet.MayHavePersonalWorkspace.ToNullableBool();
+                RestrictToPersonalWorkspace = cmdlet.RestrictToPersonalWorkspace.ToNullableBool();
 
                 UpdatePolicyType = cmdlet.UpdatePolicyType;
                 UpdatePolicyVersion = cmdlet.UpdatePolicyVersion;
@@ -122,16 +121,16 @@ namespace UiPath.PowerShell.Commands
                 UR_Password = cmdlet.UR_Password;
                 UR_CredentialExternalName = cmdlet.UR_CredentialExternalName;
                 UR_CredentialType = cmdlet.UR_CredentialType;
-                UR_LimitConcurrentExecution = TryParse(cmdlet.UR_LimitConcurrentExecution);
+                UR_LimitConcurrentExecution = cmdlet.UR_LimitConcurrentExecution.ToNullableBool();
 
                 ES_TracingLevel = cmdlet.ES_TracingLevel;
-                ES_StudioNotifyServer = TryParse(cmdlet.ES_StudioNotifyServer);
-                ES_LoginToConsole = TryParse(cmdlet.ES_LoginToConsole);
+                ES_StudioNotifyServer = cmdlet.ES_StudioNotifyServer.ToNullableBool();
+                ES_LoginToConsole = cmdlet.ES_LoginToConsole.ToNullableBool();
                 ES_ResolutionWidth = cmdlet.ES_ResolutionWidth;
                 ES_ResolutionHeight = cmdlet.ES_ResolutionHeight;
                 ES_ResolutionDepth = cmdlet.ES_ResolutionDepth;
-                ES_FontSmoothing = TryParse(cmdlet.ES_FontSmoothing);
-                ES_AutoDownloadProcess = TryParse(cmdlet.ES_AutoDownloadProcess);
+                ES_FontSmoothing = cmdlet.ES_FontSmoothing.ToNullableBool();
+                ES_AutoDownloadProcess = cmdlet.ES_AutoDownloadProcess.ToNullableBool();
 
                 Roles = new HashSet<string>(cmdlet.Roles?.Where(r => !string.IsNullOrEmpty(r)) ?? []);
             }
@@ -461,17 +460,6 @@ namespace UiPath.PowerShell.Commands
                     }
                 }
             }
-        }
-
-        // TODO: これ、どこか共通な部分で書いた気がする
-        // 探して置き換えないと。
-        private static bool? TryParse(string? value)
-        {
-            if (bool.TryParse(value, out var boolValue))
-            {
-                return boolValue;
-            }
-            return null;
         }
 
         protected override void ProcessRecord()

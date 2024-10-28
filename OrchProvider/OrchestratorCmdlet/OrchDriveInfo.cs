@@ -225,6 +225,7 @@ namespace UiPath.PowerShell.Core
             }
         }
 
+        // TODO: 引数に IWritableHost を追加して、パスをひとつずつ解釈するようにしたい。
         public static List<(OrchDriveInfo drive, Folder folder)> EnumFolders(IEnumerable<string?>? path, bool recurse = false, uint depth = 0, bool includeRoot = false)
         {
             var paths = ResolveOrchDrivePaths(path);
@@ -283,6 +284,8 @@ namespace UiPath.PowerShell.Core
             return ret.OrderBy(df => df.folder.FullyQualifiedNameOrderable).ToList();
         }
 
+        // planned to be obsoleted
+        // ResolveToSingleFolder() を使って書き直すべきだ。
         public static List<(OrchDriveInfo drive, Folder folder)> EnumFolders(string? path, bool recurse = false, uint depth = 0, bool includeRoot = false)
         {
             return EnumFolders([path], recurse, depth, includeRoot);
@@ -638,6 +641,9 @@ namespace UiPath.PowerShell.Core
             #endregion
 
             #region Platform Management cache
+            _dicPmAuditLogs = null;
+            _dicPmAuditLogs_Exception.ClearCache();
+
             _dicPmAvailableUserBundles = null;
             _dicPmAvailableUserBundles_Exceptions.ClearCache();
 
@@ -894,11 +900,11 @@ namespace UiPath.PowerShell.Core
             foreach (var log in logs)
             {
                 log.Path = folderPath;
-                if (log.Id.HasValue)
-                {
-                    //folderLogs[log.Id.Value] = log;
-                    folderLogs.Add(log);
-                }
+                folderLogs.Add(log);
+                //if (log.Id.HasValue)
+                //{
+                //    //folderLogs[log.Id.Value] = log;
+                //}
             }
 
             return logs.AsReadOnly();
@@ -3443,6 +3449,32 @@ namespace UiPath.PowerShell.Core
             return _dicPmUsers;
         }
         #endregion
+
+        internal HashSet<PmAuditLog>? _dicPmAuditLogs = null;
+        internal readonly ExceptionCachePerTenant _dicPmAuditLogs_Exception = new();
+        public ReadOnlyCollection<PmAuditLog> GetPmAuditLog(string? query, ulong skip, ulong first)
+        {
+            // こいつはマルチスレッドを考慮する必要はないはずだが、念のため。。
+            if (_dicPmAuditLogs == null)
+            {
+                lock (_dicPmAuditLogs_Exception)
+                {
+                    _dicPmAuditLogs = [];
+                }
+            }
+
+            // 必ず問い合わせる
+            var partitionGlobalId = GetPartitionGlobalId();
+            var logs = OrchAPISession.GetPmAuditLog(partitionGlobalId, query, skip, first).ToList();
+            foreach (var log in logs)
+            {
+                log.Path = NameColonSeparator;
+                log.auditLogDetailsExpanded = JsonTools.JsonToDictionary(log.auditLogDetails);
+                _dicPmAuditLogs.Add(log);
+            }
+
+            return logs.AsReadOnly();
+        }
 
         // key: 検索テキスト
         internal ConcurrentDictionary<string, PmDirectoryEntityInfo[]?>? _dicPmDirectoryUsers = null;
