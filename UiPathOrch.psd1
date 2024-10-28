@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.7.7'
+ModuleVersion = '0.9.8.3'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -77,7 +77,6 @@ FunctionsToExport = @(
 'Enable-OrchPersonalWorkspace',
 'Disable-OrchPersonalWorkspace',
 'Find-OrchFolderNoUserAssigned',
-'Copy-OrchFolderWithoutEntity',
 'Get-OrchJobVideo'
 )
 
@@ -135,9 +134,12 @@ CmdletsToExport = @(
 'Enable-OrchLicenseRuntime',
 'Disable-OrchLicenseRuntime',
 
+'Get-OrchPmAuditLog',
+
 'Get-OrchPmLicensedUser',
 
 'Get-OrchPmLicensedGroup',
+'Remove-OrchPmLicensedGroup',
 'Add-OrchPmLicenseToPmLicensedGroup',
 'Remove-OrchPmAllocationFromPmLicensedGroup',
 'Remove-OrchPmLicenseFromPmLicensedGroup',
@@ -183,11 +185,16 @@ CmdletsToExport = @(
 'Add-OrchMachine',
 'Remove-OrchMachine',
 'Copy-OrchMachine',
+'Get-OrchMachineClientSecretId',
+'Add-OrchMachineClientSecret',
+'Remove-OrchMachineClientSecret',
 
 'Get-OrchFolderMachine',
 'Add-OrchFolderMachine',
 'Copy-OrchFolderMachine',
 'Remove-OrchFolderMachine',
+'Enable-OrchFolderMachineInherit',
+'Disable-OrchFolderMachineInherit',
 
 'Get-OrchAsset',
 'Set-OrchAsset',
@@ -298,6 +305,8 @@ CmdletsToExport = @(
 'Get-OrchPmExternalApiResource',
 'Get-OrchPmExternalApplication',
 
+'Get-DuRole',
+'Get-DuUser',
 'Get-DuDocumentType',
 'Get-DuClassifier',
 'Get-DuExtractor',
@@ -355,9 +364,11 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Updated the progress bars in the Copy-OrchLibrary and Copy-OrchPackage cmdlets to display overall progress.
-- Added the -ProcessType filter parameter to the Get-OrchJob cmdlet.
-- Removed the Get-OrchJobVideo cmdlet and replaced it with a function of the same name. The new function achieves the same functionality by calling the Get-OrchJob cmdlet, reducing code duplication and minimizing the module''s footprint.
+        ReleaseNotes = '- The Get-OrchPmAuditLog cmdlet has been added. Similar to Get-OrchJob and Get-OrchLog cmdlets, running it without specifying filter parameters will output the entire cache. Please note that the only filter parameters available for this cmdlet are -Skip and -First.
+
+- The -ExportCsv parameter has been added to the Get-OrchFolderMachine cmdlet. Machines inherited from parent folders will not be included in this CSV file. This CSV file can be imported using the Add-OrchFolderMachine cmdlet. Please be aware that if you are importing it into a different tenant, you need to modify the drive name embedded in the Path column of the CSV file.
+
+- The -PropagateToSubFolders parameter of the Add-OrchFolderMachine cmdlet was not functioning. When the parameter was added in an earlier version, the implementation was forgotten. My apologies for this oversight.
 '
 
         # Prerelease string of this module

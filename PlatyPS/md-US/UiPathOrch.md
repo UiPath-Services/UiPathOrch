@@ -323,6 +323,9 @@ Gets the versions of process packages.
 ### [Get-OrchPersonalWorkspace](Get-OrchPersonalWorkspace.md)
 Gets the personal workspaces.
 
+### [Get-OrchPmAuditLog](Get-OrchPmAuditLog.md)
+{{ Fill in the Synopsis }}
+
 ### [Get-OrchPmExternalApiResource](Get-OrchPmExternalApiResource.md)
 {{ Fill in the Synopsis }}
 

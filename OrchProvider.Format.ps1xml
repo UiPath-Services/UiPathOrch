@@ -9,8 +9,8 @@
         <TypeName>UiPath.PowerShell.Entities.OrchPSDrive</TypeName>
       </ViewSelectedBy>
       <GroupBy>
-        <Label>Directory</Label>
-        <PropertyName>Path</PropertyName>
+        <Label>Provider</Label>
+        <PropertyName>Provider</PropertyName>
       </GroupBy>
       <TableControl>
         <TableHeaders>
@@ -1209,6 +1209,9 @@
             <Label>Scope</Label>
           </TableColumnHeader>
           <TableColumnHeader>
+            <Label>IsInherited</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
             <Label>UA-Slots</Label>
           </TableColumnHeader>
           <TableColumnHeader>
@@ -1233,6 +1236,9 @@
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>Scope</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>IsInherited</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>UnattendedSlots</PropertyName>
@@ -1299,7 +1305,7 @@
       </ViewSelectedBy>
       <GroupBy>
         <Label>Role</Label>
-        <PropertyName>Path</PropertyName>
+        <PropertyName>PathDisplayName</PropertyName>
       </GroupBy>
       <TableControl>
         <TableHeaders>
@@ -1450,7 +1456,7 @@
             <Label>Name</Label>
           </TableColumnHeader>
           <TableColumnHeader>
-            <Label>LicenseKey</Label>
+            <Label>ClientId</Label>
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>ClientSecret</Label>
@@ -1467,6 +1473,57 @@
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>ClientSecret</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>MachineSecretKey</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.MachineSecretKey</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Name</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>ClientId</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>SecretId</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>ClientSecret</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>CreationTime</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>Name</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>ClientId</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>SecretId</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>ClientSecret</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>CreationTime</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -3961,6 +4018,98 @@
     </View>
 
     <View>
+      <Name>PmAuditLog</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.PmAuditLog</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>createdOn</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>category</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>userName</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>action</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>message</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>createdOn</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>category</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>userName</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>action</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>message</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>DuRole</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.DuRole</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>name</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>createdOn</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>description</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>name</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  $_.createdOn.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>description</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
       <Name>DuProject</Name>
       <ViewSelectedBy>
         <TypeName>UiPath.PowerShell.Entities.DuProject</TypeName>
@@ -3994,6 +4143,66 @@
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>description</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>DuUser</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.DuUser</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Project</Label>
+        <PropertyName>PathProject</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>displayName</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>email</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>type</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>source</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>roles</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>displayName</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>email</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>type</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>source</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  $roleNames = @($_.roleAssignmentDtos | ForEach-Object {
+                    if ($_.inherited) {
+                      "$($_.roleName) (Inherited from organization)"
+                    } else {
+                      $_.roleName
+                    }
+                  }) -join ', '
+                  $roleNames
+                </ScriptBlock>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>

@@ -7,6 +7,7 @@ using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
 using BoolCompleter = UiPath.PowerShell.Completer.StaticTextsCompleter<UiPath.PowerShell.Positional.True_False>;
+using System.Data;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -85,7 +86,21 @@ namespace UiPath.PowerShell.Commands
 
         protected override void ProcessRecord()
         {
+            // この修正をしておくことが必要だ。そうでないと、CSV インポート時に解決できない Path があると
+            // CSV の後続の行の処理が全部キャンセルされてしまう。。
+            // 全ての cmdlet をまとめて修正したい。
+            // OrchDriveInfo.EnumFolders() の引数に IWritableHost を渡して、エラー処理を呼び出し先で行う方が安全に漏れなく修正できそうだ。
+            //List<(OrchDriveInfo drive, Folder folder)> drivesFolders;
+            //try
+            //{
             var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+            //}
+            //catch (Exception ex)
+            //{
+            //    WriteError(new ErrorRecord(new OrchException(string.Join(',', Path!), ex), "GetFolderMachineError", ErrorCategory.InvalidOperation, this));
+            //    return;
+            //}
+
             var wpName = Name.ConvertToWildcardPatternList();
 
             using var results = OrchThreadPool.RunForEach(drivesFolders,
@@ -96,13 +111,23 @@ namespace UiPath.PowerShell.Commands
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var result in results)
             {
+                cancelHandler.Token.ThrowIfCancellationRequested();
+
                 try
                 {
                     var machines = result.GetResult(cancelHandler.Token);
                     if (machines == null) continue;
                     var (drive, folder) = result.Source;
 
-                    var addingMachines = machines!.FilterByWildcards(m => m?.Name, wpName);
+                    var addingMachines = machines!.FilterByWildcards(m => m?.Name, wpName).ToList();
+                    // TODO: これ入れないと。このままだといまいちな感じ。Name を複数指定したとき、ひとつでも合致すれば警告が出ない。
+                    // Name をひとつずつ確認していかないといけない。
+                    //if (addingMachines.Count == 0)
+                    //{
+                    //    WriteWarning($"'{folder.GetPSPath()}': No matching machine found with '{string.Join(',', Name!)}' in {drive.NameColonSeparator}.");
+                    //    continue;
+                    //}
+
                     string targetFolder = folder.GetPSPath();
                     try
                     {
@@ -115,12 +140,32 @@ namespace UiPath.PowerShell.Commands
                             drive.OrchAPISession.AddMachinesToFolder(folder.Id ?? 0, machineIds);
                             drive._dicMachinesAssigned?.TryRemove(folder.Id!.Value, out _);
                             drive._dicAssignedMachines?.TryRemove(folder.Id!.Value, out _);
+
+                            // 非 null の場合に処理する
+                            // machine を add するだけなら true の場合のみ処理すればいいのだけど
+                            // 実際には、machine を update する場合もあるから、false も処理しないといけない。
+                            // 既存のと同じマシンを add しただけでは、既存のマシンの PropagateToSubFolders は変化しない。
+                            // これ、Update-OrchFolderMachine も作るべきなのか？
+                            bool? bPropagateToSubFolders = PropagateToSubFolders.ToNullableBool();
+                            if (bPropagateToSubFolders != null)
+                            {
+                                foreach (var machineId in machineIds)
+                                {
+                                    try
+                                    {
+                                        drive.OrchAPISession.SetFolderMachineInherit(folder.Id!.Value, machineId, bPropagateToSubFolders.Value);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        WriteError(new ErrorRecord(new OrchException(targetFolder, ex), "SetFolderMachineInheritError", ErrorCategory.InvalidOperation, folder));
+                                    }
+                                }
+                            }
                         }
                     }
                     catch (Exception ex)
                     {
-                        var errorRecord = new ErrorRecord(new OrchException(targetFolder, ex), "AddFolderMachineError", ErrorCategory.InvalidOperation, folder);
-                        WriteError(errorRecord);
+                        WriteError(new ErrorRecord(new OrchException(targetFolder, ex), "AddFolderMachineError", ErrorCategory.InvalidOperation, folder));
                     }
                 }
                 catch (OrchException ex)

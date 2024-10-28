@@ -313,6 +313,16 @@ namespace UiPath.PowerShell.Core
             return null;
         }
 
+        public static bool? ToNullableBool(this string? str)
+        {
+            return str.ToNullable<bool>(bool.TryParse);
+        }
+
+        public static DateTime? ToNullableDateTime(this string? str)
+        {
+            return str.ToNullable<DateTime>(DateTime.TryParse);
+        }
+
         public static T? ToNullable<T>(this T? value) where T : struct, IComparable
         {
             if (value.HasValue && value.Value.CompareTo(default(T)) == 0)

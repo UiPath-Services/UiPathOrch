@@ -446,6 +446,7 @@ namespace UiPath.PowerShell.Commands
             string msg = $"Get Log";
             using ProgressReporter reporter = new(this, 1, drivesFolders.Count, msg, msg);
             int index = 0;
+            using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (drive, folder) in drivesFolders)
             {
                 reporter.WriteProgress(++index, $"{index:D}/{drivesFolders.Count} {folder.GetPSPath()}");
@@ -461,6 +462,8 @@ namespace UiPath.PowerShell.Commands
                     first -= first2;
                     while (logs.Count == 10000)
                     {
+                        cancelHandler.Token.ThrowIfCancellationRequested();
+
                         var lastLog = logs.LastOrDefault();
                         if (lastLog == null) continue;
 

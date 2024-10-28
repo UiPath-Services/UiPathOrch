@@ -2523,6 +2523,13 @@ namespace UiPath.OrchAPI
         //}
 
         // 非公開の API だな。。
+        public IEnumerable<PmAuditLog> GetPmAuditLog(string? partitionGlobalId, string? query, ulong skip, ulong first)
+        {
+            if (string.IsNullOrEmpty(partitionGlobalId)) return [];
+            return GetEnumerablePortal<PmAuditLog>($"/api/auditLog/{partitionGlobalId}", null, query, skip, first);
+        }
+
+        // 非公開の API だな。。
         public AvailableUserBundles? GetPmLicensedGroupsAvailableLicenses(string? groupId)
         {
             if (groupId == null) return null;

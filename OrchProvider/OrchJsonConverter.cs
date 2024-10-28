@@ -61,9 +61,14 @@ namespace UiPath.PowerShell.Entities.JsonConverter
         public static Dictionary<string, object?>? JsonToDictionary(string? jsonText)
         {
             if (jsonText == null) return null;
-            // JSON をパースして JsonNode に変換
-            JsonNode jsonNode = JsonNode.Parse(jsonText);
-            return ProcessNode(jsonNode as JsonObject);
+            try
+            {
+                // JSON をパースして JsonNode に変換
+                JsonNode jsonNode = JsonNode.Parse(jsonText);
+                return ProcessNode(jsonNode as JsonObject);
+            }
+            catch { } // この例外は握りつぶして良い
+            return null;
         }
     }
 

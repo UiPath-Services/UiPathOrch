@@ -35,6 +35,8 @@ namespace UiPath.PowerShell.Commands
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var result in results)
             {
+                cancelHandler.Token.ThrowIfCancellationRequested();
+
                 try
                 {
                     var entities = result.GetResult(cancelHandler.Token);
