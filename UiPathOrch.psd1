@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.8.3'
+ModuleVersion = '0.9.8.4'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -158,6 +158,7 @@ CmdletsToExport = @(
 'Get-OrchLicenseStats',
 
 'Get-OrchRole',
+'Set-OrchRole',
 'Remove-OrchRole',
 'Copy-OrchRole',
 
@@ -364,11 +365,18 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- The Get-OrchPmAuditLog cmdlet has been added. Similar to Get-OrchJob and Get-OrchLog cmdlets, running it without specifying filter parameters will output the entire cache. Please note that the only filter parameters available for this cmdlet are -Skip and -First.
+        ReleaseNotes = '- Configuration File-Related Updates:
+  - The HttpListener in UiPathOrchConfig.json is now automatically configured from RedirectUrl. The value of HttpListener will be the same as RedirectUrl with a trailing slash added. This allows the configuration file to work without specifying HttpListener. However, if the port number specified in RedirectUrl is 1024 or below, you still need to include HttpListener in the configuration file as before.
 
-- The -ExportCsv parameter has been added to the Get-OrchFolderMachine cmdlet. Machines inherited from parent folders will not be included in this CSV file. This CSV file can be imported using the Add-OrchFolderMachine cmdlet. Please be aware that if you are importing it into a different tenant, you need to modify the drive name embedded in the Path column of the CSV file.
+  - Changed the value of RedirectUrl in the template file of UiPathOrchConfig.json to "http://localhost:8085/Temporary_Listen_Addresses" (in other words, changed the port from 80 to 8085). Also, removed HttpListener from this file. If the configuration file does not exist when Import-Module UiPathOrch is executed, a configuration file will be automatically created from this template.
 
-- The -PropagateToSubFolders parameter of the Add-OrchFolderMachine cmdlet was not functioning. When the parameter was added in an earlier version, the implementation was forgotten. My apologies for this oversight.
+- Role-Related Updates:
+  - Added the -ExportCsv parameter to the Get-OrchRole cmdlet. Like other cmdlets, you can specify a folder or file path for exporting the CSV. If a folder path is specified, it will output with the default file name "ExportedRoles.csv". This CSV file can be imported using the Set-OrchRole cmdlet.
+
+  - Added the Set-OrchRole cmdlet. If a role with the name specified by the -Name parameter (Name column in the CSV) already exists, it will be updated. If it does not exist, a new role with that name will be created.
+
+- Other:
+  - The execution result of Get-OrchRole -ExpandPermission was incorrect. I apologize for the inconvenience.
 '
 
         # Prerelease string of this module

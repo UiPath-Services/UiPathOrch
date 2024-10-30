@@ -575,6 +575,9 @@ Sets the current location to the UiPathOrch module's installation directory.
 ### [Set-OrchPmRobotAccount](Set-OrchPmRobotAccount.md)
 Creates or updates robot accounts in the Identity server.
 
+### [Set-OrchRole](Set-OrchRole.md)
+Adds or updates a role.
+
 ### [Start-OrchJob](Start-OrchJob.md)
 {{ Fill in the Synopsis }}
 

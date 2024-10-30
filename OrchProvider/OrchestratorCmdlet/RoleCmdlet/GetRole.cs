@@ -8,6 +8,7 @@ using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
 
 using Positional = UiPath.PowerShell.Positional.Name;
+using System.Text;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -32,22 +33,60 @@ namespace UiPath.PowerShell.Commands
         [Parameter]
         public SwitchParameter ExpandPermission { get; set; }
 
+        [Parameter]
+        public string? ExportCsv { get; set; }
+
+        [Parameter]
+        [ArgumentCompleter(typeof(EncodingCompleter))]
+        [EncodingArgumentTransformation]
+        public Encoding? CsvEncoding { get; set; }
+
+        private static readonly string DefaultCsvName = "ExportedRoles.csv";
+
+        private static readonly string[] CsvHeaders = [
+            "Path", "Name", "Type", "PermissionName", "Scope", "IsEditable", "View", "Edit", "Create", "Delete"
+        ];
+
+        private static void WriteCsvContent(StreamWriter writer, IEnumerable<OrchRolePermissionExpanded> output)
+        {
+            foreach (var permission in output)
+            {
+                string[] line = [
+                    EscapeCsvValue(permission.Path, true),
+                    EscapeCsvValue(permission.Name, true),
+                    EscapeCsvValue(permission.Type),
+                    EscapeCsvValue(permission.PermissionName),
+                    EscapeCsvValue(permission.Scope),
+                    EscapeCsvValue(permission.IsEditable),
+                    EscapeCsvValue(permission.View),
+                    EscapeCsvValue(permission.Edit),
+                    EscapeCsvValue(permission.Create),
+                    EscapeCsvValue(permission.Delete)
+                ];
+                WriteCsvLine(writer, line);
+            }
+        }
+
         protected override void ProcessRecord()
         {
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
             var wpName = Name?.Select(name => new WildcardPattern(name, WildcardOptions.IgnoreCase)).ToList();
 
-            if (!ExpandPermission.IsPresent)
+            ExportCsv = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
+            using var writer = WriteCsvHeader(ExportCsv, CsvEncoding, CsvHeaders);
+
+            if (!ExpandPermission.IsPresent && writer == null)
             {
                 foreach (var drive in drives)
                 {
                     try
                     {
-                        WriteObject(drive!.GetRoles()
+                        var targetRoles = drive!.GetRoles()
                             .FilterByWildcards(role => role?.Name, wpName)
                             .OrderByDescending(role => role.Type)
-                            .ThenBy(role => role.Name),
-                            true);
+                            .ThenBy(role => role.Name);
+
+                        WriteObject(targetRoles, true);
                     }
                     catch (Exception ex)
                     {
@@ -58,8 +97,11 @@ namespace UiPath.PowerShell.Commands
             }
 
             // ExpandPermission.IsPresent == true
+            using var cancelHandler = new ConsoleCancelHandler();
             foreach (var drive in drives)
             {
+                cancelHandler.Token.ThrowIfCancellationRequested();
+
                 try
                 {
                     foreach (var role in drive!.GetRoles()
@@ -69,16 +111,17 @@ namespace UiPath.PowerShell.Commands
                     {
                         var p = role.Permissions;
                         IEnumerable<Permission> q = null;
-                        if (role.Type == "Tenant") { q = p!.Where(p => p.Scope != "Folder"); }
+                             if (role.Type == "Tenant") { q = p!.Where(p => p.Scope != "Folder"); }
                         else if (role.Type == "Folder") { q = p!.Where(p => p.Scope != "Global"); }
                         else { q = p; }
 
                         var groupByPermissions = q!.GroupBy(q =>
                         {
-                            int idx = q.Name!.IndexOf(".");
-                            if (idx != -1)
+                            var splitName = q.Name?.Split('.') ?? [];
+
+                            if (splitName.Length > 1)
                             {
-                                return (q.Scope, Name: q.Name.Substring(0, idx));
+                                return (q.Scope, Name: splitName[0]);
                             }
                             else
                             {
@@ -92,32 +135,42 @@ namespace UiPath.PowerShell.Commands
                             var expanded = new OrchRolePermissionExpanded
                             {
                                 //expanded.Name = role.DisplayName;
-                                Name = item.Key.Name,
-                                Scope = item.Key.Scope,
+                                PermissionName = item.Key.Name,
                                 Type = role.Type,
-                                Path = drive.NameColon,
-                                DisplayName = role.Name,
-                                PathDisplayName = System.IO.Path.Combine(drive.NameColon, role.Name!)
+                                IsEditable = role.IsEditable,
+                                Scope = item.Key.Scope,
+                                Path = drive.NameColonSeparator,
+                                Name = role.Name,
+                                PathName = System.IO.Path.Combine(drive.NameColonSeparator, role.Name!)
                             };
                             foreach (var s in item)
                             {
-                                     if (s.Name!.Contains(".View"))  { expanded.View = true; }
-                                else if (s.Name.Contains(".Edit"))   { expanded.Edit = true; }
-                                else if (s.Name.Contains(".Create")) { expanded.Create = true; }
-                                else if (s.Name.Contains(".Delete")) { expanded.Delete = true; }
+                                if (string.IsNullOrEmpty(s.Name)) continue;
+                                     if (s.Name.Contains(".View"))   { expanded.View = s.IsGranted; }
+                                else if (s.Name.Contains(".Edit"))   { expanded.Edit = s.IsGranted; }
+                                else if (s.Name.Contains(".Create")) { expanded.Create = s.IsGranted; }
+                                else if (s.Name.Contains(".Delete")) { expanded.Delete = s.IsGranted; }
                             }
                             output.Add(expanded);
                         }
 
-                        WriteObject(output.OrderBy(p => p.Name).ThenByDescending(p => p.Scope), true);
+                        if (writer != null)
+                        {
+                            WriteCsvContent(writer, output.OrderBy(p => p.PermissionName).ThenByDescending(p => p.Scope));
+                        }
+                        else
+                        {
+                            WriteObject(output.OrderBy(p => p.PermissionName).ThenByDescending(p => p.Scope), true);
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
-                    var errorRecord = new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetRoleError", ErrorCategory.InvalidOperation, drive);
-                    WriteError(errorRecord);
+                    WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetRoleError", ErrorCategory.InvalidOperation, drive));
                 }
             }
+
+            WriteCSVExportedMessage(this, ExportCsv);
         }
     }
 }

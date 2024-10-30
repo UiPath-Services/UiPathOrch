@@ -106,7 +106,7 @@ namespace UiPath.PowerShell.Commands
                     {
                         try
                         {
-                            var addedRole = dstDrive.OrchAPISession.AddRole(role);
+                            var addedRole = dstDrive.OrchAPISession.PostRole(role);
                             //addedRole.Path = dstDrive.NameColonSeparator;
                             //WriteObject(addedRole);
                             dstDrive._dicRoles = null;

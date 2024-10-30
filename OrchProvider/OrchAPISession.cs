@@ -1646,38 +1646,40 @@ namespace UiPath.OrchAPI
 
         #region Role
 
-        public IEnumerable<Role> GetRoles()//bool expandPermission = false)
+        public IEnumerable<Role> GetRoles()
         {
-            //if (expandPermission)
-                return GetEnumerable<Role>("/odata/Roles", null, "&$expand=Permissions");
-            //else
-            //    return GetEnumerable<Role>("/odata/Roles");
+            return GetEnumerable<Role>("/odata/Roles", null, "&$expand=Permissions");
         }
 
-        public Role? AddRole(Role role)
+        public Role? PostRole(Role role)
         {
-            var payload = new Dictionary<string, object>();
-            payload["Name"] = role.Name!;
-            payload["DisplayName"] = role.DisplayName!;
-            payload["Type"] = role.Type!;
-
-            var permissions = new List<Dictionary<string, object>>();
-            foreach (var p in role.Permissions!)
+            role.Id = null;
+            role.IsEditable = null;
+            role.IsStatic = null;
+            foreach (var p in role.Permissions ?? [])
             {
-                var entry = new Dictionary<string, object>()
-                {
-                    ["Name"] = p.Name!,
-                    ["IsGranted"] = p.IsGranted!,
-                    ["Scope"] = p.Scope!
-                };
-                permissions.Add(entry);
+                p.Id = null;
+                p.RoleId = null;
             }
-            payload["Permissions"] = permissions;
 
-            return HttpRequest<Role>(HttpMethod.Post, "/odata/Roles", null, payload);
+            return HttpRequest<Role>(HttpMethod.Post, "/odata/Roles", null, role);
         }
 
-        public void RemoveRole(Int64 roleId)
+        public void PutRole(Role role)
+        {
+            role.IsEditable = null;
+            role.IsStatic = null;
+            foreach (var p in role.Permissions ?? [])
+            {
+                p.Id = null;
+                p.RoleId = null;
+            }
+
+            // 何も返らない
+            HttpRequest(HttpMethod.Put, $"/odata/Roles({role.Id})", null, role);
+        }
+
+        public void DeleteRole(Int64 roleId)
         {
             HttpRequest(HttpMethod.Delete, $"/odata/Roles({roleId})");
         }

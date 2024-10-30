@@ -1305,7 +1305,7 @@
       </ViewSelectedBy>
       <GroupBy>
         <Label>Role</Label>
-        <PropertyName>PathDisplayName</PropertyName>
+        <PropertyName>PathName</PropertyName>
       </GroupBy>
       <TableControl>
         <TableHeaders>
@@ -1316,7 +1316,7 @@
             <Label>Scope</Label>
           </TableColumnHeader>
           <TableColumnHeader>
-            <Label>Name</Label>
+            <Label>PermissionName</Label>
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>View</Label>
@@ -1343,7 +1343,7 @@
                 <PropertyName>Scope</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>Name</PropertyName>
+                <PropertyName>PermissionName</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <ScriptBlock>

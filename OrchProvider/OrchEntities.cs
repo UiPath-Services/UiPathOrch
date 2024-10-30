@@ -1315,7 +1315,7 @@ namespace UiPath.PowerShell.Entities
         public List<Permission>? Permissions { get; set; }
     }
 
-    // UserRolesDto
+    // SimpleRoleDto
     public class SimpleRole
     {
         public string? Origin { get; set; }
@@ -3586,6 +3586,7 @@ namespace UiPath.PowerShell.Entities
             if (other == null)
                 return false;
 
+            // Path と auditLogDetailsExpanded は考慮しない
             return createdOn == other.createdOn &&
                    category == other.category &&
                    action == other.action &&
@@ -4119,11 +4120,12 @@ namespace UiPath.PowerShell.Entities
     public class OrchRolePermissionExpanded
     {
         public string? Path { get; set; }
-        public string? DisplayName { get; set; }
-        public string? PathDisplayName { get; set; }
-        public string? Type { get; set; }
-        public string? Scope { get; set; }
         public string? Name { get; set; }
+        public string? PathName { get; set; }
+        public bool? IsEditable { get; set; }
+        public string? Type { get; set; }
+        public string? PermissionName { get; set; }
+        public string? Scope { get; set; }
         public bool? View { get; set; }
         public bool? Edit { get; set; }
         public bool? Create { get; set; }
