@@ -120,13 +120,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.Nullable`1[[System.UInt64, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]
-
 ### System.Management.Automation.SwitchParameter
-
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.PmAuditLog
-
 ## NOTES
 
 ## RELATED LINKS

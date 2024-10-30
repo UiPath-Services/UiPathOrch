@@ -110,42 +110,39 @@ namespace UiPath.PowerShell.Commands
                                 continue;
                             }
 
-                            foreach (var srcRobot in targetRobots)
+                            reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {srcRobotAccount.GetPSPath()} to {dstDrive.NameColonSeparator}");
+
+                            string target = $"Item: {System.IO.Path.Combine(srcDrive!.NameColon, srcRobotAccount!.displayName!)} Destination: {dstDrive.NameColonSeparator}";
+
+                            // この名前のロボットを新規追加
+                            var cmd = new CreateRobotAccountCommand()
                             {
-                                reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {srcRobot.GetPSPath()} to {dstDrive.NameColonSeparator}");
+                                partitionGlobalId = dstPartitionGlobalId,
+                                name = srcRobotAccount.name,
+                                displayName = srcRobotAccount.displayName,
+                                groupIDsToAdd = Core.OrchProvider.FindDstIdGroups(
+                                    this, srcDrive, srcRobotAccount.groupIds,
+                                    dstDrive, "Copying PmRobotAccount")?.Select(group => group.id!).ToList()
+                            };
 
-                                string target = $"Item: {System.IO.Path.Combine(srcDrive!.NameColon, srcRobot!.displayName!)} Destination: {dstDrive.NameColonSeparator}";
-
-                                // この名前のロボットを新規追加
-                                var cmd = new CreateRobotAccountCommand()
+                            if (ShouldProcess(target, "Copy PmRobotAccount"))
+                            {
+                                try
                                 {
-                                    partitionGlobalId = dstPartitionGlobalId,
-                                    name = srcRobot.name,
-                                    displayName = srcRobot.displayName,
-                                    groupIDsToAdd = Core.OrchProvider.FindDstIdGroups(
-                                        this, srcDrive, srcRobot.groupIds,
-                                        dstDrive, "Copying PmRobotAccount")?.Select(group => group.id!).ToList()
-                                };
-
-                                if (ShouldProcess(target, "Copy PmRobotAccount"))
+                                    var newRobot = dstDrive.OrchAPISession.CreatePmRobot(cmd);
+                                    dstDrive._dicPmRobotAccounts = null;
+                                    dstDrive._dicPmDirectoryUsers = null;
+                                    dstDrive._dicSearchForUsersAndGroups = null;
+                                    if (newRobot != null)
+                                    {
+                                        newRobot.Path = dstDrive.NameColonSeparator;
+                                        WriteObject(newRobot);
+                                    }
+                                }
+                                catch (Exception ex)
                                 {
-                                    try
-                                    {
-                                        var newRobot = dstDrive.OrchAPISession.CreatePmRobot(cmd);
-                                        dstDrive._dicPmRobotAccounts = null;
-                                        dstDrive._dicPmDirectoryUsers = null;
-                                        dstDrive._dicSearchForUsersAndGroups = null;
-                                        if (newRobot != null)
-                                        {
-                                            newRobot.Path = dstDrive.NameColonSeparator;
-                                            WriteObject(newRobot);
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        WriteError(new ErrorRecord(new OrchException(target, ex), "CreatePmRobotAccountError", ErrorCategory.InvalidOperation, target));
-                                        continue;
-                                    }
+                                    WriteError(new ErrorRecord(new OrchException(target, ex), "CreatePmRobotAccountError", ErrorCategory.InvalidOperation, target));
+                                    continue;
                                 }
                             }
                         }

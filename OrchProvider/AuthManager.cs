@@ -64,9 +64,6 @@ namespace UiPath.OrchAPI
 
             if (!string.IsNullOrEmpty(drive.RedirectUrl) && drive.RedirectUrl!.EndsWith('/'))
                 _drive.RedirectUrl = drive.RedirectUrl!.TrimEnd('/');
-
-            if (!string.IsNullOrEmpty(drive.HttpListener) && !drive.HttpListener!.EndsWith('/'))
-                _drive.HttpListener += '/';
         }
 
         public string RequestToken(string driveLetter)
@@ -164,34 +161,6 @@ namespace UiPath.OrchAPI
             return _access_token;
         }
 
-        //private (string access_token, string refresh_token) GetAccessToken(Dictionary<string, string> postData)
-        //{
-        //    string endPoint = _baseUrl.Contains("uipath.com", StringComparison.InvariantCultureIgnoreCase)
-        //        ? _baseUrl + "/identity_/connect/token"
-        //        : _baseUrl + "/identity/connect/token";
-
-        //    var request = new HttpRequestMessage(HttpMethod.Post, endPoint)
-        //    {
-        //        Content = new FormUrlEncodedContent(postData)
-        //    };
-
-        //    using var consoleCancelHandler = new ConsoleCancelHandler();
-        //    HttpResponseMessage response = _httpClient.Send(request, consoleCancelHandler.Token);
-
-        //    string body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-
-        //    if (!response.IsSuccessStatusCode)
-        //    {
-        //        return ("", "");
-        //        //throw new Exception(body);
-        //    }
-
-        //    dynamic? doc = JsonConvert.DeserializeObject(body);
-        //    string access_token = doc?.access_token ?? "";
-        //    string refresh_token = doc?.refresh_token ?? "";
-        //    return (access_token, refresh_token);
-        //}
-
         private (string access_token, string refresh_token) GetAccessToken(Dictionary<string, string> postData)
         {
             string endPoint;
@@ -254,20 +223,39 @@ namespace UiPath.OrchAPI
                     : _baseUrl + "/identity/connect/authorize";
             }
 
-            string authUrl = null;
-            if (!string.IsNullOrEmpty(codeVerifier))
+            string authUrl = !string.IsNullOrEmpty(codeVerifier)
+                ? $"{endPoint}?response_type=code&client_id={_drive.AppId}&scope={_drive.Scope} offline_access&redirect_uri={WebUtility.UrlEncode(_drive.RedirectUrl)}&code_challenge={GetHash(codeVerifier)}&code_challenge_method=S256"
+                : $"{endPoint}?response_type=code&client_id={_drive.AppId}&scope={_drive.Scope} offline_access&redirect_uri={WebUtility.UrlEncode(_drive.RedirectUrl)}";
+
+            // 自動で HttpListener プレフィックスを生成
+            string httpListenerPrefix;
+            if (!string.IsNullOrEmpty(_drive.HttpListener))
             {
-                string codeChallenge = GetHash(codeVerifier);
-                authUrl = endPoint + $"?response_type=code&client_id={_drive.AppId}&scope={_drive.Scope} offline_access&redirect_uri={WebUtility.UrlEncode(_drive.RedirectUrl)}&code_challenge={codeChallenge}&code_challenge_method=S256";
+                // 設定ファイルの HttpListener の設定を尊重する
+                httpListenerPrefix = _drive.HttpListener;
             }
             else
             {
-                authUrl = endPoint + $"?response_type=code&client_id={_drive.AppId}&scope={_drive.Scope} offline_access&redirect_uri={WebUtility.UrlEncode(_drive.RedirectUrl)}";
+                // 設定ファイルに HttpListener がない場合は、自動生成する
+                Uri redirectUri = new(_drive.RedirectUrl!);
+                httpListenerPrefix = $"{redirectUri.Scheme}://{redirectUri.Host}:{redirectUri.Port}{redirectUri.AbsolutePath}/";
             }
 
             using var listener = new HttpListener();
-            listener.Prefixes.Add(_drive.HttpListener!);
-            listener.Start();
+            try
+            {
+                listener.Prefixes.Add(httpListenerPrefix);
+                listener.Start();
+            }
+            catch (HttpListenerException ex)
+            {
+                // If starting the listener failed
+                var uri = new Uri(_drive.RedirectUrl!);
+                string message = uri.Port <= 1024
+                    ? $"Failed to start the HttpListener. The port {uri.Port} specified in 'RedirectUrl' may require administrative privileges. Please ensure you have the necessary permissions or try changing this port in the configuration file, which can be opened using the Edit-OrchConfig cmdlet."
+                    : $"Failed to start the HttpListener. The port {uri.Port} specified in 'RedirectUrl' may be in use. Try changing this port in the configuration file, which can be opened using the Edit-OrchConfig cmdlet.";
+                throw new InvalidOperationException(message, ex);
+            }
 
             Process.Start(new ProcessStartInfo(authUrl) { UseShellExecute = true });
 
@@ -283,32 +271,29 @@ namespace UiPath.OrchAPI
             {
                 try
                 {
-                    while (!cts.IsCancellationRequested)
+                    while (listener.IsListening && !cts.IsCancellationRequested)
                     {
-                        if (listener.IsListening)
+                        try
                         {
                             var context = await listener.GetContextAsync();
                             authorizationCode = context.Request.QueryString["code"];
                             if (!string.IsNullOrEmpty(authorizationCode))
                             {
                                 // Send a response back to the browser
-                                Assembly assembly = Assembly.GetExecutingAssembly();
-                                using Stream stream = assembly.GetManifestResourceStream("OrchProvider.MountSuccessNotification.html");
+                                using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("OrchProvider.MountSuccessNotification.html");
                                 using StreamReader reader = new(stream!);
                                 string htmlTemplate = reader.ReadToEnd();
-
                                 string responseString = string.Format(htmlTemplate, _drive.Root, driveName);
                                 byte[] buffer = Encoding.UTF8.GetBytes(responseString);
                                 context.Response.ContentLength64 = buffer.Length;
                                 await context.Response.OutputStream.WriteAsync(buffer, 0, buffer.Length, cts);
-                                context.Response.OutputStream.Close();
-                                break;  // Break the loop once the code is obtained
+                                break;
                             }
                         }
-                        else
+                        catch (HttpListenerException)
                         {
-                            // If listener is not listening, delay a bit before the next check
-                            await Task.Delay(100, cts);
+                            // If the listener was stopped unexpectedly
+                            break;
                         }
                     }
                 }
@@ -335,12 +320,14 @@ namespace UiPath.OrchAPI
                 }
             }
 
+            // Stop and close the listener
+            listener.Stop();
+            listener.Close();
+
             if (capturedException != null)
             {
                 throw capturedException;
             }
-
-            listener.Stop();
 
             if (authorizationCode == null)
             {

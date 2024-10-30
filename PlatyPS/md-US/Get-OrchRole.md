@@ -13,8 +13,8 @@ Get the roles.
 ## SYNTAX
 
 ```
-Get-OrchRole [-Name <String[]>] [-Path <String[]>] [-ExpandPermission] [-ProgressAction <ActionPreference>]
- [<CommonParameters>]
+Get-OrchRole [-Name <String[]>] [-Path <String[]>] [-ExpandPermission] [-ExportCsv <String>]
+ [-CsvEncoding <Encoding>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -95,6 +95,36 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: True
+```
+
+### -CsvEncoding
+{{ Fill CsvEncoding Description }}
+
+```yaml
+Type: Encoding
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ExportCsv
+{{ Fill ExportCsv Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
 ```
 
 ### CommonParameters

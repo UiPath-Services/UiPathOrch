@@ -44,7 +44,7 @@ namespace UiPath.PowerShell.Commands
                         {
                             try
                             {
-                                drive.OrchAPISession.RemoveRole(role.Id ?? 0);
+                                drive.OrchAPISession.DeleteRole(role.Id ?? 0);
                                 drive._dicRoles = null;
                             }
                             catch (Exception ex)
