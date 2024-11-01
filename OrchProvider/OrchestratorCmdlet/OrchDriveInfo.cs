@@ -291,6 +291,7 @@ namespace UiPath.PowerShell.Core
             return EnumFolders([path], recurse, depth, includeRoot);
         }
 
+        // TODO: これを一般化しなければ。★★★★
         public static (OrchDriveInfo drive, Folder folder) ResolveToSingleFolder(string? path)
         {
             var ret = EnumFolders(path, false, 0, true);

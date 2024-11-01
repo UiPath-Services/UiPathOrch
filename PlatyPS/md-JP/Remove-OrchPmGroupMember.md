@@ -5,16 +5,16 @@ online version:
 schema: 2.0.0
 ---
 
-# Add-OrchPmMemberToPmGroup
+# Remove-OrchPmGroupMember
 
 ## SYNOPSIS
-グループにメンバーを追加します。
+グループからメンバーを削除します。
 
 ## SYNTAX
 
 ```
-Add-OrchPmMemberToPmGroup -GroupName <String[]> [-Type <String[]>] -UserName <String[]> [-Path <String[]>]
- [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-OrchPmGroupMember [-GroupName] <String[]> [-Type] <String[]> [-UserName] <String[]> [-WarnOnNoMatch]
+ [-Path <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -23,6 +23,8 @@ Add-OrchPmMemberToPmGroup -GroupName <String[]> [-Type <String[]>] -UserName <St
 主に呼び出すエンドポイント: PUT /api/Group/{groupId}
 
 OAuth に必要なスコープ: PM.Group
+
+必要な権限:
 
 ## EXAMPLES
 
@@ -50,6 +52,21 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -GroupName
+ユーザーを削除するグループの名前を指定します。
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: 0
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
+```
+
 ### -Path
 ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
 
@@ -62,6 +79,51 @@ Required: False
 Position: Named
 Default value: None
 Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -Type
+削除するユーザーの種別を指定します。
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: 1
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
+```
+
+### -UserName
+削除するユーザーの UserName を指定します。
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: 2
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
+```
+
+### -WarnOnNoMatch
+{{ Fill WarnOnNoMatch Description }}
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
@@ -96,57 +158,13 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -GroupName
-ユーザーを追加するグループの名前を指定します。
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: True
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
-### -Type
-追加するユーザーの種別を指定します。
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
-### -UserName
-追加するユーザーの UserName を指定します。
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: True
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: False
-```
-
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
-### None
+### System.String[]
+
 ## OUTPUTS
 
 ### System.Object

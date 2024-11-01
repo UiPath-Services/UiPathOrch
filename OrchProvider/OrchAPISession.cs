@@ -93,6 +93,7 @@ namespace UiPath.OrchAPI
         // 1秒間の間に送出できるリクエスト数を15に制限
         private readonly RateLimiter limitter = new(15);
 
+        //private int http_call_num = 0; // for debug log
         private HttpResponseMessage HttpClient_Send(HttpRequestMessage message, CancellationToken cancellationToken = default)
         {
             //limitter.WaitAsync(cancellationToken).GetAwaiter().GetResult();
@@ -100,6 +101,8 @@ namespace UiPath.OrchAPI
             try
             {
                 // すべての HTTP リクエストをコンソールにログ出力
+                //int num = Interlocked.Increment(ref http_call_num);
+                //Console.WriteLine($"HTTP#{num} {message.Method} {message.RequestUri}");
 
                 var ret = HttpClient!.Send(message, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 

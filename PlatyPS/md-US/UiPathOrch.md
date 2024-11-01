@@ -35,11 +35,11 @@ Adds machines.
 ### [Add-OrchPmGroup](Add-OrchPmGroup.md)
 Adds groups to the Identity server.
 
+### [Add-OrchPmGroupMember](Add-OrchPmGroupMember.md)
+Adds members to groups.
+
 ### [Add-OrchPmLicenseToPmLicensedGroup](Add-OrchPmLicenseToPmLicensedGroup.md)
 {{ Fill in the Synopsis }}
-
-### [Add-OrchPmMemberToPmGroup](Add-OrchPmMemberToPmGroup.md)
-Adds members to groups.
 
 ### [Add-OrchPmUserBulk](Add-OrchPmUserBulk.md)
 Adds users to the organization.
@@ -497,14 +497,14 @@ Removes license allocations from users within license groups.
 ### [Remove-OrchPmGroup](Remove-OrchPmGroup.md)
 {{ Fill in the Synopsis }}
 
+### [Remove-OrchPmGroupMember](Remove-OrchPmGroupMember.md)
+Removes members from groups.
+
 ### [Remove-OrchPmLicensedGroup](Remove-OrchPmLicensedGroup.md)
 {{ Fill in the Synopsis }}
 
 ### [Remove-OrchPmLicenseFromPmLicensedGroup](Remove-OrchPmLicenseFromPmLicensedGroup.md)
 {{ Fill in the Synopsis }}
-
-### [Remove-OrchPmMemberFromPmGroup](Remove-OrchPmMemberFromPmGroup.md)
-Removes members from groups.
 
 ### [Remove-OrchPmRobotAccount](Remove-OrchPmRobotAccount.md)
 {{ Fill in the Synopsis }}

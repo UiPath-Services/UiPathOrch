@@ -1,11 +1,7 @@
-﻿using System.Collections;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.GroupName;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -27,11 +23,14 @@ namespace UiPath.PowerShell.Commands
         {
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
 
+            using var cancelHandler = new ConsoleCancelHandler();
             foreach (var drive in drives)
             {
                 var partitionGlobalId = drive.GetPartitionGlobalId();
                 foreach (var groupName in GroupName!)
                 {
+                    cancelHandler.Token.ThrowIfCancellationRequested();
+
                     string target = System.IO.Path.Combine(drive.NameColonSeparator, groupName);
                     if (ShouldProcess(target, "Add Group"))
                     {
