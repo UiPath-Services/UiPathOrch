@@ -24,7 +24,7 @@ Get-OrchRobot [[-FullName] <String[]>] [[-Username] <String[]>] [-Path <String[]
 
 OAuth に必要なスコープ: OR.Robots or OR.Robots.Read
 
-必要な権限: (Users.View - Required only when the robot's user is expanded) and (Robots.View)
+必要な権限: Users.View and Robots.View
 
 ## EXAMPLES
 

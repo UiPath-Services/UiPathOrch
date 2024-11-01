@@ -11,7 +11,7 @@ using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands
 {
-    [Cmdlet(VerbsCommon.Remove, "OrchPmMemberFromPmGroup", SupportsShouldProcess = true)]
+    [Cmdlet(VerbsCommon.Remove, "OrchPmGroupMember", SupportsShouldProcess = true)]
     //[OutputType(typeof(Entities.IdGroup))]
     public class RemovePmMemberFromPmGroupCommand : OrchestratorPSCmdlet
     {

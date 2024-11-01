@@ -35,11 +35,11 @@ Locale: en-US
 ### [Add-OrchPmGroup](Add-OrchPmGroup.md)
 Identity Server にグループを追加します。
 
+### [Add-OrchPmGroupMember](Add-OrchPmGroupMember.md)
+グループにメンバーを追加します。
+
 ### [Add-OrchPmLicenseToPmLicensedGroup](Add-OrchPmLicenseToPmLicensedGroup.md)
 {{ Fill in the Synopsis }}
-
-### [Add-OrchPmMemberToPmGroup](Add-OrchPmMemberToPmGroup.md)
-グループにメンバーを追加します。
 
 ### [Add-OrchPmUserBulk](Add-OrchPmUserBulk.md)
 組織にユーザーを追加します。
@@ -497,14 +497,14 @@ API トリガーを削除します。
 ### [Remove-OrchPmGroup](Remove-OrchPmGroup.md)
 Identity サーバーに登録されたグループを削除します。
 
+### [Remove-OrchPmGroupMember](Remove-OrchPmGroupMember.md)
+グループからメンバーを削除します。
+
 ### [Remove-OrchPmLicensedGroup](Remove-OrchPmLicensedGroup.md)
 User named license が割り当てられたグループを削除します。
 
 ### [Remove-OrchPmLicenseFromPmLicensedGroup](Remove-OrchPmLicenseFromPmLicensedGroup.md)
 {{ Fill in the Synopsis }}
-
-### [Remove-OrchPmMemberFromPmGroup](Remove-OrchPmMemberFromPmGroup.md)
-グループからメンバーを削除します。
 
 ### [Remove-OrchPmRobotAccount](Remove-OrchPmRobotAccount.md)
 Identity サーバーに登録されたロボットアカウントを削除します。

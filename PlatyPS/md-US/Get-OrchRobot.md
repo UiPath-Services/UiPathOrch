@@ -24,7 +24,7 @@ Primary Endpoint: GET /odata/Robots/UiPath.Server.Configuration.OData.GetConfigu
 
 OAuth required scopes: OR.Robots or OR.Robots.Read
 
-Required permissions: (Users.View - Required only when the robot's user is expanded) and (Robots.View)
+Required permissions: Users.View and Robots.View
 
 ## EXAMPLES
 

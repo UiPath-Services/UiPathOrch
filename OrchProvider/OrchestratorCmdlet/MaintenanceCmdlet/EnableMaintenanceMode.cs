@@ -1,10 +1,4 @@
-﻿using System.Collections;
-using System.Management.Automation;
-using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.MachineName_HostMachineName_ServiceUserName_SessionId;
+﻿using System.Management.Automation;
 using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands

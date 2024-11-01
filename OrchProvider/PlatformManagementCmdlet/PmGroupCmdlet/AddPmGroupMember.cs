@@ -1,17 +1,14 @@
 ﻿using System.Collections;
-using System.ComponentModel;
+using System.Data;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.GroupName_Type_UserName;
-using System.Data;
 
 namespace UiPath.PowerShell.Commands
 {
-    [Cmdlet(VerbsCommon.Add, "OrchPmMemberToPmGroup", SupportsShouldProcess = true)]
+    [Cmdlet(VerbsCommon.Add, "OrchPmGroupMember", SupportsShouldProcess = true)]
     public class AddPmMemberToPmGroupCommand : OrchestratorPSCmdlet
     {
         // Key: (drive, pmGroup), Value: (name, displayName, objectType, identifier)

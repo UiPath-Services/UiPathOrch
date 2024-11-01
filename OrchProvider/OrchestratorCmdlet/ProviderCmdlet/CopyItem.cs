@@ -1,20 +1,9 @@
-﻿using Microsoft.Management.Infrastructure.Options;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.IO;
+﻿using System.Collections.ObjectModel;
 using System.Management.Automation;
-using System.Management.Automation.Language;
 using System.Management.Automation.Provider;
-using System.Text;
-using System.Xml.Linq;
-using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
-using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
-using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace UiPath.PowerShell.Core
 {
