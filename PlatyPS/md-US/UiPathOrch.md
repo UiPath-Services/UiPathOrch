@@ -443,6 +443,9 @@ Gets the test sets from projects in Test Manager.
 ### [Import-OrchQueueItem](Import-OrchQueueItem.md)
 {{ Fill in the Synopsis }}
 
+### [Move-OrchPmGroupMember](Move-OrchPmGroupMember.md)
+Moves users between two groups within an organization.
+
 ### [Open-OrchJob](Open-OrchJob.md)
 {{ Fill in the Synopsis }}
 

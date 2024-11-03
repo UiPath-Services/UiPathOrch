@@ -9,7 +9,6 @@ using UiPath.PowerShell.Completer;
 
 using UiPath.PowerShell.Positional;
 
-using BoolCompleter = UiPath.PowerShell.Completer.StaticTextsCompleter<UiPath.PowerShell.Positional.True_False>;
 using System;
 
 namespace UiPath.PowerShell.Commands

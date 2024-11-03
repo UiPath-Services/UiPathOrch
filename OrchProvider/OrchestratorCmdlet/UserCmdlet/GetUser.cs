@@ -2,12 +2,9 @@
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using System.Text;
-using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.UserName_FullName;
+using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using System;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -29,7 +26,7 @@ namespace UiPath.PowerShell.Commands
         public SwitchParameter ExpandDetails { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.UserName_FullName>))]
+        [ArgumentCompleter(typeof(DriveCompleter))]
         public string[]? Path { get; set; }
 
         [Parameter]

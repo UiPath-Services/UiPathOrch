@@ -14,7 +14,6 @@ using VideoRecordingTypeItems = UiPath.PowerShell.Positional.VideoRecordingTypeI
 using QueueItemVideoRecordingTypeItems = UiPath.PowerShell.Positional.QueueItemVideoRecordingTypeItems;
 using UiPath.PowerShell.Completer;
 
-using BoolCompleter = UiPath.PowerShell.Completer.StaticTextsCompleter<UiPath.PowerShell.Positional.True_False>;
 using RetentionActionCompleter = UiPath.PowerShell.Completer.StaticTextsCompleter<UiPath.PowerShell.Positional.Delete_Archive>;
 
 using Item30 = UiPath.PowerShell.Positional.Item30;

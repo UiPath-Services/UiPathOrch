@@ -2450,7 +2450,7 @@ namespace UiPath.OrchAPI
         }
 
         // entityType: "user", "group", or "application"
-        public Dictionary<string, Member>? PmBulkResolveByName(string partitionGlobalId, string entityType, string[] names)
+        public Dictionary<string, PmGroupMember>? PmBulkResolveByName(string partitionGlobalId, string entityType, string[] names)
         {
             var postdata = new BulkResolveByNameCommand()
             {
@@ -2459,7 +2459,7 @@ namespace UiPath.OrchAPI
             };
 
             string body = HttpRequestIdentity(HttpMethod.Post, $"/api/Directory/BulkResolveByName/{partitionGlobalId}", null, postdata);
-            return JsonSerializer.Deserialize<Dictionary<string, Member>>(body, jsoMemberConverter);
+            return JsonSerializer.Deserialize<Dictionary<string, PmGroupMember>>(body, jsoMemberConverter);
         }
 
         public PmDirectoryEntityInfo[]? SearchPmDirectoryUsers(string partitionGlobalId, string userName)

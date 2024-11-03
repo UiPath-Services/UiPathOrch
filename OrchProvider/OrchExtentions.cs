@@ -63,6 +63,7 @@ namespace UiPath.PowerShell.Core
         public static string GetPSPath(this PmUser entity)                => Path.Combine(entity?.Path ?? "", entity?.userName ?? "");
         public static string GetPSPath(this PmRobotAccount entity)        => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
         public static string GetPSPath(this PmGroup entity)               => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+        public static string GetPSPath(this PmGroupMember entity)         => Path.Combine(entity?.Path ?? "", entity?.groupName ?? "", entity?.name ?? "");
         public static string GetPSPath(this PmDirectoryEntityInfo entity) => Path.Combine(entity?.Path ?? "", entity?.identityName ?? "");
         public static string GetPSPath(this ExternalResource entity)      => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
         public static string GetPSPath(this ExternalClient entity)        => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
@@ -244,7 +245,7 @@ namespace UiPath.PowerShell.Core
             return input.Replace("``", "`").Replace("`", "");
         }
 
-        private static IEnumerable<string> SplitByUnescapedCommas(string? input)
+        public static IEnumerable<string> SplitByUnescapedCommas(string? input)
         {
             if (string.IsNullOrEmpty(input))
             {

@@ -6,7 +6,6 @@ using System.Management.Automation.Language;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-using BoolCompleter = UiPath.PowerShell.Completer.StaticTextsCompleter<UiPath.PowerShell.Positional.True_False>;
 using System.Data;
 
 namespace UiPath.PowerShell.Commands

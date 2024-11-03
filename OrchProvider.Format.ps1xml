@@ -3693,9 +3693,9 @@
     </View>
 
     <View>
-      <Name>Member</Name>
+      <Name>PmGroupMember</Name>
       <ViewSelectedBy>
-        <TypeName>UiPath.PowerShell.Entities.Member</TypeName>
+        <TypeName>UiPath.PowerShell.Entities.PmGroupMember</TypeName>
       </ViewSelectedBy>
       <GroupBy>
         <Label>Group</Label>

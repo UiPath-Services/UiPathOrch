@@ -195,9 +195,9 @@ namespace UiPath.PowerShell.Entities.JsonConverter
     }
 
     // Member を、適切なサブクラスでデシリアライズするためのコンバータ。
-    public class MemberConverter : JsonConverter<Member>
+    public class MemberConverter : JsonConverter<PmGroupMember>
     {
-        public override Member? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override PmGroupMember? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             var jsonDoc = JsonDocument.ParseValue(ref reader);
             var root = jsonDoc.RootElement;
@@ -214,7 +214,7 @@ namespace UiPath.PowerShell.Entities.JsonConverter
             };
         }
 
-        public override void Write(Utf8JsonWriter writer, Member value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, PmGroupMember value, JsonSerializerOptions options)
         {
             JsonSerializer.Serialize(writer, value, value.GetType(), options);
         }

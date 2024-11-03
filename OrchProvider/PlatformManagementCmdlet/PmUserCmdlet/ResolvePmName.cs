@@ -12,7 +12,7 @@ namespace UiPath.PowerShell.Commands
 {
     // TODO: OrchProvider.Format.ps1xml を直して、取得した users の各エントリに Path を設定しないと。
     [Cmdlet(VerbsDiagnostic.Resolve, "OrchPmNames")]
-    [OutputType(typeof(Entities.Member))]
+    [OutputType(typeof(Entities.PmGroupMember))]
     class ResolvePmDirectoryName: OrchestratorPSCmdlet
     {
         private static readonly string[] types = ["User", "Group", "Application"];

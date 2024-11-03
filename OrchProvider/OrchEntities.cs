@@ -3388,7 +3388,7 @@ namespace UiPath.PowerShell.Entities
         public DateTime? creationTime { get; set; }
         //[JsonConverter(typeof(LocalDateTimeConverter))]
         public DateTime? lastModificationTime { get; set; }
-        public Member[]? members { get; set; }
+        public PmGroupMember[]? members { get; set; }
         public string? mappingRole { get; set; }
         public string? scope { get; set; }
         public string[]? userBundleLicenses { get; set; } // undocumented
@@ -3415,8 +3415,8 @@ namespace UiPath.PowerShell.Entities
     {
         public string? partitionGlobalId { get; set; }
         public string? name { get; set; }
-        public string[]? directoryUserIDsToAdd { get; set; } // Guid
-        public string[]? directoryUserIDsToRemove { get; set; } // Guid
+        public List<string>? directoryUserIDsToAdd { get; set; } // Guid
+        public List<string>? directoryUserIDsToRemove { get; set; } // Guid
     }
 
     // BulkResolveByNameCommand
@@ -3427,7 +3427,7 @@ namespace UiPath.PowerShell.Entities
         public string? scope { get; set; }
     }
 
-    public abstract class Member
+    public abstract class PmGroupMember
     {
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public string? Path { get; set; } // added by UiPathOrch
@@ -3443,7 +3443,7 @@ namespace UiPath.PowerShell.Entities
     }
 
     // objectType = "DirectoryUser"
-    public class DirectoryUser : Member
+    public class DirectoryUser : PmGroupMember
     {
         public string? email { get; set; }
         public string? firstName { get; set; }
@@ -3457,21 +3457,21 @@ namespace UiPath.PowerShell.Entities
     }
 
     // objectType = "DirectoryGroup"
-    public class DirectoryGroup : Member
+    public class DirectoryGroup : PmGroupMember
     {
         public string? source { get; set; }
         public string? email { get; set; }
     }
 
     // objectType = "DirectoryRobotUser"
-    public class DirectoryRobotUser : Member
+    public class DirectoryRobotUser : PmGroupMember
     {
         public string? source { get; set; }
         public string? email { get; set; }
     }
 
     // objectType = "DirectoryRobotUser"
-    public class DirectoryApplication : Member
+    public class DirectoryApplication : PmGroupMember
     {
         public string? source { get; set; }
         public string? email { get; set; }

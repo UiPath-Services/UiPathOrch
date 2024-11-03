@@ -859,8 +859,7 @@ namespace UiPath.PowerShell.Commands
                     }
                     catch (Exception ex)
                     {
-                        var errorRecord = new ErrorRecord(new OrchException(target, ex), "AddAssetError", ErrorCategory.InvalidOperation, target);
-                        WriteError(errorRecord);
+                        WriteError(new ErrorRecord(new OrchException(target, ex), "AddAssetError", ErrorCategory.InvalidOperation, target));
                     }
                 }
             }

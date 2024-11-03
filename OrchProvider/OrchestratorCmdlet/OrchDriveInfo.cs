@@ -3515,9 +3515,9 @@ namespace UiPath.PowerShell.Core
 
         // key: (name, kind)
         // kind: "user", "group", or "application"
-        internal ConcurrentDictionary<(string, string), Member>? _dicPmBulkResolveByName = null;
+        internal ConcurrentDictionary<(string, string), PmGroupMember>? _dicPmBulkResolveByName = null;
         internal readonly ExceptionCachePerTenant _dicPmBulkResolveByName_Exception = new();
-        public ReadOnlyCollection<Member> PmBulkResolveByName(string kind, IEnumerable<string> names)
+        public ReadOnlyCollection<PmGroupMember> PmBulkResolveByName(string kind, IEnumerable<string> names)
         {
             _dicPmBulkResolveByName_Exception.ThrowCachedExceptionIfAny();
 
@@ -3552,7 +3552,7 @@ namespace UiPath.PowerShell.Core
 
             // 指定されたキーを持つ要素を抽出してリストを作成
             var ret = names.Select(name => {
-                    bool found = _dicPmBulkResolveByName.TryGetValue((kind, name), out Member value);
+                    bool found = _dicPmBulkResolveByName.TryGetValue((kind, name), out PmGroupMember value);
                     return (found, value);
                 })
                 .Where(result => result.found && result.value != null)
@@ -3683,7 +3683,7 @@ namespace UiPath.PowerShell.Core
                             //});
                             #endregion
 
-                            #region 各グループの詳細は、Get-OrchIdGroup -ExpandMember を指定したときに
+                            #region 各グループの詳細は、Get-OrchPmGroup -ExpandMember を指定したときに
                             // 指定されたグループだけについて詳細を取得するならこっち。
                             foreach (var group in groups ?? [])
                             {

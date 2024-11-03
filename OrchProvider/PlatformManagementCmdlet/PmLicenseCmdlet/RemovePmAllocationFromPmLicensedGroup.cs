@@ -8,7 +8,7 @@ using UiPath.PowerShell.Positional;
 namespace UiPath.PowerShell.Commands
 {
     [Cmdlet(VerbsCommon.Remove, "OrchPmAllocationFromPmLicensedGroup", SupportsShouldProcess = true)]
-    [OutputType(typeof(Entities.Member))]
+    [OutputType(typeof(Entities.PmGroupMember))]
     public class RemoveAllocationFromUserLicenseGroup: OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
