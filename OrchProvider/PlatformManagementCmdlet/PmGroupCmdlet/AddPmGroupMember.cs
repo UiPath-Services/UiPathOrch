@@ -5,24 +5,16 @@ using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
+using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands
 {
     [Cmdlet(VerbsCommon.Add, "OrchPmGroupMember", SupportsShouldProcess = true)]
-    public class AddPmMemberToPmGroupCommand : OrchestratorPSCmdlet
+    public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
     {
         // Key: (drive, pmGroup), Value: (name, displayName, objectType, identifier)
         private readonly Dictionary<(OrchDriveInfo drive, PmGroup group), HashSet<(string name, string displayName, string objectType, string identifier)>> _parameterSets = [];
         private HashSet<(OrchDriveInfo drive, string name)>? _warnedNames = null;
-
-        // Key: SearchPmDirectoryUsers() で返ったエントリの objectType
-        // Value: options in console
-        private static readonly Dictionary<string, string> DirectoryTypes = new()
-        {
-            { "DirectoryUser",        "DirectoryUser" },
-            { "DirectoryRobotUser",   "DirectoryRobot" },
-            { "Application",          "DirectoryApplication" }
-        };
 
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(PmGroupNameCompleter<Positional.GroupName_Type_UserName>))]
@@ -30,7 +22,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? GroupName { get; set; }
 
         [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(TypeCompleter))]
+        [ArgumentCompleter(typeof(ValueOfDictionaryCompleter<DirectoryTypes>))]
         [SupportsWildcards]
         public string[]? Type { get; set; }
 
@@ -68,27 +60,27 @@ namespace UiPath.PowerShell.Commands
         }
 
         // TODO: KeyOfDictionaryCompleter で書き直す。ValueOfDictionaryCompleter が必要かもしれない。。
-        private class TypeCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var wpType = CreateWPListFromParameter(commandAst, "Type", Positional.GroupName_Type_UserName.Parameters, wordToComplete);
+        //private class TypeCompleter : OrchArgumentCompleter
+        //{
+        //    public override IEnumerable<CompletionResult> CompleteArgument(
+        //        string commandName,
+        //        string parameterName,
+        //        string wordToComplete,
+        //        CommandAst commandAst,
+        //        IDictionary fakeBoundParameters)
+        //    {
+        //        var wpType = CreateWPListFromParameter(commandAst, "Type", Positional.GroupName_Type_UserName.Parameters, wordToComplete);
 
-                var wp = CreateWPFromWordToComplete(wordToComplete);
+        //        var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                foreach (var t in DirectoryTypes.Values
-                    .Where(c => wp.IsMatch(c))
-                    .ExcludeByWildcards(o => o, wpType))
-                {
-                    yield return new CompletionResult(t);
-                }
-            }
-        }
+        //        foreach (var t in DirectoryTypes.Values
+        //            .Where(c => wp.IsMatch(c))
+        //            .ExcludeByWildcards(o => o, wpType))
+        //        {
+        //            yield return new CompletionResult(t);
+        //        }
+        //    }
+        //}
 
         private class UserNameCompleter : OrchArgumentCompleter
         {
@@ -108,7 +100,7 @@ namespace UiPath.PowerShell.Commands
                 var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", Positional.GroupName_Type_UserName.Parameters);
                 var wpUserName = CreateWPListFromParameter(commandAst, "UserName", Positional.GroupName_Type_UserName.Parameters, wordToComplete);
                 var wpType = CreateWPListFromOtherParameters(commandAst, "Type", Positional.GroupName_Type_UserName.Parameters);
-                var types = DirectoryTypes.FilterByWildcards(d => d.Value, wpType).Select(d => d.Key);
+                var types = DirectoryTypes.Items.FilterByWildcards(d => d.Value, wpType).Select(d => d.Key);
 
                 var drives = ResolveDrives(fakeBoundParameters);
 
@@ -169,7 +161,7 @@ namespace UiPath.PowerShell.Commands
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
             var wpGroupName = GroupName.ConvertToWildcardPatternList();
             var wpType = Type.ConvertToWildcardPatternList();
-            var objectTypes = DirectoryTypes.FilterByWildcards(t => t.Value, wpType).Select(t => t.Key);
+            var objectTypes = DirectoryTypes.Items.FilterByWildcards(t => t.Value, wpType).Select(t => t.Key);
 
             // CSV インポートしたとき、あるグループに対して複数のメンバー追加を一度の API call で実現する
             // ドライブ名とグループ名はワイルドカードを展開して保持
@@ -217,7 +209,7 @@ namespace UiPath.PowerShell.Commands
                                 var entry = entries.FirstOrDefault(e => e.name == name);
                                 if (entry?.identifier != null)
                                 {
-                                    members.Add((entry.name, entry.displayName, DirectoryTypes[addingMember.objectType!], entry.identifier)!);
+                                    members.Add((entry.name, entry.displayName, DirectoryTypes.Items[addingMember.objectType!], entry.identifier)!);
                                 }
                                 else
                                 {
@@ -227,7 +219,7 @@ namespace UiPath.PowerShell.Commands
                             }
                             else
                             {
-                                members.Add((addingMember.identityName, addingMember.displayName, DirectoryTypes[addingMember.objectType!], addingMember.identifier)!);
+                                members.Add((addingMember.identityName, addingMember.displayName, DirectoryTypes.Items[addingMember.objectType!], addingMember.identifier)!);
                             }
                         }
                     }
@@ -283,7 +275,7 @@ namespace UiPath.PowerShell.Commands
                     {
                         partitionGlobalId = partitionGlobalId,
                         name = group!.name,
-                        directoryUserIDsToAdd = identifiers.ToArray(),
+                        directoryUserIDsToAdd = identifiers.ToList(),
                         directoryUserIDsToRemove = []
                     };
 

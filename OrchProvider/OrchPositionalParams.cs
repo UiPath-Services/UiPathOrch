@@ -3,8 +3,10 @@ using UiPath.PowerShell.Commands;
 
 namespace UiPath.PowerShell.Positional
 {
-    // これらのクラスは、型パラメータとして使用する。}
+    // これらのクラスは、型パラメータとして使用する。
     // code bloat を抑止するため、同じ定義に対しては同じクラスを使う必要がある。そのため、ここでまとめて定義しておく。
+    // と思ったけど、実は C# の場合は（C++ とは違って）違うクラスを型パラメータとして使っても code bloat は発生しないかな。。
+    // .ps1 から completer を使うときには、public な型パラメータが必要になるから、これはこれで良いか。
 
     public interface IBoolParameter
     {
@@ -247,7 +249,7 @@ namespace UiPath.PowerShell.Positional
         public static string[] Parameters { get; } = ["SoftStop", "Kill"];
     }
 
-    internal class Empty : IPositionalParameters
+    public class Empty : IPositionalParameters
     {
         public static string[] Parameters { get; } = [];
     }
@@ -270,6 +272,11 @@ namespace UiPath.PowerShell.Positional
     internal class GroupName_Type_UserName : IPositionalParameters
     {
         public static string[] Parameters { get; } = ["GroupName", "Type", "UserName"];
+    }
+
+    internal class GroupName_Type_UserName_Destination : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["GroupName", "Type", "UserName", "Destination"];
     }
 
     internal class Id : IPositionalParameters

@@ -2,6 +2,7 @@
 using System.Data;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using UiPath.PowerShell.Core;
@@ -253,6 +254,140 @@ namespace UiPath.PowerShell.Completer
             return new WildcardPattern(wordToComplete, WildcardOptions.IgnoreCase);
         }
 
+        protected static List<PmGroupMember> GetExistingMembers(List<OrchDriveInfo> drives, List<WildcardPattern>? wpGroupName)
+        {
+            var results = ParallelResults.ForEach(drives, drive =>
+            {
+                var groups = drive.GetPmGroups().Values
+                    .FilterByWildcards(g => g?.name!, wpGroupName)
+                    .OrderBy(g => g?.name);
+                return ParallelResults.ForEach(groups, group => drive.GetPmGroup(group?.id));
+            });
+
+            List<PmGroupMember> existingMembers = [];
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var group in entities!)
+                {
+                    if (!group.TryGetValue(out var detailedGroup)) continue;
+
+                    existingMembers.AddRange(detailedGroup?.members ?? []);
+                }
+            }
+            return existingMembers;
+        }
+
+        // positional parameters の一覧を、リフレクションで取得する試験的な実装
+        // これを使えば、positinal parameter の一覧はテンプレートパラメータで completer class に渡す必要がなくなる
+        // うまく動きそうだけど、これを使うと completer を .ps1 から使うことができなくなる。。
+        // つらい
+        // .ps1 の function からも completer を使えた方がいいよね？
+        // すると、やはり positinal parameter の一覧はテンプレートパラメータで completer class に渡すしかない
+        //private static readonly Dictionary<string, Dictionary<string, string[]>> _cache = new();
+
+        // これを completer の CompleteArgument() から呼び出すと、positional parameters の一覧を配列で取得できる
+        // parameter set を考慮する実装が不完全だが、positional parameters の一覧を取得することはできている
+        // ただし、リフレクションを適切に動作させるには、cmdlet class の名前が cmdlet name のハイフンを除去したものと同一に
+        // なっている必要があることに注意。
+        //protected string[]? GetPositionalParameterList(string commandName, IDictionary fakeBoundParameters)
+        //{
+        //    // キャッシュを確認
+        //    if (_cache.TryGetValue(commandName, out var cachedParameterSets))
+        //    {
+        //        // パラメータセットが一つしかない場合はそれをデフォルトとして使用
+        //        if (cachedParameterSets.Count == 1)
+        //        {
+        //            return cachedParameterSets.Values.First();
+        //        }
+
+        //        // 現在のパラメータセットを推測
+        //        string? currentParameterSet = DetermineCurrentParameterSet(cachedParameterSets.Keys, fakeBoundParameters);
+        //        return currentParameterSet != null && cachedParameterSets.ContainsKey(currentParameterSet)
+        //            ? cachedParameterSets[currentParameterSet]
+        //            : null;
+        //    }
+
+        //    // コマンドクラスの型を取得
+        //    string className = $"UiPath.PowerShell.Commands.{commandName.Replace("-", "")}Command, UiPath.PowerShell.OrchProvider";
+        //    Type commandType = Type.GetType(className);
+
+        //    if (commandType != null)
+        //    {
+        //        var parameterSets = new Dictionary<string, List<string>>();
+
+        //        // パラメータプロパティを取得し、パラメータセットを考慮して positional parameter を抽出
+        //        foreach (var property in commandType.GetProperties())
+        //        {
+        //            var parameterAttributes = property.GetCustomAttributes<ParameterAttribute>();
+
+        //            foreach (var parameterAttribute in parameterAttributes)
+        //            {
+        //                if (parameterAttribute.Position >= 0)
+        //                {
+        //                    string parameterSetName = string.IsNullOrEmpty(parameterAttribute.ParameterSetName)
+        //                        ? "__DefaultParameterSet__"
+        //                        : parameterAttribute.ParameterSetName;
+
+        //                    if (!parameterSets.ContainsKey(parameterSetName))
+        //                    {
+        //                        parameterSets[parameterSetName] = new List<string>();
+        //                    }
+        //                    parameterSets[parameterSetName].Add(property.Name);
+        //                }
+        //            }
+        //        }
+
+        //        var positionalParameterSets = parameterSets.ToDictionary(
+        //            kvp => kvp.Key,
+        //            kvp => kvp.Value.OrderBy(paramName =>
+        //                commandType.GetProperty(paramName)?
+        //                    .GetCustomAttributes<ParameterAttribute>()
+        //                    .First(attr => attr.ParameterSetName == kvp.Key).Position)
+        //                .ToArray()
+        //        );
+
+        //        _cache[commandName] = positionalParameterSets;
+
+        //        // パラメータセットが一つしかない場合はそれを返す
+        //        if (positionalParameterSets.Count == 1)
+        //        {
+        //            return positionalParameterSets.Values.First();
+        //        }
+
+        //        string? currentSet = DetermineCurrentParameterSet(positionalParameterSets.Keys, fakeBoundParameters);
+        //        return currentSet != null && positionalParameterSets.ContainsKey(currentSet)
+        //            ? positionalParameterSets[currentSet]
+        //            : null;
+        //    }
+
+        //    return null;
+        //}
+
+        //private string? DetermineCurrentParameterSet(IEnumerable<string> parameterSetNames, IDictionary fakeBoundParameters)
+        //{
+        //    // パラメータセットの候補を順にチェックして、fakeBoundParameters に一致するものを特定
+        //    foreach (var setName in parameterSetNames)
+        //    {
+        //        // "__DefaultParameterSet__" を優先して返す
+        //        if (setName == "__DefaultParameterSet__")
+        //        {
+        //            return setName;
+        //        }
+
+        //        bool matches = fakeBoundParameters.Keys.Cast<string>()
+        //            .All(param => parameterSetNames.Contains(param));
+
+        //        if (matches)
+        //        {
+        //            return setName;
+        //        }
+        //    }
+
+        //    return null; // 一致するパラメータセットが見つからない場合
+        //}
+
         protected static string TipHelp(OrchDriveInfo drive)
         {
             string tiphelp = drive.DisplayRoot;
@@ -297,7 +432,7 @@ namespace UiPath.PowerShell.Completer
             return tiphelp;
         }
 
-        protected static string TipHelp(Member entity)
+        protected static string TipHelp(PmGroupMember entity)
         {
             string tiphelp = $"{entity.name} ({entity.displayName})";
             return tiphelp;
@@ -1278,6 +1413,99 @@ namespace UiPath.PowerShell.Completer
         }
     }
 
+    internal class UserNameInPmGroupCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = ResolveDrives(fakeBoundParameters);
+
+            // パラメータで選択済みの UserName は、候補から除外する
+            var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            // 指定されたグループの既存のメンバーを取得する
+            var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", TPositional.Parameters);
+            var existingMemberIds = GetExistingMembers(drives, wpGroupName);
+
+            // 各グループの詳細を取得する
+            var results = ParallelResults.ForEach(drives, drive =>
+            {
+                var groups = drive.GetPmGroups().Values
+                    .FilterByWildcards(g => g?.name!, wpGroupName)
+                    .OrderBy(g => g?.name);
+                return ParallelResults.ForEach(groups, group => drive.GetPmGroup(group?.id));
+            });
+
+            // グループのメンバーとなっている DirectoryUser を収集する
+            List<PmGroupMember> users = [];
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var e in entities!)
+                {
+                    if (!e.TryGetValue(out var detailedGroup)) continue;
+
+                    foreach (var member in detailedGroup?.members?
+                        .FilterByWildcards(m => m?.objectType, wpType) ?? [])
+                    {
+                        users.Add(member);
+                    }
+                }
+            }
+
+            // 条件に合致する DirectoryUser を候補として表示する
+            foreach (var user in users
+                .Where(e => wp.IsMatch(e?.name))
+                .ExcludeByWildcards(e => e?.name!, wpUserName)
+                .OrderBy(e => e?.name))
+            {
+                string tiphelp = TipHelp(user);
+                yield return new CompletionResult(PathTools.EscapePSText(user.name), user.name, CompletionResultType.Text, tiphelp);
+            }
+        }
+    }
+
+    internal class TypeInPmGroupCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = ResolveDrives(fakeBoundParameters);
+
+            // パラメータで選択済みの UserName は、候補から除外する
+            var wpType = CreateWPListFromParameter(commandAst, "Type", TPositional.Parameters, wordToComplete);
+            var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            // 指定されたグループの既存のメンバーを取得する
+            var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", TPositional.Parameters);
+            var existingMembers = GetExistingMembers(drives, wpGroupName);
+
+            foreach (var member in existingMembers
+                .Where(e => wp.IsMatch(e?.name))
+                .FilterByWildcards(m => m?.name, wpUserName)
+                .ExcludeByWildcards(m => m?.objectType, wpType)
+                .OrderBy(m => m.objectType))
+            {
+                //string tiphelp = TipHelp(member);
+                yield return new CompletionResult(PathTools.EscapePSText(member.objectType), member.objectType, CompletionResultType.Text, member.objectType);
+            }
+        }
+    }
+
     internal class TestCaseNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -1720,6 +1948,8 @@ namespace UiPath.PowerShell.Completer
         }
     }
 
+    internal class BoolCompleter : StaticTextsCompleter<True_False> { }
+
     // key は必ず string
     internal class KeyOfDictionaryCompleter<TItems, TValue> : OrchArgumentCompleter where TItems : IDictionaryItems<TValue>
     {
@@ -1742,6 +1972,31 @@ namespace UiPath.PowerShell.Completer
                 var key = candidate.Key;
                 if (string.IsNullOrEmpty(key)) continue;
                 yield return new CompletionResult(key);
+            }
+        }
+    }
+
+    // value は必ず string
+    internal class ValueOfDictionaryCompleter<TItems> : OrchArgumentCompleter where TItems : IDictionaryItems<string>
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var wpParam = CreateWPListFromParameter(commandAst, parameterName, null, wordToComplete);
+
+            if (!wordToComplete.EndsWith('?')) wordToComplete += '*';
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            foreach (var candidate in TItems.Items.Values
+                .Where(c => wp.IsMatch(c))
+                .ExcludeByWildcards(c => c, wpParam))
+            {
+                if (string.IsNullOrEmpty(candidate)) continue;
+                yield return new CompletionResult(candidate);
             }
         }
     }
@@ -1855,6 +2110,11 @@ namespace UiPath.PowerShell.Completer
                 yield return new CompletionResult(PathTools.EscapePSText(driveName), driveName, CompletionResultType.ParameterValue, tiphelp);
             }
         }
+    }
+
+    // positional parameter となっていない -Path パラメータのための drive name completer
+    public class DriveCompleter : DriveCompleter<Positional.Empty>
+    {
     }
 
     internal class TmDriveCompleter<T> : OrchArgumentCompleter where T : IPositionalParameters

@@ -120,7 +120,7 @@ namespace UiPath.PowerShell.Commands
                                 partitionGlobalId = dstPartitionGlobalId,
                                 name = srcRobotAccount.name,
                                 displayName = srcRobotAccount.displayName,
-                                groupIDsToAdd = Core.OrchProvider.FindDstIdGroups(
+                                groupIDsToAdd = Core.OrchProvider.FindDstPmGroups(
                                     this, srcDrive, srcRobotAccount.groupIds,
                                     dstDrive, "Copying PmRobotAccount")?.Select(group => group.id!).ToList()
                             };

@@ -4,8 +4,6 @@ using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
 using UiPath.PowerShell.Completer;
 
-using BoolCompleter = UiPath.PowerShell.Completer.StaticTextsCompleter<UiPath.PowerShell.Positional.True_False>;
-
 using Positional = UiPath.PowerShell.Positional.UserName;
 using System.Linq;
 using System.Collections.Concurrent;

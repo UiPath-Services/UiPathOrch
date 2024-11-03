@@ -13,13 +13,13 @@ namespace UiPath.PowerShell.Commands
 {
     [Cmdlet(VerbsCommon.Remove, "OrchPmGroupMember", SupportsShouldProcess = true)]
     //[OutputType(typeof(Entities.IdGroup))]
-    public class RemovePmMemberFromPmGroupCommand : OrchestratorPSCmdlet
+    public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
     {
         // Key: (drive, group), Value: Members
-        private Dictionary<(OrchDriveInfo drive, PmGroup group), HashSet<Member>>? _parameterSets = null;
+        private Dictionary<(OrchDriveInfo drive, PmGroup group), HashSet<PmGroupMember>>? _parameterSets = null;
 
         // CSV で重複した行を除去するために使う
-        private Dictionary<(OrchDriveInfo drive, PmGroup group), HashSet<Member>>? _visitedUsersHash = null;
+        private Dictionary<(OrchDriveInfo drive, PmGroup group), HashSet<PmGroupMember>>? _visitedUsersHash = null;
 
         // CSV で指定したユーザー名ワイルドカードの重複を除去するために使う
         private HashSet<(OrchDriveInfo drive, PmGroup group, string type, string userName)>? _visitedUserPatterns = null;
@@ -38,17 +38,17 @@ namespace UiPath.PowerShell.Commands
         }
 
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PmGroupNameCompleter<Positional.GroupName_Type_UserName>))]
+        [ArgumentCompleter(typeof(PmGroupNameCompleter<GroupName_Type_UserName>))]
         [SupportsWildcards]
         public string[]? GroupName { get; set; }
 
         [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(TypeCompleter))]
+        [ArgumentCompleter(typeof(TypeInPmGroupCompleter<GroupName_Type_UserName>))]
         [SupportsWildcards]
         public string[]? Type { get; set; }
 
         [Parameter(Position = 2, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(UserNameCompleter))]
+        [ArgumentCompleter(typeof(UserNameInPmGroupCompleter<GroupName_Type_UserName>))]
         [SupportsWildcards]
         public string[]? UserName { get; set; }
 
@@ -56,126 +56,8 @@ namespace UiPath.PowerShell.Commands
         public SwitchParameter WarnOnNoMatch { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.GroupName_Type_UserName>))]
+        [ArgumentCompleter(typeof(DriveCompleter<GroupName_Type_UserName>))]
         public string[]? Path { get; set; }
-
-        private static List<Member> GetExistingMembers(List<OrchDriveInfo> drives, List<WildcardPattern>? wpGroupName)
-        {
-            var results = ParallelResults.ForEach(drives, drive =>
-            {
-                var groups = drive.GetPmGroups().Values
-                    .FilterByWildcards(g => g?.name!, wpGroupName)
-                    .OrderBy(g => g?.name);
-                return ParallelResults.ForEach(groups, group => drive.GetPmGroup(group?.id));
-            });
-
-            List<Member> existingMembers = [];
-            foreach (var result in results)
-            {
-                if (!result.TryGetValue(out var entities)) continue;
-
-                foreach (var group in entities!)
-                {
-                    if (!group.TryGetValue(out var detailedGroup)) continue;
-
-                    existingMembers.AddRange(detailedGroup?.members ?? []);
-                }
-            }
-            return existingMembers;
-        }
-
-        private class TypeCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var drives = ResolveDrives(fakeBoundParameters);
-
-                // パラメータで選択済みの UserName は、候補から除外する
-                var wpType = CreateWPListFromParameter(commandAst, "Type", Positional.GroupName_Type_UserName.Parameters, wordToComplete);
-                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", Positional.GroupName_Type_UserName.Parameters);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                // 指定されたグループの既存のメンバーを取得する
-                var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", Positional.GroupName_Type_UserName.Parameters);
-                var existingMembers = GetExistingMembers(drives, wpGroupName);
-
-                foreach (var member in existingMembers
-                    .Where(e => wp.IsMatch(e?.name))
-                    .FilterByWildcards(m => m?.name, wpUserName)
-                    .ExcludeByWildcards(m => m?.objectType, wpType)
-                    .OrderBy(m => m.objectType))
-                {
-                    //string tiphelp = TipHelp(member);
-                    yield return new CompletionResult(PathTools.EscapePSText(member.objectType), member.objectType, CompletionResultType.Text, member.objectType);
-                }
-            }
-        }
-
-        private class UserNameCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var drives = ResolveDrives(fakeBoundParameters);
-
-                // パラメータで選択済みの UserName は、候補から除外する
-                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", Positional.GroupName_Type_UserName.Parameters, wordToComplete);
-                var wpType = CreateWPListFromOtherParameters(commandAst, "Type", Positional.GroupName_Type_UserName.Parameters);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                // 指定されたグループの既存のメンバーを取得する
-                var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", Positional.GroupName_Type_UserName.Parameters);
-                var existingMemberIds = GetExistingMembers(drives, wpGroupName);
-
-                // 各グループの詳細を取得する
-                var results = ParallelResults.ForEach(drives, drive =>
-                {
-                    var groups = drive.GetPmGroups().Values
-                        .FilterByWildcards(g => g?.name!, wpGroupName)
-                        .OrderBy(g => g?.name);
-                    return ParallelResults.ForEach(groups, group => drive.GetPmGroup(group?.id));
-                });
-
-                // グループのメンバーとなっている DirectoryUser を収集する
-                List<Member> users = [];
-                foreach (var result in results)
-                {
-                    if (!result.TryGetValue(out var entities)) continue;
-
-                    foreach (var e in entities!)
-                    {
-                        if (!e.TryGetValue(out var detailedGroup)) continue;
-
-                        foreach (var member in detailedGroup?.members?
-                            .FilterByWildcards(m => m?.objectType, wpType) ?? [])
-                        {
-                            users.Add(member);
-                        }
-                    }
-                }
-
-                // 条件に合致する DirectoryUser を候補として表示する
-                foreach (var user in users
-                    .Where(e => wp.IsMatch(e?.name))
-                    .ExcludeByWildcards(e => e?.name!, wpUserName)
-                    .OrderBy(e => e?.name))
-                {
-                    string tiphelp = TipHelp(user);
-                    yield return new CompletionResult(PathTools.EscapePSText(user.name), user.name, CompletionResultType.Text, tiphelp);
-                }
-            }
-        }
 
         protected override void ProcessRecord()
         {
@@ -291,7 +173,7 @@ namespace UiPath.PowerShell.Commands
                         partitionGlobalId = partitionGlobalId,
                         name = group!.name,
                         directoryUserIDsToAdd = [],
-                        directoryUserIDsToRemove = toBeRemoved.Select(m => m.identifier).ToArray()!
+                        directoryUserIDsToRemove = toBeRemoved.Select(m => m.identifier).ToList()!
                     };
 
                     drive.OrchAPISession.PutPmGroup(group.id, updateGroupCommand);
@@ -300,7 +182,7 @@ namespace UiPath.PowerShell.Commands
                 }
                 catch (Exception ex)
                 {
-                    WriteError(new ErrorRecord(new OrchException(group!.GetPSPath(), ex), "PutIdGroupError", ErrorCategory.InvalidOperation, group));
+                    WriteError(new ErrorRecord(new OrchException(group!.GetPSPath(), ex), "PutPmGroupError", ErrorCategory.InvalidOperation, group));
                 }
             }
         }

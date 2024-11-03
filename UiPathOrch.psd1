@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.8.4'
+ModuleVersion = '0.9.8.6'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -300,8 +300,9 @@ CmdletsToExport = @(
 'Get-OrchPmGroup',
 'Add-OrchPmGroup',
 'Remove-OrchPmGroup',
-'Add-OrchPmMemberToPmGroup',
-'Remove-OrchPmMemberFromPmGroup',
+'Add-OrchPmGroupMember',
+'Move-OrchPmGroupMember',
+'Remove-OrchPmGroupMember',
 
 'Get-OrchPmExternalApiResource',
 'Get-OrchPmExternalApplication',
@@ -365,18 +366,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Configuration File-Related Updates:
-  - The HttpListener in UiPathOrchConfig.json is now automatically configured from RedirectUrl. The value of HttpListener will be the same as RedirectUrl with a trailing slash added. This allows the configuration file to work without specifying HttpListener. However, if the port number specified in RedirectUrl is 1024 or below, you still need to include HttpListener in the configuration file as before.
-
-  - Changed the value of RedirectUrl in the template file of UiPathOrchConfig.json to "http://localhost:8085/Temporary_Listen_Addresses" (in other words, changed the port from 80 to 8085). Also, removed HttpListener from this file. If the configuration file does not exist when Import-Module UiPathOrch is executed, a configuration file will be automatically created from this template.
-
-- Role-Related Updates:
-  - Added the -ExportCsv parameter to the Get-OrchRole cmdlet. Like other cmdlets, you can specify a folder or file path for exporting the CSV. If a folder path is specified, it will output with the default file name "ExportedRoles.csv". This CSV file can be imported using the Set-OrchRole cmdlet.
-
-  - Added the Set-OrchRole cmdlet. If a role with the name specified by the -Name parameter (Name column in the CSV) already exists, it will be updated. If it does not exist, a new role with that name will be created.
-
-- Other:
-  - The execution result of Get-OrchRole -ExpandPermission was incorrect. I apologize for the inconvenience.
+        ReleaseNotes = '- Added the Move-OrchPmGroupMember cmdlet. This cmdlet moves users between organizational groups within a tenant.
 '
 
         # Prerelease string of this module

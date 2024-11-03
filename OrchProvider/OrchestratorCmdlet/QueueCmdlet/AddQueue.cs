@@ -3,7 +3,6 @@ using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 
 using UiPath.PowerShell.Completer;
-using BoolCompleter = UiPath.PowerShell.Completer.StaticTextsCompleter<UiPath.PowerShell.Positional.True_False>;
 using RetentionActionCompleter = UiPath.PowerShell.Completer.StaticTextsCompleter<UiPath.PowerShell.Positional.Delete_Archive>;
 
 using Positional = UiPath.PowerShell.Positional.Name;

@@ -8,7 +8,6 @@ using UiPath.PowerShell.Completer;
 
 using UiPath.PowerShell.Positional;
 using Positional = UiPath.PowerShell.Positional.UserName;
-using BoolCompleter = UiPath.PowerShell.Completer.StaticTextsCompleter<UiPath.PowerShell.Positional.True_False>;
 using System.Data;
 using System.Text.Json;
 

@@ -792,8 +792,8 @@ namespace UiPath.PowerShell.Core
             }
         }
 
-        // TODO: List<IdGroup> を返すようにした方が、コード保守が安全になるような気がする
-        internal static IEnumerable<PmGroup>? FindDstIdGroups(IWritableHost _this,
+        // TODO: List<PmGroup> を返すようにした方が、コード保守が安全になるような気がする
+        internal static IEnumerable<PmGroup>? FindDstPmGroups(IWritableHost _this,
             OrchDriveInfo srcDrive, IEnumerable<string>? srcPmGroupIds,
             OrchDriveInfo dstDrive, string msg)
         {
