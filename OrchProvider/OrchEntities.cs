@@ -35,12 +35,20 @@ namespace UiPath.PowerShell.Entities
 
     public class OrchPSDrive
     {
-        public string? Provider { get; set; }
+        public string? Provider { get; set; } = "UiPathOrch";
         public string? Name { get; set; }
         public string? Root { get; set; }
-        public double? ApiVersion { get; set; }
+        public string? IdentityUrl { get; set; }
         public bool? IsConfidential { get; set; }
         public string? Description { get; set; }
+        public string? Scope { get; set; }
+        //public string? BaseUrl { get; set; }
+        //public string? TenancyName { get; set; }
+        public string? AppId { get; set; }
+        public string? RedirectUrl { get; set; }
+        public string? HttpListener { get; set; }
+        public ProxySettings? ProxySettings { get; set; }
+        public double? ApiVersion { get; set; }
         public string? CurrentUser { get; set; }
         public string? CurrentLocation { get; set; }
         public string? PartitionGlobalId { get; set; }
@@ -50,18 +58,40 @@ namespace UiPath.PowerShell.Entities
 
         public OrchPSDrive(OrchDriveInfo drive)
         {
-            Provider = "UiPathOrch";
             Name = drive.Name;
             Root = drive.DisplayRoot;
-            ApiVersion = drive.OrchAPISession.ApiVersion;
+            IdentityUrl = drive._psDrive.IdentityUrl;
             IsConfidential = drive.OrchAPISession.AuthManager.IsConfidentialApp;
             Description = drive.Description;
+            Scope = drive._psDrive.Scope;
+            AppId = drive._psDrive.AppId;
+            RedirectUrl = drive._psDrive.RedirectUrl;
+            HttpListener = drive._psDrive.HttpListener;
+            ApiVersion = drive.OrchAPISession.ApiVersion;
             CurrentUser = drive.OrchAPISession.AuthManager.IsConfidentialApp ? "N/A" : drive._dicCurrentUser?.UserName;
             CurrentLocation = drive.CurrentLocation;
             PartitionGlobalId = drive._dicPartitionGlobalId;
             TenantId = drive._dicTenantId;
             TenantKey = drive._dicTenantKey;
             BearerToken = drive.OrchAPISession.AuthManager.AccessToken;
+            if (drive._psDrive.Proxy != null)
+            {
+                ProxySettings = new()
+                {
+                    Url = drive._psDrive.Proxy.Url,
+                    BypassProxyOnLocal = drive._psDrive.Proxy.BypassProxyOnLocal,
+                    UseDefaultCredentials = drive._psDrive.Proxy.UseDefaultCredentials,
+                    Enabled = drive._psDrive.Proxy.Enabled
+                };
+                if (drive._psDrive.Proxy.Credentials != null)
+                {
+                    ProxySettings.Credentials = new()
+                    {
+                        Username = drive._psDrive.Proxy.Credentials.Username
+                        // Password は入れないでおく
+                    };
+                }
+            }
         }
 
         public OrchPSDrive(OrchDuDriveInfo drive) : this(drive.ParentDrive)

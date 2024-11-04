@@ -15,6 +15,7 @@ using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Positional;
+using System.Net;
 
 // インストール方法
 // 1. PowerShell 7 をインストール。PowerShell-7.x.x-win-x64.msi をダウンロード。PowerShell 5 と side by side でインストールできる。
@@ -175,11 +176,34 @@ namespace UiPath.PowerShell.Core
                 }
 
                 Collection<PSDriveInfo> ret = base.InitializeDefaultDrives();
+
+                if (config.Proxy != null && config.Proxy.Enabled == null)
+                {
+                    config.Proxy.Enabled = true;
+                }
+
                 foreach (var drive in config!.PSDrives!)
                 {
+                    //drive.BaseUrl ??= config.BaseUrl;
+                    drive.Description ??= config.Description;
+                    drive.RedirectUrl ??= config.RedirectUrl;
+                    drive.HttpListener ??= config.HttpListener;
+                    drive.Scope ??= config.Scope;
+                    drive.Enabled ??= config.Enabled;
+                    drive.Proxy ??= config.Proxy;
+
+                    //if (string.IsNullOrEmpty(drive.IdentityUrl))
+                    //{
+                    //    drive.IdentityUrl = _baseUrl.Contains("uipath.com", StringComparison.InvariantCultureIgnoreCase)
+                    //        ? _baseUrl + "/identity_/connect/token"
+                    //        : _baseUrl + "/identity/connect/token";
+                    //}
+
+
+
                     if (drive.Enabled == null || drive.Enabled.GetValueOrDefault())
                     {
-                        var orchDrive = new OrchDriveInfo(ProviderInfo, drive, config.Proxy);
+                        var orchDrive = new OrchDriveInfo(ProviderInfo, drive);
                         ret.Add(orchDrive);
                     }
                 }

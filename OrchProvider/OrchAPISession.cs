@@ -135,31 +135,27 @@ namespace UiPath.OrchAPI
 
         #region Authentication
 
-        public OrchAPISession(PSDrive drive, ProxySettings? globalProxy)
+        public OrchAPISession(PSDrive drive)
         {
-            // Enabled が設定されていない場合には、true として扱う
-            bool proxyEnabled = drive.Proxy?.Enabled ?? globalProxy?.Enabled ?? true;
-
-            // drive の Proxy と、globalProxy をカスケードして設定する
-            if ((drive.Proxy != null || globalProxy != null) && proxyEnabled)
+            if (drive.Proxy?.Enabled ?? false)
             {
                 HttpClientHandler handler;
                 try
                 {
-                    Uri proxyUri = new(drive.Proxy?.Url ?? globalProxy?.Url ?? "");
+                    Uri proxyUri = new(drive.Proxy.Url ?? "");
 
                     var proxy = new WebProxy
                     {
                         Address = proxyUri,
-                        BypassProxyOnLocal = drive.Proxy?.BypassProxyOnLocal ?? globalProxy?.BypassProxyOnLocal ?? true,
-                        UseDefaultCredentials = drive.Proxy?.UseDefaultCredentials ?? globalProxy?.UseDefaultCredentials ?? false
+                        BypassProxyOnLocal = drive.Proxy.BypassProxyOnLocal ?? true,
+                        UseDefaultCredentials = drive.Proxy.UseDefaultCredentials ?? false
                     };
 
-                    if ((drive.Proxy?.Credentials != null || globalProxy?.Credentials != null) && !proxy.UseDefaultCredentials)
+                    if (drive.Proxy?.Credentials != null && !proxy.UseDefaultCredentials)
                     {
                         proxy.Credentials = new NetworkCredential(
-                            userName: drive.Proxy?.Credentials?.Username ?? globalProxy?.Credentials?.Username,
-                            password: drive.Proxy?.Credentials?.Password ?? globalProxy?.Credentials?.Password);
+                            userName: drive.Proxy.Credentials.Username,
+                            password: drive.Proxy.Credentials.Password);
                     }
 
                     handler = new HttpClientHandler
