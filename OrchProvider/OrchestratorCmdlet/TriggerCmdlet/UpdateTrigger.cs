@@ -2,13 +2,10 @@
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using System.Text.Json;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
 using UiPath.PowerShell.Positional;
-
-using Positional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -388,6 +385,10 @@ namespace UiPath.PowerShell.Commands
 
                         postTrigger.ExecutorRobots = postTrigger.MachineRobots?
                             .Select(m => new RobotExecutor() { Id = m.RobotId }).ToArray();
+                    }
+                    else if (MachineRobots == "")
+                    {
+                        postTrigger.MachineRobots = null;
                     }
                     #endregion
 

@@ -225,6 +225,15 @@ namespace UiPath.PowerShell.Commands
                                 var dstPmUser = dstDrive.SearchForUsersAndGroups(newUser.UserName!)
                                     .Where(u => string.Compare(u.identityName, newUser.UserName, true) == 0 && u.type == srcType)
                                     .FirstOrDefault();
+
+                                if (dstPmUser == null && !string.IsNullOrEmpty(newUser.EmailAddress) && newUser.UserName != newUser.EmailAddress)
+                                {
+                                    // 見つからない場合は、メールアドレスでも探してみる
+                                    dstPmUser = dstDrive.SearchForUsersAndGroups(newUser.EmailAddress)
+                                        .Where(u => string.Compare(u.identityName, newUser.EmailAddress, true) == 0 && u.type == srcType)
+                                        .FirstOrDefault();
+                                }
+
                                 if (dstPmUser != null)
                                 {
                                     //WriteError(new ErrorRecord(new OrchException(srcUser.GetPSPath(), $"A user with the same name does not exist in the organization of {dstDrive.NameColonSeparator}."), "SearchUserError", ErrorCategory.InvalidOperation, srcUser));

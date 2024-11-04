@@ -1,4 +1,6 @@
 {
+  "RedirectUrl": "http://localhost:8085/Temporary_Listen_Addresses",
+
   "Proxy": {
     "Url": "http://proxy.example.com:8080",
     "BypassProxyOnLocal": true,
@@ -16,7 +18,6 @@
       "Description": "Non-Conf App settings. In Orchestrator admin page: create an external app, add User Scopes of Orchestrator API Access to match or exceed the scopes listed below, and use http://localhost:8085/Temporary_Listen_Addresses as the Redirect URL. In this config: input the Root and the issued App ID.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
-      "RedirectUrl": "http://localhost:8085/Temporary_Listen_Addresses",
       "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
       "Enabled": true
     },
@@ -43,7 +44,6 @@
       "Root": "https://XXX.azurewebsites.net",
       "IdentityUrl": "https://YYY.azurewebsites.net/identity",
       "AppId": "YOUR_APP_ID",
-      "RedirectUrl": "http://localhost:8085/Temporary_Listen_Addresses",
       "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
       "Enabled": false
     },
@@ -52,7 +52,6 @@
       "Description": "This configuration includes proxy settings. The 'Proxy' section within this PSDrive will override the global proxy settings defined at the root level, allowing customized proxy configurations for this specific drive. Note that only the settings you wish to override need to be included in this section; any omitted items will use the global configuration.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
-      "RedirectUrl": "http://localhost:8085/Temporary_Listen_Addresses",
       "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
       "Enabled": true,
       "Proxy": {

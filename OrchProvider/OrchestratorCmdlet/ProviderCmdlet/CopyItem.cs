@@ -235,6 +235,19 @@ namespace UiPath.PowerShell.Core
                                 .FirstOrDefault();
                             if (resolved == null)
                             {
+                                // ディレクトリに同名のユーザーが見つからない！
+                                // このユーザーの email を srcDrive で検索する。
+                                var srcUser = srcDrive.GetUsers().FirstOrDefault(u => u.Id == userRole.UserEntity?.Id);
+                                if (srcUser != null && !string.IsNullOrEmpty(srcUser.EmailAddress) && srcUser.EmailAddress != userName)
+                                {
+                                    resolved = dstDrive.SearchForUsersAndGroups(srcUser.EmailAddress)?
+                                        .Where(u => u.type == type)
+                                        .Where(u => string.Compare(u.identityName, srcUser.EmailAddress, true) == 0)
+                                        .FirstOrDefault();
+                                }
+                            }
+                            if (resolved == null)
+                            {
                                 _this.WriteError(new ErrorRecord(new OrchException(targetFolder, $"{msg}: {dstDrive.Name}: does not have the DirectoryUser \"{userName}\"."), "AssignFolderUserError", ErrorCategory.InvalidOperation, targetFolder));
                                 continue;
                             }
@@ -900,7 +913,14 @@ namespace UiPath.PowerShell.Core
                     return null;
                 }
 
-                var dstUser = dstDrive.GetUsers().FirstOrDefault(u => string.Compare(u.UserName, srcUser.UserName, StringComparison.OrdinalIgnoreCase) == 0);
+                var dstUsers = dstDrive.GetUsers();
+                var dstUser = dstUsers.FirstOrDefault(u => string.Compare(u.UserName, srcUser.UserName, StringComparison.OrdinalIgnoreCase) == 0);
+                if (dstUser == null)
+                {
+                    // ユーザーが見つからない！ Email でも探してみる。
+                    dstUser = dstUsers.FirstOrDefault(u => string.Compare(u.UserName, srcUser.EmailAddress, StringComparison.OrdinalIgnoreCase) == 0);
+                }
+
                 if (dstUser == null)
                 {
                     string target = newFolder.GetPSPath();
@@ -1166,7 +1186,9 @@ namespace UiPath.PowerShell.Core
             }
             catch (Exception ex)
             {
-                _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "MigrateProcessIdError", ErrorCategory.InvalidOperation, target));
+                _this.WriteError(new ErrorRecord(
+                    new OrchException(target, $"{msg}: Failed to get processes from {dstFolder.GetPSPath()}", ex),
+                    "MigrateProcessIdError", ErrorCategory.InvalidOperation, target));
                 return null;
             }
             if (dstRelease == null)
