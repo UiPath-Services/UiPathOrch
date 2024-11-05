@@ -15,23 +15,23 @@ namespace UiPath.PowerShell.Commands
     class GetPmUserLoginAttemptCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(PmUserNameCompleter<Positional.UserName>))]
+        [ArgumentCompleter(typeof(PmUserEmailCompleter<Positional.Email>))]
         [SupportsWildcards]
-        public string[]? UserName { get; set; }
+        public string[]? Email { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.UserName>))]
+        [ArgumentCompleter(typeof(DriveCompleter<Positional.Email>))]
         public string[]? Path { get; set; }
 
         protected override void ProcessRecord()
         {
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
-            var wpUserName = UserName.ConvertToWildcardPatternList();
+            var wpEmail = Email.ConvertToWildcardPatternList();
 
 
             foreach (var drive in drives)
             {
-                var users = drive.GetPmUsers().Values.FilterByWildcards(u => u?.userName, wpUserName);
+                var users = drive.GetPmUsers().Values.FilterByWildcards(u => u?.email, wpEmail);
                 foreach (var user in users)
                 {
                     drive.OrchAPISession.GetPmUserLoginAttempts(user.id!);

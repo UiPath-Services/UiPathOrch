@@ -143,6 +143,36 @@ namespace UiPath.PowerShell.Core
         }
     }
 
+    // List<string> を辞書のキーとして使えるようにするための comparer
+    // キーは辞書順にソートしておかなければいけない
+    public class ListStringComparer : IEqualityComparer<List<string>>
+    {
+        public bool Equals(List<string>? x, List<string>? y)
+        {
+            if (x == null || y == null)
+            {
+                return x == y;
+            }
+            return x.SequenceEqual(y);
+        }
+
+        public int GetHashCode(List<string> obj)
+        {
+            if (obj == null || obj.Count == 0)
+            {
+                return 0;
+            }
+
+            // リスト内のすべての要素を個別に組み合わせてハッシュコードを生成
+            int hash = 17;
+            foreach (var item in obj)
+            {
+                hash = HashCode.Combine(hash, item?.GetHashCode() ?? 0);
+            }
+            return hash;
+        }
+    }
+
     // todo: 次の形式を正しくソートできるようにしたい。
     // 1.0.8
     // 1.0.8-alpha.1

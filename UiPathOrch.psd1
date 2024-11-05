@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.8.6'
+ModuleVersion = '0.9.8.8'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -176,6 +176,7 @@ CmdletsToExport = @(
 'Get-OrchFolderUser',
 'Add-OrchFolderUser',
 'Copy-OrchFolderUser',
+'Move-OrchFolderUser',
 'Remove-OrchFolderUser',
 
 'Add-OrchRoleToFolderUser',
@@ -291,6 +292,7 @@ CmdletsToExport = @(
 'Update-OrchPmUser',
 'Remove-OrchPmUser',
 'Add-OrchPmUserBulk',
+'Copy-OrchPmUser',
 
 'Get-OrchPmRobotAccount',
 'Set-OrchPmRobotAccount',
@@ -366,7 +368,14 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Added the Move-OrchPmGroupMember cmdlet. This cmdlet moves users between organizational groups within a tenant.
+        ReleaseNotes = '- The Move-OrchFolderUser cmdlet has been added. This cmdlet moves folder users within a tenant''s folders.
+
+- The Copy-OrchPmUser cmdlet has been added. This cmdlet copies organizational users between organizations. If the groups to which the users belong do not exist in the destination organization, they are automatically created.
+
+- The parameter for cmdlets handling PmUser has been changed from -UserName to -Email. It was more appropriate to use -Email for uniquely identifying PmUser rather than -UserName. Note that the -Email parameter has an alias -UserName. The modified cmdlets are as follows:
+  - Get-OrchPmUser
+  - Update-OrchPmUser
+  - Remove-OrchPmUser
 '
 
         # Prerelease string of this module

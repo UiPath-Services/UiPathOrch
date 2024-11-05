@@ -484,6 +484,16 @@ namespace UiPath.PowerShell.Positional
         public static string[] Parameters { get; } = ["Type", "UserName"];
     }
 
+    public class Email : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["Email"];
+    }
+
+    public class Email_Destination : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["Email", "Destination"];
+    }
+
     public class UserName : IPositionalParameters
     {
         public static string[] Parameters { get; } = ["UserName"];
@@ -499,9 +509,9 @@ namespace UiPath.PowerShell.Positional
         public static string[] Parameters { get; } = ["UserName", "FullName"];
     }
 
-    internal class UserName_Language : IPositionalParameters
+    internal class Email_Language : IPositionalParameters
     {
-        public static string[] Parameters { get; } = ["UserName", "Language"];
+        public static string[] Parameters { get; } = ["Email", "Language"];
     }
 
     internal class UserName_Roles : IPositionalParameters

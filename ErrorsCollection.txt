@@ -6,3 +6,4 @@ Copy-OrchPmRobotAccount:
 
 {"message":"; roleDto must not be null","errorCode":0,"traceId":"00-9df23a0b8f3c379f83b977056c76fda2-9f0246949c69e350-00"}
 
+Copy-OrchPmUser: "Orch5:\": Failed to add PmUsers: {"result":{"succeeded":false,"errors":[{"code":"DuplicateUserName","description":"Username 'wenqi.li@uipath.com' is already taken."},{"code":"DuplicateEmail","description":"Email 'wenqi.li@uipath.com' is already taken."}]},"users":[]}

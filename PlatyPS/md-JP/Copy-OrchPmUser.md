@@ -5,26 +5,20 @@ online version:
 schema: 2.0.0
 ---
 
-# Remove-OrchPmUser
+# Copy-OrchPmUser
 
 ## SYNOPSIS
-Removes users registered with the Identity Server.
+組織ユーザーを組織間でコピーします。
 
 ## SYNTAX
 
 ```
-Remove-OrchPmUser -Email <String[]> [-WarnOnNoMatch] [-Path <String[]>] [-ProgressAction <ActionPreference>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Copy-OrchPmUser [-Email] <String[]> [-Destination] <String[]> [-Path <String>]
+ [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
-
-Primary Endpoint: DELETE /api/User/{userId}
-
-OAuth required scopes:
-
-Required permissions:
+このコマンドレットは、組織ユーザーを組織間でコピーします。ユーザーが所属するグループがコピー先の組織に存在しない場合は、自動的に作成されます。
 
 ## EXAMPLES
 
@@ -38,7 +32,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -Confirm
-Prompts you for confirmation before running the cmdlet.
+コマンドレットを実行する前に、あなたの確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -52,11 +46,41 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -Path
-Specifies the name of the target drives. If not specified, the current drive will be targeted.
+### -Destination
+{{ Fill Destination Description }}
 
 ```yaml
 Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: 1
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -Email
+{{ Fill Email Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases: UserName
+
+Required: True
+Position: 0
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
+```
+
+### -Path
+ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+
+```yaml
+Type: String
 Parameter Sets: (All)
 Aliases:
 
@@ -68,8 +92,8 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットは実行されません。
 
 ```yaml
 Type: SwitchParameter
@@ -98,45 +122,19 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -WarnOnNoMatch
-{{ Fill WarnOnNoMatch Description }}
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -Email
-{{ Fill Email Description }}
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases: UserName
-
-Required: True
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
-### None
+### System.String[]
+
+### System.String
+
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.PmUser
+
 ## NOTES
 
 ## RELATED LINKS

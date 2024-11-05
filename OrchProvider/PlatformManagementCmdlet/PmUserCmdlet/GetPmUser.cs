@@ -14,18 +14,19 @@ namespace UiPath.PowerShell.Commands
     public class GetPmUserCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(PmUserNameCompleter<Positional.UserName>))]
+        [ArgumentCompleter(typeof(PmUserEmailCompleter<Positional.Email>))]
         [SupportsWildcards]
-        public string[]? UserName { get; set; }
+        [Alias("UserName")]
+        public string[]? Email { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.UserName>))]
+        [ArgumentCompleter(typeof(DriveCompleter<Positional.Email>))]
         public string[]? Path { get; set; }
 
         protected override void ProcessRecord()
         {
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
-            var wpUserName = UserName.ConvertToWildcardPatternList();
+            var wpEmail = Email.ConvertToWildcardPatternList();
 
             using var results = OrchThreadPool.RunForEach(drives,
                 drive => drive.NameColonSeparator,
@@ -43,8 +44,8 @@ namespace UiPath.PowerShell.Commands
                     if (entities == null) continue;
 
                     WriteObject(entities
-                        .FilterByWildcards(u => u?.userName, wpUserName)
-                        .OrderBy(u => u.userName),
+                        .FilterByWildcards(u => u?.email, wpEmail)
+                        .OrderBy(u => u.email),
                         true);
                 }
                 catch (OrchException ex)

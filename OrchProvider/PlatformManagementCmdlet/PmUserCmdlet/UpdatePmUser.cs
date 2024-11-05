@@ -9,9 +9,10 @@ namespace UiPath.PowerShell.Commands
     public class UpdatePmUserCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PmUserNameCompleter<Positional.UserName>))]
+        [ArgumentCompleter(typeof(PmUserEmailCompleter<Positional.Email>))]
         [SupportsWildcards]
-        public string[]? UserName { get; set; }
+        [Alias("UserName")]
+        public string[]? Email { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         public string? Name { get; set; }
@@ -58,15 +59,15 @@ namespace UiPath.PowerShell.Commands
         protected override void ProcessRecord()
         {
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
-            var wpUserName = UserName.ConvertToWildcardPatternList();
+            var wpEmail = Email.ConvertToWildcardPatternList();
 
             foreach (var drive in drives)
             {
                 try
                 {
                     var users = drive.GetPmUsers().Values;
-                    var targetUsers = users.SelectByWildcards(u => u?.userName, wpUserName);
-                    foreach (var user in targetUsers.OrderBy(u => u.userName))
+                    var targetUsers = users.SelectByWildcards(u => u?.email, wpEmail);
+                    foreach (var user in targetUsers.OrderBy(u => u.email))
                     {
                         UiPath.PowerShell.Entities.UpdateUserCommand src = new()
                         {

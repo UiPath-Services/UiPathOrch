@@ -1736,7 +1736,7 @@ namespace UiPath.PowerShell.Completer
         }
     }
 
-    internal class PmUserNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    internal class PmUserEmailCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
             string commandName,
@@ -1748,7 +1748,7 @@ namespace UiPath.PowerShell.Completer
             var drives = ResolveDrives(fakeBoundParameters);
 
             // パラメータで選択済みの Name は、候補から除外する
-            var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var wpEmail = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1759,12 +1759,14 @@ namespace UiPath.PowerShell.Completer
                 if (!result.TryGetValue(out var entities)) continue;
 
                 foreach (var user in entities!.Values
-                    .Where(g => wp.IsMatch(g?.userName))
-                    .ExcludeByWildcards(u => u?.userName!, wpUserName)
-                    .OrderBy(u => u?.userName))
+                    .Where(g => wp.IsMatch(g?.email))
+                    .ExcludeByWildcards(u => u?.email!, wpEmail)
+                    .OrderBy(u => u?.email))
                 {
                     string tooltip = user.GetPSPath();
-                    yield return new CompletionResult(PathTools.EscapePSText(user?.userName), user?.userName, CompletionResultType.Text, tooltip);
+                    if (!string.IsNullOrEmpty(user.displayName))
+                        tooltip += $" ({user.displayName})";
+                    yield return new CompletionResult(PathTools.EscapePSText(user?.email), user?.email, CompletionResultType.Text, tooltip);
                 }
             }
         }
@@ -2081,7 +2083,7 @@ namespace UiPath.PowerShell.Completer
         }
     }
 
-    public class DriveCompleter<T> : OrchArgumentCompleter where T : IPositionalParameters
+    public class DriveCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
             string commandName,
@@ -2094,7 +2096,7 @@ namespace UiPath.PowerShell.Completer
 
             // パラメータで選択済みのドライブは、候補から除外する
             //var paramPath = GetParameterValues(commandAst, ParameterName(), T.Parameters, wordToComplete).Select(p => p.TrimEnd(':'));
-            var paramPath = GetParameterValues(commandAst, parameterName, T.Parameters, wordToComplete).Select(p => p.TrimEnd(':'));
+            var paramPath = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete).Select(p => p.TrimEnd(':'));
             var wpPath = paramPath.Select(p => new WildcardPattern(p, WildcardOptions.IgnoreCase)).ToList();
             var matchingDrives = drives.ExcludeByWildcards(d => d?.Name, wpPath);
 
@@ -2115,6 +2117,43 @@ namespace UiPath.PowerShell.Completer
     // positional parameter となっていない -Path パラメータのための drive name completer
     public class DriveCompleter : DriveCompleter<Positional.Empty>
     {
+    }
+
+    // DriveCompleter と良く似ているのだけど、これはコピー元のドライブを除外する機能がある。
+    internal class DestinationDriveCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = OrchDriveInfo.EnumAllOrchDrives();
+
+            // パラメータで選択済みのドライブは、候補から除外する
+            var paramPath = GetParameterValues(commandAst, "Path", TPositional.Parameters).Select(p => p.TrimEnd(':'));
+            var paramPathDrives = OrchDriveInfo.EnumOrchDrives(paramPath).Select(d => d.Name);
+            var wpPath = paramPathDrives.Select(p => new WildcardPattern(p, WildcardOptions.IgnoreCase)).ToList();
+
+            // パラメータで選択済みのドライブは、候補から除外する
+            var paramDestination = GetParameterValues(commandAst, "Destination", TPositional.Parameters, wordToComplete).Select(p => p.TrimEnd(':'));
+            var wpDestination = paramDestination.Select(p => new WildcardPattern(p, WildcardOptions.IgnoreCase)).ToList();
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            foreach (var drive in drives
+                .ExcludeByWildcards(d => d?.Name, wpPath)
+                .ExcludeByWildcards(d => d?.Name, wpDestination)
+                .Where(d => wp.IsMatch(d.NameColon)))
+            {
+                string driveName = drive.NameColon;
+                string tiphelp = drive.DisplayRoot;
+                if (!string.IsNullOrEmpty(drive.Description))
+                    tiphelp += $" ({drive.Description})";
+                yield return new CompletionResult(PathTools.EscapePSText(driveName), driveName, CompletionResultType.ParameterValue, tiphelp);
+            }
+        }
     }
 
     internal class TmDriveCompleter<T> : OrchArgumentCompleter where T : IPositionalParameters
