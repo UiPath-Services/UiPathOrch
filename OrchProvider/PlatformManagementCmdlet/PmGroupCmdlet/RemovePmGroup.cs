@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands
     public class RemovePmGroupCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PmGroupNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(PmGroupNameCompleter<Positional.GroupName>))]
         [SupportsWildcards]
         public string[]? GroupName { get; set; }
 

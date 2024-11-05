@@ -16,9 +16,10 @@ namespace UiPath.PowerShell.Commands
     public class RemovePmUserCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PmUserNameCompleter<Positional.UserName>))]
+        [ArgumentCompleter(typeof(PmUserEmailCompleter<Positional.Email>))]
         [SupportsWildcards]
-        public string[]? UserName { get; set; }
+        [Alias("UserName")]
+        public string[]? Email { get; set; }
 
         [Parameter]
         public SwitchParameter WarnOnNoMatch { get; set; }
@@ -30,7 +31,7 @@ namespace UiPath.PowerShell.Commands
         protected override void ProcessRecord()
         {
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
-            var wpUserName = UserName.ConvertToWildcardPatternList();
+            var wpEmail = Email.ConvertToWildcardPatternList();
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var drive in drives)
@@ -41,17 +42,17 @@ namespace UiPath.PowerShell.Commands
 
                     var partitionGlobalId = drive!.GetPartitionGlobalId();
 
-                    var targetUsers = users.Values.FilterByWildcards(u => u?.userName, wpUserName);
+                    var targetUsers = users.Values.FilterByWildcards(u => u?.email, wpEmail);
 
                     if (WarnOnNoMatch.IsPresent && !targetUsers.Any())
                     {
                         // ちょっと適当な実装だけど、これでも CSV インポート時にちゃんと動くから十分か。。
                         // ちゃんと実装するには、UserName の配列を先頭から順にひとつずつ処理しないといけない。
-                        WriteWarning($"No match found for UserName '{UserName![0]}'.");
+                        WriteWarning($"No match found for UserName '{Email![0]}'.");
                         continue;
                     }
 
-                    foreach (var user in targetUsers.OrderBy(u => u.userName))
+                    foreach (var user in targetUsers.OrderBy(u => u.email))
                     {
                         cancelHandler.Token.ThrowIfCancellationRequested();
 

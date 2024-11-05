@@ -1,6 +1,6 @@
 ﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
-Module Name: uiPathOrch
+Module Name: UiPathOrch
 online version:
 schema: 2.0.0
 ---
@@ -13,7 +13,7 @@ Updates users.
 ## SYNTAX
 
 ```
-Update-OrchPmUser [[-UserName] <String[]>] [-Name <String>] [-Surname <String>] [-Password <String>]
+Update-OrchPmUser [-Email <String[]>] [-Name <String>] [-Surname <String>] [-Password <String>]
  [-BypassBasicAuthRestriction <String>] [-Path <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf]
  [-Confirm] [<CommonParameters>]
 ```
@@ -128,21 +128,6 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
-### -UserName
-Specifies the userName of the users to be updated.
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 0
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
 ### -WhatIf
 Shows what would happen if the cmdlet runs.
 The cmdlet is not run.
@@ -172,6 +157,21 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
+```
+
+### -Email
+{{ Fill Email Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases: UserName
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
 ```
 
 ### CommonParameters

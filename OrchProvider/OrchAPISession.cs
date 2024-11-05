@@ -928,7 +928,7 @@ namespace UiPath.OrchAPI
             HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.AssignDirectoryUser", null, request);
         }
 
-        public void AssignUser(Int64 folderId, Int64 userId, IEnumerable<Int64> roleIds)
+        public void AssignUser(Int64 folderId, Int64 userId, IEnumerable<Int64>? roleIds)
         {
             var payload = new Dictionary<string, object?>();
             payload["assignments"] = new Dictionary<string, object?>()

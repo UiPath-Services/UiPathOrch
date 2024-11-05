@@ -98,6 +98,9 @@ Copies storage buckets.
 ### [Copy-OrchPmRobotAccount](Copy-OrchPmRobotAccount.md)
 {{ Fill in the Synopsis }}
 
+### [Copy-OrchPmUser](Copy-OrchPmUser.md)
+Copies organizational users between organizations.
+
 ### [Copy-OrchProcess](Copy-OrchProcess.md)
 {{ Fill in the Synopsis }}
 
@@ -442,6 +445,9 @@ Gets the test sets from projects in Test Manager.
 
 ### [Import-OrchQueueItem](Import-OrchQueueItem.md)
 {{ Fill in the Synopsis }}
+
+### [Move-OrchFolderUser](Move-OrchFolderUser.md)
+Removes users assigned to a folder and assigns them to another folders.
 
 ### [Move-OrchPmGroupMember](Move-OrchPmGroupMember.md)
 Moves users between two groups within an organization.

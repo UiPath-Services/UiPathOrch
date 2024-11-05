@@ -13,8 +13,7 @@ Identity サーバーに登録されたユーザーを取得します。
 ## SYNTAX
 
 ```
-Get-OrchPmUser [[-UserName] <String[]>] [-Path <String[]>] [-ProgressAction <ActionPreference>]
- [<CommonParameters>]
+Get-OrchPmUser [-Email <String[]>] [-Path <String[]>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -52,21 +51,6 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -UserName
-{{ Fill UserName Description }}
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 0
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: True
-```
-
 ### -ProgressAction
 {{ Fill ProgressAction Description }}
 
@@ -80,6 +64,21 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
+```
+
+### -Email
+{{ Fill Email Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases: UserName
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: True
 ```
 
 ### CommonParameters

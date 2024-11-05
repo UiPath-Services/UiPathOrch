@@ -95,8 +95,8 @@ namespace UiPath.PowerShell.Commands
                 cancelHandler.Token.ThrowIfCancellationRequested();
 
                 // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
-                srcDrive!._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, true), out var _);
-                srcDrive!._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, false), out var _);
+                srcDrive!._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, true), out _);
+                srcDrive!._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, false), out _);
                 var srcEntities = srcDrive.GetUsersForFolder(srcFolder, false)
                     .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName);
                 if (!srcEntities.Any()) continue;

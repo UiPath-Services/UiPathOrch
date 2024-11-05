@@ -19,8 +19,8 @@ namespace UiPath.PowerShell.Commands
         public string? surname { get; set; } = surname;
         public string? displayName { get; set; } = displayName;
         public string? type { get; set; } = type;
-        public bool? bypassBasicAuthRestriction { get; set; } = bool.TryParse(bypassBasicAuthRestriction, out var value) ? value : null;
-        public bool? invitationAccepted { get; set; } = bool.TryParse(invitationAccepted, out var value) ? value : null;
+        public bool? bypassBasicAuthRestriction { get; set; } = bypassBasicAuthRestriction.ToNullableBool();
+        public bool? invitationAccepted { get; set; } = invitationAccepted.ToNullableBool();
     }
 
     internal class DriveGroupIdsComparer : IEqualityComparer<(OrchDriveInfo drive, string[] groupIds)>

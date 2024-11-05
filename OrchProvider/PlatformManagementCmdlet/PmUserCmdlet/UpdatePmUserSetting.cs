@@ -32,9 +32,10 @@ namespace UiPath.PowerShell.Commands
         ];
 
         [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PmUserNameCompleter<Positional.UserName_Language>))]
+        [ArgumentCompleter(typeof(PmUserEmailCompleter<Positional.Email_Language>))]
         [SupportsWildcards]
-        public string[]? UserName { get; set; }
+        [Alias("UserName")]
+        public string[]? Email { get; set; }
 
         [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(LanguageCompleter))]
@@ -44,40 +45,6 @@ namespace UiPath.PowerShell.Commands
         [Parameter]
         [ArgumentCompleter(typeof(DriveCompleter<Positional.UserName>))]
         public string[]? Path { get; set; }
-
-        internal class PmUserNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var drives = ResolveDrives(fakeBoundParameters);
-
-                // パラメータで選択済みの Name は、候補から除外する
-                var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                var results = ParallelResults.ForEach(drives, drive => drive.GetPmUsers());
-
-                foreach (var result in results)
-                {
-                    if (!result.TryGetValue(out var entities)) continue;
-
-                    foreach (var user in entities!.Values
-                        .Where(g => wp.IsMatch(g?.userName))
-                        .ExcludeByWildcards(u => u?.userName!, wpUserName)
-                        .OrderBy(u => u?.userName))
-                    {
-                        string tooltip = user.GetPSPath();
-                        yield return new CompletionResult(PathTools.EscapePSText(user?.userName), user?.userName, CompletionResultType.Text, tooltip);
-                    }
-                }
-            }
-        }
 
         internal class LanguageCompleter : OrchArgumentCompleter
         {
@@ -99,7 +66,7 @@ namespace UiPath.PowerShell.Commands
         protected override void ProcessRecord()
         {
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
-            var wpUserName = UserName.ConvertToWildcardPatternList();
+            var wpEmail = Email.ConvertToWildcardPatternList();
 
             var (locale, localeCode) = _languages.FirstOrDefault(l => l.Locale == Language);
             localeCode ??= Language;
@@ -120,7 +87,8 @@ namespace UiPath.PowerShell.Commands
                     var drive = result.Source;
 
                     foreach (var user in entities
-                        .FilterByWildcards(user => user?.userName, wpUserName))
+                        .FilterByWildcards(user => user?.email, wpEmail)
+                        .OrderBy(user => user.email))
                     {
                         if (ShouldProcess(user.GetPSPath(), "Update PmUserSetting"))
                         {
@@ -142,7 +110,7 @@ namespace UiPath.PowerShell.Commands
                             }
                             catch (Exception ex)
                             {
-                                WriteError(new ErrorRecord(new OrchException(user.GetPSPath(), ex), "GetPmUserError", ErrorCategory.InvalidOperation, user));
+                                WriteError(new ErrorRecord(new OrchException(user.GetPSPath(), ex), "UpdatePmUserSettingError", ErrorCategory.InvalidOperation, user));
                             }
                         }
                     }

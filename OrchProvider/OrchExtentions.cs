@@ -175,18 +175,20 @@ namespace UiPath.PowerShell.Core
         }
 
         // patterns が空であれば、source のすべての要素をそのまま返す
-        public static IEnumerable<T> FilterByWildcards<T>(this IEnumerable<T> source,
-                                                   Func<T?, string?> selector,
-                                                   List<WildcardPattern>? patterns)
+        public static IEnumerable<T> FilterByWildcards<T>(
+            this IEnumerable<T> source,
+            Func<T?, string?> selector,
+            List<WildcardPattern>? patterns)
         {
             if (patterns == null || patterns.Count == 0) return source;
             return source.Where(item => patterns.Any(pattern => pattern.IsMatch(selector(item))));
         }
 
         // patterns が空であれば、source のすべての要素をそのまま返す
-        public static IEnumerable<T> FilterByWildcards<T>(this IEnumerable<T> source,
-                                                   Func<T?, string?> selector,
-                                                   string[]? patterns)
+        public static IEnumerable<T> FilterByWildcards<T>(
+            this IEnumerable<T> source,
+            Func<T?, string?> selector,
+            string[]? patterns)
         {
             if (patterns == null || patterns.Length == 0) return source;
             var wpPatterns = patterns.ConvertToWildcardPatternList();
@@ -194,18 +196,20 @@ namespace UiPath.PowerShell.Core
         }
 
         // patterns が空であれば、空を返す
-        public static IEnumerable<T> SelectByWildcards<T>(this IEnumerable<T> source,
-                                                   Func<T?, string?> selector,
-                                                   List<WildcardPattern>? patterns)
+        public static IEnumerable<T> SelectByWildcards<T>(
+            this IEnumerable<T> source,
+            Func<T?, string?> selector,
+            List<WildcardPattern>? patterns)
         {
             if (patterns == null || patterns.Count == 0) return [];
             return source.Where(item => patterns.Any(pattern => pattern.IsMatch(selector(item))));
         }
 
         // patterns が空であれば、空を返す
-        public static IEnumerable<T> SelectByWildcards<T>(this IEnumerable<T> source,
-                                                   Func<T?, string?> selector,
-                                                   string[]? patterns)
+        public static IEnumerable<T> SelectByWildcards<T>(
+            this IEnumerable<T> source,
+            Func<T?, string?> selector,
+            string[]? patterns)
         {
             if (patterns == null || patterns.Length == 0) return [];
             var wpPatterns = patterns.ConvertToWildcardPatternList();
@@ -230,9 +234,10 @@ namespace UiPath.PowerShell.Core
             return source.Where(item => !values.Contains(selector(item)));
         }
 
-        public static IEnumerable<T> ExcludeByWildcards<T>(this IEnumerable<T> source,
-                                                 Func<T?, string?> selector,
-                                                 List<WildcardPattern>? patterns)
+        public static IEnumerable<T> ExcludeByWildcards<T>(
+            this IEnumerable<T> source,
+            Func<T?, string?> selector,
+            List<WildcardPattern>? patterns)
         {
             if (patterns == null || !patterns.Any()) return source;
             return source.Where(item => !patterns.Any(pattern => pattern.IsMatch(selector(item))));
