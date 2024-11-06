@@ -104,6 +104,8 @@ namespace UiPath.PowerShell.Commands
 
             bool keepSource = KeepSource.ToNullableBool() ?? false;
 
+            string action = keepSource ? "Copy Folder User" : "Move Folder User";
+
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (srcDrive, srcFolder) in srcDrivesFolders)
             {
@@ -146,7 +148,8 @@ namespace UiPath.PowerShell.Commands
                             continue;
                         }
 
-                        if (ShouldProcess(target, "Move Folder User"))
+
+                        if (ShouldProcess(target, action))
                         {
                             try
                             {
