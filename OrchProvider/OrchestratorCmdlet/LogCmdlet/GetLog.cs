@@ -15,10 +15,6 @@ namespace UiPath.PowerShell.Commands
     public class GetLogCommand : OrchestratorPSCmdlet
     {
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(IdCompleter))]
-        public Int64[]? JobId { get; set; }
-
-        [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(StaticTextsCompleter<LastItems>))]
         public string? Last { get; set; }
 
@@ -78,69 +74,6 @@ namespace UiPath.PowerShell.Commands
 
         [Parameter]
         public uint Depth { get; set; }
-
-        private class IdCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-
-                // パラメータで選択済みの Id は、候補から除外する
-                var paramId = GetParameterValues(commandAst, "Id", Id_Level.Parameters, wordToComplete).Select(id => long.Parse(id));
-
-                // パラメータで選択された State のみ対象とする
-                var wpState = CreateWPListFromOtherParameters(commandAst, "State", Id_Level.Parameters);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                // キャッシュを検索するだけなので、マルチスレッド化は不要
-                foreach (var (drive, folder) in drivesFolders)
-                {
-                    if (drive._dicJobs == null && drive._dicJobsHavingExecutionMedia == null)
-                        continue;
-
-                    if (drive._dicJobs != null && drive._dicJobs!.TryGetValue(folder.Id ?? 0, out Dictionary<Int64, Job>? folderJobs))
-                    {
-                        foreach (var job in folderJobs.Values
-                            .ExcludeByStructValues(job => job.Id ?? 0, paramId)
-                            .FilterByWildcards(job => job?.State, wpState)
-                            .Where(job => wp.IsMatch((job.Id ?? 0).ToString())))
-                        {
-                            string tiphelp = $"{job.Id} C{job.CreationTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")}";
-                            if (job.StartTime != null)
-                                tiphelp += $"  S{job.StartTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss").ToString()}";
-                            else
-                                tiphelp += $"                      ";
-                            if (job.EndTime != null)
-                                tiphelp += $"  E{job.EndTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss").ToString()}";
-                            else
-                                tiphelp += $"                      ";
-                            tiphelp += $" {job.State,11} {job.ReleaseName}";
-
-                            yield return new CompletionResult(job.Id.ToString(), job.Id.ToString(), CompletionResultType.ParameterValue, tiphelp);
-                        }
-                    }
-
-                    if (drive._dicJobsHavingExecutionMedia != null && drive._dicJobsHavingExecutionMedia.TryGetValue(folder.Id ?? 0, out var folderMedia))
-                    {
-                        foreach (var media in folderMedia
-                            .ExcludeByStructValues<ExecutionMedia, Int64>(job => job.Id ?? 0, paramId)
-                            //.FilterByWildcards(job => job.State!, wpState)
-                            .Where(job => wp.IsMatch((job.Id ?? 0).ToString()))
-                            )
-                        {
-                            string tiphelp = $"{media.JobId}";
-                            yield return new CompletionResult(media.JobId.ToString(), media.Id.ToString(), CompletionResultType.ParameterValue, tiphelp);
-                        }
-                    }
-                }
-            }
-        }
 
         private class LevelCompleter : OrchArgumentCompleter
         {
@@ -339,13 +272,11 @@ namespace UiPath.PowerShell.Commands
         protected override void ProcessRecord()
         {
             ulong skip = Skip ?? 0;
-            ulong first = First ?? ulong.MaxValue;
 
             if (string.IsNullOrEmpty(OrderBy)) OrderBy = "TimeStamp";
 
             // すべてのパラメータが指定されていなければ、キャッシュの内容を返す
             bool bOutCache = (
-                JobId == null &&
                 Last == null &&
                 TimeStampAfter == null &&
                 TimeStampBefore == null &&
@@ -385,70 +316,13 @@ namespace UiPath.PowerShell.Commands
                 return;
             }
 
-            if (JobId != null && JobId.Length != 0)
-            {
-                foreach (var (drive, folder) in drivesFolders)
-                {
-
-                    foreach (var id in JobId!)
-                    {
-                        string? jobKey = null;
-                        // キャッシュから Job.Key を取得
-                        if (drive._dicJobs?.TryGetValue(folder.Id ?? 0, out var jobs) ?? false)
-                        {
-                            if (jobs.TryGetValue(id, out var job))
-                            {
-                                jobKey = job.Key;
-                            }
-                        }
-                        // キャッシュがなければ、Job を問い合わせる
-                        if (jobKey == null)
-                        {
-                            Job job;
-                            try
-                            {
-                                job = drive.GetJob(folder, id);
-                                jobKey = job?.Key;
-                            }
-                            catch (Exception ex)
-                            {
-                                WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "GetJobError", ErrorCategory.InvalidOperation, folder));
-                                continue;
-                            }
-                            if (job == null)
-                            {
-                                WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), $"No job with Id = {id} found."), "GetJobError", ErrorCategory.InvalidOperation, folder));
-                                continue;
-                            }
-                            if (jobKey == null)
-                            {
-                                WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), $"Job with Id = {id} has no Key."), "GetJobError", ErrorCategory.InvalidOperation, folder));
-                                continue;
-                            }
-                        }
-
-                        try
-                        {
-                            string query = MakeFilter(drive, folder, jobKey);
-                            var logs = drive.GetRobotLogs(folder, query, skip, first, OrderBy, OrderAscending.IsPresent);
-                            WriteObject(logs, true);
-                        }
-                        catch (Exception ex)
-                        {
-                            string target = System.IO.Path.Combine(folder.GetPSPath(), id.ToString());
-                            WriteError(new ErrorRecord(new OrchException(target, ex), "GetLogError", ErrorCategory.InvalidOperation, folder));
-                        }
-                    }
-                }
-                return;
-            }
-
             string msg = $"Get Log";
             using ProgressReporter reporter = new(this, 1, drivesFolders.Count, msg, msg);
             int index = 0;
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (drive, folder) in drivesFolders)
             {
+                ulong first = First ?? ulong.MaxValue; // first は、フォルダごとにリセットする
                 reporter.WriteProgress(++index, $"{index:D}/{drivesFolders.Count} {folder.GetPSPath()}");
                 try
                 {

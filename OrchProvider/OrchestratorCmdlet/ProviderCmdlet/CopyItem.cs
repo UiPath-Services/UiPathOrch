@@ -936,7 +936,8 @@ namespace UiPath.PowerShell.Core
             }
         }
 
-        internal static Robot? FindDstRobot(IWritableHost _this,
+        internal static RobotsFromFolderModel? FindDstRobot(IWritableHost _this,
+        //internal static Robot? FindDstRobot(IWritableHost _this,
             OrchDriveInfo srcDrive,
             OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcRobotId, string msg)
         {
@@ -950,7 +951,8 @@ namespace UiPath.PowerShell.Core
                     return null;
                 }
                 //msg = $"Migrating id of the robot {Path.Combine(srcDrive.NameColon, srcRobot.Name!)}";
-                var dstRobots = dstDrive.GetRobots();
+
+                var dstRobots = dstDrive.GetRobotsFromFolder(dstFolder);
                 var dstRobot = dstRobots?.FirstOrDefault(r => string.Compare(r.Name, srcRobot.Name, StringComparison.OrdinalIgnoreCase) == 0);
                 if (dstRobot == null)
                 {
@@ -1867,7 +1869,7 @@ namespace UiPath.PowerShell.Core
                         foreach (var machineRobot in postingTrigger.MachineRobots)
                         {
                             // RobotId を移行
-                            Robot dstRobot = null;
+                            RobotsFromFolderModel dstRobot = null;
                             if (machineRobot.RobotId != null && machineRobot.RobotId != 0)
                             {
                                 dstRobot = FindDstRobot(_this,

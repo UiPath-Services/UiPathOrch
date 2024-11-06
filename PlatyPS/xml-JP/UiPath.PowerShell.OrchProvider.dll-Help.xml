@@ -21550,18 +21550,6 @@
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
-          <maml:name>JobId</maml:name>
-          <maml:description>
-            <maml:para>{{ Fill JobId Description }}</maml:para>
-          </maml:description>
-          <command:parameterValue required="true" variableLength="false">Int64[]</command:parameterValue>
-          <dev:type>
-            <maml:name>Int64[]</maml:name>
-            <maml:uri />
-          </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
-        </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
           <maml:name>Last</maml:name>
           <maml:description>
             <maml:para>{{ Fill Last Description }}</maml:para>
@@ -21739,18 +21727,6 @@
         <command:parameterValue required="true" variableLength="false">UInt64</command:parameterValue>
         <dev:type>
           <maml:name>UInt64</maml:name>
-          <maml:uri />
-        </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
-      </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
-        <maml:name>JobId</maml:name>
-        <maml:description>
-          <maml:para>{{ Fill JobId Description }}</maml:para>
-        </maml:description>
-        <command:parameterValue required="true" variableLength="false">Int64[]</command:parameterValue>
-        <dev:type>
-          <maml:name>Int64[]</maml:name>
           <maml:uri />
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
@@ -35050,18 +35026,6 @@
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Remove-OrchPmUser</maml:name>
-        <command:parameter required="true" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
-          <maml:name>UserName</maml:name>
-          <maml:description>
-            <maml:para>削除するユーザーの UserName を指定します。</maml:para>
-          </maml:description>
-          <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
-          <dev:type>
-            <maml:name>String[]</maml:name>
-            <maml:uri />
-          </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
-        </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
           <maml:name>Confirm</maml:name>
           <maml:description>
@@ -35119,6 +35083,18 @@
           </dev:type>
           <dev:defaultValue>False</dev:defaultValue>
         </command:parameter>
+        <command:parameter required="true" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="named" aliases="UserName">
+          <maml:name>Email</maml:name>
+          <maml:description>
+            <maml:para>{{ Fill Email Description }}</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+          <dev:type>
+            <maml:name>String[]</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
@@ -35138,18 +35114,6 @@
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。</maml:para>
-        </maml:description>
-        <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
-        <dev:type>
-          <maml:name>String[]</maml:name>
-          <maml:uri />
-        </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
-      </command:parameter>
-      <command:parameter required="true" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
-        <maml:name>UserName</maml:name>
-        <maml:description>
-          <maml:para>削除するユーザーの UserName を指定します。</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
         <dev:type>
@@ -35193,6 +35157,18 @@
           <maml:uri />
         </dev:type>
         <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="true" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="named" aliases="UserName">
+        <maml:name>Email</maml:name>
+        <maml:description>
+          <maml:para>{{ Fill Email Description }}</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+        <dev:type>
+          <maml:name>String[]</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
     </command:parameters>
     <command:inputTypes>

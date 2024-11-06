@@ -13,9 +13,9 @@ schema: 2.0.0
 ## SYNTAX
 
 ```
-Get-OrchLog [-JobId <Int64[]>] [-Last <String>] [-TimeStampAfter <DateTime>] [-TimeStampBefore <DateTime>]
- [[-Level] <String>] [-Machine <String>] [-ProcessName <String>] [-WindowsIdentity <String[]>] [-Skip <UInt64>]
- [-First <UInt64>] [-OrderBy <String>] [-OrderAscending] [-Path <String[]>] [-Recurse] [-Depth <UInt32>]
+Get-OrchLog [-Last <String>] [-TimeStampAfter <DateTime>] [-TimeStampBefore <DateTime>] [[-Level] <String>]
+ [-Machine <String>] [-ProcessName <String>] [-WindowsIdentity <String[]>] [-Skip <UInt64>] [-First <UInt64>]
+ [-OrderBy <String>] [-OrderAscending] [-Path <String[]>] [-Recurse] [-Depth <UInt32>]
  [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
@@ -166,21 +166,6 @@ Accept wildcard characters: False
 
 ```yaml
 Type: UInt64
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: False
-```
-
-### -JobId
-{{ Fill JobId Description }}
-
-```yaml
-Type: Int64[]
 Parameter Sets: (All)
 Aliases:
 

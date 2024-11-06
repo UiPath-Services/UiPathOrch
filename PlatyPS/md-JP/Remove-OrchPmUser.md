@@ -13,8 +13,8 @@ Identity サーバーに登録されたユーザーを削除します。
 ## SYNTAX
 
 ```
-Remove-OrchPmUser [-UserName] <String[]> [-WarnOnNoMatch] [-Path <String[]>]
- [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-OrchPmUser -Email <String[]> [-WarnOnNoMatch] [-Path <String[]>] [-ProgressAction <ActionPreference>]
+ [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -67,21 +67,6 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
-### -UserName
-削除するユーザーの UserName を指定します。
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: True
-Position: 0
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
 ### -WhatIf
 コマンドレットを実行すると、何が起こるかを表示します。
 コマンドレットは実行されません。
@@ -126,6 +111,21 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
+```
+
+### -Email
+{{ Fill Email Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases: UserName
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
 ```
 
 ### CommonParameters

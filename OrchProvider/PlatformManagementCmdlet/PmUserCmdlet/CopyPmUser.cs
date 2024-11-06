@@ -119,6 +119,12 @@ namespace UiPath.PowerShell.Commands
 
             foreach (var dstDrive in dstDrives)
             {
+                if (srcDrive.GetPartitionGlobalId() == dstDrive.GetPartitionGlobalId())
+                {
+                    WriteWarning($"The drives '{srcDrive.NameColonSeparator}' and '{dstDrive.NameColonSeparator}' belong to the same organization, so this operation will be skipped.");
+                    continue;
+                }
+
                 #region dstDrive のグループ一覧を取得
                 Dictionary<string, PmGroup> dstGroups;
                 try

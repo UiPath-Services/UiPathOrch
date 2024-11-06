@@ -13,9 +13,9 @@ Gets the execution logs of the robots.
 ## SYNTAX
 
 ```
-Get-OrchLog [-JobId <Int64[]>] [-Last <String>] [-TimeStampAfter <DateTime>] [-TimeStampBefore <DateTime>]
- [[-Level] <String>] [-Machine <String>] [-ProcessName <String>] [-WindowsIdentity <String[]>] [-Skip <UInt64>]
- [-First <UInt64>] [-OrderBy <String>] [-OrderAscending] [-Path <String[]>] [-Recurse] [-Depth <UInt32>]
+Get-OrchLog [-Last <String>] [-TimeStampAfter <DateTime>] [-TimeStampBefore <DateTime>] [[-Level] <String>]
+ [-Machine <String>] [-ProcessName <String>] [-WindowsIdentity <String[]>] [-Skip <UInt64>] [-First <UInt64>]
+ [-OrderBy <String>] [-OrderAscending] [-Path <String[]>] [-Recurse] [-Depth <UInt32>]
  [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
@@ -166,21 +166,6 @@ Enter the number of objects to get.
 
 ```yaml
 Type: UInt64
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: False
-```
-
-### -JobId
-{{ Fill JobId Description }}
-
-```yaml
-Type: Int64[]
 Parameter Sets: (All)
 Aliases:
 

@@ -143,6 +143,8 @@ namespace UiPath.PowerShell.Commands
         [Parameter]
         public uint Depth { get; set; }
 
+        private Dictionary<(OrchDriveInfo drive, Int64 folderId), bool>? IsGetRobotsFromFolderCalled;
+
         internal class TimeZoneCompleter : OrchArgumentCompleter
         {
             public override IEnumerable<CompletionResult> CompleteArgument(
@@ -350,6 +352,16 @@ namespace UiPath.PowerShell.Commands
                     #region MachineRobots をデシリアライズ
                     if (!string.IsNullOrEmpty(MachineRobots))
                     {
+                        // CSV インポートで処理した場合であっても、各フォルダーに対して1回だけ
+                        // GetRobotsFromFolder を呼び出すようにする
+                        IsGetRobotsFromFolderCalled ??= [];
+                        if (!IsGetRobotsFromFolderCalled.TryGetValue((drive, folder.Id!.Value), out _))
+                        {
+                            // これを呼び出しておかないと、Orchestrator がロボットの検索に失敗してしまう
+                            _ = drive.GetRobotsFromFolder(folder);
+                            IsGetRobotsFromFolderCalled[(drive, folder.Id.Value)] = true;
+                        }
+
                         var mrss = JsonSerializer.Deserialize<MachineRobotSessionForSerialize[]>(MachineRobots);
 
                         List<MachineRobotSession> targets = [];
