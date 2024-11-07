@@ -218,7 +218,9 @@ namespace UiPath.PowerShell.Commands
                         var command = new CreateUserCommandBase()
                         {
                             id = Guid.NewGuid().ToString(),
-                            userName = srcUser.email, // userName には email を入れるのがポイントか。
+                            
+                            userName = !string.IsNullOrEmpty(srcUser.email) ? srcUser.email : srcUser.userName,
+                                                                   
                             email = srcUser.email,
                             name = srcUser.name,
                             surname = srcUser.surname,

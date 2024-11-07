@@ -1680,7 +1680,7 @@ namespace UiPath.PowerShell.Core
             List<ProcessSchedule> srcTriggers = null;
             try
             {
-                srcTriggers = srcDrive.GetProcessSchedules(srcFolder).FilterByWildcards(t => t?.Name, wpName).ToList();
+                srcTriggers = srcDrive.GetTriggers(srcFolder).FilterByWildcards(t => t?.Name, wpName).ToList();
             }
             catch (Exception ex)
             {
@@ -2572,7 +2572,7 @@ namespace UiPath.PowerShell.Core
                         if (!ExcludeEntities)
                         {
                             // #1 フォルダーユーザーをコピー
-                            msg = "Copying assigned users...    ";
+                            msg = "Copying folder users...      ";
                             reporter.WriteProgress(1);
                             srcDrive!._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, true), out var _);
                             srcDrive!._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, false), out var _);
@@ -2580,7 +2580,7 @@ namespace UiPath.PowerShell.Core
                             CopyFolderUsers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterFolderUsers, cancelHandler.Token, true);
 
                             // #2 フォルダーマシンをコピー
-                            msg = "Copying assigned machines... ";
+                            msg = "Copying folder machines...   ";
                             reporter.WriteProgress(2);
                             srcDrive._dicMachinesAssigned?.TryRemove(srcFolder.Id ?? 0, out _);
                             using var reporterFolderMachines = new ProgressReporter(this, 200, Int32.MaxValue, msg, msg);
@@ -2621,7 +2621,7 @@ namespace UiPath.PowerShell.Core
                             // #8 トリガーをコピー
                             msg = "Copying triggers...          ";
                             reporter.WriteProgress(8);
-                            srcDrive._dicProcessSchedules?.TryRemove(srcFolder.Id ?? 0, out _);
+                            srcDrive._dicTriggers?.TryRemove(srcFolder.Id ?? 0, out _);
                             using var reporterTriggers = new ProgressReporter(this, 800, Int32.MaxValue, msg, msg);
                             CopyTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTriggers, cancelHandler.Token, true);
 
@@ -2634,7 +2634,7 @@ namespace UiPath.PowerShell.Core
 
                             // #xx テストケースはコピーする必要がない。
                             // パッケージとプロセスをコピーすれば、自動で出てくる。
-                            //msg = "Copying test cases...      ";
+                            //msg = "Copying test cases...        ";
                             //reporter.WriteProgress();
                             //using var reporterTestCases = new ProgressReporter(this, 1100, Int32.MaxValue, msg, msg);
                             //CopyTestCases(this, srcDrive, srcFolder, dstDrive, newFolder, reporterTestCases);
@@ -2658,7 +2658,7 @@ namespace UiPath.PowerShell.Core
                             CopyTestDataQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestDataQueues, cancelHandler.Token, true);
 
                             // #13 アクションカタログをコピー
-                            msg = "Copying action catalogs...  ";
+                            msg = "Copying action catalogs...   ";
                             reporter.WriteProgress(12);
                             using var reporterActionCatalogs = new ProgressReporter(this, 1300, Int32.MaxValue, msg, msg);
                             srcDrive._dicTaskCatalog?.TryRemove(srcFolder.Id ?? 0, out _);

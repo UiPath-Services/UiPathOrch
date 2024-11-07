@@ -72,29 +72,34 @@ namespace UiPath.PowerShell.Commands
             var (dstDrive, dstRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Destination);
 
             // コピー元とコピー先が同じなら、何もしない
-            if (srcDrive == dstDrive && srcRootFolder.FullyQualifiedName == dstRootFolder.FullyQualifiedName) return;
+            if (srcDrive == dstDrive && srcRootFolder == dstRootFolder) return;
 
             var wpName = Name.ConvertToWildcardPatternList();
 
-            //using var results = OrchThreadPool.RunForEach(srcDrivesFolders,
-            //    df => df.folder.GetPSPath(),
-            //    df => df.folder,
-            //    df => df.drive.GetMachinesAssignedToFolder(df.folder));
-
-            string msg = "Copying assigned machines...";
+            string msg = "Copying folder machines...";
             using var reporter = new ProgressReporter(this, 200, Int32.MaxValue, msg, msg);
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (_, srcFolder) in srcDrivesFolders)
             {
-                // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
-                srcDrive._dicMachinesAssigned?.TryRemove(srcFolder.Id ?? 0, out _);
-                var srcEntities = srcDrive.GetMachinesAssignedToFolder(srcFolder)
-                    .Where(e => e.IsAssignedToFolder.GetValueOrDefault())
-                    .FilterByWildcards(e => e?.Name, wpName);
-                if (!srcEntities.Any()) continue;
+                cancelHandler.Token.ThrowIfCancellationRequested();
+
+                try
+                {
+                    // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
+                    //srcDrive._dicMachinesAssigned?.TryRemove(srcFolder.Id ?? 0, out _);
+                    var srcEntities = srcDrive.GetMachinesAssignedToFolder(srcFolder)
+                        .Where(e => e.IsAssignedToFolder.GetValueOrDefault())
+                        .FilterByWildcards(e => e?.Name, wpName);
+                    if (!srcEntities.Any()) continue;
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), ex), "GetFolderMachineError", ErrorCategory.InvalidOperation, srcFolder));
+                    continue;
+                }
 
                 Folder? dstFolder = GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
-                if (dstFolder == null) continue;
+                if (dstFolder == null || (srcDrive == dstDrive && srcFolder == dstFolder)) continue;
 
                 try
                 {
@@ -130,7 +135,7 @@ namespace UiPath.PowerShell.Commands
         //        df => df.folder,
         //        df => df.drive.GetMachinesAssignedToFolder(df.folder));
 
-        //    string msg = "Copying assigned machines...";
+        //    string msg = "Copying folder machines...";
         //    using var reporter = new ProgressReporter(this, 200, Int32.MaxValue, msg, msg);
         //    using var cancelHandler = new ConsoleCancelHandler();
         //    foreach (var dstDriveFolder in dstDrivesFolders)

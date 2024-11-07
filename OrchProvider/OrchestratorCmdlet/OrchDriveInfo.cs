@@ -552,7 +552,7 @@ namespace UiPath.PowerShell.Core
             _dicPersonalWorkspaces = null;
             _dicPersonalWorkspaces_Exception?.ClearCache();
 
-            _dicProcessSchedules = null;
+            _dicTriggers = null;
             _dicProcessSchedules_Exceptions?.ClearCache();
 
             _dicProcessScheduleDetailed = null;
@@ -697,7 +697,7 @@ namespace UiPath.PowerShell.Core
             _dicJobsHavingExecutionMedia?.TryRemove(folderId, out _);
             _dicMachinesAssignable?.TryRemove(folderId, out _);
             _dicMachinesAssigned?.TryRemove(folderId, out _);
-            _dicProcessSchedules?.TryRemove(folderId, out _);
+            _dicTriggers?.TryRemove(folderId, out _);
             _dicQueueDefinitions?.TryRemove(folderId, out _);
             _dicQueueLinks = null;
             _dicReleases?.TryRemove(folderId, out _);
@@ -1359,23 +1359,23 @@ namespace UiPath.PowerShell.Core
 
         #region OrchProcessSchedule cache
         // key: foldlerId
-        internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, ProcessSchedule>>? _dicProcessSchedules = null;
+        internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, ProcessSchedule>>? _dicTriggers = null;
         internal ExceptionsCachePer<Int64> _dicProcessSchedules_Exceptions = new();
-        public ICollection<ProcessSchedule> GetProcessSchedules(Folder folder)
+        public ICollection<ProcessSchedule> GetTriggers(Folder folder)
         {
             _dicProcessSchedules_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
 
-            if (_dicProcessSchedules == null)
+            if (_dicTriggers == null)
             {
                 lock (_dicProcessSchedules_Exceptions)
                 {
-                    _dicProcessSchedules ??= [];
+                    _dicTriggers ??= [];
                 }
             }
-            if (!_dicProcessSchedules.TryGetValue(folder.Id ?? 0, out var triggersPerFolder))
+            if (!_dicTriggers.TryGetValue(folder.Id ?? 0, out var triggersPerFolder))
             {
                 triggersPerFolder = [];
-                _dicProcessSchedules[folder.Id ?? 0] = triggersPerFolder;
+                _dicTriggers[folder.Id ?? 0] = triggersPerFolder;
                 try
                 {
                     var triggers = OrchAPISession.GetProcessSchedule(folder.Id ?? 0).ToList();
@@ -1432,7 +1432,7 @@ namespace UiPath.PowerShell.Core
                         detailedTrigger.Path = folder.GetPSPath();
                         detailedTriggersPerFolder[schedule.Id!.Value] = detailedTrigger;
 
-                        if (_dicProcessSchedules != null && _dicProcessSchedules.TryGetValue(folder.Id!.Value, out var triggersPerFolder))
+                        if (_dicTriggers != null && _dicTriggers.TryGetValue(folder.Id!.Value, out var triggersPerFolder))
                         {
                             triggersPerFolder[schedule.Id!.Value] = detailedTrigger;
                         }

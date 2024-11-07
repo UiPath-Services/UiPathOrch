@@ -41,7 +41,7 @@ namespace UiPath.PowerShell.Commands
             var (dstDrive, dstRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Destination);
 
             // コピー元とコピー先が同じなら、何もしない
-            if (srcDrive == dstDrive && srcRootFolder.FullyQualifiedName == dstRootFolder.FullyQualifiedName) return;
+            if (srcDrive == dstDrive && srcRootFolder == dstRootFolder) return;
 
             var wpName = Name.ConvertToWildcardPatternList();
 
@@ -50,13 +50,23 @@ namespace UiPath.PowerShell.Commands
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (_, srcFolder) in srcDrivesFolders)
             {
-                // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
-                srcDrive._dicHttpTriggers?.TryRemove(srcFolder.Id ?? 0, out _);
-                var srcEntities = srcDrive.GetHttpTriggers(srcFolder).FilterByWildcards(e => e?.Name, wpName);
-                if (!srcEntities.Any()) continue;
+                cancelHandler.Token.ThrowIfCancellationRequested();
+
+                try
+                {
+                    // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
+                    //srcDrive._dicHttpTriggers?.TryRemove(srcFolder.Id ?? 0, out _);
+                    var srcEntities = srcDrive.GetHttpTriggers(srcFolder).FilterByWildcards(e => e?.Name, wpName);
+                    if (!srcEntities.Any()) continue;
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), ex), "GetApiTriggerError", ErrorCategory.InvalidOperation, srcFolder));
+                    continue;
+                }
 
                 Folder? dstFolder = GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
-                if (dstFolder == null) continue;
+                if (dstFolder == null || (srcDrive == dstDrive && srcFolder == dstFolder)) continue;
 
                 srcDrive._dicReleases?.TryRemove(srcFolder.Id ?? 0, out _);
                 dstDrive._dicRobots = null;

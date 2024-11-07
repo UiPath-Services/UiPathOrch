@@ -1,12 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name_Destination;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -21,52 +16,74 @@ namespace UiPath.PowerShell.Commands
 
         [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
-        public string[]? Destination { get; set; }
+        public string? Destination { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
-        public string[]? Path { get; set; }
+        public string? Path { get; set; }
 
-        //[Parameter]
-        //public SwitchParameter Recurse { get; set; }
+        [Parameter]
+        public SwitchParameter Recurse { get; set; }
 
-        //[Parameter]
-        //public uint Depth { get; set; }
+        [Parameter]
+        public uint Depth { get; set; }
 
         protected override void ProcessRecord()
         {
-            var srcDrives = OrchDriveInfo.EnumOrchDrives(Path);
-            var srcDrivesFolders = OrchDriveInfo.EnumFolders(Path);
-            var dstDrivesFolders = OrchDriveInfo.EnumFolders(Destination);
+            var (srcDrive, srcRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Path);
+            var srcDrivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+
+            var (dstDrive, dstRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Destination);
+
+            // コピー元とコピー先が同じなら、何もしない
+            if (srcDrive == dstDrive && srcRootFolder == dstRootFolder) return;
+
             var wpName = Name.ConvertToWildcardPatternList();
 
-            foreach (var srcDrive in srcDrives)
-            {
-                srcDrive._dicQueueLinks = null;
-            }
+            srcDrive._dicQueueLinks = null;
 
             // コピーの直前でキャッシュを削除するので、ここで取得しておくのは意味がない
 
             string msg = "Copying queues...";
             using var reporterQueues = new ProgressReporter(this, 700, Int32.MaxValue, msg, msg);
             using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var (dstDrive, dstFolder) in dstDrivesFolders)
+
+            foreach (var (_, srcFolder) in srcDrivesFolders)
             {
-                foreach (var (srcDrive, srcFolder) in srcDrivesFolders)
+                cancelHandler.Token.ThrowIfCancellationRequested();
+
+                try
                 {
-                    try
-                    {
-                        Core.OrchProvider.CopyQueues(this,
-                            srcDrive, srcFolder, wpName,
-                            dstDrive, dstFolder, reporterQueues,
-                            cancelHandler.Token, false);
-                        dstDrive._dicQueueDefinitions?.TryRemove(dstFolder.Id ?? 0, out _);
-                    }
-                    catch (Exception ex)
-                    {
-                        string target = dstFolder.GetPSPath();
-                        WriteError(new ErrorRecord(new OrchException(target, ex), "CopyQueueError", ErrorCategory.InvalidOperation, target));
-                    }
+                    // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
+                    //srcDrive._dicQueueDefinitions?.TryRemove(srcFolder.Id ?? 0, out _);
+                    var srcEntities = srcDrive.GetQueues(srcFolder).FilterByWildcards(b => b?.Name, wpName);
+                    if (!srcEntities.Any()) continue;
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), ex), "GetQueueError", ErrorCategory.InvalidOperation, srcFolder));
+                    continue;
+                }
+
+                Folder? dstFolder = GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
+                if (dstFolder == null || (srcDrive == dstDrive && srcFolder == dstFolder)) continue;
+
+                try
+                {
+                    Core.OrchProvider.CopyQueues(this,
+                        srcDrive, srcFolder, wpName,
+                        dstDrive, dstFolder, reporterQueues,
+                        cancelHandler.Token, false);
+                    dstDrive._dicQueueDefinitions?.TryRemove(dstFolder.Id ?? 0, out _);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    string target = dstFolder.GetPSPath();
+                    WriteError(new ErrorRecord(new OrchException(target, ex), "CopyQueueError", ErrorCategory.InvalidOperation, target));
                 }
             }
         }

@@ -42,7 +42,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetProcessSchedules(df.folder));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetTriggers(df.folder));
 
                 foreach (var result in results)
                 {
@@ -73,7 +73,7 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var schedules = drive.GetProcessSchedules(folder);
+                    var schedules = drive.GetTriggers(folder);
 
                     foreach (var trigger in schedules
                         .Where(t => Enable.Value
@@ -91,7 +91,7 @@ namespace UiPath.PowerShell.Commands
                             try
                             {
                                 drive.OrchAPISession.EnableProcessSchedule(folder.Id ?? 0, [trigger.Id ?? 0], Enable.Value);
-                                drive._dicProcessSchedules?.TryRemove(folder.Id ?? 0, out _);
+                                drive._dicTriggers?.TryRemove(folder.Id ?? 0, out _);
                                 drive._dicProcessSchedules_Exceptions.ClearCache();
                                 drive._dicProcessScheduleDetailed?.TryRemove(folder.Id ?? 0, out _);
                                 drive._dicProcessScheduleDetailed_Exceptions.ClearCache();

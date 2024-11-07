@@ -1,13 +1,9 @@
 ﻿using System.Collections;
-using System.Collections.Concurrent;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using System.Xml.Linq;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.UserName;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -74,35 +70,40 @@ namespace UiPath.PowerShell.Commands
 
         protected override void ProcessRecord()
         {
-            //var srcDrivesFolders = OrchDriveInfo.EnumFolders(Path);
-            //var dstDrivesFolders = OrchDriveInfo.EnumFolders(Destination);
-
             var (srcDrive, srcRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Path);
             var srcDrivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
 
             var (dstDrive, dstRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Destination);
 
             // コピー元とコピー先が同じなら、何もしない
-            if (srcDrive == dstDrive && srcRootFolder.FullyQualifiedName == dstRootFolder.FullyQualifiedName) return;
+            if (srcDrive == dstDrive && srcRootFolder == dstRootFolder) return;
 
             var wpUserName = UserName.ConvertToWildcardPatternList();
 
-            string msg = "Copying assigned users...";
+            string msg = "Copying folder users...";
             using var reporter = new ProgressReporter(this, 200, Int32.MaxValue, msg, msg);
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (_, srcFolder) in srcDrivesFolders)
             {
                 cancelHandler.Token.ThrowIfCancellationRequested();
 
-                // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
-                srcDrive!._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, true), out _);
-                srcDrive!._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, false), out _);
-                var srcEntities = srcDrive.GetUsersForFolder(srcFolder, false)
-                    .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName);
-                if (!srcEntities.Any()) continue;
+                try
+                {
+                    // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
+                    //srcDrive!._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, true), out _);
+                    //srcDrive!._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, false), out _);
+                    var srcEntities = srcDrive.GetUsersForFolder(srcFolder, false)
+                        .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName);
+                    if (!srcEntities.Any()) continue;
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), ex), "GetFolderUserError", ErrorCategory.InvalidOperation, srcFolder));
+                    continue;
+                }
 
                 Folder? dstFolder = GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
-                if (dstFolder == null) continue;
+                if (dstFolder == null || (srcDrive == dstDrive && srcFolder == dstFolder)) continue;
 
                 try
                 {
