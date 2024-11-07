@@ -129,7 +129,7 @@ namespace UiPath.PowerShell.Positional
 
     internal class UserCredentialTypeItems : IPositionalParameters
     {
-        public static string[] Parameters { get; } = ["Default", "SmartCard", "NCipher", "SafeNet"];
+        public static string[] Parameters { get; } = ["Default", "SmartCard", "NCipher", "SafeNet", "NoCredential"];
     }
 
     internal class UserUpdatePolicyItems : IPositionalParameters

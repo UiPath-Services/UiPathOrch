@@ -1336,7 +1336,7 @@ namespace UiPath.PowerShell.Completer
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetProcessSchedules(df.folder));
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetTriggers(df.folder));
 
             foreach (var result in results)
             {
@@ -1759,6 +1759,7 @@ namespace UiPath.PowerShell.Completer
                 if (!result.TryGetValue(out var entities)) continue;
 
                 foreach (var user in entities!.Values
+                    .Where(g => !string.IsNullOrEmpty(g?.email))
                     .Where(g => wp.IsMatch(g?.email))
                     .ExcludeByWildcards(u => u?.email!, wpEmail)
                     .OrderBy(u => u?.email))

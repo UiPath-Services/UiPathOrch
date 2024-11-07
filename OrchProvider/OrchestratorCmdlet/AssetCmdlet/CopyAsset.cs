@@ -1,19 +1,8 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
 using System.Reflection.Metadata;
-using System.Security.Cryptography;
-using System.Text;
-using System.Xml.Linq;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name_Destination;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -52,7 +41,7 @@ namespace UiPath.PowerShell.Commands
             var (dstDrive, dstRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Destination);
 
             // コピー元とコピー先が同じなら、何もしない
-            if (srcDrive == dstDrive && srcRootFolder.FullyQualifiedName == dstRootFolder.FullyQualifiedName) return;
+            if (srcDrive == dstDrive && srcRootFolder == dstRootFolder) return;
 
             var wpName = Name.ConvertToWildcardPatternList();
 
@@ -70,13 +59,23 @@ namespace UiPath.PowerShell.Commands
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (_, srcFolder) in srcDrivesFolders)
             {
-                // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
-                //srcDrive._dicAssets?.TryRemove(srcFolder.Id ?? 0, out _);
-                var srcEntities = srcDrive.GetAssets(srcFolder).FilterByWildcards(e => e?.Name, wpName);
-                if (!srcEntities.Any()) continue;
+                cancelHandler.Token.ThrowIfCancellationRequested();
+
+                try
+                {
+                    // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
+                    //srcDrive._dicAssets?.TryRemove(srcFolder.Id ?? 0, out _);
+                    var srcEntities = srcDrive.GetAssets(srcFolder).FilterByWildcards(e => e?.Name, wpName);
+                    if (!srcEntities.Any()) continue;
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), ex), "GetAssetError", ErrorCategory.InvalidOperation, srcFolder));
+                    continue;
+                }
 
                 Folder? dstFolder = GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
-                if (dstFolder == null) continue;
+                if (dstFolder == null || (srcDrive == dstDrive && srcFolder == dstFolder)) continue;
 
                 try
                 {
@@ -96,50 +95,6 @@ namespace UiPath.PowerShell.Commands
                     WriteError(new ErrorRecord(new OrchException(target, ex), "CopyAssetError", ErrorCategory.InvalidOperation, dstFolder));
                 }
             }
-
-
-
-
-
-            //var srcDrives = OrchDriveInfo.EnumOrchDrives(Path);
-            //var srcDrivesFolders = OrchDriveInfo.EnumFolders(Path);
-            //var dstDrivesFolders = OrchDriveInfo.EnumFolders(Destination);
-            //var wpName = Name.ConvertToWildcardPatternList();
-
-            //foreach (var srcDrive in srcDrives)
-            //{
-            //    srcDrive._dicAssetLinks = null;
-            //}
-
-            //// コピーの直前でキャッシュを削除するので、ここで取得しておくのは意味がない
-
-            //string msg = "Copying assets...";
-            //using var reporterAssets = new ProgressReporter(this, 600, Int32.MaxValue, msg, msg);
-            //foreach (var dstDriveFolder in dstDrivesFolders)
-            //{
-            //    var (dstDrive, dstFolder) = dstDriveFolder;
-            //    foreach (var srcDriveFolder in srcDrivesFolders)
-            //    {
-            //        var (srcDrive, srcFolder) = srcDriveFolder;
-
-            //        try
-            //        {
-            //            Core.OrchProvider.CopyAssets(this,
-            //                srcDrive, srcFolder, wpName,
-            //                dstDrive, dstFolder, reporterAssets, false);
-            //            dstDrive._dicAssets?.TryRemove(dstFolder.Id ?? 0, out _);
-            //        }
-            //        catch (OperationCanceledException)
-            //        {
-            //            throw;
-            //        }
-            //        catch (Exception ex)
-            //        {
-            //            string target = dstFolder.GetPSPath();
-            //            WriteError(new ErrorRecord(new OrchException(target, ex), "CopyAssetError", ErrorCategory.InvalidOperation, dstFolder));
-            //        }
-            //    }
-            //}
         }
     }
 }

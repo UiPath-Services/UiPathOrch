@@ -310,7 +310,7 @@ namespace UiPath.PowerShell.Commands
                             {
                                 created.Path = folder.Path;
                                 WriteObject(created);
-                                drive._dicProcessSchedules?.TryRemove(folder.Id.Value, out _);
+                                drive._dicTriggers?.TryRemove(folder.Id.Value, out _);
                                 drive._dicProcessSchedules_Exceptions.ClearCache();
                                 drive._dicProcessScheduleDetailed?.TryRemove(folder.Id.Value, out _);
                                 drive._dicProcessScheduleDetailed_Exceptions.ClearCache();

@@ -1,12 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name_Destination;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -21,49 +16,71 @@ namespace UiPath.PowerShell.Commands
 
         [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
-        public string[]? Destination { get; set; }
+        public string? Destination { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
         public string? Path { get; set; }
 
-        //[Parameter]
-        //public SwitchParameter Recurse { get; set; }
+        [Parameter]
+        public SwitchParameter Recurse { get; set; }
 
-        //[Parameter]
-        //public uint Depth { get; set; }
+        [Parameter]
+        public uint Depth { get; set; }
 
         protected override void ProcessRecord()
         {
-            var srcDrivesFolders = OrchDriveInfo.EnumFolders(Path);
-            var dstDrivesFolders = OrchDriveInfo.EnumFolders(Destination);
+            var (srcDrive, srcRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Path);
+            var srcDrivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+
+            var (dstDrive, dstRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Destination);
+
+            // コピー元とコピー先が同じなら、何もしない
+            if (srcDrive == dstDrive && srcRootFolder == dstRootFolder) return;
+
             var wpName = Name.ConvertToWildcardPatternList();
 
             string msg = "Copying buckets...";
             using var reporterBuckets = new ProgressReporter(this, 1000, Int32.MaxValue, msg, msg);
             using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var (dstDrive, dstFolder) in dstDrivesFolders)
+
+            foreach (var (_, srcFolder) in srcDrivesFolders)
             {
-                foreach (var (srcDrive, srcFolder) in srcDrivesFolders)
+                cancelHandler.Token.ThrowIfCancellationRequested();
+
+                try
                 {
-                    try
-                    {
-                        Core.OrchProvider.CopyBuckets(this,
-                            srcDrive, srcFolder, wpName,
-                            dstDrive, dstFolder, reporterBuckets,
-                            cancelHandler.Token, false);
-                        dstDrive._dicBuckets?.TryRemove(dstFolder.Id ?? 0, out _);
-                        dstDrive._dicBucketLinks = null;
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        throw;
-                    }
-                    catch (Exception ex)
-                    {
-                        string target = dstFolder.GetPSPath();
-                        WriteError(new ErrorRecord(new OrchException(target, ex), "CopyBucketError", ErrorCategory.InvalidOperation, dstFolder));
-                    }
+                    // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
+                    //srcDrive._dicBuckets?.TryRemove(srcFolder.Id ?? 0, out _);
+                    var srcEntities = srcDrive.GetBuckets(srcFolder).FilterByWildcards(b => b?.Name, wpName);
+                    if (!srcEntities.Any()) continue;
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), ex), "GetBucketError", ErrorCategory.InvalidOperation, srcFolder));
+                    continue;
+                }
+
+                Folder? dstFolder = GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
+                if (dstFolder == null || (srcDrive == dstDrive && srcFolder == dstFolder)) continue;
+
+                try
+                {
+                    Core.OrchProvider.CopyBuckets(this,
+                        srcDrive, srcFolder, wpName,
+                        dstDrive, dstFolder, reporterBuckets,
+                        cancelHandler.Token, false);
+                    dstDrive._dicBuckets?.TryRemove(dstFolder.Id ?? 0, out _);
+                    dstDrive._dicBucketLinks = null;
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    string target = dstFolder.GetPSPath();
+                    WriteError(new ErrorRecord(new OrchException(target, ex), "CopyBucketError", ErrorCategory.InvalidOperation, dstFolder));
                 }
             }
         }

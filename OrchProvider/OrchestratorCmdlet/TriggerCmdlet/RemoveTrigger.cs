@@ -39,7 +39,7 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var triggers = drive.GetProcessSchedules(folder);
+                    var triggers = drive.GetTriggers(folder);
 
                     foreach (var trigger in triggers
                         .FilterByWildcards(t => t?.Name, wpName)
@@ -52,7 +52,7 @@ namespace UiPath.PowerShell.Commands
                             try
                             {
                                 drive.OrchAPISession.DeleteProcessSchedule(folder.Id ?? 0, trigger.Id ?? 0);
-                                drive._dicProcessSchedules?.TryRemove(folder.Id ?? 0, out _);
+                                drive._dicTriggers?.TryRemove(folder.Id ?? 0, out _);
                                 drive._dicProcessSchedules_Exceptions.ClearCache();
                                 drive._dicProcessScheduleDetailed?.TryRemove(folder.Id ?? 0, out _);
                                 drive._dicProcessScheduleDetailed_Exceptions.ClearCache();

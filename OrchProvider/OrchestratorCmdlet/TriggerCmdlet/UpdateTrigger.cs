@@ -143,8 +143,6 @@ namespace UiPath.PowerShell.Commands
         [Parameter]
         public uint Depth { get; set; }
 
-        private Dictionary<(OrchDriveInfo drive, Int64 folderId), bool>? IsGetRobotsFromFolderCalled;
-
         internal class TimeZoneCompleter : OrchArgumentCompleter
         {
             public override IEnumerable<CompletionResult> CompleteArgument(
@@ -182,7 +180,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetProcessSchedules(df.folder));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetTriggers(df.folder));
 
                 bool bExists = false;
                 foreach (var result in results)
@@ -231,7 +229,7 @@ namespace UiPath.PowerShell.Commands
                 IEnumerable<ProcessSchedule> triggers = null;
                 try
                 {
-                    triggers = drive.GetProcessSchedules(folder);
+                    triggers = drive.GetTriggers(folder);
                 }
                 catch (Exception ex)
                 {
@@ -352,14 +350,14 @@ namespace UiPath.PowerShell.Commands
                     #region MachineRobots をデシリアライズ
                     if (!string.IsNullOrEmpty(MachineRobots))
                     {
-                        // CSV インポートで処理した場合であっても、各フォルダーに対して1回だけ
-                        // GetRobotsFromFolder を呼び出すようにする
-                        IsGetRobotsFromFolderCalled ??= [];
-                        if (!IsGetRobotsFromFolderCalled.TryGetValue((drive, folder.Id!.Value), out _))
+                        // これを呼び出しておかないと、Orchestrator がロボットの検索に失敗してしまう
+                        try
                         {
-                            // これを呼び出しておかないと、Orchestrator がロボットの検索に失敗してしまう
                             _ = drive.GetRobotsFromFolder(folder);
-                            IsGetRobotsFromFolderCalled[(drive, folder.Id.Value)] = true;
+                        }
+                        catch (Exception ex)
+                        {
+                            WriteError(new ErrorRecord(new OrchException(target, $"Update robots for '{folder.GetPSPath()}' failed", ex), "UpdateRobotFromFolderError", ErrorCategory.InvalidOperation, folder));
                         }
 
                         var mrss = JsonSerializer.Deserialize<MachineRobotSessionForSerialize[]>(MachineRobots);
@@ -415,7 +413,7 @@ namespace UiPath.PowerShell.Commands
                         try
                         {
                             drive.OrchAPISession.PutProcessSchedule(folder.Id!.Value, postTrigger);
-                            drive._dicProcessSchedules?.TryRemove(folder.Id ?? 0, out _);
+                            drive._dicTriggers?.TryRemove(folder.Id ?? 0, out _);
                             drive._dicProcessSchedules_Exceptions.ClearCache();
                             drive._dicProcessScheduleDetailed?.TryRemove(folder.Id ?? 0, out _);
                             drive._dicProcessScheduleDetailed_Exceptions.ClearCache();

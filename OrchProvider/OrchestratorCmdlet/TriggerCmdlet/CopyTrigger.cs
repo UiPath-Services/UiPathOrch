@@ -41,7 +41,7 @@ namespace UiPath.PowerShell.Commands
             var (dstDrive, dstRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Destination);
 
             // コピー元とコピー先が同じなら、何もしない
-            if (srcDrive == dstDrive && srcRootFolder.FullyQualifiedName == dstRootFolder.FullyQualifiedName) return;
+            if (srcDrive == dstDrive && srcRootFolder == dstRootFolder) return;
 
             var wpName = Name.ConvertToWildcardPatternList();
 
@@ -50,13 +50,23 @@ namespace UiPath.PowerShell.Commands
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (_, srcFolder) in srcDrivesFolders)
             {
-                // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
-                srcDrive._dicProcessSchedules?.TryRemove(srcFolder.Id ?? 0, out _);
-                var srcEntities = srcDrive.GetProcessSchedules(srcFolder).FilterByWildcards(e => e?.Name, wpName);
-                if (!srcEntities.Any()) continue;
+                cancelHandler.Token.ThrowIfCancellationRequested();
+
+                try
+                {
+                    // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
+                    //srcDrive._dicTriggers?.TryRemove(srcFolder.Id ?? 0, out _);
+                    var srcEntities = srcDrive.GetTriggers(srcFolder).FilterByWildcards(e => e?.Name, wpName);
+                    if (!srcEntities.Any()) continue;
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), ex), "GetTriggerError", ErrorCategory.InvalidOperation, srcFolder));
+                    continue;
+                }
 
                 Folder? dstFolder = GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
-                if (dstFolder == null) continue;
+                if (dstFolder == null || (srcDrive == dstDrive && srcFolder == dstFolder)) continue;
 
                 // キャッシュをクリアしておく
                 dstDrive._dicMachinesAssigned?.TryRemove(dstFolder.Id ?? 0, out var _);
@@ -67,7 +77,7 @@ namespace UiPath.PowerShell.Commands
                         srcDrive, srcFolder, wpName!,
                         dstDrive, dstFolder, reporterTriggers,
                         cancelHandler.Token, false);
-                    dstDrive._dicProcessSchedules?.TryRemove(dstFolder.Id ?? 0, out _);
+                    dstDrive._dicTriggers?.TryRemove(dstFolder.Id ?? 0, out _);
                     dstDrive._dicProcessSchedules_Exceptions.ClearCache();
                     dstDrive._dicProcessScheduleDetailed?.TryRemove(dstFolder.Id ?? 0, out _);
                     dstDrive._dicProcessScheduleDetailed_Exceptions.ClearCache();

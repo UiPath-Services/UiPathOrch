@@ -3,8 +3,6 @@ using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 
-using Positional = UiPath.PowerShell.Positional.Name_Destination;
-
 namespace UiPath.PowerShell.Commands
 {
     [Cmdlet(VerbsCommon.Copy, "OrchActionCatalog", SupportsShouldProcess = true)]
@@ -38,7 +36,7 @@ namespace UiPath.PowerShell.Commands
             var (dstDrive, dstRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Destination);
 
             // コピー元とコピー先が同じなら、何もしない
-            if (srcDrive == dstDrive && srcRootFolder.FullyQualifiedName == dstRootFolder.FullyQualifiedName) return;
+            if (srcDrive == dstDrive && srcRootFolder == dstRootFolder) return;
 
             var wpName = Name.ConvertToWildcardPatternList();
 
@@ -47,13 +45,23 @@ namespace UiPath.PowerShell.Commands
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (_, srcFolder) in srcDrivesFolders)
             {
-                // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
-                srcDrive._dicTaskCatalog?.TryRemove(srcFolder.Id ?? 0, out _);
-                var srcEntities = srcDrive.GetTaskCatalogs(srcFolder).FilterByWildcards(b => b?.Name, wpName);
-                if (!srcEntities.Any()) continue;
+                cancelHandler.Token.ThrowIfCancellationRequested();
+
+                try
+                {
+                    // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
+                    //srcDrive._dicTaskCatalog?.TryRemove(srcFolder.Id ?? 0, out _);
+                    var srcEntities = srcDrive.GetTaskCatalogs(srcFolder).FilterByWildcards(b => b?.Name, wpName);
+                    if (!srcEntities.Any()) continue;
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), ex), "GetActionCatalogError", ErrorCategory.InvalidOperation, srcFolder));
+                    continue;
+                }
 
                 Folder? dstFolder = GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
-                if (dstFolder == null) continue;
+                if (dstFolder == null || (srcDrive == dstDrive && srcFolder == dstFolder)) continue;
 
                 try
                 {

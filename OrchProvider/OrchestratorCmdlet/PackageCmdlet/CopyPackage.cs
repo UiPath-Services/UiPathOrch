@@ -232,12 +232,14 @@ namespace UiPath.PowerShell.Commands
                 throw new Exception("The -Recurse can only be used when the source folder is the root folder.");
             }
 
-            string msg1 = "Processing folders... ";
+            string msg1 = "Processing folders...";
             int index1 = 0;
             using var reporterMain = new ProgressReporter(this, 1, srcDrivesFolders.Count, msg1, msg1);
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (_, srcFolder) in srcDrivesFolders)
             {
+                cancelHandler.Token.ThrowIfCancellationRequested();
+
                 //reporterMain.WriteProgress(++indexMain, $"{indexMain:D}/{srcDrivesFolders.Count} {srcFolder.GetPSPath()}");
                 if (srcDrivesFolders.Count > 1) reporterMain.WriteProgress(++index1, $"{index1:D}/{srcDrivesFolders.Count}");
                 try
@@ -254,6 +256,8 @@ namespace UiPath.PowerShell.Commands
                     using var reporter2 = new ProgressReporter(this, 2, srcPackages.Count, msg2, msg2);
                     foreach (var srcPackage in srcPackages)
                     {
+                        cancelHandler.Token.ThrowIfCancellationRequested();
+
                         if (reporter2.TotalNum > 1) reporter2.WriteProgress(++index2, $"{index2:D}/{reporter2.TotalNum}");
 
                         var srcVersions = srcDrive.GetPackageVersions(srcFolder, srcPackage.Id!)
@@ -320,6 +324,15 @@ namespace UiPath.PowerShell.Commands
                 {
                     // この例外は、コピー先フォルダーがない場合に処理をスキップするときにスローされる。
                     // 警告はコンソールに出力済みなので、ここでは何もしない
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    // だいぶ雑だな。。とりあえずいいか、、
+                    WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, ex), "CopyFolderMachineError", ErrorCategory.InvalidOperation, srcDrive));
                 }
             }
         }

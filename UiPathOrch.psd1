@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.8.8'
+ModuleVersion = '0.9.8.10'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -368,14 +368,20 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- The Move-OrchFolderUser cmdlet has been added. This cmdlet moves folder users within a tenant''s folders.
+        ReleaseNotes = '- For cmdlets that copy folder entities (such as Copy-OrchAsset), the process has been modified so that even if reading entities from a folder fails, the operation continues with subsequent folders without interruption.
 
-- The Copy-OrchPmUser cmdlet has been added. This cmdlet copies organizational users between organizations. If the groups to which the users belong do not exist in the destination organization, they are automatically created.
+- The -Recurse switch parameter has been added to the following cmdlets, allowing -Recurse to be used with all cmdlets that copy folder entities:
+  - Copy-OrchBucket
+  - Copy-OrchProcess
+  - Copy-OrchQueue
+  - Copy-OrchTestDataQueue
+  - Copy-OrchTestSet
+  - Copy-OrchTestSetSchedule
 
-- The parameter for cmdlets handling PmUser has been changed from -UserName to -Email. It was more appropriate to use -Email for uniquely identifying PmUser rather than -UserName. Note that the -Email parameter has an alias -UserName. The modified cmdlets are as follows:
-  - Get-OrchPmUser
-  - Update-OrchPmUser
-  - Remove-OrchPmUser
+- When the source and destination folders have an identical subfolder structure, specifying -Recurse on folder entity copy cmdlets will automatically copy each folder''s entities to the corresponding destination folder. For example, to copy all storage buckets from one tenant to another with an identical folder structure, use the following command:
+  PS Src:\> Copy-OrchBucket -Recurse * Dst:\
+
+- For the Copy-OrchPmUser cmdlet, when the source user''s email is empty, this will now set the destination user''s username to the source user''s username. Previously, the source user''s email was always set as the destination user''s username, even if it was empty.
 '
 
         # Prerelease string of this module
