@@ -42,7 +42,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetAuthenticationSettings());
+                var results = ParallelResults.ForEach(drives, drive => drive.AuthenticationSettings.Get());
 
                 foreach (var result in results)
                 {
@@ -68,7 +68,7 @@ namespace UiPath.PowerShell.Commands
             using var results = OrchThreadPool.RunForEach(drives,
                 drive => drive.NameColonSeparator,
                 drive => drive,
-                drive => drive.GetAuthenticationSettings());
+                drive => drive.AuthenticationSettings.Get());
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var result in results)

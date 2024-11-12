@@ -47,37 +47,19 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var combinations = drivesFolders.SelectMany(df => Enumerable.Range(0, 2), (df, i) => (df.drive, df.folder, i));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderMachinesAssignable.Get(df.folder));
 
-                Parallel.ForEach(combinations, dfi =>
+                foreach (var result in results)
                 {
-                    var (drive, folder, index) = dfi;
-                    try
-                    {
-                        switch (index)
-                        {
-                            case 0: drive.GetMachinesAssignedToFolder(folder); break;
-                            case 1: drive.GetMachinesAssignableToFolder(folder); break;
-                        }
-                    }
-                    catch { }
-                });
+                    if (!result.TryGetValue(out var entities)) continue;
 
-                foreach (var (drive, folder) in drivesFolders)
-                {
-                    List<MachineFolder> assigneds = null;
-                    List<MachineFolder> assignables = null;
-                    drive._dicMachinesAssigned?.TryGetValue(folder.Id ?? 0, out assigneds);
-                    if (drive._dicMachinesAssignable?.TryGetValue(folder.Id ?? 0, out assignables) ?? false)
+                    foreach (var entity in entities!
+                        .Where(b => wp.IsMatch(b.Name))
+                        .ExcludeByWildcards(b => b?.Name, wpName)
+                        .OrderBy(b => b.Name))
                     {
-                        foreach (var assignable in assignables!
-                            .Where(m => wp.IsMatch(m.Name))
-                            .ExcludeByWildcards(m => m?.Name, wpName)
-                            .ExcludeByClassValues(m => m?.Name, assigneds?.Select(a => a?.Name!))
-                            .OrderBy(m => m.Name))
-                        {
-                            yield return new CompletionResult(PathTools.EscapePSText(assignable.Name), assignable.Name, CompletionResultType.ParameterValue, TipHelp(assignable));
-                        }
+                        string tooltip = entity.GetPSPath();
+                        yield return new CompletionResult(PathTools.EscapePSText(entity.Name), entity.Name, CompletionResultType.Text, tooltip);
                     }
                 }
             }
@@ -105,7 +87,7 @@ namespace UiPath.PowerShell.Commands
             using var results = OrchThreadPool.RunForEach(drivesFolders,
                 df => df.folder.GetPSPath(),
                 df => df.folder,
-                df => df.drive.GetMachinesAssignableToFolder(df.folder));
+                df => df.drive.FolderMachinesAssignable.Get(df.folder));
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var result in results)
@@ -137,8 +119,8 @@ namespace UiPath.PowerShell.Commands
                         if (ShouldProcess(target, "Add Folder Machines"))
                         {
                             drive.OrchAPISession.AddMachinesToFolder(folder.Id ?? 0, machineIds);
-                            drive._dicMachinesAssigned?.TryRemove(folder.Id!.Value, out _);
-                            drive._dicAssignedMachines?.TryRemove(folder.Id!.Value, out _);
+                            drive.FolderMachinesAssigned.ClearCache(folder);
+                            drive.FolderMachinesAssignable.ClearCache(folder);
 
                             // 非 null の場合に処理する
                             // machine を add するだけなら true の場合のみ処理すればいいのだけど

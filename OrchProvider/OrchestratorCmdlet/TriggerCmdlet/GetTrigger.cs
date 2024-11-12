@@ -193,7 +193,7 @@ namespace UiPath.PowerShell.Commands
                     {
                         foreach (var entity in targetEntities)
                         {
-                            var detailedEntity = drive.GetProcessSchedule(folder, entity);
+                            var detailedEntity = drive.GetTrigger(folder, entity);
                             Output(writer, detailedEntity);
                         }
                     }

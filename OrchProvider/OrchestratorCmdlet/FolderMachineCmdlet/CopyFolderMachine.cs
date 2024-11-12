@@ -1,12 +1,9 @@
 ﻿using System.Collections;
-using System.Collections.Concurrent;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name_Destination;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -47,7 +44,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetMachinesAssignedToFolder(df.folder));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -87,7 +84,7 @@ namespace UiPath.PowerShell.Commands
                 {
                     // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
                     //srcDrive._dicMachinesAssigned?.TryRemove(srcFolder.Id ?? 0, out _);
-                    var srcEntities = srcDrive.GetMachinesAssignedToFolder(srcFolder)
+                    var srcEntities = srcDrive.FolderMachinesAssigned.Get(srcFolder)
                         .Where(e => e.IsAssignedToFolder.GetValueOrDefault())
                         .FilterByWildcards(e => e?.Name, wpName);
                     if (!srcEntities.Any()) continue;
@@ -107,8 +104,8 @@ namespace UiPath.PowerShell.Commands
                         srcDrive, srcFolder, wpName,
                         dstDrive, dstFolder, reporter,
                         cancelHandler.Token, false);
-                    dstDrive._dicMachinesAssigned?.TryRemove(dstFolder.Id!.Value, out _);
-                    dstDrive._dicAssignedMachines?.TryRemove(dstFolder.Id!.Value, out _);
+                    dstDrive.FolderMachinesAssigned.ClearCache(dstFolder);
+                    dstDrive.FolderMachinesAssignable.ClearCache(dstFolder);
                 }
                 catch (OperationCanceledException)
                 {

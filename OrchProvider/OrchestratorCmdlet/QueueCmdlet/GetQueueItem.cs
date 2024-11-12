@@ -1,17 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using System.Security.AccessControl;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
 using UiPath.PowerShell.Positional;
-using Positional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -55,11 +50,43 @@ namespace UiPath.PowerShell.Commands
         public string[]? Reviewer { get; set; }
 
         [Parameter]
-        public ulong? Skip { get; set; }
+        [ArgumentCompleter(typeof(TimeAfterCompleter))]
+        public DateTime? DueDateAfter { get; set; }
+
+        [Parameter]
+        [ArgumentCompleter(typeof(TimeAfterCompleter))]
+        public DateTime? DueDateBefore { get; set; }
+
+        [Parameter]
+        [ArgumentCompleter(typeof(TimeAfterCompleter))]
+        public DateTime? DeferDateAfter { get; set; }
+
+        [Parameter]
+        [ArgumentCompleter(typeof(TimeAfterCompleter))]
+        public DateTime? DeferDateBefore { get; set; }
+
+        [Parameter]
+        [ArgumentCompleter(typeof(TimeAfterCompleter))]
+        public DateTime? StartProcessingAfter { get; set; }
+
+        [Parameter]
+        [ArgumentCompleter(typeof(TimeBeforeCompleter))]
+        public DateTime? StartProcessingBefore { get; set; }
+
+        [Parameter]
+        [ArgumentCompleter(typeof(TimeAfterCompleter))]
+        public DateTime? EndProcessingAfter { get; set; }
+
+        [Parameter]
+        [ArgumentCompleter(typeof(TimeBeforeCompleter))]
+        public DateTime? EndProcessingBefore { get; set; }
+
+        [Parameter]
+        public int? Skip { get; set; }
 
         [Parameter]
         [ArgumentCompleter(typeof(StaticTextsCompleter<Item10>))]
-        public ulong? First { get; set; }
+        public int? First { get; set; }
 
         [Parameter]
         [ArgumentCompleter(typeof(StaticTextsCompleter<QueueItemOrderableItems>))]
@@ -94,7 +121,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetRobotsFromFolder(df.folder));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.RobotsFromFolder.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -135,7 +162,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetReviewers(df.folder));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Reviewers.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -182,7 +209,7 @@ namespace UiPath.PowerShell.Commands
 
             if (Robot != null && Robot.Length != 0)
             {
-                var robots = drive.GetRobotsFromFolder(folder);
+                var robots = drive.RobotsFromFolder.Get(folder);
                 filter.AddIfNotNull(robots
                     .SelectByWildcards(r => r?.Name, Robot)
                     .CreateOrFilter(r => $"RobotId eq {r.Id}"));
@@ -190,25 +217,68 @@ namespace UiPath.PowerShell.Commands
 
             if (Reviewer != null && Reviewer.Length != 0)
             {
-                var reviewers = drive.GetReviewers(folder);
+                var reviewers = drive.Reviewers.Get(folder);
                 filter.AddIfNotNull(reviewers
                     .SelectByWildcards(r => r?.UserName, Reviewer)
                     .CreateOrFilter(r => $"ReviewerUserId eq {r.Id}"));
             }
 
+            if (DueDateAfter != null)
+            {
+                filter.Add($"(DueDate ge {DueDateAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            }
+
+            if (DueDateBefore != null)
+            {
+                filter.Add($"(DueDate lt {DueDateBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            }
+
+            if (DeferDateAfter != null)
+            {
+                filter.Add($"(DeferDate ge {DeferDateAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            }
+
+            if (DeferDateBefore != null)
+            {
+                filter.Add($"(DeferDate lt {DeferDateBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            }
+
+            if (StartProcessingAfter != null)
+            {
+                filter.Add($"(StartProcessing ge {StartProcessingAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            }
+
+            if (StartProcessingBefore != null)
+            {
+                filter.Add($"(StartProcessing lt {StartProcessingBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            }
+
+            if (EndProcessingAfter != null)
+            {
+                filter.Add($"(EndProcessing ge {EndProcessingAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            }
+
+            if (EndProcessingBefore != null)
+            {
+                filter.Add($"(EndProcessing lt {EndProcessingBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            }
+
+            //filter.Add("Id gt 18288985"); // Id も query に使えるようだ。
             string ret = filter.CreateAndFilter(s => s);
-            return $"&$filter=({ret})";
+            return $"&$filter={ret}";
+        }
+
+        private void WriteQueryUnavailableWarning(QueueDefinition queue, string fieldName)
+        {
+            WriteWarning($"{queue.GetPSPath()}: The {fieldName} of the last queue item is null, so subsequent queue items cannot be retrieved.");
         }
 
         protected override void ProcessRecord()
         {
-            ulong skip = Skip ?? 0;
-            ulong first = First ?? ulong.MaxValue;
-
             var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
             var wpName = Name.ConvertToWildcardPatternList();
 
-            if (string.IsNullOrEmpty(OrderBy)) OrderBy = "EndProcessing";
+            if (string.IsNullOrEmpty(OrderBy)) OrderBy = "DeferDate";
 
             bool bOutCache = (
                 Status == null &&
@@ -222,10 +292,7 @@ namespace UiPath.PowerShell.Commands
             if (bOutCache)
             {
                 WriteWarning("Since no filter parameters were specified, the contents of the cache will be output. To query the Orchestrator, please specify at least one filter parameter.");
-            }
 
-            if (bOutCache)
-            {
                 foreach (var (drive, folder) in drivesFolders)
                 {
                     if (drive._dicQueueItems?.TryGetValue(folder.Id!.Value, out var queueItemsPerFolder) ?? false)
@@ -270,12 +337,23 @@ namespace UiPath.PowerShell.Commands
                 return;
             }
 
+            using var cancelHandler = new ConsoleCancelHandler();
+            string msgFolder = "Folder";
+            using ProgressReporter reporterFolder = new(this, 1, drivesFolders.Count, msgFolder, msgFolder);
+            int indexFolder = 0;
             foreach (var (drive, folder) in drivesFolders)
             {
+                cancelHandler.Token.ThrowIfCancellationRequested();
+
+                if (drivesFolders.Count > 1)
+                {
+                    reporterFolder.WriteProgress(++indexFolder, $"{indexFolder:D}/{drivesFolders.Count} {folder.GetPSPath()}");
+                }
+
                 IEnumerable<QueueDefinition> queues = null;
                 try
                 {
-                    queues = drive.GetQueues(folder);
+                    queues = drive.Queues.Get(folder);
                 }
                 catch (Exception ex)
                 {
@@ -283,22 +361,62 @@ namespace UiPath.PowerShell.Commands
                     continue;
                 }
 
-                foreach (var queue in queues
+                var targetQueues = queues
                     .FilterByWildcards(q => q?.Name, wpName)
-                    .OrderBy(q => q.Name))
+                    .OrderBy(q => q.Name).ToList();
+                string msgQueue = "Queue ";
+                using ProgressReporter reporterQueue = new(this, 2, targetQueues.Count, msgQueue, msgQueue);
+                int indexQueue = 0;
+                foreach (var queue in targetQueues)
                 {
+                    cancelHandler.Token.ThrowIfCancellationRequested();
+
+                    //reporterQueue.WriteProgress(++indexQueue, $"{indexQueue:D}/{drivesFolders.Count} {queue.GetPSPath()}");
+                    reporterQueue.WriteProgress(++indexQueue, $"{indexQueue:D}/{targetQueues.Count}");
+
+                    string query = MakeFilter(drive, folder, queue);
+                    int first = First ?? int.MaxValue; // first は、キューごとにリセット
+                    int skip = Skip ?? 0;
+
+                    string msgItem  = "Item  ";
+                    int intReporterItemTotal;
+                    string strReporterItemTotal;
+                    if (first > int.MaxValue)
+                    {
+                        intReporterItemTotal = 1000;
+                        strReporterItemTotal = "Unknown";
+                    }
+                    else
+                    {
+                        intReporterItemTotal = (int)first;
+                        strReporterItemTotal = $"{first}";
+                    }
+                    using ProgressReporter reporterItem = new(this, 3, intReporterItemTotal, msgItem, msgItem);
                     try
                     {
-                        var items = drive.GetQueueItems(folder, queue, MakeFilter(drive, folder, queue), skip, first, OrderBy, OrderAscending.IsPresent);
+                        while (first > 0)
+                        {
+                            cancelHandler.Token.ThrowIfCancellationRequested();
+                            reporterItem?.WriteProgress((int)(skip % intReporterItemTotal), $"{(int)skip:D}/{strReporterItemTotal}");
 
-                        // Skip と First をサポートするコマンドレットでは OrderBy してはいけない
-                        WriteObject(items, true);
+                            var first2 = int.Min(100, first);
+                            var items = drive.GetQueueItems(folder, queue, query, (ulong)skip, (ulong)first2, OrderBy, OrderAscending.IsPresent);
+                            WriteObject(items, true);
+                            Thread.Sleep(600); // API call rate limit を回避するため待機する
+
+                            if (items.Count < 100) break;
+                            skip += items.Count;
+                            first -= first2;
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
                     }
                     catch (Exception ex)
                     {
                         WriteError(new ErrorRecord(new OrchException(queue.GetPSPath(), ex), "GetQueueItemError", ErrorCategory.InvalidOperation, queue));
                     }
-                    Thread.Sleep(600); // API call rate limit を回避するため待機する
                 }
             }
 

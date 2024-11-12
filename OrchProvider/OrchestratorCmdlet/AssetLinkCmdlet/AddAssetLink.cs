@@ -30,6 +30,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? Path { get; set; }
 
         // TODO: この実装はきれいにできる
+        // Parallel.ForEach は使わないようにすべきだ。
         protected override void ProcessRecord()
         {
             var drivesFolders = OrchDriveInfo.EnumFolders(Path);
@@ -42,17 +43,17 @@ namespace UiPath.PowerShell.Commands
                 var (drive, folder) = driveFolder;
                 try
                 {
-                    drive.GetAssets(folder);
+                    drive.Assets.Get(folder);
                 }
                 catch { }
             });
 
             foreach (var (drive, folder) in drivesFolders)
             {
-                ReadOnlyCollection<Asset> assets = null;
+                ICollection<Asset> assets = null;
                 try
                 {
-                    assets = drive.GetAssets(folder);
+                    assets = drive.Assets.Get(folder);
                 }
                 catch (Exception ex)
                 {

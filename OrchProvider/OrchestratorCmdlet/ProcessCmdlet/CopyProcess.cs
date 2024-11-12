@@ -1,12 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name_Destination;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -76,7 +71,7 @@ namespace UiPath.PowerShell.Commands
                         dstDrive, dstFolder, reporterProcesses,
                         cancelHandler.Token, false);
                     dstDrive._dicReleases?.TryRemove(dstFolder.Id ?? 0, out _);
-                    dstDrive._dicReleaseList?.TryRemove(dstFolder.Id ?? 0, out _);
+                    //dstDrive._dicReleaseList?.TryRemove(dstFolder.Id ?? 0, out _);
                 }
                 catch (OperationCanceledException)
                 {

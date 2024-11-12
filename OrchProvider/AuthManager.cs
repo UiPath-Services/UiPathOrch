@@ -16,7 +16,7 @@ namespace UiPath.OrchAPI
         public readonly string _baseUrl;
         private readonly string? _onpremiseTenancy;
         private readonly bool _isConfidentialApp;
-        private readonly bool _isUserScope;
+        //private readonly bool _isUserScope;
         public readonly bool _isUserPassword;
 
         internal bool IsConfidentialApp
@@ -40,7 +40,9 @@ namespace UiPath.OrchAPI
             this._drive = drive;
 
             _isConfidentialApp = !string.IsNullOrEmpty(_drive.AppSecret);
-            _isUserScope = !string.IsNullOrEmpty(_drive.RedirectUrl);
+            // 機密アプリのユーザーモードをサポートしたいのだけど、RedirectUrl がカスケードして
+            // 設定されてしまうと、なんだかうまくいかないな。。
+            //_isUserScope = !string.IsNullOrEmpty(_drive.RedirectUrl);
             _isUserPassword = !string.IsNullOrEmpty(_drive.Password);
             IdentityUrl = _drive.IdentityUrl?.TrimEnd('/');
 
@@ -70,20 +72,20 @@ namespace UiPath.OrchAPI
         {
             if (_isConfidentialApp)
             {
-                if (_isUserScope) ////// Conf User Scope // ここ動くようにしたい、、
-                {
-                    string authorizationCode = GetAuthorizationCode(null, driveLetter);
-                    (_access_token, _refresh_token) = GetAccessToken(new Dictionary<string, string>
-                    {
-                        { "grant_type", "client_credentials" },
-                        { "code", authorizationCode },
-                        { "client_id", _drive.AppId! },
-                        { "client_secret", _drive.AppSecret! },
-                        { "scope", _drive.Scope! }
-                    });
-                    return _access_token;
-                }
-                else /////////////////// Conf App Scope
+                //if (_isUserScope) ////// Conf User Scope // 機密アプリのユーザースコープ。ここ動くようにしたい、、
+                //{
+                //    string authorizationCode = GetAuthorizationCode(null, driveLetter);
+                //    (_access_token, _refresh_token) = GetAccessToken(new Dictionary<string, string>
+                //    {
+                //        { "grant_type", "client_credentials" },
+                //        { "code", authorizationCode },
+                //        { "client_id", _drive.AppId! },
+                //        { "client_secret", _drive.AppSecret! },
+                //        { "scope", _drive.Scope! }
+                //    });
+                //    return _access_token;
+                //}
+                //else /////////////////// Conf App Scope
                 {
                     (_access_token, _refresh_token) = GetAccessToken(new Dictionary<string, string>
                     {

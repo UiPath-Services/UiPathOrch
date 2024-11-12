@@ -338,7 +338,7 @@ namespace UiPath.PowerShell.Commands
                     string feedFolder = folder.GetPackageFeedFolder();
                     string folderDisplayName = OrchDriveInfo.MakeValidFolderName(feedFolder);
 
-                    string feedId = drive.GetFolderFeedId(folder);
+                    string feedId = drive.FolderFeedId.Get(folder);
 
                     string destination;
                     if (string.IsNullOrEmpty(feedFolder))

@@ -44,7 +44,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetMachineSessionRuntimes());
+                var results = ParallelResults.ForEach(drives, drive => drive.MachineSessionRuntimes.Get());
                 //"&$filter=((Runtimes%20ne%200)%20and%20(((RuntimeType%20eq%20%273%27)%20or%20(RuntimeType%20eq%20%270%27)%20or%20(RuntimeType%20eq%20%277%27)%20or%20(RuntimeType%20eq%20%272%27)%20or%20(RuntimeType%20eq%20%278%27)%20or%20(RuntimeType%20eq%20%2712%27))))"););
 
                 foreach (var result in results)
@@ -89,7 +89,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetMachineSessionRuntimes());
+                var results = ParallelResults.ForEach(drives, drive => drive.MachineSessionRuntimes.Get());
                 //"&$filter=((Runtimes%20ne%200)%20and%20(((RuntimeType%20eq%20%273%27)%20or%20(RuntimeType%20eq%20%270%27)%20or%20(RuntimeType%20eq%20%277%27)%20or%20(RuntimeType%20eq%20%272%27)%20or%20(RuntimeType%20eq%20%278%27)%20or%20(RuntimeType%20eq%20%2712%27))))"););
 
                 foreach (var result in results)
@@ -134,7 +134,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetMachineSessionRuntimes());
+                var results = ParallelResults.ForEach(drives, drive => drive.MachineSessionRuntimes.Get());
                 //"&$filter=((Runtimes%20ne%200)%20and%20(((RuntimeType%20eq%20%273%27)%20or%20(RuntimeType%20eq%20%270%27)%20or%20(RuntimeType%20eq%20%277%27)%20or%20(RuntimeType%20eq%20%272%27)%20or%20(RuntimeType%20eq%20%278%27)%20or%20(RuntimeType%20eq%20%2712%27))))"););
 
                 foreach (var result in results)
@@ -179,7 +179,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetMachineSessionRuntimes());
+                var results = ParallelResults.ForEach(drives, drive => drive.MachineSessionRuntimes.Get());
                 //"&$filter=((Runtimes%20ne%200)%20and%20(((RuntimeType%20eq%20%273%27)%20or%20(RuntimeType%20eq%20%270%27)%20or%20(RuntimeType%20eq%20%277%27)%20or%20(RuntimeType%20eq%20%272%27)%20or%20(RuntimeType%20eq%20%278%27)%20or%20(RuntimeType%20eq%20%2712%27))))"););
 
                 foreach (var result in results)
@@ -217,7 +217,7 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var sessions = drive.GetMachineSessionRuntimes();
+                    var sessions = drive.MachineSessionRuntimes.Get();
 
                     foreach (var session in sessions
                         .Where(session => session.SessionId != null)
@@ -239,7 +239,7 @@ namespace UiPath.PowerShell.Commands
                             try
                             {
                                 drive.OrchAPISession.SetMaintenanceMode(session.SessionId, Enable.Value, Force.IsPresent);
-                                drive._dicMachineSessionRuntimes = null;
+                                drive.MachineSessionRuntimes.ClearCache();
                             }
                             catch (Exception ex)
                             {

@@ -42,7 +42,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetMachinesAssignedToFolder(df.folder));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -70,7 +70,7 @@ namespace UiPath.PowerShell.Commands
                 cancelHandler.Token.ThrowIfCancellationRequested();
                 try
                 {
-                    var entities = drive.GetMachinesAssignedToFolder(folder);
+                    var entities = drive.FolderMachinesAssigned.Get(folder);
 
                     var removingMachines = entities.FilterByWildcards(m => m?.Name, wpName);
 
@@ -88,8 +88,8 @@ namespace UiPath.PowerShell.Commands
                     try
                     {
                         drive.OrchAPISession.UnassignMachinesFromFolder(folder.Id ?? 0, machineIdsToRemove);
-                        drive._dicMachinesAssigned?.TryRemove(folder.Id!.Value, out var _);
-                        drive._dicAssignedMachines?.TryRemove(folder.Id!.Value, out var _);
+                        drive.FolderMachinesAssigned.ClearCache(folder);
+                        drive.FolderMachinesAssignable.ClearCache(folder);
                     }
                     catch (Exception ex)
                     {

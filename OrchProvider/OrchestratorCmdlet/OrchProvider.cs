@@ -540,7 +540,7 @@ namespace UiPath.PowerShell.Core
             if (parameters != null && parameters.Reload.IsPresent)
             {
                 drive._dicFolders = null;
-                drive._dicPersonalWorkspaces = null;
+                drive.PersonalWorkspaces.ClearCache();
             }
 
             if (!recurse)
@@ -918,7 +918,7 @@ namespace UiPath.PowerShell.Core
                     // でないと、削除したワークスペースフォルダが自動ですぐに復活してしまう
                     if (folder.FolderType == "Personal")
                     {
-                        var personalWorkspaces = drive.GetPersonalWorkspaces();
+                        var personalWorkspaces = drive.PersonalWorkspaces.Get();
                         var targetPersonalWorkspace = personalWorkspaces.FirstOrDefault(p => p.Id == folder.Id);
                         if (targetPersonalWorkspace != null)
                         {
@@ -930,7 +930,7 @@ namespace UiPath.PowerShell.Core
 
                     if (folder.FolderType == "Personal")
                     {
-                        drive._dicPersonalWorkspaces = null;
+                        drive.PersonalWorkspaces.ClearCache();
                     }
 
                     // いまいちなんだけど、GetFolders() の実装に合わせて、個人ワークスペースを削除した場合も _dicFolders をクリアしておく。。

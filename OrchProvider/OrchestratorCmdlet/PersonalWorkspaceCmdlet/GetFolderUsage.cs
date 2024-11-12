@@ -82,7 +82,7 @@ namespace UiPath.PowerShell.Commands
 
                 string name = Name != null ? Name : DisplayName;
 
-                inputParameters ??= new();
+                inputParameters ??= [];
                 var param = new InputParameter()
                 {
                     drive = drive,
@@ -96,7 +96,7 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
                 foreach (var (drive, folder) in drivesFolders)
                 {
-                    inputParameters ??= new();
+                    inputParameters ??= [];
                     var param = new InputParameter()
                     {
                         drive = drive,

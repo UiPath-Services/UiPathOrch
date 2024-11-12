@@ -71,7 +71,7 @@ namespace UiPath.PowerShell.Commands
                 df => df.folder,
                 df =>
                 {
-                    var testDataQueues = df.drive.GetTestDataQueues(df.folder);
+                    var testDataQueues = df.drive.TestDataQueues.Get(df.folder);
                     return OrchThreadPool.RunForEach(testDataQueues.FilterByWildcards(e => e?.Name, wpName),
                         queue => queue.GetPSPath(),
                         queue => queue,

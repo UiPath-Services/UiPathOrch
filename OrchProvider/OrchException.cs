@@ -78,8 +78,9 @@ namespace UiPath.PowerShell.Commands
             }
         }
 
-        public void TryRemove(T key)
+        public void ClearCache(T? key)
         {
+            if (key == null) return;
             _exceptionsCache.Value.TryRemove(key, out var _);
         }
 

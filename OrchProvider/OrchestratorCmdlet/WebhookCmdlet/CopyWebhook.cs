@@ -79,14 +79,13 @@ namespace UiPath.PowerShell.Commands
 
             var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();
 
-            srcDrive._dicWebhooks = null;
-            srcDrive._dicWebhooks_Exceptions.ClearCache();
+            srcDrive.Webhooks.ClearCache();
 
             // この実装はこれで良い。
             ICollection<Webhook>? srcWebhooks = null;
             try
             {
-                srcWebhooks = srcDrive.GetWebhooks();
+                srcWebhooks = srcDrive.Webhooks.Get();
             }
             catch (Exception ex)
             {
@@ -115,7 +114,7 @@ namespace UiPath.PowerShell.Commands
                             var createdWebhook = dstDrive.OrchAPISession.CreateWebhook(newWebhook);
                             if (createdWebhook != null)
                             {
-                                dstDrive._dicWebhooks = null;
+                                dstDrive.Webhooks.ClearCache();
                                 createdWebhook.Path = dstDrive.NameColonSeparator;
                                 //WriteObject(createdWebhook);
                             }

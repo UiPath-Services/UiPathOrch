@@ -138,7 +138,7 @@ namespace UiPath.PowerShell.Commands
                     #region RetentionBucket を RetentionBucketId に変換
                     newQueue.AssignIdFromName(
                         RetentionBucket,
-                        () => drive.GetBuckets(folder),
+                        () => drive.Buckets.Get(folder),
                         e => e.Name!,
                         e => e.Id!,
                         (s, v) => s.RetentionBucketId = v,
@@ -152,7 +152,7 @@ namespace UiPath.PowerShell.Commands
                             var createdQueue = drive.OrchAPISession.CreateQueue(folder.Id!.Value, newQueue);
                             if (createdQueue != null)
                             {
-                                drive._dicQueueDefinitions = null;
+                                drive.Queues.ClearCache(folder);
                                 createdQueue.Path = folder.GetPSPath();
                                 WriteObject(createdQueue);
                             }

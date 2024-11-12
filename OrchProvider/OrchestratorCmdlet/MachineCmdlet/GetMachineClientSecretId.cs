@@ -49,7 +49,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetMachines());
+                var results = ParallelResults.ForEach(drives, drive => drive.Machines.Get());
 
                 bool bFound = false;
                 foreach (var result in results)
@@ -92,7 +92,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetMachines());
+                var results = ParallelResults.ForEach(drives, drive => drive.Machines.Get());
 
                 foreach (var result in results)
                 {
@@ -139,7 +139,7 @@ namespace UiPath.PowerShell.Commands
                 IEnumerable<ExtendedMachine> machines = null;
                 try
                 {
-                    machines = drive.GetMachines();
+                    machines = drive.Machines.Get();
                 }
                 catch (Exception ex)
                 {

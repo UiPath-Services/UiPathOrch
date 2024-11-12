@@ -300,7 +300,7 @@ namespace UiPath.PowerShell.Commands
                 string targetFolder = folder.GetPSPath();
                 try
                 {
-                    var queues = drive.GetQueues(folder);
+                    var queues = drive.Queues.Get(folder);
                     foreach (var queue in queues.FilterByWildcards(q => q?.Name, wpName))
                     {
                         foreach (var queueItem in queueItemData)

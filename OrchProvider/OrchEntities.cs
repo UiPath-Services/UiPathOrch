@@ -2437,17 +2437,17 @@ namespace UiPath.PowerShell.Entities
         public string? Key { get; set; }
         public string? Reference { get; set; }
         public string? ProcessingExceptionType { get; set; }
-        //[JsonConverter(typeof(LocalDateTimeConverter))]
+        [JsonConverter(typeof(LocalDateTimeConverter))]
         public DateTime? DueDate { get; set; }
-        //[JsonConverter(typeof(LocalDateTimeConverter))]
+        [JsonConverter(typeof(LocalDateTimeConverter))]
         public DateTime? RiskSlaDate { get; set; }
         public string? Priority { get; set; }
         public SimpleRobot? Robot { get; set; }
-        //[JsonConverter(typeof(LocalDateTimeConverter))]
+        [JsonConverter(typeof(LocalDateTimeConverter))]
         public DateTime? DeferDate { get; set; }
-        //[JsonConverter(typeof(LocalDateTimeConverter))]
+        [JsonConverter(typeof(LocalDateTimeConverter))]
         public DateTime? StartProcessing { get; set; }
-        //[JsonConverter(typeof(LocalDateTimeConverter))]
+        [JsonConverter(typeof(LocalDateTimeConverter))]
         public DateTime? EndProcessing { get; set; }
         public int? SecondsInPreviousAttempts { get; set; }
         public Int64? AncestorId { get; set; }
@@ -2459,7 +2459,7 @@ namespace UiPath.PowerShell.Entities
         public string? UniqueKey { get; set; }
         //HasVideoRecorded boolean // deprecated
         public string? SpecificData { get; set; }
-        //[JsonConverter(typeof(LocalDateTimeConverter))]
+        [JsonConverter(typeof(LocalDateTimeConverter))]
         public DateTime? CreationTime { get; set; }
         public string? Progress { get; set; }
         public string? RowVersion { get; set; }

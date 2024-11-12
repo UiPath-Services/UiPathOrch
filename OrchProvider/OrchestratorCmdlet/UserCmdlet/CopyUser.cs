@@ -272,7 +272,7 @@ namespace UiPath.PowerShell.Commands
                             newUser.ProvisionType = null; // need to be removed
                             newUser.UserRoles = null; // ロール名の一覧が RolesList に入っているので、UserRoles は不要
 
-                            var dstRoles = dstDrive.GetRoles();
+                            var dstRoles = dstDrive.Roles.Get();
                             List<string> rolesToBeRemoved = null;
                             foreach (var role in newUser.RolesList ?? [])
                             {

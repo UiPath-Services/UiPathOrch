@@ -173,7 +173,7 @@ namespace UiPath.PowerShell.Commands
                         .FilterByWildcards(p => p?.Id, wpId)
                         .FilterByWildcards(p => p?.Version, wpVersion);
 
-                    var feedId = df.drive.GetFolderFeedId(df.folder);
+                    var feedId = df.drive.FolderFeedId.Get(df.folder);
 
                     var r2 = ParallelResults.ForEach(packages, package =>
                     {
@@ -232,7 +232,7 @@ namespace UiPath.PowerShell.Commands
                         .FilterByWildcards(p => p?.Id, wpId)
                         .FilterByWildcards(p => p?.Version, wpVersion);
 
-                    var feedId = df.drive.GetFolderFeedId(df.folder);
+                    var feedId = df.drive.FolderFeedId.Get(df.folder);
 
                     var r2 = ParallelResults.ForEach(packages, package =>
                     {
@@ -356,7 +356,7 @@ namespace UiPath.PowerShell.Commands
                     release.AssignTags(Tags, (r, v) => r.Tags = v);
 
                     #region EntryPoint を EntryPointid に変換
-                    var feedId = drive.GetFolderFeedId(folder);
+                    var feedId = drive.FolderFeedId.Get(folder);
                     release.AssignIdFromName(
                         EntryPoint,
                         () => drive.GetPackageEntryPoints(feedId, id!, latest.Version!),
@@ -399,7 +399,7 @@ namespace UiPath.PowerShell.Commands
                     #region RetentionBucket を RetentionBucketId に変換
                     release.AssignIdFromName(
                         RetentionBucket,
-                        () => drive.GetBuckets(folder),
+                        () => drive.Buckets.Get(folder),
                         e => e.Name!,
                         e => e.Id!,
                         (s, v) => s.RetentionBucketId = v,
@@ -416,7 +416,7 @@ namespace UiPath.PowerShell.Commands
                                 newProcess.Path = folder.GetPSPath();
                                 WriteObject(newProcess);
                                 drive._dicReleases?.TryRemove(folder.Id ?? 0, out var _);
-                                drive._dicReleaseList?.TryRemove(folder.Id ?? 0, out var _);
+                                //drive._dicReleaseList?.TryRemove(folder.Id ?? 0, out var _);
                             }
                         }
                         catch (Exception ex)

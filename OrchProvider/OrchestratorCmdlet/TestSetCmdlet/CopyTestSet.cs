@@ -56,7 +56,7 @@ namespace UiPath.PowerShell.Commands
                 {
                     // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
                     //srcDrive._dicTestSets?.TryRemove(srcFolder.Id ?? 0, out _);
-                    var srcEntities = srcDrive.GetTestSets(srcFolder).FilterByWildcards(b => b?.Name, wpName);
+                    var srcEntities = srcDrive.TestSets.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName);
                     if (!srcEntities.Any()) continue;
                 }
                 catch (Exception ex)
@@ -74,7 +74,7 @@ namespace UiPath.PowerShell.Commands
                         srcDrive, srcFolder, wpName,
                         dstDrive, dstFolder, reporterTestSets, 
                         cancelHandler.Token, false);
-                    dstDrive._dicTestSetSchedules?.TryRemove(dstFolder.Id ?? 0, out _);
+                    dstDrive.TestSets.ClearCache(dstFolder);
                 }
                 catch (OperationCanceledException)
                 {

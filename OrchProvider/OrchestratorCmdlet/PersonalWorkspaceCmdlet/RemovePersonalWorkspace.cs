@@ -43,7 +43,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetPersonalWorkspaces());
+                var results = ParallelResults.ForEach(drives, drive => drive.PersonalWorkspaces.Get());
 
                 foreach (var result in results)
                 {
@@ -78,7 +78,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetPersonalWorkspaces());
+                var results = ParallelResults.ForEach(drives, drive => drive.PersonalWorkspaces.Get());
 
                 foreach (var result in results)
                 {
@@ -116,7 +116,7 @@ namespace UiPath.PowerShell.Commands
             using var results = OrchThreadPool.RunForEach(drives,
                 drive => drive.NameColonSeparator,
                 drive => drive,
-                drive => drive.GetPersonalWorkspaces());
+                drive => drive.PersonalWorkspaces.Get());
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var result in results)
@@ -141,7 +141,7 @@ namespace UiPath.PowerShell.Commands
                                 drive.DisablePersonalWorkspace(ws.OwnerId);
                                 drive!.OrchAPISession.RemoveFolder(ws.Id ?? 0);
                                 drive._dicFolders = null;
-                                drive._dicPersonalWorkspaces = null;
+                                drive.PersonalWorkspaces.ClearCache();
                             }
                             catch (Exception ex)
                             {

@@ -28,7 +28,7 @@ namespace UiPath.PowerShell.Commands
             using var results = OrchThreadPool.RunForEach(drives,
                 drive => drive.NameColonSeparator,
                 drive => drive,
-                drive => drive.GetUpdateSettings());
+                drive => drive.UpdateSettings.Get());
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var result in results)

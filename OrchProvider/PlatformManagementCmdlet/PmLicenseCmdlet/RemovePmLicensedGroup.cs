@@ -32,7 +32,7 @@ namespace UiPath.PowerShell.Commands
                 IEnumerable<NuLicensedGroup> groups = null;
                 try
                 {
-                    groups = drive.GetPmLicensedGroups()
+                    groups = drive.PmLicensedGroups.Get()
                         .FilterByWildcards(g => g?.name, wpGroupName)
                         .OrderBy(g => g?.name);
                 }
@@ -49,7 +49,7 @@ namespace UiPath.PowerShell.Commands
                         try
                         {
                             drive.OrchAPISession.RemovePmLicensedGroup(group.id);
-                            drive._dicPmLicensedGroups = null;
+                            drive.PmLicensedGroups.ClearCache();
                         }
                         catch (Exception ex)
                         {

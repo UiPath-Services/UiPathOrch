@@ -32,7 +32,7 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var credentialStores = drive.GetCredentialStores();
+                    var credentialStores = drive.CredentialStores.Get();
 
                     foreach (var cs in credentialStores.FilterByWildcards(c => c?.Name, wpName).OrderBy(c => c.Name))
                     {
@@ -43,7 +43,7 @@ namespace UiPath.PowerShell.Commands
                             try
                             {
                                 drive.OrchAPISession.RemoveCredentialStore(cs.Id ?? 0);
-                                drive._dicCredentialStores = null;
+                                drive.CredentialStores.ClearCache();
                             }
                             catch (Exception ex)
                             {

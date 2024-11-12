@@ -92,9 +92,9 @@ namespace UiPath.PowerShell.Commands
                             {
                                 drive.OrchAPISession.EnableProcessSchedule(folder.Id ?? 0, [trigger.Id ?? 0], Enable.Value);
                                 drive._dicTriggers?.TryRemove(folder.Id ?? 0, out _);
-                                drive._dicProcessSchedules_Exceptions.ClearCache();
-                                drive._dicProcessScheduleDetailed?.TryRemove(folder.Id ?? 0, out _);
-                                drive._dicProcessScheduleDetailed_Exceptions.ClearCache();
+                                drive._dicTriggers_Exceptions.ClearCache();
+                                drive._dicTriggersDetailed?.TryRemove(folder.Id ?? 0, out _);
+                                drive._dicTriggersDetailed_Exceptions.ClearCache();
                             }
                             catch (Exception ex)
                             {

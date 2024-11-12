@@ -49,7 +49,7 @@ namespace UiPath.PowerShell.Commands
                             {
                                 drive.OrchAPISession.RemoveTmTestSet(project.id!, testSet.id!);
                                 drive._dicTmTestSets?.TryRemove(project.id!, out var _);
-                                drive._dicTmTestSetsExceptions.TryRemove(project.id!);
+                                drive._dicTmTestSetsExceptions.ClearCache(project.id);
                             }
                             catch (Exception ex)
                             {

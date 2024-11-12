@@ -18,93 +18,93 @@ namespace UiPath.PowerShell.Commands
     [OutputType(typeof(Entities.QueueDefinition))]
     class StartExploringPersonalWorkspaceCommand : OrchestratorPSCmdlet
     {
-        [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(NameCompleter))]
-        [SupportsWildcards]
-        public string[]? Name { get; set; }
+        //[Parameter(Position = 0)]
+        //[ArgumentCompleter(typeof(NameCompleter))]
+        //[SupportsWildcards]
+        //public string[]? Name { get; set; }
 
-        [Parameter]
-        [SupportsWildcards]
-        public string[]? Path { get; set; }
+        //[Parameter]
+        //[SupportsWildcards]
+        //public string[]? Path { get; set; }
 
-        private class NameCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var drives = ResolveDrives(fakeBoundParameters);
+        //private class NameCompleter : OrchArgumentCompleter
+        //{
+        //    public override IEnumerable<CompletionResult> CompleteArgument(
+        //        string commandName,
+        //        string parameterName,
+        //        string wordToComplete,
+        //        CommandAst commandAst,
+        //        IDictionary fakeBoundParameters)
+        //    {
+        //        var drives = ResolveDrives(fakeBoundParameters);
 
-                // パラメータで選択済みの Name は、候補から除外する
-                var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Parameters, wordToComplete);
+        //        // パラメータで選択済みの Name は、候補から除外する
+        //        var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Parameters, wordToComplete);
 
-                var wp = CreateWPFromWordToComplete(wordToComplete);
+        //        var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetPersonalWorkspaces());
+        //        var results = ParallelResults.ForEach(drives, drive => drive.GetPersonalWorkspaces());
 
-                foreach (var result in results)
-                {
-                    if (!result.TryGetValue(out var entities)) continue;
+        //        foreach (var result in results)
+        //        {
+        //            if (!result.TryGetValue(out var entities)) continue;
 
-                    foreach (var e in entities!
-                        .Where(q => wp.IsMatch(q.Name))
-                        .ExcludeByWildcards(q => q?.Name, wpName)
-                        .OrderBy(q => q.Name))
-                    {
-                        string tiphelp = $"OwnerId: {e.OwnerId}  OwnerName: {e.OwnerName}";
-                        yield return new CompletionResult(PathTools.EscapePSText(e.Name), e.Name, CompletionResultType.ParameterValue, tiphelp);
-                    }
-                }
-            }
-        }
+        //            foreach (var e in entities!
+        //                .Where(q => wp.IsMatch(q.Name))
+        //                .ExcludeByWildcards(q => q?.Name, wpName)
+        //                .OrderBy(q => q.Name))
+        //            {
+        //                string tiphelp = $"OwnerId: {e.OwnerId}  OwnerName: {e.OwnerName}";
+        //                yield return new CompletionResult(PathTools.EscapePSText(e.Name), e.Name, CompletionResultType.ParameterValue, tiphelp);
+        //            }
+        //        }
+        //    }
+        //}
 
-        protected override void ProcessRecord()
-        {
-            var drives = OrchDriveInfo.EnumOrchDrives(Path);
-            var wpName = Name.ConvertToWildcardPatternList();
+        //protected override void ProcessRecord()
+        //{
+        //    var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        //    var wpName = Name.ConvertToWildcardPatternList();
 
-            using var results = OrchThreadPool.RunForEach(drives,
-                drive => drive.NameColonSeparator,
-                drive => drive,
-                drive => drive.GetPersonalWorkspaces());
+        //    using var results = OrchThreadPool.RunForEach(drives,
+        //        drive => drive.NameColonSeparator,
+        //        drive => drive,
+        //        drive => drive.GetPersonalWorkspaces());
 
-            using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var result in results)
-            {
-                //drive.OrchAPISession.StartExploringPersonalWorkspace(280062);
-                try
-                {
-                    var entities = result.GetResult(cancelHandler.Token);
-                    if (entities == null) continue;
+        //    using var cancelHandler = new ConsoleCancelHandler();
+        //    foreach (var result in results)
+        //    {
+        //        //drive.OrchAPISession.StartExploringPersonalWorkspace(280062);
+        //        try
+        //        {
+        //            var entities = result.GetResult(cancelHandler.Token);
+        //            if (entities == null) continue;
 
-                    var drive = result.Source;
+        //            var drive = result.Source;
 
-                    bool bDirty = false;
-                    foreach (var ws in entities
-                        .FilterByWildcards(ws => ws?.Name, wpName)
-                        .OrderBy(ws => ws.Name))
-                    {
-                        string target = $"{ws.Path}{ws.Name}";
-                        if (ShouldProcess(target, "Start ExploringPersonalWorkspace"))
-                        {
-                            drive!._dicPersonalWorkspacesExploringAvailable ??= new();
-                            drive._dicPersonalWorkspacesExploringAvailable.Add(ws);
-                            bDirty = true;
-                        }
-                    }
-                    if (bDirty)
-                    {
-                        drive!._dicFolders = null;
-                    }
-                }
-                catch (OrchException ex)
-                {
-                    WriteError(new ErrorRecord(ex, "GetPackageUserError", ErrorCategory.InvalidOperation, ex.Target));
-                }
-            }
-        }
+        //            bool bDirty = false;
+        //            foreach (var ws in entities
+        //                .FilterByWildcards(ws => ws?.Name, wpName)
+        //                .OrderBy(ws => ws.Name))
+        //            {
+        //                string target = $"{ws.Path}{ws.Name}";
+        //                if (ShouldProcess(target, "Start ExploringPersonalWorkspace"))
+        //                {
+        //                    drive!._dicPersonalWorkspacesExploringAvailable ??= new();
+        //                    drive._dicPersonalWorkspacesExploringAvailable.Add(ws);
+        //                    bDirty = true;
+        //                }
+        //            }
+        //            if (bDirty)
+        //            {
+        //                drive!._dicFolders = null;
+        //            }
+        //        }
+        //        catch (OrchException ex)
+        //        {
+        //            WriteError(new ErrorRecord(ex, "GetPackageUserError", ErrorCategory.InvalidOperation, ex.Target));
+        //        }
+        //    }
+        //}
     }
 }

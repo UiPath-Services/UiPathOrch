@@ -706,7 +706,7 @@ namespace UiPath.PowerShell.Completer
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetTaskCatalogs(df.folder));
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.ActionCatalogs.Get(df.folder));
 
             foreach (var result in results)
             {
@@ -740,7 +740,7 @@ namespace UiPath.PowerShell.Completer
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetHttpTriggers(df.folder));
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.ApiTriggers.Get(df.folder));
 
             foreach (var result in results)
             {
@@ -776,7 +776,7 @@ namespace UiPath.PowerShell.Completer
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetAssets(df.folder));
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Assets.Get(df.folder));
 
             foreach (var result in results)
             {
@@ -811,7 +811,7 @@ namespace UiPath.PowerShell.Completer
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetAssets(df.folder));
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Assets.Get(df.folder));
 
             HashSet<string> valueTypes = [];
             foreach (var result in results)
@@ -849,7 +849,7 @@ namespace UiPath.PowerShell.Completer
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetBuckets(df.folder));
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Buckets.Get(df.folder));
 
             bool bFound = false;
             foreach (var result in results)
@@ -930,7 +930,7 @@ namespace UiPath.PowerShell.Completer
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.GetCredentialStores());
+            var results = ParallelResults.ForEach(drives, drive => drive.CredentialStores.Get());
 
             bool bFound = false;
             foreach (var result in results)
@@ -971,7 +971,7 @@ namespace UiPath.PowerShell.Completer
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.GetMachines());
+            var results = ParallelResults.ForEach(drives, drive => drive.Machines.Get());
 
             bool bFound = false;
             foreach (var result in results)
@@ -1133,7 +1133,7 @@ namespace UiPath.PowerShell.Completer
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetQueues(df.folder));
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Queues.Get(df.folder));
 
             foreach (var result in results)
             {
@@ -1208,7 +1208,7 @@ namespace UiPath.PowerShell.Completer
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.GetRoles());
+            var results = ParallelResults.ForEach(drives, drive => drive.Roles.Get());
 
             foreach (var result in results)
             {
@@ -1242,7 +1242,7 @@ namespace UiPath.PowerShell.Completer
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.GetRoles());
+            var results = ParallelResults.ForEach(drives, drive => drive.Roles.Get());
 
             foreach (var result in results)
             {
@@ -1368,7 +1368,7 @@ namespace UiPath.PowerShell.Completer
 
             foreach (var drive in drives)
             {
-                var versions = drive.GetAvailableVersions();
+                var versions = drive.AvailableVersions.Get();
 
                 foreach (var version in versions ?? [])
                 {
@@ -1395,7 +1395,7 @@ namespace UiPath.PowerShell.Completer
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.GetWebhooks());
+            var results = ParallelResults.ForEach(drives, drive => drive.Webhooks.Get());
 
             foreach (var result in results)
             {
@@ -1528,7 +1528,7 @@ namespace UiPath.PowerShell.Completer
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetTestCases(df.folder));
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.TestCases.Get(df.folder));
 
             foreach (var result in results)
             {
@@ -1568,7 +1568,7 @@ namespace UiPath.PowerShell.Completer
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetTestDataQueues(df.folder));
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.TestDataQueues.Get(df.folder));
 
             foreach (var result in results)
             {
@@ -1608,7 +1608,7 @@ namespace UiPath.PowerShell.Completer
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetTestSetSchedules(df.folder));
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.TestSetSchedules.Get(df.folder));
 
             foreach (var result in results)
             {
@@ -1648,7 +1648,7 @@ namespace UiPath.PowerShell.Completer
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetTestSets(df.folder));
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.TestSets.Get(df.folder));
 
             foreach (var result in results)
             {
@@ -1789,7 +1789,7 @@ namespace UiPath.PowerShell.Completer
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.GetPmLicensedGroups());
+            var results = ParallelResults.ForEach(drives, drive => drive.PmLicensedGroups.Get());
 
             foreach (var result in results)
             {

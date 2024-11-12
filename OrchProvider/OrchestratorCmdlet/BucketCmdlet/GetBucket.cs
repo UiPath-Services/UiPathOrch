@@ -1,14 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
+using System.Text;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name;
-using System.Text;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -64,7 +58,7 @@ namespace UiPath.PowerShell.Commands
                     try
                     {
                         var (drive, folder) = OrchDriveInfo.EnumFolders(bucket.Path).FirstOrDefault();
-                        var credentialStores = drive.GetCredentialStores();
+                        var credentialStores = drive.CredentialStores.Get();
                         credentialStoreName = credentialStores.FirstOrDefault(c => c.Id == bucket.CredentialStoreId)?.Name;
                     }
                     catch (Exception ex)
@@ -102,7 +96,7 @@ namespace UiPath.PowerShell.Commands
             using var results = OrchThreadPool.RunForEach(drivesFolders,
                 df => df.folder.GetPSPath(),
                 df => df.folder,
-                df => df.drive.GetBuckets(df.folder));
+                df => df.drive.Buckets.Get(df.folder));
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var result in results)

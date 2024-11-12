@@ -31,7 +31,7 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var roles = drive.GetRoles();
+                    var roles = drive.Roles.Get();
                     foreach (var role in roles
                         .Where(r => !r.IsStatic.GetValueOrDefault())
                         .FilterByWildcards(role => role?.Name, wpName)
@@ -45,7 +45,7 @@ namespace UiPath.PowerShell.Commands
                             try
                             {
                                 drive.OrchAPISession.DeleteRole(role.Id ?? 0);
-                                drive._dicRoles = null;
+                                drive.Roles.ClearCache();
                             }
                             catch (Exception ex)
                             {

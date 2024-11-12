@@ -40,7 +40,7 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var testCases = drive.GetTestCases(folder);
+                    var testCases = drive.TestCases.Get(folder);
                     foreach (var testCase in testCases
                         .FilterByWildcards(e => e?.Name, wpName)
                         .OrderBy(e => e.Name))
@@ -52,7 +52,7 @@ namespace UiPath.PowerShell.Commands
                             try
                             {
                                 drive.OrchAPISession.RemoveTestCases(folder.Id ?? 0, [testCase.Id ?? 0]);
-                                drive._dicTestCases?.TryRemove(folder.Id ?? 0, out _);
+                                drive.TestCases.ClearCache(folder);
                             }
                             catch (Exception ex)
                             {

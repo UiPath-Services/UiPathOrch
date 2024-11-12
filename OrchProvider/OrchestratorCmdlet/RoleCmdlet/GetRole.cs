@@ -81,7 +81,7 @@ namespace UiPath.PowerShell.Commands
                 {
                     try
                     {
-                        var targetRoles = drive!.GetRoles()
+                        var targetRoles = drive!.Roles.Get()
                             .FilterByWildcards(role => role?.Name, wpName)
                             .OrderByDescending(role => role.Type)
                             .ThenBy(role => role.Name);
@@ -104,7 +104,7 @@ namespace UiPath.PowerShell.Commands
 
                 try
                 {
-                    foreach (var role in drive!.GetRoles()
+                    foreach (var role in drive!.Roles.Get()
                         .FilterByWildcards(role => role?.Name, wpName)
                         .OrderByDescending(role => role.Type)
                         .ThenBy(role => role.Name))

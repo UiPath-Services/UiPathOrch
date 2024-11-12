@@ -33,7 +33,7 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var entities = drive.GetWebhooks();
+                    var entities = drive.Webhooks.Get();
 
                     foreach (var webhook in entities
                         .FilterByWildcards(wh => wh?.Name, wpName)
@@ -46,7 +46,7 @@ namespace UiPath.PowerShell.Commands
                             try
                             {
                                 drive.OrchAPISession.RemoveWebhooks(webhook.Id ?? 0);
-                                drive._dicWebhooks = null;
+                                drive.Webhooks.ClearCache();
                             }
                             catch (Exception ex)
                             {

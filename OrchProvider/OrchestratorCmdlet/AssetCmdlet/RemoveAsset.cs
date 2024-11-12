@@ -54,7 +54,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetAssets(df.folder));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Assets.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -84,7 +84,7 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var assets = drive.GetAssets(folder);
+                    var assets = drive.Assets.Get(folder);
 
                     foreach (var asset in assets
                         .FilterByWildcards(asset => asset?.ValueType, wpValueType)
@@ -98,7 +98,7 @@ namespace UiPath.PowerShell.Commands
                             if (ShouldProcess(asset.GetPSPath(), "Remove Asset"))
                             {
                                 drive.OrchAPISession.RemoveAsset(folder.Id ?? 0, asset.Id ?? 0);
-                                drive._dicAssets?.TryRemove(folder.Id ?? 0, out _);
+                                drive.Assets.ClearCache(folder);
                             }
                         }
                         catch (Exception ex)

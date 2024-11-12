@@ -90,7 +90,7 @@ namespace UiPath.PowerShell.Commands
                             machine.AssignTags(Tags, (m, v) => m.Tags = v);
 
                             var newMachine = drive.OrchAPISession.AddMachine(machine);
-                            drive._dicExtendedMachines = null;
+                            drive.Machines.ClearCache();
                             if (newMachine != null)
                             {
                                 newMachine.Path = drive.NameColonSeparator;

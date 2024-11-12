@@ -71,7 +71,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetPmLicensedUsers());
+                var results = ParallelResults.ForEach(drives, drive => drive.PmLicensedUsers.Get());
 
                 foreach (var result in results)
                 {
@@ -108,7 +108,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetPmLicensedUsers());
+                var results = ParallelResults.ForEach(drives, drive => drive.PmLicensedUsers.Get());
 
                 foreach (var result in results)
                 {
@@ -139,7 +139,7 @@ namespace UiPath.PowerShell.Commands
             using var results = OrchThreadPool.RunForEach(drives,
                 drive => drive.NameColonSeparator,
                 drive => drive,
-                drive => drive.GetPmLicensedUsers());
+                drive => drive.PmLicensedUsers.Get());
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var result in results)

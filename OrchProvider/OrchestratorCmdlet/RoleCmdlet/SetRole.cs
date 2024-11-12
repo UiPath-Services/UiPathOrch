@@ -199,7 +199,7 @@ namespace UiPath.PowerShell.Commands
                 var (drive, name) = parameterSet.Key;
                 var roleParams = parameterSet.Value;
 
-                var existingRoles = drive.GetRoles();
+                var existingRoles = drive.Roles.Get();
 
                 var wpName = new WildcardPattern(name);
 
@@ -238,7 +238,7 @@ namespace UiPath.PowerShell.Commands
                             {
                                 // 何も返らない
                                 drive.OrchAPISession.PutRole(postingRole);
-                                drive._dicRoles = null;
+                                drive.Roles.ClearCache();
                             }
                             catch (Exception ex)
                             {
@@ -258,7 +258,7 @@ namespace UiPath.PowerShell.Commands
                             // parameterSet を Role に変換して POST する
                             var postingRole = RoleParamsToRole(nameUnescaped, roleParams);
                             var createdRole = drive.OrchAPISession.PostRole(postingRole);
-                            drive._dicRoles = null;
+                            drive.Roles.ClearCache();
                             if (createdRole != null)
                             {
                                 createdRole.Path = drive.NameColonSeparator;

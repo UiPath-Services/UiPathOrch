@@ -44,7 +44,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetTestSetSchedules(df.folder));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.TestSetSchedules.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -75,7 +75,7 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var schedules = drive.GetTestSetSchedules(folder);
+                    var schedules = drive.TestSetSchedules.Get(folder);
 
                     foreach (var schedule in schedules
                         .FilterByWildcards(ts => ts?.Name, wpName)
@@ -90,7 +90,7 @@ namespace UiPath.PowerShell.Commands
                             try
                             {
                                 drive.OrchAPISession.EnableTestSetSchedules(folder.Id ?? 0, Enable.Value, [schedule.Id ?? 0]);
-                                drive._dicTestSetSchedules?.TryRemove(folder.Id ?? 0, out _);
+                                drive.TestSetSchedules.ClearCache(folder);
                             }
                             catch (Exception ex)
                             {

@@ -57,7 +57,7 @@ namespace UiPath.PowerShell.Commands
 
                 var results = ParallelResults.ForEach(drivesFolders, df =>
                 {
-                    var buckets = df.drive.GetBuckets(df.folder).FilterByWildcards(e => e?.Name, wpName);
+                    var buckets = df.drive.Buckets.Get(df.folder).FilterByWildcards(e => e?.Name, wpName);
                     return ParallelResults.ForEach(buckets, bucket =>
                         df.drive.GetBucketFiles(df.folder, bucket));
                 });
@@ -92,7 +92,7 @@ namespace UiPath.PowerShell.Commands
             using var results = OrchThreadPool.RunForEach(drivesFolders,
                 df => df.folder.GetPSPath(),
                 df => df.folder,
-                df => df.drive.GetBuckets(df.folder));
+                df => df.drive.Buckets.Get(df.folder));
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var result in results)

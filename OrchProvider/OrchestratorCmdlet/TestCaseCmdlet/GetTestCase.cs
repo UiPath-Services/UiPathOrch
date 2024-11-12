@@ -43,7 +43,7 @@ namespace UiPath.PowerShell.Commands
             using var results = OrchThreadPool.RunForEach(drivesFolders,
                 df => df.folder.GetPSPath(),
                 df => df.folder,
-                df => df.drive.GetTestCases(df.folder)
+                df => df.drive.TestCases.Get(df.folder)
             );
 
             using var cancelHandler = new ConsoleCancelHandler();
