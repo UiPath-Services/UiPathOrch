@@ -40,7 +40,7 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var entities = drive.GetBuckets(folder);
+                    var entities = drive.Buckets.Get(folder);
 
                     foreach (var bucket in entities
                         .FilterByWildcards(b => b?.Name, wpName)
@@ -53,7 +53,7 @@ namespace UiPath.PowerShell.Commands
                             try
                             {
                                 drive.OrchAPISession.DeleteBucket(folder.Id ?? 0, bucket.Id ?? 0);
-                                drive._dicBuckets?.TryRemove(folder.Id ?? 0, out _);
+                                drive.Buckets.ClearCache(folder);
                                 drive._dicBucketLinks = null;
                             }
                             catch (Exception ex)

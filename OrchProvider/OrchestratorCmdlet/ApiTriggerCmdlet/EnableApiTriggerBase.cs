@@ -37,7 +37,7 @@ namespace UiPath.PowerShell.Commands
                 var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Parameters, wordToComplete);
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetHttpTriggers(df.folder));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.ApiTriggers.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -67,7 +67,7 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var triggers = drive.GetHttpTriggers(folder);
+                    var triggers = drive.ApiTriggers.Get(folder);
 
                     foreach (var trigger in triggers
                         .Where(t => Enable.Value
@@ -85,7 +85,7 @@ namespace UiPath.PowerShell.Commands
                             try
                             {
                                 drive.OrchAPISession.EnableHttpTriggers(folder.Id ?? 0, [trigger.Id!], Enable.Value);
-                                drive._dicHttpTriggers?.TryRemove(folder.Id ?? 0, out _);
+                                drive.ApiTriggers.ClearCache(folder);
                             }
                             catch (Exception ex)
                             {

@@ -54,7 +54,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetAssets(df.folder));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Assets.Get(df.folder));
 
                 // TODO: link も取得する。link を複数もつアセットだけを候補に表示したい。
 
@@ -86,7 +86,7 @@ namespace UiPath.PowerShell.Commands
                 var (drive, folder) = driveFolder;
                 try
                 {
-                    var assets = drive.GetAssets(folder);
+                    var assets = drive.Assets.Get(folder);
                     Parallel.ForEach(assets, asset =>
                     {
                         drive.GetFoldersForAsset(folder, asset);
@@ -100,10 +100,10 @@ namespace UiPath.PowerShell.Commands
             HashSet<(Int64 folderId, string assetName)> outputLink = [];
             foreach (var (drive, folder) in drivesFolders)
             {
-                ReadOnlyCollection<Asset> assets;
+                ICollection<Asset> assets;
                 try
                 {
-                    assets = drive.GetAssets(folder);
+                    assets = drive.Assets.Get(folder);
                 }
                 catch (Exception ex)
                 {

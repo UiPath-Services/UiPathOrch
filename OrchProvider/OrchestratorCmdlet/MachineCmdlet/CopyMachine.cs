@@ -71,13 +71,12 @@ namespace UiPath.PowerShell.Commands
             var srcDrive = OrchDriveInfo.GetOrchDrive(Path!);
             var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
 
-            srcDrive._dicExtendedMachines = null;
-            srcDrive._dicExtendedMachines_Exception.ClearCache();
+            srcDrive.Machines.ClearCache();
 
             List<ExtendedMachine> srcMachines;
             try
             {
-                srcMachines = srcDrive!.GetMachines()
+                srcMachines = srcDrive!.Machines.Get()
                     .Where(m => m.Scope != "PersonalWorkspace")
                     .FilterByWildcards(m => m?.Name, wpName)
                     .OrderBy(m => m.Name)
@@ -103,7 +102,7 @@ namespace UiPath.PowerShell.Commands
                 string target = dstDrive.NameColonSeparator;
                 try
                 {
-                    var dstRobots = dstDrive.GetRobots();
+                    var dstRobots = dstDrive.Robots.Get();
                     foreach (var machine in srcMachines)
                     {
                         cancelHandler.Token.ThrowIfCancellationRequested();
@@ -136,7 +135,7 @@ namespace UiPath.PowerShell.Commands
                                     foreach (var robotUser in machine.RobotUsers)
                                     {
                                         // TODO: ユーザーとロボットの Id の移行を、OrchFolderProvider の static method で行うように統一。
-                                        var srcRobots = srcDrive.GetRobots();
+                                        var srcRobots = srcDrive.Robots.Get();
                                         var srcRobot = srcRobots.FirstOrDefault(r => r.Id == robotUser.RobotId);
 
                                         if (srcRobot == null)
@@ -178,8 +177,7 @@ namespace UiPath.PowerShell.Commands
                                     addedMachine.Path = dstDrive.NameColonSeparator;
                                     WriteObject(addedMachine);
                                 }
-                                dstDrive._dicExtendedMachines = null;
-                                dstDrive._dicMachinesAssignable = null;
+                                dstDrive.Machines.ClearCache();
                             }
                             catch (Exception ex)
                             {

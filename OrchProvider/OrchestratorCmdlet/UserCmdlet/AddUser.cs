@@ -440,7 +440,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetRoles());
+                var results = ParallelResults.ForEach(drives, drive => drive.Roles.Get());
 
                 foreach (var result in results)
                 {
@@ -499,7 +499,7 @@ namespace UiPath.PowerShell.Commands
             if (roles == null) return [];
             try
             {
-                var existingRoles = drive.GetRoles();
+                var existingRoles = drive.Roles.Get();
 
                 foreach (var specifiedRole in roles)
                 {
@@ -708,7 +708,7 @@ namespace UiPath.PowerShell.Commands
 
                             if (line.UR_CredentialStore != null)
                             {
-                                var credentialStores = drive.GetCredentialStores();
+                                var credentialStores = drive.CredentialStores.Get();
                                 var targetStore = credentialStores.FirstOrDefault(cs => string.Compare(cs.Name, line.UR_CredentialStore, true) == 0);
                                 postingUser.UnattendedRobot.CredentialStoreId = targetStore?.Id;
                             }
@@ -716,7 +716,7 @@ namespace UiPath.PowerShell.Commands
                             // パスワードが指定されていれば、CredentialStoreId を埋めておく
                             if (postingUser.UnattendedRobot.Password != null && postingUser.UnattendedRobot.CredentialStoreId == null)
                             {
-                                var credentialStores = drive.GetCredentialStores();
+                                var credentialStores = drive.CredentialStores.Get();
                                 var defaultStore = credentialStores.FirstOrDefault(cs => string.Compare(cs.Name, "Orchestrator Database", true) == 0);
                                 postingUser.UnattendedRobot.CredentialStoreId = defaultStore?.Id;
                             }

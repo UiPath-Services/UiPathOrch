@@ -102,7 +102,7 @@ namespace UiPath.PowerShell.Commands
                 {
                     try
                     {
-                        var buckets = drive.GetBuckets(folder);
+                        var buckets = drive.Buckets.Get(folder);
                         var bucket = buckets.FirstOrDefault(b => b.Id == retention.BucketId);
                         retentionBucket = bucket?.Name;
                     }
@@ -159,7 +159,7 @@ namespace UiPath.PowerShell.Commands
             using var results = OrchThreadPool.RunForEach(drivesFolders,
                 df => df.folder.GetPSPath(),
                 df => df.folder,
-                df => df.drive.GetQueues(df.folder));
+                df => df.drive.Queues.Get(df.folder));
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var result in results)

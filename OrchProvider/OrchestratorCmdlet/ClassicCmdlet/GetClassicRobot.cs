@@ -112,7 +112,7 @@ namespace UiPath.PowerShell.Commands
                 var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Parameters, wordToComplete);
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetSessions(df.folder));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Sessions.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -154,7 +154,7 @@ namespace UiPath.PowerShell.Commands
                 drivesFolders.Where(df => df.folder.ProvisionType == "Manual"),
                 df => df.folder.GetPSPath(),
                 df => df.folder,
-                df => df.drive.GetSessions(df.folder));
+                df => df.drive.Sessions.Get(df.folder));
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var result in results)

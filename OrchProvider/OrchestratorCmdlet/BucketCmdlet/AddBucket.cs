@@ -89,7 +89,7 @@ namespace UiPath.PowerShell.Commands
                             }
 
                             var newBucket = drive.OrchAPISession.PostBucket(folder.Id!.Value, postingBucket);
-                            drive._dicBuckets?.TryRemove(folder.Id.Value, out var _);
+                            drive.Buckets.ClearCache(folder);
                             if (newBucket != null)
                             {
                                 newBucket.Path = folder.GetPSPath();

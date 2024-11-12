@@ -332,14 +332,14 @@ namespace UiPath.PowerShell.Commands
                 // RobotId を変換
                 if (elem.RobotId != null)
                 {
-                    var robots2 = drive!.GetRobots();
+                    var robots2 = drive.Robots.Get();
                     mrs.RobotName = robots2.FirstOrDefault(r => r.Id == elem.RobotId)?.Name;
                 }
 
                 // MachineId を変換
                 if (elem.MachineId != null)
                 {
-                    var machines = drive!.GetMachines();
+                    var machines = drive!.Machines.Get();
                     mrs.MachineName = machines.FirstOrDefault(m => m.Id == elem.MachineId)?.Name;
                 }
 
@@ -374,7 +374,7 @@ namespace UiPath.PowerShell.Commands
 
         internal CredentialStore? FindCredentialStoreId(string target, OrchDriveInfo drive, WildcardPattern? wpCredentialStore)
         {
-            var credentialStores = drive.GetCredentialStores();
+            var credentialStores = drive.CredentialStores.Get();
             if (wpCredentialStore != null)
             {
                 var matchingCredentialStores = credentialStores.Where(cs => wpCredentialStore.IsMatch(cs.Name));

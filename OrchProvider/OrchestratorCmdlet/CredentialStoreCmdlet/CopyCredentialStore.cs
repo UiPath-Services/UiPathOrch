@@ -99,14 +99,13 @@ namespace UiPath.PowerShell.Commands
             var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
             var wpName = Name.ConvertToWildcardPatternList();
 
-            srcDrive._dicCredentialStores = null;
-            srcDrive._dicCredentialStores_Exceptions.ClearCache();
+            srcDrive.CredentialStores.ClearCache();
 
             // この実装はこれで良い
             List<CredentialStore> stores = null;
             try
             {
-                stores = srcDrive.GetCredentialStores()
+                stores = srcDrive.CredentialStores.Get()
                     .FilterByWildcards(s => s?.Name, wpName).ToList();
             }
             catch (Exception ex)
@@ -144,7 +143,7 @@ namespace UiPath.PowerShell.Commands
                             var createdStore = dstDrive.OrchAPISession.CreateCredentialStore(postingStore);
                             if (createdStore != null)
                             {
-                                dstDrive._dicCredentialStores = null;
+                                dstDrive.CredentialStores.ClearCache();
                                 //createdStore.Path = dstDrive.NameColonSeparator;
                                 //WriteObject(createdStore);
 

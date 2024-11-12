@@ -137,14 +137,14 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                ParallelResults.ForEach(drives, drive => drive.GetRoles());
+                ParallelResults.ForEach(drives, drive => drive.Roles.Get());
 
                 ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
 
                 foreach (var (drive, folder) in drivesFolders)
                 {
                     // このフォルダーで利用可能なロールの一覧
-                    var tenantRoles = drive.GetRoles().Where(tr => tr.Type != "Tenant").ToList();
+                    var tenantRoles = drive.Roles.Get().Where(tr => tr.Type != "Tenant").ToList();
 
                     // このフォルダーに割り当て済みのユーザー一覧
                     if (drive._dicUserRoles?.TryGetValue((folder.Id ?? 0, false), out var folderUsers) ?? false && folderUsers.Count != 0)
@@ -197,7 +197,7 @@ namespace UiPath.PowerShell.Commands
             var wpRoles = Roles?.Select(role => new WildcardPattern(role, WildcardOptions.IgnoreCase)).ToList();
 
             // 対象のドライブの roles を、非同期にまとめて取得する
-            ParallelResults.ForEach(drives, drive => drive.GetRoles());
+            // ParallelResults.ForEach(drives, drive => drive.Roles.Get());
 
             using var results = OrchThreadPool.RunForEach(drivesFolders,
                 df => df.folder.GetPSPath(),
@@ -212,7 +212,7 @@ namespace UiPath.PowerShell.Commands
                     var existingUsers = result.GetResult(cancelHandler.Token);
                     var (drive, folder) = result.Source;
 
-                    var tenantRoles = drive.GetRoles()
+                    var tenantRoles = drive.Roles.Get()
                         .Where(role => role.Type != "Tenant")
                         .FilterByWildcards(role => role?.Name, wpRoles);
 

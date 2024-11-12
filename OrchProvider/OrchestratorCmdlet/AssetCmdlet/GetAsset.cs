@@ -113,7 +113,7 @@ namespace UiPath.PowerShell.Commands
             foreach (var asset in output.Where(a => a.ValueType == "Credential"))
             {
                 #region find the name of CredentialStore
-                ReadOnlyCollection<CredentialStore> credentialStores = null;
+                ICollection<CredentialStore> credentialStores = null;
 
                 string credentialStore = "";
                 var psPath = SessionState.Path.GetResolvedPSPathFromPSPath(asset.Path).FirstOrDefault();
@@ -122,7 +122,7 @@ namespace UiPath.PowerShell.Commands
                     OrchDriveInfo drive = psPath.Drive as OrchDriveInfo;
                     if (drive != null)
                     {
-                        credentialStores = drive.GetCredentialStores();
+                        credentialStores = drive.CredentialStores.Get();
                         credentialStore = credentialStores.FirstOrDefault(cs => cs.Id == asset.CredentialStoreId)?.Name ?? "";
                     }
                 }
@@ -191,7 +191,7 @@ namespace UiPath.PowerShell.Commands
             using var results = OrchThreadPool.RunForEach(drivesFolders,
                 df => df.folder.GetPSPath(),
                 df => df.folder,
-                df => df.drive.GetAssets(df.folder));
+                df => df.drive.Assets.Get(df.folder));
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var result in results)

@@ -39,7 +39,7 @@ namespace UiPath.PowerShell.Commands
                 string targetFolder = folder.GetPSPath();
                 try
                 {
-                    var queues = drive.GetQueues(folder);
+                    var queues = drive.Queues.Get(folder);
                     foreach (var queue in queues.FilterByWildcards(q => q?.Name, wpName))
                     {
                         cancelHandler.Token.ThrowIfCancellationRequested();
@@ -50,7 +50,7 @@ namespace UiPath.PowerShell.Commands
                             if (ShouldProcess(folder.GetPSPath(), "Remove Queue " + queue.Name))
                             {
                                 drive.OrchAPISession.RemoveQueue(folder.Id ?? 0, queue.Id ?? 0);
-                                drive._dicQueueDefinitions?.TryRemove(folder.Id ?? 0, out List<QueueDefinition>? _);
+                                drive.Queues.ClearCache(folder);
                             }
                         }
                         catch (Exception ex)

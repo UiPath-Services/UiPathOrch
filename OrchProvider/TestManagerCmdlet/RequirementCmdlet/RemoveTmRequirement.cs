@@ -52,7 +52,7 @@ namespace UiPath.PowerShell.Commands
                             {
                                 drive.OrchAPISession.RemoveTmRequirements(project.id!, requirement.id!);
                                 drive._dicTmRequirements?.TryRemove(project.id!, out var _);
-                                drive._dicTmRequirementExceptions.TryRemove(project.id!);
+                                drive._dicTmRequirementExceptions.ClearCache(project.id);
                             }
                             catch (Exception ex)
                             {

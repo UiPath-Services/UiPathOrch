@@ -36,7 +36,7 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var schedules = drive.GetTestSetSchedules(folder);
+                    var schedules = drive.TestSetSchedules.Get(folder);
 
                     foreach (var schedule in schedules
                         .FilterByWildcards(e => e?.Name, wpName)
@@ -49,7 +49,7 @@ namespace UiPath.PowerShell.Commands
                             try
                             {
                                 drive.OrchAPISession.RemoveTestSetSchedules(folder.Id ?? 0, schedule.Id ?? 0);
-                                drive._dicTestSetSchedules?.TryRemove(folder.Id ?? 0, out _);
+                                drive.TestSetSchedules.ClearCache(folder);
                             }
                             catch (Exception ex)
                             {

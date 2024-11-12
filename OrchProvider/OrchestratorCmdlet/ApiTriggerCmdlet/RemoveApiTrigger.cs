@@ -38,7 +38,7 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var triggers = drive.GetHttpTriggers(folder);
+                    var triggers = drive.ApiTriggers.Get(folder);
 
                     foreach (var trigger in triggers
                         .FilterByWildcards(t => t?.Name, wpName)
@@ -51,7 +51,7 @@ namespace UiPath.PowerShell.Commands
                             try
                             {
                                 drive.OrchAPISession.RemoveHttpTrigger(folder.Id ?? 0, trigger.Id!);
-                                drive._dicHttpTriggers?.TryRemove(folder.Id ?? 0, out _);
+                                drive.ApiTriggers.ClearCache(folder);
                             }
                             catch (Exception ex)
                             {

@@ -38,7 +38,7 @@ namespace UiPath.PowerShell.Commands
             using var results = OrchThreadPool.RunForEach(drivesFolders,
                 df => df.folder.GetPSPath(),
                 df => df.folder,
-                df => df.drive.GetHttpTriggers(df.folder));
+                df => df.drive.ApiTriggers.Get(df.folder));
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var result in results)

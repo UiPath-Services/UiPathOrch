@@ -188,7 +188,7 @@ namespace UiPath.PowerShell.Commands
             if (string.IsNullOrEmpty(fileName) || fileContent == null) return false;
             try
             {
-                string dstFeedId = dstDrive.GetFolderFeedId(dstFolder);
+                string dstFeedId = dstDrive.FolderFeedId.Get(dstFolder);
                 var copiedPackage = dstDrive.OrchAPISession.UploadPackage(dstFeedId, fileName!, fileContent!);
                 if (copiedPackage != null)
                 {
@@ -199,7 +199,7 @@ namespace UiPath.PowerShell.Commands
                     if (dstFolder.FolderType == "Personal")
                     {
                         dstDrive._dicReleases?.TryRemove(dstFolder.Id ?? 0, out var _);
-                        dstDrive._dicReleaseList?.TryRemove(dstFolder.Id ?? 0, out var _);
+                        //dstDrive._dicReleaseList?.TryRemove(dstFolder.Id ?? 0, out var _);
                     }
                 }
                 return true;
@@ -249,7 +249,7 @@ namespace UiPath.PowerShell.Commands
                         .OrderBy(p => p.Id)
                         .ToList();
 
-                    var srcFeedId = srcDrive.GetFolderFeedId(srcFolder);
+                    var srcFeedId = srcDrive.FolderFeedId.Get(srcFolder);
 
                     string msg2 = "Processing packages...";
                     int index2 = 0;

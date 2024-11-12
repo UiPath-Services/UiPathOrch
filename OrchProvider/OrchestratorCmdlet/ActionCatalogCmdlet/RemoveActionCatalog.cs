@@ -40,7 +40,7 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var entities = drive.GetTaskCatalogs(folder);
+                    var entities = drive.ActionCatalogs.Get(folder);
 
                     foreach (var catalog in entities
                         .FilterByWildcards(s => s?.Name, wpName)
@@ -51,7 +51,7 @@ namespace UiPath.PowerShell.Commands
                             try
                             {
                                 drive!.OrchAPISession.RemoveTaskCatalog(folder.Id ?? 0, catalog.Id ?? 0);
-                                drive._dicTaskCatalog?.TryRemove(folder.Id ?? 0, out var _);
+                                drive.ActionCatalogs.ClearCache(folder);
                             }
                             catch (Exception ex)
                             {

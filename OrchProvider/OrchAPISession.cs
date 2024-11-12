@@ -11,9 +11,6 @@ using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Entities.JsonConverter;
-using UiPath.PowerShell.Positional;
-using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
-using static System.Formats.Asn1.AsnWriter;
 using Job = UiPath.PowerShell.Entities.Job;
 using Release = UiPath.PowerShell.Entities.Release;
 using Session = UiPath.PowerShell.Entities.Session;
@@ -469,7 +466,7 @@ namespace UiPath.OrchAPI
                         if (total == first)
                             break;
                     }
-                    if (body.results.Length == 0 || total == first)
+                    if (body.results.Length < 1000 || total == first)
                         break;
                     skip += (ulong)body.results.Length;
                 }
@@ -950,18 +947,6 @@ namespace UiPath.OrchAPI
         public IEnumerable<MachineFolder> GetMachinesAssignedTo(Int64 folderId, string? query = null)
         {
             return GetEnumerable<MachineFolder>($"/odata/Folders/UiPath.Server.Configuration.OData.GetMachinesForFolder(key={folderId})", null, query);
-//                "&$filter=((IsAssignedToFolder%20eq%20true)%20or%20(IsInherited%20eq%20true))");
-        }
-
-        public IEnumerable<MachineFolder> GetMachinesAssignableTo(Int64 folderId)
-        {
-            return GetEnumerable<MachineFolder>($"/odata/Folders/UiPath.Server.Configuration.OData.GetMachinesForFolder(key={folderId})");
-        }
-
-        public IEnumerable<MachineFolder> GetAssignedMachines(Int64 folderId)
-        {
-            return GetEnumerable<MachineFolder>(
-                $"/odata/Machines/UiPath.Server.Configuration.OData.GetAssignedMachines(folderId={folderId})");
         }
 
         // FolderMachineInheritDto
@@ -1579,6 +1564,7 @@ namespace UiPath.OrchAPI
             return GetEnumerable<HttpTrigger>("/odata/HttpTriggers", folderId);
         }
 
+        // TODO: これどこからも使っていない。良くないのでは？
         public HttpTrigger? GetHttpTrigger(Int64 folderId, string triggerId)
         {
             return HttpRequest<HttpTrigger>(HttpMethod.Get, $"/odata/HttpTriggers({triggerId})", folderId);
@@ -2114,9 +2100,11 @@ namespace UiPath.OrchAPI
             return GetEnumerable<Session>("/odata/Sessions/UiPath.Server.Configuration.OData.GetGlobalSessions", null, query, skip, first);
         }
 
-        public IEnumerable<MachineSessionRuntime> GetMachineSessionRuntimes(string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
+        //public IEnumerable<MachineSessionRuntime> GetMachineSessionRuntimes(string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
+        public IEnumerable<MachineSessionRuntime> GetMachineSessionRuntimes()
         {
-            return GetEnumerable<MachineSessionRuntime>($"/odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimes", null, query, skip, first);
+            //return GetEnumerable<MachineSessionRuntime>($"/odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimes", null, query, skip, first);
+            return GetEnumerable<MachineSessionRuntime>($"/odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimes");
         }
 
         public IEnumerable<MachineSessionRuntime> GetMachineSessionRuntimesByFolderId(Int64 folderId, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)

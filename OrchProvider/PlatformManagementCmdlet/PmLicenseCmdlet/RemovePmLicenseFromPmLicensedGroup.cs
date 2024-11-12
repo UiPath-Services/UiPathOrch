@@ -49,7 +49,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetPmLicensedGroups());
+                var results = ParallelResults.ForEach(drives, drive => drive.PmLicensedGroups.Get());
 
                 foreach (var result in results)
                 {
@@ -96,7 +96,7 @@ namespace UiPath.PowerShell.Commands
 
             foreach (var drive in drives)
             {
-                var licenseGroups = drive.GetPmLicensedGroups();
+                var licenseGroups = drive.PmLicensedGroups.Get();
                 var targetGroups = licenseGroups.SelectByWildcards(g => g?.name, wpGroupName);
 
                 foreach (var group in targetGroups.OrderBy(g => g.name))
@@ -150,7 +150,7 @@ namespace UiPath.PowerShell.Commands
                             ret.userBundleLicenseNames = ret.userBundleCodes?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
                             WriteObject(ret);
                         }
-                        drive._dicPmLicensedGroups = null;
+                        drive.PmLicensedGroups.ClearCache();
                         drive._dicPmUserLicenseGroupAllocations = null;
                         drive._dicPmAvailableUserBundles = null;
                     }

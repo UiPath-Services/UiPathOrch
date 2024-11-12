@@ -103,7 +103,7 @@ namespace UiPath.PowerShell.Commands
                 // パラメータで選択済みの Id は、候補から除外する
                 var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Positional.Name.Parameters);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetQueues(df.folder));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Queues.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -136,7 +136,7 @@ namespace UiPath.PowerShell.Commands
                 IEnumerable<QueueDefinition> queues = null;
                 try
                 {
-                    queues = drive.GetQueues(folder);
+                    queues = drive.Queues.Get(folder);
                 }
                 catch (Exception ex)
                 {
@@ -180,7 +180,7 @@ namespace UiPath.PowerShell.Commands
                     #region RetentionBucket を RetentionBucketId に変換
                     newQueue.AssignIdFromName(
                         RetentionBucket,
-                        () => drive.GetBuckets(folder),
+                        () => drive.Buckets.Get(folder),
                         e => e.Name!,
                         e => e.Id!,
                         (s, v) => s.RetentionBucketId = v,
@@ -221,7 +221,7 @@ namespace UiPath.PowerShell.Commands
                         try
                         {
                             drive.OrchAPISession.EditQueue(folder.Id!.Value, newQueue);
-                            drive._dicQueueDefinitions = null;
+                            drive.Queues.ClearCache(folder);
                         }
                         catch (Exception ex)
                         {

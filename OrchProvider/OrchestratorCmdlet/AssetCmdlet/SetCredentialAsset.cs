@@ -103,7 +103,7 @@ namespace OrchProvider.AssetCmdlet
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetAssets(df.folder));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Assets.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -184,7 +184,7 @@ namespace OrchProvider.AssetCmdlet
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetMachinesAssignedToFolder(df.folder));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -245,7 +245,7 @@ namespace OrchProvider.AssetCmdlet
 
                 //var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetAssets(df.folder));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Assets.Get(df.folder));
 
                 bool bEmpty = true;
                 foreach (var result in results)
@@ -330,7 +330,7 @@ namespace OrchProvider.AssetCmdlet
                 return ParallelResults.ForEach(drivesFolders, driveFolder =>
                 {
                     var (drive, folder) = driveFolder;
-                    return drive.GetAssets(folder);
+                    return drive.Assets.Get(folder);
                 });
             });
         }
@@ -347,7 +347,7 @@ namespace OrchProvider.AssetCmdlet
             var asset = parameterSets.FirstOrDefault(asset => asset.Name == name && asset.Path == folder.GetPSPath());
             if (asset == null)
             {
-                var assets = drive.GetAssets(folder);
+                var assets = drive.Assets.Get(folder);
                 asset = assets.FirstOrDefault(a => a.Name == name);
                 if (asset == null)
                 {
@@ -626,7 +626,7 @@ namespace OrchProvider.AssetCmdlet
                     // expand MachineName
                     if (wpMachineName != null)
                     {
-                        var tenantMachines = drive.GetMachines();
+                        var tenantMachines = drive.Machines.Get();
                         specifiedMachines = tenantMachines.FilterByWildcards(m => m?.Name, wpMachineName);
                         if (!specifiedMachines.Any())
                         {
@@ -644,7 +644,7 @@ namespace OrchProvider.AssetCmdlet
                         specifiedMachines = [null];
                     }
 
-                    var existingAssets = drive.GetAssets(folder).Where(a => a.ValueType == "Credential");
+                    var existingAssets = drive.Assets.Get(folder).Where(a => a.ValueType == "Credential");
 
                     foreach (var name in param.Name!)
                     {
@@ -703,7 +703,7 @@ namespace OrchProvider.AssetCmdlet
 
                     reporter.WriteProgress(++index, $"{index:D}/{parameterSets.Count}");
 
-                    var existingAssets = drive.GetAssets(folder);
+                    var existingAssets = drive.Assets.Get(folder);
                     var existingAsset = existingAssets.FirstOrDefault(a => a.Name == asset.Name);
 
                     try
@@ -757,7 +757,7 @@ namespace OrchProvider.AssetCmdlet
             {
                 foreach (var cache in folderIdsThatShouldRemoveCache)
                 {
-                    cache.drive._dicAssets?.TryRemove(cache.id, out List<Asset>? _);
+                    cache.drive.Assets.ClearCache(cache.id);
                 }
             }
         }

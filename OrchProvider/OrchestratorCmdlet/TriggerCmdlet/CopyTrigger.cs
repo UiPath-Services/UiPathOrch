@@ -69,7 +69,7 @@ namespace UiPath.PowerShell.Commands
                 if (dstFolder == null || (srcDrive == dstDrive && srcFolder == dstFolder)) continue;
 
                 // キャッシュをクリアしておく
-                dstDrive._dicMachinesAssigned?.TryRemove(dstFolder.Id ?? 0, out var _);
+                dstDrive.FolderMachinesAssigned.ClearCache(dstFolder);
 
                 try
                 {
@@ -78,9 +78,9 @@ namespace UiPath.PowerShell.Commands
                         dstDrive, dstFolder, reporterTriggers,
                         cancelHandler.Token, false);
                     dstDrive._dicTriggers?.TryRemove(dstFolder.Id ?? 0, out _);
-                    dstDrive._dicProcessSchedules_Exceptions.ClearCache();
-                    dstDrive._dicProcessScheduleDetailed?.TryRemove(dstFolder.Id ?? 0, out _);
-                    dstDrive._dicProcessScheduleDetailed_Exceptions.ClearCache();
+                    dstDrive._dicTriggers_Exceptions.ClearCache();
+                    dstDrive._dicTriggersDetailed?.TryRemove(dstFolder.Id ?? 0, out _);
+                    dstDrive._dicTriggersDetailed_Exceptions.ClearCache();
                 }
                 catch (OperationCanceledException)
                 {

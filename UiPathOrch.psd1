@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.8.10'
+ModuleVersion = '0.9.8.11'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -368,20 +368,20 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- For cmdlets that copy folder entities (such as Copy-OrchAsset), the process has been modified so that even if reading entities from a folder fails, the operation continues with subsequent folders without interruption.
+        ReleaseNotes = '- When RedirectUrl was set at the root level of the configuration file, connections to confidential app settings could not be established.
 
-- The -Recurse switch parameter has been added to the following cmdlets, allowing -Recurse to be used with all cmdlets that copy folder entities:
-  - Copy-OrchBucket
-  - Copy-OrchProcess
-  - Copy-OrchQueue
-  - Copy-OrchTestDataQueue
-  - Copy-OrchTestSet
-  - Copy-OrchTestSetSchedule
+- Previously, each entity used a distinct cache implementation, despite the code being nearly identical. To streamline maintenance, the common code has now been extracted and unified. This change improves code maintainability and slightly reduces the module''s footprint. Additionally, several minor issues were fixed in the process.
 
-- When the source and destination folders have an identical subfolder structure, specifying -Recurse on folder entity copy cmdlets will automatically copy each folder''s entities to the corresponding destination folder. For example, to copy all storage buckets from one tenant to another with an identical folder structure, use the following command:
-  PS Src:\> Copy-OrchBucket -Recurse * Dst:\
+- In the former implementation of Get-OrchLog, logs sorted by TimeStamp could retrieve over 10,000 rows by generating an OData query based on the TimeStamp value of the last row fetched. However, this approach sometimes caused log rows on page boundaries to be missed. Therefore, the automatic page splitting by TimeStamp values has been removed. This change is expected to improve functionality, though as a trade-off, it is no longer possible to retrieve over 10,000 log rows at once. If needed, please adjust the query parameters manually and execute the Get-OrchLog cmdlet in segments. Then, by running the Get-OrchLog cmdlet without parameters, the cached log rows can be combined and output.
 
-- For the Copy-OrchPmUser cmdlet, when the source user''s email is empty, this will now set the destination user''s username to the source user''s username. Previously, the source user''s email was always set as the destination user''s username, even if it was empty.
+- The Get-OrchQueueItem cmdlet has been enhanced.
+  - In Automation Cloud, the number of queue items that can be retrieved at once is limited to 100. Previously, specifying -First 100 was required when executing the Get-OrchQueueItem cmdlet to obtain the expected results. This limitation has been removed by automatically paginating in increments of 100 rows.
+
+  - The DateTime values returned by the Get-OrchQueueItem cmdlet (such as DueDate, DeferDate, etc.) are now output in the local time zone. Previously, the default view displayed DateTime values in the local time zone, but they appeared in UTC format when redirected via a pipeline.
+
+  - Several query parameters (such as -DueDateAfter and -DueDateBefore) have been added.
+
+  - The Get-OrchQueueItem cmdlet now displays a progress bar.
 '
 
         # Prerelease string of this module

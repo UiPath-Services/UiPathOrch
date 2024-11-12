@@ -73,10 +73,9 @@ namespace UiPath.PowerShell.Commands
 
             var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
 
-            srcDrive._dicRoles = null;
-            srcDrive._dicRoles_Exception.ClearCache();
+            srcDrive.Roles.ClearCache();
 
-            var srcRoles = srcDrive!.GetRoles()
+            var srcRoles = srcDrive!.Roles.Get()
                 .FilterByWildcards(role => role?.Name, wpName)
                 .OrderBy(role => role.Name)
                 .ToList();
@@ -109,7 +108,7 @@ namespace UiPath.PowerShell.Commands
                             var addedRole = dstDrive.OrchAPISession.PostRole(role);
                             //addedRole.Path = dstDrive.NameColonSeparator;
                             //WriteObject(addedRole);
-                            dstDrive._dicRoles = null;
+                            dstDrive.Roles.ClearCache();
                         }
                         catch (Exception ex)
                         {

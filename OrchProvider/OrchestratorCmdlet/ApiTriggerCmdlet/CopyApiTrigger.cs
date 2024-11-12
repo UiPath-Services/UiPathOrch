@@ -56,7 +56,7 @@ namespace UiPath.PowerShell.Commands
                 {
                     // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
                     //srcDrive._dicHttpTriggers?.TryRemove(srcFolder.Id ?? 0, out _);
-                    var srcEntities = srcDrive.GetHttpTriggers(srcFolder).FilterByWildcards(e => e?.Name, wpName);
+                    var srcEntities = srcDrive.ApiTriggers.Get(srcFolder).FilterByWildcards(e => e?.Name, wpName);
                     if (!srcEntities.Any()) continue;
                 }
                 catch (Exception ex)
@@ -68,10 +68,9 @@ namespace UiPath.PowerShell.Commands
                 Folder? dstFolder = GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
                 if (dstFolder == null || (srcDrive == dstDrive && srcFolder == dstFolder)) continue;
 
-                srcDrive._dicReleases?.TryRemove(srcFolder.Id ?? 0, out _);
-                dstDrive._dicRobots = null;
-                dstDrive._dicReleases?.TryRemove(dstFolder.Id ?? 0, out _);
-                dstDrive._dicMachinesAssigned?.TryRemove(dstFolder.Id ?? 0, out _);
+                //srcDrive._dicReleases?.TryRemove(srcFolder.Id ?? 0, out _);
+                //dstDrive.Robots.ClearCache();
+                //dstDrive.FolderMachinesAssigned.ClearCache(dstFolder);
 
                 try
                 {
@@ -79,7 +78,7 @@ namespace UiPath.PowerShell.Commands
                         srcDrive, srcFolder, wpName!,
                         dstDrive, dstFolder, reporterApiTriggers,
                         cancelHandler.Token, false);
-                    dstDrive._dicHttpTriggers?.TryRemove(dstFolder.Id ?? 0, out _);
+                    dstDrive.ApiTriggers.ClearCache(dstFolder);
                 }
                 catch (OperationCanceledException)
                 {

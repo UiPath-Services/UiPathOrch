@@ -34,7 +34,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetMachinesAssignedToFolder(df.folder));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -63,7 +63,7 @@ namespace UiPath.PowerShell.Commands
             using var results = OrchThreadPool.RunForEach(drivesFolders,
                 df => df.folder.GetPSPath(),
                 df => df.folder,
-                df => df.drive.GetMachinesAssignedToFolder(df.folder));
+                df => df.drive.FolderMachinesAssigned.Get(df.folder));
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var result in results)
@@ -90,8 +90,8 @@ namespace UiPath.PowerShell.Commands
                             try
                             {
                                 drive.OrchAPISession.SetFolderMachineInherit(folder.Id!.Value, machine.Id!.Value, EnableInherit.Value);
-                                drive._dicMachinesAssigned?.TryRemove(folder.Id.Value, out _);
-                                drive._dicAssignedMachines?.TryRemove(folder.Id.Value, out _);
+                                // 本当は、このフォルダーとそのサブフォルダーのキャッシュだけをクリアすべきだが、
+                                drive.FolderMachinesAssigned.ClearCache();
                             }
                             catch (Exception ex)
                             {

@@ -38,7 +38,7 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var testSets = drive.GetTestSets(folder);
+                    var testSets = drive.TestSets.Get(folder);
              
                     foreach (var testSet in testSets
                         .FilterByWildcards(ts => ts?.Name, wpName)
@@ -51,7 +51,7 @@ namespace UiPath.PowerShell.Commands
                             try
                             {
                                 drive.OrchAPISession.RemoveTestSet(folder.Id ?? 0, testSet.Id ?? 0);
-                                drive._dicTestSets?.TryRemove(folder.Id ?? 0, out _);
+                                drive.TestSets.ClearCache(folder);
                             }
                             catch (Exception ex)
                             {

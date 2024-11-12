@@ -49,7 +49,7 @@ namespace UiPath.PowerShell.Commands
                             {
                                 drive.OrchAPISession.RemoveRelease(folder.Id ?? 0, proc.Id ?? 0);
                                 drive._dicReleases?.TryRemove(folder.Id ?? 0, out var _);
-                                drive._dicReleaseList?.TryRemove(folder.Id ?? 0, out var _);
+                                //drive._dicReleaseList?.TryRemove(folder.Id ?? 0, out var _);
                             }
                             catch (Exception ex)
                             {

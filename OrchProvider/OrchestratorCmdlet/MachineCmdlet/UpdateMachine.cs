@@ -94,7 +94,7 @@ namespace UiPath.PowerShell.Commands
                 // パラメータで選択済みの Id は、候補から除外する
                 var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Positional.Name.Parameters);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetMachines());
+                var results = ParallelResults.ForEach(drives, drive => drive.Machines.Get());
 
                 foreach (var result in results)
                 {
@@ -125,7 +125,7 @@ namespace UiPath.PowerShell.Commands
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var drive in drives)
             {
-                var existingMachines = drive.GetMachines();
+                var existingMachines = drive.Machines.Get();
                 var targetMachines = existingMachines.FilterByWildcards(m => m?.Name, wpName);
 
                 foreach (var machine in targetMachines.OrderBy(m => m.Name))
@@ -194,7 +194,7 @@ namespace UiPath.PowerShell.Commands
                             }
 
                             drive.OrchAPISession.PatchMachine(postingMachine);
-                            drive._dicExtendedMachines = null;
+                            drive.Machines.ClearCache();
                         }
                         catch (Exception ex)
                         {

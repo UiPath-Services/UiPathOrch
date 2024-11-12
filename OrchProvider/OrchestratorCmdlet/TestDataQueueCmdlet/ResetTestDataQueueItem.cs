@@ -40,7 +40,7 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var queues = drive.GetTestDataQueues(folder);
+                    var queues = drive.TestDataQueues.Get(folder);
                     foreach (var queue in queues
                         .FilterByWildcards(e => e?.Name, wpName)
                         .OrderBy(e => e.Name))

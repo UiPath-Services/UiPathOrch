@@ -14,9 +14,11 @@ Gets the queue items.
 
 ```
 Get-OrchQueueItem [[-Name] <String[]>] [-Status <String[]>] [-Revision <String[]>] [-Priority <String[]>]
- [-Exception <String[]>] [-Robot <String[]>] [-Reviewer <String[]>] [-Skip <UInt64>] [-First <UInt64>]
- [-OrderBy <String>] [-OrderAscending] [-Path <String[]>] [-Recurse] [-Depth <UInt32>]
- [-ProgressAction <ActionPreference>] [<CommonParameters>]
+ [-Exception <String[]>] [-Robot <String[]>] [-Reviewer <String[]>] [-DueDateAfter <DateTime>]
+ [-DueDateBefore <DateTime>] [-DeferDateAfter <DateTime>] [-DeferDateBefore <DateTime>]
+ [-StartProcessingAfter <DateTime>] [-StartProcessingBefore <DateTime>] [-EndProcessingAfter <DateTime>]
+ [-EndProcessingBefore <DateTime>] [-Skip <Int32>] [-First <Int32>] [-OrderBy <String>] [-OrderAscending]
+ [-Path <String[]>] [-Recurse] [-Depth <UInt32>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -89,7 +91,7 @@ Ignores the specified number of objects and then gets the remaining objects.
 Enter the number of objects to skip.
 
 ```yaml
-Type: UInt64
+Type: Int32
 Parameter Sets: (All)
 Aliases:
 
@@ -105,7 +107,7 @@ Gets only the specified number of objects.
 Enter the number of objects to get.
 
 ```yaml
-Type: UInt64
+Type: Int32
 Parameter Sets: (All)
 Aliases:
 
@@ -256,6 +258,126 @@ Accept wildcard characters: False
 
 ```yaml
 Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -DeferDateAfter
+{{ Fill DeferDateAfter Description }}
+
+```yaml
+Type: DateTime
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -DeferDateBefore
+{{ Fill DeferDateBefore Description }}
+
+```yaml
+Type: DateTime
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -DueDateAfter
+{{ Fill DueDateAfter Description }}
+
+```yaml
+Type: DateTime
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -DueDateBefore
+{{ Fill DueDateBefore Description }}
+
+```yaml
+Type: DateTime
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -EndProcessingAfter
+{{ Fill EndProcessingAfter Description }}
+
+```yaml
+Type: DateTime
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -EndProcessingBefore
+{{ Fill EndProcessingBefore Description }}
+
+```yaml
+Type: DateTime
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -StartProcessingAfter
+{{ Fill StartProcessingAfter Description }}
+
+```yaml
+Type: DateTime
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -StartProcessingBefore
+{{ Fill StartProcessingBefore Description }}
+
+```yaml
+Type: DateTime
 Parameter Sets: (All)
 Aliases:
 

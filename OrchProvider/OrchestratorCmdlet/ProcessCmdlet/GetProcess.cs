@@ -83,7 +83,7 @@ namespace UiPath.PowerShell.Commands
 
                 if ((drive != null) && (folder != null))
                 {
-                    var buckets = drive.GetBuckets(folder);
+                    var buckets = drive.Buckets.Get(folder);
                     var bucket = buckets.FirstOrDefault(b => b.Id == release.RetentionBucketId);
                     if (bucket != null)
                     {
@@ -195,7 +195,7 @@ namespace UiPath.PowerShell.Commands
 
                             if (releaseDetailed.EntryPointId != null)
                             {
-                                var feedId = drive.GetFolderFeedId(folder);
+                                var feedId = drive.FolderFeedId.Get(folder);
                                 var entryPoints = drive.GetPackageEntryPoints(feedId, releaseDetailed.Name!, releaseDetailed.ProcessVersion!);
                                 var entryPath = entryPoints.FirstOrDefault(e => e.Id == releaseDetailed.EntryPointId)?.Path;
                                 releaseDetailed.EntryPointPath = entryPath;

@@ -128,7 +128,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetRoles());
+                var results = ParallelResults.ForEach(drives, drive => drive.Roles.Get());
 
                 foreach (var result in results)
                 {
@@ -230,7 +230,7 @@ namespace UiPath.PowerShell.Commands
                             List<Entities.Role> roles = null;
                             try
                             {
-                                roles = drive.GetRoles()
+                                roles = drive.Roles.Get()
                                     .Where(r => r.Type != "Folder")
                                     .SelectByWildcards(r => r?.Name, wpRoles)
                                     .ToList();
@@ -266,7 +266,7 @@ namespace UiPath.PowerShell.Commands
                             if (!string.IsNullOrEmpty(UR_CredentialStore))
                             {
                                 //var wpCredentialStore = new WildcardPattern(UR_CredentialStore, WildcardOptions.IgnoreCase);
-                                var credentialStores = drive.GetCredentialStores();
+                                var credentialStores = drive.CredentialStores.Get();
                                 var targetCredentialStore = credentialStores.FirstOrDefault(cs => string.Compare(cs.Name, UR_CredentialStore, true) == 0);
 
                                 if (targetCredentialStore == null)

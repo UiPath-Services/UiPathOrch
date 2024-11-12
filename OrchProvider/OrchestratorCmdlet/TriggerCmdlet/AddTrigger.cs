@@ -236,7 +236,7 @@ namespace UiPath.PowerShell.Commands
                     #region QueueDefinitionName を QueueDefinitionId に変換
                     schedule.AssignIdFromName(
                         QueueDefinitionName,
-                        () => drive.GetQueues(folder),
+                        () => drive.Queues.Get(folder),
                         e => e.Name!,
                         e => e.Id!,
                         (s, v) => s.QueueDefinitionId = v,
@@ -266,8 +266,8 @@ namespace UiPath.PowerShell.Commands
 
                         List<MachineRobotSession> targets = [];
 
-                        var robots = drive.GetRobots();
-                        var machines = drive.GetMachines();
+                        var robots = drive.Robots.Get();
+                        var machines = drive.Machines.Get();
                         var sessions = drive.GetMachineSessionRuntimesByFolderId(folder);
 
                         foreach (var mrs in mrss ?? [])
@@ -311,9 +311,9 @@ namespace UiPath.PowerShell.Commands
                                 created.Path = folder.Path;
                                 WriteObject(created);
                                 drive._dicTriggers?.TryRemove(folder.Id.Value, out _);
-                                drive._dicProcessSchedules_Exceptions.ClearCache();
-                                drive._dicProcessScheduleDetailed?.TryRemove(folder.Id.Value, out _);
-                                drive._dicProcessScheduleDetailed_Exceptions.ClearCache();
+                                drive._dicTriggers_Exceptions.ClearCache();
+                                drive._dicTriggersDetailed?.TryRemove(folder.Id.Value, out _);
+                                drive._dicTriggersDetailed_Exceptions.ClearCache();
                             }
                         }
                         catch (Exception ex)

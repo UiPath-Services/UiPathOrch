@@ -35,7 +35,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetWebhooks());
+                var results = ParallelResults.ForEach(drives, drive => drive.Webhooks.Get());
 
                 foreach (var result in results)
                 {
@@ -65,7 +65,7 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var webhooks = drive.GetWebhooks();
+                    var webhooks = drive.Webhooks.Get();
 
                     foreach (var webhook in webhooks
                         .Where(e => Enable.Value

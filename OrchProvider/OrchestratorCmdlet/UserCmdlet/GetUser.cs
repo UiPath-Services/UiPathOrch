@@ -112,7 +112,7 @@ namespace UiPath.PowerShell.Commands
             string ur_credentialStore = null;
             if (p.UnattendedRobot?.CredentialStoreId != null)
             {
-                var credentialStores = drive.GetCredentialStores();
+                var credentialStores = drive.CredentialStores.Get();
                 var credentialStore = credentialStores.FirstOrDefault(c => c.Id == p.UnattendedRobot.CredentialStoreId);
                 ur_credentialStore = credentialStore?.Name;
             }

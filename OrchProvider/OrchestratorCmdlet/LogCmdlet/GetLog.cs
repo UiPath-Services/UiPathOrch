@@ -119,7 +119,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetAssignedMachines(df.folder));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -153,7 +153,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetUserRobots(df.folder));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.UserRobots.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -243,7 +243,7 @@ namespace UiPath.PowerShell.Commands
             #region Machine
             if (!string.IsNullOrEmpty(Machine))
             {
-                var machines = drive.GetAssignedMachines(folder);
+                var machines = drive.FolderMachinesAssigned.Get(folder);
                 filter.AddIfNotNull(machines
                     //.SelectByWildcards(m => m?.Name, Machine)
                     .Where(m => string.Compare(m?.Name, WildcardPattern.Unescape(Machine), StringComparison.OrdinalIgnoreCase) == 0)
@@ -254,7 +254,7 @@ namespace UiPath.PowerShell.Commands
             #region HostIdentity
             if (WindowsIdentity != null)
             {
-                var userRobots = drive.GetUserRobots(folder);
+                var userRobots = drive.UserRobots.Get(folder);
                 filter.AddIfNotNull(userRobots
                     .SelectByWildcards(u => u?.UserName, WindowsIdentity)
                     .Where(u => u.RobotNames != null)
@@ -265,14 +265,14 @@ namespace UiPath.PowerShell.Commands
             #endregion
 
             string ret = filter.CreateAndFilter(f => f);
-            ret = "&$filter=(" + ret + ")";
+            ret = $"&$filter={ret}";
             return ret;
         }
 
         protected override void ProcessRecord()
         {
+            ulong first = First ?? ulong.MaxValue;
             ulong skip = Skip ?? 0;
-
             if (string.IsNullOrEmpty(OrderBy)) OrderBy = "TimeStamp";
 
             // すべてのパラメータが指定されていなければ、キャッシュの内容を返す
@@ -316,56 +316,22 @@ namespace UiPath.PowerShell.Commands
                 return;
             }
 
-            string msg = $"Get Log";
+            string msg = "Get Log";
             using ProgressReporter reporter = new(this, 1, drivesFolders.Count, msg, msg);
             int index = 0;
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (drive, folder) in drivesFolders)
             {
-                ulong first = First ?? ulong.MaxValue; // first は、フォルダごとにリセットする
+                cancelHandler.Token.ThrowIfCancellationRequested();
+
                 reporter.WriteProgress(++index, $"{index:D}/{drivesFolders.Count} {folder.GetPSPath()}");
+                string query = MakeFilter(drive, folder);
+                if (query == "null") continue;
+
                 try
                 {
-                    string query = MakeFilter(drive, folder);
-                    if (query == "null") continue;
-
-                    var first2 = ulong.Min(10000, first);
-                    var logs = drive.GetRobotLogs(folder, query, skip, first2, OrderBy, OrderAscending.IsPresent);
+                    var logs = drive.GetRobotLogs(folder, query, skip, first, OrderBy, OrderAscending.IsPresent);
                     WriteObject(logs, true);
-
-                    first -= first2;
-                    while (logs.Count == 10000)
-                    {
-                        cancelHandler.Token.ThrowIfCancellationRequested();
-
-                        var lastLog = logs.LastOrDefault();
-                        if (lastLog == null) continue;
-
-                        first2 = ulong.Min(10000, first);
-                        if (OrderBy == "TimeStamp")
-                        {
-                            if (OrderAscending.IsPresent)
-                                TimeStampAfter = lastLog.TimeStamp?.ToLocalTime();
-                            else
-                                TimeStampBefore = lastLog.TimeStamp?.ToLocalTime();
-                        }
-                        else if (OrderBy == "Level")
-                        {
-                            WriteError(new ErrorRecord(
-                                new InvalidOperationException("When 'Level' is specified in the -OrderBy parameter, logs exceeding 10,000 rows cannot be retrieved."),
-                                "LogRetrievalLimitExceeded",
-                                ErrorCategory.InvalidOperation,
-                                null
-                            ));
-
-                            break;
-                        }
-
-                        query = MakeFilter(drive, folder);
-                        logs = drive.GetRobotLogs(folder, query, 0, first2, OrderBy, OrderAscending.IsPresent);
-                        WriteObject(logs, true);
-                        first -= first2;
-                    }
                 }
                 catch (Exception ex)
                 {

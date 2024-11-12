@@ -178,7 +178,7 @@ namespace UiPath.PowerShell.Commands
                 var (drive, group) = parameterSet.Key;
                 var codesToAdd = parameterSet.Value;
 
-                var existingLicensedGroup = drive.GetPmLicensedGroups();
+                var existingLicensedGroup = drive.PmLicensedGroups.Get();
                 var targetGroup = existingLicensedGroup.FirstOrDefault(g => g.id == group.identifier);
 
                 var existingSet = new HashSet<string>(targetGroup?.userBundleLicenses ?? []);
@@ -209,7 +209,7 @@ namespace UiPath.PowerShell.Commands
                             ret.userBundleLicenseNames = ret.userBundleCodes?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
                             WriteObject(ret);
                         }
-                        drive._dicPmLicensedGroups = null;
+                        drive.PmLicensedGroups.ClearCache();
                         drive._dicPmUserLicenseGroupAllocations = null;
                         drive._dicPmAvailableUserBundles = null;
                     }

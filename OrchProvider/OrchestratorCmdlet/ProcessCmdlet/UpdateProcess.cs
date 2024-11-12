@@ -212,7 +212,7 @@ namespace UiPath.PowerShell.Commands
                 {
                     var processes = drive.GetReleases(folder);
                     var targetProcesses = processes.SelectByWildcards(p => p?.Name, wpName);
-                    var feedId = drive.GetFolderFeedId(folder);
+                    var feedId = drive.FolderFeedId.Get(folder);
                     foreach (var p in targetProcesses)
                     {
                         var searchVersion = (!string.IsNullOrEmpty(paramVersion)) ? paramVersion : p.ProcessVersion;
@@ -389,7 +389,7 @@ namespace UiPath.PowerShell.Commands
                     #region RetentionBucket を RetentionBucketId に変換する
                     newRelease.AssignIdFromName(
                         RetentionBucket,
-                        () => drive.GetBuckets(folder),
+                        () => drive.Buckets.Get(folder),
                         e => e.Name!,
                         e => e.Id!,
                         (s, v) => s.RetentionBucketId = v,
@@ -422,7 +422,7 @@ namespace UiPath.PowerShell.Commands
                     {
                         try
                         {
-                            var feedId = drive.GetFolderFeedId(folder);
+                            var feedId = drive.FolderFeedId.Get(folder);
                             // Version を変更したけど、EntryPoint は指定していない場合には、現在の entryPointPath を確認しないと。
                             if (bVersionChanged && string.IsNullOrEmpty(EntryPoint))
                             {
@@ -463,7 +463,7 @@ namespace UiPath.PowerShell.Commands
                         {
                             drive.OrchAPISession.EditRelease(folder.Id!.Value, newRelease);
                             drive._dicReleases?.TryRemove(folder.Id ?? 0, out var _);
-                            drive._dicReleaseList?.TryRemove(folder.Id ?? 0, out var _);
+                            //drive._dicReleaseList?.TryRemove(folder.Id ?? 0, out var _);
                         }
                         catch (Exception ex)
                         {

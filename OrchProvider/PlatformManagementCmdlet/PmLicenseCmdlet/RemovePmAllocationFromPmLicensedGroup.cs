@@ -44,7 +44,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetPmLicensedGroups());
+                var results = ParallelResults.ForEach(drives, drive => drive.PmLicensedGroups.Get());
 
                 foreach (var result in results)
                 {
@@ -80,7 +80,7 @@ namespace UiPath.PowerShell.Commands
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var drive in drives)
             {
-                var groups = drive.GetPmLicensedGroups();
+                var groups = drive.PmLicensedGroups.Get();
 
                 var targetGroups = groups.FilterByWildcards(g => g?.name, wpGroupName);
 

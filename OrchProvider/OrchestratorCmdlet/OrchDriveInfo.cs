@@ -1,15 +1,11 @@
 ﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Management.Automation;
-using System.Text.Json.Nodes;
-using System.Threading.Tasks.Dataflow;
 using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Entities.JsonConverter;
 using UiPath.PowerShell.Positional;
-using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 using Job = UiPath.PowerShell.Entities.Job;
 using License = UiPath.PowerShell.Entities.License;
 using Path = System.IO.Path;
@@ -278,7 +274,7 @@ namespace UiPath.PowerShell.Core
 
             if (ret == null || ret.Count == 0)
             {
-                throw new Exception("Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.");
+                throw new Exception("Use Set-Location cmdlet (alias: cd) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.");
             }
             return ret.OrderBy(df => df.folder.FullyQualifiedNameOrderable).ToList();
         }
@@ -449,35 +445,22 @@ namespace UiPath.PowerShell.Core
 
         public void ClearAllCache()
         {
+            foreach (var cache in _cacheItems)
+            {
+                cache.ClearCache();
+            }
+
             #region Orchestrator API cache
             _dicFolders = null;
-
-            _dicActivitySettings = null;
-            _dicActivitySettings_Exception.ClearCache();
-
-            _dicAssets = null;
-            _dicAssets_Exceptions?.ClearCache();
 
             _dicAssetLinks = null;
             _dicAssetLinks_Exception.ClearCache();
 
-            _dicAssignedMachines = null;
-            _dicAssignedMachines_Exceptions.ClearCache();
-
             _dicAuditLogs = null;
             _dicAuditLogs_Exceptions.ClearCache();
 
-            _dicAuthenticationSettings = null;
-            _dicAuthenticationSettings_Exception.ClearCache();
-
-            _dicAvailableVersions = null;
-            _dicAvailableVersions_Exception.ClearCache();
-
             _dicBlobFiles = null;
             _dicBlobFiles_Exceptions?.ClearCache();
-
-            _dicBuckets = null;
-            _dicBuckets_Exceptions?.ClearCache();
 
             _dicBucketLinks = null;
             _dicBucketLinks_Exceptions?.ClearCache();
@@ -485,28 +468,11 @@ namespace UiPath.PowerShell.Core
             _dicCalendars = null;
             _dicCalendars_Exceptions?.ClearCache();
 
-            _dicConnectionString = null;
-            _dicConnectionString_Exception.ClearCache();
-
-            _dicCredentialStores = null;
-            _dicCredentialStores_Exceptions?.ClearCache();
-
             _dicCurrentUser = null;
             _dicCurrentUser_Exception?.ClearCache();
 
             _dicEntitiesSummary = null;
             _dicEntitiesSummary_Exceptions?.ClearCache();
-
-            _dicEnvironments = null;
-            _dicEnvironments_Exceptions.ClearCache();
-
-            _dicExtendedMachines = null;
-            _dicExtendedMachines_Exception?.ClearCache();
-
-            _dicFolderFeedIds = null; // これはクリアする必要ないけど、いちおうクリアしちゃうか。。
-
-            _dicHttpTriggers = null;
-            _dicHttpTriggers_Exceptions?.ClearCache();
 
             _dicJobs = null;
 
@@ -517,24 +483,12 @@ namespace UiPath.PowerShell.Core
 
             _dicLibraryVersions = null; // 例外が発生するとしたら、_dicLibraries 取得時に発生しているはずだから、まあいいか。。
 
-            _dicLicense = null;
-            _dicLicense_Exception?.ClearCache();
-
             _dicLicenseNamedUser = null; // TODO: 例外キャッシュを追加
 
             _dicLicenseRuntime = null; // TODO: 例外キャッシュを追加
 
-            _dicMachinesAssignable = null;
-            _dicMachinesAssignable_Exceptions?.ClearCache();
-
-            _dicMachinesAssigned = null;
-            _dicMachinesAssigned_Exceptions?.ClearCache();
-
             _dicMachineClientSecrets = null;
             _dicMachineClientSecrets_Exception.ClearCache();
-
-            _dicMachineSessionRuntimes = null;
-            _dicMachineSessionRuntimes_Exception?.ClearCache();
 
             _dicMachineSessionRuntimesByFolder = null;
             _dicMachineSessionRuntimesByFolder_Exceptions?.ClearCache();
@@ -549,23 +503,17 @@ namespace UiPath.PowerShell.Core
 
             _dicPartitionGlobalId = null;
 
-            _dicPersonalWorkspaces = null;
-            _dicPersonalWorkspaces_Exception?.ClearCache();
-
             _dicTriggers = null;
-            _dicProcessSchedules_Exceptions?.ClearCache();
+            _dicTriggers_Exceptions?.ClearCache();
 
-            _dicProcessScheduleDetailed = null;
-            _dicProcessScheduleDetailed_Exceptions.ClearCache();
-
-            _dicQueueDefinitions = null;
-            _dicQueueDefinitions_Exceptions?.ClearCache();
+            _dicTriggersDetailed = null;
+            _dicTriggersDetailed_Exceptions.ClearCache();
 
             _dicQueueLinks = null; // TODO: 例外キャッシュを追加
             _dicQueueItems = null;
 
-            _dicReleaseList = null;
-            _dicReleaseList_Exceptions?.ClearCache();
+            //_dicReleaseList = null;
+            //_dicReleaseList_Exceptions?.ClearCache();
 
             _dicReleases = null;
             _dicReleases_Exceptions?.ClearCache();
@@ -573,57 +521,18 @@ namespace UiPath.PowerShell.Core
             _dicReleasesDetailed = null;
             _dicReleasesDetailed_Exceptions.ClearCache();
 
-            _dicReviewer = null;
-            _dicReviewer_Exceptions?.ClearCache();
-
-            _dicRobots = null;
-            _dicRobots_Exception?.ClearCache();
-
-            _dicRobotsFromFolder = null;
-            _dicRobotsFromFolder_Exceptions.ClearCache();
-
             _dicRobotLogs = null;
-
-            _dicRoles = null;
-            _dicRoles_Exception?.ClearCache();
 
             _dicSearchForUsersAndGroups = null;
             _dicSearchForUsersAndGroups_Exception.ClearCache();
 
-            _dicSessions = null;
-            _dicSessions_Exceptions.ClearCache();
-
-            _dicSettings = null;
-            _dicSettings_Exception?.ClearCache();
-
-            _dicTaskCatalog = null;
-            _dicTaskCatalog_Exceptions?.ClearCache();
-
             _dicTenantId = null;
             _dicTenantKey = null;
 
-            _dicTestCases = null;
-            _dicTestCases_Exceptions?.ClearCache();
-
-            _dicTestCaseExecutions = null;
-            _dicTestCaseExecutions_Exceptions.ClearCache();
-
-            _dicTestDataQueues = null;
-            _dicTestDataQueues_Exceptions?.ClearCache();
-
             _dicTestDataQueueItems = null;
-
-            _dicTestSets = null;
-            _dicTestSets_Exceptions?.ClearCache();
 
             _dicTestSetExecutions = null;
             _dicTestSetExecutions_Exceptions?.ClearCache();
-
-            _dicTestSetSchedules = null;
-            _dicTestSetSchedules_Exceptions?.ClearCache();
-
-            _dicUpdateSettings = null;
-            _dicUpdateSettings_Exception.ClearCache();
 
             _dicUserRoles = null;
             _dicUserRoles_Exceptions?.ClearCache();
@@ -632,12 +541,6 @@ namespace UiPath.PowerShell.Core
             _dicUsers_Exception?.ClearCache();
 
             _dicUsersDetailed = null;
-
-            _dicWebhooks = null;
-            _dicWebhooks_Exceptions?.ClearCache();
-
-            _dicWebSettings = null;
-            _dicWebSettings_Exception.ClearCache();
             #endregion
 
             #region Platform Management cache
@@ -668,12 +571,6 @@ namespace UiPath.PowerShell.Core
             _dicPmUsers = null;
             _dicPmUsers_Exception?.ClearCache();
 
-            _dicPmLicensedUsers = null;
-            _dicPmLicensedUsers_Exceptions.ClearCache();
-
-            _dicPmLicensedGroups = null;
-            _dicPmLicensedGroups_Exceptions.ClearCache();
-
             _dicPmUserLicenseGroupAllocations = null;
             _dicPmUserLicenseGroupAllocations_Exceptions.ClearCache();
 
@@ -689,41 +586,23 @@ namespace UiPath.PowerShell.Core
             if (folder == null || folder.Id == null || folder.Id.Value == 0) return;
             Int64 folderId = folder.Id.Value;
 
-            _dicAssets?.TryRemove(folderId, out _);
-            _dicAssetLinks = null; // TODO: もっとかしこく必要な部分だけクリアしたいが、、面倒くさい
-            _dicFolderFeedIds?.TryRemove(folderId, out _);
-            _dicHttpTriggers?.TryRemove(folderId, out _);
+            //_dicAssetLinks = null; // TODO: もっとかしこく必要な部分だけクリアしたいが、、面倒くさい
             _dicJobs?.TryRemove(folderId, out _);
             _dicJobsHavingExecutionMedia?.TryRemove(folderId, out _);
-            _dicMachinesAssignable?.TryRemove(folderId, out _);
-            _dicMachinesAssigned?.TryRemove(folderId, out _);
             _dicTriggers?.TryRemove(folderId, out _);
-            _dicQueueDefinitions?.TryRemove(folderId, out _);
             _dicQueueLinks = null;
             _dicReleases?.TryRemove(folderId, out _);
-            _dicReleaseList?.TryRemove(folderId, out _);
-            _dicTestCases?.TryRemove(folderId, out _);
-            _dicTestSets?.TryRemove(folderId, out _);
+            //_dicReleaseList?.TryRemove(folderId, out _);
             _dicTestSetExecutions?.TryRemove(folderId, out _);
             _dicUserRoles?.TryRemove((folderId, false), out _);
             _dicUserRoles?.TryRemove((folderId, true), out _);
 
-            _dicAssets_Exceptions?.ClearCache();
-            _dicBuckets_Exceptions?.ClearCache();
             _dicEntitiesSummary_Exceptions?.ClearCache();
-            _dicHttpTriggers_Exceptions?.ClearCache();
-            _dicMachinesAssignable_Exceptions?.ClearCache();
-            _dicMachinesAssigned_Exceptions?.ClearCache();
             _dicPackages_Exceptions?.ClearCache();
-            _dicProcessSchedules_Exceptions?.ClearCache();
-            _dicQueueDefinitions_Exceptions?.ClearCache();
-            _dicReleaseList_Exceptions?.ClearCache();
+            _dicTriggers_Exceptions?.ClearCache();
+            //_dicReleaseList_Exceptions?.ClearCache();
             _dicReleases_Exceptions?.ClearCache();
-            _dicTestCases_Exceptions?.ClearCache();
-            _dicTestDataQueues_Exceptions?.ClearCache();
             _dicTestSetExecutions_Exceptions?.ClearCache();
-            _dicTestSetSchedules_Exceptions?.ClearCache();
-            _dicTestSets_Exceptions?.ClearCache();
             _dicUserRoles_Exceptions?.ClearCache();
         }
 
@@ -962,8 +841,8 @@ namespace UiPath.PowerShell.Core
         // この API は非公開であり、古いバージョンの Orchestrator では動かない場合があるようだ。
         // そのため、しばらく封印する。
         // Key: folderId
-        internal ConcurrentDictionary<Int64, List<Release>>? _dicReleaseList;
-        internal ExceptionsCachePer<Int64> _dicReleaseList_Exceptions = new();
+        //internal ConcurrentDictionary<Int64, List<Release>>? _dicReleaseList;
+        //internal ExceptionsCachePer<Int64> _dicReleaseList_Exceptions = new();
         //public ReadOnlyCollection<Release> ListReleases(Folder folder)
         //{
         //    _dicReleaseList_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
@@ -1167,59 +1046,7 @@ namespace UiPath.PowerShell.Core
             return (_dicTenantId, _dicTenantKey);
         }
 
-        #region GetAvailableVersions cache
-        internal string[]? _dicAvailableVersions = null;
-        internal readonly ExceptionCachePerTenant _dicAvailableVersions_Exception = new();
-        public string[]? GetAvailableVersions()
-        {
-            _dicAvailableVersions_Exception.ThrowCachedExceptionIfAny();
-
-            if (_dicAvailableVersions == null)
-            {
-                try
-                {
-                    var av = OrchAPISession.GetAvailableVersions();
-                    _dicAvailableVersions = av?.availableVersions;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicAvailableVersions_Exception.CacheException(ex);
-                    throw;
-                }
-            }
-            return _dicAvailableVersions;
-        }
-        #endregion
-
         #region PersonalWorkspace cache
-        // no need to be multi-threaded
-        internal List<PersonalWorkspace>? _dicPersonalWorkspaces = null;
-        internal readonly ExceptionCachePerTenant _dicPersonalWorkspaces_Exception = new();
-        public ReadOnlyCollection<PersonalWorkspace> GetPersonalWorkspaces()
-        {
-            _dicPersonalWorkspaces_Exception.ThrowCachedExceptionIfAny();
-
-            if (_dicPersonalWorkspaces == null)
-            {
-                try
-                {
-                    _dicPersonalWorkspaces = OrchAPISession.GetPersonalWorkspaces().ToList();
-                    foreach (var pw in _dicPersonalWorkspaces)
-                    {
-                        pw.Path = NameColonSeparator;
-                    }
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicPersonalWorkspaces_Exception.CacheException(ex);
-                    throw;
-                }
-            }
-            return _dicPersonalWorkspaces.AsReadOnly();
-        }
-
-        internal List<PersonalWorkspace>? _dicPersonalWorkspacesExploringAvailable = null;
-
         public bool DisablePersonalWorkspace(long? userId)
         {
             if (userId == null) return false;
@@ -1357,17 +1184,17 @@ namespace UiPath.PowerShell.Core
         }
         #endregion
 
-        #region OrchProcessSchedule cache
+        #region OrchTrigger cache
         // key: foldlerId
         internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, ProcessSchedule>>? _dicTriggers = null;
-        internal ExceptionsCachePer<Int64> _dicProcessSchedules_Exceptions = new();
+        internal ExceptionsCachePer<Int64> _dicTriggers_Exceptions = new();
         public ICollection<ProcessSchedule> GetTriggers(Folder folder)
         {
-            _dicProcessSchedules_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
+            _dicTriggers_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
 
             if (_dicTriggers == null)
             {
-                lock (_dicProcessSchedules_Exceptions)
+                lock (_dicTriggers_Exceptions)
                 {
                     _dicTriggers ??= [];
                 }
@@ -1388,7 +1215,7 @@ namespace UiPath.PowerShell.Core
                 }
                 catch (HttpResponseException ex)
                 {
-                    _dicProcessSchedules_Exceptions.CacheException(folder.Id ?? 0, ex);
+                    _dicTriggers_Exceptions.CacheException(folder.Id ?? 0, ex);
                     throw;
                 }
             }
@@ -1396,28 +1223,28 @@ namespace UiPath.PowerShell.Core
         }
         #endregion
 
-        internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, ProcessSchedule>>? _dicProcessScheduleDetailed = null;
-        internal ExceptionsCachePer<(Int64, Int64)> _dicProcessScheduleDetailed_Exceptions = new();
-        public ProcessSchedule? GetProcessSchedule(Folder folder, ProcessSchedule schedule)
+        internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, ProcessSchedule>>? _dicTriggersDetailed = null;
+        internal ExceptionsCachePer<(Int64, Int64)> _dicTriggersDetailed_Exceptions = new();
+        public ProcessSchedule? GetTrigger(Folder folder, ProcessSchedule schedule)
         {
-            _dicProcessScheduleDetailed_Exceptions.ThrowCachedExceptionIfAny((folder.Id ?? 0, schedule.Id ?? 0));
+            _dicTriggersDetailed_Exceptions.ThrowCachedExceptionIfAny((folder.Id ?? 0, schedule.Id ?? 0));
 
-            if (_dicProcessScheduleDetailed == null)
+            if (_dicTriggersDetailed == null)
             {
-                lock (_dicProcessScheduleDetailed_Exceptions)
+                lock (_dicTriggersDetailed_Exceptions)
                 {
-                    _dicProcessScheduleDetailed ??= [];
+                    _dicTriggersDetailed ??= [];
                 }
             }
 
-            if (!_dicProcessScheduleDetailed.TryGetValue(folder.Id ?? 0, out var detailedTriggersPerFolder))
+            if (!_dicTriggersDetailed.TryGetValue(folder.Id ?? 0, out var detailedTriggersPerFolder))
             {
                 lock (folder)
                 {
-                    if (!_dicProcessScheduleDetailed.TryGetValue(folder.Id ?? 0, out detailedTriggersPerFolder))
+                    if (!_dicTriggersDetailed.TryGetValue(folder.Id ?? 0, out detailedTriggersPerFolder))
                     {
                         detailedTriggersPerFolder = [];
-                        _dicProcessScheduleDetailed[folder.Id!.Value] = detailedTriggersPerFolder;
+                        _dicTriggersDetailed[folder.Id!.Value] = detailedTriggersPerFolder;
                     }
                 }
             }
@@ -1440,57 +1267,12 @@ namespace UiPath.PowerShell.Core
                 }
                 catch (HttpResponseException ex)
                 {
-                    _dicProcessScheduleDetailed_Exceptions.CacheException((folder.Id ?? 0, schedule.Id ?? 0), ex);
+                    _dicTriggersDetailed_Exceptions.CacheException((folder.Id ?? 0, schedule.Id ?? 0), ex);
                     throw;
                 }
             }
             return detailedTrigger;
         }
-
-        #region OrchHttpTrigger cache
-        internal ConcurrentDictionary<Int64, List<HttpTrigger>>? _dicHttpTriggers = null;
-        internal ExceptionsCachePer<Int64> _dicHttpTriggers_Exceptions = new();
-        private ReadOnlyCollection<HttpTrigger>? _dicHttpTriggersEmpty = null;
-        public ReadOnlyCollection<HttpTrigger> GetHttpTriggers(Folder folder)
-        {
-            // TODO: 16 未満の数字は正しいか？ 15.0 では、取得がエラーになることは確認済みだが、
-            if (OrchAPISession.ApiVersion < 16)
-            {
-                _dicHttpTriggersEmpty ??= new List<HttpTrigger>().AsReadOnly();
-                return _dicHttpTriggersEmpty;
-            }
-
-            _dicHttpTriggers_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-            if (_dicHttpTriggers == null)
-            {
-                lock (_dicHttpTriggers_Exceptions)
-                {
-                    _dicHttpTriggers ??= new ConcurrentDictionary<Int64, List<HttpTrigger>>();
-                }
-            }
-            if (!_dicHttpTriggers.TryGetValue(folder.Id ?? 0, out List<HttpTrigger> triggers))
-            {
-                try
-                {
-                    triggers = OrchAPISession.GetHttpTriggers(folder.Id ?? 0).ToList();
-                    string folderPath = folder.GetPSPath();
-                    foreach (var trigger in triggers)
-                    {
-                        trigger.Path = folderPath;
-                    }
-                    _dicHttpTriggers[folder.Id ?? 0] = triggers;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicHttpTriggers_Exceptions.CacheException(folder.Id ?? 0, ex);
-                    throw;
-                }
-            }
-            return triggers.AsReadOnly();
-        }
-
-        #endregion
 
         #region OrchFolderUser cache
         // Key: folderId, includeInherited
@@ -1530,201 +1312,7 @@ namespace UiPath.PowerShell.Core
         }
         #endregion
 
-        #region OrchFolderMachine cache
-        // Key: folderId
-        internal ConcurrentDictionary<Int64, List<MachineFolder>>? _dicMachinesAssigned = null;
-        internal ExceptionsCachePer<Int64> _dicMachinesAssigned_Exceptions = new();
-        public ReadOnlyCollection<MachineFolder> GetMachinesAssignedToFolder(Folder folder)
-        {
-            _dicMachinesAssigned_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-            if (_dicMachinesAssigned == null)
-            {
-                lock (_dicMachinesAssigned_Exceptions)
-                {
-                    _dicMachinesAssigned ??= new ConcurrentDictionary<Int64, List<MachineFolder>>();
-                }
-            }
-            if (!_dicMachinesAssigned.TryGetValue(folder.Id ?? 0, out List<MachineFolder> machines))
-            {
-                try
-                {
-                    string query = null;
-                    if (OrchAPISession.ApiVersion >= 12)
-                    {
-                        query = "&$filter=((IsAssignedToFolder eq true) or (IsInherited eq true))";
-                    }
-                    else
-                    {
-                        query = "&$filter=(IsAssignedToFolder eq true)";
-                    }
-                    machines = OrchAPISession.GetMachinesAssignedTo(folder.Id ?? 0, query).ToList();
-                    string folderPath = folder.GetPSPath();
-                    foreach (var machine in machines)
-                    {
-                        machine.Path = folderPath;
-                    }
-                    _dicMachinesAssigned[folder.Id ?? 0] = machines;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicMachinesAssigned_Exceptions.CacheException(folder.Id ?? 0, ex);
-                    throw;
-                }
-            }
-            return machines.AsReadOnly();
-        }
-
-        // Key: folderId
-        internal ConcurrentDictionary<Int64, List<MachineFolder>>? _dicMachinesAssignable = null;
-        internal ExceptionsCachePer<Int64> _dicMachinesAssignable_Exceptions = new();
-        public ReadOnlyCollection<MachineFolder> GetMachinesAssignableToFolder(Folder folder)
-        {
-            _dicMachinesAssignable_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-            if (_dicMachinesAssignable == null)
-            {
-                lock (_dicMachinesAssignable_Exceptions)
-                {
-                    _dicMachinesAssignable ??= new ConcurrentDictionary<Int64, List<MachineFolder>>();
-                }
-            }
-            if (!_dicMachinesAssignable.TryGetValue(folder.Id ?? 0, out List<MachineFolder> machines))
-            {
-                try
-                {
-                    machines = OrchAPISession.GetMachinesAssignableTo(folder.Id ?? 0).ToList();
-                    string folderPath = folder.GetPSPath();
-                    foreach (var machine in machines)
-                    {
-                        machine.Path = folderPath;
-                    }
-                    _dicMachinesAssignable[folder.Id ?? 0] = machines;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicMachinesAssignable_Exceptions.CacheException(folder.Id ?? 0, ex);
-                    throw;
-                }
-            }
-            return machines.AsReadOnly();
-        }
-        #endregion
-
-        internal ConcurrentDictionary<Int64, List<MachineFolder>>? _dicAssignedMachines = null;
-        internal ExceptionsCachePer<Int64> _dicAssignedMachines_Exceptions = new();
-        public ReadOnlyCollection<MachineFolder> GetAssignedMachines(Folder folder)
-        {
-            _dicAssignedMachines_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-            if (_dicAssignedMachines == null)
-            {
-                lock (_dicAssignedMachines_Exceptions)
-                {
-                    _dicAssignedMachines ??= new ConcurrentDictionary<Int64, List<MachineFolder>>();
-                }
-            }
-            if (!_dicAssignedMachines.TryGetValue(folder.Id ?? 0, out List<MachineFolder> machines))
-            {
-                try
-                {
-                    machines = OrchAPISession.GetAssignedMachines(folder.Id ?? 0).ToList();
-                    string folderPath = folder.GetPSPath();
-                    foreach (var machine in machines)
-                    {
-                        machine.Path = folderPath;
-                    }
-                    _dicAssignedMachines[folder.Id ?? 0] = machines;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicAssignedMachines_Exceptions.CacheException(folder.Id ?? 0, ex);
-                    throw;
-                }
-            }
-            return machines.AsReadOnly();
-        }
-
-        internal ConcurrentDictionary<Int64, List<UserRobots>>? _dicUserRobots = null;
-        internal ExceptionsCachePer<Int64> _dicUserRobots_Exceptions = new();
-        public ReadOnlyCollection<UserRobots> GetUserRobots(Folder folder)
-        {
-            _dicUserRobots_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-            if (_dicUserRobots == null)
-            {
-                lock (_dicUserRobots_Exceptions)
-                {
-                    _dicUserRobots ??= [];
-                }
-            }
-            if (!_dicUserRobots.TryGetValue(folder.Id ?? 0, out var userRobots))
-            {
-                try
-                {
-                    userRobots = OrchAPISession.GetUserRobots(folder.Id ?? 0).ToList();
-                    //string folderPath = folder.GetPSPath();
-                    //foreach (var machine in machines)
-                    //{
-                    //    machine.Path = folderPath;
-                    //}
-                    _dicUserRobots[folder.Id ?? 0] = userRobots;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicUserRobots_Exceptions.CacheException(folder.Id ?? 0, ex);
-                    throw;
-                }
-            }
-            return userRobots.AsReadOnly();
-        }
-
         #region OrchAsset cache
-        // Key: folderId
-        internal ConcurrentDictionary<Int64, List<Asset>>? _dicAssets;
-        internal ExceptionsCachePer<Int64> _dicAssets_Exceptions = new();
-        public ReadOnlyCollection<Asset> GetAssets(Folder folder)
-        {
-            _dicAssets_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-            if (_dicAssets == null)
-            {
-                lock (_dicAssets_Exceptions)
-                {
-                    _dicAssets ??= new ConcurrentDictionary<Int64, List<Asset>>();
-                }
-            }
-
-            if (!_dicAssets.TryGetValue(folder.Id ?? 0, out List<Asset> assets))
-            {
-                try
-                {
-                    assets = OrchAPISession.GetAssets(folder.Id ?? 0).ToList();
-                    string folderPath = folder.GetPSPath();
-                    foreach (var asset in assets)
-                    {
-                        asset.Path = folderPath;
-                        if (asset.UserValues != null)
-                        {
-                            string assetPath = Path.Combine(folderPath, asset.Name!);
-                            foreach (var userValue in asset.UserValues)
-                            {
-                                userValue.Name = asset.Name;
-                                userValue.Path = folderPath;
-                                userValue.PathName = assetPath;
-                            }
-                        }
-                    }
-                    _dicAssets[folder.Id ?? 0] = assets;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicAssets_Exceptions.CacheException(folder.Id ?? 0, ex);
-                    throw;
-                }
-            }
-            return assets.AsReadOnly();
-        }
 
         // key: (folderId, assetId)
         // assetId だけで一意になりそうだけど、念のため folderId もキーに含めておく。
@@ -1766,69 +1354,6 @@ namespace UiPath.PowerShell.Core
                 }
             }
             return folderShare;
-        }
-
-        #endregion
-
-        #region OrchCredentialStore cashe
-        // no need to be multi-threaded
-        internal List<CredentialStore>? _dicCredentialStores = null;
-        internal readonly ExceptionCachePerTenant _dicCredentialStores_Exceptions = new();
-        public ReadOnlyCollection<CredentialStore> GetCredentialStores()
-        {
-            _dicCredentialStores_Exceptions.ThrowCachedExceptionIfAny();
-
-            if (_dicCredentialStores == null)
-            {
-                _dicCredentialStores = [];
-                try
-                {
-                    var stores = OrchAPISession.GetCredentialStores();
-                    Parallel.ForEach(stores, store =>
-                    {
-                        var credentialStore = OrchAPISession.GetCredentialStore(store.Id ?? 0);
-                        if (credentialStore != null)
-                        {
-                            credentialStore.Path = NameColonSeparator;
-                            _dicCredentialStores.Add(credentialStore);
-                        }
-                    });
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicCredentialStores_Exceptions.CacheException(ex);
-                    throw;
-                }
-            }
-            return _dicCredentialStores.AsReadOnly();
-        }
-        #endregion
-
-        #region OrchWebhook cache
-        // no need to be multi-threaded
-        internal List<Webhook>? _dicWebhooks = null;
-        internal readonly ExceptionCachePerTenant _dicWebhooks_Exceptions = new();
-        public ReadOnlyCollection<Webhook> GetWebhooks()
-        {
-            _dicWebhooks_Exceptions.ThrowCachedExceptionIfAny();
-
-            if (_dicWebhooks == null)
-            {
-                try
-                {
-                    _dicWebhooks = OrchAPISession.GetWebhooks().ToList();
-                    foreach (var webhook in _dicWebhooks)
-                    {
-                        webhook.Path = NameColonSeparator;
-                    }
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicWebhooks_Exceptions.CacheException(ex);
-                    throw;
-                }
-            }
-            return _dicWebhooks.AsReadOnly();
         }
 
         #endregion
@@ -1937,7 +1462,7 @@ namespace UiPath.PowerShell.Core
         internal readonly ExceptionCachePerTenant _dicLibraries_Exceptions = new();
         public ReadOnlyCollection<Library> GetLibraries()
         {
-            _dicRoles_Exception.ThrowCachedExceptionIfAny();
+            _dicLibraries_Exceptions.ThrowCachedExceptionIfAny();
 
             if (_dicLibraries == null)
             {
@@ -1995,7 +1520,7 @@ namespace UiPath.PowerShell.Core
         internal ExceptionsCachePer<string> _dicPackages_Exceptions = new();
         public ReadOnlyCollection<Package> GetPackages(Folder folder)
         {
-            string feedId = GetFolderFeedId(folder) ?? "";
+            string feedId = FolderFeedId.Get(folder) ?? "";
             _dicPackages_Exceptions.ThrowCachedExceptionIfAny(feedId);
 
             if (_dicPackages == null)
@@ -2034,7 +1559,7 @@ namespace UiPath.PowerShell.Core
         // processId に "id:version" を渡さないでね。それをするとキャッシュが壊れちゃう。
         public ReadOnlyCollection<Package> GetPackageVersions(Folder folder, string processId)
         {
-            string feedId = GetFolderFeedId(folder) ?? "";
+            string feedId = FolderFeedId.Get(folder) ?? "";
             _dicPackages_Exceptions.ThrowCachedExceptionIfAny(feedId);
 
             if (_dicPackageVersions == null)
@@ -2108,112 +1633,6 @@ namespace UiPath.PowerShell.Core
         }
         #endregion
 
-
-        #region OrchRole cache
-        // no need to be multi-threaded
-        internal List<Role>? _dicRoles = null;
-        internal readonly ExceptionCachePerTenant _dicRoles_Exception = new();
-        public ReadOnlyCollection<Role> GetRoles()
-        {
-            _dicRoles_Exception.ThrowCachedExceptionIfAny();
-
-            if (_dicRoles == null)
-            {
-                try
-                {
-                    _dicRoles = OrchAPISession.GetRoles().ToList();
-                    foreach (var role in _dicRoles)
-                    {
-                        role.Path = NameColonSeparator;
-                    }
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicRoles_Exception.CacheException(ex);
-                    throw;
-                }
-            }
-            return _dicRoles.AsReadOnly();
-        }
-        #endregion
-
-        #region OrchRobot cache
-        // no need to be multi-threaded
-        internal List<Robot>? _dicRobots = null;
-        internal readonly ExceptionCachePerTenant _dicRobots_Exception = new();
-        public ReadOnlyCollection<Robot> GetRobots()
-        {
-            _dicRobots_Exception.ThrowCachedExceptionIfAny();
-
-            if (_dicRobots == null)
-            {
-                try
-                {
-                    _dicRobots = OrchAPISession.GetRobots().ToList();
-                    foreach (var robot in _dicRobots)
-                    {
-                        robot.Path = NameColonSeparator;
-                    }
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicRobots_Exception.CacheException(ex);
-                    throw;
-                }
-            }
-            return _dicRobots.AsReadOnly();
-        }
-        #endregion
-
-        #region OrchMachine cashe
-        // no need to be multi-threaded
-        // Key: Machine.Name
-        internal List<ExtendedMachine>? _dicExtendedMachines = null;
-        internal readonly ExceptionCachePerTenant _dicExtendedMachines_Exception = new();
-        public ReadOnlyCollection<ExtendedMachine> GetMachines()
-        {
-            _dicExtendedMachines_Exception.ThrowCachedExceptionIfAny();
-
-            if (_dicExtendedMachines == null)
-            {
-                try
-                {
-                    string query = null;
-                    if (OrchAPISession.ApiVersion >= 12)
-                    {
-                        query = "&$expand=UpdateInfo";
-                    }
-                    else
-                    {
-                        query = null;
-                    }
-                    _dicExtendedMachines = OrchAPISession.GetMachines(query).ToList();
-
-                    foreach (var machine in _dicExtendedMachines)
-                    {
-                        machine.Path = NameColonSeparator;
-                        if (machine.RobotUsers != null)
-                        {
-                            string pathMachine = machine.Path + machine.Name;
-                            foreach (var robotUser in machine.RobotUsers)
-                            {
-                                robotUser.Path = machine.Path;
-                                robotUser.Machine = machine.Name;
-                                robotUser.PathMachine = pathMachine;
-                            }
-                        }
-                    }
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicExtendedMachines_Exception.CacheException(ex);
-                    throw;
-                }
-            }
-            return _dicExtendedMachines.AsReadOnly();
-        }
-        #endregion
-
         #region OrchMachineClientSecret cache
         internal Dictionary<Guid, MachineClientSecretResponse[]?>? _dicMachineClientSecrets = null;
         internal readonly ExceptionsCachePer<Guid> _dicMachineClientSecrets_Exception = new();
@@ -2242,41 +1661,6 @@ namespace UiPath.PowerShell.Core
             return secrets;
         }
         #endregion
-
-        #region OrchQueue cache
-        internal ConcurrentDictionary<Int64, List<QueueDefinition>>? _dicQueueDefinitions  = null;
-        internal ExceptionsCachePer<Int64> _dicQueueDefinitions_Exceptions = new();
-        public ReadOnlyCollection<QueueDefinition> GetQueues(Folder folder)
-        {
-            _dicQueueDefinitions_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-            if (_dicQueueDefinitions == null)
-            {
-                lock (_dicQueueDefinitions_Exceptions)
-                {
-                    _dicQueueDefinitions ??= new ConcurrentDictionary<Int64, List<QueueDefinition>>();
-                }
-            }
-            if (!_dicQueueDefinitions.TryGetValue(folder.Id ?? 0, out List<QueueDefinition> queues))
-            {
-                try
-                {
-                    queues = OrchAPISession.GetQueues(folder.Id ?? 0).ToList();
-                    string folderPath = folder.GetPSPath();
-                    foreach (var queue in queues)
-                    {
-                        queue.Path = folderPath;
-                    }
-                    _dicQueueDefinitions[folder.Id ?? 0] = queues;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicQueueDefinitions_Exceptions.CacheException(folder.Id ?? 0, ex);
-                    throw;
-                }
-            }
-            return queues.AsReadOnly();
-        }
 
         // key: (folderId, assetId)
         // bucketId だけで一意になりそうだけど、念のため folderId もキーに含めておく。
@@ -2308,88 +1692,6 @@ namespace UiPath.PowerShell.Core
             }
             return folderShare;
         }
-
-        #endregion
-
-        #region RobotsFromFolder cache
-        // key: folderId
-        internal ConcurrentDictionary<Int64, List<RobotsFromFolderModel>>? _dicRobotsFromFolder = null;
-        internal ExceptionsCachePer<Int64> _dicRobotsFromFolder_Exceptions = new();
-        public ReadOnlyCollection<RobotsFromFolderModel> GetRobotsFromFolder(Folder folder)
-        {
-            _dicRobotsFromFolder_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-            if (_dicRobotsFromFolder == null)
-            {
-                lock (_dicRobotsFromFolder_Exceptions)
-                {
-                    _dicRobotsFromFolder ??= [];
-                }
-            }
-            if (!_dicRobotsFromFolder.TryGetValue(folder.Id ?? 0, out var robots))
-            {
-                try
-                {
-                    robots = OrchAPISession.GetRobotsFromFolder(folder.Id!.Value).ToList();
-                    if (robots != null)
-                    {
-                        string folderPath = folder.GetPSPath();
-                        foreach (var robot in robots)
-                        {
-                            robot.Path = folderPath;
-                        }
-                        _dicRobotsFromFolder[folder.Id ?? 0] = robots;
-                    }
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicRobotsFromFolder_Exceptions.CacheException(folder.Id ?? 0, ex);
-                    throw;
-                }
-            }
-            return robots?.AsReadOnly() ?? new List<RobotsFromFolderModel>().AsReadOnly();
-        }
-        #endregion
-
-        #region Reviewer cache
-        // key: folderId
-        internal ConcurrentDictionary<Int64, List<SimpleUser>>? _dicReviewer = null;
-        internal ExceptionsCachePer<Int64> _dicReviewer_Exceptions = new();
-        public ReadOnlyCollection<SimpleUser> GetReviewers(Folder folder)
-        {
-            _dicReviewer_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-            if (_dicReviewer == null)
-            {
-                lock (_dicReviewer_Exceptions)
-                {
-                    _dicReviewer ??= [];
-                }
-            }
-            if (!_dicReviewer.TryGetValue(folder.Id ?? 0, out var reviewers))
-            {
-                try
-                {
-                    reviewers = OrchAPISession.GetReviewers(folder.Id!.Value).ToList();
-                    if (reviewers != null)
-                    {
-                        //string folderPath = folder.GetPSPath();
-                        //foreach (var robot in reviewers)
-                        //{
-                        //    robot.Path = folderPath;
-                        //}
-                        _dicReviewer[folder.Id ?? 0] = reviewers;
-                    }
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicReviewer_Exceptions.CacheException(folder.Id ?? 0, ex);
-                    throw;
-                }
-            }
-            return reviewers?.AsReadOnly() ?? new List<SimpleUser>().AsReadOnly();
-        }
-        #endregion
 
         #region OrchQueueItem cache
         // key: folderId, <queueName, <queueItemId>>
@@ -2429,149 +1731,6 @@ namespace UiPath.PowerShell.Core
 
             return items.AsReadOnly();
         }
-        #endregion
-
-        #region OrchTestSet cache
-        // Key: folderId
-        internal ConcurrentDictionary<Int64, List<TestSet>>? _dicTestSets = null;
-        internal ExceptionsCachePer<Int64> _dicTestSets_Exceptions = new();
-        private ReadOnlyCollection<TestSet>? _dicTestSetsEmpty = null;
-        public ReadOnlyCollection<TestSet> GetTestSets(Folder folder)
-        {
-            // TODO: 16 未満の数字は正しいか？ 15.0 では、取得がエラーになることは確認済みだが、
-            if (OrchAPISession.ApiVersion < 16)
-            {
-                _dicTestSetsEmpty ??= new List<TestSet>().AsReadOnly();
-                return _dicTestSetsEmpty;
-            }
-
-            _dicTestSets_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-            if (_dicTestSets == null)
-            {
-                lock (_dicTestSets_Exceptions)
-                {
-                    _dicTestSets ??= new ConcurrentDictionary<Int64, List<TestSet>>();
-                }
-            }
-
-            if (!_dicTestSets.TryGetValue(folder.Id ?? 0, out List<TestSet> testSets))
-            {
-                try
-                {
-                    testSets = OrchAPISession.GetTestSets(folder.Id ?? 0).ToList();
-                    string folderPath = folder.GetPSPath();
-                    foreach (var testSet in testSets)
-                    {
-                        testSet.Path = folderPath;
-                    }
-                    _dicTestSets[folder.Id ?? 0] = testSets;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicTestSets_Exceptions.CacheException(folder.Id ?? 0, ex);
-                    throw;
-                }
-            }
-            return testSets.AsReadOnly();
-        }
-
-        #endregion
-
-        #region OrchTestCase cache
-
-        // Key: folderId
-        internal ConcurrentDictionary<Int64, List<TestCaseDefinition>>? _dicTestCases = null;
-        internal ExceptionsCachePer<Int64> _dicTestCases_Exceptions = new();
-        private ReadOnlyCollection<TestCaseDefinition>? _dicTestCasesEmpty = null;
-        public ReadOnlyCollection<TestCaseDefinition> GetTestCases(Folder folder)
-        {
-            // TODO: 16 未満の数字は正しいか？ 15.0 では、取得がエラーになることは確認済みだが、
-            if (OrchAPISession.ApiVersion < 16)
-            {
-                _dicTestCasesEmpty ??= new List<TestCaseDefinition>().AsReadOnly();
-                return _dicTestCasesEmpty;
-            }
-
-            _dicTestCases_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-            if (_dicTestCases == null)
-            {
-                lock (_dicTestCases_Exceptions)
-                {
-                    _dicTestCases ??= new ConcurrentDictionary<Int64, List<TestCaseDefinition>>();
-                }
-            }
-
-            if (!_dicTestCases.TryGetValue(folder.Id ?? 0, out List<TestCaseDefinition> testCases))
-            {
-                try
-                {
-                    testCases = OrchAPISession.GetTestCases(folder.Id ?? 0).ToList();
-                    string folderPath = folder.GetPSPath();
-                    foreach (var testCase in testCases)
-                    {
-                        testCase.Path = folderPath;
-                    }
-                    _dicTestCases[folder.Id ?? 0] = testCases;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicTestCases_Exceptions.CacheException(folder.Id ?? 0, ex);
-                    throw;
-                }
-            }
-            return testCases.AsReadOnly();
-        }
-
-        #endregion
-
-        #region OrchTestCaseExecution cache
-
-        // Key: folderId
-        internal ConcurrentDictionary<Int64, List<TestCaseExecution>>? _dicTestCaseExecutions = null;
-        internal ExceptionsCachePer<Int64> _dicTestCaseExecutions_Exceptions = new();
-        private ReadOnlyCollection<TestCaseExecution>? _dicTestCaseExecutionsEmpty = null;
-        public ReadOnlyCollection<TestCaseExecution> GetTestCaseExecutions(Folder folder)
-        {
-            // TODO: 16 未満の数字は正しいか？ 15.0 では、取得がエラーになることは確認済みだが、
-            if (OrchAPISession.ApiVersion < 16)
-            {
-                _dicTestCaseExecutionsEmpty ??= new List<TestCaseExecution>().AsReadOnly();
-                return _dicTestCaseExecutionsEmpty;
-            }
-
-            _dicTestCaseExecutions_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-            if (_dicTestCaseExecutions == null)
-            {
-                lock (_dicTestCaseExecutions_Exceptions)
-                {
-                    _dicTestCaseExecutions ??= new();
-                }
-            }
-
-            if (!_dicTestCaseExecutions.TryGetValue(folder.Id ?? 0, out var executions))
-            {
-                try
-                {
-                    executions = OrchAPISession.GetTestCaseExecutions(folder.Id ?? 0).ToList();
-                    string folderPath = folder.GetPSPath();
-                    foreach (var execution in executions)
-                    {
-                        execution.Path = folderPath;
-                    }
-                    _dicTestCaseExecutions[folder.Id ?? 0] = executions;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicTestCaseExecutions_Exceptions.CacheException(folder.Id ?? 0, ex);
-                    throw;
-                }
-            }
-            return executions.AsReadOnly();
-        }
-
         #endregion
 
         #region OrchTestSetExecution cache
@@ -2623,100 +1782,6 @@ namespace UiPath.PowerShell.Core
 
         #endregion
 
-        #region OrchTestSetSchedule cache
-
-        // Key: folderId
-        internal ConcurrentDictionary<Int64, List<TestSetSchedule>>? _dicTestSetSchedules = null;
-        internal ExceptionsCachePer<Int64> _dicTestSetSchedules_Exceptions = new();
-        private ReadOnlyCollection<TestSetSchedule>? _dicTestSetSchedulesEmpty = null;
-        public ReadOnlyCollection<TestSetSchedule> GetTestSetSchedules(Folder folder)
-        {
-            // TODO: 16 未満の数字は正しいか？ 15.0 では、API トリガー取得がエラーになることは確認済みだが、
-            if (OrchAPISession.ApiVersion < 16)
-            {
-                _dicTestSetSchedulesEmpty ??= new List<TestSetSchedule>().AsReadOnly();
-                return _dicTestSetSchedulesEmpty;
-            }
-
-            _dicTestSetSchedules_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-            if (_dicTestSetSchedules == null)
-            {
-                lock (_dicTestSetSchedules_Exceptions)
-                {
-                    _dicTestSetSchedules ??= new();
-                }
-            }
-
-            if (!_dicTestSetSchedules.TryGetValue(folder.Id ?? 0, out var testSetSchedules))
-            {
-                try
-                {
-                    testSetSchedules = OrchAPISession.GetTestSetSchedules(folder.Id ?? 0).ToList();
-                    string folderPath = folder.GetPSPath();
-                    foreach (var testSetSchedule in testSetSchedules)
-                    {
-                        testSetSchedule.Path = folderPath;
-                    }
-                    _dicTestSetSchedules[folder.Id ?? 0] = testSetSchedules;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicTestSetSchedules_Exceptions.CacheException(folder.Id ?? 0, ex);
-                    throw;
-                }
-            }
-            return testSetSchedules.AsReadOnly();
-        }
-
-        #endregion
-
-        #region OrchTestDataQueue cache
-        // Key: folderId
-        internal ConcurrentDictionary<Int64, List<TestDataQueue>>? _dicTestDataQueues = null;
-        internal ExceptionsCachePer<Int64> _dicTestDataQueues_Exceptions = new();
-        private ReadOnlyCollection<TestDataQueue>? _dicTestDataQueuesEmpty = null;
-        public ReadOnlyCollection<TestDataQueue> GetTestDataQueues(Folder folder)
-        {
-            // TODO: 16 未満の数字は正しいか？ 15.0 では、API トリガー取得がエラーになることは確認済みだが、
-            if (OrchAPISession.ApiVersion < 16)
-            {
-                _dicTestDataQueuesEmpty ??= new List<TestDataQueue>().AsReadOnly();
-                return _dicTestDataQueuesEmpty;
-            }
-
-            _dicTestDataQueues_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-            if (_dicTestDataQueues == null)
-            {
-                lock (_dicTestDataQueues_Exceptions)
-                {
-                    _dicTestDataQueues ??= new();
-                }
-            }
-
-            if (!_dicTestDataQueues.TryGetValue(folder.Id ?? 0, out var testQueues))
-            {
-                try
-                {
-                    testQueues = OrchAPISession.GetTestDataQueues(folder.Id ?? 0).ToList();
-                    string folderPath = folder.GetPSPath();
-                    foreach (var testDataQueue in testQueues)
-                    {
-                        testDataQueue.Path = folderPath;
-                    }
-                    _dicTestDataQueues[folder.Id ?? 0] = testQueues;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicTestDataQueues_Exceptions.CacheException(folder.Id ?? 0, ex);
-                    throw;
-                }
-            }
-            return testQueues.AsReadOnly();
-        }
-        #endregion
-
         #region TestDataQueueItem
         // Key: folderId, testDataQueueId
         internal ConcurrentDictionary<Int64, Dictionary<Int64, List<TestDataQueueItem>>>? _dicTestDataQueueItems = null;
@@ -2752,42 +1817,6 @@ namespace UiPath.PowerShell.Core
         #endregion
 
         #region OrchBucket cache
-
-        // Key: folderId
-        internal ConcurrentDictionary<Int64, List<Bucket>>? _dicBuckets = null;
-        internal ExceptionsCachePer<Int64> _dicBuckets_Exceptions = new();
-        public ReadOnlyCollection<Bucket> GetBuckets(Folder folder)
-        {
-            _dicBuckets_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-            if (_dicBuckets == null)
-            {
-                lock (_dicBuckets_Exceptions)
-                {
-                    _dicBuckets ??= new ConcurrentDictionary<Int64, List<Bucket>>();
-                }
-            }
-
-            if (!_dicBuckets.TryGetValue(folder.Id ?? 0, out List<Bucket> buckets))
-            {
-                try
-                {
-                    buckets = OrchAPISession.GetBuckets(folder.Id ?? 0).ToList();
-                    string folderPath = folder.GetPSPath();
-                    foreach (var bucket in buckets)
-                    {
-                        bucket.Path = folderPath;
-                    }
-                    _dicBuckets[folder.Id ?? 0] = buckets;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicBuckets_Exceptions.CacheException(folder.Id ?? 0, ex);
-                    throw;
-                }
-            }
-            return buckets.AsReadOnly();
-        }
 
         // key: (folderId, bucketId)
         // bucketId だけで一意になりそうだけど、念のため folderId もキーに含めておく。
@@ -2959,108 +1988,6 @@ namespace UiPath.PowerShell.Core
 
         #endregion
 
-        // Key: folderId
-        internal ConcurrentDictionary<Int64, List<Entities.Environment>>? _dicEnvironments = null;
-        internal ExceptionsCachePer<Int64> _dicEnvironments_Exceptions = new();
-        public ReadOnlyCollection<Entities.Environment> GetEnvironments(Folder folder)
-        {
-            _dicEnvironments_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-            if (_dicEnvironments == null)
-            {
-                lock (_dicEnvironments_Exceptions)
-                {
-                    _dicEnvironments ??= new();
-                }
-            }
-
-            if (!_dicEnvironments.TryGetValue(folder.Id ?? 0, out var environments))
-            {
-                try
-                {
-                    environments = OrchAPISession.GetEnvironments(folder.Id ?? 0).ToList();
-                    string folderPath = folder.GetPSPath();
-                    foreach (var env in environments)
-                    {
-                        env.Path = folderPath;
-                    }
-                    _dicEnvironments[folder.Id ?? 0] = environments;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicEnvironments_Exceptions.CacheException(folder.Id ?? 0, ex);
-                    throw;
-                }
-            }
-            return environments.AsReadOnly();
-        }
-
-        #region OrchSession cache
-        // Key: folderId
-        internal ConcurrentDictionary<Int64, List<Session>>? _dicSessions = null;
-        internal readonly ExceptionsCachePer<Int64>_dicSessions_Exceptions = new();
-        public ReadOnlyCollection<Session> GetSessions(Folder folder)
-        {
-            _dicSessions_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-            if (_dicSessions == null)
-            {
-                lock (_dicSessions_Exceptions)
-                {
-                    _dicSessions ??= new();
-                }
-            }
-            if (!_dicSessions.TryGetValue(folder.Id ?? 0, out List<Session> sessions))
-            {
-                try
-                {
-                    sessions = OrchAPISession.GetSessions(folder.Id ?? 0).ToList();
-                    string folderPath = folder.GetPSPath();
-                    foreach (var session in sessions)
-                    {
-                        session.Path = folderPath;
-                    }
-                    _dicSessions[folder.Id ?? 0] = sessions;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicSessions_Exceptions.CacheException(folder.Id ?? 0, ex);
-                    throw;
-                }
-            }
-            return sessions.AsReadOnly();
-        }
-        #endregion
-
-        #region MachineSessionRuntimes cache
-        // Key: folderId, SessionId
-        internal List<MachineSessionRuntime>? _dicMachineSessionRuntimes = null;
-        internal readonly ExceptionCachePerTenant _dicMachineSessionRuntimes_Exception = new();
-        //public ReadOnlyCollection<MachineSessionRuntime> GetMachineSessionRuntimes(string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
-        public ReadOnlyCollection<MachineSessionRuntime> GetMachineSessionRuntimes()
-        {
-            _dicMachineSessionRuntimes_Exception.ThrowCachedExceptionIfAny();
-
-            if (_dicMachineSessionRuntimes == null)
-            {
-                try
-                {
-                    _dicMachineSessionRuntimes = OrchAPISession.GetMachineSessionRuntimes().ToList();
-                    foreach (var session in _dicMachineSessionRuntimes)
-                    {
-                        session.Path = NameColonSeparator;
-                    }
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicMachineSessionRuntimes_Exception.CacheException(ex);
-                    throw;
-                }
-            }
-            return _dicMachineSessionRuntimes.AsReadOnly();
-        }
-        #endregion
-
         #region MachineSessionRuntimeByFolder cache
         // Key: folderId, SessionId
         internal ConcurrentDictionary<Int64, List<MachineSessionRuntime>>? _dicMachineSessionRuntimesByFolder = null;
@@ -3095,107 +2022,6 @@ namespace UiPath.PowerShell.Core
                 }
             }
             return sessions.AsReadOnly();
-        }
-        #endregion
-
-        #region OrchSetting Cache
-        internal List<Settings>? _dicSettings = null;
-        internal readonly ExceptionCachePerTenant _dicSettings_Exception = new();
-        public List<Settings>? GetSettings()
-        {
-            _dicSettings_Exception.ThrowCachedExceptionIfAny();
-
-            if (_dicSettings == null)
-            {
-                lock (_dicSettings_Exception)
-                {
-                    if (_dicSettings == null)
-                    {
-                        try
-                        {
-                            _dicSettings = OrchAPISession.GetSettings().ToList();
-                            foreach (var setting in _dicSettings)
-                            {
-                                setting.Path = NameColonSeparator;
-                            }
-                        }
-                        catch (HttpResponseException ex)
-                        {
-                            _dicSettings_Exception.CacheException(ex);
-                            throw;
-                        }
-                    }
-                }
-            }
-            return _dicSettings;
-        }
-        #endregion
-
-        #region OrchWebSetting Cache
-        internal List<ResponseDictionaryItem>? _dicWebSettings = null;
-        internal readonly ExceptionCachePerTenant _dicWebSettings_Exception = new();
-        public List<ResponseDictionaryItem>? GetWebSettings()
-        {
-            _dicWebSettings_Exception.ThrowCachedExceptionIfAny();
-
-            if (_dicWebSettings == null)
-            {
-                lock (_dicWebSettings_Exception)
-                {
-                    if (_dicWebSettings == null)
-                    {
-                        try
-                        {
-                            var dic = OrchAPISession.GetWebSettings();
-                            _dicWebSettings = dic?.Keys?.Zip(dic.Values ?? [], (key, value) => new ResponseDictionaryItem()
-                            {
-                                Path = NameColonSeparator,
-                                Key = key,
-                                Value = value
-                            }).ToList();
-                        }
-                        catch (HttpResponseException ex)
-                        {
-                            _dicWebSettings_Exception.CacheException(ex);
-                            throw;
-                        }
-                    }
-                }
-            }
-            return _dicWebSettings;
-        }
-        #endregion
-
-        #region OrchUpdateSettings Cache
-        internal UpdateSettings? _dicUpdateSettings = null;
-        internal readonly ExceptionCachePerTenant _dicUpdateSettings_Exception = new();
-        public UpdateSettings? GetUpdateSettings()
-        {
-            _dicUpdateSettings_Exception.ThrowCachedExceptionIfAny();
-
-            if (_dicUpdateSettings == null)
-            {
-                lock (_dicUpdateSettings_Exception)
-                {
-                    if (_dicUpdateSettings == null)
-                    {
-                        try
-                        {
-                            _dicUpdateSettings = OrchAPISession.GetUpdateSettings();
-                            if (_dicUpdateSettings != null)
-                            {
-                                _dicUpdateSettings.Path = NameColonSeparator;
-                            }
-                        }
-                        catch (HttpResponseException ex)
-                        {
-                            _dicUpdateSettings_Exception.CacheException(ex);
-                            throw;
-                        }
-                    }
-                }
-            }
-            return _dicUpdateSettings;
         }
         #endregion
 
@@ -3240,178 +2066,6 @@ namespace UiPath.PowerShell.Core
             }
             return ret;
         }
-        #endregion
-
-        #region OrchActivitySetting Cache
-        internal ActivitySettings? _dicActivitySettings = null;
-        internal readonly ExceptionCachePerTenant _dicActivitySettings_Exception = new();
-        public ActivitySettings? GetActivitySettings()
-        {
-            _dicActivitySettings_Exception.ThrowCachedExceptionIfAny();
-
-            if (_dicActivitySettings == null)
-            {
-                lock (_dicActivitySettings_Exception)
-                {
-                    if (_dicActivitySettings == null)
-                    {
-                        try
-                        {
-                            _dicActivitySettings = OrchAPISession.GetActivitySettings();
-                            if (_dicActivitySettings != null)
-                            {
-                                _dicActivitySettings.Path = NameColonSeparator;
-                            }
-                        }
-                        catch (HttpResponseException ex)
-                        {
-                            _dicActivitySettings_Exception.CacheException(ex);
-                            throw;
-                        }
-                    }
-                }
-            }
-            return _dicActivitySettings;
-        }
-        #endregion
-
-        #region OrchAuthenticationSetting Cache
-        internal List<ResponseDictionaryItem>? _dicAuthenticationSettings = null;
-        internal readonly ExceptionCachePerTenant _dicAuthenticationSettings_Exception = new();
-        public List<ResponseDictionaryItem>? GetAuthenticationSettings()
-        {
-            _dicAuthenticationSettings_Exception.ThrowCachedExceptionIfAny();
-
-            if (_dicAuthenticationSettings == null)
-            {
-                lock (_dicAuthenticationSettings_Exception)
-                {
-                    if (_dicAuthenticationSettings == null)
-                    {
-                        try
-                        {
-                            var dic = OrchAPISession.GetAuthenticationSettings();
-                            _dicAuthenticationSettings = dic?.Keys?.Zip(dic.Values ?? [], (key, value) => new ResponseDictionaryItem()
-                            {
-                                Path = NameColonSeparator,
-                                Key = key,
-                                Value = value
-                            }).ToList();
-                        }
-                        catch (HttpResponseException ex)
-                        {
-                            _dicAuthenticationSettings_Exception.CacheException(ex);
-                            throw;
-                        }
-                    }
-                }
-            }
-            return _dicAuthenticationSettings;
-        }
-        #endregion
-
-        #region OrchConnectionSetting Cache
-        internal ODataValueOfString? _dicConnectionString = null;
-        internal readonly ExceptionCachePerTenant _dicConnectionString_Exception = new();
-        public ODataValueOfString? GetConnectionString()
-        {
-            _dicConnectionString_Exception.ThrowCachedExceptionIfAny();
-
-            if (_dicConnectionString == null)
-            {
-                lock (_dicConnectionString_Exception)
-                {
-                    if (_dicConnectionString == null)
-                    {
-                        try
-                        {
-                            _dicConnectionString = OrchAPISession.GetConnectionString();
-                            if (_dicConnectionString != null)
-                            {
-                                _dicConnectionString.Path = NameColonSeparator;
-                            }
-                        }
-                        catch (HttpResponseException ex)
-                        {
-                            _dicConnectionString_Exception.CacheException(ex);
-                            throw;
-                        }
-                    }
-                }
-            }
-            return _dicConnectionString;
-        }
-        #endregion
-
-        #region OrchLicense Cache
-        internal License? _dicLicense = null;
-        internal readonly ExceptionCachePerTenant _dicLicense_Exception = new();
-        public License? GetLicenseSettings()
-        {
-            _dicLicense_Exception.ThrowCachedExceptionIfAny();
-
-            if (_dicLicense == null)
-            {
-                lock (_dicLicense_Exception)
-                {
-                    if (_dicLicense == null)
-                    {
-                        try
-                        {
-                            _dicLicense = OrchAPISession.GetLicenseSettings();
-                            if (_dicLicense != null)
-                            {
-                                _dicLicense.Path = NameColonSeparator;
-                            }
-                        }
-                        catch (HttpResponseException ex)
-                        {
-                            _dicLicense_Exception.CacheException(ex);
-                            throw;
-                        }
-                    }
-                }
-            }
-            return _dicLicense;
-        }
-        #endregion
-
-        #region OrchActionCatalog Cache
-        internal ConcurrentDictionary<Int64, List<TaskCatalog>>? _dicTaskCatalog = null;
-        internal readonly ExceptionsCachePer<Int64> _dicTaskCatalog_Exceptions = new();
-        public ReadOnlyCollection<TaskCatalog> GetTaskCatalogs(Folder folder)
-        {
-            _dicTaskCatalog_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-            if (_dicTaskCatalog == null)
-            {
-                lock (_dicTaskCatalog_Exceptions)
-                {
-                    _dicTaskCatalog ??= [];
-                }
-            }
-
-            if (!_dicTaskCatalog.TryGetValue(folder.Id ?? 0, out var actionCatalogs))
-            {
-                try
-                {
-                    actionCatalogs = OrchAPISession.GetTaskCatalogs(folder.Id ?? 0).ToList();
-                    string folderPath = folder.GetPSPath();
-                    foreach (var actionCatalog in actionCatalogs)
-                    {
-                        actionCatalog.Path = folderPath;
-                    }
-                    _dicTaskCatalog[folder.Id ?? 0] = actionCatalogs;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicTaskCatalog_Exceptions.CacheException(folder.Id ?? 0, ex);
-                    throw;
-                }
-            }
-            return actionCatalogs.AsReadOnly();
-        }
-
         #endregion
 
         #region PmUser Cache
@@ -3772,70 +2426,6 @@ namespace UiPath.PowerShell.Core
 
         #endregion
 
-        #region PmUserLicensedUsers Cache
-        internal List<NuLicensedUser>? _dicPmLicensedUsers = null;
-        internal readonly ExceptionCachePerTenant _dicPmLicensedUsers_Exceptions = new();
-        public ReadOnlyCollection<NuLicensedUser> GetPmLicensedUsers()
-        {
-            _dicPmLicensedUsers_Exceptions.ThrowCachedExceptionIfAny();
-
-            if (_dicPmLicensedUsers == null)
-            {
-                lock (_dicPmLicensedUsers_Exceptions)
-                {
-                    try
-                    {
-                        _dicPmLicensedUsers = OrchAPISession.GetPmLicensedUsers().ToList();
-
-                        foreach (var user in _dicPmLicensedUsers)
-                        {
-                            user.Path = NameColonSeparator;
-                            user.userBundleLicenseNames = user.userBundleLicenses?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
-                        }
-                    }
-                    catch (HttpResponseException ex)
-                    {
-                        _dicPmLicensedUsers_Exceptions.CacheException(ex);
-                        throw;
-                    }
-                }
-            }
-            return _dicPmLicensedUsers.AsReadOnly();
-        }
-        #endregion
-
-        #region PmUserLicenseGroups Cache
-        internal List<NuLicensedGroup>? _dicPmLicensedGroups = null;
-        internal readonly ExceptionCachePerTenant _dicPmLicensedGroups_Exceptions = new();
-        public ReadOnlyCollection<NuLicensedGroup> GetPmLicensedGroups()
-        {
-            _dicPmLicensedGroups_Exceptions.ThrowCachedExceptionIfAny();
-
-            if (_dicPmLicensedGroups == null)
-            {
-                lock (_dicPmLicensedGroups_Exceptions)
-                {
-                    try
-                    {
-                        _dicPmLicensedGroups = OrchAPISession.GetPmLicensedGroups().ToList();
-
-                        foreach (var group in _dicPmLicensedGroups)
-                        {
-                            group.Path = NameColonSeparator;
-                            group.userBundleLicenseNames = group.userBundleLicenses?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
-                        }
-                    }
-                    catch (HttpResponseException ex)
-                    {
-                        _dicPmLicensedGroups_Exceptions.CacheException(ex);
-                        throw;
-                    }
-                }
-            }
-            return _dicPmLicensedGroups.AsReadOnly();
-        }
-        #endregion
-
         internal ConcurrentDictionary<string, AvailableUserBundles>? _dicPmAvailableUserBundles = null;
         internal readonly ExceptionsCachePer<string> _dicPmAvailableUserBundles_Exceptions = new();
         //public AvailableUserBundles? GetPmUserLicenseGroupsAvailableLicenses(NuLicensedGroup? group)
@@ -4026,32 +2616,50 @@ namespace UiPath.PowerShell.Core
         }
         #endregion
 
-        #region FeedId cache
+        internal readonly List<ICacheClearable> _cacheItems = [];
 
-        // Key: folderId, Value: feedId
-        // このメソッドは、"" を返すべきではない
-        // このメソッドを呼ぶ側が、必要に応じて null を "" に変換する必要がある
-        // (Dictionary のキーとして使う場合など)
-        internal ConcurrentDictionary<Int64, string>? _dicFolderFeedIds = null;
-        public string? GetFolderFeedId(Folder folder)
-        {
-            if (_dicFolderFeedIds == null)
-            {
-                lock (this)
-                {
-                    _dicFolderFeedIds ??= new ConcurrentDictionary<long, string>();
-                }
-            }
-            Int64 folderId = folder.Id ?? 0;
-            if (!_dicFolderFeedIds.TryGetValue(folderId, out string feedId))
-            {
-                feedId = OrchAPISession.GetFolderFeedId(folderId);
-                _dicFolderFeedIds[folderId] = feedId!;
-            }
-            return feedId;
-        }
+        // インデックスなしのテナントエンティティ
+        public readonly SingleCachePerTenant<ActivitySettings> ActivitySettings;
+        public readonly SingleCachePerTenant<string[]> AvailableVersions;
+        public readonly SingleCachePerTenant<ODataValueOfString> ConnectionString;
+        public readonly SingleCachePerTenant<UpdateSettings> UpdateSettings;
+        public readonly SingleCachePerTenant<License> LicenseSettings;
 
-        #endregion
+        public readonly ListCachePerTenant<ResponseDictionaryItem> AuthenticationSettings;
+        public readonly ListCachePerTenant<CredentialStore> CredentialStores;
+        public readonly ListCachePerTenant<Robot> Robots;
+        public readonly ListCachePerTenant<Role> Roles;
+        public readonly ListCachePerTenant<ExtendedMachine> Machines;
+        public readonly ListCachePerTenant<MachineSessionRuntime> MachineSessionRuntimes;
+        public readonly ListCachePerTenant<PersonalWorkspace> PersonalWorkspaces;
+        public readonly ListCachePerTenant<Settings> Settings;
+        public readonly ListCachePerTenant<Webhook> Webhooks;
+        public readonly ListCachePerTenant<ResponseDictionaryItem> WebSettings;
+        public readonly ListCachePerTenant<NuLicensedGroup> PmLicensedGroups;
+        public readonly ListCachePerTenant<NuLicensedUser> PmLicensedUsers;
+
+        // インデックスなしのフォルダーエンティティ
+        public readonly SingleCachePerFolder<string> FolderFeedId;
+
+        public readonly ListCachePerFolder<TaskCatalog> ActionCatalogs;
+        public readonly ListCachePerFolder<HttpTrigger> ApiTriggers;
+        public readonly ListCachePerFolder<Asset> Assets;
+        public readonly ListCachePerFolder<Bucket> Buckets;
+        public readonly ListCachePerFolder<Entities.Environment> Environments;
+        public readonly ListCachePerFolder<MachineFolder> FolderMachinesAssigned;
+        public readonly ListCachePerFolder<MachineFolder> FolderMachinesAssignable;
+        public readonly ListCachePerFolder<SimpleUser> Reviewers;
+        public readonly ListCachePerFolder<QueueDefinition> Queues;
+        public readonly ListCachePerFolder<RobotsFromFolderModel> RobotsFromFolder;
+        public readonly ListCachePerFolder<Session> Sessions;
+        public readonly ListCachePerFolder<TestCaseDefinition> TestCases;
+        public readonly ListCachePerFolder<TestCaseExecution> TestCaseExecutions;
+        public readonly ListCachePerFolder<TestDataQueue> TestDataQueues;
+        public readonly ListCachePerFolder<TestSet> TestSets;
+        public readonly ListCachePerFolder<TestSetSchedule> TestSetSchedules;
+        public readonly ListCachePerFolder<UserRobots> UserRobots;
+
+        //public readonly CachePerFolder<Release> Processes; // これはインデックスがついてた。。
 
         // このコンストラクタを実行するタイミングでは、NameColonSeparator は利用できない
         public OrchDriveInfo(ProviderInfo provider, PSDrive drive) :
@@ -4060,6 +2668,156 @@ namespace UiPath.PowerShell.Core
             _psDrive = drive;
             _psDrive.Root = _psDrive.Root?.TrimEnd('/');
             RootFolder = new Folder() { DisplayName = "", FullyQualifiedName = "", Path = NameColonSeparator };
+
+            // キャッシュを初期化
+            // インデックスなしのテナントエンティティ
+            ActivitySettings       = new(this, OrchAPISession.GetActivitySettings,       e => e.Path = NameColonSeparator);
+            ConnectionString       = new(this, OrchAPISession.GetConnectionString,       e => e.Path = NameColonSeparator);
+            LicenseSettings        = new(this, OrchAPISession.GetLicenseSettings,        e => e.Path = NameColonSeparator);
+            MachineSessionRuntimes = new(this, OrchAPISession.GetMachineSessionRuntimes, e => e.Path = NameColonSeparator);
+            Robots                 = new(this, OrchAPISession.GetRobots,                 e => e.Path = NameColonSeparator);
+            PersonalWorkspaces     = new(this, OrchAPISession.GetPersonalWorkspaces,     e => e.Path = NameColonSeparator);
+            Roles                  = new(this, OrchAPISession.GetRoles,                  e => e.Path = NameColonSeparator);
+            Settings               = new(this, OrchAPISession.GetSettings,               e => e.Path = NameColonSeparator);
+            UpdateSettings         = new(this, OrchAPISession.GetUpdateSettings,         e => e.Path = NameColonSeparator);
+            Webhooks               = new(this, OrchAPISession.GetWebhooks,               e => e.Path = NameColonSeparator);
+
+            AvailableVersions = new(this, () =>
+                {
+                    var av = OrchAPISession.GetAvailableVersions();
+                    return av?.availableVersions;
+                }
+            );
+
+            // 現行の実装では、必ず GetCredentialStore を呼び出している。
+            // Get-OrchCredentialStore cmdlet に、-ExpandDetails parameter を実装して、この呼び出しは分離すべきかもしれない。
+            CredentialStores = new(this, () =>
+                {
+                    var stores = OrchAPISession.GetCredentialStores();
+                    var results = ParallelResults.ForEach(stores, store => OrchAPISession.GetCredentialStore(store.Id!.Value));
+                    List<CredentialStore> ret = [];
+                    foreach (var result in results)
+                    {
+                        if (!result.TryGetValue(out var store)) continue;
+                        if (store != null) ret.Add(store);
+                    }
+                    return ret;
+                },
+                store => store.Path = NameColonSeparator
+            );
+
+            AuthenticationSettings = new(this, () =>
+                {
+                    var dic = OrchAPISession.GetAuthenticationSettings();
+                    var list = dic?.Keys?.Zip(dic.Values ?? [], (key, value) => new ResponseDictionaryItem()
+                    {
+                        Path = NameColonSeparator,
+                        Key = key,
+                        Value = value
+                    });
+                    return list ?? [];
+                }
+            );
+
+            Machines = new(this,
+                OrchAPISession.ApiVersion >= 12
+                    ? () => OrchAPISession.GetMachines("&$expand=UpdateInfo")
+                    : () => OrchAPISession.GetMachines(null),
+                machine =>
+                {
+                    machine.Path = NameColonSeparator;
+                    string pathMachine = NameColonSeparator + machine.Name;
+                    foreach (var robotUser in machine.RobotUsers ?? [])
+                    {
+                        robotUser.Path = machine.Path;
+                        robotUser.Machine = machine.Name;
+                        robotUser.PathMachine = pathMachine;
+                    }
+                }
+            );
+
+            WebSettings = new(this, () =>
+                {
+                    var dic = OrchAPISession.GetWebSettings();
+                    var list = dic?.Keys?.Zip(dic.Values ?? [], (key, value) => new ResponseDictionaryItem()
+                    {
+                        Path = NameColonSeparator,
+                        Key = key,
+                        Value = value
+                    });
+                    return list ?? [];
+                }
+            );
+
+            PmLicensedGroups = new (this,
+                OrchAPISession.GetPmLicensedGroups,
+                e =>
+                {
+                    e.Path = NameColonSeparator;
+                    e.userBundleLicenseNames = e.userBundleLicenses?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
+                }
+            );
+
+            PmLicensedUsers = new(this,
+                OrchAPISession.GetPmLicensedUsers,
+                e =>
+                {
+                    e.Path = NameColonSeparator;
+                    e.userBundleLicenseNames = e.userBundleLicenses?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
+                }
+            );
+
+            // インデックスなしのフォルダエンティティ
+            FolderFeedId       = new(this, OrchAPISession.GetFolderFeedId);
+            ActionCatalogs     = new(this, OrchAPISession.GetTaskCatalogs,       (e, folderPath) => e.Path = folderPath, 16);
+            ApiTriggers        = new(this, OrchAPISession.GetHttpTriggers,       (e, folderPath) => e.Path = folderPath, 16);
+            Buckets            = new(this, OrchAPISession.GetBuckets,            (e, folderPath) => e.Path = folderPath);
+            Environments       = new(this, OrchAPISession.GetEnvironments,       (e, folderPath) => e.Path = folderPath);
+            Queues             = new(this, OrchAPISession.GetQueues,             (e, folderPath) => e.Path = folderPath);
+            Reviewers          = new(this, OrchAPISession.GetReviewers);
+            RobotsFromFolder   = new(this, OrchAPISession.GetRobotsFromFolder,   (e, folderPath) => e.Path = folderPath);
+            Sessions           = new(this, OrchAPISession.GetSessions,           (e, folderPath) => e.Path = folderPath);
+            TestCases          = new(this, OrchAPISession.GetTestCases,          (e, folderPath) => e.Path = folderPath, 16);
+            TestCaseExecutions = new(this, OrchAPISession.GetTestCaseExecutions, (e, folderPath) => e.Path = folderPath, 16);
+            TestDataQueues     = new(this, OrchAPISession.GetTestDataQueues,     (e, folderPath) => e.Path = folderPath, 16);
+            TestSets           = new(this, OrchAPISession.GetTestSets,           (e, folderPath) => e.Path = folderPath, 16);
+            TestSetSchedules   = new(this, OrchAPISession.GetTestSetSchedules,   (e, folderPath) => e.Path = folderPath, 16);
+            UserRobots         = new(this, OrchAPISession.GetUserRobots);
+
+            Assets = new(this, OrchAPISession.GetAssets, (e, folderPath) =>
+            {
+                e.Path = folderPath;
+                if (e.UserValues != null)
+                {
+                    string assetPath = Path.Combine(folderPath, e.Name!);
+                    foreach (var userValue in e.UserValues)
+                    {
+                        userValue.Name = e.Name;
+                        userValue.Path = folderPath;
+                        userValue.PathName = assetPath;
+                    }
+                }
+            });
+
+            FolderMachinesAssigned = new (this,
+                OrchAPISession.ApiVersion >= 12
+                    ? fid => OrchAPISession.GetMachinesAssignedTo(fid, "&$filter=((IsAssignedToFolder eq true) or (IsInherited eq true))")
+                    : fid => OrchAPISession.GetMachinesAssignedTo(fid, "&$filter=(IsAssignedToFolder eq true)"),
+                (e, folderPath) => e.Path = folderPath
+            );
+
+            FolderMachinesAssignable = new(this,
+                fid => OrchAPISession.GetMachinesAssignedTo(fid, "&$filter=(IsAssignedToFolder eq false)"),
+                (e, folderPath) => e.Path = folderPath
+            );
+
+            // Processes はインデックスがついているので、下記ではキャッシュを実装できない
+            //Processes = new(this,
+            //    OrchAPISession.ApiVersion >= 12
+            //        ? fid => OrchAPISession.GetReleases(fid, "&$expand=Environment,CurrentVersion,ReleaseVersions,EntryPoint")
+            //        : fid => OrchAPISession.GetReleases(fid, "&$expand=Environment,CurrentVersion,ReleaseVersions"),
+            //    (e, folderPath) => e.Path = folderPath
+            //);
         }
 
         internal List<Folder>? _dicFolders; // sorted by OrchDirectory and DisplayName
@@ -4083,11 +2841,11 @@ namespace UiPath.PowerShell.Core
                 }
 
                 // get personal workspaces that being explored
-                ReadOnlyCollection<PersonalWorkspace> personalWorkspaces = null;
+                List<PersonalWorkspace> personalWorkspaces = null;
                 tasks.Add(Task.Run(() =>
                 {
                     // この例外は握りつぶす
-                    try { personalWorkspaces = GetPersonalWorkspaces(); } catch { }
+                    try { personalWorkspaces = PersonalWorkspaces.Get(); } catch { }
                 }));
 
                 // get folders

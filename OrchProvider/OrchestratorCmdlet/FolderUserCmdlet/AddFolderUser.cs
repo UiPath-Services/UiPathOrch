@@ -110,7 +110,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetRoles());
+                var results = ParallelResults.ForEach(drives, drive => drive.Roles.Get());
 
                 foreach (var result in results)
                 {
@@ -185,7 +185,8 @@ namespace UiPath.PowerShell.Commands
 
             var wpRoles = Roles?.Select(role => new WildcardPattern(role, WildcardOptions.IgnoreCase)).ToList();
 
-            ParallelResults.ForEach(drives, drive => drive.GetRoles());
+            // これはしなくて良いか。。
+            //ParallelResults.ForEach(drives, drive => drive.Roles.Get());
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (drive, folder) in drivesFolders)
@@ -195,7 +196,7 @@ namespace UiPath.PowerShell.Commands
                 // ここで考慮する必要はない
                 //if (folder.FolderType == "Personal") continue;
 
-                var existingRoles = drive.GetRoles().Where(r => r.Type != "Tenant");
+                var existingRoles = drive.Roles.Get().Where(r => r.Type != "Tenant");
 
                 // 指定された Roles に、既存のロールに合致しないパターンがあれば警告
                 // 微妙に無駄な処理があるが、まあいいか。。

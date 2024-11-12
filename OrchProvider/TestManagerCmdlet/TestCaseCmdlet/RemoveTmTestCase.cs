@@ -50,7 +50,7 @@ namespace UiPath.PowerShell.Commands
                             {
                                 drive.OrchAPISession.RemoveTmTestCase(project.id!, testCase.id!);
                                 drive._dicTmTestCases = null;
-                                drive._dicTmTestCasesExceptions.TryRemove(project.id!);
+                                drive._dicTmTestCasesExceptions.ClearCache(project.id);
                             }
                             catch (Exception ex)
                             {

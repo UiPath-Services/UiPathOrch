@@ -112,7 +112,7 @@ namespace UiPath.PowerShell.Commands
                             continue;
                         }
 
-                        string? feedId = drive!.GetFolderFeedId(targetFolder);
+                        string? feedId = drive.FolderFeedId.Get(targetFolder);
                         var result = drive.OrchAPISession.UploadPackage(feedId!, fullPath);
                         if (result != null)
                         {

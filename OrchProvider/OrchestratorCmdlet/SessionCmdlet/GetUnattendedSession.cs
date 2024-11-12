@@ -1,15 +1,9 @@
 ﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using System.Reflection.Emit;
-using System.Xml.Linq;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
+using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Positional;
-using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
-
-using Positional = UiPath.PowerShell.Positional.Last;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -79,7 +73,7 @@ namespace UiPath.PowerShell.Commands
             using var results = OrchThreadPool.RunForEach(drives,
                 drive => drive.NameColonSeparator,
                 drive => drive,
-                drive => drive.GetMachineSessionRuntimes());
+                drive => drive.MachineSessionRuntimes.Get());
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var result in results)

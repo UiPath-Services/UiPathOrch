@@ -38,14 +38,14 @@ namespace UiPath.PowerShell.Commands
             using var results = OrchThreadPool.RunForEach(drivesFolders,
                 df => df.folder.GetPSPath(),
                 df => df.folder,
-                df => df.drive.GetTestSets(df.folder));
+                df => df.drive.TestSets.Get(df.folder));
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (drive, folder) in drivesFolders)
             {
                 try
                 {
-                    var testSets = drive.GetTestSets(folder);
+                    var testSets = drive.TestSets.Get(folder);
 
                     foreach (var testSet in testSets
                         .FilterByWildcards(ts => ts?.Name, wpName)

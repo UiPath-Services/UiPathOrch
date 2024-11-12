@@ -101,7 +101,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetAssets(df.folder));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Assets.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -142,7 +142,7 @@ namespace UiPath.PowerShell.Commands
                 var wpDescription = CreateWPListFromParameter(commandAst, "Description", positionalParams, wordToComplete);
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetAssets(df.folder));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Assets.Get(df.folder));
 
                 bool isEmpty = true;
                 foreach (var result in results)
@@ -216,7 +216,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetAssets(df.folder));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Assets.Get(df.folder));
 
                 bool bValueExists = false;
                 foreach (var result in results)
@@ -317,7 +317,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetMachinesAssignedToFolder(df.folder));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -365,7 +365,7 @@ namespace UiPath.PowerShell.Commands
                 return ParallelResults.ForEach(drivesFolders, driveFolder =>
                 {
                     var (drive, folder) = driveFolder;
-                    return drive.GetAssets(folder);
+                    return drive.Assets.Get(folder);
                 });
             });
         }
@@ -380,7 +380,7 @@ namespace UiPath.PowerShell.Commands
             var asset = parameterSets.FirstOrDefault(asset => asset.Name == name && asset.Path == folder.GetPSPath());
             if (asset == null)
             {
-                var assets = drive.GetAssets(folder);
+                var assets = drive.Assets.Get(folder);
                 asset = assets.FirstOrDefault(a => a.Name == name);
                 if (asset == null)
                 {
@@ -717,7 +717,7 @@ namespace UiPath.PowerShell.Commands
                     // expand MachineName
                     if (wpMachineName != null)
                     {
-                        var tenantMachines = drive.GetMachines();
+                        var tenantMachines = drive.Machines.Get(); // ★TODO: ここは FolderMachinesAssigned.Get(folder) に変えておかねば。
                         specifiedMachines = tenantMachines.FilterByWildcards(m => m?.Name, wpMachineName);
                         if (!specifiedMachines.Any())
                         {
@@ -734,7 +734,7 @@ namespace UiPath.PowerShell.Commands
                         specifiedMachines = [null];
                     }
 
-                    var existingAssets = drive.GetAssets(folder).Where(a => a.ValueType != "Credential");
+                    var existingAssets = drive.Assets.Get(folder).Where(a => a.ValueType != "Credential");
 
                     foreach (var name in param.Name!)
                     {
@@ -791,7 +791,7 @@ namespace UiPath.PowerShell.Commands
 
                     reporter.WriteProgress(++index, $"{index:D}/{parameterSets.Count}");
 
-                    var existingAssets = drive.GetAssets(folder);
+                    var existingAssets = drive.Assets.Get(folder);
                     var existingAsset = existingAssets.FirstOrDefault(a => a.Name == asset.Name);
                     if (existingAsset != null && !ValidValueTypes.Contains(existingAsset.ValueType))
                     {
@@ -845,7 +845,7 @@ namespace UiPath.PowerShell.Commands
                                             {
                                                 foreach (var AccessibleFolder in sharedFolders.AccessibleFolders)
                                                 {
-                                                    drive._dicAssets?.TryRemove(AccessibleFolder.Id ?? 0, out List<Asset>? _);
+                                                    drive.Assets.ClearCache(AccessibleFolder.Id!.Value);
                                                 }
                                             }
                                         }
@@ -867,7 +867,7 @@ namespace UiPath.PowerShell.Commands
             {
                 foreach (var cache in folderIdsThatShouldRemoveCache)
                 {
-                    cache.drive._dicAssets?.TryRemove(cache.id, out List<Asset>? _);
+                    cache.drive.Assets.ClearCache(cache.id);
                 }
             }
         }

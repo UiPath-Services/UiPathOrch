@@ -205,7 +205,7 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var tenantRoles = drive.GetRoles().Where(role => role.Type != "Tenant").FilterByWildcards(role => role?.DisplayName, wpRoles);
+                    var tenantRoles = drive.Roles.Get().Where(role => role.Type != "Tenant").FilterByWildcards(role => role?.DisplayName, wpRoles);
                     try
                     {
                         // 編集対象のユーザーを抽出する

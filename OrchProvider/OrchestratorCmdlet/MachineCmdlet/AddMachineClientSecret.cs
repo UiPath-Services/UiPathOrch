@@ -48,7 +48,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetMachines());
+                var results = ParallelResults.ForEach(drives, drive => drive.Machines.Get());
 
                 bool bFound = false;
                 foreach (var result in results)
@@ -82,7 +82,7 @@ namespace UiPath.PowerShell.Commands
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var drive in drives)
             {
-                var machines = drive.GetMachines();
+                var machines = drive.Machines.Get();
                 var targetMachines = machines
                     .Where(m => m.Scope != "PersonalWorkspace" && m.Scope != "AutomationCloudRobot")
                     .FilterByWildcards(m => m?.Name, wpName)

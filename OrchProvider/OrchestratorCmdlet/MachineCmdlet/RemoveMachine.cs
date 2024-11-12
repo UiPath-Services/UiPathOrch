@@ -30,7 +30,7 @@ namespace UiPath.PowerShell.Commands
                 try
                 {
                     string targetFolder = drive.NameColonSeparator;
-                    foreach (var machine in drive.GetMachines().FilterByWildcards(m => m?.Name, wpName).OrderBy(m => m.Name))
+                    foreach (var machine in drive.Machines.Get().FilterByWildcards(m => m?.Name, wpName).OrderBy(m => m.Name))
                     {
                         cancelHandler.Token.ThrowIfCancellationRequested();
 
@@ -39,8 +39,8 @@ namespace UiPath.PowerShell.Commands
                             try
                             {
                                 drive.OrchAPISession.RemoveMachine(machine.Id ?? 0);
-                                drive._dicExtendedMachines = null;
-                                drive._dicMachinesAssignable = null;
+                                drive.Machines.ClearCache();
+                                drive.FolderMachinesAssignable.ClearCache();
                             }
                             catch (Exception ex)
                             {

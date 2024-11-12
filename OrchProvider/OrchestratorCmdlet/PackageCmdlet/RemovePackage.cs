@@ -197,7 +197,7 @@ namespace UiPath.PowerShell.Commands
                                 {
                                     try
                                     {
-                                        string feedId = drive.GetFolderFeedId(folder);
+                                        string feedId = drive.FolderFeedId.Get(folder);
                                         drive.OrchAPISession.RemovePackage(version.Id!, version.Version!, feedId);
                                         drive._dicPackages?.TryRemove(feedId ?? "", out _);
                                         if (drive._dicPackageVersions?.TryGetValue(feedId ?? "", out var packageVersionsByPackageId) ?? false)

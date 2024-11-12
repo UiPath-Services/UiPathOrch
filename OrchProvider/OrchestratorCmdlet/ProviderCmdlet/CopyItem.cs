@@ -114,10 +114,10 @@ namespace UiPath.PowerShell.Core
         {
             if (srcRoleIds == null || !srcRoleIds.Any()) return null;
 
-            ReadOnlyCollection<Role> dstTenantRoles = null;
+            ICollection<Role> dstTenantRoles = null;
             try
             {
-                dstTenantRoles = dstDrive.GetRoles();
+                dstTenantRoles = dstDrive.Roles.Get();
             }
             catch (Exception ex)
             {
@@ -275,7 +275,7 @@ namespace UiPath.PowerShell.Core
 
         internal static bool AssignMyselfToFolder(IWritableHost _this, OrchDriveInfo drive, Folder folder)
         {
-            var folderAdministratorRole = drive.GetRoles().FirstOrDefault(r => r.DisplayName == "Folder Administrator");
+            var folderAdministratorRole = drive.Roles.Get().FirstOrDefault(r => r.DisplayName == "Folder Administrator");
             if (folderAdministratorRole == null)
                 return false;
 
@@ -324,7 +324,7 @@ namespace UiPath.PowerShell.Core
             IEnumerable<MachineFolder> srcMachines = null;
             try
             {
-                srcMachines = srcDrive.GetMachinesAssignedToFolder(srcFolder)
+                srcMachines = srcDrive.FolderMachinesAssigned.Get(srcFolder)
                     .Where(e => e.IsAssignedToFolder.GetValueOrDefault())
                     .FilterByWildcards(m => m?.Name, wpNames);
             }
@@ -343,8 +343,8 @@ namespace UiPath.PowerShell.Core
             string targetFolder = newFolder.GetPSPath();
 
             var machinesToBeAdded = new List<MachineFolder>();
-            var dstTenantMachines = dstDrive
-                .GetMachinesAssignableToFolder(newFolder)
+            var dstMachinesAssignable = dstDrive
+                .FolderMachinesAssignable.Get(newFolder)
                 .ToDictionary(m => m.Name!, StringComparer.OrdinalIgnoreCase);
 
             // 宛先が同じドライブでも、名前で Id を探した方がいいかな。。
@@ -367,7 +367,7 @@ namespace UiPath.PowerShell.Core
 
             foreach (var srcMachine in srcMachines.OrderBy(m => m.Name))
             {
-                if (dstTenantMachines.TryGetValue(srcMachine.Name!, out var dstMachine))
+                if (dstMachinesAssignable.TryGetValue(srcMachine.Name!, out var dstMachine))
                 {
                     if (shouldProcess || _this.ShouldProcess($"Item: '{srcMachine.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy FolderMachine"))
                     {
@@ -432,7 +432,7 @@ namespace UiPath.PowerShell.Core
             string srcFeedId;
             try
             {
-                srcFeedId = srcDrive.GetFolderFeedId(srcFolder);
+                srcFeedId = srcDrive.FolderFeedId.Get(srcFolder);
             }
             catch (Exception ex)
             {
@@ -443,7 +443,7 @@ namespace UiPath.PowerShell.Core
             string dstFeedId;
             try
             {
-                dstFeedId = dstDrive.GetFolderFeedId(newFolder);
+                dstFeedId = dstDrive.FolderFeedId.Get(newFolder);
             }
             catch (Exception ex)
             {
@@ -521,7 +521,7 @@ namespace UiPath.PowerShell.Core
         {
             if (srcBucketId == null || srcBucketId == 0) return null;
 
-            var srcBuckets = srcDrive.GetBuckets(srcFolder);
+            var srcBuckets = srcDrive.Buckets.Get(srcFolder);
             var srcBucket = srcBuckets.FirstOrDefault(b => b.Id == srcBucketId);
             if (srcBucket == null)
             {
@@ -531,7 +531,7 @@ namespace UiPath.PowerShell.Core
                 return null;
             }
 
-            var dstBuckets = dstDrive.GetBuckets(newFolder);
+            var dstBuckets = dstDrive.Buckets.Get(newFolder);
             var dstBucket = dstBuckets.FirstOrDefault(b => b.Name == srcBucket.Name);
             if (dstBucket == null)
             {
@@ -621,14 +621,14 @@ namespace UiPath.PowerShell.Core
                     #region srcRelease のエントリポイントの Id を取得
                     #endregion
 
-                    string dstFeedId = dstDrive.GetFolderFeedId(newFolder);
+                    string dstFeedId = dstDrive.FolderFeedId.Get(newFolder);
 
                     #region エントリポイントの Id を移行
                     try
                     {
                         if (srcRelease.EntryPointId.HasValue)
                         {
-                            string srcFeedId = srcDrive.GetFolderFeedId(srcFolder);
+                            string srcFeedId = srcDrive.FolderFeedId.Get(srcFolder);
                             var srcEntryPoints = srcDrive.GetPackageEntryPoints(srcFeedId, srcRelease.ProcessKey!, srcRelease.ProcessVersion!).ToList();
                             var dstEntryPoints = dstDrive.GetPackageEntryPoints(dstFeedId, srcRelease.ProcessKey!, srcRelease.ProcessVersion!).ToList();
 
@@ -873,7 +873,7 @@ namespace UiPath.PowerShell.Core
 
             try
             {
-                CredentialStore srcCredentialStore = srcDrive.GetCredentialStores().FirstOrDefault(cs => (cs.Id ?? 0) == srcCredentialStoreId);
+                CredentialStore srcCredentialStore = srcDrive.CredentialStores.Get().FirstOrDefault(cs => (cs.Id ?? 0) == srcCredentialStoreId);
                 if (srcCredentialStore == null)
                 {
                     string target = $"{srcDrive.NameColonSeparator}";
@@ -881,7 +881,7 @@ namespace UiPath.PowerShell.Core
                     return null;
                 }
 
-                var dstCredentialStore = dstDrive.GetCredentialStores().FirstOrDefault(cs => string.Compare(cs.Name, srcCredentialStore.Name, StringComparison.OrdinalIgnoreCase) == 0);
+                var dstCredentialStore = dstDrive.CredentialStores.Get().FirstOrDefault(cs => string.Compare(cs.Name, srcCredentialStore.Name, StringComparison.OrdinalIgnoreCase) == 0);
                 if (dstCredentialStore == null)
                 {
                     string target = dstDrive.NameColonSeparator;
@@ -944,7 +944,7 @@ namespace UiPath.PowerShell.Core
             if (srcRobotId == null || srcRobotId == 0) return null;
             try
             {
-                var srcRobot = srcDrive.GetRobots()?.FirstOrDefault(r => r.Id == srcRobotId);
+                var srcRobot = srcDrive.Robots.Get()?.FirstOrDefault(r => r.Id == srcRobotId);
                 if (srcRobot == null)
                 {
                     _this.WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, $"{msg}: {srcDrive.NameColon} does not have robot with Id = {srcRobotId}."), "MigrateRobotIdError", ErrorCategory.InvalidOperation, srcDrive));
@@ -952,7 +952,7 @@ namespace UiPath.PowerShell.Core
                 }
                 //msg = $"Migrating id of the robot {Path.Combine(srcDrive.NameColon, srcRobot.Name!)}";
 
-                var dstRobots = dstDrive.GetRobotsFromFolder(dstFolder);
+                var dstRobots = dstDrive.RobotsFromFolder.Get(dstFolder);
                 var dstRobot = dstRobots?.FirstOrDefault(r => string.Compare(r.Name, srcRobot.Name, StringComparison.OrdinalIgnoreCase) == 0);
                 if (dstRobot == null)
                 {
@@ -978,7 +978,7 @@ namespace UiPath.PowerShell.Core
             //string msg = $"Migrating the machine id {Path.Combine(srcDrive.NameColon, srcMachineId?.ToString() ?? "")}";
             try
             {
-                var srcMachine = srcDrive.GetMachines().FirstOrDefault(m => m.Id == srcMachineId);
+                var srcMachine = srcDrive.Machines.Get().FirstOrDefault(m => m.Id == srcMachineId);
                 if (srcMachine == null)
                 {
                     string target = srcFolder.GetPSPath();
@@ -986,7 +986,7 @@ namespace UiPath.PowerShell.Core
                     return null;
                 }
                 //msg = $"Migrating id of the machine {Path.Combine(srcDrive.NameColon, srcMachine.Name!)}";
-                var dstMachineFolder = dstDrive.GetMachinesAssignedToFolder(dstFolder).FirstOrDefault(m => string.Compare(m.Name, srcMachine.Name, StringComparison.OrdinalIgnoreCase) == 0);
+                var dstMachineFolder = dstDrive.FolderMachinesAssigned.Get(dstFolder).FirstOrDefault(m => string.Compare(m.Name, srcMachine.Name, StringComparison.OrdinalIgnoreCase) == 0);
                 if (dstMachineFolder == null)
                 {
                     string target = dstFolder.GetPSPath();
@@ -1071,7 +1071,7 @@ namespace UiPath.PowerShell.Core
             QueueDefinition srcQueue = null;
             try
             {
-                srcQueue = srcDrive.GetQueues(srcFolder)?.FirstOrDefault(q => q.Id == srcQueueId);
+                srcQueue = srcDrive.Queues.Get(srcFolder)?.FirstOrDefault(q => q.Id == srcQueueId);
             }
             catch (Exception ex)
             {
@@ -1089,7 +1089,7 @@ namespace UiPath.PowerShell.Core
             QueueDefinition dstQueue = null;
             try
             {
-                dstQueue = dstDrive.GetQueues(dstFolder)?.FirstOrDefault(q => string.Compare(q.Name, srcQueue.Name, StringComparison.OrdinalIgnoreCase) == 0);
+                dstQueue = dstDrive.Queues.Get(dstFolder)?.FirstOrDefault(q => string.Compare(q.Name, srcQueue.Name, StringComparison.OrdinalIgnoreCase) == 0);
             }
             catch (Exception ex)
             {
@@ -1287,7 +1287,7 @@ namespace UiPath.PowerShell.Core
             {
                 foreach (var dstLinkFolder in dstLinkFolders)
                 {
-                    var assets = dstDrive.GetAssets(dstLinkFolder);
+                    var assets = dstDrive.Assets.Get(dstLinkFolder);
                     var dstAsset = assets.FirstOrDefault(a => string.Compare(a.Name, asset.Name, StringComparison.OrdinalIgnoreCase) == 0);
                     if (dstAsset == null)
                     {
@@ -1315,14 +1315,14 @@ namespace UiPath.PowerShell.Core
             OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
             CancellationToken cancelToken, bool shouldProcess)
         {
-            dstDrive._dicMachinesAssigned?.TryRemove(newFolder.Id ?? 0, out _);
+            dstDrive.FolderMachinesAssigned.ClearCache(newFolder);
 
             string target = srcFolder.GetPSPath();
             string msg = "Copying assets";
             List<Asset> srcAssets;
             try
             {
-                srcAssets = srcDrive.GetAssets(srcFolder).FilterByWildcards(a => a?.Name, wpName).ToList();
+                srcAssets = srcDrive.Assets.Get(srcFolder).FilterByWildcards(a => a?.Name, wpName).ToList();
             }
             catch (Exception ex)
             {
@@ -1507,7 +1507,7 @@ namespace UiPath.PowerShell.Core
             {
                 foreach (var dstLinkFolder in dstLinkFolders)
                 {
-                    var queues = dstDrive.GetQueues(dstLinkFolder);
+                    var queues = dstDrive.Queues.Get(dstLinkFolder);
                     var dstQueue = queues.FirstOrDefault(a => string.Compare(a.Name, queue.Name, StringComparison.OrdinalIgnoreCase) == 0);
                     if (dstQueue == null)
                     {
@@ -1554,7 +1554,7 @@ namespace UiPath.PowerShell.Core
             List<QueueDefinition> srcQueues = null;
             try
             {
-                srcQueues = srcDrive.GetQueues(srcFolder).FilterByWildcards(q => q?.Name, wpName).ToList();
+                srcQueues = srcDrive.Queues.Get(srcFolder).FilterByWildcards(q => q?.Name, wpName).ToList();
             }
             catch (Exception ex)
             {
@@ -1827,7 +1827,7 @@ namespace UiPath.PowerShell.Core
             List<HttpTrigger> srcTriggers = null;
             try
             {
-                srcTriggers = srcDrive.GetHttpTriggers(srcFolder).FilterByWildcards(t => t?.Name, wpName).ToList();
+                srcTriggers = srcDrive.ApiTriggers.Get(srcFolder).FilterByWildcards(t => t?.Name, wpName).ToList();
             }
             catch (Exception ex)
             {
@@ -1963,7 +1963,7 @@ namespace UiPath.PowerShell.Core
             {
                 foreach (var dstLinkFolder in dstLinkFolders)
                 {
-                    var buckets = dstDrive.GetBuckets(dstLinkFolder);
+                    var buckets = dstDrive.Buckets.Get(dstLinkFolder);
                     var dstBucket = buckets.FirstOrDefault(a => string.Compare(a.Name, bucket.Name, StringComparison.OrdinalIgnoreCase) == 0);
                     if (dstBucket == null)
                     {
@@ -2003,7 +2003,7 @@ namespace UiPath.PowerShell.Core
             List<Bucket> srcBuckets;
             try
             {
-                srcBuckets = srcDrive.GetBuckets(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
+                srcBuckets = srcDrive.Buckets.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
             }
             catch (Exception ex)
             {
@@ -2077,7 +2077,7 @@ namespace UiPath.PowerShell.Core
             OrchDriveInfo srcDrive, Folder srcFolder, Int64? srcDefinitionId,
             OrchDriveInfo dstDrive, Folder newFolder, string msg)
         {
-            var srcTestCases = srcDrive.GetTestCases(srcFolder);
+            var srcTestCases = srcDrive.TestCases.Get(srcFolder);
             var srcTestCase = srcTestCases.FirstOrDefault(ts => ts.Id == srcDefinitionId);
             if (srcTestCase == null)
             {
@@ -2087,7 +2087,7 @@ namespace UiPath.PowerShell.Core
                 return null;
             }
 
-            var dstTestCases = dstDrive.GetTestCases(newFolder);
+            var dstTestCases = dstDrive.TestCases.Get(newFolder);
             var dstTestCase = dstTestCases.FirstOrDefault(tc => (tc.PackageIdentifier == srcTestCase.PackageIdentifier && tc.Name == srcTestCase.Name));
             if (dstTestCase == null)
             {
@@ -2117,7 +2117,7 @@ namespace UiPath.PowerShell.Core
 
             try
             {
-                var srcTestSets = srcDrive.GetTestSets(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
+                var srcTestSets = srcDrive.TestSets.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
                 reporter.TotalNum = srcTestSets.Count;
 
                 int index = 0;
@@ -2229,7 +2229,7 @@ namespace UiPath.PowerShell.Core
                 OrchDriveInfo srcDrive, Folder srcFolder, Int64? srcTestSetId,
                 OrchDriveInfo dstDrive, Folder newFolder, string msg)
         {
-            var srcTestSets = srcDrive.GetTestSets(srcFolder);
+            var srcTestSets = srcDrive.TestSets.Get(srcFolder);
             var srcTestSet = srcTestSets.FirstOrDefault(ts => ts.Id == srcTestSetId);
             if (srcTestSet == null)
             {
@@ -2239,7 +2239,7 @@ namespace UiPath.PowerShell.Core
                 return null;
             }
 
-            var dstTestSets = dstDrive.GetTestSets(newFolder);
+            var dstTestSets = dstDrive.TestSets.Get(newFolder);
             var dstTestSet = dstTestSets.FirstOrDefault(ts => (ts.Name == srcTestSet.Name));
             if (dstTestSet == null)
             {
@@ -2270,7 +2270,7 @@ namespace UiPath.PowerShell.Core
             List<TestSetSchedule> srcTestSetSchedules;
             try
             {
-                srcTestSetSchedules = srcDrive.GetTestSetSchedules(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
+                srcTestSetSchedules = srcDrive.TestSetSchedules.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
             }
             catch (Exception ex)
             {
@@ -2334,7 +2334,7 @@ namespace UiPath.PowerShell.Core
             List<TestDataQueue> srcTestDataQueues;
             try
             {
-                srcTestDataQueues = srcDrive.GetTestDataQueues(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
+                srcTestDataQueues = srcDrive.TestDataQueues.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
             }
             catch (Exception ex)
             {
@@ -2393,7 +2393,7 @@ namespace UiPath.PowerShell.Core
             List<TaskCatalog> srcTaskCatalogs;
             try
             {
-                srcTaskCatalogs = srcDrive.GetTaskCatalogs(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
+                srcTaskCatalogs = srcDrive.ActionCatalogs.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
             }
             catch (Exception ex)
             {
@@ -2434,7 +2434,7 @@ namespace UiPath.PowerShell.Core
                     try
                     {
                         dstDrive.OrchAPISession.CreateTaskCatalog(newFolder.Id ?? 0, postingTaskCatalog);
-                        dstDrive._dicTaskCatalog?.TryRemove(newFolder.Id ?? 0, out var _);
+                        dstDrive.ActionCatalogs.ClearCache(newFolder);
                     }
                     catch (Exception ex)
                     {
@@ -2567,7 +2567,7 @@ namespace UiPath.PowerShell.Core
 
                         srcDrive._dicReleases?.TryRemove(srcFolder.Id ?? 0, out _);
                         dstDrive._dicReleases?.TryRemove(dstFolder.Id ?? 0, out _);
-                        dstDrive._dicMachinesAssigned?.TryRemove(dstFolder.Id ?? 0, out _);
+                        dstDrive.FolderMachinesAssigned.ClearCache(dstFolder);
 
                         if (!ExcludeEntities)
                         {
@@ -2582,7 +2582,7 @@ namespace UiPath.PowerShell.Core
                             // #2 フォルダーマシンをコピー
                             msg = "Copying folder machines...   ";
                             reporter.WriteProgress(2);
-                            srcDrive._dicMachinesAssigned?.TryRemove(srcFolder.Id ?? 0, out _);
+                            srcDrive.FolderMachinesAssigned.ClearCache(srcFolder);
                             using var reporterFolderMachines = new ProgressReporter(this, 200, Int32.MaxValue, msg, msg);
                             CopyFolderMachines(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterFolderMachines, cancelHandler.Token, true);
 
@@ -2608,7 +2608,7 @@ namespace UiPath.PowerShell.Core
                             // #6 アセットをコピー
                             msg = "Copying assets...            ";
                             reporter.WriteProgress(6);
-                            srcDrive._dicAssets?.TryRemove(srcFolder.Id ?? 0, out _);
+                            srcDrive.Assets.ClearCache(srcFolder);
                             using var reporterAssets = new ProgressReporter(this, 600, Int32.MaxValue, msg, msg);
                             CopyAssets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterAssets, cancelHandler.Token, true);
 
@@ -2628,7 +2628,7 @@ namespace UiPath.PowerShell.Core
                             // #8 APIトリガーをコピー
                             msg = "Copying API triggers...      ";
                             reporter.WriteProgress(9);
-                            srcDrive._dicHttpTriggers?.TryRemove(srcFolder.Id ?? 0, out _);
+                            srcDrive.ApiTriggers.ClearCache(srcFolder);
                             using var reporterApiTriggers = new ProgressReporter(this, 900, Int32.MaxValue, msg, msg);
                             CopyApiTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterApiTriggers, cancelHandler.Token, true);
 
@@ -2661,7 +2661,7 @@ namespace UiPath.PowerShell.Core
                             msg = "Copying action catalogs...   ";
                             reporter.WriteProgress(12);
                             using var reporterActionCatalogs = new ProgressReporter(this, 1300, Int32.MaxValue, msg, msg);
-                            srcDrive._dicTaskCatalog?.TryRemove(srcFolder.Id ?? 0, out _);
+                            //srcDrive.ActionCatalogs.ClearCache(srcFolder);
                             CopyActionCatalogs(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestDataQueues, cancelHandler.Token, true);
                         }
                     }

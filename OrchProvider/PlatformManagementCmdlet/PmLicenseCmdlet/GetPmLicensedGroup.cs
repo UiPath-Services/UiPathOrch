@@ -83,12 +83,12 @@ namespace UiPath.PowerShell.Commands
             {
                 var drives = ResolveDrives(fakeBoundParameters);
 
-                var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", Positional.GroupName_UserName.Parameters);
-                var wpUserName = CreateWPListFromParameter(commandAst, parameterName, Positional.GroupName_UserName.Parameters, wordToComplete);
+                var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", GroupName_UserName.Parameters);
+                var wpUserName = CreateWPListFromParameter(commandAst, parameterName, GroupName_UserName.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetPmLicensedGroups());
+                var results = ParallelResults.ForEach(drives, drive => drive.PmLicensedGroups.Get());
 
                 foreach (var result in results)
                 {
@@ -130,7 +130,7 @@ namespace UiPath.PowerShell.Commands
                 IEnumerable<NuLicensedGroup> groups = null;
                 try
                 {
-                    groups = drive.GetPmLicensedGroups()
+                    groups = drive.PmLicensedGroups.Get()
                         .FilterByWildcards(g => g?.name, wpGroupName)
                         .OrderBy(g => g?.name);
                 }
