@@ -73,7 +73,7 @@ namespace UiPath.PowerShell.Commands
                     Core.OrchProvider.CopyQueues(this,
                         srcDrive, srcFolder, wpName,
                         dstDrive, dstFolder, reporterQueues,
-                        cancelHandler.Token, false);
+                        false, cancelHandler.Token);
                     dstDrive.Queues.ClearCache(dstFolder);
                 }
                 catch (OperationCanceledException)

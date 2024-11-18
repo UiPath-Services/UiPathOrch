@@ -185,42 +185,47 @@ namespace UiPath.PowerShell.Commands
 
                     foreach (var name in UserName!)
                     {
-                        var addingMembers = drive.SearchPmDirectoryUsers(name)?
+                        var addingMember = drive.SearchPmDirectoryUsers(name)?
                             .Where(t => objectTypes.Contains(t.objectType))
-                            .Where(t => string.Compare(t.identityName, name, StringComparison.OrdinalIgnoreCase) == 0);
+                            .FirstOrDefault(t => string.Compare(t.identityName, name, true) == 0);
 
                         // 一件も当たらなかったら警告を表示して次のユーザーへ
-                        if (!(addingMembers?.Any() ?? false))
+                        if (addingMember == null)
                         {
                             _warnedNames ??= [];
                             if (!_warnedNames.Add((drive, name))) continue;
-                            WriteWarning($"\"{drive.NameColonSeparator}\": No match found for UserName '{name}'.");
+
+                            WriteError(new ErrorRecord(
+                                new OrchException(
+                                    drive.NameColonSeparator,
+                                    $"Adding '{group!.GetPSPath()}': Failed to find '{name}' in '{drive.NameColonSeparator}'. Ignored."),
+                                "DirectorySearchFailed",
+                                ErrorCategory.InvalidOperation,
+                                drive
+                            ));
                             continue;
                         }
 
                         // ユーザーもしくはアプリの場合に限って、BulkResolveByName() を呼び出す必要がある
-                        foreach (var addingMember in addingMembers ?? [])
+                        if (addingMember.objectType == "DirectoryUser" || addingMember.objectType == "Application")
                         {
-                            if (addingMember.objectType == "DirectoryUser" || addingMember.objectType == "Application")
-                            {
-                                string searchKey = addingMember.objectType == "DirectoryUser" ? "user" : "application";
+                            string searchKey = addingMember.objectType == "DirectoryUser" ? "user" : "application";
 
-                                var entries = drive.PmBulkResolveByName(searchKey, [addingMember.identityName!]);
-                                var entry = entries.FirstOrDefault(e => e.name == name);
-                                if (entry?.identifier != null)
-                                {
-                                    members.Add((entry.name, entry.displayName, DirectoryTypes.Items[addingMember.objectType!], entry.identifier)!);
-                                }
-                                else
-                                {
-                                    WriteWarning($"\"{group!.name}\": No match found for UserName '{name}' ({addingMember.identityName}).");
-                                    continue;
-                                }
+                            var entries = drive.PmBulkResolveByName(searchKey, [addingMember.identityName!]);
+                            var entry = entries.FirstOrDefault(e => string.Compare(e.name, name, true) == 0);
+                            if (entry?.identifier != null)
+                            {
+                                members.Add((entry.name, entry.displayName, DirectoryTypes.Items[addingMember.objectType!], entry.identifier)!);
                             }
                             else
                             {
-                                members.Add((addingMember.identityName, addingMember.displayName, DirectoryTypes.Items[addingMember.objectType!], addingMember.identifier)!);
+                                WriteWarning($"\"{group!.name}\": No match found for UserName '{name}' ({addingMember.identityName}).");
+                                continue;
                             }
+                        }
+                        else
+                        {
+                            members.Add((addingMember.identityName, addingMember.displayName, DirectoryTypes.Items[addingMember.objectType!], addingMember.identifier)!);
                         }
                     }
                 }

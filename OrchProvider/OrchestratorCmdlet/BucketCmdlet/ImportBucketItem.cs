@@ -12,7 +12,7 @@ using Positional = UiPath.PowerShell.Positional.Name;
 namespace UiPath.PowerShell.Commands
 {
     // WIP
-    //[Cmdlet(VerbsData.Import, "OrchFileToBucket")]
+    //[Cmdlet(VerbsData.Import, "BucketItem")]
     [OutputType(typeof(Bucket))]
     class ImportFileToBucketCommand : OrchestratorPSCmdlet
     {

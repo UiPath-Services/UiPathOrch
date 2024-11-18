@@ -82,7 +82,7 @@ namespace UiPath.PowerShell.Commands
                     Core.OrchProvider.CopyAssets(this,
                         srcDrive, srcFolder, wpName,
                         dstDrive, dstFolder, reporterAssets,
-                        cancelHandler.Token, false);
+                        false, cancelHandler.Token);
                     dstDrive.Assets.ClearCache(dstFolder);
                 }
                 catch (OperationCanceledException)

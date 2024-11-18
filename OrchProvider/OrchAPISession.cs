@@ -1,5 +1,6 @@
 ﻿#pragma warning disable IDE1006 // 命名スタイル
 
+using System.Linq;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Reflection;
@@ -2434,11 +2435,12 @@ namespace UiPath.OrchAPI
         }
 
         // entityType: "user", "group", or "application"
-        public Dictionary<string, PmGroupMember>? PmBulkResolveByName(string partitionGlobalId, string entityType, string[] names)
+        // "robot" の場合はどうなる？
+        public Dictionary<string, PmGroupMember>? PmBulkResolveByName(string partitionGlobalId, string entityType, IEnumerable<string> names)
         {
             var postdata = new BulkResolveByNameCommand()
             {
-                entityNames = names,
+                entityNames = names as string[] ?? names.ToArray(),
                 entityType = entityType
             };
 

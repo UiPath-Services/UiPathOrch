@@ -1,16 +1,12 @@
 ﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Job = UiPath.PowerShell.Entities.Job;
-
-using Positional = UiPath.PowerShell.Positional.Id;
-using LastItems = UiPath.PowerShell.Positional.Hour_Day_Week_Month_3Month_6Month_Year_3Year;
-using System.Security.AccessControl;
 using UiPath.PowerShell.Positional;
+using Job = UiPath.PowerShell.Entities.Job;
+using LastItems = UiPath.PowerShell.Positional.Hour_Day_Week_Month_3Month_6Month_Year_3Year;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -33,6 +29,30 @@ namespace UiPath.PowerShell.Commands
         [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(TimeBeforeCompleter))]
         public DateTime? CreationTimeBefore { get; set; }
+
+        [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(TimeAfterCompleter))]
+        public DateTime? StartTimeAfter { get; set; }
+
+        [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(TimeBeforeCompleter))]
+        public DateTime? StartTimeBefore { get; set; }
+
+        [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(TimeAfterCompleter))]
+        public DateTime? EndTimeAfter { get; set; }
+
+        [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(TimeBeforeCompleter))]
+        public DateTime? EndTimeBefore { get; set; }
+
+        [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(TimeAfterCompleter))]
+        public DateTime? ResumeTimeAfter { get; set; }
+
+        [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(TimeBeforeCompleter))]
+        public DateTime? ResumeTimeBefore { get; set; }
 
         [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(PriorityCompleter))]
@@ -223,6 +243,48 @@ namespace UiPath.PowerShell.Commands
             }
             #endregion
 
+            #region StartTimeAfter
+            if (StartTimeAfter != null)
+            {
+                filter.Add($"(StartTime ge {StartTimeAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            }
+            #endregion
+
+            #region StartTimeBefore
+            if (StartTimeBefore != null)
+            {
+                filter.Add($"(StartTime lt {StartTimeBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            }
+            #endregion
+
+            #region EndTimeAfter
+            if (EndTimeAfter != null)
+            {
+                filter.Add($"(EndTime ge {EndTimeAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            }
+            #endregion
+
+            #region EndTimeBefore
+            if (EndTimeBefore != null)
+            {
+                filter.Add($"(EndTime lt {EndTimeBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            }
+            #endregion
+
+            #region ResumeTimeAfter
+            if (ResumeTimeAfter != null)
+            {
+                filter.Add($"(ResumeTime ge {ResumeTimeAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            }
+            #endregion
+
+            #region ResumeTimeBefore
+            if (ResumeTimeBefore != null)
+            {
+                filter.Add($"(ResumeTime lt {ResumeTimeBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            }
+            #endregion
+
             #region Priority
             if (Priority!= null)
             {
@@ -297,6 +359,12 @@ namespace UiPath.PowerShell.Commands
                 Last == null &&
                 CreationTimeAfter == null &&
                 CreationTimeBefore == null &&
+                StartTimeAfter == null &&
+                StartTimeBefore == null &&
+                EndTimeAfter == null &&
+                EndTimeBefore == null &&
+                ResumeTimeAfter == null &&
+                ResumeTimeBefore == null &&
                 Priority == null &&
                 ReleaseName == null &&
                 ProcessType == null &&

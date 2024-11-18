@@ -490,9 +490,6 @@ namespace UiPath.PowerShell.Core
             _dicMachineClientSecrets = null;
             _dicMachineClientSecrets_Exception.ClearCache();
 
-            _dicMachineSessionRuntimesByFolder = null;
-            _dicMachineSessionRuntimesByFolder_Exceptions?.ClearCache();
-
             _dicPackages = null;
             _dicPackages_Exceptions?.ClearCache();
 
@@ -1988,43 +1985,6 @@ namespace UiPath.PowerShell.Core
 
         #endregion
 
-        #region MachineSessionRuntimeByFolder cache
-        // Key: folderId, SessionId
-        internal ConcurrentDictionary<Int64, List<MachineSessionRuntime>>? _dicMachineSessionRuntimesByFolder = null;
-        internal readonly ExceptionsCachePer<Int64> _dicMachineSessionRuntimesByFolder_Exceptions = new();
-        public ReadOnlyCollection<MachineSessionRuntime> GetMachineSessionRuntimesByFolderId(Folder folder, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
-        {
-            _dicMachineSessionRuntimesByFolder_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-            if (_dicMachineSessionRuntimesByFolder == null)
-            {
-                lock (_dicMachineSessionRuntimesByFolder_Exceptions)
-                {
-                    _dicMachineSessionRuntimesByFolder ??= new();
-                }
-            }
-            if (!_dicMachineSessionRuntimesByFolder.TryGetValue(folder.Id ?? 0, out var sessions))
-            {
-                try
-                {
-                    sessions = OrchAPISession.GetMachineSessionRuntimesByFolderId(folder.Id ?? 0, query, skip, first).ToList();
-                    string folderPath = folder.GetPSPath();
-                    foreach (var session in sessions)
-                    {
-                        session.Path = folderPath;
-                    }
-                    _dicMachineSessionRuntimesByFolder[folder.Id ?? 0] = sessions;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicMachineSessionRuntimesByFolder_Exceptions.CacheException(folder.Id ?? 0, ex);
-                    throw;
-                }
-            }
-            return sessions.AsReadOnly();
-        }
-        #endregion
-
         #region OrchExecutionSettings Cache
         // key: scope
         internal Dictionary<int, ExecutionSettingDefinition[]?>? _dicExecutionSettings = null;
@@ -2171,8 +2131,10 @@ namespace UiPath.PowerShell.Core
         // kind: "user", "group", or "application"
         internal ConcurrentDictionary<(string, string), PmGroupMember>? _dicPmBulkResolveByName = null;
         internal readonly ExceptionCachePerTenant _dicPmBulkResolveByName_Exception = new();
-        public ReadOnlyCollection<PmGroupMember> PmBulkResolveByName(string kind, IEnumerable<string> names)
+        public ICollection<PmGroupMember> PmBulkResolveByName(string kind, IEnumerable<string> names)
         {
+            if (!names.Any()) return [];
+
             _dicPmBulkResolveByName_Exception.ThrowCachedExceptionIfAny();
 
             if (_dicPmBulkResolveByName == null)
@@ -2212,7 +2174,7 @@ namespace UiPath.PowerShell.Core
                 .Where(result => result.found && result.value != null)
                 .Select(result => result.value!)
                 .ToList();
-            return ret.AsReadOnly();
+            return ret;
         }
 
         // key: name
@@ -2648,6 +2610,7 @@ namespace UiPath.PowerShell.Core
         public readonly ListCachePerFolder<Entities.Environment> Environments;
         public readonly ListCachePerFolder<MachineFolder> FolderMachinesAssigned;
         public readonly ListCachePerFolder<MachineFolder> FolderMachinesAssignable;
+        public readonly ListCachePerFolder<MachineSessionRuntime> MachineSessionRuntimesByFolder;
         public readonly ListCachePerFolder<SimpleUser> Reviewers;
         public readonly ListCachePerFolder<QueueDefinition> Queues;
         public readonly ListCachePerFolder<RobotsFromFolderModel> RobotsFromFolder;
@@ -2655,6 +2618,7 @@ namespace UiPath.PowerShell.Core
         public readonly ListCachePerFolder<TestCaseDefinition> TestCases;
         public readonly ListCachePerFolder<TestCaseExecution> TestCaseExecutions;
         public readonly ListCachePerFolder<TestDataQueue> TestDataQueues;
+        //public readonly ListCachePerFolder<TestDataQueueItem> TestDataQueueItems;
         public readonly ListCachePerFolder<TestSet> TestSets;
         public readonly ListCachePerFolder<TestSetSchedule> TestSetSchedules;
         public readonly ListCachePerFolder<UserRobots> UserRobots;
@@ -2749,7 +2713,7 @@ namespace UiPath.PowerShell.Core
                 }
             );
 
-            PmLicensedGroups = new (this,
+            PmLicensedGroups = new(this,
                 OrchAPISession.GetPmLicensedGroups,
                 e =>
                 {
@@ -2773,6 +2737,7 @@ namespace UiPath.PowerShell.Core
             ApiTriggers        = new(this, OrchAPISession.GetHttpTriggers,       (e, folderPath) => e.Path = folderPath, 16);
             Buckets            = new(this, OrchAPISession.GetBuckets,            (e, folderPath) => e.Path = folderPath);
             Environments       = new(this, OrchAPISession.GetEnvironments,       (e, folderPath) => e.Path = folderPath);
+            MachineSessionRuntimesByFolder = new(this, OrchAPISession.GetMachineSessionRuntimesByFolderId, (e, folderPath) => e.Path = folderPath);
             Queues             = new(this, OrchAPISession.GetQueues,             (e, folderPath) => e.Path = folderPath);
             Reviewers          = new(this, OrchAPISession.GetReviewers);
             RobotsFromFolder   = new(this, OrchAPISession.GetRobotsFromFolder,   (e, folderPath) => e.Path = folderPath);
@@ -2799,7 +2764,7 @@ namespace UiPath.PowerShell.Core
                 }
             });
 
-            FolderMachinesAssigned = new (this,
+            FolderMachinesAssigned = new(this,
                 OrchAPISession.ApiVersion >= 12
                     ? fid => OrchAPISession.GetMachinesAssignedTo(fid, "&$filter=((IsAssignedToFolder eq true) or (IsInherited eq true))")
                     : fid => OrchAPISession.GetMachinesAssignedTo(fid, "&$filter=(IsAssignedToFolder eq true)"),

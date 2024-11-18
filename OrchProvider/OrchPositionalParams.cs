@@ -259,6 +259,11 @@ namespace UiPath.PowerShell.Positional
         public static string[] Parameters { get; } = ["GroupName"];
     }
 
+    internal class GroupName_Destination : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["GroupName", "Destination"];
+    }
+
     internal class GroupName_License : IPositionalParameters
     {
         public static string[] Parameters { get; } = ["GroupName", "License"];

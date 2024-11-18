@@ -268,7 +268,7 @@ namespace UiPath.PowerShell.Commands
 
                         var robots = drive.Robots.Get();
                         var machines = drive.Machines.Get();
-                        var sessions = drive.GetMachineSessionRuntimesByFolderId(folder);
+                        var sessions = drive.MachineSessionRuntimesByFolder.Get(folder);
 
                         foreach (var mrs in mrss ?? [])
                         {
@@ -308,7 +308,7 @@ namespace UiPath.PowerShell.Commands
                             var created = drive.OrchAPISession.PostProcessSchedule(folder.Id!.Value, schedule);
                             if (created != null)
                             {
-                                created.Path = folder.Path;
+                                created.Path = folder.GetPSPath();
                                 WriteObject(created);
                                 drive._dicTriggers?.TryRemove(folder.Id.Value, out _);
                                 drive._dicTriggers_Exceptions.ClearCache();

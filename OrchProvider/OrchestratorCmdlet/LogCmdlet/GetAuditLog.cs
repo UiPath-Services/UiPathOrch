@@ -18,31 +18,31 @@ namespace UiPath.PowerShell.Commands
     [OutputType(typeof(AuditLogEntity))]
     public class GetAuditLogCommand : OrchestratorPSCmdlet
     {
-        [Parameter(Position = 0, ParameterSetName = "Filter")]
+        [Parameter(Position = 0, ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(StaticTextsCompleter<LastItems>))]
         public string? Last { get; set; }
 
-        [Parameter(Position = 1, ParameterSetName = "Filter")]
+        [Parameter(Position = 1, ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(ComponentCompleter))]
         public string[]? Component { get; set; }
 
-        [Parameter(Position = 2, ParameterSetName = "Filter")]
+        [Parameter(Position = 2, ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(UserNameCompleter))]
         public string[]? UserName { get; set; }
 
-        [Parameter(Position = 3, ParameterSetName = "Filter")]
+        [Parameter(Position = 3, ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(ActionCompleter))]
         public string[]? Action { get; set; }
 
-        [Parameter(ParameterSetName = "Filter")]
+        [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(TimeAfterCompleter))]
         public DateTime? ExecutionTimeAfter { get; set; }
 
-        [Parameter(ParameterSetName = "Filter")]
+        [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(TimeBeforeCompleter))]
         public DateTime? ExecutionTimeBefore { get; set; }
 
-        [Parameter(ParameterSetName = "Id")]
+        [Parameter(ParameterSetName = "Id", ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(IdCompleter))]
         [SupportsWildcards]
         public string[]? Id { get; set; }
@@ -130,14 +130,14 @@ namespace UiPath.PowerShell.Commands
         [Parameter]
         public SwitchParameter ExpandDetails { get; set; }
 
-        [Parameter]
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         public ulong? Skip { get; set; }
 
-        [Parameter]
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(StaticTextsCompleter<Item10>))]
         public ulong? First { get; set; }
 
-        [Parameter]
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(DriveCompleter<Last_Component_UserName_Action>))]
         public string[]? Path { get; set; }
 

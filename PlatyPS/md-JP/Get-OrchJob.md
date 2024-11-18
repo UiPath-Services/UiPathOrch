@@ -21,9 +21,11 @@ Get-OrchJob [-JobId <Int64[]>] [-Path <String[]>] [-Recurse] [-Depth <UInt32>]
 ### Filter
 ```
 Get-OrchJob [-Last <String>] [-CreationTimeAfter <DateTime>] [-CreationTimeBefore <DateTime>]
- [-Priority <String>] [-ReleaseName <String[]>] [-SourceType <String[]>] [-State <String[]>]
- [-ProcessType <String[]>] [-Skip <UInt64>] [-OrderBy <String>] [-OrderAscending] [-First <UInt64>]
- [-Path <String[]>] [-Recurse] [-Depth <UInt32>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+ [-StartTimeAfter <DateTime>] [-StartTimeBefore <DateTime>] [-EndTimeAfter <DateTime>]
+ [-EndTimeBefore <DateTime>] [-ResumeTimeAfter <DateTime>] [-ResumeTimeBefore <DateTime>] [-Priority <String>]
+ [-ReleaseName <String[]>] [-SourceType <String[]>] [-State <String[]>] [-ProcessType <String[]>]
+ [-Skip <UInt64>] [-OrderBy <String>] [-OrderAscending] [-First <UInt64>] [-Path <String[]>] [-Recurse]
+ [-Depth <UInt32>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -301,6 +303,96 @@ Position: Named
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
+```
+
+### -EndTimeAfter
+{{ Fill EndTimeAfter Description }}
+
+```yaml
+Type: DateTime
+Parameter Sets: Filter
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -EndTimeBefore
+{{ Fill EndTimeBefore Description }}
+
+```yaml
+Type: DateTime
+Parameter Sets: Filter
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -ResumeTimeAfter
+{{ Fill ResumeTimeAfter Description }}
+
+```yaml
+Type: DateTime
+Parameter Sets: Filter
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -ResumeTimeBefore
+{{ Fill ResumeTimeBefore Description }}
+
+```yaml
+Type: DateTime
+Parameter Sets: Filter
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -StartTimeAfter
+{{ Fill StartTimeAfter Description }}
+
+```yaml
+Type: DateTime
+Parameter Sets: Filter
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -StartTimeBefore
+{{ Fill StartTimeBefore Description }}
+
+```yaml
+Type: DateTime
+Parameter Sets: Filter
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
 ```
 
 ### CommonParameters

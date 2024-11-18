@@ -77,7 +77,7 @@ namespace UiPath.PowerShell.Commands
                     Core.OrchProvider.CopyApiTriggers(this,
                         srcDrive, srcFolder, wpName!,
                         dstDrive, dstFolder, reporterApiTriggers,
-                        cancelHandler.Token, false);
+                        false, cancelHandler.Token);
                     dstDrive.ApiTriggers.ClearCache(dstFolder);
                 }
                 catch (OperationCanceledException)

@@ -366,7 +366,7 @@ namespace UiPath.PowerShell.Commands
 
                         var robots = drive.Robots.Get();
                         var machines = drive.Machines.Get();
-                        var sessions = drive.GetMachineSessionRuntimesByFolderId(folder);
+                        var sessions = drive.MachineSessionRuntimesByFolder.Get(folder);
 
                         foreach (var mrs in mrss ?? [])
                         {

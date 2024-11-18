@@ -76,7 +76,7 @@ namespace UiPath.PowerShell.Commands
                     Core.OrchProvider.CopyTriggers(this,
                         srcDrive, srcFolder, wpName!,
                         dstDrive, dstFolder, reporterTriggers,
-                        cancelHandler.Token, false);
+                        false, cancelHandler.Token);
                     dstDrive._dicTriggers?.TryRemove(dstFolder.Id ?? 0, out _);
                     dstDrive._dicTriggers_Exceptions.ClearCache();
                     dstDrive._dicTriggersDetailed?.TryRemove(dstFolder.Id ?? 0, out _);

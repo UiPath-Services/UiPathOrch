@@ -3,8 +3,7 @@ using System.Text;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name;
+using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -17,7 +16,7 @@ namespace UiPath.PowerShell.Commands
     public class GetPmGroupCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(PmGroupNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(PmGroupNameCompleter<GroupName>))]
         [SupportsWildcards]
         public string[]? GroupName { get; set; }
 
@@ -25,7 +24,7 @@ namespace UiPath.PowerShell.Commands
         public SwitchParameter ExpandMembers { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(DriveCompleter<GroupName>))]
         public string[]? Path { get; set; }
 
         [Parameter]
@@ -37,15 +36,15 @@ namespace UiPath.PowerShell.Commands
         public Encoding? CsvEncoding { get; set; }
 
         private static readonly string DefaultCsvName = "ExportedPmGroups.csv";
-        private static readonly string[] CsvHeaders = ["Path", "GroupName", "Type", "UserName"];
+        private static readonly string[] CsvHeaders = ["Path", "GroupName", "Type", "UserName", "Email", "Source"];
 
         // TODO: -ExpandedMembers を指定しない場合は、メンバを展開しない方が良いのではないか？
-        private static void WriteCsvContent(StreamWriter writer, IEnumerable<PmGroup> output)
+        private static void WriteCsvContent(StreamWriter writer, PmGroup group)
         {
             // 各グループに対してデータ行を書き込む
-            foreach (var member in output
-                .Where(g => g.members != null)
-                .SelectMany(g => g.members!)
+            if (group?.members == null) return;
+
+            foreach (var member in group.members
                 .OrderBy(m => m.groupName)
                 .ThenBy(m => m.objectType)
                 .ThenBy(m => m.name))
@@ -54,7 +53,9 @@ namespace UiPath.PowerShell.Commands
                     EscapeCsvValue(member.Path, true),
                     EscapeCsvValue(member.groupName, true),
                     EscapeCsvValue(member.objectType), ////////// TODO: これ変換必要だっけ？
-                    EscapeCsvValue(member.name)
+                    EscapeCsvValue(member.name),
+                    member.email ?? "",
+                    member.source ?? ""
                 ];
                 WriteCsvLine(writer, line);
             }
@@ -65,78 +66,56 @@ namespace UiPath.PowerShell.Commands
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
             var wpGroupName = GroupName.ConvertToWildcardPatternList();
 
-            //foreach (var drive in drives)
-            //{
-            //    var pg = drive.GetPartitionGlobalId();
-            //    WriteObject(drive.OrchAPISession.GetPmGroups2(pg), true);
-            //}
-
-            //return;
-
             ExportCsv = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
             using var writer = WriteCsvHeader(ExportCsv, CsvEncoding, CsvHeaders);
 
-            using var results = OrchThreadPool.RunForEach(drives,
-                drive => drive.NameColonSeparator,
-                drive => drive,
-                drive =>
-                {
-                    var ret = drive.GetPmGroups().Values;
-                    if (ExpandMembers.IsPresent || !string.IsNullOrEmpty(ExportCsv))
-                    {
-                        var groups = ret
-                            .Where(g => g != null)
-                            .FilterByWildcards(g => g?.name!, wpGroupName);
-                        foreach (var group in groups)
-                        {
-                            drive.GetPmGroup(group?.id);
-                        }
-                        ret = drive.GetPmGroups().Values;
-                    }
-                    return ret;
-                }
-            );
-
-            using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var result in results)
+            foreach (var drive in drives)
             {
-                try
+                var groups = drive.GetPmGroups().Values
+                    .Where(g => g != null)
+                    .FilterByWildcards(g => g?.name!, wpGroupName)
+                    .OrderBy(g => g.name);
+
+                if (!ExpandMembers && writer == null)
                 {
-                    var groups = result.GetResult(cancelHandler.Token);
-                    if (groups == null) continue;
+                    WriteObject(groups, true);
+                }
+                else
+                {
+                    using var results = OrchThreadPool.RunForEach(groups,
+                        group => group.GetPSPath(),
+                        group => group,
+                        group => drive.GetPmGroup(group.id)
+                    );
 
-                    var targetGroups = groups
-                        .Where(g => g != null)
-                        .FilterByWildcards(g => g?.displayName!, wpGroupName)
-                        .OrderBy(g => g!.name);
-
-                    if (writer != null)
+                    using var cancelHandler = new ConsoleCancelHandler();
+                    foreach (var result in results)
                     {
-                        WriteCsvContent(writer, targetGroups!);
-                    }
-                    else if (ExpandMembers.IsPresent)
-                    {
-                        foreach (var group in targetGroups)
+                        try
                         {
-                            WriteObject(group!.members?
-                                .OrderBy(m => m.objectType)
-                                .ThenBy(m => m.displayName), true);
+                            var detailedGroup = result.GetResult(cancelHandler.Token);
+                            if (detailedGroup == null) continue;
+
+                            if (writer != null)
+                            {
+                                WriteCsvContent(writer, detailedGroup);
+                            }
+                            else
+                            {
+                                if (detailedGroup.members == null) continue;
+
+                                WriteObject(detailedGroup.members.OrderBy(m => m.name), true);
+                            }
+                        }
+                        catch (OrchException ex)
+                        {
+                            WriteError(new ErrorRecord(ex, "GetPmGroupError", ErrorCategory.InvalidOperation, ex.Target));
                         }
                     }
-                    else
-                    {
-                        WriteObject(groups
-                            .FilterByWildcards(g => g?.displayName!, wpGroupName)
-                            .OrderBy(g => g!.displayName), true);
-                    }
-                }
-                catch (OrchException ex)
-                {
-                    WriteError(new ErrorRecord(ex, "GetPmGroupError", ErrorCategory.InvalidOperation, ex.Target));
+
+                    WriteCSVExportedMessage(this, ExportCsv);
                 }
             }
-
-            WriteCSVExportedMessage(this, ExportCsv);
         }
     }
 }

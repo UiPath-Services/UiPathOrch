@@ -103,7 +103,7 @@ namespace UiPath.PowerShell.Commands
                     Core.OrchProvider.CopyFolderMachines(this,
                         srcDrive, srcFolder, wpName,
                         dstDrive, dstFolder, reporter,
-                        cancelHandler.Token, false);
+                        false, cancelHandler.Token);
                     dstDrive.FolderMachinesAssigned.ClearCache(dstFolder);
                     dstDrive.FolderMachinesAssignable.ClearCache(dstFolder);
                 }
