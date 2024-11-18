@@ -110,7 +110,7 @@ namespace UiPath.PowerShell.Commands
                     Core.OrchProvider.CopyFolderUsers(this,
                         srcDrive, srcFolder, wpUserName,
                         dstDrive, dstFolder, reporter,
-                        cancelHandler.Token, false);
+                        false, cancelHandler.Token);
                     dstDrive._dicUserRoles?.TryRemove((dstFolder.Id ?? 0, false), out _);
                     dstDrive._dicUserRoles?.TryRemove((dstFolder.Id ?? 0, true), out _);
                 }

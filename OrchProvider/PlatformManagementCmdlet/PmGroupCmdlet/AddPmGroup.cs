@@ -32,7 +32,7 @@ namespace UiPath.PowerShell.Commands
                     cancelHandler.Token.ThrowIfCancellationRequested();
 
                     string target = System.IO.Path.Combine(drive.NameColonSeparator, groupName);
-                    if (ShouldProcess(target, "Add Group"))
+                    if (ShouldProcess(target, "Add PmGroup"))
                     {
                         CreateGroupCommand createGroupCommand = new()
                         {

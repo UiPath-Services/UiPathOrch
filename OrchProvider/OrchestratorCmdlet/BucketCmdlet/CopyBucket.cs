@@ -69,7 +69,7 @@ namespace UiPath.PowerShell.Commands
                     Core.OrchProvider.CopyBuckets(this,
                         srcDrive, srcFolder, wpName,
                         dstDrive, dstFolder, reporterBuckets,
-                        cancelHandler.Token, false);
+                        false, cancelHandler.Token);
                     dstDrive.Buckets.ClearCache(dstFolder);
                     dstDrive._dicBucketLinks = null;
                 }

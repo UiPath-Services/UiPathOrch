@@ -983,6 +983,10 @@ namespace UiPath.PowerShell.Entities
         public bool? MayHaveUnattendedSession { get; set; }
         public bool? BypassBasicAuthRestriction { get; set; }
         public bool? MayHavePersonalWorkspace { get; set; }
+        public bool? ExplicitMayHaveRobotSession { get; set; }
+        public bool? ExplicitMayHaveUserSession { get; set; }
+        public bool? ExplicitMayHavePersonalWorkspace { get; set; }
+        public bool? ExplicitRestrictToPersonalWorkspace { get; set; }
         public UpdatePolicy? UpdatePolicy { get; set; }
         public string? AccountId { get; set; }
         //[JsonConverter(typeof(LocalDateTimeConverter))]
@@ -1570,7 +1574,7 @@ namespace UiPath.PowerShell.Entities
         public bool? HasMediaRecorded { get; set; }
         public bool? HasVideoRecorded { get; set; }
         public string? PersistenceId { get; set; }
-        public string? ResumeVersion { get; set; }
+        public int? ResumeVersion { get; set; }
         public string? StopStrategy { get; set; }
         public string? RuntimeType { get; set; }
         public bool? RequiresUserInteraction { get; set; }
@@ -3467,15 +3471,16 @@ namespace UiPath.PowerShell.Entities
         public string? groupName { get; set; } // added by UiPathOrch
 
         public string? objectType { get; set; }
+        public string? source { get; set; }
         public string? identifier { get; set; } // Guid
         public string? name { get; set; }
         public string? displayName { get; set; }
+        public string? email { get; set; }
     }
 
     // objectType = "DirectoryUser"
     public class DirectoryUser : PmGroupMember
     {
-        public string? email { get; set; }
         public string? firstName { get; set; }
         public string? lastName { get; set; }
         public string? jobTitle { get; set; }
@@ -3489,22 +3494,16 @@ namespace UiPath.PowerShell.Entities
     // objectType = "DirectoryGroup"
     public class DirectoryGroup : PmGroupMember
     {
-        public string? source { get; set; }
-        public string? email { get; set; }
     }
 
     // objectType = "DirectoryRobotUser"
     public class DirectoryRobotUser : PmGroupMember
     {
-        public string? source { get; set; }
-        public string? email { get; set; }
     }
 
-    // objectType = "DirectoryRobotUser"
+    // objectType = "DirectoryApplication"
     public class DirectoryApplication : PmGroupMember
     {
-        public string? source { get; set; }
-        public string? email { get; set; }
         public string? applicationId { get; set; }
     }
 

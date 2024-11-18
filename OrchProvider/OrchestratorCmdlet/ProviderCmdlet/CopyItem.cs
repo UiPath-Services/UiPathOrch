@@ -162,7 +162,7 @@ namespace UiPath.PowerShell.Core
         internal static void CopyFolderUsers(IWritableHost _this,
             OrchDriveInfo srcDrive, Folder srcFolder,  List<WildcardPattern>? wpUserName,
             OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
-            CancellationToken cancelToken, bool shouldProcess)
+            bool shouldProcess, CancellationToken cancelToken)
         {
             if (newFolder.FolderType == "Personal") return;
 
@@ -317,7 +317,7 @@ namespace UiPath.PowerShell.Core
             IWritableHost _this,
             OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpNames,
             OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
-            CancellationToken cancelToken, bool shouldProcess)
+            bool shouldProcess, CancellationToken cancelToken)
         {
             if (newFolder.FolderType == "Personal") return;
 
@@ -546,7 +546,7 @@ namespace UiPath.PowerShell.Core
         internal static void CopyProcesses(IWritableHost _this,
             OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
             OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
-            CancellationToken cancelToken, bool shouldProcess)
+            bool shouldProcess, CancellationToken cancelToken)
         {
             // スクリプトで連続して cmdlet を実行することを考えると、
             // いちいちキャッシュをクリアするべきじゃなかった。。
@@ -1017,7 +1017,7 @@ namespace UiPath.PowerShell.Core
                 //string query = $"&robotId={dstRobot.Id.Value}&MachineId%20eq%20{dstMachineFolder.Id}";
 
                 // TODO: これはキャッシュにかえた。ちゃんと動いているか？
-                var srcSessions = srcDrive.GetMachineSessionRuntimesByFolderId(srcFolder).ToList();
+                var srcSessions = srcDrive.MachineSessionRuntimesByFolder.Get(srcFolder).ToList();
                 srcSession = srcSessions.FirstOrDefault(s => s.SessionId == srcSessionId);
                 if (srcSession == null)
                 {
@@ -1313,7 +1313,7 @@ namespace UiPath.PowerShell.Core
         internal static void CopyAssets(IWritableHost _this, 
             OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
             OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
-            CancellationToken cancelToken, bool shouldProcess)
+            bool shouldProcess, CancellationToken cancelToken)
         {
             dstDrive.FolderMachinesAssigned.ClearCache(newFolder);
 
@@ -1540,7 +1540,7 @@ namespace UiPath.PowerShell.Core
         internal static void CopyQueues(IWritableHost _this,
             OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
             OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
-            CancellationToken cancelToken, bool shouldProcess)
+            bool shouldProcess, CancellationToken cancelToken)
         {
             // スクリプトで連続して cmdlet を実行することを考えると、
             // いちいちキャッシュをクリアするべきじゃなかった。。
@@ -1673,7 +1673,7 @@ namespace UiPath.PowerShell.Core
         internal static void CopyTriggers(IWritableHost _this,
             OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
             OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
-            CancellationToken cancelToken, bool shouldProcess)
+            bool shouldProcess, CancellationToken cancelToken)
         {
             string target = null;
             string msg = "Copying triggers";
@@ -1817,7 +1817,7 @@ namespace UiPath.PowerShell.Core
         internal static void CopyApiTriggers(IWritableHost _this,
             OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
             OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
-            CancellationToken cancelToken, bool shouldProcess)
+            bool shouldProcess, CancellationToken cancelToken)
         {
             if (srcDrive.OrchAPISession.ApiVersion < 14) return;
 
@@ -1988,7 +1988,7 @@ namespace UiPath.PowerShell.Core
         internal static void CopyBuckets(IWritableHost _this,
             OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
             OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
-            CancellationToken cancelToken, bool shouldProcess)
+            bool shouldProcess, CancellationToken cancelToken)
         {
             // スクリプトで連続して cmdlet を実行することを考えると、
             // いちいちキャッシュをクリアするべきじゃなかった。。
@@ -2101,7 +2101,7 @@ namespace UiPath.PowerShell.Core
         internal static void CopyTestSets(IWritableHost _this,
             OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
             OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
-            CancellationToken cancelToken, bool shouldProcess)
+            bool shouldProcess, CancellationToken cancelToken)
         {
             if (newFolder.FolderType == "Personal") return;
             if (srcDrive.OrchAPISession.ApiVersion < 14) return;
@@ -2253,7 +2253,7 @@ namespace UiPath.PowerShell.Core
         internal static void CopyTestSetSchedules(IWritableHost _this,
             OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
             OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
-            CancellationToken cancelToken, bool shouldProcess)
+            bool shouldProcess, CancellationToken cancelToken)
         {
             if (newFolder.FolderType == "Personal") return;
             if (srcDrive.OrchAPISession.ApiVersion < 14) return;
@@ -2317,7 +2317,7 @@ namespace UiPath.PowerShell.Core
         internal static void CopyTestDataQueues(IWritableHost _this,
             OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
             OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
-            CancellationToken cancelToken, bool shouldProcess)
+            bool shouldProcess, CancellationToken cancelToken)
         {
             if (newFolder.FolderType == "Personal") return;
             if (srcDrive.OrchAPISession.ApiVersion < 14) return;
@@ -2384,7 +2384,7 @@ namespace UiPath.PowerShell.Core
         internal static void CopyActionCatalogs(IWritableHost _this,
             OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
             OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
-            CancellationToken cancelToken, bool shouldProcess)
+            bool shouldProcess, CancellationToken cancelToken)
         {
             //if (srcDrive.OrchAPISession.ApiVersion < 14) return;
 
@@ -2577,21 +2577,21 @@ namespace UiPath.PowerShell.Core
                             srcDrive!._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, true), out var _);
                             srcDrive!._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, false), out var _);
                             using var reporterFolderUsers = new ProgressReporter(this, 100, Int32.MaxValue, msg, msg);
-                            CopyFolderUsers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterFolderUsers, cancelHandler.Token, true);
+                            CopyFolderUsers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterFolderUsers, true, cancelHandler.Token);
 
                             // #2 フォルダーマシンをコピー
                             msg = "Copying folder machines...   ";
                             reporter.WriteProgress(2);
                             srcDrive.FolderMachinesAssigned.ClearCache(srcFolder);
                             using var reporterFolderMachines = new ProgressReporter(this, 200, Int32.MaxValue, msg, msg);
-                            CopyFolderMachines(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterFolderMachines, cancelHandler.Token, true);
+                            CopyFolderMachines(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterFolderMachines, true, cancelHandler.Token);
 
                             // #3 バケットをコピー
                             // プロセスをコピーする前に、先にバケットをコピーしておく必要がある
                             msg = "Copying buckets...           ";
                             reporter.WriteProgress(3);
                             using var reporterBuckets = new ProgressReporter(this, 300, Int32.MaxValue, msg, msg);
-                            CopyBuckets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterBuckets, cancelHandler.Token, true);
+                            CopyBuckets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterBuckets, true, cancelHandler.Token);
 
                             // #4 フォルダーパッケージをコピー
                             msg = "Copying packages...          ";
@@ -2603,34 +2603,34 @@ namespace UiPath.PowerShell.Core
                             msg = "Copying processes...         ";
                             reporter.WriteProgress(5);
                             using var reporterProcesses = new ProgressReporter(this, 500, Int32.MaxValue, msg, msg);
-                            CopyProcesses(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterProcesses, cancelHandler.Token, true);
+                            CopyProcesses(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterProcesses, true, cancelHandler.Token);
 
                             // #6 アセットをコピー
                             msg = "Copying assets...            ";
                             reporter.WriteProgress(6);
                             srcDrive.Assets.ClearCache(srcFolder);
                             using var reporterAssets = new ProgressReporter(this, 600, Int32.MaxValue, msg, msg);
-                            CopyAssets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterAssets, cancelHandler.Token, true);
+                            CopyAssets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterAssets, true, cancelHandler.Token);
 
                             // #7 キューをコピー
                             msg = "Copying queues...            ";
                             reporter.WriteProgress(7);
                             using var reporterQueues = new ProgressReporter(this, 700, Int32.MaxValue, msg, msg);
-                            CopyQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterQueues, cancelHandler.Token, true);
+                            CopyQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterQueues, true, cancelHandler.Token);
 
                             // #8 トリガーをコピー
                             msg = "Copying triggers...          ";
                             reporter.WriteProgress(8);
                             srcDrive._dicTriggers?.TryRemove(srcFolder.Id ?? 0, out _);
                             using var reporterTriggers = new ProgressReporter(this, 800, Int32.MaxValue, msg, msg);
-                            CopyTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTriggers, cancelHandler.Token, true);
+                            CopyTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTriggers, true, cancelHandler.Token);
 
                             // #8 APIトリガーをコピー
                             msg = "Copying API triggers...      ";
                             reporter.WriteProgress(9);
                             srcDrive.ApiTriggers.ClearCache(srcFolder);
                             using var reporterApiTriggers = new ProgressReporter(this, 900, Int32.MaxValue, msg, msg);
-                            CopyApiTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterApiTriggers, cancelHandler.Token, true);
+                            CopyApiTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterApiTriggers, true, cancelHandler.Token);
 
                             // #xx テストケースはコピーする必要がない。
                             // パッケージとプロセスをコピーすれば、自動で出てくる。
@@ -2643,26 +2643,26 @@ namespace UiPath.PowerShell.Core
                             msg = "Copying test sets...         ";
                             reporter.WriteProgress(10);
                             using var reporterTestSets = new ProgressReporter(this, 1000, Int32.MaxValue, msg, msg);
-                            CopyTestSets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestSets, cancelHandler.Token, true);
+                            CopyTestSets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestSets, true, cancelHandler.Token);
 
                             // #11 テストセットスケジュールをコピー
                             msg = "Copying test schedules...    ";
                             reporter.WriteProgress(11);
                             using var reporterTestSchedules = new ProgressReporter(this, 1100, Int32.MaxValue, msg, msg);
-                            CopyTestSetSchedules(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestSchedules, cancelHandler.Token, true);
+                            CopyTestSetSchedules(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestSchedules, true, cancelHandler.Token);
 
                             // #12 テストデータキューをコピー
                             msg = "Copying test data queues...  ";
                             reporter.WriteProgress(12);
                             using var reporterTestDataQueues = new ProgressReporter(this, 1200, Int32.MaxValue, msg, msg);
-                            CopyTestDataQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestDataQueues, cancelHandler.Token, true);
+                            CopyTestDataQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestDataQueues, true, cancelHandler.Token);
 
                             // #13 アクションカタログをコピー
                             msg = "Copying action catalogs...   ";
                             reporter.WriteProgress(12);
                             using var reporterActionCatalogs = new ProgressReporter(this, 1300, Int32.MaxValue, msg, msg);
                             //srcDrive.ActionCatalogs.ClearCache(srcFolder);
-                            CopyActionCatalogs(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestDataQueues, cancelHandler.Token, true);
+                            CopyActionCatalogs(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestDataQueues, true, cancelHandler.Token);
                         }
                     }
 

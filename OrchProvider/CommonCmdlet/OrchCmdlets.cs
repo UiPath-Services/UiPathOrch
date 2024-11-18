@@ -346,7 +346,7 @@ namespace UiPath.PowerShell.Commands
                 // SessionId を変換
                 if (elem.SessionId != null)
                 {
-                    var sessions = drive.GetMachineSessionRuntimesByFolderId(folder!);
+                    var sessions = drive.MachineSessionRuntimesByFolder.Get(folder);
                     mrs.HostMachineName = sessions.FirstOrDefault(s => s.SessionId == elem.SessionId)?.HostMachineName;
                 }
                 mrss.Add(mrs);

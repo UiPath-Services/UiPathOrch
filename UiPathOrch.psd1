@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.8.11'
+ModuleVersion = '0.9.8.12'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -368,20 +368,27 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- When RedirectUrl was set at the root level of the configuration file, connections to confidential app settings could not be established.
+        ReleaseNotes = '- The ResumeVersion property of JobDto was incorrectly defined as a string, which caused an error when retrieving resumed jobs using the Get-OrchJob cmdlet. This has been fixed by changing the ResumeVersion property to int.
 
-- Previously, each entity used a distinct cache implementation, despite the code being nearly identical. To streamline maintenance, the common code has now been extracted and unified. This change improves code maintainability and slightly reduces the module''s footprint. Additionally, several minor issues were fixed in the process.
+- Fixed an issue where the source property of users was not included in the output when executing Get-OrchPmGroup -ExpandMembers.
 
-- In the former implementation of Get-OrchLog, logs sorted by TimeStamp could retrieve over 10,000 rows by generating an OData query based on the TimeStamp value of the last row fetched. However, this approach sometimes caused log rows on page boundaries to be missed. Therefore, the automatic page splitting by TimeStamp values has been removed. This change is expected to improve functionality, though as a trade-off, it is no longer possible to retrieve over 10,000 log rows at once. If needed, please adjust the query parameters manually and execute the Get-OrchLog cmdlet in segments. Then, by running the Get-OrchLog cmdlet without parameters, the cached log rows can be combined and output.
+- Enhanced the processing speed of Get-OrchPmGroup -ExpandMembers.
 
-- The Get-OrchQueueItem cmdlet has been enhanced.
-  - In Automation Cloud, the number of queue items that can be retrieved at once is limited to 100. Previously, specifying -First 100 was required when executing the Get-OrchQueueItem cmdlet to obtain the expected results. This limitation has been removed by automatically paginating in increments of 100 rows.
+- Added the following query parameters to the Get-OrchJob cmdlet:
+  - -StartTimeAfter
+  - -StartTimeBefore
+  - -EndTimeAfter
+  - -EndTimeBefore
+  - -ResumeTimeAfter
+  - -ResumeTimeBefore
 
-  - The DateTime values returned by the Get-OrchQueueItem cmdlet (such as DueDate, DeferDate, etc.) are now output in the local time zone. Previously, the default view displayed DateTime values in the local time zone, but they appeared in UTC format when redirected via a pipeline.
+- Updated the output of the Get-OrchUser cmdlet to include the following properties:
+  - ExplicitMayHaveRobotSession
+  - ExplicitMayHaveUserSession
+  - ExplicitMayHavePersonalWorkspace
+  - ExplicitRestrictToPersonalWorkspace
 
-  - Several query parameters (such as -DueDateAfter and -DueDateBefore) have been added.
-
-  - The Get-OrchQueueItem cmdlet now displays a progress bar.
+- Fixed an issue where the Directory of triggers did not display correctly immediately after triggers were created using the Add-OrchTrigger cmdlet.
 '
 
         # Prerelease string of this module

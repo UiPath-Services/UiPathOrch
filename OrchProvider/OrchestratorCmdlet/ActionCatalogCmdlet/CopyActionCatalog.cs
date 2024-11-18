@@ -68,7 +68,7 @@ namespace UiPath.PowerShell.Commands
                     Core.OrchProvider.CopyActionCatalogs(this,
                         srcDrive, srcFolder, wpName,
                         dstDrive, dstFolder, reporterActionCatalogs,
-                        cancelHandler.Token, false);
+                        false, cancelHandler.Token);
                     dstDrive.ActionCatalogs.ClearCache(dstFolder);
                 }
                 catch (OperationCanceledException)

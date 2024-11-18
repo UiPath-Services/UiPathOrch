@@ -69,7 +69,7 @@ namespace UiPath.PowerShell.Commands
                     Core.OrchProvider.CopyProcesses(this,
                         srcDrive, srcFolder, wpName,
                         dstDrive, dstFolder, reporterProcesses,
-                        cancelHandler.Token, false);
+                        false, cancelHandler.Token);
                     dstDrive._dicReleases?.TryRemove(dstFolder.Id ?? 0, out _);
                     //dstDrive._dicReleaseList?.TryRemove(dstFolder.Id ?? 0, out _);
                 }
