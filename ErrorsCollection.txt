@@ -14,3 +14,9 @@ Copy-OrchPmUser: "Demo:\": Failed to add PmUsers:
 
 Get-OrchQueueItem:
 {"message":"The field take must be between 0 and 100","errorCode":1009,"traceId":"00-a1748eae82a7add9cd2870735bcd51ef-9a46a107cf90b991-00"}
+
+Copy-OrchPmGroup:
+{"StatusCode":400,"StatusDescription":"BadRequest","Message":"Invalid Entity Names. (Parameter 'entityIdentifiers')"}
+
+Copy-OrchPmGroup:
+{"errors":{"entityType":["Error converting value \"robot\" to type 'UiPath.IdentityServer.Directory.Abstractions.DataContracts.DirectoryEntityType'. Path 'entityType', line 1, position 43."]},"type":"https://tools.ietf.org/html/rfc9110#section-15.5.1","title":"One or more validation errors occurred.","status":400,"traceId":"00-b4356a07063fc3fcc9cfc85d93806940-b5a1b0c76e7b0974-00"}

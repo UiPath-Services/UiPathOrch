@@ -5,12 +5,13 @@ using UiPath.PowerShell.Positional;
 using UiPath.PowerShell.Entities;
 using System.Management.Automation.Language;
 using System.Xml.Linq;
+using System.Collections.Generic;
+using System.Collections;
 
 namespace UiPath.PowerShell.Commands
 {
-    // WIP
     [Cmdlet(VerbsCommon.Copy, "OrchPmGroup", SupportsShouldProcess = true)]
-    class CopyPmGroupCommand : OrchestratorPSCmdlet
+    public class CopyPmGroupCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
         [ArgumentCompleter(typeof(PmGroupNameCompleter<GroupName_Destination>))]
@@ -30,64 +31,53 @@ namespace UiPath.PowerShell.Commands
             OrchDriveInfo drive,
             string srcGroupPath,
             string objectType,
-            IEnumerable<PmGroupMember> list)
+            IEnumerable<PmGroupMember> srcMembers)
         {
-            int listCount = list.Count();
+            int listCount = srcMembers.Count();
             if (listCount == 0) return [];
 
-            List<string> identifiers = [];
+            List<string> retIdentifiers = [];
+            List<PmGroupMember> unresolvedMembers = [];
 
-            var entriesUsers = drive.PmBulkResolveByName(objectType, list.Select(m => m.name!));
-            identifiers.AddRange(entriesUsers.Select(u => u.identifier!));
+            var entriesUsers = drive.PmBulkResolveByName(
+                objectType, srcMembers, m => m.name!,
+                unresolvedMembers);
 
-            // 見つからなかったユーザーを確認する
-            if (listCount != identifiers.Count)
+            retIdentifiers.AddRange(entriesUsers
+                .Where(u => u.Value != null)
+                .Select(u => u.Value!.identifier!));
+
+            // name で見つからなかったユーザーは、email でも検索する
+            if (unresolvedMembers.Count > 0)
             {
-                var dicEntriesUsers = entriesUsers.ToDictionary(m => m.name!, m => m, StringComparer.OrdinalIgnoreCase);
-                List<PmGroupMember> notFoundUsers = [];
-                foreach (var memberUser in list)
-                {
-                    if (!dicEntriesUsers.ContainsKey(memberUser.name!))
-                    {
-                        notFoundUsers.Add(memberUser);
-                    }
-                }
-                if (notFoundUsers.Count != 0)
-                {
-                    var entriesUsersByEmail = drive.PmBulkResolveByName(
-                        objectType,
-                        notFoundUsers
-                            .Where(u => !string.IsNullOrEmpty(u.email))
-                            .Select(u => u.email!));
-                    identifiers.AddRange(entriesUsersByEmail.Select(u => u.identifier!));
+                List<PmGroupMember> unresolvedEmails = [];
+                var entriesEmails = drive.PmBulkResolveByName(
+                    objectType,
+                    unresolvedMembers,
+                    m => m.email!,
+                    unresolvedEmails);
 
-                    if (notFoundUsers.Count != entriesUsersByEmail.Count)
-                    {
-                        // それでも見つからなかったユーザーについては警告を表示
-                        var dicEntriesUsersByEmail = entriesUsersByEmail.ToDictionary(m => m.name!, m => m, StringComparer.OrdinalIgnoreCase);
-                        foreach (var memberUser in notFoundUsers)
-                        {
-                            if (!dicEntriesUsersByEmail.ContainsKey(memberUser.name!))
-                            {
-                                string userName = memberUser.name;
-                                if (!string.IsNullOrEmpty(memberUser.email))
-                                    userName += $" {(memberUser.email)}";
+                retIdentifiers.AddRange(entriesEmails
+                    .Where(u => u.Value != null)
+                    .Select(u => u.Value!.identifier!));
 
-                                WriteError(new ErrorRecord(
-                                    new OrchException(
-                                        drive.NameColonSeparator,
-                                        $"Copying '{srcGroupPath}': Failed to find '{userName}' ({memberUser.email}) in '{drive.NameColonSeparator}'. Ignored."),
-                                    "DirectorySearchFailed",
-                                    ErrorCategory.InvalidOperation,
-                                    drive
-                                ));
-                            }
-                        }
-                    }
+                // name でも email でも見つからなかったユーザーについては、エラーを出力
+                foreach (var unresolvedEmail in unresolvedEmails)
+                {
+                    string userName = unresolvedEmail.name;
+                    if (!string.IsNullOrEmpty(unresolvedEmail.email))
+                        userName += $" ({unresolvedEmail.email})";
+                    WriteError(new ErrorRecord(
+                        new OrchException(
+                            drive.NameColonSeparator,
+                            $"Copying '{srcGroupPath}': Failed to find '{userName}' in '{drive.NameColonSeparator}'. Ignored."),
+                        "DirectorySearchFailed",
+                        ErrorCategory.InvalidOperation,
+                        drive
+                    ));
                 }
             }
-
-            return identifiers;
+            return retIdentifiers;
         }
 
         protected override void ProcessRecord()
@@ -108,7 +98,7 @@ namespace UiPath.PowerShell.Commands
                     .FilterByWildcards(g => g?.name, wpGroupName)
                     .OrderBy(g => g.name);
 
-                // 結果は srcGroups にキャッシュされる
+                // GetPmGroup() の結果は srcGroups にキャッシュされる
                 var results = ParallelResults.ForEach(srcGroups, g => srcDrive.GetPmGroup(g.id));
             }
             catch (Exception ex)
@@ -154,6 +144,7 @@ namespace UiPath.PowerShell.Commands
                         PmGroupMember[]? members = srcGroup.members;
                         List<DirectoryUser> membersUsers = (members?.Where(m => m.objectType == "DirectoryUser") ?? []).Cast<DirectoryUser>().ToList();
                         List<DirectoryApplication> membersApps = (members?.Where(m => m.objectType == "DirectoryApplication") ?? []).Cast<DirectoryApplication>().ToList();
+                        List<PmGroupMember> membersGroups = (members?.Where(m => m.objectType == "DirectoryGroup") ?? []).ToList();
                         List<PmGroupMember> membersOthers = (members?.Where(m => m.objectType != "DirectoryUser" && m.objectType != "DirectoryApplication") ?? []).ToList();
 
                         // users と apps については、BulkResolveByName() を呼び出す必要がある
@@ -169,12 +160,23 @@ namespace UiPath.PowerShell.Commands
                             "application",
                             membersApps));
 
-                        // ユーザーとアプリ以外でも、もしかしてこれで動く？？
                         directoryUserMemberIDs.AddRange(FindIdentifiers(
                             dstDrive,
                             srcGroup.GetPSPath(),
-                            "robot",
-                            membersApps));
+                            "group",
+                            membersGroups));
+
+                        // それ以外のやつは、ひとつずつ SearchPmDirectoryUsers() で探す。。
+                        //foreach (var name in membersOthers)
+                        //var addingMember = dstDrive.SearchPmDirectoryUsers(srcMember.name!)?
+                        //    .FirstOrDefault(t => string.Compare(t.identityName, srcMember.name, true) == 0);
+
+                        // ユーザーとアプリ以外でも、もしかしてこれで動く？？
+                        //directoryUserMemberIDs.AddRange(FindIdentifiers(
+                        //    dstDrive,
+                        //    srcGroup.GetPSPath(),
+                        //    "robot",
+                        //    membersRobots));
 
 
 
