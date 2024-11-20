@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Management.Automation;
 using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
@@ -2096,6 +2097,7 @@ namespace UiPath.PowerShell.Core
         internal readonly ExceptionsCachePer<string> _dicPmDirectoryUsersException = new();
         public PmDirectoryEntityInfo[]? SearchPmDirectoryUsers(string key)
         {
+            key = key.ToLower();
             _dicPmDirectoryUsersException.ThrowCachedExceptionIfAny(key);
 
             if (_dicPmDirectoryUsers == null)
@@ -2128,12 +2130,19 @@ namespace UiPath.PowerShell.Core
         }
 
         // key: (name, kind)
-        // kind: "user", "group", or "application"
-        internal ConcurrentDictionary<(string, string), PmGroupMember>? _dicPmBulkResolveByName = null;
+        // kind: "user", "group", or "application" ロボットは検索できないようだ。
+        // unresolvedList は出力パラメータ。解決できなかった名前を、元の T のリストで返す。
+        internal ConcurrentDictionary<(string, string), PmGroupMember?>? _dicPmBulkResolveByName = null;
         internal readonly ExceptionCachePerTenant _dicPmBulkResolveByName_Exception = new();
-        public ICollection<PmGroupMember> PmBulkResolveByName(string kind, IEnumerable<string> names)
+        public Dictionary<string, PmGroupMember?> PmBulkResolveByName<T>(
+            string kind, IEnumerable<T> users, 
+            Func<T, string> getSearchKeyFunc,
+            List<T>? unresolvedList = null)
         {
-            if (!names.Any()) return [];
+            if (!users.Any())
+            {
+                return [];
+            }
 
             _dicPmBulkResolveByName_Exception.ThrowCachedExceptionIfAny();
 
@@ -2145,15 +2154,20 @@ namespace UiPath.PowerShell.Core
                 }
             }
 
-            // まだ問い合わせていない names の一覧を作成
-            string[] needQueryNames = names.Where(name => !_dicPmBulkResolveByName.ContainsKey((kind, name))).ToArray();
+            // まだ問い合わせていない names or emails の一覧を作成
+            List<T> needQueryUsers = users
+                .Where(user => !string.IsNullOrEmpty(getSearchKeyFunc(user)))
+                .Where(user => !_dicPmBulkResolveByName.ContainsKey((kind, getSearchKeyFunc(user))))
+                .ToList();
 
-            if (needQueryNames.Length != 0)
+            if (needQueryUsers.Count != 0)
             {
                 try
                 {
                     var partitionGlobalId = GetPartitionGlobalId();
-                    var result = OrchAPISession.PmBulkResolveByName(partitionGlobalId!, kind, needQueryNames);
+                    var result = OrchAPISession.PmBulkResolveByName(partitionGlobalId!, kind,
+                        needQueryUsers.Select(u => getSearchKeyFunc(u)));
+
                     foreach (var kvp in result ?? [])
                     {
                         _dicPmBulkResolveByName.AddOrUpdate((kind, kvp.Key), kvp.Value, (key, oldValue) => kvp.Value);
@@ -2166,14 +2180,48 @@ namespace UiPath.PowerShell.Core
                 }
             }
 
-            // 指定されたキーを持つ要素を抽出してリストを作成
-            var ret = names.Select(name => {
-                    bool found = _dicPmBulkResolveByName.TryGetValue((kind, name), out PmGroupMember value);
-                    return (found, value);
-                })
-                .Where(result => result.found && result.value != null)
-                .Select(result => result.value!)
-                .ToList();
+            // キャッシュをそのまま返すのではなく、今回の問い合わせの対象（users）の結果だけを返す
+            Dictionary<string, T> dicList = [];
+
+            // unresolvedList が渡されている場合には、このリストを作成する。
+            // users を高速に検索できるように、辞書にしておく。
+            if (unresolvedList != null)
+            {
+                dicList = users.ToDictionary(u => getSearchKeyFunc(u), u => u, StringComparer.OrdinalIgnoreCase);
+
+                // 検索キーが null のものは、未解決リストに追加する
+                foreach (var user in users)
+                {
+                    if (string.IsNullOrEmpty(getSearchKeyFunc(user)))
+                    {
+                        unresolvedList.Add(user);
+                    }
+                }
+            }
+
+            Dictionary<string, PmGroupMember?> ret = [];
+            foreach (var user in users)
+            {
+                string key = getSearchKeyFunc(user);
+                if (string.IsNullOrEmpty(key))
+                {
+                    continue;
+                }
+                // すべて辞書に入っているはず。。見つからなかった名前には null が入っている。
+                if (_dicPmBulkResolveByName.TryGetValue((kind, key), out PmGroupMember value))
+                {
+                    ret[key] = value;
+                    if (value == null && dicList != null)
+                    {
+                        // これも必ず辞書に入っているはず。。
+                        if (dicList.TryGetValue(key, out var unresolvedEntry))
+                        {
+                            unresolvedList!.Add(unresolvedEntry);
+                        }
+                    }
+                }
+            }
+
             return ret;
         }
 
@@ -2329,7 +2377,7 @@ namespace UiPath.PowerShell.Core
 
             if (_dicPmGroups == null)
             {
-                lock (this)
+                lock (_dicPmGroups_Exception)
                 {
                     _dicPmGroups ??= new();
                 }

@@ -50,10 +50,21 @@ namespace UiPath.PowerShell.Positional
         public static Dictionary<string, string> Items { get; } = new()
         {
             { "DirectoryUser",        "DirectoryUser" },
+            { "DirectoryGroup",       "DirectoryGroup" },
             { "DirectoryRobotUser",   "DirectoryRobot" },
             { "Application",          "DirectoryApplication" }
         };
     }
+
+    //internal class DirectoryTypes2 : IDictionaryItems<string>
+    //{
+    //    public static Dictionary<string, string> Items { get; } = new()
+    //    {
+    //        { "DirectoryUser",        "user" },
+    //        { "DirectoryGroup",       "group" },
+    //        { "DirectoryApplication", "application" }
+    //    };
+    //}
 
     internal class AlertComponentItems : IDictionaryItems<int>
     {

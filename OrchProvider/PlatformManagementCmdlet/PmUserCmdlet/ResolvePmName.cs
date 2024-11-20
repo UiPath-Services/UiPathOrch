@@ -85,8 +85,8 @@ namespace UiPath.PowerShell.Commands
                 {
                     try
                     {
-                        var users = drive.PmBulkResolveByName(t, UserName!);
-                        WriteObject(users, true);
+                        //var users = drive.PmBulkResolveByName(t, UserName!);
+                        //WriteObject(users, true);
                     }
                     catch (Exception ex)
                     {

@@ -127,11 +127,9 @@ namespace UiPath.PowerShell.Core
             }
 
             Assembly assembly = Assembly.GetExecutingAssembly();
-            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
-            using (FileStream fileStream = new FileStream(outputPath, FileMode.Create))
-            {
-                stream!.CopyTo(fileStream);
-            }
+            using Stream stream = assembly.GetManifestResourceStream(resourceName);
+            using FileStream fileStream = new(outputPath, FileMode.Create);
+            stream!.CopyTo(fileStream);
         }
 
         public static string GetConfigFilePath()
@@ -145,7 +143,6 @@ namespace UiPath.PowerShell.Core
             string configFilePath = GetConfigFilePath();
             if (!System.IO.File.Exists(configFilePath))
             {
-                Assembly assembly = Assembly.GetExecutingAssembly();
                 SaveResourceToFile("OrchProvider.UiPathOrchConfig.json", configFilePath);
             }
         }
