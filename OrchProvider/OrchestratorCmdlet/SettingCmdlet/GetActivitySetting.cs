@@ -3,8 +3,6 @@ using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
 
-using Positional = UiPath.PowerShell.Positional.Path;
-
 namespace UiPath.PowerShell.Commands
 {
     [Cmdlet(VerbsCommon.Get, "OrchActivitySetting")]

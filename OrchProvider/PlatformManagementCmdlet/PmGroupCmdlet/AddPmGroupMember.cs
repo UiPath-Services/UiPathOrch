@@ -186,6 +186,7 @@ namespace UiPath.PowerShell.Commands
             if (_csvLines == null) return;
 
             // ユーザー名の重複を除外しておく。
+            // 違うグループに同じユーザーを追加することもあるから、ユーザー名の重複はこの cmdlet の正しい使用の範囲内だ。
             // この cmdlet においては、ユーザー名はワイルドカードをサポートしない（できない）ことに注意。
             // ユーザー名の比較は case を無視する。
             _csvLines = _csvLines
