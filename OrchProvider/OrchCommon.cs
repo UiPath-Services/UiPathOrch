@@ -1,16 +1,8 @@
 ﻿using System.Collections;
-using System.Collections.ObjectModel;
 using System.Data;
 using System.Management.Automation;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text.Json;
 using System.Text.RegularExpressions;
-using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
-using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Positional;
-using Path = System.IO.Path;
 
 namespace UiPath.PowerShell.Core
 {
@@ -132,136 +124,6 @@ namespace UiPath.PowerShell.Core
             return obj.GetHashCode();
         }
     }
-
-    //internal class UsersCache
-    //{
-    //    private Lazy<List<User>> _lazyUsers;
-    //    internal readonly ExceptionCachePerTenant _dicUsersException = new ExceptionCachePerTenant();
-    //    internal OrchAPISession OrchAPISession { get; set; }
-    //    internal string NameColonSeparator { get; set; }
-
-    //    public UsersCache()
-    //    {
-    //        // Lazy<T>の初期化に、スレッドセーフな方法でUserリストを取得するLambda式を渡します。
-    //        _lazyUsers = new Lazy<List<User>>(() => FetchUsers(), LazyThreadSafetyMode.ExecutionAndPublication);
-    //    }
-
-    //    public ReadOnlyCollection<User> GetUsers()
-    //    {
-    //        _dicUsersException.ThrowCachedExceptionIfAny();
-
-    //        // Lazy<T>.Valueにアクセスすることで、必要な時に一度だけUserリストを取得します。
-    //        return _lazyUsers.Value.AsReadOnly();
-    //    }
-
-    //    private List<User> FetchUsers()
-    //    {
-    //        try
-    //        {
-    //            var users = OrchAPISession.GetUsers().ToList();
-    //            string driveName = NameColonSeparator;
-    //            foreach (var user in users)
-    //            {
-    //                user.Path = driveName;
-    //            }
-    //            return users;
-    //        }
-    //        catch (HttpResponseException ex)
-    //        {
-    //            _dicUsersException.CacheException(ex);
-    //            throw;
-    //        }
-    //    }
-    //}
-
-    #region テナントキャッシュの実験的な実装
-    //public class TenantEntityCache<T> where T : class
-    //{
-    //    private readonly OrchDriveInfo _drive;
-    //    private Lazy<T>? _cache;
-    //    private readonly Func<OrchDriveInfo, T> _fetchEntities;
-    //    private readonly ExceptionCachePerTenant _exceptionCache = new();
-
-    //    public TenantEntityCache(OrchDriveInfo drive, Func<OrchDriveInfo, T> fetchEntities)
-    //    {
-    //        _drive = drive;
-    //        _fetchEntities = fetchEntities;
-    //        ResetCache();
-    //    }
-
-    //    private T InitializeCache()
-    //    {
-    //        try
-    //        {
-    //            return _fetchEntities(_drive);
-    //        }
-    //        catch (HttpResponseException ex)
-    //        {
-    //            _exceptionCache.CacheException(ex);
-    //            throw;
-    //        }
-    //    }
-
-    //    public T GetCache()
-    //    {
-    //        _exceptionCache.ThrowCachedExceptionIfAny();
-    //        return _cache!.Value;
-    //    }
-
-    //    public void ResetCache()
-    //    {
-    //        _cache = new Lazy<T>(() => InitializeCache(), LazyThreadSafetyMode.ExecutionAndPublication);
-    //    }
-    //}
-    #endregion
-
-    //public class ConsoleCancelHandler : IDisposable
-    //{
-    //    private readonly CancellationTokenSource _cts;
-    //    private readonly ConsoleCancelEventHandler _handler;
-    //    private bool _cancelKeyPressed;
-
-    //    // キャンセルキーが押されたかどうかを示すプロパティ
-    //    public bool CancelKeyPressed => _cancelKeyPressed;
-
-    //    // デフォルトコンストラクタ
-    //    public ConsoleCancelHandler()
-    //    {
-    //        _cts = new CancellationTokenSource();
-    //        _cancelKeyPressed = false;
-    //        _handler = (sender, args) =>
-    //        {
-    //            _cancelKeyPressed = true;
-    //            _cts.Cancel();
-    //            args.Cancel = true; // Prevent the process from terminating
-    //        };
-    //        Console.CancelKeyPress += _handler;
-    //    }
-
-    //    // キャンセル処理のデリゲートを受け取るコンストラクタ
-    //    public ConsoleCancelHandler(Action onCancel)
-    //    {
-    //        _cts = new CancellationTokenSource();
-    //        _cancelKeyPressed = false;
-    //        _handler = (sender, args) =>
-    //        {
-    //            _cancelKeyPressed = true;
-    //            onCancel.Invoke();
-    //            args.Cancel = true; // Prevent the process from terminating
-    //        };
-    //        Console.CancelKeyPress += _handler;
-    //    }
-
-    //    // CancellationTokenSource を公開するプロパティ
-    //    public CancellationToken Token => _cts.Token;
-
-    //    public void Dispose()
-    //    {
-    //        Console.CancelKeyPress -= _handler;
-    //        _cts?.Dispose();
-    //        GC.SuppressFinalize(this);
-    //    }
-    //}
 
     public class ConsoleCancelHandler : IDisposable
     {
@@ -397,7 +259,7 @@ namespace UiPath.PowerShell.Core
             Func<TSource, object> getTargetFunc,
             Func<TSource, TResult> getResultFunc, int maxDegreeOfParallelism = 4)
         {
-            var threads = new OrchTask<TSource, TResult>[sources is ICollection<TSource> ? ((ICollection<TSource>)sources).Count : sources.Count()];
+            var threads = new OrchTask<TSource, TResult>[sources.Count()];
             var semaphore = new SemaphoreSlim(maxDegreeOfParallelism);
             var mainContext = SynchronizationContext.Current;
 

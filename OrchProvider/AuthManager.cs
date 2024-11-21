@@ -210,6 +210,39 @@ namespace UiPath.OrchAPI
             return new string(Enumerable.Range(0, length).Select(_ => chars[random.Next(chars.Length)]).ToArray());
         }
 
+        private static string LoadBotImageRandomly()
+        {
+            // 埋め込みリソースの名前一覧
+            var resourceNames = new List<string>
+            {
+                "autopilot.png",
+                "caring.png",
+                "flying.png",
+                "listening.png",
+                "processing.png",
+                "receiving.png",
+                "recording.png",
+                "searching.png"
+            };
+
+            // ランダムに1つ選択
+            var random = new Random();
+            int index = random.Next(resourceNames.Count);
+            string selectedResource = resourceNames[index];
+
+            using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("OrchProvider.bot." + selectedResource);
+            if (stream == null) return "";
+
+            // ストリームをバイト配列に変換
+            using var memoryStream = new MemoryStream();
+
+            stream.CopyTo(memoryStream);
+            byte[] imageBytes = memoryStream.ToArray();
+
+            // Base64にエンコード
+            return Convert.ToBase64String(imageBytes);
+        }
+
         // driveName は、ブラウザーにマウント成功のメッセージを表示するために必要
         private string GetAuthorizationCode(string? codeVerifier, string driveName)
         {
@@ -284,17 +317,34 @@ namespace UiPath.OrchAPI
                                 // Send a response back to the browser
                                 using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("OrchProvider.MountSuccessNotification.html");
                                 using StreamReader reader = new(stream!);
-                                string htmlTemplate = reader.ReadToEnd();
-                                string responseString = string.Format(htmlTemplate, _drive.Root, driveName);
+                                string htmlTemplate = await reader.ReadToEndAsync();
+
+                                // 画像とバージョン情報の埋め込み
+                                var version = Assembly.GetExecutingAssembly().GetName().Version;
+                                string responseString = string.Format(htmlTemplate, _drive.Root, driveName, version, LoadBotImageRandomly());
+
                                 byte[] buffer = Encoding.UTF8.GetBytes(responseString);
                                 context.Response.ContentLength64 = buffer.Length;
-                                await context.Response.OutputStream.WriteAsync(buffer, 0, buffer.Length, cts);
+                                context.Response.ContentType = "text/html; charset=UTF-8";
+                                context.Response.Headers["Connection"] = "close";
+
+                                // レスポンスを送信
+                                await using var output = context.Response.OutputStream;
+                                await output.WriteAsync(buffer, cts);
+                                await output.FlushAsync();
+
+                                await Task.Delay(50); // 画面が真っ白になることがあるんだけど、これで回避できるのかな。。
+
+                                // レスポンスを明示的に終了
+                                context.Response.Close();
+
+                                // ループを終了
                                 break;
                             }
                         }
-                        catch (HttpListenerException)
+                        catch (Exception)
                         {
-                            // If the listener was stopped unexpectedly
+                            //Console.WriteLine($"Unexpected exception: {ex}");
                             break;
                         }
                     }
@@ -321,10 +371,16 @@ namespace UiPath.OrchAPI
                     throw;
                 }
             }
+            finally
+            {
+                // リスナーの停止
+                if (listener.IsListening)
+                {
+                    listener.Stop();
+                }
 
-            // Stop and close the listener
-            listener.Stop();
-            listener.Close();
+                listener.Close();
+            }
 
             if (capturedException != null)
             {
