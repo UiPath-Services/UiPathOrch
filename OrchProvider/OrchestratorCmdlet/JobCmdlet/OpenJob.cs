@@ -54,7 +54,7 @@ namespace UiPath.PowerShell.Commands
                         continue;
                     }
 
-                    if (!drive._dicJobs.TryGetValue(folder.Id ?? 0, out Dictionary<Int64, Job>? dicJobs))
+                    if (!drive._dicJobs.TryGetValue(folder.Id ?? 0, out var dicJobs))
                     {
                         continue;
                     }
@@ -87,7 +87,7 @@ namespace UiPath.PowerShell.Commands
 
             foreach (var (drive, folder) in drivesFolders)
             {
-                Dictionary<Int64, Job> dicJobs = null;
+                ConcurrentDictionary<Int64, Job> dicJobs = null;
                 if (drive._dicJobs != null)
                 {
                     drive._dicJobs.TryGetValue(folder.Id ?? 0, out dicJobs);

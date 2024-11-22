@@ -66,7 +66,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -114,7 +114,7 @@ namespace UiPath.PowerShell.Commands
                 IEnumerable<UserRoles> targetUsers;
                 try
                 {
-                    targetUsers = srcDrive.GetUsersForFolder(srcFolder, false)
+                    targetUsers = srcDrive.FolderUsersWithNoInherited.Get(srcFolder)
                         .Where(u => u != null)
                         .Where(u => u.Id != null)
                         .FilterByWildcards(fu => fu?.UserEntity?.UserName, wpUserName);
@@ -161,15 +161,15 @@ namespace UiPath.PowerShell.Commands
 
                                 // 子フォルダーのキャッシュも削除しないといけない？ いやそうではないはずだ
                                 // dstDrive.ClearFolderCache(srcFolder); これ必要だっけ？
-                                dstDrive._dicUserRoles?.TryRemove((dstFolder.Id ?? 0, false), out _);
-                                dstDrive._dicUserRoles?.TryRemove((dstFolder.Id ?? 0, true), out _);
+                                dstDrive.FolderUsersWithInherited.ClearCache();
+                                dstDrive.FolderUsersWithNoInherited.ClearCache();
 
                                 if (!keepSource)
                                 {
                                     // 元フォルダーから削除する
                                     srcDrive.OrchAPISession.UnassignUserFromFolder(srcFolder.Id!.Value, targetUser.Id.Value);
-                                    srcDrive._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, false), out _);
-                                    srcDrive._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, true), out _);
+                                    srcDrive.FolderUsersWithInherited.ClearCache();
+                                    srcDrive.FolderUsersWithNoInherited.ClearCache();
                                     // srcDrive.ClearFolderCache(srcFolder); これ必要だっけ？
                                 }
 

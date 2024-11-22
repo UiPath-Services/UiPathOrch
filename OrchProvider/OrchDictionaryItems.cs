@@ -175,6 +175,41 @@ namespace UiPath.PowerShell.Positional
         };
     }
 
+    internal class UserSessionStateItems : IDictionaryItems<int>
+    {
+        public static Dictionary<string, int> Items { get; } = new()
+        {
+            { "Available", 0 },
+            { "Busy", 1 },
+            { "Disconnected", 2 } // Unresponsible on OC web interface
+        };
+    }
+
+    internal class UserSessionTypeItems : IDictionaryItems<int>
+    {
+        public static Dictionary<string, int> Items { get; } = new()
+        {
+            { "Attended (Attended User)", 1 },
+            { "Attended (Citizen Developer)", 4 },
+            { "Attended (RPA Developer)", 3 },
+            { "Attended (Automation Developer)", 6 },
+            { "Production (Unattended)", 2 },
+            { "Cloud - VM", 8 }
+        };
+    }
+
+    internal class UserSessionOrderableItems : IDictionaryItems<string>
+    {
+        public static Dictionary<string, string> Items { get; } = new()
+        {
+            { "User",     "Robot/User/UserName" },
+            { "Domain",   "Robot/Username" },
+            { "Hostname", "HostMachineName" },
+            { "Type",     "Robot/Type" },
+            { "Version",  "Version" }
+        };
+    }
+
     internal class AvailableUserBundlesItems : IDictionaryItems<string>
     {
         public static Dictionary<string, string> Items { get; } = new()

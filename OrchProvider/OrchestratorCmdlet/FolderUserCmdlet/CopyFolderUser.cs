@@ -50,7 +50,11 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, IncludeInherited));
+                var results = ParallelResults.ForEach(drivesFolders, df => {
+                    return IncludeInherited
+                        ? df.drive.FolderUsersWithInherited.Get(df.folder)
+                        : df.drive.FolderUsersWithNoInherited.Get(df.folder);
+                });
 
                 foreach (var result in results)
                 {
@@ -90,9 +94,9 @@ namespace UiPath.PowerShell.Commands
                 try
                 {
                     // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
-                    //srcDrive!._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, true), out _);
-                    //srcDrive!._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, false), out _);
-                    var srcEntities = srcDrive.GetUsersForFolder(srcFolder, false)
+                    //srcDrive.FolderUsersWithInherited.ClearCache();
+                    //srcDrive.FolderUsersWithNoInherited.ClearCache();
+                    var srcEntities = srcDrive.FolderUsersWithNoInherited.Get(srcFolder)
                         .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName);
                     if (!srcEntities.Any()) continue;
                 }
@@ -111,8 +115,8 @@ namespace UiPath.PowerShell.Commands
                         srcDrive, srcFolder, wpUserName,
                         dstDrive, dstFolder, reporter,
                         false, cancelHandler.Token);
-                    dstDrive._dicUserRoles?.TryRemove((dstFolder.Id ?? 0, false), out _);
-                    dstDrive._dicUserRoles?.TryRemove((dstFolder.Id ?? 0, true), out _);
+                    dstDrive.FolderUsersWithInherited.ClearCache();
+                    dstDrive.FolderUsersWithNoInherited.ClearCache();
                 }
                 catch (OperationCanceledException)
                 {

@@ -166,14 +166,14 @@ namespace UiPath.PowerShell.Core
         {
             if (newFolder.FolderType == "Personal") return;
 
-            var srcFolderUsers = srcDrive.GetUsersForFolder(srcFolder, false)
+            var srcFolderUsers = srcDrive.FolderUsersWithNoInherited.Get(srcFolder)
                 .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName).ToList();
             if (srcFolderUsers.Count == 0)
             {
                 return;
             }
 
-            var dstFolderUsers = dstDrive.GetUsersForFolder(newFolder, false)
+            var dstFolderUsers = dstDrive.FolderUsersWithNoInherited.Get(newFolder)
                 .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName).ToList();
 
             string targetFolder = newFolder.GetPSPath();
@@ -261,8 +261,8 @@ namespace UiPath.PowerShell.Core
                             };
                             dstDrive.OrchAPISession.AssignDirectoryUser(postingUser);
 
-                            dstDrive._dicUserRoles?.TryRemove((newFolder.Id ?? 0, false), out _);
-                            dstDrive._dicUserRoles?.TryRemove((newFolder.Id ?? 0, true), out _);
+                            dstDrive.FolderUsersWithInherited.ClearCache(newFolder);
+                            dstDrive.FolderUsersWithNoInherited.ClearCache(newFolder);
                         }
                     }
                     catch (Exception ex)
@@ -2456,7 +2456,7 @@ namespace UiPath.PowerShell.Core
             var dstCurrentUser = dstDrive.GetCurrentUser();
             if (dstCurrentUser == null) return;
 
-            var srcFolderUsers = srcDrive.GetUsersForFolder(srcFolder, false);
+            var srcFolderUsers = srcDrive.FolderUsersWithNoInherited.Get(srcFolder);
             var srcMyself = srcFolderUsers?.FirstOrDefault(u => string.Compare(u.UserEntity!.UserName, dstCurrentUser.UserName, StringComparison.OrdinalIgnoreCase) == 0);
             if (srcMyself == null)
             {
@@ -2464,8 +2464,8 @@ namespace UiPath.PowerShell.Core
                 try
                 {
                     dstDrive.OrchAPISession.UnassignUserFromFolder(newFolder.Id ?? 0, dstCurrentUser.Id ?? 0);
-                    dstDrive._dicUserRoles?.TryRemove((newFolder.Id ?? 0, true), out _);
-                    dstDrive._dicUserRoles?.TryRemove((newFolder.Id ?? 0, false), out _);
+                    dstDrive.FolderUsersWithInherited.ClearCache(newFolder);
+                    dstDrive.FolderUsersWithNoInherited.ClearCache(newFolder);
                 }
                 catch { }
                 return;
@@ -2476,7 +2476,7 @@ namespace UiPath.PowerShell.Core
             bool srcIhaveFolderAdministratorRole = srcMyself.Roles?.Any(r => string.Compare(r.Name, "Folder Administrator", StringComparison.OrdinalIgnoreCase) == 0) ?? false;
             if (!srcIhaveFolderAdministratorRole)
             {
-                var dstFolderUsers = dstDrive.GetUsersForFolder(newFolder, false);
+                var dstFolderUsers = dstDrive.FolderUsersWithNoInherited.Get(newFolder);
                 var dstMyself = dstFolderUsers?.FirstOrDefault(u => string.Compare(u.UserEntity!.UserName, dstCurrentUser.UserName, StringComparison.OrdinalIgnoreCase) == 0);
                 if (dstMyself == null || dstMyself.Roles == null) return;
 
@@ -2574,8 +2574,8 @@ namespace UiPath.PowerShell.Core
                             // #1 フォルダーユーザーをコピー
                             msg = "Copying folder users...      ";
                             reporter.WriteProgress(1);
-                            srcDrive!._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, true), out var _);
-                            srcDrive!._dicUserRoles?.TryRemove((srcFolder.Id ?? 0, false), out var _);
+                            srcDrive.FolderUsersWithInherited.ClearCache(srcFolder);
+                            srcDrive.FolderUsersWithNoInherited.ClearCache(srcFolder);
                             using var reporterFolderUsers = new ProgressReporter(this, 100, Int32.MaxValue, msg, msg);
                             CopyFolderUsers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterFolderUsers, true, cancelHandler.Token);
 

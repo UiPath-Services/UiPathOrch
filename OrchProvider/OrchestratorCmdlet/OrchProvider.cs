@@ -311,7 +311,8 @@ namespace UiPath.PowerShell.Core
 
             var (tenantId, _) = drive.GetTenantId();
             bool bQuery = false;
-            if (drive.OrchAPISession.ApiVersion < 12 && tenantId.HasValue)
+            //if (drive.OrchAPISession.ApiVersion < 12 && tenantId.HasValue)
+            if (tenantId.HasValue)
             {
                 endpoint += $"?tid={tenantId.Value}";
                 bQuery = true;

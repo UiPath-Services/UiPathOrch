@@ -146,7 +146,7 @@ namespace OrchProvider.AssetCmdlet
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, true));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderUsersWithInherited.Get(df.folder));
 
                 foreach (var result in results)
                 {

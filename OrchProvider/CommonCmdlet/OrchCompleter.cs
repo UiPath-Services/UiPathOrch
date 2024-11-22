@@ -1974,7 +1974,7 @@ namespace UiPath.PowerShell.Completer
             {
                 var key = candidate.Key;
                 if (string.IsNullOrEmpty(key)) continue;
-                yield return new CompletionResult(key);
+                yield return new CompletionResult(PathTools.EscapePSText(key), key, CompletionResultType.ParameterValue, key);
             }
         }
     }

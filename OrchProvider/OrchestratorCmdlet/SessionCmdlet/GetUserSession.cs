@@ -17,42 +17,16 @@ namespace UiPath.PowerShell.Commands
     [OutputType(typeof(Entities.Session))]
     public class GetUserSessionCommand : OrchestratorPSCmdlet
     {
-        static readonly Dictionary<string, int> stateMapping = new()
-        {
-            { "Available", 0 },
-            { "Busy", 1 },
-            { "Disconnected", 2 } // Unresponsible on OC web interface
-        };
-
-        static readonly Dictionary<string, int> typeMapping = new()
-        {
-            { "Attended (Attended User)", 1 },
-            { "Attended (Citizen Developer)", 4 },
-            { "Attended (RPA Developer)", 3 },
-            { "Attended (Automation Developer)", 6 },
-            { "Production (Unattended)", 2 },
-            { "Cloud - VM", 8 }
-        };
-
-        static readonly Dictionary<string, string> orderableMapping = new()
-        {
-            { "User",     "Robot/User/UserName" },
-            { "Domain",   "Robot/Username" },
-            { "Hostname", "HostMachineName" },
-            { "Type",     "Robot/Type" },
-            { "Version",  "Version" }
-        };
-
         [Parameter]
-        [ArgumentCompleter(typeof(StateCompleter))]
+        [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<UserSessionStateItems, int>))]
         public string[]? State { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(TypeCompleter))]
+        [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<UserSessionTypeItems, int>))]
         public string[]? Type { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(OrderByCompleter))]
+        [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<UserSessionOrderableItems, string>))]
         public string[]? OrderBy { get; set; }
 
         [Parameter]
@@ -66,87 +40,6 @@ namespace UiPath.PowerShell.Commands
         [ArgumentCompleter(typeof(DriveCompleter<Empty>))]
         public string[]? Path { get; set; }
 
-        // TODO: StaticTextCompleter で書き直す
-        private class StateCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName, 
-                string parameterName, 
-                string wordToComplete, 
-                CommandAst commandAst, 
-                System.Collections.IDictionary 
-                fakeBoundParameters)
-            {
-                // パラメータで選択済みの State は、候補から除外する
-                var paramState = GetParameterValues(commandAst, "State", null, wordToComplete);
-                var wpState = paramState.ConvertToWildcardPatternList();
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                foreach (var candidate in stateMapping
-                    .Select(c => c.Key)
-                    .Where(c => wp.IsMatch(c))
-                    .ExcludeByWildcards(c => c, wpState))
-                {
-                    yield return new CompletionResult(candidate);
-                }
-            }
-        }
-
-        // TODO: StaticTextCompleter で書き直す
-        private class TypeCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                System.Collections.IDictionary
-                fakeBoundParameters)
-            {
-                // パラメータで選択済みの Type は、候補から除外する
-                var paramType = GetParameterValues(commandAst, "Type", null, wordToComplete);
-                var wpType = paramType.ConvertToWildcardPatternList();
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                foreach (var candidate in typeMapping
-                    .Select(c => c.Key)
-                    .Where(c => wp.IsMatch(c))
-                    .ExcludeByWildcards(c => c, wpType))
-                {
-                    yield return new CompletionResult(PathTools.EscapePSText(candidate));
-                }
-            }
-        }
-
-        // TODO: StaticTextCompleter で書き直す
-        private class OrderByCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                System.Collections.IDictionary
-                fakeBoundParameters)
-            {
-                // パラメータで選択済みの Type は、候補から除外する
-                var paramOrderBy = GetParameterValues(commandAst, "OrderBy", null, wordToComplete);
-                var wpOrderBy = paramOrderBy.ConvertToWildcardPatternList();
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                foreach (var candidate in orderableMapping
-                    .Select(c => c.Key)
-                    .Where(c => wp.IsMatch(c))
-                    .ExcludeByWildcards(c => c, wpOrderBy))
-                {
-                    yield return new CompletionResult(PathTools.EscapePSText(candidate));
-                }
-            }
-        }
-
         private string? MakeFilter()
         {
             var filter = new List<string>();
@@ -154,7 +47,7 @@ namespace UiPath.PowerShell.Commands
             #region State
             if (State != null && State.Length > 0)
             {
-                int[] status = Array.ConvertAll(State, status => stateMapping[status]);
+                int[] status = Array.ConvertAll(State, status => UserSessionStateItems.Items[status]);
                 IEnumerable<string> f = status.Select(i => $"(State eq '{i}')");
                 filter.Add($"({string.Join(" or ", f)})");
             }
@@ -163,7 +56,7 @@ namespace UiPath.PowerShell.Commands
             #region Type
             if (Type != null)
             {
-                int[] t = Array.ConvertAll(Type, t => typeMapping[t]);
+                int[] t = Array.ConvertAll(Type, t => UserSessionTypeItems.Items[t]);
                 IEnumerable<string> f = t.Select(i => $"(Robot/Type eq '{i}')");
                 filter.Add($"({string.Join(" or ", f)})");
             }
@@ -182,7 +75,7 @@ namespace UiPath.PowerShell.Commands
         {
             if (OrderBy != null && OrderBy.Length > 0)
             {
-                IEnumerable<string> o1 = OrderBy.Select(o => orderableMapping[o]);
+                IEnumerable<string> o1 = OrderBy.Select(o => UserSessionOrderableItems.Items[o]);
                 string o2 = string.Join(",", o1);
                 return $"&$orderby={o2} asc";
             }

@@ -277,7 +277,9 @@ namespace UiPath.PowerShell.Core
             {
                 throw new Exception("Use Set-Location cmdlet (alias: cd) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.");
             }
-            return ret.OrderBy(df => df.folder.FullyQualifiedNameOrderable).ToList();
+            return ret
+                .OrderBy(df => df.folder.FolderType)
+                .ThenBy(df => df.folder.FullyQualifiedNameOrderable).ToList();
         }
 
         // planned to be obsoleted
@@ -532,9 +534,6 @@ namespace UiPath.PowerShell.Core
             _dicTestSetExecutions = null;
             _dicTestSetExecutions_Exceptions?.ClearCache();
 
-            _dicUserRoles = null;
-            _dicUserRoles_Exceptions?.ClearCache();
-
             _dicUsers = null;
             _dicUsers_Exception?.ClearCache();
 
@@ -592,8 +591,6 @@ namespace UiPath.PowerShell.Core
             _dicReleases?.TryRemove(folderId, out _);
             //_dicReleaseList?.TryRemove(folderId, out _);
             _dicTestSetExecutions?.TryRemove(folderId, out _);
-            _dicUserRoles?.TryRemove((folderId, false), out _);
-            _dicUserRoles?.TryRemove((folderId, true), out _);
 
             _dicEntitiesSummary_Exceptions?.ClearCache();
             _dicPackages_Exceptions?.ClearCache();
@@ -601,7 +598,6 @@ namespace UiPath.PowerShell.Core
             //_dicReleaseList_Exceptions?.ClearCache();
             _dicReleases_Exceptions?.ClearCache();
             _dicTestSetExecutions_Exceptions?.ClearCache();
-            _dicUserRoles_Exceptions?.ClearCache();
         }
 
         //public void ClearFolderCacheRecurse(Folder folder)
@@ -687,17 +683,17 @@ namespace UiPath.PowerShell.Core
         // Job は、一度の OrchAPI.GetJobs() 呼び出しですべてを取得できないため
         // 呼び出すたびに結果を追加する必要がある。そのため Dictionary<JobId, Job> を使う
         // Key: <folderId, <JobId, Job>>
-        internal ConcurrentDictionary<Int64, Dictionary<Int64, Job>>? _dicJobs = null;
+        internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, Job>>? _dicJobs = null;
         public ReadOnlyCollection<Job> GetJobs(Folder folder, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue, string? orderBy = null, bool orderAscending = false)
         {
             if (_dicJobs == null)
             {
                 lock (this)
                 {
-                    _dicJobs ??= new ConcurrentDictionary<Int64, Dictionary<Int64, Job>>();
+                    _dicJobs ??= new();
                 }
             }
-            if (!_dicJobs.TryGetValue(folder.Id ?? 0, out Dictionary<Int64, Job> folderJobs))
+            if (!_dicJobs.TryGetValue(folder.Id ?? 0, out var folderJobs))
             {
                 folderJobs = [];
                 _dicJobs[folder.Id ?? 0] = folderJobs;
@@ -718,8 +714,8 @@ namespace UiPath.PowerShell.Core
 
         public ReadOnlyCollection<Job> StartJobs(Folder folder, string processKey, string? runtimeType, int? jobsCount, string? inputArguments = null)
         {
-            _dicJobs ??= new ConcurrentDictionary<Int64, Dictionary<Int64, Job>>();
-            if (!_dicJobs.TryGetValue(folder.Id ?? 0, out Dictionary<Int64, Job> folderJobs))
+            _dicJobs ??= new();
+            if (!_dicJobs.TryGetValue(folder.Id ?? 0, out var folderJobs))
             {
                 folderJobs = [];
                 _dicJobs[folder.Id ?? 0] = folderJobs;
@@ -736,13 +732,13 @@ namespace UiPath.PowerShell.Core
 
         public Job? GetJob(Folder folder, Int64 jobId)
         {
-            _dicJobs ??= new ConcurrentDictionary<Int64, Dictionary<Int64, Job>>();
+            _dicJobs ??= new();
 
             var job = OrchAPISession.GetJob(folder.Id ?? 0, jobId);
             if (job != null)
             {
                 job.Path = folder.GetPSPath();
-                if (!_dicJobs.TryGetValue(folder.Id ?? 0, out Dictionary<Int64, Job> folderJobs))
+                if (!_dicJobs.TryGetValue(folder.Id ?? 0, out var folderJobs))
                 {
                     folderJobs = [];
                     _dicJobs[folder.Id ?? 0] = folderJobs;
@@ -803,11 +799,11 @@ namespace UiPath.PowerShell.Core
             _dicJobsHavingExecutionMedia[folder.Id ?? 0] = result;
 
             #region  この JobId がキャッシュされていない場合に限り、_dicJobs に入れておく
-            _dicJobs ??= new ConcurrentDictionary<long, Dictionary<long, Job>>();
+            _dicJobs ??= new();
 
             if (!_dicJobs.TryGetValue(folder.Id ?? 0, out var jobs))
             {
-                jobs = new Dictionary<long, Job>();
+                jobs = new();
                 _dicJobs[folder.Id ?? 0] = jobs;
             }
 
@@ -1272,44 +1268,6 @@ namespace UiPath.PowerShell.Core
             return detailedTrigger;
         }
 
-        #region OrchFolderUser cache
-        // Key: folderId, includeInherited
-        internal ConcurrentDictionary<(Int64, bool), List<UserRoles>>? _dicUserRoles = null;
-        internal ExceptionsCachePer<Int64> _dicUserRoles_Exceptions = new();
-        public ReadOnlyCollection<UserRoles> GetUsersForFolder(Folder folder, bool includeInherited)
-        {
-            _dicUserRoles_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-            if (_dicUserRoles == null)
-            {
-                lock (_dicUserRoles_Exceptions)
-                {
-                    _dicUserRoles ??= new ConcurrentDictionary<(Int64, bool), List<UserRoles>>();
-                }
-            }
-            if (!_dicUserRoles.TryGetValue((folder.Id ?? 0, includeInherited), out List<UserRoles> userRoles))
-            {
-                try
-                {
-                    userRoles = OrchAPISession.GetUsersForFolder(folder.Id ?? 0, includeInherited).ToList();
-                    string folderPath = folder.GetPSPath();
-                    foreach (var userRole in userRoles)
-                    {
-                        userRole.Path = folderPath;
-                    }
-                    _dicUserRoles[(folder.Id ?? 0, includeInherited)] = userRoles;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicUserRoles_Exceptions.CacheException(folder.Id ?? 0, ex);
-                    throw;
-                }
-            }
-
-            return userRoles.AsReadOnly();
-        }
-        #endregion
-
         #region OrchAsset cache
 
         // key: (folderId, assetId)
@@ -1358,7 +1316,7 @@ namespace UiPath.PowerShell.Core
 
         #region OrchProcess cache
         // Key: folderId, release.Id
-        internal ConcurrentDictionary<Int64, Dictionary<Int64, Release>>? _dicReleases = null;
+        internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, Release>>? _dicReleases = null;
         internal ExceptionsCachePer<Int64> _dicReleases_Exceptions = new();
         public ICollection<Release> GetReleases(Folder folder)
         {
@@ -1409,7 +1367,7 @@ namespace UiPath.PowerShell.Core
             return releasesPerFolder.Values;
         }
 
-        internal ConcurrentDictionary<Int64, Dictionary<Int64, Release>>? _dicReleasesDetailed = null;
+        internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, Release>>? _dicReleasesDetailed = null;
         internal ExceptionsCachePer<(Int64, Int64)> _dicReleasesDetailed_Exceptions = new();
         public Release? GetReleaseById(Folder folder, Int64 releaseId)
         {
@@ -2658,6 +2616,8 @@ namespace UiPath.PowerShell.Core
         public readonly ListCachePerFolder<Entities.Environment> Environments;
         public readonly ListCachePerFolder<MachineFolder> FolderMachinesAssigned;
         public readonly ListCachePerFolder<MachineFolder> FolderMachinesAssignable;
+        public readonly ListCachePerFolder<UserRoles> FolderUsersWithNoInherited;
+        public readonly ListCachePerFolder<UserRoles> FolderUsersWithInherited;
         public readonly ListCachePerFolder<MachineSessionRuntime> MachineSessionRuntimesByFolder;
         public readonly ListCachePerFolder<SimpleUser> Reviewers;
         public readonly ListCachePerFolder<QueueDefinition> Queues;
@@ -2780,22 +2740,24 @@ namespace UiPath.PowerShell.Core
             );
 
             // インデックスなしのフォルダエンティティ
-            FolderFeedId       = new(this, OrchAPISession.GetFolderFeedId);
-            ActionCatalogs     = new(this, OrchAPISession.GetTaskCatalogs,       (e, folderPath) => e.Path = folderPath, 16);
-            ApiTriggers        = new(this, OrchAPISession.GetHttpTriggers,       (e, folderPath) => e.Path = folderPath, 16);
-            Buckets            = new(this, OrchAPISession.GetBuckets,            (e, folderPath) => e.Path = folderPath);
-            Environments       = new(this, OrchAPISession.GetEnvironments,       (e, folderPath) => e.Path = folderPath);
+            FolderFeedId                   = new(this, OrchAPISession.GetFolderFeedId);
+            ActionCatalogs                 = new(this, OrchAPISession.GetTaskCatalogs,       (e, folderPath) => e.Path = folderPath, 16);
+            ApiTriggers                    = new(this, OrchAPISession.GetHttpTriggers,       (e, folderPath) => e.Path = folderPath, 16);
+            Buckets                        = new(this, OrchAPISession.GetBuckets,            (e, folderPath) => e.Path = folderPath);
+            Environments                   = new(this, OrchAPISession.GetEnvironments,       (e, folderPath) => e.Path = folderPath);
+            FolderUsersWithNoInherited     = new(this, fid => OrchAPISession.GetUsersForFolder(fid, false), (e, folderPath) => e.Path = folderPath);
+            FolderUsersWithInherited       = new(this, fid => OrchAPISession.GetUsersForFolder(fid, true),  (e, folderPath) => e.Path = folderPath);
             MachineSessionRuntimesByFolder = new(this, OrchAPISession.GetMachineSessionRuntimesByFolderId, (e, folderPath) => e.Path = folderPath);
-            Queues             = new(this, OrchAPISession.GetQueues,             (e, folderPath) => e.Path = folderPath);
-            Reviewers          = new(this, OrchAPISession.GetReviewers);
-            RobotsFromFolder   = new(this, OrchAPISession.GetRobotsFromFolder,   (e, folderPath) => e.Path = folderPath);
-            Sessions           = new(this, OrchAPISession.GetSessions,           (e, folderPath) => e.Path = folderPath);
-            TestCases          = new(this, OrchAPISession.GetTestCases,          (e, folderPath) => e.Path = folderPath, 16);
-            TestCaseExecutions = new(this, OrchAPISession.GetTestCaseExecutions, (e, folderPath) => e.Path = folderPath, 16);
-            TestDataQueues     = new(this, OrchAPISession.GetTestDataQueues,     (e, folderPath) => e.Path = folderPath, 16);
-            TestSets           = new(this, OrchAPISession.GetTestSets,           (e, folderPath) => e.Path = folderPath, 16);
-            TestSetSchedules   = new(this, OrchAPISession.GetTestSetSchedules,   (e, folderPath) => e.Path = folderPath, 16);
-            UserRobots         = new(this, OrchAPISession.GetUserRobots);
+            Queues                         = new(this, OrchAPISession.GetQueues,             (e, folderPath) => e.Path = folderPath);
+            Reviewers                      = new(this, OrchAPISession.GetReviewers);
+            RobotsFromFolder               = new(this, OrchAPISession.GetRobotsFromFolder,   (e, folderPath) => e.Path = folderPath);
+            Sessions                       = new(this, OrchAPISession.GetSessions,           (e, folderPath) => e.Path = folderPath);
+            TestCases                      = new(this, OrchAPISession.GetTestCases,          (e, folderPath) => e.Path = folderPath, 16);
+            TestCaseExecutions             = new(this, OrchAPISession.GetTestCaseExecutions, (e, folderPath) => e.Path = folderPath, 16);
+            TestDataQueues                 = new(this, OrchAPISession.GetTestDataQueues,     (e, folderPath) => e.Path = folderPath, 16);
+            TestSets                       = new(this, OrchAPISession.GetTestSets,           (e, folderPath) => e.Path = folderPath, 16);
+            TestSetSchedules               = new(this, OrchAPISession.GetTestSetSchedules,   (e, folderPath) => e.Path = folderPath, 16);
+            UserRobots                     = new(this, OrchAPISession.GetUserRobots);
 
             Assets = new(this, OrchAPISession.GetAssets, (e, folderPath) =>
             {

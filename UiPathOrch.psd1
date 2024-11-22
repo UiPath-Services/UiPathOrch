@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.8.12'
+ModuleVersion = '0.9.8.15'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -368,27 +368,13 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- The ResumeVersion property of JobDto was incorrectly defined as a string, which caused an error when retrieving resumed jobs using the Get-OrchJob cmdlet. This has been fixed by changing the ResumeVersion property to int.
+        ReleaseNotes = '- When executing cmdlets with parameters instructing the retrieval of detailed information (e.g., Get-OrchProcess -ExpandDetails) across many folders (by specifying parameters such as -Recurse or -Path), an error stating "non-concurrent collections must have exclusive access" rarely occurred.
 
-- Fixed an issue where the source property of users was not included in the output when executing Get-OrchPmGroup -ExpandMembers.
+- When specifying the -Recurse switch parameter for any cmdlets, the output previously mixed personal workspace folders and other folders. This behavior has been corrected so that all personal workspace folders are output first, followed by other folders.
 
-- Enhanced the processing speed of Get-OrchPmGroup -ExpandMembers.
+  - Please note that personal workspaces that have been started exploring via the Orchestrator web interface have been operable from earlier versions of UiPathOrch. However, since starting to explore personal workspaces is not supported via API, this operation must be performed manually through the web interface.
 
-- Added the following query parameters to the Get-OrchJob cmdlet:
-  - -StartTimeAfter
-  - -StartTimeBefore
-  - -EndTimeAfter
-  - -EndTimeBefore
-  - -ResumeTimeAfter
-  - -ResumeTimeBefore
-
-- Updated the output of the Get-OrchUser cmdlet to include the following properties:
-  - ExplicitMayHaveRobotSession
-  - ExplicitMayHaveUserSession
-  - ExplicitMayHavePersonalWorkspace
-  - ExplicitRestrictToPersonalWorkspace
-
-- Fixed an issue where the Directory of triggers did not display correctly immediately after triggers were created using the Add-OrchTrigger cmdlet.
+  - To reflect personal workspace explorations started on the web in a PowerShell session, please execute the Clear-OrchCache cmdlet to clear the folder cache.
 '
 
         # Prerelease string of this module

@@ -143,30 +143,27 @@ namespace UiPath.PowerShell.Commands
                     // このフォルダーの Job キャッシュを取得
                     // パラメータごとに drive.GetJobs() を呼ばないように、キャッシュを直接読み取る
                     // (無駄に drive.GetJobs() を呼び出すと、処理が遅くなってしまう)
-                    Dictionary<Int64, Job> folderJobs = null;
-                    if (drive._dicJobs != null)
+                    if (drive._dicJobs?.TryGetValue(folder.Id ?? 0, out var folderJobs) ?? false)
                     {
-                        drive._dicJobs!.TryGetValue(folder.Id ?? 0, out folderJobs);
-                    }
-
-                    foreach (var jobId in Id!)
-                    {
-                        // キャッシュに停止済みとマークされているジョブは処理しない
-                        if (folderJobs != null)
+                        foreach (var jobId in Id!)
                         {
-                            if (folderJobs.TryGetValue(jobId, out var job))
+                            // キャッシュに停止済みとマークされているジョブは処理しない
+                            if (folderJobs != null)
                             {
-                                if (alreadyStoppedStates.Contains(job.State))
-                                    continue;
+                                if (folderJobs.TryGetValue(jobId, out var job))
+                                {
+                                    if (alreadyStoppedStates.Contains(job.State))
+                                        continue;
+                                }
                             }
+                            var parameter = new StopJobCommandParameter()
+                            {
+                                Drive = drive,
+                                Folder = folder,
+                                Id = jobId
+                            };
+                            parameters.Add(parameter);
                         }
-                        var parameter = new StopJobCommandParameter()
-                        {
-                            Drive = drive,
-                            Folder = folder,
-                            Id = jobId
-                        };
-                        parameters.Add(parameter);
                     }
                 }
             }

@@ -78,7 +78,11 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, IncludeInherited));
+                var results = ParallelResults.ForEach(drivesFolders, df => {
+                    return IncludeInherited
+                        ? df.drive.FolderUsersWithInherited.Get(df.folder)
+                        : df.drive.FolderUsersWithNoInherited.Get(df.folder);
+                });
 
                 foreach (var result in results)
                 {
@@ -120,7 +124,11 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, IncludeInherited));
+                var results = ParallelResults.ForEach(drivesFolders, df => {
+                    return IncludeInherited
+                        ? df.drive.FolderUsersWithInherited.Get(df.folder)
+                        : df.drive.FolderUsersWithNoInherited.Get(df.folder);
+                });
 
                 foreach (var result in results)
                 {
@@ -167,7 +175,12 @@ namespace UiPath.PowerShell.Commands
             using var results = OrchThreadPool.RunForEach(drivesFolders,
                 df => df.folder.GetPSPath(),
                 df => df.folder,
-                df => df.drive.GetUsersForFolder(df.folder, IncludeInherited.IsPresent));
+                df =>
+                {
+                    return IncludeInherited
+                        ? df.drive.FolderUsersWithInherited.Get(df.folder)
+                        : df.drive.FolderUsersWithNoInherited.Get(df.folder);
+                });
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var result in results)
