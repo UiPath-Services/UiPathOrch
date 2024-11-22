@@ -125,7 +125,7 @@ namespace UiPath.PowerShell.Commands
                         continue;
                     }
 
-                    if (!drive._dicJobs.TryGetValue(folder.Id ?? 0, out Dictionary<Int64, Job>? dicJobs))
+                    if (!drive._dicJobs.TryGetValue(folder.Id ?? 0, out var dicJobs))
                     {
                         continue;
                     }

@@ -62,7 +62,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -106,7 +106,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -146,9 +146,9 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    //drive._dicUserRoles?.TryRemove((folder.Id ?? 0, true), out _); // 一貫したキャッシュを保持できるように、こっちもクリアしておく
-                    //drive._dicUserRoles?.TryRemove((folder.Id ?? 0, false), out _);
-                    var folderUsers = drive.GetUsersForFolder(folder, false);
+                    //drive.FolderUsersWithInherited.ClearCache(); // 一貫したキャッシュを保持できるように、こっちもクリアしておく
+                    //drive.FolderUsersWithNoInherited.ClearCache();
+                    var folderUsers = drive.FolderUsersWithNoInherited.Get(folder);
 
                     IEnumerable<UserRoles> filteredUsers = folderUsers
                         .FilterByWildcards(fu => fu?.UserEntity?.UserName, wpUserName)
@@ -177,8 +177,8 @@ namespace UiPath.PowerShell.Commands
                             try
                             {
                                 drive.OrchAPISession.UnassignUserFromFolder(folder.Id ?? 0, folderUser?.Id ?? 0);
-                                drive._dicUserRoles?.TryRemove((folder.Id ?? 0, false), out _);
-                                drive._dicUserRoles?.TryRemove((folder.Id ?? 0, true), out _);
+                                drive.FolderUsersWithInherited.ClearCache();
+                                drive.FolderUsersWithNoInherited.ClearCache();
                                 drive.ClearFolderCache(folder);
                             }
                             catch (Exception ex)

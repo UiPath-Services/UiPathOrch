@@ -57,7 +57,7 @@ namespace UiPath.PowerShell.Commands
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
                 // このフォルダに追加済みのユーザーのみ表示する
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -97,7 +97,7 @@ namespace UiPath.PowerShell.Commands
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
                 // このフォルダに追加済みのユーザーのみ表示する
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -139,7 +139,7 @@ namespace UiPath.PowerShell.Commands
 
                 ParallelResults.ForEach(drives, drive => drive.Roles.Get());
 
-                ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
+                ParallelResults.ForEach(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
                 foreach (var (drive, folder) in drivesFolders)
                 {
@@ -147,7 +147,9 @@ namespace UiPath.PowerShell.Commands
                     var tenantRoles = drive.Roles.Get().Where(tr => tr.Type != "Tenant").ToList();
 
                     // このフォルダーに割り当て済みのユーザー一覧
-                    if (drive._dicUserRoles?.TryGetValue((folder.Id ?? 0, false), out var folderUsers) ?? false && folderUsers.Count != 0)
+                    var folderUsers = drive.FolderUsersWithNoInherited.Get(folder);
+
+                    if (folderUsers.Count != 0)
                     {
                         // パラメータで指定された、割り当て済みのユーザーを取り出す
                         var folderUsersFiltered = folderUsers
@@ -202,7 +204,7 @@ namespace UiPath.PowerShell.Commands
             using var results = OrchThreadPool.RunForEach(drivesFolders,
                 df => df.folder.GetPSPath(),
                 df => df.folder,
-                df => df.drive.GetUsersForFolder(df.folder, false));
+                df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var result in results)
@@ -242,8 +244,8 @@ namespace UiPath.PowerShell.Commands
                             if (ShouldProcess(targetUser, $"Add Roles {targetRoles}"))
                             {
                                 drive.OrchAPISession.AssignUser(folder.Id ?? 0, user.Id ?? 0, allRoles);
-                                drive._dicUserRoles?.Remove((folder.Id ?? 0, true), out List<UserRoles>? _);
-                                drive._dicUserRoles?.Remove((folder.Id ?? 0, false), out List<UserRoles>? _);
+                                drive.FolderUsersWithInherited.ClearCache();
+                                drive.FolderUsersWithNoInherited.ClearCache();
                                 drive.ClearFolderCache(folder);
                             }
                         }

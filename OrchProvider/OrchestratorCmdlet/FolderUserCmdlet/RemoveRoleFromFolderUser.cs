@@ -62,7 +62,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -107,7 +107,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -150,7 +150,7 @@ namespace UiPath.PowerShell.Commands
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
                 foreach (var result in results)
                 {
@@ -209,7 +209,7 @@ namespace UiPath.PowerShell.Commands
                     try
                     {
                         // 編集対象のユーザーを抽出する
-                        var existingUsers = drive.GetUsersForFolder(folder, false);
+                        var existingUsers = drive.FolderUsersWithNoInherited.Get(folder);
                         List<UserRoles> editingUsers = existingUsers
                             .FilterByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
                             .FilterByWildcards(eu => eu?.UserEntity?.UserName, wpUserName).ToList();
@@ -234,8 +234,8 @@ namespace UiPath.PowerShell.Commands
                                 if (ShouldProcess(targetUser, $"Remove Roles {strTargetRoles}"))
                                 {
                                     drive.OrchAPISession.AssignUser(folder.Id ?? 0, user.Id ?? 0, keepingRoles.Select(role => role.Id ?? 0));
-                                    drive._dicUserRoles?.TryRemove((folder.Id ?? 0, true), out List<UserRoles>? _);
-                                    drive._dicUserRoles?.TryRemove((folder.Id ?? 0, false), out List<UserRoles>? _);
+                                    drive.FolderUsersWithInherited.ClearCache(folder);
+                                    drive.FolderUsersWithNoInherited.ClearCache(folder);
                                     drive.ClearFolderCache(folder);
                                 }
                             }

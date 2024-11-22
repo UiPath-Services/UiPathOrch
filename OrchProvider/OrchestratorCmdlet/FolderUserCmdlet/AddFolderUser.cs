@@ -264,7 +264,8 @@ namespace UiPath.PowerShell.Commands
                             drive.OrchAPISession.AssignDomainUser(assignment); // swagger doc に記載があるほう
                             //drive.OrchAPISession.AssignDirectoryUser(assignment); // web interface が実際に呼び出すほう
 
-                            drive._dicUserRoles?.TryRemove((folder.Id ?? 0, false), out List<UserRoles>? _);
+                            drive.FolderUsersWithNoInherited.ClearCache();
+                            drive.FolderUsersWithInherited.ClearCache();
                             drive.ClearFolderCache(folder);
 
                             Thread.Sleep(600); // API call rate limit を回避するため待機する
