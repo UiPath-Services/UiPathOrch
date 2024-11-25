@@ -1,6 +1,7 @@
 ﻿using System.Management.Automation;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Completer;
+using TPositional = UiPath.PowerShell.Positional.Source_Path;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -12,7 +13,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? Source { get; set; }
 
         [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Source_Path>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         private static bool LibraryExists(OrchDriveInfo drive, string fullPath)

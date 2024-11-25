@@ -2,6 +2,7 @@
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
+using TPositional = UiPath.PowerShell.Positional.Path;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -10,7 +11,7 @@ namespace UiPath.PowerShell.Commands
     public class GetActivitySettingCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Path>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Path { get; set; }
 

@@ -1,10 +1,8 @@
-﻿using System.Collections;
-using System.Management.Automation;
-using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
+﻿using System.Management.Automation;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Path;
+using UiPath.PowerShell.Core;
+//using TPositional = UiPath.PowerShell.Positional.IdentityName;
+using TPositional = UiPath.PowerShell.Positional.Empty;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -14,11 +12,11 @@ namespace UiPath.PowerShell.Commands
     class SearchPmDirectoryUserCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true)]
-        //[ArgumentCompleter(typeof(DrivePathCompleter<Positional>))]
+        //[ArgumentCompleter(typeof(DrivePathCompleter<TPositional>))]
         public string? IdentityName { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Path>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         protected override void ProcessRecord()

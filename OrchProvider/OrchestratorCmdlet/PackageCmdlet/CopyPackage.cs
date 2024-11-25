@@ -4,6 +4,7 @@ using System.Management.Automation.Language;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
+using TPositional = UiPath.PowerShell.Positional.Id_Version_Destination;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -12,12 +13,12 @@ namespace UiPath.PowerShell.Commands
     public class CopyPackageCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PackageIdCompleter<Positional.Id_Version_Destination>))]
+        [ArgumentCompleter(typeof(PackageIdCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Id { get; set; }
 
         [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PackageVersionCompleter<Positional.Id_Version_Destination>))]
+        [ArgumentCompleter(typeof(PackageVersionCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Version { get; set; }
 
@@ -49,7 +50,7 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters, true);
 
                 // パラメータで選択済みの Destination は、候補から除外する
-                var selectedDestination = GetParameterValues(commandAst, parameterName, Positional.Id_Version_Destination.Parameters, wordToComplete)
+                var selectedDestination = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete)
                     .SelectMany(p => SessionState!.Path.GetResolvedPSPathFromPSPath(p))
                     .Select(p => WildcardPattern.Unescape(p.Path.TrimEnd('\\')))
                     .ToList();
@@ -220,8 +221,8 @@ namespace UiPath.PowerShell.Commands
             Version = Version.Split1stValueByUnescapedCommas()?.ToArray();
             Destination = Destination.Split1stValueByUnescapedCommas()?.ToArray();
 
-            var wpId = Id?.Select(id => new WildcardPattern(id, WildcardOptions.IgnoreCase)).ToList();
-            var wpVersion = Version?.Select(v => new WildcardPattern(v, WildcardOptions.IgnoreCase)).ToList();
+            var wpId = Id.ConvertToWildcardPatternList();
+            var wpVersion = Version.ConvertToWildcardPatternList();
 
             var (srcDrive, srcRootFolder) = OrchDriveInfo.ResolveToSingleFeedFolder(Path);
             var srcDrivesFolders = OrchDriveInfo.EnumPackageFeedFolders([srcRootFolder.GetPSPath()], Recurse.IsPresent);

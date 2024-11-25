@@ -1,11 +1,10 @@
 ﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Scope_DisplayName;
+using TPositional = UiPath.PowerShell.Positional.Scope_DisplayName;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -30,7 +29,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? DisplayName { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Scope_DisplayName>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Path { get; set; }
 
@@ -44,7 +43,7 @@ namespace UiPath.PowerShell.Commands
                 IDictionary fakeBoundParameters)
             {
                 // パラメータで選択済みの Scope は、候補から除外する
-                var wpScope = CreateWPListFromParameter(commandAst, "Scope", Positional.Scope_DisplayName.Parameters, wordToComplete);
+                var wpScope = CreateWPListFromParameter(commandAst, "Scope", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -69,12 +68,12 @@ namespace UiPath.PowerShell.Commands
             {
                 var drives = ResolveDrives(fakeBoundParameters);
 
-                var wpScope = CreateWPListFromOtherParameters(commandAst, "Scope", Positional.Scope_DisplayName.Parameters);
+                var wpScope = CreateWPListFromOtherParameters(commandAst, "Scope", TPositional.Parameters);
 
                 var specifiedScopes = scopeList.FilterByWildcards(s => s.Value, wpScope);
 
                 // パラメータで選択済みの Key は、候補から除外する
-                var wpDisplayName = CreateWPListFromParameter(commandAst, "DisplayName", Positional.Scope_DisplayName.Parameters, wordToComplete);
+                var wpDisplayName = CreateWPListFromParameter(commandAst, "DisplayName", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 

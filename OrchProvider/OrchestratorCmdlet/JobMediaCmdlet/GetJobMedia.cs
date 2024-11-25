@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Management.Automation;
-using System.Management.Automation.Language;
-using UiPath.PowerShell.Commands;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
+﻿using System.Management.Automation;
 using UiPath.PowerShell.Completer;
+using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Positional;
+//using TPositional = UiPath.PowerShell.Positional.JobId_Destination;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -39,12 +33,6 @@ namespace UiPath.PowerShell.Commands
             ulong first = First ?? ulong.MaxValue;
 
             var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
-
-            //using var results = new OrchThreadPool<ICollection<ExecutionMedia>>(drivesFolders.Count);
-            //results.RunForEach(drivesFolders,
-            //    df => df.folder.GetPSPath(),
-            //    df => df.folder,
-            //    df => df.drive.GetExecutionMedia(df.folder, skip, first));
 
             using var results = OrchThreadPool.RunForEach(drivesFolders,
                 df => df.folder.GetPSPath(),

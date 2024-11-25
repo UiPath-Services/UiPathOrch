@@ -1,14 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
 using System.Security;
-using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Completer;
-
+using UiPath.PowerShell.Core;
 using User = UiPath.PowerShell.Entities.User;
-
-using Positional = UiPath.PowerShell.Positional.Path;
+using TPositional = UiPath.PowerShell.Positional.Path;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -23,7 +18,7 @@ namespace UiPath.PowerShell.Commands
         public SecureString? Confirmation { get; set; }
 
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Path>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         protected override void ProcessRecord()

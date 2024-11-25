@@ -1,12 +1,7 @@
-﻿using System.Collections;
-using System.Management.Automation;
-using System.Management.Automation.Language;
-using System.Xml.Linq;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
+﻿using System.Management.Automation;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name;
+using UiPath.PowerShell.Core;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -14,11 +9,11 @@ namespace UiPath.PowerShell.Commands
     public class RemovePmRobotAccountCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PmRobotAccountNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(PmRobotAccountNameCompleter<TPositional>))]
         public string[]? Name { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         protected override void ProcessRecord()
@@ -31,10 +26,10 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var entities = drive.GetPmRobotAccounts();
+                    var entities = drive.PmRobotAccounts.Get();
                     var partitionGlobalId = drive!.GetPartitionGlobalId();
 
-                    foreach (var robot in entities.Values
+                    foreach (var robot in entities
                         .Where(r => r != null)
                         .FilterByWildcards(r => r!.name!, wpName)
                         .OrderBy(r => r!.name))
@@ -47,7 +42,7 @@ namespace UiPath.PowerShell.Commands
                             try
                             {
                                 drive!.OrchAPISession.RemovePmRobot(partitionGlobalId!, robot.id!);
-                                drive._dicPmRobotAccounts?.Remove(robot.id ?? "", out var _);
+                                drive.PmRobotAccounts.ClearCache();
                                 drive._dicPmGroups = null;
                                 drive._dicPmDirectoryUsers = null;
                                 drive._dicSearchForUsersAndGroups = null;

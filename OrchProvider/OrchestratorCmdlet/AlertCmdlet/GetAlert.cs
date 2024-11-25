@@ -2,13 +2,10 @@
 using System.Data;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Positional;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Last_Severity_Component;
-using LastItems = UiPath.PowerShell.Positional.Hour_Day_Week_Month_3Month_6Month_Year_3Year;
+using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.Last_Severity_Component;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -17,7 +14,7 @@ namespace UiPath.PowerShell.Commands
     public class GetAlertCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(StaticTextsCompleter<LastItems>))]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>))]
         public string? Last { get; set; }
 
         [Parameter(Position = 1)]
@@ -45,9 +42,10 @@ namespace UiPath.PowerShell.Commands
         public ulong? First { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Last_Severity_Component>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
+        // TODO: StaticTextCompleter で書き直す
         private class SeverityCompleter : OrchArgumentCompleter
         {
             private static readonly Dictionary<string, string> candidates = new()

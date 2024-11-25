@@ -1,13 +1,10 @@
 ﻿using System.Collections;
-using System.Collections.Concurrent;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using System.Numerics;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.UserName_FullName;
+using TPositional = UiPath.PowerShell.Positional.UserName_FullName;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -55,10 +52,10 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
                 // パラメータで選択済みの UserName は、候補から除外する
-                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", Positional.UserName_FullName.Parameters, wordToComplete);
+                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
 
                 // パラメータで選択された FullName のみ対象とする
-                var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", Positional.UserName_FullName.Parameters);
+                var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -99,10 +96,10 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
                 // パラメータで選択された UserName のみ対象とする
-                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", Positional.UserName_FullName.Parameters);
+                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
 
                 // パラメータで選択済みの FullName は、候補から除外する
-                var wpFullName = CreateWPListFromParameter(commandAst, "FullName", Positional.UserName_FullName.Parameters, wordToComplete);
+                var wpFullName = CreateWPListFromParameter(commandAst, "FullName", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -138,8 +135,8 @@ namespace UiPath.PowerShell.Commands
 
             var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
 
-            var wpUserName = UserName?.Select(un => new WildcardPattern(un, WildcardOptions.IgnoreCase)).ToList();
-            var wpFullName = FullName?.Select(fn => new WildcardPattern(fn, WildcardOptions.IgnoreCase)).ToList();
+            var wpUserName = UserName.ConvertToWildcardPatternList();
+            var wpFullName = FullName.ConvertToWildcardPatternList();
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (drive, folder) in drivesFolders)

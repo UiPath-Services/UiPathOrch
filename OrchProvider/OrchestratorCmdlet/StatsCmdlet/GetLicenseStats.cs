@@ -1,10 +1,8 @@
 ﻿using System.Management.Automation;
-using UiPath.PowerShell.Commands;
-using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Last;
-using DaysItems = UiPath.PowerShell.Positional.Day_Week_Month_3Month_6Month_Year_3Year;
+using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.Last;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -13,11 +11,11 @@ namespace UiPath.PowerShell.Commands
     public class GetLicenseStatsCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(StaticTextsCompleter<DaysItems>))]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<Day_Week_Month_3Month_6Month_Year_3Year>))]
         public string? Last { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Last>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         protected override void ProcessRecord()

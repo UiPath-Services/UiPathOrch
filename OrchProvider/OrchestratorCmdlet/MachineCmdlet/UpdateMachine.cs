@@ -1,15 +1,10 @@
 ﻿using System.Collections;
-using System.Collections.Concurrent;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using System.Reflection.PortableExecutable;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
+using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Positional;
-
-using System;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -20,7 +15,7 @@ namespace UiPath.PowerShell.Commands
     public class UpdateMachineCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(MachineNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(MachineNameCompleter<TPositional>))]
         public string[]? Name { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -76,7 +71,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? Tags { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         // マシンの Tags 専用
@@ -91,8 +86,8 @@ namespace UiPath.PowerShell.Commands
             {
                 var drives = ResolveDrives(fakeBoundParameters);
 
-                // パラメータで選択済みの Id は、候補から除外する
-                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Positional.Name.Parameters);
+                // パラメータで選択済みの Name は、候補から除外する
+                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
                 var results = ParallelResults.ForEach(drives, drive => drive.Machines.Get());
 

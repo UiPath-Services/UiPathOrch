@@ -1,11 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Management.Automation;
-using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-using Positional = UiPath.PowerShell.Positional.Name;
+﻿using System.Management.Automation;
 using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands

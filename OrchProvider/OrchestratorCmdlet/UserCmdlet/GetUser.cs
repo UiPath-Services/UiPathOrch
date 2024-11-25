@@ -1,10 +1,10 @@
-﻿using System.Collections;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
 using System.Text;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
+using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.UserName_FullName;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -14,13 +14,18 @@ namespace UiPath.PowerShell.Commands
     {
         [Parameter(Position = 0)]
         [SupportsWildcards]
-        [ArgumentCompleter(typeof(TenantUserNameCompleter<Positional.UserName_FullName>))]
+        [ArgumentCompleter(typeof(TenantUserUserNameCompleter<TPositional>))]
         public string[]? UserName { get; set; }
 
         [Parameter(Position = 1)]
         [SupportsWildcards]
-        [ArgumentCompleter(typeof(FullNameCompleter))]
+        [ArgumentCompleter(typeof(TenantUserFullNameCompleter<TPositional>))]
         public string[]? FullName { get; set; }
+
+        [Parameter]
+        [SupportsWildcards]
+        [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<DirectoryTypeItems, int>))]
+        public string[]? Type{ get; set; }
 
         [Parameter]
         public SwitchParameter ExpandDetails { get; set; }
@@ -66,44 +71,6 @@ namespace UiPath.PowerShell.Commands
             "ES_AutoDownloadProcess",
             "Roles"
         ];
-
-        private class FullNameCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var drives = ResolveDrives(fakeBoundParameters);
-
-                // パラメータで選択された UserName のみ対象とする
-                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", Positional.UserName_FullName.Parameters);
-
-                // パラメータで選択済みのユーザー名は、候補から除外する
-                var wpFullName = CreateWPListFromParameter(commandAst, "FullName", Positional.UserName_FullName.Parameters, wordToComplete);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                var results = ParallelResults.ForEach(drives, drive => drive.GetUsers());
-
-                foreach (var result in results)
-                {
-                    if (!result.TryGetValue(out var entities)) continue;
-
-                    foreach (var e in entities!
-                        .Where(u => wp.IsMatch(u.FullName))
-                        .FilterByWildcards(u => u?.UserName, wpUserName)
-                        .ExcludeByWildcards(u => u?.FullName, wpFullName)
-                        .OrderBy(u => u.FullName))
-                    {
-                        string tiphelp = TipHelp2(e);
-                        yield return new CompletionResult(PathTools.EscapePSText(e.FullName), e.FullName, CompletionResultType.ParameterValue, tiphelp);
-                    }
-                }
-            }
-        }
 
         private static void WriteCsvContent(StreamWriter writer, OrchDriveInfo drive, User? p)
         {
@@ -155,6 +122,7 @@ namespace UiPath.PowerShell.Commands
 
             var wpUserName = UserName.ConvertToWildcardPatternList();
             var wpFullName = FullName.ConvertToWildcardPatternList();
+            var wpType = Type.ConvertToWildcardPatternList();
 
             ExportCsv = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
             using var writer = WriteCsvHeader(ExportCsv, CsvEncoding, CsvHeaders);
@@ -168,6 +136,7 @@ namespace UiPath.PowerShell.Commands
                     var targetUsers = users
                         .FilterByWildcards(u => u?.FullName, wpFullName)
                         .FilterByWildcards(u => u?.UserName, wpUserName)
+                        .FilterByWildcards(u => u?.Type, wpType)
                         .OrderBy(u => u.UserName)
                         .ToList();
 

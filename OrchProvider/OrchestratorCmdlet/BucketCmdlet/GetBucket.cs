@@ -3,6 +3,7 @@ using System.Text;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -11,7 +12,7 @@ namespace UiPath.PowerShell.Commands
     public class GetBucketCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(BucketNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(BucketNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 

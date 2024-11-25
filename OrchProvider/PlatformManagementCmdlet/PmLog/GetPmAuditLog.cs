@@ -1,12 +1,8 @@
 ﻿using System.Management.Automation;
-using System.Reflection.Emit;
-using System.Security.Principal;
-using System.Xml.Linq;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
-using LastItems = UiPath.PowerShell.Positional.Hour_Day_Week_Month_3Month_6Month_Year_3Year;
+using TPositional = UiPath.PowerShell.Positional.Empty;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -16,7 +12,7 @@ namespace UiPath.PowerShell.Commands
     {
         // 試してみたけど、この API はフィルターを指定しても機能しないようだ。。
         //[Parameter(ValueFromPipelineByPropertyName = true)]
-        //[ArgumentCompleter(typeof(StaticTextsCompleter<LastItems>))]
+        //[ArgumentCompleter(typeof(StaticTextsCompleter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>))]
         //public string? Last { get; set; }
 
         //[Parameter(ValueFromPipelineByPropertyName = true)]
@@ -38,7 +34,7 @@ namespace UiPath.PowerShell.Commands
         public SwitchParameter OrderAscending { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Empty>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         private string? MakeFilter()

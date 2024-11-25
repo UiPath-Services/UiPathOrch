@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
-using System.Management.Automation;
-using System.Management.Automation.Language;
-using System.Text;
+﻿using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.RobotType;
 using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.RobotType;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -24,7 +17,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? RobotType { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.RobotType>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         protected override void ProcessRecord()

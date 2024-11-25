@@ -1,11 +1,9 @@
 ﻿using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-
-using UiPath.PowerShell.Completer;
-using RetentionActionCompleter = UiPath.PowerShell.Completer.StaticTextsCompleter<UiPath.PowerShell.Positional.Delete_Archive>;
-
-using Positional = UiPath.PowerShell.Positional.Name;
+using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -14,7 +12,7 @@ namespace UiPath.PowerShell.Commands
     public class AddQueueCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(QueueNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(QueueNameCompleter<TPositional>))]
         public string[]? Name { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -39,10 +37,8 @@ namespace UiPath.PowerShell.Commands
         [ArgumentCompleter(typeof(BoolCompleter))]
         public string? Encrypted { get; set; }
 
-        //ProcessScheduleId": null,
-
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(ProcessNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(ProcessNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string? Release { get; set; }
 
@@ -62,14 +58,14 @@ namespace UiPath.PowerShell.Commands
         public string? AnalyticsDataJsonSchema { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(RetentionActionCompleter))]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<Delete_Archive>))]
         public string? RetentionAction { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         public int? RetentionPeriod { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(BucketNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(BucketNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string? RetentionBucket { get; set; }
 

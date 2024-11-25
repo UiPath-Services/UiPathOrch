@@ -4,6 +4,7 @@ using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
+using TPositional = UiPath.PowerShell.Positional.UserName_Destination;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -59,10 +60,10 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
                 // パラメータで選択済みの UserName は、候補から除外する
-                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", Positional.UserName_Destination.Parameters, wordToComplete);
+                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
 
                 // パラメータで選択された FullName のみ対象とする
-                var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", Positional.UserName_Destination.Parameters);
+                var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -99,7 +100,7 @@ namespace UiPath.PowerShell.Commands
             var srcDrivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(Path);
             var dstDrivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(Destination);
 
-            var wpUserName = UserName?.Select(un => new WildcardPattern(un, WildcardOptions.IgnoreCase)).ToList();
+            var wpUserName = UserName.ConvertToWildcardPatternList();
             //var wpFullName = FullName?.Select(fn => new WildcardPattern(fn, WildcardOptions.IgnoreCase)).ToList();
 
             bool keepSource = KeepSource.ToNullableBool() ?? false;

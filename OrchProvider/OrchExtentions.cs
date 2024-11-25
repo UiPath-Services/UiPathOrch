@@ -153,6 +153,7 @@ namespace UiPath.PowerShell.Core
         // WildcardPattern の列挙は、なんども繰り返して使用することになるので、ここで List にして返しておく方が良い。
         public static List<WildcardPattern>? ConvertToWildcardPatternList(this IEnumerable<string>? input)
         {
+            // PathTools.UnescapePSText(n) はしなくても良いのだっけ？
             return input?.Select(n => new WildcardPattern(n, WildcardOptions.IgnoreCase)).ToList();
         }
 

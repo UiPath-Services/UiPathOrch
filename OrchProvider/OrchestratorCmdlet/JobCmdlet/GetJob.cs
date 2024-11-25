@@ -5,8 +5,7 @@ using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
-using Job = UiPath.PowerShell.Entities.Job;
-using LastItems = UiPath.PowerShell.Positional.Hour_Day_Week_Month_3Month_6Month_Year_3Year;
+using TPositional = UiPath.PowerShell.Positional.Id;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -16,10 +15,10 @@ namespace UiPath.PowerShell.Commands
     {
         [Parameter(Position = 0, ParameterSetName = "JobId", ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(IdCompleter))]
-        public Int64[]? JobId { get; set; }
+        public Int64[]? Id { get; set; }
 
         [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(StaticTextsCompleter<LastItems>))]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>))]
         public string? Last { get; set; }
 
         [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
@@ -114,7 +113,7 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの Id は、候補から除外する
-                var paramId = GetParameterValues(commandAst, "Id", Id.Parameters, wordToComplete);
+                var paramId = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -192,7 +191,7 @@ namespace UiPath.PowerShell.Commands
             #region ReleaseName
             if (ReleaseName != null && ReleaseName.Length > 0 && !ReleaseName.Any(p => p == "*"))
             {
-                var wpProcess = ReleaseName.Select(p => new WildcardPattern(p, WildcardOptions.IgnoreCase)).ToList();
+                var wpProcess = ReleaseName.ConvertToWildcardPatternList();
                 var releases = drive.GetReleases(folder);
                 var targetReleases = releases.SelectByWildcards(r => r?.Name, wpProcess);
                 if (!targetReleases.Any()) return "null";
@@ -355,7 +354,7 @@ namespace UiPath.PowerShell.Commands
 
             // すべてのパラメータが指定されていなければ、キャッシュの内容を返す
             bool bOutCache = (
-                JobId == null &&
+                Id == null &&
                 Last == null &&
                 CreationTimeAfter == null &&
                 CreationTimeBefore == null &&
@@ -431,7 +430,7 @@ namespace UiPath.PowerShell.Commands
             }
 
             using var cancelHandler = new ConsoleCancelHandler();
-            if (JobId == null || JobId.Length == 0)
+            if (Id == null || Id.Length == 0)
             {
                 string msg = $"Get Job";
                 using ProgressReporter reporter = new(this, 1, drivesFolders.Count, msg, msg);
@@ -459,10 +458,10 @@ namespace UiPath.PowerShell.Commands
                 return;
             }
 
-            // JobId の指定がある場合は、その Job のみ取得する
+            // Id の指定がある場合は、その Job のみ取得する
             foreach (var (drive, folder) in drivesFolders)
             {
-                foreach (var jobId in JobId!)
+                foreach (var jobId in Id!)
                 {
                     cancelHandler.Token.ThrowIfCancellationRequested(); // この行は try の外側に置く必要がある。
                     try

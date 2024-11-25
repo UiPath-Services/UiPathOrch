@@ -1,30 +1,31 @@
 ﻿---
-external help file: UiPathOrch-help.xml
+external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
 schema: 2.0.0
 ---
 
-# Disable-OrchPersonalWorkspace
+# Disable-OrchMaintenanceMode
 
 ## SYNOPSIS
-�l�p���[�N�X�y�[�X�t�H���_�[�𖳌��ɂ��܂��B
+無人セッションのメンテナンスモードを無効にします。
 
 ## SYNTAX
 
 ```
-Disable-OrchPersonalWorkspace [-UserName] <String[]> [-Path <String[]>] [-ProgressAction <ActionPreference>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Disable-OrchMaintenanceMode [[-MachineName] <String[]>] [[-HostMachineName] <String[]>]
+ [[-ServiceUserName] <String[]>] [[-SessionId] <Int64[]>] [-Force] [-Path <String[]>]
+ [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-��ɌĂяo���G���h�|�C���g: GET /odata/Users, GET /odata/Users({userId}), PUT /odata/Users({userId})
+主に呼び出すエンドポイント: GET /odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimes
 
-OAuth �ɕK�v�ȃX�R�[�v: OR.Users
+OAuth に必要なスコープ: OR.Robots or OR.Robots.Read
 
-�K�v�Ȍ���: Users.View, Users.Edit or Robots.Create or Robots.Edit or Robots.Delete.
+必要な権限: Machines.View
 
 ## EXAMPLES
 
@@ -38,7 +39,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -Confirm
-�R�}���h���b�g�����s����O�ɁA���Ȃ��̊m�F�����߂܂��B
+コマンドレットを実行する前に、あなたの確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -52,8 +53,38 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -HostMachineName
+メンテナンスモードを無効にする無人セッションの HostMachineName を指定します。
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 1
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -MachineName
+メンテナンスモードを無効にする無人セッションの MachineName を指定します。
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 0
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
 ### -Path
-�^�[�Q�b�g�Ƃ���h���C�u�̖��O���w�肵�܂��B�w�肵�Ȃ��ꍇ�́A���݂̃h���C�u���^�[�Q�b�g�Ƃ��܂��B
+ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
 
 ```yaml
 Type: String[]
@@ -67,24 +98,39 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
-### -UserName
-�l�p���[�N�X�y�[�X�t�H���_�[�𖳌��ɂ��郆�[�U�[�� UserName ���w�肵�܂��B
+### -ServiceUserName
+メンテナンスモードを無効にする無人セッションの ServiceUserName を指定します。
 
 ```yaml
 Type: String[]
 Parameter Sets: (All)
 Aliases:
 
-Required: True
-Position: 0
+Required: False
+Position: 2
 Default value: None
 Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
+Accept wildcard characters: False
+```
+
+### -SessionId
+メンテナンスモードを無効にする無人セッションの SessionId を指定します。
+
+```yaml
+Type: Int64[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 3
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
 ```
 
 ### -WhatIf
-�R�}���h���b�g�����s����ƁA�����N���邩��\�����܂��B
-�R�}���h���b�g�͎��s����܂���B
+コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットは実行されません。
 
 ```yaml
 Type: SwitchParameter
@@ -113,12 +159,27 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -Force
+{{ Fill Force Description }}
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
-### System.String[]
+### None
 ## OUTPUTS
 
 ### System.Object

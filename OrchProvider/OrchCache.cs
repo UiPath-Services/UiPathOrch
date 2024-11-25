@@ -117,6 +117,62 @@ namespace UiPath.PowerShell.Core
         }
     }
 
+    public class ListCachePerOrganization<T> : ICacheClearable
+    {
+        private readonly OrchDriveInfo _drive;
+        private List<T>? _cache = null;
+        private readonly ExceptionCachePerTenant _exception = new();
+        private readonly Func<string, IEnumerable<T>> getter;
+        private readonly Action<T>? initializer;
+
+        public ListCachePerOrganization(OrchDriveInfo drive, Func<string, IEnumerable<T>> getter, Action<T>? initializer = null)
+        {
+            _drive = drive;
+            _drive._cacheItems.Add(this);
+            this.getter = getter;
+            this.initializer = initializer;
+        }
+
+        public List<T> Get()
+        {
+            _exception.ThrowCachedExceptionIfAny();
+
+            if (_cache == null)
+            {
+                try
+                {
+                    lock (this)
+                    {
+                        if (_cache == null)
+                        {
+                            var partitionGlobalId = _drive.GetPartitionGlobalId();
+                            _cache = getter(partitionGlobalId!).ToList();
+                            if (initializer != null)
+                            {
+                                foreach (var entity in _cache)
+                                {
+                                    initializer(entity);
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (HttpResponseException ex)
+                {
+                    _exception.CacheException(ex);
+                    throw;
+                }
+            }
+            return _cache;
+        }
+
+        public void ClearCache()
+        {
+            _cache = null;
+            _exception.ClearCache();
+        }
+    }
+
     public class SingleCachePerFolder<T> : ICacheClearable
     {
         private readonly OrchDriveInfo _drive;

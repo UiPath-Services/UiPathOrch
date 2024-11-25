@@ -14,14 +14,14 @@ Creates or updates robot accounts in the Identity server.
 
 ### ConsoleInput (Default)
 ```
-Set-OrchPmRobotAccount [[-GroupName] <String[]>] [-Path <String[]>] [-ProgressAction <ActionPreference>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Set-OrchPmRobotAccount -UserName <String[]> [[-GroupName] <String[]>] [-Path <String[]>]
+ [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ### CsvInput
 ```
-Set-OrchPmRobotAccount [[-GroupName] <String[]>] [-Path <String[]>] [-ProgressAction <ActionPreference>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Set-OrchPmRobotAccount -UserName <String[]> [[-GroupName] <String[]>] [-Path <String[]>]
+ [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -152,6 +152,33 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
+```
+
+### -UserName
+{{ Fill UserName Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: ConsoleInput
+Aliases:
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: True
+```
+
+```yaml
+Type: String[]
+Parameter Sets: CsvInput
+Aliases:
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: True
 ```
 
 ### CommonParameters

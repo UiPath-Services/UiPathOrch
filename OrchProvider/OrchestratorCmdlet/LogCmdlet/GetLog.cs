@@ -5,8 +5,7 @@ using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
-using Job = UiPath.PowerShell.Entities.Job;
-using LastItems = UiPath.PowerShell.Positional.Hour_Day_Week_Month_3Month_6Month_Year_3Year;
+using TPositional = UiPath.PowerShell.Positional.Empty;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -15,7 +14,7 @@ namespace UiPath.PowerShell.Commands
     public class GetLogCommand : OrchestratorPSCmdlet
     {
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(StaticTextsCompleter<LastItems>))]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>))]
         public string? Last { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -115,7 +114,7 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの Machine は、候補から除外する
-                var wpName = CreateWPListFromParameter(commandAst, parameterName, Id_Level.Parameters, wordToComplete);
+                var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -149,7 +148,7 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの Machine は、候補から除外する
-                var wpWindowsIdentity = CreateWPListFromParameter(commandAst, parameterName, Id_Level.Parameters, wordToComplete);
+                var wpWindowsIdentity = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 

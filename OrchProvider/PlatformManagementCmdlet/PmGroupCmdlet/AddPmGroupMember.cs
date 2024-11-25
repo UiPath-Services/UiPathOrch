@@ -6,6 +6,7 @@ using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.GroupName_Type_UserName;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -37,7 +38,7 @@ namespace UiPath.PowerShell.Commands
         private List<(OrchDriveInfo Drive, PmGroup Group, string Type, string UserName)>? _csvLines;
 
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PmGroupNameCompleter<GroupName_Type_UserName>))]
+        [ArgumentCompleter(typeof(PmGroupNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? GroupName { get; set; }
 
@@ -51,7 +52,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? UserName { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<GroupName_Type_UserName>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         private static List<string> GetExistingMemberIds(List<OrchDriveInfo> drives, List<WildcardPattern>? wpGroupName)
@@ -94,18 +95,15 @@ namespace UiPath.PowerShell.Commands
                     yield break;
                 }
 
-                var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", GroupName_Type_UserName.Parameters);
-                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", GroupName_Type_UserName.Parameters, wordToComplete);
-                var wpType = CreateWPListFromOtherParameters(commandAst, "Type", GroupName_Type_UserName.Parameters);
-                var types = DirectoryTypes.Items.FilterByWildcards(d => d.Value, wpType).Select(d => d.Key);
+                var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", TPositional.Parameters);
+                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
+                var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
+                //var types = DirectoryTypes.Items.FilterByWildcards(d => d.Value, wpType).Select(d => d.Key);
 
                 var drives = ResolveDrives(fakeBoundParameters);
 
                 GetExistingMemberIds(drives, wpGroupName);
                 //var existingMemberIds = GetExistingMemberIds(drives, wpGroupName);
-
-                // グループに追加済みのユーザーは非表示にする
-                var paramName = GetParameterValues(commandAst, parameterName, GroupName_Type_UserName.Parameters, wordToComplete);
 
                 bool bFound = false;
                 foreach (var drive in drives)
@@ -117,8 +115,10 @@ namespace UiPath.PowerShell.Commands
                     if (users == null) continue;
 
                     foreach (var user in users
-                        .Where(u => types.Contains(u?.objectType ?? ""))
+                        //.Where(u => types.Contains(u?.objectType ?? ""))
+                        .FilterByWildcards(u => u?.objectType, wpType)
                         .ExcludeByWildcards(e => e?.identityName, wpUserName)
+                        .Where(u => u?.objectType == "DirectoryGroup" && u?.source != "local")
                         .OrderBy(e => e.identityName))
                     {
                         // updatingGroups に含まれるすべてのグループが、メンバーとして user を含んでいれば continue する
@@ -222,7 +222,7 @@ namespace UiPath.PowerShell.Commands
                         foreach (var name in drive_type_userNames)
                         {
                             var addingMember = drive.SearchPmDirectoryUsers(name.UserName)?
-                                //.Where(t => objectTypes.Contains(t.objectType))
+                                .Where(t => t.objectType == "DirectoryRobot")
                                 .FirstOrDefault(t => string.Compare(t.identityName, name.UserName, true) == 0);
 
                             // 当たらなかったら警告を表示
@@ -234,9 +234,16 @@ namespace UiPath.PowerShell.Commands
                         break;
                 }
 
-                foreach (var entry in entries?.Where(e => e.Value == null) ?? [])
+                foreach (var entry in entries ?? [])
                 {
-                    WriteWarning($"\"{drive.NameColonSeparator}\": \"{entry.Key}\" ({type}) not found. Ignoring.");
+                    if (entry.Value == null)
+                    {
+                        WriteWarning($"\"{drive.NameColonSeparator}\": \"{entry.Key}\" ({type}) not found. Ignoring.");
+                    }
+                    else if (entry.Value.objectType == "DirectoryGroup" && entry.Value.source == "local")
+                    {
+                        WriteWarning($"\"{drive.NameColonSeparator}\": \"{entry.Key}\" ({type}) cannot be added because it is a local group. Ignoring.");
+                    }
                 }
             }
 
@@ -264,6 +271,7 @@ namespace UiPath.PowerShell.Commands
                         {
                             case "DirectoryRobot":
                                 robotEntry = drive.SearchPmDirectoryUsers(name)?
+                                    .Where(t => t.objectType == "DirectoryRobot")
                                     .FirstOrDefault(t => string.Compare(t.identityName, name, true) == 0);
                                 if (robotEntry != null)
                                 {
@@ -283,6 +291,7 @@ namespace UiPath.PowerShell.Commands
                                 break;
                             case "DirectoryGroup":
                                 entry = drive.PmBulkResolveByName("group", [name], n => n).FirstOrDefault().Value;
+                                if (entry?.source == "local") continue;
                                 break;
                             case "DirectoryApplication":
                                 entry = drive.PmBulkResolveByName("application", [name], n => n).FirstOrDefault().Value;

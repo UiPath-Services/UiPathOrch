@@ -1,14 +1,11 @@
 ﻿using System.Collections;
-using System.Collections.Concurrent;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using System.Text;
-using UiPath.OrchAPI;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.UserName_FullName;
+using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.UserName_FullName;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -17,14 +14,19 @@ namespace UiPath.PowerShell.Commands
     public class GetFolderUserCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(UserNameCompleter))]
+        [ArgumentCompleter(typeof(FolderUserUserNameCompleter))]
         [SupportsWildcards]
         public string[]? UserName { get; set; }
 
         [Parameter(Position = 1)]
-        [ArgumentCompleter(typeof(FullNameCompleter))]
+        [ArgumentCompleter(typeof(FolderUserFullNameCompleter))]
         [SupportsWildcards]
         public string[]? FullName { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [SupportsWildcards]
+        [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<DirectoryTypeItems, int>))]
+        public string[]? Type { get; set; }
 
         [Parameter]
         public SwitchParameter IncludeInherited { get; set; }
@@ -56,7 +58,7 @@ namespace UiPath.PowerShell.Commands
             "FolderRoles",
         ];
 
-        private class UserNameCompleter : OrchArgumentCompleter
+        private class FolderUserUserNameCompleter : OrchArgumentCompleter
         {
             public override IEnumerable<CompletionResult> CompleteArgument(
                 string commandName,
@@ -71,10 +73,11 @@ namespace UiPath.PowerShell.Commands
                 var IncludeInherited = GetFakeBoundParameterAsBool(fakeBoundParameters, "IncludeInherited");
 
                 // パラメータで選択済みの UserName は、候補から除外する
-                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", Positional.UserName_FullName.Parameters, wordToComplete);
+                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
 
                 // パラメータで選択された FullName のみ対象とする
-                var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", Positional.UserName_FullName.Parameters);
+                var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
+                var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -92,6 +95,7 @@ namespace UiPath.PowerShell.Commands
                         .Where(fu => wp.IsMatch(fu.UserEntity!.UserName))
                         .FilterByWildcards(u => u?.UserEntity?.FullName, wpFullName)
                         .ExcludeByWildcards(u => u?.UserEntity?.UserName, wpUserName)
+                        .FilterByWildcards(u => u?.UserEntity?.Type, wpType)
                         .OrderBy(u => u.UserEntity!.UserName))
                     {
                         string tiphelp = TipHelp(e);
@@ -101,7 +105,7 @@ namespace UiPath.PowerShell.Commands
             }
         }
 
-        private class FullNameCompleter : OrchArgumentCompleter
+        private class FolderUserFullNameCompleter : OrchArgumentCompleter
         {
             public override IEnumerable<CompletionResult> CompleteArgument(
                 string commandName,
@@ -116,11 +120,12 @@ namespace UiPath.PowerShell.Commands
                 var IncludeInherited = GetFakeBoundParameterAsBool(fakeBoundParameters, "IncludeInherited");
 
                 // パラメータで選択された UserName のみ対象とする
-                var paramUserName = GetParameterValues(commandAst, "UserName", Positional.UserName_FullName.Parameters);
-                var wpUserName = paramUserName.Select(fn => new WildcardPattern(fn, WildcardOptions.IgnoreCase)).ToList();
+                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
+
+                var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
 
                 // パラメータで選択済みの FullName は、候補から除外する
-                var wpFullName = CreateWPListFromParameter(commandAst, "FullName", Positional.UserName_FullName.Parameters, wordToComplete);
+                var wpFullName = CreateWPListFromParameter(commandAst, "FullName", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -138,6 +143,7 @@ namespace UiPath.PowerShell.Commands
                         .Where(fu => wp.IsMatch(fu.UserEntity?.FullName))
                         .ExcludeByWildcards(u => u?.UserEntity?.FullName, wpFullName)
                         .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName)
+                        .FilterByWildcards(u => u?.UserEntity?.Type, wpType)
                         .OrderBy(u => u.UserEntity!.FullName))
                     {
                         string tiphelp = TipHelp(e);
@@ -166,8 +172,9 @@ namespace UiPath.PowerShell.Commands
         protected override void ProcessRecord()
         {
             var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
-            var wpUserName = UserName?.Select(fn => new WildcardPattern(fn, WildcardOptions.IgnoreCase)).ToList();
-            var wpFullName = FullName?.Select(fn => new WildcardPattern(fn, WildcardOptions.IgnoreCase)).ToList();
+            var wpUserName = UserName.ConvertToWildcardPatternList();
+            var wpFullName = FullName.ConvertToWildcardPatternList();
+            var wpType = Type.ConvertToWildcardPatternList();
 
             ExportCsv = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
             using var writer = WriteCsvHeader(ExportCsv, CsvEncoding, CsvHeaders);
@@ -193,6 +200,7 @@ namespace UiPath.PowerShell.Commands
                     var targets = userRoles
                         .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName)
                         .FilterByWildcards(u => u?.UserEntity?.FullName, wpFullName)
+                        .FilterByWildcards(u => u?.UserEntity?.Type, wpType)
                         .OrderBy(u => u.UserEntity!.Type!)
                         .ThenBy(u => u.UserEntity!.UserName!)
                         .ThenBy(u => u.UserEntity!.FullName);

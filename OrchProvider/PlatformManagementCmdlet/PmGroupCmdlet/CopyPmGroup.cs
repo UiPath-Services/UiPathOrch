@@ -1,12 +1,8 @@
 ﻿using System.Management.Automation;
-using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Completer;
-using UiPath.PowerShell.Positional;
+using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using System.Management.Automation.Language;
-using System.Xml.Linq;
-using System.Collections.Generic;
-using System.Collections;
+using TPositional = UiPath.PowerShell.Positional.GroupName_Destination;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -14,16 +10,16 @@ namespace UiPath.PowerShell.Commands
     public class CopyPmGroupCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(PmGroupNameCompleter<GroupName_Destination>))]
+        [ArgumentCompleter(typeof(PmGroupNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? GroupName { get; set; }
 
         [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DestinationDriveCompleter<GroupName_Destination>))]
+        [ArgumentCompleter(typeof(DestinationDriveCompleter<TPositional>))]
         public string[]? Destination { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<GroupName_Destination>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string? Path { get; set; }
 
         // objectType には "user" もしくは "application" を指定する必要がある

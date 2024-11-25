@@ -1,6 +1,7 @@
 ﻿using System.Management.Automation;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
+using TPositional = UiPath.PowerShell.Positional.Email;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -9,7 +10,7 @@ namespace UiPath.PowerShell.Commands
     public class UpdatePmUserCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PmUserEmailCompleter<Positional.Email>))]
+        [ArgumentCompleter(typeof(PmUserEmailCompleter<TPositional>))]
         [SupportsWildcards]
         [Alias("UserName")]
         public string[]? Email { get; set; }
@@ -53,7 +54,7 @@ namespace UiPath.PowerShell.Commands
         //public string[]? extensionUserAttributesToRemove { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.UserName>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         protected override void ProcessRecord()
@@ -65,7 +66,7 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var users = drive.GetPmUsers().Values;
+                    var users = drive.PmUsers.Get();
                     var targetUsers = users.SelectByWildcards(u => u?.email, wpEmail);
                     foreach (var user in targetUsers.OrderBy(u => u.email))
                     {
@@ -103,7 +104,7 @@ namespace UiPath.PowerShell.Commands
                                 try
                                 {
                                     drive.OrchAPISession.PutPmUser(user.id!, dst);
-                                    drive._dicPmUsers = null;
+                                    drive.PmUsers.ClearCache();
                                 }
                                 catch (Exception ex)
                                 {

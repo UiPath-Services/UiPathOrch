@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
+﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Id_Version;
+using UiPath.PowerShell.Core;
+using TPositional = UiPath.PowerShell.Positional.Id_Version;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -52,10 +47,10 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = OrchDriveInfo.EnumPackageFeedFolders(paramPath, recurse);
 
                 // パラメータで選択済みの Id は、候補から除外する
-                var wpId = CreateWPListFromParameter(commandAst, "Id", Positional.Id_Version.Parameters, wordToComplete);
+                var wpId = CreateWPListFromParameter(commandAst, "Id", TPositional.Parameters, wordToComplete);
 
                 // パラメータで選択された Version のみ対象とする
-                var wpVersion = CreateWPListFromOtherParameters(commandAst, "Version", Positional.Id_Version.Parameters);
+                var wpVersion = CreateWPListFromOtherParameters(commandAst, "Version", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -95,10 +90,10 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = OrchDriveInfo.EnumPackageFeedFolders(paramPath, recurse);
 
                 // パラメータで選択された Id のみ対象とする
-                var wpId = CreateWPListFromOtherParameters(commandAst, "Id", Positional.Id_Version.Parameters);
+                var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
 
                 // パラメータで選択済みの Version は、候補から除外する
-                var wpVersion = CreateWPListFromParameter(commandAst, "Version", Positional.Id_Version.Parameters, wordToComplete);
+                var wpVersion = CreateWPListFromParameter(commandAst, "Version", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -147,10 +142,10 @@ namespace UiPath.PowerShell.Commands
                     .Select(df => df.folder.GetPSPath());
 
                 // パラメータで選択済みの Path は、候補から除外する
-                var wpPath = CreateWPListFromParameter(commandAst, "Path", Positional.Id_Version.Parameters, wordToComplete);
+                var wpPath = CreateWPListFromParameter(commandAst, "Path", TPositional.Parameters, wordToComplete);
 
                 // パラメータで選択済みの Destination も、候補から除外する
-                var wpDestination = CreateWPListFromOtherParameters(commandAst, "Destination", Positional.Id_Version.Parameters);
+                var wpDestination = CreateWPListFromOtherParameters(commandAst, "Destination", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -168,8 +163,8 @@ namespace UiPath.PowerShell.Commands
         {
             var drivesFolders = OrchDriveInfo.EnumPackageFeedFolders(Path, Recurse.IsPresent);
 
-            var wpId = Id!.Select(id => new WildcardPattern(id, WildcardOptions.IgnoreCase)).ToList();
-            var wpVersion = Version?.Select(ver => new WildcardPattern(ver, WildcardOptions.IgnoreCase)).ToList();
+            var wpId = Id.ConvertToWildcardPatternList();
+            var wpVersion = Version.ConvertToWildcardPatternList();
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (drive, folder) in drivesFolders)

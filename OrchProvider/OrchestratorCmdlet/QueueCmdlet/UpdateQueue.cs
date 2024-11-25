@@ -1,16 +1,11 @@
 ﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using RetentionActionCompleter = UiPath.PowerShell.Completer.StaticTextsCompleter<UiPath.PowerShell.Positional.Delete_Archive>;
-
-using Positional = UiPath.PowerShell.Positional.Name;
-using System.Diagnostics;
+using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -19,7 +14,7 @@ namespace UiPath.PowerShell.Commands
     public class UpdateQueueCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(QueueNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(QueueNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 
@@ -43,7 +38,7 @@ namespace UiPath.PowerShell.Commands
         //ProcessScheduleId": null,
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(ProcessNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(ProcessNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string? Release { get; set; }
 
@@ -63,14 +58,14 @@ namespace UiPath.PowerShell.Commands
         public string? AnalyticsDataJsonSchema { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(RetentionActionCompleter))]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<Delete_Archive>))]
         public string? RetentionAction { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         public int? RetentionPeriod { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(BucketNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(BucketNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string? RetentionBucket { get; set; }
 
@@ -101,7 +96,7 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの Id は、候補から除外する
-                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Positional.Name.Parameters);
+                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
                 var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Queues.Get(df.folder));
 
@@ -128,7 +123,7 @@ namespace UiPath.PowerShell.Commands
         protected override void ProcessRecord()
         {
             var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
-            var wpName = Name?.Select(id => new WildcardPattern(id, WildcardOptions.IgnoreCase)).ToList();
+            var wpName = Name.ConvertToWildcardPatternList();
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (drive, folder) in drivesFolders)

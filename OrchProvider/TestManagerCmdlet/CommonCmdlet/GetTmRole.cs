@@ -1,10 +1,9 @@
 ﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Path;
+using UiPath.PowerShell.Core;
+using TPositional = UiPath.PowerShell.Positional.Path;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -19,7 +18,7 @@ namespace UiPath.PowerShell.Commands
         //public string[]? Name { get; set; }
 
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(TmDriveCompleter<Positional.Path>))]
+        [ArgumentCompleter(typeof(TmDriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         private class TmProjectNameCompleter : OrchArgumentCompleter
@@ -36,7 +35,7 @@ namespace UiPath.PowerShell.Commands
                 var drives = OrchTmDriveInfo.EnumOrchTmDrives(paramPath);
 
                 // パラメータで選択済みの Name は、候補から除外する
-                var wpname = CreateWPListFromParameter(commandAst, "name", Positional.Path.Parameters, wordToComplete);
+                var wpname = CreateWPListFromParameter(commandAst, "name", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 

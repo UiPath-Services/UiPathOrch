@@ -1,14 +1,10 @@
-﻿
-using System.Collections;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Management.Automation;
-using System.Management.Automation.Language;
 using System.Text;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -21,11 +17,11 @@ namespace UiPath.PowerShell.Commands
         private const string psExportCsv = "ExportCsv";
 
         [Parameter(ParameterSetName = psDefault, Position = 0)]
-        [ArgumentCompleter(typeof(PmRobotAccountNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(PmRobotAccountNameCompleter<TPositional>))]
         public string[]? Name { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         [Parameter(ParameterSetName = psDefault)]
@@ -76,7 +72,7 @@ namespace UiPath.PowerShell.Commands
             using var results = OrchThreadPool.RunForEach(drives,
                 drive => drive.NameColonSeparator,
                 drive => drive,
-                drive => drive.GetPmRobotAccounts());
+                drive => drive.PmRobotAccounts.Get());
 
             if (ExpandGroup.IsPresent)
             {
@@ -89,7 +85,6 @@ namespace UiPath.PowerShell.Commands
                 try
                 {
                     var robotAccounts = result.GetResult(cancelHandler.Token)?
-                        .Values
                         .Where(r => r != null)
                         .FilterByWildcards(r => r?.name!, wpName)
                         .OrderBy(r => r?.name);

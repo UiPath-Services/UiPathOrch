@@ -1,13 +1,8 @@
-﻿using System.Collections;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
-
-using Positional = UiPath.PowerShell.Positional.UserName;
+using TPositional = UiPath.PowerShell.Positional.Email;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -16,7 +11,7 @@ namespace UiPath.PowerShell.Commands
     public class RemovePmUserCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PmUserEmailCompleter<Positional.Email>))]
+        [ArgumentCompleter(typeof(PmUserEmailCompleter<TPositional>))]
         [SupportsWildcards]
         [Alias("UserName")]
         public string[]? Email { get; set; }
@@ -25,7 +20,7 @@ namespace UiPath.PowerShell.Commands
         public SwitchParameter WarnOnNoMatch { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.UserName>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         protected override void ProcessRecord()
@@ -38,11 +33,11 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var users = drive.GetPmUsers();
+                    var users = drive.PmUsers.Get();
 
                     var partitionGlobalId = drive!.GetPartitionGlobalId();
 
-                    var targetUsers = users.Values.FilterByWildcards(u => u?.email, wpEmail);
+                    var targetUsers = users.FilterByWildcards(u => u?.email, wpEmail);
 
                     if (WarnOnNoMatch.IsPresent && !targetUsers.Any())
                     {
@@ -62,7 +57,7 @@ namespace UiPath.PowerShell.Commands
                             try
                             {
                                 drive.OrchAPISession.RemovePmUser(user.id!);
-                                drive._dicPmUsers?.TryRemove(user.id!, out _);
+                                drive.PmUsers.ClearCache();
                             }
                             catch (Exception ex)
                             {

@@ -1,8 +1,8 @@
 ﻿using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.GroupName;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -10,12 +10,12 @@ namespace UiPath.PowerShell.Commands
     public class RemoveUserLicenseGroup: OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter<GroupName>))]
+        [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? GroupName { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<GroupName>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         protected override void ProcessRecord()

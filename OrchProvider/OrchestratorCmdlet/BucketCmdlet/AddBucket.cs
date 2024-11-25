@@ -1,10 +1,8 @@
 ﻿using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-using System.Collections;
-using System.Management.Automation.Language;
-using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -13,7 +11,7 @@ namespace UiPath.PowerShell.Commands
     public class AddBucketCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(BucketNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(BucketNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 
@@ -28,11 +26,11 @@ namespace UiPath.PowerShell.Commands
         public string? StorageParameters { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(CredentialStoreNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(CredentialStoreNameCompleter<TPositional>))]
         public string? StorageContainer { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(CredentialStoreNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(CredentialStoreNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string? CredentialStore { get; set; }
 

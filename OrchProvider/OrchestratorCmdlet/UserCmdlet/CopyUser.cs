@@ -1,16 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
+﻿using System.Data;
 using System.Management.Automation;
-using System.Management.Automation.Language;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
+using UiPath.PowerShell.Positional;
 using OrchCollectionExtensions = UiPath.PowerShell.Core.OrchCollectionExtensions;
 using User = UiPath.PowerShell.Entities.User;
-using System.Data;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.UserName_Destination;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -20,135 +16,27 @@ namespace UiPath.PowerShell.Commands
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
-        [ArgumentCompleter(typeof(UserNameCompleter))]
+        [ArgumentCompleter(typeof(TenantUserUserNameCompleter<TPositional>))]
         public string[]? UserName { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
-        [ArgumentCompleter(typeof(FullNameCompleter))]
+        [ArgumentCompleter(typeof(TenantUserFullNameCompleter<TPositional>))]
         public string[]? FullName { get; set; }
 
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [SupportsWildcards]
+        [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<DirectoryTypeItems, int>))]
+        public string[]? Type { get; set; }
+
         [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DestinationCompleter))]
+        [ArgumentCompleter(typeof(DestinationDriveCompleter<TPositional>))]
         public string[]? Destination { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.UserName_Destination>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         [SupportsWildcards]
         public string? Path { get; set; }
-
-        private class UserNameCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var drives = ResolveDrives(fakeBoundParameters);
-
-                // パラメータで選択済みのユーザー名は、候補から除外する
-                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", Positional.UserName_Destination.Parameters, wordToComplete);
-
-                // パラメータで選択された FullName のみ対象とする
-                var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", Positional.UserName_Destination.Parameters);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                var results = ParallelResults.ForEach(drives, drive => drive.GetUsers());
-
-                foreach (var result in results)
-                {
-                    if (!result.TryGetValue(out var entities)) continue;
-
-                    foreach (var e in entities!
-                        .Where(u => wp.IsMatch(u.UserName))
-                        .ExcludeByWildcards(u => u?.UserName, wpUserName)
-                        .FilterByWildcards(u => u?.FullName, wpFullName)
-                        .OrderBy(u => u.UserName))
-                    {
-                        string tiphelp = TipHelp2(e);
-                        yield return new CompletionResult(PathTools.EscapePSText(e.UserName), e.UserName, CompletionResultType.ParameterValue, tiphelp);
-                    }
-                }
-            }
-        }
-
-        private class FullNameCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var drives = ResolveDrives(fakeBoundParameters);
-
-                // パラメータで選択された UserName のみ対象とする
-                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", Positional.UserName_Destination.Parameters);
-
-                // パラメータで選択済みのユーザー名は、候補から除外する
-                var wpFullName = CreateWPListFromParameter(commandAst, "FullName", Positional.UserName_Destination.Parameters, wordToComplete);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                var results = ParallelResults.ForEach(drives, drive => drive.GetUsers());
-
-                foreach (var result in results)
-                {
-                    if (!result.TryGetValue(out var entities)) continue;
-
-                    foreach (var e in entities!
-                        .Where(u => wp.IsMatch(u.FullName))
-                        .ExcludeByWildcards(u => u?.FullName, wpFullName)
-                        .FilterByWildcards(u => u?.UserName, wpUserName)
-                        .OrderBy(u => u.FullName))
-                    {
-                        string tiphelp = TipHelp2(e);
-                        yield return new CompletionResult(PathTools.EscapePSText(e.FullName), e.FullName, CompletionResultType.ParameterValue, tiphelp);
-                    }
-                }
-            }
-        }
-
-        // DriveCompleter と良く似ているのだけど、これはコピー元のドライブを除外する機能がある。
-        public class DestinationCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var drives = OrchDriveInfo.EnumAllOrchDrives();
-
-                // パラメータで選択済みのドライブは、候補から除外する
-                var paramPath = GetParameterValues(commandAst, "Path", Positional.UserName_Destination.Parameters).Select(p => p.TrimEnd(':'));
-                var paramPathDriveNames = OrchDriveInfo.EnumOrchDrives(paramPath).Select(d => d.Name);
-                var wpPath = paramPathDriveNames.Select(p => new WildcardPattern(p, WildcardOptions.IgnoreCase)).ToList();
-
-                // パラメータで選択済みのドライブは、候補から除外する
-                var paramDestination = GetParameterValues(commandAst, "Destination", Positional.UserName_Destination.Parameters, wordToComplete).Select(p => p.TrimEnd(':'));
-                var wpDestination = paramDestination.Select(p => new WildcardPattern(p, WildcardOptions.IgnoreCase)).ToList();
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                foreach (var drive in drives
-                    .ExcludeByWildcards(d => d?.Name, wpPath)
-                    .ExcludeByWildcards(d => d?.Name, wpDestination)
-                    .Where(d => wp.IsMatch(d.NameColon)))
-                {
-                    string driveName = drive.NameColon;
-                    string tiphelp = drive.DisplayRoot;
-                    if (!string.IsNullOrEmpty(drive.Description))
-                        tiphelp += $" ({drive.Description})";
-                    yield return new CompletionResult(PathTools.EscapePSText(driveName), driveName, CompletionResultType.ParameterValue, tiphelp);
-                }
-            }
-        }
 
         protected override void ProcessRecord()
         {
@@ -157,6 +45,7 @@ namespace UiPath.PowerShell.Commands
 
             var wpUserName = UserName.ConvertToWildcardPatternList();
             var wpFullName = FullName.ConvertToWildcardPatternList();
+            var wpType = Type.ConvertToWildcardPatternList();
 
             var srcDrive = OrchDriveInfo.GetOrchDrive(Path!) ?? throw new Exception("Path is not OrchDrive.");
             var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
@@ -169,6 +58,7 @@ namespace UiPath.PowerShell.Commands
             var srcUsers = srcDrive.GetUsers()
                 .FilterByWildcards(user => user?.UserName, wpUserName)
                 .FilterByWildcards(user => user?.FullName, wpFullName)
+                .FilterByWildcards(user => user?.Type, wpType)
                 .OrderBy(user => user.UserName)
                 .ToList();
 

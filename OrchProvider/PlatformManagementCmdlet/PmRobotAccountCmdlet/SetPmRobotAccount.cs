@@ -2,11 +2,10 @@
 using System.Data;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name_GroupName;
+using TPositional = UiPath.PowerShell.Positional.UserName_GroupName;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -18,7 +17,7 @@ namespace UiPath.PowerShell.Commands
         private const string psByCsv = "CsvInput";
 
         [Parameter(ParameterSetName = psDefault, Position = 0, Mandatory = true)]
-        [Parameter(ParameterSetName = psByCsv, Mandatory = true, ValueFromPipelineByPropertyName = true, DontShow = true)]
+        [Parameter(ParameterSetName = psByCsv, Mandatory = true, ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(NameCompleter))]
         [SupportsWildcards]
         public string[]? UserName { get; set; }
@@ -72,7 +71,7 @@ namespace UiPath.PowerShell.Commands
         #endregion
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Name_GroupName>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         private static readonly char[] separator = [','];
@@ -89,17 +88,17 @@ namespace UiPath.PowerShell.Commands
                 var drives = ResolveDrives(fakeBoundParameters);
 
                 // パラメータで選択済みのライブラリ名は、候補から除外する
-                var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name_GroupName.Parameters, wordToComplete);
+                var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetPmRobotAccounts());
+                var results = ParallelResults.ForEach(drives, drive => drive.PmRobotAccounts.Get());
 
                 foreach (var result in results)
                 {
                     if (!result.TryGetValue(out var entities)) continue;
 
-                    foreach (var e in entities!.Values
+                    foreach (var e in entities!
                         .Where(r => r != null)
                         .Where(r => wp.IsMatch(r!.name!))
                         .ExcludeByWildcards(r => r!.name!, wpName)
@@ -128,7 +127,7 @@ namespace UiPath.PowerShell.Commands
                 var drives = ResolveDrives(fakeBoundParameters);
 
                 // パラメータで選択済みのライブラリ名は、候補から除外する
-                var wpGroupName = CreateWPListFromParameter(commandAst, "GroupName", Positional.Name_GroupName.Parameters, wordToComplete);
+                var wpGroupName = CreateWPListFromParameter(commandAst, "GroupName", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -199,12 +198,12 @@ namespace UiPath.PowerShell.Commands
                 ];
             }
 
-            var wpUserName = UserName?.Select(dn => new WildcardPattern(dn, WildcardOptions.IgnoreCase)).ToList();
-            var wpGroupName = groupNames?.Select(dn => new WildcardPattern(dn, WildcardOptions.IgnoreCase)).ToList();
+            var wpUserName = UserName.ConvertToWildcardPatternList();
+            var wpGroupName = groupNames.ConvertToWildcardPatternList();
 
             foreach (var drive in drives)
             {
-                var existingRobots = drive.GetPmRobotAccounts().Values;
+                var existingRobots = drive.PmRobotAccounts.Get();
                 string partitionGlobalId = null;
                 try
                 {
@@ -265,10 +264,10 @@ namespace UiPath.PowerShell.Commands
                             try
                             {
                                 var newRobot = drive.OrchAPISession.CreatePmRobot(cmd);
+                                drive.PmRobotAccounts.ClearCache();
                                 if (newRobot != null)
                                 {
                                     newRobot.Path = drive.NameColonSeparator;
-                                    drive._dicPmRobotAccounts![newRobot.id!] = newRobot;
                                     WriteObject(newRobot);
                                 }
                             }
@@ -313,7 +312,7 @@ namespace UiPath.PowerShell.Commands
                                 try
                                 {
                                     var updatedRobot = drive.OrchAPISession.UpdatePmRobot(robot.id!, cmd);
-                                    drive._dicPmRobotAccounts = null;
+                                    drive.PmRobotAccounts.ClearCache();
                                     drive._dicPmDirectoryUsers = null;
                                     drive._dicSearchForUsersAndGroups = null;
 

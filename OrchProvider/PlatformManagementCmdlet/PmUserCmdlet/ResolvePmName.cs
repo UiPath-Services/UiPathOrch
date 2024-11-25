@@ -1,12 +1,10 @@
 ﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Type_UserName;
-using Types = UiPath.PowerShell.Positional.User_Group_Application;
+using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.Type_UserName;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -18,7 +16,7 @@ namespace UiPath.PowerShell.Commands
         private static readonly string[] types = ["User", "Group", "Application"];
 
         [Parameter(Position = 0, Mandatory = true)]
-        [ArgumentCompleter(typeof(StaticTextsCompleter<Types>))]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<User_Group_Application>))]
         [SupportsWildcards]
         public string[]? Type { get; set; }
 
@@ -27,7 +25,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? UserName { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Type_UserName>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         private class UserNameCompleter : OrchArgumentCompleter
@@ -45,7 +43,7 @@ namespace UiPath.PowerShell.Commands
                     yield break;
                 }
 
-                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", Positional.Type_UserName.Parameters, wordToComplete);
+                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
 
                 var drives = ResolveDrives(fakeBoundParameters);
 
@@ -74,7 +72,7 @@ namespace UiPath.PowerShell.Commands
         protected override void ProcessRecord()
         {
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
-            var wpType = Type?.Select(t => new WildcardPattern(t, WildcardOptions.IgnoreCase)).ToList();
+            var wpType = Type.ConvertToWildcardPatternList();
             var specifiedTypes = types.FilterByWildcards(t => t, wpType);
 
             foreach (var drive in drives)

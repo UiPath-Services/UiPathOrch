@@ -13,8 +13,8 @@ Unassigns the roles from users.
 ## SYNTAX
 
 ```
-Remove-OrchRoleFromUser [[-UserName] <String[]>] [-FullName <String[]>] [-Roles] <String[]> [-Path <String[]>]
- [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-OrchRoleFromUser [[-UserName] <String[]>] [-FullName <String[]>] [-Type <String[]>] [-Roles] <String[]>
+ [-Path <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -141,6 +141,21 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
+```
+
+### -Type
+{{ Fill Type Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
 ```
 
 ### CommonParameters

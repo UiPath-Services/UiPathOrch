@@ -1,14 +1,9 @@
 ﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using System.Text;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name_Email;
-using System.Text.RegularExpressions;
-using UiPath.PowerShell.Positional;
+using UiPath.PowerShell.Core;
+using TPositional = UiPath.PowerShell.Positional.Name_Email;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -28,7 +23,7 @@ namespace UiPath.PowerShell.Commands
         //public SwitchParameter ExpandAllocation { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Name_Email>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         //[Parameter]
@@ -66,8 +61,8 @@ namespace UiPath.PowerShell.Commands
             {
                 var drives = ResolveDrives(fakeBoundParameters);
 
-                var wpName = CreateWPListFromParameter(commandAst, parameterName, Positional.Name_Email.Parameters, wordToComplete);
-                var wpEmail = CreateWPListFromOtherParameters(commandAst, "Email", Positional.Name_Email.Parameters);
+                var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+                var wpEmail = CreateWPListFromOtherParameters(commandAst, "Email", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -103,8 +98,8 @@ namespace UiPath.PowerShell.Commands
             {
                 var drives = ResolveDrives(fakeBoundParameters);
 
-                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Positional.Name_Email.Parameters);
-                var wpEmail = CreateWPListFromParameter(commandAst, parameterName, Positional.Name_Email.Parameters, wordToComplete);
+                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
+                var wpEmail = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 

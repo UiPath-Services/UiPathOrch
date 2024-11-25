@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.8.15'
+ModuleVersion = '0.9.8.16'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -368,13 +368,23 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- When executing cmdlets with parameters instructing the retrieval of detailed information (e.g., Get-OrchProcess -ExpandDetails) across many folders (by specifying parameters such as -Recurse or -Path), an error stating "non-concurrent collections must have exclusive access" rarely occurred.
+        ReleaseNotes = '- The following cmdlets for managing users now support the -Type parameter:
+  - Get-OrchUser
+  - Copy-OrchUser
+  - Remove-OrchUser
+  - Remove-OrchRoleFromUser
+  - Add-OrchRoleToFolderUser
+  - Remove-OrchRoleFromFolderUser
 
-- When specifying the -Recurse switch parameter for any cmdlets, the output previously mixed personal workspace folders and other folders. This behavior has been corrected so that all personal workspace folders are output first, followed by other folders.
+- Fixed an issue where the completers for the Add-OrchProcess cmdlet were not functioning properly.
 
-  - Please note that personal workspaces that have been started exploring via the Orchestrator web interface have been operable from earlier versions of UiPathOrch. However, since starting to explore personal workspaces is not supported via API, this operation must be performed manually through the web interface.
+- Renamed the -JobId parameter in Get-OrchJob to -Id.
 
-  - To reflect personal workspace explorations started on the web in a PowerShell session, please execute the Clear-OrchCache cmdlet to clear the folder cache.
+- Renamed the -PackageId parameter in Add-OrchProcess to -Id.
+
+- Resolved an issue in the Add-OrchPmGroupMember cmdlet where the auto-completion for the -UserName parameter included local group names. Since local groups cannot be added to groups, local group names are no longer displayed as suggestions.
+
+- Fixed an issue where the -UserName parameter in the Set-OrchPmRobotAccount cmdlet was unintentionally hidden.
 '
 
         # Prerelease string of this module

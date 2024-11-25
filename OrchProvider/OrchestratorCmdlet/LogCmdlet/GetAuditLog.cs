@@ -1,15 +1,12 @@
 ﻿using System.Collections;
 using System.Data;
-using System.IO.Compression;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using System.Reflection.PortableExecutable;
-using System.Text.Json.Nodes;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
-using LastItems = UiPath.PowerShell.Positional.Hour_Day_Week_Month_3Month_6Month_Year_3Year;
+using TPositional = UiPath.PowerShell.Positional.Last_Component_UserName_Action;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -19,11 +16,11 @@ namespace UiPath.PowerShell.Commands
     public class GetAuditLogCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(StaticTextsCompleter<LastItems>))]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>))]
         public string? Last { get; set; }
 
         [Parameter(Position = 1, ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(ComponentCompleter))]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<AuditLogComponentItems>))]
         public string[]? Component { get; set; }
 
         [Parameter(Position = 2, ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
@@ -31,7 +28,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? UserName { get; set; }
 
         [Parameter(Position = 3, ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(ActionCompleter))]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<AuditLogActionItems>))]
         public string[]? Action { get; set; }
 
         [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
@@ -47,83 +44,6 @@ namespace UiPath.PowerShell.Commands
         [SupportsWildcards]
         public string[]? Id { get; set; }
 
-        static readonly string[] ComponentsList = [
-            "Assets",
-            "Buckets",
-            "CloudSnapshots",
-            "CloudSubscriptions",
-            "Comments",
-            "CredentialStores",
-            "CredentialsProxies",
-            "DirectoryService",
-            "Environments",
-            "ExecutionMedia",
-            "Folders",
-            "Jobs",
-            "Libraries",
-            "Licenses",
-            "Machines",
-            "Maintenance",
-            "Monitoring",
-            "Packages",
-            "PersonalWorkspaces",
-            "Processes",
-            "Queues",
-            "RemoteControl",
-            "Robots",
-            "Roles",
-            "Triggers",
-            "Sessions",
-            "Settings",
-            //"Actions",
-            "Units",
-            "Users",
-            "Webhooks",
-        ];
-
-        static readonly string[] ActionsList =
-        [
-            "Acknowledge",
-            "Activate",
-            "Assign",
-            "Associate",
-            "AutomaticallyExploreEnd",
-            "BulkComplete",
-            "BulkSave",
-            "BulkUpload",
-            "ChangePassword",
-            "ChangeStatus",
-            "Convert",
-            "Create",
-            "CreateBlobFileSas",
-            "Deactivate",
-            "Delete",
-            "DeleteBlobFile",
-            "Download",
-            "End",
-            "ExploreEnd",
-            "ExploreStart",
-            "Forward",
-            "lmport",
-            "MigrateFolder",
-            "Move",
-            "PasswordResetAttempt",
-            "ResetPassword",
-            "Save",
-            "Skip",
-            "Start",
-            "StartDelete",
-            "StartJob",
-            "StartMigrateFolders",
-            "StopJob",
-            "Toggle",
-            "ToggleUserFolderSubscription",
-            "Unassign",
-            "Update",
-            "Upload",
-            "VideoAccess"
-        ];
-
         [Parameter]
         public SwitchParameter ExpandEntity { get; set; }
 
@@ -138,7 +58,7 @@ namespace UiPath.PowerShell.Commands
         public ulong? First { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<Last_Component_UserName_Action>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         private class IdCompleter : OrchArgumentCompleter
@@ -153,7 +73,7 @@ namespace UiPath.PowerShell.Commands
                 var drives = ResolveDrives(fakeBoundParameters);
 
                 // パラメータで選択済みの Id は、候補から除外する
-                var paramId = GetParameterValues(commandAst, "Id", null, wordToComplete);
+                var paramId = GetParameterValues(commandAst, "Id", TPositional.Parameters, wordToComplete);
                 var wpId = paramId.ConvertToWildcardPatternList();
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -178,31 +98,6 @@ namespace UiPath.PowerShell.Commands
             }
         }
 
-        // TODO: StaticTextCompleter で書き直す
-        private class ComponentCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                // パラメータで選択済みの Component は、候補から除外する
-                var paramComponent = GetParameterValues(commandAst, "Component", null, wordToComplete);
-                var wpComponent = paramComponent.ConvertToWildcardPatternList();
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                foreach (var c in ComponentsList
-                    .Where(c => wp.IsMatch(c))
-                    .ExcludeByWildcards(c => c, wpComponent))
-                {
-                    yield return new CompletionResult(c);
-                }
-            }
-        }
-
         private class UserNameCompleter : OrchArgumentCompleter
         {
             public override IEnumerable<CompletionResult> CompleteArgument(
@@ -215,7 +110,7 @@ namespace UiPath.PowerShell.Commands
                 var drives = ResolveDrives(fakeBoundParameters);
 
                 // パラメータで選択済みの User は、候補から除外する
-                var paramUserName = GetParameterValues(commandAst, "UserName", null, wordToComplete);
+                var paramUserName = GetParameterValues(commandAst, "UserName", TPositional.Parameters, wordToComplete);
                 var wpUserName = paramUserName.ConvertToWildcardPatternList();
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -234,28 +129,6 @@ namespace UiPath.PowerShell.Commands
                         string tiphelp = TipHelp2(e);
                         yield return new CompletionResult(PathTools.EscapePSText(e.UserName), e.UserName, CompletionResultType.Text, tiphelp);
                     }
-                }
-            }
-        }
-
-        // TODO: StaticTextCompleter で書き直す
-        private class ActionCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                // パラメータで選択済みの Action は、候補から除外する
-                var paramAction = GetParameterValues(commandAst, "Action", null, wordToComplete);
-                var wpAction = paramAction.ConvertToWildcardPatternList();
-
-                var results = ActionsList.ExcludeByWildcards(a => a, wpAction);
-                foreach (var a in results)
-                {
-                    yield return new CompletionResult(a);
                 }
             }
         }
@@ -301,8 +174,8 @@ namespace UiPath.PowerShell.Commands
             if (Component != null && Component.Length > 0)
             {
                 var components = new List<string>();
-                var wpComponent = Component.Select(st => new WildcardPattern(st, WildcardOptions.IgnoreCase)).ToList();
-                foreach (var component in ComponentsList.FilterByWildcards(st => st, wpComponent))
+                var wpComponent = Component.ConvertToWildcardPatternList();
+                foreach (var component in AuditLogComponentItems.Parameters.FilterByWildcards(st => st, wpComponent))
                 {
                     components.Add($"(Component%20eq%20%27{component}%27)");
                 }
@@ -317,7 +190,7 @@ namespace UiPath.PowerShell.Commands
                 try
                 {
                     var drives = OrchDriveInfo.EnumOrchDrives(Path);
-                    var wpUserName = UserName.Select(p => new WildcardPattern(p, WildcardOptions.IgnoreCase)).ToList();
+                    var wpUserName = UserName.ConvertToWildcardPatternList();
                     var userIds = new HashSet<Int64>();
                     foreach (var drive in drives)
                     {
@@ -336,8 +209,8 @@ namespace UiPath.PowerShell.Commands
             if (Action != null && Action.Length > 0)
             {
                 var actions = new List<string>();
-                var wpAction = Action.Select(ac => new WildcardPattern(ac, WildcardOptions.IgnoreCase)).ToList();
-                foreach (var action in ActionsList.FilterByWildcards(st => st, wpAction))
+                var wpAction = Action.ConvertToWildcardPatternList();
+                foreach (var action in AuditLogActionItems.Parameters.FilterByWildcards(st => st, wpAction))
                 {
                     actions.Add($"(Action%20eq%20%27{action}%27)");
                 }
@@ -452,7 +325,7 @@ namespace UiPath.PowerShell.Commands
             {
                 WriteWarning("Since no filter parameters were specified, the contents of the cache will be output. To query the Orchestrator, please specify at least one filter parameter.");
 
-                var wpId = Id?.Select(id => new WildcardPattern(id)).ToList();
+                var wpId = Id.ConvertToWildcardPatternList();
                 foreach (var drive in drives)
                 {
                     WriteLog(drive, drive._dicAuditLogs?.Values

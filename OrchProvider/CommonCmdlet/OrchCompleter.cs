@@ -1226,42 +1226,7 @@ namespace UiPath.PowerShell.Completer
         }
     }
 
-    internal class StaticRoleNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
-    {
-        public override IEnumerable<CompletionResult> CompleteArgument(
-            string commandName,
-            string parameterName,
-            string wordToComplete,
-            CommandAst commandAst,
-            IDictionary fakeBoundParameters)
-        {
-            var drives = ResolveDrives(fakeBoundParameters);
-
-            // パラメータで選択済みのライブラリ名は、候補から除外する
-            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
-
-            var wp = CreateWPFromWordToComplete(wordToComplete);
-
-            var results = ParallelResults.ForEach(drives, drive => drive.Roles.Get());
-
-            foreach (var result in results)
-            {
-                if (!result.TryGetValue(out var entities)) continue;
-
-                foreach (var role in entities!
-                    //.Where(r => !r.IsStatic.GetValueOrDefault())
-                    .Where(r => wp.IsMatch(r.Name))
-                    .ExcludeByWildcards(r => r?.Name, wpName)
-                    .OrderBy(role => role.Name))
-                {
-                    string tiphelp = TipHelp(role);
-                    yield return new CompletionResult(PathTools.EscapePSText(role.Name), role.Name, CompletionResultType.ParameterValue, tiphelp);
-                }
-            }
-        }
-    }
-
-    public class TenantUserNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    public class TenantUserUserNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
             string commandName,
@@ -1273,10 +1238,12 @@ namespace UiPath.PowerShell.Completer
             var drives = ResolveDrives(fakeBoundParameters);
 
             // パラメータで選択済みのユーザー名は、候補から除外する
-            var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
+            var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
             // パラメータで選択された FullName のみ対象とする
             var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
+
+            var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1290,10 +1257,52 @@ namespace UiPath.PowerShell.Completer
                     .Where(u => wp.IsMatch(u.UserName))
                     .ExcludeByWildcards(u => u?.UserName, wpUserName)
                     .FilterByWildcards(u => u?.FullName, wpFullName)
+                    .FilterByWildcards(u => u?.Type, wpType)
                     .OrderBy(u => u.UserName))
                 {
                     string tiphelp = TipHelp2(e);
                     yield return new CompletionResult(PathTools.EscapePSText(e.UserName), e.UserName, CompletionResultType.ParameterValue, tiphelp);
+                }
+            }
+        }
+    }
+
+    public class TenantUserFullNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = ResolveDrives(fakeBoundParameters);
+
+            // パラメータで選択された UserName のみ対象とする
+            var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
+
+            // パラメータで選択済みのユーザー名は、候補から除外する
+            var wpFullName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drives, drive => drive.GetUsers());
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var e in entities!
+                    .Where(u => wp.IsMatch(u.FullName))
+                    .FilterByWildcards(u => u?.UserName, wpUserName)
+                    .ExcludeByWildcards(u => u?.FullName, wpFullName)
+                    .FilterByWildcards(u => u?.Type, wpType)
+                    .OrderBy(u => u.FullName))
+                {
+                    string tiphelp = TipHelp2(e);
+                    yield return new CompletionResult(PathTools.EscapePSText(e.FullName), e.FullName, CompletionResultType.ParameterValue, tiphelp);
                 }
             }
         }
@@ -1717,13 +1726,13 @@ namespace UiPath.PowerShell.Completer
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.GetPmRobotAccounts());
+            var results = ParallelResults.ForEach(drives, drive => drive.PmRobotAccounts.Get());
 
             foreach (var result in results)
             {
                 if (!result.TryGetValue(out var entities)) continue;
 
-                foreach (var e in entities!.Values
+                foreach (var e in entities!
                     .Where(r => r != null)
                     .Where(r => wp.IsMatch(r!.name!))
                     .ExcludeByWildcards(r => r!.name!, wpName)
@@ -1752,13 +1761,13 @@ namespace UiPath.PowerShell.Completer
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.GetPmUsers());
+            var results = ParallelResults.ForEach(drives, drive => drive.PmUsers.Get());
 
             foreach (var result in results)
             {
                 if (!result.TryGetValue(out var entities)) continue;
 
-                foreach (var user in entities!.Values
+                foreach (var user in entities!
                     .Where(g => !string.IsNullOrEmpty(g?.email))
                     .Where(g => wp.IsMatch(g?.email))
                     .ExcludeByWildcards(u => u?.email!, wpEmail)
@@ -1965,7 +1974,7 @@ namespace UiPath.PowerShell.Completer
         {
             var wpParam = CreateWPListFromParameter(commandAst, parameterName, null, wordToComplete);
 
-            if (!wordToComplete.EndsWith('?')) wordToComplete += '*';
+            if (!wordToComplete?.EndsWith('?') ?? false) wordToComplete += '*';
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
             foreach (var candidate in TItems.Items
@@ -1991,7 +2000,7 @@ namespace UiPath.PowerShell.Completer
         {
             var wpParam = CreateWPListFromParameter(commandAst, parameterName, null, wordToComplete);
 
-            if (!wordToComplete.EndsWith('?')) wordToComplete += '*';
+            if (!wordToComplete?.EndsWith('?') ?? false) wordToComplete += '*';
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
             foreach (var candidate in TItems.Items.Values
@@ -2003,41 +2012,6 @@ namespace UiPath.PowerShell.Completer
             }
         }
     }
-
-    // ほとんどの場合で、IKeyValuePairItems で十分なんだけど
-    // KeyOfDictionaryCompleter が便利な場合があるので、全部こっちで統一しておくか。。
-
-    // key は必ず string
-    //internal interface IKeyValuePairItems<TValue>
-    //{
-    //    static abstract KeyValuePair<string, TValue>[] Items { get; }
-    //}
-
-    // key は必ず string
-    //internal class KeyOfKeyValuePairCompleter<TItems, TValue> : OrchArgumentCompleter where TItems : IKeyValuePairItems<TValue>
-    //{
-    //    public override IEnumerable<CompletionResult> CompleteArgument(
-    //        string commandName,
-    //        string parameterName,
-    //        string wordToComplete,
-    //        CommandAst commandAst,
-    //        IDictionary fakeBoundParameters)
-    //    {
-    //        var wpParam = CreateWPListFromParameter(commandAst, parameterName, null, wordToComplete);
-
-    //        if (!wordToComplete.EndsWith('?')) wordToComplete += '*';
-    //        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-    //        foreach (var candidate in TItems.Items
-    //            .Where(c => wp.IsMatch(c.Key))
-    //            .ExcludeByWildcards(c => c.Key, wpParam))
-    //        {
-    //            var key = candidate.Key;
-    //            if (string.IsNullOrEmpty(key)) continue;
-    //            yield return new CompletionResult(key);
-    //        }
-    //    }
-    //}
 
     // このパラメータは、どうせ値をひとつしか受け入れないから、positional param を考慮する必要もない。。
     internal class TimeAfterCompleter : OrchArgumentCompleter
@@ -2096,21 +2070,19 @@ namespace UiPath.PowerShell.Completer
             var drives = OrchDriveInfo.EnumAllOrchDrives();
 
             // パラメータで選択済みのドライブは、候補から除外する
-            //var paramPath = GetParameterValues(commandAst, ParameterName(), T.Parameters, wordToComplete).Select(p => p.TrimEnd(':'));
-            var paramPath = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete).Select(p => p.TrimEnd(':'));
-            var wpPath = paramPath.Select(p => new WildcardPattern(p, WildcardOptions.IgnoreCase)).ToList();
-            var matchingDrives = drives.ExcludeByWildcards(d => d?.Name, wpPath);
+            var wpPath = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var matchingDrives = drives.ExcludeByWildcards(d => d?.NameColon, wpPath);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
             foreach (var drive in matchingDrives
                 .Where(d => wp.IsMatch(d.NameColon)))
             {
-                string driveName = drive.NameColon;
                 string tiphelp = drive.DisplayRoot;
                 if (!string.IsNullOrEmpty(drive.Description))
                     tiphelp += $" ({drive.Description})";
-                yield return new CompletionResult(PathTools.EscapePSText(driveName), driveName, CompletionResultType.ParameterValue, tiphelp);
+                yield return new CompletionResult(PathTools.EscapePSText(drive.NameColon), drive.NameColon, CompletionResultType.ParameterValue, tiphelp);
             }
         }
     }
@@ -2130,29 +2102,23 @@ namespace UiPath.PowerShell.Completer
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
+            var sourceDrives = ResolveDrives(fakeBoundParameters);
             var drives = OrchDriveInfo.EnumAllOrchDrives();
 
             // パラメータで選択済みのドライブは、候補から除外する
-            var paramPath = GetParameterValues(commandAst, "Path", TPositional.Parameters).Select(p => p.TrimEnd(':'));
-            var paramPathDrives = OrchDriveInfo.EnumOrchDrives(paramPath).Select(d => d.Name);
-            var wpPath = paramPathDrives.Select(p => new WildcardPattern(p, WildcardOptions.IgnoreCase)).ToList();
-
-            // パラメータで選択済みのドライブは、候補から除外する
-            var paramDestination = GetParameterValues(commandAst, "Destination", TPositional.Parameters, wordToComplete).Select(p => p.TrimEnd(':'));
-            var wpDestination = paramDestination.Select(p => new WildcardPattern(p, WildcardOptions.IgnoreCase)).ToList();
+            var wpDestination = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
             foreach (var drive in drives
-                .ExcludeByWildcards(d => d?.Name, wpPath)
-                .ExcludeByWildcards(d => d?.Name, wpDestination)
+                .Where(d => sourceDrives.All(sd => sd != d))
+                .ExcludeByWildcards(d => d?.NameColon, wpDestination)
                 .Where(d => wp.IsMatch(d.NameColon)))
             {
-                string driveName = drive.NameColon;
                 string tiphelp = drive.DisplayRoot;
                 if (!string.IsNullOrEmpty(drive.Description))
                     tiphelp += $" ({drive.Description})";
-                yield return new CompletionResult(PathTools.EscapePSText(driveName), driveName, CompletionResultType.ParameterValue, tiphelp);
+                yield return new CompletionResult(PathTools.EscapePSText(drive.NameColon), drive.NameColon, CompletionResultType.ParameterValue, tiphelp);
             }
         }
     }
@@ -2169,21 +2135,18 @@ namespace UiPath.PowerShell.Completer
             var drives = OrchTmDriveInfo.EnumAllOrchDrives();
 
             // パラメータで選択済みのドライブは、候補から除外する
-            //var paramPath = GetParameterValues(commandAst, ParameterName(), T.Parameters, wordToComplete).Select(p => p.TrimEnd(':'));
-            var paramPath = GetParameterValues(commandAst, parameterName, T.Parameters, wordToComplete).Select(p => p.TrimEnd(':'));
-            var wpPath = paramPath.Select(p => new WildcardPattern(p, WildcardOptions.IgnoreCase)).ToList();
-            var matchingDrives = drives.ExcludeByWildcards(d => d?.Name, wpPath);
+            var wpPath = CreateWPListFromParameter(commandAst, parameterName, T.Parameters, wordToComplete);
+            var matchingDrives = drives.ExcludeByWildcards(d => d?.NameColon, wpPath);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
             foreach (var drive in matchingDrives
                 .Where(d => wp.IsMatch(d.NameColon)))
             {
-                string driveName = drive.NameColon;
                 string tiphelp = drive.DisplayRoot;
                 if (!string.IsNullOrEmpty(drive.Description))
                     tiphelp += $" ({drive.Description})";
-                yield return new CompletionResult(PathTools.EscapePSText(driveName), driveName, CompletionResultType.ParameterValue, tiphelp);
+                yield return new CompletionResult(PathTools.EscapePSText(drive.NameColon), drive.NameColon, CompletionResultType.ParameterValue, tiphelp);
             }
         }
     }

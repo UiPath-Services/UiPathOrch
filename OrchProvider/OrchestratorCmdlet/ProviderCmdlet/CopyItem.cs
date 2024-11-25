@@ -160,7 +160,7 @@ namespace UiPath.PowerShell.Core
         }
 
         internal static void CopyFolderUsers(IWritableHost _this,
-            OrchDriveInfo srcDrive, Folder srcFolder,  List<WildcardPattern>? wpUserName,
+            OrchDriveInfo srcDrive, Folder srcFolder,  List<WildcardPattern>? wpUserName, List<WildcardPattern>? wpType,
             OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
             bool shouldProcess, CancellationToken cancelToken)
         {
@@ -174,7 +174,8 @@ namespace UiPath.PowerShell.Core
             }
 
             var dstFolderUsers = dstDrive.FolderUsersWithNoInherited.Get(newFolder)
-                .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName).ToList();
+                .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName)
+                .FilterByWildcards(u => u?.UserEntity?.Type, wpType).ToList();
 
             string targetFolder = newFolder.GetPSPath();
 
@@ -2577,7 +2578,7 @@ namespace UiPath.PowerShell.Core
                             srcDrive.FolderUsersWithInherited.ClearCache(srcFolder);
                             srcDrive.FolderUsersWithNoInherited.ClearCache(srcFolder);
                             using var reporterFolderUsers = new ProgressReporter(this, 100, Int32.MaxValue, msg, msg);
-                            CopyFolderUsers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterFolderUsers, true, cancelHandler.Token);
+                            CopyFolderUsers(this, srcDrive, srcFolder, null, null, dstDrive, newFolder, reporterFolderUsers, true, cancelHandler.Token);
 
                             // #2 フォルダーマシンをコピー
                             msg = "Copying folder machines...   ";

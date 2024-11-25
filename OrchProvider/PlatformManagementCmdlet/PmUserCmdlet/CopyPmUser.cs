@@ -1,12 +1,9 @@
-﻿using System.Management.Automation;
+﻿using System.Collections.Concurrent;
+using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Positional;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.UserName;
-using System.Linq;
-using System.Collections.Concurrent;
+using TPositional = UiPath.PowerShell.Positional.Email_Destination;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -18,17 +15,17 @@ namespace UiPath.PowerShell.Commands
         Dictionary<(OrchDriveInfo drive, string[] groupIds), Dictionary<string, CsvLine>> _params = new(new DriveGroupIdsComparer());
 
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PmUserEmailCompleter<Email_Destination>))]
+        [ArgumentCompleter(typeof(PmUserEmailCompleter<TPositional>))]
         [SupportsWildcards]
         [Alias("UserName")]
         public string[]? Email { get; set; }
 
         [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DestinationDriveCompleter<Email_Destination>))]
+        [ArgumentCompleter(typeof(DestinationDriveCompleter<TPositional>))]
         public string[]? Destination { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<Email_Destination>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string? Path { get; set; }
 
         private PmGroup? CreatePmGroup(OrchDriveInfo drive, string groupName)
@@ -72,9 +69,9 @@ namespace UiPath.PowerShell.Commands
             var targetUsers = new Dictionary<List<string>, List<PmUser>>(new ListStringComparer());
             try
             {
-                var srcAllUsers = srcDrive.GetPmUsers().Values;
+                var srcAllUsers = srcDrive.PmUsers.Get();
 
-                var srcUsers = srcDrive.GetPmUsers().Values
+                var srcUsers = srcDrive.PmUsers.Get()
                     .FilterByWildcards(u => u?.email, wpEmail)
                     .OrderBy(u => u.name);
 
@@ -192,7 +189,7 @@ namespace UiPath.PowerShell.Commands
                     Dictionary<string, PmUser> dstUsers = null;
                     try
                     {
-                        dstUsers = dstDrive.GetPmUsers().Values.ToDictionary(
+                        dstUsers = dstDrive.PmUsers.Get().ToDictionary(
                             u => u.email!,
                             u => u,
                             StringComparer.OrdinalIgnoreCase);
@@ -240,8 +237,7 @@ namespace UiPath.PowerShell.Commands
                     try
                     {
                         var response = dstDrive.OrchAPISession.CreatePmUserBulk(payload);
-                        dstDrive._dicPmUsers = null;
-                        dstDrive._dicPmUsers_Exception.ClearCache();
+                        dstDrive.PmUsers.ClearCache();
                         dstDrive._dicPmGroups = null;
                         dstDrive._dicPmGroups_Exception.ClearCache();
                         dstDrive._dicSearchForUsersAndGroups = null;

@@ -3,6 +3,7 @@ using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Completer;
+using TPositional = UiPath.PowerShell.Positional.Path;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -16,10 +17,9 @@ namespace UiPath.PowerShell.Commands
         [Parameter]
         public SwitchParameter AllDrives { get; set; }
 
+        // これはすべてのプロバイダを列挙しないといけないから、共通化できない
         public class Position0AllDriveCompleter : OrchArgumentCompleter
         {
-            private static readonly string[] positionalParams = ["Path"];
-
             public override IEnumerable<CompletionResult> CompleteArgument(
                 string commandName,
                 string parameterName,
@@ -28,14 +28,13 @@ namespace UiPath.PowerShell.Commands
                 IDictionary fakeBoundParameters)
             {
                 // パラメータで選択済みのドライブは、候補から除外する
-                var paramPath = GetParameterValues(commandAst, "Path", positionalParams, wordToComplete).Select(p => p.TrimEnd(':'));
-                var wpPath = paramPath.Select(p => new WildcardPattern(p, WildcardOptions.IgnoreCase)).ToList();
+                var wpPath = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
                 var drives = OrchDriveInfo.EnumAllOrchDrives();
                 foreach (var drive in drives
-                    .ExcludeByWildcards(d => d?.Name, wpPath)
+                    .ExcludeByWildcards(d => d?.NameColon, wpPath)
                     .Where(d => wp.IsMatch(d.NameColon)))
                 {
                     string driveName = drive.NameColon;
@@ -47,14 +46,24 @@ namespace UiPath.PowerShell.Commands
 
                 var duDrives = OrchDuDriveInfo.EnumAllOrchDrives();
                 foreach (var drive in duDrives
-                    .ExcludeByWildcards(d => d?.Name, wpPath)
+                    .ExcludeByWildcards(d => d?.NameColon, wpPath)
                     .Where(d => wp.IsMatch(d.NameColon)))
                 {
-                    string driveName = drive.NameColon;
                     string tiphelp = drive.DisplayRoot;
                     if (!string.IsNullOrEmpty(drive.Description))
                         tiphelp += $" ({drive.Description})";
-                    yield return new CompletionResult(PathTools.EscapePSText(driveName), driveName, CompletionResultType.ParameterValue, tiphelp);
+                    yield return new CompletionResult(PathTools.EscapePSText(drive.NameColon), drive.NameColon, CompletionResultType.ParameterValue, tiphelp);
+                }
+
+                var tmDrives = OrchTmDriveInfo.EnumAllOrchDrives();
+                foreach (var drive in tmDrives
+                    .ExcludeByWildcards(d => d?.NameColon, wpPath)
+                    .Where(d => wp.IsMatch(d.NameColon)))
+                {
+                    string tiphelp = drive.DisplayRoot;
+                    if (!string.IsNullOrEmpty(drive.Description))
+                        tiphelp += $" ({drive.Description})";
+                    yield return new CompletionResult(PathTools.EscapePSText(drive.NameColon), drive.NameColon, CompletionResultType.ParameterValue, tiphelp);
                 }
             }
         }

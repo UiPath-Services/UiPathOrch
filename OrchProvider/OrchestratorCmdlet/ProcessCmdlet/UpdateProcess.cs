@@ -1,29 +1,13 @@
 ﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using UiPath.OrchAPI;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using System.Text.Json.Nodes;
-using System.Text.Json;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name;
-using RetentionActionItems = UiPath.PowerShell.Positional.Delete_Archive;
-using JobPriorityItems = UiPath.PowerShell.Positional.JobPriorityItems;
-using RemoteControlAccessItems = UiPath.PowerShell.Positional.RemoteControlAccessItems;
-using True_False = UiPath.PowerShell.Positional.True_False;
-using VideoRecordingTypeItems = UiPath.PowerShell.Positional.VideoRecordingTypeItems;
-using QueueItemVideoRecordingTypeItems = UiPath.PowerShell.Positional.QueueItemVideoRecordingTypeItems;
-
-using Item30 = UiPath.PowerShell.Positional.Item30;
-using Item40 = UiPath.PowerShell.Positional.Item40;
-using Item100 = UiPath.PowerShell.Positional.Item100;
-using Item180 = UiPath.PowerShell.Positional.Item180;
-using Item500 = UiPath.PowerShell.Positional.Item500;
-using System.Globalization;
-using System.Diagnostics;
-
+using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -32,7 +16,7 @@ namespace UiPath.PowerShell.Commands
     public class UpdateProcessCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(ProcessNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(ProcessNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 
@@ -78,7 +62,7 @@ namespace UiPath.PowerShell.Commands
         public string? RemoteControlAccess { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(StaticTextsCompleter<RetentionActionItems>))]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<Delete_Archive>))]
         public string? RetentionAction { get; set; }
 
         // 0 だったら 30 に補正する
@@ -164,7 +148,7 @@ namespace UiPath.PowerShell.Commands
             {
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Positional.Name.Parameters);
+                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -203,8 +187,8 @@ namespace UiPath.PowerShell.Commands
             {
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Positional.Name.Parameters);
-                var paramVersion = GetParameterValue(commandAst, "Version", Positional.Name.Parameters);
+                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
+                var paramVersion = GetParameterValue(commandAst, "Version", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -296,7 +280,7 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの Id は、候補から除外する
-                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Positional.Name.Parameters);
+                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
                 var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetReleases(df.folder));
 
@@ -323,7 +307,7 @@ namespace UiPath.PowerShell.Commands
         protected override void ProcessRecord()
         {
             var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
-            var wpName = Name?.Select(id => new WildcardPattern(id, WildcardOptions.IgnoreCase)).ToList();
+            var wpName = Name.ConvertToWildcardPatternList();
 
             SpecificPriorityValue ??= ConvertPriorityToSpecificPriorityValue(Priority);
 

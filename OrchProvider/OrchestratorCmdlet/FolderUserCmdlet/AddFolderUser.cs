@@ -2,11 +2,11 @@
 using System.Data;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
 using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.Type_UserName_Roles;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -54,7 +54,7 @@ namespace UiPath.PowerShell.Commands
                     yield break;
                 }
 
-                var paramType = GetParameterValue(commandAst, "Type", Type_UserName_Roles.Parameters);
+                var paramType = GetParameterValue(commandAst, "Type", TPositional.Parameters);
                 if (!DirectoryTypeItems.Items.TryGetValue(paramType ?? "", out var objectType))
                 {
                     //yield return new CompletionResult(PathTools.EscapePSText("Invalid Type."));
@@ -68,7 +68,7 @@ namespace UiPath.PowerShell.Commands
                 // アサイン済みのユーザーを除外するため、アサイン済みのユーザーを取得
                 //ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
 
-                var paramUserName = GetParameterValues(commandAst, parameterName, Type_UserName_Roles.Parameters, wordToComplete);
+                var paramUserName = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
                 bool bFound = false;
                 foreach (var drive in drives)
                 {
@@ -106,7 +106,7 @@ namespace UiPath.PowerShell.Commands
                 var drives = ResolveDrives(fakeBoundParameters);
 
                 // パラメータで選択済みの Roles は、候補から除外する
-                var wpRoles = CreateWPListFromParameter(commandAst, parameterName, Type_UserName_Roles.Parameters, wordToComplete);
+                var wpRoles = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -177,13 +177,10 @@ namespace UiPath.PowerShell.Commands
 
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
             var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
-            var wpUserName = UserName?.Select(un => new WildcardPattern(un, WildcardOptions.IgnoreCase)).ToList();
+            var wpUserName = UserName.ConvertToWildcardPatternList();
 
             // 先頭の要素は CSV から入力されている可能性があるので、先頭の要素についてはカンマで区切る
-            //if (Roles != null && Roles.Length > 0) Roles = Roles[0].Split(',').Concat(Roles.Skip(1)).ToArray();
-            Roles = Roles.Split1stValueByUnescapedCommas()?.ToArray();
-
-            var wpRoles = Roles?.Select(role => new WildcardPattern(role, WildcardOptions.IgnoreCase)).ToList();
+            var wpRoles = Roles.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
 
             // これはしなくて良いか。。
             //ParallelResults.ForEach(drives, drive => drive.Roles.Get());

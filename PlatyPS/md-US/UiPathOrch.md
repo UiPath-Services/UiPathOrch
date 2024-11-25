@@ -140,8 +140,8 @@ Disables the runtime licenses.
 ### [Disable-OrchMaintenanceMode](Disable-OrchMaintenanceMode.md)
 Disables maintenance mode of unattended sessions.
 
-### [Disable-OrchPersonalWorkspace](Disable-OrchPersonalWorkspace.md)
-Disables personal workspace folders.
+### [Disable-OrchMaintenanceMode](Disable-OrchMaintenanceMode.md)
+Disables maintenance mode of unattended sessions.
 
 ### [Disable-OrchTestSetSchedule](Disable-OrchTestSetSchedule.md)
 Disables the test schedules.
@@ -149,8 +149,8 @@ Disables the test schedules.
 ### [Disable-OrchTrigger](Disable-OrchTrigger.md)
 Disables the triggers.
 
-### [Disable-OrchUserAttended](Disable-OrchUserAttended.md)
-Disables the users to run automations.
+### [Disable-OrchTrigger](Disable-OrchTrigger.md)
+Disables the triggers.
 
 ### [Disable-OrchWebhook](Disable-OrchWebhook.md)
 Disables the webhooks.
@@ -173,8 +173,8 @@ Enables the runtime licenses.
 ### [Enable-OrchMaintenanceMode](Enable-OrchMaintenanceMode.md)
 Enables maintenance mode of unattended sessions.
 
-### [Enable-OrchPersonalWorkspace](Enable-OrchPersonalWorkspace.md)
-Enables personal workspace folders.
+### [Enable-OrchMaintenanceMode](Enable-OrchMaintenanceMode.md)
+Enables maintenance mode of unattended sessions.
 
 ### [Enable-OrchTestSetSchedule](Enable-OrchTestSetSchedule.md)
 Enables the test schedules.
@@ -182,8 +182,8 @@ Enables the test schedules.
 ### [Enable-OrchTrigger](Enable-OrchTrigger.md)
 Enables the triggers.
 
-### [Enable-OrchUserAttended](Enable-OrchUserAttended.md)
-Enables the users to run automations.
+### [Enable-OrchTrigger](Enable-OrchTrigger.md)
+Enables the triggers.
 
 ### [Enable-OrchWebhook](Enable-OrchWebhook.md)
 Enables the webhooks.

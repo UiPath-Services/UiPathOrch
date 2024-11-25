@@ -1,12 +1,11 @@
 ﻿using System.Collections;
-using System.Collections.Concurrent;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using System.Text;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.ValueType_Name_Value_UserName_MachineName;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -35,8 +34,6 @@ namespace UiPath.PowerShell.Commands
         //private const string GenerateTemplateCsv = "GenerateTemplateCsvParameterSet";
 
         public static readonly string[] ValidValueTypes = ["Text", "Integer", "Bool"];
-
-        private static readonly string[] positionalParams = ["ValueType", "Name", "Value", "UserName", "MachineName"];
 
         [Parameter(ParameterSetName = Default, Position = 0, ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(StaticTextsCompleter<AssetTypeItems>))]
@@ -94,10 +91,10 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択された ValueType のみ対象とする
-                var wpValueType = CreateWPListFromOtherParameters(commandAst, "ValueType", positionalParams);
+                var wpValueType = CreateWPListFromOtherParameters(commandAst, "ValueType", TPositional.Parameters);
 
                 // パラメータで選択済みの Name は、候補から除外する
-                var wpName = CreateWPListFromParameter(commandAst, "Name", positionalParams, wordToComplete);
+                var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -137,9 +134,9 @@ namespace UiPath.PowerShell.Commands
             {
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-                var wpValueType = CreateWPListFromOtherParameters(commandAst, "ValueType", positionalParams);
-                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", positionalParams);
-                var wpDescription = CreateWPListFromParameter(commandAst, "Description", positionalParams, wordToComplete);
+                var wpValueType = CreateWPListFromOtherParameters(commandAst, "ValueType", TPositional.Parameters);
+                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
+                var wpDescription = CreateWPListFromParameter(commandAst, "Description", TPositional.Parameters, wordToComplete);
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
                 var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Assets.Get(df.folder));
@@ -209,10 +206,10 @@ namespace UiPath.PowerShell.Commands
             {
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-                var wpValueType   = CreateWPListFromOtherParameters(commandAst, "ValueType",   positionalParams);
-                var wpName        = CreateWPListFromOtherParameters(commandAst, "Name",        positionalParams);
-                var wpUserName    = CreateWPListFromOtherParameters(commandAst, "UserName",    positionalParams);
-                var wpMachineName = CreateWPListFromOtherParameters(commandAst, "MachineName", positionalParams);
+                var wpValueType   = CreateWPListFromOtherParameters(commandAst, "ValueType",   TPositional.Parameters);
+                var wpName        = CreateWPListFromOtherParameters(commandAst, "Name",        TPositional.Parameters);
+                var wpUserName    = CreateWPListFromOtherParameters(commandAst, "UserName",    TPositional.Parameters);
+                var wpMachineName = CreateWPListFromOtherParameters(commandAst, "MachineName", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -272,7 +269,7 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの UserName は、候補から除外する
-                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", positionalParams, wordToComplete);
+                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
 
                 //// パラメータで選択済みの Name のみ対象とする
                 //var wpName = CreateWPListFromOtherParameters(commandAst, "Name", positionalParams);
@@ -310,7 +307,7 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの MachineName は、候補から除外する
-                var wpMachineName = CreateWPListFromParameter(commandAst, "MachineName", positionalParams, wordToComplete);
+                var wpMachineName = CreateWPListFromParameter(commandAst, "MachineName", TPositional.Parameters, wordToComplete);
 
                 // TODO: 既存のユーザー名とマシン名の組み合わせは、候補に表示しないようにする
                 // ややこしいから、いいか。。

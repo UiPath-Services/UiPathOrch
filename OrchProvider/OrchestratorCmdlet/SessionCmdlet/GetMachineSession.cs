@@ -1,11 +1,9 @@
-﻿using System.Collections;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Positional;
-using UiPath.PowerShell.Completer;
 
-using Positional = UiPath.PowerShell.Positional.Last;
+//using TPositional = UiPath.PowerShell.Positional.Status;
 
 namespace UiPath.PowerShell.Commands
 {

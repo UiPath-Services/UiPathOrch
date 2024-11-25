@@ -1,16 +1,12 @@
-﻿using System.Collections;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
 using System.Text;
-using System.Text.Json.Serialization;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
 using UiPath.PowerShell.Positional;
-
-using Positional = UiPath.PowerShell.Positional.Name_CsvPath_CsvEncoding_CommitType;
+using TPositional = UiPath.PowerShell.Positional.Name_ImportCsv_CsvEncoding_CommitType;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -27,7 +23,7 @@ namespace UiPath.PowerShell.Commands
     public class ImportQueueItemCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true)]
-        [ArgumentCompleter(typeof(QueueNameCompleter<Name_CsvPath_CsvEncoding_CommitType>))]
+        [ArgumentCompleter(typeof(QueueNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 

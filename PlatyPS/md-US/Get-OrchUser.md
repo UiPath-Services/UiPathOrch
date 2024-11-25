@@ -13,8 +13,9 @@ Gets the users.
 ## SYNTAX
 
 ```
-Get-OrchUser [[-UserName] <String[]>] [[-FullName] <String[]>] [-ExpandDetails] [-Path <String[]>]
- [-ExportCsv <String>] [-CsvEncoding <Encoding>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-OrchUser [[-UserName] <String[]>] [[-FullName] <String[]>] [-Type <String[]>] [-ExpandDetails]
+ [-Path <String[]>] [-ExportCsv <String>] [-CsvEncoding <Encoding>] [-ProgressAction <ActionPreference>]
+ [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -140,6 +141,21 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
+```
+
+### -Type
+{{ Fill Type Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: True
 ```
 
 ### CommonParameters

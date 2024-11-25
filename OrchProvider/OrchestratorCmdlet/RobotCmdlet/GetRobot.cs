@@ -1,14 +1,10 @@
 ﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
 using System.Data;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Completer;
-using UiPath.PowerShell.Entities;
-
-using Positional = UiPath.PowerShell.Positional.FullName_Username;
+using UiPath.PowerShell.Core;
+using TPositional = UiPath.PowerShell.Positional.FullName_Username;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -27,7 +23,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? Username { get; set; } // Entities.Robot の定義を尊重した capitalization
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.FullName_Username>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         private class FullNameCompleter : OrchArgumentCompleter
@@ -41,8 +37,8 @@ namespace UiPath.PowerShell.Commands
             {
                 var drives = ResolveDrives(fakeBoundParameters);
 
-                var wpFullName = CreateWPListFromParameter(commandAst, "FullName", Positional.FullName_Username.Parameters, wordToComplete);
-                var wpUsername = CreateWPListFromOtherParameters(commandAst, "Username", Positional.FullName_Username.Parameters);
+                var wpFullName = CreateWPListFromParameter(commandAst, "FullName", TPositional.Parameters, wordToComplete);
+                var wpUsername = CreateWPListFromOtherParameters(commandAst, "Username", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -76,8 +72,8 @@ namespace UiPath.PowerShell.Commands
             {
                 var drives = ResolveDrives(fakeBoundParameters);
 
-                var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", Positional.FullName_Username.Parameters);
-                var wpUsername = CreateWPListFromParameter(commandAst, "Username", Positional.FullName_Username.Parameters, wordToComplete);
+                var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
+                var wpUsername = CreateWPListFromParameter(commandAst, "Username", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -104,8 +100,8 @@ namespace UiPath.PowerShell.Commands
         protected override void ProcessRecord()
         {
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
-            var wpFullName = FullName?.Select(displayName => new WildcardPattern(displayName, WildcardOptions.IgnoreCase)).ToList();
-            var wpUsername = Username?.Select(displayName => new WildcardPattern(displayName, WildcardOptions.IgnoreCase)).ToList();
+            var wpFullName = FullName.ConvertToWildcardPatternList();
+            var wpUsername = Username.ConvertToWildcardPatternList();
 
             using var results = OrchThreadPool.RunForEach(drives,
                 drive => drive.NameColonSeparator,

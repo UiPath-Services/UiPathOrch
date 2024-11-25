@@ -4,6 +4,7 @@ using System.Management.Automation.Language;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.Name_OwnerName;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -23,7 +24,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? OwnerName { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Name_OwnerName>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Path { get; set; }
 
@@ -38,8 +39,8 @@ namespace UiPath.PowerShell.Commands
             {
                 var drives = ResolveDrives(fakeBoundParameters);
 
-                var wpName = CreateWPListFromParameter(commandAst, "Name", Name_OwnerName.Parameters, wordToComplete);
-                var wpOwnerName = CreateWPListFromOtherParameters(commandAst, "OwnerName", Name_OwnerName.Parameters);
+                var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
+                var wpOwnerName = CreateWPListFromOtherParameters(commandAst, "OwnerName", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -73,8 +74,8 @@ namespace UiPath.PowerShell.Commands
             {
                 var drives = ResolveDrives(fakeBoundParameters);
 
-                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Positional.Name_OwnerName.Parameters);
-                var wpOwnerName = CreateWPListFromParameter(commandAst, "OwnerName", Positional.Name_OwnerName.Parameters, wordToComplete);
+                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
+                var wpOwnerName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 

@@ -5,19 +5,20 @@ using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
 
-using Positional = UiPath.PowerShell.Positional.UserName_Roles;
+using TPositional = UiPath.PowerShell.Positional.UserName_Roles;
+using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands
 {
     [Cmdlet(VerbsCommon.Remove, "OrchRoleFromFolderUser", SupportsShouldProcess = true)]
-    public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
+    public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(UserNameCompleter))]
+        [ArgumentCompleter(typeof(FolderUserUserNameCompleter))]
         public string[]? UserName { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(FullNameCompleter))]
+        [ArgumentCompleter(typeof(FolderUserFullNameCompleter))]
         [SupportsWildcards]
         public string[]? FullName { get; set; }
 
@@ -25,6 +26,11 @@ namespace UiPath.PowerShell.Commands
         [Alias("FolderRoles")]
         [ArgumentCompleter(typeof(RolesCompleter))]
         public string[]? Roles { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [SupportsWildcards]
+        [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<DirectoryTypeItems, int>))]
+        public string[]? Type { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
@@ -37,7 +43,7 @@ namespace UiPath.PowerShell.Commands
         public uint Depth { get; set; }
 
         // TODO: これは共通化できる気がする
-        private class UserNameCompleter : OrchArgumentCompleter
+        private class FolderUserUserNameCompleter : OrchArgumentCompleter
         {
             public override IEnumerable<CompletionResult> CompleteArgument(
                 string commandName,
@@ -55,10 +61,12 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
                 // パラメータで選択済みの UserName は、候補から除外する
-                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", Positional.UserName_Roles.Parameters, wordToComplete);
+                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
 
                 // パラメータで選択された FullName のみ対象とする
-                var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", Positional.UserName_Roles.Parameters);
+                var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
+
+                var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -72,6 +80,7 @@ namespace UiPath.PowerShell.Commands
                         .Where(eu => wp.IsMatch(eu.UserEntity!.UserName!))
                         .ExcludeByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
                         .FilterByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
+                        .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
                         .OrderBy(u => u.UserEntity!.UserName))
                     {
                         string tiphelp = TipHelp(e);
@@ -82,7 +91,7 @@ namespace UiPath.PowerShell.Commands
             }
         }
 
-        private class FullNameCompleter : OrchArgumentCompleter
+        private class FolderUserFullNameCompleter : OrchArgumentCompleter
         {
             public override IEnumerable<CompletionResult> CompleteArgument(
                 string commandName,
@@ -100,10 +109,12 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
                 // パラメータで選択された UserName のみ対象とする
-                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", Positional.UserName_Roles.Parameters);
+                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
 
                 // パラメータで選択済みの FullName は、候補から除外する
-                var wpFullName = CreateWPListFromParameter(commandAst, "FullName", Positional.UserName_Roles.Parameters, wordToComplete);
+                var wpFullName = CreateWPListFromParameter(commandAst, "FullName", TPositional.Parameters, wordToComplete);
+
+                var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -117,6 +128,7 @@ namespace UiPath.PowerShell.Commands
                         .Where(eu => wp.IsMatch(eu.UserEntity?.FullName))
                         .ExcludeByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
                         .FilterByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
+                        .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
                         .OrderBy(u => u.UserEntity!.FullName))
                     {
                         string tiphelp = TipHelp(e);
@@ -144,9 +156,11 @@ namespace UiPath.PowerShell.Commands
                 var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
                 var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
-                var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", Positional.UserName_Roles.Parameters);
-                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", Positional.UserName_Roles.Parameters);
-                var wpRoles = CreateWPListFromParameter(commandAst, parameterName, Positional.UserName_Roles.Parameters, wordToComplete);
+                var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
+                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
+                var wpRoles = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+                var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -158,7 +172,8 @@ namespace UiPath.PowerShell.Commands
 
                     foreach (var e in entities!
                         .FilterByWildcards(u => u?.UserEntity?.FullName, wpFullName)
-                        .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName))
+                        .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName)
+                        .FilterByWildcards(u => u?.UserEntity?.Type, wpType))
                     {
                         if (e.Roles != null)
                         {
@@ -191,14 +206,13 @@ namespace UiPath.PowerShell.Commands
 
             var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
 
-            var wpFullName = FullName?.Select(fn => new WildcardPattern(fn, WildcardOptions.IgnoreCase)).ToList();
-            var wpUserName = UserName?.Select(un => new WildcardPattern(un, WildcardOptions.IgnoreCase)).ToList();
+            var wpFullName = FullName.ConvertToWildcardPatternList();
+            var wpUserName = UserName.ConvertToWildcardPatternList();
+            var wpType = Type.ConvertToWildcardPatternList();
 
             // 先頭の要素は CSV から入力されている可能性があるので、先頭の要素についてはカンマで区切る
             //if (Roles != null && Roles.Length > 0) Roles = Roles[0].Split(',').Concat(Roles.Skip(1)).ToArray();
-            Roles = Roles.Split1stValueByUnescapedCommas()?.ToArray();
-
-            var wpRoles = Roles?.Select(role => new WildcardPattern(role, WildcardOptions.IgnoreCase)).ToList();
+            var wpRoles = Roles.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (drive, folder) in drivesFolders)
@@ -212,7 +226,9 @@ namespace UiPath.PowerShell.Commands
                         var existingUsers = drive.FolderUsersWithNoInherited.Get(folder);
                         List<UserRoles> editingUsers = existingUsers
                             .FilterByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
-                            .FilterByWildcards(eu => eu?.UserEntity?.UserName, wpUserName).ToList();
+                            .FilterByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
+                            .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
+                            .ToList();
 
                         foreach (var user in editingUsers.OrderBy(user => user.UserEntity!.FullName))
                         {

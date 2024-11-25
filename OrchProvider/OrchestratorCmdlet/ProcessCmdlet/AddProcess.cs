@@ -1,26 +1,13 @@
 ﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using System.Text.Json.Nodes;
-using System.Text.Json;
-
-using Positional = UiPath.PowerShell.Positional.Id_Version;
-using RetentionActionItems = UiPath.PowerShell.Positional.Delete_Archive;
-using JobPriorityItems = UiPath.PowerShell.Positional.JobPriorityItems;
-using RemoteControlAccessItems = UiPath.PowerShell.Positional.RemoteControlAccessItems;
-using VideoRecordingTypeItems = UiPath.PowerShell.Positional.VideoRecordingTypeItems;
-using QueueItemVideoRecordingTypeItems = UiPath.PowerShell.Positional.QueueItemVideoRecordingTypeItems;
-using UiPath.PowerShell.Completer;
-
-using RetentionActionCompleter = UiPath.PowerShell.Completer.StaticTextsCompleter<UiPath.PowerShell.Positional.Delete_Archive>;
-
-using Item30 = UiPath.PowerShell.Positional.Item30;
-using Item40 = UiPath.PowerShell.Positional.Item40;
-using Item100 = UiPath.PowerShell.Positional.Item100;
-using Item180 = UiPath.PowerShell.Positional.Item180;
-using Item500 = UiPath.PowerShell.Positional.Item500;
+using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.Id_Version;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -29,12 +16,12 @@ namespace UiPath.PowerShell.Commands
     public class AddProcessCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PackageIdCompleter<Positional.Id_Version>))]
+        [ArgumentCompleter(typeof(PackageIdCompleter<TPositional>))]
         [SupportsWildcards]
-        public string[]? PackageId { get; set; }
+        public string[]? Id { get; set; }
 
         [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PackageVersionCompleter<Positional.Id_Version>))]
+        [ArgumentCompleter(typeof(PackageVersionCompleter<TPositional>))]
         [SupportsWildcards]
         public string? Version { get; set; }
 
@@ -63,9 +50,7 @@ namespace UiPath.PowerShell.Commands
         [ArgumentCompleter(typeof(StaticTextsCompleter<JobPriorityItems>))]
         public string? Priority { get; set; }
 
-        //  "RobotSize": null,
-
-        // Hide process for attended users
+         // Hide process for attended users
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(BoolCompleter))]
         public string? HiddenForAttendedUser { get; set; }
@@ -76,7 +61,7 @@ namespace UiPath.PowerShell.Commands
         public string? RemoteControlAccess { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(RetentionActionCompleter))]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<Delete_Archive>))]
         public string? RetentionAction { get; set; }
 
         // 0 だったら 30 に補正する
@@ -162,8 +147,8 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの Id は、候補から除外する
-                var wpId = CreateWPListFromOtherParameters(commandAst, "Id", Positional.Id_Version.Parameters);
-                var wpVersion = CreateWPListFromOtherParameters(commandAst, "Version", Positional.Id_Version.Parameters);
+                var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
+                var wpVersion = CreateWPListFromOtherParameters(commandAst, "Version", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -220,9 +205,9 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの Id は、候補から除外する
-                var wpId = CreateWPListFromOtherParameters(commandAst, "Id", Positional.Id_Version.Parameters);
-                var wpVersion = CreateWPListFromOtherParameters(commandAst, "Version", Positional.Id_Version.Parameters);
-                var wpEntryPoint = CreateWPListFromOtherParameters(commandAst, "EntryPoint", Positional.Id_Version.Parameters);
+                var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
+                var wpVersion = CreateWPListFromOtherParameters(commandAst, "Version", TPositional.Parameters);
+                var wpEntryPoint = CreateWPListFromOtherParameters(commandAst, "EntryPoint", TPositional.Parameters);
 
                 //var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -280,7 +265,7 @@ namespace UiPath.PowerShell.Commands
         protected override void ProcessRecord()
         {
             var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
-            var wpPackageId = PackageId?.Select(id => new WildcardPattern(id, WildcardOptions.IgnoreCase)).ToList();
+            var wpPackageId = Id.ConvertToWildcardPatternList();
 
             if (Version == "") Version = null;
             var wpVersion = (Version != null) ? new WildcardPattern(Version, WildcardOptions.IgnoreCase) : null;
@@ -298,7 +283,7 @@ namespace UiPath.PowerShell.Commands
                 var targetPackageIds = packages.Select(p => p.Id).SelectByWildcards(id => id, wpPackageId);
                 if (!targetPackageIds.Any())
                 {
-                    WriteWarning($"{folder.GetPSPath()}: No packages found with PackageId '{PackageId![0]}'.");
+                    WriteWarning($"{folder.GetPSPath()}: No packages found with PackageId '{Id![0]}'.");
                     continue;
                 }
 

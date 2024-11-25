@@ -1,16 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics.Eventing.Reader;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using System.Xml.Linq;
-using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Completer;
-
+using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using Job = UiPath.PowerShell.Entities.Job;
+using TPositional = UiPath.PowerShell.Positional.Id;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -29,8 +26,6 @@ namespace UiPath.PowerShell.Commands
         //private static readonly string[] stoppableStates = ["Pending", "Running", "Suspended", "Resumed"];
         //private static readonly string[] killableStates = ["Pending", "Running", "Stopping", "Suspended", "Resumed"];
         private static readonly string[] alreadyStoppedStates = ["Terminating", "Faulted", "Successful", "Stopped"];
-
-        private static readonly string[] positionalParams = ["Id"];
 
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(IdCompleter))]
@@ -64,7 +59,8 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの Id は、候補から除外する
-                var paramId = GetParameterValues(commandAst, "Id", positionalParams, wordToComplete).Select(id => Int64.Parse(id));
+                // TODO: これ入力時にはワイルドカードをサポートしてもいいのでは？
+                var paramId = GetParameterValues(commandAst, "Id", TPositional.Parameters, wordToComplete).Select(id => Int64.Parse(id));
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 

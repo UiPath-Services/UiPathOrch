@@ -1,15 +1,12 @@
 ﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using System.Reflection.Metadata;
-using System.Text;
 using UiPath.PowerShell.Commands;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.Name_UserName_MachineName_CredentialUsername_CredentialPassword;
 
 namespace OrchProvider.AssetCmdlet
 {
@@ -77,7 +74,7 @@ namespace OrchProvider.AssetCmdlet
 
         [Parameter(ParameterSetName = Default)]
         [Parameter(ParameterSetName = Plain, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(CredentialStoreNameCompleter<Name_UserName_MachineName_CredentialUsername_CredentialPassword>))]
+        [ArgumentCompleter(typeof(CredentialStoreNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string? CredentialStore { get; set; }
 
@@ -99,7 +96,7 @@ namespace OrchProvider.AssetCmdlet
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの Name は、候補から除外する
-                var wpName = CreateWPListFromParameter(commandAst, "Name", Name_UserName_MachineName_CredentialUsername_CredentialPassword.Parameters, wordToComplete);
+                var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -139,10 +136,10 @@ namespace OrchProvider.AssetCmdlet
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの UserName は、候補から除外する
-                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Name_UserName_MachineName_CredentialUsername_CredentialPassword.Parameters);
+                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
                 // パラメータで選択済みの UserName は、候補から除外する
-                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", Name_UserName_MachineName_CredentialUsername_CredentialPassword.Parameters, wordToComplete);
+                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -177,7 +174,7 @@ namespace OrchProvider.AssetCmdlet
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの MachineName は、候補から除外する
-                var wpMachineName = CreateWPListFromParameter(commandAst, "MachineName", Name_UserName_MachineName_CredentialUsername_CredentialPassword.Parameters, wordToComplete);
+                var wpMachineName = CreateWPListFromParameter(commandAst, "MachineName", TPositional.Parameters, wordToComplete);
 
                 // TODO: 既存のユーザー名とマシン名の組み合わせは、候補に表示しないようにする
                 // ややこしいから、いいか。。
@@ -241,7 +238,7 @@ namespace OrchProvider.AssetCmdlet
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの Name は、候補から除外する
-                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Name_UserName_MachineName_CredentialUsername_CredentialPassword.Parameters);
+                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
                 //var wp = CreateWPFromWordToComplete(wordToComplete);
 
