@@ -1,13 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Globalization;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -16,12 +11,12 @@ namespace UiPath.PowerShell.Commands
     public class RemoveCalendarCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(CalendarNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(CalendarNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Path { get; set; }
 

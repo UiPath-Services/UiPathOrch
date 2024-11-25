@@ -1,11 +1,7 @@
-﻿using System.Collections;
-using System.Management.Automation;
-using System.Management.Automation.Language;
-using System.Xml.Linq;
-using UiPath.PowerShell.Core;
+﻿using System.Management.Automation;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name;
+using UiPath.PowerShell.Core;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -14,7 +10,7 @@ namespace UiPath.PowerShell.Commands
     public class GetTmRequirementCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(TmRequirementNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(TmRequirementNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 

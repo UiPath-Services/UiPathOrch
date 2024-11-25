@@ -1,12 +1,9 @@
 ﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
-using UiPath.PowerShell.Positional;
-using Positional = UiPath.PowerShell.Positional.Name;
+using UiPath.PowerShell.Core;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -40,7 +37,7 @@ namespace UiPath.PowerShell.Commands
             {
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-                var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Parameters, wordToComplete);
+                var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
                 var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Environments.Get(df.folder));
@@ -64,7 +61,7 @@ namespace UiPath.PowerShell.Commands
         protected override void ProcessRecord()
         {
             var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
-            var wpName = Name?.Select(fn => new WildcardPattern(fn, WildcardOptions.IgnoreCase)).ToList();
+            var wpName = Name.ConvertToWildcardPatternList();
 
             using var results = OrchThreadPool.RunForEach(
                 drivesFolders.Where(df => df.folder.ProvisionType == "Manual"),

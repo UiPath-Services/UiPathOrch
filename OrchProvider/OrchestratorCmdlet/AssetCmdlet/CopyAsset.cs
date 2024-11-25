@@ -3,6 +3,7 @@ using System.Reflection.Metadata;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
+using TPositional = UiPath.PowerShell.Positional.Name_Destination;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -11,7 +12,7 @@ namespace UiPath.PowerShell.Commands
     public class CopyAssetCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(AssetNameCompleter<Positional.Name_Destination>))]
+        [ArgumentCompleter(typeof(AssetNameCompleter<TPositional>))]
         public string[]? Name { get; set; }
 
         [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]

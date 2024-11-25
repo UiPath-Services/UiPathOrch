@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Management.Automation;
-using System.Management.Automation.Language;
-using System.Reflection.Emit;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
+﻿using System.Management.Automation;
 using UiPath.PowerShell.Completer;
-
+using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Positional;
-
-using Positional = UiPath.PowerShell.Positional.Empty;
+using TPositional = UiPath.PowerShell.Positional.Empty;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -37,7 +30,7 @@ namespace UiPath.PowerShell.Commands
         public ulong? First { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Empty>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         private string? MakeFilter()

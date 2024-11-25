@@ -6,7 +6,7 @@ using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
 
-using Positional = UiPath.PowerShell.Positional.Name;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -42,7 +42,7 @@ namespace UiPath.PowerShell.Commands
                 var drivesProjects = OrchDuDriveInfo.EnumFolders(paramPath, recurse);
 
                 // パラメータで選択済みの DocumentTypeName は、候補から除外する
-                var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Parameters, wordToComplete);
+                var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 

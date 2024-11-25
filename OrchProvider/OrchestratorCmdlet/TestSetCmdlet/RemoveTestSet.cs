@@ -1,11 +1,8 @@
-﻿using System.Collections;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -14,7 +11,7 @@ namespace UiPath.PowerShell.Commands
     public class RemoveTestSetCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(TestSetNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(TestSetNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 

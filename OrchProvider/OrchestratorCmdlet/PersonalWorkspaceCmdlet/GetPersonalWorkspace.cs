@@ -1,12 +1,9 @@
 ﻿using System.Collections;
-using System.Collections.Concurrent;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
-using UiPath.PowerShell.Positional;
+using UiPath.PowerShell.Core;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -20,7 +17,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? Name { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Path { get; set; }
 
@@ -36,7 +33,7 @@ namespace UiPath.PowerShell.Commands
                 var drives = ResolveDrives(fakeBoundParameters);
 
                 // パラメータで選択済みの Name は、候補から除外する
-                var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Parameters, wordToComplete);
+                var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 

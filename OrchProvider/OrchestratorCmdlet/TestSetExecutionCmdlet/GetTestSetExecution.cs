@@ -1,13 +1,11 @@
 ﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name;
-using LastItems = UiPath.PowerShell.Positional.Hour_Day_Week_Month_3Month_6Month_Year_3Year;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -26,7 +24,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? Status { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(StaticTextsCompleter<LastItems>))]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>))]
         public string? Last { get; set; }
 
         [Parameter]
@@ -77,7 +75,7 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
                 // パラメータで選択済みの Name は、候補から除外する
-                var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Parameters, wordToComplete);
+                var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -112,6 +110,7 @@ namespace UiPath.PowerShell.Commands
             }
         }
 
+        // TODO: StaticTextCompleter で書き直す
         private class StatusCompleter : OrchArgumentCompleter
         {
             public override IEnumerable<CompletionResult> CompleteArgument(
@@ -122,8 +121,7 @@ namespace UiPath.PowerShell.Commands
                 IDictionary fakeBoundParameters)
             {
                 // パラメータで選択済みの SourceType は、候補から除外する
-                var paramStatus = GetParameterValues(commandAst, "Status", null, wordToComplete);
-                var wpStatus = paramStatus.Select(fn => new WildcardPattern(fn, WildcardOptions.IgnoreCase)).ToList();
+                var wpStatus = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -134,6 +132,7 @@ namespace UiPath.PowerShell.Commands
             }
         }
 
+        // TODO: StaticTextCompleter で書き直す
         private class TriggerTypeCompleter : OrchArgumentCompleter
         {
             public override IEnumerable<CompletionResult> CompleteArgument(
@@ -143,9 +142,9 @@ namespace UiPath.PowerShell.Commands
                 CommandAst commandAst,
                 IDictionary fakeBoundParameters)
             {
-                // パラメータで選択済みの SourceType は、候補から除外する
-                var paramStatus = GetParameterValues(commandAst, "Source", null, wordToComplete);
-                var wpStatus = paramStatus.Select(fn => new WildcardPattern(fn, WildcardOptions.IgnoreCase)).ToList();
+                // パラメータで選択済みの TriggerType は、候補から除外する
+                var paramStatus = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+                var wpStatus = paramStatus.ConvertToWildcardPatternList();
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -230,7 +229,7 @@ namespace UiPath.PowerShell.Commands
             if (Status != null && Status.Length > 0)
             {
                 var status = new List<string>();
-                var wpStatus = Status.Select(st => new WildcardPattern(st, WildcardOptions.IgnoreCase)).ToList();
+                var wpStatus = Status.ConvertToWildcardPatternList();
                 foreach (var state in Enum.GetNames(typeof(TestSetExecutionStatus)).FilterByWildcards(st => st, wpStatus))
                 {
                     status.Add($"(Status%20eq%20%27{(int)Enum.Parse(typeof(TestSetExecutionStatus), state)}%27)");
@@ -244,7 +243,7 @@ namespace UiPath.PowerShell.Commands
             if (TriggerType != null && TriggerType.Length > 0)
             {
                 var triggerTypes = new List<string>();
-                var wpTriggerType = TriggerType.Select(st => new WildcardPattern(st, WildcardOptions.IgnoreCase)).ToList();
+                var wpTriggerType = TriggerType.ConvertToWildcardPatternList();
                 foreach (var triggerType in Enum.GetNames(typeof(TestSetExecutionTriggerType)).FilterByWildcards(st => st, wpTriggerType))
                 {
                     triggerTypes.Add($"(TriggerType%20eq%20%27{Enum.Parse(typeof(TestSetExecutionTriggerType), triggerType)}%27)");

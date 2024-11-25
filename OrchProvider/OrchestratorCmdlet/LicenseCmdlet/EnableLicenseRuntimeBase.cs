@@ -1,75 +1,24 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Concurrent;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Positional;
-
-using Positional = UiPath.PowerShell.Positional.RobotType_Key;
+using TPositional = UiPath.PowerShell.Positional.RobotType_Key;
 
 namespace UiPath.PowerShell.Commands
 {
     public class EnableLicenseRuntimeCommandBase<Enable> : OrchestratorPSCmdlet where Enable : IBoolParameter
     {
-        private static string[] robotTypes = [
-            "Attended",
-            "AttendedStudioWeb",
-            "AutomationCloud",
-            "AutomationCloudTestAutomation",
-            "AutomationKit",
-            "Development",
-            "Headless",
-            "NonProduction",
-            "Serverless",
-            "ServerlessTestAutomation",
-            "StudioPro",
-            "StudioX",
-            "TestAutomation",
-            "Unattended",
-            //"CitizenDeveloper",
-            //"RpaDeveloper",
-            //"RpaDeveloperPro",
-            //"Studio",
-        ];
-
         public virtual string[]? RobotType { get; set; }
 
         public virtual string[]? Key { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.RobotType_Key>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
-
-        internal class RobotTypeCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
-                var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-                var drivesFolders = OrchDriveInfo.EnumOrchDrives(paramPath);
-
-                // パラメータで選択済みの RobotType は、候補から除外する
-                var wpRobotTypes = CreateWPListFromParameter(commandAst, "RobotType", Positional.RobotType_Key.Parameters, wordToComplete);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                foreach (var robotType in robotTypes
-                    .Where(rt => wp.IsMatch(rt))
-                    .ExcludeByWildcards(rt => rt, wpRobotTypes)
-                    .OrderBy(rt => rt))
-                {
-                    yield return new CompletionResult(robotType);
-                }
-            }
-        }
 
         internal class KeyCompleter : OrchArgumentCompleter
         {
@@ -83,14 +32,14 @@ namespace UiPath.PowerShell.Commands
                 var drives = ResolveDrives(fakeBoundParameters);
 
                 // パラメータで選択された RobotType のみ対象とする
-                var wpRobotTypes = CreateWPListFromOtherParameters(commandAst, "RobotType", Positional.RobotType_Key.Parameters);
+                var wpRobotTypes = CreateWPListFromOtherParameters(commandAst, "RobotType", TPositional.Parameters);
 
                 // パラメータで選択済みの Key は、候補から除外する
-                var wpKey = CreateWPListFromParameter(commandAst, "Key", Positional.RobotType_Key.Parameters, wordToComplete);
+                var wpKey = CreateWPListFromParameter(commandAst, "Key", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var specifiedRobotTypes = robotTypes
+                var specifiedRobotTypes = LicenseRobotTypeItems.Parameters
                     .FilterByWildcards(rt => rt, wpRobotTypes)
                     // .OrderBy(rt => rt);
                     .ToList();
@@ -148,7 +97,7 @@ namespace UiPath.PowerShell.Commands
             var wpRobotType = RobotType.ConvertToWildcardPatternList();
             var wpKey = Key.ConvertToWildcardPatternList();
 
-            var specifiedRobotType = robotTypes
+            var specifiedRobotType = LicenseRobotTypeItems.Parameters
                 .FilterByWildcards(rt => rt, wpRobotType)
                 .OrderBy(rt => rt)
                 .ToList();

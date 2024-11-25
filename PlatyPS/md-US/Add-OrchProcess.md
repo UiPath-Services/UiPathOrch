@@ -13,7 +13,7 @@ Adds proccesses.
 ## SYNTAX
 
 ```
-Add-OrchProcess [-PackageId] <String[]> [[-Version] <String>] [-Name <String>] [-Description <String>]
+Add-OrchProcess -Id <String[]> [[-Version] <String>] [-Name <String>] [-Description <String>]
  [-EntryPoint <String>] [-InputArguments <String>] [-Priority <String>] [-HiddenForAttendedUser <String>]
  [-RemoteControlAccess <String>] [-RetentionAction <String>] [-RetentionPeriod <Int32>]
  [-RetentionBucket <String>] [-ErrorRecordingEnabled <String>] [-Quality <Int32>] [-Frequency <Int32>]
@@ -237,21 +237,6 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
-### -PackageId
-Specifies the PackageId of the processes to be added.
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: True
-Position: 0
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
 ### -Path
 Specifies the source folders. If not specified, the current folder will be used as the source.
 
@@ -461,6 +446,21 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
+```
+
+### -Id
+{{ Fill Id Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
 ```
 
 ### CommonParameters

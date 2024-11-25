@@ -1,13 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Data;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Path;
+using TPositional = UiPath.PowerShell.Positional.Path;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -19,7 +14,7 @@ namespace UiPath.PowerShell.Commands
     class GetMaintenanceSettingCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Path>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         protected override void ProcessRecord()

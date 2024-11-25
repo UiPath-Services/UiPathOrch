@@ -1,14 +1,10 @@
-﻿using System.Collections;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using OrchCollectionExtensions = UiPath.PowerShell.Core.OrchCollectionExtensions;
-
-using Positional = UiPath.PowerShell.Positional.Name_Destination;
 using UiPath.PowerShell.Positional;
+using OrchCollectionExtensions = UiPath.PowerShell.Core.OrchCollectionExtensions;
+using TPositional = UiPath.PowerShell.Positional.Name_Destination;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -17,57 +13,22 @@ namespace UiPath.PowerShell.Commands
     public class CopyMachineCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(MachineNameCompleter<Positional.Name_Destination>))]
+        [ArgumentCompleter(typeof(MachineNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 
         [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DestinationCompleter))]
+        [ArgumentCompleter(typeof(DestinationDriveCompleter<TPositional>))]
         public string[]? Destination { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Name_Destination>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         [SupportsWildcards]
         public string? Path { get; set; }
 
-        public class DestinationCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var drives = OrchDriveInfo.EnumAllOrchDrives();
-
-                // コピー元のドライブは、候補から除外する
-                var paramPath = GetParameterValues(commandAst, "Path");
-                var paramPathDriveNames = OrchDriveInfo.EnumOrchDrives(paramPath).Select(d => d.Name);
-                var wpPath = paramPathDriveNames.Select(p => new WildcardPattern(p, WildcardOptions.IgnoreCase)).ToList();
-
-                // パラメータで選択済みのドライブは、候補から除外する
-                var wpDestination = CreateWPListFromParameter(commandAst, "Destination", Positional.Name_Destination.Parameters, wordToComplete);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                foreach (var drive in drives
-                    .ExcludeByWildcards(d => d?.Name, wpPath)
-                    .ExcludeByWildcards(d => d?.Name, wpDestination)
-                    .Where(d => wp.IsMatch(d.NameColon)))
-                {
-                    string driveName = drive.NameColon;
-                    string tiphelp = drive.DisplayRoot;
-                    if (!string.IsNullOrEmpty(drive.Description))
-                        tiphelp += $" ({drive.Description})";
-                    yield return new CompletionResult(PathTools.EscapePSText(driveName), driveName, CompletionResultType.ParameterValue, tiphelp);
-                }
-            }
-        }
-
         protected override void ProcessRecord()
         {
-            var wpName = Name?.Select(name => new WildcardPattern(name, WildcardOptions.IgnoreCase)).ToList();
+            var wpName = Name.ConvertToWildcardPatternList();
             var srcDrive = OrchDriveInfo.GetOrchDrive(Path!);
             var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
 

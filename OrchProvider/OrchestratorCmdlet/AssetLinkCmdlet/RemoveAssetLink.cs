@@ -1,15 +1,10 @@
 ﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using System.Text;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name_Link;
+using TPositional = UiPath.PowerShell.Positional.Name_Link;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -50,7 +45,7 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの Name は、候補から除外する
-                var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name_Link.Parameters, wordToComplete);
+                var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 

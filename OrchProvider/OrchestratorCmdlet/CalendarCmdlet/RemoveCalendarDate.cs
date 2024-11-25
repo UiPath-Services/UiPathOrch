@@ -1,15 +1,11 @@
 ﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
 using System.Data;
-using System.Globalization;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name_ExcludedDate;
+using TPositional = UiPath.PowerShell.Positional.Name_ExcludedDate;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -19,7 +15,7 @@ namespace UiPath.PowerShell.Commands
         private Dictionary<(OrchDriveInfo drive, string calendarName), (ExtendedCalendar calendar, List<DateTime> excludedDates)> _parameters = [];
 
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(CalendarNameCompleter<Positional.Name_ExcludedDate>))]
+        [ArgumentCompleter(typeof(CalendarNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 
@@ -43,8 +39,8 @@ namespace UiPath.PowerShell.Commands
             {
                 var drives = ResolveDrives(fakeBoundParameters);
 
-                var wpCalendarName = CreateWPListFromOtherParameters(commandAst, "Name", Positional.Name_ExcludedDate.Parameters);
-                var paramExcludedDate = GetParameterValues(commandAst, parameterName, Positional.Name_ExcludedDate.Parameters, wordToComplete)
+                var wpCalendarName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
+                var paramExcludedDate = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete)
                     .Select(dateStr =>
                         {
                             if (DateTime.TryParse(dateStr, out DateTime parsedDate)) { return parsedDate; }
@@ -92,7 +88,7 @@ namespace UiPath.PowerShell.Commands
         protected override void ProcessRecord()
         {
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
-            var wpName = Name?.Select(un => new WildcardPattern(un, WildcardOptions.IgnoreCase)).ToList();
+            var wpName = Name.ConvertToWildcardPatternList();
 
             // 時刻成分をゼロにしておく
             ExcludedDate = ExcludedDate!.Select(d => d.Date).ToArray();

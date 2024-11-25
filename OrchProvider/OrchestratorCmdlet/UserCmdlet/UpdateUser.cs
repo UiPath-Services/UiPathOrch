@@ -1,15 +1,11 @@
 ﻿using System.Collections;
-using System.Collections.ObjectModel;
+using System.Data;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
+using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Positional;
-using Positional = UiPath.PowerShell.Positional.UserName;
-using System.Data;
-using System.Text.Json;
+using TPositional = UiPath.PowerShell.Positional.UserName;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -18,7 +14,7 @@ namespace UiPath.PowerShell.Commands
     public class UpdateUserCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(TenantUserNameCompleter<UserName>))]
+        [ArgumentCompleter(typeof(TenantUserUserNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? UserName { get; set; }
 
@@ -59,7 +55,7 @@ namespace UiPath.PowerShell.Commands
         public string? UR_UserName { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(CredentialStoreNameCompleter<UserName>))]
+        [ArgumentCompleter(typeof(CredentialStoreNameCompleter<TPositional>))]
         //[SupportsWildcards] // 面倒なのでいっか
         public string? UR_CredentialStore { get; set; }
 
@@ -107,7 +103,7 @@ namespace UiPath.PowerShell.Commands
         public string? ES_AutoDownloadProcess { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<UserName>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         private class RolesCompleter : OrchArgumentCompleter
@@ -123,8 +119,8 @@ namespace UiPath.PowerShell.Commands
                 var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
                 var drives = OrchDriveInfo.EnumOrchDrives(paramPath);
 
-                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", Positional.UserName.Parameters);
-                var wpRoles = CreateWPListFromParameter(commandAst, parameterName, Positional.UserName.Parameters, wordToComplete);
+                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
+                var wpRoles = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -204,19 +200,6 @@ namespace UiPath.PowerShell.Commands
                         {
                             postingUser.UnattendedRobot.Password = null;
                         }
-
-                        // 次のプロパティは、web interface からは POST されていないようだ。
-                        // でもここで null を入れてしまうと、POST 直前の同一性確認(dirty check)が偽陽性になってしまう。
-                        // 入れたままでも特に害はないようなので、そのままにしておく。
-                        //postingUser.DirectoryIdentifier = null;
-                        //postingUser.Domain = null;
-                        //postingUser.Name = null;
-                        //postingUser.Surname = null;
-                        //postingUser.LastModificationTime = null;
-                        //postingUser.LastModifierUserId = null;
-                        //postingUser.LicenseType = null;
-                        //postingUser.OrganizationUnits = null;
-                        //postingUser.LoginProviders = null;
 
                         postingUser.AssignBoolIfNotFalse(MayHaveUserSession,          u => u.MayHaveUserSession,          (u, v) => u.MayHaveUserSession = v);
                         postingUser.AssignBoolIfNotFalse(MayHaveRobotSession,         u => u.MayHaveRobotSession,         (u, v) => u.MayHaveRobotSession = v);
@@ -362,7 +345,19 @@ namespace UiPath.PowerShell.Commands
                         //}
 
                         if (postingUser.Equals(detailedUser)) continue;
-                        
+
+                        // 次のプロパティは、web interface からは POST されていないようだ。
+                        // null を入れておくべきか？
+                        //postingUser.DirectoryIdentifier = null;
+                        //postingUser.Domain = null;
+                        //postingUser.Name = null;
+                        //postingUser.Surname = null;
+                        //postingUser.LastModificationTime = null;
+                        //postingUser.LastModifierUserId = null;
+                        //postingUser.LicenseType = null;
+                        //postingUser.OrganizationUnits = null;
+                        //postingUser.LoginProviders = null;
+
                         if (ShouldProcess(target, $"Update User"))
                         {
                             try

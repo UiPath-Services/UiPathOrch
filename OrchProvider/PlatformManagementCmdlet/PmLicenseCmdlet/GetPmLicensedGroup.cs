@@ -2,12 +2,10 @@
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using System.Text;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.GroupName_UserName;
-using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.GroupName_UserName;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -17,7 +15,7 @@ namespace UiPath.PowerShell.Commands
     public class GetUserLicenseGroup: OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter<GroupName_UserName>))]
+        [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? GroupName { get; set; }
 
@@ -33,7 +31,7 @@ namespace UiPath.PowerShell.Commands
         //public SwitchParameter License { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.GroupName_UserName>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         [Parameter]
@@ -83,8 +81,8 @@ namespace UiPath.PowerShell.Commands
             {
                 var drives = ResolveDrives(fakeBoundParameters);
 
-                var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", GroupName_UserName.Parameters);
-                var wpUserName = CreateWPListFromParameter(commandAst, parameterName, GroupName_UserName.Parameters, wordToComplete);
+                var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", TPositional.Parameters);
+                var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 

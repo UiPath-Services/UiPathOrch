@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
+﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name_ValueType;
+using UiPath.PowerShell.Core;
+using TPositional = UiPath.PowerShell.Positional.Name_ValueType;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -16,7 +11,7 @@ namespace UiPath.PowerShell.Commands
     public class RemoveAssetCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(AssetNameCompleter<Positional.Name_ValueType>))]
+        [ArgumentCompleter(typeof(AssetNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 
@@ -47,10 +42,10 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択された Name のみ対象とする
-                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Positional.Name_ValueType.Parameters);
+                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
                 // パラメータで選択済みの ValueType は、候補から除外する
-                var wpValueType = CreateWPListFromParameter(commandAst, "ValueType", Positional.Name_ValueType.Parameters, wordToComplete);
+                var wpValueType = CreateWPListFromParameter(commandAst, "ValueType", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 

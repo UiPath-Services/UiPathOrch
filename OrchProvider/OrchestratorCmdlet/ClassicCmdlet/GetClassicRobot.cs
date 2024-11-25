@@ -5,8 +5,7 @@ using System.Text;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -109,7 +108,7 @@ namespace UiPath.PowerShell.Commands
             {
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-                var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Parameters, wordToComplete);
+                var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
                 var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Sessions.Get(df.folder));
@@ -145,7 +144,7 @@ namespace UiPath.PowerShell.Commands
         protected override void ProcessRecord()
         {
             var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
-            var wpName = Name?.Select(fn => new WildcardPattern(fn, WildcardOptions.IgnoreCase)).ToList();
+            var wpName = Name.ConvertToWildcardPatternList();
 
             ExportCsv = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
             using var writer = WriteCsvHeader(ExportCsv, CsvEncoding, CsvHeaders);

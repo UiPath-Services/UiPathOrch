@@ -1,12 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Management.Automation;
-using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
+﻿using System.Management.Automation;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Id;
+using UiPath.PowerShell.Core;
+using TPositional = UiPath.PowerShell.Positional.Id;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -15,7 +10,7 @@ namespace UiPath.PowerShell.Commands
     public class GetPackageCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(PackageIdCompleter<Positional.Id>))]
+        [ArgumentCompleter(typeof(PackageIdCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Id { get; set; }
 
@@ -32,7 +27,7 @@ namespace UiPath.PowerShell.Commands
         protected override void ProcessRecord()
         {
             var drivesFolders = OrchDriveInfo.EnumPackageFeedFolders(Path, Recurse.IsPresent);
-            var wpId = Id?.Select(id => new WildcardPattern(id, WildcardOptions.IgnoreCase)).ToList();
+            var wpId = Id.ConvertToWildcardPatternList();
 
             using var results = OrchThreadPool.RunForEach(drivesFolders,
                 df => df.folder.GetPSPath(),

@@ -1,11 +1,8 @@
-﻿using System.Collections;
-using System.Management.Automation;
-using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
+﻿using System.Management.Automation;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name_Destination;
+using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
+using TPositional = UiPath.PowerShell.Positional.Name_Destination;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -14,7 +11,7 @@ namespace UiPath.PowerShell.Commands
     public class CopyTestSetScheduleCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(TestScheduleNameCompleter<Positional.Name_Destination>))]
+        [ArgumentCompleter(typeof(TestScheduleNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 

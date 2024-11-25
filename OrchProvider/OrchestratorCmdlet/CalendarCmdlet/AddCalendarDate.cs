@@ -4,8 +4,7 @@ using System.Management.Automation.Language;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name_ExcludedDate;
+using TPositional = UiPath.PowerShell.Positional.Name_ExcludedDate;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -15,7 +14,7 @@ namespace UiPath.PowerShell.Commands
         private Dictionary<(OrchDriveInfo drive, string calendarName), (ExtendedCalendar calendar, List<DateTime> excludedDates)> _parameters = [];
 
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(CalendarNameCompleter<Positional.Name_ExcludedDate>))]
+        [ArgumentCompleter(typeof(CalendarNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 
@@ -40,7 +39,7 @@ namespace UiPath.PowerShell.Commands
                 CommandAst commandAst,
                 IDictionary fakeBoundParameters)
             {
-                var param = GetParameterValues(commandAst, parameterName, Positional.Name_ExcludedDate.Parameters, wordToComplete);
+                var param = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
                 if (!DateTime.TryParse(param?.LastOrDefault(), out DateTime theLast))
                 {

@@ -1,19 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using System.Net;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
+using UiPath.PowerShell.Core;
 using Job = UiPath.PowerShell.Entities.Job;
-using JobState = UiPath.PowerShell.Entities.JobState;
-
-using Positional = UiPath.PowerShell.Positional.Id;
+using TPositional = UiPath.PowerShell.Positional.Id;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -43,7 +36,7 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの Id は、候補から除外する
-                var paramId = GetParameterValues(commandAst, "Id", Positional.Id.Parameters, wordToComplete);
+                var paramId = GetParameterValues(commandAst, "Id", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 

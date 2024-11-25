@@ -1,12 +1,9 @@
 ﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using System.Xml.Linq;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name;
+using UiPath.PowerShell.Core;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -20,7 +17,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? Name { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         private class NameCompleter : OrchArgumentCompleter
@@ -35,17 +32,17 @@ namespace UiPath.PowerShell.Commands
                 var drives = ResolveDrives(fakeBoundParameters);
 
                 // パラメータで選択済みの Name は、候補から除外する
-                var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Parameters, wordToComplete);
+                var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetIdentityExternalClient());
+                var results = ParallelResults.ForEach(drives, drive => drive.PmExternalClients.Get());
 
                 foreach (var result in results)
                 {
                     if (!result.TryGetValue(out var entities)) continue;
 
-                    foreach (var e in entities!.Values
+                    foreach (var e in entities!
                         .Where(a => wp.IsMatch(a?.name))
                         .ExcludeByWildcards(a => a?.name!, wpName)
                         .OrderBy(a => a?.name))
@@ -65,7 +62,7 @@ namespace UiPath.PowerShell.Commands
             using var results = OrchThreadPool.RunForEach(drives,
                 drive => drive.NameColonSeparator,
                 drive => drive,
-                drive => drive.GetIdentityExternalClient().Values);
+                drive => drive.PmExternalClients.Get());
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var result in results)

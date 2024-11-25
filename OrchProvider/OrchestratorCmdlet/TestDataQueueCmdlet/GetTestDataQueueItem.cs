@@ -1,12 +1,9 @@
-﻿using System.Collections;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
 using System.Text.Json;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -15,7 +12,7 @@ namespace UiPath.PowerShell.Commands
     public class GetTestDataQueueItemCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(TestDataQueueNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(TestDataQueueNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 

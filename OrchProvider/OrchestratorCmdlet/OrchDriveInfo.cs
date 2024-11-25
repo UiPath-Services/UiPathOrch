@@ -553,20 +553,8 @@ namespace UiPath.PowerShell.Core
             _dicPmDirectoryUsers = null;
             _dicPmDirectoryUsersException.ClearCache();
 
-            _dicPmExternalApiResource = null;
-            _dicPmExternalApiResource_Exception?.ClearCache();
-
-            _dicPmExternalClient = null;
-            _dicPmExternalClient_Exception?.ClearCache();
-
             _dicPmGroups = null;
             _dicPmGroups_Exception?.ClearCache();
-
-            _dicPmRobotAccounts = null;
-            _dicPmRobotAccounts_Exceptions?.ClearCache();
-
-            _dicPmUsers = null;
-            _dicPmUsers_Exception?.ClearCache();
 
             _dicPmUserLicenseGroupAllocations = null;
             _dicPmUserLicenseGroupAllocations_Exceptions.ClearCache();
@@ -1691,7 +1679,7 @@ namespace UiPath.PowerShell.Core
 
         #region OrchTestSetExecution cache
         // Key: <folderId, <TestSetExecutionId, TestSetExecution>>
-        internal ConcurrentDictionary<Int64, Dictionary<Int64, TestSetExecution>>? _dicTestSetExecutions = null;
+        internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, TestSetExecution>>? _dicTestSetExecutions = null;
         internal ExceptionsCachePer<Int64> _dicTestSetExecutions_Exceptions = new();
         private ReadOnlyCollection<TestSetExecution>? _dicTestSetExecutionsEmpty = null;
         public ReadOnlyCollection<TestSetExecution> GetTestSetExecutions(Folder folder, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
@@ -1740,7 +1728,7 @@ namespace UiPath.PowerShell.Core
 
         #region TestDataQueueItem
         // Key: folderId, testDataQueueId
-        internal ConcurrentDictionary<Int64, Dictionary<Int64, List<TestDataQueueItem>>>? _dicTestDataQueueItems = null;
+        internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, List<TestDataQueueItem>>>? _dicTestDataQueueItems = null;
         public ReadOnlyCollection<TestDataQueueItem> GetTestDataQueueItems(Folder folder, TestDataQueue testDataQueue)
         {
             if (_dicTestDataQueueItems == null)
@@ -1987,43 +1975,6 @@ namespace UiPath.PowerShell.Core
         }
         #endregion
 
-        #region PmUser Cache
-        // key: userId
-        internal ConcurrentDictionary<string, PmUser>? _dicPmUsers = null;
-        internal readonly ExceptionCachePerTenant _dicPmUsers_Exception = new();
-        public ConcurrentDictionary<string, PmUser> GetPmUsers()
-        {
-            _dicPmUsers_Exception.ThrowCachedExceptionIfAny();
-
-            if (_dicPmUsers == null)
-            {
-                lock (_dicPmUsers_Exception)
-                {
-                    if (_dicPmUsers == null)
-                    {
-                        try
-                        {
-                            _dicPmUsers = new ConcurrentDictionary<string, PmUser>();
-                            var partitionGlobalId = GetPartitionGlobalId();
-                            var users = OrchAPISession.GetPmUsers(partitionGlobalId!);
-                            foreach (var user in users)
-                            {
-                                user.Path = NameColonSeparator;
-                                _dicPmUsers[user.id ?? ""] = user;
-                            }
-                        }
-                        catch (HttpResponseException ex)
-                        {
-                            _dicPmUsers_Exception.CacheException(ex);
-                            throw;
-                        }
-                    }
-                }
-            }
-            return _dicPmUsers;
-        }
-        #endregion
-
         internal HashSet<PmAuditLog>? _dicPmAuditLogs = null;
         internal readonly ExceptionCachePerTenant _dicPmAuditLogs_Exception = new();
         public ReadOnlyCollection<PmAuditLog> GetPmAuditLog(string? query, ulong skip, ulong first)
@@ -2222,44 +2173,6 @@ namespace UiPath.PowerShell.Core
 
             return value?.Where(obj => obj.identityName?.StartsWith(name, StringComparison.OrdinalIgnoreCase) ?? false) ?? [];
         }
-
-        #region PmRobot Cache
-        // key: robotId
-        internal ConcurrentDictionary<string, PmRobotAccount>? _dicPmRobotAccounts = null;
-        internal readonly ExceptionCachePerTenant _dicPmRobotAccounts_Exceptions = new();
-        public ConcurrentDictionary<string, PmRobotAccount> GetPmRobotAccounts()
-        {
-            _dicPmRobotAccounts_Exceptions.ThrowCachedExceptionIfAny();
-
-            if (_dicPmRobotAccounts == null)
-            {
-                lock (_dicPmRobotAccounts_Exceptions)
-                {
-                    if (_dicPmRobotAccounts == null)
-                    {
-                        var partitionGlobalId = GetPartitionGlobalId();
-                        _dicPmRobotAccounts = new ConcurrentDictionary<string, PmRobotAccount>();
-                        try
-                        {
-                            var robots = OrchAPISession.GetPmRobotAccounts(partitionGlobalId!);
-                            if (robots == null) return _dicPmRobotAccounts;
-                            foreach (var robot in robots)
-                            {
-                                robot.Path = NameColonSeparator;
-                                _dicPmRobotAccounts[robot.id ?? ""] = robot;
-                            }
-                        }
-                        catch (HttpResponseException ex)
-                        {
-                            _dicPmRobotAccounts_Exceptions.CacheException(ex);
-                            throw;
-                        }
-                    }
-                }
-            }
-            return _dicPmRobotAccounts;
-        }
-        #endregion
 
         #region PmGroup Cache
         // key: groupId
@@ -2478,77 +2391,6 @@ namespace UiPath.PowerShell.Core
         }
         #endregion
 
-        #region PmExternalApiResource cache
-        internal ExternalResource[]? _dicPmExternalApiResource = null;
-        internal readonly ExceptionCachePerTenant _dicPmExternalApiResource_Exception = new();
-        public ExternalResource[]? GetIdentityExternalApiResource()
-        {
-            _dicPmExternalApiResource_Exception.ThrowCachedExceptionIfAny();
-
-            if (_dicPmExternalApiResource == null)
-            {
-                lock (_dicPmExternalApiResource_Exception)
-                {
-                    if (_dicPmExternalApiResource == null)
-                    {
-                        try
-                        {
-                            _dicPmExternalApiResource = OrchAPISession.GetPmExternalApiResource();
-                            foreach (var res in _dicPmExternalApiResource ?? [])
-                            {
-                                res.Path = NameColonSeparator;
-                            }
-                        }
-                        catch (HttpResponseException ex)
-                        {
-                            _dicPmExternalApiResource_Exception.CacheException(ex);
-                            throw;
-                        }
-                    }
-                }
-            }
-            return _dicPmExternalApiResource;
-        }
-        #endregion
-
-        #region PmExternalClient cache
-        internal ConcurrentDictionary<string, ExternalClient>? _dicPmExternalClient = null;
-        internal readonly ExceptionCachePerTenant _dicPmExternalClient_Exception = new();
-        public ConcurrentDictionary<string, ExternalClient> GetIdentityExternalClient()
-        {
-            _dicPmExternalClient_Exception.ThrowCachedExceptionIfAny();
-
-            if (_dicPmExternalClient == null)
-            {
-                lock (_dicPmExternalClient_Exception)
-                {
-                    if (_dicPmExternalClient == null)
-                    {
-                        var partitionGlobalId = GetPartitionGlobalId();
-
-                        try
-                        {
-                            var apps = OrchAPISession.GetPmExternalClient(partitionGlobalId!);
-                            _dicPmExternalClient = new ConcurrentDictionary<string, ExternalClient>();
-                            if (apps == null) return _dicPmExternalClient;
-                            foreach (var app in apps)
-                            {
-                                app.Path = NameColonSeparator;
-                                _dicPmExternalClient[app.id ?? ""] = app;
-                            }
-                        }
-                        catch (HttpResponseException ex)
-                        {
-                            _dicPmExternalClient_Exception.CacheException(ex);
-                            throw;
-                        }
-                    }
-                }
-            }
-            return _dicPmExternalClient;
-        }
-        #endregion
-
         #region PmAuthenticationSetting cache
         internal PmAuthenticationRoot? _dicPmAuthenticationSetting = null;
         internal readonly ExceptionCachePerTenant _dicPmAuthenticationSetting_Exception = new();
@@ -2585,6 +2427,12 @@ namespace UiPath.PowerShell.Core
         #endregion
 
         internal readonly List<ICacheClearable> _cacheItems = [];
+
+        // 組織のリストエンティティ
+        public readonly ListCachePerOrganization<PmUser> PmUsers;
+        public readonly ListCachePerOrganization<PmRobotAccount> PmRobotAccounts;
+        public readonly ListCachePerOrganization<ExternalClient> PmExternalClients;
+        public readonly ListCachePerTenant<ExternalResource> PmExternalApiResources; // なぜか globalPartitionId が不要。
 
         // インデックスなしのテナントエンティティ
         public readonly SingleCachePerTenant<ActivitySettings> ActivitySettings;
@@ -2642,6 +2490,13 @@ namespace UiPath.PowerShell.Core
             RootFolder = new Folder() { DisplayName = "", FullyQualifiedName = "", Path = NameColonSeparator };
 
             // キャッシュを初期化
+
+            // 組織のリストエンティティ
+            PmUsers                = new(this, OrchAPISession.GetPmUsers,                e => e.Path = NameColonSeparator);
+            PmRobotAccounts        = new(this, OrchAPISession.GetPmRobotAccounts,        e => e.Path = NameColonSeparator);
+            PmExternalClients      = new(this, OrchAPISession.GetPmExternalClient,       e => e.Path = NameColonSeparator);
+            PmExternalApiResources = new(this, OrchAPISession.GetPmExternalApiResource,  e => e.Path = NameColonSeparator);
+
             // インデックスなしのテナントエンティティ
             ActivitySettings       = new(this, OrchAPISession.GetActivitySettings,       e => e.Path = NameColonSeparator);
             ConnectionString       = new(this, OrchAPISession.GetConnectionString,       e => e.Path = NameColonSeparator);

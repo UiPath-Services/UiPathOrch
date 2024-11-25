@@ -1,15 +1,9 @@
-﻿    using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
 using System.Text;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -18,12 +12,12 @@ namespace UiPath.PowerShell.Commands
     public class GetAssetCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(AssetNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(AssetNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(AssetValueTypeCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(AssetValueTypeCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? ValueType { get; set; }
 

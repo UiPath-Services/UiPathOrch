@@ -1,13 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.GroupName_Type_UserName;
-using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.GroupName_Type_UserName;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -38,17 +33,17 @@ namespace UiPath.PowerShell.Commands
         }
 
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PmGroupNameCompleter<GroupName_Type_UserName>))]
+        [ArgumentCompleter(typeof(PmGroupNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? GroupName { get; set; }
 
         [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(TypeInPmGroupCompleter<GroupName_Type_UserName>))]
+        [ArgumentCompleter(typeof(TypeInPmGroupCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Type { get; set; }
 
         [Parameter(Position = 2, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(UserNameInPmGroupCompleter<GroupName_Type_UserName>))]
+        [ArgumentCompleter(typeof(UserNameInPmGroupCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? UserName { get; set; }
 
@@ -56,7 +51,7 @@ namespace UiPath.PowerShell.Commands
         public SwitchParameter WarnOnNoMatch { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<GroupName_Type_UserName>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         protected override void ProcessRecord()

@@ -1,13 +1,9 @@
 ﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Id;
+using UiPath.PowerShell.Core;
+using TPositional = UiPath.PowerShell.Positional.Id;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -38,7 +34,7 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath);
 
                 // パラメータで選択済みの Id は、候補から除外する
-                var paramId = GetParameterValues(commandAst, "Id", Positional.Id.Parameters, wordToComplete).Select(id => long.Parse(id));
+                var paramId = GetParameterValues(commandAst, "Id", TPositional.Parameters, wordToComplete).Select(id => long.Parse(id));
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 

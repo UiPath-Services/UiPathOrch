@@ -1,11 +1,7 @@
-﻿using System.Collections;
-using System.Management.Automation;
-using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
+﻿using System.Management.Automation;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.UserName;
+using UiPath.PowerShell.Core;
+using TPositional = UiPath.PowerShell.Positional.Email;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -15,12 +11,12 @@ namespace UiPath.PowerShell.Commands
     class GetPmUserLoginAttemptCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(PmUserEmailCompleter<Positional.Email>))]
+        [ArgumentCompleter(typeof(PmUserEmailCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Email { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Email>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         protected override void ProcessRecord()
@@ -31,7 +27,7 @@ namespace UiPath.PowerShell.Commands
 
             foreach (var drive in drives)
             {
-                var users = drive.GetPmUsers().Values.FilterByWildcards(u => u?.email, wpEmail);
+                var users = drive.PmUsers.Get().FilterByWildcards(u => u?.email, wpEmail);
                 foreach (var user in users)
                 {
                     drive.OrchAPISession.GetPmUserLoginAttempts(user.id!);

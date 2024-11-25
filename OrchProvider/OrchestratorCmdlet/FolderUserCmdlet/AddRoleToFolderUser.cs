@@ -1,17 +1,16 @@
 ﻿using System.Collections;
-using System.Collections.Concurrent;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.UserName_Roles;
+using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.UserName_Roles;
 
 namespace UiPath.PowerShell.Commands
 {
     [Cmdlet(VerbsCommon.Add, "OrchRoleToFolderUser", SupportsShouldProcess = true)]
-    public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
+    public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(UserNameCompleter))]
@@ -29,6 +28,11 @@ namespace UiPath.PowerShell.Commands
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
+        [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<DirectoryTypeItems, int>))]
+        public string[]? Type { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [SupportsWildcards]
         public string[]? Path { get; set; }
 
         [Parameter]
@@ -37,6 +41,7 @@ namespace UiPath.PowerShell.Commands
         [Parameter]
         public uint Depth { get; set; }
 
+        // TODO: FolderUserUserNameCompleter class を作成するのが吉か。
         private class UserNameCompleter : OrchArgumentCompleter
         {
             public override IEnumerable<CompletionResult> CompleteArgument(
@@ -49,10 +54,12 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePathWithoutPersonalWorkspace(commandAst, fakeBoundParameters);
 
                 // パラメータで選択された FullName のみ対象とする
-                var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", Positional.UserName_Roles.Parameters);
+                var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
 
                 // パラメータで選択済みの UserName は、候補から除外する
-                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", Positional.UserName_Roles.Parameters, wordToComplete);
+                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
+
+                var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -67,6 +74,7 @@ namespace UiPath.PowerShell.Commands
                         .Where(u => wp.IsMatch(u.UserEntity!.UserName!))
                         .FilterByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
                         .ExcludeByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
+                        .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
                         .OrderBy(u => u.UserEntity!.UserName))
                     {
                         string tiphelp = TipHelp(e);
@@ -89,10 +97,12 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePathWithoutPersonalWorkspace(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの FullName は、候補から除外する
-                var wpFullName = CreateWPListFromParameter(commandAst, "FullName", Positional.UserName_Roles.Parameters, wordToComplete);
+                var wpFullName = CreateWPListFromParameter(commandAst, "FullName", TPositional.Parameters, wordToComplete);
 
                 // パラメータで選択された UserName のみ対象とする
-                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", Positional.UserName_Roles.Parameters);
+                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
+
+                var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -107,6 +117,7 @@ namespace UiPath.PowerShell.Commands
                         .Where(u => wp.IsMatch(u.UserEntity!.FullName!))
                         .ExcludeByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
                         .FilterByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
+                        .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
                         .OrderBy(u => u.UserEntity!.FullName))
                     {
                         string tiphelp = TipHelp(e);
@@ -131,9 +142,11 @@ namespace UiPath.PowerShell.Commands
 
                 // 操作対象の User を抽出する
 
-                var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", Positional.UserName_Roles.Parameters);
-                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", Positional.UserName_Roles.Parameters);
-                var wpRoles = CreateWPListFromParameter(commandAst, parameterName, Positional.UserName_Roles.Parameters, wordToComplete);
+                var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
+                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
+                var wpRoles = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+                var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -154,7 +167,9 @@ namespace UiPath.PowerShell.Commands
                         // パラメータで指定された、割り当て済みのユーザーを取り出す
                         var folderUsersFiltered = folderUsers
                             .FilterByWildcards(u => u?.UserEntity?.FullName, wpFullName)
-                            .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName);
+                            .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName)
+                            .FilterByWildcards(u => u?.UserEntity?.Type, wpType);
+
                         List<Role> notAssignedRoles = new();
                         foreach (var folderUser in folderUsersFiltered)
                         {
@@ -189,14 +204,13 @@ namespace UiPath.PowerShell.Commands
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
             var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
 
-            var wpFullName = FullName?.Select(fn => new WildcardPattern(fn, WildcardOptions.IgnoreCase)).ToList();
-            var wpUserName = UserName?.Select(un => new WildcardPattern(un, WildcardOptions.IgnoreCase)).ToList();
+            var wpFullName = FullName.ConvertToWildcardPatternList();
+            var wpUserName = UserName.ConvertToWildcardPatternList();
+            var wpType = Type.ConvertToWildcardPatternList();
 
             // 先頭の要素は CSV から入力されている可能性があるので、先頭の要素についてはカンマで区切る
             //if (Roles != null && Roles.Length > 0) Roles = Roles[0].Split(',').Concat(Roles.Skip(1)).ToArray();
-            Roles = Roles.Split1stValueByUnescapedCommas()?.ToArray();
-
-            var wpRoles = Roles?.Select(role => new WildcardPattern(role, WildcardOptions.IgnoreCase)).ToList();
+            var wpRoles = Roles.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
 
             // 対象のドライブの roles を、非同期にまとめて取得する
             // ParallelResults.ForEach(drives, drive => drive.Roles.Get());
@@ -221,7 +235,9 @@ namespace UiPath.PowerShell.Commands
                     // 編集対象のユーザーを抽出する
                     List<UserRoles> editingUsers = existingUsers!
                         .FilterByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
-                        .FilterByWildcards(eu => eu?.UserEntity?.UserName, wpUserName).ToList();
+                        .FilterByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
+                        .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
+                        .ToList();
 
                     foreach (var user in editingUsers.OrderBy(user => user.UserEntity!.FullName))
                     {

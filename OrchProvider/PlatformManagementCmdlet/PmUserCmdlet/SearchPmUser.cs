@@ -1,12 +1,9 @@
 ﻿using System.Collections;
-using System.ComponentModel;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.UserName;
+using UiPath.PowerShell.Core;
+using TPositional = UiPath.PowerShell.Positional.UserName;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -19,7 +16,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? UserName { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.UserName>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         private class UserNameCompleter : OrchArgumentCompleter
@@ -37,7 +34,7 @@ namespace UiPath.PowerShell.Commands
                     yield break;
                 }
 
-                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", Positional.UserName.Parameters, wordToComplete);
+                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
 
                 var drives = ResolveDrives(fakeBoundParameters);
 

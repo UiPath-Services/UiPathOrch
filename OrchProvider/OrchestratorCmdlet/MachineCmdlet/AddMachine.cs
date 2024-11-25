@@ -1,16 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Management.Automation;
-using System.Management.Automation.Language;
-using System.Reflection.PortableExecutable;
+﻿using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name;
-using Template = UiPath.PowerShell.Positional.Template;
-using Any_Foreground_Background = UiPath.PowerShell.Positional.Any_Foreground_Background;
-using Any_Windows_Portable  = UiPath.PowerShell.Positional.Any_Windows_Portable;
+using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -51,7 +44,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? Tags { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         protected override void ProcessRecord()

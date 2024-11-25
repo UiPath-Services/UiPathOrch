@@ -3,7 +3,7 @@ using System.Text;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-using Newtonsoft.Json.Linq;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -12,7 +12,7 @@ namespace UiPath.PowerShell.Commands
     public class GetProcessCommand : OrchestratorPSCmdlet
     {
         [Parameter (Position = 0)]
-        [ArgumentCompleter(typeof(ProcessNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(ProcessNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 
@@ -155,7 +155,7 @@ namespace UiPath.PowerShell.Commands
         protected override void ProcessRecord()
         {
             var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
-            var wpName = Name?.Select(name => new WildcardPattern(name, WildcardOptions.IgnoreCase)).ToList();
+            var wpName = Name.ConvertToWildcardPatternList();
 
             ExportCsv = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
             using var writer = WriteCsvHeader(ExportCsv, CsvEncoding, CsvHeaders);

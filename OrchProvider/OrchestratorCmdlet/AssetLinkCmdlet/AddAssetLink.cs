@@ -1,15 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Management.Automation;
-using System.Management.Automation.Language;
-using System.Text;
+﻿using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name_Link;
+using TPositional = UiPath.PowerShell.Positional.Name_Link;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -17,7 +10,7 @@ namespace UiPath.PowerShell.Commands
     public class AddAssetLinkCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(AssetNameCompleter<Positional.Name_Link>))]
+        [ArgumentCompleter(typeof(AssetNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 

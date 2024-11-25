@@ -2,10 +2,9 @@
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name_RuntimeType_JobsCount;
+using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.Name_RuntimeType_JobsCount;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -43,7 +42,7 @@ namespace UiPath.PowerShell.Commands
         public string? RuntimeType { get; set; }
 
         [Parameter(Position = 2)]
-        [ArgumentCompleter(typeof(JobsCountCompleter))]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<Item1>))]
         public int? JobsCount { get; set; }
 
         [Parameter(Position = 3)]
@@ -72,7 +71,7 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの Name は、候補から除外する
-                var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name_RuntimeType_JobsCount.Parameters, wordToComplete);
+                var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -120,19 +119,6 @@ namespace UiPath.PowerShell.Commands
             }
         }
 
-        private class JobsCountCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                yield return new CompletionResult("1");
-            }
-        }
-
         private class InputArgumentsCompleter : OrchArgumentCompleter
         {
             public override IEnumerable<CompletionResult> CompleteArgument(
@@ -144,7 +130,7 @@ namespace UiPath.PowerShell.Commands
             {
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-                var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name_RuntimeType_JobsCount.Parameters, wordToComplete);
+                var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 

@@ -8,7 +8,7 @@ using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
 
-using Positional = UiPath.PowerShell.Positional.Key;
+using TPositional = UiPath.PowerShell.Positional.Key;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -22,7 +22,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? Key { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Key>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Path { get; set; }
 
@@ -38,7 +38,7 @@ namespace UiPath.PowerShell.Commands
                 var drives = ResolveDrives(fakeBoundParameters);
 
                 // パラメータで選択済みの Key は、候補から除外する
-                var wpKey = CreateWPListFromParameter(commandAst, "Key", Positional.Key.Parameters, wordToComplete);
+                var wpKey = CreateWPListFromParameter(commandAst, "Key", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 

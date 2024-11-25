@@ -1,18 +1,11 @@
 ﻿using OrchProvider.JobMediaCmdlet;
-using System;
 using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using System.Reflection;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.JobId_Destination;
+using TPositional = UiPath.PowerShell.Positional.JobId_Destination;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -49,12 +42,12 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの JobId は、候補から除外する
-                var paramJobId = GetParameterValues(commandAst, "JobId", Positional.JobId_Destination.Parameters, wordToComplete).Select(id => long.Parse(id));
+                var paramJobId = GetParameterValues(commandAst, "JobId", TPositional.Parameters, wordToComplete).Select(id => long.Parse(id));
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
                 // (folderId, media)
-                List<(Int64 folderId, ExecutionMedia media)> results = new();
+                List<(Int64 folderId, ExecutionMedia media)> results = [];
                 foreach (var (drive, folder) in drivesFolders)
                 {
                     // キャッシュ済みならキャッシュを使う

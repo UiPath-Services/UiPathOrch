@@ -13,8 +13,9 @@ schema: 2.0.0
 ## SYNTAX
 
 ```
-Add-OrchRoleToFolderUser [[-UserName] <String[]>] [-FullName <String[]>] [-Roles] <String[]> [-Path <String[]>]
- [-Recurse] [-Depth <UInt32>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Add-OrchRoleToFolderUser [[-UserName] <String[]>] [-FullName <String[]>] [-Roles] <String[]> [-Type <String[]>]
+ [-Path <String[]>] [-Recurse] [-Depth <UInt32>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm]
+ [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -171,6 +172,21 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
+```
+
+### -Type
+{{ Fill Type Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
 ```
 
 ### CommonParameters

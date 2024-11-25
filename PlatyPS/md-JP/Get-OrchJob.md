@@ -14,7 +14,7 @@ schema: 2.0.0
 
 ### JobId (Default)
 ```
-Get-OrchJob [-JobId <Int64[]>] [-Path <String[]>] [-Recurse] [-Depth <UInt32>]
+Get-OrchJob [-Id <Int64[]>] [-Path <String[]>] [-Recurse] [-Depth <UInt32>]
  [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
@@ -230,21 +230,6 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -JobId
-{{ Fill JobId Description }}
-
-```yaml
-Type: Int64[]
-Parameter Sets: JobId
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: False
-```
-
 ### -ReleaseName
 {{ Fill ReleaseName Description }}
 
@@ -386,6 +371,21 @@ Accept wildcard characters: False
 ```yaml
 Type: DateTime
 Parameter Sets: Filter
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -Id
+{{ Fill Id Description }}
+
+```yaml
+Type: Int64[]
+Parameter Sets: JobId
 Aliases:
 
 Required: False

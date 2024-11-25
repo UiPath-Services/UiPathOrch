@@ -1,7 +1,7 @@
 ﻿using System.Management.Automation;
-using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Completer;
-using UiPath.PowerShell.Positional;
+using UiPath.PowerShell.Core;
+using TPositional = UiPath.PowerShell.Positional.GroupName;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -9,12 +9,12 @@ namespace UiPath.PowerShell.Commands
     public class RemovePmGroupCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PmGroupNameCompleter<GroupName>))]
+        [ArgumentCompleter(typeof(PmGroupNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? GroupName { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<GroupName>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         protected override void ProcessRecord()

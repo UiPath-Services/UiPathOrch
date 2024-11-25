@@ -28,6 +28,11 @@ namespace UiPath.PowerShell.Positional
         static abstract string[] Parameters { get; }
     }
 
+    internal class Item1 : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["1"];
+    }
+
     internal class Item10 : IPositionalParameters
     {
         public static string[] Parameters { get; } = ["10"];
@@ -61,6 +66,88 @@ namespace UiPath.PowerShell.Positional
     internal class AssetTypeItems : IPositionalParameters
     {
         public static string[] Parameters { get; } = ["Text", "Integer", "Bool"];
+    }
+
+    internal class AuditLogComponentItems : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = [
+            "Assets",
+            "Buckets",
+            "CloudSnapshots",
+            "CloudSubscriptions",
+            "Comments",
+            "CredentialStores",
+            "CredentialsProxies",
+            "DirectoryService",
+            "Environments",
+            "ExecutionMedia",
+            "Folders",
+            "Jobs",
+            "Libraries",
+            "Licenses",
+            "Machines",
+            "Maintenance",
+            "Monitoring",
+            "Packages",
+            "PersonalWorkspaces",
+            "Processes",
+            "Queues",
+            "RemoteControl",
+            "Robots",
+            "Roles",
+            "Triggers",
+            "Sessions",
+            "Settings",
+            //"Actions",
+            "Units",
+            "Users",
+            "Webhooks",
+        ];
+    }
+
+    internal class AuditLogActionItems : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = [
+            "Acknowledge",
+            "Activate",
+            "Assign",
+            "Associate",
+            "AutomaticallyExploreEnd",
+            "BulkComplete",
+            "BulkSave",
+            "BulkUpload",
+            "ChangePassword",
+            "ChangeStatus",
+            "Convert",
+            "Create",
+            "CreateBlobFileSas",
+            "Deactivate",
+            "Delete",
+            "DeleteBlobFile",
+            "Download",
+            "End",
+            "ExploreEnd",
+            "ExploreStart",
+            "Forward",
+            "lmport",
+            "MigrateFolder",
+            "Move",
+            "PasswordResetAttempt",
+            "ResetPassword",
+            "Save",
+            "Skip",
+            "Start",
+            "StartDelete",
+            "StartJob",
+            "StartMigrateFolders",
+            "StopJob",
+            "Toggle",
+            "ToggleUserFolderSubscription",
+            "Unassign",
+            "Update",
+            "Upload",
+            "VideoAccess"
+        ];
     }
 
     internal class BucketOptionsItems : IPositionalParameters
@@ -279,9 +366,9 @@ namespace UiPath.PowerShell.Positional
         public static string[] Parameters { get; } = ["GroupName", "Type", "UserName"];
     }
 
-    internal class GroupName_Type_UserName_Destination : IPositionalParameters
+    internal class GroupName_UserName_Destination : IPositionalParameters
     {
-        public static string[] Parameters { get; } = ["GroupName", "Type", "UserName", "Destination"];
+        public static string[] Parameters { get; } = ["GroupName", "UserName", "Destination"];
     }
 
     internal class Id : IPositionalParameters
@@ -297,6 +384,11 @@ namespace UiPath.PowerShell.Positional
     internal class Id_Version : IPositionalParameters
     {
         public static string[] Parameters { get; } = ["Id", "Version"];
+    }
+
+    internal class PackageId_Version : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["PackageId", "Version"];
     }
 
     internal class Id_Version_Destination : IPositionalParameters
@@ -384,9 +476,9 @@ namespace UiPath.PowerShell.Positional
         public static string[] Parameters { get; } = ["Name", "ExcludedDate"];
     }
 
-    internal class Name_CsvPath_CsvEncoding_CommitType : IPositionalParameters
+    internal class Name_ImportCsv_CsvEncoding_CommitType : IPositionalParameters
     {
-        public static string[] Parameters { get; } = ["Name", "CsvPath", "CsvEncoding", "CommitType"];
+        public static string[] Parameters { get; } = ["Name", "ImportCsv", "CsvEncoding", "CommitType"];
     }
 
     internal class Name_Destination : IPositionalParameters
@@ -417,6 +509,16 @@ namespace UiPath.PowerShell.Positional
     internal class Name_OwnerName : IPositionalParameters
     {
         public static string[] Parameters { get; } = ["Name", "OwnerName"];
+    }
+
+    internal class Name_PropagateToSubFolders : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["Name", "PropagateToSubFolders"];
+    }
+
+    internal class Name_ReleaseName: IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["Name", "ReleaseName"];
     }
 
     internal class Name_Role : IPositionalParameters
@@ -479,6 +581,11 @@ namespace UiPath.PowerShell.Positional
         public static string[] Parameters { get; } = ["SourceGroupName", "UserName", "DestinationGroupName"];
     }
 
+    public class Status : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["Status"];
+    }
+
     internal class Type_UserName_Roles : IPositionalParameters
     {
         public static string[] Parameters { get; } = ["Type", "UserName", "Roles"];
@@ -514,13 +621,28 @@ namespace UiPath.PowerShell.Positional
         public static string[] Parameters { get; } = ["UserName", "FullName"];
     }
 
+    internal class UserName_FullName_Type : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["UserName", "FullName", "Type"];
+    }
+
     internal class Email_Language : IPositionalParameters
     {
         public static string[] Parameters { get; } = ["Email", "Language"];
     }
 
+    internal class UserName_GroupName : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["UserName", "GroupName"];
+    }
+
     internal class UserName_Roles : IPositionalParameters
     {
-        public static string[] Parameters { get; } = ["UserName", "FolderRoles"];
+        public static string[] Parameters { get; } = ["UserName", "Roles"];
     }
+
+    internal class ValueType_Name_Value_UserName_MachineName : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["ValueType", "Name", "Value", "UserName", "MachineName"];
+    };
 }

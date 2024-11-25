@@ -1,12 +1,10 @@
 ﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.UserName;
-using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.Email_Language;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -32,7 +30,7 @@ namespace UiPath.PowerShell.Commands
         ];
 
         [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PmUserEmailCompleter<Positional.Email_Language>))]
+        [ArgumentCompleter(typeof(PmUserEmailCompleter<TPositional>))]
         [SupportsWildcards]
         [Alias("UserName")]
         public string[]? Email { get; set; }
@@ -43,7 +41,7 @@ namespace UiPath.PowerShell.Commands
         public string? Language { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.UserName>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         internal class LanguageCompleter : OrchArgumentCompleter
@@ -55,10 +53,10 @@ namespace UiPath.PowerShell.Commands
                 CommandAst commandAst,
                 IDictionary fakeBoundParameters)
             {
-                foreach (var language in _languages)
+                foreach (var (Locale, LocaleCode) in _languages)
                 {
-                    string tooltip = $"{language.Locale} ({language.LocaleCode})";
-                    yield return new CompletionResult($"'{language.Locale}'", language.Locale, CompletionResultType.Text, tooltip);
+                    string tooltip = $"{Locale} ({LocaleCode})";
+                    yield return new CompletionResult($"'{Locale}'", Locale, CompletionResultType.Text, tooltip);
                 }
             }
         }
@@ -74,7 +72,7 @@ namespace UiPath.PowerShell.Commands
             using var results = OrchThreadPool.RunForEach(drives,
                 drive => drive.NameColonSeparator,
                 drive => drive,
-                drive => drive.GetPmUsers().Values);
+                drive => drive.PmUsers.Get());
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var result in results)

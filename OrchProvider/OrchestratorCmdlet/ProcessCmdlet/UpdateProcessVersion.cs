@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Concurrent;
+﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name_Version;
-using Microsoft.VisualBasic;
+using UiPath.PowerShell.Core;
+using TPositional = UiPath.PowerShell.Positional.Name_Version;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -53,7 +48,7 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みのパッケージ名は、候補から除外する
-                var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name_Version.Parameters, wordToComplete);
+                var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -104,7 +99,8 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みのパッケージ名は、候補から除外する
-                var wpId = CreateWPListFromParameter(commandAst, "Id", Positional.Name_Version.Parameters, wordToComplete);
+                // parameter set が異なるため、positional parameter が異なることに注意
+                var wpId = CreateWPListFromParameter(commandAst, parameterName, Positional.Id_Version.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -155,10 +151,10 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択された Name のみ対象とする
-                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Positional.Name_Version.Parameters);
+                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
                 // パラメータで選択済みの Version 候補から除外する
-                var wpVersion = CreateWPListFromParameter(commandAst, "Version", Positional.Name_Version.Parameters, wordToComplete);
+                var wpVersion = CreateWPListFromParameter(commandAst, "Version", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -207,7 +203,7 @@ namespace UiPath.PowerShell.Commands
             }
 
             var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
-            var wpName = Name?.Select(name => new WildcardPattern(name, WildcardOptions.IgnoreCase)).ToList();
+            var wpName = Name.ConvertToWildcardPatternList();
             WildcardPattern wpVersion = null;
             if (!string.IsNullOrEmpty(Version))
             {
@@ -326,7 +322,7 @@ namespace UiPath.PowerShell.Commands
         //protected override void ProcessRecord()
         //{
         //    var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
-        //    var wpName = Name?.Select(name => new WildcardPattern(name, WildcardOptions.IgnoreCase)).ToList();
+        //    var wpName = Name.ConvertToWildcardPatternList();
         //    WildcardPattern wpVersion = null;
         //    if (!string.IsNullOrEmpty(Version))
         //    {

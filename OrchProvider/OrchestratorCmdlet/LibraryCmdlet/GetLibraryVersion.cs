@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
+﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Completer;
-using UiPath.PowerShell.Entities;
-
-using Positional = UiPath.PowerShell.Positional.Id_Version;
+using UiPath.PowerShell.Core;
+using TPositional = UiPath.PowerShell.Positional.Id_Version;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -42,7 +37,7 @@ namespace UiPath.PowerShell.Commands
                 var drives = ResolveDrives(fakeBoundParameters);
 
                 // パラメータで選択済みの Id は、候補から除外する
-                var wpId = CreateWPListFromParameter(commandAst, "Id", Positional.Id_Version.Parameters, wordToComplete);
+                var wpId = CreateWPListFromParameter(commandAst, "Id", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -76,11 +71,10 @@ namespace UiPath.PowerShell.Commands
                 var drives = ResolveDrives(fakeBoundParameters);
 
                 // パラメータで選択済みの Id は、候補から除外する
-                var paramId = GetFakeBoundParameters(fakeBoundParameters, "Id");
-                var wpId = paramId.Select(id => new WildcardPattern(id, WildcardOptions.IgnoreCase)).ToList();
+                var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
 
                 // パラメータで選択済みの Version は、候補から除外する
-                var wpVersion = CreateWPListFromParameter(commandAst, "Version", Positional.Id_Version.Parameters, wordToComplete);
+                var wpVersion = CreateWPListFromParameter(commandAst, "Version", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -115,8 +109,8 @@ namespace UiPath.PowerShell.Commands
         protected override void ProcessRecord()
         {
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
-            var wpId = Id?.Select(id => new WildcardPattern(id, WildcardOptions.IgnoreCase)).ToList();
-            var wpVersion = Version?.Select(id => new WildcardPattern(id, WildcardOptions.IgnoreCase)).ToList();
+            var wpId = Id.ConvertToWildcardPatternList();
+            var wpVersion = Version.ConvertToWildcardPatternList();
 
             using var results = OrchThreadPool.RunForEach(drives,
                 drive => drive.NameColonSeparator,

@@ -4,6 +4,7 @@ using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.Status;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -44,6 +45,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? Path { get; set; }
 
         // TODO: 存在する Status だけを候補に出す方が良い
+        // TODO: これのままにするなら、StaticTextCompleter で書き直さないと。
         private class StatusCompleter : OrchArgumentCompleter
         {
             public override IEnumerable<CompletionResult> CompleteArgument(
@@ -53,7 +55,7 @@ namespace UiPath.PowerShell.Commands
                 CommandAst commandAst,
                 IDictionary fakeBoundParameters)
             {
-                var wpStatus = CreateWPListFromParameter(commandAst, "Status", Last.Parameters, wordToComplete);
+                var wpStatus = CreateWPListFromParameter(commandAst, "Status", TPositional.Parameters, wordToComplete);
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
                 foreach (var status in StatusList

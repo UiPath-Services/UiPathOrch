@@ -1,4 +1,5 @@
 ﻿using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands
@@ -7,7 +8,7 @@ namespace UiPath.PowerShell.Commands
     public class EnableLicenseRuntimeCommand : EnableLicenseRuntimeCommandBase<True>
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(RobotTypeCompleter))]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<LicenseRobotTypeItems>))]
         [SupportsWildcards]
         public override string[]? RobotType { get; set; }
 

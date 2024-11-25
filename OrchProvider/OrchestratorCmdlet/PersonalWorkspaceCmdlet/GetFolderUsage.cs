@@ -1,10 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Management.Automation;
-using System.Management.Automation.Language;
-using System.Security.Cryptography;
+﻿using System.Management.Automation;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
+//using TPositional = UiPath.PowerShell.Positional.Path;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -19,8 +16,6 @@ namespace UiPath.PowerShell.Commands
     [OutputType(typeof(Entities.EntitySummary))]
     public class GetFolderUsageCommand : OrchestratorPSCmdlet
     {
-        //private static readonly string[] positionalParams = ["Path"];
-
         List<InputParameter>? inputParameters;
 
         [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
@@ -80,7 +75,7 @@ namespace UiPath.PowerShell.Commands
                     return;
                 }
 
-                string name = Name != null ? Name : DisplayName;
+                string name = Name ?? DisplayName;
 
                 inputParameters ??= [];
                 var param = new InputParameter()

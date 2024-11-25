@@ -3,7 +3,7 @@ using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Positional;
 
-using Positional = UiPath.PowerShell.Positional.Path;
+using TPositional = UiPath.PowerShell.Positional.Path;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -20,7 +20,7 @@ namespace UiPath.PowerShell.Commands
         public ulong? First { get; set; }
 
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Path>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         [Parameter]

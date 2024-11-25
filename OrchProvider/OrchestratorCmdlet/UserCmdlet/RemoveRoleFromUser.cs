@@ -3,8 +3,8 @@ using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.UserName_Roles;
+using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.UserName_Roles;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -14,13 +14,18 @@ namespace UiPath.PowerShell.Commands
     {
         [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
-        [ArgumentCompleter(typeof(UserNameCompleter))]
+        [ArgumentCompleter(typeof(TenantUserUserNameCompleter<TPositional>))]
         public string[]? UserName { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
-        [ArgumentCompleter(typeof(FullNameCompleter))]
+        [ArgumentCompleter(typeof(TenantUserFullNameCompleter<TPositional>))]
         public string[]? FullName { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [SupportsWildcards]
+        [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<DirectoryTypeItems, int>))]
+        public string[]? Type { get; set; }
 
         [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
         [Alias("TenantRoles")]
@@ -28,84 +33,8 @@ namespace UiPath.PowerShell.Commands
         public string[]? Roles { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.UserName_Roles>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
-
-        private class UserNameCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var drives = ResolveDrives(fakeBoundParameters);
-
-                // パラメータで選択済みのユーザー名は、候補から除外する
-                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", Positional.UserName_Roles.Parameters, wordToComplete);
-
-                // パラメータで選択された FullName のみ対象とする
-                var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", Positional.UserName_Roles.Parameters);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                var results = ParallelResults.ForEach(drives, drive => drive.GetUsers());
-
-                foreach (var result in results)
-                {
-                    if (!result.TryGetValue(out var entities)) continue;
-
-                    foreach (var e in entities!
-                        .Where(u => wp.IsMatch(u.UserName))
-                        .ExcludeByWildcards(u => u?.UserName, wpUserName)
-                        .FilterByWildcards(u => u?.FullName, wpFullName)
-                        .OrderBy(u => u.UserName))
-                    {
-                        string tiphelp = TipHelp2(e);
-                        yield return new CompletionResult(PathTools.EscapePSText(e.UserName), e.UserName, CompletionResultType.ParameterValue, tiphelp);
-                    }
-                }
-            }
-        }
-
-        private class FullNameCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var drives = ResolveDrives(fakeBoundParameters);
-
-                // パラメータで選択された UserName のみ対象とする
-                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", Positional.UserName_Roles.Parameters);
-
-                // パラメータで選択済みのユーザー名は、候補から除外する
-                var wpFullName = CreateWPListFromParameter(commandAst, "FullName", Positional.UserName_Roles.Parameters, wordToComplete);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                var results = ParallelResults.ForEach(drives, drive => drive.GetUsers());
-
-                foreach (var result in results)
-                {
-                    if (!result.TryGetValue(out var entities)) continue;
-
-                    foreach (var e in entities!
-                        .Where(u => wp.IsMatch(u.FullName))
-                        .FilterByWildcards(u => u?.UserName, wpUserName)
-                        .ExcludeByWildcards(u => u?.FullName, wpFullName)
-                        .OrderBy(u => u.FullName))
-                    {
-                        string tiphelp = TipHelp2(e);
-                        yield return new CompletionResult(PathTools.EscapePSText(e.FullName), e.FullName, CompletionResultType.ParameterValue, tiphelp);
-                    }
-                }
-            }
-        }
 
         private class RolesCompleter : OrchArgumentCompleter
         {
@@ -118,9 +47,9 @@ namespace UiPath.PowerShell.Commands
             {
                 var drives = ResolveDrives(fakeBoundParameters);
 
-                var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", Positional.UserName_Roles.Parameters);
-                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", Positional.UserName_Roles.Parameters);
-                var wpRoles = CreateWPListFromParameter(commandAst, parameterName, Positional.UserName_Roles.Parameters, wordToComplete);
+                var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
+                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
+                var wpRoles = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -152,51 +81,6 @@ namespace UiPath.PowerShell.Commands
             }
         }
 
-        //private class TenantRolesCompleter : OrchArgumentCompleter
-        //{
-        //    public override IEnumerable<CompletionResult> CompleteArgument(
-        //        string commandName,
-        //        string parameterName,
-        //        string wordToComplete,
-        //        CommandAst commandAst,
-        //        IDictionary fakeBoundParameters)
-        //    {
-        //        var drives = ResolveDrives(fakeBoundParameters);
-
-        //        var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", Positional.Parameters);
-        //        var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", Positional.Parameters);
-        //        var wpRoles = CreateWPListFromParameter(commandAst, "Roles", Positional.Parameters, wordToComplete);
-
-        //        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        //        var results = ParallelResults.ForEach(drives, drive => drive.GetUsers());
-
-        //        foreach (var result in results)
-        //        {
-        //            if (!result.TryGetValue(out var entities)) continue;
-
-        //            foreach (var e in entities!
-        //                .FilterByWildcards(u => u?.UserName, wpUserName)
-        //                .FilterByWildcards(u => u?.FullName, wpFullName)
-        //                .OrderBy(u => u.UserName))
-        //            {
-        //                if (e.UserRoles != null)
-        //                {
-        //                    foreach (var role in e.UserRoles
-        //                        .Where(r => wp.IsMatch(r.RoleName))
-        //                        .ExcludeByWildcards(r => r?.RoleName, wpRoles)
-        //                        .OrderBy(r => r.RoleName))
-        //                    {
-        //                        string tiphelp = TipHelp(e);
-        //                        var ret = new CompletionResult(PathTools.EscapePSText(role.RoleName), role.RoleName, CompletionResultType.ParameterValue, tiphelp);
-        //                        yield return ret;
-        //                    }
-        //                }
-        //            }
-        //        }
-        //    }
-        //}
-
         protected override void ProcessRecord()
         {
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
@@ -212,6 +96,7 @@ namespace UiPath.PowerShell.Commands
 
             var wpUserName = UserName.ConvertToWildcardPatternList();
             var wpFullName = FullName.ConvertToWildcardPatternList();
+            var wpType = Type.ConvertToWildcardPatternList();
 
             // 先頭の要素は CSV から入力されている可能性があるので、先頭の要素についてはカンマで区切る
             Roles = Roles.Split1stValueByUnescapedCommas()?.ToArray();
@@ -227,6 +112,7 @@ namespace UiPath.PowerShell.Commands
                     users = drive.GetUsers()
                         .FilterByWildcards(u => u?.UserName, wpUserName)
                         .FilterByWildcards(u => u?.FullName, wpFullName)
+                        .FilterByWildcards(u => u?.Type, wpType)
                         .OrderBy(u => u.UserName)
                         .ToList();
                 }

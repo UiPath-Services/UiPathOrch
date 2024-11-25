@@ -1,17 +1,9 @@
-﻿using System.CodeDom.Compiler;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
 using System.Text;
-using System.Text.Json;
-using System.Xml.Linq;
-using UiPath.OrchAPI;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -20,7 +12,7 @@ namespace UiPath.PowerShell.Commands
     public class GetTriggerCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(TriggerNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(TriggerNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 

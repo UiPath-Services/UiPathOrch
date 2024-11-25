@@ -1,14 +1,11 @@
 ﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using System.Text;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
 using UiPath.PowerShell.Positional;
-using System.Text.RegularExpressions;
-using System.Runtime.CompilerServices;
+using TPositional = UiPath.PowerShell.Positional.GroupName_License;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -31,7 +28,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? License { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.GroupName_License>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         private class SearchGroupNameCompleter : OrchArgumentCompleter
@@ -49,7 +46,7 @@ namespace UiPath.PowerShell.Commands
                     yield break;
                 }
 
-                var wpGroupName = CreateWPListFromParameter(commandAst, "GroupName", Positional.GroupName_Type_UserName.Parameters, wordToComplete);
+                var wpGroupName = CreateWPListFromParameter(commandAst, "GroupName", TPositional.Parameters, wordToComplete);
 
                 var drives = ResolveDrives(fakeBoundParameters);
 
@@ -90,8 +87,8 @@ namespace UiPath.PowerShell.Commands
             {
                 var drives = ResolveDrives(fakeBoundParameters);
 
-                var groupNames = GetParameterValues(commandAst, "GroupName", GroupName_License.Parameters);
-                var wpLicense = CreateWPListFromParameter(commandAst, parameterName, GroupName_License.Parameters, wordToComplete);
+                var groupNames = GetParameterValues(commandAst, "GroupName", TPositional.Parameters);
+                var wpLicense = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -122,7 +119,6 @@ namespace UiPath.PowerShell.Commands
                         }
                     }
                 }
-                yield break;
             }
         }
 

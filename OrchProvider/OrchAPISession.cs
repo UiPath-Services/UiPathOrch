@@ -2616,7 +2616,7 @@ namespace UiPath.OrchAPI
             HttpRequestIdentity(HttpMethod.Delete, $"/api/Group/{partitionGlobalId}", null, removeGroup);
         }
 
-        public IEnumerable<PmRobotAccount>? GetPmRobotAccounts(string partitionGlobalId)
+        public IEnumerable<PmRobotAccount> GetPmRobotAccounts(string partitionGlobalId)
         {
             return GetEnumerableIdentity<PmRobotAccount>($"/api/RobotAccount/{partitionGlobalId}");
         }
@@ -2647,14 +2647,14 @@ namespace UiPath.OrchAPI
         }
 
         // なぜかpartitionGlobalId は不要
-        public ExternalResource[]? GetPmExternalApiResource()
+        public IEnumerable<ExternalResource> GetPmExternalApiResource()
         {
-            return GetEnumerableWithoutPagingIdentity<ExternalResource>("/api/ExternalApiResource");
+            return GetEnumerableWithoutPagingIdentity<ExternalResource>("/api/ExternalApiResource") ?? [];
         }
 
-        public ExternalClient[]? GetPmExternalClient(string partitionGlobalId)
+        public IEnumerable<ExternalClient> GetPmExternalClient(string partitionGlobalId)
         {
-            return GetEnumerableWithoutPagingIdentity<ExternalClient>($"/api/ExternalClient/{partitionGlobalId}");
+            return GetEnumerableWithoutPagingIdentity<ExternalClient>($"/api/ExternalClient/{partitionGlobalId}") ?? [];
         }
 
         // Forbidden for external app

@@ -3,6 +3,7 @@ using System.Management.Automation;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -31,7 +32,7 @@ namespace UiPath.PowerShell.Commands
 
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
-        [ArgumentCompleter(typeof(RoleNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(RoleNameCompleter<TPositional>))]
         public string[]? Name { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -60,7 +61,7 @@ namespace UiPath.PowerShell.Commands
         public string? Delete { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         [Parameter]

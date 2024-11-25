@@ -4,6 +4,8 @@ using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
+using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.UserName_Destination;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -20,6 +22,11 @@ namespace UiPath.PowerShell.Commands
         [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
         public string? Destination { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [SupportsWildcards]
+        [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<DirectoryTypeItems, int>))]
+        public string[]? Type { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
@@ -45,8 +52,8 @@ namespace UiPath.PowerShell.Commands
                 var IncludeInherited = GetFakeBoundParameterAsBool(fakeBoundParameters, "IncludeInherited");
 
                 // パラメータで選択済みの UserName は、候補から除外する
-                var paramUserName = GetParameterValues(commandAst, "UserName", null, wordToComplete);
-                var wpUserName = paramUserName.Select(un => new WildcardPattern(un, WildcardOptions.IgnoreCase)).ToList();
+                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
+                var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -62,7 +69,8 @@ namespace UiPath.PowerShell.Commands
 
                     foreach (var e in entities!
                         .Where(fu => wp.IsMatch(fu.UserEntity!.UserName))
-                        .ExcludeByWildcards(u => u?.UserEntity?.UserName!, wpUserName)
+                        .ExcludeByWildcards(u => u?.UserEntity?.UserName, wpUserName)
+                        .FilterByWildcards(u => u?.UserEntity?.Type, wpType)
                         .OrderBy(u => u.UserEntity!.UserName!))
                     {
                         string tiphelp = TipHelp(e);
@@ -83,6 +91,7 @@ namespace UiPath.PowerShell.Commands
             if (srcDrive == dstDrive && srcRootFolder == dstRootFolder) return;
 
             var wpUserName = UserName.ConvertToWildcardPatternList();
+            var wpType = Type.ConvertToWildcardPatternList();
 
             string msg = "Copying folder users...";
             using var reporter = new ProgressReporter(this, 200, Int32.MaxValue, msg, msg);
@@ -97,7 +106,8 @@ namespace UiPath.PowerShell.Commands
                     //srcDrive.FolderUsersWithInherited.ClearCache();
                     //srcDrive.FolderUsersWithNoInherited.ClearCache();
                     var srcEntities = srcDrive.FolderUsersWithNoInherited.Get(srcFolder)
-                        .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName);
+                        .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName)
+                        .FilterByWildcards(u => u?.UserEntity?.Type, wpType);
                     if (!srcEntities.Any()) continue;
                 }
                 catch (Exception ex)
@@ -112,7 +122,7 @@ namespace UiPath.PowerShell.Commands
                 try
                 {
                     Core.OrchProvider.CopyFolderUsers(this,
-                        srcDrive, srcFolder, wpUserName,
+                        srcDrive, srcFolder, wpUserName, wpType,
                         dstDrive, dstFolder, reporter,
                         false, cancelHandler.Token);
                     dstDrive.FolderUsersWithInherited.ClearCache();

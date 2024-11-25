@@ -1,11 +1,9 @@
 ﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.UserName;
+using UiPath.PowerShell.Core;
+using TPositional = UiPath.PowerShell.Positional.UserName;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -19,7 +17,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? UserName { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.UserName>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         // TODO: これは共通化すべき
@@ -35,11 +33,11 @@ namespace UiPath.PowerShell.Commands
                 var drives = ResolveDrives(fakeBoundParameters);
 
                 // パラメータで選択済みの Name は、候補から除外する
-                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", Positional.UserName.Parameters, wordToComplete);
+                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drives, drive => drive.GetPmUsers());
+                var results = ParallelResults.ForEach(drives, drive => drive.PmUsers.Get());
 
                 foreach (var drive in drives)
                 {
@@ -47,7 +45,7 @@ namespace UiPath.PowerShell.Commands
                     {
                         if (!result.TryGetValue(out var entities)) continue;
 
-                        foreach (var e in entities!.Values
+                        foreach (var e in entities!
                             .Where(g => wp.IsMatch(g?.userName))
                             .ExcludeByWildcards(u => u?.userName!, wpUserName)
                             .OrderBy(u => u?.userName))

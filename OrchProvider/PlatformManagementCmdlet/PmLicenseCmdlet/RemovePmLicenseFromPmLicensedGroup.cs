@@ -1,14 +1,12 @@
 ﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using System.Text;
+using System.Reflection.Metadata;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
 using UiPath.PowerShell.Positional;
-using System.Text.RegularExpressions;
-using System.Reflection.Metadata;
+using TPositional = UiPath.PowerShell.Positional.GroupName_License;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -20,7 +18,7 @@ namespace UiPath.PowerShell.Commands
         private Dictionary<(OrchDriveInfo drive, NuLicensedGroup group), HashSet<string>>? _parameterSets;
 
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter<GroupName_License>))]
+        [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? GroupName { get; set; }
 
@@ -30,7 +28,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? License { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.GroupName_License>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         private class LicenseCompleter : OrchArgumentCompleter
@@ -44,8 +42,8 @@ namespace UiPath.PowerShell.Commands
             {
                 var drives = ResolveDrives(fakeBoundParameters);
 
-                var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", GroupName_License.Parameters);
-                var wpLicense = CreateWPListFromParameter(commandAst, parameterName, GroupName_License.Parameters, wordToComplete);
+                var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", TPositional.Parameters);
+                var wpLicense = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 

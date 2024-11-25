@@ -6,6 +6,7 @@ using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -14,7 +15,7 @@ namespace UiPath.PowerShell.Commands
     public class UpdateTriggerCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(TriggerNameCompleter<Name>))]
+        [ArgumentCompleter(typeof(TriggerNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 
@@ -81,7 +82,7 @@ namespace UiPath.PowerShell.Commands
         public string? IsConnected { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(CalendarNameCompleter<Name>))]
+        [ArgumentCompleter(typeof(CalendarNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string? CalendarName { get; set; }
 
@@ -106,13 +107,13 @@ namespace UiPath.PowerShell.Commands
         public string? StartProcessCron { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(ProcessNameCompleter<Name>))]
+        [ArgumentCompleter(typeof(ProcessNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string? ReleaseName { get; set; }
 
         //QueueDefinitionId
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(QueueNameCompleter<Name>))]
+        [ArgumentCompleter(typeof(QueueNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string? QueueDefinitionName { get; set; }
 
@@ -176,7 +177,7 @@ namespace UiPath.PowerShell.Commands
                 var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
                 // パラメータで選択済みの Name は、候補から除外する
-                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Positional.Name.Parameters);
+                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -213,7 +214,7 @@ namespace UiPath.PowerShell.Commands
         protected override void ProcessRecord()
         {
             var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
-            var wpName = Name?.Select(id => new WildcardPattern(id, WildcardOptions.IgnoreCase)).ToList();
+            var wpName = Name.ConvertToWildcardPatternList();
 
             int? specificPriorityValue = ConvertPriorityToSpecificPriorityValue(Priority);
 

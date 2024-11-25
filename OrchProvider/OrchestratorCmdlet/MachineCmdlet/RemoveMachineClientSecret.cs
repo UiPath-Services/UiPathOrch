@@ -1,17 +1,11 @@
 ﻿using System.Collections;
-using System.Collections.Concurrent;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using System.Reflection.PortableExecutable;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name;
-using Template = UiPath.PowerShell.Positional.Template;
-using Any_Foreground_Background = UiPath.PowerShell.Positional.Any_Foreground_Background;
-using Any_Windows_Portable  = UiPath.PowerShell.Positional.Any_Windows_Portable;
 using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.Name_SecretId;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -19,7 +13,7 @@ namespace UiPath.PowerShell.Commands
     public class RemoveMachineClientSecretCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(MachineNameCompleter<Name_SecretId>))]
+        [ArgumentCompleter(typeof(MachineNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 
@@ -29,7 +23,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? SecretId { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<Name_SecretId>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         // Scope が "PersonalWorkspace" と "AutomationCloudRobot" のマシンは除外するため、この completer は共通化できない
@@ -88,10 +82,10 @@ namespace UiPath.PowerShell.Commands
             {
                 var drives = ResolveDrives(fakeBoundParameters);
 
-                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Name_SecretId.Parameters);
+                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
                 // パラメータで選択済みの SecretId は、候補から除外する
-                var wpSecretId = CreateWPListFromParameter(commandAst, "SecretId", Name_SecretId.Parameters, wordToComplete);
+                var wpSecretId = CreateWPListFromParameter(commandAst, "SecretId", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 

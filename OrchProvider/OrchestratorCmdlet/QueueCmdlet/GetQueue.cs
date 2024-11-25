@@ -1,16 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
 using System.Text;
-using System.Text.Json;
-using UiPath.OrchAPI;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -19,7 +12,7 @@ namespace UiPath.PowerShell.Commands
     public class GetQueueCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(QueueNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(QueueNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 

@@ -1,12 +1,9 @@
 ﻿using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
-using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.UserName;
-using System.Linq;
-using System.Collections.Concurrent;
+using TPositional = UiPath.PowerShell.Positional.Email;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -23,6 +20,7 @@ namespace UiPath.PowerShell.Commands
         public bool? invitationAccepted { get; set; } = invitationAccepted.ToNullableBool();
     }
 
+    // TODO: これは OrchComparer.cs に移すべきだ多分。
     internal class DriveGroupIdsComparer : IEqualityComparer<(OrchDriveInfo drive, string[] groupIds)>
     {
         public bool Equals((OrchDriveInfo drive, string[] groupIds) x, (OrchDriveInfo drive, string[] groupIds) y)
@@ -85,12 +83,12 @@ namespace UiPath.PowerShell.Commands
         public string? InvitationAccepted { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PmGroupNameCompleter<UserName>))]
+        [ArgumentCompleter(typeof(PmGroupNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? GroupName { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<UserName>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         protected override void ProcessRecord()
@@ -183,8 +181,7 @@ namespace UiPath.PowerShell.Commands
                 try
                 {
                     var response = drive.OrchAPISession.CreatePmUserBulk(payload);
-                    drive._dicPmUsers = null;
-                    drive._dicPmUsers_Exception.ClearCache();
+                    drive.PmUsers.ClearCache();
                     drive._dicPmGroups = null;
                     drive._dicPmGroups_Exception.ClearCache();
                     drive._dicSearchForUsersAndGroups = null;

@@ -140,8 +140,8 @@ API トリガーを無効にします。
 ### [Disable-OrchMaintenanceMode](Disable-OrchMaintenanceMode.md)
 無人セッションのメンテナンスモードを無効にします。
 
-### [Disable-OrchPersonalWorkspace](Disable-OrchPersonalWorkspace.md)
-�l�p���[�N�X�y�[�X�t�H���_�[�𖳌��ɂ��܂��B
+### [Disable-OrchMaintenanceMode](Disable-OrchMaintenanceMode.md)
+無人セッションのメンテナンスモードを無効にします。
 
 ### [Disable-OrchTestSetSchedule](Disable-OrchTestSetSchedule.md)
 テストスケジュールを無効にします。
@@ -149,8 +149,8 @@ API トリガーを無効にします。
 ### [Disable-OrchTrigger](Disable-OrchTrigger.md)
 トリガーを無効にします。
 
-### [Disable-OrchUserAttended](Disable-OrchUserAttended.md)
-ユーザーによるオートメーションの実行を無効化します。
+### [Disable-OrchTrigger](Disable-OrchTrigger.md)
+トリガーを無効にします。
 
 ### [Disable-OrchWebhook](Disable-OrchWebhook.md)
 Webhook を無効にします。
@@ -173,8 +173,8 @@ API トリガーを有効にします。
 ### [Enable-OrchMaintenanceMode](Enable-OrchMaintenanceMode.md)
 無人セッションのメンテナンスモードを有効にします。
 
-### [Enable-OrchPersonalWorkspace](Enable-OrchPersonalWorkspace.md)
-�l�p���[�N�X�y�[�X�t�H���_�[��L���ɂ��܂��B
+### [Enable-OrchMaintenanceMode](Enable-OrchMaintenanceMode.md)
+無人セッションのメンテナンスモードを有効にします。
 
 ### [Enable-OrchTestSetSchedule](Enable-OrchTestSetSchedule.md)
 テストスケジュールを有効にします。
@@ -182,8 +182,8 @@ API トリガーを有効にします。
 ### [Enable-OrchTrigger](Enable-OrchTrigger.md)
 トリガーを有効にします。
 
-### [Enable-OrchUserAttended](Enable-OrchUserAttended.md)
-ユーザーによるオートメーションの実行を有効化します。
+### [Enable-OrchTrigger](Enable-OrchTrigger.md)
+トリガーを有効にします。
 
 ### [Enable-OrchWebhook](Enable-OrchWebhook.md)
 Webhook を有効にします。

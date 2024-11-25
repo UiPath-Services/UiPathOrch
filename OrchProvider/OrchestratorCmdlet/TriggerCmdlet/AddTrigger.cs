@@ -5,6 +5,7 @@ using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
+using TPositional = UiPath.PowerShell.Positional.Name_ReleaseName;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -13,11 +14,11 @@ namespace UiPath.PowerShell.Commands
     public class AddTriggerCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(TriggerNameCompleter<Name>))]
+        [ArgumentCompleter(typeof(TriggerNameCompleter<TPositional>))]
         public string[]? Name { get; set; }
 
         [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(ProcessNameCompleter<Name>))]
+        [ArgumentCompleter(typeof(ProcessNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string? ReleaseName { get; set; }
 

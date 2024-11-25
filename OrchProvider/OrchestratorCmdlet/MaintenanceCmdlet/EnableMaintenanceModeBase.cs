@@ -1,12 +1,10 @@
 ﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.MachineName_HostMachineName_ServiceUserName_SessionId;
+using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Positional;
-using UiPath.PowerShell.Entities;
+using TPositional = UiPath.PowerShell.Positional.MachineName_HostMachineName_ServiceUserName_SessionId;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -21,7 +19,7 @@ namespace UiPath.PowerShell.Commands
         public SwitchParameter Force { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.MachineName_HostMachineName_ServiceUserName_SessionId>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         private static string _propValue = Enable.Value ? "Default" : "Enabled";
@@ -37,10 +35,10 @@ namespace UiPath.PowerShell.Commands
             {
                 var drives = ResolveDrives(fakeBoundParameters);
 
-                var wpMachineName     = CreateWPListFromParameter(commandAst, "MachineName", Positional.MachineName_HostMachineName_ServiceUserName_SessionId.Parameters, wordToComplete);
-                var wpHostMachineName = CreateWPListFromOtherParameters(commandAst, "HostMachineName", Positional.MachineName_HostMachineName_ServiceUserName_SessionId.Parameters);
-                var wpServiceUserName = CreateWPListFromOtherParameters(commandAst, "ServiceUserName", Positional.MachineName_HostMachineName_ServiceUserName_SessionId.Parameters);
-                var wpSessionId       = CreateWPListFromOtherParameters(commandAst, "SessionId", Positional.MachineName_HostMachineName_ServiceUserName_SessionId.Parameters);
+                var wpMachineName     = CreateWPListFromParameter(commandAst, "MachineName", TPositional.Parameters, wordToComplete);
+                var wpHostMachineName = CreateWPListFromOtherParameters(commandAst, "HostMachineName", TPositional.Parameters);
+                var wpServiceUserName = CreateWPListFromOtherParameters(commandAst, "ServiceUserName", TPositional.Parameters);
+                var wpSessionId       = CreateWPListFromOtherParameters(commandAst, "SessionId", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -82,10 +80,10 @@ namespace UiPath.PowerShell.Commands
             {
                 var drives = ResolveDrives(fakeBoundParameters);
 
-                var wpMachineName     = CreateWPListFromOtherParameters(commandAst, "MachineName", Positional.MachineName_HostMachineName_ServiceUserName_SessionId.Parameters);
-                var wpHostMachineName = CreateWPListFromParameter(commandAst, "HostMachineName", Positional.MachineName_HostMachineName_ServiceUserName_SessionId.Parameters, wordToComplete);
-                var wpServiceUserName = CreateWPListFromOtherParameters(commandAst, "ServiceUserName", Positional.MachineName_HostMachineName_ServiceUserName_SessionId.Parameters);
-                var wpSessionId       = CreateWPListFromOtherParameters(commandAst, "SessionId", Positional.MachineName_HostMachineName_ServiceUserName_SessionId.Parameters);
+                var wpMachineName     = CreateWPListFromOtherParameters(commandAst, "MachineName", TPositional.Parameters);
+                var wpHostMachineName = CreateWPListFromParameter(commandAst, "HostMachineName", TPositional.Parameters, wordToComplete);
+                var wpServiceUserName = CreateWPListFromOtherParameters(commandAst, "ServiceUserName", TPositional.Parameters);
+                var wpSessionId       = CreateWPListFromOtherParameters(commandAst, "SessionId", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -127,10 +125,10 @@ namespace UiPath.PowerShell.Commands
             {
                 var drives = ResolveDrives(fakeBoundParameters);
 
-                var wpMachineName     = CreateWPListFromOtherParameters(commandAst, "MachineName", Positional.MachineName_HostMachineName_ServiceUserName_SessionId.Parameters);
-                var wpHostMachineName = CreateWPListFromOtherParameters(commandAst, "HostMachineName", Positional.MachineName_HostMachineName_ServiceUserName_SessionId.Parameters);
-                var wpServiceUserName = CreateWPListFromParameter(commandAst, "ServiceUserName", Positional.MachineName_HostMachineName_ServiceUserName_SessionId.Parameters, wordToComplete);
-                var wpSessionId       = CreateWPListFromOtherParameters(commandAst, "SessionId", Positional.MachineName_HostMachineName_ServiceUserName_SessionId.Parameters);
+                var wpMachineName     = CreateWPListFromOtherParameters(commandAst, "MachineName", TPositional.Parameters);
+                var wpHostMachineName = CreateWPListFromOtherParameters(commandAst, "HostMachineName", TPositional.Parameters);
+                var wpServiceUserName = CreateWPListFromParameter(commandAst, "ServiceUserName", TPositional.Parameters, wordToComplete);
+                var wpSessionId       = CreateWPListFromOtherParameters(commandAst, "SessionId", TPositional.Parameters);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -172,10 +170,10 @@ namespace UiPath.PowerShell.Commands
             {
                 var drives = ResolveDrives(fakeBoundParameters);
 
-                var wpMachineName     = CreateWPListFromOtherParameters(commandAst, "MachineName", Positional.MachineName_HostMachineName_ServiceUserName_SessionId.Parameters);
-                var wpHostMachineName = CreateWPListFromOtherParameters(commandAst, "HostMachineName", Positional.MachineName_HostMachineName_ServiceUserName_SessionId.Parameters);
-                var wpServiceUserName = CreateWPListFromOtherParameters(commandAst, "ServiceUserName", Positional.MachineName_HostMachineName_ServiceUserName_SessionId.Parameters);
-                var wpSessionId       = CreateWPListFromParameter(commandAst, "SessionId", Positional.MachineName_HostMachineName_ServiceUserName_SessionId.Parameters, wordToComplete);
+                var wpMachineName     = CreateWPListFromOtherParameters(commandAst, "MachineName", TPositional.Parameters);
+                var wpHostMachineName = CreateWPListFromOtherParameters(commandAst, "HostMachineName", TPositional.Parameters);
+                var wpServiceUserName = CreateWPListFromOtherParameters(commandAst, "ServiceUserName", TPositional.Parameters);
+                var wpSessionId       = CreateWPListFromParameter(commandAst, "SessionId", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 

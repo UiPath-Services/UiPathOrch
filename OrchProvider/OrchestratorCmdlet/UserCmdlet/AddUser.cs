@@ -6,6 +6,7 @@ using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Positional;
 using System.Data;
+using TPositional = UiPath.PowerShell.Positional.Type_UserName_Roles;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -300,7 +301,7 @@ namespace UiPath.PowerShell.Commands
         public string? UR_UserName { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(CredentialStoreNameCompleter<UserName>))]
+        [ArgumentCompleter(typeof(CredentialStoreNameCompleter<TPositional>))]
         //[SupportsWildcards] // 面倒なのでいっか
         public string? UR_CredentialStore { get; set; }
 
@@ -349,7 +350,7 @@ namespace UiPath.PowerShell.Commands
         public string? ES_AutoDownloadProcess { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<Type_UserName_Roles>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         private class TypeCompleter : OrchArgumentCompleter
@@ -361,7 +362,7 @@ namespace UiPath.PowerShell.Commands
                 CommandAst commandAst,
                 IDictionary fakeBoundParameters)
             {
-                var wpType = CreateWPListFromParameter(commandAst, "Type", Type_UserName_Roles.Parameters, wordToComplete);
+                var wpType = CreateWPListFromParameter(commandAst, "Type", TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -392,8 +393,8 @@ namespace UiPath.PowerShell.Commands
                 var drives = ResolveDrives(fakeBoundParameters);
 
                 // パラメータで選択済みのユーザー名は、候補から除外する
-                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", Type_UserName_Roles.Parameters, wordToComplete);
-                var wpType = CreateWPListFromOtherParameters(commandAst, "Type", Type_UserName_Roles.Parameters);
+                var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
+                var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
 
                 var specifiedTypes = Types.SelectByWildcards(t => t.Value, wpType).Select(t => t.Key);
 
@@ -435,8 +436,8 @@ namespace UiPath.PowerShell.Commands
             {
                 var drives = ResolveDrives(fakeBoundParameters);
 
-                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", Type_UserName_Roles.Parameters);
-                var wpRoles = CreateWPListFromParameter(commandAst, parameterName, Type_UserName_Roles.Parameters, wordToComplete);
+                var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
+                var wpRoles = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 

@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
 using OrchCollectionExtensions = UiPath.PowerShell.Core.OrchCollectionExtensions;
-
-using Positional = UiPath.PowerShell.Positional.Name_Destination;
+using TPositional = UiPath.PowerShell.Positional.Name_Destination;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -18,56 +12,19 @@ namespace UiPath.PowerShell.Commands
     public class CopyWebhookCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(WebhookNameCompleter<Positional.Name_Destination>))]
+        [ArgumentCompleter(typeof(WebhookNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 
         [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DestinationCompleter))]
+        [ArgumentCompleter(typeof(DestinationDriveCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Destination { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Name_Destination>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         [SupportsWildcards]
         public string? Path { get; set; }
-
-        // DriveCompleter と良く似ているのだけど、これはコピー元のドライブを除外する機能がある。
-        public class DestinationCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var drives = OrchDriveInfo.EnumAllOrchDrives();
-
-                // パラメータで選択済みのドライブは、候補から除外する
-                var paramPath = GetParameterValues(commandAst, "Path", Positional.Name_Destination.Parameters).Select(p => p.TrimEnd(':'));
-                var paramPathDriveNames = OrchDriveInfo.EnumOrchDrives(paramPath).Select(d => d.Name);
-                var wpPath = paramPathDriveNames.Select(p => new WildcardPattern(p, WildcardOptions.IgnoreCase)).ToList();
-
-                // パラメータで選択済みのドライブは、候補から除外する
-                var paramDestination = GetParameterValues(commandAst, "Destination", Positional.Name_Destination.Parameters, wordToComplete).Select(p => p.TrimEnd(':'));
-                var wpDestination = paramDestination.Select(p => new WildcardPattern(p, WildcardOptions.IgnoreCase)).ToList();
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                foreach (var drive in drives
-                    .ExcludeByWildcards(d => d?.Name, wpPath)
-                    .ExcludeByWildcards(d => d?.Name, wpDestination)
-                    .Where(d => wp.IsMatch(d.NameColon)))
-                {
-                    string driveName = drive.NameColon;
-                    string tiphelp = drive.DisplayRoot;
-                    if (!string.IsNullOrEmpty(drive.Description))
-                        tiphelp += $" ({drive.Description})";
-                    yield return new CompletionResult(PathTools.EscapePSText(driveName), driveName, CompletionResultType.ParameterValue, tiphelp);
-                }
-            }
-        }
 
         protected override void ProcessRecord()
         {
@@ -78,6 +35,7 @@ namespace UiPath.PowerShell.Commands
             var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
 
             var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();
+            //var wpName = Name.ConvertToWildcardPatternList();
 
             srcDrive.Webhooks.ClearCache();
 

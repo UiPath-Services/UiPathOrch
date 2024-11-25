@@ -1,9 +1,9 @@
 ﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Completer;
-using UiPath.PowerShell.Positional;
+using UiPath.PowerShell.Core;
+using TPositional = UiPath.PowerShell.Positional.GroupName_UserName;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -12,7 +12,7 @@ namespace UiPath.PowerShell.Commands
     public class RemoveAllocationFromUserLicenseGroup: OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter<GroupName_UserName>))]
+        [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? GroupName { get; set; }
 
@@ -25,7 +25,7 @@ namespace UiPath.PowerShell.Commands
         public SwitchParameter WarnOnNoMatch { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.GroupName_UserName>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
 
         private class UserNameCompleter : OrchArgumentCompleter
@@ -39,8 +39,8 @@ namespace UiPath.PowerShell.Commands
             {
                 var drives = ResolveDrives(fakeBoundParameters);
 
-                var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", Positional.GroupName_UserName.Parameters);
-                var wpUserName = CreateWPListFromParameter(commandAst, parameterName, Positional.GroupName_UserName.Parameters, wordToComplete);
+                var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", TPositional.Parameters);
+                var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 

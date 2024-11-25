@@ -1,12 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Management.Automation;
-using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
+﻿using System.Management.Automation;
 using UiPath.PowerShell.Completer;
-
-using Positional = UiPath.PowerShell.Positional.Name;
+using UiPath.PowerShell.Core;
+using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -14,7 +9,7 @@ namespace UiPath.PowerShell.Commands
     public class RemoveQueueCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(QueueNameCompleter<Positional.Name>))]
+        [ArgumentCompleter(typeof(QueueNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 

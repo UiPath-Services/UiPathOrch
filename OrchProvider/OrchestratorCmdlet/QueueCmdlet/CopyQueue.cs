@@ -2,6 +2,7 @@
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
+using TPositional = UiPath.PowerShell.Positional.Name_Destination;
 
 namespace UiPath.PowerShell.Commands
 {
@@ -10,7 +11,7 @@ namespace UiPath.PowerShell.Commands
     public class CopyQueueCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(QueueNameCompleter<Positional.Name_Destination>))]
+        [ArgumentCompleter(typeof(QueueNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Name { get; set; }
 
