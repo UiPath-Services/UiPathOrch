@@ -13,7 +13,7 @@ Removes the users.
 ## SYNTAX
 
 ```
-Remove-OrchUser [[-UserName] <String[]>] [[-FullName] <String[]>] [-Type <String[]>] [-WarnOnNoMatch]
+Remove-OrchUser [[-UserName] <String[]>] [[-FullName] <String[]>] [-Type <String[]>] [-NoMatchWarning]
  [-Path <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
@@ -128,21 +128,6 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -WarnOnNoMatch
-{{ Fill WarnOnNoMatch Description }}
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -Type
 {{ Fill Type Description }}
 
@@ -156,6 +141,21 @@ Position: Named
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
+```
+
+### -NoMatchWarning
+{{ Fill NoMatchWarning Description }}
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
 ```
 
 ### CommonParameters

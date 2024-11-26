@@ -13,7 +13,7 @@ Removes users registered with the Identity Server.
 ## SYNTAX
 
 ```
-Remove-OrchPmUser -Email <String[]> [-WarnOnNoMatch] [-Path <String[]>] [-ProgressAction <ActionPreference>]
+Remove-OrchPmUser -Email <String[]> [-NoMatchWarning] [-Path <String[]>] [-ProgressAction <ActionPreference>]
  [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
@@ -98,21 +98,6 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -WarnOnNoMatch
-{{ Fill WarnOnNoMatch Description }}
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -Email
 {{ Fill Email Description }}
 
@@ -126,6 +111,21 @@ Position: Named
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
+```
+
+### -NoMatchWarning
+{{ Fill NoMatchWarning Description }}
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
 ```
 
 ### CommonParameters

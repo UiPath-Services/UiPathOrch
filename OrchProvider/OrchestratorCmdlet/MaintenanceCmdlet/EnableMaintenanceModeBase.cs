@@ -209,7 +209,7 @@ namespace UiPath.PowerShell.Commands
             var wpMachineName = MachineName.ConvertToWildcardPatternList();
             var wpHostMachineName = HostMachineName.ConvertToWildcardPatternList();
             var wpServiceUserName = ServiceUserName.ConvertToWildcardPatternList();
-            var wpSessionId = SessionId?.Select(n => new WildcardPattern(n.ToString(), WildcardOptions.IgnoreCase)).ToList();
+            var wpSessionId = SessionId?.Select(n => n.ToString()).ConvertToWildcardPatternList();
 
             foreach (var drive in drives)
             {

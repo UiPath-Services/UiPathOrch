@@ -17,7 +17,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? Path { get; set; }
 
         [Parameter]
-        public SwitchParameter SourceRecurse { get; set; }
+        public SwitchParameter Recurse { get; set; }
 
         private static bool PackageExists(OrchDriveInfo drive, Folder folder, string fullPath)
         {
@@ -41,12 +41,12 @@ namespace UiPath.PowerShell.Commands
         protected override void ProcessRecord()
         {
             var drivesFolders = OrchDriveInfo.EnumPackageFeedFolders(Path);
-            if (SourceRecurse.IsPresent && drivesFolders.Any(df => df.folder != df.drive.RootFolder))
+            if (Recurse && drivesFolders.Any(df => df.folder != df.drive.RootFolder))
             {
                 throw new Exception("The -SourceRecurse parameter can only be specified for the tenant's root folder.");
             }
 
-            var pkgFilePaths = OrchDriveInfo.ExpandLocalPath(Source, "*.nupkg", SourceRecurse.IsPresent, SourceRecurse.IsPresent ? 1 : 0)
+            var pkgFilePaths = OrchDriveInfo.ExpandLocalPath(Source, "*.nupkg", Recurse, Recurse ? 1 : 0)
                 .OrderByFileNameVersion();
 
             var tasks = drivesFolders

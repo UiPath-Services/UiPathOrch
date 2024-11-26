@@ -22,7 +22,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? FullName { get; set; }
 
         [Parameter]
-        public SwitchParameter WarnOnNoMatch { get; set; }
+        public SwitchParameter NoMatchWarning { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
@@ -151,7 +151,7 @@ namespace UiPath.PowerShell.Commands
                         .FilterByWildcards(fu => fu?.UserEntity?.UserName, wpUserName)
                         .FilterByWildcards(fu => fu?.UserEntity?.FullName, wpFullName);
 
-                    if (WarnOnNoMatch.IsPresent && !filteredUsers.Any())
+                    if (NoMatchWarning.IsPresent && !filteredUsers.Any())
                     {
                         // ちょっと適当な実装だけど、これでも CSV インポート時にちゃんと動くから十分か。。
                         // ちゃんと実装するには、UserName の配列を先頭から順にひとつずつ処理しないといけない。

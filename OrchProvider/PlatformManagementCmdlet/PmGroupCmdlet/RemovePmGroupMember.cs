@@ -48,7 +48,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? UserName { get; set; }
 
         [Parameter]
-        public SwitchParameter WarnOnNoMatch { get; set; }
+        public SwitchParameter NoMatchWarning { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
@@ -84,7 +84,7 @@ namespace UiPath.PowerShell.Commands
                     .Where(g => g != null)
                     .FilterByWildcards(g => g!.name ?? "", wpGroupName);
 
-                if (WarnOnNoMatch.IsPresent && !(targetGroups?.Any() ?? false))
+                if (NoMatchWarning.IsPresent && !(targetGroups?.Any() ?? false))
                 {
                     WriteWarning($"No match found for GroupName '{drive.NameColonSeparator}{GroupName![0]}'.");
                     continue;
@@ -99,7 +99,7 @@ namespace UiPath.PowerShell.Commands
                         .FilterByWildcards(m => m?.objectType, wpType)
                         .FilterByWildcards(m => m?.name, wpUserName);
 
-                    if (WarnOnNoMatch.IsPresent && !(targetMembers?.Any() ?? false))
+                    if (NoMatchWarning.IsPresent && !(targetMembers?.Any() ?? false))
                     {
                         _visitedUserPatterns ??= [];
                         // ちょっと雑だけど、CSV を処理する場合は配列にひとつの要素しかないのでこれで十分か。

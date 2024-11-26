@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.8.16'
+ModuleVersion = '0.9.8.17'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -368,23 +368,16 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- The following cmdlets for managing users now support the -Type parameter:
-  - Get-OrchUser
-  - Copy-OrchUser
+        ReleaseNotes = '- The Add-OrchUser cmdlet was unable to add robot accounts with the -UR_Password parameter.
+
+- The -SourceRecurse switch parameter of the Import-OrchPackage cmdlet has been renamed to -Recurse to make it easier for users to find this parameter.
+
+- The -WarnNoMatch parameter in the following cmdlets has been renamed to -NoMatchWarning. This change was made to reduce the risk of user errors, such as mistakenly specifying -WarnNoMatch instead of -WhatIf.
   - Remove-OrchUser
-  - Remove-OrchRoleFromUser
-  - Add-OrchRoleToFolderUser
-  - Remove-OrchRoleFromFolderUser
-
-- Fixed an issue where the completers for the Add-OrchProcess cmdlet were not functioning properly.
-
-- Renamed the -JobId parameter in Get-OrchJob to -Id.
-
-- Renamed the -PackageId parameter in Add-OrchProcess to -Id.
-
-- Resolved an issue in the Add-OrchPmGroupMember cmdlet where the auto-completion for the -UserName parameter included local group names. Since local groups cannot be added to groups, local group names are no longer displayed as suggestions.
-
-- Fixed an issue where the -UserName parameter in the Set-OrchPmRobotAccount cmdlet was unintentionally hidden.
+  - Remove-OrchFolderUser
+  - Remove-OrchPmUser
+  - Remove-OrchPmGroupMember
+  - Remove-OrchPmAllocationFromPmLicensedGroup
 '
 
         # Prerelease string of this module
