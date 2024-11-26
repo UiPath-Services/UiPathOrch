@@ -22,7 +22,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? UserName { get; set; }
 
         [Parameter]
-        public SwitchParameter WarnOnNoMatch { get; set; }
+        public SwitchParameter NoMatchWarning { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
@@ -84,7 +84,7 @@ namespace UiPath.PowerShell.Commands
 
                 var targetGroups = groups.FilterByWildcards(g => g?.name, wpGroupName);
 
-                if (WarnOnNoMatch.IsPresent && !targetGroups.Any())
+                if (NoMatchWarning.IsPresent && !targetGroups.Any())
                 {
                     // ちょっと適当な実装だけど、これでも CSV インポート時にちゃんと動くから十分か。。
                     // ちゃんと実装するには、GroupName の配列を先頭から順にひとつずつ処理しないといけない。
@@ -99,7 +99,7 @@ namespace UiPath.PowerShell.Commands
 
                     var targetUsers = users.FilterByWildcards(u => u?.name, wpUserName);
 
-                    if (WarnOnNoMatch.IsPresent && !targetUsers.Any())
+                    if (NoMatchWarning.IsPresent && !targetUsers.Any())
                     {
                         // ちょっと適当な実装だけど、これでも CSV インポート時にちゃんと動くから十分か。。
                         // ちゃんと実装するには、UserName の配列を先頭から順にひとつずつ処理しないといけない。

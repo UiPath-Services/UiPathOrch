@@ -13,7 +13,7 @@ Removes license allocations from users within license groups.
 ## SYNTAX
 
 ```
-Remove-OrchPmAllocationFromPmLicensedGroup [-GroupName] <String[]> [-UserName] <String[]> [-WarnOnNoMatch]
+Remove-OrchPmAllocationFromPmLicensedGroup [-GroupName] <String[]> [-UserName] <String[]> [-NoMatchWarning]
  [-Path <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
@@ -97,21 +97,6 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
 ```
 
-### -WarnOnNoMatch
-{{ Fill WarnOnNoMatch Description }}
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -WhatIf
 Shows what would happen if the cmdlet runs.
 The cmdlet is not run.
@@ -135,6 +120,21 @@ Accept wildcard characters: False
 Type: ActionPreference
 Parameter Sets: (All)
 Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -NoMatchWarning
+{{ Fill NoMatchWarning Description }}
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
 
 Required: False
 Position: Named

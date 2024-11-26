@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <BaseOutputPath></BaseOutputPath>
     <AssemblyName>UiPath.PowerShell.OrchProvider</AssemblyName>
-    <Version>0.9.8.16</Version>
+    <Version>0.9.8.17</Version>
     <GenerateDocumentationFile>False</GenerateDocumentationFile>
   </PropertyGroup>
 

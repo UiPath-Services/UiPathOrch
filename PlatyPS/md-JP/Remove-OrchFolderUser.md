@@ -13,7 +13,7 @@ schema: 2.0.0
 ## SYNTAX
 
 ```
-Remove-OrchFolderUser [[-UserName] <String[]>] [[-FullName] <String[]>] [-WarnOnNoMatch] [-Path <String[]>]
+Remove-OrchFolderUser [[-UserName] <String[]>] [[-FullName] <String[]>] [-NoMatchWarning] [-Path <String[]>]
  [-Recurse] [-Depth <UInt32>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
@@ -158,8 +158,8 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -WarnOnNoMatch
-{{ Fill WarnOnNoMatch Description }}
+### -NoMatchWarning
+{{ Fill NoMatchWarning Description }}
 
 ```yaml
 Type: SwitchParameter

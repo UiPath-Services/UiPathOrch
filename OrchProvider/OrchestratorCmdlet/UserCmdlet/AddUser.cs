@@ -777,7 +777,7 @@ namespace UiPath.PowerShell.Commands
                             postingUser.MayHaveRobotSession ??= false; // これがないと失敗する
 
                             postingUser.UnattendedRobot ??= new();
-                            postingUser.UnattendedRobot.CredentialType ??= "NoCredential";
+
                             postingUser.UnattendedRobot.LimitConcurrentExecution ??= false;
 
                             postingUser.RestrictToPersonalWorkspace ??= false;
@@ -789,6 +789,21 @@ namespace UiPath.PowerShell.Commands
                         else if (user.type == 4) // application の場合
                         {
                             postingUser.MayHaveUserSession ??= false; // prohibit 'Standard Interface'
+                        }
+
+                        if (user.type == 0 || user.type == 3) // user もしくは robot の場合
+                        {
+                            if (postingUser.UnattendedRobot != null)
+                            {
+                                if (string.IsNullOrEmpty(postingUser.UnattendedRobot.Password))
+                                {
+                                    postingUser.UnattendedRobot.CredentialType ??= "NoCredential";
+                                }
+                                else
+                                {
+                                    postingUser.UnattendedRobot.CredentialType ??= "Default";
+                                }
+                            }
                         }
 
                         try

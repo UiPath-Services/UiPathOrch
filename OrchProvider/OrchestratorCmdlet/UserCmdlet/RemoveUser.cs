@@ -25,7 +25,7 @@ namespace UiPath.PowerShell.Commands
         public string[]? Type { get; set; }
 
         [Parameter]
-        public SwitchParameter WarnOnNoMatch { get; set; }
+        public SwitchParameter NoMatchWarning { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(DriveCompleter<Positional.UserName_FullName>))]
@@ -60,7 +60,7 @@ namespace UiPath.PowerShell.Commands
                         .FilterByWildcards(u => u?.Type, wpType)
                         .ToList();
 
-                    if (WarnOnNoMatch.IsPresent && targetUsers.Count == 0)
+                    if (NoMatchWarning.IsPresent && targetUsers.Count == 0)
                     {
                         WriteWarning($"No match found for UserName '{UserName?[0]}' and FullName '{FullName?[0]}'.");
                         continue;
