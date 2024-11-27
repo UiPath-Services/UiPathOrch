@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.8.17'
+ModuleVersion = '0.9.8.18'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -368,16 +368,13 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- The Add-OrchUser cmdlet was unable to add robot accounts with the -UR_Password parameter.
+        ReleaseNotes = '- Added the following parameter to the Add-OrchMachine cmdlet:
+  - -RobotUsers 
 
-- The -SourceRecurse switch parameter of the Import-OrchPackage cmdlet has been renamed to -Recurse to make it easier for users to find this parameter.
-
-- The -WarnNoMatch parameter in the following cmdlets has been renamed to -NoMatchWarning. This change was made to reduce the risk of user errors, such as mistakenly specifying -WarnNoMatch instead of -WhatIf.
-  - Remove-OrchUser
-  - Remove-OrchFolderUser
-  - Remove-OrchPmUser
-  - Remove-OrchPmGroupMember
-  - Remove-OrchPmAllocationFromPmLicensedGroup
+- Added the following parameters to the Update-OrchMachine cmdlet:
+  - -RobotUsers 
+  - -AutomationType
+  - -TargetFramework
 '
 
         # Prerelease string of this module

@@ -1,15 +1,9 @@
-﻿using System.Collections;
-using System.Collections.ObjectModel;
-using System.Data;
+﻿using System.Data;
 using System.Management.Automation;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Positional;
 using Path = System.IO.Path;
 
 namespace UiPath.PowerShell.Core
@@ -36,6 +30,7 @@ namespace UiPath.PowerShell.Core
         public static string GetPSPath(this Role entity)                   => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
         public static string GetPSPath(this Webhook entity)                => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
         public static string GetPSPath(this Robot entity)                  => Path.Combine(entity?.Path ?? "", entity?.User?.Name ?? "");
+        public static string GetPSPath(this ExtendedRobot entity)          => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
         public static string GetPSPath(this RobotsFromFolderModel entity)  => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
         public static string GetPSPath(this ExtendedCalendar entity)       => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
         public static string GetPSPath(this MachineFolder entity)          => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");

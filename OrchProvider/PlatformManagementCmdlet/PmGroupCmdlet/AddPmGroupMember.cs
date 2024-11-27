@@ -13,23 +13,6 @@ namespace UiPath.PowerShell.Commands
     [Cmdlet(VerbsCommon.Add, "OrchPmGroupMember", SupportsShouldProcess = true)]
     public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
     {
-        // UserName を case を無視して比較する comparer
-        private class TupleKeyComparer : IEqualityComparer<(OrchDriveInfo drive, string Type, string UserName)>
-        {
-            public bool Equals((OrchDriveInfo drive, string Type, string UserName) x,
-                               (OrchDriveInfo drive, string Type, string UserName) y)
-            {
-                return x.drive == y.drive &&
-                       x.Type == y.Type &&
-                       string.Equals(x.UserName, y.UserName, StringComparison.OrdinalIgnoreCase);
-            }
-
-            public int GetHashCode((OrchDriveInfo drive, string Type, string UserName) obj)
-            {
-                return HashCode.Combine(obj.drive, obj.Type, StringComparer.OrdinalIgnoreCase.GetHashCode(obj.UserName));
-            }
-        }
-
         // Key: (drive, pmGroup), Value: (name, displayName, objectType, identifier)
         //private readonly Dictionary<(OrchDriveInfo drive, PmGroup group), HashSet<(string name, string displayName, string objectType, string identifier)>> _parameterSets = [];
         //private HashSet<(OrchDriveInfo drive, string name)>? _warnedNames = null;
@@ -190,8 +173,7 @@ namespace UiPath.PowerShell.Commands
             // この cmdlet においては、ユーザー名はワイルドカードをサポートしない（できない）ことに注意。
             // ユーザー名の比較は case を無視する。
             _csvLines = _csvLines
-                //.GroupBy(line => (line.Drive, line.Type, UserName: line.UserName.ToLowerInvariant()))
-                .GroupBy(line => (line.Drive, line.Type, line.UserName), new TupleKeyComparer())
+                .GroupBy(line => (line.Drive, line.Type, line.UserName), new ThirdItemIgnoreCaseComparer<OrchDriveInfo, string>())
                 .Select(group => group.First())
                 .ToList();
 

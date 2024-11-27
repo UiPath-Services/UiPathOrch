@@ -153,7 +153,6 @@ namespace UiPath.PowerShell.Commands
                 CommandAst commandAst,
                 IDictionary fakeBoundParameters)
             {
-                if (!wordToComplete.EndsWith('?')) wordToComplete += '*';
                 var wp = CreateWPFromWordToComplete(wordToComplete);
 
                 foreach (var timeZone in TimeZoneInfo.GetSystemTimeZones()
