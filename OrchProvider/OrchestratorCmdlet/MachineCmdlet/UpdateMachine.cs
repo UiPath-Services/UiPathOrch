@@ -3,6 +3,7 @@ using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
 using TPositional = UiPath.PowerShell.Positional.Name;
 
@@ -37,7 +38,19 @@ namespace UiPath.PowerShell.Commands
         // HeadlessSlots
         // AutomationCloudSlots
         // AutomationCloudTestAutomationSlots
-        // AutomationType
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<Any_Foreground_Background>))]
+        public string? AutomationType { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<Any_Windows_Portable>))]
+        public string? TargetFramework { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(MachineRobotUsersCompleter<TPositional>))]
+        [SupportsWildcards]
+        public string[]? RobotUsers { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(StaticTextsCompleter<UserUpdatePolicyItems>))]
@@ -134,10 +147,35 @@ namespace UiPath.PowerShell.Commands
                     }
 
                     var postingMachine = OrchCollectionExtensions.DeepCopy(machine);
-                    postingMachine.AssignStringIfNotNull(Description,         (m, v) => m.Description = v);
-                    postingMachine.AssignNumberIfNotNull(UnattendedSlots,     (m, v) => m.UnattendedSlots = v);
-                    postingMachine.AssignNumberIfNotNull(NonProductionSlots,  (m, v) => m.NonProductionSlots = v);
-                    postingMachine.AssignNumberIfNotNull(TestAutomationSlots, (m, v) => m.TestAutomationSlots = v);
+                    postingMachine.AssignStringIfNotNull(Description,            (m, v) => m.Description = v);
+                    postingMachine.AssignNumberIfNotNull(UnattendedSlots,        (m, v) => m.UnattendedSlots = v);
+                    postingMachine.AssignNumberIfNotNull(NonProductionSlots,     (m, v) => m.NonProductionSlots = v);
+                    postingMachine.AssignNumberIfNotNull(TestAutomationSlots,    (m, v) => m.TestAutomationSlots = v);
+                    postingMachine.AssignStringIfNotNullOrEmpty(AutomationType,  (m, v) => m.AutomationType = v);
+                    postingMachine.AssignStringIfNotNullOrEmpty(TargetFramework, (m, v) => m.TargetFramework = v);
+
+                    if (RobotUsers != null)
+                    {
+                        // 変更されたかを正しく確認できるようにソートしておく
+                        //machine.RobotUsers = machine?.RobotUsers?.OrderBy(r => r.UserName).ToList();
+                        // と思ったけど、RobotUsers メンバの同一性の確認は無理な気がする。。ので諦める
+                        // -RobotUsers が指定された場合には、必ず Machine を Update することになる
+                        // ExtendedRobot class の Equals() では RobotUsers の同値性を確認せず
+                        // ここで RobotUsers の UserName と RobotId だけを使って同値性を確認すれば
+                        // まあできなくもないが、、今はちと面倒なのでそこまでしない
+
+                        var robots = drive.AllRobotsAcrossFolders.Get();
+                        var wpRobotUsers = RobotUsers.ConvertToWildcardPatternList();
+                        var targetRobots = robots.FilterByWildcards(r => r?.User?.FullName, wpRobotUsers);
+                        postingMachine.RobotUsers = targetRobots
+                            .Select(r => new RobotUser()
+                            {
+                                UserName = r.Username,
+                                RobotId = r.Id
+                            })
+                            .OrderBy(r => r.UserName)
+                            .ToList();
+                    }
 
                     postingMachine.AssignUpdatePolicy(UpdatePolicyType, UpdatePolicyVersion);
 
@@ -145,16 +183,14 @@ namespace UiPath.PowerShell.Commands
 
                     if (postingMachine.Equals(machine)) continue;
 
-                    string target = machine.GetPSPath();
+                    string target = machine?.GetPSPath();
                     if (ShouldProcess(target, "Update Machine"))
                     {
                         try
                         {
-                            postingMachine.AutomationType = null;
                             postingMachine.EndpointDetectionStatus = null;
                             postingMachine.Key = null;
                             postingMachine.RobotVersions = null;
-                            postingMachine.TargetFramework = null;
                             postingMachine.UpdateInfo = null;
 
                             foreach (var ru in postingMachine.RobotUsers ?? [])

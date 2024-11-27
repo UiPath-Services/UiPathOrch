@@ -1785,6 +1785,57 @@ namespace UiPath.PowerShell.Entities
         public Int64? CreatorUserId { get; set; }
     }
 
+    // ExtendRobotDto
+    public class ExtendedRobot
+    {
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        public string? Path { get; set; } // added by UiPathOrch
+        public User? User { get; set; }
+        public string? LicenseKey { get; set; }
+        public string? MachineName { get; set; }
+        public long? MachineId { get; set; }
+        public string? Name { get; set; } // required
+        public string? Username { get; set; }
+        public string? ExternalName { get; set; }
+        public string? Description { get; set; }
+        // NonProduction, Attended, Unattended, Development, Studio, RpaDeveloper, StudioX,
+        // CitizenDeveloper, Headless, StudioPro, RpaDeveloperPro, TestAutomation, AutomationCloud,
+        // Serverless, AutomationKit, ServerlessTestAutomation, AutomationCloudTestAutomation,
+        // AttendedStudioWeb, Hosting, AssistantWeb
+        public string? Type { get; set; } // required
+
+        // Standard, Floating
+        public string? HostingType { get; set; } // required
+
+        // Standard, Floating
+        public string? ProvisionType { get; set; }
+
+        public string? Password { get; set; }
+        public long? CredentialStoreId { get; set; }
+        public long? UserId { get; set; }
+        public bool? Enabled { get; set; }
+
+        // Default, SmartCard, NCipher, SafeNet, NoCredential
+        public string? CredentialType { get; set; }
+
+        public List<Environment>? Environments { get; set; }
+
+        // Comma-separated environment names
+        public string? RobotEnvironments { get; set; }
+
+        public bool IsExternalLicensed { get; set; }
+
+        // Key-value pairs for execution settings
+        public Dictionary<string, string>? ExecutionSettings { get; set; }
+
+        public bool? LimitConcurrentExecution { get; set; }
+        public DateTime? LastModificationTime { get; set; }
+        public long? LastModifierUserId { get; set; }
+        public DateTime? CreationTime { get; set; }
+        public long? CreatorUserId { get; set; }
+        public long? Id { get; set; }
+    }
+
     // SimpleRobotDto
     public class SimpleRobot
     {

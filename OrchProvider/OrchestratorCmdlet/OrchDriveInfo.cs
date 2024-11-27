@@ -2446,6 +2446,7 @@ namespace UiPath.PowerShell.Core
         public readonly ListCachePerTenant<Robot> Robots;
         public readonly ListCachePerTenant<Role> Roles;
         public readonly ListCachePerTenant<ExtendedMachine> Machines;
+        public readonly ListCachePerTenant<ExtendedRobot> AllRobotsAcrossFolders;
         public readonly ListCachePerTenant<MachineSessionRuntime> MachineSessionRuntimes;
         public readonly ListCachePerTenant<PersonalWorkspace> PersonalWorkspaces;
         public readonly ListCachePerTenant<Settings> Settings;
@@ -2498,16 +2499,17 @@ namespace UiPath.PowerShell.Core
             PmExternalApiResources = new(this, OrchAPISession.GetPmExternalApiResource,  e => e.Path = NameColonSeparator);
 
             // インデックスなしのテナントエンティティ
-            ActivitySettings       = new(this, OrchAPISession.GetActivitySettings,       e => e.Path = NameColonSeparator);
-            ConnectionString       = new(this, OrchAPISession.GetConnectionString,       e => e.Path = NameColonSeparator);
-            LicenseSettings        = new(this, OrchAPISession.GetLicenseSettings,        e => e.Path = NameColonSeparator);
-            MachineSessionRuntimes = new(this, OrchAPISession.GetMachineSessionRuntimes, e => e.Path = NameColonSeparator);
-            Robots                 = new(this, OrchAPISession.GetRobots,                 e => e.Path = NameColonSeparator);
-            PersonalWorkspaces     = new(this, OrchAPISession.GetPersonalWorkspaces,     e => e.Path = NameColonSeparator);
-            Roles                  = new(this, OrchAPISession.GetRoles,                  e => e.Path = NameColonSeparator);
-            Settings               = new(this, OrchAPISession.GetSettings,               e => e.Path = NameColonSeparator);
-            UpdateSettings         = new(this, OrchAPISession.GetUpdateSettings,         e => e.Path = NameColonSeparator);
-            Webhooks               = new(this, OrchAPISession.GetWebhooks,               e => e.Path = NameColonSeparator);
+            ActivitySettings       = new(this, OrchAPISession.GetActivitySettings,        e => e.Path = NameColonSeparator);
+            ConnectionString       = new(this, OrchAPISession.GetConnectionString,        e => e.Path = NameColonSeparator);
+            LicenseSettings        = new(this, OrchAPISession.GetLicenseSettings,         e => e.Path = NameColonSeparator);
+            MachineSessionRuntimes = new(this, OrchAPISession.GetMachineSessionRuntimes,  e => e.Path = NameColonSeparator);
+            Robots                 = new(this, OrchAPISession.GetRobots,                  e => e.Path = NameColonSeparator);
+            AllRobotsAcrossFolders = new(this, OrchAPISession.FindAllRobotsAcrossFolders, e => e.Path = NameColonSeparator);
+            PersonalWorkspaces     = new(this, OrchAPISession.GetPersonalWorkspaces,      e => e.Path = NameColonSeparator);
+            Roles                  = new(this, OrchAPISession.GetRoles,                   e => e.Path = NameColonSeparator);
+            Settings               = new(this, OrchAPISession.GetSettings,                e => e.Path = NameColonSeparator);
+            UpdateSettings         = new(this, OrchAPISession.GetUpdateSettings,          e => e.Path = NameColonSeparator);
+            Webhooks               = new(this, OrchAPISession.GetWebhooks,                e => e.Path = NameColonSeparator);
 
             AvailableVersions = new(this, () =>
                 {

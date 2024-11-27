@@ -15,8 +15,8 @@ Adds machines.
 ```
 Add-OrchMachine [-Name] <String[]> [-Description <String>] [-Type <String>] [-UnattendedSlots <Int32>]
  [-NonProductionSlots <Int32>] [-TestAutomationSlots <Int32>] [-AutomationType <String>]
- [-TargetFramework <String>] [-Tags <String[]>] [-Path <String[]>] [-ProgressAction <ActionPreference>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+ [-TargetFramework <String>] [-RobotUsers <String[]>] [-Tags <String[]>] [-Path <String[]>]
+ [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -233,6 +233,21 @@ Position: Named
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
+```
+
+### -RobotUsers
+{{ Fill RobotUsers Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
 ```
 
 ### CommonParameters

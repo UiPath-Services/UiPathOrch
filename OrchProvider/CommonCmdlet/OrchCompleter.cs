@@ -995,6 +995,42 @@ namespace UiPath.PowerShell.Completer
         }
     }
 
+    internal class MachineRobotUsersCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = ResolveDrives(fakeBoundParameters);
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpRobotUsers = CreateWPListFromParameter(commandAst, "RobotUsers", TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drives, drive => drive.AllRobotsAcrossFolders.Get());
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var robot in entities!
+                    .Where(r => wp.IsMatch(r?.User?.FullName))
+                    .ExcludeByWildcards(p => p?.User?.FullName, wpRobotUsers)
+                    .OrderBy(p => p.User?.FullName))
+                {
+                    string tiphelp = robot.GetPSPath();
+                    if (!string.IsNullOrEmpty(robot.Username))
+                        tiphelp += $" ({robot.Username})";
+                    yield return new CompletionResult(PathTools.EscapePSText(robot.User?.FullName), robot.User?.FullName, CompletionResultType.Text, tiphelp);
+                }
+            }
+        }
+    }
+
     internal class PackageIdCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -1317,7 +1353,6 @@ namespace UiPath.PowerShell.Completer
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            if (!wordToComplete.EndsWith('?')) wordToComplete += '*';
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
             foreach (var timeZone in TimeZoneInfo.GetSystemTimeZones()
@@ -1948,7 +1983,6 @@ namespace UiPath.PowerShell.Completer
         {
             var wpParam = CreateWPListFromParameter(commandAst, parameterName, null, wordToComplete);
 
-            if (!wordToComplete.EndsWith('?')) wordToComplete += '*';
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
             foreach (var candidate in TItems.Parameters

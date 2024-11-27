@@ -738,6 +738,13 @@ namespace UiPath.OrchAPI
             return GetEnumerable<RobotsFromFolderModel>($"/odata/Robots/UiPath.Server.Configuration.OData.GetRobotsFromFolder(folderId={folderId})");
         }
 
+        // マシン作成・更新時に使う。フィルターを設定していることに注意。このフィルタテキストはキャッシュ側でもつべきかもしれない。
+        public IEnumerable<ExtendedRobot> FindAllRobotsAcrossFolders()
+        {
+            return GetEnumerable<ExtendedRobot>($"/odata/Robots/UiPath.Server.Configuration.OData.FindAllAcrossFolders", null,
+                "&$filter=Type%20eq%20%272%27%20and%20ProvisionType%20eq%20%271%27&$expand=User");
+        }
+
         public IEnumerable<SimpleUser> GetReviewers(Int64 folderId)
         {
             return GetEnumerable<SimpleUser>("/odata/QueueItems/UiPath.Server.Configuration.OData.GetReviewers()", folderId, "&$filter=(Type%20eq%20%27DirectoryUser%27)");

@@ -46,6 +46,28 @@ namespace UiPath.PowerShell.Core
         }
     }
 
+    // 3要素の tuple を比較する Comparer
+    // 最後の要素は必ず string で、case を無視して比較する
+    internal class ThirdItemIgnoreCaseComparer<T1, T2> : IEqualityComparer<(T1 Item1, T2 Item2, string UserName)>
+    {
+        public bool Equals((T1 Item1, T2 Item2, string UserName) x,
+                           (T1 Item1, T2 Item2, string UserName) y)
+        {
+            return EqualityComparer<T1>.Default.Equals(x.Item1, y.Item1) &&
+                   EqualityComparer<T2>.Default.Equals(x.Item2, y.Item2) &&
+                   string.Equals(x.UserName, y.UserName, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public int GetHashCode((T1 Item1, T2 Item2, string UserName) obj)
+        {
+            return HashCode.Combine(
+                EqualityComparer<T1>.Default.GetHashCode(obj.Item1 ?? default!),
+                EqualityComparer<T2>.Default.GetHashCode(obj.Item2 ?? default!),
+                StringComparer.OrdinalIgnoreCase.GetHashCode(obj.UserName)
+            );
+        }
+    }
+
     public partial class VersionComparer : IComparer<string>
     {
         public static readonly VersionComparer Instance = new();

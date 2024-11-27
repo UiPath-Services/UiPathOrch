@@ -41,6 +41,11 @@ namespace UiPath.PowerShell.Commands
         public string? TargetFramework { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(MachineRobotUsersCompleter<TPositional>))]
+        [SupportsWildcards]
+        public string[]? RobotUsers { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         public string[]? Tags { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -65,6 +70,22 @@ namespace UiPath.PowerShell.Commands
                     string target = System.IO.Path.Combine(drive.NameColonSeparator, name);
                     if (ShouldProcess(target, "Add Machine"))
                     {
+                        List<RobotUser>? lstRobotUsers = null;
+                       if (RobotUsers != null)
+                        {
+                            var robots = drive.AllRobotsAcrossFolders.Get();
+                            var wpRobotUsers = RobotUsers.ConvertToWildcardPatternList();
+                            var targetRobots = robots.FilterByWildcards(r => r?.User?.FullName, wpRobotUsers);
+                            lstRobotUsers = targetRobots
+                                .Select(r => new RobotUser()
+                                {
+                                    UserName = r.Username,
+                                    RobotId = r.Id
+                                })
+                                .OrderBy(r => r.UserName)
+                                .ToList();
+                        }
+
                         ExtendedMachine machine = null;
                         try
                         {
@@ -78,6 +99,7 @@ namespace UiPath.PowerShell.Commands
                                 TestAutomationSlots = TestAutomationSlots,
                                 AutomationType = AutomationType,
                                 TargetFramework = TargetFramework,
+                                RobotUsers = lstRobotUsers
                             };
 
                             machine.AssignTags(Tags, (m, v) => m.Tags = v);

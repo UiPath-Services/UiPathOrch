@@ -14,7 +14,8 @@ schema: 2.0.0
 
 ```
 Update-OrchMachine [-Name] <String[]> [-Description <String>] [-UnattendedSlots <Int32>]
- [-NonProductionSlots <Int32>] [-TestAutomationSlots <Int32>] [-UpdatePolicyType <String>]
+ [-NonProductionSlots <Int32>] [-TestAutomationSlots <Int32>] [-AutomationType <String>]
+ [-TargetFramework <String>] [-RobotUsers <String[]>] [-UpdatePolicyType <String>]
  [-UpdatePolicyVersion <String>] [-MaintenanceCron <String>] [-MaintenanceDuration <Int32>]
  [-MaintenanceEnabled <String>] [-MaintenanceTimeZone <String>] [-Tags <String[]>] [-Path <String[]>]
  [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
@@ -271,6 +272,51 @@ Accept wildcard characters: False
 
 ```yaml
 Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -AutomationType
+{{ Fill AutomationType Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -RobotUsers
+{{ Fill RobotUsers Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
+```
+
+### -TargetFramework
+{{ Fill TargetFramework Description }}
+
+```yaml
+Type: String
 Parameter Sets: (All)
 Aliases:
 

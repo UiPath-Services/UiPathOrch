@@ -1,11 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Collections;
-using System.Data;
+﻿using System.Data;
 using System.Management.Automation;
-using System.Management.Automation.Language;
-using System.Net.Sockets;
-using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
@@ -15,8 +9,6 @@ using UiPath.OrchAPI;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using Path = System.IO.Path;
-using Session = UiPath.PowerShell.Entities.Session;
-using User = UiPath.PowerShell.Entities.User;
 
 namespace UiPath.PowerShell.Commands
 {
