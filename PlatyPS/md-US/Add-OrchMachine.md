@@ -13,10 +13,10 @@ Adds machines.
 ## SYNTAX
 
 ```
-Add-OrchMachine [-Name] <String[]> [-Description <String>] [-Type <String>] [-UnattendedSlots <Int32>]
- [-NonProductionSlots <Int32>] [-TestAutomationSlots <Int32>] [-AutomationType <String>]
- [-TargetFramework <String>] [-RobotUsers <String[]>] [-Tags <String[]>] [-Path <String[]>]
- [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Add-OrchMachine [-Name] <String[]> [-Description <String>] [-Type <String>] [-Scope <String>]
+ [-UnattendedSlots <Int32>] [-NonProductionSlots <Int32>] [-TestAutomationSlots <Int32>]
+ [-AutomationType <String>] [-TargetFramework <String>] [-RobotUsers <String[]>] [-Tags <String[]>]
+ [-Path <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -248,6 +248,21 @@ Position: Named
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
+```
+
+### -Scope
+{{ Fill Scope Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
 ```
 
 ### CommonParameters

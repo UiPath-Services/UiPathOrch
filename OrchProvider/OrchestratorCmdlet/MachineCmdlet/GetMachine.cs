@@ -34,32 +34,59 @@ namespace UiPath.PowerShell.Commands
 
         private static readonly string DefaultCsvName = "ExportedMachines.csv";
         private static readonly string[] CsvHeaders = [
-            "Path", 
-            "Name", 
-            "Description", 
-            "Type", 
+            "Path",
+            "Name",
+            "Description",
+            "Type",
+            "Scope",
             "UnattendedSlots",
             "NonProductionSlots",
-            "TestAutomationSlots", 
-            "AutomationType", 
-            "TargetFramework", 
+            "TestAutomationSlots",
+            "AutomationType",
+            "TargetFramework",
+            "RobotUsers",
+            "UpdatePolicyType",
+            "UpdatePolicyVersion",
+            "MaintenanceCron",
+            "MaintenanceDuration",
+            "MaintenanceEnabled",
+            "MaintenanceTimezoneId",
             "Tags"
         ];
 
-        private static void WriteCsvContent(StreamWriter writer, IEnumerable<ExtendedMachine> machines)
+        private static void WriteCsvContent(StreamWriter writer, OrchDriveInfo drive, IEnumerable<ExtendedMachine> machines)
         {
             foreach (var machine in machines)
             {
-                string[] line = [
+                IEnumerable<string?> robotUsers = null;
+                if (machine.RobotUsers != null)
+                {
+                    var allRobots = drive.AllRobotsAcrossFolders.Get();
+                    robotUsers = machine.RobotUsers?.Select(r => {
+                        var robot = allRobots.FirstOrDefault(all => all.Id == r.RobotId);
+                        return robot?.User?.FullName;
+                    })
+                    .Where(r => !string.IsNullOrEmpty(r));
+                }
+
+                string?[] line = [
                     EscapeCsvValue(machine.Path, true),
                     EscapeCsvValue(machine.Name, true),
                     EscapeCsvValue(machine.Description),
+                    EscapeCsvValue(machine.Type),
+                    EscapeCsvValue(machine.Scope),
                     EscapeCsvValue(machine.UnattendedSlots),
                     EscapeCsvValue(machine.NonProductionSlots),
                     EscapeCsvValue(machine.TestAutomationSlots),
-                    EscapeCsvValue(machine.Type),
                     EscapeCsvValue(machine.AutomationType),
                     EscapeCsvValue(machine.TargetFramework),
+                    EscapeCsvValue(robotUsers),
+                    machine.UpdatePolicy?.Type,
+                    machine.UpdatePolicy?.SpecificVersion,
+                    EscapeCsvValue(machine.MaintenanceWindow?.CronExpression),
+                    EscapeCsvValue(machine.MaintenanceWindow?.Duration),
+                    EscapeCsvValue(machine.MaintenanceWindow?.Enabled),
+                    EscapeCsvValue(machine.MaintenanceWindow?.TimezoneId),
                     EscapeCsvValue(machine.Tags)
                 ];
                 WriteCsvLine(writer, line);
@@ -87,13 +114,15 @@ namespace UiPath.PowerShell.Commands
                     var machines = result.GetResult(cancelHandler.Token);
                     if (machines == null) continue;
 
+                    var drive = result.Source!;
+
                     var filteredMachines = machines
                             .FilterByWildcards(m => m?.Name, wpName)
                             .OrderBy(m => m.Name);
 
                     if (writer != null)
                     {
-                        WriteCsvContent(writer, filteredMachines);
+                        WriteCsvContent(writer, drive, filteredMachines);
                     }
                     else if (!ExpandRobotUser.IsPresent)
                     {

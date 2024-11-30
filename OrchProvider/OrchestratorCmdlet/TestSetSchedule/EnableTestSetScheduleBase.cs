@@ -71,6 +71,8 @@ namespace UiPath.PowerShell.Commands
             var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
             var wpName = Name.ConvertToWildcardPatternList();
 
+            string action = $"{(Enable.Value ? "Enable" : "Disable")} TestSetSchedule";
+
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (drive, folder) in drivesFolders)
             {
@@ -85,7 +87,7 @@ namespace UiPath.PowerShell.Commands
                         cancelHandler.Token.ThrowIfCancellationRequested();
 
                         var target = schedule.GetPSPath();
-                        string action = $"{(Enable.Value ? "Enable" : "Disable")} TestSetSchedule";
+
                         if (ShouldProcess(target, action))
                         {
                             try

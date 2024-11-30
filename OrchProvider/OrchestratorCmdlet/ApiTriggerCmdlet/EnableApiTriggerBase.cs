@@ -62,6 +62,8 @@ namespace UiPath.PowerShell.Commands
             var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
             var wpName = Name.ConvertToWildcardPatternList();
 
+            string action = $"{(Enable.Value ? "Enable" : "Disable")} ApiTrigger";
+
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (drive, folder) in drivesFolders)
             {
@@ -77,8 +79,6 @@ namespace UiPath.PowerShell.Commands
                         .OrderBy(t => t.Name))
                     {
                         cancelHandler.Token.ThrowIfCancellationRequested();
-
-                        string action = $"{(Enable.Value ? "Enable" : "Disable")} ApiTrigger";
 
                         if (ShouldProcess(trigger.GetPSPath(), action))
                         {

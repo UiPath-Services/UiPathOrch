@@ -96,12 +96,13 @@ namespace UiPath.PowerShell.Commands
             return value?.ToString() ?? "";
         }
 
-        internal static string EscapeCsvValue(IEnumerable<string>? values, bool escapeWildcard = false)
+        internal static string EscapeCsvValue(IEnumerable<string?>? values, bool escapeWildcard = false)
         {
             if (values == null) return "";
             if (escapeWildcard)
             {
                 return EscapeCsvValue(string.Join(',', values
+                    .Where(r => r != null)
                     .OrderBy(r => r)
                     .Select(r => WildcardPattern.Escape(r)) ?? []));
             }
@@ -232,7 +233,7 @@ namespace UiPath.PowerShell.Commands
 
         // writer.WriteLine(string.Join(',', values) とすると、内部で string を連結してしまう。
         // 逐次 writer.Write() を呼ぶ方が効率的だ。
-        internal static void WriteCsvLine(TextWriter writer, string[] values)
+        internal static void WriteCsvLine(TextWriter writer, string?[] values)
         {
             for (int i = 0; i < values.Length; i++)
             {

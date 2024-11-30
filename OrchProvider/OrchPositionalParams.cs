@@ -426,9 +426,14 @@ namespace UiPath.PowerShell.Positional
         public static string[] Parameters { get; } = ["Last"];
     }
 
-    internal class Template : IPositionalParameters
+    internal class Template_Standard_Serverless : IPositionalParameters
     {
-        public static string[] Parameters { get; } = ["Template"];
+        public static string[] Parameters { get; } = ["Template", "Standard", "Serverless"];
+    }
+
+    internal class Default_Serverless_AutomationCloudRobot : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["Default", "Serverless", "AutomationCloudRobot"];
     }
 
     internal class Last_Component_UserName_Action : IPositionalParameters
@@ -534,6 +539,11 @@ namespace UiPath.PowerShell.Positional
     internal class Name_SecretId : IPositionalParameters
     {
         public static string[] Parameters { get; } = ["Name", "SecretId"];
+    }
+
+    internal class Name_UserName : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["Name", "UserName"];
     }
 
     internal class FullName_Username : IPositionalParameters

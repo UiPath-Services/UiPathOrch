@@ -12,7 +12,7 @@ namespace UiPath.PowerShell.Commands
     public class CopyFolderMachineCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(NameCompleter))]
+        [ArgumentCompleter(typeof(FolderMachineNameCompleter<TPositional>))]
         public string[]? Name { get; set; }
 
         [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
@@ -28,39 +28,6 @@ namespace UiPath.PowerShell.Commands
 
         [Parameter]
         public uint Depth { get; set; }
-
-        private class NameCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-
-                // パラメータで選択済みの Name は、候補から除外する
-                var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
-
-                foreach (var result in results)
-                {
-                    if (!result.TryGetValue(out var entities)) continue;
-
-                    foreach (var machine in entities!
-                        .Where(m => wp.IsMatch(m.Name))
-                        .ExcludeByWildcards(m => m?.Name, wpName)
-                        .OrderBy(m => m.Name))
-                    {
-                        yield return new CompletionResult(PathTools.EscapePSText(machine.Name), machine.Name, CompletionResultType.ParameterValue, TipHelp(machine));
-                    }
-                }
-            }
-        }
 
         protected override void ProcessRecord()
         {
@@ -107,6 +74,7 @@ namespace UiPath.PowerShell.Commands
                         false, cancelHandler.Token);
                     dstDrive.FolderMachinesAssigned.ClearCache(dstFolder);
                     dstDrive.FolderMachinesAssignable.ClearCache(dstFolder);
+                    dstDrive.MachinesRobots.ClearCache(dstFolder);
                 }
                 catch (OperationCanceledException)
                 {

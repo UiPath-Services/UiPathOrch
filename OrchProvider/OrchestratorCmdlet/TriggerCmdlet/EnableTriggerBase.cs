@@ -68,6 +68,8 @@ namespace UiPath.PowerShell.Commands
             var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
             var wpName = Name.ConvertToWildcardPatternList();
 
+            string action = $"{(Enable.Value ? "Enable" : "Disable")} Trigger";
+
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (drive, folder) in drivesFolders)
             {
@@ -78,13 +80,11 @@ namespace UiPath.PowerShell.Commands
                     foreach (var trigger in schedules
                         .Where(t => Enable.Value
                             ? !t.Enabled.GetValueOrDefault()
-                            : t.Enabled.GetValueOrDefault())
+                            :  t.Enabled.GetValueOrDefault())
                         .FilterByWildcards(t => t?.Name, wpName)
                         .OrderBy(t => t.Name))
                     {
                         cancelHandler.Token.ThrowIfCancellationRequested();
-
-                        string action = $"{(Enable.Value ? "Enable" : "Disable")} Trigger";
 
                         if (ShouldProcess(trigger.GetPSPath(), action))
                         {

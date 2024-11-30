@@ -14,7 +14,7 @@ namespace UiPath.PowerShell.Commands
     public class RemoveFolderMachineCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(NameCompleter))]
+        [ArgumentCompleter(typeof(FolderMachineNameCompleter<TPositional>))]
         public string[]? Name { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -26,39 +26,6 @@ namespace UiPath.PowerShell.Commands
 
         [Parameter]
         public uint Depth { get; set; }
-
-        private class NameCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-
-                // パラメータで選択済みの Name は、候補から除外する
-                var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
-
-                foreach (var result in results)
-                {
-                    if (!result.TryGetValue(out var entities)) continue;
-
-                    foreach (var e in entities!
-                        .Where(m => wp.IsMatch(m.Name))
-                        .ExcludeByWildcards(m => m?.Name, wpName)
-                        .OrderBy(m => m.Name))
-                    {
-                        yield return new CompletionResult(PathTools.EscapePSText(e.Name), e.Name, CompletionResultType.ParameterValue, TipHelp(e));
-                    }
-                }
-            }
-        }
 
         protected override void ProcessRecord()
         {
@@ -91,6 +58,7 @@ namespace UiPath.PowerShell.Commands
                         drive.OrchAPISession.UnassignMachinesFromFolder(folder.Id ?? 0, machineIdsToRemove);
                         drive.FolderMachinesAssigned.ClearCache(folder);
                         drive.FolderMachinesAssignable.ClearCache(folder);
+                        drive.MachinesRobots.ClearCache(folder);
                     }
                     catch (Exception ex)
                     {

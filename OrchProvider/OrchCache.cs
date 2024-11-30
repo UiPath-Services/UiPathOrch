@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using UiPath.PowerShell.Commands;
+using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Core
@@ -381,7 +383,7 @@ namespace UiPath.PowerShell.Core
         {
             if (_drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom)
             {
-                return Enumerable.Empty<T>().ToList();
+                return [];
             }
 
             _exceptions.ThrowCachedExceptionIfAny(folder.Id!.Value);
@@ -390,7 +392,7 @@ namespace UiPath.PowerShell.Core
             {
                 lock (this)
                 {
-                    _cache ??= new ConcurrentDictionary<Int64, List<T>>();
+                    _cache ??= [];
                 }
             }
 
@@ -417,6 +419,111 @@ namespace UiPath.PowerShell.Core
                 }
             }
             return cachePerFolder;
+        }
+
+        public void ClearCache(Int64 folderId)
+        {
+            _cache?.TryRemove(folderId, out _);
+            _exceptions.ClearCache(folderId);
+        }
+
+        public void ClearCache(Folder folder)
+        {
+            ClearCache(folder.Id!.Value);
+        }
+
+        public void ClearCache()
+        {
+            _cache = null;
+            _exceptions.ClearCache();
+        }
+    }
+
+    // 今のところ、インデックスとしては Int64 のみをサポート。この型もパラメータ化した方がいいのかもしれない
+    // TIndexEntity: インデックスを含むエンティティ
+    // getIndex(TIndexEntity): TIndexEntity から Int64 のインデックス値を取得する Func
+    // TEntity: 取得してキャッシュするエンティティ
+    public class IndexedListCachePerFolder<TIndexEntity, TEntity> : ICacheClearable where TIndexEntity : notnull
+    {
+        private readonly OrchDriveInfo _drive;
+
+        // 1st key: folderId
+        // 2nd key: TIndexEntity.Id
+        private ConcurrentDictionary<Int64, Dictionary<Int64, List<TEntity>>>? _cache = null;
+        private readonly ExceptionsCachePer<Int64> _exceptions = new();
+        private readonly Func<Int64, Int64, IEnumerable<TEntity>> _fetchFunc; // folderId と index を渡すと TEntity の列挙が返る
+        private readonly Func<TIndexEntity, Int64> _getIdFunc;
+        private readonly Action<TEntity, string, TIndexEntity>? _initializer; // string はフォルダパス
+        private readonly int? _supportedApiVersionFrom;
+
+        public IndexedListCachePerFolder(
+            OrchDriveInfo drive,
+            Func<Int64, Int64, IEnumerable<TEntity>> fetchFunc,
+            Func<TIndexEntity, Int64> getIdFunc,
+            Action<TEntity, string, TIndexEntity>? initializer,
+            int? supportedApiVersionFrom = null)
+        {
+            _drive = drive;
+            _drive._cacheItems.Add(this);
+            _fetchFunc = fetchFunc;
+            _getIdFunc = getIdFunc;
+            _initializer = initializer;
+            _supportedApiVersionFrom = supportedApiVersionFrom;
+        }
+
+        public ICollection<TEntity> Get(Folder folder, TIndexEntity indexEntity)
+        {
+            if (_drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom)
+            {
+                return [];
+            }
+
+            _exceptions.ThrowCachedExceptionIfAny(folder.Id!.Value);
+
+            if (_cache == null)
+            {
+                lock (this)
+                {
+                    if (_cache == null)
+                    {
+                        _cache = [];
+                    }
+                }
+            }
+
+            Int64 folderId = folder.Id!.Value;
+            Int64 index = _getIdFunc(indexEntity);
+
+            if (!_cache.TryGetValue(folderId, out var cachePerFolder))
+            {
+                cachePerFolder = [];
+                _cache[folderId] = cachePerFolder;
+            }
+
+            if (!cachePerFolder.TryGetValue(index, out var entities))
+            {
+                try
+                {
+                    entities = _fetchFunc(folderId, index).ToList();
+                    cachePerFolder[index] = entities;
+
+                    if (_initializer != null)
+                    {
+                        string folderPath = folder.GetPSPath();
+                        foreach (var entity in entities)
+                        {
+                            _initializer(entity, folderPath, indexEntity);
+                        }
+                    }
+                }
+                catch (HttpResponseException ex)
+                {
+                    _exceptions.CacheException(folder.Id ?? 0, ex);
+                    throw;
+                }
+            }
+
+            return entities;
         }
 
         public void ClearCache(Int64 folderId)

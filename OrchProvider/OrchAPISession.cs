@@ -128,32 +128,32 @@ namespace UiPath.OrchAPI
         internal readonly string _base_url_portal;
         internal bool _isAuthenticated = false;
         private bool _disposed = false;
-        private readonly string _driveName;
+        private readonly OrchDriveInfo _drive;
         public double? ApiVersion;
 
         #region Authentication
 
-        public OrchAPISession(PSDrive drive)
+        public OrchAPISession(OrchDriveInfo drive)
         {
-            if (drive.Proxy?.Enabled ?? false)
+            if (drive._psDrive.Proxy?.Enabled ?? false)
             {
                 HttpClientHandler handler;
                 try
                 {
-                    Uri proxyUri = new(drive.Proxy.Url ?? "");
+                    Uri proxyUri = new(drive._psDrive.Proxy.Url ?? "");
 
                     var proxy = new WebProxy
                     {
                         Address = proxyUri,
-                        BypassProxyOnLocal = drive.Proxy.BypassProxyOnLocal ?? true,
-                        UseDefaultCredentials = drive.Proxy.UseDefaultCredentials ?? false
+                        BypassProxyOnLocal = drive._psDrive.Proxy.BypassProxyOnLocal ?? true,
+                        UseDefaultCredentials = drive._psDrive.Proxy.UseDefaultCredentials ?? false
                     };
 
-                    if (drive.Proxy?.Credentials != null && !proxy.UseDefaultCredentials)
+                    if (drive._psDrive.Proxy?.Credentials != null && !proxy.UseDefaultCredentials)
                     {
                         proxy.Credentials = new NetworkCredential(
-                            userName: drive.Proxy.Credentials.Username,
-                            password: drive.Proxy.Credentials.Password);
+                            userName: drive._psDrive.Proxy.Credentials.Username,
+                            password: drive._psDrive.Proxy.Credentials.Password);
                     }
 
                     handler = new HttpClientHandler
@@ -185,7 +185,7 @@ namespace UiPath.OrchAPI
             }
             else
             {
-                _base_url = drive.Root!;
+                _base_url = drive._psDrive.Root!;
             }
 
             if (_authManager.IsCloud)
@@ -205,7 +205,7 @@ namespace UiPath.OrchAPI
                 _base_url_identity = _authManager.IdentityUrl;
             }
 
-            _driveName = drive.Name + System.IO.Path.VolumeSeparatorChar;
+            _drive = drive;
         }
 
         private static readonly object _authlock = new();
@@ -218,7 +218,7 @@ namespace UiPath.OrchAPI
                     if (!_isAuthenticated)
                     {
                         // Set initial token
-                        SetToken(_authManager.RequestToken(_driveName));
+                        SetToken(_authManager.RequestToken());
                         _isAuthenticated = true;
                         _expiryTime = DateTime.Now.AddHours(1);
 
@@ -258,7 +258,7 @@ namespace UiPath.OrchAPI
             catch (Exception ex)
             {
                 _isAuthenticated = false;
-                Console.WriteLine($"renew token failed on {_driveName}.");
+                Console.WriteLine($"renew token failed on {_drive.NameColonSeparator}.");
                 Console.WriteLine(ex.Message);
                 throw;
             }
@@ -970,6 +970,25 @@ namespace UiPath.OrchAPI
             FolderMachineInherit payload = new(machineId, folderId, enabled);
             // "" が返る
             HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.ToggleFolderMachineInherit", folderId, payload);
+        }
+
+        // TODO: ここでフィルター指定してるけど、まあいいか。。キャッシュ側で実装した方があとあと嬉しいかもしれないけど、
+        public IEnumerable<ExtendedRobot> GetFolderRobots(Int64 folderId, Int64 machineId)
+        {
+            return GetEnumerable<ExtendedRobot>($"/odata/Robots/UiPath.Server.Configuration.OData.GetFolderRobots(folderId={folderId},machineId={machineId})",
+                null,
+                "&$filter=Type eq '2' and ProvisionType eq 'Automatic'&$expand=User");
+        }
+
+        public IEnumerable<RobotUser> GetMachineRobots(Int64 folderId, Int64 machineId)
+        {
+            return GetEnumerable<RobotUser>($"/odata/Folders/UiPath.Server.Configuration.OData.GetMachineRobots(folderId={folderId},machineId={machineId})");
+        }
+
+        public void SetMachineRobots(SetMachineRobotsCmd cmd)
+        {
+            // 何も返らない
+            HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.SetMachineRobots", null, cmd);
         }
 
         public IEnumerable<UserRobots> GetUserRobots(Int64 folderId)

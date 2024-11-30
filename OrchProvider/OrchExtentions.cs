@@ -432,7 +432,7 @@ namespace UiPath.PowerShell.Core
             Func<TElement, TId> getIdFunc,
             Action<T, TId> setter,
             IWritableHost host,
-            string targetName,
+            string? targetName,
             string nameKind)
         {
             if (!string.IsNullOrEmpty(name))

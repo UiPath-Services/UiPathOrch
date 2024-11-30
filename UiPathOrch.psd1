@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.8.18'
+ModuleVersion = '0.9.8.19'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -198,6 +198,10 @@ CmdletsToExport = @(
 'Enable-OrchFolderMachineInherit',
 'Disable-OrchFolderMachineInherit',
 
+'Get-OrchFolderMachineAccountMapping',
+'Enable-OrchFolderMachineAccountMapping',
+'Disable-OrchFolderMachineAccountMapping',
+
 'Get-OrchAsset',
 'Set-OrchAsset',
 'Copy-OrchAsset',
@@ -368,13 +372,30 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Added the following parameter to the Add-OrchMachine cmdlet:
-  - -RobotUsers 
+        ReleaseNotes = '- Added the following cmdlets:
+  - Get-OrchFolderMachineAccountMapping
+  - Enable-OrchFolderMachineAccountMapping
+  - Disable-OrchFolderMachineAccountMapping
 
-- Added the following parameters to the Update-OrchMachine cmdlet:
-  - -RobotUsers 
-  - -AutomationType
-  - -TargetFramework
+- Regarding the Enable and Disable cmdlets mentioned above:
+  - The first positional parameter -Name specifies the machine name.
+  - The second positional parameter -UserName specifies the account name.
+  - These parameters support wildcards. To specify exact names, you can use auto-completion.
+  - Additionally, like other cmdlets, the -WhatIf, -Verbose, and -Confirm switch parameters are supported.
+  - For example, to remove all account mappings for all machines assigned to all folders, you can use the following command:
+    PS Orch1:\> Disable-OrchFolderMachineAccountMapping -Recurse * *
+
+- Added the -Scope parameter to the Add-OrchMachine cmdlet. In addition to Machine Templates, it is now possible to add Standard and Serverless machines.
+
+- Fixed an issue where the header and values in the CSV file output by Get-OrchMachine -ExportCsv were misaligned. Additionally, the following columns are now included in the output. This CSV file can be imported using Add-OrchMachine and Update-OrchMachine cmdlets:
+  - Scope
+  - RobotUsers
+  - UpdatePolicyType
+  - UpdatePolicyVersion
+  - MaintenanceCron
+  - MaintenanceDuration
+  - MaintenanceEnabled
+  - MaintenanceTimezoneId
 '
 
         # Prerelease string of this module

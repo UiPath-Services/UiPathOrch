@@ -131,6 +131,9 @@ Webhook をコピーします。
 ### [Disable-OrchApiTrigger](Disable-OrchApiTrigger.md)
 API トリガーを無効にします。
 
+### [Disable-OrchFolderMachineAccountMapping](Disable-OrchFolderMachineAccountMapping.md)
+{{ Fill in the Synopsis }}
+
 ### [Disable-OrchFolderMachineInherit](Disable-OrchFolderMachineInherit.md)
 {{ Fill in the Synopsis }}
 
@@ -163,6 +166,9 @@ UiPathOrch の設定ファイルを、テキストエディタで開きます。
 
 ### [Enable-OrchApiTrigger](Enable-OrchApiTrigger.md)
 API トリガーを有効にします。
+
+### [Enable-OrchFolderMachineAccountMapping](Enable-OrchFolderMachineAccountMapping.md)
+{{ Fill in the Synopsis }}
 
 ### [Enable-OrchFolderMachineInherit](Enable-OrchFolderMachineInherit.md)
 {{ Fill in the Synopsis }}
@@ -268,6 +274,9 @@ API トリガーを取得します。
 
 ### [Get-OrchFolderMachine](Get-OrchFolderMachine.md)
 フォルダーに割り当てられたマシンを取得します。
+
+### [Get-OrchFolderMachineAccountMapping](Get-OrchFolderMachineAccountMapping.md)
+{{ Fill in the Synopsis }}
 
 ### [Get-OrchFolderUsage](Get-OrchFolderUsage.md)
 フォルダーの概要情報を取得します。
