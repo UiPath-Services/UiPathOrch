@@ -17,11 +17,15 @@ namespace UiPath.PowerShell.Commands
         [Parameter(ValueFromPipelineByPropertyName = true)]
         public string? Description { get; set; }
 
-        // 現在は Template しかサポートしていない
-        // ["Template", "", "", ""]
+        // 現在は Template と Standard と Serverless をサポート
+        // AutomationCloudRobot もサポートしなければ。
         [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(StaticTextsCompleter<Template>))]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<Template_Standard_Serverless>))]
         public string? Type { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<Default_Serverless_AutomationCloudRobot>))]
+        public string? Scope { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         public int? UnattendedSlots { get; set; }
@@ -55,6 +59,7 @@ namespace UiPath.PowerShell.Commands
         protected override void ProcessRecord()
         {
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
+            RobotUsers = RobotUsers?.Split1stValueByUnescapedCommas()?.ToArray();
 
             if (string.IsNullOrEmpty(Type))            { Type = "Template"; }
             if (string.IsNullOrEmpty(AutomationType))  { AutomationType = null; }
@@ -67,12 +72,18 @@ namespace UiPath.PowerShell.Commands
                 {
                     cancelHandler.Token.ThrowIfCancellationRequested();
 
+                    if (Scope == "PersonalWorkspace")
+                    {
+                        WriteWarning($"{drive.NameColonSeparator}{name}: Machines with the \"Scope\" set to \"PersonalWorkspace\" cannot be added with this cmdlet. Please enable the personal workspace using the Enable-OrchPersonalWorkspace cmdlet.");
+                        continue;
+                    }
+
                     string target = System.IO.Path.Combine(drive.NameColonSeparator, name);
                     if (ShouldProcess(target, "Add Machine"))
                     {
-                        List<RobotUser>? lstRobotUsers = null;
+                       List<RobotUser>? lstRobotUsers = null;
                        if (RobotUsers != null)
-                        {
+                       {
                             var robots = drive.AllRobotsAcrossFolders.Get();
                             var wpRobotUsers = RobotUsers.ConvertToWildcardPatternList();
                             var targetRobots = robots.FilterByWildcards(r => r?.User?.FullName, wpRobotUsers);
@@ -89,11 +100,17 @@ namespace UiPath.PowerShell.Commands
                         ExtendedMachine machine = null;
                         try
                         {
+                            if (Scope == "Serverless")
+                            {
+                                TargetFramework ??= "Portable";
+                            }
+
                             machine = new()
                             {
                                 Name = WildcardPattern.Unescape(name),
                                 Description = Description,
                                 Type = Type,
+                                Scope = Scope,
                                 NonProductionSlots = NonProductionSlots,
                                 UnattendedSlots = UnattendedSlots,
                                 TestAutomationSlots = TestAutomationSlots,

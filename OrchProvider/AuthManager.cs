@@ -12,7 +12,7 @@ namespace UiPath.OrchAPI
     internal class OrchestratorAuthManager
     {
         private readonly HttpClient _httpClient;
-        private readonly PSDrive _drive;
+        private readonly OrchDriveInfo _drive;
         public readonly string _baseUrl;
         private readonly string? _onpremiseTenancy;
         private readonly bool _isConfidentialApp;
@@ -30,25 +30,25 @@ namespace UiPath.OrchAPI
         private string? _refresh_token;
 
         internal bool IsAuthenticated => !string.IsNullOrEmpty(_access_token);
-        internal bool IsCloud => _drive.Root?.Contains("uipath.com", StringComparison.InvariantCultureIgnoreCase) ?? false;
+        internal bool IsCloud => _drive._psDrive.Root?.Contains("uipath.com", StringComparison.InvariantCultureIgnoreCase) ?? false;
 
         internal string? AccessToken => _access_token;
 
-        public OrchestratorAuthManager(PSDrive drive, HttpClient httpClient)
+        public OrchestratorAuthManager(OrchDriveInfo drive, HttpClient httpClient)
         {
             _httpClient = httpClient;
             this._drive = drive;
 
-            _isConfidentialApp = !string.IsNullOrEmpty(_drive.AppSecret);
+            _isConfidentialApp = !string.IsNullOrEmpty(_drive._psDrive.AppSecret);
             // 機密アプリのユーザーモードをサポートしたいのだけど、RedirectUrl がカスケードして
             // 設定されてしまうと、なんだかうまくいかないな。。
             //_isUserScope = !string.IsNullOrEmpty(_drive.RedirectUrl);
-            _isUserPassword = !string.IsNullOrEmpty(_drive.Password);
-            IdentityUrl = _drive.IdentityUrl?.TrimEnd('/');
+            _isUserPassword = !string.IsNullOrEmpty(_drive._psDrive.Password);
+            IdentityUrl = _drive._psDrive.IdentityUrl?.TrimEnd('/');
 
             //_baseUrl = (_drive.Root!.Contains("uipath.com", StringComparison.InvariantCultureIgnoreCase)
-            _baseUrl = IsCloud ? _drive!.Root!.Substring(0, _drive.Root.IndexOf("uipath.com") + "uipath.com".Length)
-                : _drive.Root!.TrimEnd('/');
+            _baseUrl = IsCloud ? _drive!._psDrive.Root!.Substring(0, _drive._psDrive.Root.IndexOf("uipath.com") + "uipath.com".Length)
+                : _drive._psDrive.Root!.TrimEnd('/');
 
             if (_isUserPassword) /////////////////////// Non-Conf User Scope
             {
@@ -64,11 +64,11 @@ namespace UiPath.OrchAPI
                 _baseUrl = _baseUrl.Substring(0, lastSlashIndex);
             }
 
-            if (!string.IsNullOrEmpty(drive.RedirectUrl) && drive.RedirectUrl!.EndsWith('/'))
-                _drive.RedirectUrl = drive.RedirectUrl!.TrimEnd('/');
+            if (!string.IsNullOrEmpty(drive._psDrive.RedirectUrl) && drive._psDrive.RedirectUrl!.EndsWith('/'))
+                _drive._psDrive.RedirectUrl = drive._psDrive.RedirectUrl!.TrimEnd('/');
         }
 
-        public string RequestToken(string driveLetter)
+        public string RequestToken()
         {
             if (_isConfidentialApp)
             {
@@ -90,9 +90,9 @@ namespace UiPath.OrchAPI
                     (_access_token, _refresh_token) = GetAccessToken(new Dictionary<string, string>
                     {
                         { "grant_type", "client_credentials" },
-                        { "client_id", _drive.AppId! },
-                        { "client_secret", _drive.AppSecret! },
-                        { "scope", _drive.Scope! }
+                        { "client_id", _drive._psDrive.AppId! },
+                        { "client_secret", _drive._psDrive.AppSecret! },
+                        { "scope", _drive._psDrive.Scope! }
                     });
                     return _access_token;
                 }
@@ -100,14 +100,14 @@ namespace UiPath.OrchAPI
             else if (!_isUserPassword) /////////////////////// Non-Conf User Scope
             {
                 string codeVerifier = RandomString(80);
-                string authorizationCode = GetAuthorizationCode(codeVerifier, driveLetter);
+                string authorizationCode = GetAuthorizationCode(codeVerifier);
 
                 (_access_token, _refresh_token) = GetAccessToken(new Dictionary<string, string>
                 {
                     { "grant_type", "authorization_code" },
                     { "code", authorizationCode },
-                    { "redirect_uri", _drive.RedirectUrl! },
-                    { "client_id", _drive.AppId! },
+                    { "redirect_uri", _drive._psDrive.RedirectUrl! },
+                    { "client_id", _drive._psDrive.AppId! },
                     { "code_verifier", codeVerifier }
                 });
                 return _access_token;
@@ -117,8 +117,8 @@ namespace UiPath.OrchAPI
                 LoginModel payload = new()
                 {
                     tenancyName = _onpremiseTenancy,
-                    usernameOrEmailAddress = _drive.Username,
-                    password = _drive.Password
+                    usernameOrEmailAddress = _drive._psDrive.Username,
+                    password = _drive._psDrive.Password
                 };
 
                 string url = _baseUrl + "/api/Account/Authenticate";
@@ -140,7 +140,7 @@ namespace UiPath.OrchAPI
                 { "expires_in", "3600" },
                 { "token_type", "Bearer" },
                 { "refresh_token", "" },
-                { "scope", _drive.Scope! }
+                { "scope", _drive._psDrive.Scope! }
             });
         }
 
@@ -148,14 +148,14 @@ namespace UiPath.OrchAPI
         {
             if (_isConfidentialApp)
             {
-                return RequestToken(""); // no need to pass drive name for confidential app
+                return RequestToken(); // no need to pass drive name for confidential app
             }
             else
             {
                 (_access_token, _refresh_token) = GetAccessToken(new Dictionary<string, string>
                 {
                     { "grant_type", "refresh_token" },
-                    { "client_id", _drive.AppId! },
+                    { "client_id", _drive._psDrive.AppId! },
                     { "refresh_token", _refresh_token! }
                 });
             }
@@ -243,8 +243,7 @@ namespace UiPath.OrchAPI
             return Convert.ToBase64String(imageBytes);
         }
 
-        // driveName は、ブラウザーにマウント成功のメッセージを表示するために必要
-        private string GetAuthorizationCode(string? codeVerifier, string driveName)
+        private string GetAuthorizationCode(string? codeVerifier)
         {
             string endPoint;
             if (!string.IsNullOrEmpty(IdentityUrl))
@@ -259,20 +258,20 @@ namespace UiPath.OrchAPI
             }
 
             string authUrl = !string.IsNullOrEmpty(codeVerifier)
-                ? $"{endPoint}?response_type=code&client_id={_drive.AppId}&scope={_drive.Scope} offline_access&redirect_uri={WebUtility.UrlEncode(_drive.RedirectUrl)}&code_challenge={GetHash(codeVerifier)}&code_challenge_method=S256"
-                : $"{endPoint}?response_type=code&client_id={_drive.AppId}&scope={_drive.Scope} offline_access&redirect_uri={WebUtility.UrlEncode(_drive.RedirectUrl)}";
+                ? $"{endPoint}?response_type=code&client_id={_drive._psDrive.AppId}&scope={_drive._psDrive.Scope} offline_access&redirect_uri={WebUtility.UrlEncode(_drive._psDrive.RedirectUrl)}&code_challenge={GetHash(codeVerifier)}&code_challenge_method=S256"
+                : $"{endPoint}?response_type=code&client_id={_drive._psDrive.AppId}&scope={_drive._psDrive.Scope} offline_access&redirect_uri={WebUtility.UrlEncode(_drive._psDrive.RedirectUrl)}";
 
             // 自動で HttpListener プレフィックスを生成
             string httpListenerPrefix;
-            if (!string.IsNullOrEmpty(_drive.HttpListener))
+            if (!string.IsNullOrEmpty(_drive._psDrive.HttpListener))
             {
                 // 設定ファイルの HttpListener の設定を尊重する
-                httpListenerPrefix = _drive.HttpListener;
+                httpListenerPrefix = _drive._psDrive.HttpListener;
             }
             else
             {
                 // 設定ファイルに HttpListener がない場合は、自動生成する
-                Uri redirectUri = new(_drive.RedirectUrl!);
+                Uri redirectUri = new(_drive._psDrive.RedirectUrl!);
                 httpListenerPrefix = $"{redirectUri.Scheme}://{redirectUri.Host}:{redirectUri.Port}{redirectUri.AbsolutePath}/";
             }
 
@@ -285,7 +284,7 @@ namespace UiPath.OrchAPI
             catch (HttpListenerException ex)
             {
                 // If starting the listener failed
-                var uri = new Uri(_drive.RedirectUrl!);
+                var uri = new Uri(_drive._psDrive.RedirectUrl!);
                 string message = uri.Port <= 1024
                     ? $"Failed to start the HttpListener. The port {uri.Port} specified in 'RedirectUrl' may require administrative privileges. Please ensure you have the necessary permissions or try changing this port in the configuration file, which can be opened using the Edit-OrchConfig cmdlet."
                     : $"Failed to start the HttpListener. The port {uri.Port} specified in 'RedirectUrl' may be in use. Try changing this port in the configuration file, which can be opened using the Edit-OrchConfig cmdlet.";
@@ -321,7 +320,7 @@ namespace UiPath.OrchAPI
 
                                 // 画像とバージョン情報の埋め込み
                                 var version = Assembly.GetExecutingAssembly().GetName().Version;
-                                string responseString = string.Format(htmlTemplate, _drive.Root, driveName, version, LoadBotImageRandomly());
+                                string responseString = string.Format(htmlTemplate, _drive._psDrive.Root, _drive.NameColon, version, LoadBotImageRandomly());
 
                                 byte[] buffer = Encoding.UTF8.GetBytes(responseString);
                                 context.Response.ContentLength64 = buffer.Length;

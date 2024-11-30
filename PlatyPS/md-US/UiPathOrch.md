@@ -131,6 +131,9 @@ Copy the test schedules.
 ### [Disable-OrchApiTrigger](Disable-OrchApiTrigger.md)
 Disables the API triggers.
 
+### [Disable-OrchFolderMachineAccountMapping](Disable-OrchFolderMachineAccountMapping.md)
+{{ Fill in the Synopsis }}
+
 ### [Disable-OrchFolderMachineInherit](Disable-OrchFolderMachineInherit.md)
 {{ Fill in the Synopsis }}
 
@@ -163,6 +166,9 @@ Disables the webhooks.
 
 ### [Enable-OrchApiTrigger](Enable-OrchApiTrigger.md)
 Enables the API triggers.
+
+### [Enable-OrchFolderMachineAccountMapping](Enable-OrchFolderMachineAccountMapping.md)
+{{ Fill in the Synopsis }}
 
 ### [Enable-OrchFolderMachineInherit](Enable-OrchFolderMachineInherit.md)
 {{ Fill in the Synopsis }}
@@ -268,6 +274,9 @@ Gets the execution settings configuration.
 
 ### [Get-OrchFolderMachine](Get-OrchFolderMachine.md)
 Get the machines assigned to folders.
+
+### [Get-OrchFolderMachineAccountMapping](Get-OrchFolderMachineAccountMapping.md)
+{{ Fill in the Synopsis }}
 
 ### [Get-OrchFolderUsage](Get-OrchFolderUsage.md)
 {{ Fill in the Synopsis }}

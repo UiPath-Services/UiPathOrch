@@ -15,7 +15,7 @@ namespace UiPath.PowerShell.Commands
     {
         [Parameter(Position = 0)]
         [SupportsWildcards]
-        [ArgumentCompleter(typeof(NameCompleter))]
+        [ArgumentCompleter(typeof(FolderMachineNameCompleter<TPositional>))]
         public string[]? Name { get; set; }
 
         [Parameter]
@@ -39,39 +39,6 @@ namespace UiPath.PowerShell.Commands
         private static readonly string DefaultCsvName = "ExportedFolderMachines.csv";
 
         private static readonly string[] CsvHeaders = ["Path", "Name", "PropagateToSubFolders"];
-
-        private class NameCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-
-                // パラメータで選択済みの Name は、候補から除外する
-                var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
-
-                foreach (var result in results)
-                {
-                    if (!result.TryGetValue(out var entities)) continue;
-
-                    foreach (var e in entities!
-                        .Where(m => wp.IsMatch(m.Name))
-                        .ExcludeByWildcards(m => m?.Name, wpName)
-                        .OrderBy(m => m.Name))
-                    {
-                        yield return new CompletionResult(PathTools.EscapePSText(e.Name), e.Name, CompletionResultType.ParameterValue, TipHelp(e));
-                    }
-                }
-            }
-        }
 
         private static void WriteCsvContent(StreamWriter writer, IEnumerable<MachineFolder> output)
         {

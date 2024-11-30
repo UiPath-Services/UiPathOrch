@@ -60,6 +60,8 @@ namespace UiPath.PowerShell.Commands
             var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();
             //var wpName = Name.ConvertToWildcardPatternList();
 
+            string action = $"{(Enable.Value ? "Enable" : "Disable")} Webhook";
+
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var drive in drives)
             {
@@ -75,8 +77,6 @@ namespace UiPath.PowerShell.Commands
                         .OrderBy(e => e.Name))
                     {
                         cancelHandler.Token.ThrowIfCancellationRequested();
-
-                        string action = $"{(Enable.Value ? "Enable" : "Disable")} Webhook";
 
                         if (ShouldProcess(webhook.GetPSPath(), action))
                         {

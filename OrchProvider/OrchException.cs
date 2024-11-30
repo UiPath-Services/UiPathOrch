@@ -180,12 +180,15 @@ namespace UiPath.PowerShell.Commands
             return ExtractMessage(ex.Message);
         }
 
-        private static string CreateExceptionMessage(string target, string? message)
+        private static string CreateExceptionMessage(string? target, string? message)
         {
-            return "\"" + target + "\": " + message;
+            if (string.IsNullOrEmpty(target))
+                return message ?? "";
+            else
+                return "\"" + target + "\": " + message;
         }
 
-        private static string CreateExceptionMessage(string target, Exception ex)
+        private static string CreateExceptionMessage(string? target, Exception ex)
         {
             return CreateExceptionMessage(target, ExtractMessage(ex));
         }
@@ -200,12 +203,12 @@ namespace UiPath.PowerShell.Commands
         {
         }
 
-        public OrchException(string target, string message)
+        public OrchException(string? target, string message)
             : base(CreateExceptionMessage(target, message))
         {
         }
 
-        public OrchException(string target, Exception ex)
+        public OrchException(string? target, Exception ex)
             : base(CreateExceptionMessage(target, ex), ex)
         {
         }

@@ -56,7 +56,7 @@ namespace UiPath.PowerShell.Core
                 {
                     lock (_orchAPISessionLock)
                     {
-                        _orchAPISession ??= new OrchAPISession(_psDrive);
+                        _orchAPISession ??= new OrchAPISession(this);
                     }
                 }
                 return _orchAPISession;
@@ -2480,6 +2480,10 @@ namespace UiPath.PowerShell.Core
         public readonly ListCachePerFolder<TestSetSchedule> TestSetSchedules;
         public readonly ListCachePerFolder<UserRobots> UserRobots;
 
+        // インデックスつきフォルダーエンティティ
+        public readonly IndexedListCachePerFolder<MachineFolder, ExtendedRobot> FolderRobots;
+        public readonly IndexedListCachePerFolder<MachineFolder, RobotUser> MachinesRobots;
+
         //public readonly CachePerFolder<Release> Processes; // これはインデックスがついてた。。
 
         // このコンストラクタを実行するタイミングでは、NameColonSeparator は利用できない
@@ -2650,6 +2654,26 @@ namespace UiPath.PowerShell.Core
             //        : fid => OrchAPISession.GetReleases(fid, "&$expand=Environment,CurrentVersion,ReleaseVersions"),
             //    (e, folderPath) => e.Path = folderPath
             //);
+
+            // インデックスつきのフォルダーエンティティ
+            FolderRobots = new(this, OrchAPISession.GetFolderRobots,
+                machineFolder => machineFolder.Id!.Value,
+                (folderRobot, folderPath, machineFolder) =>
+                {
+                    folderRobot.Path = folderPath;
+                    folderRobot.Machine = machineFolder.Name;
+                }
+            );
+
+            MachinesRobots = new(this, OrchAPISession.GetMachineRobots,
+                machineFolder => machineFolder.Id!.Value,
+                (machineRobot, folderPath, machineFolder) =>
+                {
+                    machineRobot.Path = folderPath;
+                    machineRobot.Machine = machineFolder.Name;
+                    machineRobot.PathMachine = Path.Combine(folderPath, machineFolder.Name ?? "");
+                }
+            );
         }
 
         internal List<Folder>? _dicFolders; // sorted by OrchDirectory and DisplayName

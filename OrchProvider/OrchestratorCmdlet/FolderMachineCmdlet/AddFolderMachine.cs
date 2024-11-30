@@ -119,6 +119,7 @@ namespace UiPath.PowerShell.Commands
                             drive.OrchAPISession.AddMachinesToFolder(folder.Id ?? 0, machineIds);
                             drive.FolderMachinesAssigned.ClearCache(folder);
                             drive.FolderMachinesAssignable.ClearCache(folder);
+                            drive.MachinesRobots.ClearCache(folder);
 
                             // 非 null の場合に処理する
                             // machine を add するだけなら true の場合のみ処理すればいいのだけど

@@ -58,6 +58,8 @@ namespace UiPath.PowerShell.Commands
             var drivesFolders = OrchDriveInfo.EnumFolders(Path);
             var wpName = Name.ConvertToWildcardPatternList();
 
+            string action = $"{(EnableInherit.Value ? "Enable" : "Disable")} FolderMachineInherit";
+
             using var results = OrchThreadPool.RunForEach(drivesFolders,
                 df => df.folder.GetPSPath(),
                 df => df.folder,
@@ -81,8 +83,6 @@ namespace UiPath.PowerShell.Commands
                         .FilterByWildcards(m => m?.Name, wpName)
                         .OrderBy(m => m.Name))
                     {
-                        string action = $"{(EnableInherit.Value ? "Enable" : "Disable")} FolderMachineInherit";
-
                         if (ShouldProcess(machine.GetPSPath(), action))
                         {
                             try

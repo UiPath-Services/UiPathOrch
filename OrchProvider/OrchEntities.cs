@@ -1,12 +1,6 @@
-﻿using System.Reflection.PortableExecutable;
-using System;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using UiPath.OrchAPI;
-using UiPath.PowerShell.Positional;
-using UiPath.PowerShell.Entities.JsonConverter;
+﻿using System.Text.Json.Serialization;
 using UiPath.PowerShell.Core;
-using System.Security.Policy;
+using UiPath.PowerShell.Entities.JsonConverter;
 
 #pragma warning disable IDE1006 // 命名スタイル
 
@@ -1790,6 +1784,11 @@ namespace UiPath.PowerShell.Entities
     {
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public string? Path { get; set; } // added by UiPathOrch
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        public string? Machine { get; set; } // added by UiPathOrch
+
+        public long? Id { get; set; }
         public User? User { get; set; }
         public string? LicenseKey { get; set; }
         public string? MachineName { get; set; }
@@ -1833,7 +1832,14 @@ namespace UiPath.PowerShell.Entities
         public long? LastModifierUserId { get; set; }
         public DateTime? CreationTime { get; set; }
         public long? CreatorUserId { get; set; }
-        public long? Id { get; set; }
+    }
+
+    public class SetMachineRobotsCmd // added by UiPathOrch 正しいクラス名が不明。
+    {
+        public long? MachineId { get; set; }
+        public long? FolderId { get; set; }
+        public List<long>? AddedRobotIds { get; set; }
+        public List<long>? RemovedRobotIds { get; set; }
     }
 
     // SimpleRobotDto

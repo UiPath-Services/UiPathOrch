@@ -211,6 +211,8 @@ namespace UiPath.PowerShell.Commands
             var wpServiceUserName = ServiceUserName.ConvertToWildcardPatternList();
             var wpSessionId = SessionId?.Select(n => n.ToString()).ConvertToWildcardPatternList();
 
+            string action = $"{(Enable.Value ? "Enable" : "Disable")} MaintenanceMode";
+
             foreach (var drive in drives)
             {
                 try
@@ -229,8 +231,6 @@ namespace UiPath.PowerShell.Commands
                         .OrderBy(session => session.SessionId))
                     {
                         string target = System.IO.Path.Combine(drive.NameColon, session.SessionId.ToString()!);
-
-                        string action = $"{(Enable.Value ? "Enable" : "Disable")} MaintenanceMode";
 
                         if (ShouldProcess(target, action))
                         {

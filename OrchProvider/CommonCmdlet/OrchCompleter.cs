@@ -955,6 +955,39 @@ namespace UiPath.PowerShell.Completer
         }
     }
 
+    internal class FolderMachineNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var machine in entities!
+                    .Where(m => wp.IsMatch(m.Name))
+                    .ExcludeByWildcards(m => m?.Name, wpName)
+                    .OrderBy(m => m.Name))
+                {
+                    yield return new CompletionResult(PathTools.EscapePSText(machine.Name), machine.Name, CompletionResultType.ParameterValue, TipHelp(machine));
+                }
+            }
+        }
+    }
+
     internal class MachineNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
