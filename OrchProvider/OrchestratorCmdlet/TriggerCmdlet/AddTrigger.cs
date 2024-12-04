@@ -1,10 +1,13 @@
-﻿using System.Data;
+﻿using System.Collections;
+using System.Data;
 using System.Management.Automation;
+using System.Management.Automation.Language;
 using System.Text.Json;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
+using static UiPath.PowerShell.Commands.UpdateTriggerCommand;
 using TPositional = UiPath.PowerShell.Positional.Name_ReleaseName;
 
 namespace UiPath.PowerShell.Commands
@@ -125,6 +128,7 @@ namespace UiPath.PowerShell.Commands
         public DateTime? StopProcessDate { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(MachineRobotsCompleter))]
         public string? MachineRobots { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -137,22 +141,25 @@ namespace UiPath.PowerShell.Commands
         //[Parameter]
         //public uint Depth { get; set; }
 
+        private class MachineRobotsCompleter : OrchArgumentCompleter
+        {
+            public override IEnumerable<CompletionResult> CompleteArgument(
+                string commandName,
+                string parameterName,
+                string wordToComplete,
+                CommandAst commandAst,
+                IDictionary fakeBoundParameters)
+            {
+                yield return new CompletionResult("'[{\"RobotName\":\"\",\"MachineName\":\"\",\"HostMachineName\":\"\"}]'");
+            }
+        }
+
         protected override void ProcessRecord()
         {
             var drivesFolders = OrchDriveInfo.EnumFolders(Path);
-
             int? specificPriorityValue = ConvertPriorityToSpecificPriorityValue(Priority);
 
-            // ExecutorRobots は、MachineRobots から生成すれば良いので、パラメータからは外す。
-            // 先頭の要素は CSV から入力されている可能性があるので、先頭の要素についてはカンマで区切る
-            //if (ExecutorRobots != null && ExecutorRobots.Length > 0) ExecutorRobots = ExecutorRobots[0].Split(',').Concat(ExecutorRobots.Skip(1)).ToArray();
-
-            // MachineRobots は JSON でシリアライズしているため、配列ではないのでそのまま。。
-
-            //if (StopProcessDate != null)
-            //{
-            //    StopProcessDate = DateTime.SpecifyKind(StopProcessDate.Value, DateTimeKind.Utc);
-            //}
+            // ExecutorRobots は、どのように処理すべきなのか分からない。。
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (drive, folder) in drivesFolders)
@@ -260,47 +267,15 @@ namespace UiPath.PowerShell.Commands
 
                     schedule.AssignDateTimeIfNotNull(StopProcessDate, (s, v) => s.StopProcessDate = v);
 
-                    #region MachineRobots をデシリアライズ
-                    if (!string.IsNullOrEmpty(MachineRobots))
+                    // MachineRobots をデシリアライズ
+                    try
                     {
-                        var mrss = JsonSerializer.Deserialize<MachineRobotSessionForSerialize[]>(MachineRobots);
-
-                        List<MachineRobotSession> targets = [];
-
-                        var robots = drive.Robots.Get();
-                        var machines = drive.Machines.Get();
-                        var sessions = drive.MachineSessionRuntimesByFolder.Get(folder);
-
-                        foreach (var mrs in mrss ?? [])
-                        {
-                            MachineRobotSession elem = new();
-
-                            // RobotName を変換
-                            if (!string.IsNullOrEmpty(mrs.RobotName))
-                            {
-                                elem.RobotId = robots.FirstOrDefault(r => r.Name == mrs.RobotName)?.Id;
-                            }
-
-                            // MachineName を変換
-                            if (mrs.MachineName != null)
-                            {
-                                elem.MachineId = machines.FirstOrDefault(m => m.Name == mrs.MachineName)?.Id;
-                            }
-
-                            // HostMachineName を変換
-                            if (mrs.MachineName != null)
-                            {
-                                elem.SessionId = sessions.FirstOrDefault(s => s.HostMachineName == mrs.HostMachineName)?.SessionId;
-                            }
-                            targets.Add(elem);
-                        }
-                        schedule.MachineRobots = targets.ToArray();
-
-                        schedule.ExecutorRobots = schedule.MachineRobots?
-                            .Select(m => new RobotExecutor() { Id = m.RobotId }).ToArray();
+                        schedule.MachineRobots = DeserializeMachineRobotSessions(drive, folder, MachineRobots)?.ToArray();
                     }
-                    #endregion
-
+                    catch (Exception ex)
+                    {
+                        WriteWarning($"{target}: Failed to deserialize MachineRobots. Ignoring. {ex.Message}");
+                    }
 
                     if (ShouldProcess(target, "Add Trigger"))
                     {

@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.8.19'
+ModuleVersion = '0.9.8.20'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -372,30 +372,23 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Added the following cmdlets:
-  - Get-OrchFolderMachineAccountMapping
-  - Enable-OrchFolderMachineAccountMapping
-  - Disable-OrchFolderMachineAccountMapping
+        ReleaseNotes = '- Under certain conditions, the Copy-Item cmdlet was failing. This issue has been present since UiPathOrch 0.9.8.11.
 
-- Regarding the Enable and Disable cmdlets mentioned above:
-  - The first positional parameter -Name specifies the machine name.
-  - The second positional parameter -UserName specifies the account name.
-  - These parameters support wildcards. To specify exact names, you can use auto-completion.
-  - Additionally, like other cmdlets, the -WhatIf, -Verbose, and -Confirm switch parameters are supported.
-  - For example, to remove all account mappings for all machines assigned to all folders, you can use the following command:
-    PS Orch1:\> Disable-OrchFolderMachineAccountMapping -Recurse * *
+- Fixed an issue where the Add-OrchTrigger and Update-OrchTrigger cmdlets could not add multiple account-machine mappings. These mappings can be specified using the -MachineRobots parameter. The valid format for this parameter can be confirmed using auto-completion.
 
-- Added the -Scope parameter to the Add-OrchMachine cmdlet. In addition to Machine Templates, it is now possible to add Standard and Serverless machines.
+- The -MachineRobots parameter of the Add-OrchTrigger and Update-OrchTrigger cmdlets now supports wildcards for the internal RobotName, MachineName, and HostMachineName fields. While auto-completion is not available for these internal values, using wildcards allows you to perform the intended operation even if the exact RobotName or MachineName is unknown. For example, to add all combinations of RobotName, MachineName, and HostMachineName available in the current folder as account-machine mappings to <your triggers>, use the following command:
 
-- Fixed an issue where the header and values in the CSV file output by Get-OrchMachine -ExportCsv were misaligned. Additionally, the following columns are now included in the output. This CSV file can be imported using Add-OrchMachine and Update-OrchMachine cmdlets:
-  - Scope
-  - RobotUsers
-  - UpdatePolicyType
-  - UpdatePolicyVersion
-  - MaintenanceCron
-  - MaintenanceDuration
-  - MaintenanceEnabled
-  - MaintenanceTimezoneId
+  PS Orch1:\Shared> Update-OrchTrigger <your trigger names> -MachineRobots ''[{"RobotName":"*","MachineName":"*","HostMachineName":"*"}]''
+
+- The completer for the -UserName parameter in the following functions stopped working in version 0.9.8.16:
+  - Enable-OrchUserAttended
+  - Enable-OrchPersonalWorkspace
+  - Disable-OrchUserAttended
+  - Disable-OrchPersonalWorkspace
+
+  Note: Functions refer to cmdlets implemented in .ps1 files. The implementations of the above functions are located in the Functions directory under the UiPathOrch installation directory.
+
+- Changed the output format of the Get-OrchActivitySetting cmdlet from table view to list view. Additionally, the members of SignalR are now expanded and displayed. 
 '
 
         # Prerelease string of this module

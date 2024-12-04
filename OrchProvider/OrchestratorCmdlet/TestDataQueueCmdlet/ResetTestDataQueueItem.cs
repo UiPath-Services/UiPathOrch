@@ -49,7 +49,7 @@ namespace UiPath.PowerShell.Commands
                             try
                             {
                                 drive.OrchAPISession.SetAllTestDataQueueItemsConsumed(folder.Id ?? 0, queue.Name ?? "", IsConsumed.IsPresent);
-                                drive._dicTestDataQueueItems?.TryRemove(folder.Id ?? 0, out _);
+                                drive.TestDataQueueItems.ClearCache(folder);
                             }
                             catch (Exception ex)
                             {

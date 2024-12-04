@@ -1,6 +1,5 @@
-# Retrieve all jobs information from all mounted UiPathOrch drives
-# and save it to a single CSV file.
-
+# Retrieve all job information created after midnight (the start of today)
+# from all mounted UiPathOrch drives and save it to a single CSV file.
 
 $OutputDir = "c:\tmp"
 $CsvEncoding = "utf-8"
@@ -15,10 +14,12 @@ if (-not (Test-Path -Path $OutputDir)) {
 $drivePaths = (Get-PSDrive -PSProvider UiPathOrch) | ForEach-Object { "$($_.Name):\" }
 
 # Retrieve processes from each drive, display them in the console, and store in a variable
-Get-OrchJob -Recurse -Path $drivePaths | Tee-Object -Variable output
+Get-OrchJob -Path $drivePaths -Recurse -CreationTimeAfter $([DateTime]::Today) | Tee-Object -Variable output
 
-# Export the contents of the array to a CSV file
-$output | Export-Csv -Path $OutputCsv -Encoding $CsvEncoding -NoTypeInformation
-
-# Invoke Excel
-ii $OutputCsv
+if ($output -ne $null -and $output.Count -gt 0) {
+    $output | Export-Csv -Path $OutputCsv -Encoding $CsvEncoding -NoTypeInformation
+    ii $OutputCsv
+}
+else {
+    Write-Host "No jobs found to export."
+}

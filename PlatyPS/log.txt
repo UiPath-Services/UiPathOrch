@@ -171732,3 +171732,2669 @@
 ---- COMPLETED UPDATING Cmdlet : Update-OrchUser ----
 
 
+[Update-MarkdownHelpModule] 12/04/2024 17:13:33 Determined module name for './md-US' as 'UiPathOrch'.
+[Update-MarkdownHelpModule] 12/04/2024 17:13:33 [Update-MarkdownHelpModule]2024/12/04 17:13:33
+[Update-MarkdownHelpModule] 12/04/2024 17:13:33 Updating documents for module 'UiPathOrch' in ./md-US
+---- UPDATING Cmdlet : Add-OrchAssetLink ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Add-OrchAssetLink ----
+
+
+---- UPDATING Cmdlet : Add-OrchBucket ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Add-OrchBucket ----
+
+
+---- UPDATING Cmdlet : Add-OrchCalendarDate ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Add-OrchCalendarDate ----
+
+
+---- UPDATING Cmdlet : Add-OrchFolderMachine ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Add-OrchFolderMachine ----
+
+
+---- UPDATING Cmdlet : Add-OrchFolderUser ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Add-OrchFolderUser ----
+
+
+---- UPDATING Cmdlet : Add-OrchMachine ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Add-OrchMachine ----
+
+
+---- UPDATING Cmdlet : Add-OrchMachineClientSecret ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Add-OrchMachineClientSecret ----
+
+
+---- UPDATING Cmdlet : Add-OrchPmGroup ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Add-OrchPmGroup ----
+
+
+---- UPDATING Cmdlet : Add-OrchPmGroupMember ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Add-OrchPmGroupMember ----
+
+
+---- UPDATING Cmdlet : Add-OrchPmLicenseToPmLicensedGroup ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Add-OrchPmLicenseToPmLicensedGroup ----
+
+
+---- UPDATING Cmdlet : Add-OrchPmUserBulk ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Add-OrchPmUserBulk ----
+
+
+---- UPDATING Cmdlet : Add-OrchProcess ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Add-OrchProcess ----
+
+
+---- UPDATING Cmdlet : Add-OrchQueue ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Add-OrchQueue ----
+
+
+---- UPDATING Cmdlet : Add-OrchRoleToFolderUser ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Add-OrchRoleToFolderUser ----
+
+
+---- UPDATING Cmdlet : Add-OrchTrigger ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Add-OrchTrigger ----
+
+
+---- UPDATING Cmdlet : Add-OrchUser ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Add-OrchUser ----
+
+
+---- UPDATING Cmdlet : Clear-OrchCache ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Clear-OrchCache ----
+
+
+---- UPDATING Cmdlet : Copy-OrchActionCatalog ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Copy-OrchActionCatalog ----
+
+
+---- UPDATING Cmdlet : Copy-OrchApiTrigger ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Copy-OrchApiTrigger ----
+
+
+---- UPDATING Cmdlet : Copy-OrchAsset ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Copy-OrchAsset ----
+
+
+---- UPDATING Cmdlet : Copy-OrchBucket ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Copy-OrchBucket ----
+
+
+---- UPDATING Cmdlet : Copy-OrchCalendar ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Copy-OrchCalendar ----
+
+
+---- UPDATING Cmdlet : Copy-OrchCredentialStore ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Copy-OrchCredentialStore ----
+
+
+---- UPDATING Cmdlet : Copy-OrchFolderMachine ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Copy-OrchFolderMachine ----
+
+
+---- UPDATING Cmdlet : Copy-OrchFolderUser ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Copy-OrchFolderUser ----
+
+
+---- UPDATING Cmdlet : Copy-OrchLibrary ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Copy-OrchLibrary ----
+
+
+---- UPDATING Cmdlet : Copy-OrchMachine ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Copy-OrchMachine ----
+
+
+---- UPDATING Cmdlet : Copy-OrchPackage ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Copy-OrchPackage ----
+
+
+---- UPDATING Cmdlet : Copy-OrchPmRobotAccount ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Copy-OrchPmRobotAccount ----
+
+
+---- UPDATING Cmdlet : Copy-OrchPmUser ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Copy-OrchPmUser ----
+
+
+---- UPDATING Cmdlet : Copy-OrchProcess ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Copy-OrchProcess ----
+
+
+---- UPDATING Cmdlet : Copy-OrchQueue ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Copy-OrchQueue ----
+
+
+---- UPDATING Cmdlet : Copy-OrchRole ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Copy-OrchRole ----
+
+
+---- UPDATING Cmdlet : Copy-OrchTestDataQueue ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Copy-OrchTestDataQueue ----
+
+
+---- UPDATING Cmdlet : Copy-OrchTestSet ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Copy-OrchTestSet ----
+
+
+---- UPDATING Cmdlet : Copy-OrchTestSetSchedule ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Copy-OrchTestSetSchedule ----
+
+
+---- UPDATING Cmdlet : Copy-OrchTrigger ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Copy-OrchTrigger ----
+
+
+---- UPDATING Cmdlet : Copy-OrchUser ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Copy-OrchUser ----
+
+
+---- UPDATING Cmdlet : Copy-OrchWebhook ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Copy-OrchWebhook ----
+
+
+---- UPDATING Cmdlet : Disable-OrchApiTrigger ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Disable-OrchApiTrigger ----
+
+
+---- UPDATING Cmdlet : Disable-OrchFolderMachineAccountMapping ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Disable-OrchFolderMachineAccountMapping ----
+
+
+---- UPDATING Cmdlet : Disable-OrchFolderMachineInherit ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Disable-OrchFolderMachineInherit ----
+
+
+---- UPDATING Cmdlet : Disable-OrchLicenseRuntime ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Disable-OrchLicenseRuntime ----
+
+
+---- UPDATING Cmdlet : Disable-OrchMaintenanceMode ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Disable-OrchMaintenanceMode ----
+
+
+---- UPDATING Cmdlet : Disable-OrchMaintenanceMode ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Disable-OrchMaintenanceMode ----
+
+
+---- UPDATING Cmdlet : Disable-OrchTestSetSchedule ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Disable-OrchTestSetSchedule ----
+
+
+---- UPDATING Cmdlet : Disable-OrchTrigger ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Disable-OrchTrigger ----
+
+
+---- UPDATING Cmdlet : Disable-OrchTrigger ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Disable-OrchTrigger ----
+
+
+---- UPDATING Cmdlet : Disable-OrchWebhook ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Disable-OrchWebhook ----
+
+
+---- UPDATING Cmdlet : Edit-OrchConfig ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Edit-OrchConfig ----
+
+
+---- UPDATING Cmdlet : Edit-OrchProcess ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Edit-OrchProcess ----
+
+
+---- UPDATING Cmdlet : Enable-OrchApiTrigger ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Enable-OrchApiTrigger ----
+
+
+---- UPDATING Cmdlet : Enable-OrchFolderMachineAccountMapping ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Enable-OrchFolderMachineAccountMapping ----
+
+
+---- UPDATING Cmdlet : Enable-OrchFolderMachineInherit ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Enable-OrchFolderMachineInherit ----
+
+
+---- UPDATING Cmdlet : Enable-OrchLicenseRuntime ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Enable-OrchLicenseRuntime ----
+
+
+---- UPDATING Cmdlet : Enable-OrchMaintenanceMode ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Enable-OrchMaintenanceMode ----
+
+
+---- UPDATING Cmdlet : Enable-OrchMaintenanceMode ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Enable-OrchMaintenanceMode ----
+
+
+---- UPDATING Cmdlet : Enable-OrchTestSetSchedule ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Enable-OrchTestSetSchedule ----
+
+
+---- UPDATING Cmdlet : Enable-OrchTrigger ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Enable-OrchTrigger ----
+
+
+---- UPDATING Cmdlet : Enable-OrchTrigger ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Enable-OrchTrigger ----
+
+
+---- UPDATING Cmdlet : Enable-OrchWebhook ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Enable-OrchWebhook ----
+
+
+---- UPDATING Cmdlet : Export-OrchJobMedia ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Export-OrchJobMedia ----
+
+
+---- UPDATING Cmdlet : Export-OrchLibrary ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Export-OrchLibrary ----
+
+
+---- UPDATING Cmdlet : Export-OrchPackage ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Export-OrchPackage ----
+
+
+---- UPDATING Cmdlet : Find-OrchFolderNoUserAssigned ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Find-OrchFolderNoUserAssigned ----
+
+
+---- UPDATING Cmdlet : Get-DuClassifier ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-DuClassifier ----
+
+
+---- UPDATING Cmdlet : Get-DuDocumentType ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-DuDocumentType ----
+
+
+---- UPDATING Cmdlet : Get-DuExtractor ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-DuExtractor ----
+
+
+---- UPDATING Cmdlet : Get-DuRole ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-DuRole ----
+
+
+---- UPDATING Cmdlet : Get-DuUser ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-DuUser ----
+
+
+---- UPDATING Cmdlet : Get-OrchActionCatalog ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchActionCatalog ----
+
+
+---- UPDATING Cmdlet : Get-OrchActivitySetting ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchActivitySetting ----
+
+
+---- UPDATING Cmdlet : Get-OrchAlert ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchAlert ----
+
+
+---- UPDATING Cmdlet : Get-OrchApiTrigger ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchApiTrigger ----
+
+
+---- UPDATING Cmdlet : Get-OrchAsset ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchAsset ----
+
+
+---- UPDATING Cmdlet : Get-OrchAssetLink ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchAssetLink ----
+
+
+---- UPDATING Cmdlet : Get-OrchAuditLog ----
+
+	No updates done
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchAuditLog ----
+
+
+---- UPDATING Cmdlet : Get-OrchAuthenticationSetting ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchAuthenticationSetting ----
+
+
+---- UPDATING Cmdlet : Get-OrchBucket ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchBucket ----
+
+
+---- UPDATING Cmdlet : Get-OrchBucketItem ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchBucketItem ----
+
+
+---- UPDATING Cmdlet : Get-OrchCalendar ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchCalendar ----
+
+
+---- UPDATING Cmdlet : Get-OrchClassicEnvironment ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchClassicEnvironment ----
+
+
+---- UPDATING Cmdlet : Get-OrchClassicRobot ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchClassicRobot ----
+
+
+---- UPDATING Cmdlet : Get-OrchConnectionString ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchConnectionString ----
+
+
+---- UPDATING Cmdlet : Get-OrchCredentialStore ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchCredentialStore ----
+
+
+---- UPDATING Cmdlet : Get-OrchCurrentUser ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchCurrentUser ----
+
+
+---- UPDATING Cmdlet : Get-OrchExecutionSetting ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchExecutionSetting ----
+
+
+---- UPDATING Cmdlet : Get-OrchFolderMachine ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchFolderMachine ----
+
+
+---- UPDATING Cmdlet : Get-OrchFolderMachineAccountMapping ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchFolderMachineAccountMapping ----
+
+
+---- UPDATING Cmdlet : Get-OrchFolderUsage ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchFolderUsage ----
+
+
+---- UPDATING Cmdlet : Get-OrchFolderUser ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchFolderUser ----
+
+
+---- UPDATING Cmdlet : Get-OrchJob ----
+
+	No updates done
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchJob ----
+
+
+---- UPDATING Cmdlet : Get-OrchJobMedia ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchJobMedia ----
+
+
+---- UPDATING Cmdlet : Get-OrchJobStats ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchJobStats ----
+
+
+---- UPDATING Cmdlet : Get-OrchJobVideo ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchJobVideo ----
+
+
+---- UPDATING Cmdlet : Get-OrchLibrary ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchLibrary ----
+
+
+---- UPDATING Cmdlet : Get-OrchLibraryVersion ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchLibraryVersion ----
+
+
+---- UPDATING Cmdlet : Get-OrchLicense ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchLicense ----
+
+
+---- UPDATING Cmdlet : Get-OrchLicenseNamedUser ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchLicenseNamedUser ----
+
+
+---- UPDATING Cmdlet : Get-OrchLicenseRuntime ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchLicenseRuntime ----
+
+
+---- UPDATING Cmdlet : Get-OrchLicenseStats ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchLicenseStats ----
+
+
+---- UPDATING Cmdlet : Get-OrchLog ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchLog ----
+
+
+---- UPDATING Cmdlet : Get-OrchMachine ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchMachine ----
+
+
+---- UPDATING Cmdlet : Get-OrchMachineClientSecretId ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchMachineClientSecretId ----
+
+
+---- UPDATING Cmdlet : Get-OrchMachineSession ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchMachineSession ----
+
+
+---- UPDATING Cmdlet : Get-OrchPackage ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchPackage ----
+
+
+---- UPDATING Cmdlet : Get-OrchPackageVersion ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchPackageVersion ----
+
+
+---- UPDATING Cmdlet : Get-OrchPersonalWorkspace ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchPersonalWorkspace ----
+
+
+---- UPDATING Cmdlet : Get-OrchPmAuditLog ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchPmAuditLog ----
+
+
+---- UPDATING Cmdlet : Get-OrchPmExternalApiResource ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchPmExternalApiResource ----
+
+
+---- UPDATING Cmdlet : Get-OrchPmExternalApplication ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchPmExternalApplication ----
+
+
+---- UPDATING Cmdlet : Get-OrchPmGroup ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchPmGroup ----
+
+
+---- UPDATING Cmdlet : Get-OrchPmLicensedGroup ----
+
+	Parameter Set Added: ExpandAllocation
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: ExpandAllocation
+		Old Set: 
+		New Set: ExpandAllocation
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchPmLicensedGroup ----
+
+
+---- UPDATING Cmdlet : Get-OrchPmLicensedUser ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchPmLicensedUser ----
+
+
+---- UPDATING Cmdlet : Get-OrchPmRobotAccount ----
+
+	No updates done
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchPmRobotAccount ----
+
+
+---- UPDATING Cmdlet : Get-OrchPmUser ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchPmUser ----
+
+
+---- UPDATING Cmdlet : Get-OrchProcess ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchProcess ----
+
+
+---- UPDATING Cmdlet : Get-OrchPSDrive ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchPSDrive ----
+
+
+---- UPDATING Cmdlet : Get-OrchQueue ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchQueue ----
+
+
+---- UPDATING Cmdlet : Get-OrchQueueItem ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchQueueItem ----
+
+
+---- UPDATING Cmdlet : Get-OrchRobot ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchRobot ----
+
+
+---- UPDATING Cmdlet : Get-OrchRole ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchRole ----
+
+
+---- UPDATING Cmdlet : Get-OrchSetting ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchSetting ----
+
+
+---- UPDATING Cmdlet : Get-OrchTestCase ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchTestCase ----
+
+
+---- UPDATING Cmdlet : Get-OrchTestCaseExecution ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchTestCaseExecution ----
+
+
+---- UPDATING Cmdlet : Get-OrchTestDataQueue ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchTestDataQueue ----
+
+
+---- UPDATING Cmdlet : Get-OrchTestDataQueueItem ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchTestDataQueueItem ----
+
+
+---- UPDATING Cmdlet : Get-OrchTestDataQueueItemTable ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchTestDataQueueItemTable ----
+
+
+---- UPDATING Cmdlet : Get-OrchTestSet ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchTestSet ----
+
+
+---- UPDATING Cmdlet : Get-OrchTestSetExecution ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchTestSetExecution ----
+
+
+---- UPDATING Cmdlet : Get-OrchTestSetSchedule ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchTestSetSchedule ----
+
+
+---- UPDATING Cmdlet : Get-OrchTrigger ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchTrigger ----
+
+
+---- UPDATING Cmdlet : Get-OrchUnattendedSession ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchUnattendedSession ----
+
+
+---- UPDATING Cmdlet : Get-OrchUpdateSetting ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchUpdateSetting ----
+
+
+---- UPDATING Cmdlet : Get-OrchUser ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchUser ----
+
+
+---- UPDATING Cmdlet : Get-OrchUserSession ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchUserSession ----
+
+
+---- UPDATING Cmdlet : Get-OrchWebhook ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchWebhook ----
+
+
+---- UPDATING Cmdlet : Get-OrchWebSetting ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-OrchWebSetting ----
+
+
+---- UPDATING Cmdlet : Get-TmConfiguration ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-TmConfiguration ----
+
+
+---- UPDATING Cmdlet : Get-TmProjectPermission ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-TmProjectPermission ----
+
+
+---- UPDATING Cmdlet : Get-TmProjectSetting ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-TmProjectSetting ----
+
+
+---- UPDATING Cmdlet : Get-TmRequirement ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-TmRequirement ----
+
+
+---- UPDATING Cmdlet : Get-TmServerInfo ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-TmServerInfo ----
+
+
+---- UPDATING Cmdlet : Get-TmTestCase ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-TmTestCase ----
+
+
+---- UPDATING Cmdlet : Get-TmTestSet ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Get-TmTestSet ----
+
+
+---- UPDATING Cmdlet : Import-OrchLibrary ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Import-OrchLibrary ----
+
+
+---- UPDATING Cmdlet : Import-OrchPackage ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Import-OrchPackage ----
+
+
+---- UPDATING Cmdlet : Import-OrchQueueItem ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Import-OrchQueueItem ----
+
+
+---- UPDATING Cmdlet : Move-OrchFolderUser ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Move-OrchFolderUser ----
+
+
+---- UPDATING Cmdlet : Move-OrchPmGroupMember ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Move-OrchPmGroupMember ----
+
+
+---- UPDATING Cmdlet : Open-OrchJob ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Open-OrchJob ----
+
+
+---- UPDATING Cmdlet : Remove-OrchActionCatalog ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchActionCatalog ----
+
+
+---- UPDATING Cmdlet : Remove-OrchApiTrigger ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchApiTrigger ----
+
+
+---- UPDATING Cmdlet : Remove-OrchAsset ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchAsset ----
+
+
+---- UPDATING Cmdlet : Remove-OrchBucket ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchBucket ----
+
+
+---- UPDATING Cmdlet : Remove-OrchCalendar ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchCalendar ----
+
+
+---- UPDATING Cmdlet : Remove-OrchCalendarDate ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchCalendarDate ----
+
+
+---- UPDATING Cmdlet : Remove-OrchCredentialStore ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchCredentialStore ----
+
+
+---- UPDATING Cmdlet : Remove-OrchFolderMachine ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchFolderMachine ----
+
+
+---- UPDATING Cmdlet : Remove-OrchFolderUser ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchFolderUser ----
+
+
+---- UPDATING Cmdlet : Remove-OrchJobMedia ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchJobMedia ----
+
+
+---- UPDATING Cmdlet : Remove-OrchLibrary ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchLibrary ----
+
+
+---- UPDATING Cmdlet : Remove-OrchMachine ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchMachine ----
+
+
+---- UPDATING Cmdlet : Remove-OrchMachineClientSecret ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchMachineClientSecret ----
+
+
+---- UPDATING Cmdlet : Remove-OrchPackage ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchPackage ----
+
+
+---- UPDATING Cmdlet : Remove-OrchPersonalWorkspace ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchPersonalWorkspace ----
+
+
+---- UPDATING Cmdlet : Remove-OrchPmAllocationFromPmLicensedGroup ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchPmAllocationFromPmLicensedGroup ----
+
+
+---- UPDATING Cmdlet : Remove-OrchPmGroup ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchPmGroup ----
+
+
+---- UPDATING Cmdlet : Remove-OrchPmGroupMember ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchPmGroupMember ----
+
+
+---- UPDATING Cmdlet : Remove-OrchPmLicensedGroup ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchPmLicensedGroup ----
+
+
+---- UPDATING Cmdlet : Remove-OrchPmLicenseFromPmLicensedGroup ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchPmLicenseFromPmLicensedGroup ----
+
+
+---- UPDATING Cmdlet : Remove-OrchPmRobotAccount ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchPmRobotAccount ----
+
+
+---- UPDATING Cmdlet : Remove-OrchPmUser ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchPmUser ----
+
+
+---- UPDATING Cmdlet : Remove-OrchProcess ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchProcess ----
+
+
+---- UPDATING Cmdlet : Remove-OrchQueue ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchQueue ----
+
+
+---- UPDATING Cmdlet : Remove-OrchRole ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchRole ----
+
+
+---- UPDATING Cmdlet : Remove-OrchRoleFromFolderUser ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchRoleFromFolderUser ----
+
+
+---- UPDATING Cmdlet : Remove-OrchRoleFromUser ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchRoleFromUser ----
+
+
+---- UPDATING Cmdlet : Remove-OrchTestCase ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchTestCase ----
+
+
+---- UPDATING Cmdlet : Remove-OrchTestDataQueue ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchTestDataQueue ----
+
+
+---- UPDATING Cmdlet : Remove-OrchTestSet ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchTestSet ----
+
+
+---- UPDATING Cmdlet : Remove-OrchTestSetSchedule ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchTestSetSchedule ----
+
+
+---- UPDATING Cmdlet : Remove-OrchTrigger ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchTrigger ----
+
+
+---- UPDATING Cmdlet : Remove-OrchUser ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchUser ----
+
+
+---- UPDATING Cmdlet : Remove-OrchWebhook ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-OrchWebhook ----
+
+
+---- UPDATING Cmdlet : Remove-TmRequirement ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-TmRequirement ----
+
+
+---- UPDATING Cmdlet : Remove-TmTestCase ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-TmTestCase ----
+
+
+---- UPDATING Cmdlet : Remove-TmTestSet ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Remove-TmTestSet ----
+
+
+---- UPDATING Cmdlet : Reset-OrchProcessVersion ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Reset-OrchProcessVersion ----
+
+
+---- UPDATING Cmdlet : Reset-OrchTestDataQueueItem ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Reset-OrchTestDataQueueItem ----
+
+
+---- UPDATING Cmdlet : Set-OrchAsset ----
+
+	Parameter Set Added: DefaultParameterSet
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: DefaultParameterSet
+		Old Set: 
+		New Set: DefaultParameterSet
+
+---- COMPLETED UPDATING Cmdlet : Set-OrchAsset ----
+
+
+---- UPDATING Cmdlet : Set-OrchCredentialAsset ----
+
+	No updates done
+
+---- COMPLETED UPDATING Cmdlet : Set-OrchCredentialAsset ----
+
+
+---- UPDATING Cmdlet : Set-OrchLocation ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Set-OrchLocation ----
+
+
+---- UPDATING Cmdlet : Set-OrchPmRobotAccount ----
+
+	Parameter Set Name Updated: ConsoleInput
+		Old Set: CsvInput
+		New Set: ConsoleInput
+
+	Parameter Set Name Updated: CsvInput
+		Old Set: ConsoleInput
+		New Set: CsvInput
+
+	No updates done
+
+---- COMPLETED UPDATING Cmdlet : Set-OrchPmRobotAccount ----
+
+
+---- UPDATING Cmdlet : Set-OrchRole ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Set-OrchRole ----
+
+
+---- UPDATING Cmdlet : Start-OrchJob ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Start-OrchJob ----
+
+
+---- UPDATING Cmdlet : Start-OrchTestSet ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Start-OrchTestSet ----
+
+
+---- UPDATING Cmdlet : Stop-OrchJob ----
+
+	Parameter Set Added: FromCommandLine
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: FromCommandLine
+		Old Set: 
+		New Set: FromCommandLine
+
+---- COMPLETED UPDATING Cmdlet : Stop-OrchJob ----
+
+
+---- UPDATING Cmdlet : Stop-OrchTestSetExecution ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Stop-OrchTestSetExecution ----
+
+
+---- UPDATING Cmdlet : Update-OrchCurrentUserURPassword ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Update-OrchCurrentUserURPassword ----
+
+
+---- UPDATING Cmdlet : Update-OrchMachine ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Update-OrchMachine ----
+
+
+---- UPDATING Cmdlet : Update-OrchPmUser ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Update-OrchPmUser ----
+
+
+---- UPDATING Cmdlet : Update-OrchProcess ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Update-OrchProcess ----
+
+
+---- UPDATING Cmdlet : Update-OrchProcessVersion ----
+
+	No updates done
+
+---- COMPLETED UPDATING Cmdlet : Update-OrchProcessVersion ----
+
+
+---- UPDATING Cmdlet : Update-OrchQueue ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Update-OrchQueue ----
+
+
+---- UPDATING Cmdlet : Update-OrchTrigger ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Update-OrchTrigger ----
+
+
+---- UPDATING Cmdlet : Update-OrchUser ----
+
+	Parameter Set Added: __AllParameterSets
+
+	Parameter Set Deleted: 
+
+	Parameter Set Name Updated: __AllParameterSets
+		Old Set: 
+		New Set: __AllParameterSets
+
+---- COMPLETED UPDATING Cmdlet : Update-OrchUser ----
+
+

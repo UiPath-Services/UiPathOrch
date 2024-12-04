@@ -1420,6 +1420,7 @@ namespace UiPath.OrchAPI
             return HttpRequest<Release>(HttpMethod.Post, "/odata/Releases/UiPath.Server.Configuration.OData.CreateRelease", folderId, release);
         }
 
+        // 非公開の API だな。
         public void EditRelease(Int64 folderId, Release release)
         {
             // 何も返さない

@@ -33,30 +33,21 @@ if (-not (Test-Path $csvFilePath)) {
 }
 
 try {
-    Start-Transcript -Append
-    Write-Output "Starting CSV import and cmdlet execution at $(Get-Date)"
-    Write-Output ""
+    Start-Transcript
 
     $data = Import-Csv $csvFilePath
 
     # Execute the cmdlets with the imported data
     try {
         $data | ForEach-Object {
-            $rootFolder = [System.IO.Path]::GetPathRoot($_.Path)
-            Remove-OrchFolderUser -UserName $_.UserName -Path $rootFolder -Recurse -Verbose
-        }
-        Write-Output "Remove-OrchFolderUser executed successfully."
-        Write-Output ""
-
-        $data | ForEach-Object {
-            $username = $_.UserName.Trim().ToLower()
-
-            $matchingWorkspace = Get-OrchPersonalWorkspace | Where-Object { $_.OwnerName.Trim().ToLower() -eq $username }
+            $username = $_.UserName
+            $path = $_.Path
+            $matchingWorkspace = Get-OrchPersonalWorkspace -Path $path | Where-Object { $_.OwnerName -eq $username }
 
             if ($matchingWorkspace) {
                 $wsname = $matchingWorkspace | Select-Object -ExpandProperty Name
-                Remove-OrchUser -UserName $username -Verbose
-                Remove-OrchPersonalWorkspace -Path $_.Path -Name $wsname -Verbose
+                Remove-OrchUser -Path $path -UserName $username -Verbose
+                Remove-OrchPersonalWorkspace -Path $path -Name $wsname -Verbose
             } else {
                 Remove-OrchUser -UserName $username -Verbose
             }
@@ -79,6 +70,7 @@ try {
     Write-Error "Failed to import CSV file or execute cmdlets: $_"
     exit 1
 } finally {
-    Write-Output "All cmdlets executed successfully and logging completed at $(Get-Date)."
-    Write-Output Stop-Transcript
+    Write-Output "All cmdlets executed successfully and logging completed."
+    $transcript = Stop-Transcript
+    Write-Output $transcript
 }

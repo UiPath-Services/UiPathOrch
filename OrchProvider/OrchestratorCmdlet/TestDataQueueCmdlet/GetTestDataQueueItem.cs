@@ -72,7 +72,7 @@ namespace UiPath.PowerShell.Commands
                     return OrchThreadPool.RunForEach(testDataQueues.FilterByWildcards(e => e?.Name, wpName),
                         queue => queue.GetPSPath(),
                         queue => queue,
-                        queue => df.drive.GetTestDataQueueItems(df.folder, queue));
+                        queue => df.drive.TestDataQueueItems.Get(df.folder, queue));
                 });
 
             using var cancelHandler = new ConsoleCancelHandler();

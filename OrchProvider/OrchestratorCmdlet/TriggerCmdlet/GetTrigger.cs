@@ -67,11 +67,29 @@ namespace UiPath.PowerShell.Commands
             "QueueDefinitionName",
             "TimeZoneId",
             "StopProcessDate",
+            //"ExecutorRobots",
             "MachineRobots"
         ];
 
         private void WriteCsvContent(StreamWriter writer, ProcessSchedule t)
         {
+            #region ExecutorRobots の Id を Name に変換して出力
+            // おかしいなーこのプロパティはいつも null だな。。
+            //string executorRobots = null;
+            //if (t.ExecutorRobots != null && t.ExecutorRobots.Length != 0)
+            //{
+            //    try
+            //    {
+            //        var (drive, folder) = OrchDriveInfo.EnumFolders(t.Path).FirstOrDefault();
+            //        executorRobots = SerializeExecutorRobotArray(drive, t.ExecutorRobots);
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        WriteWarning($"{t.GetPSPath()}: Failed to retrieve ExecutorRobots: {ex.Message}");
+            //    }
+            //}
+            #endregion
+
             #region MachineRobots の Id を Name に変換して出力
             string machineRobots = null;
             if (t.MachineRobots != null && t.MachineRobots.Length != 0)
@@ -79,7 +97,7 @@ namespace UiPath.PowerShell.Commands
                 try
                 {
                     var (drive, folder) = OrchDriveInfo.EnumFolders(t.Path).FirstOrDefault();
-                    machineRobots = SerializeMachineRobotSessionArray(drive, folder!, t.MachineRobots);
+                    machineRobots = SerializeMachineRobotSessions(drive, folder!, t.MachineRobots);
                 }
                 catch (Exception ex)
                 {
@@ -117,6 +135,7 @@ namespace UiPath.PowerShell.Commands
                 EscapeCsvValue(t.QueueDefinitionName),
                 EscapeCsvValue(t.TimeZoneId),
                 EscapeCsvValue(FormatDateTimeWithKind(t.StopProcessDate)),
+                //EscapeCsvValue(executorRobots),
                 EscapeCsvValue(machineRobots)
             ];
             WriteCsvLine(writer, line);
