@@ -55,7 +55,7 @@ namespace UiPath.PowerShell.Commands
                 {
                     var buckets = df.drive.Buckets.Get(df.folder).FilterByWildcards(e => e?.Name, wpName);
                     return ParallelResults.ForEach(buckets, bucket =>
-                        df.drive.GetBucketFiles(df.folder, bucket));
+                        df.drive.BucketFiles.Get(df.folder, bucket));
                 });
 
                 foreach (var result in results)
@@ -106,7 +106,7 @@ namespace UiPath.PowerShell.Commands
                     {
                         try
                         {
-                            var files = drive.GetBucketFiles(folder, bucket);
+                            var files = drive.BucketFiles.Get(folder, bucket);
                             WriteObject(files
                                 .FilterByWildcards(file => file?.FullPath, wpFullPath)
                                 .OrderBy(file => file.FullPath),

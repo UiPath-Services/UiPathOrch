@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Management.Automation;
 using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
@@ -448,7 +447,12 @@ namespace UiPath.PowerShell.Core
 
         public void ClearAllCache()
         {
-            foreach (var cache in _cacheItems)
+            foreach (var cache in _allTenantCache)
+            {
+                cache.ClearCache();
+            }
+
+            foreach (var cache in _allFolderCache)
             {
                 cache.ClearCache();
             }
@@ -461,9 +465,6 @@ namespace UiPath.PowerShell.Core
 
             _dicAuditLogs = null;
             _dicAuditLogs_Exceptions.ClearCache();
-
-            _dicBlobFiles = null;
-            _dicBlobFiles_Exceptions?.ClearCache();
 
             _dicBucketLinks = null;
             _dicBucketLinks_Exceptions?.ClearCache();
@@ -529,8 +530,6 @@ namespace UiPath.PowerShell.Core
             _dicTenantId = null;
             _dicTenantKey = null;
 
-            _dicTestDataQueueItems = null;
-
             _dicTestSetExecutions = null;
             _dicTestSetExecutions_Exceptions?.ClearCache();
 
@@ -571,6 +570,11 @@ namespace UiPath.PowerShell.Core
             if (folder == null || folder.Id == null || folder.Id.Value == 0) return;
             Int64 folderId = folder.Id.Value;
 
+            foreach (var cache in _allFolderCache)
+            {
+                cache.ClearCache(folder);
+            }
+
             //_dicAssetLinks = null; // TODO: もっとかしこく必要な部分だけクリアしたいが、、面倒くさい
             _dicJobs?.TryRemove(folderId, out _);
             _dicJobsHavingExecutionMedia?.TryRemove(folderId, out _);
@@ -584,8 +588,6 @@ namespace UiPath.PowerShell.Core
             _dicPackages_Exceptions?.ClearCache();
             _dicTriggers_Exceptions?.ClearCache();
             //_dicReleaseList_Exceptions?.ClearCache();
-            _dicReleases_Exceptions?.ClearCache();
-            _dicTestSetExecutions_Exceptions?.ClearCache();
         }
 
         //public void ClearFolderCacheRecurse(Folder folder)
@@ -1726,40 +1728,6 @@ namespace UiPath.PowerShell.Core
 
         #endregion
 
-        #region TestDataQueueItem
-        // Key: folderId, testDataQueueId
-        internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, List<TestDataQueueItem>>>? _dicTestDataQueueItems = null;
-        public ReadOnlyCollection<TestDataQueueItem> GetTestDataQueueItems(Folder folder, TestDataQueue testDataQueue)
-        {
-            if (_dicTestDataQueueItems == null)
-            {
-                lock (this)
-                {
-                    _dicTestDataQueueItems ??= new();
-                }
-            }
-
-            if (!_dicTestDataQueueItems.TryGetValue(folder.Id ?? 0, out var dicTestQueueItemsPerFolder))
-            {
-                dicTestQueueItemsPerFolder = [];
-                _dicTestDataQueueItems[folder.Id ?? 0] = dicTestQueueItemsPerFolder;
-            }
-
-            if (!dicTestQueueItemsPerFolder.TryGetValue(testDataQueue.Id ?? 0, out var lstTestDataQueueItems))
-            {
-                lstTestDataQueueItems = OrchAPISession.GetTestDataQueueItems(folder.Id ?? 0, testDataQueue.Id ?? 0).ToList();
-                foreach (var item in lstTestDataQueueItems)
-                {
-                    item.Path = NameColonSeparator;
-                    item.PathTestDataQueue = testDataQueue.GetPSPath();
-                }
-                dicTestQueueItemsPerFolder[testDataQueue.Id ?? 0] = lstTestDataQueueItems;
-            }
-
-            return lstTestDataQueueItems.AsReadOnly();
-        }
-        #endregion
-
         #region OrchBucket cache
 
         // key: (folderId, bucketId)
@@ -1802,62 +1770,6 @@ namespace UiPath.PowerShell.Core
                 }
             }
             return folderShare;
-        }
-
-        // BlobFile は、ディレクトリもしくはフォルダを表す
-        // key: folderId, <bucketId, BlobFiles>
-        internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, List<BlobFile>>>? _dicBlobFiles = null;
-        // key: (folderId, bucketId)
-        internal ExceptionsCachePer<(Int64, Int64)> _dicBlobFiles_Exceptions = new();
-        public ReadOnlyCollection<BlobFile> GetBucketFiles(Folder folder, Bucket bucket)
-        {
-            _dicBlobFiles_Exceptions.ThrowCachedExceptionIfAny((folder.Id ?? 0, bucket.Id ?? 0));
-
-            if (_dicBlobFiles == null)
-            {
-                lock (_dicBlobFiles_Exceptions)
-                {
-                    _dicBlobFiles ??= new();
-                }
-            }
-
-            if (!_dicBlobFiles.TryGetValue(folder.Id ?? 0, out var blobFilesPerFolder))
-            {
-                blobFilesPerFolder = [];
-                _dicBlobFiles[folder.Id ?? 0] = blobFilesPerFolder;
-            }
-
-            if (!blobFilesPerFolder.TryGetValue(bucket.Id ?? 0, out var blobItems))
-            {
-                try
-                {
-                    blobItems = OrchAPISession.GetBucketFiles(folder.Id ?? 0, bucket.Id ?? 0).ToList();
-                    string folderPath = folder.GetPSPath();
-                    string pathBucket = Path.Combine(folderPath, bucket.Name!);
-                    foreach (var item in blobItems)
-                    {
-                        item.Path = folderPath;
-                        item.Bucket = bucket.Name!;
-                        item.PathBucket = pathBucket;
-                    }
-
-                    #region このフォルダを仮想的に追加
-                    //blobItems.Insert(0, new BlobFile()
-                    //{
-                    //    Path = NameColonSeparator + folderPath,
-                    //    IsDirectory = true
-                    //});
-                    #endregion
-
-                    blobFilesPerFolder[bucket.Id ?? 0] = blobItems;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicBlobFiles_Exceptions.CacheException((folder.Id ?? 0, bucket.Id ?? 0), ex);
-                    throw;
-                }
-            }
-            return blobItems.AsReadOnly();
         }
 
         #endregion
@@ -2426,7 +2338,9 @@ namespace UiPath.PowerShell.Core
         }
         #endregion
 
-        internal readonly List<ICacheClearable> _cacheItems = [];
+        // これらはドライブごとに保持する必要があるため、 Cache クラスの static メンバにはできない
+        internal readonly List<ITenantCacheClearable> _allTenantCache = [];
+        internal readonly List<IFolderCacheClearable> _allFolderCache = [];
 
         // 組織のリストエンティティ
         public readonly ListCachePerOrganization<PmUser> PmUsers;
@@ -2483,6 +2397,8 @@ namespace UiPath.PowerShell.Core
         // インデックスつきフォルダーエンティティ
         public readonly IndexedListCachePerFolder<MachineFolder, ExtendedRobot> FolderRobots;
         public readonly IndexedListCachePerFolder<MachineFolder, RobotUser> MachinesRobots;
+        public readonly IndexedListCachePerFolder<Bucket, BlobFile> BucketFiles;
+        public readonly IndexedListCachePerFolder<TestDataQueue, TestDataQueueItem> TestDataQueueItems;
 
         //public readonly CachePerFolder<Release> Processes; // これはインデックスがついてた。。
 
@@ -2608,7 +2524,7 @@ namespace UiPath.PowerShell.Core
             Environments                   = new(this, OrchAPISession.GetEnvironments,       (e, folderPath) => e.Path = folderPath);
             FolderUsersWithNoInherited     = new(this, fid => OrchAPISession.GetUsersForFolder(fid, false), (e, folderPath) => e.Path = folderPath);
             FolderUsersWithInherited       = new(this, fid => OrchAPISession.GetUsersForFolder(fid, true),  (e, folderPath) => e.Path = folderPath);
-            MachineSessionRuntimesByFolder = new(this, OrchAPISession.GetMachineSessionRuntimesByFolderId, (e, folderPath) => e.Path = folderPath);
+            MachineSessionRuntimesByFolder = new(this, fid => OrchAPISession.GetMachineSessionRuntimesByFolderId(fid), (e, folderPath) => e.Path = folderPath);
             Queues                         = new(this, OrchAPISession.GetQueues,             (e, folderPath) => e.Path = folderPath);
             Reviewers                      = new(this, OrchAPISession.GetReviewers);
             RobotsFromFolder               = new(this, OrchAPISession.GetRobotsFromFolder,   (e, folderPath) => e.Path = folderPath);
@@ -2656,22 +2572,45 @@ namespace UiPath.PowerShell.Core
             //);
 
             // インデックスつきのフォルダーエンティティ
+            BucketFiles = new(this, OrchAPISession.GetBucketFiles,
+                bucket => bucket.Id!.Value,
+                bucket => bucket.Name!,
+                (bucketItem, folderPath, bucketName, entityPath) =>
+                {
+                    bucketItem.Path = folderPath;
+                    bucketItem.Bucket = bucketName;
+                    bucketItem.PathBucket = entityPath;
+                }
+            );
+
             FolderRobots = new(this, OrchAPISession.GetFolderRobots,
                 machineFolder => machineFolder.Id!.Value,
-                (folderRobot, folderPath, machineFolder) =>
+                machineFolder => machineFolder.Name!,
+                (folderRobot, folderPath, name, entityPath) =>
                 {
                     folderRobot.Path = folderPath;
-                    folderRobot.Machine = machineFolder.Name;
+                    folderRobot.Machine = name;
                 }
             );
 
             MachinesRobots = new(this, OrchAPISession.GetMachineRobots,
                 machineFolder => machineFolder.Id!.Value,
-                (machineRobot, folderPath, machineFolder) =>
+                machineFolder => machineFolder.Name!,
+                (machineRobot, folderPath, name, entityPath) =>
                 {
                     machineRobot.Path = folderPath;
-                    machineRobot.Machine = machineFolder.Name;
-                    machineRobot.PathMachine = Path.Combine(folderPath, machineFolder.Name ?? "");
+                    machineRobot.Machine = name;
+                    machineRobot.PathMachine = entityPath;
+                }
+            );
+
+            TestDataQueueItems = new(this, OrchAPISession.GetTestDataQueueItems,
+                testDataQueue => testDataQueue.Id!.Value,
+                TestDataQueue => TestDataQueue.Name!,
+                (queueItem, folderPath, name, entityPath) =>
+                {
+                    queueItem.Path = folderPath;
+                    queueItem.PathTestDataQueue = entityPath;
                 }
             );
         }

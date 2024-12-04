@@ -130,6 +130,10 @@ namespace UiPath.PowerShell.Commands
         [ArgumentCompleter(typeof(OneWeekAfterCompleter))]
         public DateTime? StopProcessDate { get; set; }
 
+        //[Parameter(ValueFromPipelineByPropertyName = true)]
+        //[ArgumentCompleter(typeof(ExecutorRobotsCompleter))]
+        //public string? ExecutorRobots { get; set; }
+
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(MachineRobotsCompleter))]
         public string? MachineRobots { get; set; }
@@ -143,26 +147,6 @@ namespace UiPath.PowerShell.Commands
 
         [Parameter]
         public uint Depth { get; set; }
-
-        internal class TimeZoneCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                foreach (var timeZone in TimeZoneInfo.GetSystemTimeZones()
-                    .Where(t => wp.IsMatch(t.DisplayName)))
-                {
-                    string tiphelp = $"{timeZone.DisplayName} (Id = '{timeZone.Id}')";
-                    yield return new CompletionResult(PathTools.EscapePSText(timeZone.DisplayName), timeZone.DisplayName, CompletionResultType.ParameterValue, tiphelp);
-                }
-            }
-        }
 
         internal class MachineRobotsCompleter : OrchArgumentCompleter
         {
@@ -195,11 +179,11 @@ namespace UiPath.PowerShell.Commands
                         .Where(e => e?.MachineRobots != null)
                         .OrderBy(a => a.Name))
                     {
-                        bExists = true;
                         string tiphelp = trigger.GetPSPath();
-                        string machineRobots = SerializeMachineRobotSessionArray(drive, folder!, trigger.MachineRobots);
+                        string machineRobots = SerializeMachineRobotSessions(drive, folder!, trigger.MachineRobots);
                         if (string.IsNullOrEmpty(machineRobots)) continue;
 
+                        bExists = true;
                         yield return new CompletionResult("'" + machineRobots + "'", machineRobots, CompletionResultType.Text, tiphelp);
                     }
                 }
@@ -214,7 +198,6 @@ namespace UiPath.PowerShell.Commands
         {
             var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
             var wpName = Name.ConvertToWildcardPatternList();
-
             int? specificPriorityValue = ConvertPriorityToSpecificPriorityValue(Priority);
 
             if (StopProcessDate != null)
@@ -347,60 +330,17 @@ namespace UiPath.PowerShell.Commands
 
                     postTrigger.AssignDateTimeIfNotNull(StopProcessDate, (s, v) => s.StopProcessDate = v, false);
 
-                    #region MachineRobots をデシリアライズ
-                    if (!string.IsNullOrEmpty(MachineRobots))
+                    // TODO: RobotExecutor をデシリアライズ、は必要？？
+
+                    // MachineRobots をデシリアライズ
+                    try
                     {
-                        // これを呼び出しておかないと、Orchestrator がロボットの検索に失敗してしまう
-                        try
-                        {
-                            _ = drive.RobotsFromFolder.Get(folder);
-                        }
-                        catch (Exception ex)
-                        {
-                            WriteError(new ErrorRecord(new OrchException(target, $"Update robots for '{folder.GetPSPath()}' failed", ex), "UpdateRobotFromFolderError", ErrorCategory.InvalidOperation, folder));
-                        }
-
-                        var mrss = JsonSerializer.Deserialize<MachineRobotSessionForSerialize[]>(MachineRobots);
-
-                        List<MachineRobotSession> targets = [];
-
-                        var robots = drive.Robots.Get();
-                        var machines = drive.Machines.Get();
-                        var sessions = drive.MachineSessionRuntimesByFolder.Get(folder);
-
-                        foreach (var mrs in mrss ?? [])
-                        {
-                            MachineRobotSession elem = new();
-
-                            // RobotName を変換
-                            if (!string.IsNullOrEmpty(mrs.RobotName))
-                            {
-                                elem.RobotId = robots.FirstOrDefault(r => r.Name == mrs.RobotName)?.Id;
-                            }
-
-                            // MachineName を変換
-                            if (mrs.MachineName != null)
-                            {
-                                elem.MachineId = machines.FirstOrDefault(m => m.Name == mrs.MachineName)?.Id;
-                            }
-
-                            // HostMachineName を変換
-                            if (mrs.MachineName != null)
-                            {
-                                elem.SessionId = sessions.FirstOrDefault(s => s.HostMachineName == mrs.HostMachineName)?.SessionId;
-                            }
-                            targets.Add(elem);
-                        }
-                        postTrigger.MachineRobots = targets.ToArray();
-
-                        postTrigger.ExecutorRobots = postTrigger.MachineRobots?
-                            .Select(m => new RobotExecutor() { Id = m.RobotId }).ToArray();
+                        postTrigger.MachineRobots = DeserializeMachineRobotSessions(drive, folder, MachineRobots)?.ToArray();
                     }
-                    else if (MachineRobots == "")
+                    catch (Exception ex)
                     {
-                        postTrigger.MachineRobots = null;
+                        WriteWarning($"{target}: Failed to deserialize MachineRobots. Ignoring. {ex.Message}");
                     }
-                    #endregion
 
                     postTrigger.EnvironmentId = null;
                     postTrigger.CalendarName = null; // CalendarId があるので、CalendarName は不要

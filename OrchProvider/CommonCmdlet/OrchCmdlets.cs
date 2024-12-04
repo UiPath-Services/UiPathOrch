@@ -140,7 +140,7 @@ namespace UiPath.PowerShell.Commands
             if (string.IsNullOrEmpty(paramExportCsv)) return null;
 
             ICollection<PathInfo> resolvedPaths = null;
-            
+
             try
             {
                 resolvedPaths = state.Path.GetResolvedPSPathFromPSPath(paramExportCsv);
@@ -263,7 +263,7 @@ namespace UiPath.PowerShell.Commands
                     WriteError(new ErrorRecord(
                         new OrchException(dstDrive.NameColonSeparator, $"Folder entities cannot be copied to {dstDrive.NameColonSeparator}."),
                         "CopyFolderEntityToRootFolderError",
-                        ErrorCategory.InvalidOperation, 
+                        ErrorCategory.InvalidOperation,
                         dstDrive));
                     return null;
                 }
@@ -312,9 +312,25 @@ namespace UiPath.PowerShell.Commands
             };
         }
 
-        internal static string? SerializeMachineRobotSessionArray(OrchDriveInfo drive, Folder folder, MachineRobotSession[]? machineRobots)
+        //internal static string? SerializeExecutorRobotArray(OrchDriveInfo drive, RobotExecutor[]? robotExecutors)
+        //{
+        //    if (robotExecutors == null || robotExecutors.Length == 0) return null;
+
+        //    var robots = drive.Robots.Get();
+        //    // TODO: このメソッドを呼び出すたびに辞書を作成するので良かったんだっけ？
+        //    var robotDictionary = robots.ToDictionary(r => r.Id!.Value, r => r.Name);
+
+        //    IEnumerable<string?> robotNames = robotExecutors
+        //        .Select(executor => robotDictionary.TryGetValue(executor.Id!.Value, out var name) ? name : null)
+        //        .Where(name => name != null);
+
+        //    if (!robotNames.Any()) return null;
+        //    return string.Join(',', robotNames);
+        //}
+
+        internal static string? SerializeMachineRobotSessions(OrchDriveInfo drive, Folder folder, IEnumerable<MachineRobotSession>? machineRobots)
         {
-            if (machineRobots == null || machineRobots.Length == 0) return null;
+            if (machineRobots == null || !machineRobots.Any()) return null;
 
             List<MachineRobotSessionForSerialize> mrss = [];
 
@@ -345,7 +361,83 @@ namespace UiPath.PowerShell.Commands
                 mrss.Add(mrs);
             }
 
-            return JsonSerializer.Serialize(mrss, OrchAPISession.jsoWhenWritingNull);
+            return JsonSerializer.Serialize(mrss, OrchAPISession.jsoWhenWritingNull).Replace("\\u0027", "''");
+        }
+
+        private Lazy<HashSet<string>> ValidScopes = new(() =>
+            ["Default", "Shared", "PersonalWorkspace", "Cloud", "AutomationCloudRobot", "ElasticRobot"]);
+
+        internal List<MachineRobotSession>? DeserializeMachineRobotSessions(OrchDriveInfo drive, Folder folder, string? machineRobots)
+        {
+            if (string.IsNullOrEmpty(machineRobots)) return null;
+
+            // これを呼び出しておかないと、Orchestrator がロボットの検索に失敗してしまう
+            _ = drive.RobotsFromFolder.Get(folder);
+
+            // この中にはワイルドカードが入っている可能性があるので、すべて展開していく
+            var mrss = JsonSerializer.Deserialize<MachineRobotSessionForSerialize[]>(machineRobots);
+
+            List<MachineRobotSession> targets = [];
+
+            foreach (var mrs in mrss ?? [])
+            {
+                // RobotName を変換
+                if (string.IsNullOrEmpty(mrs.RobotName)) continue;
+
+                var wpRobotName = new WildcardPattern(mrs.RobotName, WildcardOptions.IgnoreCase);
+                var robots = drive.RobotsFromFolder.Get(folder)
+                    .Where(r => r.Type == "Unattended" && r.CredentialType != "NoCredential")
+                    .Where(r => wpRobotName.IsMatch(r.Name))
+                    .Cast<RobotsFromFolderModel?>()
+                    .ToList();
+
+                if (robots.Count == 0) continue;
+
+                foreach (var robot in robots)
+                {
+                    // MachineName を変換
+                    if (string.IsNullOrEmpty(mrs.MachineName)) continue;
+                    var wpMachineName = new WildcardPattern(mrs.MachineName, WildcardOptions.IgnoreCase);
+                    var machines = drive.FolderMachinesAssigned.Get(folder)
+                        //.Where(m => m.)
+                        .Where(m => ValidScopes.Value.Contains(m.Scope!))
+                        .Cast<MachineFolder?>()
+                        .ToList();
+                    if (machines.Count == 0) continue;
+
+                    foreach (var machine in machines)
+                    {
+                        List<MachineSessionRuntime?> sessions = null;                                    // HostMachineName を変換
+                        if (!string.IsNullOrEmpty(mrs.HostMachineName))
+                        {
+                            var wpHostMachineName = new WildcardPattern(mrs.HostMachineName, WildcardOptions.IgnoreCase);
+                            sessions = drive.MachineSessionRuntimesByFolder.Get(folder)
+                                .Where(s => s.MachineType != "Template" || s.MachineScope != "Cloud")
+                                .Where(s => s.RuntimeType == "Unattended")
+                                .Where(s => wpHostMachineName.IsMatch(s.HostMachineName))
+                                .Cast<MachineSessionRuntime?>()
+                                .ToList();
+                            //elem.SessionId = sessions.FirstOrDefault(s => s.HostMachineName == mrs.HostMachineName)?.SessionId;
+                        }
+                        sessions ??= [];
+                        if (sessions.Count == 0) sessions.Add(null);
+
+                        foreach (var session in sessions)
+                        {
+                            if (robot?.Id != null && machine?.Id != null)
+                            {
+                                targets.Add(new MachineRobotSession()
+                                {
+                                    RobotId = robot?.Id,
+                                    MachineId = machine?.Id,
+                                    SessionId = session?.SessionId
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            return targets;
         }
 
         internal static (string?, string?) ExtractPackageIdVersionFromFilePath(string fullPath)

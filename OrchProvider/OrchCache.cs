@@ -7,12 +7,18 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Core
 {
-    public interface ICacheClearable
+    public interface ITenantCacheClearable
     {
         void ClearCache();
     }
 
-    public class SingleCachePerTenant<T> : ICacheClearable where T : class
+    public interface IFolderCacheClearable
+    {
+        void ClearCache();
+        void ClearCache(Folder folder);
+    }
+
+    public class SingleCachePerTenant<T> : ITenantCacheClearable where T : class
     {
         private readonly OrchDriveInfo _drive;
         private T? _cache = null;
@@ -23,7 +29,7 @@ namespace UiPath.PowerShell.Core
         public SingleCachePerTenant(OrchDriveInfo drive, Func<T?> getter, Action<T>? initializer = null)
         {
             _drive = drive;
-            _drive._cacheItems.Add(this);
+            _drive._allTenantCache.Add(this);
             this.getter = getter;
             this.initializer = initializer;
         }
@@ -64,7 +70,7 @@ namespace UiPath.PowerShell.Core
         }
     }
 
-    public class ListCachePerTenant<T> : ICacheClearable
+    public class ListCachePerTenant<T> : ITenantCacheClearable
     {
         private readonly OrchDriveInfo _drive;
         private List<T>? _cache = null;
@@ -75,7 +81,7 @@ namespace UiPath.PowerShell.Core
         public ListCachePerTenant(OrchDriveInfo drive, Func<IEnumerable<T>> getter, Action<T>? initializer = null)
         {
             _drive = drive;
-            _drive._cacheItems.Add(this);
+            _drive._allTenantCache.Add(this);
             this.getter = getter;
             this.initializer = initializer;
         }
@@ -119,7 +125,7 @@ namespace UiPath.PowerShell.Core
         }
     }
 
-    public class ListCachePerOrganization<T> : ICacheClearable
+    public class ListCachePerOrganization<T> : ITenantCacheClearable
     {
         private readonly OrchDriveInfo _drive;
         private List<T>? _cache = null;
@@ -130,7 +136,7 @@ namespace UiPath.PowerShell.Core
         public ListCachePerOrganization(OrchDriveInfo drive, Func<string, IEnumerable<T>> getter, Action<T>? initializer = null)
         {
             _drive = drive;
-            _drive._cacheItems.Add(this);
+            _drive._allTenantCache.Add(this);
             this.getter = getter;
             this.initializer = initializer;
         }
@@ -175,7 +181,7 @@ namespace UiPath.PowerShell.Core
         }
     }
 
-    public class SingleCachePerFolder<T> : ICacheClearable
+    public class SingleCachePerFolder<T> : IFolderCacheClearable
     {
         private readonly OrchDriveInfo _drive;
         private ConcurrentDictionary<Int64, T?>? _cache = null;
@@ -191,7 +197,7 @@ namespace UiPath.PowerShell.Core
             int? supportedApiVersionFrom = null)
         {
             _drive = drive;
-            _drive._cacheItems.Add(this);
+            _drive._allFolderCache.Add(this);
             _getter = getter;
             _initializer = initializer;
             _supportedApiVersionFrom = supportedApiVersionFrom;
@@ -331,55 +337,29 @@ namespace UiPath.PowerShell.Core
     //    }
     //}
 
-    public class ListCachePerFolder<T> : ICacheClearable
+    public class ListCachePerFolder<T> : IFolderCacheClearable
     {
         private readonly OrchDriveInfo _drive;
         private ConcurrentDictionary<Int64, List<T>>? _cache = null;
         private readonly ExceptionsCachePer<Int64> _exceptions = new();
-        private readonly Func<Int64, IEnumerable<T>>? _getter;
-        private readonly Func<Int64, string?, ulong, ulong, IEnumerable<T>>? _getter2;
+        private readonly Func<Int64, IEnumerable<T>> _getter;
         private readonly Action<T, string>? _initializer;
         private readonly int? _supportedApiVersionFrom;
-
-        private ListCachePerFolder(
-            OrchDriveInfo drive,
-            Action<T, string>? initializer,
-            int? supportedApiVersionFrom)
-        {
-            _drive = drive;
-            _drive._cacheItems.Add(this);
-            _initializer = initializer;
-            _supportedApiVersionFrom = supportedApiVersionFrom;
-        }
 
         public ListCachePerFolder(
             OrchDriveInfo drive,
             Func<Int64, IEnumerable<T>> getter,
             Action<T, string>? initializer = null,
-            int? supportedApiVersionFrom = null) : this(drive, initializer, supportedApiVersionFrom)
+            int? supportedApiVersionFrom = null)
         {
+            _drive = drive;
             _getter = getter;
+            _drive._allFolderCache.Add(this);
+            _initializer = initializer;
+            _supportedApiVersionFrom = supportedApiVersionFrom;
         }
 
-        public ListCachePerFolder(
-            OrchDriveInfo drive,
-            Func<Int64, string?, ulong, ulong, IEnumerable<T>> getter2,
-            Action<T, string>? initializer = null,
-            int? supportedApiVersionFrom = null) : this(drive, initializer, supportedApiVersionFrom)
-        {
-            _getter2 = getter2;
-        }
-
-        public List<T> Get(Folder folder, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
-        {
-            return GetFromCache(folder, (folderId) =>
-                _getter != null ? _getter(folderId) :
-                _getter2 != null ? _getter2(folderId, query, skip, first) :
-                throw new InvalidOperationException()
-            );
-        }
-
-        private List<T> GetFromCache(Folder folder, Func<Int64, IEnumerable<T>> fetchFunc)
+        public List<T> Get(Folder folder)
         {
             if (_drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom)
             {
@@ -400,7 +380,7 @@ namespace UiPath.PowerShell.Core
             {
                 try
                 {
-                    cachePerFolder = fetchFunc(folder.Id.Value).ToList();
+                    cachePerFolder = _getter(folder.Id.Value).ToList();
                     _cache[folder.Id.Value] = cachePerFolder;
 
                     if (_initializer != null)
@@ -423,8 +403,10 @@ namespace UiPath.PowerShell.Core
 
         public void ClearCache(Int64 folderId)
         {
-            _cache?.TryRemove(folderId, out _);
-            _exceptions.ClearCache(folderId);
+            _cache = null;
+            _exceptions.ClearCache();
+            //_cache?.TryRemove(folderId, out _); // この行、安全に実行できない！
+            //_exceptions.ClearCache(folderId);
         }
 
         public void ClearCache(Folder folder)
@@ -443,30 +425,34 @@ namespace UiPath.PowerShell.Core
     // TIndexEntity: インデックスを含むエンティティ
     // getIndex(TIndexEntity): TIndexEntity から Int64 のインデックス値を取得する Func
     // TEntity: 取得してキャッシュするエンティティ
-    public class IndexedListCachePerFolder<TIndexEntity, TEntity> : ICacheClearable where TIndexEntity : notnull
+    public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClearable where TIndexEntity : notnull
     {
         private readonly OrchDriveInfo _drive;
 
         // 1st key: folderId
         // 2nd key: TIndexEntity.Id
         private ConcurrentDictionary<Int64, Dictionary<Int64, List<TEntity>>>? _cache = null;
-        private readonly ExceptionsCachePer<Int64> _exceptions = new();
+        // この例外キャッシュの機能がいまいちだな。。フォルダごとにキャッシュをクリアできるといいのに。
+        private readonly ExceptionsCachePer<(Int64, Int64)> _exceptions = new();
         private readonly Func<Int64, Int64, IEnumerable<TEntity>> _fetchFunc; // folderId と index を渡すと TEntity の列挙が返る
         private readonly Func<TIndexEntity, Int64> _getIdFunc;
-        private readonly Action<TEntity, string, TIndexEntity>? _initializer; // string はフォルダパス
+        private readonly Func<TIndexEntity, string> _getNameFunc;
+        private readonly Action<TEntity, string, string, string>? _initializer; // フォルダパス, 名前, フォルダパス\名前
         private readonly int? _supportedApiVersionFrom;
 
         public IndexedListCachePerFolder(
             OrchDriveInfo drive,
             Func<Int64, Int64, IEnumerable<TEntity>> fetchFunc,
             Func<TIndexEntity, Int64> getIdFunc,
-            Action<TEntity, string, TIndexEntity>? initializer,
+            Func<TIndexEntity, string> getNameFunc,
+            Action<TEntity, string, string, string>? initializer,
             int? supportedApiVersionFrom = null)
         {
             _drive = drive;
-            _drive._cacheItems.Add(this);
+            _drive._allFolderCache.Add(this);
             _fetchFunc = fetchFunc;
             _getIdFunc = getIdFunc;
+            _getNameFunc = getNameFunc;
             _initializer = initializer;
             _supportedApiVersionFrom = supportedApiVersionFrom;
         }
@@ -478,7 +464,9 @@ namespace UiPath.PowerShell.Core
                 return [];
             }
 
-            _exceptions.ThrowCachedExceptionIfAny(folder.Id!.Value);
+            Int64 index = _getIdFunc(indexEntity);
+
+            _exceptions.ThrowCachedExceptionIfAny((folder.Id!.Value, index));
 
             if (_cache == null)
             {
@@ -492,7 +480,6 @@ namespace UiPath.PowerShell.Core
             }
 
             Int64 folderId = folder.Id!.Value;
-            Int64 index = _getIdFunc(indexEntity);
 
             if (!_cache.TryGetValue(folderId, out var cachePerFolder))
             {
@@ -510,15 +497,17 @@ namespace UiPath.PowerShell.Core
                     if (_initializer != null)
                     {
                         string folderPath = folder.GetPSPath();
+                        string indexName = _getNameFunc(indexEntity);
+                        string entityPath = System.IO.Path.Combine(folderPath, indexName);
                         foreach (var entity in entities)
                         {
-                            _initializer(entity, folderPath, indexEntity);
+                            _initializer(entity, folderPath, indexName, entityPath);
                         }
                     }
                 }
                 catch (HttpResponseException ex)
                 {
-                    _exceptions.CacheException(folder.Id ?? 0, ex);
+                    _exceptions.CacheException((folder.Id ?? 0, index), ex);
                     throw;
                 }
             }
@@ -529,7 +518,7 @@ namespace UiPath.PowerShell.Core
         public void ClearCache(Int64 folderId)
         {
             _cache?.TryRemove(folderId, out _);
-            _exceptions.ClearCache(folderId);
+            _exceptions.ClearCache(); // ちょっと横着な実装だけど、機能的にはこれで問題ないはず
         }
 
         public void ClearCache(Folder folder)

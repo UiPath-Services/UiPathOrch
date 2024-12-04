@@ -3,7 +3,6 @@ function Get-OrchTestDataQueueItemTable {
     Param(
         [Parameter(Mandatory = $false, ValueFromPipeline = $true)]
         [string]$Path,
-
         [Switch]$Recurse
     )
 
