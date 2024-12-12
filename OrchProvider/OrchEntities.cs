@@ -484,11 +484,11 @@ namespace UiPath.PowerShell.Entities
     // TODO: confirm case
     public class UpdateInfo : IEquatable<UpdateInfo>
     {
-        public string? updateStatus { get; set; }
-        public string? reason { get; set; }
-        public string? targetUpdateVersion { get; set; }
-        public bool? isCommunity { get; set; }
-        public string? statusInfo { get; set; }
+        public string? UpdateStatus { get; set; }
+        public string? Reason { get; set; }
+        public string? TargetUpdateVersion { get; set; }
+        public bool? IsCommunity { get; set; }
+        public string? StatusInfo { get; set; }
 
         // IEquatable<UpdateInfo> の実装
         public bool Equals(UpdateInfo? other)
@@ -496,11 +496,11 @@ namespace UiPath.PowerShell.Entities
             if (other is null)
                 return false;
 
-            return updateStatus == other.updateStatus &&
-                   reason == other.reason &&
-                   targetUpdateVersion == other.targetUpdateVersion &&
-                   isCommunity == other.isCommunity &&
-                   statusInfo == other.statusInfo;
+            return UpdateStatus == other.UpdateStatus &&
+                   Reason == other.Reason &&
+                   TargetUpdateVersion == other.TargetUpdateVersion &&
+                   IsCommunity == other.IsCommunity &&
+                   StatusInfo == other.StatusInfo;
         }
 
         // Object.Equals のオーバーライド
@@ -510,11 +510,11 @@ namespace UiPath.PowerShell.Entities
         public override int GetHashCode()
         {
             return HashCode.Combine(
-                updateStatus,
-                reason,
-                targetUpdateVersion,
-                isCommunity,
-                statusInfo
+                UpdateStatus,
+                Reason,
+                TargetUpdateVersion,
+                IsCommunity,
+                StatusInfo
             );
         }
     }
@@ -2034,7 +2034,7 @@ namespace UiPath.PowerShell.Entities
         public string? Source { get; set; }
         //[JsonConverter(typeof(LocalDateTimeConverter))]
         public DateTime? DebugModeExpirationDate { get; set; }
-        public UpdateInfo? UpdateInfoDto { get; set; }
+        public UpdateInfo? UpdateInfo { get; set; }
         public string? InstallationId { get; set; }
         public string? Platform { get; set; }
         public string? EndpointDetection { get; set; }

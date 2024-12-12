@@ -128,9 +128,6 @@ namespace UiPath.PowerShell.Commands
             }
         }
 
-        // PmBulkResolveByName() /api/Directory/BulkResolveByName/{partitionGlobalId} を使った実装は複雑すぎるのでやめる！
-        // ↑はロボットを検索できないし。
-        // 全部、SearchPmDirectoryUsers() /api/Directory/Search/{partitionGlobalId} で検索すれば良いじゃない。
         protected override void ProcessRecord()
         {
             GroupName = GroupName.Split1stValueByUnescapedCommas()?.ToArray();

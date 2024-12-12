@@ -2,12 +2,13 @@
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
+using UiPath.PowerShell.Positional;
 using TPositional = UiPath.PowerShell.Positional.GroupName_Destination;
 
 namespace UiPath.PowerShell.Commands
 {
     [Cmdlet(VerbsCommon.Copy, "OrchPmGroup", SupportsShouldProcess = true)]
-    public class CopyPmGroupCommand : OrchestratorPSCmdlet
+    class CopyPmGroupCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
         [ArgumentCompleter(typeof(PmGroupNameCompleter<TPositional>))]
@@ -63,14 +64,17 @@ namespace UiPath.PowerShell.Commands
                     string userName = unresolvedEmail.name;
                     if (!string.IsNullOrEmpty(unresolvedEmail.email))
                         userName += $" ({unresolvedEmail.email})";
-                    WriteError(new ErrorRecord(
-                        new OrchException(
-                            drive.NameColonSeparator,
-                            $"Copying '{srcGroupPath}': Failed to find '{userName}' in '{drive.NameColonSeparator}'. Ignored."),
-                        "DirectorySearchFailed",
-                        ErrorCategory.InvalidOperation,
-                        drive
-                    ));
+
+                    WriteWarning($"{srcGroupPath}: Failed to find {objectType} '{userName}' in '{drive.NameColonSeparator}'. Ignored.");
+
+                    //WriteError(new ErrorRecord(
+                    //    new OrchException(
+                    //        drive.NameColonSeparator,
+                    //        $"Copying '{srcGroupPath}': Failed to find '{userName}' in '{drive.NameColonSeparator}'. Ignored."),
+                    //    "DirectorySearchFailed",
+                    //    ErrorCategory.InvalidOperation,
+                    //    drive
+                    //));
                 }
             }
             return retIdentifiers;
@@ -137,35 +141,86 @@ namespace UiPath.PowerShell.Commands
                     {
                         List<string> directoryUserMemberIDs = [];
 
-                        PmGroupMember[]? members = srcGroup.members;
-                        List<DirectoryUser> membersUsers = (members?.Where(m => m.objectType == "DirectoryUser") ?? []).Cast<DirectoryUser>().ToList();
-                        List<DirectoryApplication> membersApps = (members?.Where(m => m.objectType == "DirectoryApplication") ?? []).Cast<DirectoryApplication>().ToList();
-                        List<PmGroupMember> membersGroups = (members?.Where(m => m.objectType == "DirectoryGroup") ?? []).ToList();
-                        List<PmGroupMember> membersOthers = (members?.Where(m => m.objectType != "DirectoryUser" && m.objectType != "DirectoryApplication") ?? []).ToList();
+                        foreach (var groupedMembers in srcGroup.members?
+                            .GroupBy(m => m.objectType) ?? [])
+                        {
+                            //Dictionary<string, PmGroupMember?>? entries = null;
+                            switch (groupedMembers.Key)
+                            {
+                                case "DirectoryUser":
+                                    //entries = drive.PmBulkResolveByName("user", drive_type_userNames, m => m.UserName);
+                                    directoryUserMemberIDs.AddRange(FindIdentifiers(
+                                        dstDrive,
+                                        srcGroup.GetPSPath(),
+                                        "user",
+                                        groupedMembers));
+                                    break;
+                                case "DirectoryGroup":
+                                    //entries = drive.PmBulkResolveByName("group", drive_type_userNames, m => m.UserName);
+                                    directoryUserMemberIDs.AddRange(FindIdentifiers(
+                                        dstDrive,
+                                        srcGroup.GetPSPath(),
+                                        "group",
+                                        groupedMembers));
+                                    break;
+                                case "DirectoryApplication":
+                                    //entries = drive.PmBulkResolveByName("application", drive_type_userNames, m => m.UserName);
+                                    directoryUserMemberIDs.AddRange(FindIdentifiers(
+                                        dstDrive,
+                                        srcGroup.GetPSPath(),
+                                        "application",
+                                        groupedMembers));
+                                    break;
+                                case "DirectoryRobot":
+                                    foreach (var robot in groupedMembers)
+                                    {
+                                        var addingMember = dstDrive.SearchPmDirectoryUsers(robot.name!)?
+                                            .Where(t => t.objectType == "DirectoryRobot")
+                                            .FirstOrDefault(t => string.Compare(t.identityName, robot.name, true) == 0);
 
-                        // users と apps については、BulkResolveByName() を呼び出す必要がある
-                        directoryUserMemberIDs.AddRange(FindIdentifiers(
-                            dstDrive,
-                            srcGroup.GetPSPath(),
-                            "user",
-                            membersUsers));
+                                        // 当たらなかったら警告を表示
+                                        if (addingMember == null)
+                                        {
+                                            WriteWarning($"\"{dstDrive.NameColonSeparator}\": robot \"{robot.name}\" not found. Ignoring.");
+                                        }
+                                    }
+                                    break;
+                            }
 
-                        directoryUserMemberIDs.AddRange(FindIdentifiers(
-                            dstDrive,
-                            srcGroup.GetPSPath(),
-                            "application",
-                            membersApps));
+                                //foreach (var entry in entries ?? [])
+                                //{
+                                //    if (entry.Value == null)
+                                //    {
+                                //        WriteWarning($"\"{drive.NameColonSeparator}\": \"{entry.Key}\" ({type}) not found. Ignoring.");
+                                //    }
+                                //    else if (entry.Value.objectType == "DirectoryGroup" && entry.Value.source == "local")
+                                //    {
+                                //        WriteWarning($"\"{drive.NameColonSeparator}\": \"{entry.Key}\" ({type}) cannot be added because it is a local group. Ignoring.");
+                                //    }
+                                //}
+                            }
 
-                        directoryUserMemberIDs.AddRange(FindIdentifiers(
-                            dstDrive,
-                            srcGroup.GetPSPath(),
-                            "group",
-                            membersGroups));
+
+                        //    PmGroupMember[]? members = srcGroup.members;
+                        //List<DirectoryUser> membersUsers = (members?.Where(m => m.objectType == "DirectoryUser") ?? []).Cast<DirectoryUser>().ToList();
+                        //List<DirectoryApplication> membersApps = (members?.Where(m => m.objectType == "DirectoryApplication") ?? []).Cast<DirectoryApplication>().ToList();
+                        //List<PmGroupMember> membersGroups = (members?.Where(m => m.objectType == "DirectoryGroup") ?? []).ToList();
+                        //List<PmGroupMember> membersOthers = (members?.Where(m => m.objectType != "DirectoryUser" && m.objectType != "DirectoryApplication") ?? []).ToList();
+
+                        // user と application と group については、BulkResolveByName() を呼び出す必要がある
+
+
 
                         // それ以外のやつは、ひとつずつ SearchPmDirectoryUsers() で探す。。
-                        //foreach (var name in membersOthers)
-                        //var addingMember = dstDrive.SearchPmDirectoryUsers(srcMember.name!)?
-                        //    .FirstOrDefault(t => string.Compare(t.identityName, srcMember.name, true) == 0);
+//                        foreach (var member in membersOthers)
+                        {
+//                            var addingMember = dstDrive.SearchPmDirectoryUsers(member.name!)?
+  //                              .FirstOrDefault(t => string.Compare(t.identityName, member.name, true) == 0);
+                            //if (member != null && !string.IsNullOrEmpty(member.identifier))
+                            //{
+                            //    directoryUserMemberIDs.Add(member.identifier);
+                            //}
+                        }
 
                         // ユーザーとアプリ以外でも、もしかしてこれで動く？？
                         //directoryUserMemberIDs.AddRange(FindIdentifiers(

@@ -827,6 +827,12 @@ namespace UiPath.OrchAPI
         //    HttpRequest(HttpMethod.Get, "/api/FoldersNavigation/GetAllFoldersForCurrentUser");
         //}
 
+        // This endpoint cannot be called from OAuth external app..
+        //public void GetAllRolesForUser()
+        //{
+        //    HttpRequest(HttpMethod.Get, "/api/FoldersNavigation/GetAllRolesForUser?username=wenqi.li%40uipath.com&type=User");
+        //}
+
         public Folder? GetFolderById(Int64 Id)
         {
             return HttpRequest<Folder>(HttpMethod.Get, $"/odata/Folders({Id})");

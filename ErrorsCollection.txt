@@ -20,3 +20,7 @@ Copy-OrchPmGroup:
 
 Copy-OrchPmGroup:
 {"errors":{"entityType":["Error converting value \"robot\" to type 'UiPath.IdentityServer.Directory.Abstractions.DataContracts.DirectoryEntityType'. Path 'entityType', line 1, position 43."]},"type":"https://tools.ietf.org/html/rfc9110#section-15.5.1","title":"One or more validation errors occurred.","status":400,"traceId":"00-b4356a07063fc3fcc9cfc85d93806940-b5a1b0c76e7b0974-00"}
+
+{"message":"Folder does not exist or the user does not have access to the folder.","errorCode":1100,"traceId":"00-f9ec99bcada90902ed5216acd5a19afc-a84b1a270cc7f87a-00"}
+
+{"message":"You are not authorized!","errorCode":0,"result":null,"targetUrl":null,"success":false,"error":{"code":0,"message":"You are not authorized!","details":"You are not allowed to perform this operation.","validationErrors":null},"unAuthorizedRequest":true,"__abp":true}
