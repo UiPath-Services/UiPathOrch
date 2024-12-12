@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.8.20'
+ModuleVersion = '0.9.8.21'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -372,23 +372,9 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Under certain conditions, the Copy-Item cmdlet was failing. This issue has been present since UiPathOrch 0.9.8.11.
+        ReleaseNotes = '- The member names included in UpdateInfoDto were incorrect. As a result, information from UpdateInfo was not properly included in the output of cmdlets such as Get-OrchUserSession.
 
-- Fixed an issue where the Add-OrchTrigger and Update-OrchTrigger cmdlets could not add multiple account-machine mappings. These mappings can be specified using the -MachineRobots parameter. The valid format for this parameter can be confirmed using auto-completion.
-
-- The -MachineRobots parameter of the Add-OrchTrigger and Update-OrchTrigger cmdlets now supports wildcards for the internal RobotName, MachineName, and HostMachineName fields. While auto-completion is not available for these internal values, using wildcards allows you to perform the intended operation even if the exact RobotName or MachineName is unknown. For example, to add all combinations of RobotName, MachineName, and HostMachineName available in the current folder as account-machine mappings to <your triggers>, use the following command:
-
-  PS Orch1:\Shared> Update-OrchTrigger <your trigger names> -MachineRobots ''[{"RobotName":"*","MachineName":"*","HostMachineName":"*"}]''
-
-- The completer for the -UserName parameter in the following functions stopped working in version 0.9.8.16:
-  - Enable-OrchUserAttended
-  - Enable-OrchPersonalWorkspace
-  - Disable-OrchUserAttended
-  - Disable-OrchPersonalWorkspace
-
-  Note: Functions refer to cmdlets implemented in .ps1 files. The implementations of the above functions are located in the Functions directory under the UiPathOrch installation directory.
-
-- Changed the output format of the Get-OrchActivitySetting cmdlet from table view to list view. Additionally, the members of SignalR are now expanded and displayed. 
+- When importing a CSV using the Add-OrchFolderUser cmdlet, if multiple roles were specified in the Roles column as comma-separated values, a warning stating "No matching role found" was incorrectly displayed, even though the processing completed successfully.
 '
 
         # Prerelease string of this module

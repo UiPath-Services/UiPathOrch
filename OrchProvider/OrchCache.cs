@@ -401,17 +401,17 @@ namespace UiPath.PowerShell.Core
             return cachePerFolder;
         }
 
-        public void ClearCache(Int64 folderId)
+        public void ClearCache(Int64? folderId)
         {
-            _cache = null;
-            _exceptions.ClearCache();
-            //_cache?.TryRemove(folderId, out _); // この行、安全に実行できない！
-            //_exceptions.ClearCache(folderId);
+            if (folderId == null) return;
+            _cache?.TryRemove(folderId.Value, out _);
+            _exceptions.ClearCache(folderId.Value);
         }
 
         public void ClearCache(Folder folder)
         {
-            ClearCache(folder.Id!.Value);
+            // root folder は、Id が null であることに注意！
+            ClearCache(folder.Id);
         }
 
         public void ClearCache()

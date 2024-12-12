@@ -180,7 +180,9 @@ namespace UiPath.PowerShell.Commands
             var wpUserName = UserName.ConvertToWildcardPatternList();
 
             // 先頭の要素は CSV から入力されている可能性があるので、先頭の要素についてはカンマで区切る
-            var wpRoles = Roles.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
+            // Roles はあとでまた使うので、区切り直した値を Roles にも入れておく
+            Roles = Roles?.Split1stValueByUnescapedCommas()?.ToArray();
+            var wpRoles = Roles.ConvertToWildcardPatternList();
 
             // これはしなくて良いか。。
             //ParallelResults.ForEach(drives, drive => drive.Roles.Get());

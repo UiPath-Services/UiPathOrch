@@ -2568,7 +2568,7 @@ namespace UiPath.PowerShell.Core
 
                         srcDrive._dicReleases?.TryRemove(srcFolder.Id ?? 0, out _);
                         dstDrive._dicReleases?.TryRemove(dstFolder.Id ?? 0, out _);
-                        //dstDrive.FolderMachinesAssigned.ClearCache(dstFolder);
+                        dstDrive.FolderMachinesAssigned.ClearCache(dstFolder);
 
                         if (!ExcludeEntities)
                         {
