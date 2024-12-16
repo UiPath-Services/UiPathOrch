@@ -189,6 +189,42 @@ namespace UiPath.PowerShell.Core
                     drive.Enabled ??= config.Enabled;
                     drive.Proxy ??= config.Proxy;
 
+                    if (drive.Enabled ?? false)
+                    {
+                        if (string.IsNullOrWhiteSpace(drive.Scope))
+                        {
+                            WriteWarning($"\"{drive.Name}:\\\": Scope is not specified!");
+                        }
+                        else
+                        {
+                            string lowerScope = drive.Scope.ToLower();
+
+                            if (!lowerScope.Contains("or.folders"))
+                            {
+                                WriteWarning($"\"{drive.Name}:\\\": Ensure the \"OR.Folders.Read\" scope is included to retrieve folder information.");
+                            }
+
+                            if (!lowerScope.Contains("or.settings"))
+                            {
+                                WriteWarning($"\"{drive.Name}:\\\": Ensure the \"OR.Settings.Read\" scope is included to retrieve the API version needed to properly call Orchestrator APIs.");
+                            }
+
+                            if (string.IsNullOrEmpty(drive.AppSecret) && !lowerScope.Contains("or.users"))
+                            {
+                                WriteWarning($"\"{drive.Name}:\\\": Ensure the \"OR.Users.Read\" scope is included to access your personal workspace folder.");
+                            }
+                        }
+
+                        if (string.IsNullOrWhiteSpace(drive.Root))
+                        {
+                            WriteWarning($"\"{drive.Name}:\\\": Root is not specified!");
+                        }
+                        else if ((drive.Root.EndsWith("/orchestrator_/") || drive.Root.EndsWith("/orchestrator_")))
+                        {
+                            WriteWarning($"\"{drive.Name}:\\\": Root should not contain '/orchestrator_/'.");
+                        }
+                    }
+
                     //if (string.IsNullOrEmpty(drive.IdentityUrl))
                     //{
                     //    drive.IdentityUrl = _baseUrl.Contains("uipath.com", StringComparison.InvariantCultureIgnoreCase)

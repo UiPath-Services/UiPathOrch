@@ -126,8 +126,9 @@ namespace UiPath.OrchAPI
                 string strPayload = JsonSerializer.Serialize(payload);
                 request.Content = new StringContent(strPayload, Encoding.UTF8, @"application/json");
 
-                var response = _httpClient.Send(request);
-                var body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                using var cts = new ConsoleCancelHandler();
+                var response = _httpClient.Send(request, cts.Token);
+                var body = response.Content.ReadAsStringAsync(cts.Token).GetAwaiter().GetResult();
                 return JsonSerializer.Deserialize<AjaxResponse>(body)?.result ?? "";
             }
         }
@@ -183,10 +184,10 @@ namespace UiPath.OrchAPI
                 Content = new FormUrlEncodedContent(postData)
             };
 
-            using var consoleCancelHandler = new ConsoleCancelHandler();
-            HttpResponseMessage response = _httpClient.Send(request, consoleCancelHandler.Token);
+            using var cts = new ConsoleCancelHandler();
+            HttpResponseMessage response = _httpClient.Send(request, cts.Token);
 
-            string body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            string body = response.Content.ReadAsStringAsync(cts.Token).GetAwaiter().GetResult();
 
             if (!response.IsSuccessStatusCode)
             {

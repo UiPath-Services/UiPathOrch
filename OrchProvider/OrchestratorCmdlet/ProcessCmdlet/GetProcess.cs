@@ -41,7 +41,7 @@ namespace UiPath.PowerShell.Commands
         private static readonly string[] CsvHeaders = [
             "Path",
             "Name",
-            "PackageId",
+            "Id",
             "Version",
             "Description",
             "EntryPoint",
