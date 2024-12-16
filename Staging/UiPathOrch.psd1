@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.8.21'
+ModuleVersion = '0.9.8.22'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -372,9 +372,13 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- The member names included in UpdateInfoDto were incorrect. As a result, information from UpdateInfo was not properly included in the output of cmdlets such as Get-OrchUserSession.
+        ReleaseNotes = '- In version 0.9.8.16, the parameter name of the Add-OrchProcess cmdlet was changed from -PackageId to -Id. However, the column name in the CSV file output by Get-OrchProcess -ExportCsv was not updated accordingly. As a result, this CSV file could not be imported using the Add-OrchProcess cmdlet.
 
-- When importing a CSV using the Add-OrchFolderUser cmdlet, if multiple roles were specified in the Roles column as comma-separated values, a warning stating "No matching role found" was incorrectly displayed, even though the processing completed successfully.
+- When the Get-OrchProcess cmdlet tried to deserialize ReleaseDto from the server, it failed if the ResourceOverwrite property had a value because its type was not documented in the Swagger doc. Based on the JSON returned by Automation Cloud, I defined the ResourceOverwrite type correctly to resolve the error. To account for other Orchestrator versions returning differently defined ResourceOverwrite, deserialization failures now set the value to null instead of throwing an exception. This may require future adjustments.
+
+- A warning is now displayed if the required scope specifications for UiPathOrch are not listed in the configuration file.
+
+- The authentication process can now be canceled with Ctrl+C.
 '
 
         # Prerelease string of this module

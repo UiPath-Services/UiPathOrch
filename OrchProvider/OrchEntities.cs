@@ -1536,6 +1536,23 @@ namespace UiPath.PowerShell.Entities
         public long? CreatorUserId { get; set; }
     }
 
+    public class NameValuePair
+    {
+        public string? Name { get; set; }
+        public string? Value { get; set; }
+    }
+
+    public class ResourceOverwrite
+    {
+        public string? ResourceType { get; set; }
+        public Guid? ResourceKey { get; set; }
+        public Guid? EntityId { get; set; }
+        public string? EntityDisplayName { get; set; }
+        public Int64? EntityFolderId { get; set; }
+        public NameValuePair[]? Properties2 { get; set; }
+        // Properties // unknown type
+    }
+
     // JobDto
     public class Job
     {
@@ -1552,7 +1569,9 @@ namespace UiPath.PowerShell.Entities
         public int? SpecificPriorityValue { get; set; }
         public SimpleRobot? Robot { get; set; }
         public SimpleRelease? Release { get; set; }
-        public string? ResourceOverwrites { get; set; }
+
+        [JsonConverter(typeof(SafeArrayConverter<ResourceOverwrite>))]
+        public ResourceOverwrite[]? ResourceOverwrites { get; set; }
         public string? Source { get; set; }
         public string? SourceType { get; set; }
         public string? BatchExecutionKey { get; set; }
@@ -2222,7 +2241,9 @@ namespace UiPath.PowerShell.Entities
         //[JsonConverter(typeof(LocalDateTimeConverter))]
         public DateTime? CreationTime { get; set; }
         public Int64? CreatorUserId { get; set; }
-        public string[]? ResourceOverwrites { get; set; } // ISSUE: unknonw. not mentioned in swagger.
+
+        [JsonConverter(typeof(SafeArrayConverter<ResourceOverwrite>))]
+        public ResourceOverwrite[]? ResourceOverwrites { get; set; } // ISSUE: unknown. not mentioned in swagger.
         public string? RetentionAction { get; set; } // ISSUE: this is not mentioned in swagger.
         public int? RetentionPeriod { get; set; } // ISSUE: this is not mentioned in swagger.
         public Int64? RetentionBucketId { get; set; } // ISSUE: this is not mentioned in swagger.

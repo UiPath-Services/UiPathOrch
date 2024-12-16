@@ -222,13 +222,17 @@ namespace UiPath.OrchAPI
                         _isAuthenticated = true;
                         _expiryTime = DateTime.Now.AddHours(1);
 
-                        if (ApiVersion == null)
+                        if (ApiVersion == null && _drive != null)
                         {
-                            var activitySettings = GetActivitySettings();
-                            if (double.TryParse(activitySettings?.ApiVersion, out var version))
+                            try
                             {
-                                ApiVersion = version;
+                                var activitySettings = _drive.ActivitySettings.Get();
+                                if (double.TryParse(activitySettings?.ApiVersion, out var version))
+                                {
+                                    ApiVersion = version;
+                                }
                             }
+                            catch {} // この例外は握りつぶす
                         }
                     }
                 }

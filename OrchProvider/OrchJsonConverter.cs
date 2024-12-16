@@ -220,4 +220,30 @@ namespace UiPath.PowerShell.Entities.JsonConverter
         }
     }
 
+    // 詳細不明な配列型について、デシリアライズが失敗したら例外をスローせずに null を入れるコンバータ。
+    // swagger doc に記載されていない型については、この属性をつけておくと安心だ。
+    // ただし、型が明確なメンバについてはつけない方が良い。将来、型の説明が swagger に追加されたら、この属性は外すべきだ。
+    public class SafeArrayConverter<T> : JsonConverter<T[]?>
+    {
+        public override T[]? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            try
+            {
+                // 通常の配列としてデシリアライズを試行
+                return JsonSerializer.Deserialize<T[]>(ref reader, options);
+            }
+            catch (JsonException)
+            {
+                // デシリアライズ失敗時は null を返す
+                return null;
+            }
+        }
+
+        public override void Write(Utf8JsonWriter writer, T[]? value, JsonSerializerOptions options)
+        {
+            // 配列を通常通りシリアライズ
+            JsonSerializer.Serialize(writer, value, options);
+        }
+    }
+
 }
