@@ -101,7 +101,7 @@ namespace UiPath.PowerShell.Commands
                         //.Where(u => types.Contains(u?.objectType ?? ""))
                         .FilterByWildcards(u => u?.objectType, wpType)
                         .ExcludeByWildcards(e => e?.identityName, wpUserName)
-                        .Where(u => u?.objectType == "DirectoryGroup" && u?.source != "local")
+                        .Where(u => u?.objectType == "DirectoryUser") // && u?.source != "local")
                         .OrderBy(e => e.identityName))
                     {
                         // updatingGroups に含まれるすべてのグループが、メンバーとして user を含んでいれば continue する

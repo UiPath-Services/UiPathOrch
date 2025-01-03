@@ -37,6 +37,7 @@ namespace UiPath.PowerShell.Core
         public static string GetPSPath(this ExtendedMachine entity)        => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
         public static string GetPSPath(this CredentialStore entity)        => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
         public static string GetPSPath(this QueueDefinition entity)        => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+        public static string GetPSPath(this QueueItem entity)              => Path.Combine(entity?.PathName ?? "", entity?.Id.ToString() ?? "");
         public static string GetPSPath(this Asset entity)                  => Path.Combine(entity?.Path ?? "", WildcardPattern.Escape(entity?.Name ?? ""));
         public static string GetPSPath(this Release entity)                => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
         public static string GetPSPath(this PersonalWorkspace entity)      => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");

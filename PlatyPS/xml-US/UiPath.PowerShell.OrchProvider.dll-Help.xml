@@ -33066,6 +33066,235 @@
   </command:command>
   <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
     <command:details>
+      <command:name>Redo-OrchQueueItem</command:name>
+      <command:verb>Redo</command:verb>
+      <command:noun>OrchQueueItem</command:noun>
+      <maml:description>
+        <maml:para>Retries failed transaction items in the specified queues.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>This cmdlet retries transaction items by specifying the queue name and the item IDs. It retries only retryable items, defined as those with a Status of Failed and a Revision of either None or InReview.</maml:para>
+      <maml:para>Primary Endpoint: POST /odata/QueueItems/UiPathODataSvc.SetItemReviewStatus</maml:para>
+      <maml:para>OAuth required scopes: OR.Queues</maml:para>
+      <maml:para>Required permissions: Queues.View and Transactions.Edit</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Redo-OrchQueueItem</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
+          <maml:name>Name</maml:name>
+          <maml:description>
+            <maml:para>Specifies the Name of the queues that contain the queue items to retry.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+          <dev:type>
+            <maml:name>String[]</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
+          <maml:name>Id</maml:name>
+          <maml:description>
+            <maml:para>Specifies the Id of the queue items to retry.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">Int64[]</command:parameterValue>
+          <dev:type>
+            <maml:name>Int64[]</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
+          <maml:name>Path</maml:name>
+          <maml:description>
+            <maml:para>Specifies the target folder. If not specified, the current folder will be targeted.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+          <dev:type>
+            <maml:name>String[]</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+          <maml:name>WhatIf</maml:name>
+          <maml:description>
+            <maml:para>Shows what would happen if the cmdlet runs. The cmdlet is not run.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
+          <maml:name>ProgressAction</maml:name>
+          <maml:description>
+            <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
+          <dev:type>
+            <maml:name>ActionPreference</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
+        <maml:name>Id</maml:name>
+        <maml:description>
+          <maml:para>Specifies the Id of the queue items to retry.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">Int64[]</command:parameterValue>
+        <dev:type>
+          <maml:name>Int64[]</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="true" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
+        <maml:name>Name</maml:name>
+        <maml:description>
+          <maml:para>Specifies the Name of the queues that contain the queue items to retry.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+        <dev:type>
+          <maml:name>String[]</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
+        <maml:name>Path</maml:name>
+        <maml:description>
+          <maml:para>Specifies the target folder. If not specified, the current folder will be targeted.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+        <dev:type>
+          <maml:name>String[]</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+        <maml:name>WhatIf</maml:name>
+        <maml:description>
+          <maml:para>Shows what would happen if the cmdlet runs. The cmdlet is not run.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
+        <maml:name>ProgressAction</maml:name>
+        <maml:description>
+          <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
+        <dev:type>
+          <maml:name>ActionPreference</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.String[]</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.Int64[]</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>UiPath.PowerShell.Entities.BulkOperationResponse</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para></maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- Example 1 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Redo-OrchQueueItem YourQueueName &lt;item IDs&gt;</dev:code>
+        <dev:remarks>
+          <maml:para>Retries the specified items in the queue. The -Id parameter, which specifies &lt;item IDs&gt;, supports auto-completion.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 2 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchQueueItem YourQueueName -Status Failed | Redo-OrchQueueItem -Verbose</dev:code>
+        <dev:remarks>
+          <maml:para>Retries all failed items in the specified queue, YourQueueName. The -Verbose parameter displays the IDs of the retried items.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 3 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchQueueItem YourQueueName -Status Failed -Revision None,InReview | Redo-OrchQueueItem -Verbose</dev:code>
+        <dev:remarks>
+          <maml:para>Please note that the Get-OrchQueueItem cmdlet can retrieve up to a maximum of 1000 items at a time. If there are more than 1000 retryable items, repeatedly execute this command until the -Verbose parameter no longer outputs anything.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 4 --------------------------</maml:title>
+        <dev:code>PS Orch1:\&gt; Get-OrchQueueItem -Recurse * -Status Failed | Redo-OrchQueueItem</dev:code>
+        <dev:remarks>
+          <maml:para>Retries all retryable queue items across all queues in the tenant.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks />
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
       <command:name>Remove-OrchActionCatalog</command:name>
       <command:verb>Remove</command:verb>
       <command:noun>OrchActionCatalog</command:noun>

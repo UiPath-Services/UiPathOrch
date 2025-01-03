@@ -2499,9 +2499,9 @@ namespace UiPath.PowerShell.Entities
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public string? Path { get; set; } // added by UiPathOrch
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-        public string? Queue { get; set; } // added by UiPathOrch
+        public string? Name { get; set; } // added by UiPathOrch
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-        public string? PathQueue { get; set; } // added by UiPathOrch
+        public string? PathName { get; set; } // added by UiPathOrch
         public Int64? Id { get; set; }
         public Int64? QueueDefinitionId { get; set; }
         public QueueDefinition? QueueDefinition { get; set; }
@@ -2570,6 +2570,33 @@ namespace UiPath.PowerShell.Entities
         public string? queueName { get; set; }
         public string? commitType { get; set; }
         public QueueItemData[]? queueItems { get; set; }
+    }
+
+    public class RetryQueueItem
+    {
+        public Int64? Id { get; set; }
+        public string? RowVersion { get; set; }
+    }
+
+    public class RetryQueueItemRequest
+    {
+        public IEnumerable<RetryQueueItem>? queueItems { get; set; }
+        public string? status { get; set; }
+    }
+
+    // BulkOperationResponseDto
+    public class BulkOperationResponse
+    {
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        public string? Path { get; set; } // added by UiPathOrch
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        public string? Queue { get; set; } // added by UiPathOrch
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        public string? PathQueue { get; set; } // added by UiPathOrch
+
+        public bool? Success { get; set; }
+        public string? Message { get; set; }
+        public Int64[]? FailedItems { get; set; }
     }
 
     //public class QueueItem

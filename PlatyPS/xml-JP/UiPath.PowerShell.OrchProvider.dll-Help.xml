@@ -33064,6 +33064,235 @@
   </command:command>
   <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
     <command:details>
+      <command:name>Redo-OrchQueueItem</command:name>
+      <command:verb>Redo</command:verb>
+      <command:noun>OrchQueueItem</command:noun>
+      <maml:description>
+        <maml:para>指定したキューに含まれる、失敗したトランザクションアイテムをリトライします。</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>このコマンドレットは、キュー名とアイテム ID を指定してトランザクションアイテムをリトライします。リトライの対象となるのは、Status が Failed であり、かつ Revision が None または InReview のアイテムのみです。</maml:para>
+      <maml:para>主に呼び出すエンドポイント: POST /odata/QueueItems/UiPathODataSvc.SetItemReviewStatus</maml:para>
+      <maml:para>OAuth に必要なスコープ: OR.Queues</maml:para>
+      <maml:para>必要な権限: Queues.View and Transactions.Edit</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Redo-OrchQueueItem</maml:name>
+        <command:parameter required="true" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
+          <maml:name>Name</maml:name>
+          <maml:description>
+            <maml:para>リトライするキューアイテムを含むキューの Name を指定します。</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+          <dev:type>
+            <maml:name>String[]</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
+          <maml:name>Id</maml:name>
+          <maml:description>
+            <maml:para>リトライするキューアイテムの Id を指定します。</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">Int64[]</command:parameterValue>
+          <dev:type>
+            <maml:name>Int64[]</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>コマンドレットを実行する前に、あなたの確認を求めます。</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
+          <maml:name>Path</maml:name>
+          <maml:description>
+            <maml:para>ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+          <dev:type>
+            <maml:name>String[]</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+          <maml:name>WhatIf</maml:name>
+          <maml:description>
+            <maml:para>コマンドレットを実行すると、何が起こるかを表示します。 コマンドレットは実行されません。</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
+          <maml:name>ProgressAction</maml:name>
+          <maml:description>
+            <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
+          <dev:type>
+            <maml:name>ActionPreference</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>コマンドレットを実行する前に、あなたの確認を求めます。</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
+        <maml:name>Id</maml:name>
+        <maml:description>
+          <maml:para>リトライするキューアイテムの Id を指定します。</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">Int64[]</command:parameterValue>
+        <dev:type>
+          <maml:name>Int64[]</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="true" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
+        <maml:name>Name</maml:name>
+        <maml:description>
+          <maml:para>リトライするキューアイテムを含むキューの Name を指定します。</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+        <dev:type>
+          <maml:name>String[]</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
+        <maml:name>Path</maml:name>
+        <maml:description>
+          <maml:para>ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
+        <dev:type>
+          <maml:name>String[]</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+        <maml:name>WhatIf</maml:name>
+        <maml:description>
+          <maml:para>コマンドレットを実行すると、何が起こるかを表示します。 コマンドレットは実行されません。</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
+        <maml:name>ProgressAction</maml:name>
+        <maml:description>
+          <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
+        <dev:type>
+          <maml:name>ActionPreference</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.String[]</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.Int64[]</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+    </command:inputTypes>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>UiPath.PowerShell.Entities.BulkOperationResponse</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para></maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- Example 1 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Redo-OrchQueueItem YourQueueName &lt;item IDs&gt;</dev:code>
+        <dev:remarks>
+          <maml:para>指定されたキュー YourQueueName 内の指定されたアイテムをリトライします。&lt;item IDs&gt; を指定する -Id パラメータは自動補完できます。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 2 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchQueueItem YourQueueName -Status Failed | Redo-OrchQueueItem -Verbose</dev:code>
+        <dev:remarks>
+          <maml:para>指定されたキュー YourQueueName 内のすべての失敗したアイテムをリトライします。 -Verbose パラメータを指定すると、リトライしたアイテムの ID を表示します。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 3 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchQueueItem YourQueueName -Status Failed -Revision None,InReview | Redo-OrchQueueItem -Verbose</dev:code>
+        <dev:remarks>
+          <maml:para>Get-OrchQueueItem cmdlet が一度に取得できるアイテムの数は、最大で 1000 個であることに注意してください。 キュー内にリトライ可能なアイテムが 1000 個以上ある場合、これらのアイテムをすべてリトライするには、このコマンドを -Verbose パラメータが何も出力しなくなるまで繰り返し実行してください。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 4 --------------------------</maml:title>
+        <dev:code>PS Orch1:\&gt; Get-OrchQueueItem -Recurse * -Status Failed | Redo-OrchQueueItem</dev:code>
+        <dev:remarks>
+          <maml:para>テナント内のすべてのキューにおいて、リトライ可能なキューアイテムをすべてリトライします。</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks />
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
       <command:name>Remove-OrchActionCatalog</command:name>
       <command:verb>Remove</command:verb>
       <command:noun>OrchActionCatalog</command:noun>
