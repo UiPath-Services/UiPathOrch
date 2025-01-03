@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.8.22'
+ModuleVersion = '0.9.8.23'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -238,6 +238,7 @@ CmdletsToExport = @(
 
 'Get-OrchQueueItem',
 'Import-OrchQueueItem',
+'Redo-OrchQueueItem',
 
 'Get-OrchTestSet',
 'Copy-OrchTestSet',
@@ -372,13 +373,25 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- In version 0.9.8.16, the parameter name of the Add-OrchProcess cmdlet was changed from -PackageId to -Id. However, the column name in the CSV file output by Get-OrchProcess -ExportCsv was not updated accordingly. As a result, this CSV file could not be imported using the Add-OrchProcess cmdlet.
+        ReleaseNotes = '- Added the Redo-OrchQueueItem cmdlet, which retries transaction items by specifying the queue name and the item IDs. It retries only retryable items, defined as those with a Status of Failed and a Revision of either None or InReview.
 
-- When the Get-OrchProcess cmdlet tried to deserialize ReleaseDto from the server, it failed if the ResourceOverwrite property had a value because its type was not documented in the Swagger doc. Based on the JSON returned by Automation Cloud, I defined the ResourceOverwrite type correctly to resolve the error. To account for other Orchestrator versions returning differently defined ResourceOverwrite, deserialization failures now set the value to null instead of throwing an exception. This may require future adjustments.
+  - To retry specified items in the queue, use the following command. The -Id parameter, which specifies item IDs, supports auto-completion:
 
-- A warning is now displayed if the required scope specifications for UiPathOrch are not listed in the configuration file.
+    PS Orch1:\Shared> Redo-OrchQueueItem YourQueueName <item IDs>
 
-- The authentication process can now be canceled with Ctrl+C.
+  - To retry all failed items in a queue:
+
+    PS Orch1:\Shared> Get-OrchQueueItem YourQueueName -Status Failed -Revision None,InReview | Redo-OrchQueueItem -Verbose
+
+  - Please note that the Get-OrchQueueItem cmdlet can retrieve up to a maximum of 1000 items at a time. If there are more than 1000 retryable items, repeatedly execute following command until the -Verbose parameter no longer outputs anything:
+
+    PS Orch1:\Shared> Get-OrchQueueItem YourQueueName -Status Failed -Revision None,InReview | Redo-OrchQueueItem -Verbose
+
+  - To retry all retryable queue items across all queues in the tenant:
+
+    PS Orch1:\> Get-OrchQueueItem -Recurse * -Status Failed -Revision None,InReview | Redo-OrchQueueItem
+
+- Fixed an issue where the -UserName parameter completer for the Add-OrchPmGroupMember cmdlet was not functioning correctly.
 '
 
         # Prerelease string of this module

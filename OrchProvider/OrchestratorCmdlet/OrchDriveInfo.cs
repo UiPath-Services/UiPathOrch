@@ -1642,7 +1642,7 @@ namespace UiPath.PowerShell.Core
         #region OrchQueueItem cache
         // key: folderId, <queueName, <queueItemId>>
         internal ConcurrentDictionary<Int64, Dictionary<string, Dictionary<Int64, QueueItem>>>? _dicQueueItems = null;
-        public ReadOnlyCollection<QueueItem> GetQueueItems(Folder folder, QueueDefinition queue, string filter, ulong skip, ulong first, string? orderBy = null, bool orderAscending = false)
+        public List<QueueItem> GetQueueItems(Folder folder, QueueDefinition queue, string filter, ulong skip, ulong first, string? orderBy = null, bool orderAscending = false)
         {
             if (_dicQueueItems == null)
             {
@@ -1667,15 +1667,48 @@ namespace UiPath.PowerShell.Core
             foreach (var item in items)
             {
                 item.Path = folder.GetPSPath();
-                item.PathQueue = queue.GetPSPath();
-                item.Queue = queue.Name;
+                item.PathName = queue.GetPSPath();
+                item.Name = queue.Name;
                 if (item.Id.HasValue)
                 {
                     queueItemsPerQueue[item.Id.Value] = item;
                 }
             }
 
-            return items.AsReadOnly();
+            return items;
+        }
+
+        public QueueItem? GetQueueItemById(Folder folder, QueueDefinition queue, Int64 id)
+        {
+            var item = OrchAPISession.GetQueueItemById(folder.Id!.Value, id);
+            if (item != null)
+            {
+                item.Path = folder.GetPSPath();
+                item.PathName = queue.GetPSPath();
+                item.Name = queue.Name;
+
+                if (_dicQueueItems == null)
+                {
+                    lock (this)
+                    {
+                        _dicQueueItems ??= [];
+                    }
+                }
+                if (!_dicQueueItems.TryGetValue(folder.Id!.Value, out var queueItemsPerFolder))
+                {
+                    queueItemsPerFolder = [];
+                    _dicQueueItems[folder.Id!.Value] = queueItemsPerFolder;
+                }
+
+                if (!queueItemsPerFolder.TryGetValue(queue.Name!, out var queueItemsPerQueue))
+                {
+                    queueItemsPerQueue = [];
+                    queueItemsPerFolder[queue.Name!] = queueItemsPerQueue;
+                }
+
+                queueItemsPerQueue[item.Id!.Value] = item;
+            }
+            return item;
         }
         #endregion
 

@@ -249,8 +249,11 @@ namespace UiPath.PowerShell.Completer
             }
 
             wordToComplete ??= "*";
-            if (!wordToComplete.EndsWith('*') && !wordToComplete.EndsWith('?'))
+
+            string checker = wordToComplete.Replace("`*", "").Replace("`+", "");
+            if (!checker.Contains('*') && !checker.Contains('?'))
                 wordToComplete += '*';
+
             return new WildcardPattern(wordToComplete, WildcardOptions.IgnoreCase);
         }
 
@@ -582,6 +585,16 @@ namespace UiPath.PowerShell.Completer
             //{
             //    tiphelp += $" ({queue.Description})";
             //}
+            return tiphelp;
+        }
+
+        public static string TipHelp(QueueItem item)
+        {
+            string tiphelp = item.GetPSPath();
+            if (!string.IsNullOrEmpty(item.Reference))
+            {
+                tiphelp += $" ({item.Reference})";
+            }
             return tiphelp;
         }
 

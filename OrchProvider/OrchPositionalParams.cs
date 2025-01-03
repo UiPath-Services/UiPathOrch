@@ -551,6 +551,11 @@ namespace UiPath.PowerShell.Positional
         public static string[] Parameters { get; } = ["FullName", "Username"];
     }
 
+    internal class Name_Id : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["Name", "Id"];
+    }
+
     internal class Name_ValueType : IPositionalParameters
     {
         public static string[] Parameters { get; } = ["Name", "ValueType"];

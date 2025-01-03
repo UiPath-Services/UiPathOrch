@@ -201,27 +201,27 @@ namespace UiPath.PowerShell.Core
 
                             if (!lowerScope.Contains("or.folders"))
                             {
-                                WriteWarning($"\"{drive.Name}:\\\": Ensure the \"OR.Folders.Read\" scope is included to retrieve folder information.");
+                                WriteWarning($"\"{drive.Name}{System.IO.Path.VolumeSeparatorChar}{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Folders.Read\" scope is included to retrieve folder information.");
                             }
 
                             if (!lowerScope.Contains("or.settings"))
                             {
-                                WriteWarning($"\"{drive.Name}:\\\": Ensure the \"OR.Settings.Read\" scope is included to retrieve the API version needed to properly call Orchestrator APIs.");
+                                WriteWarning($"\"{drive.Name}{System.IO.Path.VolumeSeparatorChar}{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Settings.Read\" scope is included to retrieve the API version needed to properly call Orchestrator APIs.");
                             }
 
                             if (string.IsNullOrEmpty(drive.AppSecret) && !lowerScope.Contains("or.users"))
                             {
-                                WriteWarning($"\"{drive.Name}:\\\": Ensure the \"OR.Users.Read\" scope is included to access your personal workspace folder.");
+                                WriteWarning($"\"{drive.Name}{System.IO.Path.VolumeSeparatorChar}{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Users.Read\" scope is included to access your personal workspace folder.");
                             }
                         }
 
                         if (string.IsNullOrWhiteSpace(drive.Root))
                         {
-                            WriteWarning($"\"{drive.Name}:\\\": Root is not specified!");
+                            WriteWarning($"\"{drive.Name}{System.IO.Path.VolumeSeparatorChar}{System.IO.Path.DirectorySeparatorChar}\": Root is not specified!");
                         }
                         else if ((drive.Root.EndsWith("/orchestrator_/") || drive.Root.EndsWith("/orchestrator_")))
                         {
-                            WriteWarning($"\"{drive.Name}:\\\": Root should not contain '/orchestrator_/'.");
+                            WriteWarning($"\"{drive.Name}\": The \"Root\" value in UiPathOrchConfig.json should not contain '/orchestrator_/'. Run the Edit-OrchConfig cmdlet to open the file and update it manually.");
                         }
                     }
 
@@ -236,8 +236,16 @@ namespace UiPath.PowerShell.Core
 
                     if (drive.Enabled == null || drive.Enabled.GetValueOrDefault())
                     {
-                        var orchDrive = new OrchDriveInfo(ProviderInfo, drive);
-                        ret.Add(orchDrive);
+                        try
+                        {
+                            var orchDrive = new OrchDriveInfo(ProviderInfo, drive);
+                            ret.Add(orchDrive);
+                        }
+                        catch (Exception ex)
+                        {
+                            WriteError(new ErrorRecord(new OrchException(drive.Name, ex),
+                                "NewPSDriveError", ErrorCategory.InvalidData, drive.Name));
+                        }
                     }
                 }
                 return ret;

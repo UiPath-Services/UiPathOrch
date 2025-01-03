@@ -24,3 +24,12 @@ Copy-OrchPmGroup:
 {"message":"Folder does not exist or the user does not have access to the folder.","errorCode":1100,"traceId":"00-f9ec99bcada90902ed5216acd5a19afc-a84b1a270cc7f87a-00"}
 
 {"message":"You are not authorized!","errorCode":0,"result":null,"targetUrl":null,"success":false,"error":{"code":0,"message":"You are not authorized!","details":"You are not allowed to perform this operation.","validationErrors":null},"unAuthorizedRequest":true,"__abp":true}
+
+Add-OrchPmGroupMember:
+{"StatusCode":400,"StatusDescription":"BadRequest","Message":"entityNames size is larger that maximum supported value of 20 (Parameter 'entityNames')"}
+
+Redo-OrchQueueItem:
+{"message":"QueueItem does not exist.","errorCode":1002,"traceId":"00-251a15bda95bc9fab2c2f1f469010705-1dca256d8c91bb21-01"}
+
+Redo-OrchQueueItem:
+{"message":"itemReviewStatusParameters must not be null","errorCode":0,"traceId":"00-fbc101bfd0e701a9cd7eb7c0fbb7b03b-47ec2d4ee4e8ed71-01"}

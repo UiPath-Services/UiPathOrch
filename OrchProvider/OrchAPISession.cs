@@ -737,6 +737,21 @@ namespace UiPath.OrchAPI
             return GetEnumerable<QueueItem>("/odata/QueueItems", folderId, $"{filter}{order}&$expand=Robot,ReviewerUser&orderby=Id%20desc", skip, first);
         }
 
+        public QueueItem? GetQueueItemById(Int64 folderId, Int64 id)
+        {
+            return HttpRequest<QueueItem>(HttpMethod.Get, $"/odata/QueueItems({id})", folderId);
+        }
+
+        public BulkOperationResponse? RetryQueueItem(Int64 folderId, IEnumerable<RetryQueueItem> items)
+        {
+            RetryQueueItemRequest payload = new()
+            {
+                queueItems = items,
+                status = "Retried"
+            };
+            return HttpRequest<BulkOperationResponse>(HttpMethod.Post, "/odata/QueueItems/UiPathODataSvc.SetItemReviewStatus", folderId, payload);
+        }
+
         public IEnumerable<RobotsFromFolderModel> GetRobotsFromFolder(Int64 folderId)
         {
             return GetEnumerable<RobotsFromFolderModel>($"/odata/Robots/UiPath.Server.Configuration.OData.GetRobotsFromFolder(folderId={folderId})");
@@ -1533,11 +1548,13 @@ namespace UiPath.OrchAPI
             HttpRequest(HttpMethod.Delete, $"/odata/ProcessSchedules({processScheduleId})", folderId);
         }
 
-        public bool? EnableProcessSchedule(Int64 folderId, Int64[] processScheduleIds, bool enabled = true)
+        public bool? EnableProcessSchedule(Int64 folderId, IEnumerable<Int64> processScheduleIds, bool enabled = true)
         {
-            var payload = new Dictionary<string, object?>();
-            payload["scheduleIds"] = processScheduleIds;
-            payload["enabled"] = enabled;
+            var payload = new Dictionary<string, object?>
+            {
+                ["scheduleIds"] = processScheduleIds,
+                ["enabled"] = enabled
+            };
 
             var ret = HttpRequest<HttpBodyValue<bool>>(HttpMethod.Post, "/odata/ProcessSchedules/UiPath.Server.Configuration.OData.SetEnabled", folderId, payload);
             return ret?.value;

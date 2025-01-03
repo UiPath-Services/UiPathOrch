@@ -464,6 +464,9 @@ Moves users between two groups within an organization.
 ### [Open-OrchJob](Open-OrchJob.md)
 {{ Fill in the Synopsis }}
 
+### [Redo-OrchQueueItem](Redo-OrchQueueItem.md)
+Retries failed transaction items in the specified queues.
+
 ### [Remove-OrchActionCatalog](Remove-OrchActionCatalog.md)
 Removes the action catalogs.
 

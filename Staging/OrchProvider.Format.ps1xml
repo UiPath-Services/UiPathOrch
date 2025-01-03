@@ -1259,6 +1259,47 @@
     </View>
 
     <View>
+      <Name>ExtendedRobot</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.ExtendedRobot</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Machine</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>FullName</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Username</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>Machine</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  $_.User.FullName
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Username</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
       <Name>SimpleFolder</Name>
       <ViewSelectedBy>
         <TypeName>UiPath.PowerShell.Entities.SimpleFolder</TypeName>
@@ -1638,7 +1679,7 @@
       </ViewSelectedBy>
       <GroupBy>
         <Label>Queue</Label>
-        <PropertyName>PathQueue</PropertyName>
+        <PropertyName>PathName</PropertyName>
       </GroupBy>
       <TableControl>
         <TableHeaders>
@@ -1716,7 +1757,7 @@
     </View>
 
     <View>
-      <Name>QueueItem</Name>
+      <Name>FailedQueueItem</Name>
       <ViewSelectedBy>
         <TypeName>UiPath.PowerShell.Entities.FailedQueueItem</TypeName>
       </ViewSelectedBy>
@@ -1748,6 +1789,47 @@
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>ErrorMessage</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>BulkOperationResponse</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.BulkOperationResponse</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Queue</Label>
+        <PropertyName>PathQueue</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Success</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Message</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>FailedItems</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>Success</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Message</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  -join (($_.FailedItems | ForEach-Object { $_.ToString() }) -join ", ")
+                </ScriptBlock>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -3279,35 +3361,34 @@
       <ViewSelectedBy>
         <TypeName>UiPath.PowerShell.Entities.ActivitySettings</TypeName>
       </ViewSelectedBy>
-      <TableControl>
-        <TableHeaders>
-          <TableColumnHeader>
-            <Label>Path</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>ApiVersion</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>SignalR</Label>
-          </TableColumnHeader>
-        </TableHeaders>
-        <TableRowEntries>
-          <TableRowEntry>
-            <TableColumnItems>
-              <TableColumnItem>
-                <PropertyName>Path</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem>
+                <Label>ApiVersion</Label>
                 <PropertyName>ApiVersion</PropertyName>
-                <Alignment>right</Alignment>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>SignalR</PropertyName>
-              </TableColumnItem>
-            </TableColumnItems>
-          </TableRowEntry>
-        </TableRowEntries>
-      </TableControl>
+              </ListItem>
+              <ListItem>
+                <Label>SignalR.Url</Label>
+                <ScriptBlock>
+                  $_.SignalR.Url
+                </ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>SignalR.SkipNegotiation</Label>
+                <ScriptBlock>
+                  $_.SignalR.SkipNegotiation
+                </ScriptBlock>
+              </ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
     </View>
 
     <View>
