@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands
     // このコマンドレットからは、メンバーを追加する機能は外す。
     // 空っぽのグループを追加するだけのコマンドレットでないと、ShouldProcess がうまいことサポートできないため。
 
-    [Cmdlet(VerbsCommon.Add, "OrchPmGroup", SupportsShouldProcess = true)]
+    [Cmdlet(VerbsCommon.New, "OrchPmGroup", SupportsShouldProcess = true)]
     public class AddPmGroupCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]

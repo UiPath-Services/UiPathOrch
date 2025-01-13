@@ -7,7 +7,7 @@ using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
-    [Cmdlet(VerbsCommon.Add, "OrchMachine", SupportsShouldProcess = true)]
+    [Cmdlet(VerbsCommon.New, "OrchMachine", SupportsShouldProcess = true)]
     [OutputType(typeof(Entities.CreatedMachine))]
     public class AddMachineCommand : OrchestratorPSCmdlet
     {

@@ -5,7 +5,7 @@ online version:
 schema: 2.0.0
 ---
 
-# Add-OrchPmGroup
+# New-OrchPmGroup
 
 ## SYNOPSIS
 Adds groups to the Identity server.
@@ -13,7 +13,7 @@ Adds groups to the Identity server.
 ## SYNTAX
 
 ```
-Add-OrchPmGroup [-GroupName] <String[]> [-Path <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf]
+New-OrchPmGroup [-GroupName] <String[]> [-Path <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf]
  [-Confirm] [<CommonParameters>]
 ```
 
@@ -53,7 +53,7 @@ Accept wildcard characters: False
 ```
 
 ### -GroupName
-Specifies the name of the groups to be added.
+Specifies the name of the groups to be created.
 
 ```yaml
 Type: String[]
@@ -119,6 +119,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
+
 ## OUTPUTS
 
 ### System.Object

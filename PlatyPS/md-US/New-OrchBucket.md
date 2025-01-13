@@ -5,15 +5,15 @@ online version:
 schema: 2.0.0
 ---
 
-# Add-OrchBucket
+# New-OrchBucket
 
 ## SYNOPSIS
-Adds storage buckets.
+Creates storage buckets.
 
 ## SYNTAX
 
 ```
-Add-OrchBucket [[-Name] <String[]>] [-Description <String>] [-StorageProvider <String>]
+New-OrchBucket [[-Name] <String[]>] [-Description <String>] [-StorageProvider <String>]
  [-StorageParameters <String>] [-StorageContainer <String>] [-CredentialStore <String>] [-Password <String>]
  [-Options <String[]>] [-ExternalName <String>] [-Tags <String[]>] [-Path <String[]>]
  [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
@@ -256,10 +256,13 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
+
 ### System.String
+
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.Bucket
+
 ## NOTES
 
 ## RELATED LINKS

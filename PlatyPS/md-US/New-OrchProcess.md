@@ -5,15 +5,15 @@ online version:
 schema: 2.0.0
 ---
 
-# Add-OrchProcess
+# New-OrchProcess
 
 ## SYNOPSIS
-Adds proccesses.
+Creates processes.
 
 ## SYNTAX
 
 ```
-Add-OrchProcess -Id <String[]> [[-Version] <String>] [-Name <String>] [-Description <String>]
+New-OrchProcess [-Id] <String[]> [[-Version] <String>] [-Name <String>] [-Description <String>]
  [-EntryPoint <String>] [-InputArguments <String>] [-Priority <String>] [-HiddenForAttendedUser <String>]
  [-RemoteControlAccess <String>] [-RetentionAction <String>] [-RetentionPeriod <Int32>]
  [-RetentionBucket <String>] [-ErrorRecordingEnabled <String>] [-Quality <Int32>] [-Frequency <Int32>]
@@ -43,7 +43,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -AlwaysRunning
-Specifies the AlwaysRunning of the processes to be added.
+Specifies the AlwaysRunning of the processes to be created.
 
 ```yaml
 Type: String
@@ -58,7 +58,7 @@ Accept wildcard characters: False
 ```
 
 ### -AutoStartProcess
-Specifies the AutoStartProcess of the processes to be added.
+Specifies the AutoStartProcess of the processes to be created.
 
 ```yaml
 Type: String
@@ -103,7 +103,7 @@ Accept wildcard characters: False
 ```
 
 ### -Description
-Specifies the Description of the processes to be added.
+Specifies the Description of the processes to be created.
 
 ```yaml
 Type: String
@@ -118,7 +118,7 @@ Accept wildcard characters: False
 ```
 
 ### -Duration
-Specifies the Duration of the processes to be added.
+Specifies the Duration of the processes to be created.
 
 ```yaml
 Type: Int32
@@ -133,7 +133,7 @@ Accept wildcard characters: False
 ```
 
 ### -EntryPoint
-Specifies the EntryPoint of the processes to be added.
+Specifies the EntryPoint of the processes to be created.
 
 ```yaml
 Type: String
@@ -148,7 +148,7 @@ Accept wildcard characters: True
 ```
 
 ### -ErrorRecordingEnabled
-Specifies the ErrorRecordingEnabled of the processes to be added.
+Specifies the ErrorRecordingEnabled of the processes to be created.
 
 ```yaml
 Type: String
@@ -163,7 +163,7 @@ Accept wildcard characters: False
 ```
 
 ### -Frequency
-Specifies the Frequency of the processes to be added.
+Specifies the Frequency of the processes to be created.
 
 ```yaml
 Type: Int32
@@ -178,7 +178,7 @@ Accept wildcard characters: False
 ```
 
 ### -HiddenForAttendedUser
-Specifies the HiddenForAttendedUser of the processes to be added.
+Specifies the HiddenForAttendedUser of the processes to be created.
 
 ```yaml
 Type: String
@@ -192,8 +192,23 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
+### -Id
+{{ Fill Id Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: 0
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
+```
+
 ### -InputArguments
-Specifies the InputArguments of the processes to be added.
+Specifies the InputArguments of the processes to be created.
 
 ```yaml
 Type: String
@@ -208,7 +223,7 @@ Accept wildcard characters: False
 ```
 
 ### -MaxDurationSeconds
-Specifies the MaxDurationSeconds of the processes to be added.
+Specifies the MaxDurationSeconds of the processes to be created.
 
 ```yaml
 Type: Int32
@@ -223,7 +238,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-Specifies the Name of the processes to be added.
+Specifies the Name of the processes to be created.
 
 ```yaml
 Type: String
@@ -253,7 +268,7 @@ Accept wildcard characters: True
 ```
 
 ### -Priority
-Specifies the Priority of the processes to be added.
+Specifies the Priority of the processes to be created.
 
 ```yaml
 Type: String
@@ -268,7 +283,7 @@ Accept wildcard characters: False
 ```
 
 ### -Quality
-Specifies the Quality of the processes to be added.
+Specifies the Quality of the processes to be created.
 
 ```yaml
 Type: Int32
@@ -283,7 +298,7 @@ Accept wildcard characters: False
 ```
 
 ### -QueueItemVideoRecordingType
-Specifies the QueueItemVideoRecordingType of the processes to be added.
+Specifies the QueueItemVideoRecordingType of the processes to be created.
 
 ```yaml
 Type: String
@@ -313,7 +328,7 @@ Accept wildcard characters: False
 ```
 
 ### -RemoteControlAccess
-Specifies the RemoteControlAccess of the processes to be added.
+Specifies the RemoteControlAccess of the processes to be created.
 
 ```yaml
 Type: String
@@ -328,7 +343,7 @@ Accept wildcard characters: False
 ```
 
 ### -RetentionAction
-Specifies the RetentionAction of the processes to be added.
+Specifies the RetentionAction of the processes to be created.
 
 ```yaml
 Type: String
@@ -343,7 +358,7 @@ Accept wildcard characters: False
 ```
 
 ### -RetentionBucket
-Specifies the RetentionBucket of the processes to be added.
+Specifies the RetentionBucket of the processes to be created.
 
 ```yaml
 Type: String
@@ -358,7 +373,7 @@ Accept wildcard characters: True
 ```
 
 ### -RetentionPeriod
-Specifies the RetentionPeriod of the processes to be added.
+Specifies the RetentionPeriod of the processes to be created.
 
 ```yaml
 Type: Int32
@@ -373,7 +388,7 @@ Accept wildcard characters: False
 ```
 
 ### -Tags
-Specifies the Tags of the processes to be added.
+Specifies the Tags of the processes to be created.
 
 ```yaml
 Type: String[]
@@ -388,7 +403,7 @@ Accept wildcard characters: False
 ```
 
 ### -Version
-Specifies the Version of the processes to be added.
+Specifies the Version of the processes to be created.
 
 ```yaml
 Type: String
@@ -403,7 +418,7 @@ Accept wildcard characters: True
 ```
 
 ### -VideoRecordingType
-Specifies the VideoRecordingType of the processes to be added.
+Specifies the VideoRecordingType of the processes to be created.
 
 ```yaml
 Type: String
@@ -448,32 +463,21 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -Id
-{{ Fill Id Description }}
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: True
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
 ### System.String[]
+
 ### System.String
+
 ### System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]
+
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.Release
+
 ## NOTES
 
 ## RELATED LINKS

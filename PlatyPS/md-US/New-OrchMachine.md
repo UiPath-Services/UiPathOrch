@@ -5,15 +5,15 @@ online version:
 schema: 2.0.0
 ---
 
-# Add-OrchMachine
+# New-OrchMachine
 
 ## SYNOPSIS
-Adds machines.
+Creates machines.
 
 ## SYNTAX
 
 ```
-Add-OrchMachine [-Name] <String[]> [-Description <String>] [-Type <String>] [-Scope <String>]
+New-OrchMachine [-Name] <String[]> [-Description <String>] [-Type <String>] [-Scope <String>]
  [-UnattendedSlots <Int32>] [-NonProductionSlots <Int32>] [-TestAutomationSlots <Int32>]
  [-AutomationType <String>] [-TargetFramework <String>] [-RobotUsers <String[]>] [-Tags <String[]>]
  [-Path <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
@@ -40,7 +40,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -AutomationType
-Specifies the AutomationType of the machines to be added. Please specify one of the following: Any, Foreground, or Background.
+Specifies the AutomationType of the machines to be created. Please specify one of the following: Any, Foreground, or Background.
 
 ```yaml
 Type: String
@@ -70,7 +70,7 @@ Accept wildcard characters: False
 ```
 
 ### -Description
-Specifies the Description of the machines to be added.
+Specifies the Description of the machines to be created.
 
 ```yaml
 Type: String
@@ -85,7 +85,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-Specifies the Name of the machines to be added.
+Specifies the Name of the machines to be created.
 
 ```yaml
 Type: String[]
@@ -100,7 +100,7 @@ Accept wildcard characters: False
 ```
 
 ### -NonProductionSlots
-Specifies the NonProductionSlots of the machines to be added.
+Specifies the NonProductionSlots of the machines to be created.
 
 ```yaml
 Type: Int32
@@ -129,8 +129,53 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
+### -RobotUsers
+{{ Fill RobotUsers Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
+```
+
+### -Scope
+{{ Fill Scope Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -Tags
+{{ Fill Tags Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
 ### -TargetFramework
-Specifies the TargetFramework of the machines to be added. Please specify one of the following: Any, Windows, or Portable.
+Specifies the TargetFramework of the machines to be created. Please specify one of the following: Any, Windows, or Portable.
 
 ```yaml
 Type: String
@@ -145,7 +190,7 @@ Accept wildcard characters: False
 ```
 
 ### -TestAutomationSlots
-Specifies the TestAutomationSlots of the machines to be added.
+Specifies the TestAutomationSlots of the machines to be created.
 
 ```yaml
 Type: Int32
@@ -160,7 +205,7 @@ Accept wildcard characters: False
 ```
 
 ### -Type
-Specifies the Type of the machines to be added. Please specify one of the following: Template.
+Specifies the Type of the machines to be created. Please specify one of the following: Template.
 
 ```yaml
 Type: String
@@ -175,7 +220,7 @@ Accept wildcard characters: False
 ```
 
 ### -UnattendedSlots
-Specifies the UnattendedSlots of the machines to be added.
+Specifies the UnattendedSlots of the machines to be created.
 
 ```yaml
 Type: Int32
@@ -220,62 +265,21 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -Tags
-{{ Fill Tags Description }}
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: False
-```
-
-### -RobotUsers
-{{ Fill RobotUsers Description }}
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
-### -Scope
-{{ Fill Scope Description }}
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: False
-```
-
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
 ### System.String[]
+
 ### System.String
+
 ### System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]
+
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.CreatedMachine
+
 ## NOTES
 
 ## RELATED LINKS

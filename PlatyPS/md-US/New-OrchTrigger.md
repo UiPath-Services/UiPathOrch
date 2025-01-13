@@ -5,15 +5,15 @@ online version:
 schema: 2.0.0
 ---
 
-# Add-OrchTrigger
+# New-OrchTrigger
 
 ## SYNOPSIS
-Adds triggers.
+Creates triggers.
 
 ## SYNTAX
 
 ```
-Add-OrchTrigger [-Name] <String[]> [[-ReleaseName] <String>] [-Enabled <String>] [-Priority <String>]
+New-OrchTrigger [-Name] <String[]> [[-ReleaseName] <String>] [-Enabled <String>] [-Priority <String>]
  [-StartStrategy <Int32>] [-StopStrategy <String>] [-StopProcessExpression <String>]
  [-KillProcessExpression <String>] [-AlertPendingExpression <String>] [-AlertRunningExpression <String>]
  [-ConsecutiveJobFailuresThreshold <Int32>] [-JobFailuresGracePeriodInHours <Int32>] [-RuntimeType <String>]
@@ -532,12 +532,17 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
+
 ### System.String
+
 ### System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]
+
 ### System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]
+
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.ProcessSchedule
+
 ## NOTES
 
 ## RELATED LINKS

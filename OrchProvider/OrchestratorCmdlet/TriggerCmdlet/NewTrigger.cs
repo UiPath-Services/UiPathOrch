@@ -12,7 +12,7 @@ using TPositional = UiPath.PowerShell.Positional.Name_ReleaseName;
 
 namespace UiPath.PowerShell.Commands
 {
-    [Cmdlet(VerbsCommon.Add, "OrchTrigger", SupportsShouldProcess = true)]
+    [Cmdlet(VerbsCommon.New, "OrchTrigger", SupportsShouldProcess = true)]
     [OutputType(typeof(Entities.ProcessSchedule))]
     public class AddTriggerCommand : OrchestratorPSCmdlet
     {

@@ -5,15 +5,15 @@ online version:
 schema: 2.0.0
 ---
 
-# Add-OrchPmGroup
+# New-OrchPmGroup
 
 ## SYNOPSIS
-Identity Server にグループを追加します。
+Identity Server にグループを作成します。
 
 ## SYNTAX
 
 ```
-Add-OrchPmGroup [-GroupName] <String[]> [-Path <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf]
+New-OrchPmGroup [-GroupName] <String[]> [-Path <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf]
  [-Confirm] [<CommonParameters>]
 ```
 
@@ -53,7 +53,7 @@ Accept wildcard characters: False
 ```
 
 ### -GroupName
-追加するグループの名前を指定します。
+作成するグループの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -119,6 +119,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
+
 ## OUTPUTS
 
 ### System.Object

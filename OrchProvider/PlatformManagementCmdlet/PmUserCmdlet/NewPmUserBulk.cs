@@ -50,7 +50,7 @@ namespace UiPath.PowerShell.Commands
         }
     }
 
-    [Cmdlet(VerbsCommon.Add, "OrchPmUserBulk", SupportsShouldProcess = true)]
+    [Cmdlet(VerbsCommon.New, "OrchPmUserBulk", SupportsShouldProcess = true)]
     [OutputType(typeof(Entities.PmUser))]
     public class AddPmUserBulkCommand : OrchestratorPSCmdlet
     {
