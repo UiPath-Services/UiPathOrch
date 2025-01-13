@@ -37,21 +37,16 @@ Retries the specified items in the queue. The -Id parameter, which specifies <it
 
 ### Example 2
 ```powershell
-PS Orch1:\Shared> Get-OrchQueueItem YourQueueName -Status Failed | Redo-OrchQueueItem -Verbose
+PS Orch1:\Shared> Get-OrchQueueItem YourQueueName -Status Failed -Revision None,InReview | Redo-OrchQueueItem -Verbose
 ```
 
 Retries all failed items in the specified queue, YourQueueName.
 The -Verbose parameter displays the IDs of the retried items.
 
-### Example 3
-```powershell
-PS Orch1:\Shared> Get-OrchQueueItem YourQueueName -Status Failed -Revision None,InReview | Redo-OrchQueueItem -Verbose
-```
-
 Please note that the Get-OrchQueueItem cmdlet can retrieve up to a maximum of 1000 items at a time.
-If there are more than 1000 retryable items, repeatedly execute this command until the -Verbose parameter no longer outputs anything.
+If there are more than 1,000 retriable items in the queue, repeat this command until the -Verbose parameter stops producing output to retry all of these items.
 
-### Example 4
+### Example 3
 ```powershell
 PS Orch1:\> Get-OrchQueueItem -Recurse * -Status Failed | Redo-OrchQueueItem
 ```

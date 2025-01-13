@@ -33269,21 +33269,15 @@
       </command:example>
       <command:example>
         <maml:title>-------------------------- Example 2 --------------------------</maml:title>
-        <dev:code>PS Orch1:\Shared&gt; Get-OrchQueueItem YourQueueName -Status Failed | Redo-OrchQueueItem -Verbose</dev:code>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchQueueItem YourQueueName -Status Failed -Revision None,InReview | Redo-OrchQueueItem -Verbose</dev:code>
         <dev:remarks>
           <maml:para>指定されたキュー YourQueueName 内のすべての失敗したアイテムをリトライします。 -Verbose パラメータを指定すると、リトライしたアイテムの ID を表示します。</maml:para>
+          <maml:para>Get-OrchQueueItem cmdlet が一度に取得できるアイテムの数は、最大で 1000 個であることに注意してください。 キュー内にリトライ可能なアイテムが 1,000 個以上ある場合、これらのアイテムをすべてリトライするには、このコマンドを -Verbose パラメータが何も出力しなくなるまで繰り返し実行してください。</maml:para>
         </dev:remarks>
       </command:example>
       <command:example>
         <maml:title>-------------------------- Example 3 --------------------------</maml:title>
-        <dev:code>PS Orch1:\Shared&gt; Get-OrchQueueItem YourQueueName -Status Failed -Revision None,InReview | Redo-OrchQueueItem -Verbose</dev:code>
-        <dev:remarks>
-          <maml:para>Get-OrchQueueItem cmdlet が一度に取得できるアイテムの数は、最大で 1000 個であることに注意してください。 キュー内にリトライ可能なアイテムが 1000 個以上ある場合、これらのアイテムをすべてリトライするには、このコマンドを -Verbose パラメータが何も出力しなくなるまで繰り返し実行してください。</maml:para>
-        </dev:remarks>
-      </command:example>
-      <command:example>
-        <maml:title>-------------------------- Example 4 --------------------------</maml:title>
-        <dev:code>PS Orch1:\&gt; Get-OrchQueueItem -Recurse * -Status Failed | Redo-OrchQueueItem</dev:code>
+        <dev:code>PS Orch1:\&gt; Get-OrchQueueItem -Recurse * -Status Failed -Revision None,InReview | Redo-OrchQueueItem</dev:code>
         <dev:remarks>
           <maml:para>テナント内のすべてのキューにおいて、リトライ可能なキューアイテムをすべてリトライします。</maml:para>
         </dev:remarks>

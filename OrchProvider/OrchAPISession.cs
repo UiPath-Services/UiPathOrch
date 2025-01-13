@@ -161,6 +161,12 @@ namespace UiPath.OrchAPI
                         Proxy = proxy,
                         UseProxy = true
                     };
+
+                    // SSL 証明書がない場合の例外を無視する
+                    if (drive._psDrive.IgnoreSslErrors.GetValueOrDefault(false))
+                    {
+                        handler.ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => true;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -171,7 +177,19 @@ namespace UiPath.OrchAPI
             }
             else
             {
-                _httpClient = new HttpClient();
+                // SSL 証明書がない場合の例外を無視する
+                if (drive._psDrive.IgnoreSslErrors.GetValueOrDefault(false))
+                {
+                    var handler = new HttpClientHandler
+                    {
+                        ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => true,
+                    };
+                    _httpClient = new HttpClient(handler);
+                }
+                else
+                {
+                    _httpClient = new HttpClient();
+                }
             }
 
             var version = Assembly.GetExecutingAssembly().GetName().Version;
@@ -673,7 +691,19 @@ namespace UiPath.OrchAPI
 
         public QueueDefinition? CreateQueue(Int64 folderId, QueueDefinitionPosting queue)
         {
-            return HttpRequest<QueueDefinition>(HttpMethod.Post, "/odata/QueueDefinitions/UiPath.Server.Configuration.OData.CreateQueue", folderId, queue);
+            // OC 22.10.1 (15.0) で動作確認済み POST /odata/QueueDefinitions
+            // OC 23.4.0 (16.0) で動作確認済み POST /odata/QueueDefinitions/UiPath.Server.Configuration.OData.CreateQueue
+            if (ApiVersion >= 16)
+            {
+                return HttpRequest<QueueDefinition>(HttpMethod.Post, "/odata/QueueDefinitions/UiPath.Server.Configuration.OData.CreateQueue", folderId, queue);
+            }
+            else
+            {
+                queue.RetentionAction = null;
+                queue.RetentionPeriod = null;
+                queue.RetentionBucketId = null;
+                return HttpRequest<QueueDefinition>(HttpMethod.Post, "/odata/QueueDefinitions", folderId, queue);
+            }
         }
 
         public void EditQueue(Int64 folderId, QueueDefinitionPosting queue)
@@ -990,6 +1020,7 @@ namespace UiPath.OrchAPI
             public bool? InheritEnabled { get; set; } = inheritEnabled;
         }
 
+        // ApiVersion = 15 で動作確認済み
         public void SetFolderMachineInherit(Int64 folderId, Int64 machineId, bool enabled)
         {
             FolderMachineInherit payload = new(machineId, folderId, enabled);
@@ -1435,14 +1466,23 @@ namespace UiPath.OrchAPI
             return HttpRequest<Release>(HttpMethod.Get, $"/odata/Releases({releaseId})", folderId, query);
         }
 
-        public Release? CreateRelease(Int64 folderId, Release release)
+        public Release? PostRelease(Int64 folderId, Release release)
         {
-            return HttpRequest<Release>(HttpMethod.Post, "/odata/Releases", folderId, release);
-        }
-
-        public Release? CreateRelease2(Int64 folderId, Release release)
-        {
-            return HttpRequest<Release>(HttpMethod.Post, "/odata/Releases/UiPath.Server.Configuration.OData.CreateRelease", folderId, release);
+            // OC 22.10.1 (15.0) で動作確認済み POST /odata/Releases
+            // OC 23.4.0 (16.0) で動作確認済み POST /odata/Releases
+            // OC 23.10.6 (17.0) で動作確認済み POST /odata/Releases/UiPath.Server.Configuration.OData.CreateRelease
+            if (ApiVersion >= 17)
+            {
+                return HttpRequest<Release>(HttpMethod.Post, "/odata/Releases/UiPath.Server.Configuration.OData.CreateRelease", folderId, release);
+            }
+            else
+            {
+                release.VideoRecordingSettings = null;
+                release.RetentionAction = null;
+                release.RetentionPeriod = null;
+                release.RetentionBucketId = null;
+                return HttpRequest<Release>(HttpMethod.Post, "/odata/Releases", folderId, release);
+            }
         }
 
         // 非公開の API だな。
@@ -1455,6 +1495,9 @@ namespace UiPath.OrchAPI
         #region ReleaseRetention
         public ReleaseRetentionSetting? GetReleaseRetention(Int64 folderId, Int64 releaseId)
         {
+            // API ver が 16.0 の場合には、リテンションポリシーを読み取れなかった。
+            // API ver が 17.0 の場合には、リテンションポリシーを読み取れた。
+            if (ApiVersion < 17) return null;
             return HttpRequest<ReleaseRetentionSetting>(HttpMethod.Get, $"/odata/ReleaseRetention({releaseId})", folderId);
         }
 

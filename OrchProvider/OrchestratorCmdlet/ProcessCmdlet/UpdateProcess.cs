@@ -348,18 +348,17 @@ namespace UiPath.PowerShell.Commands
                     // 既存のプロセスの内容から、post data を作成
                     Release newRelease = OrchCollectionExtensions.DeepCopy(process)!;
 
-                    // API ver が 15.0 の場合には、リテンションポリシーを読み取れなかった。この正しい数字は、もっと大きいかもしれない。
-                    if (drive.OrchAPISession.ApiVersion >= 16)
+                    try
                     {
-                        try
-                        {
-                            // 既存の Retention を取得して設定しておく
-                            var retention = drive.OrchAPISession.GetReleaseRetention(folder.Id!.Value, process!.Id!.Value);
-                            newRelease.RetentionAction = retention?.Action;
-                            newRelease.RetentionPeriod = retention?.Period;
-                            newRelease.RetentionBucketId = retention?.BucketId;
-                        }
-                        catch { }
+                        // 既存の Retention を取得して設定しておく
+                        var retention = drive.OrchAPISession.GetReleaseRetention(folder.Id!.Value, process!.Id!.Value);
+                        newRelease.RetentionAction = retention?.Action;
+                        newRelease.RetentionPeriod = retention?.Period;
+                        newRelease.RetentionBucketId = retention?.BucketId;
+                    }
+                    catch (Exception ex) {
+                        string msg2 = $"Get release retention failed.";
+                        WriteError(new ErrorRecord(new OrchException(target, msg2, ex), "GetReleaseRetentionError", ErrorCategory.InvalidOperation, target));
                     }
 
                     #region パラメータで指定された値を設定
