@@ -2501,6 +2501,7 @@ namespace UiPath.PowerShell.Core
                 }
             );
 
+            // 15 の web interface で &$expand=UpdateInfo が付与されていることを確認済み
             Machines = new(this,
                 OrchAPISession.ApiVersion >= 12
                     ? () => OrchAPISession.GetMachines("&$expand=UpdateInfo")
@@ -2551,8 +2552,8 @@ namespace UiPath.PowerShell.Core
 
             // インデックスなしのフォルダエンティティ
             FolderFeedId                   = new(this, OrchAPISession.GetFolderFeedId);
-            ActionCatalogs                 = new(this, OrchAPISession.GetTaskCatalogs,       (e, folderPath) => e.Path = folderPath, 16);
-            ApiTriggers                    = new(this, OrchAPISession.GetHttpTriggers,       (e, folderPath) => e.Path = folderPath, 16);
+            ActionCatalogs                 = new(this, OrchAPISession.GetTaskCatalogs,       (e, folderPath) => e.Path = folderPath, 16); // 16 でエラーが返らないことを確認済み
+            ApiTriggers                    = new(this, OrchAPISession.GetHttpTriggers,       (e, folderPath) => e.Path = folderPath, 18); // 17 で web interface にないことを確認済み (17 で実行してもエラーは返らないようだが、)
             Buckets                        = new(this, OrchAPISession.GetBuckets,            (e, folderPath) => e.Path = folderPath);
             Environments                   = new(this, OrchAPISession.GetEnvironments,       (e, folderPath) => e.Path = folderPath);
             FolderUsersWithNoInherited     = new(this, fid => OrchAPISession.GetUsersForFolder(fid, false), (e, folderPath) => e.Path = folderPath);
@@ -2562,11 +2563,11 @@ namespace UiPath.PowerShell.Core
             Reviewers                      = new(this, OrchAPISession.GetReviewers);
             RobotsFromFolder               = new(this, OrchAPISession.GetRobotsFromFolder,   (e, folderPath) => e.Path = folderPath);
             Sessions                       = new(this, OrchAPISession.GetSessions,           (e, folderPath) => e.Path = folderPath);
-            TestCases                      = new(this, OrchAPISession.GetTestCases,          (e, folderPath) => e.Path = folderPath, 16);
-            TestCaseExecutions             = new(this, OrchAPISession.GetTestCaseExecutions, (e, folderPath) => e.Path = folderPath, 16);
-            TestDataQueues                 = new(this, OrchAPISession.GetTestDataQueues,     (e, folderPath) => e.Path = folderPath, 16);
-            TestSets                       = new(this, OrchAPISession.GetTestSets,           (e, folderPath) => e.Path = folderPath, 16);
-            TestSetSchedules               = new(this, OrchAPISession.GetTestSetSchedules,   (e, folderPath) => e.Path = folderPath, 16);
+            TestCases                      = new(this, OrchAPISession.GetTestCases,          (e, folderPath) => e.Path = folderPath, 18); // 17 で web interface にないことを確認済み
+            TestCaseExecutions             = new(this, OrchAPISession.GetTestCaseExecutions, (e, folderPath) => e.Path = folderPath, 18); // 17 で web interface にないことを確認済み
+            TestDataQueues                 = new(this, OrchAPISession.GetTestDataQueues,     (e, folderPath) => e.Path = folderPath, 18); // 17 で web interface にないことを確認済み
+            TestSets                       = new(this, OrchAPISession.GetTestSets,           (e, folderPath) => e.Path = folderPath, 18); // 17 で web interface にないことを確認済み
+            TestSetSchedules               = new(this, OrchAPISession.GetTestSetSchedules,   (e, folderPath) => e.Path = folderPath, 18); // 17 で web interface にないことを確認済み
             UserRobots                     = new(this, OrchAPISession.GetUserRobots);
 
             Assets = new(this, OrchAPISession.GetAssets, (e, folderPath) =>
@@ -2584,6 +2585,7 @@ namespace UiPath.PowerShell.Core
                 }
             });
 
+            // 15: ?$filter=((((IsAssignedToFolder eq true) or (IsInherited eq true))))
             FolderMachinesAssigned = new(this,
                 OrchAPISession.ApiVersion >= 12
                     ? fid => OrchAPISession.GetMachinesAssignedTo(fid, "&$filter=((IsAssignedToFolder eq true) or (IsInherited eq true))")

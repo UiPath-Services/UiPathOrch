@@ -348,6 +348,10 @@ namespace UiPath.PowerShell.Core
                 .FolderMachinesAssignable.Get(newFolder)
                 .ToDictionary(m => m.Name!, StringComparer.OrdinalIgnoreCase);
 
+            var dstMachinesAssigned = dstDrive
+                .FolderMachinesAssigned.Get(newFolder)
+                .ToDictionary(m => m.Name!, StringComparer.OrdinalIgnoreCase);
+
             // 宛先が同じドライブでも、名前で Id を探した方がいいかな。。
             //if (srcDrive == dstDrive)
             //{
@@ -374,6 +378,10 @@ namespace UiPath.PowerShell.Core
                     {
                         machinesToBeAdded.Add(dstMachine);
                     }
+                }
+                else if (dstMachinesAssigned.TryGetValue(srcMachine.Name!, out dstMachine))
+                {
+                    _this.WriteWarning($"The folder '{newFolder.GetPSPath()}' already has the machine '{srcMachine.Name}' assigned.");
                 }
                 else
                 {
@@ -405,7 +413,10 @@ namespace UiPath.PowerShell.Core
                 {
                     try
                     {
-                        dstDrive.OrchAPISession.SetFolderMachineInherit(newFolder.Id!.Value, dstMachine.Id!.Value, true);
+                        //if (shouldProcess || _this.ShouldProcess(dstMachine.GetPSPath(), "Enable FolderMachineInherit"))
+                        {
+                            dstDrive.OrchAPISession.SetFolderMachineInherit(newFolder.Id!.Value, dstMachine.Id!.Value, true);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -674,18 +685,14 @@ namespace UiPath.PowerShell.Core
 
                     #region srcRelease の ReleaseRetension を取得
                     ReleaseRetentionSetting srcRetention = null;
-                    // API ver が 15.0 の場合には、リテンションポリシーを読み取れなかった。この正しい数字は、もっと大きいかもしれない。
-                    if (srcDrive.OrchAPISession.ApiVersion >= 16)
+                    try
                     {
-                        try
-                        {
-                            srcRetention = srcDrive.OrchAPISession.GetReleaseRetention(srcFolder.Id ?? 0, srcRelease.Id ?? 0);
-                        }
-                        catch (Exception ex)
-                        {
-                            string msg2 = $"Get retention info failed.";
-                            _this.WriteError(new ErrorRecord(new OrchException(target, msg + ": " + msg2, ex), "GetRetentionSettingError", ErrorCategory.InvalidOperation, target));
-                        }
+                        srcRetention = srcDrive.OrchAPISession.GetReleaseRetention(srcFolder.Id ?? 0, srcRelease.Id ?? 0);
+                    }
+                    catch (Exception ex)
+                    {
+                        string msg2 = $"Get release retention failed.";
+                        _this.WriteError(new ErrorRecord(new OrchException(target, msg + ": " + msg2, ex), "GetReleaseRetentionError", ErrorCategory.InvalidOperation, target));
                     }
                     #endregion
 
@@ -716,14 +723,14 @@ namespace UiPath.PowerShell.Core
 
                         if (srcRetention != null)
                         {
-                            postingRelease.RetentionAction = srcRetention?.Action;
-                            postingRelease.RetentionPeriod = srcRetention?.Period;
+                            postingRelease.RetentionAction = srcRetention.Action;
+                            postingRelease.RetentionPeriod = srcRetention.Period;
                             postingRelease.RetentionBucketId = FindDstBucket(_this,
-                                srcDrive, srcFolder, srcRetention!.BucketId,
+                                srcDrive, srcFolder, srcRetention.BucketId,
                                 dstDrive, newFolder, "Copy Process", msg)?.Id;
                         }
 
-                        if (dstDrive.OrchAPISession.ApiVersion >= 18)
+                        if (dstDrive.OrchAPISession.ApiVersion >= 17)
                         {
                             postingRelease.RetentionAction ??= "Delete";
                             postingRelease.RetentionPeriod ??= 30;
@@ -745,7 +752,7 @@ namespace UiPath.PowerShell.Core
                             postingRelease.JobPriority = null;
                         }
 
-                        created = dstDrive.OrchAPISession.CreateRelease2(newFolder.Id ?? 0, postingRelease);
+                        created = dstDrive.OrchAPISession.PostRelease(newFolder.Id ?? 0, postingRelease);
 
                         // 画面が乱れるから、この表示はしなくて良いか。。
                         //if (!shouldProcess && created != null)
@@ -1250,6 +1257,7 @@ namespace UiPath.PowerShell.Core
             OrchDriveInfo srcDrive, Folder srcFolder, 
             OrchDriveInfo dstDrive, Folder newFolder, Asset asset, string msg)
         {
+            // TODO: この数字は正しいか？ 12 より古い数字の Orchestrator はもうないような気がする。
             if (srcDrive.OrchAPISession.ApiVersion < 12) return false;
             if (dstDrive.OrchAPISession.ApiVersion < 12) return false;
 
@@ -1470,6 +1478,7 @@ namespace UiPath.PowerShell.Core
             OrchDriveInfo srcDrive, Folder srcFolder, 
             OrchDriveInfo dstDrive, Folder newFolder, QueueDefinition queue)
         {
+            // TODO: この数字は正しいか？ 12 より古い数字の Orchestrator はもうないような気がする。
             if (srcDrive.OrchAPISession.ApiVersion < 12) return false;
             if (dstDrive.OrchAPISession.ApiVersion < 12) return false;
 
@@ -1609,6 +1618,8 @@ namespace UiPath.PowerShell.Core
                     QueueRetentionSetting srcRetention = null;
                     try
                     {
+                        // TODO: 15 で成功するか？ たぶん失敗するような気がする
+                        // 16 で成功することは確認済み
                         if (srcDrive.OrchAPISession.ApiVersion >= 16)
                         {
                             srcRetention = srcDrive.OrchAPISession.GetQueueRetention(srcFolder.Id ?? 0, queue.Id ?? 0);
@@ -1820,6 +1831,8 @@ namespace UiPath.PowerShell.Core
             OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
             bool shouldProcess, CancellationToken cancelToken)
         {
+            // TODO: 14 で成功するか？
+            // TODO: 15 で成功するか？
             if (srcDrive.OrchAPISession.ApiVersion < 14) return;
 
             string target = srcFolder.GetPSPath();
@@ -2105,7 +2118,11 @@ namespace UiPath.PowerShell.Core
             bool shouldProcess, CancellationToken cancelToken)
         {
             if (newFolder.FolderType == "Personal") return;
-            if (srcDrive.OrchAPISession.ApiVersion < 14) return;
+
+            // TODO: この数字は正しいか？
+            // 16 ではテストエンティティがないことは確認済み
+            if (srcDrive.OrchAPISession.ApiVersion < 17) return;
+            if (dstDrive.OrchAPISession.ApiVersion < 17) return;
 
             // スクリプトで連続して cmdlet を実行することを考えると、
             // いちいちキャッシュをクリアするべきじゃなかった。。
@@ -2195,7 +2212,10 @@ namespace UiPath.PowerShell.Core
             OrchDriveInfo dstDrive, Folder newFolder, string dstTestDataQueueName, bool shouldProcess)
         {
             if (newFolder.FolderType == "Personal") return;
-            if (srcDrive.OrchAPISession.ApiVersion < 14) return;
+
+            // 17 ではテストエンティティがないことは確認済み
+            if (srcDrive.OrchAPISession.ApiVersion < 18) return;
+            if (dstDrive.OrchAPISession.ApiVersion < 18) return;
 
             ICollection<TestDataQueueItem> items;
             try
@@ -2257,7 +2277,10 @@ namespace UiPath.PowerShell.Core
             bool shouldProcess, CancellationToken cancelToken)
         {
             if (newFolder.FolderType == "Personal") return;
-            if (srcDrive.OrchAPISession.ApiVersion < 14) return;
+
+            // 17 ではテストエンティティがないことは確認済み
+            if (srcDrive.OrchAPISession.ApiVersion < 18) return;
+            if (dstDrive.OrchAPISession.ApiVersion < 18) return;
 
             // スクリプトで連続して cmdlet を実行することを考えると、
             // いちいちキャッシュをクリアするべきじゃなかった。。
@@ -2321,7 +2344,10 @@ namespace UiPath.PowerShell.Core
             bool shouldProcess, CancellationToken cancelToken)
         {
             if (newFolder.FolderType == "Personal") return;
-            if (srcDrive.OrchAPISession.ApiVersion < 14) return;
+
+            // 17 ではテストエンティティがないことは確認済み
+            if (srcDrive.OrchAPISession.ApiVersion < 18) return;
+            if (srcDrive.OrchAPISession.ApiVersion < 18) return;
 
             // スクリプトで連続して cmdlet を実行することを考えると、
             // いちいちキャッシュをクリアするべきじゃなかった。。
@@ -2387,6 +2413,7 @@ namespace UiPath.PowerShell.Core
             OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
             bool shouldProcess, CancellationToken cancelToken)
         {
+            // TODO: この数字は必要？
             //if (srcDrive.OrchAPISession.ApiVersion < 14) return;
 
             string msg = $"Copying action catalogs";

@@ -373,29 +373,41 @@ namespace UiPath.PowerShell.Commands
                     release.ProcessSettings.AssignNumberIfNotNullOrZero(Frequency, (p, v) => p.Frequency = v);
                     release.ProcessSettings.AssignNumberIfNotNullOrZero(Duration, (p, v) => p.Duration = v);
 
-                    release.VideoRecordingSettings = new();
-                    release.VideoRecordingSettings.AssignStringIfNotNullOrEmpty(VideoRecordingType, (s, v) => s.VideoRecordingType = v);
-                    release.VideoRecordingSettings.AssignStringIfNotNullOrEmpty(QueueItemVideoRecordingType, (s, v) => s.QueueItemVideoRecordingType = v);
-                    release.VideoRecordingSettings.AssignNumberIfNotNullOrZero(MaxDurationSeconds, (s, v) => s.MaxDurationSeconds = v);
+                    //release.ProcessSettings.ErrorRecordingEnabled ??= false;
+                    //release.ProcessSettings.Duration ??= 40;
+                    //release.ProcessSettings.Frequency ??= 500;
+                    //release.ProcessSettings.Quality ??= 100;
+                    //release.ProcessSettings.AutoStartProcess ??= false;
+                    //release.ProcessSettings.AlwaysRunning ??= false;
 
-                    release.RetentionAction = (string.IsNullOrEmpty(RetentionAction)) ? "Delete" : RetentionAction;
-                    release.RetentionPeriod = (RetentionPeriod == null || RetentionPeriod == 0) ? 30 : RetentionPeriod;
+                    // OC 22.10.1 (15.0) で動作確認済み
+                    // OC 23.4.0 (16.0) で動作確認済み
+                    // OC 23.10.6 (17.0) で動作確認済み
+                    if (drive.OrchAPISession.ApiVersion >= 17)
+                    {
+                        release.RetentionAction = (string.IsNullOrEmpty(RetentionAction)) ? "Delete" : RetentionAction;
+                        release.RetentionPeriod = (RetentionPeriod == null || RetentionPeriod == 0) ? 30 : RetentionPeriod;
+                        #region RetentionBucket を RetentionBucketId に変換
+                        release.AssignIdFromName(
+                            RetentionBucket,
+                            () => drive.Buckets.Get(folder),
+                            e => e.Name!,
+                            e => e.Id!,
+                            (s, v) => s.RetentionBucketId = v,
+                            this, target, "RetentionBucket");
+                        #endregion
 
-                    #region RetentionBucket を RetentionBucketId に変換
-                    release.AssignIdFromName(
-                        RetentionBucket,
-                        () => drive.Buckets.Get(folder),
-                        e => e.Name!,
-                        e => e.Id!,
-                        (s, v) => s.RetentionBucketId = v,
-                        this, target, "RetentionBucket");
-                    #endregion
+                        release.VideoRecordingSettings = new();
+                        release.VideoRecordingSettings.AssignStringIfNotNullOrEmpty(VideoRecordingType, (s, v) => s.VideoRecordingType = v);
+                        release.VideoRecordingSettings.AssignStringIfNotNullOrEmpty(QueueItemVideoRecordingType, (s, v) => s.QueueItemVideoRecordingType = v);
+                        release.VideoRecordingSettings.AssignNumberIfNotNullOrZero(MaxDurationSeconds, (s, v) => s.MaxDurationSeconds = v);
+                    }
 
                     if (ShouldProcess(target + $":{latest.Version}", "Add Process"))
                     {
                         try
                         {
-                            var newProcess = drive.OrchAPISession.CreateRelease2(folder.Id!.Value, release);
+                            var newProcess = drive.OrchAPISession.PostRelease(folder.Id!.Value, release);
                             if (newProcess != null)
                             {
                                 newProcess.Path = folder.GetPSPath();

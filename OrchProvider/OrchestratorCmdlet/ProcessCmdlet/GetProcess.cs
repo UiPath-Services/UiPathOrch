@@ -201,24 +201,19 @@ namespace UiPath.PowerShell.Commands
                                 releaseDetailed.EntryPointPath = entryPath;
                             }
 
-                            ReleaseRetentionSetting retention = null;
-                            // API ver が 15.0 の場合には、リテンションポリシーを読み取れなかった。この正しい数字は、もっと大きいかもしれない。
-                            if (drive.OrchAPISession.ApiVersion >= 16)
+                            try
                             {
-                                try
+                                var retention = drive.OrchAPISession.GetReleaseRetention(folder.Id!.Value, releaseDetailed.Id!.Value);
+                                if (retention != null)
                                 {
-                                    retention = drive.OrchAPISession.GetReleaseRetention(folder.Id!.Value, releaseDetailed.Id!.Value);
-                                    if (retention != null)
-                                    {
-                                        releaseDetailed.RetentionAction = retention.Action;
-                                        releaseDetailed.RetentionPeriod = retention.Period;
-                                        releaseDetailed.RetentionBucketId = retention.BucketId;
-                                    }
+                                    releaseDetailed.RetentionAction = retention.Action;
+                                    releaseDetailed.RetentionPeriod = retention.Period;
+                                    releaseDetailed.RetentionBucketId = retention.BucketId;
                                 }
-                                catch (Exception ex)
-                                {
-                                    WriteError(new ErrorRecord(new OrchException(releaseDetailed.GetPSPath(), "Get retention info failed.", ex), "GetRetentionSettingError", ErrorCategory.InvalidOperation, releaseDetailed));
-                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                WriteError(new ErrorRecord(new OrchException(releaseDetailed.GetPSPath(), "Get retention info failed.", ex), "GetRetentionSettingError", ErrorCategory.InvalidOperation, releaseDetailed));
                             }
 
                             Output(writer, releaseDetailed);

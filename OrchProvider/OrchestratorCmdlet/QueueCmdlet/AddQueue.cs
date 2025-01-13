@@ -128,18 +128,21 @@ namespace UiPath.PowerShell.Commands
                     newQueue.AssignStringIfNotNullOrEmpty(RetentionAction, (q, v) => q.RetentionAction = v);
                     newQueue.AssignNumberIfNotNullOrZero(RetentionPeriod, (q, v) => q.RetentionPeriod = v);
 
-                    newQueue.RetentionAction ??= "Delete";
-                    newQueue.RetentionPeriod ??= 30;
+                    if (drive.OrchAPISession.ApiVersion >= 16)
+                    {
+                        newQueue.RetentionAction ??= "Delete";
+                        newQueue.RetentionPeriod ??= 30;
 
-                    #region RetentionBucket を RetentionBucketId に変換
-                    newQueue.AssignIdFromName(
-                        RetentionBucket,
-                        () => drive.Buckets.Get(folder),
-                        e => e.Name!,
-                        e => e.Id!,
-                        (s, v) => s.RetentionBucketId = v,
-                        this, target, "RetentionBucket");
-                    #endregion
+                        #region RetentionBucket を RetentionBucketId に変換
+                        newQueue.AssignIdFromName(
+                            RetentionBucket,
+                            () => drive.Buckets.Get(folder),
+                            e => e.Name!,
+                            e => e.Id!,
+                            (s, v) => s.RetentionBucketId = v,
+                            this, target, "RetentionBucket");
+                        #endregion
+                    }
 
                     if (ShouldProcess(target, "Add Queue"))
                     {

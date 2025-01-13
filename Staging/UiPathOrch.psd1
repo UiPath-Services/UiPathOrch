@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.8.23'
+ModuleVersion = '0.9.8.24'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -373,25 +373,30 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Added the Redo-OrchQueueItem cmdlet, which retries transaction items by specifying the queue name and the item IDs. It retries only retryable items, defined as those with a Status of Failed and a Revision of either None or InReview.
+        ReleaseNotes = '- When an SSL error, such as the absence of an installed certificate, occurs, the process can now continue by ignoring the error. To ignore SSL errors, add the following to the PSDrive in the configuration file:
+  "IgnoreSslErrors": true
 
-  - To retry specified items in the queue, use the following command. The -Id parameter, which specifies item IDs, supports auto-completion:
+- The Add-OrchFolderUser cmdlet now displays an appropriate message if it fails to retrieve roles.
 
-    PS Orch1:\Shared> Redo-OrchQueueItem YourQueueName <item IDs>
+- The Copy-Item and Copy-OrchFolderMachine cmdlets now display an appropriate message if a machine with the same name is already assigned to the destination folder.
 
-  - To retry all failed items in a queue:
+- Some operations failed when the target Orchestrator version was outdated. These issues have been resolved, and the cmdlets now handle operations appropriately based on the API version. The correspondence between cmdlets and API versions is as follows:
 
-    PS Orch1:\Shared> Get-OrchQueueItem YourQueueName -Status Failed -Revision None,InReview | Redo-OrchQueueItem -Verbose
+  - Add-OrchQueue:
+    - ApiVer <  16: Does not set RetentionAction and RetentionPeriod, and Calls POST /odata/QueueDefinitions
+    - ApiVer >= 16: Sets RetentionAction and RetentionPeriod, and Calls POST /odata/QueueDefinitions/UiPath.Server.Configuration.OData.CreateQueue
 
-  - Please note that the Get-OrchQueueItem cmdlet can retrieve up to a maximum of 1000 items at a time. If there are more than 1000 retryable items, repeatedly execute following command until the -Verbose parameter no longer outputs anything:
+  - Get-OrchProcess -ExpandDetails, Update-OrchProcess, Copy-OrchProcess, Copy-Item:
+    - ApiVer <  17: Does not call GET /odata/ReleaseRetention({releaseId})
+    - ApiVer >= 17: Calls GET /odata/ReleaseRetention({releaseId})
 
-    PS Orch1:\Shared> Get-OrchQueueItem YourQueueName -Status Failed -Revision None,InReview | Redo-OrchQueueItem -Verbose
+  - Add-OrchProcess, Copy-Item:
+    - ApiVer <  17: Calls POST /odata/Releases
+    - ApiVer >= 17: Calls POST /odata/Releases/UiPath.Server.Configuration.OData.CreateRelease
 
-  - To retry all retryable queue items across all queues in the tenant:
-
-    PS Orch1:\> Get-OrchQueueItem -Recurse * -Status Failed -Revision None,InReview | Redo-OrchQueueItem
-
-- Fixed an issue where the -UserName parameter completer for the Add-OrchPmGroupMember cmdlet was not functioning correctly.
+  - Get-OrchTestCase, Get-OrchTestSet, Get-OrchTestSetSchedule, Get-OrchTestSetExecution:
+    - ApiVer <  18: No action is taken.
+    - ApiVer >= 18: Retrieve entities.
 '
 
         # Prerelease string of this module

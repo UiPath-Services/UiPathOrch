@@ -302,6 +302,26 @@ namespace UiPath.PowerShell.Positional
         ];
     }
 
+    /*
+     * NonProduction: 0,
+     * Attended: 1,
+     * Unattended: 2,
+     * Development: 3,
+     * Studio: 3,
+     * RpaDeveloper: 3,
+     * StudioX: 4,
+     * CitizenDeveloper: 4,
+     * Headless: 5,
+     * RpaDeveloperPro: 6,
+     * StudioPro: 6,
+     * TestAutomation: 7,
+     * AutomationCloud: 8,
+     * Serverless: 9,
+     * AutomationKit: 10,
+     * ServerlessTestAutomation: 11,
+     * AutomationCloudTestAutomation: 12,
+     * AttendedStudioWeb: 13,
+     */
     internal class RuntimeTypes : IPositionalParameters
     {
         public static string[] Parameters { get; } = [

@@ -152,6 +152,8 @@ namespace UiPath.PowerShell.Commands
                     QueueRetentionSetting retention = null;
                     try
                     {
+                        // TODO: 15 で成功するか？ たぶん失敗するはず
+                        // 16 で成功することは確認済み
                         if (drive.OrchAPISession.ApiVersion >= 16)
                         {
                             retention = drive.OrchAPISession.GetQueueRetention(folder.Id ?? 0, queue.Id ?? 0);

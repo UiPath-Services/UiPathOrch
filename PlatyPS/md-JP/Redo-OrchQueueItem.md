@@ -37,23 +37,18 @@ PS Orch1:\Shared> Redo-OrchQueueItem YourQueueName <item IDs>
 
 ### Example 2
 ```powershell
-PS Orch1:\Shared> Get-OrchQueueItem YourQueueName -Status Failed | Redo-OrchQueueItem -Verbose
+PS Orch1:\Shared> Get-OrchQueueItem YourQueueName -Status Failed -Revision None,InReview | Redo-OrchQueueItem -Verbose
 ```
 
 指定されたキュー YourQueueName 内のすべての失敗したアイテムをリトライします。
 -Verbose パラメータを指定すると、リトライしたアイテムの ID を表示します。
 
+Get-OrchQueueItem cmdlet が一度に取得できるアイテムの数は、最大で 1000 個であることに注意してください。
+キュー内にリトライ可能なアイテムが 1,000 個以上ある場合、これらのアイテムをすべてリトライするには、このコマンドを -Verbose パラメータが何も出力しなくなるまで繰り返し実行してください。
+
 ### Example 3
 ```powershell
-PS Orch1:\Shared> Get-OrchQueueItem YourQueueName -Status Failed -Revision None,InReview | Redo-OrchQueueItem -Verbose
-```
-
-Get-OrchQueueItem cmdlet が一度に取得できるアイテムの数は、最大で 1000 個であることに注意してください。
-キュー内にリトライ可能なアイテムが 1000 個以上ある場合、これらのアイテムをすべてリトライするには、このコマンドを -Verbose パラメータが何も出力しなくなるまで繰り返し実行してください。
-
-### Example 4
-```powershell
-PS Orch1:\> Get-OrchQueueItem -Recurse * -Status Failed | Redo-OrchQueueItem
+PS Orch1:\> Get-OrchQueueItem -Recurse * -Status Failed -Revision None,InReview | Redo-OrchQueueItem
 ```
 
 テナント内のすべてのキューにおいて、リトライ可能なキューアイテムをすべてリトライします。

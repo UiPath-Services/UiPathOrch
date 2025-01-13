@@ -11,6 +11,7 @@
         public ProxySettings? Proxy { get; set; }
         public List<PSDrive>? PSDrives { get; set; }
         //public List<ExternalApplication>? ExternalApplications{ get; set; }
+        public bool? IgnoreSslErrors { get; set; }
     }
 
     public class Credentials
@@ -45,6 +46,7 @@
         public string? Password { get; set; }
         public bool? Enabled { get; set; }
         public ProxySettings? Proxy { get; set; }
+        public bool? IgnoreSslErrors { get; set; }
     }
 
     public class ExternalApplication

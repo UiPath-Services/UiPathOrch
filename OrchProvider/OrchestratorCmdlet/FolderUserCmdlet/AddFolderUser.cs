@@ -195,21 +195,33 @@ namespace UiPath.PowerShell.Commands
                 // ここで考慮する必要はない
                 //if (folder.FolderType == "Personal") continue;
 
-                var existingRoles = drive.Roles.Get().Where(r => r.Type != "Tenant");
+                IEnumerable<Role> existingRoles = null;
+                if (Roles?.Length > 0)
+                {
+                    try
+                    {
+                        existingRoles = drive.Roles.Get().Where(r => r.Type != "Tenant");
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, "Failed to get roles", ex), "GetRolesError", ErrorCategory.InvalidOperation, drive));
+                        continue;
+                    }
+                }
 
                 // 指定された Roles に、既存のロールに合致しないパターンがあれば警告
                 // 微妙に無駄な処理があるが、まあいいか。。
                 foreach (var role in Roles ?? [])
                 {
                     var wpRole = new WildcardPattern(role, WildcardOptions.IgnoreCase);
-                    if (!existingRoles.Any(r => wpRole.IsMatch(r.Name)))
+                    if (existingRoles == null || !existingRoles.Any(r => wpRole.IsMatch(r.Name)))
                     {
                         WriteWarning($"'{role}': No matching role found in {drive.NameColonSeparator}.");
                     }
                 }
 
                 // ロールを検索
-                var addingRoles = existingRoles.SelectByWildcards(role => role?.Name, wpRoles);
+                var addingRoles = existingRoles?.SelectByWildcards(role => role?.Name, wpRoles);
 
                 // ディレクトリから、追加すべき名前を検索
                 // bulk で検索すると、ユーザーに対して親切なメッセージを表示できないため
@@ -218,11 +230,18 @@ namespace UiPath.PowerShell.Commands
                 {
                     cancelHandler.Token.ThrowIfCancellationRequested();
 
-                    var member = SearchDirectory(drive, userName, objectType);
-                    if (member == null)
+                    DirectoryObject? member = null;
+                    try
                     {
+                        member = SearchDirectory(drive, userName, objectType);
+                    }
+                    catch (Exception ex)
+                    {
+                        string t = drive.NameColonSeparator + userName;
+                        WriteError(new ErrorRecord(new OrchException(t, "Failed to search directory", ex), "SearchDirectoryError", ErrorCategory.InvalidOperation, drive));
                         continue;
                     }
+                    if (member == null) continue;
 
                     // このフォルダに追加済みのユーザーは除外する処理は未実装
 
@@ -232,7 +251,7 @@ namespace UiPath.PowerShell.Commands
                         target += $" ({member.displayName})";
                     }
 
-                    if (addingRoles.Any())
+                    if (addingRoles?.Any() ?? false)
                     {
                         var targetRoles = string.Join(", ", addingRoles.Select(role => "'" + role.DisplayName + "'"));
                         target += $" with {targetRoles}";
@@ -253,7 +272,7 @@ namespace UiPath.PowerShell.Commands
                                     new FolderRoles()
                                     {
                                         FolderId = folder.Id,
-                                        RoleIds = addingRoles.Select(r => r.Id ?? 0).ToList()
+                                        RoleIds = addingRoles?.Select(r => r.Id ?? 0).ToList()
                                     }
                                 ]
                             };

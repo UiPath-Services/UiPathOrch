@@ -188,6 +188,7 @@ namespace UiPath.PowerShell.Core
                     drive.Scope ??= config.Scope;
                     drive.Enabled ??= config.Enabled;
                     drive.Proxy ??= config.Proxy;
+                    drive.IgnoreSslErrors ??= config.IgnoreSslErrors;
 
                     if (drive.Enabled ?? false)
                     {
