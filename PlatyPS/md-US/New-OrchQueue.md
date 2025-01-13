@@ -5,15 +5,15 @@ online version:
 schema: 2.0.0
 ---
 
-# Add-OrchQueue
+# New-OrchQueue
 
 ## SYNOPSIS
-Adds queues.
+Creates queues.
 
 ## SYNTAX
 
 ```
-Add-OrchQueue [-Name] <String[]> [-Description <String>] [-AcceptAutomaticallyRetry <String>]
+New-OrchQueue [-Name] <String[]> [-Description <String>] [-AcceptAutomaticallyRetry <String>]
  [-RetryAbandonedItems <String>] [-MaxNumberOfRetries <Int32>] [-EnforceUniqueReference <String>]
  [-Encrypted <String>] [-Release <String>] [-SlaInMinutes <Int32>] [-RiskSlaInMinutes <Int32>]
  [-SpecificDataJsonSchema <String>] [-OutputDataJsonSchema <String>] [-AnalyticsDataJsonSchema <String>]
@@ -42,7 +42,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -AcceptAutomaticallyRetry
-Specifies the AcceptAutomaticallyRetry of the queues to be added.
+Specifies the AcceptAutomaticallyRetry of the queues to be created.
 
 ```yaml
 Type: String
@@ -57,7 +57,7 @@ Accept wildcard characters: False
 ```
 
 ### -AnalyticsDataJsonSchema
-Specifies the AnalyticsDataJsonSchema of the queues to be added.
+Specifies the AnalyticsDataJsonSchema of the queues to be created.
 
 ```yaml
 Type: String
@@ -87,7 +87,7 @@ Accept wildcard characters: False
 ```
 
 ### -Description
-Specifies the Description of the queues to be added.
+Specifies the Description of the queues to be created.
 
 ```yaml
 Type: String
@@ -102,7 +102,7 @@ Accept wildcard characters: False
 ```
 
 ### -Encrypted
-Specifies the Encrypted of the queues to be added.
+Specifies the Encrypted of the queues to be created.
 
 ```yaml
 Type: String
@@ -117,7 +117,7 @@ Accept wildcard characters: False
 ```
 
 ### -EnforceUniqueReference
-Specifies the EnforceUniqueReference of the queues to be added.
+Specifies the EnforceUniqueReference of the queues to be created.
 
 ```yaml
 Type: String
@@ -132,7 +132,7 @@ Accept wildcard characters: False
 ```
 
 ### -MaxNumberOfRetries
-Specifies the MaxNumberOfRetries of the queues to be added.
+Specifies the MaxNumberOfRetries of the queues to be created.
 
 ```yaml
 Type: Int32
@@ -147,7 +147,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-Specifies the Name of the queues to be added.
+Specifies the Name of the queues to be created.
 
 ```yaml
 Type: String[]
@@ -162,7 +162,7 @@ Accept wildcard characters: False
 ```
 
 ### -OutputDataJsonSchema
-Specifies the OutputDataJsonSchema of the queues to be added.
+Specifies the OutputDataJsonSchema of the queues to be created.
 
 ```yaml
 Type: String
@@ -192,7 +192,7 @@ Accept wildcard characters: True
 ```
 
 ### -Release
-Specifies the Release of the queues to be added.
+Specifies the Release of the queues to be created.
 
 ```yaml
 Type: String
@@ -207,7 +207,7 @@ Accept wildcard characters: True
 ```
 
 ### -RetentionAction
-Specifies the RetentionAction of the queues to be added.
+Specifies the RetentionAction of the queues to be created.
 
 ```yaml
 Type: String
@@ -222,7 +222,7 @@ Accept wildcard characters: False
 ```
 
 ### -RetentionBucket
-Specifies the RetentionBucket of the queues to be added.
+Specifies the RetentionBucket of the queues to be created.
 
 ```yaml
 Type: String
@@ -237,7 +237,7 @@ Accept wildcard characters: True
 ```
 
 ### -RetentionPeriod
-Specifies the RetentionPeriod of the queues to be added.
+Specifies the RetentionPeriod of the queues to be created.
 
 ```yaml
 Type: Int32
@@ -252,7 +252,7 @@ Accept wildcard characters: False
 ```
 
 ### -RetryAbandonedItems
-Specifies the RetryAbandonedItems of the queues to be added.
+Specifies the RetryAbandonedItems of the queues to be created.
 
 ```yaml
 Type: String
@@ -267,7 +267,7 @@ Accept wildcard characters: False
 ```
 
 ### -RiskSlaInMinutes
-Specifies the RiskSlaInMinutes of the queues to be added.
+Specifies the RiskSlaInMinutes of the queues to be created.
 
 ```yaml
 Type: Int32
@@ -282,7 +282,7 @@ Accept wildcard characters: False
 ```
 
 ### -SlaInMinutes
-Specifies the SlaInMinutes of the queues to be added.
+Specifies the SlaInMinutes of the queues to be created.
 
 ```yaml
 Type: Int32
@@ -297,7 +297,7 @@ Accept wildcard characters: False
 ```
 
 ### -SpecificDataJsonSchema
-Specifies the SpecificDataJsonSchema of the queues to be added.
+Specifies the SpecificDataJsonSchema of the queues to be created.
 
 ```yaml
 Type: String
@@ -312,7 +312,7 @@ Accept wildcard characters: False
 ```
 
 ### -Tags
-Specifies the Tags of the queues to be added.
+Specifies the Tags of the queues to be created.
 
 ```yaml
 Type: String[]
@@ -363,11 +363,15 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
+
 ### System.String
+
 ### System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]
+
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.QueueDefinition
+
 ## NOTES
 
 ## RELATED LINKS

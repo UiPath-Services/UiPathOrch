@@ -5,15 +5,15 @@ online version:
 schema: 2.0.0
 ---
 
-# Add-OrchPmUserBulk
+# New-OrchPmUserBulk
 
 ## SYNOPSIS
-組織にユーザーを追加します。
+組織にユーザーを作成します。
 
 ## SYNTAX
 
 ```
-Add-OrchPmUserBulk [-Email] <String> [-Name <String>] [-SurName <String>] [-DisplayName <String>]
+New-OrchPmUserBulk [-Email] <String> [-Name <String>] [-SurName <String>] [-DisplayName <String>]
  [-Type <String>] [-BypassBasicAuthRestriction <String>] [-InvitationAccepted <String>] [-GroupName <String[]>]
  [-Path <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
@@ -225,10 +225,13 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String
+
 ### System.String[]
+
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.PmUser
+
 ## NOTES
 
 ## RELATED LINKS

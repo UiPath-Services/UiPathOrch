@@ -11,7 +11,7 @@ using TPositional = UiPath.PowerShell.Positional.Id_Version;
 
 namespace UiPath.PowerShell.Commands
 {
-    [Cmdlet(VerbsCommon.Add, "OrchProcess", SupportsShouldProcess = true)]
+    [Cmdlet(VerbsCommon.New, "OrchProcess", SupportsShouldProcess = true)]
     [OutputType(typeof(Entities.Release))]
     public class AddProcessCommand : OrchestratorPSCmdlet
     {

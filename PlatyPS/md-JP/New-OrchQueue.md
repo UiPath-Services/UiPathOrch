@@ -5,15 +5,15 @@ online version:
 schema: 2.0.0
 ---
 
-# Add-OrchQueue
+# New-OrchQueue
 
 ## SYNOPSIS
-キューを追加します。
+キューを作成します。
 
 ## SYNTAX
 
 ```
-Add-OrchQueue [-Name] <String[]> [-Description <String>] [-AcceptAutomaticallyRetry <String>]
+New-OrchQueue [-Name] <String[]> [-Description <String>] [-AcceptAutomaticallyRetry <String>]
  [-RetryAbandonedItems <String>] [-MaxNumberOfRetries <Int32>] [-EnforceUniqueReference <String>]
  [-Encrypted <String>] [-Release <String>] [-SlaInMinutes <Int32>] [-RiskSlaInMinutes <Int32>]
  [-SpecificDataJsonSchema <String>] [-OutputDataJsonSchema <String>] [-AnalyticsDataJsonSchema <String>]
@@ -42,7 +42,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -AcceptAutomaticallyRetry
-追加するキューの AcceptAutomaticallyRetry を指定します。
+作成するキューの AcceptAutomaticallyRetry を指定します。
 
 ```yaml
 Type: String
@@ -57,7 +57,7 @@ Accept wildcard characters: False
 ```
 
 ### -AnalyticsDataJsonSchema
-追加するキューの AnalyticsDataJsonSchema を指定します。
+作成するキューの AnalyticsDataJsonSchema を指定します。
 
 ```yaml
 Type: String
@@ -87,7 +87,7 @@ Accept wildcard characters: False
 ```
 
 ### -Description
-追加するキューの Description を指定します。
+作成するキューの Description を指定します。
 
 ```yaml
 Type: String
@@ -102,7 +102,7 @@ Accept wildcard characters: False
 ```
 
 ### -Encrypted
-追加するキューの Encrypted を指定します。
+作成するキューの Encrypted を指定します。
 
 ```yaml
 Type: String
@@ -117,7 +117,7 @@ Accept wildcard characters: False
 ```
 
 ### -EnforceUniqueReference
-追加するキューの EnforceUniqueReference を指定します。
+作成するキューの EnforceUniqueReference を指定します。
 
 ```yaml
 Type: String
@@ -132,7 +132,7 @@ Accept wildcard characters: False
 ```
 
 ### -MaxNumberOfRetries
-追加するキューの MaxNumberOfRetries を指定します。
+作成するキューの MaxNumberOfRetries を指定します。
 
 ```yaml
 Type: Int32
@@ -147,7 +147,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-追加するキューの Name を指定します。
+作成するキューの Name を指定します。
 
 ```yaml
 Type: String[]
@@ -162,7 +162,7 @@ Accept wildcard characters: False
 ```
 
 ### -OutputDataJsonSchema
-追加するキューの OutputDataJsonSchema を指定します。
+作成するキューの OutputDataJsonSchema を指定します。
 
 ```yaml
 Type: String
@@ -192,7 +192,7 @@ Accept wildcard characters: True
 ```
 
 ### -Release
-追加するキューの Release を指定します。
+作成するキューの Release を指定します。
 
 ```yaml
 Type: String
@@ -207,7 +207,7 @@ Accept wildcard characters: True
 ```
 
 ### -RetentionAction
-追加するキューの RetentionAction を指定します。
+作成するキューの RetentionAction を指定します。
 
 ```yaml
 Type: String
@@ -222,7 +222,7 @@ Accept wildcard characters: False
 ```
 
 ### -RetentionBucket
-追加するキューの RetentionBucket を指定します。
+作成するキューの RetentionBucket を指定します。
 
 ```yaml
 Type: String
@@ -237,7 +237,7 @@ Accept wildcard characters: True
 ```
 
 ### -RetentionPeriod
-追加するキューの RetentionPeriod を指定します。
+作成するキューの RetentionPeriod を指定します。
 
 ```yaml
 Type: Int32
@@ -252,7 +252,7 @@ Accept wildcard characters: False
 ```
 
 ### -RetryAbandonedItems
-追加するキューの RetryAbandonedItems を指定します。
+作成するキューの RetryAbandonedItems を指定します。
 
 ```yaml
 Type: String
@@ -267,7 +267,7 @@ Accept wildcard characters: False
 ```
 
 ### -RiskSlaInMinutes
-追加するキューの RiskSlaInMinutes を指定します。
+作成するキューの RiskSlaInMinutes を指定します。
 
 ```yaml
 Type: Int32
@@ -282,7 +282,7 @@ Accept wildcard characters: False
 ```
 
 ### -SlaInMinutes
-追加するキューの SlaInMinutes を指定します。
+作成するキューの SlaInMinutes を指定します。
 
 ```yaml
 Type: Int32
@@ -297,7 +297,7 @@ Accept wildcard characters: False
 ```
 
 ### -SpecificDataJsonSchema
-追加するキューの SpecificDataJsonSchema を指定します。
+作成するキューの SpecificDataJsonSchema を指定します。
 
 ```yaml
 Type: String
@@ -312,7 +312,7 @@ Accept wildcard characters: False
 ```
 
 ### -Tags
-追加するキューの Tags を指定します。
+作成するキューの Tags を指定します。
 
 ```yaml
 Type: String[]
@@ -363,11 +363,15 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
+
 ### System.String
+
 ### System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]
+
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.QueueDefinition
+
 ## NOTES
 
 ## RELATED LINKS

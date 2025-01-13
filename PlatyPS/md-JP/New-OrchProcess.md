@@ -5,15 +5,15 @@ online version:
 schema: 2.0.0
 ---
 
-# Add-OrchProcess
+# New-OrchProcess
 
 ## SYNOPSIS
-プロセスを追加します。
+プロセスを作成します。
 
 ## SYNTAX
 
 ```
-Add-OrchProcess -Id <String[]> [[-Version] <String>] [-Name <String>] [-Description <String>]
+New-OrchProcess [-Id] <String[]> [[-Version] <String>] [-Name <String>] [-Description <String>]
  [-EntryPoint <String>] [-InputArguments <String>] [-Priority <String>] [-HiddenForAttendedUser <String>]
  [-RemoteControlAccess <String>] [-RetentionAction <String>] [-RetentionPeriod <Int32>]
  [-RetentionBucket <String>] [-ErrorRecordingEnabled <String>] [-Quality <Int32>] [-Frequency <Int32>]
@@ -43,7 +43,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -AlwaysRunning
-追加するプロセスの AlwaysRunning を指定します。
+作成するプロセスの AlwaysRunning を指定します。
 
 ```yaml
 Type: String
@@ -58,7 +58,7 @@ Accept wildcard characters: False
 ```
 
 ### -AutoStartProcess
-追加するプロセスの AutoStartProcess を指定します。
+作成するプロセスの AutoStartProcess を指定します。
 
 ```yaml
 Type: String
@@ -103,7 +103,7 @@ Accept wildcard characters: False
 ```
 
 ### -Description
-追加するプロセスの Description を指定します。
+作成するプロセスの Description を指定します。
 
 ```yaml
 Type: String
@@ -118,7 +118,7 @@ Accept wildcard characters: False
 ```
 
 ### -Duration
-追加するプロセスの Duration を指定します。
+作成するプロセスの Duration を指定します。
 
 ```yaml
 Type: Int32
@@ -133,7 +133,7 @@ Accept wildcard characters: False
 ```
 
 ### -EntryPoint
-追加するプロセスの EntryPoint を指定します。
+作成するプロセスの EntryPoint を指定します。
 
 ```yaml
 Type: String
@@ -148,7 +148,7 @@ Accept wildcard characters: True
 ```
 
 ### -ErrorRecordingEnabled
-追加するプロセスの ErrorRecordingEnabled を指定します。
+作成するプロセスの ErrorRecordingEnabled を指定します。
 
 ```yaml
 Type: String
@@ -163,7 +163,7 @@ Accept wildcard characters: False
 ```
 
 ### -Frequency
-追加するプロセスの Frequency を指定します。
+作成するプロセスの Frequency を指定します。
 
 ```yaml
 Type: Int32
@@ -178,7 +178,7 @@ Accept wildcard characters: False
 ```
 
 ### -HiddenForAttendedUser
-追加するプロセスの HiddenForAttendedUser を指定します。
+作成するプロセスの HiddenForAttendedUser を指定します。
 
 ```yaml
 Type: String
@@ -192,8 +192,23 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
+### -Id
+{{ Fill Id Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: 0
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
+```
+
 ### -InputArguments
-追加するプロセスの InputArguments を指定します。
+作成するプロセスの InputArguments を指定します。
 
 ```yaml
 Type: String
@@ -208,7 +223,7 @@ Accept wildcard characters: False
 ```
 
 ### -MaxDurationSeconds
-追加するプロセスの MaxDurationSeconds を指定します。
+作成するプロセスの MaxDurationSeconds を指定します。
 
 ```yaml
 Type: Int32
@@ -223,7 +238,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-追加するプロセスの Name を指定します。
+作成するプロセスの Name を指定します。
 
 ```yaml
 Type: String
@@ -253,7 +268,7 @@ Accept wildcard characters: True
 ```
 
 ### -Priority
-追加するプロセスの Priority を指定します。
+作成するプロセスの Priority を指定します。
 
 ```yaml
 Type: String
@@ -268,7 +283,7 @@ Accept wildcard characters: False
 ```
 
 ### -Quality
-追加するプロセスの Quality を指定します。
+作成するプロセスの Quality を指定します。
 
 ```yaml
 Type: Int32
@@ -283,7 +298,7 @@ Accept wildcard characters: False
 ```
 
 ### -QueueItemVideoRecordingType
-追加するプロセスの QueueItemVideoRecordingType を指定します。
+作成するプロセスの QueueItemVideoRecordingType を指定します。
 
 ```yaml
 Type: String
@@ -313,7 +328,7 @@ Accept wildcard characters: False
 ```
 
 ### -RemoteControlAccess
-追加するプロセスの RemoteControlAccess を指定します。
+作成するプロセスの RemoteControlAccess を指定します。
 
 ```yaml
 Type: String
@@ -328,7 +343,7 @@ Accept wildcard characters: False
 ```
 
 ### -RetentionAction
-追加するプロセスの RetentionAction を指定します。
+作成するプロセスの RetentionAction を指定します。
 
 ```yaml
 Type: String
@@ -343,7 +358,7 @@ Accept wildcard characters: False
 ```
 
 ### -RetentionBucket
-追加するプロセスの RetentionBucket を指定します。
+作成するプロセスの RetentionBucket を指定します。
 
 ```yaml
 Type: String
@@ -358,7 +373,7 @@ Accept wildcard characters: True
 ```
 
 ### -RetentionPeriod
-追加するプロセスの RetentionPeriod を指定します。
+作成するプロセスの RetentionPeriod を指定します。
 
 ```yaml
 Type: Int32
@@ -373,7 +388,7 @@ Accept wildcard characters: False
 ```
 
 ### -Tags
-追加するプロセスの Tags を指定します。
+作成するプロセスの Tags を指定します。
 
 ```yaml
 Type: String[]
@@ -388,7 +403,7 @@ Accept wildcard characters: False
 ```
 
 ### -Version
-追加するプロセスの Version を指定します。
+作成するプロセスの Version を指定します。
 
 ```yaml
 Type: String
@@ -403,7 +418,7 @@ Accept wildcard characters: True
 ```
 
 ### -VideoRecordingType
-追加するプロセスの VideoRecordingType を指定します。
+作成するプロセスの VideoRecordingType を指定します。
 
 ```yaml
 Type: String
@@ -448,32 +463,21 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -Id
-{{ Fill Id Description }}
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: True
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
 ### System.String[]
+
 ### System.String
+
 ### System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]
+
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.Release
+
 ## NOTES
 
 ## RELATED LINKS

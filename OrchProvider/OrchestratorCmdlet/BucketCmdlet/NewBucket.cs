@@ -6,7 +6,7 @@ using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
-    [Cmdlet(VerbsCommon.Add, "OrchBucket", SupportsShouldProcess = true)]
+    [Cmdlet(VerbsCommon.New, "OrchBucket", SupportsShouldProcess = true)]
     [OutputType(typeof(Bucket))]
     public class AddBucketCommand : OrchestratorPSCmdlet
     {

@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.8.24'
+ModuleVersion = '0.9.9.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -110,7 +110,7 @@ CmdletsToExport = @(
 'Remove-OrchJobMedia',
 
 'Get-OrchProcess',
-'Add-OrchProcess',
+'New-OrchProcess',
 'Update-OrchProcess',
 'Copy-OrchProcess',
 'Remove-OrchProcess',
@@ -184,7 +184,7 @@ CmdletsToExport = @(
 
 'Get-OrchMachine',
 'Update-OrchMachine',
-'Add-OrchMachine',
+'New-OrchMachine',
 'Remove-OrchMachine',
 'Copy-OrchMachine',
 'Get-OrchMachineClientSecretId',
@@ -217,7 +217,7 @@ CmdletsToExport = @(
 'Add-OrchAssetLink',
 
 'Get-OrchTrigger',
-'Add-OrchTrigger',
+'New-OrchTrigger',
 'Update-OrchTrigger',
 'Remove-OrchTrigger',
 'Copy-OrchTrigger',
@@ -231,7 +231,7 @@ CmdletsToExport = @(
 'Disable-OrchApiTrigger',
 
 'Get-OrchQueue',
-'Add-OrchQueue',
+'New-OrchQueue',
 'Update-OrchQueue',
 'Copy-OrchQueue',
 'Remove-OrchQueue',
@@ -268,7 +268,7 @@ CmdletsToExport = @(
 'Get-OrchAlert',
 
 'Get-OrchBucket',
-'Add-OrchBucket',
+'New-OrchBucket',
 'Copy-OrchBucket',
 'Remove-OrchBucket',
 
@@ -296,7 +296,7 @@ CmdletsToExport = @(
 'Get-OrchPmUser',
 'Update-OrchPmUser',
 'Remove-OrchPmUser',
-'Add-OrchPmUserBulk',
+'New-OrchPmUserBulk',
 'Copy-OrchPmUser',
 
 'Get-OrchPmRobotAccount',
@@ -305,7 +305,7 @@ CmdletsToExport = @(
 'Remove-OrchPmRobotAccount',
 
 'Get-OrchPmGroup',
-'Add-OrchPmGroup',
+'New-OrchPmGroup',
 'Remove-OrchPmGroup',
 'Add-OrchPmGroupMember',
 'Move-OrchPmGroupMember',
@@ -373,30 +373,36 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- When an SSL error, such as the absence of an installed certificate, occurs, the process can now continue by ignoring the error. To ignore SSL errors, add the following to the PSDrive in the configuration file:
-  "IgnoreSslErrors": true
+        ReleaseNotes = '- Several cmdlets with the verb Add have been renamed to use the verb New. When these cmdlets were initially created, the verb Add was chosen to align with the terminology used in the Orchestrator web interface, as it was considered more intuitive at the time. However, as the number of cmdlets increased, it was determined that New and Add should be used appropriately based on their functionality. We apologize for any inconvenience caused by this change.
 
-- The Add-OrchFolderUser cmdlet now displays an appropriate message if it fails to retrieve roles.
+- List of cmdlets renamed to use the verb New:
+  - Add-OrchMachine -> New-OrchMachine
+  - Add-OrchBucket -> New-OrchBucket
+  - Add-OrchProcess -> New-OrchProcess
+  - Add-OrchQueue -> New-OrchQueue
+  - Add-OrchTrigger -> New-OrchTrigger
+  - Add-OrchPmUserBulk -> New-OrchPmUserBulk
+  - Add-OrchPmGroup -> New-OrchPmGroup
 
-- The Copy-Item and Copy-OrchFolderMachine cmdlets now display an appropriate message if a machine with the same name is already assigned to the destination folder.
+List of cmdlets where the verb was not changed:
+  - Add-OrchUser 
+  - Add-OrchCalendarDate
+  - Add-OrchMachineClientSecret
+  - Add-OrchFolderMachine
+  - Add-OrchFolderUser
+  - Add-OrchRoleToFolderUser
+  - Add-OrchAssetLink
+  - Add-OrchPmGroupMember
+  - Add-OrchPmLicenseToPmLicensedGroup
+  - Start-OrchJob
 
-- Some operations failed when the target Orchestrator version was outdated. These issues have been resolved, and the cmdlets now handle operations appropriately based on the API version. The correspondence between cmdlets and API versions is as follows:
+- The above changes are only renaming the cmdlets, and their functionality remains completely unchanged. If you wish to use the cmdlets with their old names, you can set aliases. Aliases can be configured as follows:
 
-  - Add-OrchQueue:
-    - ApiVer <  16: Does not set RetentionAction and RetentionPeriod, and Calls POST /odata/QueueDefinitions
-    - ApiVer >= 16: Sets RetentionAction and RetentionPeriod, and Calls POST /odata/QueueDefinitions/UiPath.Server.Configuration.OData.CreateQueue
+  PS> Set-Alias Add-OrchProcess New-OrchProcess
 
-  - Get-OrchProcess -ExpandDetails, Update-OrchProcess, Copy-OrchProcess, Copy-Item:
-    - ApiVer <  17: Does not call GET /odata/ReleaseRetention({releaseId})
-    - ApiVer >= 17: Calls GET /odata/ReleaseRetention({releaseId})
+- To configure the alias automatically when the PowerShell console starts, you can add the above command to your profile script. To edit the profile script, execute the following in the PowerShell console:
 
-  - Add-OrchProcess, Copy-Item:
-    - ApiVer <  17: Calls POST /odata/Releases
-    - ApiVer >= 17: Calls POST /odata/Releases/UiPath.Server.Configuration.OData.CreateRelease
-
-  - Get-OrchTestCase, Get-OrchTestSet, Get-OrchTestSetSchedule, Get-OrchTestSetExecution:
-    - ApiVer <  18: No action is taken.
-    - ApiVer >= 18: Retrieve entities.
+  PS> notepad $profile
 '
 
         # Prerelease string of this module

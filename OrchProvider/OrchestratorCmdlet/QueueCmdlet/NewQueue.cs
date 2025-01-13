@@ -7,7 +7,7 @@ using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands
 {
-    [Cmdlet(VerbsCommon.Add, "OrchQueue", SupportsShouldProcess = true)]
+    [Cmdlet(VerbsCommon.New, "OrchQueue", SupportsShouldProcess = true)]
     [OutputType(typeof(QueueDefinition))]
     public class AddQueueCommand : OrchestratorPSCmdlet
     {

@@ -5,15 +5,15 @@ online version:
 schema: 2.0.0
 ---
 
-# Add-OrchMachine
+# New-OrchMachine
 
 ## SYNOPSIS
-マシンを追加します。
+マシンを作成します。
 
 ## SYNTAX
 
 ```
-Add-OrchMachine [-Name] <String[]> [-Description <String>] [-Type <String>] [-Scope <String>]
+New-OrchMachine [-Name] <String[]> [-Description <String>] [-Type <String>] [-Scope <String>]
  [-UnattendedSlots <Int32>] [-NonProductionSlots <Int32>] [-TestAutomationSlots <Int32>]
  [-AutomationType <String>] [-TargetFramework <String>] [-RobotUsers <String[]>] [-Tags <String[]>]
  [-Path <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
@@ -40,7 +40,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -AutomationType
-追加するマシンの AutomationType を指定します。次のいずれかを指定して下さい: Any, Foreground, Background
+作成するマシンの AutomationType を指定します。次のいずれかを指定して下さい: Any, Foreground, Background
 
 
 ```yaml
@@ -71,7 +71,7 @@ Accept wildcard characters: False
 ```
 
 ### -Description
-追加するマシンの Description を指定します。
+作成するマシンの Description を指定します。
 
 ```yaml
 Type: String
@@ -86,7 +86,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-追加するマシンの Name を指定します。
+作成するマシンの Name を指定します。
 
 ```yaml
 Type: String[]
@@ -101,7 +101,7 @@ Accept wildcard characters: False
 ```
 
 ### -NonProductionSlots
-追加するマシンの NonProductionSlots を指定します。
+作成するマシンの NonProductionSlots を指定します。
 
 ```yaml
 Type: Int32
@@ -130,8 +130,53 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
+### -RobotUsers
+{{ Fill RobotUsers Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
+```
+
+### -Scope
+{{ Fill Scope Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -Tags
+{{ Fill Tags Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
 ### -TargetFramework
-追加するマシンの TargetFramework を指定します。次のいずれかを指定して下さい: Any, Windows, Portable
+作成するマシンの TargetFramework を指定します。次のいずれかを指定して下さい: Any, Windows, Portable
 
 ```yaml
 Type: String
@@ -146,7 +191,7 @@ Accept wildcard characters: False
 ```
 
 ### -TestAutomationSlots
-追加するマシンの TestAutomationSlots を指定します。
+作成するマシンの TestAutomationSlots を指定します。
 
 ```yaml
 Type: Int32
@@ -161,7 +206,7 @@ Accept wildcard characters: False
 ```
 
 ### -Type
-追加するマシンの Type を指定します。次のいずれかを指定して下さい: Template
+作成するマシンの Type を指定します。次のいずれかを指定して下さい: Template
 
 ```yaml
 Type: String
@@ -176,7 +221,7 @@ Accept wildcard characters: False
 ```
 
 ### -UnattendedSlots
-追加するマシンの UnattendedSlots を指定します。
+作成するマシンの UnattendedSlots を指定します。
 
 ```yaml
 Type: Int32
@@ -221,62 +266,21 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -Tags
-{{ Fill Tags Description }}
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: False
-```
-
-### -RobotUsers
-{{ Fill RobotUsers Description }}
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
-### -Scope
-{{ Fill Scope Description }}
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: False
-```
-
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
 ### System.String[]
+
 ### System.String
+
 ### System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]
+
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.CreatedMachine
+
 ## NOTES
 
 ## RELATED LINKS

@@ -14,9 +14,6 @@ Locale: en-US
 ### [Add-OrchAssetLink](Add-OrchAssetLink.md)
 Adds links to the specified assets.
 
-### [Add-OrchBucket](Add-OrchBucket.md)
-Adds storage buckets.
-
 ### [Add-OrchCalendarDate](Add-OrchCalendarDate.md)
 Adds dates to the Non-Working Days calendars.
 
@@ -26,14 +23,8 @@ Assigns the machines to folders.
 ### [Add-OrchFolderUser](Add-OrchFolderUser.md)
 Assigns the users to folders.
 
-### [Add-OrchMachine](Add-OrchMachine.md)
-Adds machines.
-
 ### [Add-OrchMachineClientSecret](Add-OrchMachineClientSecret.md)
 {{ Fill in the Synopsis }}
-
-### [Add-OrchPmGroup](Add-OrchPmGroup.md)
-Adds groups to the Identity server.
 
 ### [Add-OrchPmGroupMember](Add-OrchPmGroupMember.md)
 Adds members to groups.
@@ -41,20 +32,8 @@ Adds members to groups.
 ### [Add-OrchPmLicenseToPmLicensedGroup](Add-OrchPmLicenseToPmLicensedGroup.md)
 {{ Fill in the Synopsis }}
 
-### [Add-OrchPmUserBulk](Add-OrchPmUserBulk.md)
-Adds users to the organization.
-
-### [Add-OrchProcess](Add-OrchProcess.md)
-Adds proccesses.
-
-### [Add-OrchQueue](Add-OrchQueue.md)
-Adds queues.
-
 ### [Add-OrchRoleToFolderUser](Add-OrchRoleToFolderUser.md)
 Assigns the roles to folder users.
-
-### [Add-OrchTrigger](Add-OrchTrigger.md)
-Adds triggers.
 
 ### [Add-OrchUser](Add-OrchUser.md)
 Adds users to tenants.
@@ -460,6 +439,27 @@ Removes users assigned to a folder and assigns them to another folders.
 
 ### [Move-OrchPmGroupMember](Move-OrchPmGroupMember.md)
 Moves users between two groups within an organization.
+
+### [New-OrchBucket](New-OrchBucket.md)
+Creates storage buckets.
+
+### [New-OrchMachine](New-OrchMachine.md)
+Creates machines.
+
+### [New-OrchPmGroup](New-OrchPmGroup.md)
+Adds groups to the Identity server.
+
+### [New-OrchPmUserBulk](New-OrchPmUserBulk.md)
+Creates users to the organization.
+
+### [New-OrchProcess](New-OrchProcess.md)
+Creates processes.
+
+### [New-OrchQueue](New-OrchQueue.md)
+Creates queues.
+
+### [New-OrchTrigger](New-OrchTrigger.md)
+Creates triggers.
 
 ### [Open-OrchJob](Open-OrchJob.md)
 {{ Fill in the Synopsis }}
