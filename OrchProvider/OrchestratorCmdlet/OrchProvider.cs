@@ -268,8 +268,6 @@ namespace UiPath.PowerShell.Core
 
         protected override PSDriveInfo NewDrive(PSDriveInfo drive)
         {
-            OrchDriveInfo orchDrive = (OrchDriveInfo)drive;
-
             // プロバイダクラスのロード順によっては、このタイミングではまだ UiPathOrchTm プロバイダは未登録。
             // 下記の処理を、すべてのプロバイダの NewDrive で行うことで、UiPathOrch と UiPathOrchTm を確実に関連づけるようにする。
             #region Find and associate Du drives
@@ -306,9 +304,6 @@ namespace UiPath.PowerShell.Core
             //}
             //catch { }
 
-            #endregion
-
-            #region adding package feed drive
             #endregion
 
             return drive;
@@ -548,13 +543,9 @@ namespace UiPath.PowerShell.Core
             Encoding encoding = csvEncoding ?? Encoding.Default;
             string[] headers = ["Path", "Name", "Description", "FeedType"];
 
-            exportCsv = OrchestratorPSCmdlet.GenerateCsvFilePath(exportCsv, SessionState, DefaultCsvName);
-
-            using var writer = new StreamWriter(exportCsv!, false, encoding);
-
-            // ヘッダ行を書き込む
-            //writer.WriteLine(string.Join(",", headers));
-            OrchestratorPSCmdlet.WriteCsvLine(writer, headers);
+            var (physicalCsvPath, providerCsvPath) = OrchestratorPSCmdlet.GenerateCsvFilePath(exportCsv, SessionState, DefaultCsvName);
+            using var writer = OrchestratorPSCmdlet.WriteCsvHeader(physicalCsvPath, encoding, headers);
+            if (writer == null) return null;
 
             // 各フォルダに対してデータ行を書き込む
             foreach (var folder in output.Where(f => f.FolderType != "Personal"))
@@ -568,7 +559,7 @@ namespace UiPath.PowerShell.Core
                 OrchestratorPSCmdlet.WriteCsvLine(writer, line);
             }
 
-            return exportCsv;
+            return providerCsvPath;
         }
 
         protected override void GetChildItems(string path, bool recurse, uint depth)

@@ -43,10 +43,12 @@ namespace UiPath.PowerShell.Commands
             var drivesFolders = OrchDriveInfo.EnumPackageFeedFolders(Path);
             if (Recurse && drivesFolders.Any(df => df.folder != df.drive.RootFolder))
             {
-                throw new Exception("The -SourceRecurse parameter can only be specified for the tenant's root folder.");
+                throw new Exception("The -Recurse parameter can only be specified for the tenant's root folder.");
             }
 
-            var pkgFilePaths = OrchDriveInfo.ExpandLocalPath(Source, "*.nupkg", Recurse, Recurse ? 1 : 0)
+            Source = Source?.Select(s => SessionState.Path.GetUnresolvedProviderPathFromPSPath(s)).ToArray();
+
+            var pkgFilePaths = OrchDriveInfo.ExpandLocalPath(SessionState, Source, "*.nupkg", Recurse, Recurse ? 1 : 0)
                 .OrderByFileNameVersion();
 
             var tasks = drivesFolders

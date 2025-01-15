@@ -38,7 +38,7 @@ namespace UiPath.PowerShell.Commands
         protected override void ProcessRecord()
         {
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
-            var pkgFilePaths = OrchDriveInfo.ExpandLocalPath(Source, "*.nupkg").OrderByFileNameVersion();
+            var pkgFilePaths = OrchDriveInfo.ExpandLocalPath(SessionState, Source, "*.nupkg").OrderByFileNameVersion();
 
             // この実装は、このままで良いか。
             var importTasks = drives

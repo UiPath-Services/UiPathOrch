@@ -124,8 +124,8 @@ namespace UiPath.PowerShell.Commands
             var wpFullName = FullName.ConvertToWildcardPatternList();
             var wpType = Type.ConvertToWildcardPatternList();
 
-            ExportCsv = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
-            using var writer = WriteCsvHeader(ExportCsv, CsvEncoding, CsvHeaders);
+            var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
+            using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var drive in drives)
@@ -185,7 +185,7 @@ namespace UiPath.PowerShell.Commands
                 }
             }
 
-            WriteCSVExportedMessage(this, ExportCsv);
+            WriteCSVExportedMessage(this, providerCsvPath);
         }
     }
 }

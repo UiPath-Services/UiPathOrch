@@ -176,11 +176,11 @@ namespace UiPath.PowerShell.Commands
             var wpName = Name.ConvertToWildcardPatternList();
             var wpValueType = ValueType.ConvertToWildcardPatternList();
 
-            ExportCsv = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
-            using var writer = WriteCsvHeader(ExportCsv, CsvEncoding, CsvHeaders);
+            var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
+            using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
-            ExportCredentialCsv = GenerateCsvFilePath(ExportCredentialCsv, SessionState, DefaultCredentialCsvName);
-            using var writerCredential = WriteCsvHeader(ExportCredentialCsv, CsvEncoding, CsvCredentialHeaders);
+            var (physicalCredentialCsvPath, providerCredentialCsvPath) = GenerateCsvFilePath(ExportCredentialCsv, SessionState, DefaultCredentialCsvName);
+            using var writerCredential = WriteCsvHeader(physicalCredentialCsvPath, CsvEncoding, CsvCredentialHeaders);
 
             using var results = OrchThreadPool.RunForEach(drivesFolders,
                 df => df.folder.GetPSPath(),
@@ -260,11 +260,11 @@ namespace UiPath.PowerShell.Commands
 
             if (!string.IsNullOrEmpty(ExportCsv))
             {
-                WriteCSVExportedMessage(this, ExportCsv);
+                WriteCSVExportedMessage(this, providerCsvPath);
             }
             if (!string.IsNullOrEmpty(ExportCredentialCsv))
             {
-                WriteCSVExportedMessage(this, ExportCredentialCsv);
+                WriteCSVExportedMessage(this, providerCredentialCsvPath);
             }
         }
     }

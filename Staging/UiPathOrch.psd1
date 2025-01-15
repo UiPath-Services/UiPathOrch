@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.9.0'
+ModuleVersion = '0.9.9.1'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -307,6 +307,8 @@ CmdletsToExport = @(
 'Get-OrchPmGroup',
 'New-OrchPmGroup',
 'Remove-OrchPmGroup',
+
+'Get-OrchPmGroupMember',
 'Add-OrchPmGroupMember',
 'Move-OrchPmGroupMember',
 'Remove-OrchPmGroupMember',
@@ -373,36 +375,28 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Several cmdlets with the verb Add have been renamed to use the verb New. When these cmdlets were initially created, the verb Add was chosen to align with the terminology used in the Orchestrator web interface, as it was considered more intuitive at the time. However, as the number of cmdlets increased, it was determined that New and Add should be used appropriately based on their functionality. We apologize for any inconvenience caused by this change.
+        ReleaseNotes = '- The Get-OrchPmGroupMember cmdlet has been added.
+  - This cmdlet outputs the same content as the existing Get-OrchPmGroup -ExpandMembers.
 
-- List of cmdlets renamed to use the verb New:
-  - Add-OrchMachine -> New-OrchMachine
-  - Add-OrchBucket -> New-OrchBucket
-  - Add-OrchProcess -> New-OrchProcess
-  - Add-OrchQueue -> New-OrchQueue
-  - Add-OrchTrigger -> New-OrchTrigger
-  - Add-OrchPmUserBulk -> New-OrchPmUserBulk
-  - Add-OrchPmGroup -> New-OrchPmGroup
+  - As part of this change, the -ExpandMembers parameter has been removed from the Get-OrchPmGroup cmdlet, and the functionality to expand members has been migrated to the Get-OrchPmGroupMember cmdlet.
 
-List of cmdlets where the verb was not changed:
-  - Add-OrchUser 
-  - Add-OrchCalendarDate
-  - Add-OrchMachineClientSecret
-  - Add-OrchFolderMachine
-  - Add-OrchFolderUser
-  - Add-OrchRoleToFolderUser
-  - Add-OrchAssetLink
-  - Add-OrchPmGroupMember
-  - Add-OrchPmLicenseToPmLicensedGroup
-  - Start-OrchJob
+  - This update enables more intuitive operations, as follows:
+    - The output of Get-OrchPmGroup -ExportCsv can be imported into the New-OrchPmGroup cmdlet.
+    - The output of Get-OrchPmGroupMember -ExportCsv can be imported into the Add-OrchPmGroupMember cmdlet.
 
-- The above changes are only renaming the cmdlets, and their functionality remains completely unchanged. If you wish to use the cmdlets with their old names, you can set aliases. Aliases can be configured as follows:
+- The Export-OrchPackage cmdlet has been improved.
+  - When a relative path for the -Destination parameter is specified, the path was previously resolved using the process''s current working directory, which could lead to unintended behavior.
 
-  PS> Set-Alias Add-OrchProcess New-OrchProcess
+  - The relative path is now correctly resolved using the current location of the PSDrive.
 
-- To configure the alias automatically when the PowerShell console starts, you can add the above command to your profile script. To edit the profile script, execute the following in the PowerShell console:
+  - For example, the following command previously failed to write the packages to the correct location. This issue has now been resolved. The first wildcard represents the package name, and the second wildcard represents the version number:
 
-  PS> notepad $profile
+    PS Orch1:\> Export-OrchPackage -Recurse * * c:
+
+  - If the -Destination parameter is not specified, the packages are exported to the current location of the last-used FileSystem drive. This behavior remains unchanged from previous versions.
+
+- The Import-OrchLibrary and Import-OrchPackage cmdlets have also been improved.
+  - These cmdlets previously did not function correctly when a relative path was specified for the -Source parameter.
 '
 
         # Prerelease string of this module

@@ -306,8 +306,10 @@ namespace UiPath.PowerShell.Core
                 .Where(df => df.folder.FolderType != "Personal").ToList();
         }
 
-        public static IEnumerable<(string FullPath, string RelativePath)> ExpandLocalPath(string[]? localPaths, string wildcard, bool recurse = false, int depth = 0)
+        public static IEnumerable<(string FullPath, string RelativePath)> ExpandLocalPath(SessionState sessionState, string[]? localPaths, string wildcard, bool recurse = false, int depth = 0)
         {
+            localPaths = localPaths?.Select(p => sessionState.Path.GetUnresolvedProviderPathFromPSPath(p)).ToArray();
+
             HashSet<string> uniquePath = [];
 
             if (localPaths == null)
@@ -340,9 +342,11 @@ namespace UiPath.PowerShell.Core
             {
                 if (Directory.Exists(localPath))
                 {
-                    EnumerationOptions option = new();
-                    option.RecurseSubdirectories = recurse;
-                    option.MaxRecursionDepth = depth;
+                    EnumerationOptions option = new()
+                    {
+                        RecurseSubdirectories = recurse,
+                        MaxRecursionDepth = depth
+                    };
                     string root = localPath;
                     foreach (var pathExpanded in Directory.EnumerateFiles(root, wildcard, option))
                     {
