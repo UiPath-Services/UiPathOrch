@@ -539,6 +539,7 @@ namespace UiPath.OrchAPI
         public static readonly JsonSerializerOptions jsoWhenWritingNull = new()
         {
             //Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
+            //Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, // エンコードを抑制
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
         };
 

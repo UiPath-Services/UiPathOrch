@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Diagnostics;
 using System.Management.Automation;
 using System.Runtime.InteropServices;
 using System.Security;
@@ -135,9 +136,10 @@ namespace UiPath.PowerShell.Commands
             }
         }
 
-        internal static string? GenerateCsvFilePath(string? paramExportCsv, SessionState state, string defaultFileName)
+        // returns (physicalFilePath, psFilePath)
+        internal static (string?, string?) GenerateCsvFilePath(string? paramExportCsv, SessionState state, string defaultFileName)
         {
-            if (string.IsNullOrEmpty(paramExportCsv)) return null;
+            if (string.IsNullOrEmpty(paramExportCsv)) return (null, null);
 
             ICollection<PathInfo> resolvedPaths = null;
 
@@ -145,7 +147,7 @@ namespace UiPath.PowerShell.Commands
             {
                 resolvedPaths = state.Path.GetResolvedPSPathFromPSPath(paramExportCsv);
             }
-            catch
+            catch // (ディレクトリパスではなく) ファイルパスを指定した場合は、存在しないファイル名を除外して親フォルダパスを探し直す
             {
                 string parentFolder = Path.GetDirectoryName(paramExportCsv);
                 defaultFileName = Path.GetFileName(paramExportCsv);
@@ -155,38 +157,43 @@ namespace UiPath.PowerShell.Commands
                 }
                 catch
                 {
-                    throw new FileNotFoundException($"The specified path '{paramExportCsv}' does not exist.");
+                    throw new ItemNotFoundException($"Cannot find path '{paramExportCsv}' because it does not exist.'");
                 }
             }
 
-            string resolvedPath;
+            Debug.Assert(resolvedPaths.Count != 0);
+
+            string psPath;
+            string physicalPath;
             switch (resolvedPaths.Count)
             {
                 case 1:
-                    resolvedPath = resolvedPaths.First().ProviderPath;
+                    var resolvedPath = resolvedPaths.First();
+                    psPath = resolvedPath.Path;
+                    physicalPath = resolvedPath.ProviderPath;
                     break;
-                case 0:
-                    var parentFolder = Path.GetDirectoryName(paramExportCsv);
-                    var fileName = Path.GetFileName(paramExportCsv);
-                    resolvedPaths = state.Path.GetResolvedPSPathFromPSPath(parentFolder);
-                    resolvedPath = resolvedPaths.Count switch
-                    {
-                        1 => Path.Combine(resolvedPaths.First().ProviderPath, fileName),
-                        0 => throw new FileNotFoundException($"The specified path '{paramExportCsv}' does not exist."),
-                        _ => throw new InvalidOperationException($"The specified path '{paramExportCsv}' resolves to multiple locations."),
-                    };
-                    break;
+                //case 0: // GetResolvedPSPathFromPSPath() が例外をスローするはずなので、これはない
+                    //var parentFolder = Path.GetDirectoryName(paramExportCsv);
+                    //var fileName = Path.GetFileName(paramExportCsv);
+                    //resolvedPaths = state.Path.GetResolvedPSPathFromPSPath(parentFolder);
+                    //physicalPath = resolvedPaths.Count switch
+                    //{
+                    //    1 => Path.Combine(resolvedPaths.First().ProviderPath, fileName),
+                    //    0 => throw new FileNotFoundException($"The specified path '{paramExportCsv}' does not exist."),
+                    //    _ => throw new InvalidOperationException($"The specified path '{paramExportCsv}' resolves to multiple locations."),
+                    //};
+                    //break;
                 default:
                     throw new InvalidOperationException($"The specified path '{paramExportCsv}' resolves to multiple locations.");
             }
 
-            if (Directory.Exists(resolvedPath))
+            if (Directory.Exists(physicalPath))
             {
-                return Path.Combine(resolvedPath, defaultFileName);
+                return (Path.Combine(physicalPath, defaultFileName), Path.Combine(psPath, defaultFileName));
             }
             else
             {
-                return resolvedPath!;
+                return (physicalPath, psPath);
             }
         }
 
@@ -235,6 +242,8 @@ namespace UiPath.PowerShell.Commands
         // 逐次 writer.Write() を呼ぶ方が効率的だ。
         internal static void WriteCsvLine(TextWriter writer, string?[] values)
         {
+            if (writer == null) return;
+
             for (int i = 0; i < values.Length; i++)
             {
                 writer.Write(values[i]); // 各値を直接書き込む

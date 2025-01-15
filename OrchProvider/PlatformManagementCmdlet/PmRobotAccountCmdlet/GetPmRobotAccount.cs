@@ -66,8 +66,8 @@ namespace UiPath.PowerShell.Commands
             var drives = OrchDriveInfo.EnumOrchDrives(Path);
             var wpName = Name.ConvertToWildcardPatternList();
 
-            ExportCsv = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
-            using var writer = WriteCsvHeader(ExportCsv, CsvEncoding, CsvHeaders);
+            var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
+            using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
             using var results = OrchThreadPool.RunForEach(drives,
                 drive => drive.NameColonSeparator,
@@ -137,7 +137,7 @@ namespace UiPath.PowerShell.Commands
                 }
             }
 
-            WriteCSVExportedMessage(this, ExportCsv);
+            WriteCSVExportedMessage(this, providerCsvPath);
         }
     }
 }

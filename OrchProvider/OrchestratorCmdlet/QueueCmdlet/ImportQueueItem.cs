@@ -1,5 +1,6 @@
 ﻿using System.Management.Automation;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using UiPath.PowerShell.Completer;
@@ -44,6 +45,12 @@ namespace UiPath.PowerShell.Commands
         [SupportsWildcards]
         public string[]? Path { get; set; }
 
+        // TODO: 次のようなダブルクォートを含む csv を適切にパースできていないな。。
+        /*
+        Path,Type,UserName,Roles
+        TestTenant:,DirectoryUser,LynneR@1pf2dr.onmicrosoft.com,
+        TestTenant:,DirectoryUser,MeganB@1pf2dr.onmicrosoft.com,"""Allow to be Automation Developer"",""Solutions Contributor"""
+         */
         public bool ParseCsvContent(string csvFilePath, out List<string> headers, out List<List<string>> contents, out List<CSVParseError> errorInfo)
         {
             headers = [];
@@ -168,11 +175,12 @@ namespace UiPath.PowerShell.Commands
 
         private (int rowNum, string content) CreateItemData(string csvFilePath, out List<CSVParseError> errorInfo)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             sb.Append("{\"queueItems\":[\n");
 
             var options = new JsonSerializerOptions
             {
+                //Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, // エンコードを抑制
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                 WriteIndented = true
             };
@@ -261,7 +269,7 @@ namespace UiPath.PowerShell.Commands
                 CommitType = "ProcessAllIndependently";
             }
 
-            var csvPathExpanded = OrchDriveInfo.ExpandLocalPath(ImportCsv, "*.csv");
+            var csvPathExpanded = OrchDriveInfo.ExpandLocalPath(SessionState, ImportCsv, "*.csv");
 
             var queueItemData = new List<(string csvPath, (int rowNum, string content))>();
             foreach (var p in csvPathExpanded)

@@ -28,7 +28,7 @@
       "AppId": "YOUR_APP_ID",
       "AppSecret": "YOUR_APP_SECRET",
       "Scope": "OR.Folders.Read OR.Settings.Read",
-      "Enabled": true
+      "Enabled": false
     },
     {
       "Name": "Orch3",
@@ -36,7 +36,8 @@
       "Root": "https://YOUR_ORCHESTRATOR_URL/YOUR_TENANT",
       "Username": "USERNAME_OR_EMAILADDR",
       "Password": "PASSWORD",
-      "Enabled": true
+      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Enabled": false
     },
     {
       "Name": "Orch4",
@@ -53,7 +54,7 @@
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
       "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
-      "Enabled": true,
+      "Enabled": false,
       "Proxy": {
         "Url": "http://proxy.example.com:8081",
         "BypassProxyOnLocal": true,
