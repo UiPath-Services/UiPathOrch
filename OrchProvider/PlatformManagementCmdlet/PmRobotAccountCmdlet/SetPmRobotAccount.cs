@@ -313,8 +313,8 @@ namespace UiPath.PowerShell.Commands
                                 {
                                     var updatedRobot = drive.OrchAPISession.UpdatePmRobot(robot.id!, cmd);
                                     drive.PmRobotAccounts.ClearCache();
-                                    drive._dicPmDirectoryUsers = null;
-                                    drive._dicSearchForUsersAndGroups = null;
+                                    drive._dicSearchPmDirectory = null;
+                                    drive._dicSearchDirectory = null;
 
                                     if (updatedRobot != null)
                                     {

@@ -326,6 +326,9 @@ Gets the personal workspaces.
 ### [Get-OrchPmGroup](Get-OrchPmGroup.md)
 {{ Fill in the Synopsis }}
 
+### [Get-OrchPmGroupMember](Get-OrchPmGroupMember.md)
+{{ Fill in the Synopsis }}
+
 ### [Get-OrchPmLicensedGroup](Get-OrchPmLicensedGroup.md)
 Gets the group assigned with the User named license.
 
@@ -583,6 +586,15 @@ Reverts the package version of the processes to the last version.
 
 ### [Reset-OrchTestDataQueueItem](Reset-OrchTestDataQueueItem.md)
 Resets the consumption state of items in the test data queues.
+
+### [Resolve-OrchPmDirectoryNameBulk](Resolve-OrchPmDirectoryNameBulk.md)
+Resolves the names of directory entries.
+
+### [Search-OrchDirectory](Search-OrchDirectory.md)
+Searches Directory.
+
+### [Search-OrchPmDirectory](Search-OrchPmDirectory.md)
+Searches Directory.
 
 ### [Set-OrchAsset](Set-OrchAsset.md)
 Creates, updates, and removes the assets.

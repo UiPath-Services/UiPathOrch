@@ -85,8 +85,8 @@ namespace UiPath.PowerShell.Commands
                                 {
                                     var newRobot = dstDrive.OrchAPISession.CreatePmRobot(cmd);
                                     dstDrive.PmRobotAccounts.ClearCache();
-                                    dstDrive._dicPmDirectoryUsers = null;
-                                    dstDrive._dicSearchForUsersAndGroups = null;
+                                    dstDrive._dicSearchPmDirectory = null;
+                                    dstDrive._dicSearchDirectory = null;
                                     if (newRobot != null)
                                     {
                                         newRobot.Path = dstDrive.NameColonSeparator;

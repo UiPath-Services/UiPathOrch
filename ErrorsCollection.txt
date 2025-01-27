@@ -33,3 +33,6 @@ Redo-OrchQueueItem:
 
 Redo-OrchQueueItem:
 {"message":"itemReviewStatusParameters must not be null","errorCode":0,"traceId":"00-fbc101bfd0e701a9cd7eb7c0fbb7b03b-47ec2d4ee4e8ed71-01"}
+
+Resolve-OrchPmDirectoryNameBulk
+{"errors":{"entityType":["Error converting value \"robot\" to type 'UiPath.IdentityServer.Directory.Abstractions.DataContracts.DirectoryEntityType'. Path 'entityType', line 1, position 54."]},"type":"https://tools.ietf.org/html/rfc9110#section-15.5.1","title":"One or more validation errors occurred.","status":400,"traceId":"00-ce6d7689c5815396278aa54077e685f7-169adffa28d8a60d-00"}

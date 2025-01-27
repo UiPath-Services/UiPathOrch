@@ -444,6 +444,77 @@ namespace UiPath.PowerShell.Core
             return ret.First();
         }
 
+        public static Dictionary<string, string>? LoadUserMappingCsv(IWritableHost _this, OrchDriveInfo srcDrive, OrchDriveInfo dstDrive, string? path)
+        {
+            if (path == null) return null;
+
+            if (srcDrive == dstDrive)
+            {
+                _this.WriteWarning("The specified SourceTenant and DestinationTenant drives are the same. Ignoring -UserMappingCsv parameter.");
+                return null;
+            }
+
+            if (srcDrive.GetPartitionGlobalId() == dstDrive.GetPartitionGlobalId())
+            {
+                _this.WriteWarning("The specified SourceTenant and DestinationTenant belong to the same organization. Ignoring -UserMappingCsv parameter.");
+                return null;
+            }
+
+            string physicalPath = SessionState?.Path.GetUnresolvedProviderPathFromPSPath(path);
+            if (string.IsNullOrEmpty(physicalPath)) return null;
+
+            var userMapping = new Dictionary<string, string>();
+
+            try
+            {
+                using var enumerator = File.ReadLines(physicalPath).GetEnumerator();
+
+                // Read the first line to determine column positions
+                if (!enumerator.MoveNext())
+                    throw new InvalidOperationException("The CSV file is empty.");
+
+                var headerLine = enumerator.Current;
+                var headers = headerLine.Split(',');
+
+                int sourceIndex = Array.FindIndex(headers, h => h.Trim().Equals("SourceUserName", StringComparison.OrdinalIgnoreCase));
+                int destinationIndex = Array.FindIndex(headers, h => h.Trim().Equals("DestinationUserName", StringComparison.OrdinalIgnoreCase));
+
+                if (sourceIndex == -1 || destinationIndex == -1)
+                    throw new InvalidOperationException("The CSV file does not contain the required columns: 'SourceUserName' and 'DestinationUserName'.");
+
+                // Process remaining lines
+                while (enumerator.MoveNext())
+                {
+                    var line = enumerator.Current;
+
+                    // Skip empty lines and comments
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+
+                    // Split the line into columns
+                    var columns = line.Split(',');
+
+                    // Ensure the line has enough columns
+                    if (columns.Length <= Math.Max(sourceIndex, destinationIndex))
+                        continue;
+
+                    string sourceUserName = columns[sourceIndex].Trim();
+                    string destinationUserName = columns[destinationIndex].Trim();
+
+                    // Add to dictionary if the source username is not empty
+                    if (!string.IsNullOrEmpty(sourceUserName))
+                    {
+                        userMapping[sourceUserName] = destinationUserName;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Error reading the CSV file at {physicalPath}", ex);
+            }
+
+            return userMapping;
+        }
+
         protected internal Folder? RootFolder;
 
         // TODO: created folder cache sorted by FullyQualifiedName for GetFolder()
@@ -528,8 +599,8 @@ namespace UiPath.PowerShell.Core
 
             _dicRobotLogs = null;
 
-            _dicSearchForUsersAndGroups = null;
-            _dicSearchForUsersAndGroups_Exception.ClearCache();
+            _dicSearchDirectory = null;
+            _dicSearchDirectory_Exception.ClearCache();
 
             _dicTenantId = null;
             _dicTenantKey = null;
@@ -553,8 +624,8 @@ namespace UiPath.PowerShell.Core
             _dicPmBulkResolveByName = null;
             _dicPmBulkResolveByName_Exception.ClearCache();
 
-            _dicPmDirectoryUsers = null;
-            _dicPmDirectoryUsersException.ClearCache();
+            _dicSearchPmDirectory = null;
+            _dicSearchPmDirectory_Exception.ClearCache();
 
             _dicPmGroups = null;
             _dicPmGroups_Exception?.ClearCache();
@@ -1178,6 +1249,9 @@ namespace UiPath.PowerShell.Core
         internal ExceptionsCachePer<Int64> _dicTriggers_Exceptions = new();
         public ICollection<ProcessSchedule> GetTriggers(Folder folder)
         {
+            // ApiVersion == 11.1 のとき、個人用ワークスペースにはトリガーがないことを確認済み
+            if (OrchAPISession.ApiVersion < 12 && folder.FolderType == "Personal") return [];
+
             _dicTriggers_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
 
             if (_dicTriggers == null)
@@ -1193,7 +1267,7 @@ namespace UiPath.PowerShell.Core
                 _dicTriggers[folder.Id ?? 0] = triggersPerFolder;
                 try
                 {
-                    var triggers = OrchAPISession.GetProcessSchedule(folder.Id ?? 0).ToList();
+                    var triggers = OrchAPISession.GetProcessSchedules(folder.Id ?? 0).ToList();
                     string folderPath = folder.GetPSPath();
                     foreach (var trigger in triggers)
                     {
@@ -1246,6 +1320,11 @@ namespace UiPath.PowerShell.Core
                     {
                         detailedTrigger.Path = folder.GetPSPath();
                         detailedTriggersPerFolder[schedule.Id!.Value] = detailedTrigger;
+                        detailedTrigger.ExecutorRobots = OrchAPISession.GetRobotIdsForSchedule(folder.Id ?? 0, schedule.Id!.Value)?
+                            .Select(id => new RobotExecutor()
+                            {
+                                Id = id
+                            }).ToArray();
 
                         if (_dicTriggers != null && _dicTriggers.TryGetValue(folder.Id!.Value, out var triggersPerFolder))
                         {
@@ -1951,36 +2030,36 @@ namespace UiPath.PowerShell.Core
         }
 
         // key: 検索テキスト
-        internal ConcurrentDictionary<string, PmDirectoryEntityInfo[]?>? _dicPmDirectoryUsers = null;
-        internal readonly ExceptionsCachePer<string> _dicPmDirectoryUsersException = new();
-        public PmDirectoryEntityInfo[]? SearchPmDirectoryUsers(string key)
+        internal ConcurrentDictionary<string, PmDirectoryEntityInfo[]?>? _dicSearchPmDirectory = null;
+        internal readonly ExceptionsCachePer<string> _dicSearchPmDirectory_Exception = new();
+        public PmDirectoryEntityInfo[]? SearchPmDirectory(string key)
         {
             key = key.ToLower();
-            _dicPmDirectoryUsersException.ThrowCachedExceptionIfAny(key);
+            _dicSearchPmDirectory_Exception.ThrowCachedExceptionIfAny(key);
 
-            if (_dicPmDirectoryUsers == null)
+            if (_dicSearchPmDirectory == null)
             {
-                lock (_dicPmDirectoryUsersException)
+                lock (_dicSearchPmDirectory_Exception)
                 {
-                    _dicPmDirectoryUsers ??= [];
+                    _dicSearchPmDirectory ??= [];
                 }
             }
             PmDirectoryEntityInfo[] ret;
-            if (!_dicPmDirectoryUsers.TryGetValue(key, out ret))
+            if (!_dicSearchPmDirectory.TryGetValue(key, out ret))
             {
                 try
                 {
                     var partitionGlobalId = GetPartitionGlobalId();
-                    ret = OrchAPISession.SearchPmDirectoryUsers(partitionGlobalId!, key);
+                    ret = OrchAPISession.SearchPmDirectory(partitionGlobalId!, key);
                     foreach (var user in ret ?? [])
                     {
                         user.Path = NameColonSeparator;
                     }
-                    _dicPmDirectoryUsers[key] = ret;
+                    _dicSearchPmDirectory[key] = ret;
                 }
                 catch (HttpResponseException ex)
                 {
-                    _dicPmDirectoryUsersException.CacheException(key, ex);
+                    _dicSearchPmDirectory_Exception.CacheException(key, ex);
                     throw;
                 }
             }
@@ -2028,6 +2107,10 @@ namespace UiPath.PowerShell.Core
 
                     foreach (var kvp in result ?? [])
                     {
+                        if (kvp.Value != null)
+                        {
+                            kvp.Value.Path = NameColonSeparator;
+                        }
                         _dicPmBulkResolveByName.AddOrUpdate((kind, kvp.Key), kvp.Value, (key, oldValue) => kvp.Value);
                     }
                 }
@@ -2084,38 +2167,38 @@ namespace UiPath.PowerShell.Core
         }
 
         // key: name
-        internal ConcurrentDictionary<string, DirectoryObject[]?>? _dicSearchForUsersAndGroups = null;
-        internal readonly ExceptionsCachePer<string>_dicSearchForUsersAndGroups_Exception = new();
-        public IEnumerable<DirectoryObject> SearchForUsersAndGroups(string name)
+        internal ConcurrentDictionary<string, DirectoryObject[]?>? _dicSearchDirectory = null;
+        internal readonly ExceptionsCachePer<string>_dicSearchDirectory_Exception = new();
+        public IEnumerable<DirectoryObject> SearchDirectory(string name)
         {
             // この API は、'+' を含むユーザー名を検索できないようだ。
             // 念のため、+ のほか '-' と '_' についても検索ワードから除いて処理する
             int index = name.IndexOfAny(['+', '-', '_']);
             string searchWord = index >= 0 ? name.Substring(0, index) : name;
 
-            _dicSearchForUsersAndGroups_Exception.ThrowCachedExceptionIfAny(searchWord);
+            _dicSearchDirectory_Exception.ThrowCachedExceptionIfAny(searchWord);
 
-            if (_dicSearchForUsersAndGroups == null)
+            if (_dicSearchDirectory == null)
             {
-                lock (_dicSearchForUsersAndGroups_Exception)
+                lock (_dicSearchDirectory_Exception)
                 {
-                    _dicSearchForUsersAndGroups ??= [];
+                    _dicSearchDirectory ??= [];
                 }
             }
-            if (!_dicSearchForUsersAndGroups.TryGetValue(searchWord, out var value))
+            if (!_dicSearchDirectory.TryGetValue(searchWord, out var value))
             {
                 try
                 {
-                    value = OrchAPISession.SearchForUsersAndGroups(searchWord);
+                    value = OrchAPISession.SearchDirectory(searchWord);
                     foreach (var v in value ?? [])
                     {
                         v.Path = NameColonSeparator;
                     }
-                    _dicSearchForUsersAndGroups[searchWord] = value;
+                    _dicSearchDirectory[searchWord] = value;
                 }
                 catch (HttpResponseException ex)
                 {
-                    _dicSearchForUsersAndGroups_Exception.CacheException(searchWord, ex);
+                    _dicSearchDirectory_Exception.CacheException(searchWord, ex);
                     throw;
                 }
             }
@@ -2460,13 +2543,40 @@ namespace UiPath.PowerShell.Core
             ConnectionString       = new(this, OrchAPISession.GetConnectionString,        e => e.Path = NameColonSeparator);
             LicenseSettings        = new(this, OrchAPISession.GetLicenseSettings,         e => e.Path = NameColonSeparator);
             MachineSessionRuntimes = new(this, OrchAPISession.GetMachineSessionRuntimes,  e => e.Path = NameColonSeparator);
-            Robots                 = new(this, OrchAPISession.GetRobots,                  e => e.Path = NameColonSeparator);
             AllRobotsAcrossFolders = new(this, OrchAPISession.FindAllRobotsAcrossFolders, e => e.Path = NameColonSeparator);
             PersonalWorkspaces     = new(this, OrchAPISession.GetPersonalWorkspaces,      e => e.Path = NameColonSeparator);
             Roles                  = new(this, OrchAPISession.GetRoles,                   e => e.Path = NameColonSeparator);
             Settings               = new(this, OrchAPISession.GetSettings,                e => e.Path = NameColonSeparator);
             UpdateSettings         = new(this, OrchAPISession.GetUpdateSettings,          e => e.Path = NameColonSeparator);
             Webhooks               = new(this, OrchAPISession.GetWebhooks,                e => e.Path = NameColonSeparator);
+
+            Robots = new(this, () =>
+                {
+                    if (OrchAPISession.ApiVersion >= 12)
+                    {
+                        return OrchAPISession.GetRobots();
+                    }
+                    else
+                    {
+                        // 11.1 では、ロボット一覧取得で API call が発生していなかった。。ユーザーからそれっぽいのを作ってみる。
+                        // TODO: 12 以降ではどうか？
+                        var users = GetUsers();
+                        foreach (var user in users)
+                        {
+                            GetUser(user);
+                        }
+                        return users.Select(u => new Robot()
+                        {
+                            // TODO: ここ未完成。なんちゃって実装。
+                            Path = NameColonSeparator,
+                            Id = u.UnattendedRobot?.RobotId ?? u.RobotProvision?.RobotId,
+                            Type = u.RobotProvision?.RobotType,
+                            Username = u.UnattendedRobot?.UserName ?? u.RobotProvision?.UserName,
+                            User = u
+                        });
+                    }
+                },
+                e => e.Path = NameColonSeparator);
 
             AvailableVersions = new(this, () =>
                 {
@@ -2555,7 +2665,8 @@ namespace UiPath.PowerShell.Core
             );
 
             // インデックスなしのフォルダエンティティ
-            FolderFeedId                   = new(this, OrchAPISession.GetFolderFeedId);
+            // 下記は 11.1 ではエラーになることを確認済み。TODO: feedId はどうやって取得するのか？ 12 以降ではどうか？
+            FolderFeedId                   = new(this, OrchAPISession.GetFolderFeedId, null, 12);
             ActionCatalogs                 = new(this, OrchAPISession.GetTaskCatalogs,       (e, folderPath) => e.Path = folderPath, 16); // 16 でエラーが返らないことを確認済み
             ApiTriggers                    = new(this, OrchAPISession.GetHttpTriggers,       (e, folderPath) => e.Path = folderPath, 18); // 17 で web interface にないことを確認済み (17 で実行してもエラーは返らないようだが、)
             Buckets                        = new(this, OrchAPISession.GetBuckets,            (e, folderPath) => e.Path = folderPath);
@@ -2699,6 +2810,7 @@ namespace UiPath.PowerShell.Core
                     personalWorkspaceName = user.PersonalWorkspace.DisplayName;
                     user.PersonalWorkspace.ParentId = null; // なぜか値が入っていることがあるので修正
                     user.PersonalWorkspace.Path = NameColonSeparator;
+                    user.PersonalWorkspace.FolderType = "Personal"; // なぜか ApiVer == 11.1 では null になっているので修正
                     user.PersonalWorkspace.FeedType = "FolderHierarchy"; // なぜか "Processes" が入っているので修正
                     //user.PersonalWorkspace.FullName = NameColonSeparator + WildcardPattern.Escape(user.PersonalWorkspace.DisplayName);
                     user.PersonalWorkspace.FullName = NameColonSeparator + user.PersonalWorkspace.DisplayName;
@@ -2742,6 +2854,8 @@ namespace UiPath.PowerShell.Core
                 // folders の戻りを処理
                 foreach (var folder in folders ?? [])
                 {
+                    folder.FolderType = "Standard"; // なぜか ApiVer == 11.1 では null になっているので修正
+
                     // Path メンバに、親フォルダの名前を入れておく
                     int idx = folder.FullyQualifiedName!.LastIndexOf('/');
                     if (idx != -1)

@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using System.Text.Json;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
@@ -130,13 +129,13 @@ namespace UiPath.PowerShell.Commands
         [ArgumentCompleter(typeof(OneWeekAfterCompleter))]
         public DateTime? StopProcessDate { get; set; }
 
-        //[Parameter(ValueFromPipelineByPropertyName = true)]
-        //[ArgumentCompleter(typeof(ExecutorRobotsCompleter))]
-        //public string? ExecutorRobots { get; set; }
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(ExecutorRobotsCompleter<TPositional>))]
+        public string[]? ExecutorRobots { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(MachineRobotsCompleter))]
-        public string? MachineRobots { get; set; }
+        public string[]? MachineRobots { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
@@ -147,6 +146,52 @@ namespace UiPath.PowerShell.Commands
 
         [Parameter]
         public uint Depth { get; set; }
+
+        // 現在トリガに設定されているユーザー名を候補に表示。Update-OrchTrigger のための実装。
+        // New-OrchTrigger では、利用可能なユーザーをすべて表示する方が使いやすいと思うので、この実装を共有はしない。。
+        private class ExecutorRobotsCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+        {
+            public override IEnumerable<CompletionResult> CompleteArgument(
+                string commandName,
+                string parameterName,
+                string wordToComplete,
+                CommandAst commandAst,
+                IDictionary fakeBoundParameters)
+            {
+                var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+                // パラメータで選択済みの Name は、候補から除外する
+                var wpExecutorRobots = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+                // 指定の Name のトリガーの ExecutorRobots を取得して表示
+                var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
+
+                var wp = CreateWPFromWordToComplete(wordToComplete);
+
+                foreach (var (drive, folder) in drivesFolders)
+                {
+                    var triggers = drive.GetTriggers(folder)
+                        .FilterByWildcards(t => t?.Name, wpName)
+                        .OrderBy(t => t.Name);
+
+                    var results = ParallelResults.ForEach(triggers, trigger => drive.GetTrigger(folder, trigger));
+
+                    foreach (var result in results)
+                    {
+                        if (!result.TryGetValue(out var detailedTrigger)) continue;
+                        if (detailedTrigger?.ExecutorRobots == null || detailedTrigger.ExecutorRobots.Length == 0) continue;
+
+                        var executerRobots = SerializeExecutorRobotArray(drive, detailedTrigger.ExecutorRobots);
+                        if (wpExecutorRobots != null && wpExecutorRobots.Any(wpe => wpe.IsMatch(executerRobots))) continue;
+                        if (!string.IsNullOrEmpty(executerRobots))
+                        {
+                            string tooltip = detailedTrigger.GetPSPath();
+                            yield return new CompletionResult(PathTools.EscapePSText(executerRobots), executerRobots, CompletionResultType.Text, tooltip);
+                        }
+                    }
+                }
+            }
+        }
 
         internal class MachineRobotsCompleter : OrchArgumentCompleter
         {
@@ -180,16 +225,16 @@ namespace UiPath.PowerShell.Commands
                         .OrderBy(a => a.Name))
                     {
                         string tiphelp = trigger.GetPSPath();
-                        string machineRobots = SerializeMachineRobotSessions(drive, folder!, trigger.MachineRobots);
+                        string machineRobots = SerializeMachineRobotSessions(null, drive, folder!, null, trigger.MachineRobots);
                         if (string.IsNullOrEmpty(machineRobots)) continue;
 
                         bExists = true;
-                        yield return new CompletionResult("'" + machineRobots + "'", machineRobots, CompletionResultType.Text, tiphelp);
+                        yield return new CompletionResult("'" + machineRobots.Replace("'", "''") + "'", machineRobots, CompletionResultType.Text, tiphelp);
                     }
                 }
                 if (!bExists)
                 {
-                    yield return new CompletionResult("'[{\"RobotName\":\"\",\"MachineName\":\"\",\"HostMachineName\":\"\"}]'");
+                    yield return new CompletionResult("'[{\"UserName\":\"\",\"MachineName\":\"\",\"SessionName\":\"\"}]'");
                 }
             }
         }
@@ -243,12 +288,18 @@ namespace UiPath.PowerShell.Commands
                     postTrigger.AssignStringIfNotNullOrEmpty(KillProcessExpression,           (s, v) => s.KillProcessExpression = v);
                     postTrigger.AssignStringIfNotNullOrEmpty(AlertPendingExpression,          (s, v) => s.AlertPendingExpression = v);
                     postTrigger.AssignStringIfNotNullOrEmpty(AlertRunningExpression,          (s, v) => s.AlertRunningExpression = v);
+
+                    postTrigger.PackageName = null;
+                    postTrigger.ReleaseKey = null;
+                    postTrigger.ConsecutiveJobFailuresThreshold = null;
+                    postTrigger.JobFailuresGracePeriodInHours = null;
                     postTrigger.AssignNumberIfNotNullOrZero(ConsecutiveJobFailuresThreshold, (s, v) => s.ConsecutiveJobFailuresThreshold = v);
                     postTrigger.AssignNumberIfNotNullOrZero(JobFailuresGracePeriodInHours,   (s, v) => s.JobFailuresGracePeriodInHours = v);
 
                     postTrigger.AssignStringIfNotNullOrEmpty(RuntimeType,       (s, v) => s.RuntimeType = v);
                     postTrigger.RuntimeType ??= "Unattended";
 
+                    postTrigger.InputArguments ??= "{}";
                     postTrigger.AssignStringIfNotNullOrEmpty(InputArguments,    (s, v) => postTrigger.InputArguments = v);
 
                     postTrigger.AssignBoolIfNotNull(ResumeOnSameContext, (s, v) => s.ResumeOnSameContext = v);
@@ -271,11 +322,18 @@ namespace UiPath.PowerShell.Commands
                     postTrigger.UseCalendar = (postTrigger.CalendarId != null);
                     #endregion
 
+                    postTrigger.ExternalJobKeyScheduler = null;
+
+                    postTrigger.ItemsActivationThreshold = null;
+                    postTrigger.ItemsPerJobActivationTarget = null;
                     postTrigger.AssignNumberIfNotNullOrZero(ItemsActivationThreshold,    (s, v) => s.ItemsActivationThreshold = v);
                     postTrigger.AssignNumberIfNotNullOrZero(ItemsPerJobActivationTarget, (s, v) => s.ItemsPerJobActivationTarget = v);
+                    postTrigger.MaxJobsForActivation = null;
                     postTrigger.AssignNumberIfNotNullOrZero(MaxJobsForActivation,        (s, v) => s.MaxJobsForActivation = v);
                     postTrigger.AssignBoolIfNotNull(ActivateOnJobComplete,         (s, v) => s.ActivateOnJobComplete = v);
 
+                    postTrigger.StartProcessCronSummary = null;
+                    postTrigger.StartProcessNextOccurrence = null;
                     postTrigger.AssignStringIfNotNullOrEmpty(StartProcessCron,            (s, v) => s.StartProcessCron = v);
                     postTrigger.StartProcessCron ??= "0 0/1 * 1/1 * ? *";
 
@@ -290,9 +348,6 @@ namespace UiPath.PowerShell.Commands
                     {
                         postTrigger.JobPriority = null;
                     }
-
-                    //schedule.AssignString(ExecutorRobots, (s, v) => s.ExecutorRobots = v);
-                    // schedule.ExecutorRobots = []; // TODO
 
                     #region ReleaseName を ReleaseId に変換
                     postTrigger.AssignIdFromName(
@@ -330,16 +385,14 @@ namespace UiPath.PowerShell.Commands
 
                     postTrigger.AssignDateTimeIfNotNull(StopProcessDate, (s, v) => s.StopProcessDate = v, false);
 
-                    // TODO: RobotExecutor をデシリアライズ、は必要？？
-
-                    // MachineRobots をデシリアライズ
-                    try
+                    if (MachineRobots != null)
                     {
-                        postTrigger.MachineRobots = DeserializeMachineRobotSessions(drive, folder, MachineRobots)?.ToArray();
+                        postTrigger.MachineRobots = DeserializeMachineRobotSessions(this, drive, folder, postTrigger.GetPSPath(), MachineRobots);
                     }
-                    catch (Exception ex)
+
+                    if (ExecutorRobots != null)
                     {
-                        WriteWarning($"{target}: Failed to deserialize MachineRobots. Ignoring. {ex.Message}");
+                        postTrigger.ExecutorRobots = DeserializeExecutorRobots(this, drive, folder, postTrigger.GetPSPath(), ExecutorRobots);
                     }
 
                     postTrigger.EnvironmentId = null;

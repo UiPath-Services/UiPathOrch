@@ -98,6 +98,8 @@ namespace UiPath.PowerShell.Commands
                     if (machines == null) continue;
                     var (drive, folder) = result.Source;
 
+                    if (folder.FolderType == "Personal") continue;
+
                     var addingMachines = machines!.FilterByWildcards(m => m?.Name, wpName).ToList();
                     // TODO: これ入れないと。このままだといまいちな感じ。Name を複数指定したとき、ひとつでも合致すれば警告が出ない。
                     // Name をひとつずつ確認していかないといけない。

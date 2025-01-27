@@ -404,7 +404,7 @@ namespace UiPath.PowerShell.Commands
                 foreach (var drive in drives)
                 {
                     var existingTenantUser = drive.GetUsers();
-                    var users = drive.SearchForUsersAndGroups(wordToComplete);
+                    var users = drive.SearchDirectory(wordToComplete);
                     if (users == null) continue;
 
                     foreach (var user in users
@@ -549,7 +549,7 @@ namespace UiPath.PowerShell.Commands
             IEnumerable<DirectoryObject> users;
             try
             {
-                users = drive.SearchForUsersAndGroups(userName);
+                users = drive.SearchDirectory(userName);
             }
             catch (Exception ex)
             {

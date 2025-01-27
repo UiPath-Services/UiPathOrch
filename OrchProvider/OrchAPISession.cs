@@ -1270,6 +1270,7 @@ namespace UiPath.OrchAPI
 
         public PackageEntryPoint? GetPackageMainEntryPoint(string? feedId, string packageId, string packageVersion)
         {
+            if (ApiVersion < 12) return null; // 11.1 では Not found になることを確認済み TODO: 12 以降では？ New-OrchProcess で確認。
             string endPoint = $"/odata/Processes/UiPath.Server.Configuration.OData.GetPackageMainEntryPoint(key='{HttpUtility.UrlEncode(packageId)}:{packageVersion}')";
             if (!string.IsNullOrEmpty(feedId))
             {
@@ -1478,6 +1479,14 @@ namespace UiPath.OrchAPI
             }
             else
             {
+                // 11.1 では SpecificPriorityValue が not null だとエラーになることを確認済み
+                // TODO: 12 以降ではどうか？
+                if (ApiVersion < 12 && release.SpecificPriorityValue != null)
+                {
+                    if      (release.SpecificPriorityValue >= 61) release.JobPriority = "High";
+                    else if (release.SpecificPriorityValue <= 30) release.JobPriority = "Low";
+                    else                                          release.JobPriority = "Normal";
+                }
                 release.VideoRecordingSettings = null;
                 release.RetentionAction = null;
                 release.RetentionPeriod = null;
@@ -1565,15 +1574,20 @@ namespace UiPath.OrchAPI
 
         #region ProcessSchedule
 
-        public IEnumerable<ProcessSchedule> GetProcessSchedule(Int64 folderId)
+        public IEnumerable<ProcessSchedule> GetProcessSchedules(Int64 folderId)
         {
             return GetEnumerable<ProcessSchedule>("/odata/ProcessSchedules", folderId);
         }
 
-        // WIP
         public ProcessSchedule? GetProcessSchedule(Int64 folderId, Int64 processScheduleId)
         {
             return HttpRequest<ProcessSchedule>(HttpMethod.Get, $"/odata/ProcessSchedules({processScheduleId})", folderId);
+        }
+
+        // トリガーの ExecutorRobots を取得
+        public Int64[]? GetRobotIdsForSchedule(Int64 folderId, Int64 processScheduleId)
+        {
+            return HttpRequest<HttpBodyValue<Int64[]>>(HttpMethod.Get, $"/odata/ProcessSchedules/UiPath.Server.Configuration.OData.GetRobotIdsForSchedule(key={processScheduleId})", folderId)?.value;
         }
 
         public ProcessSchedule? PostProcessSchedule(Int64 folderId, ProcessSchedule schedule)
@@ -1841,7 +1855,7 @@ namespace UiPath.OrchAPI
 
         #region DirectoryService
 
-        public DirectoryObject[]? SearchForUsersAndGroups(string prefix)
+        public DirectoryObject[]? SearchDirectory(string prefix)
         {
             return HttpRequest<DirectoryObject[]>(HttpMethod.Get, $"/api/DirectoryService/SearchForUsersAndGroups?domain=autogen&prefix={prefix}&searchContext=All");
         }
@@ -2533,7 +2547,7 @@ namespace UiPath.OrchAPI
         }
 
         // entityType: "user", "group", or "application"
-        // "robot" の場合はどうなる？
+        // "robot" を渡すとエラーになる。
         public Dictionary<string, PmGroupMember>? PmBulkResolveByName(string partitionGlobalId, string entityType, IEnumerable<string> names)
         {
             var postdata = new BulkResolveByNameCommand()
@@ -2546,16 +2560,15 @@ namespace UiPath.OrchAPI
             return JsonSerializer.Deserialize<Dictionary<string, PmGroupMember>>(body, jsoMemberConverter);
         }
 
-        public PmDirectoryEntityInfo[]? SearchPmDirectoryUsers(string partitionGlobalId, string userName)
+        public PmDirectoryEntityInfo[]? SearchPmDirectory(string partitionGlobalId, string userName)
         {
-            return GetEnumerableWithoutPagingIdentity<PmDirectoryEntityInfo>($"/api/Directory/Search/{partitionGlobalId}", null, $"&startsWith={userName}" +
-                "&sourceFilter=localUsers" +
-                "&sourceFilter=localGroups" +
-                "&sourceFilter=directoryUsers" +
-                "&sourceFilter=directoryGroups" +
-                "&sourceFilter=robotAccounts" +
-                "&sourceFilter=applications");
-            //return GetEnumerableWithoutPagingIdentity<PmDirectoryEntityInfo>($"/api/Directory/Search/{partitionGlobalId}", null, $"&startsWith={userName}&sourceFilter=localUsers&sourceFilter=directoryUsers&sourceFilter=directoryGroups&sourceFilter=robotAccounts&sourceFilter=applications");
+            return GetEnumerableWithoutPagingIdentity<PmDirectoryEntityInfo>($"/api/Directory/Search/{partitionGlobalId}", null, $"&startsWith={userName}");
+            //+ "&sourceFilter=localUsers"
+            //+ "&sourceFilter=localGroups"
+            //+ "&sourceFilter=directoryUsers"
+            //+ "&sourceFilter=directoryGroups"
+            //+ "&sourceFilter=robotAccounts"
+            //+ "&sourceFilter=applications");
         }
 
         // undocumented API

@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -112,17 +112,12 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### None
-
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.DirectoryUser
-
 ### UiPath.PowerShell.Entities.DirectoryGroup
-
 ### UiPath.PowerShell.Entities.DirectoryRobotUser
-
 ### UiPath.PowerShell.Entities.DirectoryApplication
-
 ## NOTES
 
 ## RELATED LINKS

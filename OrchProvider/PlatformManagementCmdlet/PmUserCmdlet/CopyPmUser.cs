@@ -45,8 +45,8 @@ namespace UiPath.PowerShell.Commands
                 if (newGroup != null)
                 {
                     newGroup.Path = drive.NameColonSeparator;
-                    drive._dicPmDirectoryUsers = null;
-                    drive._dicSearchForUsersAndGroups = null;
+                    drive._dicSearchPmDirectory = null;
+                    drive._dicSearchDirectory = null;
                     drive._dicPmGroups = null;
                     drive._dicPmGroups_Exception.ClearCache();
                     return newGroup;
@@ -240,8 +240,8 @@ namespace UiPath.PowerShell.Commands
                         dstDrive.PmUsers.ClearCache();
                         dstDrive._dicPmGroups = null;
                         dstDrive._dicPmGroups_Exception.ClearCache();
-                        dstDrive._dicSearchForUsersAndGroups = null;
-                        dstDrive._dicSearchForUsersAndGroups_Exception.ClearCache();
+                        dstDrive._dicSearchDirectory = null;
+                        dstDrive._dicSearchDirectory_Exception.ClearCache();
 
                         if (response?.result?.succeeded ?? false)
                         {

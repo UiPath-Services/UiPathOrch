@@ -129,7 +129,7 @@ namespace UiPath.PowerShell.Positional
             "ExploreEnd",
             "ExploreStart",
             "Forward",
-            "lmport",
+            "Import",
             "MigrateFolder",
             "Move",
             "PasswordResetAttempt",
@@ -489,6 +489,11 @@ namespace UiPath.PowerShell.Positional
     internal class DescriptionHere : IPositionalParameters
     {
         public static string[] Parameters { get; } = ["'Description here'"];
+    }
+
+    internal class Kind_Name : IPositionalParameters
+    {
+        public static string[] Parameters { get; } = ["Kind", "Name"];
     }
 
     internal class Name : IPositionalParameters

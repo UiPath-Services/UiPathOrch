@@ -174,7 +174,7 @@ namespace UiPath.PowerShell.Commands
                                 case "DirectoryRobot":
                                     foreach (var robot in groupedMembers)
                                     {
-                                        var addingMember = dstDrive.SearchPmDirectoryUsers(robot.name!)?
+                                        var addingMember = dstDrive.SearchPmDirectory(robot.name!)?
                                             .Where(t => t.objectType == "DirectoryRobot")
                                             .FirstOrDefault(t => string.Compare(t.identityName, robot.name, true) == 0);
 
@@ -309,8 +309,8 @@ namespace UiPath.PowerShell.Commands
                             {
                                 newGroup.Path = dstDrive.NameColonSeparator;
                                 WriteObject(newGroup);
-                                dstDrive._dicPmDirectoryUsers = null;
-                                dstDrive._dicSearchForUsersAndGroups = null;
+                                dstDrive._dicSearchPmDirectory = null;
+                                dstDrive._dicSearchDirectory = null;
                                 dstDrive._dicPmGroups = null;
                                 dstDrive._dicPmGroups_Exception.ClearCache();
                             }

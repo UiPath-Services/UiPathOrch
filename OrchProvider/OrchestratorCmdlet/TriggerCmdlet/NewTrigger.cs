@@ -3,24 +3,25 @@ using System.Data;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using System.Text.Json;
+using UiPath.OrchAPI;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
-using static UiPath.PowerShell.Commands.UpdateTriggerCommand;
+using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 using TPositional = UiPath.PowerShell.Positional.Name_ReleaseName;
 
 namespace UiPath.PowerShell.Commands
 {
     [Cmdlet(VerbsCommon.New, "OrchTrigger", SupportsShouldProcess = true)]
     [OutputType(typeof(Entities.ProcessSchedule))]
-    public class AddTriggerCommand : OrchestratorPSCmdlet
+    public class NewTriggerCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(TriggerNameCompleter<TPositional>))]
+        //[ArgumentCompleter(typeof(TriggerNameCompleter<TPositional>))] // TODO: 新規エンティティの名前のための completer を書く。
         public string[]? Name { get; set; }
 
-        [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
+        [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(ProcessNameCompleter<TPositional>))]
         [SupportsWildcards]
         public string? ReleaseName { get; set; }
@@ -128,8 +129,12 @@ namespace UiPath.PowerShell.Commands
         public DateTime? StopProcessDate { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(ExecutorRobotsCompleter<TPositional>))]
+        public string[]? ExecutorRobots { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(MachineRobotsCompleter))]
-        public string? MachineRobots { get; set; }
+        public string[]? MachineRobots { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
@@ -141,7 +146,9 @@ namespace UiPath.PowerShell.Commands
         //[Parameter]
         //public uint Depth { get; set; }
 
-        private class MachineRobotsCompleter : OrchArgumentCompleter
+        // 利用可能なユーザー名一覧を候補に表示。New-OrchTrigger のための実装。
+        // Update-OrchTrigger では、現在の内容を表示する方が使いやすいと思うので、この実装を共有はしない。。
+        private class ExecutorRobotsCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
         {
             public override IEnumerable<CompletionResult> CompleteArgument(
                 string commandName,
@@ -150,7 +157,121 @@ namespace UiPath.PowerShell.Commands
                 CommandAst commandAst,
                 IDictionary fakeBoundParameters)
             {
-                yield return new CompletionResult("'[{\"RobotName\":\"\",\"MachineName\":\"\",\"HostMachineName\":\"\"}]'");
+                var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+                // パラメータで選択済みの ExecutorRobots は、候補から除外する
+                var wpExecutorRobots = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+                var wp = CreateWPFromWordToComplete(wordToComplete);
+
+                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.RobotsFromFolder.Get(df.folder));
+
+                foreach (var result in results)
+                {
+                    if (!result.TryGetValue(out var entities)) continue;
+
+                    var (drive, folder) = result.Source;
+                    var users = drive.GetUsers();
+
+                    foreach (var user in entities!
+                        .Where(e => e.Type == "Unattended")
+                        .Select(e => users.FirstOrDefault(u => u.Id == e.UserId))
+                        .Where(u => !string.IsNullOrEmpty(u?.UnattendedRobot?.UserName))
+                        .Where(u => wp.IsMatch(u?.UnattendedRobot?.UserName))
+                        .FilterByWildcards(u => u?.UnattendedRobot?.UserName, wpExecutorRobots))
+                    {
+                        string tooltip = user!.GetPSPath();
+                        yield return new CompletionResult(PathTools.EscapePSText(user!.UnattendedRobot!.UserName), user.UnattendedRobot.UserName, CompletionResultType.Text, tooltip);
+                    }
+                }
+            }
+        }
+
+        private class MachineRobotsCompleter : OrchArgumentCompleter
+        {
+            private static string MakeCandidateText(Entities.User? user, MachineFolder? machine, MachineSessionRuntime? session)
+            {
+                string sessionName = session?.HostMachineName;
+                if (!string.IsNullOrEmpty(session?.ServiceUserName))
+                {
+                    sessionName += (" - " + session.ServiceUserName);
+                }
+
+                MachineRobotSessionForSerialize ret = new()
+                {
+                    UserName = user?.UnattendedRobot?.UserName,
+                    MachineName = machine?.Name,
+                    SessionName = sessionName
+                };
+
+                return JsonSerializer.Serialize(ret, OrchAPISession.jsoWhenWritingNull).Replace("\\u0027", "'");
+            }
+
+            public override IEnumerable<CompletionResult> CompleteArgument(
+                string commandName,
+                string parameterName,
+                string wordToComplete,
+                CommandAst commandAst,
+                IDictionary fakeBoundParameters)
+            {
+                var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+                // パラメータで選択済みの MachineRobots は、候補から除外する
+                var wpMachineRobots = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+                var wp = CreateWPFromWordToComplete(wordToComplete);
+
+                var usersPerFolders = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderUsersWithInherited.Get(df.folder));
+                var robotsPerFolders = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
+                var sessionsPerFolders = ParallelResults.ForEach(drivesFolders, df => df.drive.MachineSessionRuntimesByFolder.Get(df.folder));
+
+                List<UserRoles> users = [null];
+                foreach (var usersPerFolder in usersPerFolders)
+                {
+                    if (!usersPerFolder.TryGetValue(out var entities)) continue;
+                    if (entities != null) users.AddRange(entities);
+                }
+
+                List<MachineFolder> machines = [null];
+                foreach (var robotsPerFolder in robotsPerFolders)
+                {
+                    if (!robotsPerFolder.TryGetValue(out var entities)) continue;
+                    if (entities != null) machines.AddRange(entities);
+                }
+
+                List<MachineSessionRuntime> sessions = [null];
+                foreach (var sessionsPerFolder in sessionsPerFolders)
+                {
+                    if (!sessionsPerFolder.TryGetValue(out var entities)) continue;
+                    if (entities != null) sessions.AddRange(entities);
+                }
+
+                // すべての組み合わせを生成して処理
+                var combinations = users
+                    .SelectMany(user => machines, (user, machine) => new { user, machine })
+                    .SelectMany(pair => sessions, (pair, session) => new { pair.user, pair.machine, session });
+
+                foreach (var c in combinations)
+                {
+                    // セッションの MachineId が不一致ならスキップ
+                    if (c.session != null && c.machine?.Id != c.session.MachineId) continue;
+
+                    // Dynamic Allocation の場合には user を指定せずも可能だが、
+                    // machine mapping の場合には user は null ではいけない。
+                    // 候補が多すぎても不便だし、user が null のものはすべて候補から外す
+                    //if (c.user == null && c.machine == null) continue;
+                    if (c.user == null) continue;
+
+                    var drive = OrchDriveInfo.GetOrchDrive(c.user?.Path);
+                    var targetUser = drive.GetUsers().Where(u => u.Id == c.user?.Id).FirstOrDefault();
+                    if (targetUser?.UnattendedRobot?.UserName == null) continue;
+
+                    string text = MakeCandidateText(targetUser, c.machine, c.session);
+
+                    if (!wp.IsMatch(text)) continue;
+                    if (wpMachineRobots != null && wpMachineRobots.Any(wpm => wpm.IsMatch(text))) continue;
+
+                    yield return new CompletionResult(PathTools.EscapePSText(text), text, CompletionResultType.Text, text);
+                }
             }
         }
 
@@ -159,7 +280,10 @@ namespace UiPath.PowerShell.Commands
             var drivesFolders = OrchDriveInfo.EnumFolders(Path);
             int? specificPriorityValue = ConvertPriorityToSpecificPriorityValue(Priority);
 
-            // ExecutorRobots は、どのように処理すべきなのか分からない。。
+            Path = Path.Split1stValueByUnescapedCommas()?.ToArray();
+            Name = Name.Split1stValueByUnescapedCommas()?.ToArray();
+            ExecutorRobots = ExecutorRobots.Split1stValueByUnescapedCommas()?.ToArray();
+            // MachineRobots は JsonSerializer でデシリアライズするので、ここでカンマで区切る必要はない
 
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var (drive, folder) in drivesFolders)
@@ -267,15 +391,11 @@ namespace UiPath.PowerShell.Commands
 
                     schedule.AssignDateTimeIfNotNull(StopProcessDate, (s, v) => s.StopProcessDate = v);
 
+                    // ExecutorRobots をデシリアライズ
+                    schedule.ExecutorRobots = DeserializeExecutorRobots(this, drive, folder, schedule.GetPSPath(), ExecutorRobots);
+
                     // MachineRobots をデシリアライズ
-                    try
-                    {
-                        schedule.MachineRobots = DeserializeMachineRobotSessions(drive, folder, MachineRobots)?.ToArray();
-                    }
-                    catch (Exception ex)
-                    {
-                        WriteWarning($"{target}: Failed to deserialize MachineRobots. Ignoring. {ex.Message}");
-                    }
+                    schedule.MachineRobots = DeserializeMachineRobotSessions(this, drive, folder, schedule.GetPSPath(), MachineRobots);
 
                     if (ShouldProcess(target, "Add Trigger"))
                     {

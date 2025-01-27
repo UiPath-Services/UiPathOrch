@@ -20,7 +20,7 @@ Get-OrchLicenseStats [[-Last] <String>] [-Path <String[]>] [-ProgressAction <Act
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-Primary Endpoint: /api/Stats/GetLicenseStats?tenantId={tenantId}&days={days}
+Primary Endpoint: GET /api/Stats/GetLicenseStats?tenantId={tenantId}&days={days}
 
 OAuth required scopes: OR.Monitoring or OR.Monitoring.Read
 

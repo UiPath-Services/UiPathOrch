@@ -14,4 +14,10 @@ function Disable-OrchPersonalWorkspace {
     foreach ($user in $UserName) {
         Update-OrchUser @PSBoundParameters -Path $Path -UserName $user -MayHavePersonalWorkspace False
     }
+
+    if ($PSBoundParameters.ContainsKey('Path')) {
+        Clear-OrchCache -Path $Path
+    } else {
+        Clear-OrchCache
+    }
 }

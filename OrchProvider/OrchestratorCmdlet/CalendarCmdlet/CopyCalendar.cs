@@ -59,7 +59,9 @@ namespace UiPath.PowerShell.Commands
             using var cancelHandler = new ConsoleCancelHandler();
             foreach (var dstDrive in dstDrives)
             {
-                foreach (var srcCalendar in srcCalendars)
+                foreach (var srcCalendar in srcCalendars
+                    .FilterByWildcards(c => c?.Name, wpName)
+                    .OrderBy(c => c.Name))
                 {
                     string item = srcCalendar.GetPSPath();
                     string destination = dstDrive.NameColonSeparator;

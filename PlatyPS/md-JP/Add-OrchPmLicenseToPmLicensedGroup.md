@@ -20,6 +20,12 @@ Add-OrchPmLicenseToPmLicensedGroup [-GroupName] <String[]> [-License] <String[]>
 ## DESCRIPTION
 {{ Fill in the Description }}
 
+主に呼び出すエンドポイント: PUT /api/license/accountant/UserLicense/group
+
+OAuth に必要なスコープ:
+
+必要な権限:
+
 ## EXAMPLES
 
 ### Example 1
@@ -32,7 +38,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -Confirm
-Prompts you for confirmation before running the cmdlet.
+コマンドレットを実行する前に、あなたの確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -77,7 +83,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-{{ Fill Path Description }}
+ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
 
 ```yaml
 Type: String[]
@@ -92,8 +98,8 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットは実行されません。
 
 ```yaml
 Type: SwitchParameter
