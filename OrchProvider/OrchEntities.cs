@@ -2697,14 +2697,12 @@ namespace UiPath.PowerShell.Entities
         public string? SessionName { get; set; }
     }
 
-    // TODO: 何かこれおかしいな。メンバは、MachineRobotSession と同じにしないといけないのじゃないか。
-    // Add-OrchTrigger の実装を確認しないと。
-    // Get-OrchTrigger -ExportCsv の結果を、Add-OrchTrigger でインポートできるか？
+    // Get-OrchTrigger -ExportCsv で MachineRobots をシリアライズするためのもの
     public class MachineRobotSessionForSerialize // added by UiPathOrch
     {
-        public string? RobotName { get; set; }
+        public string? UserName { get; set; }
         public string? MachineName { get; set; }
-        public string? HostMachineName { get; set; }
+        public string? SessionName { get; set; }
     }
 
     // ProcessScheduleDto

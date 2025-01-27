@@ -20,7 +20,7 @@ Get-OrchLicenseRuntime [[-RobotType] <String[]>] [-Path <String[]>] [-ProgressAc
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-主に呼び出すエンドポイント: /odata/LicensesRuntime/UiPath.Server.Configuration.OData.GetLicensesRuntime(robotType='{robotType}')
+主に呼び出すエンドポイント: GET /odata/LicensesRuntime/UiPath.Server.Configuration.OData.GetLicensesRuntime(robotType='{robotType}')
 
 OAuth に必要なスコープ: OR.License or OR.License.Read
 

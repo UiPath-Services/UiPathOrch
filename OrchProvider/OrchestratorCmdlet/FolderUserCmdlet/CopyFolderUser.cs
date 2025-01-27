@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using System.Reflection.Metadata;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
@@ -37,6 +38,9 @@ namespace UiPath.PowerShell.Commands
 
         [Parameter]
         public uint Depth { get; set; }
+
+        //[Parameter]
+        //public string? UserMappingCsv { get; set; }
 
         private class UserNameCompleter : OrchArgumentCompleter
         {
@@ -87,8 +91,10 @@ namespace UiPath.PowerShell.Commands
 
             var (dstDrive, dstRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Destination);
 
+            //var userMappingCsv = OrchDriveInfo.LoadUserMappingCsv(this, srcDrive, dstDrive, UserMappingCsv);
+
             // コピー元とコピー先が同じなら、何もしない
-            if (srcDrive == dstDrive && srcRootFolder == dstRootFolder) return;
+            if (srcRootFolder == dstRootFolder) return;
 
             var wpUserName = UserName.ConvertToWildcardPatternList();
             var wpType = Type.ConvertToWildcardPatternList();

@@ -119,7 +119,7 @@ namespace UiPath.PowerShell.Commands
                     WriteObject(robots
                         .FilterByWildcards(r => r?.User?.FullName, wpFullName)
                         .FilterByWildcards(r => r?.Username, wpUsername)
-                        .OrderBy(r => r.User!.FullName)
+                        .OrderBy(r => r.User?.FullName)
                         .ThenBy(r => r.Username),
                         true);
                 }

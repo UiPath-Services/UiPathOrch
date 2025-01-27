@@ -192,27 +192,31 @@ namespace UiPath.PowerShell.Core
 
                     if (drive.Enabled ?? false)
                     {
-                        if (string.IsNullOrWhiteSpace(drive.Scope))
+                        // Scope に関する警告は、パスワードが設定されていない場合に限り出力する
+                        if (string.IsNullOrEmpty(drive.Password))
                         {
-                            WriteWarning($"\"{drive.Name}:\\\": Scope is not specified!");
-                        }
-                        else
-                        {
-                            string lowerScope = drive.Scope.ToLower();
-
-                            if (!lowerScope.Contains("or.folders"))
+                            if (string.IsNullOrWhiteSpace(drive.Scope))
                             {
-                                WriteWarning($"\"{drive.Name}{System.IO.Path.VolumeSeparatorChar}{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Folders.Read\" scope is included to retrieve folder information.");
+                                WriteWarning($"\"{drive.Name}:\\\": Scope is not specified!");
                             }
-
-                            if (!lowerScope.Contains("or.settings"))
+                            else
                             {
-                                WriteWarning($"\"{drive.Name}{System.IO.Path.VolumeSeparatorChar}{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Settings.Read\" scope is included to retrieve the API version needed to properly call Orchestrator APIs.");
-                            }
+                                string lowerScope = drive.Scope?.ToLower() ?? "";
 
-                            if (string.IsNullOrEmpty(drive.AppSecret) && !lowerScope.Contains("or.users"))
-                            {
-                                WriteWarning($"\"{drive.Name}{System.IO.Path.VolumeSeparatorChar}{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Users.Read\" scope is included to access your personal workspace folder.");
+                                if (!lowerScope.Contains("or.folders"))
+                                {
+                                    WriteWarning($"\"{drive.Name}{System.IO.Path.VolumeSeparatorChar}{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Folders.Read\" scope is included to retrieve folder information.");
+                                }
+
+                                if (!lowerScope.Contains("or.settings"))
+                                {
+                                    WriteWarning($"\"{drive.Name}{System.IO.Path.VolumeSeparatorChar}{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Settings.Read\" scope is included to retrieve the API version needed to properly call Orchestrator APIs.");
+                                }
+
+                                if (string.IsNullOrEmpty(drive.AppSecret) && !lowerScope.Contains("or.users"))
+                                {
+                                    WriteWarning($"\"{drive.Name}{System.IO.Path.VolumeSeparatorChar}{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Users.Read\" scope is included to access your personal workspace folder.");
+                                }
                             }
                         }
 
@@ -594,7 +598,7 @@ namespace UiPath.PowerShell.Core
             {
                 if (orchPath == "")
                 {
-                    foreach (var folder in drive!.GetFolders())
+                    foreach (var folder in drive.GetFolders())
                     {
                         uint folderDepth = FolderDepth(folder.FullyQualifiedName!);
 

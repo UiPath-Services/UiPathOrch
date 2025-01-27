@@ -67,27 +67,26 @@ namespace UiPath.PowerShell.Commands
             "QueueDefinitionName",
             "TimeZoneId",
             "StopProcessDate",
-            //"ExecutorRobots",
+            "ExecutorRobots",
             "MachineRobots"
         ];
 
         private void WriteCsvContent(StreamWriter writer, ProcessSchedule t)
         {
             #region ExecutorRobots の Id を Name に変換して出力
-            // おかしいなーこのプロパティはいつも null だな。。
-            //string executorRobots = null;
-            //if (t.ExecutorRobots != null && t.ExecutorRobots.Length != 0)
-            //{
-            //    try
-            //    {
-            //        var (drive, folder) = OrchDriveInfo.EnumFolders(t.Path).FirstOrDefault();
-            //        executorRobots = SerializeExecutorRobotArray(drive, t.ExecutorRobots);
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        WriteWarning($"{t.GetPSPath()}: Failed to retrieve ExecutorRobots: {ex.Message}");
-            //    }
-            //}
+            string executorRobots = null;
+            if (t.ExecutorRobots != null && t.ExecutorRobots.Length != 0)
+            {
+                try
+                {
+                    var (drive, folder) = OrchDriveInfo.ResolveToSingleFolder(t.Path);
+                    executorRobots = SerializeExecutorRobotArray(drive, t.ExecutorRobots);
+                }
+                catch (Exception ex)
+                {
+                    WriteWarning($"{t.GetPSPath()}: Failed to retrieve ExecutorRobots: {ex.Message}");
+                }
+            }
             #endregion
 
             #region MachineRobots の Id を Name に変換して出力
@@ -96,8 +95,8 @@ namespace UiPath.PowerShell.Commands
             {
                 try
                 {
-                    var (drive, folder) = OrchDriveInfo.EnumFolders(t.Path).FirstOrDefault();
-                    machineRobots = SerializeMachineRobotSessions(drive, folder!, t.MachineRobots);
+                    var (drive, folder) = OrchDriveInfo.ResolveToSingleFolder(t.Path);
+                    machineRobots = SerializeMachineRobotSessions(this, drive, folder!, t.GetPSPath(), t.MachineRobots);
                 }
                 catch (Exception ex)
                 {
@@ -135,7 +134,7 @@ namespace UiPath.PowerShell.Commands
                 EscapeCsvValue(t.QueueDefinitionName),
                 EscapeCsvValue(t.TimeZoneId),
                 EscapeCsvValue(FormatDateTimeWithKind(t.StopProcessDate)),
-                //EscapeCsvValue(executorRobots),
+                EscapeCsvValue(executorRobots),
                 EscapeCsvValue(machineRobots)
             ];
             WriteCsvLine(writer, line);
@@ -154,21 +153,6 @@ namespace UiPath.PowerShell.Commands
                 WriteObject(trigger);
             }
         }
-
-        //private void Output(StreamWriter? writer, IEnumerable<ProcessSchedule> triggers)
-        //{
-        //    if (writer != null)
-        //    {
-        //        foreach (var t in triggers)
-        //        {
-        //            WriteCsvContent(writer, t);
-        //        }
-        //    }
-        //    else
-        //    {
-        //        WriteObject(triggers, true);
-        //    }
-        //}
 
         protected override void ProcessRecord()
         {

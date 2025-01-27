@@ -56,7 +56,7 @@ namespace UiPath.PowerShell.Commands
                     //var existingGroups = drive.GetPmGroups().Values;
                     //var updatingGroups = existingGroups.FilterByWildcards(u => u!.name!, wpGroupName);
 
-                    var groups = drive.SearchPmDirectoryUsers(wordToComplete);
+                    var groups = drive.SearchPmDirectory(wordToComplete);
                     if (groups == null) continue;
 
                     foreach (var group in groups
@@ -96,7 +96,7 @@ namespace UiPath.PowerShell.Commands
                 {
                     foreach (var groupName in groupNames)
                     {
-                        var groups = drive.SearchPmDirectoryUsers(groupName);
+                        var groups = drive.SearchPmDirectory(groupName);
                         if (groups == null) continue;
 
                         foreach (var group in groups
@@ -135,7 +135,7 @@ namespace UiPath.PowerShell.Commands
             {
                 foreach (var groupName in GroupName ?? [])
                 {
-                    var groups = drive.SearchPmDirectoryUsers(groupName);
+                    var groups = drive.SearchPmDirectory(groupName);
                     if (groups == null) continue;
 
                     foreach (var group in groups

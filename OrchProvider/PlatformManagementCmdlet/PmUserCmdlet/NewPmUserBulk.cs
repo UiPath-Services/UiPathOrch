@@ -184,8 +184,8 @@ namespace UiPath.PowerShell.Commands
                     drive.PmUsers.ClearCache();
                     drive._dicPmGroups = null;
                     drive._dicPmGroups_Exception.ClearCache();
-                    drive._dicSearchForUsersAndGroups = null;
-                    drive._dicSearchForUsersAndGroups_Exception.ClearCache();
+                    drive._dicSearchDirectory = null;
+                    drive._dicSearchDirectory_Exception.ClearCache();
 
                     if (response?.result?.succeeded ?? false)
                     {

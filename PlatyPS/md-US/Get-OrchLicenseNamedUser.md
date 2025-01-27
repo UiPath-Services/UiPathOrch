@@ -20,7 +20,7 @@ Get-OrchLicenseNamedUser [[-RobotType] <String[]>] [-Path <String[]>] [-Progress
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-Primary Endpoint: /odata/LicensesNamedUser/UiPath.Server.Configuration.OData.GetLicensesNamedUser(robotType='{robotType}')
+Primary Endpoint: GET /odata/LicensesNamedUser/UiPath.Server.Configuration.OData.GetLicensesNamedUser(robotType='{robotType}')
 
 OAuth required scopes: OR.License or OR.License.Read
 

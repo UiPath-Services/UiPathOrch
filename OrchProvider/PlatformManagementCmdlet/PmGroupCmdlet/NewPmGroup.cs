@@ -50,8 +50,8 @@ namespace UiPath.PowerShell.Commands
                             {
                                 newGroup.Path = drive.NameColonSeparator;
                                 WriteObject(newGroup);
-                                drive._dicPmDirectoryUsers = null;
-                                drive._dicSearchForUsersAndGroups = null;
+                                drive._dicSearchPmDirectory = null;
+                                drive._dicSearchDirectory = null;
                                 drive._dicPmGroups = null;
                                 drive._dicPmGroups_Exception.ClearCache();
                             }

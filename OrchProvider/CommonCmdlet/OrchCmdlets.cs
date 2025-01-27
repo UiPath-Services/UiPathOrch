@@ -321,132 +321,228 @@ namespace UiPath.PowerShell.Commands
             };
         }
 
-        //internal static string? SerializeExecutorRobotArray(OrchDriveInfo drive, RobotExecutor[]? robotExecutors)
-        //{
-        //    if (robotExecutors == null || robotExecutors.Length == 0) return null;
+        internal static string? SerializeExecutorRobotArray(OrchDriveInfo drive, RobotExecutor[]? robotExecutors)
+        {
+            if (robotExecutors == null || robotExecutors.Length == 0) return null;
 
-        //    var robots = drive.Robots.Get();
-        //    // TODO: このメソッドを呼び出すたびに辞書を作成するので良かったんだっけ？
-        //    var robotDictionary = robots.ToDictionary(r => r.Id!.Value, r => r.Name);
+            var users = drive.GetUsers();
 
-        //    IEnumerable<string?> robotNames = robotExecutors
-        //        .Select(executor => robotDictionary.TryGetValue(executor.Id!.Value, out var name) ? name : null)
-        //        .Where(name => name != null);
+            var targetUsers = robotExecutors
+                .Select(re => users.FirstOrDefault(u => u.UnattendedRobot?.RobotId == re.Id))
+                .Where(user => user?.UnattendedRobot?.UserName != null); // null を除外
 
-        //    if (!robotNames.Any()) return null;
-        //    return string.Join(',', robotNames);
-        //}
+            if (!targetUsers.Any()) return null;
+            return string.Join(',', targetUsers.Select(u => u!.UnattendedRobot!.UserName)); //.Order());
+        }
 
-        internal static string? SerializeMachineRobotSessions(OrchDriveInfo drive, Folder folder, IEnumerable<MachineRobotSession>? machineRobots)
+        internal static string? SerializeMachineRobotSessions(IWritableHost? _this, OrchDriveInfo drive, Folder folder, string? target, IEnumerable<MachineRobotSession>? machineRobots)
         {
             if (machineRobots == null || !machineRobots.Any()) return null;
 
             List<MachineRobotSessionForSerialize> mrss = [];
 
-            foreach (var elem in machineRobots)
+            // drive.RobotsFromFolder.Get(folder) を使う方が、どんなタイミングでも期待通り動きそうだけど
+            // completer の実装においては、パフォーマンスも大事かな。。
+            // すでに登録済みの内容をシリアライズするのだし、drive.Robots.Get() でも動きそうな気がする
+            var robots = drive.Robots.Get();
+            foreach (var mr in machineRobots)
             {
-                MachineRobotSessionForSerialize mrs = new();
-
-                // RobotId を変換
-                if (elem.RobotId != null)
+                Robot robot = null;
+                if (mr.RobotId != null && mr.RobotId != 0)
                 {
-                    var robots2 = drive.Robots.Get();
-                    mrs.RobotName = robots2.FirstOrDefault(r => r.Id == elem.RobotId)?.Name;
+                    robot = robots.Where(r => r.Id == mr.RobotId).FirstOrDefault();
+                }
+                else if (!string.IsNullOrEmpty(mr.RobotUserName))
+                {
+                    robot = robots.Where(r => string.Compare(r.User?.UserName, mr.RobotUserName, StringComparison.OrdinalIgnoreCase) == 0).FirstOrDefault();
                 }
 
-                // MachineId を変換
-                if (elem.MachineId != null)
+                string machineName = mr.MachineName;
+                if (string.IsNullOrEmpty(machineName))
                 {
-                    var machines = drive!.Machines.Get();
-                    mrs.MachineName = machines.FirstOrDefault(m => m.Id == elem.MachineId)?.Name;
+                    machineName = drive.Machines.Get().Where(m => m.Id == mr.MachineId).FirstOrDefault()?.Name;
                 }
 
-                // SessionId を変換
-                if (elem.SessionId != null)
+                string sessionName = mr.SessionName;
+                if (string.IsNullOrEmpty(sessionName) && (mr.SessionId.GetValueOrDefault() != 0))
                 {
-                    var sessions = drive.MachineSessionRuntimesByFolder.Get(folder);
-                    mrs.HostMachineName = sessions.FirstOrDefault(s => s.SessionId == elem.SessionId)?.HostMachineName;
+                    var session = drive.MachineSessionRuntimesByFolder.Get(folder)
+                        //.Where(s => s.RuntimeType == "Unattended") // これ不要。RuntimeType が違っても SessionId は同じになるため。
+                        .Where(s => s.SessionId == mr.SessionId)
+                        .FirstOrDefault();
+                    sessionName = session?.HostMachineName + " - " + session?.ServiceUserName;
                 }
-                mrss.Add(mrs);
+
+                mrss.Add(new MachineRobotSessionForSerialize()
+                {
+                    UserName = robot?.Username,
+                    MachineName = machineName,
+                    SessionName = sessionName
+                });
             }
 
-            return JsonSerializer.Serialize(mrss, OrchAPISession.jsoWhenWritingNull).Replace("\\u0027", "''");
+            //return string.Join(',', mrss.Select(e => JsonSerializer.Serialize(e, OrchAPISession.jsoWhenWritingNull))).Replace("\\u0027", "'");
+            return JsonSerializer.Serialize(mrss, OrchAPISession.jsoWhenWritingNull).Replace("\\u0027", "'");
         }
 
-        private Lazy<HashSet<string>> ValidScopes = new(() =>
+        private readonly Lazy<HashSet<string>> ValidScopes = new(() =>
             ["Default", "Shared", "PersonalWorkspace", "Cloud", "AutomationCloudRobot", "ElasticRobot"]);
 
-        internal List<MachineRobotSession>? DeserializeMachineRobotSessions(OrchDriveInfo drive, Folder folder, string? machineRobots)
+        // executorRobots は UserName の列挙を渡す
+        // SelectMany() の結果を連結しているから、内部で List<RobotExecutor> を構築する必要はない。その方が効率的。
+        internal static RobotExecutor[]? DeserializeExecutorRobots(IWritableHost? _this, OrchDriveInfo drive, Folder folder, string target, IEnumerable<string>? executorRobots)
         {
-            if (string.IsNullOrEmpty(machineRobots)) return null;
+            if (executorRobots == null || executorRobots.All(string.IsNullOrEmpty)) return null;
 
-            // これを呼び出しておかないと、Orchestrator がロボットの検索に失敗してしまう
-            _ = drive.RobotsFromFolder.Get(folder);
-
-            // この中にはワイルドカードが入っている可能性があるので、すべて展開していく
-            var mrss = JsonSerializer.Deserialize<MachineRobotSessionForSerialize[]>(machineRobots);
-
-            List<MachineRobotSession> targets = [];
-
-            foreach (var mrs in mrss ?? [])
+            try
             {
-                // RobotName を変換
-                if (string.IsNullOrEmpty(mrs.RobotName)) continue;
+                var robotsPerFolder = drive.RobotsFromFolder.Get(folder);
 
-                var wpRobotName = new WildcardPattern(mrs.RobotName, WildcardOptions.IgnoreCase);
-                var robots = drive.RobotsFromFolder.Get(folder)
-                    .Where(r => r.Type == "Unattended" && r.CredentialType != "NoCredential")
-                    .Where(r => wpRobotName.IsMatch(r.Name))
-                    .Cast<RobotsFromFolderModel?>()
-                    .ToList();
-
-                if (robots.Count == 0) continue;
-
-                foreach (var robot in robots)
-                {
-                    // MachineName を変換
-                    if (string.IsNullOrEmpty(mrs.MachineName)) continue;
-                    var wpMachineName = new WildcardPattern(mrs.MachineName, WildcardOptions.IgnoreCase);
-                    var machines = drive.FolderMachinesAssigned.Get(folder)
-                        //.Where(m => m.)
-                        .Where(m => ValidScopes.Value.Contains(m.Scope!))
-                        .Cast<MachineFolder?>()
-                        .ToList();
-                    if (machines.Count == 0) continue;
-
-                    foreach (var machine in machines)
+                var result = executorRobots
+                    .SelectMany(executorRobot =>
                     {
-                        List<MachineSessionRuntime?> sessions = null;                                    // HostMachineName を変換
-                        if (!string.IsNullOrEmpty(mrs.HostMachineName))
-                        {
-                            var wpHostMachineName = new WildcardPattern(mrs.HostMachineName, WildcardOptions.IgnoreCase);
-                            sessions = drive.MachineSessionRuntimesByFolder.Get(folder)
-                                .Where(s => s.MachineType != "Template" || s.MachineScope != "Cloud")
-                                .Where(s => s.RuntimeType == "Unattended")
-                                .Where(s => wpHostMachineName.IsMatch(s.HostMachineName))
-                                .Cast<MachineSessionRuntime?>()
-                                .ToList();
-                            //elem.SessionId = sessions.FirstOrDefault(s => s.HostMachineName == mrs.HostMachineName)?.SessionId;
-                        }
-                        sessions ??= [];
-                        if (sessions.Count == 0) sessions.Add(null);
+                        // 合致するユーザー一覧を抽出
+                        var wpUserName = new WildcardPattern(executorRobot, WildcardOptions.IgnoreCase);
+                        var targetRobots = robotsPerFolder.Where(r => wpUserName.IsMatch(r.Username));
 
-                        foreach (var session in sessions)
+                        if (!targetRobots.Any())
                         {
-                            if (robot?.Id != null && machine?.Id != null)
-                            {
-                                targets.Add(new MachineRobotSession()
-                                {
-                                    RobotId = robot?.Id,
-                                    MachineId = machine?.Id,
-                                    SessionId = session?.SessionId
-                                });
-                            }
+                            _this?.WriteWarning($"'{target}': The robot with user name '{executorRobot}' is not configured in '{folder.GetPSPath()}'.");
+                        }
+
+                        return targetRobots;
+                    })
+                    .DistinctBy(r => r.Id)
+                    .Select(robot => new RobotExecutor { Id = robot.Id })
+                    .ToArray();
+
+                return (result.Length == 0) ? null : result;
+            }
+            catch (Exception ex)
+            {
+                _this?.WriteError(new ErrorRecord(new OrchException(target, "Failed to deserialize ExecutorRobots.", ex), "GetRobotsFromFolderError", ErrorCategory.InvalidOperation, target));
+                return null;
+            }
+        }
+
+        internal MachineRobotSession[]? DeserializeMachineRobotSessions(IWritableHost? _this, OrchDriveInfo drive, Folder folder, string target, string[]? machineRobots)
+        {
+            if (machineRobots == null || machineRobots.All(string.IsNullOrEmpty)) return null;
+
+            try
+            {
+                var tenantUsers = drive.GetUsers();
+
+                // これを呼び出しておかないと、Orchestrator がロボットの検索に失敗してしまう
+                // んだけど、GetUsers() で置き換えたからもう呼ばなくても良いな。
+                //_ = drive.RobotsFromFolder.Get(folder);
+
+                // この中にはワイルドカードが入っている可能性があるので、すべて展開していく
+                IEnumerable<MachineRobotSessionForSerialize?> mrss = null;
+                if (machineRobots.Length == 1 && machineRobots[0].StartsWith('[')) // && machineRobots[0].EndsWith(']'))
+                {
+                    // CSV からインポートした場合は配列としてデシリアライズ
+                    mrss = JsonSerializer.Deserialize<MachineRobotSessionForSerialize[]>(machineRobots[0]);
+                }
+                else
+                {
+                    mrss = machineRobots.Select(mr => JsonSerializer.Deserialize<MachineRobotSessionForSerialize>(mr));
+                }
+
+                List<MachineRobotSession> targets = [];
+
+                foreach (var mrs in mrss ?? [])
+                {
+                    // UserName を適切な Id に変換
+                    // ワイルドカードをサポートするため、複数の User が出てくる場合がある
+                    List<Entities.User> users = null;
+                    if (!string.IsNullOrEmpty(mrs?.UserName))
+                    {
+                        var wpUserName = new WildcardPattern(mrs.UserName, WildcardOptions.IgnoreCase);
+                        users = tenantUsers.Where(u => wpUserName.IsMatch(u.UnattendedRobot?.UserName)).ToList();
+                        if (users.Count == 0)
+                        {
+                            WriteWarning($"'{target}': The user name '{mrs.UserName}' is not configured as Unattended Robot in '{drive.NameColonSeparator}'.");
                         }
                     }
+
+                    // MachineName を適切な Id に変換
+                    // ワイルドカードをサポートするため、複数の Machine が出てくる場合がある
+                    List<MachineFolder> machines = null;
+                    if (!string.IsNullOrEmpty(mrs?.MachineName))
+                    {
+                        var wpMachineName = new WildcardPattern(mrs.MachineName, WildcardOptions.IgnoreCase);
+                        machines = drive.FolderMachinesAssigned.Get(folder)
+                            .Where(m => wpMachineName.IsMatch(m.Name))
+                            .Where(m => ValidScopes.Value.Contains(m.Scope!))
+                            .ToList();
+                        if (machines.Count == 0)
+                        {
+                            WriteWarning($"'{target}': The machine name '{mrs.MachineName}' does not match any in '{folder.GetPSPath()}'.");
+                        }
+                    }
+
+                    // user と machine の両方がなければスキップ
+                    if ((users == null || users.Count == 0) && (machines == null || machines.Count == 0)) continue;
+
+                    // 便宜上、要素をひとつだけ入れておく
+                    if (users == null || users.Count == 0) users = [null];
+                    if (machines == null || machines.Count == 0) machines = [null];
+
+                    // SessionName を適切な Id に変換
+                    // ワイルドカードをサポートするため、複数の Session が出てくる場合がある
+                    List<MachineSessionRuntime> sessions = null;
+                    if (!string.IsNullOrEmpty(mrs?.SessionName))
+                    {
+                        var wpSessionName = new WildcardPattern(mrs.SessionName, WildcardOptions.IgnoreCase);
+                        sessions = drive.MachineSessionRuntimesByFolder.Get(folder)
+                            //.Where(s => s.RuntimeType == "Unattended") // これ不要。RuntimeType が違っても SessionId は同じになるため。
+                            //.Where(s => wpMachineName.IsMatch(s.MachineName)) // この条件はあとで判断する
+                            .Where(s =>
+                            {
+                                var sessionName = s.HostMachineName;
+                                if (!string.IsNullOrEmpty(s.ServiceUserName))
+                                {
+                                    sessionName += (" - " + s.ServiceUserName);
+                                }
+                                return wpSessionName.IsMatch(sessionName);
+                            })
+                            .DistinctBy(s => s.SessionId)
+                            .ToList();
+
+                        if (sessions == null || sessions.Count == 0)
+                        {
+                            WriteWarning($"'{target}': The session name '{mrs.SessionName}' does not match any in '{folder.GetPSPath()}'.");
+                        }
+                    }
+                    // 便宜上、要素をひとつだけ入れておく
+                    if (sessions == null || sessions.Count == 0) sessions = [null];
+
+                    // すべての組み合わせを生成して処理
+                    var combinations = users
+                        .SelectMany(user => machines, (user, machine) => new { user, machine })
+                        .SelectMany(pair => sessions, (pair, session) => new { pair.user, pair.machine, session });
+
+                    foreach (var c in combinations)
+                    {
+                        // セッションの MachineId が不一致ならスキップ
+                        if (c.session != null && c.machine?.Id != c.session.MachineId) continue;
+
+                        targets.Add(new MachineRobotSession()
+                        {
+                            RobotId = c.user?.UnattendedRobot?.RobotId,
+                            MachineId = c.machine?.Id,
+                            SessionId = c.session?.SessionId
+                        });
+                    }
                 }
+                return targets.ToArray();
             }
-            return targets;
+            catch (Exception ex)
+            {
+                _this?.WriteError(new ErrorRecord(new OrchException(target, "Failed to deserialize MachineRobots.", ex), "GetUsersError", ErrorCategory.InvalidOperation, target));
+                return null;
+            }
         }
 
         internal static (string?, string?) ExtractPackageIdVersionFromFilePath(string fullPath)

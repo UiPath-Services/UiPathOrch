@@ -20,7 +20,7 @@ Get-OrchLicenseStats [[-Last] <String>] [-Path <String[]>] [-ProgressAction <Act
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-主に呼び出すエンドポイント: /api/Stats/GetLicenseStats?tenantId={tenantId}&days={days}
+主に呼び出すエンドポイント: GET /api/Stats/GetLicenseStats?tenantId={tenantId}&days={days}
 
 OAuth に必要なスコープ: OR.Monitoring or OR.Monitoring.Read
 

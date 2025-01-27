@@ -20,7 +20,7 @@ Get-OrchLicenseRuntime [[-RobotType] <String[]>] [-Path <String[]>] [-ProgressAc
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-Primary Endpoint: /odata/LicensesRuntime/UiPath.Server.Configuration.OData.GetLicensesRuntime(robotType='{robotType}')
+Primary Endpoint: GET /odata/LicensesRuntime/UiPath.Server.Configuration.OData.GetLicensesRuntime(robotType='{robotType}')
 
 OAuth required scopes: OR.License or OR.License.Read
 

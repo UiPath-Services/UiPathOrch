@@ -112,14 +112,14 @@ namespace UiPath.PowerShell.Commands
                             // 組織の PmUser の中に見つかれば、その identifier を DirectoryIdentifier を設定しておく
                             if (DirectoryTypeItems.Items.TryGetValue(detailedUser.Type ?? "DirectoryUser", out var srcType))
                             {
-                                var dstPmUser = dstDrive.SearchForUsersAndGroups(newUser.UserName!)
+                                var dstPmUser = dstDrive.SearchDirectory(newUser.UserName!)
                                     .Where(u => string.Compare(u.identityName, newUser.UserName, true) == 0 && u.type == srcType)
                                     .FirstOrDefault();
 
                                 if (dstPmUser == null && !string.IsNullOrEmpty(newUser.EmailAddress) && newUser.UserName != newUser.EmailAddress)
                                 {
                                     // 見つからない場合は、メールアドレスでも探してみる
-                                    dstPmUser = dstDrive.SearchForUsersAndGroups(newUser.EmailAddress)
+                                    dstPmUser = dstDrive.SearchDirectory(newUser.EmailAddress)
                                         .Where(u => string.Compare(u.identityName, newUser.EmailAddress, true) == 0 && u.type == srcType)
                                         .FirstOrDefault();
                                 }

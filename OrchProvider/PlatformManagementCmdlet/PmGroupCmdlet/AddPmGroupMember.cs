@@ -94,7 +94,7 @@ namespace UiPath.PowerShell.Commands
                     var existingGroups = drive.GetPmGroups().Values;
                     var updatingGroups = existingGroups.FilterByWildcards(u => u!.name!, wpGroupName);
 
-                    var users = drive.SearchPmDirectoryUsers(wordToComplete);
+                    var users = drive.SearchPmDirectory(wordToComplete);
                     if (users == null) continue;
 
                     foreach (var user in users
@@ -200,7 +200,7 @@ namespace UiPath.PowerShell.Commands
                     case "DirectoryRobot":
                         foreach (var name in drive_type_userNames)
                         {
-                            var addingMember = drive.SearchPmDirectoryUsers(name.UserName)?
+                            var addingMember = drive.SearchPmDirectory(name.UserName)?
                                 .Where(t => t.objectType == "DirectoryRobot")
                                 .FirstOrDefault(t => string.Compare(t.identityName, name.UserName, true) == 0);
 
@@ -249,7 +249,7 @@ namespace UiPath.PowerShell.Commands
                         switch (type)
                         {
                             case "DirectoryRobot":
-                                robotEntry = drive.SearchPmDirectoryUsers(name)?
+                                robotEntry = drive.SearchPmDirectory(name)?
                                     .Where(t => t.objectType == "DirectoryRobot")
                                     .FirstOrDefault(t => string.Compare(t.identityName, name, true) == 0);
                                 if (robotEntry != null)
@@ -310,8 +310,8 @@ namespace UiPath.PowerShell.Commands
                             WriteObject(newGroup);
                             drive._dicPmGroups = null;
                             drive._dicPmGroups_Exception.ClearCache();
-                            drive._dicPmDirectoryUsers = null;
-                            drive._dicSearchForUsersAndGroups = null;
+                            drive._dicSearchPmDirectory = null;
+                            drive._dicSearchDirectory = null;
                         }
                     }
                 }

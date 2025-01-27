@@ -1,8 +1,6 @@
 ﻿using System.Management.Automation;
 using System.Text;
-using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using UiPath.OrchAPI;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
@@ -178,13 +176,6 @@ namespace UiPath.PowerShell.Commands
             StringBuilder sb = new();
             sb.Append("{\"queueItems\":[\n");
 
-            var options = new JsonSerializerOptions
-            {
-                //Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, // エンコードを抑制
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                WriteIndented = true
-            };
-
             ParseCsvContent(csvFilePath, out var headers, out var contents, out errorInfo);
 
             int currentRowNumber = 0;
@@ -233,7 +224,7 @@ namespace UiPath.PowerShell.Commands
                             break;
                     }
                 }
-                string strLine = System.Text.Json.JsonSerializer.Serialize(queueItem, options);
+                string strLine = System.Text.Json.JsonSerializer.Serialize(queueItem, OrchAPISession.jsoWhenWritingNull);
                 if (currentRowNumber == 1)
                 {
                     sb.Append(strLine);

@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.9.1'
+ModuleVersion = '0.9.9.2'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -293,6 +293,10 @@ CmdletsToExport = @(
 'Copy-OrchActionCatalog',
 'Remove-OrchActionCatalog',
 
+'Search-OrchDirectory',
+'Search-OrchPmDirectory',
+'Resolve-OrchPmDirectoryNameBulk',
+
 'Get-OrchPmUser',
 'Update-OrchPmUser',
 'Remove-OrchPmUser',
@@ -375,28 +379,54 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- The Get-OrchPmGroupMember cmdlet has been added.
-  - This cmdlet outputs the same content as the existing Get-OrchPmGroup -ExpandMembers.
+        ReleaseNotes = '- Improved Get-OrchTrigger cmdlet:
+  - Fixed an issue where the ExecutorRobots property of triggers could not be retrieved. This required calling an additional endpoint:
+    GET /odata/ProcessSchedules/UiPath.Server.Configuration.OData.GetRobotIdsForSchedule(key={processScheduleId}) 
 
-  - As part of this change, the -ExpandMembers parameter has been removed from the Get-OrchPmGroup cmdlet, and the functionality to expand members has been migrated to the Get-OrchPmGroupMember cmdlet.
+  - When the -ExpandDetails or -ExportCsv switch parameter is specified, the above endpoint is called along with following endpoint. The behavior of calling this endpoint remains unchanged from previous versions:
+    GET /odata/ProcessSchedules({processScheduleId})
 
-  - This update enables more intuitive operations, as follows:
-    - The output of Get-OrchPmGroup -ExportCsv can be imported into the New-OrchPmGroup cmdlet.
-    - The output of Get-OrchPmGroupMember -ExportCsv can be imported into the Add-OrchPmGroupMember cmdlet.
+  - As part of this fix, the CSV file output by Get-OrchTrigger -ExportCsv now include an ExecutorRobots column. Additionally, the MachineRobots column is now serialized in a more appropriate format.
 
-- The Export-OrchPackage cmdlet has been improved.
-  - When a relative path for the -Destination parameter is specified, the path was previously resolved using the process''s current working directory, which could lead to unintended behavior.
+  - Triggers are no longer retrieved from personal workspace folders when the Orchestrator Web API version is below 12, as attempting to do so would result in an error.
 
-  - The relative path is now correctly resolved using the current location of the PSDrive.
+- Improved New-OrchTrigger and Update-OrchTrigger cmdlets:
+  - Added the -ExecutorRobots parameter, allowing better reflection of trigger dynamic allocation and account mapping information.
 
-  - For example, the following command previously failed to write the packages to the correct location. This issue has now been resolved. The first wildcard represents the package name, and the second wildcard represents the version number:
+  - Enhanced the completers for the -ExecutorRobots and -MachineRobots parameters.
+    - For New-OrchTrigger, the completers display available combinations of values, and multiple values can be specified using a comma-separated format.
+    - For Update-OrchTrigger, the completers show the values configured for the specified triggers.
 
-    PS Orch1:\> Export-OrchPackage -Recurse * * c:
+- Improved Copy-OrchTrigger and Copy-Item cmdlets:
+  - Improved the ability to copy trigger dynamic allocation and account mapping information. However, to fully copy these, the destination folder must have the appropriate robots and sessions configured.
 
-  - If the -Destination parameter is not specified, the packages are exported to the current location of the last-used FileSystem drive. This behavior remains unchanged from previous versions.
+  - Fixed an issue where copying a trigger with a StopProcessDate in the past would fail. Now, if the date is in the past, it is removed, and the trigger is copied with Enabled set to false.
 
-- The Import-OrchLibrary and Import-OrchPackage cmdlets have also been improved.
-  - These cmdlets previously did not function correctly when a relative path was specified for the -Source parameter.
+  - When copying queue triggers, the operation now fails if a queue with the same name does not exist in the destination folder.
+
+  - The Copy-Item cmdlet now copies entities in alphabetical order by their names.
+
+- Fixed an issue in the Copy-OrchCalendar cmdlet where all calendars were copied regardless of the value specified in the -Name parameter.
+
+- Improved Add-OrchFolderMachine cmdlet:
+  - When the target folder is a personal workspace folder, the cmdlet now skips processing. For example, when adding a machine to all folders directly under the root, unnecessary errors are no longer output:
+
+    PS Orch1:\> Add-OrchFolderMachine -Path * MyMachine
+
+- Improved Get-ChildItem cmdlet (alias: dir):
+  - When the Orchestrator API version is outdated and does not return the FolderType property, this cmdlet now sets this property to either Personal or Standard (simulated). This is useful when writing .ps1 scripts to process folders.
+
+- Addressed an issue where inappropriate warnings about OAuth scopes were output when connecting to Orchestrator without OAuth support using a username and password.
+
+- Added three cmdlets for searching the directory service. Each cmdlet corresponds to a different endpoint:
+  - Search-OrchDirectory cmdlet
+    Endpoint: GET /api/DirectoryService/SearchForUsersAndGroups
+
+  - Search-OrchPmDirectory cmdlet
+    Endpoint: GET /api/Directory/Search/{partitionGlobalId}
+
+  - Resolve-OrchPmDirectoryNameBulk cmdlet
+    Endpoint: POST /api/Directory/BulkResolveByName/{partitionGlobalId}
 '
 
         # Prerelease string of this module

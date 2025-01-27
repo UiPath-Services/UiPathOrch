@@ -50,7 +50,7 @@ namespace UiPath.PowerShell.Commands
                 bool bFound = false;
                 foreach (var drive in drives)
                 {
-                    var users = drive.SearchPmDirectoryUsers(wordToComplete);
+                    var users = drive.SearchPmDirectory(wordToComplete);
                     if (users == null) continue;
 
                     foreach (var user in users

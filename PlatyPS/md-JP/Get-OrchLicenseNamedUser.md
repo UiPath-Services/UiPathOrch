@@ -20,7 +20,7 @@ Get-OrchLicenseNamedUser [[-RobotType] <String[]>] [-Path <String[]>] [-Progress
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-主に呼び出すエンドポイント: /odata/LicensesNamedUser/UiPath.Server.Configuration.OData.GetLicensesNamedUser(robotType='{robotType}')
+主に呼び出すエンドポイント: GET /odata/LicensesNamedUser/UiPath.Server.Configuration.OData.GetLicensesNamedUser(robotType='{robotType}')
 
 OAuth に必要なスコープ: OR.License or OR.License.Read
 

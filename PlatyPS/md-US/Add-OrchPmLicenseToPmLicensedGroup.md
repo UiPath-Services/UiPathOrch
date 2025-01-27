@@ -20,6 +20,12 @@ Add-OrchPmLicenseToPmLicensedGroup [-GroupName] <String[]> [-License] <String[]>
 ## DESCRIPTION
 {{ Fill in the Description }}
 
+Primary Endpoint: PUT /api/license/accountant/UserLicense/group
+
+OAuth required scopes:
+
+Required permissions:
+
 ## EXAMPLES
 
 ### Example 1
@@ -77,7 +83,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-{{ Fill Path Description }}
+Specifies the name of the target drives. If not specified, the current drive will be targeted.
 
 ```yaml
 Type: String[]

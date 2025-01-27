@@ -73,7 +73,7 @@ namespace UiPath.PowerShell.Commands
                 foreach (var drive in drives)
                 {
                     string partitionGlobalId = drive.GetPartitionGlobalId();
-                    var ret = drive.SearchForUsersAndGroups(wordToComplete);
+                    var ret = drive.SearchDirectory(wordToComplete);
                     if (ret == null) continue;
 
                     foreach (var e in ret
@@ -147,7 +147,7 @@ namespace UiPath.PowerShell.Commands
                 _ => throw new InvalidOperationException()
             };
 
-            var resolved = drive.SearchForUsersAndGroups(name)?.Where(g => g.type == type).ToList();
+            var resolved = drive.SearchDirectory(name)?.Where(g => g.type == type).ToList();
 
             if (resolved == null || resolved.Count == 0)
             {

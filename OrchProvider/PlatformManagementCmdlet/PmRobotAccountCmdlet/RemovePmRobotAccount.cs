@@ -44,8 +44,8 @@ namespace UiPath.PowerShell.Commands
                                 drive!.OrchAPISession.RemovePmRobot(partitionGlobalId!, robot.id!);
                                 drive.PmRobotAccounts.ClearCache();
                                 drive._dicPmGroups = null;
-                                drive._dicPmDirectoryUsers = null;
-                                drive._dicSearchForUsersAndGroups = null;
+                                drive._dicSearchPmDirectory = null;
+                                drive._dicSearchDirectory = null;
                             }
                             catch (Exception ex)
                             {

@@ -173,6 +173,7 @@ namespace UiPath.PowerShell.Core
                 return;
             }
 
+            // すでに割り当て済みのユーザーを取得する
             var dstFolderUsers = dstDrive.FolderUsersWithNoInherited.Get(newFolder)
                 .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName)
                 .FilterByWildcards(u => u?.UserEntity?.Type, wpType).ToList();
@@ -181,7 +182,7 @@ namespace UiPath.PowerShell.Core
 
             reporter.TotalNum = srcFolderUsers.Count;
             int index = 0;
-            foreach (var userRole in srcFolderUsers)
+            foreach (var userRole in srcFolderUsers.OrderBy(u => u.UserEntity?.UserName))
             {
                 cancelToken.ThrowIfCancellationRequested();
 
@@ -226,45 +227,58 @@ namespace UiPath.PowerShell.Core
                         if (!DirectoryTypeItems.Items.TryGetValue(userRole.UserEntity?.Type ?? "", out var type))
                         {
                             _this.WriteError(new ErrorRecord(new OrchException(userRole.GetPSPath(), $"Invalid Type: '{userRole.UserEntity?.Type}'."), "AssignFolderUserError", ErrorCategory.InvalidOperation, targetFolder));
+                            continue;
                         }
-                        else
+
+                        // ディレクトリを検索しなければ。。
+                        var resolved = dstDrive.SearchDirectory(userName)?
+                            .Where(u => u.type == type)
+                            .Where(u => string.Compare(u.identityName, userName, true) == 0)
+                            .FirstOrDefault();
+                        if (resolved == null)
                         {
-                            // ディレクトリを検索しなければ。。
-                            var resolved = dstDrive.SearchForUsersAndGroups(userName)?
-                                .Where(u => u.type == type)
-                                .Where(u => string.Compare(u.identityName, userName, true) == 0)
-                                .FirstOrDefault();
-                            if (resolved == null)
-                            {
-                                // ディレクトリに同名のユーザーが見つからない！
-                                // このユーザーの email を srcDrive で検索する。
-                                var srcUser = srcDrive.GetUsers().FirstOrDefault(u => u.Id == userRole.UserEntity?.Id);
-                                if (srcUser != null && !string.IsNullOrEmpty(srcUser.EmailAddress) && srcUser.EmailAddress != userName)
-                                {
-                                    resolved = dstDrive.SearchForUsersAndGroups(srcUser.EmailAddress)?
-                                        .Where(u => u.type == type)
-                                        .Where(u => string.Compare(u.identityName, srcUser.EmailAddress, true) == 0)
-                                        .FirstOrDefault();
-                                }
-                            }
-                            if (resolved == null)
-                            {
-                                _this.WriteError(new ErrorRecord(new OrchException(targetFolder, $"{msg}: {dstDrive.Name}: does not have the DirectoryUser \"{userName}\"."), "AssignFolderUserError", ErrorCategory.InvalidOperation, targetFolder));
-                                continue;
-                            }
+                            // srcDrive のユーザーと同名のユーザーが、dstDrive のディレクトリに見つからない！
+                            // そこで、このユーザーの email でも dstDrive で検索する。
 
-                            postingUser = new DomainUserAssignment
-                            {
-                                Domain = string.IsNullOrEmpty(resolved.domain) ? "autogen" : resolved.domain,
-                                DirectoryIdentifier = resolved.identifier,
-                                UserType = userRole.UserEntity?.Type,
-                                RolesPerFolder = newRolesPerFolder
-                            };
-                            dstDrive.OrchAPISession.AssignDirectoryUser(postingUser);
+                            // まず srcUser の email を確認する。
+                            var srcUserEmail = srcDrive.GetUsers().FirstOrDefault(u => u.Id == userRole.UserEntity?.Id)?.EmailAddress;
+ 
+                            // TODO: ローカルユーザーにいなければ、ディレクトリを探さないと。
+                            //if (string.IsNullOrEmpty(srcUserEmail))
+                            //{
+                            //    // もしテナントユーザーにいなければ、ディレクトリを検索する。
+                            //    var srcDirectoryUser = srcDrive.SearchPmDirectory(userName)?
+                            //        .Where(u => u.type == type)
+                            //        .Where(u => string.Compare(u.identityName, userName, true) == 0)
+                            //        .FirstOrDefault();
+                            //    srcUserEmail = srcDirectoryUser?.email;
+                            //}
 
-                            dstDrive.FolderUsersWithInherited.ClearCache(newFolder);
-                            dstDrive.FolderUsersWithNoInherited.ClearCache(newFolder);
+                            if (!string.IsNullOrEmpty(srcUserEmail) && srcUserEmail!= userName)
+                            {
+                                resolved = dstDrive.SearchDirectory(srcUserEmail)?
+                                    .Where(u => u.type == type)
+                                    .Where(u => string.Compare(u.identityName, srcUserEmail, true) == 0)
+                                    .FirstOrDefault();
+                            }
                         }
+                        if (resolved == null)
+                        {
+                            _this.WriteError(new ErrorRecord(new OrchException(targetFolder, $"{msg}: {dstDrive.Name}: does not have the DirectoryUser \"{userName}\"."), "AssignFolderUserError", ErrorCategory.InvalidOperation, targetFolder));
+                            continue;
+                        }
+
+                        postingUser = new DomainUserAssignment
+                        {
+                            Domain = string.IsNullOrEmpty(resolved.domain) ? "autogen" : resolved.domain,
+                            DirectoryIdentifier = resolved.identifier,
+                            UserType = userRole.UserEntity?.Type,
+                            RolesPerFolder = newRolesPerFolder
+                        };
+                        dstDrive.OrchAPISession.AssignDirectoryUser(postingUser);
+
+                        dstDrive.FolderUsersWithInherited.ClearCache(newFolder);
+                        dstDrive.FolderUsersWithNoInherited.ClearCache(newFolder);
                     }
                     catch (Exception ex)
                     {
@@ -589,7 +603,7 @@ namespace UiPath.PowerShell.Core
 
             int index = 0;
             bool isNewFolderProcessCacheDirty = false;
-            foreach (var process in processes)
+            foreach (var process in processes.OrderBy(p => p.Name))
             {
                 cancelToken.ThrowIfCancellationRequested();
                 
@@ -905,6 +919,8 @@ namespace UiPath.PowerShell.Core
             }
         }
 
+        // TODO: この実装が足りてないではないか。ディレクトリ検索でユーザーを探さないと。
+        // 現在の実装はローカルユーザーしか探していない。
         internal static Entities.User? FindDstUser(IWritableHost _this,
             OrchDriveInfo srcDrive, 
             OrchDriveInfo dstDrive, Folder newFolder, Int64? srcUserId, string msg)
@@ -945,7 +961,6 @@ namespace UiPath.PowerShell.Core
         }
 
         internal static RobotsFromFolderModel? FindDstRobot(IWritableHost _this,
-        //internal static Robot? FindDstRobot(IWritableHost _this,
             OrchDriveInfo srcDrive,
             OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcRobotId, string msg)
         {
@@ -978,6 +993,42 @@ namespace UiPath.PowerShell.Core
             }
         }
 
+        internal static RobotsFromFolderModel? FindDstRobotByUnattendedAccount(IWritableHost _this,
+            OrchDriveInfo srcDrive,
+            OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcRobotId, string msg)
+        {
+            if (srcRobotId == null || srcRobotId == 0) return null;
+            try
+            {
+                var srcRobot = srcDrive.Robots.Get()?.FirstOrDefault(r => r.Id == srcRobotId);
+                if (srcRobot == null)
+                {
+                    _this.WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, $"{msg}: {srcDrive.NameColon} does not have robot with Id = {srcRobotId}."), "MigrateRobotIdError", ErrorCategory.InvalidOperation, srcDrive));
+                    return null;
+                }
+                //msg = $"Migrating id of the robot {Path.Combine(srcDrive.NameColon, srcRobot.Name!)}";
+
+                var dstRobots = dstDrive.RobotsFromFolder.Get(dstFolder);
+                var dstRobot = dstRobots?.FirstOrDefault(r => 
+                    r.Type == srcRobot.Type && // たぶん、この srcRobot.Type は必ず "Unattended" になっているはず。。
+                    string.Compare(r.Username, srcRobot.Username, StringComparison.OrdinalIgnoreCase) == 0);
+                if (dstRobot == null)
+                {
+                    string target = dstFolder.GetPSPath();
+                    //_this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: A Robot with the user name '{srcRobot.Username}' is not configured in {dstFolder.GetPSPath()}."), "MigrateRobotIdError", ErrorCategory.InvalidOperation, target));
+                    _this.WriteWarning($"{msg}: An unattended robot with the user name '{srcRobot.Username}' ({srcRobot.User?.UserName}) is not configured in {dstFolder.GetPSPath()}.");
+                    return null;
+                }
+                return dstRobot;
+            }
+            catch (Exception ex)
+            {
+                string target = dstFolder.GetPSPath();
+                _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "MigrateRobotIdError", ErrorCategory.InvalidOperation, target));
+                return null;
+            }
+        }
+
         internal static MachineFolder? FindDstMachine(IWritableHost _this,
             OrchDriveInfo srcDrive, Folder srcFolder,
             OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcMachineId, string msg)
@@ -998,7 +1049,11 @@ namespace UiPath.PowerShell.Core
                 if (dstMachineFolder == null)
                 {
                     string target = dstFolder.GetPSPath();
-                    _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: {dstDrive.NameColon} does not have machine with Name = '{srcMachine.Name}'."), "MigrateMachineIdError", ErrorCategory.InvalidOperation, target));
+                    //_this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: A machine with the name '{srcMachine.Name}' is not assigned in '{dstFolder.GetPSPath()}'."),
+                    //    "MigrateMachineIdError",
+                    //    ErrorCategory.InvalidOperation,
+                    //    target));
+                    _this.WriteWarning($"{msg}: A machine with the name '{srcMachine.Name}' is not assigned in '{dstFolder.GetPSPath()}'.");
                     return null;
                 }
                 return dstMachineFolder;
@@ -1029,6 +1084,7 @@ namespace UiPath.PowerShell.Core
                 srcSession = srcSessions.FirstOrDefault(s => s.SessionId == srcSessionId);
                 if (srcSession == null)
                 {
+                    //_this.WriteWarning($"{srcFolder.GetPSPath()}: {msg}: The session not found with SessionId {srcSessionId}.");
                     _this.WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), $"{msg}: The session not found with SessionId {srcSessionId}."), "MigrateSessionIdError", ErrorCategory.InvalidOperation, srcFolder));
                     return null;
                 }
@@ -1039,20 +1095,32 @@ namespace UiPath.PowerShell.Core
                 return null;
             }
 
-            var srcServiceUserName = srcSession.ServiceUserName;
-            var srcMachineName = srcSession.MachineName;
-            var srcHostMachineName = srcSession.HostMachineName;
+            var srcMachineName = srcSession.MachineName ?? "";
+            var srcHostMachineName = srcSession.HostMachineName ?? "";
+            var srcServiceUserName = srcSession.ServiceUserName ?? "";
 
             try
             {
-                var dstSessions = dstDrive.OrchAPISession.GetMachineSessionRuntimesByFolderId(dstFolder.Id ?? 0);
-                var dstSession = dstSessions.FirstOrDefault(s => 
-                    (string.Compare(s.ServiceUserName, srcServiceUserName, true) == 0 && 
-                    (string.Compare(s.MachineName, srcMachineName, true) == 0) &&
-                    (string.Compare(s.HostMachineName, srcHostMachineName, true) == 0)));
+                var dstSessions = dstDrive.MachineSessionRuntimesByFolder.Get(dstFolder);
+                var dstSession = dstSessions.FirstOrDefault(s =>
+                    string.Compare(s.MachineName ?? "", srcMachineName, true) == 0 &&
+                    string.Compare(s.HostMachineName ?? "", srcHostMachineName, true) == 0 &&
+                    string.Compare(s.ServiceUserName ?? "", srcServiceUserName, true) == 0);
+
                 if (dstSession == null)
                 {
-                    _this.WriteError(new ErrorRecord(new OrchException(dstFolder.GetPSPath(), $"{msg}: The session not found with ServiceUserName = '{srcServiceUserName}', MachineName ='{srcMachineName}' and HostMachineName = '{srcHostMachineName}'."), "MigrateSessionIdError", ErrorCategory.InvalidOperation, dstFolder));
+                    //_this.WriteError(new ErrorRecord(new OrchException(dstFolder.GetPSPath(),
+                    //    $"{msg}: The session not found with MachineName ='{srcMachineName}', HostMachineName = '{srcHostMachineName}' and ServiceUserName = '{srcServiceUserName}'."), "MigrateSessionIdError", ErrorCategory.InvalidOperation, dstFolder));
+                    _this.WriteWarning($"\"{dstFolder.GetPSPath()}\": {msg}: The session not found with MachineName ='{srcMachineName}', HostMachineName = '{srcHostMachineName}' and ServiceUserName = '{srcServiceUserName}'.");
+
+                    dstSession = dstSessions.FirstOrDefault(s =>
+                        string.Compare(s.MachineName, srcMachineName, true) == 0 &&
+                        string.Compare(s.HostMachineName, srcHostMachineName, true) == 0 &&
+                        string.IsNullOrEmpty(s.ServiceUserName));
+
+                    dstSession ??= dstSessions.FirstOrDefault(s =>
+                            (string.Compare(s.MachineName, srcMachineName, true) == 0 &&
+                            (string.Compare(s.HostMachineName, srcHostMachineName, true) == 0)));
                 }
                 return dstSession;
             }
@@ -1097,7 +1165,7 @@ namespace UiPath.PowerShell.Core
             QueueDefinition dstQueue = null;
             try
             {
-                dstQueue = dstDrive.Queues.Get(dstFolder)?.FirstOrDefault(q => string.Compare(q.Name, srcQueue.Name, StringComparison.OrdinalIgnoreCase) == 0);
+                dstQueue = dstDrive.Queues.Get(dstFolder)?.FirstOrDefault(q => string.Compare(q.Name, srcQueue.Name, true) == 0);
             }
             catch (Exception ex)
             {
@@ -1237,7 +1305,8 @@ namespace UiPath.PowerShell.Core
             }
             if (dstCalendar == null)
             {
-                _this.WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, $"{msg}: {dstDrive.NameColonSeparator} doesn't have calendar with Name = {srcCalendar.Name}."), "MigrateMachineIdError", ErrorCategory.InvalidOperation, dstDrive));
+                //_this.WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, $"{msg}: {dstDrive.NameColonSeparator} doesn't have calendar with Name = {srcCalendar.Name}."), "MigrateMachineIdError", ErrorCategory.InvalidOperation, dstDrive));
+                _this.WriteWarning($"{msg}: Calendar with name '{srcCalendar.Name}' does not exist in '{dstDrive.NameColonSeparator}'.");
                 return null;
             }
             return dstCalendar;
@@ -1342,7 +1411,7 @@ namespace UiPath.PowerShell.Core
             reporter.TotalNum = srcAssets.Count;
 
             int index = 0;
-            foreach (var asset in srcAssets)
+            foreach (var asset in srcAssets.OrderBy(a => a.Name))
             {
                 cancelToken.ThrowIfCancellationRequested();
 
@@ -1579,7 +1648,7 @@ namespace UiPath.PowerShell.Core
             reporter.TotalNum = srcQueues.Count;
 
             int index = 0;
-            foreach (var queue in srcQueues)
+            foreach (var queue in srcQueues.OrderBy(q => q.Name))
             {
                 cancelToken.ThrowIfCancellationRequested();
 
@@ -1682,6 +1751,59 @@ namespace UiPath.PowerShell.Core
             }
         }
 
+        private static RobotExecutor[]? MigrateExecutorRobots(IWritableHost _this, string msg,
+            OrchDriveInfo srcDrive,
+            OrchDriveInfo dstDrive, Folder newFolder,
+            RobotExecutor[]? executorRobots)
+        {
+            if (executorRobots == null) return null;
+
+            List<RobotsFromFolderModel?> dstRobots = [];
+            foreach (var executorRobot in executorRobots.Where(er => er != null))
+            {
+                var dstExecutorRobot = FindDstRobotByUnattendedAccount(_this, srcDrive, dstDrive, newFolder, executorRobot.Id, msg);
+                dstRobots.Add(dstExecutorRobot);
+            }
+
+            return dstRobots
+                .Where(r => r?.Id != null)
+                .DistinctBy(r => r!.Id)
+                .Select(r => new RobotExecutor() { Id = r!.Id })
+                .ToArray();
+        }
+
+        private static MachineRobotSession[]? MigrateMachineRobots(IWritableHost _this, string msg,
+            OrchDriveInfo srcDrive, Folder srcFolder,
+            OrchDriveInfo dstDrive, Folder newFolder,
+            MachineRobotSession[]? machineRobots)
+        {
+            if (machineRobots == null) return null;
+
+            List<MachineRobotSession> dstSessions = [];
+            foreach (var machineRobot in machineRobots.Where(mr => mr != null))
+            {
+                var robotId = FindDstRobotByUnattendedAccount(_this, srcDrive, dstDrive, newFolder, machineRobot.RobotId, msg)?.Id;
+                var machineId = FindDstMachine(_this, srcDrive, srcFolder, dstDrive, newFolder, machineRobot.MachineId, msg)?.Id;
+
+                if (robotId != null || machineId != null)
+                {
+                    dstSessions.Add(new MachineRobotSession()
+                    {
+                        // RobotId を移行
+                        RobotId = robotId,
+                        MachineId = machineId,
+                        SessionId = (machineId == null) ? null : FindDstSession(_this, srcDrive, srcFolder, dstDrive, newFolder, machineRobot.SessionId, msg)?.SessionId
+                    });
+                }
+            }
+            dstSessions = dstSessions.DistinctBy(s => (s.RobotId, s.MachineId, s.SessionId)).ToList();
+            if (dstSessions.Count != 0)
+            {
+                return dstSessions.ToArray();
+            }
+            return null;
+        }
+
         internal static void CopyTriggers(IWritableHost _this,
             OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
             OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
@@ -1703,7 +1825,7 @@ namespace UiPath.PowerShell.Core
             reporter.TotalNum = srcTriggers.Count;
 
             int index = 0;
-            foreach (var srcTrigger in srcTriggers)
+            foreach (var srcTrigger in srcTriggers.OrderBy(t => t.Name))
             {
                 cancelToken.ThrowIfCancellationRequested();
 
@@ -1715,25 +1837,31 @@ namespace UiPath.PowerShell.Core
                     //reporter.WriteProgress(++index, $"{index:D}/{srcTriggers.Count} {srcTrigger.Name}");
                     reporter.WriteProgress(++index, $"{index:D}/{srcTriggers.Count}");
 
-                    var postingTrigger = OrchCollectionExtensions.DeepCopy(srcTrigger);
+                    var detailedSrcTrigger = srcDrive.GetTrigger(srcFolder, srcTrigger);
+
+                    var postingTrigger = OrchCollectionExtensions.DeepCopy(detailedSrcTrigger);
+                    if (postingTrigger == null) continue;
+
                     postingTrigger.Id = null;
                     postingTrigger.StartProcessNextOccurrence = null;
                     postingTrigger.Key = null;
                     postingTrigger.ReleaseKey = null;
                     // postingTrigger.Path = null; // JsonIgnore 属性がついているので不要
-                    //postingTrigger.TimeZoneIana = null;
+                    postingTrigger.TimeZoneIana = null;
                     postingTrigger.ExternalJobKeyScheduler = null;
                     postingTrigger.StartProcessCronSummary = null;
                     postingTrigger.PackageName = null;
+                    if (postingTrigger.SpecificPriorityValue.HasValue) postingTrigger.JobPriority = null;
 
                     // キューIDを移行
                     // TODO: この条件式不要、中身だけあればいい気がする
-                    if (srcTrigger.QueueDefinitionId != null && srcTrigger.QueueDefinitionId.Value != 0)
+                    if (srcTrigger.QueueDefinitionId.GetValueOrDefault() != 0)
                     {
                         postingTrigger.QueueDefinitionId = FindDstQueue(_this,
                             srcDrive, srcFolder,
                             dstDrive, newFolder, srcTrigger.QueueDefinitionId, msg)?.Id;
-                        // 見つからなくても処理を続行
+                        // キュートリガーなのにキューが見つからなかったら、これはコピーしなくて良いのでは。
+                        if (postingTrigger.QueueDefinitionId == null) continue;
                     }
 
                     // プロセスIDを移行
@@ -1747,54 +1875,17 @@ namespace UiPath.PowerShell.Core
                         continue;
                     }
 
-                    // マシンIDを移行
-                    Int64? robotId = null;
-                    if (postingTrigger.MachineRobots != null)
-                    {
-                        foreach (var machineRobot in postingTrigger.MachineRobots)
-                        {
-                            // RobotId を移行
-                            var robot = FindDstRobot(_this,
-                                srcDrive,
-                                dstDrive, newFolder, machineRobot.RobotId, msg);
-                            // 見つからず、robot == null でもコピー処理を続行
+                    // ExecutorRobots を移行
+                    postingTrigger.ExecutorRobots = MigrateExecutorRobots(_this, msg,
+                        srcDrive,
+                        dstDrive, newFolder,
+                        postingTrigger.ExecutorRobots);
 
-                            machineRobot.RobotId = robot?.Id;
-                            //machineRobot.RobotUserName = robot?.Username;
-                            machineRobot.RobotUserName = null;
-                            robotId = robot?.Id;
-
-                            // MachineId を移行
-                            MachineFolder dstMachineFolder = null;
-                            if (machineRobot.MachineId != null && machineRobot.MachineId != 0)
-                            {
-                                dstMachineFolder = FindDstMachine(_this,
-                                    srcDrive, srcFolder,
-                                    dstDrive, newFolder, machineRobot.MachineId, msg);
-                                machineRobot.MachineId = dstMachineFolder?.Id;
-
-                                // 見つからず、machineRobot.MachineId == null でもコピー処理を続行
-                            }
-
-                            //machineRobot.MachineName = machine?.Name;
-                            machineRobot.MachineName = null;
-
-                            if (machineRobot.SessionId != null && machineRobot.SessionId != 0)
-                            {
-                                machineRobot.SessionId = FindDstSession(_this,
-                                    srcDrive, srcFolder,
-                                    dstDrive, newFolder, machineRobot.SessionId, msg)?.SessionId;
-                            }
-                        }
-                    }
-                    if (robotId.HasValue)
-                    {
-                        postingTrigger.ExecutorRobots = new RobotExecutor[1];
-                        postingTrigger.ExecutorRobots[0] = new RobotExecutor()
-                        {
-                            Id = robotId
-                        };
-                    }
+                    // MachineRobots を移行
+                    postingTrigger.MachineRobots = MigrateMachineRobots(_this, msg,
+                        srcDrive, srcFolder,
+                        dstDrive, newFolder,
+                        postingTrigger.MachineRobots);
 
                     // カレンダー Id を移行
                     postingTrigger.CalendarId = FindDstCalendar(_this, srcDrive, dstDrive,
@@ -1805,6 +1896,13 @@ namespace UiPath.PowerShell.Core
                     {
                         postingTrigger.EnvironmentId = null;
                         postingTrigger.StartStrategy = 1;// StartStrategy って何だろう。。
+                    }
+
+                    if (postingTrigger.StopProcessDate < DateTime.Now)
+                    {
+                        _this.WriteWarning($"{msg}: The StopProcessDate is in the past ({postingTrigger.StopProcessDate.Value.ToLocalTime}). Remove it before copying.");
+                        postingTrigger.StopProcessDate = null;
+                        postingTrigger.Enabled = false;
                     }
 
                     try
@@ -1853,7 +1951,7 @@ namespace UiPath.PowerShell.Core
             target = newFolder.GetPSPath();
 
             int index = 0;
-            foreach (var trigger in srcTriggers)
+            foreach (var trigger in srcTriggers.OrderBy(t => t.Name))
             {
                 cancelToken.ThrowIfCancellationRequested();
 
@@ -1878,42 +1976,11 @@ namespace UiPath.PowerShell.Core
                     postingTrigger!.ReleaseKey = dstRelease?.Key;
                     if (postingTrigger!.ReleaseKey == null) continue;
 
-                    if (postingTrigger.MachineRobots != null)
-                    {
-                        foreach (var machineRobot in postingTrigger.MachineRobots)
-                        {
-                            // RobotId を移行
-                            RobotsFromFolderModel dstRobot = null;
-                            if (machineRobot.RobotId != null && machineRobot.RobotId != 0)
-                            {
-                                dstRobot = FindDstRobot(_this,
-                                    srcDrive,
-                                    dstDrive, newFolder, machineRobot.RobotId, msg);
-                                machineRobot.RobotId = dstRobot?.Id;
-                            }
-
-                            machineRobot.RobotUserName = null;
-
-                            // MachineId を移行
-                            MachineFolder dstMachineFolder = null;
-                            if (machineRobot.MachineId != null && machineRobot.MachineId != 0)
-                            {
-                                dstMachineFolder = FindDstMachine(_this,
-                                    srcDrive, srcFolder,
-                                    dstDrive, newFolder, machineRobot.MachineId, msg);
-                                machineRobot.MachineId = dstMachineFolder?.Id;
-                            }
-
-                            machineRobot.MachineName = null;
-
-                            if (machineRobot.SessionId != null && machineRobot.SessionId != 0)
-                            {
-                                machineRobot.SessionId = FindDstSession(_this,
-                                    srcDrive, srcFolder,
-                                    dstDrive, newFolder, machineRobot.SessionId, msg)?.SessionId;
-                            }
-                        }
-                    }
+                    // MachineRobots を移行
+                    postingTrigger.MachineRobots = MigrateMachineRobots(_this, msg,
+                        srcDrive, srcFolder,
+                        dstDrive, newFolder,
+                        postingTrigger.MachineRobots);
 
                     try
                     {
@@ -2029,7 +2096,7 @@ namespace UiPath.PowerShell.Core
             target = newFolder.GetPSPath();
 
             int index = 0;
-            foreach (var bucket in srcBuckets)
+            foreach (var bucket in srcBuckets.OrderBy(b => b.Name))
             {
                 cancelToken.ThrowIfCancellationRequested();
 
@@ -2139,7 +2206,7 @@ namespace UiPath.PowerShell.Core
                 reporter.TotalNum = srcTestSets.Count;
 
                 int index = 0;
-                foreach (var ts in srcTestSets)
+                foreach (var ts in srcTestSets.OrderBy(t => t.Name))
                 {
                     cancelToken.ThrowIfCancellationRequested();
 
@@ -2305,7 +2372,7 @@ namespace UiPath.PowerShell.Core
             reporter.TotalNum = srcTestSetSchedules.Count;
 
             int index = 0;
-            foreach (var testSetSchedule in srcTestSetSchedules)
+            foreach (var testSetSchedule in srcTestSetSchedules.OrderBy(t => t.Name))
             {
                 cancelToken.ThrowIfCancellationRequested();
 
@@ -2372,7 +2439,9 @@ namespace UiPath.PowerShell.Core
             reporter.TotalNum = srcTestDataQueues.Count;
 
             int index = 0;
-            foreach (var testDataQueue in srcTestDataQueues.Where(e => !e.IsDeleted.GetValueOrDefault()))
+            foreach (var testDataQueue in srcTestDataQueues
+                .Where(e => !e.IsDeleted.GetValueOrDefault())
+                .OrderBy(q => q.Name))
             {
                 cancelToken.ThrowIfCancellationRequested();
 
@@ -2432,7 +2501,7 @@ namespace UiPath.PowerShell.Core
             reporter.TotalNum = srcTaskCatalogs.Count;
 
             int index = 0;
-            foreach (var srcTaskCatalog in srcTaskCatalogs)
+            foreach (var srcTaskCatalog in srcTaskCatalogs.OrderBy(t => t.Name))
             {
                 cancelToken.ThrowIfCancellationRequested();
 
@@ -2563,7 +2632,7 @@ namespace UiPath.PowerShell.Core
                 // totalNum: folder itself, users, machines, packages, processes, assets, 
                 // queues, triggers, API triggers, buckets, testsets, testschedules, testdataqueues
                 int totalStageNum = 12;
-                if (srcFolder.FolderType == "Perasonal") totalStageNum = 9;
+                if (srcFolder.FolderType == "Personal") totalStageNum = 9;
                 // Apps はコピーできるんだっけ？
 
                 try
