@@ -1,6 +1,6 @@
 ﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
-Module Name: UiPathOrch
+Module Name: uiPathOrch
 online version:
 schema: 2.0.0
 ---
@@ -15,7 +15,7 @@ schema: 2.0.0
 ```
 Get-OrchLog [-Last <String>] [-TimeStampAfter <DateTime>] [-TimeStampBefore <DateTime>] [[-Level] <String>]
  [-Machine <String>] [-ProcessName <String>] [-WindowsIdentity <String[]>] [-Skip <UInt64>] [-First <UInt64>]
- [-OrderBy <String>] [-OrderAscending] [-Path <String[]>] [-Recurse] [-Depth <UInt32>]
+ [-JobKey <String>] [-OrderBy <String>] [-OrderAscending] [-Path <String[]>] [-Recurse] [-Depth <UInt32>]
  [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
@@ -258,6 +258,21 @@ Accept wildcard characters: False
 Type: String
 Parameter Sets: (All)
 Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -JobKey
+{{ Fill JobKey Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases: Key
 
 Required: False
 Position: Named

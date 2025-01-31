@@ -165,6 +165,12 @@ namespace UiPath.PowerShell.Commands
             }
         }
 
+        //private class StopJobOutput(string? path, long? id)
+        //{
+        //    public string? Path { get; set; } = path;
+        //    public long? Id { get; set; } = id;
+        //}
+
         protected override void EndProcessing()
         {
             string action = Force ? "Kill Job " : "Stop Job ";
@@ -186,6 +192,7 @@ namespace UiPath.PowerShell.Commands
                     try
                     {
                         drive!.OrchAPISession.StopJobs(group.Key!.Id ?? 0, jobsToStop, Force);
+                        //WriteObject(jobsToStop.Select(id => new StopJobOutput(folder?.GetPSPath(), id)), true);
                         drive._dicJobs?.TryRemove(folder!.Id ?? 0, out var _);
                     }
                     catch (OperationCanceledException)

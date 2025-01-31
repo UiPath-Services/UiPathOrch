@@ -59,6 +59,11 @@ namespace UiPath.PowerShell.Commands
         public ulong? First { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(JobKeyCompleter))]
+        [Alias("Key")]
+        public string? JobKey { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
         [ArgumentCompleter(typeof(StaticTextsCompleter<LogOrderableItems>))]
         public string? OrderBy { get; set; }
 
@@ -171,7 +176,41 @@ namespace UiPath.PowerShell.Commands
             }
         }
 
-        private string? MakeFilter(OrchDriveInfo drive, Folder folder, string? jobKey = null)
+        private class JobKeyCompleter : OrchArgumentCompleter
+        {
+            public override IEnumerable<CompletionResult> CompleteArgument(
+                string commandName,
+                string parameterName,
+                string wordToComplete,
+                CommandAst commandAst,
+                IDictionary fakeBoundParameters)
+            {
+                var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+                // パラメータで選択済みの Machine は、候補から除外する
+                var wpJobKey = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+                var wp = CreateWPFromWordToComplete(wordToComplete);
+
+                // API call はしないので、スレッドを起こす必要はない
+
+                foreach (var (drive, folder) in drivesFolders)
+                {
+                    if (drive._dicJobs?.TryGetValue(folder.Id!.Value, out var jobs) ?? false)
+                    {
+                        foreach (var job in jobs.Values
+                            .Where(l => wp.IsMatch(l.Key))
+                            .OrderBy(l => l.Key))
+                        {
+                            string tiphelp = System.IO.Path.Combine(folder.GetPSPath(), job.Id?.ToString() ?? "") + $" ({job.ReleaseName} {job.CreationTime})";
+                            yield return new CompletionResult(PathTools.EscapePSText(job.Key), job.Key, CompletionResultType.ParameterValue, tiphelp);
+                        }
+                    }
+                }
+            }
+        }
+
+        private string? MakeFilter(OrchDriveInfo drive, Folder folder)
         {
             List<string> filter = [];
 
@@ -189,9 +228,9 @@ namespace UiPath.PowerShell.Commands
             #endregion
 
             #region JobKey
-            if (jobKey != null)
+            if (!string.IsNullOrEmpty(JobKey))
             {
-                filter.Add($"(JobKey eq {jobKey})");
+                filter.Add($"(JobKey eq {JobKey})");
             }
             #endregion
 
@@ -283,6 +322,7 @@ namespace UiPath.PowerShell.Commands
                 Machine == null &&
                 ProcessName == null &&
                 WindowsIdentity == null &&
+                JobKey == null &&
                 Skip == null && First == null);
 
             var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
@@ -324,6 +364,7 @@ namespace UiPath.PowerShell.Commands
                 cancelHandler.Token.ThrowIfCancellationRequested();
 
                 reporter.WriteProgress(++index, $"{index:D}/{drivesFolders.Count} {folder.GetPSPath()}");
+
                 string query = MakeFilter(drive, folder);
                 if (query == "null") continue;
 
