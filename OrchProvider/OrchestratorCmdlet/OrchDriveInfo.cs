@@ -557,10 +557,8 @@ namespace UiPath.PowerShell.Core
 
             _dicJobsHavingExecutionMedia = null;
 
-            _dicLibraries = null;
-            _dicLibraries_Exceptions?.ClearCache();
-
             _dicLibraryVersions = null; // 例外が発生するとしたら、_dicLibraries 取得時に発生しているはずだから、まあいいか。。
+            _dicLibraryVersionsInHostFeed = null;
 
             _dicLicenseNamedUser = null; // TODO: 例外キャッシュを追加
 
@@ -1484,35 +1482,7 @@ namespace UiPath.PowerShell.Core
         }
         #endregion
 
-        #region OrchLibrary cache
-        // no need to be multi-threaded
-        // Key: Id
-        internal List<Library>? _dicLibraries = null;
-        internal readonly ExceptionCachePerTenant _dicLibraries_Exceptions = new();
-        public ReadOnlyCollection<Library> GetLibraries()
-        {
-            _dicLibraries_Exceptions.ThrowCachedExceptionIfAny();
-
-            if (_dicLibraries == null)
-            {
-                try
-                {
-                    _dicLibraries = OrchAPISession.GetLibraries().ToList();
-                    string driveName = NameColonSeparator;
-                    foreach (var library in _dicLibraries)
-                    {
-                        library.Path = driveName;
-                    }
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicLibraries_Exceptions.CacheException(ex);
-                    throw;
-                }
-            }
-            return _dicLibraries.AsReadOnly();
-        }
-
+        #region OrchLibraryVersion cache
         // key: Id
         internal ConcurrentDictionary<string, List<LibraryVersion>>? _dicLibraryVersions = null;
         public ReadOnlyCollection<LibraryVersion> GetLibraryVersions(string libraryId)
@@ -1536,8 +1506,37 @@ namespace UiPath.PowerShell.Core
                     //library.Name = $"{library.Id}.{library.Version}.nupkg";
                     library.Path = path;
                 }
-                _dicLibraryVersions ??= new();
                 _dicLibraryVersions[libraryId] = libraryVersions;
+            }
+            return libraryVersions.AsReadOnly();
+        }
+        #endregion
+
+        #region OrchLibraryVersion cache
+        // key: Id
+        internal ConcurrentDictionary<string, List<LibraryVersion>>? _dicLibraryVersionsInHostFeed = null;
+        public ReadOnlyCollection<LibraryVersion> GetLibraryVersionsInHostFeed(string libraryId)
+        {
+            if (_dicLibraryVersionsInHostFeed == null)
+            {
+                lock (this)
+                {
+                    _dicLibraryVersionsInHostFeed ??= new();
+                }
+            }
+
+            if (!_dicLibraryVersionsInHostFeed.TryGetValue(libraryId, out List<LibraryVersion> libraryVersions))
+            {
+                libraryVersions = OrchAPISession.GetLibraryVersions(libraryId, LibraryHostFeedId)
+                    .OrderBy(v => v.Version!, VersionComparer.Instance)
+                    .ToList();
+                string path = NameColonSeparator;
+                foreach (var library in libraryVersions)
+                {
+                    //library.Name = $"{library.Id}.{library.Version}.nupkg";
+                    library.Path = path;
+                }
+                _dicLibraryVersionsInHostFeed[libraryId] = libraryVersions;
             }
             return libraryVersions.AsReadOnly();
         }
@@ -2458,6 +2457,19 @@ namespace UiPath.PowerShell.Core
         }
         #endregion
 
+        private string? _libraryHostFeedId;
+        internal string? LibraryHostFeedId
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_libraryHostFeedId))
+                {
+                    _libraryHostFeedId = LibraryFeeds.Get()?.FirstOrDefault(lf => lf.isShared)?.id;
+                }
+                return _libraryHostFeedId;
+            }
+        }
+
         // これらはドライブごとに保持する必要があるため、 Cache クラスの static メンバにはできない
         internal readonly List<ITenantCacheClearable> _allTenantCache = [];
         internal readonly List<IFolderCacheClearable> _allFolderCache = [];
@@ -2474,11 +2486,14 @@ namespace UiPath.PowerShell.Core
         public readonly SingleCachePerTenant<ODataValueOfString> ConnectionString;
         public readonly SingleCachePerTenant<UpdateSettings> UpdateSettings;
         public readonly SingleCachePerTenant<License> LicenseSettings;
+        public readonly SingleCachePerTenant<LibraryFeed[]> LibraryFeeds;
 
         public readonly ListCachePerTenant<ResponseDictionaryItem> AuthenticationSettings;
         public readonly ListCachePerTenant<CredentialStore> CredentialStores;
         public readonly ListCachePerTenant<Robot> Robots;
         public readonly ListCachePerTenant<Role> Roles;
+        public readonly ListCachePerTenant<Library> LibrariesInTenant;
+        public readonly ListCachePerTenant<Library> LibrariesInHost;
         public readonly ListCachePerTenant<ExtendedMachine> Machines;
         public readonly ListCachePerTenant<ExtendedRobot> AllRobotsAcrossFolders;
         public readonly ListCachePerTenant<MachineSessionRuntime> MachineSessionRuntimes;
@@ -2546,9 +2561,14 @@ namespace UiPath.PowerShell.Core
             AllRobotsAcrossFolders = new(this, OrchAPISession.FindAllRobotsAcrossFolders, e => e.Path = NameColonSeparator);
             PersonalWorkspaces     = new(this, OrchAPISession.GetPersonalWorkspaces,      e => e.Path = NameColonSeparator);
             Roles                  = new(this, OrchAPISession.GetRoles,                   e => e.Path = NameColonSeparator);
+
+            LibrariesInTenant      = new(this, () => OrchAPISession.GetLibraries(null),   e => e.Path = NameColonSeparator);
+            LibrariesInHost        = new(this, () => OrchAPISession.GetLibraries(LibraryHostFeedId), e => e.Path = NameColonSeparator);
+
             Settings               = new(this, OrchAPISession.GetSettings,                e => e.Path = NameColonSeparator);
             UpdateSettings         = new(this, OrchAPISession.GetUpdateSettings,          e => e.Path = NameColonSeparator);
             Webhooks               = new(this, OrchAPISession.GetWebhooks,                e => e.Path = NameColonSeparator);
+            LibraryFeeds           = new(this, OrchAPISession.GetLibraryFeeds, null);
 
             Robots = new(this, () =>
                 {

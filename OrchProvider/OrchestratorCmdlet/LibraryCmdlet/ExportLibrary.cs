@@ -12,104 +12,24 @@ namespace UiPath.PowerShell.Commands
     {
         [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
-        [ArgumentCompleter(typeof(IdCompleter))]
+        [ArgumentCompleter(typeof(LibraryIdCompleter<TPositional>))]
         public string[]? Id { get; set; }
 
         [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
-        [ArgumentCompleter(typeof(VersionCompleter))]
+        [ArgumentCompleter(typeof(LibraryVersionCompleter<TPositional>))]
         public string[]? Version { get; set; }
 
         [Parameter(Position = 2, ValueFromPipelineByPropertyName = true)]
         public string? Destination { get; set; }
 
+        //[Parameter]
+        //public SwitchParameter HostFeed { get; set; }
+
         [Parameter(ValueFromPipelineByPropertyName = true)]
         [SupportsWildcards]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Id_Version_Destination>))]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
-
-        private class IdCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var drives = ResolveDrives(fakeBoundParameters);
-
-                // パラメータで選択済みの Id は、候補から除外する
-                var wpId = CreateWPListFromParameter(commandAst, "Id", TPositional.Parameters, wordToComplete);
-
-                // パラメータで選択された Version のみ対象とする
-                var wpVersion = CreateWPListFromOtherParameters(commandAst, "Version", TPositional.Parameters);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                var results = ParallelResults.ForEach(drives, drive => drive.GetLibraries());
-
-                foreach (var result in results)
-                {
-                    if (!result.TryGetValue(out var entities)) continue;
-
-                    foreach (var library in entities!
-                        .Where(l => wp.IsMatch(l.Id))
-                        .ExcludeByWildcards(l => l?.Id, wpId)
-                        .FilterByWildcards(l => l?.Version, wpVersion))
-                    {
-                        string tiphelp = TipHelp(library);
-                        yield return new CompletionResult(PathTools.EscapePSText(library.Id), library.Id, CompletionResultType.ParameterValue, tiphelp);
-                    }
-                }
-            }
-        }
-
-        private class VersionCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var drives = ResolveDrives(fakeBoundParameters);
-
-                // パラメータで選択された Id のみ対象とする
-                var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
-
-                // パラメータで選択済みの Version は、候補から除外する
-                var wpVersion = CreateWPListFromParameter(commandAst, "Version", TPositional.Parameters, wordToComplete);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                var results = ParallelResults.ForEach(drives, drive =>
-                {
-                    var libraries = drive.GetLibraries().FilterByWildcards(l => l?.Id, wpId);
-                    return ParallelResults.ForEach(libraries, library =>
-                        drive.GetLibraryVersions(library.Id!));
-                });
-
-                foreach (var result in results)
-                {
-                    if (!result.TryGetValue(out var entities)) continue;
-
-                    foreach (var library in entities!)
-                    {
-                        if (!library.TryGetValue(out var versions)) continue;
-
-                        foreach (var version in versions!
-                            .Where(v => wp.IsMatch(v.Version))
-                            .ExcludeByWildcards(v => v?.Version, wpVersion))
-                            //.OrderBy(v => v.Version!, VersionComparer.Instance))
-                        {
-                            yield return new CompletionResult(PathTools.EscapePSText(version.Version));
-                        }
-                    }
-                }
-            }
-        }
 
         protected override void ProcessRecord()
         {
@@ -201,7 +121,8 @@ namespace UiPath.PowerShell.Commands
             using var results = OrchThreadPool.RunForEach(drives,
                 drive => drive.NameColonSeparator,
                 drive => drive,
-                drive => drive.GetLibraries());
+                //drive => HostFeed ? drive.LibrariesInHost.Get() : drive.LibrariesInTenant.Get());
+                drive => drive.LibrariesInTenant.Get());
 
             using var reporter = new ProgressReporter(this, 1, 100, "Export Library", "Export Library");
             using var cancelHandler = new ConsoleCancelHandler();
@@ -218,6 +139,7 @@ namespace UiPath.PowerShell.Commands
                     {
                         try
                         {
+                            //var versions = (HostFeed ? drive.GetLibraryVersionsInHostFeed(library.Id!) : drive.GetLibraryVersions(library.Id!))
                             var versions = drive.GetLibraryVersions(library.Id!)
                                 .FilterByWildcards(l => l?.Version, wpVersion)
                                 //.OrderBy(l => l.Version!, VersionComparer.Instance)

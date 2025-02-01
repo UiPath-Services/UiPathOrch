@@ -82,7 +82,7 @@ namespace UiPath.PowerShell.Core
 
         private IEnumerable<(ReadOnlyCollection<LibraryVersion>? versions, ErrorRecord? error)> GetLibraryVersions()
         {
-            var libraries = LibraryDriveInfo.ParentDrive.GetLibraries().OrderBy(l => l.Id);
+            var libraries = LibraryDriveInfo.ParentDrive.LibrariesInTenant.Get().OrderBy(l => l.Id);
             yield break;
             //using var resultTracker = new ThreadResultsTracker<LibraryVersion>(libraries.Count());
 

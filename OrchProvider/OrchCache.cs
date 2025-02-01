@@ -12,6 +12,13 @@ namespace UiPath.PowerShell.Core
         void ClearCache();
     }
 
+    // IndexedListCachePerTenant で使う予定なのだけど、頑張って実装しなくてもいい気がしてきたな。。
+    //public interface IIndexedTenantCacheClearable<TIndex>
+    //{
+    //    void ClearCache();
+    //    void ClearCache(TIndex index);
+    //}
+
     public interface IFolderCacheClearable
     {
         void ClearCache();
@@ -124,6 +131,112 @@ namespace UiPath.PowerShell.Core
             _exception.ClearCache();
         }
     }
+
+    // 今のところ、インデックスとして string のみをサポート
+    // 今のところ、これを使用しているのは LibraryVersion のみ
+    // IndexedListCachePerTenant<Library, LibraryVersion> として使う
+    // 実装中。。
+    //public class IndexedListCachePerTenant<TIndexEntity, TEntity> : IIndexedTenantCacheClearable<string> where TIndexEntity : notnull
+    //{
+    //    private readonly OrchDriveInfo _drive;
+
+    //    // key: TIndexEntity.Id
+    //    private ConcurrentDictionary<string, List<TEntity>>? _cache = null;
+    //    private readonly ConcurrentDictionary<string, ExceptionCachePerTenant> _exceptions = new();
+    //    private readonly Func<string, IEnumerable<TEntity>> _fetchFunc; // index を渡すと TEntity の列挙が返る
+    //    private readonly Func<TIndexEntity, string> _getIdFunc;
+    //    private readonly Func<TIndexEntity, string> _getNameFunc;
+    //    private readonly Action<TEntity, string, string>? _initializer; // 名前, ドライブ名\名前
+    //    private readonly int? _supportedApiVersionFrom;
+
+    //    public IndexedListCachePerTenant(
+    //        OrchDriveInfo drive,
+    //        Func<string, IEnumerable<TEntity>> fetchFunc,
+    //        Func<TIndexEntity, string> getIdFunc,
+    //        Func<TIndexEntity, string> getNameFunc,
+    //        Action<TEntity, string, string>? initializer,
+    //        int? supportedApiVersionFrom = null)
+    //    {
+    //        _drive = drive;
+    //        _drive._allTenantCache.Add(this);
+    //        _fetchFunc = fetchFunc;
+    //        _getIdFunc = getIdFunc;
+    //        _getNameFunc = getNameFunc;
+    //        _initializer = initializer;
+    //        _supportedApiVersionFrom = supportedApiVersionFrom;
+    //    }
+
+    //    public ICollection<TEntity> Get(TIndexEntity indexEntity)
+    //    {
+    //        if (_drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom)
+    //        {
+    //            return [];
+    //        }
+
+    //        string index = _getIdFunc(indexEntity);
+
+    //        if (_exceptions.TryGetValue(index, out var ex))
+    //        {
+    //            ex.ThrowCachedExceptionIfAny();
+    //        }
+
+    //        if (_cache == null)
+    //        {
+    //            lock (this)
+    //            {
+    //                if (_cache == null)
+    //                {
+    //                    _cache = [];
+    //                }
+    //            }
+    //        }
+    //        if (!_cache.TryGetValue(index, out var entities))
+    //        {
+    //            try
+    //            {
+    //                entities = _fetchFunc(index).ToList();
+    //                _cache[index] = entities;
+
+    //                if (_initializer != null)
+    //                {
+    //                    string indexName = _getNameFunc(indexEntity);
+    //                    string path = _drive.NameColonSeparator;
+    //                    foreach (var entity in entities)
+    //                    {
+    //                        _initializer(entity, path, indexName);
+    //                    }
+    //                }
+    //            }
+    //            catch (HttpResponseException ex)
+    //            {
+    //                _exceptions.CacheException(ex);
+    //                throw;
+    //            }
+    //        }
+
+    //        return entities;
+    //    }
+
+    //    public void ClearCache()
+    //    {
+    //        _cache = null;
+    //        foreach (var e in _exceptions.Values)
+    //        {
+    //            e.ClearCache();
+    //        }
+    //    }
+
+    //    public void ClearCache(string index)
+    //    {
+    //        _cache?.TryRemove(index, out _);
+    //        _exceptions.ClearCache(); // ちょっと横着な実装だけど、機能的にはこれで問題ないはず
+    //    }
+
+    //    public void ClearCache(TIndexEntity indexEntity)
+    //    {
+    //        ClearCache(_getIdFunc(indexEntity));
+    //    }
+    //}
 
     public class ListCachePerOrganization<T> : ITenantCacheClearable
     {
@@ -259,83 +372,6 @@ namespace UiPath.PowerShell.Core
             _exceptions.ClearCache();
         }
     }
-
-    //public class ListCachePer<Key, T> : ICacheClearable where Key : IEquatable<Key>
-    //{
-    //    private readonly OrchDriveInfo _drive;
-    //    private ConcurrentDictionary<Key, List<T>>? _cache = null;
-    //    private readonly ExceptionsCachePer<Key> _exceptions = new();
-    //    private readonly Func<Key, IEnumerable<T>> _getter;
-    //    //private readonly Action<T, string>? _initializer;
-    //    private readonly int? _supportedApiVersionFrom;
-
-    //    public ListCachePer(
-    //        OrchDriveInfo drive,
-    //        Func<Key, IEnumerable<T>> getter,
-    //        //Action<T, string>? initializer = null,
-    //        int? supportedApiVersionFrom = null)
-    //    {
-    //        _drive = drive;
-    //        _drive._cacheItems.Add(this);
-    //        _getter = getter;
-    //        //_initializer = initializer;
-    //        _supportedApiVersionFrom = supportedApiVersionFrom;
-    //    }
-
-    //    public List<T> Get(Key key)
-    //    {
-    //        if (_drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom)
-    //        {
-    //            return Enumerable.Empty<T>().ToList();
-    //        }
-
-    //        _exceptions.ThrowCachedExceptionIfAny(key);
-
-    //        if (_cache == null)
-    //        {
-    //            lock (this)
-    //            {
-    //                _cache ??= [];
-    //            }
-    //        }
-    //        if (!_cache.TryGetValue(key, out var cachePerFolder))
-    //        {
-    //            try
-    //            {
-    //                cachePerFolder = _getter(key).ToList();
-    //                _cache[key] = cachePerFolder;
-
-    //                //if (_initializer != null)
-    //                //{
-    //                //    string folderPath = folder.GetPSPath();
-    //                //    foreach (var entity in cachePerFolder)
-    //                //    {
-    //                //        _initializer(entity, folderPath);
-    //                //    }
-    //                //}
-    //            }
-    //            catch (HttpResponseException ex)
-    //            {
-    //                _exceptions.CacheException(key, ex);
-    //                throw;
-    //            }
-
-    //        }
-    //        return cachePerFolder;
-    //    }
-
-    //    public void ClearCache(Key key)
-    //    {
-    //        _cache?.TryRemove(key, out _);
-    //        _exceptions.ClearCache(key);
-    //    }
-
-    //    public void ClearCache()
-    //    {
-    //        _cache = null;
-    //        _exceptions.ClearCache();
-    //    }
-    //}
 
     public class ListCachePerFolder<T> : IFolderCacheClearable
     {

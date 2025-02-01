@@ -347,6 +347,24 @@ namespace UiPath.PowerShell.Entities
         public string? UserNotificationId { get; set; }
     }
 
+    public class LibraryFeed
+    {
+        public string? name { get; set; }
+        public string? purpose { get; set; }
+        public bool isShared { get; set; }
+        public bool isPublic { get; set; }
+        public bool isExternal { get; set; }
+        public string? feedUrl { get; set; }
+        public string? publishUrl { get; set; }
+        public string? authenticationType { get; set; }
+        public string? apiKey { get; set; }
+        public string? basicUserName { get; set; }
+        public string? basicPassword { get; set; }
+        public string? folderId { get; set; }
+        public string[]? supportedProjectTypes { get; set; }
+        public string? id { get; set; } // Guid
+    }
+
     // LibraryDto
     public class Library
     {

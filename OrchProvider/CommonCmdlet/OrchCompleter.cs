@@ -87,16 +87,30 @@ namespace UiPath.PowerShell.Completer
         public static bool GetSwitchParameterValue(CommandAst commandAst, string parameterName)
         {
             string[] knownSwitchParameters = {
+                "AllDrives",
+                "ExcludeEntities",
+                "ExpandAllocation",
+                "ExpandDetails",
+                "Expanded",
                 "ExpandEntity",
+                "ExpandExcludedDate",
+                "ExpandGroup",
                 "ExpandPermission",
-                "ExpandUserValue",
-                "ExportCredentialCsv",
-                "ExportCsv",
-                "ExportTemplateCsv",
+                "ExpandRobotUser",
+                "ExpandUserValues",
                 "Force",
+                "GenerateTemplateCsv",
+                "HostFeed",
                 "IncludeInherited",
-                "Reload",
+                "IncludePastDate",
+                "IsConsumed",
+                "License",
+                "NoMatchWarning",
+                "OrderAscending",
                 "Recurse",
+                "Reload",
+                "WarnOnNoMatch",
+                "Verbose",
                 "Confirm",
                 "WhatIf"
             };
@@ -1072,6 +1086,97 @@ namespace UiPath.PowerShell.Completer
                     if (!string.IsNullOrEmpty(robot.Username))
                         tiphelp += $" ({robot.Username})";
                     yield return new CompletionResult(PathTools.EscapePSText(robot.User?.FullName), robot.User?.FullName, CompletionResultType.Text, tiphelp);
+                }
+            }
+        }
+    }
+
+    internal class LibraryIdCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = ResolveDrives(fakeBoundParameters);
+            var hostFeed = GetSwitchParameterValue(commandAst, "HostFeed");
+
+            // パラメータで選択済みの Id は、候補から除外する
+            var wpId = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            // パラメータで選択された Version のみ対象とする
+            var wpVersion = CreateWPListFromOtherParameters(commandAst, "Version", TPositional.Parameters);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drives, drive => hostFeed ? drive.LibrariesInHost.Get() : drive.LibrariesInTenant.Get());
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var library in entities!
+                    .Where(l => wp.IsMatch(l.Id))
+                    .ExcludeByWildcards(l => l?.Id, wpId)
+                    .FilterByWildcards(l => l?.Version, wpVersion)
+                    .OrderBy(l => l.Id))
+                {
+                    string tiphelp = TipHelp(library);
+                    yield return new CompletionResult(PathTools.EscapePSText(library.Id), library.Id, CompletionResultType.ParameterValue, tiphelp);
+                }
+            }
+        }
+    }
+
+    internal class LibraryVersionCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = ResolveDrives(fakeBoundParameters);
+            var hostFeed = GetSwitchParameterValue(commandAst, "HostFeed");
+
+            // パラメータで選択済みの Id は、候補から除外する
+            var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
+
+            // パラメータで選択済みの Version は、候補から除外する
+            var wpVersion = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drives, drive =>
+            {
+                var libraries = hostFeed ?
+                    drive.LibrariesInHost.Get().FilterByWildcards(l => l?.Id, wpId) :
+                    drive.LibrariesInTenant.Get().FilterByWildcards(l => l?.Id, wpId);
+
+                return ParallelResults.ForEach(libraries, library => hostFeed ?
+                    drive.GetLibraryVersionsInHostFeed(library.Id!) :
+                    drive.GetLibraryVersions(library.Id!));
+            });
+
+            foreach (var result in results)
+            {
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var library in entities!)
+                {
+                    if (!library.TryGetValue(out var versions)) continue;
+
+                    foreach (var version in versions!
+                        .Where(v => wp.IsMatch(v.Version))
+                        .ExcludeByWildcards(v => v?.Version, wpVersion))
+                    //.OrderBy(v => v.Version!, VersionComparer.Instance))
+                    {
+                        string tiphelp = TipHelp(version);
+                        yield return new CompletionResult(PathTools.EscapePSText(version.Version), version.Version, CompletionResultType.ParameterValue, tiphelp);
+                    }
                 }
             }
         }
