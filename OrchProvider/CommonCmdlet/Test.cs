@@ -28,37 +28,14 @@ namespace UiPath.PowerShell.Commands
 
         protected override void ProcessRecord()
         {
-#if false
-            TestBase tb = new()
+ //           var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+            var drives = OrchDriveInfo.EnumOrchDrives(Path);
+
+            foreach (var drive in drives)
             {
-                Path = "hoge:\\",
-                Text = "I am Base."
-            };
-
-            //WriteObject(tb);
-
-            TestBase tb2 = new TestSub()
-            {
-                Path = "hoge:\\",
-                Text = "I am Sub."
-            };
-
-
-            var psObject = new PSObject(tb2);
-            psObject.TypeNames.Clear();
-            psObject.TypeNames.Add("UiPath.PowerShell.Entities.TmProjectPermission");
-            //psObject.TypeNames.Add("UiPath.PowerShell.Entities.DirectoryApplication");
-
-            WriteObject(tb2);
-
-            //var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
-            //var drives = OrchDriveInfo.EnumOrchDrives(Path);
-
-            //foreach (var drive in drives)
-            //{
-            //    drive.OrchAPISession.GetAllRolesForUser();
-            //}
-#endif
+                var feeds = drive.LibraryFeeds.Get();
+                WriteObject(feeds, true);
+            }
         }
     }
 }

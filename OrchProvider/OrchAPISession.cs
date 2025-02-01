@@ -946,6 +946,11 @@ namespace UiPath.OrchAPI
             HttpRequest(HttpMethod.Put, endPoint);
         }
 
+        public LibraryFeed[]? GetLibraryFeeds()
+        {
+            return HttpRequest<LibraryFeed[]>(HttpMethod.Get, "/api/PackageFeeds/GetLibraryFeeds");
+        }
+
         // このメソッドは、"" を返すべきではない
         // このメソッドを呼ぶ側が、必要に応じて null を "" に変換する必要がある
         // (Dictionary のキーとして使う場合など)
@@ -1235,10 +1240,10 @@ namespace UiPath.OrchAPI
 
         #region Packages
 
-        public IEnumerable<Library> GetLibraries()
+        public IEnumerable<Library> GetLibraries(string? feedId = null)
         {
             //return GetEnumerable<Library>("/odata/Libraries?$orderby=Id%20desc"); // なぜか動かない？
-            return GetEnumerable<Library>("/odata/Libraries");
+            return GetEnumerable<Library>("/odata/Libraries", null, feedId == null ? null : $"&feedId={feedId}");
         }
 
         public IEnumerable<Package> GetPackages(string? feedId = null)
@@ -1251,10 +1256,10 @@ namespace UiPath.OrchAPI
             return GetEnumerable<Package>("/odata/Processes", null, query);
         }
 
-        public IEnumerable<LibraryVersion> GetLibraryVersions(string libraryId)
+        public IEnumerable<LibraryVersion> GetLibraryVersions(string libraryId, string? feedId = null)
         {
             string endPoint = $"/odata/Libraries/UiPath.Server.Configuration.OData.GetVersions(packageId='{HttpUtility.UrlEncode(libraryId)}')";
-            return GetEnumerable<LibraryVersion>(endPoint);
+            return GetEnumerable<LibraryVersion>(endPoint, null, feedId == null ? null : $"&feedId={feedId}");
         }
 
         public IEnumerable<Package> GetPackageVersions(string? feedId, string processId)

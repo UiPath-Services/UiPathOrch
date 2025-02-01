@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -13,7 +13,8 @@ Gets the library packages.
 ## SYNTAX
 
 ```
-Get-OrchLibrary [[-Id] <String[]>] [-Path <String[]>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-OrchLibrary [[-Id] <String[]>] [-HostFeed] [-Path <String[]>] [-ProgressAction <ActionPreference>]
+ [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -73,6 +74,21 @@ Accept wildcard characters: False
 Type: ActionPreference
 Parameter Sets: (All)
 Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -HostFeed
+{{ Fill HostFeed Description }}
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
 
 Required: False
 Position: Named

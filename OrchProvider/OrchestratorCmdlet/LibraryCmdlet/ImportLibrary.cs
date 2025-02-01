@@ -76,8 +76,7 @@ namespace UiPath.PowerShell.Commands
                         {
                             result.Path = drive.NameColonSeparator;
                             WriteObject(result);
-                            drive._dicLibraries = null;
-                            drive._dicLibraryVersions = null;
+                            drive.LibrariesInTenant.ClearCache();
                         }
                     }
                     catch (Exception ex)

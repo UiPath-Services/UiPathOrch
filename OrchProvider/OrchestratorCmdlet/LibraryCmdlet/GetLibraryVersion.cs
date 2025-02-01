@@ -12,99 +12,21 @@ namespace UiPath.PowerShell.Commands
     public class GetLibraryVersionCommand : OrchestratorPSCmdlet
     {
         [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(IdCompleter))]
+        [ArgumentCompleter(typeof(LibraryIdCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Id { get; set; }
 
         [Parameter(Position = 1)]
-        [ArgumentCompleter(typeof(VersionCompleter))]
+        [ArgumentCompleter(typeof(LibraryVersionCompleter<TPositional>))]
         [SupportsWildcards]
         public string[]? Version { get; set; }
 
         [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Positional.Id_Version>))]
+        public SwitchParameter HostFeed { get; set; }
+
+        [Parameter]
+        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
         public string[]? Path { get; set; }
-
-        private class IdCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var drives = ResolveDrives(fakeBoundParameters);
-
-                // パラメータで選択済みの Id は、候補から除外する
-                var wpId = CreateWPListFromParameter(commandAst, "Id", TPositional.Parameters, wordToComplete);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                var results = ParallelResults.ForEach(drives, drive => drive.GetLibraries());
-
-                foreach (var result in results)
-                {
-                    if (!result.TryGetValue(out var entities)) continue;
-
-                    foreach (var library in entities!
-                        .Where(l => wp.IsMatch(l.Id))
-                        .ExcludeByWildcards(l => l?.Id, wpId)
-                        .OrderBy(l => l.Id))
-                    {
-                        string tiphelp = TipHelp(library);
-                        yield return new CompletionResult(PathTools.EscapePSText(library.Id), library.Id, CompletionResultType.ParameterValue, tiphelp);
-                    }
-                }
-            }
-        }
-
-        private class VersionCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var drives = ResolveDrives(fakeBoundParameters);
-
-                // パラメータで選択済みの Id は、候補から除外する
-                var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
-
-                // パラメータで選択済みの Version は、候補から除外する
-                var wpVersion = CreateWPListFromParameter(commandAst, "Version", TPositional.Parameters, wordToComplete);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                var results = ParallelResults.ForEach(drives, drive =>
-                {
-                    var libraries = drive.GetLibraries().FilterByWildcards(l => l?.Id, wpId);
-                    return ParallelResults.ForEach(libraries, library =>
-                        drive.GetLibraryVersions(library.Id!));
-                });
-
-                foreach (var result in results)
-                {
-                    if (!result.TryGetValue(out var entities)) continue;
-
-                    foreach (var library in entities!)
-                    {
-                        if (!library.TryGetValue(out var versions)) continue;
-
-                        foreach (var version in versions!
-                            .Where(v => wp.IsMatch(v.Version))
-                            .ExcludeByWildcards(v => v?.Version, wpVersion))
-                            //.OrderBy(v => v.Version!, VersionComparer.Instance))
-                        {
-                            string tiphelp = TipHelp(version);
-                            yield return new CompletionResult(PathTools.EscapePSText(version.Version), version.Version, CompletionResultType.ParameterValue, tiphelp);
-                        }
-                    }
-                }
-            }
-        }
 
         protected override void ProcessRecord()
         {
@@ -116,13 +38,22 @@ namespace UiPath.PowerShell.Commands
                 drive => drive.NameColonSeparator,
                 drive => drive,
                 drive => {
-                    var libraries = drive.GetLibraries();
-                    return OrchThreadPool.RunForEach(libraries.FilterByWildcards(l => l?.Id, wpId),
-                        lib => lib.GetPSPath(),
-                        lib => lib,
-                        lib => drive.GetLibraryVersions(lib.Id!)
-                            .FilterByWildcards(l => l?.Version, wpVersion));
-                            //.OrderBy(l => l.Version!, VersionComparer.Instance));
+                    if (HostFeed)
+                    {
+                        var librariesInHost = drive.LibrariesInHost.Get();
+                        return OrchThreadPool.RunForEach(librariesInHost.FilterByWildcards(l => l?.Id, wpId),
+                            lib => lib.GetPSPath(),
+                            lib => lib,
+                            lib => drive.GetLibraryVersionsInHostFeed(lib.Id!).FilterByWildcards(l => l?.Version, wpVersion));
+                    }
+                    else
+                    {
+                        var librariesInTenant = drive.LibrariesInTenant.Get();
+                        return OrchThreadPool.RunForEach(librariesInTenant.FilterByWildcards(l => l?.Id, wpId),
+                            lib => lib.GetPSPath(),
+                            lib => lib,
+                            lib => drive.GetLibraryVersions(lib.Id!).FilterByWildcards(l => l?.Version, wpVersion));
+                    }
                 });
 
             using var cancelHandler = new ConsoleCancelHandler();

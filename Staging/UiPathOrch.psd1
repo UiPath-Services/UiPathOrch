@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.9.3'
+ModuleVersion = '0.9.9.4'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -379,14 +379,10 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- The Get-OrchLog cmdlet now includes the -JobKey parameter, making it easier to retrieve logs for a specific job.
-  - The completer for the -JobKey parameter suggests cached job Key values as candidates.
+        ReleaseNotes = '- Added the -HostFeed switch parameter to the following cmdlets. When specified, it retrieves library packages from the host feed.
+  - Get-OrchLibrary
 
-  - The -JobKey parameter also has an alias, -Key, so you can execute this cmdlet in the following way as well:
-
-    PS Orch1:\Shared> Get-OrchJob -First 1 | Get-OrchLog
-
-    This works because the Path and Key properties of the job entity are redirected to the parameters of Get-OrchLog with the same names.
+  - Get-OrchLibraryVersion
 '
 
         # Prerelease string of this module
