@@ -29,9 +29,17 @@ Get-OrchJob [-Last <String>] [-CreationTimeAfter <DateTime>] [-CreationTimeBefor
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+In the Filter parameter set, you can specify conditions for retrieving jobs using various parameters.
 
-Primary Endpoint: GET /odata/Jobs?{filter}&$expand=Robot,Machine,Release&$orderby=CreationTime%20desc
+In the JobId parameter set, the `-Id` parameter allows you to directly specify the ID of the job to retrieve. The completion list for this `-Id` parameter only includes job IDs that have been previously retrieved and cached in memory by UiPathOrch.
+
+After retrieving multiple jobs using the first parameter set, if you want to examine a specific job in detail, you can specify its ID using the `-Id` parameter. Even if a job entity with the specified ID exists in the cache, `Get-OrchJob` will check and display the latest state of that job.
+
+Multiple values for the -Path parameter can be specified using comma-separated text that includes wildcards. Additionally, you can use autocomplete for these values by pressing [Ctrl+Space] or [Tab].
+
+When specifying the -Path, -Recurse, and -Depth parameters, place them immediately after the cmdlet name. This placement ensures that autocomplete for subsequent parameters functions correctly.
+
+Primary Endpoint: GET /odata/Jobs?{filter}&$expand=Robot,Machine,Release&$orderby=CreationTime%20desc, GET /odata/Jobs({jobId})?$expand=Robot,Machine,Release
 
 OAuth required scopes: OR.Jobs or OR.Jobs.Read
 
@@ -41,10 +49,203 @@ Required permissions: Jobs.View
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Get-OrchJob -Recurse -First 10
 ```
 
-{{ Add example description here }}
+  
+
+Retrieves the 10 most recent jobs across all folders.  
+
+### Example 2
+```powershell
+PS Orch1:\> Get-OrchJob -Recurse
+```
+
+  
+
+Retrieves cached jobs across all folders. Since this does not call the Orchestrator Web API, previously retrieved jobs can be displayed quickly. To fetch the latest information, specify any parameter.  
+
+### Example 3
+```powershell
+PS Orch1:\Shared> Get-OrchJob -Last Day
+```
+
+  
+
+Displays jobs from the past day in the current folder. The `-Last` parameter supports values like `Hour`, `Day`, `Week`, and `Month`.  
+
+### Example 4
+```powershell
+PS Orch1:\Shared> Get-OrchJob -State Pending,Suspended
+```
+
+  
+
+Displays jobs in the current folder that are in the `Pending` or `Suspended` state. To display only failed jobs, specify `Faulted` for the `-State` parameter.  
+
+### Example 5
+```powershell
+PS Orch1:\Shared> Get-OrchJob -SourceType Queue
+```
+
+  
+
+Displays jobs in the current folder that were started by a queue trigger.  
+
+### Example 6
+```powershell
+PS Orch1:\Shared> Get-OrchJob -CreationTimeAfter '2025/01/15 14:00:00' -CreationTimeBefore '2025/01/30 15:00:00'
+```
+
+  
+
+Filters jobs based on their creation time using the `-CreationTimeAfter` and `-CreationTimeBefore` parameters. Other available time-based filters include `-StartTimeAfter`, `-StartTimeBefore`, `-EndTimeAfter`, and `-EndTimeBefore`.  
+
+### Example 7
+```powershell
+PS Orch1:\Shared> Get-OrchJob | ? StopStrategy -eq Kill
+```
+
+  
+
+Displays only cached jobs that were forcefully stopped.  
+
+### Example 8
+```powershell
+PS Orch1:\Shared> Get-OrchJob | group ReleaseName -NoElement
+```
+
+  
+
+Groups cached jobs by process name. The property names can be completed using tab completion. `group` is an alias for `Group-Object`.  
+
+### Example 9
+```powershell
+PS Orch1:\Shared> Get-OrchJob | group HostMachineName -NoElement
+```
+
+  
+
+Groups cached jobs by machine name.  
+
+### Example 10
+```powershell
+PS Orch1:\Shared> Get-OrchJob | group HostMachineName,State -NoElement
+```
+
+  
+
+Groups cached jobs by machine name and job status.  
+
+### Example 11
+```powershell
+PS Orch1:\Shared> Get-OrchJob | group LocalSystemAccount,State -NoElement | Format-Table -AutoSize
+```
+
+  
+
+Groups cached jobs by the account that executed them. `Format-Table -AutoSize` is used to ensure that the output is not truncated.  
+
+### Example 12
+```powershell
+PS Orch1:\Shared> Get-OrchJob | group { $_.CreationTime.Date } -NoElement
+```
+
+  
+
+Groups cached jobs by creation date.  
+
+### Example 13
+```powershell
+PS Orch1:\Shared> Get-OrchJob | group { $_.CreationTime.ToString('yyyy/MM') } -NoElement
+```
+
+  
+
+Groups cached jobs by creation month.  
+
+### Example 14
+```powershell
+PS Orch1:\Shared> Get-OrchJob | group { $_.CreationTime.DayOfWeek } -NoElement
+```
+
+  
+
+Groups cached jobs by the day of the week they were created.  
+
+### Example 15
+```powershell
+PS Orch1:\Shared> Get-OrchJob | group { $_.CreationTime.DayOfWeek },State -NoElement
+```
+
+  
+
+Groups cached jobs by the day of the week they were created and their status.  
+
+### Example 16
+```powershell
+PS Orch1:\Shared> Get-OrchJob | ? { $_.CreationTime.DayOfWeek -eq 'Sunday' }
+```
+
+  
+
+Displays only cached jobs that were created on a Sunday.  
+
+### Example 17
+```powershell
+PS Orch1:\Shared> Get-OrchJob | ? StartTime -ne $null | group { $_.StartTime.Hour },State -NoElement
+```
+
+  
+
+Groups cached jobs by the hour they started and their status. This allows for quick analysis of when jobs were executed and their status trends.  
+
+### Example 18
+```powershell
+PS Orch1:\Shared> Get-OrchJob | group ReleaseName -NoElement | sort Count -Descending
+```
+
+  
+
+Displays grouped job information sorted by count in descending order. `sort` is an alias for `Sort-Object`.  
+
+### Example 19
+```powershell
+PS Orch1:\Shared> Get-OrchJob -State Faulted | group ReleaseName | sort Count -Descending
+```
+
+  
+
+Groups only failed jobs by process name and displays them in descending order of occurrence. This helps identify processes that fail frequently.  
+
+Note: Using the `-State` parameter queries Orchestrator, so for faster processing with cached jobs, use `| ? State -eq Faulted` instead.  
+
+### Example 20
+```powershell
+PS Orch1:\Shared> Get-OrchJob | sort { ($_.EndTime - $_.StartTime).TotalSeconds } -Descending
+```
+
+  
+
+Sorts cached jobs in descending order by execution duration.  
+
+### Example 21
+```powershell
+PS Orch1:\Shared> Get-OrchJob | select Id, ReleaseName, @{ Name='TotalSeconds'; Expression={ ($_.EndTime - $_.StartTime).TotalSeconds }} | sort TotalSeconds -Descending
+```
+
+  
+
+Sorts cached jobs in descending order by execution duration and displays the execution time.  
+
+### Example 22
+```powershell
+PS Orch1:\Shared> Get-OrchJob | % { ($_.EndTime - $_.StartTime).TotalMinutes } | Measure-Object -Average -Sum -Maximum -Minimum
+```
+
+  
+
+Displays the average, longest, and shortest execution times of cached jobs. `%` is an alias for `ForEach-Object`.
 
 ## PARAMETERS
 

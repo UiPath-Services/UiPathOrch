@@ -25,7 +25,7 @@ namespace UiPath.PowerShell.Core
                 .Replace("[", "`[")
                 .Replace("]", "`]");
 
-            if (input != ret || input.Contains(' ') || input.Contains('\\') || input.Contains('\'') || input.Contains('"')) //★★★
+            if (input != ret || input.Contains(' ') || input.Contains(',') || input.Contains(Path.DirectorySeparatorChar) || input.Contains('\'') || input.Contains('"')) //★★★
                 //ret = '\'' + ret + '\'';
                 ret = $"'{ret}'";
 

@@ -636,7 +636,7 @@ Updates users.
 Updates processes.
 
 ### [Update-OrchProcessVersion](Update-OrchProcessVersion.md)
-{{ Fill in the Synopsis }}
+Updates the version of processes.
 
 ### [Update-OrchQueue](Update-OrchQueue.md)
 Updates queues.
