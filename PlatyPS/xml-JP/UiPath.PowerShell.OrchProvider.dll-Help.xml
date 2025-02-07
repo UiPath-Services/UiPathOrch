@@ -10148,22 +10148,6 @@
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Edit-OrchConfig</maml:name>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="0" aliases="none">
-          <maml:name>Editor</maml:name>
-          <maml:description>
-            <maml:para>Default を指定すると、拡張子 .json に関連付けられた既定のエディタで開きます。Notepad を指定すると、メモ帳で開きます。</maml:para>
-          </maml:description>
-          <command:parameterValueGroup>
-            <command:parameterValue required="false" command:variableLength="false">Default</command:parameterValue>
-            <command:parameterValue required="false" command:variableLength="false">Notepad</command:parameterValue>
-          </command:parameterValueGroup>
-          <command:parameterValue required="true" variableLength="false">EditorType</command:parameterValue>
-          <dev:type>
-            <maml:name>EditorType</maml:name>
-            <maml:uri />
-          </dev:type>
-          <dev:defaultValue>None</dev:defaultValue>
-        </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
           <maml:name>ProgressAction</maml:name>
           <maml:description>
@@ -10176,21 +10160,21 @@
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>EditorType</maml:name>
+          <maml:description>
+            <maml:para>{{ Fill EditorType Description }}</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="0" aliases="none">
-        <maml:name>Editor</maml:name>
-        <maml:description>
-          <maml:para>Default を指定すると、拡張子 .json に関連付けられた既定のエディタで開きます。Notepad を指定すると、メモ帳で開きます。</maml:para>
-        </maml:description>
-        <command:parameterValue required="true" variableLength="false">EditorType</command:parameterValue>
-        <dev:type>
-          <maml:name>EditorType</maml:name>
-          <maml:uri />
-        </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
-      </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
         <maml:name>ProgressAction</maml:name>
         <maml:description>
@@ -10199,6 +10183,18 @@
         <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
         <dev:type>
           <maml:name>ActionPreference</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>EditorType</maml:name>
+        <maml:description>
+          <maml:para>{{ Fill EditorType Description }}</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
           <maml:uri />
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
@@ -18394,8 +18390,11 @@
       </maml:description>
     </command:details>
     <maml:description>
-      <maml:para>{{ Fill in the Description }}</maml:para>
-      <maml:para>主に呼び出すエンドポイント: /odata/Jobs?{filter}&amp;$expand=Robot,Machine,Release&amp;$orderby=CreationTime%20desc</maml:para>
+      <maml:para>Filter パラメーターセットでは、さまざまなパラメーターで取得するジョブの条件を指定できます。</maml:para>
+      <maml:para>JobId パラメーターセットの -Id パラメーターには、取得するジョブの Id を直接指定できます。この -Id パラメーターの補完リストに表示されるのは、いちど取得して UiPathOrch のメモリ内にキャッシュされたジョブの Id のみです。最初のパラメーターセットで複数のジョブを取得した後、詳細に確認したいジョブがあれば、その Id を -Id パラメーターに指定してください。キャッシュ内に当該の Id をもつジョブエンティティが存在する場合でも、Get-OrchJob はそのジョブの最新の状態を確認して表示します。</maml:para>
+      <maml:para>-Path パラメータには、ワイルドカードを含むテキストをカンマ区切りで複数指定できます。また、この値は [Ctrl+Space] もしくは [Tab] を押下することで自動補完入力できます。</maml:para>
+      <maml:para>-Path、-Recurse、-Depth パラメータを指定するときは、これらをコマンドレット名の直後に指定してください。これにより、後続のパラメータの自動補完が適切に動作するようになります。</maml:para>
+      <maml:para>主に呼び出すエンドポイント: /odata/Jobs?{filter}&amp;$expand=Robot,Machine,Release&amp;$orderby=CreationTime%20desc, GET /odata/Jobs({jobId})?$expand=Robot,Machine,Release</maml:para>
       <maml:para>OAuth に必要なスコープ: OR.Jobs or OR.Jobs.Read</maml:para>
       <maml:para>必要な権限: Jobs.View</maml:para>
     </maml:description>
@@ -19034,9 +19033,156 @@
     <command:examples>
       <command:example>
         <maml:title>-------------------------- Example 1 --------------------------</maml:title>
-        <dev:code>PS C:\&gt; {{ Add example code here }}</dev:code>
+        <dev:code>PS Orch1:\&gt; Get-OrchJob -Recurse -First 10</dev:code>
         <dev:remarks>
-          <maml:para>{{ Add example description here }}</maml:para>
+          <maml:para>すべてのフォルダーにおいて、直近の10個のジョブを出力します。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 2 --------------------------</maml:title>
+        <dev:code>PS Orch1:\&gt; Get-OrchJob -Recurse</dev:code>
+        <dev:remarks>
+          <maml:para>すべてのフォルダーにおいて、キャッシュ済みのジョブを出力します。Orchestrator Web API を呼び出すことなく、一度取得したジョブを高速に再出力できます。最新の情報を取得するには、任意のパラメータを指定してください。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 3 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchJob -Last Day</dev:code>
+        <dev:remarks>
+          <maml:para>現在のフォルダーの過去1日間のジョブを表示します。-Lastパラメーターの値には、Hour、Day、Week、Monthなどを補完で指定できます。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 4 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchJob -State Pending,Suspended</dev:code>
+        <dev:remarks>
+          <maml:para>現在のフォルダーで、ステートが保留中もしくは中断となっているジョブを表示します。失敗したジョブだけを表示するには、-Stateパラメータに Faulted を指定します。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 5 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchJob -SourceType Queue</dev:code>
+        <dev:remarks>
+          <maml:para>現在のフォルダーで、キュートリガーにより開始されたジョブを表示します。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 6 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchJob -CreationTimeAfter '2025/01/15 14:00:00' -CreationTimeBefore '2025/01/30 15:00:00'</dev:code>
+        <dev:remarks>
+          <maml:para>-CreationTimeAfter と -CreationTimeBefore パラメータで、ジョブの作成日時でフィルターできます。このほか、-StartTimeAfter、-StartTimeBefore、-EndTimeAfter、-EndTimeBefore などのパラメータを利用できます。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 7 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchJob | ? StopStrategy -eq Kill</dev:code>
+        <dev:remarks>
+          <maml:para>キャッシュ済みのジョブのうち、強制終了されたジョブのみを表示します。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 8 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchJob | group ReleaseName -NoElement</dev:code>
+        <dev:remarks>
+          <maml:para>キャッシュ済みのジョブを、プロセス名でグループ化します。項目名は補完入力できます。group は Group-Object の別名です。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 9 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchJob | group HostMachineName -NoElement</dev:code>
+        <dev:remarks>
+          <maml:para>キャッシュ済みのジョブを、マシン名でグループ化します。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 10 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchJob | group HostMachineName,State -NoElement</dev:code>
+        <dev:remarks>
+          <maml:para>キャッシュ済みのジョブを、マシン名とステータスでグループ化します。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 11 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchJob | group LocalSystemAccount,State -NoElement | Format-Table -AutoSize</dev:code>
+        <dev:remarks>
+          <maml:para>キャッシュ済みのジョブを、実行したアカウント名でグループ化します。Format-Table -AutoSize は、出力が見切れないようにするために指定しています。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 12 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchJob | group { $_.CreationTime.Date } -NoElement</dev:code>
+        <dev:remarks>
+          <maml:para>キャッシュ済みのジョブを、作成日でグループ化します。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 13 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchJob | group { $_.CreationTime.ToString('yyyy/MM') } -NoElement</dev:code>
+        <dev:remarks>
+          <maml:para>キャッシュ済みのジョブを、作成月でグループ化します。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 14 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchJob | group { $_.CreationTime.DayOfWeek } -NoElement</dev:code>
+        <dev:remarks>
+          <maml:para>キャッシュ済みのジョブを、作成曜日でグループ化します。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 15 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchJob | group { $_.CreationTime.DayOfWeek },State -NoElement</dev:code>
+        <dev:remarks>
+          <maml:para>キャッシュ済みのジョブを、作成曜日とステータスでグループ化します。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 16 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchJob | ? { $_.CreationTime.DayOfWeek -eq 'Sunday' }</dev:code>
+        <dev:remarks>
+          <maml:para>キャッシュ済みのジョブのうち、日曜日に作成したジョブだけを出力します。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 17 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchJob | ? StartTime -ne $null | group { $_.StartTime.Hour },State -NoElement</dev:code>
+        <dev:remarks>
+          <maml:para>キャッシュ済みのジョブを、開始した時間帯とステータスでグループ化します。ジョブがどの時間帯で実行されていたか、ステートごとに傾向を簡単に分析できます。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 18 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchJob | group ReleaseName -NoElement | sort Count -Descending</dev:code>
+        <dev:remarks>
+          <maml:para>キャッシュ済みのジョブをグループ化した内容を、数が大きい順に表示します。sort は Sort-Object の別名です。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 19 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchJob -State Faulted | group ReleaseName | sort Count -Descending</dev:code>
+        <dev:remarks>
+          <maml:para>失敗したジョブだけをプロセス名でグループ化し、数が大きい順に表示します。より頻繁に失敗しているプロセスはどれか、簡単に分析できます。-State パラメータを指定すると、Orchestrator に問い合わせることに注意してください。キャッシュしたジョブを使って高速に処理するには、-State パラメータを指定する代わりに | ? State -eq Faulted にリダイレクトします。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 20 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchJob | sort { ($_.EndTime - $_.StartTime).TotalSeconds } -Descending</dev:code>
+        <dev:remarks>
+          <maml:para>キャッシュ済みのジョブを、実行時間が長い順に並べます。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 21 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchJob | select Id, ReleaseName, @{ Name='TotalSeconds'; Expression={ ($_.EndTime - $_.StartTime).TotalSeconds }} | sort TotalSeconds -Descending</dev:code>
+        <dev:remarks>
+          <maml:para>キャッシュ済みのジョブを、実行時間が長い順に並べます。その実行時間も出力します。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 22 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchJob | % { ($_.EndTime - $_.StartTime).TotalMinutes } | Measure-Object -Average -Sum -Maximum -Minimum</dev:code>
+        <dev:remarks>
+          <maml:para>キャッシュ済みのジョブの実行時間の平均、最長、最短を出力します。% は ForEach-Object の別名です。</maml:para>
         </dev:remarks>
       </command:example>
     </command:examples>
@@ -20845,7 +20991,7 @@
         <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
           <maml:name>Name</maml:name>
           <maml:description>
-            <maml:para>{{ Fill Name Description }}</maml:para>
+            <maml:para>対象のマシンの Name を指定します。</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
           <dev:type>
@@ -20857,7 +21003,7 @@
         <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
           <maml:name>SecretId</maml:name>
           <maml:description>
-            <maml:para>{{ Fill SecretId Description }}</maml:para>
+            <maml:para>対象の SecretId を指定します。</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
           <dev:type>
@@ -20869,7 +21015,7 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>{{ Fill Path Description }}</maml:para>
+            <maml:para>ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
           <dev:type>
@@ -20896,7 +21042,7 @@
       <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
         <maml:name>Name</maml:name>
         <maml:description>
-          <maml:para>{{ Fill Name Description }}</maml:para>
+          <maml:para>対象のマシンの Name を指定します。</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
         <dev:type>
@@ -20908,7 +21054,7 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>{{ Fill Path Description }}</maml:para>
+          <maml:para>ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
         <dev:type>
@@ -20920,7 +21066,7 @@
       <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
         <maml:name>SecretId</maml:name>
         <maml:description>
-          <maml:para>{{ Fill SecretId Description }}</maml:para>
+          <maml:para>対象の SecretId を指定します。</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
         <dev:type>
@@ -26621,23 +26767,30 @@
       </command:example>
       <command:example>
         <maml:title>-------------------------- Example 6 --------------------------</maml:title>
-        <dev:code>PS C:\&gt; Get-OrchTrigger -Recurse | select Path,Id,Name</dev:code>
+        <dev:code>PS Orch1:\&gt; Get-OrchTrigger -Recurse | select Path,Id,Name</dev:code>
         <dev:remarks>
           <maml:para>指定された列のみを出力します。列名には、ワイルドカードを含むテキストをカンマ区切りで複数指定できます。列名は、[Ctrl+Space] もしくは [Ctrol+Tab] を押下して自動補完できます。</maml:para>
         </dev:remarks>
       </command:example>
       <command:example>
         <maml:title>-------------------------- Example 7 --------------------------</maml:title>
-        <dev:code>PS C:\&gt; Get-OrchTrigger -Recurse | Export-Csv c:triggers.csv</dev:code>
+        <dev:code>PS Orch1:\&gt; Get-OrchTrigger -Recurse | Export-Csv c:triggers.csv</dev:code>
         <dev:remarks>
           <maml:para>出力を CSV ファイルにエキスポートします。CSV ファイルは、C: ドライブの現在のフォルダーに出力されます。`select` と組み合わせると、CSV の書式を自由にカスタマイズできます。C: ドライブの現在のフォルダーを開くには、`ii c:' と入力します。</maml:para>
         </dev:remarks>
       </command:example>
       <command:example>
         <maml:title>-------------------------- Example 8 --------------------------</maml:title>
-        <dev:code>PS C:\&gt; Get-OrchTrigger -Recurse | ConvertTo-Json</dev:code>
+        <dev:code>PS Orch1:\&gt; Get-OrchTrigger -Recurse | ConvertTo-Json</dev:code>
         <dev:remarks>
           <maml:para>出力を JSON 形式に変換します。Orchestrator が出力した生の結果を確認できます。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 9 --------------------------</maml:title>
+        <dev:code>PS C:\&gt;Get-OrchTrigger -Path Orch1:\ -Recurse | Where-Object { $_.ReleaseName -eq 'Process01' }</dev:code>
+        <dev:remarks>
+          <maml:para>Orch1: テナントにおいて、Process01 という名前のパッケージを使っているプロセスをすべて出力します。</maml:para>
         </dev:remarks>
       </command:example>
     </command:examples>
@@ -46558,10 +46711,12 @@
       </maml:description>
     </command:details>
     <maml:description>
-      <maml:para>{{ Fill in the Description }}</maml:para>
-      <maml:para>主に呼び出すエンドポイント:</maml:para>
-      <maml:para>OAuth に必要なスコープ:</maml:para>
-      <maml:para>必要な権限:</maml:para>
+      <maml:para>指定したプロセスが参照するプロセスパッケージを、指定のバージョンに更新します。バージョンを指定しない場合には、最新バージョンに更新します。</maml:para>
+      <maml:para>-Path と -Id パラメータには、ワイルドカードを含むテキストをカンマ区切りで複数指定できます。また、これらの値は [Ctrl+Space] もしくは [Tab] を押下することで自動補完入力できます。</maml:para>
+      <maml:para>-Path、-Recurse、-Depth パラメータを指定するときは、これらをコマンドレット名の直後に指定してください。これにより、後続のパラメータの自動補完が適切に動作するようになります。</maml:para>
+      <maml:para>主に呼び出すエンドポイント: POST /odata/Releases({processId})/UiPath.Server.Configuration.OData.UpdateToLatestPackageVersion?mergePackageTags=false</maml:para>
+      <maml:para>OAuth に必要なスコープ: OR.Execution</maml:para>
+      <maml:para>必要な権限: Processes.Edit</maml:para>
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
@@ -46581,7 +46736,7 @@
         <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
           <maml:name>Version</maml:name>
           <maml:description>
-            <maml:para>{{ Fill Version Description }}</maml:para>
+            <maml:para>プロセスをどのバージョンに更新するかを指定します。省略すると、最新バージョンに更新されます。</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -46665,7 +46820,7 @@
         <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
           <maml:name>Version</maml:name>
           <maml:description>
-            <maml:para>{{ Fill Version Description }}</maml:para>
+            <maml:para>プロセスをどのバージョンに更新するかを指定します。省略すると、最新バージョンに更新されます。</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -46821,7 +46976,7 @@
       <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="1" aliases="none">
         <maml:name>Version</maml:name>
         <maml:description>
-          <maml:para>{{ Fill Version Description }}</maml:para>
+          <maml:para>プロセスをどのバージョンに更新するかを指定します。省略すると、最新バージョンに更新されます。</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -46895,9 +47050,30 @@
     <command:examples>
       <command:example>
         <maml:title>-------------------------- Example 1 --------------------------</maml:title>
-        <dev:code>PS C:\&gt; {{ Add example code here }}</dev:code>
+        <dev:code>PS C:\&gt; Update-OrchProcessVersion -Path Orch1:\ -Recurse * -WhatIf</dev:code>
         <dev:remarks>
-          <maml:para>{{ Add example description here }}</maml:para>
+          <maml:para>Orch1: テナントにある、最新になっていないプロセスのバージョンをすべて最新にします。問題ないことを確認したら、-WhatIf を外して再実行してください。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 2 --------------------------</maml:title>
+        <dev:code>PS C:\&gt; Update-OrchProcessVersion -Path Orch1:\Shared MyProcess</dev:code>
+        <dev:remarks>
+          <maml:para>Orch1:\Shared フォルダにある MyProcess プロセスのパッケージバージョンを最新にします。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 3 --------------------------</maml:title>
+        <dev:code>PS C:\&gt; Update-OrchProcessVersion -Path Orch1:\Shared MyProcess 1.0.3</dev:code>
+        <dev:remarks>
+          <maml:para>Orch1:\Shared フォルダにある MyProcess プロセスのパッケージバージョンを 1.0.3 にします。</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 4 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Update-OrchProcessVersion -Path Orch1:\Shared MyProcess</dev:code>
+        <dev:remarks>
+          <maml:para>カレントフォルダの MyProcess プロセスのパッケージバージョンを最新にします。</maml:para>
         </dev:remarks>
       </command:example>
     </command:examples>

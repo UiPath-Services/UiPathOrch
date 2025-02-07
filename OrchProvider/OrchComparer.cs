@@ -1,7 +1,25 @@
 ﻿using System.Text.RegularExpressions;
+using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Core
 {
+    internal class FolderComparer : IComparer<Folder?>
+    {
+        public int Compare(Folder? x, Folder? y)
+        {
+            if (x == null && y == null) return 0;
+            if (x == null) return -1;
+            if (y == null) return 1;
+
+            // OrchDirectory に対して比較
+            int orchDirectoryComparison = string.Compare(x.Path, y.Path, StringComparison.OrdinalIgnoreCase);
+            if (orchDirectoryComparison != 0) return orchDirectoryComparison;
+
+            // OrchDirectory が等しい場合、DisplayName に対して比較
+            return string.Compare(x.DisplayName, y.DisplayName, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
     // usage: new EntityComparer<Package, string>(p => p.Id)
     public class EntityComparer<T, TKey> : IComparer<T> where TKey : IComparable<TKey>
     {

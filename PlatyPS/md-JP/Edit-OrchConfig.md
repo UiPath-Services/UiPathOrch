@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -13,7 +13,7 @@ UiPathOrch の設定ファイルを、テキストエディタで開きます。
 ## SYNTAX
 
 ```
-Edit-OrchConfig [[-Editor] <EditorType>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Edit-OrchConfig [-EditorType <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -36,22 +36,6 @@ PS C:\> {{ Add example code here }}
 
 ## PARAMETERS
 
-### -Editor
-Default を指定すると、拡張子 .json に関連付けられた既定のエディタで開きます。Notepad を指定すると、メモ帳で開きます。
-
-```yaml
-Type: EditorType
-Parameter Sets: (All)
-Aliases:
-Accepted values: Default, Notepad
-
-Required: False
-Position: 0
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -ProgressAction
 {{ Fill ProgressAction Description }}
 
@@ -59,6 +43,21 @@ Accept wildcard characters: False
 Type: ActionPreference
 Parameter Sets: (All)
 Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -EditorType
+{{ Fill EditorType Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
 
 Required: False
 Position: Named

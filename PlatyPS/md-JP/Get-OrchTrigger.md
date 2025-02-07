@@ -69,24 +69,31 @@ Orch1: と Orch2: に含まれるトリガーをすべて表示します。
 
 ### Example 6
 ```powershell
-PS C:\> Get-OrchTrigger -Recurse | select Path,Id,Name
+PS Orch1:\> Get-OrchTrigger -Recurse | select Path,Id,Name
 ```
 
 指定された列のみを出力します。列名には、ワイルドカードを含むテキストをカンマ区切りで複数指定できます。列名は、[Ctrl+Space] もしくは [Ctrol+Tab] を押下して自動補完できます。
 
 ### Example 7
 ```powershell
-PS C:\> Get-OrchTrigger -Recurse | Export-Csv c:triggers.csv
+PS Orch1:\> Get-OrchTrigger -Recurse | Export-Csv c:triggers.csv
 ```
 
 出力を CSV ファイルにエキスポートします。CSV ファイルは、C: ドライブの現在のフォルダーに出力されます。`select` と組み合わせると、CSV の書式を自由にカスタマイズできます。C: ドライブの現在のフォルダーを開くには、`ii c:' と入力します。
 
 ### Example 8
 ```powershell
-PS C:\> Get-OrchTrigger -Recurse | ConvertTo-Json
+PS Orch1:\> Get-OrchTrigger -Recurse | ConvertTo-Json
 ```
 
 出力を JSON 形式に変換します。Orchestrator が出力した生の結果を確認できます。
+
+### Example 9
+```powershell
+PS C:\>Get-OrchTrigger -Path Orch1:\ -Recurse | Where-Object { $_.ReleaseName -eq 'Process01' }
+```
+
+Orch1: テナントにおいて、Process01 という名前のパッケージを使っているプロセスをすべて出力します。
 
 ## PARAMETERS
 

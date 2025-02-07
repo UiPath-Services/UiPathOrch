@@ -52,7 +52,7 @@ PS Orch1:\> Get-OrchMachineClientSecretId | ? CreationTime -LT '2024/10/01' | Re
 ## PARAMETERS
 
 ### -Name
-{{ Fill Name Description }}
+対象のマシンの Name を指定します。
 
 ```yaml
 Type: String[]
@@ -67,7 +67,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-{{ Fill Path Description }}
+ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
 
 ```yaml
 Type: String[]
@@ -82,7 +82,7 @@ Accept wildcard characters: False
 ```
 
 ### -SecretId
-{{ Fill SecretId Description }}
+対象の SecretId を指定します。
 
 ```yaml
 Type: String[]

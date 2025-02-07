@@ -25,22 +25,47 @@ Update-OrchProcessVersion [-Id <Int64[]>] [[-Version] <String>] [-Path <String[]
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+指定したプロセスが参照するプロセスパッケージを、指定のバージョンに更新します。バージョンを指定しない場合には、最新バージョンに更新します。
 
-主に呼び出すエンドポイント:
+-Path と -Id パラメータには、ワイルドカードを含むテキストをカンマ区切りで複数指定できます。また、これらの値は [Ctrl+Space] もしくは [Tab] を押下することで自動補完入力できます。
 
-OAuth に必要なスコープ:
+-Path、-Recurse、-Depth パラメータを指定するときは、これらをコマンドレット名の直後に指定してください。これにより、後続のパラメータの自動補完が適切に動作するようになります。
 
-必要な権限:
+主に呼び出すエンドポイント: POST /odata/Releases({processId})/UiPath.Server.Configuration.OData.UpdateToLatestPackageVersion?mergePackageTags=false
+
+OAuth に必要なスコープ: OR.Execution
+
+必要な権限: Processes.Edit
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS C:\> Update-OrchProcessVersion -Path Orch1:\ -Recurse * -WhatIf
 ```
 
-{{ Add example description here }}
+Orch1: テナントにある、最新になっていないプロセスのバージョンをすべて最新にします。問題ないことを確認したら、-WhatIf を外して再実行してください。
+
+### Example 2
+```powershell
+PS C:\> Update-OrchProcessVersion -Path Orch1:\Shared MyProcess
+```
+
+Orch1:\Shared フォルダにある MyProcess プロセスのパッケージバージョンを最新にします。
+
+### Example 3
+```powershell
+PS C:\> Update-OrchProcessVersion -Path Orch1:\Shared MyProcess 1.0.3
+```
+
+Orch1:\Shared フォルダにある MyProcess プロセスのパッケージバージョンを 1.0.3 にします。
+
+### Example 4
+```powershell
+PS Orch1:\Shared> Update-OrchProcessVersion -Path Orch1:\Shared MyProcess
+```
+
+カレントフォルダの MyProcess プロセスのパッケージバージョンを最新にします。
 
 ## PARAMETERS
 
@@ -120,7 +145,7 @@ Accept wildcard characters: False
 ```
 
 ### -Version
-{{ Fill Version Description }}
+プロセスをどのバージョンに更新するかを指定します。省略すると、最新バージョンに更新されます。
 
 ```yaml
 Type: String

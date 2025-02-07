@@ -69,24 +69,31 @@ Displays all triggers in Orch1: and Orch2:.
 
 ### Example 6
 ```powershell
-PS C:\> Get-OrchTrigger -Recurse | select Path,Id,Name
+PS Orch1:\> Get-OrchTrigger -Recurse | select Path,Id,Name
 ```
 
 Displays output with only the selected columns. Specify multiple columns separated by commas, including wildcards. Column names can be auto-completed with [Ctrl+Space] or [Tab].
 
 ### Example 7
 ```powershell
-PS C:\> Get-OrchTrigger -Recurse | Export-Csv c:triggers.csv
+PS Orch1:\> Get-OrchTrigger -Recurse | Export-Csv c:triggers.csv
 ```
 
-Exports the output to a CSV file. The CSV file will be located at the current location of the C: drive. You can customize the CSV format by combining with `select` to specify which columns to include. Try `ii c:' to open the current location of the C: drive.
+Exports the output to a CSV file. The CSV file will be located at the current location of the C: drive. You can customize the CSV format by combining with `select` to specify which columns to include. Try `ii c:` to open the current location of the C: drive.
 
 ### Example 8
 ```powershell
-PS C:\> Get-OrchTrigger -Recurse | ConvertTo-Json
+PS Orch1:\> Get-OrchTrigger -Recurse | ConvertTo-Json
 ```
 
 Converts the output to JSON format, providing a raw view of the data from Orchestrator.
+
+### Example 9
+```powershell
+PS C:\>Get-OrchTrigger -Path Orch1:\ -Recurse | Where-Object { $_.ReleaseName -eq 'Process01' }
+```
+
+Outputs all processes in the Orch1 tenant that use the package named Process01.
 
 ## PARAMETERS
 

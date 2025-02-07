@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Management.Automation;
+using System.Runtime.InteropServices;
 using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Entities;
@@ -111,7 +112,9 @@ namespace UiPath.PowerShell.Core
 
         public static string OrchProviderPathToPSPath(string path)
         {
-            return "\\" + path.Replace('/', '\\');//★★★
+            return Path.DirectorySeparatorChar +
+                (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ?
+                    path.Replace('/', Path.DirectorySeparatorChar) : path);
             //return "\\" + WildcardPattern.Escape(path.Replace('/', '\\'));//★★★
             //return path.Replace('/', '\\');
             //            return WildcardPattern.Escape("\\" + path.Replace('/', '\\'));
@@ -2539,7 +2542,7 @@ namespace UiPath.PowerShell.Core
 
         // このコンストラクタを実行するタイミングでは、NameColonSeparator は利用できない
         public OrchDriveInfo(ProviderInfo provider, PSDrive drive) :
-            base(drive.Name, provider, drive.Name + ":\\", drive.Description, null, drive.Root)
+            base(drive.Name, provider, drive.Name + ":" + Path.DirectorySeparatorChar, drive.Description, null, drive.Root)
         {
             _psDrive = drive;
             _psDrive.Root = _psDrive.Root?.TrimEnd('/');
@@ -2937,7 +2940,7 @@ namespace UiPath.PowerShell.Core
 
         public Folder? GetCurrentFolder()
         {
-            if (string.IsNullOrEmpty(CurrentLocation) || CurrentLocation == "\\")
+            if (string.IsNullOrEmpty(CurrentLocation) || CurrentLocation == Path.DirectorySeparatorChar + "")
             {
                 return null;
             }

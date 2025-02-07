@@ -32,23 +32,6 @@ using System.Net;
 
 namespace UiPath.PowerShell.Core
 {
-    internal class FolderComparer : IComparer<Folder?>
-    {
-        public int Compare(Folder? x, Folder? y)
-        {
-            if (x == null && y == null) return 0;
-            if (x == null) return -1;
-            if (y == null) return 1;
-
-            // OrchDirectory に対して比較
-            int orchDirectoryComparison = string.Compare(x.Path, y.Path, StringComparison.OrdinalIgnoreCase);
-            if (orchDirectoryComparison != 0) return orchDirectoryComparison;
-
-            // OrchDirectory が等しい場合、DisplayName に対して比較
-            return string.Compare(x.DisplayName, y.DisplayName, StringComparison.OrdinalIgnoreCase);
-        }
-    }
-
     public class GetChildItems_Parameters
     {
         [Parameter]
@@ -134,8 +117,19 @@ namespace UiPath.PowerShell.Core
 
         public static string GetConfigFilePath()
         {
-            string documents = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
-            return System.IO.Path.Combine(documents, @"PowerShell\Modules\UiPathOrch\UiPathOrchConfig.json");
+            string configFileName = "UiPathOrchConfig.json";
+            string moduleName = "UiPathOrch";
+
+            if (OperatingSystem.IsWindows())
+            {
+                string documents = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
+                return System.IO.Path.Combine(documents, "PowerShell", "Modules", moduleName, configFileName);
+            }
+            else // Unix 系 (Linux / macOS)
+            {
+                string home = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
+                return System.IO.Path.Combine(home, ".local", "share", "powershell", "Modules", moduleName, configFileName);
+            }
         }
 
         public static void EnsureDefaultConfigFileExists()
@@ -197,7 +191,7 @@ namespace UiPath.PowerShell.Core
                         {
                             if (string.IsNullOrWhiteSpace(drive.Scope))
                             {
-                                WriteWarning($"\"{drive.Name}:\\\": Scope is not specified!");
+                                WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": Scope is not specified!");
                             }
                             else
                             {
@@ -813,7 +807,7 @@ namespace UiPath.PowerShell.Core
                     Int64? parentPathId;
                     string displayName;
 
-                    if (parentPath == "\\")
+                    if (parentPath == System.IO.Path.DirectorySeparatorChar.ToString())
                     {
                         displayName = path.Substring(parentPath.Length);
                         parentPathId = null;
@@ -931,7 +925,7 @@ namespace UiPath.PowerShell.Core
                 return;
             }
 
-            int index = path.LastIndexOf('\\');
+            int index = path.LastIndexOf(System.IO.Path.DirectorySeparatorChar);
             if (index != -1)
             {
                 string parentPart = path.Substring(0, index);
