@@ -1,0 +1,133 @@
+﻿{
+  /* ================== Globale Einstellungen - Start =================== */
+
+  // Die globalen Einstellungen im Stammknoten werden über alle PSDrives hinweg geteilt.
+  // Diese Einstellungen können durch Angabe derselben Schlüssel in den individuellen PSDrive-Konfigurationen überschrieben werden.
+  // Um die für jedes PSDrive konfigurierten Werte zu überprüfen, führen Sie Folgendes aus: Get-OrchPSDrive | select *
+
+  // Nachdem eine nicht-vertrauliche externe Anwendung auf der Administrationsseite des Tenants erstellt wurde,
+  // setzen Sie die Weiterleitungs-URL auf den unten angegebenen Wert.
+  "RedirectUrl": "http://localhost:8085/Temporary_Listen_Addresses",
+
+  // Der hier definierte "Scope" wird durch den "Scope" in jeder PSDrive-Konfiguration überschrieben.
+  // Um diesen Scope zu verwenden, entfernen Sie den Scope-Schlüssel aus der entsprechenden PSDrive-Konfiguration.
+  // Um die für die Ausführung eines Cmdlets erforderlichen Scopes zu überprüfen, führen Sie aus: Get-Help <cmdlet name>
+  "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+
+  // Um Cmdlets zu verwenden, deren Substantiv mit OrchPm beginnt, fügen Sie den Scope "Platform Management API Access" hinzu.
+  // Beachten Sie, dass zur Verwaltung von Active Directory eine Anmeldung an der Organisation (nicht am Tenant) erforderlich ist.
+
+  // Um sich mit UiPathOrch bei der Organisation anzumelden, melden Sie sich zuerst über einen Browser bei der Organisation an
+  // und verwenden Sie dann UiPathOrch.
+  // Um sich über einen Browser bei der Organisation anzumelden, melden Sie sich zuerst vom Tenant ab und öffnen Sie dann
+  // die URL der Organisation (ohne den Tenant-Namen am Ende) in einem Browser und melden Sie sich an.
+
+  // Zusätzlich zu "Platform Management" können auch Scopes für "Document Understanding"
+  // und "TestManager" angegeben werden.
+
+  // Wenn dieser Wert auf "true" gesetzt wird, können Sie sich mit dem Tenant verbinden, indem SSL-Fehler ignoriert werden.
+  "IgnoreSslErrors": false,
+
+  "Proxy": {
+    "Url": "http://proxy.example.com:8080",
+    "BypassProxyOnLocal": true,
+    "UseDefaultCredentials": false,
+    "Credentials": {
+      "Username": "PROXY_USERNAME",
+      "Password": "PROXY_PASSWORD"
+    },
+    // Wenn dieser Wert auf "true" gesetzt wird, sind die Proxy-Einstellungen für alle PSDrives aktiviert.
+    "Enabled": false
+  },
+
+  /* =================== Globale Einstellungen - Ende ==================== */
+
+  "PSDrives": [
+
+    /* =========== Beispiel für nicht-vertrauliche App-Einstellungen =========== */
+    // Erstellen Sie eine externe Anwendung auf der Orchestrator-Administrationsseite
+    // und fügen Sie Benutzer-Scopes für den Orchestrator API-Zugriff hinzu.
+    // Tragen Sie diese dann in das unten stehende Feld „Scope“ ein.
+    // Kopieren Sie die Weiterleitungs-URL aus dem Abschnitt mit den globalen Einstellungen dieser Datei
+    // und fügen Sie sie in die externen Anwendungseinstellungen Ihres Tenants ein.
+    {
+      // Sie können beliebigen Text für "Name" festlegen. Es wird empfohlen, diesen mit dem Tenant-Namen abzugleichen.
+      "Name": "Orch1",
+      "Description": "Einstellungen für nicht-vertrauliche Apps.",
+      "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
+      "AppId": "YOUR_APP_ID",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": true
+    },
+
+    /* ============= Beispiel für vertrauliche App-Einstellungen ============= */
+    // Eine vertrauliche Anwendung wird im Allgemeinen als weniger sicher angesehen als eine nicht-vertrauliche Anwendung,
+    // da sie erfordert, dass ein AppSecret in dieser Konfigurationsdatei gespeichert wird.
+    // Da das AppSecret eine sensible Anmeldeinformation ist, besteht das Risiko der Offenlegung.
+    // Daher sollte sie nur für unbeaufsichtigte Skriptausführungen verwendet werden.
+    //
+    // Erstellen Sie auf der Orchestrator-Administrationsseite eine externe Anwendung und fügen Sie die erforderlichen
+    // App-Scopes für den Orchestrator-API-Zugriff hinzu, sodass sie mindestens mit den unten aufgeführten Scopes übereinstimmen.
+    // Eine Weiterleitungs-URL ist nicht erforderlich.
+    // In dieser Konfiguration geben Sie den Root, die ausgegebene AppId und das AppSecret an.
+    {
+      "Name": "Orch2",
+      "Description": "Einstellungen für vertrauliche Apps.",
+      "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
+      "AppId": "YOUR_APP_ID",
+      "AppSecret": "YOUR_APP_SECRET",
+      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Enabled": false
+    },
+
+    /* ======= Beispiel für Benutzername- und Passwort-Authentifizierung ======== */
+    // Diese Authentifizierungsmethode ist veraltet, aber erforderlich, wenn eine Verbindung zu älteren
+    // Versionen von On-Premises-Orchestrator hergestellt wird.
+    // Die Unterstützung für OAuth-Externe Anwendungen wurde in Version 21.4 eingeführt.
+    // Stellen Sie sicher, dass Sie YOUR_TENANT am Ende der URL angeben.
+    {
+      "Name": "Orch3",
+      "Description": "Benutzername- und Passwort-Authentifizierung.",
+      "Root": "https://YOUR_ORCHESTRATOR_URL/YOUR_TENANT",
+      "Username": "USERNAME_OR_EMAILADDR",
+      "Password": "PASSWORD",
+      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Enabled": false
+    },
+
+    /* ========== Beispiel für Automation Suite-Authentifizierung ========== */
+    // In dieser Konfiguration geben Sie die Identity Server-URL mit dem Schlüssel „IdentityUrl“ an.
+    // Für authentifizierungsbezogene Einstellungen siehe die Konfigurationen für Nicht-Vertrauliche oder Vertrauliche Apps.
+    {
+      "Name": "Orch4",
+      "Description": "Für Automation Suite oder Orchestrator, der auf Azure App Service bereitgestellt wird.",
+      "Root": "https://XXX.azurewebsites.net",
+      "IdentityUrl": "https://YYY.azurewebsites.net/identity",
+      "AppId": "YOUR_APP_ID",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": false
+    },
+
+    /* ================== Beispiel für Proxy-Einstellungen =================== */
+    // Der Abschnitt "Proxy" innerhalb dieses PSDrive überschreibt die globalen Proxy-Einstellungen,
+    // die auf der Stammebene definiert sind, sodass dieses PSDrive eine andere Proxy-Konfiguration als die globale verwenden kann.
+    {
+      "Name": "Orch5",
+      "Description": "Diese Konfiguration enthält Proxy-Einstellungen.",
+      "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
+      "AppId": "YOUR_APP_ID",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": false,
+      "Proxy": {
+        "Url": "http://proxy.example.com:8081",
+        "BypassProxyOnLocal": true,
+        "UseDefaultCredentials": false,
+        "Credentials": {
+          "Username": "PROXY_USERNAME",
+          "Password": "PROXY_PASSWORD"
+        },
+        "Enabled": true
+      }
+    }
+  ]
+}

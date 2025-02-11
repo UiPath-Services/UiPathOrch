@@ -4,6 +4,7 @@ using UiPath.OrchAPI;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
+using UiPath.PowerShell.Entities.JsonConverter;
 using UiPath.PowerShell.Positional;
 using TPositional = UiPath.PowerShell.Positional.Name_ImportCsv_CsvEncoding_CommitType;
 
@@ -224,7 +225,7 @@ public class ImportQueueItemCommand : OrchestratorPSCmdlet
                         break;
                 }
             }
-            string strLine = System.Text.Json.JsonSerializer.Serialize(queueItem, OrchAPISession.jsoWhenWritingNull);
+            string strLine = System.Text.Json.JsonSerializer.Serialize(queueItem, JsonTools.jsoWhenWritingNull);
             if (currentRowNumber == 1)
             {
                 sb.Append(strLine);

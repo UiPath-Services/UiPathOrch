@@ -1,12 +1,10 @@
 ﻿#pragma warning disable IDE1006 // 命名スタイル
 
-using System.Linq;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Web;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Core;
@@ -536,13 +534,6 @@ public class OrchAPISession : IDisposable
         return GetEnumerableWithoutPagingImpl<T[]>(_base_url_portal, endPoint, folderId, query);
     }
 
-    public static readonly JsonSerializerOptions jsoWhenWritingNull = new()
-    {
-        //Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
-        //Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, // エンコードを抑制
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-    };
-
     public string HttpRequestImpl(HttpMethod method, string baseUrl, string endPoint, Int64? folderId, string payload)
     {
         string url = baseUrl + endPoint;
@@ -581,7 +572,7 @@ public class OrchAPISession : IDisposable
         }
         else
         {
-            string strPayload = JsonSerializer.Serialize(payload, jsoWhenWritingNull);
+            string strPayload = JsonSerializer.Serialize(payload, JsonTools.jsoWhenWritingNull);
             return HttpRequestImpl(method, baseUrl, endPoint, folderId, strPayload);
         }
     }

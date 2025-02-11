@@ -1,0 +1,131 @@
+﻿{
+  /* ================== 글로벌 설정 시작 =================== */
+
+  // 루트 노드의 글로벌 설정은 모든 PSDrive에서 공유됩니다.
+  // 이러한 설정은 개별 PSDrive 구성에서 동일한 키를 지정하여 재정의할 수 있습니다.
+  // 각 PSDrive에 구성된 값을 확인하려면 다음을 실행하세요: Get-OrchPSDrive | select *
+
+  // 테넌트 관리 페이지에서 기밀이 아닌 외부 애플리케이션을 생성한 후,
+  // 해당 리디렉션 URL을 아래 지정된 값으로 설정하세요.
+  "RedirectUrl": "http://localhost:8085/Temporary_Listen_Addresses",
+
+  // 여기에서 정의된 "Scope"는 각 PSDrive 구성에 지정된 "Scope"에 의해 재정의됩니다.
+  // 이 Scope를 사용하려면 해당 PSDrive 구성에서 Scope 키를 제거하세요.
+  // 각 Cmdlet을 실행하는 데 필요한 Scope를 확인하려면 다음을 실행하세요: Get-Help <cmdlet name>
+  "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+
+  // OrchPm으로 시작하는 명사를 가진 Cmdlet을 사용하려면 플랫폼 관리 API 액세스 Scope를 추가하세요.
+  // Active Directory를 관리하려면 테넌트가 아닌 조직에 로그인해야 합니다.
+
+  // UiPathOrch를 사용하여 조직에 로그인하려면 먼저 브라우저에서 조직에 로그인한 후
+  // UiPathOrch를 사용하세요.
+  // 브라우저에서 조직에 로그인하려면 먼저 테넌트에서 로그아웃한 후,
+  // 조직의 URL(끝에 테넌트 이름이 없는)을 열어 로그인하세요.
+
+  // 플랫폼 관리 외에도 Document Understanding 및 TestManager에 대한 Scope를 지정할 수 있습니다.
+
+  // 이 값을 true로 설정하면 SSL 오류를 무시하고 테넌트에 연결할 수 있습니다.
+  "IgnoreSslErrors": false,
+
+  "Proxy": {
+    "Url": "http://proxy.example.com:8080",
+    "BypassProxyOnLocal": true,
+    "UseDefaultCredentials": false,
+    "Credentials": {
+      "Username": "PROXY_USERNAME",
+      "Password": "PROXY_PASSWORD"
+    },
+    // 이 값을 true로 설정하면 모든 PSDrive에서 프록시 설정이 활성화됩니다.
+    "Enabled": false
+  },
+
+  /* =================== 글로벌 설정 종료 ==================== */
+
+  "PSDrives": [
+
+    /* =========== 기밀이 아닌 애플리케이션 설정 샘플 =========== */
+    // Orchestrator 관리 페이지에서 외부 애플리케이션을 생성한 후
+    // Orchestrator API 액세스를 위한 사용자 스코프를 추가하고, 아래 "Scope" 필드에 입력하세요.
+    // 이 파일의 글로벌 설정 섹션에서 리디렉션 URL을 복사하여
+    // 테넌트의 외부 애플리케이션 설정에 붙여넣으세요.
+    {
+      // Name에 원하는 텍스트를 설정할 수 있습니다. 테넌트 이름과 동일하게 설정하는 것을 권장합니다.
+      "Name": "Orch1",
+      "Description": "기밀이 아닌 애플리케이션 설정.",
+      "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
+      "AppId": "YOUR_APP_ID",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": true
+    },
+
+    /* ============= 기밀 애플리케이션 설정 샘플 ============= */
+    // 기밀 애플리케이션은 일반적으로 비기밀 애플리케이션보다 보안성이 낮다고 간주됩니다.
+    // 이는 이 구성 파일에 AppSecret을 저장해야 하기 때문입니다.
+    // AppSecret은 민감한 자격 증명이므로 유출 위험이 있습니다.
+    // 따라서 무인 스크립트 실행에만 사용해야 합니다.
+    //
+    // Orchestrator 관리 페이지에서 외부 애플리케이션을 생성하고
+    // 아래 나열된 스코프와 일치하거나 초과하는 Orchestrator API 액세스를 위한
+    // 필수 App Scope를 추가하세요.
+    // 리디렉션 URL은 필요하지 않습니다.
+    // 이 구성에서 Root, 발급된 AppId, AppSecret을 지정하세요.
+    {
+      "Name": "Orch2",
+      "Description": "기밀 애플리케이션 설정.",
+      "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
+      "AppId": "YOUR_APP_ID",
+      "AppSecret": "YOUR_APP_SECRET",
+      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Enabled": false
+    },
+
+    /* ======= 사용자 이름 및 비밀번호 인증 샘플 ======== */
+    // 이 인증 방법은 더 이상 권장되지 않지만, 이전 버전의 온프레미스 Orchestrator에 연결할 때 필요합니다.
+    // OAuth 외부 애플리케이션 지원은 버전 21.4에서 도입되었습니다.
+    // URL 끝에 YOUR_TENANT을 반드시 지정하세요.
+    {
+      "Name": "Orch3",
+      "Description": "사용자 이름 및 비밀번호 인증.",
+      "Root": "https://YOUR_ORCHESTRATOR_URL/YOUR_TENANT",
+      "Username": "USERNAME_OR_EMAILADDR",
+      "Password": "PASSWORD",
+      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Enabled": false
+    },
+
+    /* ========== Automation Suite 인증 샘플 ========== */
+    // 이 구성에서 "IdentityUrl" 키를 사용하여 ID 서버 URL을 지정하세요
+    // 인증 관련 설정은 비기밀 애플리케이션 또는 기밀 애플리케이션 설정을 참조하세요.
+    {
+      "Name": "Orch4",
+      "Description": "Automation Suite 또는 Azure App Service에 배포된 Orchestrator용.",
+      "Root": "https://XXX.azurewebsites.net",
+      "IdentityUrl": "https://YYY.azurewebsites.net/identity",
+      "AppId": "YOUR_APP_ID",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": false
+    },
+
+    /* ================== 프록시 설정 샘플 =================== */
+    // 이 PSDrive의 "Proxy" 섹션은 루트 수준에서 정의된 글로벌 프록시 설정을 재정의하여,
+    // 이 PSDrive가 글로벌 설정과 다른 프록시 구성을 사용할 수 있도록 합니다.
+    {
+      "Name": "Orch5",
+      "Description": "이 구성에는 프록시 설정이 포함됩니다.",
+      "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
+      "AppId": "YOUR_APP_ID",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": false,
+      "Proxy": {
+        "Url": "http://proxy.example.com:8081",
+        "BypassProxyOnLocal": true,
+        "UseDefaultCredentials": false,
+        "Credentials": {
+          "Username": "PROXY_USERNAME",
+          "Password": "PROXY_PASSWORD"
+        },
+        "Enabled": true
+      }
+    }
+  ]
+}

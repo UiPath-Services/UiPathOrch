@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.9.4'
+ModuleVersion = '0.9.9.6'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -379,10 +379,22 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Added the -HostFeed switch parameter to the following cmdlets. When specified, it retrieves library packages from the host feed.
-  - Get-OrchLibrary
+        ReleaseNotes = '- Comments can now be written in the configuration file.
 
-  - Get-OrchLibraryVersion
+- As a result, the explanations previously written in the `Description` field of the configuration file template have been moved to comments.
+
+- The configuration file template has been localized. It currently supports the following seven languages:  
+  - German
+  - English
+  - French
+  - Japanese
+  - Korean
+  - Romanian
+  - Turkish
+
+- The configuration file must be encoded in UTF-8. To ensure this, a UTF-8 BOM (Byte Order Mark) has been added to the configuration file templates. This should help prevent character corruption when adding local characters to the configuration file.
+
+- To obtain the configuration file template, delete (or rename for backup) the existing configuration file and then run Import-Module UiPathOrch. If no configuration file exists, it will be automatically created from the template.
 '
 
         # Prerelease string of this module

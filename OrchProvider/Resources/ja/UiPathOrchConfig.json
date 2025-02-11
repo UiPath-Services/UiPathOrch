@@ -1,0 +1,130 @@
+﻿{
+  /* ================= グローバル設定 ここから ================== */
+
+  // ルートノードに記載されたグローバル設定は、すべての PSDrive で共有されます。
+  // これらの設定は、各 PSDrive の設定で同じキーを指定することで上書きできます。
+  // 各 PSDrive に設定された値を確認するには、次を実行してください: Get-OrchPSDrive | select *
+
+  // テナントの管理ページで非機密の外部アプリを作成したら、
+  // リダイレクト URL には下記と同じ値を設定してください。
+  "RedirectUrl": "http://localhost:8085/Temporary_Listen_Addresses",
+
+  // ここで定義された "Scope" は、各 PSDrive の設定で指定された "Scope" により上書きされます。
+  // この "Scope" を使用するには、該当する PSDrive の設定から "Scope" キーを削除してください。
+  // 各 cmdlet の実行に必要なスコープを確認するには、次を実行してください: Get-Help <cmdlet name>
+  "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+
+  // 名詞が OrchPm で始まる cmdlet を使用するには、Platform Management API Access のスコープを追加してください。
+  // なお、cmdlet で Active Directory を操作するには、テナントではなく組織にログインする必要があります。
+  // UiPathOrch で組織にログインするには、まずブラウザーで組織にログインした後に UiPathOrch を使用してください。
+  // ブラウザーで組織にログインするには、まずテナントからログオフし
+  // 組織の URL（末尾のテナント名を除いたもの）をブラウザーで開いてログインしてください。
+
+  // Platform Management のほか、Document Understanding や TestManager のスコープも指定できます。
+
+  // 下記を true に設定すると、SSL エラーを無視してテナントに接続できます。
+  "IgnoreSslErrors": false,
+
+  "Proxy": {
+    "Url": "http://proxy.example.com:8080",
+    "BypassProxyOnLocal": true,
+    "UseDefaultCredentials": false,
+    "Credentials": {
+      "Username": "PROXY_USERNAME",
+      "Password": "PROXY_PASSWORD"
+    },
+    // これを true に設定すると、すべての PSDrive でプロキシ設定が有効になります。
+    "Enabled": false
+  },
+
+  /* ================= グローバル設定 ここまで ================== */
+
+  "PSDrives": [
+
+    /* =================== 非機密アプリの設定例 =================== */
+    // Orchestrator の管理ページで外部アプリを作成し、Orchestrator API Access の
+    // ユーザースコープを追加したら、下記の "Scope" に転記してください。
+    // また、その外部アプリのリダイレクト URL には、このファイルのグローバル設定に記載された
+    // リダイレクト URL をコピーして転記してください。
+    {
+      // "Name" には任意のテキストを設定できます。テナント名と同じにすることをお勧めします。
+      "Name": "Orch1",
+      "Description": "非機密アプリの設定。",
+      "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
+      "AppId": "YOUR_APP_ID",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": true
+    },
+
+    /* ==================== 機密アプリの設定例 ==================== */
+    // 機密アプリは、非機密アプリよりも一般的に安全性が低いと見なされます。
+    // それは、この設定ファイル内に AppSecret を保存する必要があるためです。
+    // AppSecret は機密性の高い認証情報であり、漏洩のリスクがあります。
+    // そのため、機密アプリは無人スクリプト実行専用としてのみ使用してください。
+    //
+    // Orchestrator の管理ページで外部アプリを作成し、Orchestrator API Access の
+    // 必要なアプリスコープを下記のスコープ以上に設定してください。
+    // リダイレクト URL の設定は不要です。
+    // この設定では、Root、発行された AppID、および AppSecret を記載してください。
+    {
+      "Name": "Orch2",
+      "Description": "機密アプリの設定。",
+      "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
+      "AppId": "YOUR_APP_ID",
+      "AppSecret": "YOUR_APP_SECRET",
+      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Enabled": false
+    },
+
+    /* ============ ユーザー名とパスワード認証の設定例 ============ */
+    // この認証方法は非推奨ですが、古いバージョンのオンプレミス Orchestrator に
+    // 接続する場合に必要となります。
+    // 外部アプリがサポートされたバージョン 21.4 以降では、外部アプリを使用してください。
+    // URL の末尾に YOUR_TENANT を必ず記載してください。
+    {
+      "Name": "Orch3",
+      "Description": "ユーザー名とパスワード認証。",
+      "Root": "https://YOUR_ORCHESTRATOR_URL/YOUR_TENANT",
+      "Username": "USERNAME_OR_EMAILADDR",
+      "Password": "PASSWORD",
+      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Enabled": false
+    },
+
+    /* ============== Automation Suite 認証の設定例 =============== */
+    // この設定では、"IdentityUrl" キーに ID サーバーの URL を記載してください。
+    // 認証に関するその他の設定については、非機密アプリまたは機密アプリの設定を参照してください。
+    {
+      "Name": "Orch4",
+      "Description": "Automation Suite または Azure App Service にデプロイされた Orchestrator の設定。",
+      "Root": "https://XXX.azurewebsites.net",
+      "IdentityUrl": "https://YYY.azurewebsites.net/identity",
+      "AppId": "YOUR_APP_ID",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": false
+    },
+
+    /* ===================== プロキシの設定例 ===================== */
+    // この PSDrive 内の "Proxy" セクションは、ルートレベルで定義されたグローバルプロキシ設定を上書きし
+    // この PSDrive に対して異なるプロキシ設定を使用できるようにします。
+    {
+      "Name": "Orch5",
+      "Description": "この設定にはプロキシ設定が含まれます。",
+      "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
+      "AppId": "YOUR_APP_ID",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": false,
+
+      "Proxy": {
+        "Url": "http://proxy.example.com:8081",
+        "BypassProxyOnLocal": true,
+        "UseDefaultCredentials": false,
+        "Credentials": {
+          "Username": "PROXY_USERNAME",
+          "Password": "PROXY_PASSWORD"
+        },
+        "Enabled": true
+      }
+    }
+  ]
+}

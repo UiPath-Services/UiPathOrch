@@ -1,0 +1,132 @@
+﻿{
+  /* ================== Küresel Ayarlar Başlangıcı =================== */
+
+  // Kök düğümdeki küresel ayarlar tüm PSDrive'lar arasında paylaşılır.
+  // Bu ayarlar, bireysel PSDrive yapılandırmalarında aynı anahtarları belirterek geçersiz kılınabilir.
+  // Her PSDrive için yapılandırılmış değerleri kontrol etmek için şunu çalıştırın: Get-OrchPSDrive | select *
+
+  // Kiracı yönetim sayfasında gizli olmayan bir harici uygulama oluşturduktan sonra,
+  // yönlendirme URL'sini aşağıda belirtilen değere ayarlayın.
+  "RedirectUrl": "http://localhost:8085/Temporary_Listen_Addresses",
+
+  // Burada tanımlanan "Scope", her PSDrive yapılandırmasında belirtilen "Scope" tarafından geçersiz kılınacaktır.
+  // Bu Scope'u kullanmak için ilgili PSDrive yapılandırmasından Scope anahtarını kaldırın.
+  // Her Cmdlet'in çalıştırılması için gerekli Scope'ları kontrol etmek için şunu çalıştırın: Get-Help <cmdlet name>
+  "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+
+  // İsmi OrchPm ile başlayan Cmdlet'leri kullanmak için Platform Yönetimi API Erişim kapsamını ekleyin.
+  // Active Directory'yi yönetmek için kiracıya değil, kuruluşa giriş yapmanız gerekir.
+
+  // UiPathOrch kullanarak kuruluşa giriş yapmak için önce bir tarayıcıdan kuruluşa giriş yapın,
+  // ardından UiPathOrch'u kullanın.
+  // Bir tarayıcıdan kuruluşa giriş yapmak için önce kiracıdan çıkış yapın,
+  // ardından kiracı ismi olmadan kuruluş URL'sini açarak giriş yapın.
+
+  // Platform Yönetimi dışında, Document Understanding ve TestManager için de kapsamlar belirtebilirsiniz.
+
+  // Bunu true olarak ayarlamak, SSL hatalarını yoksayarak kiracıya bağlanmaya izin verir.
+  "IgnoreSslErrors": false,
+
+  "Proxy": {
+    "Url": "http://proxy.example.com:8080",
+    "BypassProxyOnLocal": true,
+    "UseDefaultCredentials": false,
+    "Credentials": {
+      "Username": "PROXY_USERNAME",
+      "Password": "PROXY_PASSWORD"
+    },
+    // Bunu true olarak ayarlamak, tüm PSDrive'lar için proxy ayarlarını etkinleştirir.
+    "Enabled": false
+  },
+
+  /* =================== Küresel Ayarlar Sonu ==================== */
+
+  "PSDrives": [
+
+    /* =========== Gizli Olmayan Uygulama Ayarları Örneği =========== */
+    // Orchestrator yönetim sayfasında harici bir uygulama oluşturduktan sonra
+    // ve Orchestrator API Erişimi için kullanıcı kapsamlarını ekledikten sonra,
+    // bunları aşağıdaki "Scope" alanına girin.
+    // Bu dosyanın küresel ayarlar bölümünden Yönlendirme URL'sini kopyalayın ve
+    // kiracınızın harici uygulama ayarlarına yapıştırın.
+    {
+      // Ad için herhangi bir metin belirleyebilirsiniz. Kiracı adıyla eşleşmesi önerilir.
+      "Name": "Orch1",
+      "Description": "Gizli Olmayan Uygulama Ayarları.",
+      "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
+      "AppId": "YOUR_APP_ID",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": true
+    },
+
+    /* ============= Gizli Uygulama Ayarları Örneği ============= */
+    // Gizli bir uygulama, genellikle gizli olmayan bir uygulamaya kıyasla daha az güvenli kabul edilir.
+    // Bunun nedeni, bu yapılandırma dosyasında bir AppSecret saklanmasını gerektirmesidir.
+    // AppSecret hassas bir kimlik bilgisi olduğundan, ifşa edilme riski bulunmaktadır.
+    // Bu nedenle, yalnızca gözetimsiz betik çalıştırmaları için kullanılmalıdır.
+    //
+    // Orchestrator yönetim sayfasında bir harici uygulama oluşturun ve aşağıda belirtilen
+    // kapsamlarla eşleşen veya daha geniş olan gerekli Orchestrator API Erişim kapsamlarını ekleyin.
+    // Yönlendirme URL'si gerekli değildir.
+    // Bu yapılandırmada Root, verilen AppId ve AppSecret belirleyin.
+    {
+      "Name": "Orch2",
+      "Description": "Gizli Uygulama Ayarları.",
+      "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
+      "AppId": "YOUR_APP_ID",
+      "AppSecret": "YOUR_APP_SECRET",
+      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Enabled": false
+    },
+
+    /* ======= Kullanıcı Adı ve Parola Kimlik Doğrulama Örneği ======== */
+    // Bu kimlik doğrulama yöntemi artık önerilmese de,
+    // eski sürümlerdeki şirket içi Orchestrator’a bağlanırken gereklidir.
+    // OAuth harici uygulama desteği sürüm 21.4'te tanıtılmıştır.
+    // URL'nin sonunda YOUR_TENANT belirttiğinizden emin olun.
+    {
+      "Name": "Orch3",
+      "Description": "Kullanıcı Adı ve Parola Kimlik Doğrulama.",
+      "Root": "https://YOUR_ORCHESTRATOR_URL/YOUR_TENANT",
+      "Username": "USERNAME_OR_EMAILADDR",
+      "Password": "PASSWORD",
+      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Enabled": false
+    },
+
+    /* ========== Automation Suite Kimlik Doğrulama Örneği ========== */
+    // Bu yapılandırmada, "IdentityUrl" anahtarını kullanarak Kimlik Sunucusu URL'sini belirtin.
+    // Kimlik doğrulama ile ilgili ayarlar için Gizli Olmayan Uygulama veya Gizli Uygulama yapılandırmalarına bakın.
+    {
+      "Name": "Orch4",
+      "Description": "Automation Suite veya Azure App Service üzerine dağıtılmış Orchestrator için.",
+      "Root": "https://XXX.azurewebsites.net",
+      "IdentityUrl": "https://YYY.azurewebsites.net/identity",
+      "AppId": "YOUR_APP_ID",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": false
+    },
+
+    /* ================== Proxy Ayarları Örneği =================== */
+    // Bu PSDrive içindeki "Proxy" bölümü, kök seviyesinde tanımlanan küresel proxy ayarlarını geçersiz kılarak,
+    // bu PSDrive'ın küresel ayarlardan farklı bir proxy yapılandırması kullanmasına izin verir.
+    {
+      "Name": "Orch5",
+      "Description": "Bu yapılandırma proxy ayarlarını içerir.",
+      "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
+      "AppId": "YOUR_APP_ID",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": false,
+      "Proxy": {
+        "Url": "http://proxy.example.com:8081",
+        "BypassProxyOnLocal": true,
+        "UseDefaultCredentials": false,
+        "Credentials": {
+          "Username": "PROXY_USERNAME",
+          "Password": "PROXY_PASSWORD"
+        },
+        "Enabled": true
+      }
+    }
+  ]
+}

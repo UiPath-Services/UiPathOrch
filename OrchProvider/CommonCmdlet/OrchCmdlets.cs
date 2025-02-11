@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using UiPath.OrchAPI;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
+using UiPath.PowerShell.Entities.JsonConverter;
 using Path = System.IO.Path;
 
 namespace UiPath.PowerShell.Commands;
@@ -382,7 +383,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         }
 
         //return string.Join(',', mrss.Select(e => JsonSerializer.Serialize(e, OrchAPISession.jsoWhenWritingNull))).Replace("\\u0027", "'");
-        return JsonSerializer.Serialize(mrss, OrchAPISession.jsoWhenWritingNull).Replace("\\u0027", "'");
+        return JsonSerializer.Serialize(mrss, JsonTools.jsoWhenWritingNull).Replace("\\u0027", "'");
     }
 
     private readonly Lazy<HashSet<string>> ValidScopes = new(() =>
