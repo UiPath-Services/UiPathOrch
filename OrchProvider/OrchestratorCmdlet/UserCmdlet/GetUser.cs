@@ -6,186 +6,185 @@ using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
 using TPositional = UiPath.PowerShell.Positional.UserName_FullName;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsCommon.Get, "OrchUser")]
+[OutputType(typeof(Entities.User))]
+public class GetUserCommand : OrchestratorPSCmdlet
 {
-    [Cmdlet(VerbsCommon.Get, "OrchUser")]
-    [OutputType(typeof(Entities.User))]
-    public class GetUserCommand : OrchestratorPSCmdlet
+    [Parameter(Position = 0)]
+    [SupportsWildcards]
+    [ArgumentCompleter(typeof(TenantUserUserNameCompleter<TPositional>))]
+    public string[]? UserName { get; set; }
+
+    [Parameter(Position = 1)]
+    [SupportsWildcards]
+    [ArgumentCompleter(typeof(TenantUserFullNameCompleter<TPositional>))]
+    public string[]? FullName { get; set; }
+
+    [Parameter]
+    [SupportsWildcards]
+    [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<DirectoryTypeItems, int>))]
+    public string[]? Type{ get; set; }
+
+    [Parameter]
+    public SwitchParameter ExpandDetails { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(DriveCompleter))]
+    public string[]? Path { get; set; }
+
+    [Parameter]
+    public string? ExportCsv { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(EncodingCompleter))]
+    [EncodingArgumentTransformation]
+    public Encoding? CsvEncoding { get; set; }
+
+    private static readonly string DefaultCsvName = "ExportedUsers.csv";
+    private static readonly string[] CsvHeaders = [
+        "Path",
+        "UserName",
+        "FullName",
+        "Type",
+        "MayHaveUserSession",
+        "MayHaveRobotSession",
+        "MayHaveUnattendedSession",
+        "MayHavePersonalWorkspace",
+        "RestrictToPersonalWorkspace",
+        "UpdatePolicyType",
+        "UpdatePolicyVersion",
+        "UR_UserName",
+        "UR_Password",
+        "UR_CredentialStore",
+        "UR_CredentialExternalName",
+        "UR_CredentialType",
+        "UR_LimitConcurrentExecution",
+        "ES_TracingLevel",
+        "ES_StudioNotifyServer",
+        "ES_LoginToConsole",
+        "ES_ResolutionWidth",
+        "ES_ResolutionHeight",
+        "ES_ResolutionDepth",
+        "ES_FontSmoothing",
+        "ES_AutoDownloadProcess",
+        "Roles"
+    ];
+
+    private static void WriteCsvContent(StreamWriter writer, OrchDriveInfo drive, User? p)
     {
-        [Parameter(Position = 0)]
-        [SupportsWildcards]
-        [ArgumentCompleter(typeof(TenantUserUserNameCompleter<TPositional>))]
-        public string[]? UserName { get; set; }
+        if (p is null) return;
 
-        [Parameter(Position = 1)]
-        [SupportsWildcards]
-        [ArgumentCompleter(typeof(TenantUserFullNameCompleter<TPositional>))]
-        public string[]? FullName { get; set; }
+        string ur_credentialStore = null;
+        if (p.UnattendedRobot?.CredentialStoreId is not null)
+        {
+            var credentialStores = drive.CredentialStores.Get();
+            var credentialStore = credentialStores.FirstOrDefault(c => c.Id == p.UnattendedRobot.CredentialStoreId);
+            ur_credentialStore = credentialStore?.Name;
+        }
 
-        [Parameter]
-        [SupportsWildcards]
-        [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<DirectoryTypeItems, int>))]
-        public string[]? Type{ get; set; }
-
-        [Parameter]
-        public SwitchParameter ExpandDetails { get; set; }
-
-        [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter))]
-        public string[]? Path { get; set; }
-
-        [Parameter]
-        public string? ExportCsv { get; set; }
-
-        [Parameter]
-        [ArgumentCompleter(typeof(EncodingCompleter))]
-        [EncodingArgumentTransformation]
-        public Encoding? CsvEncoding { get; set; }
-
-        private static readonly string DefaultCsvName = "ExportedUsers.csv";
-        private static readonly string[] CsvHeaders = [
-            "Path",
-            "UserName",
-            "FullName",
-            "Type",
-            "MayHaveUserSession",
-            "MayHaveRobotSession",
-            "MayHaveUnattendedSession",
-            "MayHavePersonalWorkspace",
-            "RestrictToPersonalWorkspace",
-            "UpdatePolicyType",
-            "UpdatePolicyVersion",
-            "UR_UserName",
-            "UR_Password",
-            "UR_CredentialStore",
-            "UR_CredentialExternalName",
-            "UR_CredentialType",
-            "UR_LimitConcurrentExecution",
-            "ES_TracingLevel",
-            "ES_StudioNotifyServer",
-            "ES_LoginToConsole",
-            "ES_ResolutionWidth",
-            "ES_ResolutionHeight",
-            "ES_ResolutionDepth",
-            "ES_FontSmoothing",
-            "ES_AutoDownloadProcess",
-            "Roles"
+        string[] line = [
+            EscapeCsvValue(p.Path, true),
+            EscapeCsvValue(p.UserName, true),
+            EscapeCsvValue(p.FullName),
+            EscapeCsvValue(p.Type),
+            EscapeCsvValue(p.MayHaveUserSession),
+            EscapeCsvValue(p.MayHaveRobotSession),
+            EscapeCsvValue(p.MayHaveUnattendedSession),
+            EscapeCsvValue(p.MayHavePersonalWorkspace),
+            EscapeCsvValue(p.RestrictToPersonalWorkspace),
+            EscapeCsvValue(p.UpdatePolicy?.Type),
+            EscapeCsvValue(p.UpdatePolicy?.SpecificVersion),
+            EscapeCsvValue(p.UnattendedRobot?.UserName),
+            EscapeCsvValue(""), // p.UnattendedRobot?.Password // ここにはごみなテキストが入っているので、出力しないでおく
+            EscapeCsvValue(ur_credentialStore, true),
+            EscapeCsvValue(p.UnattendedRobot?.CredentialExternalName),
+            EscapeCsvValue(p.UnattendedRobot?.CredentialType),
+            EscapeCsvValue(p.UnattendedRobot?.LimitConcurrentExecution),
+            EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.TracingLevel),
+            EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.StudioNotifyServer),
+            EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.LoginToConsole),
+            EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.ResolutionWidth),
+            EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.ResolutionHeight),
+            EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.ResolutionDepth),
+            EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.FontSmoothing),
+            EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.AutoDownloadProcess),
+            EscapeCsvValue(p.RolesList, true)
         ];
 
-        private static void WriteCsvContent(StreamWriter writer, OrchDriveInfo drive, User? p)
+        WriteCsvLine(writer, line);
+    }
+
+    protected override void ProcessRecord()
+    {
+        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+
+        var wpUserName = UserName.ConvertToWildcardPatternList();
+        var wpFullName = FullName.ConvertToWildcardPatternList();
+        var wpType = Type.ConvertToWildcardPatternList();
+
+        var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
+        using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var drive in drives)
         {
-            if (p == null) return;
-
-            string ur_credentialStore = null;
-            if (p.UnattendedRobot?.CredentialStoreId != null)
+            try
             {
-                var credentialStores = drive.CredentialStores.Get();
-                var credentialStore = credentialStores.FirstOrDefault(c => c.Id == p.UnattendedRobot.CredentialStoreId);
-                ur_credentialStore = credentialStore?.Name;
-            }
+                var users = drive.GetUsers();
+                var targetUsers = users
+                    .FilterByWildcards(u => u?.FullName, wpFullName)
+                    .FilterByWildcards(u => u?.UserName, wpUserName)
+                    .FilterByWildcards(u => u?.Type, wpType)
+                    .OrderBy(u => u.UserName)
+                    .ToList();
 
-            string[] line = [
-                EscapeCsvValue(p.Path, true),
-                EscapeCsvValue(p.UserName, true),
-                EscapeCsvValue(p.FullName),
-                EscapeCsvValue(p.Type),
-                EscapeCsvValue(p.MayHaveUserSession),
-                EscapeCsvValue(p.MayHaveRobotSession),
-                EscapeCsvValue(p.MayHaveUnattendedSession),
-                EscapeCsvValue(p.MayHavePersonalWorkspace),
-                EscapeCsvValue(p.RestrictToPersonalWorkspace),
-                EscapeCsvValue(p.UpdatePolicy?.Type),
-                EscapeCsvValue(p.UpdatePolicy?.SpecificVersion),
-                EscapeCsvValue(p.UnattendedRobot?.UserName),
-                EscapeCsvValue(""), // p.UnattendedRobot?.Password // ここにはごみなテキストが入っているので、出力しないでおく
-                EscapeCsvValue(ur_credentialStore, true),
-                EscapeCsvValue(p.UnattendedRobot?.CredentialExternalName),
-                EscapeCsvValue(p.UnattendedRobot?.CredentialType),
-                EscapeCsvValue(p.UnattendedRobot?.LimitConcurrentExecution),
-                EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.TracingLevel),
-                EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.StudioNotifyServer),
-                EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.LoginToConsole),
-                EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.ResolutionWidth),
-                EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.ResolutionHeight),
-                EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.ResolutionDepth),
-                EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.FontSmoothing),
-                EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.AutoDownloadProcess),
-                EscapeCsvValue(p.RolesList, true)
-            ];
-
-            WriteCsvLine(writer, line);
-        }
-
-        protected override void ProcessRecord()
-        {
-            var drives = OrchDriveInfo.EnumOrchDrives(Path);
-
-            var wpUserName = UserName.ConvertToWildcardPatternList();
-            var wpFullName = FullName.ConvertToWildcardPatternList();
-            var wpType = Type.ConvertToWildcardPatternList();
-
-            var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
-            using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
-
-            using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var drive in drives)
-            {
-                try
+                // 詳細を取得する必要があれば、ユーザーごとにスレッドを起こして
+                // GetUser(user) を呼び出す
+                if (ExpandDetails.IsPresent || writer is not null)
                 {
-                    var users = drive.GetUsers();
-                    var targetUsers = users
-                        .FilterByWildcards(u => u?.FullName, wpFullName)
-                        .FilterByWildcards(u => u?.UserName, wpUserName)
-                        .FilterByWildcards(u => u?.Type, wpType)
-                        .OrderBy(u => u.UserName)
-                        .ToList();
 
-                    // 詳細を取得する必要があれば、ユーザーごとにスレッドを起こして
-                    // GetUser(user) を呼び出す
-                    if (ExpandDetails.IsPresent || writer != null)
+                    using var results = OrchThreadPool.RunForEach(targetUsers
+                            .FilterByWildcards(u => u?.FullName, wpFullName)
+                            .FilterByWildcards(u => u?.UserName, wpUserName)
+                            .OrderBy(u => u.UserName),
+                        user => user.GetPSPath(),
+                        user => user,
+                        user => drive.GetUser(user));
+
+                    int index = 0;
+                    string msg = "Get users... ";
+                    using var reporter = new ProgressReporter(this, 1, targetUsers.Count, msg, msg);
+                    foreach (var result in results)
                     {
-
-                        using var results = OrchThreadPool.RunForEach(targetUsers
-                                .FilterByWildcards(u => u?.FullName, wpFullName)
-                                .FilterByWildcards(u => u?.UserName, wpUserName)
-                                .OrderBy(u => u.UserName),
-                            user => user.GetPSPath(),
-                            user => user,
-                            user => drive.GetUser(user));
-
-                        int index = 0;
-                        string msg = "Get users... ";
-                        using var reporter = new ProgressReporter(this, 1, targetUsers.Count, msg, msg);
-                        foreach (var result in results)
+                        try
                         {
-                            try
-                            {
-                                var detailedUser = result.GetResult(cancelHandler.Token);
-                                if (detailedUser == null) continue;
+                            var detailedUser = result.GetResult(cancelHandler.Token);
+                            if (detailedUser is null) continue;
 
-                                reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {detailedUser.GetPSPath()}");
+                            reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {detailedUser.GetPSPath()}");
 
-                                if (writer != null) WriteCsvContent(writer, drive, detailedUser);
-                                else WriteObject(detailedUser);
-                            }
-                            catch (OrchException ex)
-                            {
-                                WriteError(new ErrorRecord(ex, "GetUserError", ErrorCategory.InvalidOperation, ex.Target));
-                            }
+                            if (writer is not null) WriteCsvContent(writer, drive, detailedUser);
+                            else WriteObject(detailedUser);
+                        }
+                        catch (OrchException ex)
+                        {
+                            WriteError(new ErrorRecord(ex, "GetUserError", ErrorCategory.InvalidOperation, ex.Target));
                         }
                     }
-                    else
-                    {
-                        WriteObject(targetUsers, true);
-                    }
                 }
-                catch (Exception ex)
+                else
                 {
-                    WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetUserError", ErrorCategory.InvalidOperation, drive));
+                    WriteObject(targetUsers, true);
                 }
             }
-
-            WriteCSVExportedMessage(this, providerCsvPath);
+            catch (Exception ex)
+            {
+                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetUserError", ErrorCategory.InvalidOperation, drive));
+            }
         }
+
+        WriteCSVExportedMessage(this, providerCsvPath);
     }
 }

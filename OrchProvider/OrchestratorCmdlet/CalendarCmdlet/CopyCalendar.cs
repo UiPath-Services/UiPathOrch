@@ -5,97 +5,96 @@ using UiPath.PowerShell.Entities;
 using OrchCollectionExtensions = UiPath.PowerShell.Core.OrchCollectionExtensions;
 using TPositional = UiPath.PowerShell.Positional.Name_Destination;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsCommon.Copy, "OrchCalendar", SupportsShouldProcess = true)]
+[OutputType(typeof(ExtendedCalendar))]
+public class CopyCalendarCommand : OrchestratorPSCmdlet
 {
-    [Cmdlet(VerbsCommon.Copy, "OrchCalendar", SupportsShouldProcess = true)]
-    [OutputType(typeof(ExtendedCalendar))]
-    public class CopyCalendarCommand : OrchestratorPSCmdlet
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(CalendarNameCompleter<TPositional>))]
+    [SupportsWildcards]
+    public string[]? Name { get; set; }
+
+    [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(DestinationDriveCompleter<TPositional>))]
+    [SupportsWildcards]
+    public string[]? Destination { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [SupportsWildcards]
+    public string? Path { get; set; }
+
+    protected override void ProcessRecord()
     {
-        [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(CalendarNameCompleter<TPositional>))]
-        [SupportsWildcards]
-        public string[]? Name { get; set; }
+        var srcDrive = OrchDriveInfo.GetOrchDrive(Path!);
 
-        [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DestinationDriveCompleter<TPositional>))]
-        [SupportsWildcards]
-        public string[]? Destination { get; set; }
+        var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
 
-        [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
-        [SupportsWildcards]
-        public string? Path { get; set; }
+        var wpName = Name.ConvertToWildcardPatternList();
 
-        protected override void ProcessRecord()
+        srcDrive._dicCalendars = null;
+        srcDrive._dicCalendars_Exceptions.ClearCache();
+
+        // この実装はこれで良い。
+        ICollection<ExtendedCalendar>? srcCalendars;
+        try
         {
-            var srcDrive = OrchDriveInfo.GetOrchDrive(Path!);
+            srcCalendars = srcDrive.GetCalendars();
+        }
+        catch (Exception ex)
+        {
+            WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, ex), "GetCalendarError", ErrorCategory.InvalidOperation, srcDrive));
+            return;
+        }
+        if (srcCalendars is null) return;
 
-            var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
+        string msg = "Copying calendars";
+        using var reporter = new ProgressReporter(this, 1, 100, msg, msg);
 
-            var wpName = Name.ConvertToWildcardPatternList();
+        int index = 0;
+        reporter.TotalNum = dstDrives.Count * srcCalendars.Count;
 
-            srcDrive._dicCalendars = null;
-            srcDrive._dicCalendars_Exceptions.ClearCache();
-
-            // この実装はこれで良い。
-            ICollection<ExtendedCalendar>? srcCalendars;
-            try
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var dstDrive in dstDrives)
+        {
+            foreach (var srcCalendar in srcCalendars
+                .FilterByWildcards(c => c?.Name, wpName)
+                .OrderBy(c => c.Name))
             {
-                srcCalendars = srcDrive.GetCalendars();
-            }
-            catch (Exception ex)
-            {
-                WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, ex), "GetCalendarError", ErrorCategory.InvalidOperation, srcDrive));
-                return;
-            }
-            if (srcCalendars == null) return;
+                string item = srcCalendar.GetPSPath();
+                string destination = dstDrive.NameColonSeparator;
 
-            string msg = "Copying calendars";
-            using var reporter = new ProgressReporter(this, 1, 100, msg, msg);
+                cancelHandler.Token.ThrowIfCancellationRequested();
 
-            int index = 0;
-            reporter.TotalNum = dstDrives.Count * srcCalendars.Count;
+                reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {srcCalendar.GetPSPath()} to {dstDrive.NameColonSeparator}");
 
-            using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var dstDrive in dstDrives)
-            {
-                foreach (var srcCalendar in srcCalendars
-                    .FilterByWildcards(c => c?.Name, wpName)
-                    .OrderBy(c => c.Name))
+                if (ShouldProcess($"Item: {item} Destination: {destination}", "Copy Calendar"))
                 {
-                    string item = srcCalendar.GetPSPath();
-                    string destination = dstDrive.NameColonSeparator;
-
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
-                    reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {srcCalendar.GetPSPath()} to {dstDrive.NameColonSeparator}");
-
-                    if (ShouldProcess($"Item: {item} Destination: {destination}", "Copy Calendar"))
+                    try
                     {
-                        try
+                        var srcDetailedCalendar = srcDrive.GetCalendar(srcCalendar);
+                        if (srcDetailedCalendar is null)
                         {
-                            var srcDetailedCalendar = srcDrive.GetCalendar(srcCalendar);
-                            if (srcDetailedCalendar == null)
-                            {
-                                continue;
-                            }
-                            var newCalendar = OrchCollectionExtensions.DeepCopy(srcDetailedCalendar);
-                            newCalendar.TimeZoneId = null;
-                            newCalendar.Key = null;
-                            newCalendar.Id = null;
-                            //newCalendar.Path = null; // JsonIgnore 属性がついているので不要
-                            var createdCalendar = dstDrive.OrchAPISession.PostCalendar(newCalendar);
-                            if (createdCalendar != null)
-                            {
-                                //createdCalendar.Path = dstDrive.NameColonSeparator;
-                                //WriteObject(createdCalendar);
-                                dstDrive._dicCalendars = null;
-                            }
+                            continue;
                         }
-                        catch (Exception ex)
+                        var newCalendar = OrchCollectionExtensions.DeepCopy(srcDetailedCalendar);
+                        newCalendar.TimeZoneId = null;
+                        newCalendar.Key = null;
+                        newCalendar.Id = null;
+                        //newCalendar.Path = null; // JsonIgnore 属性がついているので不要
+                        var createdCalendar = dstDrive.OrchAPISession.PostCalendar(newCalendar);
+                        if (createdCalendar is not null)
                         {
-                            WriteError(new ErrorRecord(new OrchException(item, ex), "CreateCalendarError", ErrorCategory.InvalidOperation, destination));
+                            //createdCalendar.Path = dstDrive.NameColonSeparator;
+                            //WriteObject(createdCalendar);
+                            dstDrive._dicCalendars = null;
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteError(new ErrorRecord(new OrchException(item, ex), "CreateCalendarError", ErrorCategory.InvalidOperation, destination));
                     }
                 }
             }

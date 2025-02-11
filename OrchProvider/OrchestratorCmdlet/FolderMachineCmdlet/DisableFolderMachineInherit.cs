@@ -1,14 +1,13 @@
 ﻿using System.Management.Automation;
 using UiPath.PowerShell.Positional;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsLifecycle.Disable, "OrchFolderMachineInherit", SupportsShouldProcess = true)]
+public class DisableFolderMachineInheritCommand : EnableFolderMachineInheritCommandBase<False>
 {
-    [Cmdlet(VerbsLifecycle.Disable, "OrchFolderMachineInherit", SupportsShouldProcess = true)]
-    public class DisableFolderMachineInheritCommand : EnableFolderMachineInheritCommandBase<False>
-    {
-        [Parameter(Position = 0)]
-        [SupportsWildcards]
-        [ArgumentCompleter(typeof(FolderMachineNameCompleter))]
-        public override string[]? Name { get; set; }
-    }
+    [Parameter(Position = 0)]
+    [SupportsWildcards]
+    [ArgumentCompleter(typeof(FolderMachineNameCompleter))]
+    public override string[]? Name { get; set; }
 }

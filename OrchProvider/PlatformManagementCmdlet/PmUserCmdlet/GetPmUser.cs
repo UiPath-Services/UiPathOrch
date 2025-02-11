@@ -3,51 +3,50 @@ using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using TPositional = UiPath.PowerShell.Positional.Email;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsCommon.Get, "OrchPmUser")]
+[OutputType(typeof(Entities.PmUser))]
+public class GetPmUserCommand : OrchestratorPSCmdlet
 {
-    [Cmdlet(VerbsCommon.Get, "OrchPmUser")]
-    [OutputType(typeof(Entities.PmUser))]
-    public class GetPmUserCommand : OrchestratorPSCmdlet
+    [Parameter(Position = 0)]
+    [ArgumentCompleter(typeof(PmUserEmailCompleter<TPositional>))]
+    [SupportsWildcards]
+    [Alias("UserName")]
+    public string[]? Email { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    public string[]? Path { get; set; }
+
+    protected override void ProcessRecord()
     {
-        [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(PmUserEmailCompleter<TPositional>))]
-        [SupportsWildcards]
-        [Alias("UserName")]
-        public string[]? Email { get; set; }
+        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var wpEmail = Email.ConvertToWildcardPatternList();
 
-        [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
-        public string[]? Path { get; set; }
+        using var results = OrchThreadPool.RunForEach(drives,
+            drive => drive.NameColonSeparator,
+            drive => drive,
+            drive => drive.PmUsers.Get());
 
-        protected override void ProcessRecord()
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
         {
-            var drives = OrchDriveInfo.EnumOrchDrives(Path);
-            var wpEmail = Email.ConvertToWildcardPatternList();
+            cancelHandler.Token.ThrowIfCancellationRequested();
 
-            using var results = OrchThreadPool.RunForEach(drives,
-                drive => drive.NameColonSeparator,
-                drive => drive,
-                drive => drive.PmUsers.Get());
-
-            using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var result in results)
+            try
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
+                var entities = result.GetResult(cancelHandler.Token);
+                if (entities is null) continue;
 
-                try
-                {
-                    var entities = result.GetResult(cancelHandler.Token);
-                    if (entities == null) continue;
-
-                    WriteObject(entities
-                        .FilterByWildcards(u => u?.email, wpEmail)
-                        .OrderBy(u => u.email),
-                        true);
-                }
-                catch (OrchException ex)
-                {
-                    WriteError(new ErrorRecord(ex, "GetPmUserError", ErrorCategory.InvalidOperation, ex.Target));
-                }
+                WriteObject(entities
+                    .FilterByWildcards(u => u?.email, wpEmail)
+                    .OrderBy(u => u.email),
+                    true);
+            }
+            catch (OrchException ex)
+            {
+                WriteError(new ErrorRecord(ex, "GetPmUserError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }

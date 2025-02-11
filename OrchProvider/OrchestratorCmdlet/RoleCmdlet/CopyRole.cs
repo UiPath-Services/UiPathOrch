@@ -4,78 +4,77 @@ using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using TPositional = UiPath.PowerShell.Positional.Name_Destination;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsCommon.Copy, "OrchRole", SupportsShouldProcess = true)]
+[OutputType(typeof(Entities.Role))]
+public class CopyRoleCommand : OrchestratorPSCmdlet
 {
-    [Cmdlet(VerbsCommon.Copy, "OrchRole", SupportsShouldProcess = true)]
-    [OutputType(typeof(Entities.Role))]
-    public class CopyRoleCommand : OrchestratorPSCmdlet
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [SupportsWildcards]
+    [ArgumentCompleter(typeof(RoleNameCompleter<TPositional>))]
+    public string[]? Name { get; set; }
+
+    [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(DestinationDriveCompleter<TPositional>))]
+    public string[]? Destination { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [SupportsWildcards]
+    public string? Path { get; set; }
+
+    protected override void ProcessRecord()
     {
-        [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [SupportsWildcards]
-        [ArgumentCompleter(typeof(RoleNameCompleter<TPositional>))]
-        public string[]? Name { get; set; }
+        var wpName = Name.ConvertToWildcardPatternList();
 
-        [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DestinationDriveCompleter<TPositional>))]
-        public string[]? Destination { get; set; }
+        var srcDrive = OrchDriveInfo.GetOrchDrive(Path!);
+        if (srcDrive is null)
+            throw new Exception("Path is not OrchDrive.");
 
-        [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
-        [SupportsWildcards]
-        public string? Path { get; set; }
+        var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
 
-        protected override void ProcessRecord()
+        srcDrive.Roles.ClearCache();
+
+        var srcRoles = srcDrive!.Roles.Get()
+            .FilterByWildcards(role => role?.Name, wpName)
+            .OrderBy(role => role.Name)
+            .ToList();
+
+        string msg = "Copying roles";
+        using var reporter = new ProgressReporter(this, 1, 100, msg, msg);
+
+        int index = 0;
+        reporter.TotalNum = dstDrives.Count * srcRoles.Count;
+
+        foreach (var dstDrive in dstDrives)
         {
-            var wpName = Name.ConvertToWildcardPatternList();
+            if (srcDrive == dstDrive) continue;
 
-            var srcDrive = OrchDriveInfo.GetOrchDrive(Path!);
-            if (srcDrive == null)
-                throw new Exception("Path is not OrchDrive.");
+            string target = dstDrive.NameColonSeparator;
 
-            var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
-
-            srcDrive.Roles.ClearCache();
-
-            var srcRoles = srcDrive!.Roles.Get()
-                .FilterByWildcards(role => role?.Name, wpName)
-                .OrderBy(role => role.Name)
-                .ToList();
-
-            string msg = "Copying roles";
-            using var reporter = new ProgressReporter(this, 1, 100, msg, msg);
-
-            int index = 0;
-            reporter.TotalNum = dstDrives.Count * srcRoles.Count;
-
-            foreach (var dstDrive in dstDrives)
+            foreach (var role in srcRoles
+                //.Where(r => !r.IsStatic.GetValueOrDefault())
+                .OrderBy(r => r.Name))
             {
-                if (srcDrive == dstDrive) continue;
+                string item = System.IO.Path.Combine(srcDrive.NameColon, role.Name!);
+                string destination = dstDrive.NameColonSeparator;
 
-                string target = dstDrive.NameColonSeparator;
+                reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {role.GetPSPath()} to {dstDrive.NameColonSeparator}");
 
-                foreach (var role in srcRoles
-                    //.Where(r => !r.IsStatic.GetValueOrDefault())
-                    .OrderBy(r => r.Name))
+                if (ShouldProcess($"Item: {item} Destination: {destination}", $"Copy Role"))
                 {
-                    string item = System.IO.Path.Combine(srcDrive.NameColon, role.Name!);
-                    string destination = dstDrive.NameColonSeparator;
-
-                    reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {role.GetPSPath()} to {dstDrive.NameColonSeparator}");
-
-                    if (ShouldProcess($"Item: {item} Destination: {destination}", $"Copy Role"))
+                    try
                     {
-                        try
-                        {
-                            var addedRole = dstDrive.OrchAPISession.PostRole(role);
-                            //addedRole.Path = dstDrive.NameColonSeparator;
-                            //WriteObject(addedRole);
-                            dstDrive.Roles.ClearCache();
-                        }
-                        catch (Exception ex)
-                        {
-                            var errorRecord = new ErrorRecord(new OrchException(item, ex), "CopyRoleError", ErrorCategory.InvalidOperation, destination);
-                            WriteError(errorRecord);
-                        }
+                        var addedRole = dstDrive.OrchAPISession.PostRole(role);
+                        //addedRole.Path = dstDrive.NameColonSeparator;
+                        //WriteObject(addedRole);
+                        dstDrive.Roles.ClearCache();
+                    }
+                    catch (Exception ex)
+                    {
+                        var errorRecord = new ErrorRecord(new OrchException(item, ex), "CopyRoleError", ErrorCategory.InvalidOperation, destination);
+                        WriteError(errorRecord);
                     }
                 }
             }

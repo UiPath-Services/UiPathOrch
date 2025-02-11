@@ -9,201 +9,200 @@ using UiPath.PowerShell.Entities;
 using Job = UiPath.PowerShell.Entities.Job;
 using TPositional = UiPath.PowerShell.Positional.Id;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+class StopJobCommandParameter
 {
-    class StopJobCommandParameter
+    public Int64 Id { set; get; }
+    public OrchDriveInfo? Drive { set; get; }
+    public Folder? Folder { set; get; }
+}
+
+[Cmdlet(VerbsLifecycle.Stop, "OrchJob", DefaultParameterSetName = "FromCommandLine", SupportsShouldProcess = true)]
+public class StopJobCommand : OrchestratorPSCmdlet
+{
+    private List<StopJobCommandParameter> parameters = new();
+
+    //private static readonly string[] stoppableStates = ["Pending", "Running", "Suspended", "Resumed"];
+    //private static readonly string[] killableStates = ["Pending", "Running", "Stopping", "Suspended", "Resumed"];
+    private static readonly string[] alreadyStoppedStates = ["Terminating", "Faulted", "Successful", "Stopped"];
+
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(IdCompleter))]
+    public Int64[]? Id { get; set; }
+
+    [Parameter(DontShow = true, ValueFromPipeline = true)]
+    public Job? Job { get; set; }
+
+    [Parameter]
+    public SwitchParameter Force { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [SupportsWildcards]
+    public string[]? Path { get; set; }
+
+    [Parameter]
+    public SwitchParameter Recurse { get; set; }
+
+    [Parameter]
+    public uint Depth { get; set; }
+
+    private class IdCompleter : OrchArgumentCompleter
     {
-        public Int64 Id { set; get; }
-        public OrchDriveInfo? Drive { set; get; }
-        public Folder? Folder { set; get; }
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+            // パラメータで選択済みの Id は、候補から除外する
+            // TODO: これ入力時にはワイルドカードをサポートしてもいいのでは？
+            var paramId = GetParameterValues(commandAst, "Id", TPositional.Parameters, wordToComplete).Select(id => Int64.Parse(id));
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = new ConcurrentBag<ReadOnlyCollection<Job>?>();
+            Parallel.ForEach(drivesFolders, driveFolder =>
+            {
+                var (drive, folder) = driveFolder;
+
+                try
+                {
+                    // キャッシュが残っていればそれを使う
+                    if (drive._dicJobs is not null &&
+                        drive._dicJobs.TryGetValue(folder.Id ?? 0, out var folderJobs))
+                    {
+                        results.Add(folderJobs!.Values.ToList().AsReadOnly());
+                    }
+                    else // キャッシュがなければ取得する
+                    {
+                        results.Add(drive.GetJobs(folder, "&$filter=((ProcessType%20eq%20%27Process%27)%20and%20((State%20eq%20%27Pending%27)%20or%20(State%20eq%20%27Running%27)%20or%20(State%20eq%20%27Stopping%27)%20or%20(State%20eq%20%27Suspended%27)%20or%20(State%20eq%20%27Resumed%27)))"));
+                    }
+                }
+                catch { }
+            });
+
+            foreach (var job in results
+                .SelectMany(te => te!)
+                .Where(job => wp.IsMatch((job.Id ?? 0).ToString()))
+                .Where(job => !alreadyStoppedStates.Contains(job.State))
+                .ExcludeByStructValues(job => (job.Id ?? 0), paramId))
+            {
+                    string tiphelp = $"{job.Id} C{job.CreationTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")}";
+                    if (job.StartTime is not null)
+                        tiphelp += $"  S{job.StartTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss").ToString()}";
+                    else
+                        tiphelp += $"                      ";
+                    if (job.EndTime is not null)
+                        tiphelp += $"  E{job.EndTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss").ToString()}";
+                    else
+                        tiphelp += $"                      ";
+                    tiphelp += $" {job.State,11} {job.ReleaseName}";
+
+                    yield return new CompletionResult(job.Id.ToString(), job.Id.ToString(), CompletionResultType.ParameterValue, tiphelp);
+            }
+        }
     }
 
-    [Cmdlet(VerbsLifecycle.Stop, "OrchJob", DefaultParameterSetName = "FromCommandLine", SupportsShouldProcess = true)]
-    public class StopJobCommand : OrchestratorPSCmdlet
+    protected override void ProcessRecord()
     {
-        private List<StopJobCommandParameter> parameters = new();
-
-        //private static readonly string[] stoppableStates = ["Pending", "Running", "Suspended", "Resumed"];
-        //private static readonly string[] killableStates = ["Pending", "Running", "Stopping", "Suspended", "Resumed"];
-        private static readonly string[] alreadyStoppedStates = ["Terminating", "Faulted", "Successful", "Stopped"];
-
-        [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(IdCompleter))]
-        public Int64[]? Id { get; set; }
-
-        [Parameter(DontShow = true, ValueFromPipeline = true)]
-        public Job? Job { get; set; }
-
-        [Parameter]
-        public SwitchParameter Force { get; set; }
-
-        [Parameter(ValueFromPipelineByPropertyName = true)]
-        [SupportsWildcards]
-        public string[]? Path { get; set; }
-
-        [Parameter]
-        public SwitchParameter Recurse { get; set; }
-
-        [Parameter]
-        public uint Depth { get; set; }
-
-        private class IdCompleter : OrchArgumentCompleter
+        if (Job is not null)
         {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
+            // Get-OrchJob からパイプ入力
+            // 停止済みとマークされているジョブは処理しない
+            if (alreadyStoppedStates.Contains(Job.State))
+                return;
+
+            // Path を展開した上で、parameters に追加
+            var drivesFolders = OrchDriveInfo.EnumFolders(new string[] { Job.Path! });
+            foreach (var (drive, folder) in drivesFolders)
             {
-                var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-
-                // パラメータで選択済みの Id は、候補から除外する
-                // TODO: これ入力時にはワイルドカードをサポートしてもいいのでは？
-                var paramId = GetParameterValues(commandAst, "Id", TPositional.Parameters, wordToComplete).Select(id => Int64.Parse(id));
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                var results = new ConcurrentBag<ReadOnlyCollection<Job>?>();
-                Parallel.ForEach(drivesFolders, driveFolder =>
+                var parameter = new StopJobCommandParameter()
                 {
-                    var (drive, folder) = driveFolder;
-
-                    try
-                    {
-                        // キャッシュが残っていればそれを使う
-                        if (drive._dicJobs != null &&
-                            drive._dicJobs.TryGetValue(folder.Id ?? 0, out var folderJobs))
-                        {
-                            results.Add(folderJobs!.Values.ToList().AsReadOnly());
-                        }
-                        else // キャッシュがなければ取得する
-                        {
-                            results.Add(drive.GetJobs(folder, "&$filter=((ProcessType%20eq%20%27Process%27)%20and%20((State%20eq%20%27Pending%27)%20or%20(State%20eq%20%27Running%27)%20or%20(State%20eq%20%27Stopping%27)%20or%20(State%20eq%20%27Suspended%27)%20or%20(State%20eq%20%27Resumed%27)))"));
-                        }
-                    }
-                    catch { }
-                });
-
-                foreach (var job in results
-                    .SelectMany(te => te!)
-                    .Where(job => wp.IsMatch((job.Id ?? 0).ToString()))
-                    .Where(job => !alreadyStoppedStates.Contains(job.State))
-                    .ExcludeByStructValues(job => (job.Id ?? 0), paramId))
-                {
-                        string tiphelp = $"{job.Id} C{job.CreationTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")}";
-                        if (job.StartTime != null)
-                            tiphelp += $"  S{job.StartTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss").ToString()}";
-                        else
-                            tiphelp += $"                      ";
-                        if (job.EndTime != null)
-                            tiphelp += $"  E{job.EndTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss").ToString()}";
-                        else
-                            tiphelp += $"                      ";
-                        tiphelp += $" {job.State,11} {job.ReleaseName}";
-
-                        yield return new CompletionResult(job.Id.ToString(), job.Id.ToString(), CompletionResultType.ParameterValue, tiphelp);
-                }
+                    Drive = drive,
+                    Folder = folder,
+                    Id = Job.Id ?? 0
+                };
+                parameters.Add(parameter);
             }
         }
-
-        protected override void ProcessRecord()
+        else
         {
-            if (Job != null)
-            {
-                // Get-OrchJob からパイプ入力
-                // 停止済みとマークされているジョブは処理しない
-                if (alreadyStoppedStates.Contains(Job.State))
-                    return;
+            // コマンドラインから入力
+            var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
 
-                // Path を展開した上で、parameters に追加
-                var drivesFolders = OrchDriveInfo.EnumFolders(new string[] { Job.Path! });
-                foreach (var (drive, folder) in drivesFolders)
-                {
-                    var parameter = new StopJobCommandParameter()
-                    {
-                        Drive = drive,
-                        Folder = folder,
-                        Id = Job.Id ?? 0
-                    };
-                    parameters.Add(parameter);
-                }
-            }
-            else
+            foreach (var (drive, folder) in drivesFolders)
             {
-                // コマンドラインから入力
-                var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
-
-                foreach (var (drive, folder) in drivesFolders)
+                // このフォルダーの Job キャッシュを取得
+                // パラメータごとに drive.GetJobs() を呼ばないように、キャッシュを直接読み取る
+                // (無駄に drive.GetJobs() を呼び出すと、処理が遅くなってしまう)
+                if (drive._dicJobs?.TryGetValue(folder.Id ?? 0, out var folderJobs) ?? false)
                 {
-                    // このフォルダーの Job キャッシュを取得
-                    // パラメータごとに drive.GetJobs() を呼ばないように、キャッシュを直接読み取る
-                    // (無駄に drive.GetJobs() を呼び出すと、処理が遅くなってしまう)
-                    if (drive._dicJobs?.TryGetValue(folder.Id ?? 0, out var folderJobs) ?? false)
+                    foreach (var jobId in Id!)
                     {
-                        foreach (var jobId in Id!)
+                        // キャッシュに停止済みとマークされているジョブは処理しない
+                        if (folderJobs is not null)
                         {
-                            // キャッシュに停止済みとマークされているジョブは処理しない
-                            if (folderJobs != null)
+                            if (folderJobs.TryGetValue(jobId, out var job))
                             {
-                                if (folderJobs.TryGetValue(jobId, out var job))
-                                {
-                                    if (alreadyStoppedStates.Contains(job.State))
-                                        continue;
-                                }
+                                if (alreadyStoppedStates.Contains(job.State))
+                                    continue;
                             }
-                            var parameter = new StopJobCommandParameter()
-                            {
-                                Drive = drive,
-                                Folder = folder,
-                                Id = jobId
-                            };
-                            parameters.Add(parameter);
                         }
+                        var parameter = new StopJobCommandParameter()
+                        {
+                            Drive = drive,
+                            Folder = folder,
+                            Id = jobId
+                        };
+                        parameters.Add(parameter);
                     }
                 }
             }
         }
+    }
 
-        //private class StopJobOutput(string? path, long? id)
-        //{
-        //    public string? Path { get; set; } = path;
-        //    public long? Id { get; set; } = id;
-        //}
+    //private class StopJobOutput(string? path, long? id)
+    //{
+    //    public string? Path { get; set; } = path;
+    //    public long? Id { get; set; } = id;
+    //}
 
-        protected override void EndProcessing()
+    protected override void EndProcessing()
+    {
+        string action = Force ? "Kill Job " : "Stop Job ";
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var group in parameters.GroupBy(p => p.Folder))
         {
-            string action = Force ? "Kill Job " : "Stop Job ";
+            cancelHandler.Token.ThrowIfCancellationRequested();
 
-            using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var group in parameters.GroupBy(p => p.Folder))
+            OrchDriveInfo drive = group.First().Drive;
+            Folder folder = group.Key;
+            string targetFolder = group.Key!.GetPSPath();
+
+            IEnumerable<Int64> jobsToStop = group.Select(p => p.Id);
+            string strJobsToStop = string.Join(",", jobsToStop.Select(id => id.ToString()));
+
+            if (ShouldProcess(targetFolder, action + strJobsToStop))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
-                OrchDriveInfo drive = group.First().Drive;
-                Folder folder = group.Key;
-                string targetFolder = group.Key!.GetPSPath();
-
-                IEnumerable<Int64> jobsToStop = group.Select(p => p.Id);
-                string strJobsToStop = string.Join(",", jobsToStop.Select(id => id.ToString()));
-
-                if (ShouldProcess(targetFolder, action + strJobsToStop))
+                try
                 {
-                    try
-                    {
-                        drive!.OrchAPISession.StopJobs(group.Key!.Id ?? 0, jobsToStop, Force);
-                        //WriteObject(jobsToStop.Select(id => new StopJobOutput(folder?.GetPSPath(), id)), true);
-                        drive._dicJobs?.TryRemove(folder!.Id ?? 0, out var _);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        throw;
-                    }
-                    catch (Exception ex)
-                    {
-                        var errorRecord = new ErrorRecord(new OrchException(targetFolder, ex), "StopJobError", ErrorCategory.InvalidOperation, group.Key);
-                        WriteError(errorRecord);
-                    }
+                    drive!.OrchAPISession.StopJobs(group.Key!.Id ?? 0, jobsToStop, Force);
+                    //WriteObject(jobsToStop.Select(id => new StopJobOutput(folder?.GetPSPath(), id)), true);
+                    drive._dicJobs?.TryRemove(folder!.Id ?? 0, out var _);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    var errorRecord = new ErrorRecord(new OrchException(targetFolder, ex), "StopJobError", ErrorCategory.InvalidOperation, group.Key);
+                    WriteError(errorRecord);
                 }
             }
         }

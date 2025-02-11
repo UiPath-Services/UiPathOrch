@@ -7,343 +7,342 @@ using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
 using TPositional = UiPath.PowerShell.Positional.Name_ImportCsv_CsvEncoding_CommitType;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+public class CSVParseError(int csvRow, string errorType, string csvField, string errorCode)
 {
-    public class CSVParseError(int csvRow, string errorType, string csvField, string errorCode)
+    public int CSVRow { get; set; } = csvRow;
+    public string ErrorType { get; set; } = errorType;
+    public string CSVField { get; set; } = csvField;
+    public string ErrorCode { get; set; } = errorCode;
+}
+
+[Cmdlet(VerbsData.Import, "OrchQueueItem", SupportsShouldProcess = true)]
+[OutputType(typeof(Entities.FailedQueueItem))]
+public class ImportQueueItemCommand : OrchestratorPSCmdlet
+{
+    [Parameter(Position = 0, Mandatory = true)]
+    [ArgumentCompleter(typeof(QueueNameCompleter<TPositional>))]
+    [SupportsWildcards]
+    public string[]? Name { get; set; }
+
+    [Parameter(Position = 1, Mandatory = true)]
+    [SupportsWildcards]
+    public string[]? ImportCsv { get; set; }
+
+    [Parameter(Position = 2)]
+    [ArgumentCompleter(typeof(EncodingCompleter))]
+    [EncodingArgumentTransformation]
+    public Encoding? CsvEncoding { get; set; }
+
+    [Parameter(Position = 3)]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<QueueItemCommitTypeItems>))]
+    public string? CommitType { get; set; }
+
+    [Parameter]
+    [SupportsWildcards]
+    public string[]? Path { get; set; }
+
+    // TODO: 次のようなダブルクォートを含む csv を適切にパースできていないな。。
+    /*
+    Path,Type,UserName,Roles
+    TestTenant:,DirectoryUser,LynneR@1pf2dr.onmicrosoft.com,
+    TestTenant:,DirectoryUser,MeganB@1pf2dr.onmicrosoft.com,"""Allow to be Automation Developer"",""Solutions Contributor"""
+     */
+    public bool ParseCsvContent(string csvFilePath, out List<string> headers, out List<List<string>> contents, out List<CSVParseError> errorInfo)
     {
-        public int CSVRow { get; set; } = csvRow;
-        public string ErrorType { get; set; } = errorType;
-        public string CSVField { get; set; } = csvField;
-        public string ErrorCode { get; set; } = errorCode;
-    }
+        headers = [];
+        contents = [];
+        errorInfo = [];
+        bool inQuotes = false;
+        StringBuilder currentField = new();
+        List<string> currentRow = [];
+        int currentRowNumber = 0;
 
-    [Cmdlet(VerbsData.Import, "OrchQueueItem", SupportsShouldProcess = true)]
-    [OutputType(typeof(Entities.FailedQueueItem))]
-    public class ImportQueueItemCommand : OrchestratorPSCmdlet
-    {
-        [Parameter(Position = 0, Mandatory = true)]
-        [ArgumentCompleter(typeof(QueueNameCompleter<TPositional>))]
-        [SupportsWildcards]
-        public string[]? Name { get; set; }
-
-        [Parameter(Position = 1, Mandatory = true)]
-        [SupportsWildcards]
-        public string[]? ImportCsv { get; set; }
-
-        [Parameter(Position = 2)]
-        [ArgumentCompleter(typeof(EncodingCompleter))]
-        [EncodingArgumentTransformation]
-        public Encoding? CsvEncoding { get; set; }
-
-        [Parameter(Position = 3)]
-        [ArgumentCompleter(typeof(StaticTextsCompleter<QueueItemCommitTypeItems>))]
-        public string? CommitType { get; set; }
-
-        [Parameter]
-        [SupportsWildcards]
-        public string[]? Path { get; set; }
-
-        // TODO: 次のようなダブルクォートを含む csv を適切にパースできていないな。。
-        /*
-        Path,Type,UserName,Roles
-        TestTenant:,DirectoryUser,LynneR@1pf2dr.onmicrosoft.com,
-        TestTenant:,DirectoryUser,MeganB@1pf2dr.onmicrosoft.com,"""Allow to be Automation Developer"",""Solutions Contributor"""
-         */
-        public bool ParseCsvContent(string csvFilePath, out List<string> headers, out List<List<string>> contents, out List<CSVParseError> errorInfo)
+        if (CsvEncoding is null)
         {
-            headers = [];
-            contents = [];
-            errorInfo = [];
-            bool inQuotes = false;
-            StringBuilder currentField = new();
-            List<string> currentRow = [];
-            int currentRowNumber = 0;
+            CsvEncoding = Encoding.UTF8;
+        }
 
-            if (CsvEncoding == null)
+        foreach (var fullLine in File.ReadLines(csvFilePath, CsvEncoding))
+        {
+            bool lineHasError = false; // この行にエラーがあるかどうかを追跡するフラグ
+            string line = fullLine.TrimEnd('\r');
+
+            for (int i = 0; i < line.Length; i++)
             {
-                CsvEncoding = Encoding.UTF8;
-            }
+                char c = line[i];
 
-            foreach (var fullLine in File.ReadLines(csvFilePath, CsvEncoding))
-            {
-                bool lineHasError = false; // この行にエラーがあるかどうかを追跡するフラグ
-                string line = fullLine.TrimEnd('\r');
-
-                for (int i = 0; i < line.Length; i++)
+                // Toggle quoting status and handle escaped quotes
+                if (c == '"')
                 {
-                    char c = line[i];
-
-                    // Toggle quoting status and handle escaped quotes
-                    if (c == '"')
-                    {
-                        if (inQuotes && i + 1 < line.Length && line[i + 1] == '"')
-                        { // Escaped quote
-                            currentField.Append('"');
-                            i++; // Skip the next quote
-                        }
-                        else if (!inQuotes && currentField.Length > 0)
-                        {
-                            currentField.Append('"');
-                        }
-                        else
-                        {
-                            inQuotes = !inQuotes; // Toggle quoting status
-                                                  // Check if the closing quote is not properly followed by a comma or end of line
-                            if (!inQuotes && i < line.Length - 1 && line[i + 1] != ',' && line[i + 1] != '\n')
-                            {
-                                errorInfo.Add(new CSVParseError(currentRowNumber, "Quotes", "N/A", "Invalid Quotes"));
-                                lineHasError = true;
-                                // Break out of the loop to skip the rest of the line
-                                break;
-                            }
-                        }
+                    if (inQuotes && i + 1 < line.Length && line[i + 1] == '"')
+                    { // Escaped quote
+                        currentField.Append('"');
+                        i++; // Skip the next quote
                     }
-                    else if (c == ',' && !inQuotes)
+                    else if (!inQuotes && currentField.Length > 0)
                     {
-                        // End of a field
-                        currentRow.Add(currentField.ToString());
-                        currentField.Clear();
+                        currentField.Append('"');
                     }
                     else
                     {
-                        currentField.Append(c);
-                    }
-
-                    // After the loop
-                    if (lineHasError)
-                    {
-                        // If an error was detected, clear the currentField and currentRow to start fresh on the next line
-                        currentField.Clear();
-                        currentRow.Clear();
-                        break; // Skip to the next line in the outer loop
+                        inQuotes = !inQuotes; // Toggle quoting status
+                                              // Check if the closing quote is not properly followed by a comma or end of line
+                        if (!inQuotes && i < line.Length - 1 && line[i + 1] != ',' && line[i + 1] != '\n')
+                        {
+                            errorInfo.Add(new CSVParseError(currentRowNumber, "Quotes", "N/A", "Invalid Quotes"));
+                            lineHasError = true;
+                            // Break out of the loop to skip the rest of the line
+                            break;
+                        }
                     }
                 }
-
-                if (lineHasError)
+                else if (c == ',' && !inQuotes)
                 {
-                    // エラーがあった行はすべてのデータを捨てる
-                    currentField.Clear();
-                    currentRow.Clear();
-                    continue; // 次の行へ進む
-                }
-
-                // Add the last field if we're not inside quotes (end of line)
-                if (!inQuotes && currentRow.Count != 0)
-                {
+                    // End of a field
                     currentRow.Add(currentField.ToString());
                     currentField.Clear();
-                    if (currentRowNumber != 0 && headers.Count() < currentRow.Count())
-                    {
-                        currentField.Clear();
-                        currentRow.Clear();
-                        errorInfo.Add(new CSVParseError(currentRowNumber, "Fields Mismatch", "N/A", "Too Many Fields"));
-                        continue;
-                    }
                 }
                 else
                 {
-                    // Multiline field, add newline character and continue accumulating
-                    currentField.Append('\n');
+                    currentField.Append(c);
+                }
+
+                // After the loop
+                if (lineHasError)
+                {
+                    // If an error was detected, clear the currentField and currentRow to start fresh on the next line
+                    currentField.Clear();
+                    currentRow.Clear();
+                    break; // Skip to the next line in the outer loop
+                }
+            }
+
+            if (lineHasError)
+            {
+                // エラーがあった行はすべてのデータを捨てる
+                currentField.Clear();
+                currentRow.Clear();
+                continue; // 次の行へ進む
+            }
+
+            // Add the last field if we're not inside quotes (end of line)
+            if (!inQuotes && currentRow.Count != 0)
+            {
+                currentRow.Add(currentField.ToString());
+                currentField.Clear();
+                if (currentRowNumber != 0 && headers.Count() < currentRow.Count())
+                {
+                    currentField.Clear();
+                    currentRow.Clear();
+                    errorInfo.Add(new CSVParseError(currentRowNumber, "Fields Mismatch", "N/A", "Too Many Fields"));
                     continue;
                 }
-
-                // Process the header row separately
-                if (currentRowNumber == 0)
-                {
-                    headers = new List<string>(currentRow);
-                    ++currentRowNumber;
-                }
-                else if (currentRow.Count > 0) // Avoid adding empty lines as rows
-                {
-                    contents.Add(new List<string>(currentRow));
-                    ++currentRowNumber;
-                }
-
-                currentRow = new List<string>(); // Reset for the next row
             }
-
-            // Final check for unmatched quotes
-            if (inQuotes)
+            else
             {
-                errorInfo.Add(new CSVParseError(currentRowNumber, "Unmatched Quotes", "", "A field contains unmatched quotes"));
+                // Multiline field, add newline character and continue accumulating
+                currentField.Append('\n');
+                continue;
             }
 
-            return !errorInfo.Any();
+            // Process the header row separately
+            if (currentRowNumber == 0)
+            {
+                headers = new List<string>(currentRow);
+                ++currentRowNumber;
+            }
+            else if (currentRow.Count > 0) // Avoid adding empty lines as rows
+            {
+                contents.Add(new List<string>(currentRow));
+                ++currentRowNumber;
+            }
+
+            currentRow = new List<string>(); // Reset for the next row
         }
 
-        private (int rowNum, string content) CreateItemData(string csvFilePath, out List<CSVParseError> errorInfo)
+        // Final check for unmatched quotes
+        if (inQuotes)
         {
-            StringBuilder sb = new();
-            sb.Append("{\"queueItems\":[\n");
+            errorInfo.Add(new CSVParseError(currentRowNumber, "Unmatched Quotes", "", "A field contains unmatched quotes"));
+        }
 
-            ParseCsvContent(csvFilePath, out var headers, out var contents, out errorInfo);
+        return !errorInfo.Any();
+    }
 
-            int currentRowNumber = 0;
-            foreach (var values in contents)
+    private (int rowNum, string content) CreateItemData(string csvFilePath, out List<CSVParseError> errorInfo)
+    {
+        StringBuilder sb = new();
+        sb.Append("{\"queueItems\":[\n");
+
+        ParseCsvContent(csvFilePath, out var headers, out var contents, out errorInfo);
+
+        int currentRowNumber = 0;
+        foreach (var values in contents)
+        {
+            ++currentRowNumber;
+            var queueItem = new QueueItemData();
+            foreach (var column in headers.Zip(values, (header, value) => (header, value)))
             {
-                ++currentRowNumber;
-                var queueItem = new QueueItemData();
-                foreach (var column in headers.Zip(values, (header, value) => (header, value)))
+                var (header, value) = column;
+                switch (header)
                 {
-                    var (header, value) = column;
-                    switch (header)
-                    {
-                        case "Priority":
-                            if (!string.IsNullOrEmpty(value))
+                    case "Priority":
+                        if (!string.IsNullOrEmpty(value))
+                        {
+                            switch (value.ToLower())
                             {
-                                switch (value.ToLower())
-                                {
-                                    case "1":
-                                    case "low":
-                                        queueItem.Priority = "Low";
-                                        break;
-                                    case "2":
-                                    case "normal":
-                                        queueItem.Priority = "Normal";
-                                        break;
-                                    case "3":
-                                    case "high":
-                                        queueItem.Priority = "High";
-                                        break;
-                                    default:
-                                        errorInfo.Add(new CSVParseError(currentRowNumber, "Field Error", header, "Invalid Data found"));
-                                        break;
-                                }
+                                case "1":
+                                case "low":
+                                    queueItem.Priority = "Low";
+                                    break;
+                                case "2":
+                                case "normal":
+                                    queueItem.Priority = "Normal";
+                                    break;
+                                case "3":
+                                case "high":
+                                    queueItem.Priority = "High";
+                                    break;
+                                default:
+                                    errorInfo.Add(new CSVParseError(currentRowNumber, "Field Error", header, "Invalid Data found"));
+                                    break;
                             }
-                            break;
-                        case "Reference":
-                            // "" であっても設定の必要がある
-                            queueItem.Reference = value;
-                            break;
-                        default: // SpecificContent
-                            if (!string.IsNullOrEmpty(header))
-                            {
-                                queueItem.SpecificContent ??= new Dictionary<string, object>();
-                                queueItem.SpecificContent[header] = value;
-                            }
-                            break;
-                    }
+                        }
+                        break;
+                    case "Reference":
+                        // "" であっても設定の必要がある
+                        queueItem.Reference = value;
+                        break;
+                    default: // SpecificContent
+                        if (!string.IsNullOrEmpty(header))
+                        {
+                            queueItem.SpecificContent ??= new Dictionary<string, object>();
+                            queueItem.SpecificContent[header] = value;
+                        }
+                        break;
                 }
-                string strLine = System.Text.Json.JsonSerializer.Serialize(queueItem, OrchAPISession.jsoWhenWritingNull);
-                if (currentRowNumber == 1)
+            }
+            string strLine = System.Text.Json.JsonSerializer.Serialize(queueItem, OrchAPISession.jsoWhenWritingNull);
+            if (currentRowNumber == 1)
+            {
+                sb.Append(strLine);
+            }
+            else
+            {
+                sb.Append(",\n" + strLine);
+            }
+        }
+
+        sb.Append("],\n");
+
+        if (!string.IsNullOrEmpty(CommitType))
+        {
+            sb.Append("\"commitType\":\"" + CommitType + "\",\n");
+        }
+
+        if (errorInfo.Any())
+        {
+            return (0, "");
+        }
+
+        return (contents.Count, sb.ToString());
+    }
+
+    protected override void ProcessRecord()
+    {
+        var drivesFolders = OrchDriveInfo.EnumFolders(Path);
+        var wpName = Name.ConvertToWildcardPatternList();
+
+        if (string.IsNullOrEmpty(CommitType))
+        {
+            CommitType = "ProcessAllIndependently";
+        }
+
+        var csvPathExpanded = OrchDriveInfo.ExpandLocalPath(SessionState, ImportCsv, "*.csv");
+
+        var queueItemData = new List<(string csvPath, (int rowNum, string content))>();
+        foreach (var p in csvPathExpanded)
+        {
+            try
+            {
+                queueItemData.Add((p.FullPath, CreateItemData(p.FullPath, out var errorInfo)));
+                if (errorInfo is not null && errorInfo.Count != 0)
                 {
-                    sb.Append(strLine);
+                    WriteObject(errorInfo, true);
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                string target;
+                if (ex.Data.Contains("target"))
+                {
+                    target = ex.Data["target"]!.ToString();
                 }
                 else
                 {
-                    sb.Append(",\n" + strLine);
+                    target = p.FullPath;
                 }
+                WriteError(new ErrorRecord(new OrchException(target!, ex), "ImportQueueItemError", ErrorCategory.InvalidOperation, target));
             }
-
-            sb.Append("],\n");
-
-            if (!string.IsNullOrEmpty(CommitType))
-            {
-                sb.Append("\"commitType\":\"" + CommitType + "\",\n");
-            }
-
-            if (errorInfo.Any())
-            {
-                return (0, "");
-            }
-
-            return (contents.Count, sb.ToString());
         }
 
-        protected override void ProcessRecord()
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var (drive, folder) in drivesFolders)
         {
-            var drivesFolders = OrchDriveInfo.EnumFolders(Path);
-            var wpName = Name.ConvertToWildcardPatternList();
-
-            if (string.IsNullOrEmpty(CommitType))
+            string targetFolder = folder.GetPSPath();
+            try
             {
-                CommitType = "ProcessAllIndependently";
-            }
-
-            var csvPathExpanded = OrchDriveInfo.ExpandLocalPath(SessionState, ImportCsv, "*.csv");
-
-            var queueItemData = new List<(string csvPath, (int rowNum, string content))>();
-            foreach (var p in csvPathExpanded)
-            {
-                try
+                var queues = drive.Queues.Get(folder);
+                foreach (var queue in queues.FilterByWildcards(q => q?.Name, wpName))
                 {
-                    queueItemData.Add((p.FullPath, CreateItemData(p.FullPath, out var errorInfo)));
-                    if (errorInfo != null && errorInfo.Count != 0)
+                    foreach (var queueItem in queueItemData)
                     {
-                        WriteObject(errorInfo, true);
-                        return;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    string target;
-                    if (ex.Data.Contains("target"))
-                    {
-                        target = ex.Data["target"]!.ToString();
-                    }
-                    else
-                    {
-                        target = p.FullPath;
-                    }
-                    WriteError(new ErrorRecord(new OrchException(target!, ex), "ImportQueueItemError", ErrorCategory.InvalidOperation, target));
-                }
-            }
+                        cancelHandler.Token.ThrowIfCancellationRequested();
 
-            using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var (drive, folder) in drivesFolders)
-            {
-                string targetFolder = folder.GetPSPath();
-                try
-                {
-                    var queues = drive.Queues.Get(folder);
-                    foreach (var queue in queues.FilterByWildcards(q => q?.Name, wpName))
-                    {
-                        foreach (var queueItem in queueItemData)
+                        string target = targetFolder + "\\" + queue.Name;
+                        try
                         {
-                            cancelHandler.Token.ThrowIfCancellationRequested();
-
-                            string target = targetFolder + "\\" + queue.Name;
-                            try
+                            if (ShouldProcess(target, $"Import Queue Item {queueItem.csvPath} ({queueItem.Item2.rowNum} rows)"))
                             {
-                                if (ShouldProcess(target, $"Import Queue Item {queueItem.csvPath} ({queueItem.Item2.rowNum} rows)"))
+                                var response = drive.OrchAPISession.BulkAddQueueItem(folder.Id ?? 0, queueItem.Item2.content + $"\"queueName\":\"{queue.Name}\"\n}}");
+                                if (response is not null)
                                 {
-                                    var response = drive.OrchAPISession.BulkAddQueueItem(folder.Id ?? 0, queueItem.Item2.content + $"\"queueName\":\"{queue.Name}\"\n}}");
-                                    if (response != null)
+                                    if (response.Success.GetValueOrDefault())
                                     {
-                                        if (response.Success.GetValueOrDefault())
+                                        WriteObject(response);
+                                    }
+                                    else
+                                    {
+                                        WriteError(new ErrorRecord(new OrchException(target, response.Message!), "ImportQueueItemError", ErrorCategory.InvalidOperation, target));
+                                        if (response.FailedItems is not null)
                                         {
-                                            WriteObject(response);
-                                        }
-                                        else
-                                        {
-                                            WriteError(new ErrorRecord(new OrchException(target, response.Message!), "ImportQueueItemError", ErrorCategory.InvalidOperation, target));
-                                            if (response.FailedItems != null)
+                                            foreach (var failedItem in response.FailedItems!)
                                             {
-                                                foreach (var failedItem in response.FailedItems!)
-                                                {
-                                                    failedItem.Category = $"{queue.Name} ({queueItem.csvPath})";
-                                                    failedItem.QueueName = queue.Name;
-                                                    failedItem.CsvPath = queueItem.csvPath;
-                                                    WriteObject(failedItem);
-                                                }
+                                                failedItem.Category = $"{queue.Name} ({queueItem.csvPath})";
+                                                failedItem.QueueName = queue.Name;
+                                                failedItem.CsvPath = queueItem.csvPath;
+                                                WriteObject(failedItem);
                                             }
                                         }
                                     }
                                 }
                             }
-                            catch (Exception ex)
-                            {
-                                var errorRecord = new ErrorRecord(new OrchException(target, ex), "ImportQueueItemError", ErrorCategory.InvalidOperation, target);
-                                WriteError(errorRecord);
-                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            var errorRecord = new ErrorRecord(new OrchException(target, ex), "ImportQueueItemError", ErrorCategory.InvalidOperation, target);
+                            WriteError(errorRecord);
                         }
                     }
                 }
-                catch (Exception ex)
-                {
-                    var errorRecord = new ErrorRecord(new OrchException(targetFolder, ex), "RemoveQueueError", ErrorCategory.InvalidOperation, targetFolder);
-                    WriteError(errorRecord);
-                }
+            }
+            catch (Exception ex)
+            {
+                var errorRecord = new ErrorRecord(new OrchException(targetFolder, ex), "RemoveQueueError", ErrorCategory.InvalidOperation, targetFolder);
+                WriteError(errorRecord);
             }
         }
     }

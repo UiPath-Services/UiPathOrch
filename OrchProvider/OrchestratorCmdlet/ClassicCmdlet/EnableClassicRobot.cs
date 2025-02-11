@@ -5,48 +5,47 @@ using UiPath.PowerShell.Positional;
 
 using TPositional = UiPath.PowerShell.Positional.Path;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+// WIP
+[Cmdlet(VerbsLifecycle.Enable, "OrchClassicRobot")]
+[OutputType(typeof(Entities.Session))]
+class EnableClassicRobotCommand : OrchestratorPSCmdlet
 {
-    // WIP
-    [Cmdlet(VerbsLifecycle.Enable, "OrchClassicRobot")]
-    [OutputType(typeof(Entities.Session))]
-    class EnableClassicRobotCommand : OrchestratorPSCmdlet
+    [Parameter]
+    public ulong? Skip { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<Item10>))]
+    public ulong? First { get; set; }
+
+    [Parameter(Position = 0)]
+    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    public string[]? Path { get; set; }
+
+    [Parameter]
+    public SwitchParameter Recurse { get; set; }
+
+    [Parameter]
+    public uint Depth { get; set; }
+
+    protected override void ProcessRecord()
     {
-        [Parameter]
-        public ulong? Skip { get; set; }
+        ulong skip = Skip ?? 0;
+        ulong first = First ?? ulong.MaxValue;
 
-        [Parameter]
-        [ArgumentCompleter(typeof(StaticTextsCompleter<Item10>))]
-        public ulong? First { get; set; }
+        var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
 
-        [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
-        public string[]? Path { get; set; }
-
-        [Parameter]
-        public SwitchParameter Recurse { get; set; }
-
-        [Parameter]
-        public uint Depth { get; set; }
-
-        protected override void ProcessRecord()
+        foreach (var (drive, folder) in drivesFolders)
         {
-            ulong skip = Skip ?? 0;
-            ulong first = First ?? ulong.MaxValue;
+            if (folder.ProvisionType != "Manual") continue;
 
-            var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
-
-            foreach (var (drive, folder) in drivesFolders)
+            try
             {
-                if (folder.ProvisionType != "Manual") continue;
-
-                try
-                {
-                }
-                catch (Exception ex)
-                {
-                    WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "GetClassicRobotError", ErrorCategory.InvalidOperation, folder));
-                }
+            }
+            catch (Exception ex)
+            {
+                WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "GetClassicRobotError", ErrorCategory.InvalidOperation, folder));
             }
         }
     }

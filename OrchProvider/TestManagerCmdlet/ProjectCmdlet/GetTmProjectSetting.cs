@@ -1,48 +1,47 @@
 ﻿using System.Management.Automation;
 using UiPath.PowerShell.Core;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsCommon.Get, "TmProjectSetting")]
+[OutputType(typeof(Entities.TmProjectSettings))]
+public class GetTmProjectSettingCommand : OrchestratorPSCmdlet
 {
-    [Cmdlet(VerbsCommon.Get, "TmProjectSetting")]
-    [OutputType(typeof(Entities.TmProjectSettings))]
-    public class GetTmProjectSettingCommand : OrchestratorPSCmdlet
+    [Parameter]
+    [SupportsWildcards]
+    public string[]? Path { get; set; }
+
+    [Parameter]
+    public SwitchParameter Recurse { get; set; }
+
+    protected override void ProcessRecord()
     {
-        [Parameter]
-        [SupportsWildcards]
-        public string[]? Path { get; set; }
+        var drivesProjects = OrchTmDriveInfo.EnumFolders(Path, Recurse.IsPresent);
 
-        [Parameter]
-        public SwitchParameter Recurse { get; set; }
+        //foreach (var driveProject in drivesProjects)
+        //{
+        //    var (drive, project) = driveProject;
+        //    WriteObject(drive.GetTmProjectSettings(project.id!));
+        //}
 
-        protected override void ProcessRecord()
+        using var results = OrchThreadPool.RunForEach(drivesProjects,
+            dp => dp.project.GetPSPath(),
+            dp => dp.project,
+            dp => dp.drive.GetTmProjectSettings(dp.project));
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
         {
-            var drivesProjects = OrchTmDriveInfo.EnumFolders(Path, Recurse.IsPresent);
-
-            //foreach (var driveProject in drivesProjects)
-            //{
-            //    var (drive, project) = driveProject;
-            //    WriteObject(drive.GetTmProjectSettings(project.id!));
-            //}
-
-            using var results = OrchThreadPool.RunForEach(drivesProjects,
-                dp => dp.project.GetPSPath(),
-                dp => dp.project,
-                dp => dp.drive.GetTmProjectSettings(dp.project));
-
-            using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var result in results)
+            try
             {
-                try
-                {
-                    var entity = result.GetResult(cancelHandler.Token);
-                    if (entity == null) continue;
+                var entity = result.GetResult(cancelHandler.Token);
+                if (entity is null) continue;
 
-                    WriteObject(entity);
-                }
-                catch (OrchException ex)
-                {
-                    WriteError(new ErrorRecord(ex, "GetTmServerInfoError", ErrorCategory.InvalidOperation, ex.Target));
-                }
+                WriteObject(entity);
+            }
+            catch (OrchException ex)
+            {
+                WriteError(new ErrorRecord(ex, "GetTmServerInfoError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }

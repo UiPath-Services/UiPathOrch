@@ -7,181 +7,180 @@ using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using TPositional = UiPath.PowerShell.Positional.GroupName_UserName;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsCommon.Get, "OrchPmLicensedGroup")]
+[OutputType(typeof(Entities.NuLicensedGroup))]
+[OutputType(typeof(Entities.NuLicensedGroupMember))]
+public class GetUserLicenseGroup: OrchestratorPSCmdlet
 {
-    [Cmdlet(VerbsCommon.Get, "OrchPmLicensedGroup")]
-    [OutputType(typeof(Entities.NuLicensedGroup))]
-    [OutputType(typeof(Entities.NuLicensedGroupMember))]
-    public class GetUserLicenseGroup: OrchestratorPSCmdlet
+    [Parameter(Position = 0)]
+    [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter<TPositional>))]
+    [SupportsWildcards]
+    public string[]? GroupName { get; set; }
+
+    [Parameter(Position = 1)]
+    [ArgumentCompleter(typeof(UserNameCompleter))]
+    public string[]? UserName { get; set; }
+
+    [Parameter(ParameterSetName = "ExpandAllocation")]
+    public SwitchParameter ExpandAllocation { get; set; }
+
+    // TODO: これ実装する必要がある。この CSV を、Add-OrchPmLicenseToLicenseGroup cmdlet でインポートできるようにしたい。
+    //[Parameter(ParameterSetName = "License")]
+    //public SwitchParameter License { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    public string[]? Path { get; set; }
+
+    [Parameter]
+    public string? ExportCsv { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(EncodingCompleter))]
+    [EncodingArgumentTransformation]
+    public Encoding? CsvEncoding { get; set; }
+
+    private static readonly string DefaultCsvName = "ExportedPmUserLicenseGroups.csv";
+    private static readonly string[] CsvHeaders = [
+        "Path",
+        "GroupName",
+        "UserName",
+        "DisplayName",
+        "Email",
+        "LastInUse"
+    ];
+
+    // この CSV は、Remove-OrchPmAllocationFromPmUserLicenseGroup にインポートすることを意図したものなので
+    // これで良い。
+    private static void WriteCsvContent(StreamWriter writer, IEnumerable<NuLicensedGroupMember> output)
     {
-        [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter<TPositional>))]
-        [SupportsWildcards]
-        public string[]? GroupName { get; set; }
-
-        [Parameter(Position = 1)]
-        [ArgumentCompleter(typeof(UserNameCompleter))]
-        public string[]? UserName { get; set; }
-
-        [Parameter(ParameterSetName = "ExpandAllocation")]
-        public SwitchParameter ExpandAllocation { get; set; }
-
-        // TODO: これ実装する必要がある。この CSV を、Add-OrchPmLicenseToLicenseGroup cmdlet でインポートできるようにしたい。
-        //[Parameter(ParameterSetName = "License")]
-        //public SwitchParameter License { get; set; }
-
-        [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
-        public string[]? Path { get; set; }
-
-        [Parameter]
-        public string? ExportCsv { get; set; }
-
-        [Parameter]
-        [ArgumentCompleter(typeof(EncodingCompleter))]
-        [EncodingArgumentTransformation]
-        public Encoding? CsvEncoding { get; set; }
-
-        private static readonly string DefaultCsvName = "ExportedPmUserLicenseGroups.csv";
-        private static readonly string[] CsvHeaders = [
-            "Path",
-            "GroupName",
-            "UserName",
-            "DisplayName",
-            "Email",
-            "LastInUse"
-        ];
-
-        // この CSV は、Remove-OrchPmAllocationFromPmUserLicenseGroup にインポートすることを意図したものなので
-        // これで良い。
-        private static void WriteCsvContent(StreamWriter writer, IEnumerable<NuLicensedGroupMember> output)
+        foreach (var member in output)
         {
-            foreach (var member in output)
+            string[] line = [
+                EscapeCsvValue(member.Path, true),
+                EscapeCsvValue(member.GroupName, true),
+                EscapeCsvValue(member.name),
+                EscapeCsvValue(member.displayName),
+                EscapeCsvValue(member.email),
+                EscapeCsvValue(member.lastInUse?.ToLocalTime())
+            ];
+            WriteCsvLine(writer, line);
+        }
+    }
+
+    private class UserNameCompleter : OrchArgumentCompleter
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = ResolveDrives(fakeBoundParameters);
+
+            var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", TPositional.Parameters);
+            var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drives, drive => drive.PmLicensedGroups.Get());
+
+            foreach (var result in results)
             {
-                string[] line = [
-                    EscapeCsvValue(member.Path, true),
-                    EscapeCsvValue(member.GroupName, true),
-                    EscapeCsvValue(member.name),
-                    EscapeCsvValue(member.displayName),
-                    EscapeCsvValue(member.email),
-                    EscapeCsvValue(member.lastInUse?.ToLocalTime())
-                ];
-                WriteCsvLine(writer, line);
+                if (!result.TryGetValue(out var entities)) continue;
+
+                var drive = result.Source;
+
+                foreach (var e in entities!
+                    .FilterByWildcards(g => g?.name!, wpGroupName)
+                    .OrderBy(g => g?.name))
+                {
+                    var users = drive.GetPmLicensedGroupAllocations(e);
+                    foreach (var user in users
+                        .Where(u => wp.IsMatch(u?.name))
+                        .ExcludeByWildcards(u => u?.name!, wpUserName)
+                        .OrderBy(u => u?.name))
+                    {
+                        string tiphelp = TipHelp(user);
+                        yield return new CompletionResult(PathTools.EscapePSText(user?.name), user?.name, CompletionResultType.Text, tiphelp);
+                    }
+                }
             }
         }
+    }
 
-        private class UserNameCompleter : OrchArgumentCompleter
+    protected override void ProcessRecord()
+    {
+        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+
+        var wpGroupName = GroupName.ConvertToWildcardPatternList();
+        var wpUserName = UserName.ConvertToWildcardPatternList();
+
+        var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
+        using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var drive in drives)
         {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
+            IEnumerable<NuLicensedGroup> groups = null;
+            try
             {
-                var drives = ResolveDrives(fakeBoundParameters);
+                groups = drive.PmLicensedGroups.Get()
+                    .FilterByWildcards(g => g?.name, wpGroupName)
+                    .OrderBy(g => g?.name);
+            }
+            catch (Exception ex)
+            {
+                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetPmNamedUserLicenseGroupError", ErrorCategory.InvalidOperation, drive));
+                continue;
+            }
 
-                var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", TPositional.Parameters);
-                var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                var results = ParallelResults.ForEach(drives, drive => drive.PmLicensedGroups.Get());
+            if (ExpandAllocation.IsPresent || writer is not null)
+            {
+                    using var results = OrchThreadPool.RunForEach(groups,
+                        group => group.GetPSPath(),
+                        group => group,
+                        group => drive.GetPmLicensedGroupAllocations(group));
 
                 foreach (var result in results)
                 {
-                    if (!result.TryGetValue(out var entities)) continue;
-
-                    var drive = result.Source;
-
-                    foreach (var e in entities!
-                        .FilterByWildcards(g => g?.name!, wpGroupName)
-                        .OrderBy(g => g?.name))
+                    try
                     {
-                        var users = drive.GetPmLicensedGroupAllocations(e);
-                        foreach (var user in users
-                            .Where(u => wp.IsMatch(u?.name))
-                            .ExcludeByWildcards(u => u?.name!, wpUserName)
-                            .OrderBy(u => u?.name))
+                        var entities = result.GetResult(cancelHandler.Token);
+                        if (entities is null) continue;
+
+                        var targetEntities = entities
+                            .FilterByWildcards(u => u?.name, wpUserName)
+                            .OrderBy(u => u?.name);
+
+                        if (writer is null)
                         {
-                            string tiphelp = TipHelp(user);
-                            yield return new CompletionResult(PathTools.EscapePSText(user?.name), user?.name, CompletionResultType.Text, tiphelp);
+                            WriteObject(targetEntities, true);
                         }
+                        else
+                        {
+                            WriteCsvContent(writer, targetEntities);
+                        }
+                    }
+                    catch (OrchException ex)
+                    {
+                        WriteError(new ErrorRecord(ex, "GetPmLicensedGroupError", ErrorCategory.InvalidOperation, ex.Target));
                     }
                 }
             }
-        }
+            //else if (ExpandUserBundleLicenses.IsPresent)
+            //{
 
-        protected override void ProcessRecord()
-        {
-            var drives = OrchDriveInfo.EnumOrchDrives(Path);
-
-            var wpGroupName = GroupName.ConvertToWildcardPatternList();
-            var wpUserName = UserName.ConvertToWildcardPatternList();
-
-            var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
-            using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
-
-            using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var drive in drives)
+            //}
+            else
             {
-                IEnumerable<NuLicensedGroup> groups = null;
-                try
-                {
-                    groups = drive.PmLicensedGroups.Get()
-                        .FilterByWildcards(g => g?.name, wpGroupName)
-                        .OrderBy(g => g?.name);
-                }
-                catch (Exception ex)
-                {
-                    WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetPmNamedUserLicenseGroupError", ErrorCategory.InvalidOperation, drive));
-                    continue;
-                }
-
-                if (ExpandAllocation.IsPresent || writer != null)
-                {
-                        using var results = OrchThreadPool.RunForEach(groups,
-                            group => group.GetPSPath(),
-                            group => group,
-                            group => drive.GetPmLicensedGroupAllocations(group));
-
-                    foreach (var result in results)
-                    {
-                        try
-                        {
-                            var entities = result.GetResult(cancelHandler.Token);
-                            if (entities == null) continue;
-
-                            var targetEntities = entities
-                                .FilterByWildcards(u => u?.name, wpUserName)
-                                .OrderBy(u => u?.name);
-
-                            if (writer == null)
-                            {
-                                WriteObject(targetEntities, true);
-                            }
-                            else
-                            {
-                                WriteCsvContent(writer, targetEntities);
-                            }
-                        }
-                        catch (OrchException ex)
-                        {
-                            WriteError(new ErrorRecord(ex, "GetPmLicensedGroupError", ErrorCategory.InvalidOperation, ex.Target));
-                        }
-                    }
-                }
-                //else if (ExpandUserBundleLicenses.IsPresent)
-                //{
-
-                //}
-                else
-                {
-                    WriteObject(groups, true);
-                }
+                WriteObject(groups, true);
             }
-
-            WriteCSVExportedMessage(this, providerCsvPath);
         }
+
+        WriteCSVExportedMessage(this, providerCsvPath);
     }
 }

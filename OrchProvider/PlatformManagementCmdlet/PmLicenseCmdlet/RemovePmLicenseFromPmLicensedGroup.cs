@@ -8,155 +8,154 @@ using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
 using TPositional = UiPath.PowerShell.Positional.GroupName_License;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsCommon.Remove, "OrchPmLicenseFromPmLicensedGroup", SupportsShouldProcess = true)]
+[OutputType(typeof(Entities.UpdateLicensedGroupResponse))]
+public class RemoveLicenseFromLicenseGroup: OrchestratorPSCmdlet
 {
-    [Cmdlet(VerbsCommon.Remove, "OrchPmLicenseFromPmLicensedGroup", SupportsShouldProcess = true)]
-    [OutputType(typeof(Entities.UpdateLicensedGroupResponse))]
-    public class RemoveLicenseFromLicenseGroup: OrchestratorPSCmdlet
+    // code を管理
+    private Dictionary<(OrchDriveInfo drive, NuLicensedGroup group), HashSet<string>>? _parameterSets;
+
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter<TPositional>))]
+    [SupportsWildcards]
+    public string[]? GroupName { get; set; }
+
+    [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(LicenseCompleter))]
+    [SupportsWildcards]
+    public string[]? License { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    public string[]? Path { get; set; }
+
+    private class LicenseCompleter : OrchArgumentCompleter
     {
-        // code を管理
-        private Dictionary<(OrchDriveInfo drive, NuLicensedGroup group), HashSet<string>>? _parameterSets;
-
-        [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter<TPositional>))]
-        [SupportsWildcards]
-        public string[]? GroupName { get; set; }
-
-        [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(LicenseCompleter))]
-        [SupportsWildcards]
-        public string[]? License { get; set; }
-
-        [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
-        public string[]? Path { get; set; }
-
-        private class LicenseCompleter : OrchArgumentCompleter
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
         {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
+            var drives = ResolveDrives(fakeBoundParameters);
+
+            var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", TPositional.Parameters);
+            var wpLicense = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drives, drive => drive.PmLicensedGroups.Get());
+
+            foreach (var result in results)
             {
-                var drives = ResolveDrives(fakeBoundParameters);
+                if (!result.TryGetValue(out var entities)) continue;
 
-                var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", TPositional.Parameters);
-                var wpLicense = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+                var drive = result.Source;
 
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                var results = ParallelResults.ForEach(drives, drive => drive.PmLicensedGroups.Get());
-
-                foreach (var result in results)
+                foreach (var group in entities!
+                    .FilterByWildcards(g => g?.name!, wpGroupName)
+                    .OrderBy(g => g?.name))
                 {
-                    if (!result.TryGetValue(out var entities)) continue;
+                    if (group.userBundleLicenses is null) continue;
 
-                    var drive = result.Source;
+                    var availableUserBundles = drive.GetPmUserLicenseGroupsAvailableLicenses(group.id, group.name!);
 
-                    foreach (var group in entities!
-                        .FilterByWildcards(g => g?.name!, wpGroupName)
-                        .OrderBy(g => g?.name))
+                    foreach (var bundle in group.userBundleLicenses
+                        .Select(bundle => (bundle, AvailableUserBundlesItems.Items[bundle]))
+                        .ExcludeByWildcards(b => b.Item2, wpLicense)
+                        .OrderBy(b => b.Item2))
                     {
-                        if (group.userBundleLicenses == null) continue;
-
-                        var availableUserBundles = drive.GetPmUserLicenseGroupsAvailableLicenses(group.id, group.name!);
-
-                        foreach (var bundle in group.userBundleLicenses
-                            .Select(bundle => (bundle, AvailableUserBundlesItems.Items[bundle]))
-                            .ExcludeByWildcards(b => b.Item2, wpLicense)
-                            .OrderBy(b => b.Item2))
+                        string tiphelp = $"{drive.NameColonSeparator}{bundle.bundle}";
+                        var availableUserBundle = availableUserBundles?.availableUserBundles?.FirstOrDefault(b => string.Compare(b.code, bundle.bundle, true) == 0);
+                        if (availableUserBundle is not null)
                         {
-                            string tiphelp = $"{drive.NameColonSeparator}{bundle.bundle}";
-                            var availableUserBundle = availableUserBundles?.availableUserBundles?.FirstOrDefault(b => string.Compare(b.code, bundle.bundle, true) == 0);
-                            if (availableUserBundle != null)
-                            {
-                                tiphelp += $"  Available: {availableUserBundle.total - availableUserBundle.allocated}";
-                            }
-                            yield return new CompletionResult(PathTools.EscapePSText(bundle.Item2), bundle.Item2, CompletionResultType.Text, tiphelp);
+                            tiphelp += $"  Available: {availableUserBundle.total - availableUserBundle.allocated}";
                         }
+                        yield return new CompletionResult(PathTools.EscapePSText(bundle.Item2), bundle.Item2, CompletionResultType.Text, tiphelp);
                     }
                 }
             }
         }
+    }
 
-        protected override void ProcessRecord()
+    protected override void ProcessRecord()
+    {
+        _parameterSets ??= [];
+
+        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+
+        var wpGroupName = GroupName.ConvertToWildcardPatternList();
+        var wpLicense = License.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
+
+        var specifiedLicenses = AvailableUserBundlesItems.Items.SelectByWildcards(i => i.Value, wpLicense).ToList();
+
+        foreach (var drive in drives)
         {
-            _parameterSets ??= [];
+            var licenseGroups = drive.PmLicensedGroups.Get();
+            var targetGroups = licenseGroups.SelectByWildcards(g => g?.name, wpGroupName);
 
-            var drives = OrchDriveInfo.EnumOrchDrives(Path);
-
-            var wpGroupName = GroupName.ConvertToWildcardPatternList();
-            var wpLicense = License.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
-
-            var specifiedLicenses = AvailableUserBundlesItems.Items.SelectByWildcards(i => i.Value, wpLicense).ToList();
-
-            foreach (var drive in drives)
+            foreach (var group in targetGroups.OrderBy(g => g.name))
             {
-                var licenseGroups = drive.PmLicensedGroups.Get();
-                var targetGroups = licenseGroups.SelectByWildcards(g => g?.name, wpGroupName);
-
-                foreach (var group in targetGroups.OrderBy(g => g.name))
+                if (!_parameterSets.TryGetValue((drive, group), out var codes))
                 {
-                    if (!_parameterSets.TryGetValue((drive, group), out var codes))
-                    {
-                        codes = [];
-                        _parameterSets[(drive, group)] = codes;
-                    }
-                    codes.UnionWith(specifiedLicenses.Select(l => l.Key));
+                    codes = [];
+                    _parameterSets[(drive, group)] = codes;
                 }
+                codes.UnionWith(specifiedLicenses.Select(l => l.Key));
             }
         }
+    }
 
-        protected override void EndProcessing()
+    protected override void EndProcessing()
+    {
+        if (_parameterSets is null) return;
+
+        foreach (var parameterSet in _parameterSets
+            .OrderBy(p => p.Key.drive.Name)
+            .OrderBy(p => p.Key.group.name))
         {
-            if (_parameterSets == null) return;
+            var (drive, group) = parameterSet.Key;
+            var codesToRemove = parameterSet.Value;
 
-            foreach (var parameterSet in _parameterSets
-                .OrderBy(p => p.Key.drive.Name)
-                .OrderBy(p => p.Key.group.name))
+            var existingSet = new HashSet<string>(group.userBundleLicenses ?? []);
+
+            int initialCount = existingSet.Count;
+            existingSet.ExceptWith(codesToRemove);
+
+            // 削除すべきライセンスがなければ処理をスキップ
+            if (existingSet.Count == initialCount) continue;
+
+            string target = group.GetPSPath();
+            if (ShouldProcess(target, "Remove License from PmLicenseGroup"))
             {
-                var (drive, group) = parameterSet.Key;
-                var codesToRemove = parameterSet.Value;
-
-                var existingSet = new HashSet<string>(group.userBundleLicenses ?? []);
-
-                int initialCount = existingSet.Count;
-                existingSet.ExceptWith(codesToRemove);
-
-                // 削除すべきライセンスがなければ処理をスキップ
-                if (existingSet.Count == initialCount) continue;
-
-                string target = group.GetPSPath();
-                if (ShouldProcess(target, "Remove License from PmLicenseGroup"))
+                try
                 {
-                    try
+                    UpdateLicensedGroupCommand cmd = new()
                     {
-                        UpdateLicensedGroupCommand cmd = new()
-                        {
-                            id = group.id,
-                            useExternalLicense = group.useExternalLicense,
-                            ubls = existingSet.ToArray()
-                        };
+                        id = group.id,
+                        useExternalLicense = group.useExternalLicense,
+                        ubls = existingSet.ToArray()
+                    };
 
-                        var ret = drive.OrchAPISession.PutPmLicenseGroup(cmd);
-                        if (ret != null)
-                        {
-                            ret.Path = drive.NameColonSeparator;
-                            ret.GroupName = group.name;
-                            ret.userBundleLicenseNames = ret.userBundleCodes?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
-                            WriteObject(ret);
-                        }
-                        drive.PmLicensedGroups.ClearCache();
-                        drive._dicPmUserLicenseGroupAllocations = null;
-                        drive._dicPmAvailableUserBundles = null;
-                    }
-                    catch (Exception ex)
+                    var ret = drive.OrchAPISession.PutPmLicenseGroup(cmd);
+                    if (ret is not null)
                     {
-                        WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "RemovePmLicenseFromPmLicenseGroupError", ErrorCategory.InvalidOperation, drive));
-                        continue;
+                        ret.Path = drive.NameColonSeparator;
+                        ret.GroupName = group.name;
+                        ret.userBundleLicenseNames = ret.userBundleCodes?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
+                        WriteObject(ret);
                     }
+                    drive.PmLicensedGroups.ClearCache();
+                    drive._dicPmUserLicenseGroupAllocations = null;
+                    drive._dicPmAvailableUserBundles = null;
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "RemovePmLicenseFromPmLicenseGroupError", ErrorCategory.InvalidOperation, drive));
+                    continue;
                 }
             }
         }

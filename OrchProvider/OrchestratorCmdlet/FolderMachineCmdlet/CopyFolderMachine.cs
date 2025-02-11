@@ -6,138 +6,137 @@ using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
 using TPositional = UiPath.PowerShell.Positional.Name_Destination;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsCommon.Copy, "OrchFolderMachine", SupportsShouldProcess = true)]
+public class CopyFolderMachineCommand : OrchestratorPSCmdlet
 {
-    [Cmdlet(VerbsCommon.Copy, "OrchFolderMachine", SupportsShouldProcess = true)]
-    public class CopyFolderMachineCommand : OrchestratorPSCmdlet
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(FolderMachineNameCompleter<TPositional>))]
+    public string[]? Name { get; set; }
+
+    [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [SupportsWildcards]
+    public string? Destination { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [SupportsWildcards]
+    public string? Path { get; set; }
+
+    [Parameter]
+    public SwitchParameter Recurse { get; set; }
+
+    [Parameter]
+    public uint Depth { get; set; }
+
+    protected override void ProcessRecord()
     {
-        [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(FolderMachineNameCompleter<TPositional>))]
-        public string[]? Name { get; set; }
+        var (srcDrive, srcRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Path);
+        var srcDrivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
 
-        [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [SupportsWildcards]
-        public string? Destination { get; set; }
+        var (dstDrive, dstRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Destination);
 
-        [Parameter(ValueFromPipelineByPropertyName = true)]
-        [SupportsWildcards]
-        public string? Path { get; set; }
+        // コピー元とコピー先が同じなら、何もしない
+        if (srcDrive == dstDrive && srcRootFolder == dstRootFolder) return;
 
-        [Parameter]
-        public SwitchParameter Recurse { get; set; }
+        var wpName = Name.ConvertToWildcardPatternList();
 
-        [Parameter]
-        public uint Depth { get; set; }
-
-        protected override void ProcessRecord()
+        string msg = "Copying folder machines...";
+        using var reporter = new ProgressReporter(this, 200, Int32.MaxValue, msg, msg);
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var (_, srcFolder) in srcDrivesFolders)
         {
-            var (srcDrive, srcRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Path);
-            var srcDrivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+            cancelHandler.Token.ThrowIfCancellationRequested();
 
-            var (dstDrive, dstRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Destination);
-
-            // コピー元とコピー先が同じなら、何もしない
-            if (srcDrive == dstDrive && srcRootFolder == dstRootFolder) return;
-
-            var wpName = Name.ConvertToWildcardPatternList();
-
-            string msg = "Copying folder machines...";
-            using var reporter = new ProgressReporter(this, 200, Int32.MaxValue, msg, msg);
-            using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var (_, srcFolder) in srcDrivesFolders)
+            try
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
+                // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
+                //srcDrive._dicMachinesAssigned?.TryRemove(srcFolder.Id ?? 0, out _);
+                var srcEntities = srcDrive.FolderMachinesAssigned.Get(srcFolder)
+                    .Where(e => e.IsAssignedToFolder.GetValueOrDefault())
+                    .FilterByWildcards(e => e?.Name, wpName);
+                if (!srcEntities.Any()) continue;
+            }
+            catch (Exception ex)
+            {
+                WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), ex), "GetFolderMachineError", ErrorCategory.InvalidOperation, srcFolder));
+                continue;
+            }
 
-                try
-                {
-                    // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
-                    //srcDrive._dicMachinesAssigned?.TryRemove(srcFolder.Id ?? 0, out _);
-                    var srcEntities = srcDrive.FolderMachinesAssigned.Get(srcFolder)
-                        .Where(e => e.IsAssignedToFolder.GetValueOrDefault())
-                        .FilterByWildcards(e => e?.Name, wpName);
-                    if (!srcEntities.Any()) continue;
-                }
-                catch (Exception ex)
-                {
-                    WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), ex), "GetFolderMachineError", ErrorCategory.InvalidOperation, srcFolder));
-                    continue;
-                }
+            Folder? dstFolder = GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
+            if (dstFolder is null || (srcDrive == dstDrive && srcFolder == dstFolder)) continue;
 
-                Folder? dstFolder = GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
-                if (dstFolder == null || (srcDrive == dstDrive && srcFolder == dstFolder)) continue;
-
-                try
-                {
-                    Core.OrchProvider.CopyFolderMachines(this,
-                        srcDrive, srcFolder, wpName,
-                        dstDrive, dstFolder, reporter,
-                        false, cancelHandler.Token);
-                    dstDrive.FolderMachinesAssigned.ClearCache(dstFolder);
-                    dstDrive.FolderMachinesAssignable.ClearCache(dstFolder);
-                    dstDrive.MachinesRobots.ClearCache(dstFolder);
-                }
-                catch (OperationCanceledException)
-                {
-                    throw;
-                }
-                catch (Exception ex)
-                {
-                    string target = dstFolder.GetPSPath();
-                    WriteError(new ErrorRecord(new OrchException(target, ex), "CopyFolderMachineError", ErrorCategory.InvalidOperation, dstFolder));
-                }
+            try
+            {
+                Core.OrchProvider.CopyFolderMachines(this,
+                    srcDrive, srcFolder, wpName,
+                    dstDrive, dstFolder, reporter,
+                    false, cancelHandler.Token);
+                dstDrive.FolderMachinesAssigned.ClearCache(dstFolder);
+                dstDrive.FolderMachinesAssignable.ClearCache(dstFolder);
+                dstDrive.MachinesRobots.ClearCache(dstFolder);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                string target = dstFolder.GetPSPath();
+                WriteError(new ErrorRecord(new OrchException(target, ex), "CopyFolderMachineError", ErrorCategory.InvalidOperation, dstFolder));
             }
         }
-
-        //protected override void ProcessRecord()
-        //{
-        //    var (srcDrive, srcRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Path);
-        //    var srcDrivesFolders = OrchDriveInfo.EnumFoldersForRecursiveCopy(Path, Recurse.IsPresent, Depth);
-
-        //    var dstDrivesFolders = OrchDriveInfo.EnumFolders(Destination);
-        //    var wpName = Name.ConvertToWildcardPatternList();
-
-        //    using var results = OrchThreadPool.RunForEach(srcDrivesFolders,
-        //        df => df.folder.GetPSPath(),
-        //        df => df.folder,
-        //        df => df.drive.GetMachinesAssignedToFolder(df.folder));
-
-        //    string msg = "Copying folder machines...";
-        //    using var reporter = new ProgressReporter(this, 200, Int32.MaxValue, msg, msg);
-        //    using var cancelHandler = new ConsoleCancelHandler();
-        //    foreach (var dstDriveFolder in dstDrivesFolders)
-        //    {
-        //        var (dstDrive, dstFolder) = dstDriveFolder;
-        //        foreach (var result in results)
-        //        {
-        //            cancelHandler.Token.ThrowIfCancellationRequested();
-
-        //            try
-        //            {
-        //                var entities = result.GetResult(cancelHandler.Token);
-        //                if (entities == null) continue;
-
-        //                var (srcDrive, srcFolder) = result.Source;
-
-        //                try
-        //                {
-        //                    Core.OrchProvider.CopyFolderMachines(this,
-        //                    srcDrive, srcFolder, wpName,
-        //                    dstDrive, dstFolder, reporter, false);
-        //                    dstDrive._dicMachinesAssigned?.TryRemove(dstFolder.Id ?? 0, out _);
-        //                }
-        //                catch (Exception ex)
-        //                {
-        //                    string target = dstFolder.GetPSPath();
-        //                    WriteError(new ErrorRecord(new OrchException(target, ex), "CreateFolderMachineError", ErrorCategory.InvalidOperation, dstFolder));
-        //                }
-        //            }
-        //            catch (Exception ex)
-        //            {
-        //                string target = dstFolder.GetPSPath();
-        //                WriteError(new ErrorRecord(new OrchException(target, ex), "GetFolderMachineError", ErrorCategory.InvalidOperation, dstFolder));
-        //            }
-        //        }
-        //    }
-        //}
     }
+
+    //protected override void ProcessRecord()
+    //{
+    //    var (srcDrive, srcRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Path);
+    //    var srcDrivesFolders = OrchDriveInfo.EnumFoldersForRecursiveCopy(Path, Recurse.IsPresent, Depth);
+
+    //    var dstDrivesFolders = OrchDriveInfo.EnumFolders(Destination);
+    //    var wpName = Name.ConvertToWildcardPatternList();
+
+    //    using var results = OrchThreadPool.RunForEach(srcDrivesFolders,
+    //        df => df.folder.GetPSPath(),
+    //        df => df.folder,
+    //        df => df.drive.GetMachinesAssignedToFolder(df.folder));
+
+    //    string msg = "Copying folder machines...";
+    //    using var reporter = new ProgressReporter(this, 200, Int32.MaxValue, msg, msg);
+    //    using var cancelHandler = new ConsoleCancelHandler();
+    //    foreach (var dstDriveFolder in dstDrivesFolders)
+    //    {
+    //        var (dstDrive, dstFolder) = dstDriveFolder;
+    //        foreach (var result in results)
+    //        {
+    //            cancelHandler.Token.ThrowIfCancellationRequested();
+
+    //            try
+    //            {
+    //                var entities = result.GetResult(cancelHandler.Token);
+    //                if (entities is null) continue;
+
+    //                var (srcDrive, srcFolder) = result.Source;
+
+    //                try
+    //                {
+    //                    Core.OrchProvider.CopyFolderMachines(this,
+    //                    srcDrive, srcFolder, wpName,
+    //                    dstDrive, dstFolder, reporter, false);
+    //                    dstDrive._dicMachinesAssigned?.TryRemove(dstFolder.Id ?? 0, out _);
+    //                }
+    //                catch (Exception ex)
+    //                {
+    //                    string target = dstFolder.GetPSPath();
+    //                    WriteError(new ErrorRecord(new OrchException(target, ex), "CreateFolderMachineError", ErrorCategory.InvalidOperation, dstFolder));
+    //                }
+    //            }
+    //            catch (Exception ex)
+    //            {
+    //                string target = dstFolder.GetPSPath();
+    //                WriteError(new ErrorRecord(new OrchException(target, ex), "GetFolderMachineError", ErrorCategory.InvalidOperation, dstFolder));
+    //            }
+    //        }
+    //    }
+    //}
 }

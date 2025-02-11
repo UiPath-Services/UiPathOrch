@@ -5,164 +5,163 @@ using UiPath.PowerShell.Positional;
 
 //using TPositional = UiPath.PowerShell.Positional.Status;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+// フィルタを構築するパラメータは全部廃止して、フォルダごとに全部取得してキャッシュするように修正した。
+[Cmdlet(VerbsCommon.Get, "OrchMachineSession")]
+[OutputType(typeof(Entities.MachineSessionRuntime))]
+public class GetMachineSessionCommand : OrchestratorPSCmdlet
 {
-    // フィルタを構築するパラメータは全部廃止して、フォルダごとに全部取得してキャッシュするように修正した。
-    [Cmdlet(VerbsCommon.Get, "OrchMachineSession")]
-    [OutputType(typeof(Entities.MachineSessionRuntime))]
-    public class GetMachineSessionCommand : OrchestratorPSCmdlet
+    //[Parameter(Position = 0)]
+    //[ArgumentCompleter(typeof(LastCompleter))]
+    //public string? Last { get; set; }
+
+    //[Parameter]
+    //[ArgumentCompleter(typeof(TimeAfterCompleter))]
+    //public DateTime? ReportingTimeAfter { get; set; }
+
+    //[Parameter]
+    //[ArgumentCompleter(typeof(TimeBeforeCompleter))]
+    //public DateTime? ReportingTimeBefore { get; set; }
+
+    //static readonly string[] StatusList = [
+    //    "Available", "Busy", "Disconnected", "Unknown"
+    //];
+
+    [Parameter(Position = 0)]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<MachineSessionStatusItems>))]
+    [SupportsWildcards]
+    public string[]? Status { get; set; }
+
+    //[Parameter]
+    //public ulong? Skip { get; set; }
+
+    //[Parameter]
+    //[ArgumentCompleter(typeof(StaticTextsCompleter<Item10>))]
+    //public ulong? First { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(DriveCompleter<Last>))]
+    public string[]? Path { get; set; }
+
+    [Parameter]
+    public SwitchParameter Recurse { get; set; }
+
+    [Parameter]
+    public uint Depth { get; set; }
+
+    //private string? MakeFilter()
+    //{
+    //    var filter = new List<string>();
+
+    //    #region Last
+    //    if (Last is not null)
+    //    {
+    //        var last = Last.ToLower() switch
+    //        {
+    //            "hour" => DateTime.UtcNow.AddHours(-1),
+    //            "day" => DateTime.UtcNow.AddDays(-1),
+    //            "week" => DateTime.UtcNow.AddDays(-7),
+    //            "month" => DateTime.UtcNow.AddMonths(-1),
+    //            "3months" => DateTime.UtcNow.AddMonths(-3),
+    //            "6months" => DateTime.UtcNow.AddMonths(-6),
+    //            "year" => DateTime.UtcNow.AddYears(-1),
+    //            "3years" => DateTime.UtcNow.AddYears(-3),
+    //            _ => throw new ArgumentException("Invalid Last parameter. Valid values are 'Hour', 'Day', 'Week', 'Month', '3Months', '6Months', 'Year', '3Years'.")
+    //        };
+    //        filter.Add($"(ReportingTime%20ge%20{last:yyyy-MM-ddTHH:mm:ss.fffZ})");
+    //    }
+    //    #endregion
+
+    //    #region ReportingTimeAfter
+    //    if (ReportingTimeAfter is not null)
+    //    {
+    //        filter.Add($"(ReportingTime%20ge%20{ReportingTimeAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+    //    }
+    //    #endregion
+
+    //    #region ReportingTimeBefore
+    //    if (ReportingTimeBefore is not null)
+    //    {
+    //        filter.Add($"(ReportingTime%20lt%20{ReportingTimeBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+    //    }
+    //    #endregion
+
+    //    #region Status
+    //    if (Status is not null && Status.Length > 0)
+    //    {
+    //        var status = new List<string>();
+    //        var wpStatus = Status.Select(st => new WildcardPattern(st, WildcardOptions.IgnoreCase)).ToList();
+    //        foreach (var s in StatusList.FilterByWildcards(st => st, wpStatus))
+    //        {
+    //            status.Add($"(Status%20eq%20%27{s}%27)");
+    //        }
+    //        if (status.Count != 0)
+    //            filter.Add("(" + string.Join("%20or%20", status) + ")");
+    //    }
+    //    #endregion
+
+    //    if (filter.Count > 0)
+    //    {
+    //        string ret = string.Join("%20and%20", filter);
+    //        ret = "&$filter=(" + ret + ")&$orderby=ReportingTime%20asc";
+    //        return ret;
+    //    }
+    //    return "&$orderby=ReportingTime%20asc";
+    //}
+
+    protected override void ProcessRecord()
     {
-        //[Parameter(Position = 0)]
-        //[ArgumentCompleter(typeof(LastCompleter))]
-        //public string? Last { get; set; }
+        //ulong skip = Skip ?? 0;
+        //ulong first = First ?? ulong.MaxValue;
 
-        //[Parameter]
-        //[ArgumentCompleter(typeof(TimeAfterCompleter))]
-        //public DateTime? ReportingTimeAfter { get; set; }
+        var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var wpStatus = Status.ConvertToWildcardPatternList();
 
-        //[Parameter]
-        //[ArgumentCompleter(typeof(TimeBeforeCompleter))]
-        //public DateTime? ReportingTimeBefore { get; set; }
+        //string filter = MakeFilter();
 
-        //static readonly string[] StatusList = [
-        //    "Available", "Busy", "Disconnected", "Unknown"
-        //];
+        using var results = OrchThreadPool.RunForEach(drivesFolders,
+            df => df.folder.GetPSPath(),
+            df => df.folder,
+            df => df.drive.MachineSessionRuntimesByFolder.Get(df.folder));
 
-        [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(StaticTextsCompleter<MachineSessionStatusItems>))]
-        [SupportsWildcards]
-        public string[]? Status { get; set; }
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
+        {
+            try
+            {
+                var entities = result.GetResult(cancelHandler.Token);
+                if (entities is null) continue;
 
-        //[Parameter]
-        //public ulong? Skip { get; set; }
+                var (drive, folder) = result.Source;
 
-        //[Parameter]
-        //[ArgumentCompleter(typeof(StaticTextsCompleter<Item10>))]
-        //public ulong? First { get; set; }
+                WriteObject(entities
+                    .FilterByWildcards(s => s?.Status, wpStatus), true);
+            }
+            catch (OrchException ex)
+            {
+                WriteError(new ErrorRecord(ex, "GetMachineSessionPerFolderError", ErrorCategory.InvalidOperation, ex.Target));
+            }
+        }
 
-        [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<Last>))]
-        public string[]? Path { get; set; }
-
-        [Parameter]
-        public SwitchParameter Recurse { get; set; }
-
-        [Parameter]
-        public uint Depth { get; set; }
-
-        //private string? MakeFilter()
+        //foreach (var (drive, folder) in drivesFolders)
         //{
-        //    var filter = new List<string>();
-
-        //    #region Last
-        //    if (Last != null)
+        //    try
         //    {
-        //        var last = Last.ToLower() switch
+        //        var sessions = drive.OrchAPISession.GetMachineSessionRuntimesByFolderId(folder.Id ?? 0);
+        //        foreach (var session in sessions)
         //        {
-        //            "hour" => DateTime.UtcNow.AddHours(-1),
-        //            "day" => DateTime.UtcNow.AddDays(-1),
-        //            "week" => DateTime.UtcNow.AddDays(-7),
-        //            "month" => DateTime.UtcNow.AddMonths(-1),
-        //            "3months" => DateTime.UtcNow.AddMonths(-3),
-        //            "6months" => DateTime.UtcNow.AddMonths(-6),
-        //            "year" => DateTime.UtcNow.AddYears(-1),
-        //            "3years" => DateTime.UtcNow.AddYears(-3),
-        //            _ => throw new ArgumentException("Invalid Last parameter. Valid values are 'Hour', 'Day', 'Week', 'Month', '3Months', '6Months', 'Year', '3Years'.")
-        //        };
-        //        filter.Add($"(ReportingTime%20ge%20{last:yyyy-MM-ddTHH:mm:ss.fffZ})");
-        //    }
-        //    #endregion
-
-        //    #region ReportingTimeAfter
-        //    if (ReportingTimeAfter != null)
-        //    {
-        //        filter.Add($"(ReportingTime%20ge%20{ReportingTimeAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
-        //    }
-        //    #endregion
-
-        //    #region ReportingTimeBefore
-        //    if (ReportingTimeBefore != null)
-        //    {
-        //        filter.Add($"(ReportingTime%20lt%20{ReportingTimeBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
-        //    }
-        //    #endregion
-
-        //    #region Status
-        //    if (Status != null && Status.Length > 0)
-        //    {
-        //        var status = new List<string>();
-        //        var wpStatus = Status.Select(st => new WildcardPattern(st, WildcardOptions.IgnoreCase)).ToList();
-        //        foreach (var s in StatusList.FilterByWildcards(st => st, wpStatus))
-        //        {
-        //            status.Add($"(Status%20eq%20%27{s}%27)");
+        //            session.Path = folder.GetPSPath();
+        //            WriteObject(session);
         //        }
-        //        if (status.Count != 0)
-        //            filter.Add("(" + string.Join("%20or%20", status) + ")");
         //    }
-        //    #endregion
-
-        //    if (filter.Count > 0)
+        //    catch (Exception ex)
         //    {
-        //        string ret = string.Join("%20and%20", filter);
-        //        ret = "&$filter=(" + ret + ")&$orderby=ReportingTime%20asc";
-        //        return ret;
+        //        WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "UpdateUserError", ErrorCategory.InvalidOperation, folder));
         //    }
-        //    return "&$orderby=ReportingTime%20asc";
         //}
 
-        protected override void ProcessRecord()
-        {
-            //ulong skip = Skip ?? 0;
-            //ulong first = First ?? ulong.MaxValue;
-
-            var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
-            var wpStatus = Status.ConvertToWildcardPatternList();
-
-            //string filter = MakeFilter();
-
-            using var results = OrchThreadPool.RunForEach(drivesFolders,
-                df => df.folder.GetPSPath(),
-                df => df.folder,
-                df => df.drive.MachineSessionRuntimesByFolder.Get(df.folder));
-
-            using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var result in results)
-            {
-                try
-                {
-                    var entities = result.GetResult(cancelHandler.Token);
-                    if (entities == null) continue;
-
-                    var (drive, folder) = result.Source;
-
-                    WriteObject(entities
-                        .FilterByWildcards(s => s?.Status, wpStatus), true);
-                }
-                catch (OrchException ex)
-                {
-                    WriteError(new ErrorRecord(ex, "GetMachineSessionPerFolderError", ErrorCategory.InvalidOperation, ex.Target));
-                }
-            }
-
-            //foreach (var (drive, folder) in drivesFolders)
-            //{
-            //    try
-            //    {
-            //        var sessions = drive.OrchAPISession.GetMachineSessionRuntimesByFolderId(folder.Id ?? 0);
-            //        foreach (var session in sessions)
-            //        {
-            //            session.Path = folder.GetPSPath();
-            //            WriteObject(session);
-            //        }
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "UpdateUserError", ErrorCategory.InvalidOperation, folder));
-            //    }
-            //}
 
 
-
-        }
     }
 }
