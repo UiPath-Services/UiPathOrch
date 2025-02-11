@@ -16,6 +16,8 @@ using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Positional;
 using System.Net;
+using UiPath.PowerShell.Entities.JsonConverter;
+using System.Globalization;
 
 // インストール方法
 // 1. PowerShell 7 をインストール。PowerShell-7.x.x-win-x64.msi をダウンロード。PowerShell 5 と side by side でインストールできる。
@@ -129,7 +131,7 @@ public partial class OrchProvider : NavigationCmdletProvider
 
     #region DriveCmdletProvider overrides
 
-    static void SaveResourceToFile(string resourceName, string outputPath)
+    private static void SaveResourceToFile(string resourceName, string outputPath)
     {
         string folderPath = System.IO.Path.GetDirectoryName(outputPath);
         if (!Directory.Exists(folderPath))
@@ -139,7 +141,7 @@ public partial class OrchProvider : NavigationCmdletProvider
 
         Assembly assembly = Assembly.GetExecutingAssembly();
         using Stream stream = assembly.GetManifestResourceStream(resourceName);
-        using FileStream fileStream = new(outputPath, FileMode.Create);
+        using FileStream fileStream = new(outputPath, FileMode.CreateNew);
         stream!.CopyTo(fileStream);
     }
 
@@ -160,12 +162,17 @@ public partial class OrchProvider : NavigationCmdletProvider
         }
     }
 
+    private static readonly string[] configFileLanguages = ["de", "en", "fr", "ja", "ko", "ro", "tr"];
+
     public static void EnsureDefaultConfigFileExists()
     {
         string configFilePath = GetConfigFilePath();
         if (!System.IO.File.Exists(configFilePath))
         {
-            SaveResourceToFile("OrchProvider.UiPathOrchConfig.json", configFilePath);
+            string lang = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+            if (!configFileLanguages.Contains(lang)) lang = "en";
+
+            SaveResourceToFile($"OrchProvider.Resources.{lang}.UiPathOrchConfig.json", configFilePath);
         }
     }
 
@@ -178,7 +185,7 @@ public partial class OrchProvider : NavigationCmdletProvider
             UiPathOrchConfig config;
             try
             {
-                config = JsonSerializer.Deserialize<UiPathOrchConfig>(json);
+                config = JsonSerializer.Deserialize<UiPathOrchConfig>(json, JsonTools.jsonAllowComments);
                 if (config is null) throw new Exception("Deserialization resulted in a null object.");
             }
             catch (Exception ex)

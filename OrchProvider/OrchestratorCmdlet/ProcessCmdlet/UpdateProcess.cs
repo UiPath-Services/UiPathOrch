@@ -6,6 +6,7 @@ using System.Text.Json.Nodes;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
+using UiPath.PowerShell.Entities.JsonConverter;
 using UiPath.PowerShell.Positional;
 using TPositional = UiPath.PowerShell.Positional.Name;
 
@@ -250,15 +251,8 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                         .Where(x => x is not null)
                         .ToDictionary(x => x!.name ?? "", x => "");
 
-                    var options = new JsonSerializerOptions
-                    {
-                        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                        WriteIndented = true
-                    };
-
                     // Serialize the dictionary back to JSON
-                    string outputJson = JsonSerializer.Serialize(nameDictionary, options)
-                        .Replace("\n", "").Replace("\r", "").Replace("\t", "");
+                    string outputJson = JsonSerializer.Serialize(nameDictionary, JsonTools.jsoOneLine);
 
                     string tiphelp = TipHelp(release);
                     yield return new CompletionResult($"'{outputJson}'", outputJson, CompletionResultType.ParameterValue, tiphelp);

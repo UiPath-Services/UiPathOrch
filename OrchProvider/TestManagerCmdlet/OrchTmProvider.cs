@@ -8,6 +8,7 @@ using System.Management.Automation.Provider;
 using System.Text.Json;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Entities;
+using UiPath.PowerShell.Entities.JsonConverter;
 
 namespace UiPath.PowerShell.Core;
 
@@ -51,7 +52,7 @@ public class OrchTmProvider : NavigationCmdletProvider
             UiPathOrchConfig config;
             try
             {
-                config = JsonSerializer.Deserialize<UiPathOrchConfig>(json);
+                config = JsonSerializer.Deserialize<UiPathOrchConfig>(json, JsonTools.jsonAllowComments);
                 if (config is null) return null;
             }
             catch

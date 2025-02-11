@@ -6,22 +6,9 @@
     <Nullable>enable</Nullable>
     <BaseOutputPath></BaseOutputPath>
     <AssemblyName>UiPath.PowerShell.OrchProvider</AssemblyName>
-    <Version>0.9.9.5</Version>
+    <Version>0.9.9.6</Version>
     <GenerateDocumentationFile>False</GenerateDocumentationFile>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="bot\autopilot.png" />
-    <None Remove="bot\caring.png" />
-    <None Remove="bot\flying.png" />
-    <None Remove="bot\listening.png" />
-    <None Remove="bot\processing.png" />
-    <None Remove="bot\receiving.png" />
-    <None Remove="bot\recording.png" />
-    <None Remove="bot\searching.png" />
-    <None Remove="MountSuccessNotification.html" />
-    <None Remove="UiPathOrchConfig.json" />
-  </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="bot\autopilot.png" />
@@ -33,7 +20,13 @@
     <EmbeddedResource Include="bot\recording.png" />
     <EmbeddedResource Include="bot\searching.png" />
     <EmbeddedResource Include="MountSuccessNotification.html" />
-    <EmbeddedResource Include="UiPathOrchConfig.json" />
+    <EmbeddedResource Include="Resources\de\UiPathOrchConfig.json" />
+    <EmbeddedResource Include="Resources\en\UiPathOrchConfig.json" />
+    <EmbeddedResource Include="Resources\fr\UiPathOrchConfig.json" />
+    <EmbeddedResource Include="Resources\ja\UiPathOrchConfig.json" />
+    <EmbeddedResource Include="Resources\ko\UiPathOrchConfig.json" />
+    <EmbeddedResource Include="Resources\ro\UiPathOrchConfig.json" />
+    <EmbeddedResource Include="Resources\tr\UiPathOrchConfig.json" />
   </ItemGroup>
 
   <ItemGroup>

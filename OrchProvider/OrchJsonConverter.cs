@@ -6,6 +6,26 @@ namespace UiPath.PowerShell.Entities.JsonConverter;
 
 public class JsonTools
 {
+    internal static readonly JsonSerializerOptions jsoWhenWritingNull = new()
+    {
+        //Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
+        //Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, // エンコードを抑制
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
+
+    internal static readonly JsonSerializerOptions jsoOneLine = new()
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        WriteIndented = false
+    };
+
+    internal static readonly JsonSerializerOptions jsonAllowComments = new()
+    {
+        ReadCommentHandling = JsonCommentHandling.Skip,
+        AllowTrailingCommas = true
+    };
+
     private static List<object?>? ProcessArray(JsonArray? jsonArray)
     {
         if (jsonArray is null) return null;

@@ -7,6 +7,7 @@ using UiPath.OrchAPI;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
+using UiPath.PowerShell.Entities.JsonConverter;
 using UiPath.PowerShell.Positional;
 using TPositional = UiPath.PowerShell.Positional.Name_ReleaseName;
 
@@ -203,7 +204,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
                 SessionName = sessionName
             };
 
-            return JsonSerializer.Serialize(ret, OrchAPISession.jsoWhenWritingNull).Replace("\\u0027", "'");
+            return JsonSerializer.Serialize(ret, JsonTools.jsoOneLine);
         }
 
         public override IEnumerable<CompletionResult> CompleteArgument(
