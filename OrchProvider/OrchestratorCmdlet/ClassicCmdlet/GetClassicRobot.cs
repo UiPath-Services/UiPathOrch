@@ -7,173 +7,172 @@ using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
 using TPositional = UiPath.PowerShell.Positional.Name;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsCommon.Get, "OrchClassicRobot")]
+[OutputType(typeof(Entities.Session))]
+public class GetClassicRobotCommand : OrchestratorPSCmdlet
 {
-    [Cmdlet(VerbsCommon.Get, "OrchClassicRobot")]
-    [OutputType(typeof(Entities.Session))]
-    public class GetClassicRobotCommand : OrchestratorPSCmdlet
+    [Parameter(Position = 0)]
+    [ArgumentCompleter(typeof(NameCompleter))]
+    [SupportsWildcards]
+    public string[]? Name { get; set; }
+
+    [Parameter]
+    [SupportsWildcards]
+    public string[]? Path { get; set; }
+
+    [Parameter]
+    public SwitchParameter Recurse { get; set; }
+
+    [Parameter]
+    public uint Depth { get; set; }
+
+    [Parameter]
+    public string? ExportCsv { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(EncodingCompleter))]
+    [EncodingArgumentTransformation]
+    public Encoding? CsvEncoding { get; set; }
+
+    private static readonly string DefaultCsvName = "ExportedClassicRobots.csv";
+    private static readonly string[] CsvHeaders = [
+        "Path",
+        "MachineName",
+        "Name",
+        "Description",
+        "Type",
+        //"CredentialStoreName",
+        "Username",
+        "RobotEnvironments"
+    ];
+
+    private static void WriteCsvContent(StreamWriter writer, IEnumerable<Entities.Session> output)
     {
-        [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(NameCompleter))]
-        [SupportsWildcards]
-        public string[]? Name { get; set; }
-
-        [Parameter]
-        [SupportsWildcards]
-        public string[]? Path { get; set; }
-
-        [Parameter]
-        public SwitchParameter Recurse { get; set; }
-
-        [Parameter]
-        public uint Depth { get; set; }
-
-        [Parameter]
-        public string? ExportCsv { get; set; }
-
-        [Parameter]
-        [ArgumentCompleter(typeof(EncodingCompleter))]
-        [EncodingArgumentTransformation]
-        public Encoding? CsvEncoding { get; set; }
-
-        private static readonly string DefaultCsvName = "ExportedClassicRobots.csv";
-        private static readonly string[] CsvHeaders = [
-            "Path",
-            "MachineName",
-            "Name",
-            "Description",
-            "Type",
-            //"CredentialStoreName",
-            "Username",
-            "RobotEnvironments"
-        ];
-
-        private static void WriteCsvContent(StreamWriter writer, IEnumerable<Entities.Session> output)
+        foreach (var r in output)
         {
-            foreach (var r in output)
-            {
-                #region CredentialStoreId を Name に変換
-                //string credentialStoreName = null;
-                //if (r?.Robot?.CredentialStoreId != null)
-                //{
-                //    OrchDriveInfo drive = null;
-                //    Folder folder = null;
-                //    try
-                //    {
-                //        (drive, folder) = OrchDriveInfo.EnumFolders([r.Path]).FirstOrDefault();
-                //    }
-                //    catch
-                //    {
-                //        WriteWarning($"Path '{r.GetPSPath()}' cannot be resolved.");
-                //    }
+            #region CredentialStoreId を Name に変換
+            //string credentialStoreName = null;
+            //if (r?.Robot?.CredentialStoreId is not null)
+            //{
+            //    OrchDriveInfo drive = null;
+            //    Folder folder = null;
+            //    try
+            //    {
+            //        (drive, folder) = OrchDriveInfo.EnumFolders([r.Path]).FirstOrDefault();
+            //    }
+            //    catch
+            //    {
+            //        WriteWarning($"Path '{r.GetPSPath()}' cannot be resolved.");
+            //    }
 
-                //    if (drive != null)
-                //    {
-                //        var credentialStores = drive.GetCredentialStores();
-                //        var credentialStore = credentialStores.FirstOrDefault(cs => cs.Id == r.Robot.CredentialStoreId);
-                //        if (credentialStore != null)
-                //        {
-                //            credentialStoreName = credentialStore.Name;
-                //        }
-                //        else
-                //        {
-                //            WriteWarning($"{r.GetPSPath()}: CredentialStoreId {r.Robot.CredentialStoreId.ToString()} cannot be resolved.");
-                //        }
-                //    }
-                //}
-                #endregion
+            //    if (drive is not null)
+            //    {
+            //        var credentialStores = drive.GetCredentialStores();
+            //        var credentialStore = credentialStores.FirstOrDefault(cs => cs.Id == r.Robot.CredentialStoreId);
+            //        if (credentialStore is not null)
+            //        {
+            //            credentialStoreName = credentialStore.Name;
+            //        }
+            //        else
+            //        {
+            //            WriteWarning($"{r.GetPSPath()}: CredentialStoreId {r.Robot.CredentialStoreId.ToString()} cannot be resolved.");
+            //        }
+            //    }
+            //}
+            #endregion
 
-                string[] line = [
-                    EscapeCsvValue(r.Path, true),
-                    EscapeCsvValue(r.Robot?.MachineName),
-                    EscapeCsvValue(r.Robot?.Name),
-                    EscapeCsvValue(r.Robot?.Description),
-                    EscapeCsvValue(r.Robot?.Type),
-                    //EscapeCsvValue(credentialStoreName),
-                    EscapeCsvValue(r.Robot?.Username),
-                    EscapeCsvValue(r.Robot?.RobotEnvironments)
-                ];
-                WriteCsvLine(writer, line);
-            }
+            string[] line = [
+                EscapeCsvValue(r.Path, true),
+                EscapeCsvValue(r.Robot?.MachineName),
+                EscapeCsvValue(r.Robot?.Name),
+                EscapeCsvValue(r.Robot?.Description),
+                EscapeCsvValue(r.Robot?.Type),
+                //EscapeCsvValue(credentialStoreName),
+                EscapeCsvValue(r.Robot?.Username),
+                EscapeCsvValue(r.Robot?.RobotEnvironments)
+            ];
+            WriteCsvLine(writer, line);
         }
+    }
 
-        private class NameCompleter : OrchArgumentCompleter
+    private class NameCompleter : OrchArgumentCompleter
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
         {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
-            {
-                var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-                var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
-                var wp = CreateWPFromWordToComplete(wordToComplete);
+            var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
+            var wp = CreateWPFromWordToComplete(wordToComplete);
 
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Sessions.Get(df.folder));
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Sessions.Get(df.folder));
 
-                foreach (var result in results)
-                {
-                    if (!result.TryGetValue(out var entities)) continue;
-
-                    foreach (var s in entities!
-                        .Where(s => wp.IsMatch(s.Robot?.Name))
-                        .ExcludeByWildcards(s => s?.Robot?.Name, wpName)
-                        .OrderBy(s => s.Robot?.Name))
-                    {
-                        string tiphelp = TipHelp(s);
-                        yield return new CompletionResult(PathTools.EscapePSText(s.Robot?.Name), s.Robot?.Name, CompletionResultType.ParameterValue, tiphelp);
-                    }
-                }
-            }
-        }
-
-        private void Output(StreamWriter? writer, IEnumerable<Session> sessions)
-        {
-            if (writer != null)
-            {
-                WriteCsvContent(writer, sessions);
-            }
-            else
-            {
-                WriteObject(sessions, true);
-            }
-        }
-
-        protected override void ProcessRecord()
-        {
-            var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
-            var wpName = Name.ConvertToWildcardPatternList();
-
-            var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
-            using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
-
-            using var results = OrchThreadPool.RunForEach(
-                drivesFolders.Where(df => df.folder.ProvisionType == "Manual"),
-                df => df.folder.GetPSPath(),
-                df => df.folder,
-                df => df.drive.Sessions.Get(df.folder));
-
-            using var cancelHandler = new ConsoleCancelHandler();
             foreach (var result in results)
             {
-                try
-                {
-                    var sessions = result.GetResult(cancelHandler.Token);
-                    if (sessions == null) continue;
+                if (!result.TryGetValue(out var entities)) continue;
 
-                    Output(writer, sessions
-                        .FilterByWildcards(s => s?.Robot?.Name, wpName)
-                        .OrderBy(s => s.Robot?.Name));
-                }
-                catch (OrchException ex)
+                foreach (var s in entities!
+                    .Where(s => wp.IsMatch(s.Robot?.Name))
+                    .ExcludeByWildcards(s => s?.Robot?.Name, wpName)
+                    .OrderBy(s => s.Robot?.Name))
                 {
-                    WriteError(new ErrorRecord(ex, "GetClassicRobotError", ErrorCategory.InvalidOperation, ex.Target));
+                    string tiphelp = TipHelp(s);
+                    yield return new CompletionResult(PathTools.EscapePSText(s.Robot?.Name), s.Robot?.Name, CompletionResultType.ParameterValue, tiphelp);
                 }
             }
-
-            WriteCSVExportedMessage(this, providerCsvPath);
         }
+    }
+
+    private void Output(StreamWriter? writer, IEnumerable<Session> sessions)
+    {
+        if (writer is not null)
+        {
+            WriteCsvContent(writer, sessions);
+        }
+        else
+        {
+            WriteObject(sessions, true);
+        }
+    }
+
+    protected override void ProcessRecord()
+    {
+        var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
+
+        var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
+        using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
+
+        using var results = OrchThreadPool.RunForEach(
+            drivesFolders.Where(df => df.folder.ProvisionType == "Manual"),
+            df => df.folder.GetPSPath(),
+            df => df.folder,
+            df => df.drive.Sessions.Get(df.folder));
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
+        {
+            try
+            {
+                var sessions = result.GetResult(cancelHandler.Token);
+                if (sessions is null) continue;
+
+                Output(writer, sessions
+                    .FilterByWildcards(s => s?.Robot?.Name, wpName)
+                    .OrderBy(s => s.Robot?.Name));
+            }
+            catch (OrchException ex)
+            {
+                WriteError(new ErrorRecord(ex, "GetClassicRobotError", ErrorCategory.InvalidOperation, ex.Target));
+            }
+        }
+
+        WriteCSVExportedMessage(this, providerCsvPath);
     }
 }

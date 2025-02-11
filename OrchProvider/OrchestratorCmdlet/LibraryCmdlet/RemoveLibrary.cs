@@ -1,94 +1,89 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
-
 using TPositional = UiPath.PowerShell.Positional.Id_Version;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsCommon.Remove, "OrchLibrary", SupportsShouldProcess = true)]
+public class RemoveLibraryCommand : OrchestratorPSCmdlet//, IDynamicParameters
 {
-    [Cmdlet(VerbsCommon.Remove, "OrchLibrary", SupportsShouldProcess = true)]
-    public class RemoveLibraryCommand : OrchestratorPSCmdlet//, IDynamicParameters
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(LibraryIdCompleter<TPositional>))]
+    [SupportsWildcards]
+    public string[]? Id { get; set; }
+
+    [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(LibraryVersionCompleter<TPositional>))]
+    [SupportsWildcards]
+    public string[]? Version { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    public string[]? Path { get; set; }
+
+    // もともとマルチスレッドになってなかった
+    protected override void ProcessRecord()
     {
-        [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(LibraryIdCompleter<TPositional>))]
-        [SupportsWildcards]
-        public string[]? Id { get; set; }
+        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var wpId = Id.ConvertToWildcardPatternList();
+        var wpVersion = Version.ConvertToWildcardPatternList();
 
-        [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(LibraryVersionCompleter<TPositional>))]
-        [SupportsWildcards]
-        public string[]? Version { get; set; }
-
-        [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
-        public string[]? Path { get; set; }
-
-        // もともとマルチスレッドになってなかった
-        protected override void ProcessRecord()
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var drive in drives)
         {
-            var drives = OrchDriveInfo.EnumOrchDrives(Path);
-            var wpId = Id.ConvertToWildcardPatternList();
-            var wpVersion = Version.ConvertToWildcardPatternList();
-
-            using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var drive in drives)
+            try
             {
-                try
+                var libraries = drive.LibrariesInTenant.Get()
+                    .FilterByWildcards(l => l?.Id, wpId!)
+                    .OrderBy(l => l.Id!.ToLower());
+
+                foreach (var library in libraries)
                 {
-                    var libraries = drive.LibrariesInTenant.Get()
-                        .FilterByWildcards(l => l?.Id, wpId!)
-                        .OrderBy(l => l.Id!.ToLower());
-
-                    foreach (var library in libraries)
+                    try
                     {
-                        try
+                        var matchingVersions = drive.GetLibraryVersions(library.Id!)
+                            .FilterByWildcards(v => v?.Version, wpVersion);
+                            //.OrderBy(v => v.Version!, VersionComparer.Instance);
+
+                        foreach (var matchingVersion in matchingVersions)
                         {
-                            var matchingVersions = drive.GetLibraryVersions(library.Id!)
-                                .FilterByWildcards(v => v?.Version, wpVersion);
-                                //.OrderBy(v => v.Version!, VersionComparer.Instance);
+                            cancelHandler.Token.ThrowIfCancellationRequested();
 
-                            foreach (var matchingVersion in matchingVersions)
+                            string target = $"{drive.NameColonSeparator}{matchingVersion.Id}:{matchingVersion.Version}";
+                            if (ShouldProcess(target, "Remove Library"))
                             {
-                                cancelHandler.Token.ThrowIfCancellationRequested();
-
-                                string target = $"{drive.NameColonSeparator}{matchingVersion.Id}:{matchingVersion.Version}";
-                                if (ShouldProcess(target, "Remove Library"))
+                                try
                                 {
-                                    try
-                                    {
-                                        drive.OrchAPISession.RemoveLibrary(matchingVersion.Id!, matchingVersion.Version!);
-                                        drive.LibrariesInTenant.ClearCache();
-                                        drive._dicLibraryVersions?.TryRemove(matchingVersion.Id!, out List<LibraryVersion>? _);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        WriteError(new ErrorRecord(new OrchException(target, ex), "RemoveLibraryError", ErrorCategory.InvalidOperation, matchingVersion));
-                                    }
+                                    drive.OrchAPISession.RemoveLibrary(matchingVersion.Id!, matchingVersion.Version!);
+                                    drive.LibrariesInTenant.ClearCache();
+                                    drive._dicLibraryVersions?.TryRemove(matchingVersion.Id!, out List<LibraryVersion>? _);
+                                }
+                                catch (Exception ex)
+                                {
+                                    WriteError(new ErrorRecord(new OrchException(target, ex), "RemoveLibraryError", ErrorCategory.InvalidOperation, matchingVersion));
                                 }
                             }
                         }
-                        catch (OperationCanceledException)
-                        {
-                            throw;
-                        }
-                        catch (Exception ex)
-                        {
-                            WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetLibraryVersionError", ErrorCategory.InvalidOperation, drive));
-                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetLibraryVersionError", ErrorCategory.InvalidOperation, drive));
                     }
                 }
-                catch (OperationCanceledException)
-                {
-                    throw;
-                }
-                catch (Exception ex)
-                {
-                    WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetLibraryError", ErrorCategory.InvalidOperation, drive));
-                }
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetLibraryError", ErrorCategory.InvalidOperation, drive));
             }
         }
     }

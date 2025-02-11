@@ -4,50 +4,49 @@ using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using TPositional = UiPath.PowerShell.Positional.Name;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsData.Edit, "OrchProcess")]
+public class EditProcessCommand : OrchestratorPSCmdlet
 {
-    [Cmdlet(VerbsData.Edit, "OrchProcess")]
-    public class EditProcessCommand : OrchestratorPSCmdlet
+    [Parameter (Position = 0)]
+    [ArgumentCompleter(typeof(ProcessNameCompleter<TPositional>))]
+    [SupportsWildcards]
+    public string[]? Name { get; set; }
+
+    [Parameter]
+    [SupportsWildcards]
+    public string[]? Path { get; set; }
+
+    protected override void ProcessRecord()
     {
-        [Parameter (Position = 0)]
-        [ArgumentCompleter(typeof(ProcessNameCompleter<TPositional>))]
-        [SupportsWildcards]
-        public string[]? Name { get; set; }
+        var drivesFolders = OrchDriveInfo.EnumFolders(Path);
+        var wpName = Name.ConvertToWildcardPatternList();
 
-        [Parameter]
-        [SupportsWildcards]
-        public string[]? Path { get; set; }
+        using var results = OrchThreadPool.RunForEach(drivesFolders,
+            df => df.folder.GetPSPath(),
+            df => df.folder,
+            df => df.drive.GetReleases(df.folder));
 
-        protected override void ProcessRecord()
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
         {
-            var drivesFolders = OrchDriveInfo.EnumFolders(Path);
-            var wpName = Name.ConvertToWildcardPatternList();
-
-            using var results = OrchThreadPool.RunForEach(drivesFolders,
-                df => df.folder.GetPSPath(),
-                df => df.folder,
-                df => df.drive.GetReleases(df.folder));
-
-            using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var result in results)
+            try
             {
-                try
-                {
-                    var releases = result.GetResult(cancelHandler.Token);
-                    if (releases == null) continue;
+                var releases = result.GetResult(cancelHandler.Token);
+                if (releases is null) continue;
 
-                    var (drive, folder) = result.Source;
+                var (drive, folder) = result.Source;
 
-                    foreach (var release in releases)
-                    {
-                        string endpoint = $"{drive.OrchAPISession._base_url}/orchestrator_/processes/{release.Id}/edit?fid={folder.Id ?? 0}";
-                        Process.Start(new ProcessStartInfo(endpoint) { UseShellExecute = true });
-                    }
-                }
-                catch (OrchException ex)
+                foreach (var release in releases)
                 {
-                    WriteError(new ErrorRecord(ex, "GetProcessError", ErrorCategory.InvalidOperation, ex.Target));
+                    string endpoint = $"{drive.OrchAPISession._base_url}/orchestrator_/processes/{release.Id}/edit?fid={folder.Id ?? 0}";
+                    Process.Start(new ProcessStartInfo(endpoint) { UseShellExecute = true });
                 }
+            }
+            catch (OrchException ex)
+            {
+                WriteError(new ErrorRecord(ex, "GetProcessError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }

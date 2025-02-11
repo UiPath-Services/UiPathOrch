@@ -5,87 +5,86 @@ using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using TPositional = UiPath.PowerShell.Positional.Name;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsCommon.Get, "OrchClassicEnvironment")]
+[OutputType(typeof(Entities.Environment))]
+public class GetClassicEnvironmentCommand : OrchestratorPSCmdlet
 {
-    [Cmdlet(VerbsCommon.Get, "OrchClassicEnvironment")]
-    [OutputType(typeof(Entities.Environment))]
-    public class GetClassicEnvironmentCommand : OrchestratorPSCmdlet
+    [Parameter(Position = 0)]
+    [ArgumentCompleter(typeof(NameCompleter))]
+    [SupportsWildcards]
+    public string[]? Name { get; set; }
+
+    [Parameter]
+    [SupportsWildcards]
+    public string[]? Path { get; set; }
+
+    [Parameter]
+    public SwitchParameter Recurse { get; set; }
+
+    [Parameter]
+    public uint Depth { get; set; }
+
+    private class NameCompleter : OrchArgumentCompleter
     {
-        [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(NameCompleter))]
-        [SupportsWildcards]
-        public string[]? Name { get; set; }
-
-        [Parameter]
-        [SupportsWildcards]
-        public string[]? Path { get; set; }
-
-        [Parameter]
-        public SwitchParameter Recurse { get; set; }
-
-        [Parameter]
-        public uint Depth { get; set; }
-
-        private class NameCompleter : OrchArgumentCompleter
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
         {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
+            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+            var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Environments.Get(df.folder));
+
+            foreach (var result in results)
             {
-                var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+                if (!result.TryGetValue(out var entities)) continue;
 
-                var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Environments.Get(df.folder));
-
-                foreach (var result in results)
+                foreach (var s in entities!
+                    .Where(s => wp.IsMatch(s.Name))
+                    .ExcludeByWildcards(s => s?.Name, wpName)
+                    .OrderBy(s => s.Name))
                 {
-                    if (!result.TryGetValue(out var entities)) continue;
-
-                    foreach (var s in entities!
-                        .Where(s => wp.IsMatch(s.Name))
-                        .ExcludeByWildcards(s => s?.Name, wpName)
-                        .OrderBy(s => s.Name))
-                    {
-                        string tiphelp = s.GetPSPath();
-                        yield return new CompletionResult(PathTools.EscapePSText(s?.Name), s?.Name, CompletionResultType.ParameterValue, tiphelp);
-                    }
+                    string tiphelp = s.GetPSPath();
+                    yield return new CompletionResult(PathTools.EscapePSText(s?.Name), s?.Name, CompletionResultType.ParameterValue, tiphelp);
                 }
             }
         }
+    }
 
-        protected override void ProcessRecord()
+    protected override void ProcessRecord()
+    {
+        var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
+
+        using var results = OrchThreadPool.RunForEach(
+            drivesFolders.Where(df => df.folder.ProvisionType == "Manual"),
+            df => df.folder.GetPSPath(),
+            df => df.folder,
+            df => df.drive.Environments.Get(df.folder));
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
         {
-            var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
-            var wpName = Name.ConvertToWildcardPatternList();
-
-            using var results = OrchThreadPool.RunForEach(
-                drivesFolders.Where(df => df.folder.ProvisionType == "Manual"),
-                df => df.folder.GetPSPath(),
-                df => df.folder,
-                df => df.drive.Environments.Get(df.folder));
-
-            using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var result in results)
+            try
             {
-                try
-                {
-                    var env = result.GetResult(cancelHandler.Token);
-                    if (env == null) continue;
+                var env = result.GetResult(cancelHandler.Token);
+                if (env is null) continue;
 
-                    WriteObject(env
-                        .FilterByWildcards(s => s?.Name, wpName)
-                        .OrderBy(s => s.Name),
-                        true);
-                }
-                catch (OrchException ex)
-                {
-                    WriteError(new ErrorRecord(ex, "GetClassicEnvironmentError", ErrorCategory.InvalidOperation, ex.Target));
-                }
+                WriteObject(env
+                    .FilterByWildcards(s => s?.Name, wpName)
+                    .OrderBy(s => s.Name),
+                    true);
+            }
+            catch (OrchException ex)
+            {
+                WriteError(new ErrorRecord(ex, "GetClassicEnvironmentError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }

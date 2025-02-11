@@ -1,136 +1,133 @@
-﻿using System.Collections;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using TPositional = UiPath.PowerShell.Positional.Id_Version;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsCommon.Get, "OrchLibraryVersion")]
+[OutputType(typeof(Entities.Library))]
+public class GetLibraryVersionCommand : OrchestratorPSCmdlet
 {
-    [Cmdlet(VerbsCommon.Get, "OrchLibraryVersion")]
-    [OutputType(typeof(Entities.Library))]
-    public class GetLibraryVersionCommand : OrchestratorPSCmdlet
+    [Parameter(Position = 0)]
+    [ArgumentCompleter(typeof(LibraryIdCompleter<TPositional>))]
+    [SupportsWildcards]
+    public string[]? Id { get; set; }
+
+    [Parameter(Position = 1)]
+    [ArgumentCompleter(typeof(LibraryVersionCompleter<TPositional>))]
+    [SupportsWildcards]
+    public string[]? Version { get; set; }
+
+    [Parameter]
+    public SwitchParameter HostFeed { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    public string[]? Path { get; set; }
+
+    protected override void ProcessRecord()
     {
-        [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(LibraryIdCompleter<TPositional>))]
-        [SupportsWildcards]
-        public string[]? Id { get; set; }
+        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var wpId = Id.ConvertToWildcardPatternList();
+        var wpVersion = Version.ConvertToWildcardPatternList();
 
-        [Parameter(Position = 1)]
-        [ArgumentCompleter(typeof(LibraryVersionCompleter<TPositional>))]
-        [SupportsWildcards]
-        public string[]? Version { get; set; }
-
-        [Parameter]
-        public SwitchParameter HostFeed { get; set; }
-
-        [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
-        public string[]? Path { get; set; }
-
-        protected override void ProcessRecord()
-        {
-            var drives = OrchDriveInfo.EnumOrchDrives(Path);
-            var wpId = Id.ConvertToWildcardPatternList();
-            var wpVersion = Version.ConvertToWildcardPatternList();
-
-            using var results = OrchThreadPool.RunForEach(drives,
-                drive => drive.NameColonSeparator,
-                drive => drive,
-                drive => {
-                    if (HostFeed)
-                    {
-                        var librariesInHost = drive.LibrariesInHost.Get();
-                        return OrchThreadPool.RunForEach(librariesInHost.FilterByWildcards(l => l?.Id, wpId),
-                            lib => lib.GetPSPath(),
-                            lib => lib,
-                            lib => drive.GetLibraryVersionsInHostFeed(lib.Id!).FilterByWildcards(l => l?.Version, wpVersion));
-                    }
-                    else
-                    {
-                        var librariesInTenant = drive.LibrariesInTenant.Get();
-                        return OrchThreadPool.RunForEach(librariesInTenant.FilterByWildcards(l => l?.Id, wpId),
-                            lib => lib.GetPSPath(),
-                            lib => lib,
-                            lib => drive.GetLibraryVersions(lib.Id!).FilterByWildcards(l => l?.Version, wpVersion));
-                    }
-                });
-
-            using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var result in results)
-            {
-                try
+        using var results = OrchThreadPool.RunForEach(drives,
+            drive => drive.NameColonSeparator,
+            drive => drive,
+            drive => {
+                if (HostFeed)
                 {
-                    using var threads = result.GetResult(cancelHandler.Token);
-
-                    foreach (var thread in threads!)
-                    {
-                        try
-                        {
-                            var versions = thread.GetResult(cancelHandler.Token);
-                            WriteObject(versions, true);
-                        }
-                        catch (OrchException ex)
-                        {
-                            WriteError(new ErrorRecord(ex, "GetLibraryVersionError", ErrorCategory.InvalidOperation, ex.Target));
-                        }
-                    }
+                    var librariesInHost = drive.LibrariesInHost.Get();
+                    return OrchThreadPool.RunForEach(librariesInHost.FilterByWildcards(l => l?.Id, wpId),
+                        lib => lib.GetPSPath(),
+                        lib => lib,
+                        lib => drive.GetLibraryVersionsInHostFeed(lib.Id!).FilterByWildcards(l => l?.Version, wpVersion));
                 }
-                catch (OrchException ex)
+                else
                 {
-                    WriteError(new ErrorRecord(ex, "GetLibraryError", ErrorCategory.InvalidOperation, ex.Target));
+                    var librariesInTenant = drive.LibrariesInTenant.Get();
+                    return OrchThreadPool.RunForEach(librariesInTenant.FilterByWildcards(l => l?.Id, wpId),
+                        lib => lib.GetPSPath(),
+                        lib => lib,
+                        lib => drive.GetLibraryVersions(lib.Id!).FilterByWildcards(l => l?.Version, wpVersion));
+                }
+            });
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
+        {
+            try
+            {
+                using var threads = result.GetResult(cancelHandler.Token);
+
+                foreach (var thread in threads!)
+                {
+                    try
+                    {
+                        var versions = thread.GetResult(cancelHandler.Token);
+                        WriteObject(versions, true);
+                    }
+                    catch (OrchException ex)
+                    {
+                        WriteError(new ErrorRecord(ex, "GetLibraryVersionError", ErrorCategory.InvalidOperation, ex.Target));
+                    }
                 }
             }
+            catch (OrchException ex)
+            {
+                WriteError(new ErrorRecord(ex, "GetLibraryError", ErrorCategory.InvalidOperation, ex.Target));
+            }
+        }
 
 
 #if false
-            using var results = OrchThreadPool.RunForEach(drives,
-                drive => drive.NameColonSeparator,
-                drive => drive,
-                drive => drive.GetLibraries());
+        using var results = OrchThreadPool.RunForEach(drives,
+            drive => drive.NameColonSeparator,
+            drive => drive,
+            drive => drive.GetLibraries());
 
-            foreach (var result in results)
+        foreach (var result in results)
+        {
+            try
             {
-                try
+                var libraries = result.GetResult();
+                if (libraries is null) continue;
+
+                var drive = result.Source;
+
+                var matchedLibraries = libraries
+                    .FilterByWildcards(p => p.Id!, wpId)
+                    .OrderBy(l => l.Id!.ToLower()).ToList();
+
+                using var results2 = OrchThreadPool.RunForEach(matchedLibraries,
+                    ml => drive.NameColonSeparator,
+                    ml => drive,
+                    ml => drive.GetLibraryVersions(ml.Id!));
+
+                foreach (var result2 in results2)
                 {
-                    var libraries = result.GetResult();
-                    if (libraries == null) continue;
-
-                    var drive = result.Source;
-
-                    var matchedLibraries = libraries
-                        .FilterByWildcards(p => p.Id!, wpId)
-                        .OrderBy(l => l.Id!.ToLower()).ToList();
-
-                    using var results2 = OrchThreadPool.RunForEach(matchedLibraries,
-                        ml => drive.NameColonSeparator,
-                        ml => drive,
-                        ml => drive.GetLibraryVersions(ml.Id!));
-
-                    foreach (var result2 in results2)
+                    try
                     {
-                        try
-                        {
-                            var versions = result2.GetResult();
-                            if (versions == null) continue;
+                        var versions = result2.GetResult();
+                        if (versions is null) continue;
 
-                            WriteObject(versions
-                                .FilterByWildcards(p => p.Version!, wpVersion)
-                                .OrderBy(p => p.Version!, new VersionComparer()),
-                                true);
-                        }
-                        catch (OrchException ex)
-                        {
-                            WriteError(new ErrorRecord(ex, "GetLibraryVersionError", ErrorCategory.InvalidOperation, ex.Target));
-                        }
+                        WriteObject(versions
+                            .FilterByWildcards(p => p.Version!, wpVersion)
+                            .OrderBy(p => p.Version!, new VersionComparer()),
+                            true);
+                    }
+                    catch (OrchException ex)
+                    {
+                        WriteError(new ErrorRecord(ex, "GetLibraryVersionError", ErrorCategory.InvalidOperation, ex.Target));
                     }
                 }
-                catch (OrchException ex)
-                {
-                    WriteError(new ErrorRecord(ex, "GetLibraryError", ErrorCategory.InvalidOperation, ex.Target));
-                }
             }
-#endif
+            catch (OrchException ex)
+            {
+                WriteError(new ErrorRecord(ex, "GetLibraryError", ErrorCategory.InvalidOperation, ex.Target));
+            }
         }
+#endif
     }
 }

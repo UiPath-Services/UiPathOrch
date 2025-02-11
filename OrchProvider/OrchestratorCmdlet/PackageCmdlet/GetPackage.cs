@@ -3,54 +3,53 @@ using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using TPositional = UiPath.PowerShell.Positional.Id;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsCommon.Get, "OrchPackage")]
+[OutputType(typeof(Entities.Package))]
+public class GetPackageCommand : OrchestratorPSCmdlet
 {
-    [Cmdlet(VerbsCommon.Get, "OrchPackage")]
-    [OutputType(typeof(Entities.Package))]
-    public class GetPackageCommand : OrchestratorPSCmdlet
+    [Parameter(Position = 0)]
+    [ArgumentCompleter(typeof(PackageIdCompleter<TPositional>))]
+    [SupportsWildcards]
+    public string[]? Id { get; set; }
+
+    [Parameter]
+    [SupportsWildcards]
+    public string[]? Path { get; set; }
+
+    [Parameter]
+    public SwitchParameter Recurse { get; set; }
+
+    //[Parameter]
+    //public uint Depth { get; set; }
+
+    protected override void ProcessRecord()
     {
-        [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(PackageIdCompleter<TPositional>))]
-        [SupportsWildcards]
-        public string[]? Id { get; set; }
+        var drivesFolders = OrchDriveInfo.EnumPackageFeedFolders(Path, Recurse.IsPresent);
+        var wpId = Id.ConvertToWildcardPatternList();
 
-        [Parameter]
-        [SupportsWildcards]
-        public string[]? Path { get; set; }
+        using var results = OrchThreadPool.RunForEach(drivesFolders,
+            df => df.folder.GetPSPath(),
+            df => df.folder,
+            df => df.drive.GetPackages(df.folder));
 
-        [Parameter]
-        public SwitchParameter Recurse { get; set; }
-
-        //[Parameter]
-        //public uint Depth { get; set; }
-
-        protected override void ProcessRecord()
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
         {
-            var drivesFolders = OrchDriveInfo.EnumPackageFeedFolders(Path, Recurse.IsPresent);
-            var wpId = Id.ConvertToWildcardPatternList();
-
-            using var results = OrchThreadPool.RunForEach(drivesFolders,
-                df => df.folder.GetPSPath(),
-                df => df.folder,
-                df => df.drive.GetPackages(df.folder));
-
-            using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var result in results)
+            try
             {
-                try
-                {
-                    var packages = result.GetResult(cancelHandler.Token);
-                    if (packages == null) continue;
+                var packages = result.GetResult(cancelHandler.Token);
+                if (packages is null) continue;
 
-                    WriteObject(packages
-                        .FilterByWildcards(p => p?.Id, wpId)
-                        .OrderBy(p => p.Id!.ToLower()),
-                        true);
-                }
-                catch (OrchException ex)
-                {
-                    WriteError(new ErrorRecord(ex, "GetPackageError", ErrorCategory.InvalidOperation, ex.Target));
-                }
+                WriteObject(packages
+                    .FilterByWildcards(p => p?.Id, wpId)
+                    .OrderBy(p => p.Id!.ToLower()),
+                    true);
+            }
+            catch (OrchException ex)
+            {
+                WriteError(new ErrorRecord(ex, "GetPackageError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }

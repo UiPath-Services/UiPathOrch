@@ -4,100 +4,99 @@ using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Positional;
 using TPositional = UiPath.PowerShell.Positional.Empty;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsCommon.Get, "OrchUserSession")]
+[OutputType(typeof(Entities.Session))]
+public class GetUserSessionCommand : OrchestratorPSCmdlet
 {
-    [Cmdlet(VerbsCommon.Get, "OrchUserSession")]
-    [OutputType(typeof(Entities.Session))]
-    public class GetUserSessionCommand : OrchestratorPSCmdlet
+    [Parameter]
+    [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<UserSessionStateItems, int>))]
+    public string[]? State { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<UserSessionTypeItems, int>))]
+    public string[]? Type { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<UserSessionOrderableItems, string>))]
+    public string[]? OrderBy { get; set; }
+
+    [Parameter]
+    public ulong? Skip { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<Item10>))]
+    public ulong? First { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    public string[]? Path { get; set; }
+
+    private string? MakeFilter()
     {
-        [Parameter]
-        [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<UserSessionStateItems, int>))]
-        public string[]? State { get; set; }
+        var filter = new List<string>();
 
-        [Parameter]
-        [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<UserSessionTypeItems, int>))]
-        public string[]? Type { get; set; }
-
-        [Parameter]
-        [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<UserSessionOrderableItems, string>))]
-        public string[]? OrderBy { get; set; }
-
-        [Parameter]
-        public ulong? Skip { get; set; }
-
-        [Parameter]
-        [ArgumentCompleter(typeof(StaticTextsCompleter<Item10>))]
-        public ulong? First { get; set; }
-
-        [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
-        public string[]? Path { get; set; }
-
-        private string? MakeFilter()
+        #region State
+        if (State is not null && State.Length > 0)
         {
-            var filter = new List<string>();
-
-            #region State
-            if (State != null && State.Length > 0)
-            {
-                int[] status = Array.ConvertAll(State, status => UserSessionStateItems.Items[status]);
-                IEnumerable<string> f = status.Select(i => $"(State eq '{i}')");
-                filter.Add($"({string.Join(" or ", f)})");
-            }
-            #endregion
-
-            #region Type
-            if (Type != null)
-            {
-                int[] t = Array.ConvertAll(Type, t => UserSessionTypeItems.Items[t]);
-                IEnumerable<string> f = t.Select(i => $"(Robot/Type eq '{i}')");
-                filter.Add($"({string.Join(" or ", f)})");
-            }
-            #endregion
-
-            if (filter.Count != 0)
-            {
-                string ret = string.Join(" and ", filter);
-                ret = "&$filter=(" + ret + ")"; // &$orderby=HostMachineName%20asc";
-                return ret;
-            }
-            return null;
+            int[] status = Array.ConvertAll(State, status => UserSessionStateItems.Items[status]);
+            IEnumerable<string> f = status.Select(i => $"(State eq '{i}')");
+            filter.Add($"({string.Join(" or ", f)})");
         }
+        #endregion
 
-        private string? MakeOrderBy()
+        #region Type
+        if (Type is not null)
         {
-            if (OrderBy != null && OrderBy.Length > 0)
-            {
-                IEnumerable<string> o1 = OrderBy.Select(o => UserSessionOrderableItems.Items[o]);
-                string o2 = string.Join(",", o1);
-                return $"&$orderby={o2} asc";
-            }
-            return null;
+            int[] t = Array.ConvertAll(Type, t => UserSessionTypeItems.Items[t]);
+            IEnumerable<string> f = t.Select(i => $"(Robot/Type eq '{i}')");
+            filter.Add($"({string.Join(" or ", f)})");
         }
+        #endregion
 
-        protected override void ProcessRecord()
+        if (filter.Count != 0)
         {
-            ulong skip = Skip ?? 0;
-            ulong first = First ?? ulong.MaxValue;
+            string ret = string.Join(" and ", filter);
+            ret = "&$filter=(" + ret + ")"; // &$orderby=HostMachineName%20asc";
+            return ret;
+        }
+        return null;
+    }
 
-            var drives = OrchDriveInfo.EnumOrchDrives(Path);
+    private string? MakeOrderBy()
+    {
+        if (OrderBy is not null && OrderBy.Length > 0)
+        {
+            IEnumerable<string> o1 = OrderBy.Select(o => UserSessionOrderableItems.Items[o]);
+            string o2 = string.Join(",", o1);
+            return $"&$orderby={o2} asc";
+        }
+        return null;
+    }
 
-            foreach (var drive in drives)
+    protected override void ProcessRecord()
+    {
+        ulong skip = Skip ?? 0;
+        ulong first = First ?? ulong.MaxValue;
+
+        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+
+        foreach (var drive in drives)
+        {
+            string query = "&$expand=Robot($expand=License,User),UpdateInfo" + MakeFilter() + MakeOrderBy();
+            try
             {
-                string query = "&$expand=Robot($expand=License,User),UpdateInfo" + MakeFilter() + MakeOrderBy();
-                try
+                var sessions = drive.OrchAPISession.GetGlobalSessions(query, skip, first);
+                foreach (var session in sessions)
                 {
-                    var sessions = drive.OrchAPISession.GetGlobalSessions(query, skip, first);
-                    foreach (var session in sessions)
-                    {
-                        session.Path = drive.NameColonSeparator;
-                        WriteObject(session);
-                    }
+                    session.Path = drive.NameColonSeparator;
+                    WriteObject(session);
                 }
-                catch (Exception ex)
-                {
-                    WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetUserSessionError", ErrorCategory.InvalidOperation, drive));
-                }
+            }
+            catch (Exception ex)
+            {
+                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetUserSessionError", ErrorCategory.InvalidOperation, drive));
             }
         }
     }

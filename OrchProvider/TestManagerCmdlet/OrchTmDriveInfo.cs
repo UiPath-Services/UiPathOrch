@@ -1,462 +1,456 @@
-﻿using UiPath.OrchAPI;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Management.Automation;
-using UiPath.PowerShell.Entities;
-using Job = UiPath.PowerShell.Entities.Job;
+using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
-using System.Net.Sockets;
-using Microsoft.Management.Infrastructure.Options;
-using System.ComponentModel;
-using License = UiPath.PowerShell.Entities.License;
+using UiPath.PowerShell.Entities;
 
-namespace UiPath.PowerShell.Core
+namespace UiPath.PowerShell.Core;
+
+public class OrchTmDriveInfo : PSDriveInfo
 {
-    public class OrchTmDriveInfo : PSDriveInfo
+    internal OrchDriveInfo? _parentDrive;
+    internal OrchDriveInfo ParentDrive => _parentDrive!;
+
+    internal OrchAPISession OrchAPISession => ParentDrive.OrchAPISession;
+
+    private string? _NameColon = null;
+    private string? _NameColonSeparator = null;
+
+    internal string NameColon
     {
-        internal OrchDriveInfo? _parentDrive;
-        internal OrchDriveInfo ParentDrive => _parentDrive!;
-
-        internal OrchAPISession OrchAPISession => ParentDrive.OrchAPISession;
-
-        private string? _NameColon = null;
-        private string? _NameColonSeparator = null;
-
-        internal string NameColon
+        get
         {
-            get
-            {
-                _NameColon ??= Name + Path.VolumeSeparatorChar;
-                return _NameColon;
-            }
+            _NameColon ??= Name + Path.VolumeSeparatorChar;
+            return _NameColon;
         }
-        internal string NameColonSeparator
+    }
+    internal string NameColonSeparator
+    {
+        get
         {
-            get
-            {
-                _NameColonSeparator ??= Name + Path.VolumeSeparatorChar + Path.DirectorySeparatorChar;
-                return _NameColonSeparator;
-            }
+            _NameColonSeparator ??= Name + Path.VolumeSeparatorChar + Path.DirectorySeparatorChar;
+            return _NameColonSeparator;
         }
+    }
 
-        // OrchTmProvider の Start で初期化する
-        internal static SessionState? SessionState;
+    // OrchTmProvider の Start で初期化する
+    internal static SessionState? SessionState;
 
-        public static IEnumerable<OrchTmDriveInfo> EnumAllOrchDrives()
-        {
-            return SessionState!.Drive.GetAllForProvider("UiPathOrchTm")
-                .Cast<OrchTmDriveInfo>()
-                .OrderBy(d => d.Name);
-        }
+    public static IEnumerable<OrchTmDriveInfo> EnumAllOrchDrives()
+    {
+        return SessionState!.Drive.GetAllForProvider("UiPathOrchTm")
+            .Cast<OrchTmDriveInfo>()
+            .OrderBy(d => d.Name);
+    }
 
-        protected internal Folder? RootFolder;
+    protected internal Folder? RootFolder;
 
-        // このコンストラクタを実行するタイミングでは、NameColonSeparator は利用できない
-        public OrchTmDriveInfo(ProviderInfo provider, string driveName, string description, string root) :
-            base(driveName, provider, driveName + ":\\", description, null, root)
-        {
+    // このコンストラクタを実行するタイミングでは、NameColonSeparator は利用できない
+    public OrchTmDriveInfo(ProviderInfo provider, string driveName, string description, string root) :
+        base(driveName, provider, driveName + ":\\", description, null, root)
+    {
 //            _parentDrive = parent;
-        }
+    }
 
-        // paths を指定しない場合、カレントドライブのみを返す
-        public static List<OrchTmDriveInfo> EnumOrchTmDrives(IEnumerable<string?>? paths = null)
+    // paths を指定しない場合、カレントドライブのみを返す
+    public static List<OrchTmDriveInfo> EnumOrchTmDrives(IEnumerable<string?>? paths = null)
+    {
+        var drives = new List<OrchTmDriveInfo>();
+        if (paths is null || !paths.Any() || paths.All(p => p is null))
         {
-            var drives = new List<OrchTmDriveInfo>();
-            if (paths == null || !paths.Any() || paths.All(p => p == null))
+            if (SessionState!.Path.CurrentLocation.Drive is OrchTmDriveInfo orchDrive)
+                drives.Add(orchDrive);
+        }
+        else
+        {
+            var psPaths = paths.Select(p => SessionState!.Path.GetResolvedPSPathFromPSPath(p)).SelectMany(p => p);
+            foreach (var p in psPaths)
             {
-                if (SessionState!.Path.CurrentLocation.Drive is OrchTmDriveInfo orchDrive)
+                if (p.Drive is OrchTmDriveInfo orchDrive)
                     drives.Add(orchDrive);
             }
-            else
-            {
-                var psPaths = paths.Select(p => SessionState!.Path.GetResolvedPSPathFromPSPath(p)).SelectMany(p => p);
-                foreach (var p in psPaths)
-                {
-                    if (p.Drive is OrchTmDriveInfo orchDrive)
-                        drives.Add(orchDrive);
-                }
-            }
-            //return drives.DistinctBy(drive => drive.Name).ToList();
-            return drives.Distinct().ToList();
         }
+        //return drives.DistinctBy(drive => drive.Name).ToList();
+        return drives.Distinct().ToList();
+    }
 
-        public static IEnumerable<PathInfo> ResolveOrchDrivePaths(IEnumerable<string?>? paths = null)
+    public static IEnumerable<PathInfo> ResolveOrchDrivePaths(IEnumerable<string?>? paths = null)
+    {
+        if (paths is null || !paths.Any() || paths.All(p => p is null))
         {
-            if (paths == null || !paths.Any() || paths.All(p => p == null))
+            PathInfo pathInfo = SessionState!.Path.CurrentLocation;
+            if (pathInfo.Drive is OrchTmDriveInfo)
             {
-                PathInfo pathInfo = SessionState!.Path.CurrentLocation;
-                if (pathInfo.Drive is OrchTmDriveInfo)
-                {
-                    yield return SessionState!.Path.CurrentLocation;
-                }
-            }
-            else
-            {
-                var psPaths = paths.Where(p => p != null).Select(p => SessionState!.Path.GetResolvedPSPathFromPSPath(p)).SelectMany(p => p);
-                foreach (var pathInfo in psPaths.Where(p => p.Provider.Name == "UiPathOrchTm"))
-                {
-                    yield return pathInfo;
-                }
+                yield return SessionState!.Path.CurrentLocation;
             }
         }
-
-        public static List<(OrchTmDriveInfo drive, TmProject project)> EnumFolders(IEnumerable<string?>? path, bool recurse = false) ///, bool includeRoot = false)
+        else
         {
-            var paths = ResolveOrchDrivePaths(path);
-
-            List<(OrchTmDriveInfo drive, TmProject project)> ret = [];
-
-            HashSet<string> visited = [];
-            foreach (var p in paths)
+            var psPaths = paths.Where(p => p is not null).Select(p => SessionState!.Path.GetResolvedPSPathFromPSPath(p)).SelectMany(p => p);
+            foreach (var pathInfo in psPaths.Where(p => p.Provider.Name == "UiPathOrchTm"))
             {
-                OrchTmDriveInfo drive = p.Drive as OrchTmDriveInfo;
-                if (drive == null) continue;
+                yield return pathInfo;
+            }
+        }
+    }
 
-                var dicProjects = drive!.GetTmProjects();
-                if (dicProjects == null) continue;
+    public static List<(OrchTmDriveInfo drive, TmProject project)> EnumFolders(IEnumerable<string?>? path, bool recurse = false) ///, bool includeRoot = false)
+    {
+        var paths = ResolveOrchDrivePaths(path);
 
-                //Folder folder = null; // drive?.GetFolder(OrchDriveInfo.PSPathToOrchPath(WildcardPattern.Unescape(p.ProviderPath)));
-                //if (folder == null) continue;
+        List<(OrchTmDriveInfo drive, TmProject project)> ret = [];
 
-                // Recurse が指定されていて、かつルートフォルダであれば、すべてのプロジェクトを返せばOK
-                if (recurse && p.Path.EndsWith('\\'))
-                {
-                    foreach (var project in dicProjects)
-                    {
-                        if (!visited.Add(project.id!)) continue;
-                        ret.Add((drive!, project));
-                    }
-                    continue;
-                }
+        HashSet<string> visited = [];
+        foreach (var p in paths)
+        {
+            OrchTmDriveInfo drive = p.Drive as OrchTmDriveInfo;
+            if (drive is null) continue;
 
-                // dicFolders にはルートフォルダーが含まれないため、ルートだけ先にここで探して追加する
-                //if (includeRoot)
-                //{
-                //    ret.Add((drive!, null));
-                //}
+            var dicProjects = drive!.GetTmProjects();
+            if (dicProjects is null) continue;
 
-                // p からプロジェクト名を取り出す
-                string projectPrefix = Path.GetFileName(p.Path);
+            //Folder folder = null; // drive?.GetFolder(OrchDriveInfo.PSPathToOrchPath(WildcardPattern.Unescape(p.ProviderPath)));
+            //if (folder is null) continue;
 
+            // Recurse が指定されていて、かつルートフォルダであれば、すべてのプロジェクトを返せばOK
+            if (recurse && p.Path.EndsWith('\\'))
+            {
                 foreach (var project in dicProjects)
                 {
-                    if (string.Compare(project.projectPrefix, projectPrefix, StringComparison.OrdinalIgnoreCase) == 0)
-                    {
-                        if (!visited.Add(project.id!)) continue;
-                        ret.Add((drive!, project));
-                    }
+                    if (!visited.Add(project.id!)) continue;
+                    ret.Add((drive!, project));
                 }
+                continue;
             }
 
-            if (ret == null || ret.Count == 0)
+            // dicFolders にはルートフォルダーが含まれないため、ルートだけ先にここで探して追加する
+            //if (includeRoot)
+            //{
+            //    ret.Add((drive!, null));
+            //}
+
+            // p からプロジェクト名を取り出す
+            string projectPrefix = Path.GetFileName(p.Path);
+
+            foreach (var project in dicProjects)
             {
-                throw new Exception("Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters on UiPathOrchTm drive.");
-            }
-            return ret;
-        }
-
-        public void ClearAllCache()
-        {
-            _dicTmProjects = null;
-            _dicTmProjectsException.ClearCache();
-
-            _dicTmTestCases = null;
-            _dicTmTestCasesExceptions.ClearCache();
-
-            _dicTmServerInfo = null;
-            _dicTmServerInfoException.ClearCache();
-
-            _dicTmProjectSettings = null;
-            _dicTmProjectSettingsException.ClearCache();
-
-            _dicTmTestSets = null;
-            _dicTmTestSetsExceptions.ClearCache();
-
-            _dicTmConfig = null;
-            _dicTmConfigException.ClearCache();
-
-            _dicTmProjectPermission = null;
-            _dicTmProjectPermissionException.ClearCache();
-        }
-
-        internal List<TmProject>? _dicTmProjects = null;
-        internal readonly ExceptionCachePerTenant _dicTmProjectsException = new();
-        public ReadOnlyCollection<TmProject>? GetTmProjects()
-        {
-            _dicTmProjectsException.ThrowCachedExceptionIfAny();
-
-            if (_dicTmProjects == null)
-            {
-                lock (this)
+                if (string.Compare(project.projectPrefix, projectPrefix, StringComparison.OrdinalIgnoreCase) == 0)
                 {
-                    if (_dicTmProjects == null)
-                    {
-                        try
-                        {
-                            _dicTmProjects = OrchAPISession.GetTmProjects()?.ToList();
-                            if (_dicTmProjects == null)
-                            {
-                                _dicTmProjects = [];
-                            }
-                            else
-                            {
-                                foreach (var project in _dicTmProjects)
-                                {
-                                    project.Path = NameColonSeparator;
-                                    project.FullName = NameColonSeparator + project.projectPrefix;
-                                }
-                            }
-                        }
-                        catch (HttpResponseException ex)
-                        {
-                            _dicTmProjectsException.CacheException(ex);
-                            throw;
-                        }
-                    }
+                    if (!visited.Add(project.id!)) continue;
+                    ret.Add((drive!, project));
                 }
             }
-            return _dicTmProjects?.AsReadOnly();
         }
 
-        internal TmServerInfo? _dicTmServerInfo = null;
-        internal readonly ExceptionCachePerTenant _dicTmServerInfoException = new();
-        public TmServerInfo? GetTmServerInfo()
+        if (ret is null || ret.Count == 0)
         {
-            _dicTmServerInfoException.ThrowCachedExceptionIfAny();
+            throw new Exception("Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters on UiPathOrchTm drive.");
+        }
+        return ret;
+    }
 
-            if (_dicTmServerInfo == null)
+    public void ClearAllCache()
+    {
+        _dicTmProjects = null;
+        _dicTmProjectsException.ClearCache();
+
+        _dicTmTestCases = null;
+        _dicTmTestCasesExceptions.ClearCache();
+
+        _dicTmServerInfo = null;
+        _dicTmServerInfoException.ClearCache();
+
+        _dicTmProjectSettings = null;
+        _dicTmProjectSettingsException.ClearCache();
+
+        _dicTmTestSets = null;
+        _dicTmTestSetsExceptions.ClearCache();
+
+        _dicTmConfig = null;
+        _dicTmConfigException.ClearCache();
+
+        _dicTmProjectPermission = null;
+        _dicTmProjectPermissionException.ClearCache();
+    }
+
+    internal List<TmProject>? _dicTmProjects = null;
+    internal readonly ExceptionCachePerTenant _dicTmProjectsException = new();
+    public ReadOnlyCollection<TmProject>? GetTmProjects()
+    {
+        _dicTmProjectsException.ThrowCachedExceptionIfAny();
+
+        if (_dicTmProjects is null)
+        {
+            lock (this)
             {
-                lock (this)
+                if (_dicTmProjects is null)
                 {
                     try
                     {
-                        _dicTmServerInfo = OrchAPISession.GetTmServerInfo();
-                        if (_dicTmServerInfo != null)
+                        _dicTmProjects = OrchAPISession.GetTmProjects()?.ToList();
+                        if (_dicTmProjects is null)
                         {
-                            _dicTmServerInfo.Path = NameColonSeparator;
+                            _dicTmProjects = [];
+                        }
+                        else
+                        {
+                            foreach (var project in _dicTmProjects)
+                            {
+                                project.Path = NameColonSeparator;
+                                project.FullName = NameColonSeparator + project.projectPrefix;
+                            }
                         }
                     }
                     catch (HttpResponseException ex)
                     {
-                        _dicTmServerInfoException.CacheException(ex);
+                        _dicTmProjectsException.CacheException(ex);
                         throw;
                     }
                 }
             }
-            return _dicTmServerInfo;
         }
+        return _dicTmProjects?.AsReadOnly();
+    }
 
-        internal TmConfig? _dicTmConfig = null;
-        internal readonly ExceptionCachePerTenant _dicTmConfigException = new();
-        public TmConfig? GetTmConfiguration()
+    internal TmServerInfo? _dicTmServerInfo = null;
+    internal readonly ExceptionCachePerTenant _dicTmServerInfoException = new();
+    public TmServerInfo? GetTmServerInfo()
+    {
+        _dicTmServerInfoException.ThrowCachedExceptionIfAny();
+
+        if (_dicTmServerInfo is null)
         {
-            _dicTmConfigException.ThrowCachedExceptionIfAny();
-
-            if (_dicTmConfig == null)
+            lock (this)
             {
-                lock (this)
-                {
-                    try
-                    {
-                        _dicTmConfig = OrchAPISession.GetTmConfiguration();
-                        if (_dicTmConfig != null)
-                        {
-                            _dicTmConfig.Path = NameColonSeparator;
-                        }
-                    }
-                    catch (HttpResponseException ex)
-                    {
-                        _dicTmConfigException.CacheException(ex);
-                        throw;
-                    }
-                }
-            }
-            return _dicTmConfig;
-        }
-
-        // key: projectId
-        internal ConcurrentDictionary<string, TmProjectSettings>? _dicTmProjectSettings = null;
-        internal readonly ExceptionCachePerTenant _dicTmProjectSettingsException = new();
-        public TmProjectSettings? GetTmProjectSettings(TmProject project)
-        {
-            _dicTmProjectSettingsException.ThrowCachedExceptionIfAny();
-
-            if (_dicTmProjectSettings == null)
-            {
-                lock (this)
-                {
-                    _dicTmProjectSettings ??= [];
-                }
-            }
-
-            if (!_dicTmProjectSettings.TryGetValue(project.id!, out var tmProjectSettings))
-            {
-
                 try
                 {
-                    tmProjectSettings = OrchAPISession.GetTmProjectSettings(project.id!);
-                    if (tmProjectSettings != null)
+                    _dicTmServerInfo = OrchAPISession.GetTmServerInfo();
+                    if (_dicTmServerInfo is not null)
                     {
-                        tmProjectSettings.Path = NameColonSeparator + tmProjectSettings.projectPrefix;
-                        _dicTmProjectSettings[project.id ?? ""] = tmProjectSettings;
+                        _dicTmServerInfo.Path = NameColonSeparator;
                     }
                 }
                 catch (HttpResponseException ex)
                 {
-                    _dicTmProjectSettingsException.CacheException(ex);
+                    _dicTmServerInfoException.CacheException(ex);
                     throw;
                 }
             }
-            return tmProjectSettings;
         }
+        return _dicTmServerInfo;
+    }
 
-        // key: projectId
-        internal ConcurrentDictionary<string, List<TmProjectPermission>>? _dicTmProjectPermission = null;
-        internal readonly ExceptionCachePerTenant _dicTmProjectPermissionException = new();
-        public ReadOnlyCollection<TmProjectPermission>? GetTmProjectPermission(TmProject project)
+    internal TmConfig? _dicTmConfig = null;
+    internal readonly ExceptionCachePerTenant _dicTmConfigException = new();
+    public TmConfig? GetTmConfiguration()
+    {
+        _dicTmConfigException.ThrowCachedExceptionIfAny();
+
+        if (_dicTmConfig is null)
         {
-            _dicTmProjectPermissionException.ThrowCachedExceptionIfAny();
-
-            if (_dicTmProjectPermission == null)
-            {
-                lock (this)
-                {
-                    _dicTmProjectPermission ??= [];
-                }
-            }
-
-            if (!_dicTmProjectPermission.TryGetValue(project.id!, out var tmProjectPermissions))
+            lock (this)
             {
                 try
                 {
-                    tmProjectPermissions = OrchAPISession.GetTmProjectPermission(project.id!).ToList();
-                    string pathProject = project.GetPSPath();
-                    foreach (var permission in tmProjectPermissions)
+                    _dicTmConfig = OrchAPISession.GetTmConfiguration();
+                    if (_dicTmConfig is not null)
                     {
-                        permission.Path = NameColonSeparator;
-                        permission.Project = project.name;
-                        permission.PathProject = pathProject;
+                        _dicTmConfig.Path = NameColonSeparator;
                     }
-                    _dicTmProjectPermission[project.id ?? ""] = tmProjectPermissions;
                 }
                 catch (HttpResponseException ex)
                 {
-                    _dicTmProjectPermissionException.CacheException(ex);
+                    _dicTmConfigException.CacheException(ex);
                     throw;
                 }
             }
-            return tmProjectPermissions.AsReadOnly();
         }
+        return _dicTmConfig;
+    }
 
-        // key: projectId
-        internal ConcurrentDictionary<string, List<TmRequirement>>? _dicTmRequirements = null;
-        internal readonly ExceptionsCachePer<string> _dicTmRequirementExceptions = new();
-        public ReadOnlyCollection<TmRequirement> GetTmRequirements(TmProject project)
+    // key: projectId
+    internal ConcurrentDictionary<string, TmProjectSettings>? _dicTmProjectSettings = null;
+    internal readonly ExceptionCachePerTenant _dicTmProjectSettingsException = new();
+    public TmProjectSettings? GetTmProjectSettings(TmProject project)
+    {
+        _dicTmProjectSettingsException.ThrowCachedExceptionIfAny();
+
+        if (_dicTmProjectSettings is null)
         {
-            _dicTmRequirementExceptions.ThrowCachedExceptionIfAny(project.id!);
-
-            if (_dicTmRequirements == null)
+            lock (this)
             {
-                lock (this)
-                {
-                    _dicTmRequirements ??= [];
-                }
+                _dicTmProjectSettings ??= [];
             }
-
-            if (!_dicTmRequirements.TryGetValue(project.id!, out var tmRequirements))
-            {
-
-                try
-                {
-                    tmRequirements = OrchAPISession.GetTmRequirements(project.id!).ToList();
-                    string path = NameColonSeparator + project.projectPrefix;
-                    foreach (var requirement in tmRequirements)
-                    {
-                        requirement.Path = path;
-                    }
-                    _dicTmRequirements[project.id ?? ""] = tmRequirements;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicTmRequirementExceptions.CacheException(project.id!, ex);
-                    throw;
-                }
-            }
-            return tmRequirements.AsReadOnly();
         }
 
-        // key: projectId
-        internal ConcurrentDictionary<string, List<TmTestCase>>? _dicTmTestCases = null;
-        internal readonly ExceptionsCachePer<string> _dicTmTestCasesExceptions = new();
-        public ReadOnlyCollection<TmTestCase> GetTmTestCases(TmProject project)
+        if (!_dicTmProjectSettings.TryGetValue(project.id!, out var tmProjectSettings))
         {
-            _dicTmTestCasesExceptions.ThrowCachedExceptionIfAny(project.id!);
 
-            if (_dicTmTestCases == null)
+            try
             {
-                lock (this)
+                tmProjectSettings = OrchAPISession.GetTmProjectSettings(project.id!);
+                if (tmProjectSettings is not null)
                 {
-                    _dicTmTestCases ??= [];
+                    tmProjectSettings.Path = NameColonSeparator + tmProjectSettings.projectPrefix;
+                    _dicTmProjectSettings[project.id ?? ""] = tmProjectSettings;
                 }
             }
-
-            if (!_dicTmTestCases.TryGetValue(project.id!, out var tmTestCases))
+            catch (HttpResponseException ex)
             {
-
-                try
-                {
-                    tmTestCases = OrchAPISession.GetTmTestCases(project.id!).ToList();
-                    string path = NameColonSeparator + project.projectPrefix;
-                    foreach (var testCase in tmTestCases)
-                    {
-                        testCase.Path = path;
-                    }
-                    _dicTmTestCases[project.id ?? ""] = tmTestCases;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicTmTestCasesExceptions.CacheException(project.id!, ex);
-                    throw;
-                }
+                _dicTmProjectSettingsException.CacheException(ex);
+                throw;
             }
-            return tmTestCases.AsReadOnly();
         }
+        return tmProjectSettings;
+    }
 
-        // key: projectId
-        internal ConcurrentDictionary<string, List<TmTestSet>>? _dicTmTestSets = null;
-        internal readonly ExceptionsCachePer<string> _dicTmTestSetsExceptions = new();
-        public ReadOnlyCollection<TmTestSet> GetTmTestSets(TmProject project)
+    // key: projectId
+    internal ConcurrentDictionary<string, List<TmProjectPermission>>? _dicTmProjectPermission = null;
+    internal readonly ExceptionCachePerTenant _dicTmProjectPermissionException = new();
+    public ReadOnlyCollection<TmProjectPermission>? GetTmProjectPermission(TmProject project)
+    {
+        _dicTmProjectPermissionException.ThrowCachedExceptionIfAny();
+
+        if (_dicTmProjectPermission is null)
         {
-            _dicTmTestSetsExceptions.ThrowCachedExceptionIfAny(project.id!);
-
-            if (_dicTmTestSets == null)
+            lock (this)
             {
-                lock (this)
-                {
-                    _dicTmTestSets ??= [];
-                }
+                _dicTmProjectPermission ??= [];
             }
-
-            if (!_dicTmTestSets.TryGetValue(project.id!, out var tmTestSets))
-            {
-
-                try
-                {
-                    tmTestSets = OrchAPISession.GetTmTestSets(project.id!).ToList();
-                    string path = NameColonSeparator + project.projectPrefix;
-                    foreach (var testSet in tmTestSets)
-                    {
-                        testSet.Path = path;
-                    }
-                    _dicTmTestSets[project.id ?? ""] = tmTestSets;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicTmTestSetsExceptions.CacheException(project.id!, ex);
-                    throw;
-                }
-            }
-            return tmTestSets.AsReadOnly();
         }
+
+        if (!_dicTmProjectPermission.TryGetValue(project.id!, out var tmProjectPermissions))
+        {
+            try
+            {
+                tmProjectPermissions = OrchAPISession.GetTmProjectPermission(project.id!).ToList();
+                string pathProject = project.GetPSPath();
+                foreach (var permission in tmProjectPermissions)
+                {
+                    permission.Path = NameColonSeparator;
+                    permission.Project = project.name;
+                    permission.PathProject = pathProject;
+                }
+                _dicTmProjectPermission[project.id ?? ""] = tmProjectPermissions;
+            }
+            catch (HttpResponseException ex)
+            {
+                _dicTmProjectPermissionException.CacheException(ex);
+                throw;
+            }
+        }
+        return tmProjectPermissions.AsReadOnly();
+    }
+
+    // key: projectId
+    internal ConcurrentDictionary<string, List<TmRequirement>>? _dicTmRequirements = null;
+    internal readonly ExceptionsCachePer<string> _dicTmRequirementExceptions = new();
+    public ReadOnlyCollection<TmRequirement> GetTmRequirements(TmProject project)
+    {
+        _dicTmRequirementExceptions.ThrowCachedExceptionIfAny(project.id!);
+
+        if (_dicTmRequirements is null)
+        {
+            lock (this)
+            {
+                _dicTmRequirements ??= [];
+            }
+        }
+
+        if (!_dicTmRequirements.TryGetValue(project.id!, out var tmRequirements))
+        {
+
+            try
+            {
+                tmRequirements = OrchAPISession.GetTmRequirements(project.id!).ToList();
+                string path = NameColonSeparator + project.projectPrefix;
+                foreach (var requirement in tmRequirements)
+                {
+                    requirement.Path = path;
+                }
+                _dicTmRequirements[project.id ?? ""] = tmRequirements;
+            }
+            catch (HttpResponseException ex)
+            {
+                _dicTmRequirementExceptions.CacheException(project.id!, ex);
+                throw;
+            }
+        }
+        return tmRequirements.AsReadOnly();
+    }
+
+    // key: projectId
+    internal ConcurrentDictionary<string, List<TmTestCase>>? _dicTmTestCases = null;
+    internal readonly ExceptionsCachePer<string> _dicTmTestCasesExceptions = new();
+    public ReadOnlyCollection<TmTestCase> GetTmTestCases(TmProject project)
+    {
+        _dicTmTestCasesExceptions.ThrowCachedExceptionIfAny(project.id!);
+
+        if (_dicTmTestCases is null)
+        {
+            lock (this)
+            {
+                _dicTmTestCases ??= [];
+            }
+        }
+
+        if (!_dicTmTestCases.TryGetValue(project.id!, out var tmTestCases))
+        {
+
+            try
+            {
+                tmTestCases = OrchAPISession.GetTmTestCases(project.id!).ToList();
+                string path = NameColonSeparator + project.projectPrefix;
+                foreach (var testCase in tmTestCases)
+                {
+                    testCase.Path = path;
+                }
+                _dicTmTestCases[project.id ?? ""] = tmTestCases;
+            }
+            catch (HttpResponseException ex)
+            {
+                _dicTmTestCasesExceptions.CacheException(project.id!, ex);
+                throw;
+            }
+        }
+        return tmTestCases.AsReadOnly();
+    }
+
+    // key: projectId
+    internal ConcurrentDictionary<string, List<TmTestSet>>? _dicTmTestSets = null;
+    internal readonly ExceptionsCachePer<string> _dicTmTestSetsExceptions = new();
+    public ReadOnlyCollection<TmTestSet> GetTmTestSets(TmProject project)
+    {
+        _dicTmTestSetsExceptions.ThrowCachedExceptionIfAny(project.id!);
+
+        if (_dicTmTestSets is null)
+        {
+            lock (this)
+            {
+                _dicTmTestSets ??= [];
+            }
+        }
+
+        if (!_dicTmTestSets.TryGetValue(project.id!, out var tmTestSets))
+        {
+
+            try
+            {
+                tmTestSets = OrchAPISession.GetTmTestSets(project.id!).ToList();
+                string path = NameColonSeparator + project.projectPrefix;
+                foreach (var testSet in tmTestSets)
+                {
+                    testSet.Path = path;
+                }
+                _dicTmTestSets[project.id ?? ""] = tmTestSets;
+            }
+            catch (HttpResponseException ex)
+            {
+                _dicTmTestSetsExceptions.CacheException(project.id!, ex);
+                throw;
+            }
+        }
+        return tmTestSets.AsReadOnly();
     }
 }

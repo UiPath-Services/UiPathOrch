@@ -8,136 +8,135 @@ using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
 using TPositional = UiPath.PowerShell.Positional.RobotType_Key;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+public class EnableLicenseRuntimeCommandBase<Enable> : OrchestratorPSCmdlet where Enable : IBoolParameter
 {
-    public class EnableLicenseRuntimeCommandBase<Enable> : OrchestratorPSCmdlet where Enable : IBoolParameter
+    public virtual string[]? RobotType { get; set; }
+
+    public virtual string[]? Key { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    public string[]? Path { get; set; }
+
+    internal class KeyCompleter : OrchArgumentCompleter
     {
-        public virtual string[]? RobotType { get; set; }
-
-        public virtual string[]? Key { get; set; }
-
-        [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
-        public string[]? Path { get; set; }
-
-        internal class KeyCompleter : OrchArgumentCompleter
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
         {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
+            var drives = ResolveDrives(fakeBoundParameters);
+
+            // パラメータで選択された RobotType のみ対象とする
+            var wpRobotTypes = CreateWPListFromOtherParameters(commandAst, "RobotType", TPositional.Parameters);
+
+            // パラメータで選択済みの Key は、候補から除外する
+            var wpKey = CreateWPListFromParameter(commandAst, "Key", TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var specifiedRobotTypes = LicenseRobotTypeItems.Parameters
+                .FilterByWildcards(rt => rt, wpRobotTypes)
+                // .OrderBy(rt => rt);
+                .ToList();
+
+            var results = new ConcurrentBag<IEnumerable<LicenseRuntime>>();
+            Parallel.ForEach(drives, drive =>
             {
-                var drives = ResolveDrives(fakeBoundParameters);
-
-                // パラメータで選択された RobotType のみ対象とする
-                var wpRobotTypes = CreateWPListFromOtherParameters(commandAst, "RobotType", TPositional.Parameters);
-
-                // パラメータで選択済みの Key は、候補から除外する
-                var wpKey = CreateWPListFromParameter(commandAst, "Key", TPositional.Parameters, wordToComplete);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                var specifiedRobotTypes = LicenseRobotTypeItems.Parameters
-                    .FilterByWildcards(rt => rt, wpRobotTypes)
-                    // .OrderBy(rt => rt);
-                    .ToList();
-
-                var results = new ConcurrentBag<IEnumerable<LicenseRuntime>>();
-                Parallel.ForEach(drives, drive =>
+                // キャッシュされていない robotType についてのみ GetLicenseRuntime() で取得する
+                IEnumerable<string> nonCachedRobotTypes;
+                if (drive._dicLicenseRuntime is null)
                 {
-                    // キャッシュされていない robotType についてのみ GetLicenseRuntime() で取得する
-                    IEnumerable<string> nonCachedRobotTypes;
-                    if (drive._dicLicenseRuntime == null)
-                    {
-                        // キャッシュがなければ全て取得
-                        nonCachedRobotTypes = specifiedRobotTypes;
-                    }
-                    else
-                    {
-                        // キャッシュがあれば、まだキャッシュしていないものだけ取得
-                        nonCachedRobotTypes = specifiedRobotTypes
-                            .Where(rt => !drive._dicLicenseRuntime!.ContainsKey(rt));
-                    }
+                    // キャッシュがなければ全て取得
+                    nonCachedRobotTypes = specifiedRobotTypes;
+                }
+                else
+                {
+                    // キャッシュがあれば、まだキャッシュしていないものだけ取得
+                    nonCachedRobotTypes = specifiedRobotTypes
+                        .Where(rt => !drive._dicLicenseRuntime!.ContainsKey(rt));
+                }
 
-                    Parallel.ForEach(nonCachedRobotTypes, robotType =>
+                Parallel.ForEach(nonCachedRobotTypes, robotType =>
+                {
+                    try
                     {
-                        try
-                        {
-                            results.Add(drive.GetLicenseRuntime(robotType));
-                        }
-                        catch { }
-                    });
+                        results.Add(drive.GetLicenseRuntime(robotType));
+                    }
+                    catch { }
                 });
+            });
 
-                foreach (var drive in drives)
+            foreach (var drive in drives)
+            {
+                foreach (var license in specifiedRobotTypes
+                    .Where(key => drive._dicLicenseRuntime!.ContainsKey(key))
+                    .Select(key => drive._dicLicenseRuntime![key])
+                    .SelectMany(l => l)
+                    .Where(l => wp.IsMatch(l.Key))
+                    .Where(t => Enable.Value
+                        ? !t.Enabled.GetValueOrDefault()
+                        : t.Enabled.GetValueOrDefault())
+                    .ExcludeByWildcards(l => l?.Key, wpKey)
+                    .OrderBy(l => l.Key))
                 {
-                    foreach (var license in specifiedRobotTypes
-                        .Where(key => drive._dicLicenseRuntime!.ContainsKey(key))
-                        .Select(key => drive._dicLicenseRuntime![key])
-                        .SelectMany(l => l)
-                        .Where(l => wp.IsMatch(l.Key))
-                        .Where(t => Enable.Value
-                            ? !t.Enabled.GetValueOrDefault()
-                            : t.Enabled.GetValueOrDefault())
-                        .ExcludeByWildcards(l => l?.Key, wpKey)
-                        .OrderBy(l => l.Key))
-                    {
-                        string tooltip = $"HMN:{license.HostMachineName}  SUN:{license.ServiceUserName}  MN:{license.MachineName}";
-                        yield return new CompletionResult(PathTools.EscapePSText(license.Key), license.Key, CompletionResultType.Text, tooltip);
-                    }
+                    string tooltip = $"HMN:{license.HostMachineName}  SUN:{license.ServiceUserName}  MN:{license.MachineName}";
+                    yield return new CompletionResult(PathTools.EscapePSText(license.Key), license.Key, CompletionResultType.Text, tooltip);
                 }
             }
         }
+    }
 
-        protected override void ProcessRecord()
+    protected override void ProcessRecord()
+    {
+        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var wpRobotType = RobotType.ConvertToWildcardPatternList();
+        var wpKey = Key.ConvertToWildcardPatternList();
+
+        var specifiedRobotType = LicenseRobotTypeItems.Parameters
+            .FilterByWildcards(rt => rt, wpRobotType)
+            .OrderBy(rt => rt)
+            .ToList();
+
+        // drive と robotType の全ての要素の組み合わせを計算
+        var drivesRobotTypes = drives
+            .SelectMany(drive => specifiedRobotType, (drive, robotType) => (drive, robotType))
+            .ToList();
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var drive in drives)
         {
-            var drives = OrchDriveInfo.EnumOrchDrives(Path);
-            var wpRobotType = RobotType.ConvertToWildcardPatternList();
-            var wpKey = Key.ConvertToWildcardPatternList();
-
-            var specifiedRobotType = LicenseRobotTypeItems.Parameters
-                .FilterByWildcards(rt => rt, wpRobotType)
-                .OrderBy(rt => rt)
-                .ToList();
-
-            // drive と robotType の全ての要素の組み合わせを計算
-            var drivesRobotTypes = drives
-                .SelectMany(drive => specifiedRobotType, (drive, robotType) => (drive, robotType))
-                .ToList();
-
-            using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var drive in drives)
+            foreach (var robotType in specifiedRobotType)
             {
-                foreach (var robotType in specifiedRobotType)
+                var licenses = drive.GetLicenseRuntime(robotType);
+
+                foreach (var license in licenses
+                    .Where(t => Enable.Value
+                        ? !t.Enabled.GetValueOrDefault()
+                        : t.Enabled.GetValueOrDefault())
+                    .FilterByWildcards(l => l?.Key, wpKey))
                 {
-                    var licenses = drive.GetLicenseRuntime(robotType);
+                    cancelHandler.Token.ThrowIfCancellationRequested();
 
-                    foreach (var license in licenses
-                        .Where(t => Enable.Value
-                            ? !t.Enabled.GetValueOrDefault()
-                            : t.Enabled.GetValueOrDefault())
-                        .FilterByWildcards(l => l?.Key, wpKey))
+                    string target = drive.NameColonSeparator + license.Key;
+
+                    string action = $"{(Enable.Value ? "Enable" : "Disable")} LicenseRuntime {robotType}";
+
+                    if (ShouldProcess(target, action))
                     {
-                        cancelHandler.Token.ThrowIfCancellationRequested();
-
-                        string target = drive.NameColonSeparator + license.Key;
-
-                        string action = $"{(Enable.Value ? "Enable" : "Disable")} LicenseRuntime {robotType}";
-
-                        if (ShouldProcess(target, action))
+                        try
                         {
-                            try
-                            {
-                                drive.OrchAPISession.ToggleLicenseRuntime(robotType, license.Key!, license.MachineName!, Enable.Value);
-                                drive._dicLicenseRuntime?.TryRemove(robotType, out _);
-                            }
-                            catch (Exception ex)
-                            {
-                                string errorId = $"{(Enable.Value ? "Enable" : "Disable")}LicenseRuntimeError";
-                                WriteError(new ErrorRecord(new OrchException(target, ex), "EnableLicenseRuntimeError", ErrorCategory.InvalidOperation, license));
-                            }
+                            drive.OrchAPISession.ToggleLicenseRuntime(robotType, license.Key!, license.MachineName!, Enable.Value);
+                            drive._dicLicenseRuntime?.TryRemove(robotType, out _);
+                        }
+                        catch (Exception ex)
+                        {
+                            string errorId = $"{(Enable.Value ? "Enable" : "Disable")}LicenseRuntimeError";
+                            WriteError(new ErrorRecord(new OrchException(target, ex), "EnableLicenseRuntimeError", ErrorCategory.InvalidOperation, license));
                         }
                     }
                 }

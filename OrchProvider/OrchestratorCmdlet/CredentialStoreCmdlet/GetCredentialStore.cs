@@ -3,48 +3,47 @@ using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using TPositional = UiPath.PowerShell.Positional.Name;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsCommon.Get, "OrchCredentialStore")]
+[OutputType(typeof(Entities.CredentialStore))]
+public class GetCredentialStoreCommand : OrchestratorPSCmdlet
 {
-    [Cmdlet(VerbsCommon.Get, "OrchCredentialStore")]
-    [OutputType(typeof(Entities.CredentialStore))]
-    public class GetCredentialStoreCommand : OrchestratorPSCmdlet
+    [Parameter(Position = 0)]
+    [ArgumentCompleter(typeof(CredentialStoreNameCompleter<TPositional>))]
+    [SupportsWildcards]
+    public string[]? Name { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    public string[]? Path { get; set; }
+
+    protected override void ProcessRecord()
     {
-        [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(CredentialStoreNameCompleter<TPositional>))]
-        [SupportsWildcards]
-        public string[]? Name { get; set; }
+        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();
 
-        [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
-        public string[]? Path { get; set; }
+        using var results = OrchThreadPool.RunForEach(drives,
+            drive => drive.NameColonSeparator,
+            drive => drive,
+            drive => drive.CredentialStores.Get());
 
-        protected override void ProcessRecord()
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
         {
-            var drives = OrchDriveInfo.EnumOrchDrives(Path);
-            var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();
-
-            using var results = OrchThreadPool.RunForEach(drives,
-                drive => drive.NameColonSeparator,
-                drive => drive,
-                drive => drive.CredentialStores.Get());
-
-            using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var result in results)
+            try
             {
-                try
-                {
-                    var machines = result.GetResult(cancelHandler.Token);
-                    if (machines == null) continue;
+                var machines = result.GetResult(cancelHandler.Token);
+                if (machines is null) continue;
 
-                    WriteObject(machines
-                        .FilterByWildcards(c => c?.Name, wpName)
-                        .OrderBy(c => c.Name),
-                        true);
-                }
-                catch (OrchException ex)
-                {
-                    WriteError(new ErrorRecord(ex, "GetCredentialStoreError", ErrorCategory.InvalidOperation, ex.Target));
-                }
+                WriteObject(machines
+                    .FilterByWildcards(c => c?.Name, wpName)
+                    .OrderBy(c => c.Name),
+                    true);
+            }
+            catch (OrchException ex)
+            {
+                WriteError(new ErrorRecord(ex, "GetCredentialStoreError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }

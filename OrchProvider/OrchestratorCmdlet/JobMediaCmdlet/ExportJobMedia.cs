@@ -7,186 +7,185 @@ using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using TPositional = UiPath.PowerShell.Positional.JobId_Destination;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsData.Export, "OrchJobMedia", SupportsShouldProcess = true)]
+public class SaveJobMediaCommand : OrchestratorPSCmdlet
 {
-    [Cmdlet(VerbsData.Export, "OrchJobMedia", SupportsShouldProcess = true)]
-    public class SaveJobMediaCommand : OrchestratorPSCmdlet
+    [Parameter(Position = 0)]
+    [ArgumentCompleter(typeof(JobIdCompleter))]
+    public Int64[]? JobId { get; set; }
+
+    [Parameter(Position = 1)]
+    [SupportsWildcards]
+    public string? Destination { get; set; }
+
+    [Parameter]
+    [SupportsWildcards]
+    public string[]? Path { get; set; }
+
+    [Parameter]
+    public SwitchParameter Recurse { get; set; }
+
+    [Parameter]
+    public uint Depth { get; set; }
+
+    private class JobIdCompleter : OrchArgumentCompleter
     {
-        [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(JobIdCompleter))]
-        public Int64[]? JobId { get; set; }
-
-        [Parameter(Position = 1)]
-        [SupportsWildcards]
-        public string? Destination { get; set; }
-
-        [Parameter]
-        [SupportsWildcards]
-        public string[]? Path { get; set; }
-
-        [Parameter]
-        public SwitchParameter Recurse { get; set; }
-
-        [Parameter]
-        public uint Depth { get; set; }
-
-        private class JobIdCompleter : OrchArgumentCompleter
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
         {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
+            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+            // パラメータで選択済みの JobId は、候補から除外する
+            var paramJobId = GetParameterValues(commandAst, "JobId", TPositional.Parameters, wordToComplete).Select(id => long.Parse(id));
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            // (folderId, media)
+            List<(Int64 folderId, ExecutionMedia media)> results = [];
+            foreach (var (drive, folder) in drivesFolders)
             {
-                var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-
-                // パラメータで選択済みの JobId は、候補から除外する
-                var paramJobId = GetParameterValues(commandAst, "JobId", TPositional.Parameters, wordToComplete).Select(id => long.Parse(id));
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                // (folderId, media)
-                List<(Int64 folderId, ExecutionMedia media)> results = [];
-                foreach (var (drive, folder) in drivesFolders)
+                // キャッシュ済みならキャッシュを使う
+                if (drive._dicJobsHavingExecutionMedia is not null && drive._dicJobsHavingExecutionMedia.TryGetValue(folder.Id ?? 0, out var jobsHavingMedia))
                 {
-                    // キャッシュ済みならキャッシュを使う
-                    if (drive._dicJobsHavingExecutionMedia != null && drive._dicJobsHavingExecutionMedia.TryGetValue(folder.Id ?? 0, out var jobsHavingMedia))
+                    foreach (var media in jobsHavingMedia)
                     {
-                        foreach (var media in jobsHavingMedia)
-                        {
-                            results.Add((folder.Id ?? 0, media));
-                        }
-                    }
-                    else // 未キャッシュなら取得する
-                    {
-                        foreach (var media in drive.GetExecutionMedia(folder))
-                        {
-                            results.Add((folder.Id ?? 0, media));
-                        }
+                        results.Add((folder.Id ?? 0, media));
                     }
                 }
-
-                foreach (var folderMedia in results
-                    .Where(fm => wp.IsMatch(fm.media.JobId.ToString()))
-                    .ExcludeByStructValues<(Int64, ExecutionMedia), Int64>(m => m.Item2.JobId ?? 0, paramJobId))
+                else // 未キャッシュなら取得する
                 {
-                    string tiphelp = "FileName: " + JobMediaCommon.MediaFileName(folderMedia.Item1, folderMedia.Item2);
-                    yield return new CompletionResult(folderMedia.Item2.JobId.ToString(), folderMedia.Item2.JobId.ToString(), CompletionResultType.ParameterValue, tiphelp);
+                    foreach (var media in drive.GetExecutionMedia(folder))
+                    {
+                        results.Add((folder.Id ?? 0, media));
+                    }
                 }
+            }
+
+            foreach (var folderMedia in results
+                .Where(fm => wp.IsMatch(fm.media.JobId.ToString()))
+                .ExcludeByStructValues<(Int64, ExecutionMedia), Int64>(m => m.Item2.JobId ?? 0, paramJobId))
+            {
+                string tiphelp = "FileName: " + JobMediaCommon.MediaFileName(folderMedia.Item1, folderMedia.Item2);
+                yield return new CompletionResult(folderMedia.Item2.JobId.ToString(), folderMedia.Item2.JobId.ToString(), CompletionResultType.ParameterValue, tiphelp);
             }
         }
+    }
 
-        protected override void ProcessRecord()
+    protected override void ProcessRecord()
+    {
+        var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+
+        if (Destination is null)
         {
-            var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+            Destination = SessionState.Path.CurrentFileSystemLocation.Path;
+        }
+        if (!Directory.Exists(Destination))
+        {
+            throw new DirectoryNotFoundException($"Directory {Destination} doesn't exist.");
+        }
 
-            if (Destination == null)
+        #region あらかじめ、非同期で対象の ExecutionMedia を取得しておく
+        Parallel.ForEach(drivesFolders, (driveFolder, state, index) =>
+        {
+            var (drive, folder) = driveFolder;
+            try
             {
-                Destination = SessionState.Path.CurrentFileSystemLocation.Path;
+                drive.GetExecutionMedia(folder);
             }
-            if (!Directory.Exists(Destination))
+            catch { }
+        });
+        #endregion
+
+        #region 合計でいくつのファイルをダウンロードするのか数える
+        int totalFileNum = 0;
+        foreach (var (drive, folder) in drivesFolders)
+        {
+            if (drive._dicJobsHavingExecutionMedia is null)
             {
-                throw new DirectoryNotFoundException($"Directory {Destination} doesn't exist.");
+                continue;
             }
 
-            #region あらかじめ、非同期で対象の ExecutionMedia を取得しておく
-            Parallel.ForEach(drivesFolders, (driveFolder, state, index) =>
+            if (!drive._dicJobsHavingExecutionMedia.TryGetValue(folder.Id ?? 0, out var allMediasInFolder))
             {
-                var (drive, folder) = driveFolder;
-                try
-                {
-                    drive.GetExecutionMedia(folder);
-                }
-                catch { }
-            });
-            #endregion
-
-            #region 合計でいくつのファイルをダウンロードするのか数える
-            int totalFileNum = 0;
-            foreach (var (drive, folder) in drivesFolders)
-            {
-                if (drive._dicJobsHavingExecutionMedia == null)
-                {
-                    continue;
-                }
-
-                if (!drive._dicJobsHavingExecutionMedia.TryGetValue(folder.Id ?? 0, out var allMediasInFolder))
-                {
-                    continue;
-                }
-
-                if (allMediasInFolder == null)
-                {
-                    continue;
-                }
-
-                if (JobId == null)
-                {
-                    totalFileNum += allMediasInFolder.Count();
-                }
-                else
-                {
-                    totalFileNum += allMediasInFolder
-                        .Where(jobId => JobId.Contains(jobId.JobId ?? 0)).Count();
-                }
+                continue;
             }
-            #endregion
 
-            string msg = "Saving Media";
-            using var reporter = new ProgressReporter(this, 1, totalFileNum, msg, msg);
-
-            int index = 0;
-            foreach (var (drive, folder) in drivesFolders)
+            if (allMediasInFolder is null)
             {
-                string path = folder.GetPSPath();
+                continue;
+            }
 
-                if (drive._dicJobsHavingExecutionMedia == null)
-                {
-                    continue;
-                }
+            if (JobId is null)
+            {
+                totalFileNum += allMediasInFolder.Count();
+            }
+            else
+            {
+                totalFileNum += allMediasInFolder
+                    .Where(jobId => JobId.Contains(jobId.JobId ?? 0)).Count();
+            }
+        }
+        #endregion
 
-                if (!drive._dicJobsHavingExecutionMedia.TryGetValue(folder.Id ?? 0, out var allMediasInFolder))
-                {
-                    continue;
-                }
+        string msg = "Saving Media";
+        using var reporter = new ProgressReporter(this, 1, totalFileNum, msg, msg);
 
-                if (allMediasInFolder == null)
-                {
-                    continue;
-                }
+        int index = 0;
+        foreach (var (drive, folder) in drivesFolders)
+        {
+            string path = folder.GetPSPath();
 
-                List<ExecutionMedia> mediasToBeSaved;
-                if (JobId == null)
-                {
-                    mediasToBeSaved = allMediasInFolder;
-                }
-                else
-                {
-                    mediasToBeSaved = allMediasInFolder
-                        .Where(jobId => JobId.Contains(jobId.JobId ?? 0))
-                        .ToList();
-                }
+            if (drive._dicJobsHavingExecutionMedia is null)
+            {
+                continue;
+            }
 
-                foreach (var media in mediasToBeSaved!)
-                {
-                    string target = path + System.IO.Path.DirectorySeparatorChar + media.JobId;
+            if (!drive._dicJobsHavingExecutionMedia.TryGetValue(folder.Id ?? 0, out var allMediasInFolder))
+            {
+                continue;
+            }
 
-                    if (ShouldProcess(target, "Export JobMedia"))
+            if (allMediasInFolder is null)
+            {
+                continue;
+            }
+
+            List<ExecutionMedia> mediasToBeSaved;
+            if (JobId is null)
+            {
+                mediasToBeSaved = allMediasInFolder;
+            }
+            else
+            {
+                mediasToBeSaved = allMediasInFolder
+                    .Where(jobId => JobId.Contains(jobId.JobId ?? 0))
+                    .ToList();
+            }
+
+            foreach (var media in mediasToBeSaved!)
+            {
+                string target = path + System.IO.Path.DirectorySeparatorChar + media.JobId;
+
+                if (ShouldProcess(target, "Export JobMedia"))
+                {
+                    reporter.WriteProgress(++index, $"{index:D}/{totalFileNum}");
+
+                    try
                     {
-                        reporter.WriteProgress(++index, $"{index:D}/{totalFileNum}");
-
-                        try
-                        {
-                            var (fileName, fileContent) = drive.OrchAPISession.DownloadMediaByJobId(folder.Id ?? 0, media.JobId ?? 0).GetAwaiter().GetResult();
-                            string filePath = System.IO.Path.Combine(Destination, JobMediaCommon.MediaFileName(folder.Id ?? 0, media));
-                            File.WriteAllBytes(filePath, fileContent);
-                            //WriteObject(filePath + " saved.");
-                        }
-                        catch (Exception ex)
-                        {
-                            WriteError(new ErrorRecord(new OrchException(target, ex), "ExportJobMediaError", ErrorCategory.InvalidOperation, target));
-                        }
+                        var (fileName, fileContent) = drive.OrchAPISession.DownloadMediaByJobId(folder.Id ?? 0, media.JobId ?? 0).GetAwaiter().GetResult();
+                        string filePath = System.IO.Path.Combine(Destination, JobMediaCommon.MediaFileName(folder.Id ?? 0, media));
+                        File.WriteAllBytes(filePath, fileContent);
+                        //WriteObject(filePath + " saved.");
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteError(new ErrorRecord(new OrchException(target, ex), "ExportJobMediaError", ErrorCategory.InvalidOperation, target));
                     }
                 }
             }

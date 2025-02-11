@@ -7,166 +7,165 @@ using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Positional;
 using TPositional = UiPath.PowerShell.Positional.Last_Severity_Component;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsCommon.Get, "OrchAlert")]
+[OutputType(typeof(Entities.Alert))]
+public class GetAlertCommand : OrchestratorPSCmdlet
 {
-    [Cmdlet(VerbsCommon.Get, "OrchAlert")]
-    [OutputType(typeof(Entities.Alert))]
-    public class GetAlertCommand : OrchestratorPSCmdlet
+    [Parameter(Position = 0)]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>))]
+    public string? Last { get; set; }
+
+    [Parameter(Position = 1)]
+    [ArgumentCompleter(typeof(SeverityCompleter))]
+    public string? Severity { get; set; }
+
+    [Parameter(Position = 2)]
+    [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<AlertComponentItems, int>))]
+    [SupportsWildcards]
+    public string[]? Component { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(TimeAfterCompleter))]
+    public DateTime? CreationTimeAfter { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(TimeBeforeCompleter))]
+    public DateTime? CreationTimeBefore { get; set; }
+
+    [Parameter]
+    public ulong? Skip { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<Item10>))]
+    public ulong? First { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    public string[]? Path { get; set; }
+
+    // TODO: StaticTextCompleter で書き直す
+    private class SeverityCompleter : OrchArgumentCompleter
     {
-        [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(StaticTextsCompleter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>))]
-        public string? Last { get; set; }
-
-        [Parameter(Position = 1)]
-        [ArgumentCompleter(typeof(SeverityCompleter))]
-        public string? Severity { get; set; }
-
-        [Parameter(Position = 2)]
-        [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<AlertComponentItems, int>))]
-        [SupportsWildcards]
-        public string[]? Component { get; set; }
-
-        [Parameter]
-        [ArgumentCompleter(typeof(TimeAfterCompleter))]
-        public DateTime? CreationTimeAfter { get; set; }
-
-        [Parameter]
-        [ArgumentCompleter(typeof(TimeBeforeCompleter))]
-        public DateTime? CreationTimeBefore { get; set; }
-
-        [Parameter]
-        public ulong? Skip { get; set; }
-
-        [Parameter]
-        [ArgumentCompleter(typeof(StaticTextsCompleter<Item10>))]
-        public ulong? First { get; set; }
-
-        [Parameter]
-        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
-        public string[]? Path { get; set; }
-
-        // TODO: StaticTextCompleter で書き直す
-        private class SeverityCompleter : OrchArgumentCompleter
-        {
-            private static readonly Dictionary<string, string> candidates = new()
-                {
-                    { "Info",    "Fatal + Error + Warn + Success + Info (All)" },
-                    { "Success", "Fatal + Error + Warn + Success" },
-                    { "Warn",    "Fatal + Error + Warn" },
-                    { "Error",   "Fatal + Error" },
-                    { "Fatal",   "Fatal Only" }
-                };
-
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
+        private static readonly Dictionary<string, string> candidates = new()
             {
-                var wp = CreateWPFromWordToComplete(wordToComplete);
+                { "Info",    "Fatal + Error + Warn + Success + Info (All)" },
+                { "Success", "Fatal + Error + Warn + Success" },
+                { "Warn",    "Fatal + Error + Warn" },
+                { "Error",   "Fatal + Error" },
+                { "Fatal",   "Fatal Only" }
+            };
 
-                foreach (var candidate in candidates
-                    .Where(c => wp.IsMatch(c.Key)))
-                {
-                    yield return new CompletionResult(candidate.Key, candidate.Key, CompletionResultType.ParameterValue, candidate.Value);
-                }
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            foreach (var candidate in candidates
+                .Where(c => wp.IsMatch(c.Key)))
+            {
+                yield return new CompletionResult(candidate.Key, candidate.Key, CompletionResultType.ParameterValue, candidate.Value);
             }
         }
+    }
 
-        private string? MakeFilter()
+    private string? MakeFilter()
+    {
+        List<string> filter = [];
+
+        #region Last
+        if (Last is not null)
         {
-            List<string> filter = [];
-
-            #region Last
-            if (Last != null)
+            var last = Last.ToLower() switch
             {
-                var last = Last.ToLower() switch
-                {
-                    "hour" => DateTime.UtcNow.AddHours(-1),
-                    "day" => DateTime.UtcNow.AddDays(-1),
-                    "week" => DateTime.UtcNow.AddDays(-7),
-                    "month" => DateTime.UtcNow.AddMonths(-1),
-                    "3months" => DateTime.UtcNow.AddMonths(-3),
-                    "6months" => DateTime.UtcNow.AddMonths(-6),
-                    "year" => DateTime.UtcNow.AddYears(-1),
-                    "3years" => DateTime.UtcNow.AddYears(-3),
-                    _ => throw new ArgumentException("Invalid Last parameter. Valid values are 'Hour', 'Day', 'Week', 'Month', '3Months', '6Months', 'Year', '3Years'.")
-                };
-                filter.Add($"(CreationTime%20ge%20{last:yyyy-MM-ddTHH:mm:ss.fffZ})");
-            }
-            #endregion
-
-            #region Success
-            Severity ??= "Success";
-            filter.AddIfNotNull(AlertSeverityItems.Items
-                .SelectByWildcards(i => i.Key, [Severity])
-                .CreateOrFilter(i => $"Severity ge '{i.Value}'"));
-            #endregion
-
-            #region CreationTimeAfter
-            if (CreationTimeAfter != null)
-            {
-                filter.Add($"(CreationTime ge {CreationTimeAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
-            }
-            #endregion
-
-            #region CreationTimeBefore
-            if (CreationTimeBefore != null)
-            {
-                filter.Add($"(CreationTime%20lt%20{CreationTimeBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
-            }
-            #endregion
-
-            filter.AddIfNotNull(AlertComponentItems.Items
-                .SelectByWildcards(i => i.Key, Component)
-                .CreateOrFilter(i => $"Component eq '{i.Value}'"));
-
-            string ret = "&$orderby=CreationTime desc";
-            if (filter.Count != 0)
-            {
-                var strFilter = string.Join(" and ", filter);
-                ret += "&$filter=(" + strFilter + ")";
-            }
-            return ret;
+                "hour" => DateTime.UtcNow.AddHours(-1),
+                "day" => DateTime.UtcNow.AddDays(-1),
+                "week" => DateTime.UtcNow.AddDays(-7),
+                "month" => DateTime.UtcNow.AddMonths(-1),
+                "3months" => DateTime.UtcNow.AddMonths(-3),
+                "6months" => DateTime.UtcNow.AddMonths(-6),
+                "year" => DateTime.UtcNow.AddYears(-1),
+                "3years" => DateTime.UtcNow.AddYears(-3),
+                _ => throw new ArgumentException("Invalid Last parameter. Valid values are 'Hour', 'Day', 'Week', 'Month', '3Months', '6Months', 'Year', '3Years'.")
+            };
+            filter.Add($"(CreationTime%20ge%20{last:yyyy-MM-ddTHH:mm:ss.fffZ})");
         }
+        #endregion
 
-        protected override void ProcessRecord()
+        #region Success
+        Severity ??= "Success";
+        filter.AddIfNotNull(AlertSeverityItems.Items
+            .SelectByWildcards(i => i.Key, [Severity])
+            .CreateOrFilter(i => $"Severity ge '{i.Value}'"));
+        #endregion
+
+        #region CreationTimeAfter
+        if (CreationTimeAfter is not null)
         {
-            ulong skip = Skip ?? 0;
-            ulong first = First ?? ulong.MaxValue;
+            filter.Add($"(CreationTime ge {CreationTimeAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+        }
+        #endregion
 
-            var drives = OrchDriveInfo.EnumOrchDrives(Path);
-            var query = MakeFilter();
+        #region CreationTimeBefore
+        if (CreationTimeBefore is not null)
+        {
+            filter.Add($"(CreationTime%20lt%20{CreationTimeBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+        }
+        #endregion
 
-            using var results = OrchThreadPool.RunForEach(drives,
-                drive => drive.NameColonSeparator,
-                drive => drive,
-                drive =>
-                {
-                    var alerts = drive.OrchAPISession.GetAlerts(query, skip, first).ToList();
-                    foreach (var alert in alerts)
-                    {
-                        alert.Path = drive.NameColonSeparator;
-                    }
-                    return alerts;
-                }
-            );
+        filter.AddIfNotNull(AlertComponentItems.Items
+            .SelectByWildcards(i => i.Key, Component)
+            .CreateOrFilter(i => $"Component eq '{i.Value}'"));
 
-            using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var result in results)
+        string ret = "&$orderby=CreationTime desc";
+        if (filter.Count != 0)
+        {
+            var strFilter = string.Join(" and ", filter);
+            ret += "&$filter=(" + strFilter + ")";
+        }
+        return ret;
+    }
+
+    protected override void ProcessRecord()
+    {
+        ulong skip = Skip ?? 0;
+        ulong first = First ?? ulong.MaxValue;
+
+        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var query = MakeFilter();
+
+        using var results = OrchThreadPool.RunForEach(drives,
+            drive => drive.NameColonSeparator,
+            drive => drive,
+            drive =>
             {
-                try
+                var alerts = drive.OrchAPISession.GetAlerts(query, skip, first).ToList();
+                foreach (var alert in alerts)
                 {
-                    var alerts = result.GetResult(cancelHandler.Token);
-                    if (alerts == null) continue;
+                    alert.Path = drive.NameColonSeparator;
+                }
+                return alerts;
+            }
+        );
 
-                    WriteObject(alerts, true);
-                }
-                catch (OrchException ex)
-                {
-                    WriteError(new ErrorRecord(ex, "GetAlertError", ErrorCategory.InvalidOperation, ex.Target));
-                }
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
+        {
+            try
+            {
+                var alerts = result.GetResult(cancelHandler.Token);
+                if (alerts is null) continue;
+
+                WriteObject(alerts, true);
+            }
+            catch (OrchException ex)
+            {
+                WriteError(new ErrorRecord(ex, "GetAlertError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }

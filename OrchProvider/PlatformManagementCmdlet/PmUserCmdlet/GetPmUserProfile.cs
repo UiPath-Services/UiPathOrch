@@ -3,28 +3,27 @@ using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using TPositional = UiPath.PowerShell.Positional.Path;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+// このエンドポイントからは空が返ってきてしまう。。
+// いったん非公開で残しておく。
+//[Cmdlet(VerbsCommon.Get, "OrchPmUserProfile")]
+[OutputType(typeof(Entities.UserProfile))]
+class GetPmUserProfileCommand : OrchestratorPSCmdlet
 {
-    // このエンドポイントからは空が返ってきてしまう。。
-    // いったん非公開で残しておく。
-    //[Cmdlet(VerbsCommon.Get, "OrchPmUserProfile")]
-    [OutputType(typeof(Entities.UserProfile))]
-    class GetPmUserProfileCommand : OrchestratorPSCmdlet
+    [Parameter(Position = 0)]
+    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    public string[]? Path { get; set; }
+
+    protected override void ProcessRecord()
     {
-        [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
-        public string[]? Path { get; set; }
+        var drives = OrchDriveInfo.EnumOrchDrives(Path);
 
-        protected override void ProcessRecord()
+        foreach (var drive in drives)
         {
-            var drives = OrchDriveInfo.EnumOrchDrives(Path);
-
-            foreach (var drive in drives)
-            {
-                var u = drive.OrchAPISession.GetPmUserProfile();
-                WriteObject(u);
-                //drive.OrchAPISession.GetIdSetting();
-            }
+            var u = drive.OrchAPISession.GetPmUserProfile();
+            WriteObject(u);
+            //drive.OrchAPISession.GetIdSetting();
         }
     }
 }

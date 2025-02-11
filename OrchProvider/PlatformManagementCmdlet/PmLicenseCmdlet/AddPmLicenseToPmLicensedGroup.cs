@@ -7,213 +7,212 @@ using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
 using TPositional = UiPath.PowerShell.Positional.GroupName_License;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsCommon.Add, "OrchPmLicenseToPmLicensedGroup", SupportsShouldProcess = true)]
+[OutputType(typeof(Entities.UpdateLicensedGroupResponse))]
+public class AddPmLicenseToPmLicenseGroup: OrchestratorPSCmdlet
 {
-    [Cmdlet(VerbsCommon.Add, "OrchPmLicenseToPmLicensedGroup", SupportsShouldProcess = true)]
-    [OutputType(typeof(Entities.UpdateLicensedGroupResponse))]
-    public class AddPmLicenseToPmLicenseGroup: OrchestratorPSCmdlet
+    // code を管理
+    //private Dictionary<(OrchDriveInfo drive, NuLicensedGroup group), HashSet<string>>? _parameterSets;
+    private Dictionary<(OrchDriveInfo drive, PmDirectoryEntityInfo group), HashSet<string>>? _parameterSets;
+
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(SearchGroupNameCompleter))]
+    [SupportsWildcards]
+    public string[]? GroupName { get; set; }
+
+    [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(LicenseCompleter))]
+    [SupportsWildcards]
+    public string[]? License { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    public string[]? Path { get; set; }
+
+    private class SearchGroupNameCompleter : OrchArgumentCompleter
     {
-        // code を管理
-        //private Dictionary<(OrchDriveInfo drive, NuLicensedGroup group), HashSet<string>>? _parameterSets;
-        private Dictionary<(OrchDriveInfo drive, PmDirectoryEntityInfo group), HashSet<string>>? _parameterSets;
-
-        [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(SearchGroupNameCompleter))]
-        [SupportsWildcards]
-        public string[]? GroupName { get; set; }
-
-        [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(LicenseCompleter))]
-        [SupportsWildcards]
-        public string[]? License { get; set; }
-
-        [Parameter(ValueFromPipelineByPropertyName = true)]
-        [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
-        public string[]? Path { get; set; }
-
-        private class SearchGroupNameCompleter : OrchArgumentCompleter
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
         {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
+            if (string.IsNullOrEmpty(wordToComplete))
             {
-                if (string.IsNullOrEmpty(wordToComplete))
+                yield return new CompletionResult(PathTools.EscapePSText("Please enter at least one character to search."));
+                yield break;
+            }
+
+            var wpGroupName = CreateWPListFromParameter(commandAst, "GroupName", TPositional.Parameters, wordToComplete);
+
+            var drives = ResolveDrives(fakeBoundParameters);
+
+            bool bFound = false;
+            foreach (var drive in drives)
+            {
+                //var existingGroups = drive.GetPmGroups().Values;
+                //var updatingGroups = existingGroups.FilterByWildcards(u => u!.name!, wpGroupName);
+
+                var groups = drive.SearchPmDirectory(wordToComplete);
+                if (groups is null) continue;
+
+                foreach (var group in groups
+                    .Where(g => g.objectType == "DirectoryGroup" || g.objectType == "LocalGroup")
+                    .ExcludeByWildcards(e => e?.identityName, wpGroupName)
+                    .OrderBy(e => e.identityName))
                 {
-                    yield return new CompletionResult(PathTools.EscapePSText("Please enter at least one character to search."));
-                    yield break;
-                }
-
-                var wpGroupName = CreateWPListFromParameter(commandAst, "GroupName", TPositional.Parameters, wordToComplete);
-
-                var drives = ResolveDrives(fakeBoundParameters);
-
-                bool bFound = false;
-                foreach (var drive in drives)
-                {
-                    //var existingGroups = drive.GetPmGroups().Values;
-                    //var updatingGroups = existingGroups.FilterByWildcards(u => u!.name!, wpGroupName);
-
-                    var groups = drive.SearchPmDirectory(wordToComplete);
-                    if (groups == null) continue;
-
-                    foreach (var group in groups
-                        .Where(g => g.objectType == "DirectoryGroup" || g.objectType == "LocalGroup")
-                        .ExcludeByWildcards(e => e?.identityName, wpGroupName)
-                        .OrderBy(e => e.identityName))
-                    {
-                        bFound = true;
-                        string tiphelp = TipHelp(group);
-                        yield return new CompletionResult(PathTools.EscapePSText(group?.identityName), group?.identityName, CompletionResultType.Text, tiphelp);
-                    }
-                }
-                if (!bFound)
-                {
-                    yield return new CompletionResult($"\"No results matching '{wordToComplete}'\".");
+                    bFound = true;
+                    string tiphelp = TipHelp(group);
+                    yield return new CompletionResult(PathTools.EscapePSText(group?.identityName), group?.identityName, CompletionResultType.Text, tiphelp);
                 }
             }
-        }
-
-        private class LicenseCompleter : OrchArgumentCompleter
-        {
-            public override IEnumerable<CompletionResult> CompleteArgument(
-                string commandName,
-                string parameterName,
-                string wordToComplete,
-                CommandAst commandAst,
-                IDictionary fakeBoundParameters)
+            if (!bFound)
             {
-                var drives = ResolveDrives(fakeBoundParameters);
-
-                var groupNames = GetParameterValues(commandAst, "GroupName", TPositional.Parameters);
-                var wpLicense = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
-
-                var wp = CreateWPFromWordToComplete(wordToComplete);
-
-                foreach (var drive in drives)
-                {
-                    foreach (var groupName in groupNames)
-                    {
-                        var groups = drive.SearchPmDirectory(groupName);
-                        if (groups == null) continue;
-
-                        foreach (var group in groups
-                            .Where(g => g.objectType == "DirectoryGroup" || g.objectType == "LocalGroup")
-                            .OrderBy(e => e.identityName))
-                        {
-                            var availableUserBundles = drive.GetPmUserLicenseGroupsAvailableLicenses(group.identifier, group.identityName!);
-                            if (availableUserBundles?.availableUserBundles == null) continue;
-
-                            foreach (var bundle in availableUserBundles.availableUserBundles
-                                //.Where(bundle => !(group.userBundleLicenses?.Contains(bundle.code) ?? false))
-                                .ExcludeByWildcards(bundle => AvailableUserBundlesItems.Items[bundle!.code!], wpLicense)
-                                .OrderBy(bundle => AvailableUserBundlesItems.Items[bundle.code!]))
-                            {
-                                string desc = AvailableUserBundlesItems.Items[bundle.code!];
-                                string tiphelp = $"{drive.NameColonSeparator}{desc}  Available: {bundle.total - bundle.allocated}";
-                                //string tiphelp = $"{drive.NameColonSeparator}{bundle.code}  Available: {bundle.total - bundle.allocated}";
-                                yield return new CompletionResult(PathTools.EscapePSText(desc), desc, CompletionResultType.Text, tiphelp);
-                            }
-                        }
-                    }
-                }
+                yield return new CompletionResult($"\"No results matching '{wordToComplete}'\".");
             }
         }
+    }
 
-        protected override void ProcessRecord()
+    private class LicenseCompleter : OrchArgumentCompleter
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
         {
-            _parameterSets ??= [];
+            var drives = ResolveDrives(fakeBoundParameters);
 
-            var drives = OrchDriveInfo.EnumOrchDrives(Path);
+            var groupNames = GetParameterValues(commandAst, "GroupName", TPositional.Parameters);
+            var wpLicense = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
-            GroupName = GroupName.Split1stValueByUnescapedCommas()?.ToArray();
-            var wpLicense = License.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
+            var wp = CreateWPFromWordToComplete(wordToComplete);
 
             foreach (var drive in drives)
             {
-                foreach (var groupName in GroupName ?? [])
+                foreach (var groupName in groupNames)
                 {
                     var groups = drive.SearchPmDirectory(groupName);
-                    if (groups == null) continue;
+                    if (groups is null) continue;
 
                     foreach (var group in groups
                         .Where(g => g.objectType == "DirectoryGroup" || g.objectType == "LocalGroup")
                         .OrderBy(e => e.identityName))
                     {
-                        //var licenseGroups = drive.GetPmLicensedGroups();
-                        //var targetGroups = licenseGroups.SelectByWildcards(g => g?.name, wpGroupName);
+                        var availableUserBundles = drive.GetPmUserLicenseGroupsAvailableLicenses(group.identifier, group.identityName!);
+                        if (availableUserBundles?.availableUserBundles is null) continue;
 
-                        //foreach (var group in targetGroups.OrderBy(g => g.name))
+                        foreach (var bundle in availableUserBundles.availableUserBundles
+                            //.Where(bundle => !(group.userBundleLicenses?.Contains(bundle.code) ?? false))
+                            .ExcludeByWildcards(bundle => AvailableUserBundlesItems.Items[bundle!.code!], wpLicense)
+                            .OrderBy(bundle => AvailableUserBundlesItems.Items[bundle.code!]))
                         {
-                            if (!_parameterSets.TryGetValue((drive, group), out var codes))
-                            {
-                                codes = [];
-                                _parameterSets[(drive, group)] = codes;
-                            }
-
-                            var availableUserBundles = drive.GetPmUserLicenseGroupsAvailableLicenses(group.identifier, group.identityName!);
-                            codes.UnionWith(availableUserBundles?.availableUserBundles?
-                                .SelectByWildcards(b => b?.name, wpLicense)?
-                                .Select(b => b.code!) ?? []);
+                            string desc = AvailableUserBundlesItems.Items[bundle.code!];
+                            string tiphelp = $"{drive.NameColonSeparator}{desc}  Available: {bundle.total - bundle.allocated}";
+                            //string tiphelp = $"{drive.NameColonSeparator}{bundle.code}  Available: {bundle.total - bundle.allocated}";
+                            yield return new CompletionResult(PathTools.EscapePSText(desc), desc, CompletionResultType.Text, tiphelp);
                         }
                     }
                 }
             }
         }
+    }
 
-        protected override void EndProcessing()
+    protected override void ProcessRecord()
+    {
+        _parameterSets ??= [];
+
+        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+
+        GroupName = GroupName.Split1stValueByUnescapedCommas()?.ToArray();
+        var wpLicense = License.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
+
+        foreach (var drive in drives)
         {
-            if (_parameterSets == null) return;
-
-            foreach (var parameterSet in _parameterSets
-                .OrderBy(p => p.Key.drive.Name)
-                .OrderBy(p => p.Key.group.identityName))
+            foreach (var groupName in GroupName ?? [])
             {
-                var (drive, group) = parameterSet.Key;
-                var codesToAdd = parameterSet.Value;
+                var groups = drive.SearchPmDirectory(groupName);
+                if (groups is null) continue;
 
-                var existingLicensedGroup = drive.PmLicensedGroups.Get();
-                var targetGroup = existingLicensedGroup.FirstOrDefault(g => g.id == group.identifier);
-
-                var existingSet = new HashSet<string>(targetGroup?.userBundleLicenses ?? []);
-
-                int initialCount = existingSet.Count;
-                existingSet.UnionWith(codesToAdd);
-
-                // 追加すべきライセンスがなければ処理をスキップ
-                if (existingSet.Count == initialCount) continue;
-
-                string target = group.GetPSPath();
-                if (ShouldProcess(target, "Add License to PmLicenseGroup"))
+                foreach (var group in groups
+                    .Where(g => g.objectType == "DirectoryGroup" || g.objectType == "LocalGroup")
+                    .OrderBy(e => e.identityName))
                 {
-                    try
-                    {
-                        UpdateLicensedGroupCommand cmd = new()
-                        {
-                            id = group.identifier,
-                            useExternalLicense = targetGroup?.useExternalLicense ?? false,
-                            ubls = existingSet.ToArray()
-                        };
+                    //var licenseGroups = drive.GetPmLicensedGroups();
+                    //var targetGroups = licenseGroups.SelectByWildcards(g => g?.name, wpGroupName);
 
-                        var ret = drive.OrchAPISession.PutPmLicenseGroup(cmd);
-                        if (ret != null)
-                        {
-                            ret.Path = drive.NameColonSeparator;
-                            ret.GroupName = group.identityName;
-                            ret.userBundleLicenseNames = ret.userBundleCodes?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
-                            WriteObject(ret);
-                        }
-                        drive.PmLicensedGroups.ClearCache();
-                        drive._dicPmUserLicenseGroupAllocations = null;
-                        drive._dicPmAvailableUserBundles = null;
-                    }
-                    catch (Exception ex)
+                    //foreach (var group in targetGroups.OrderBy(g => g.name))
                     {
-                        WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "AddPmLicenseToPmLicenseGroupError", ErrorCategory.InvalidOperation, drive));
-                        continue;
+                        if (!_parameterSets.TryGetValue((drive, group), out var codes))
+                        {
+                            codes = [];
+                            _parameterSets[(drive, group)] = codes;
+                        }
+
+                        var availableUserBundles = drive.GetPmUserLicenseGroupsAvailableLicenses(group.identifier, group.identityName!);
+                        codes.UnionWith(availableUserBundles?.availableUserBundles?
+                            .SelectByWildcards(b => b?.name, wpLicense)?
+                            .Select(b => b.code!) ?? []);
                     }
+                }
+            }
+        }
+    }
+
+    protected override void EndProcessing()
+    {
+        if (_parameterSets is null) return;
+
+        foreach (var parameterSet in _parameterSets
+            .OrderBy(p => p.Key.drive.Name)
+            .OrderBy(p => p.Key.group.identityName))
+        {
+            var (drive, group) = parameterSet.Key;
+            var codesToAdd = parameterSet.Value;
+
+            var existingLicensedGroup = drive.PmLicensedGroups.Get();
+            var targetGroup = existingLicensedGroup.FirstOrDefault(g => g.id == group.identifier);
+
+            var existingSet = new HashSet<string>(targetGroup?.userBundleLicenses ?? []);
+
+            int initialCount = existingSet.Count;
+            existingSet.UnionWith(codesToAdd);
+
+            // 追加すべきライセンスがなければ処理をスキップ
+            if (existingSet.Count == initialCount) continue;
+
+            string target = group.GetPSPath();
+            if (ShouldProcess(target, "Add License to PmLicenseGroup"))
+            {
+                try
+                {
+                    UpdateLicensedGroupCommand cmd = new()
+                    {
+                        id = group.identifier,
+                        useExternalLicense = targetGroup?.useExternalLicense ?? false,
+                        ubls = existingSet.ToArray()
+                    };
+
+                    var ret = drive.OrchAPISession.PutPmLicenseGroup(cmd);
+                    if (ret is not null)
+                    {
+                        ret.Path = drive.NameColonSeparator;
+                        ret.GroupName = group.identityName;
+                        ret.userBundleLicenseNames = ret.userBundleCodes?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
+                        WriteObject(ret);
+                    }
+                    drive.PmLicensedGroups.ClearCache();
+                    drive._dicPmUserLicenseGroupAllocations = null;
+                    drive._dicPmAvailableUserBundles = null;
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "AddPmLicenseToPmLicenseGroupError", ErrorCategory.InvalidOperation, drive));
+                    continue;
                 }
             }
         }

@@ -3,61 +3,60 @@ using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using TPositional = UiPath.PowerShell.Positional.Name;
 
-namespace UiPath.PowerShell.Commands
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsCommon.Get, "OrchTestCase")]
+[OutputType(typeof(Entities.TestCaseDefinition))]
+public class GetTestCaseCommand : OrchestratorPSCmdlet
 {
-    [Cmdlet(VerbsCommon.Get, "OrchTestCase")]
-    [OutputType(typeof(Entities.TestCaseDefinition))]
-    public class GetTestCaseCommand : OrchestratorPSCmdlet
+    [Parameter(Position = 0)]
+    [ArgumentCompleter(typeof(TestCaseNameCompleter<TPositional>))]
+    [SupportsWildcards]
+    public string[]? Name { get; set; }
+
+    //[Parameter(Position = 1)]
+    //[ArgumentCompleter(typeof(PackageIdentifierCompleter))]
+    //[SupportsWildcards]
+    //public string[]? PackageIdentifier { get; set; }
+
+    [Parameter]
+    [SupportsWildcards]
+    public string[]? Path { get; set; }
+
+    [Parameter]
+    public SwitchParameter Recurse { get; set; }
+
+    [Parameter]
+    public uint Depth { get; set; }
+
+    protected override void ProcessRecord()
     {
-        [Parameter(Position = 0)]
-        [ArgumentCompleter(typeof(TestCaseNameCompleter<TPositional>))]
-        [SupportsWildcards]
-        public string[]? Name { get; set; }
+        var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
 
-        //[Parameter(Position = 1)]
-        //[ArgumentCompleter(typeof(PackageIdentifierCompleter))]
-        //[SupportsWildcards]
-        //public string[]? PackageIdentifier { get; set; }
+        using var results = OrchThreadPool.RunForEach(drivesFolders,
+            df => df.folder.GetPSPath(),
+            df => df.folder,
+            df => df.drive.TestCases.Get(df.folder)
+        );
 
-        [Parameter]
-        [SupportsWildcards]
-        public string[]? Path { get; set; }
-
-        [Parameter]
-        public SwitchParameter Recurse { get; set; }
-
-        [Parameter]
-        public uint Depth { get; set; }
-   
-        protected override void ProcessRecord()
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
         {
-            var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
-            var wpName = Name.ConvertToWildcardPatternList();
-
-            using var results = OrchThreadPool.RunForEach(drivesFolders,
-                df => df.folder.GetPSPath(),
-                df => df.folder,
-                df => df.drive.TestCases.Get(df.folder)
-            );
-
-            using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var result in results)
+            try
             {
-                try
-                {
-                    var entities = result.GetResult(cancelHandler.Token);
-                    if (entities == null) continue;
+                var entities = result.GetResult(cancelHandler.Token);
+                if (entities is null) continue;
 
-                    WriteObject(entities
-                        .FilterByWildcards(tc => tc?.Name, wpName)
-                        .OrderBy(tc => tc.PackageIdentifier)
-                        .ThenBy(tc => tc.Name),
-                        true);
-                }
-                catch (OrchException ex)
-                {
-                    WriteError(new ErrorRecord(ex, "GetTestCaseError", ErrorCategory.InvalidOperation, ex.Target));
-                }
+                WriteObject(entities
+                    .FilterByWildcards(tc => tc?.Name, wpName)
+                    .OrderBy(tc => tc.PackageIdentifier)
+                    .ThenBy(tc => tc.Name),
+                    true);
+            }
+            catch (OrchException ex)
+            {
+                WriteError(new ErrorRecord(ex, "GetTestCaseError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }
