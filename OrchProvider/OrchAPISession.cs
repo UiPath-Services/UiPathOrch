@@ -2891,12 +2891,11 @@ public class OrchAPISession : IDisposable
         return results?.results;
     }
 
-    // 残念、この API を呼び出すには非公開の scope が必要？のようだ。。
     public void SetDuRoleToDuUser(string? partitionGlobalId, string? tenantKey, string? projectId, UserRoleAssignmentsCmd payload)
     {
         Uri uri = new(_base_url);
         string baseUrl = $"{uri.Scheme}://{uri.Host}/{partitionGlobalId}/pap_/api/userroleassignments";
-        HttpRequestImpl(HttpMethod.Get, baseUrl, "", null, payload);
+        HttpRequestImpl(HttpMethod.Patch, baseUrl, "", null, payload);
     }
     #endregion
 

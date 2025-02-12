@@ -1,23 +1,20 @@
 ﻿//#undef DEBUG
 
-using System.Collections;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Diagnostics;
+using System.Globalization;
 using System.Management.Automation;
-using System.Management.Automation.Language;
 using System.Management.Automation.Provider;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using UiPath.PowerShell.Commands;
-using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-using UiPath.PowerShell.Positional;
-using System.Net;
+using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Entities.JsonConverter;
-using System.Globalization;
+using UiPath.PowerShell.Positional;
 
 // インストール方法
 // 1. PowerShell 7 をインストール。PowerShell-7.x.x-win-x64.msi をダウンロード。PowerShell 5 と side by side でインストールできる。
@@ -48,39 +45,50 @@ public class GetChildItems_Parameters
     public Encoding? CsvEncoding { get; set; }
 }
 
-//public class NewDrive_Parameters
-//{
-//    // パラメータセット1: AppId + AppSecret
-//    private const string AppAuthParamSet = "AppAuth";
+public class NewDrive_Parameters
+{
+    // パラメータセット1: AppId + AppSecret
+    private const string AppAuthParamSet = "AppAuth";
 
-//    // パラメータセット2: Username + Password
-//    private const string UserAuthParamSet = "UserAuth";
+    // パラメータセット2: Username + Password
+    private const string UserAuthParamSet = "UserAuth";
 
-//    [Parameter(ParameterSetName = AppAuthParamSet, Mandatory = true)]
-//    public string? AppId { get; set; }
+    [Parameter(ParameterSetName = AppAuthParamSet)]
+    public string? IdentityUrl { get; set; }
 
-//    [Parameter(ParameterSetName = AppAuthParamSet)]
-//    public string? AppSecret { get; set; }
+    [Parameter(ParameterSetName = AppAuthParamSet)]
+    public string? AppId { get; set; }
 
-//    [Parameter(ParameterSetName = AppAuthParamSet)]
-//    public string? OAuthScope { get; set; }
+    [Parameter(ParameterSetName = AppAuthParamSet)]
+    public string? AppSecret { get; set; }
 
-//    [Parameter(ParameterSetName = UserAuthParamSet, Mandatory = true)]
-//    public string? Username { get; set; }
+    [Parameter(ParameterSetName = AppAuthParamSet)]
+    public string? RedirectUrl { get; set; }
 
-//    [Parameter(ParameterSetName = UserAuthParamSet)]
-//    public string? Password { get; set; }
+    [Parameter(ParameterSetName = AppAuthParamSet)]
+    public string? HttpListener { get; set; }
 
-//    [Parameter]
-//    [ArgumentCompleter(typeof(StaticTextsCompleter<True_False>))]
-//    public bool? IgnoreSslErrors { get; set; }
-//}
+    [Parameter(ParameterSetName = AppAuthParamSet)]
+    public string? OAuthScope { get; set; }
+
+    [Parameter(ParameterSetName = UserAuthParamSet)]
+    public string? Username { get; set; }
+
+    [Parameter(ParameterSetName = UserAuthParamSet)]
+    public string? Password { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<True_False>))]
+    public bool? IgnoreSslErrors { get; set; }
+}
 
 [CmdletProvider("UiPathOrch", ProviderCapabilities.ShouldProcess)]
 [OutputType(typeof(Folder), ProviderCmdlet = ProviderCmdlet.GetChildItem)]
 [OutputType(typeof(Folder), ProviderCmdlet = ProviderCmdlet.GetItem)]
 public partial class OrchProvider : NavigationCmdletProvider
 {
+    private static UiPathOrchConfig? _config;
+
     #region CmdletProvider overrides
 
     protected override ProviderInfo Start(ProviderInfo providerInfo)
@@ -176,17 +184,80 @@ public partial class OrchProvider : NavigationCmdletProvider
         }
     }
 
+    private void WarningPSDriveConfig(PSDrive drive)
+    {
+        // Scope に関する警告は、パスワードが設定されていない場合に限り出力する
+        if (string.IsNullOrEmpty(drive.Password))
+        {
+            if (string.IsNullOrWhiteSpace(drive.Scope))
+            {
+                WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": Scope is not specified!");
+            }
+            else
+            {
+                string lowerScope = drive.Scope?.ToLower() ?? "";
+
+                if (!lowerScope.Contains("or.folders"))
+                {
+                    WriteWarning($"\"{drive.Name}{System.IO.Path.VolumeSeparatorChar}{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Folders.Read\" scope is included to retrieve folder information.");
+                }
+
+                if (!lowerScope.Contains("or.settings"))
+                {
+                    WriteWarning($"\"{drive.Name}{System.IO.Path.VolumeSeparatorChar}{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Settings.Read\" scope is included to retrieve the API version needed to properly call Orchestrator APIs.");
+                }
+
+                if (string.IsNullOrEmpty(drive.AppSecret) && !lowerScope.Contains("or.users"))
+                {
+                    WriteWarning($"\"{drive.Name}{System.IO.Path.VolumeSeparatorChar}{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Users.Read\" scope is included to access your personal workspace folder.");
+                }
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(drive.Root))
+        {
+            WriteWarning($"\"{drive.Name}{System.IO.Path.VolumeSeparatorChar}{System.IO.Path.DirectorySeparatorChar}\": Root is not specified!");
+        }
+        else if ((drive.Root.EndsWith("/orchestrator_/") || drive.Root.EndsWith("/orchestrator_")))
+        {
+            WriteWarning($"\"{drive.Name}\": The \"Root\" value in UiPathOrchConfig.json should not contain '/orchestrator_/'. Run the Edit-OrchConfig cmdlet to open the file and update it manually.");
+        }
+
+        // Username の指定がなく、AppSecret の指定もない場合には、RedirectUrl が指定されてないと。
+        if (string.IsNullOrWhiteSpace(drive.Username) && string.IsNullOrWhiteSpace(drive.AppSecret) && string.IsNullOrWhiteSpace(drive.RedirectUrl))
+        {
+            WriteWarning($"\"{drive.Name}\": The \"RedirectUrl\" value should be specified.");
+        }
+    }
+
+    private static void CascadePSDriveFromGlobalSettings(PSDrive targetDrive, UiPathOrchConfig? globalSettings)
+    {
+        targetDrive.Name            ??= globalSettings?.Name;
+        targetDrive.Description     ??= globalSettings?.Description;
+        targetDrive.Root            ??= globalSettings?.Root;
+        targetDrive.IdentityUrl     ??= globalSettings?.IdentityUrl;
+        targetDrive.AppId           ??= globalSettings?.AppId;
+        targetDrive.AppSecret       ??= globalSettings?.AppSecret;
+        targetDrive.RedirectUrl     ??= globalSettings?.RedirectUrl;
+        targetDrive.HttpListener    ??= globalSettings?.HttpListener;
+        targetDrive.Scope           ??= globalSettings?.Scope;
+        targetDrive.Username        ??= globalSettings?.Username;
+        targetDrive.Password        ??= globalSettings?.Password;
+        targetDrive.Proxy           ??= globalSettings?.Proxy;
+        targetDrive.IgnoreSslErrors ??= globalSettings?.IgnoreSslErrors;
+        targetDrive.Enabled         ??= globalSettings?.Enabled;
+    }
+
     protected override Collection<PSDriveInfo>? InitializeDefaultDrives()
     {
         string configFilePath = GetConfigFilePath();
         if (System.IO.File.Exists(configFilePath))
         {
             string json = File.ReadAllText(configFilePath);
-            UiPathOrchConfig config;
             try
             {
-                config = JsonSerializer.Deserialize<UiPathOrchConfig>(json, JsonTools.jsonAllowComments);
-                if (config is null) throw new Exception("Deserialization resulted in a null object.");
+                _config = JsonSerializer.Deserialize<UiPathOrchConfig>(json, JsonTools.jsonAllowComments);
+                if (_config is null) throw new Exception("Deserialization resulted in a null object.");
             }
             catch (Exception ex)
             {
@@ -203,61 +274,18 @@ public partial class OrchProvider : NavigationCmdletProvider
 
             Collection<PSDriveInfo> ret = base.InitializeDefaultDrives();
 
-            if (config.Proxy is not null && config.Proxy.Enabled is null)
+            if (_config.Proxy is not null)
             {
-                config.Proxy.Enabled = true;
+                _config.Proxy.Enabled ??= true;
             }
+            _config.Enabled ??= true;
 
-            foreach (var drive in config!.PSDrives!)
+            foreach (var drive in _config!.PSDrives!)
             {
-                //drive.BaseUrl ??= config.BaseUrl;
-                drive.Description ??= config.Description;
-                drive.RedirectUrl ??= config.RedirectUrl;
-                drive.HttpListener ??= config.HttpListener;
-                drive.Scope ??= config.Scope;
-                drive.Enabled ??= config.Enabled;
-                drive.Proxy ??= config.Proxy;
-                drive.IgnoreSslErrors ??= config.IgnoreSslErrors;
+                CascadePSDriveFromGlobalSettings(drive, _config);
+                if (!drive.Enabled.GetValueOrDefault()) continue;
 
-                if (drive.Enabled ?? false)
-                {
-                    // Scope に関する警告は、パスワードが設定されていない場合に限り出力する
-                    if (string.IsNullOrEmpty(drive.Password))
-                    {
-                        if (string.IsNullOrWhiteSpace(drive.Scope))
-                        {
-                            WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": Scope is not specified!");
-                        }
-                        else
-                        {
-                            string lowerScope = drive.Scope?.ToLower() ?? "";
-
-                            if (!lowerScope.Contains("or.folders"))
-                            {
-                                WriteWarning($"\"{drive.Name}{System.IO.Path.VolumeSeparatorChar}{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Folders.Read\" scope is included to retrieve folder information.");
-                            }
-
-                            if (!lowerScope.Contains("or.settings"))
-                            {
-                                WriteWarning($"\"{drive.Name}{System.IO.Path.VolumeSeparatorChar}{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Settings.Read\" scope is included to retrieve the API version needed to properly call Orchestrator APIs.");
-                            }
-
-                            if (string.IsNullOrEmpty(drive.AppSecret) && !lowerScope.Contains("or.users"))
-                            {
-                                WriteWarning($"\"{drive.Name}{System.IO.Path.VolumeSeparatorChar}{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Users.Read\" scope is included to access your personal workspace folder.");
-                            }
-                        }
-                    }
-
-                    if (string.IsNullOrWhiteSpace(drive.Root))
-                    {
-                        WriteWarning($"\"{drive.Name}{System.IO.Path.VolumeSeparatorChar}{System.IO.Path.DirectorySeparatorChar}\": Root is not specified!");
-                    }
-                    else if ((drive.Root.EndsWith("/orchestrator_/") || drive.Root.EndsWith("/orchestrator_")))
-                    {
-                        WriteWarning($"\"{drive.Name}\": The \"Root\" value in UiPathOrchConfig.json should not contain '/orchestrator_/'. Run the Edit-OrchConfig cmdlet to open the file and update it manually.");
-                    }
-                }
+                WarningPSDriveConfig(drive);
 
                 //if (string.IsNullOrEmpty(drive.IdentityUrl))
                 //{
@@ -266,102 +294,141 @@ public partial class OrchProvider : NavigationCmdletProvider
                 //        : _baseUrl + "/identity/connect/token";
                 //}
 
-                if (drive.Enabled is null || drive.Enabled.GetValueOrDefault())
+                try
                 {
-                    try
-                    {
-                        var orchDrive = new OrchDriveInfo(ProviderInfo, drive);
-                        ret.Add(orchDrive);
-                    }
-                    catch (Exception ex)
-                    {
-                        WriteError(new ErrorRecord(new OrchException(drive.Name, ex),
-                            "NewPSDriveError", ErrorCategory.InvalidData, drive.Name));
-                    }
+                    var orchDrive = new OrchDriveInfo(ProviderInfo, drive);
+                    ret.Add(orchDrive);
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(new OrchException(drive.Name, ex),
+                        "NewPSDriveError", ErrorCategory.InvalidData, drive.Name));
                 }
             }
             return ret;
         }
         else
         {
+            #region 環境変数 UIPATHORCH_SUPPRESS_CONFIG_CREATION が 1 であれば、設定ファイルを作成しない
+            var suppressConfigCreation = System.Environment.GetEnvironmentVariable("UIPATHORCH_SUPPRESS_CONFIG_CREATION");
+            bool shouldSuppress =
+                suppressConfigCreation?.Equals("1", StringComparison.OrdinalIgnoreCase) == true ||
+                suppressConfigCreation?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
+            if (shouldSuppress) return null;
+            #endregion
+
             EnsureDefaultConfigFileExists();
-            var startInfo = new ProcessStartInfo("notepad.exe")
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                Arguments = configFilePath,
-                UseShellExecute = true
-            };
-            Process.Start(startInfo);
+                var startInfo = new ProcessStartInfo("notepad.exe")
+                {
+                    Arguments = configFilePath,
+                    UseShellExecute = true
+                };
+                Process.Start(startInfo);
+            }
+            else
+            {
+                try
+                {
+                    var startInfo = new ProcessStartInfo("nano")
+                    {
+                        Arguments = configFilePath,
+                        UseShellExecute = false
+                    };
+                    Process.Start(startInfo);
+                }
+                catch
+                {
+                    var startInfo = new ProcessStartInfo("vi")
+                    {
+                        Arguments = configFilePath,
+                        UseShellExecute = false
+                    };
+                    Process.Start(startInfo);
+                }
+            }
 
             WriteWarning($"Please edit {configFilePath}. Once edited, launch a new PS session to mount your Orchestrator tenants as PSDrives.");
             return null;
         }
     }
 
-    //protected override object NewDriveDynamicParameters()
-    //{
-    //    return new NewDrive_Parameters();
-    //}
+    protected override object NewDriveDynamicParameters()
+    {
+        return new NewDrive_Parameters();
+    }
 
     protected override PSDriveInfo? NewDrive(PSDriveInfo drive)
     {
-        // プロバイダクラスのロード順によっては、このタイミングではまだ UiPathOrchTm プロバイダは未登録。
-        // 下記の処理を、すべてのプロバイダの NewDrive で行うことで、UiPathOrch と UiPathOrchTm を確実に関連づけるようにする。
-        #region Find and associate Du drives
-        try
+        // drive が OrchDriveInfo であれば、InitializeDefaultDrives() が実行されている
+        if (drive is OrchDriveInfo orchDrive)
         {
-            // var duProvider = SessionState.Provider.GetOne("UiPathOrchDu");
-            // 例外が出なければ、tmProvider is not null になっている
-            var duDrive = SessionState.Drive.Get(drive.Name + "Du") as OrchDuDriveInfo;
-            duDrive!._parentDrive = (OrchDriveInfo)drive;
+            // プロバイダクラスのロード順によっては、このタイミングではまだ UiPathOrchTm プロバイダは未登録。
+            // 下記の処理を、すべてのプロバイダの NewDrive で行うことで、UiPathOrch と UiPathOrchTm を確実に関連づけるようにする。
+            #region Find and associate Du drives
+            try
+            {
+                // var duProvider = SessionState.Provider.GetOne("UiPathOrchDu");
+                // 例外が出なければ、tmProvider is not null になっている
+                var duDrive = SessionState.Drive.Get(drive.Name + "Du") as OrchDuDriveInfo;
+                duDrive!._parentDrive = (OrchDriveInfo)drive;
+            }
+            catch { } // ここでうまくいかない場合には、OrchDuDriveInfo.NewDrive が処理するはず
+            #endregion
+
+
+            // プロバイダクラスのロード順によっては、このタイミングではまだ UiPathOrchTm プロバイダは未登録。
+            // 下記の処理を、すべてのプロバイダの NewDrive で行うことで、UiPathOrch と UiPathOrchTm を確実に関連づけるようにする。
+            #region Find and associate Tm drives
+            try
+            {
+                // var tmProvider = SessionState.Provider.GetOne("UiPathOrchTm");
+                // 例外が出なければ、tmProvider is not null になっている
+                var tmDrive = SessionState.Drive.Get(drive.Name + "Tm") as OrchTmDriveInfo;
+                tmDrive!._parentDrive = (OrchDriveInfo)drive;
+            }
+            catch { } // ここでうまくいかない場合には、OrchTmDriveInfo.NewDrive が処理するはず
+            #endregion
+
+            #region adding library feed drive
+            //try
+            //{
+            //    var providerInfo = this.SessionState.Provider.GetOne("UiPathOrchLib");
+            //    var driveInfo = new LibraryDriveInfo((drive as OrchDriveInfo)!, providerInfo);
+            //    SessionState.Drive.New(driveInfo, scope: "Global");
+            //}
+            //catch { }
+
+            #endregion
+
+            return orchDrive;
         }
-        catch { } // ここでうまくいかない場合には、OrchDuDriveInfo.NewDrive が処理するはず
-        #endregion
 
-
-        // プロバイダクラスのロード順によっては、このタイミングではまだ UiPathOrchTm プロバイダは未登録。
-        // 下記の処理を、すべてのプロバイダの NewDrive で行うことで、UiPathOrch と UiPathOrchTm を確実に関連づけるようにする。
-        #region Find and associate Tm drives
-        try
+        // drive が PSDriveInfo であれば、InitializeDefaultDrives() ではなく New-PSDrive -PSProvider UiPathOrch が実行されている
+        var parameters = DynamicParameters as NewDrive_Parameters;
+        PSDrive psDrive = new()
         {
-            // var tmProvider = SessionState.Provider.GetOne("UiPathOrchTm");
-            // 例外が出なければ、tmProvider is not null になっている
-            var tmDrive = SessionState.Drive.Get(drive.Name + "Tm") as OrchTmDriveInfo;
-            tmDrive!._parentDrive = (OrchDriveInfo)drive;
-        }
-        catch { } // ここでうまくいかない場合には、OrchTmDriveInfo.NewDrive が処理するはず
-        #endregion
+            Name = drive.Name, // mandatory なのでかならず -Name で渡されてくる
+            Root = drive.Root, // mandatory なのでかならず -Root で渡されてくる
+            Description = drive.Description,
+            IdentityUrl = parameters?.IdentityUrl,
+            AppId = parameters?.AppId,
+            AppSecret = parameters?.AppSecret,
+            RedirectUrl = parameters?.RedirectUrl,
+            HttpListener = parameters?.HttpListener,
+            Scope = parameters?.OAuthScope,
+            Username = parameters?.Username,
+            Password = parameters?.Password,
+            IgnoreSslErrors = parameters?.IgnoreSslErrors,
+            Enabled = true
+        };
 
-        #region adding library feed drive
-        //try
-        //{
-        //    var providerInfo = this.SessionState.Provider.GetOne("UiPathOrchLib");
-        //    var driveInfo = new LibraryDriveInfo((drive as OrchDriveInfo)!, providerInfo);
-        //    SessionState.Drive.New(driveInfo, scope: "Global");
-        //}
-        //catch { }
+        CascadePSDriveFromGlobalSettings(psDrive, _config);
+        WarningPSDriveConfig(psDrive);
 
-        #endregion
-
-        // New-PSDrive -PSProvider UiPathOrch の実行を処理
-        //var parameters = DynamicParameters as NewDrive_Parameters;
-        //if (parameters is not null)
-        //{
-        //    PSDrive newDrive = new()
-        //    {
-        //        Name = drive.Name,
-        //        Root = drive.Root,
-        //        AppId = parameters.AppId,
-        //        AppSecret = parameters.AppSecret,
-        //        Scope = parameters.OAuthScope,
-        //        Username = parameters.Username,
-        //        Password = parameters.Password,
-        //        IgnoreSslErrors = parameters.IgnoreSslErrors
-        //    };
-        //    // ここはどうやって処理すればいいんだったか、
-        //    return new OrchDriveInfo(ProviderInfo, newDrive);
-        //}
-
-        return drive;
+        return new OrchDriveInfo(ProviderInfo, psDrive);
     }
 
     protected override PSDriveInfo RemoveDrive(PSDriveInfo drive)
