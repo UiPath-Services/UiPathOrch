@@ -8,9 +8,8 @@ using TPositional = UiPath.PowerShell.Positional.Name_Role;
 
 namespace UiPath.PowerShell.Commands;
 
-// 残念、この cmdlet は非公開の API が動作しない。。
-//[Cmdlet(VerbsCommon.Add, "DuRoleToDuUser", SupportsShouldProcess = true)]
-//[OutputType(typeof(Entities.DuUser))]
+[Cmdlet(VerbsCommon.Add, "DuRoleToDuUser", SupportsShouldProcess = true)]
+[OutputType(typeof(Entities.DuUser))]
 class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
@@ -135,7 +134,9 @@ class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
 
                 var (drive, project) = result.Source;
 
-                foreach (var user in entities.OrderBy(u => u.displayName))
+                foreach (var user in entities
+                    .FilterByWildcards(u => u?.displayName, wpName)
+                    .OrderBy(u => u.displayName))
                 {
                     var availableRoles = drive.GetDuRoles();
                     if (availableRoles is null) continue;
