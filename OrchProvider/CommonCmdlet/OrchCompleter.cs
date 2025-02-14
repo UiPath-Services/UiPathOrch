@@ -230,6 +230,16 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         return OrchDriveInfo.EnumFolders(paramPath, recurse, depth, includeRoot);
     }
 
+    //protected static List<(OrchDriveInfo drive, Folder folder)> ResolveDuPath(CommandAst commandAst, IDictionary fakeBoundParameters, bool includeRoot = false)
+    //{
+    //    var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+    //    var paramDepth = GetParameterValue(commandAst, "Depth");
+    //    _ = uint.TryParse(paramDepth, out uint depth);
+
+    //    var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+    //    return OrchDriveInfo.EnumFolders(paramPath, recurse, depth, includeRoot);
+    //}
+
     protected static List<(OrchDriveInfo drive, Folder folder)> ResolvePathWithoutPersonalWorkspace(CommandAst commandAst, IDictionary fakeBoundParameters)
     {
         var recurse = GetSwitchParameterValue(commandAst, "Recurse");
@@ -519,7 +529,7 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
 
     protected static string TipHelp2(User user)
     {
-        return (user.Type! + ":").PadRight(30) + Path.Combine(user.Path!, user.UserName!) + " (" + user.FullName + ")";
+        return (user.Type! + ':').PadRight(30) + Path.Combine(user.Path!, user.UserName!) + " (" + user.FullName + ")";
     }
 
     protected static string TipHelp(Robot robot)
@@ -2332,6 +2342,49 @@ internal class TmDriveCompleter<T> : OrchArgumentCompleter where T : IPositional
             if (!string.IsNullOrEmpty(drive.Description))
                 tiphelp += $" ({drive.Description})";
             yield return new CompletionResult(PathTools.EscapePSText(drive.NameColon), drive.NameColon, CompletionResultType.ParameterValue, tiphelp);
+        }
+    }
+}
+
+internal class DuUserNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+{
+    public override IEnumerable<CompletionResult> CompleteArgument(
+        string commandName,
+        string parameterName,
+        string wordToComplete,
+        CommandAst commandAst,
+        IDictionary fakeBoundParameters)
+    {
+        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+
+        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+        var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+        var drivesProjects = OrchDuDriveInfo.EnumFolders(paramPath, recurse);
+
+        // パラメータで選択済みの Name は、候補から除外する
+        var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
+
+        var wp = CreateWPFromWordToComplete(wordToComplete);
+
+        var results = ParallelResults.ForEach(drivesProjects, dp => {
+            var (drive, project) = dp;
+            var partitionGlobalId = drive.ParentDrive.GetPartitionGlobalId();
+            var (_, tenantKey) = drive.ParentDrive.GetTenantId();
+            return drive.GetDuUsers(partitionGlobalId, tenantKey, project);
+        });
+
+        foreach (var result in results)
+        {
+            if (!result.TryGetValue(out var entities)) continue;
+
+            foreach (var user in entities!
+                .Where(e => wp.IsMatch(e?.displayName))
+                .ExcludeByWildcards(e => e?.displayName!, wpName)
+                .OrderBy(e => e?.displayName))
+            {
+                string tiphelp = user.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(user.displayName), user.displayName, CompletionResultType.Text, tiphelp);
+            }
         }
     }
 }

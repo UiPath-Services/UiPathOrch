@@ -303,7 +303,7 @@ public class ImportQueueItemCommand : OrchestratorPSCmdlet
                     {
                         cancelHandler.Token.ThrowIfCancellationRequested();
 
-                        string target = targetFolder + "\\" + queue.Name;
+                        string target = System.IO.Path.Combine(targetFolder, queue.Name ?? "");
                         try
                         {
                             if (ShouldProcess(target, $"Import Queue Item {queueItem.csvPath} ({queueItem.Item2.rowNum} rows)"))

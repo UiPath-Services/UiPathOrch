@@ -371,7 +371,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
         IEnumerable<User>? specifiedUsers,
         IEnumerable<ExtendedMachine?> specifiedMachines)
     {
-        string target = $"{folder.GetPSPath()}\\{param.Name![0]}";
+        string target = System.IO.Path.Combine(folder.GetPSPath(), param.Name![0]);
         bool isDirty = false;
 
         var asset = parameterSets.FirstOrDefault(asset => asset.Name == name && asset.Path == folder.GetPSPath());
@@ -661,7 +661,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                 string target;
                 if (param.Path is not null && param.Path.Any())
                 {
-                    target = $"{param.Path![0]}\\{param.Name?[0]}";
+                    target = System.IO.Path.Combine(param.Path![0], param.Name?[0] ?? "");
                 }
                 else
                 {
@@ -784,7 +784,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                 var drivesFolders = OrchDriveInfo.EnumFolders([WildcardPattern.Escape(asset.Path!)]);
                 var (drive, folder) = drivesFolders[0];
 
-                var target = folder.GetPSPath() + '\\' + asset.Name;
+                var target = System.IO.Path.Combine(folder.GetPSPath(), asset.Name ?? "");
 
                 reporter.WriteProgress(++index, $"{index:D}/{parameterSets.Count}");
 

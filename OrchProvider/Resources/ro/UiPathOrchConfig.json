@@ -1,31 +1,42 @@
 ﻿{
   /* ================== Setări globale - Început =================== */
 
-  // Setările globale din nodul rădăcină sunt partajate între toate PSDrive-urile.
-  // Aceste setări pot fi suprascrise prin specificarea acelorași chei în configurațiile individuale ale PSDrive-urilor.
-  // Pentru a verifica valorile configurate pentru fiecare PSDrive, rulați: Get-OrchPSDrive | select *
+  // Setările globale din nodul rădăcină sunt partajate între toate
+  // PSDrive-urile. Aceste setări pot fi suprascrise prin specificarea
+  // acelorași chei în configurațiile individuale ale PSDrive-urilor.
+  // Pentru a verifica valorile configurate pentru fiecare PSDrive,
+  // rulați: Get-OrchPSDrive | select *
 
-  // După crearea unei aplicații externe neconfidențiale în pagina de administrare a tenantului,
+  // După crearea unei aplicații externe neconfidențiale în pagina de
+  // administrare a tenantului,
   // setați URL-ul de redirecționare la valoarea specificată mai jos.
   "RedirectUrl": "http://localhost:8085/Temporary_Listen_Addresses",
 
-  // "Scope" definit aici va fi suprascris de "Scope" specificat în fiecare configurație PSDrive.
-  // Pentru a utiliza acest "Scope", eliminați cheia "Scope" din configurația PSDrive corespunzătoare.
-  // Pentru a verifica domeniile necesare pentru executarea fiecărui cmdlet, rulați: Get-Help <cmdlet name>
+  // "Scope" definit aici va fi suprascris de "Scope" specificat în fiecare
+  // configurație PSDrive. Pentru a utiliza acest "Scope", eliminați cheia
+  // "Scope" din configurația PSDrive corespunzătoare. Pentru a verifica
+  // domeniile necesare pentru executarea fiecărui cmdlet,
+  // rulați: Get-Help <cmdlet name>
   "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
 
-  // Pentru a utiliza cmdlet-uri al căror substantiv începe cu OrchPm, adăugați domeniul de acces al Platform Management API.
-  // Rețineți că, pentru a opera Active Directory, trebuie să vă conectați la organizație (nu la tenant).
+  // Pentru a utiliza cmdlet-uri al căror substantiv începe cu OrchPm,
+  // adăugați domeniul de acces al Platform Management API.
+  // Rețineți că, pentru a opera Active Directory, trebuie să vă conectați
+  // la organizație (nu la tenant).
 
-  // Pentru a vă conecta la organizație folosind UiPathOrch, mai întâi autentificați-vă în organizație printr-un browser,
+  // Pentru a vă conecta la organizație folosind UiPathOrch, mai întâi
+  // autentificați-vă în organizație printr-un browser,
   // apoi utilizați UiPathOrch.
-  // Pentru a vă conecta la organizație printr-un browser, mai întâi deconectați-vă de la tenant, apoi deschideți
-  // URL-ul organizației (fără numele tenantului la sfârșit) într-un browser și autentificați-vă.
+  // Pentru a vă conecta la organizație printr-un browser, mai întâi
+  // deconectați-vă de la tenant, apoi deschideți
+  // URL-ul organizației (fără numele tenantului la sfârșit) într-un
+  // browser și autentificați-vă.
 
-  // Pe lângă Platform Management, puteți specifica și domenii pentru Document Understanding
-  // și TestManager.
+  // Pe lângă Platform Management, puteți specifica și domenii pentru
+  // Document Understanding și TestManager.
 
-  // Setarea acestei valori la "true" permite conectarea la tenant ignorând erorile SSL.
+  // Setarea acestei valori la "true" permite conectarea la tenant
+  // ignorând erorile SSL.
   "IgnoreSslErrors": false,
 
   "Proxy": {
@@ -36,7 +47,8 @@
       "Username": "PROXY_USERNAME",
       "Password": "PROXY_PASSWORD"
     },
-    // Setarea acestei valori la "true" activează setările proxy pentru toate PSDrive-urile.
+    // Setarea acestei valori la "true" activează setările proxy pentru
+    // toate PSDrive-urile.
     "Enabled": false
   },
 
@@ -44,14 +56,15 @@
 
   "PSDrives": [
 
-    /* =========== Exemplar de setări pentru aplicații neconfidențiale =========== */
-    // După ce creați o aplicație externă în pagina de administrare a Orchestratorului
-    // și adăugați domenii de utilizator pentru accesul la API-ul Orchestrator,
-    // introduceți-le în câmpul „Scope” de mai jos.
-    // Copiați URL-ul de redirecționare din secțiunea de setări globale a acestui fișier și lipiți-l
-    // în setările aplicației externe a tenantului.
+    /* ======= Exemplar de setări pentru aplicații neconfidențiale ======= */
+    // După ce creați o aplicație externă în pagina de administrare
+    // a Orchestratorului și adăugați domenii de utilizator pentru accesul
+    // la API-ul Orchestrator, introduceți-le în câmpul „Scope” de mai jos.
+    // Copiați URL-ul de redirecționare din secțiunea de setări globale a
+    // acestui fișier și lipiți-l în setările aplicației externe a tenantului.
     {
-      // Puteți seta orice text pentru "Name". Se recomandă să fie același cu numele tenantului.
+      // Puteți seta orice text pentru "Name".
+      // Se recomandă să fie același cu numele tenantului.
       "Name": "Orch1",
       "Description": "Setări pentru aplicații neconfidențiale.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
@@ -60,14 +73,16 @@
       "Enabled": true
     },
 
-    /* ============= Exemplar de setări pentru aplicații confidențiale ============= */
-    // O aplicație confidențială este, în general, considerată mai puțin sigură decât o aplicație neconfidențială
-    // deoarece necesită stocarea unui AppSecret în acest fișier de configurare.
-    // Deoarece AppSecret este o acreditare sensibilă, există riscul de expunere.
-    // Prin urmare, aceasta trebuie utilizată doar pentru execuții de scripturi nesupravegheate.
-    // În pagina de administrare a Orchestratorului, creați o aplicație externă și adăugați domeniile
-    // necesare pentru accesul API-ului Orchestrator, astfel încât să se potrivească sau să depășească domeniile listate mai jos.
-    // Nu este necesar un URL de redirecționare.
+    /* ======== Exemplar de setări pentru aplicații confidențiale ======== */
+    // O aplicație confidențială este, în general, considerată mai puțin
+    // sigură decât o aplicație neconfidențială deoarece necesită stocarea
+    // unui AppSecret în acest fișier de configurare. Deoarece AppSecret este
+    // o acreditare sensibilă, există riscul de expunere. Prin urmare, aceasta
+    // trebuie utilizată doar pentru execuții de scripturi nesupravegheate.
+    // În pagina de administrare a Orchestratorului, creați o aplicație externă
+    // și adăugați domeniile necesare pentru accesul API-ului Orchestrator,
+    // astfel încât să se potrivească sau să depășească domeniile listate
+    // mai jos. Nu este necesar un URL de redirecționare.
     // În această configurație, specificați Root, AppId și AppSecret emis.
     {
       "Name": "Orch2",
@@ -80,9 +95,10 @@
     },
 
     /* ======= Exemplar de autentificare cu utilizator și parolă ======== */
-    // Această metodă de autentificare este învechită, dar este necesară pentru conectarea la versiunile anterioare
-    // ale Orchestratorului on-premises.
-    // Suportul pentru aplicațiile externe OAuth a fost introdus în versiunea 21.4.
+    // Această metodă de autentificare este învechită, dar este necesară
+    // pentru conectarea la versiunile anterioare ale Orchestratorului
+    // on-premises. Suportul pentru aplicațiile externe OAuth a fost introdus
+    // în versiunea 21.4.
     // Asigurați-vă că specificați YOUR_TENANT la sfârșitul URL-ului.
     {
       "Name": "Orch3",
@@ -94,12 +110,13 @@
       "Enabled": false
     },
 
-    /* ========== Exemplar de autentificare pentru Automation Suite ========== */
-    // În această configurație, specificați URL-ul serverului de identitate folosind cheia "IdentityUrl".
-    // Pentru setările legate de autentificare, consultați configurațiile aplicațiilor neconfidențiale sau confidențiale.
+    /* ======= Exemplar de autentificare pentru Automation Suite ======= */
+    // În această configurație, specificați URL-ul serverului de identitate
+    // folosind cheia "IdentityUrl". Pentru setările legate de autentificare,
+    // consultați configurațiile aplicațiilor neconfidențiale sau confidențiale.
     {
       "Name": "Orch4",
-      "Description": "Pentru Automation Suite sau Orchestrator implementat pe Azure App Service.",
+      "Description": "Pentru AS sau Orchestrator implementat pe Azure App Service.",
       "Root": "https://XXX.azurewebsites.net",
       "IdentityUrl": "https://YYY.azurewebsites.net/identity",
       "AppId": "YOUR_APP_ID",
@@ -108,8 +125,9 @@
     },
 
     /* ================== Exemplar de setări proxy =================== */
-    // Secțiunea "Proxy" din acest PSDrive va suprascrie setările proxy globale definite
-    // la nivelul rădăcinii, permițând acestui PSDrive să utilizeze o configurație proxy diferită de cea globală.
+    // Secțiunea "Proxy" din acest PSDrive va suprascrie setările proxy
+    // globale definite la nivelul rădăcinii, permițând acestui PSDrive să
+    // utilizeze o configurație proxy diferită de cea globală.
     {
       "Name": "Orch5",
       "Description": "Această configurație include setări proxy.",

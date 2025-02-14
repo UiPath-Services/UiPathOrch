@@ -125,7 +125,7 @@ public partial class OrchProvider : NavigationCmdletProvider
         {
             return (null, null);
         }
-        int colonIndex = path.IndexOf(System.IO.Path.VolumeSeparatorChar);
+        int colonIndex = path.IndexOf(':');
         if (colonIndex == -1)
         {
             throw new Exception("something wrong.");
@@ -199,24 +199,24 @@ public partial class OrchProvider : NavigationCmdletProvider
 
                 if (!lowerScope.Contains("or.folders"))
                 {
-                    WriteWarning($"\"{drive.Name}{System.IO.Path.VolumeSeparatorChar}{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Folders.Read\" scope is included to retrieve folder information.");
+                    WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Folders.Read\" scope is included to retrieve folder information.");
                 }
 
                 if (!lowerScope.Contains("or.settings"))
                 {
-                    WriteWarning($"\"{drive.Name}{System.IO.Path.VolumeSeparatorChar}{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Settings.Read\" scope is included to retrieve the API version needed to properly call Orchestrator APIs.");
+                    WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Settings.Read\" scope is included to retrieve the API version needed to properly call Orchestrator APIs.");
                 }
 
                 if (string.IsNullOrEmpty(drive.AppSecret) && !lowerScope.Contains("or.users"))
                 {
-                    WriteWarning($"\"{drive.Name}{System.IO.Path.VolumeSeparatorChar}{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Users.Read\" scope is included to access your personal workspace folder.");
+                    WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Users.Read\" scope is included to access your personal workspace folder.");
                 }
             }
         }
 
         if (string.IsNullOrWhiteSpace(drive.Root))
         {
-            WriteWarning($"\"{drive.Name}{System.IO.Path.VolumeSeparatorChar}{System.IO.Path.DirectorySeparatorChar}\": Root is not specified!");
+            WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": Root is not specified!");
         }
         else if ((drive.Root.EndsWith("/orchestrator_/") || drive.Root.EndsWith("/orchestrator_")))
         {
@@ -251,7 +251,7 @@ public partial class OrchProvider : NavigationCmdletProvider
     protected override Collection<PSDriveInfo>? InitializeDefaultDrives()
     {
         string configFilePath = GetConfigFilePath();
-        if (System.IO.File.Exists(configFilePath))
+        if (File.Exists(configFilePath))
         {
             string json = File.ReadAllText(configFilePath);
             try
@@ -262,23 +262,38 @@ public partial class OrchProvider : NavigationCmdletProvider
             catch (Exception ex)
             {
                 WriteWarning($"\"{configFilePath}\": {ex.Message}");
-                WriteWarning($"Please edit the UiPathOrchConfig.json. Once edited, launch a new PS session and `Import-Module UiPathOrch` to mount your Orchestrator tenants as PSDrives.");
-                var startInfo = new ProcessStartInfo("notepad.exe")
+
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    Arguments = configFilePath,
-                    UseShellExecute = true
-                };
-                Process.Start(startInfo);
+                    var startInfo = new ProcessStartInfo("notepad.exe")
+                    {
+                        Arguments = configFilePath,
+                        UseShellExecute = true
+                    };
+                    Process.Start(startInfo);
+                }
+
+                WriteWarning($"Please edit the '{configFilePath}'. Once edited, launch a new PS session and `Import-Module UiPathOrch` to mount your Orchestrator tenants as PSDrives.");
+
                 return null;
+
+                //else
+                //{
+                //    string folder = System.IO.Path.GetDirectoryName(configFilePath);
+                //    string fileName = System.IO.Path.GetFileName(configFilePath);
+
+                //    SessionState.Path.SetLocation(folder);
+                //    WriteWarning($"Please edit ./{fileName}. Once edited, launch a new PS session and `Import-Module UiPathOrch` to mount your Orchestrator tenants as PSDrives.");
+                //}
             }
 
             Collection<PSDriveInfo> ret = base.InitializeDefaultDrives();
 
-            if (_config.Proxy is not null)
+            if (_config!.Proxy is not null)
             {
                 _config.Proxy.Enabled ??= true;
             }
-            _config.Enabled ??= true;
+            _config!.Enabled ??= true;
 
             foreach (var drive in _config!.PSDrives!)
             {
@@ -327,30 +342,25 @@ public partial class OrchProvider : NavigationCmdletProvider
                     UseShellExecute = true
                 };
                 Process.Start(startInfo);
+
+                WriteWarning($"Please edit '{configFilePath}'. After saving your changes, restart the PowerShell session and run `Import-Module UiPathOrch` to mount your Orchestrator tenants as PSDrives.");
             }
             else
             {
-                try
-                {
-                    var startInfo = new ProcessStartInfo("nano")
-                    {
-                        Arguments = configFilePath,
-                        UseShellExecute = false
-                    };
-                    Process.Start(startInfo);
-                }
-                catch
-                {
-                    var startInfo = new ProcessStartInfo("vi")
-                    {
-                        Arguments = configFilePath,
-                        UseShellExecute = false
-                    };
-                    Process.Start(startInfo);
-                }
-            }
+                // Linux 環境ではエディタをうまく起動できない。。
+                // ディレクトリを移動して、編集を促すメッセージを出力する。元のディレクトリに戻るには popd を実行する。
+                string folder = System.IO.Path.GetDirectoryName(configFilePath);
+                string fileName = System.IO.Path.GetFileName(configFilePath);
 
-            WriteWarning($"Please edit {configFilePath}. Once edited, launch a new PS session to mount your Orchestrator tenants as PSDrives.");
+                // 現在のロケーションをデフォルトスタックにプッシュ
+                // したいけど、ここではまだちゃんと動かないっぽい。。
+                //SessionState.Path.PushCurrentLocation("default");
+
+                // 設定ファイルがあるパスに移動
+                SessionState.Path.SetLocation(folder);
+
+                WriteWarning($"Please edit './{fileName}'. After saving your changes, restart the PowerShell session and run Import-Module UiPathOrch to mount your Orchestrator tenants as PSDrives.");
+            }
             return null;
         }
     }
@@ -1116,7 +1126,7 @@ public partial class OrchProvider : NavigationCmdletProvider
     protected override string MakePath(string parent, string child)
     {
         string retNew = base.MakePath(parent, child);
-        if (retNew.EndsWith(System.IO.Path.DirectorySeparatorChar) && retNew.Length > 1 && retNew[retNew.Length-2] != System.IO.Path.VolumeSeparatorChar)
+        if (retNew.EndsWith(System.IO.Path.DirectorySeparatorChar) && retNew.Length > 1 && retNew[retNew.Length-2] != ':')
         {
             retNew = retNew.Substring(0, retNew.Length - 1);
         }

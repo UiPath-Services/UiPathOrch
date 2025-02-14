@@ -138,7 +138,7 @@ public class RemovePackageCommand : OrchestratorPSCmdlet
             var drives = OrchDriveInfo.EnumAllOrchDrives()
                 .Where(d => d.OrchAPISession.AuthManager.IsAuthenticated);
 
-            var feedFolders = OrchDriveInfo.EnumPackageFeedFolders(drives.SelectMany(d => new[] { $"{d.Name}:\\", $"{d.Name}:\\*" }))
+            var feedFolders = OrchDriveInfo.EnumPackageFeedFolders(drives.SelectMany(d => new[] { $"{d.Name}:{System.IO.Path.DirectorySeparatorChar}", $"{d.Name}:{System.IO.Path.DirectorySeparatorChar}*" }))
                 .Select(df => df.folder.GetPSPath());
 
             // パラメータで選択済みの Path は、候補から除外する

@@ -165,7 +165,7 @@ public class OrchDuProvider : NavigationCmdletProvider
 
     protected override void GetChildItems(string path, bool recurse, uint depth)
     {
-        if (!path.EndsWith('\\'))
+        if (!path.EndsWith(System.IO.Path.DirectorySeparatorChar))
         {
             return;
         }
@@ -295,7 +295,7 @@ public class OrchDuProvider : NavigationCmdletProvider
     protected override string MakePath(string parent, string child)
     {
         string retNew = base.MakePath(parent, child);
-        if (retNew.EndsWith(System.IO.Path.DirectorySeparatorChar) && retNew.Length > 1 && retNew[retNew.Length-2] != System.IO.Path.VolumeSeparatorChar)
+        if (retNew.EndsWith(System.IO.Path.DirectorySeparatorChar) && retNew.Length > 1 && retNew[retNew.Length-2] != ':')
         {
             retNew = retNew.Substring(0, retNew.Length - 1);
         }

@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.9.6'
+ModuleVersion = '0.9.10.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -379,22 +379,9 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Comments can now be written in the configuration file.
+        ReleaseNotes = '- It now works with PowerShell 7 on Linux. Its functionality was verified on Ubuntu.
 
-- As a result, the explanations previously written in the `Description` field of the configuration file template have been moved to comments.
-
-- The configuration file template has been localized. It currently supports the following seven languages:  
-  - German
-  - English
-  - French
-  - Japanese
-  - Korean
-  - Romanian
-  - Turkish
-
-- The configuration file must be encoded in UTF-8. To ensure this, a UTF-8 BOM (Byte Order Mark) has been added to the configuration file templates. This should help prevent character corruption when adding local characters to the configuration file.
-
-- To obtain the configuration file template, delete (or rename for backup) the existing configuration file and then run Import-Module UiPathOrch. If no configuration file exists, it will be automatically created from the template.
+- The configuration file template''s newline characters were set to CRLF, but have been changed to LF.
 '
 
         # Prerelease string of this module

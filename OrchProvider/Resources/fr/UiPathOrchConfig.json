@@ -1,31 +1,41 @@
 ﻿{
   /* ================== Paramètres globaux - Début =================== */
 
-  // Les paramètres globaux dans le nœud racine sont partagés entre tous les PSDrives.
-  // Ces paramètres peuvent être remplacés en spécifiant les mêmes clés dans les configurations individuelles des PSDrives.
-  // Pour vérifier les valeurs configurées pour chaque PSDrive, exécutez : Get-OrchPSDrive | select *
+  // Les paramètres globaux dans le nœud racine sont partagés entre tous les
+  // PSDrives. Ces paramètres peuvent être remplacés en spécifiant les mêmes
+  // clés dans les configurations individuelles des PSDrives.
+  // Pour vérifier les valeurs configurées pour chaque PSDrive,
+  // exécutez : Get-OrchPSDrive | select *
 
-  // Après avoir créé une application externe non confidentielle dans la page d'administration du locataire,
-  // définissez son URL de redirection sur la valeur spécifiée ci-dessous.
+  // Après avoir créé une application externe non confidentielle dans la page
+  // d'administration du locataire, définissez son URL de redirection sur
+  // la valeur spécifiée ci-dessous.
   "RedirectUrl": "http://localhost:8085/Temporary_Listen_Addresses",
 
-  // Le "Scope" défini ici sera remplacé par le "Scope" spécifié dans la configuration de chaque PSDrive.
-  // Pour utiliser ce Scope, supprimez la clé Scope de la configuration PSDrive correspondante.
-  // Pour vérifier les scopes requis pour exécuter chaque cmdlet, exécutez : Get-Help <cmdlet name>
+  // Le "Scope" défini ici sera remplacé par le "Scope" spécifié dans la
+  // configuration de chaque PSDrive. Pour utiliser ce Scope, supprimez la
+  // clé Scope de la configuration PSDrive correspondante.
+  // Pour vérifier les scopes requis pour exécuter chaque cmdlet,
+  // exécutez : Get-Help <cmdlet name>
   "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
 
-  // Pour utiliser les cmdlets dont le nom commence par OrchPm, ajoutez le scope d'accès à l'API de gestion de plateforme.
-  // Notez que pour gérer Active Directory, vous devez vous connecter à l'organisation (et non au locataire).
+  // Pour utiliser les cmdlets dont le nom commence par OrchPm, ajoutez le
+  // scope d'accès à l'API de gestion de plateforme. Notez que pour gérer
+  // Active Directory, vous devez vous connecter à l'organisation
+  // (et non au locataire).
 
-  // Pour vous connecter à l'organisation à l'aide de UiPathOrch, connectez-vous d'abord à l'organisation via un navigateur,
-  // puis utilisez UiPathOrch.
-  // Pour vous connecter à l'organisation via un navigateur, déconnectez-vous d'abord du locataire, puis ouvrez
-  // l'URL de l'organisation (sans le nom du locataire à la fin) dans un navigateur et connectez-vous.
+  // Pour vous connecter à l'organisation à l'aide de UiPathOrch,
+  // connectez-vous d'abord à l'organisation via un navigateur,
+  // puis utilisez UiPathOrch. Pour vous connecter à l'organisation via un
+  // navigateur, déconnectez-vous d'abord du locataire, puis ouvrez l'URL de
+  // l'organisation (sans le nom du locataire à la fin) dans un navigateur
+  // et connectez-vous.
 
-  // En plus de la gestion de plateforme, vous pouvez également spécifier des scopes pour Document Understanding
-  // et TestManager.
+  // En plus de la gestion de plateforme, vous pouvez également spécifier des
+  // scopes pour Document Understanding et TestManager.
 
-  // Définir cette valeur sur true permet de se connecter au locataire en ignorant les erreurs SSL.
+  // Définir cette valeur sur true permet de se connecter au locataire en
+  // ignorant les erreurs SSL.
   "IgnoreSslErrors": false,
 
   "Proxy": {
@@ -36,7 +46,8 @@
       "Username": "PROXY_USERNAME",
       "Password": "PROXY_PASSWORD"
     },
-    // Définir cette valeur sur true active les paramètres proxy pour tous les PSDrives.
+    // Définir cette valeur sur true active les paramètres proxy
+    // pour tous les PSDrives.
     "Enabled": false
   },
 
@@ -44,13 +55,16 @@
 
   "PSDrives": [
 
-    /* =========== Exemple de configuration d'application non confidentielle =========== */
-    // Après avoir créé une application externe dans la page d'administration d'Orchestrator
-    // et ajouté les scopes utilisateur pour l'accès à l'API Orchestrator, saisissez-les dans le champ "Scope" ci-dessous.
-    // Copiez l'URL de redirection depuis la section des paramètres globaux de ce fichier et collez-la
-    // dans les paramètres de l'application externe de votre locataire.
+    /* ==== Exemple de configuration d'application non confidentielle ==== */
+    // Après avoir créé une application externe dans la page d'administration
+    // d'Orchestrator et ajouté les scopes utilisateur pour l'accès à l'API
+    // Orchestrator, saisissez-les dans le champ "Scope" ci-dessous.
+    // Copiez l'URL de redirection depuis la section des paramètres globaux
+    // de ce fichier et collez-la dans les paramètres de l'application
+    // externe de votre locataire.
     {
-      // Vous pouvez définir n'importe quel texte pour le champ Name. Il est recommandé qu'il corresponde au nom du locataire.
+      // Vous pouvez définir n'importe quel texte pour le champ Name.
+      // Il est recommandé qu'il corresponde au nom du locataire.
       "Name": "Orch1",
       "Description": "Paramètres pour les applications non confidentielles.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
@@ -59,16 +73,19 @@
       "Enabled": true
     },
 
-    /* ============= Exemple de configuration d'application confidentielle ============= */
-    // Une application confidentielle est généralement considérée comme moins sécurisée qu'une application non confidentielle,
-    // car elle nécessite le stockage d'un AppSecret dans ce fichier de configuration.
-    // Étant donné que l'AppSecret est une information d'identification sensible, il existe un risque d'exposition.
-    // Par conséquent, elle ne doit être utilisée que pour l'exécution de scripts non supervisés.
+    /* ====== Exemple de configuration d'application confidentielle ====== */
+    // Une application confidentielle est généralement considérée comme moins
+    // sécurisée qu'une application non confidentielle, car elle nécessite le
+    // stockage d'un AppSecret dans ce fichier de configuration.
+    // Étant donné que l'AppSecret est une information d'identification
+    // sensible, il existe un risque d'exposition. Par conséquent, elle ne
+    // doit être utilisée que pour l'exécution de scripts non supervisés.
     //
-    // Dans la page d'administration d'Orchestrator, créez une application externe et ajoutez
-    // les scopes d'application requis pour l'accès à l'API Orchestrator afin qu'ils correspondent ou dépassent ceux listés ci-dessous.
-    // Aucune URL de redirection n'est nécessaire.
-    // Dans cette configuration, spécifiez la racine, l'AppId émise et l'AppSecret.
+    // Dans la page d'administration d'Orchestrator, créez une application
+    // externe et ajoutez les scopes d'application requis pour l'accès à l'API
+    // Orchestrator afin qu'ils correspondent ou dépassent ceux listés
+    // ci-dessous. Aucune URL de redirection n'est nécessaire. Dans cette
+    // configuration, spécifiez la racine, l'AppId émise et l'AppSecret.
     {
       "Name": "Orch2",
       "Description": "Paramètres pour les applications confidentielles.",
@@ -79,11 +96,11 @@
       "Enabled": false
     },
 
-    /* ======= Exemple d'authentification par nom d'utilisateur et mot de passe ======== */
-    // Cette méthode d'authentification est obsolète, mais elle est nécessaire pour se connecter
-    // aux anciennes versions d'Orchestrator sur site.
-    // La prise en charge des applications externes OAuth a été introduite dans la version 21.4.
-    // Assurez-vous de spécifier YOUR_TENANT à la fin de l'URL.
+    /* = Exemple d'authentification par nom d'utilisateur et mot de passe = */
+    // Cette méthode d'authentification est obsolète, mais elle est nécessaire
+    // pour se connecter aux anciennes versions d'Orchestrator sur site. La
+    // prise en charge des applications externes OAuth a été introduite dans la
+    // version 21.4. Assurez-vous de spécifier YOUR_TENANT à la fin de l'URL.
     {
       "Name": "Orch3",
       "Description": "Authentification par nom d'utilisateur et mot de passe.",
@@ -94,12 +111,14 @@
       "Enabled": false
     },
 
-    /* ========== Exemple d'authentification pour Automation Suite ========== */
-    // Dans cette configuration, spécifiez l'URL du serveur d'identité en utilisant la clé "IdentityUrl".
-    // Pour les paramètres liés à l'authentification, référez-vous aux configurations de l'application non confidentielle ou confidentielle.
+    /* ========= Exemple d'authentification pour Automation Suite ========= */
+    // Dans cette configuration, spécifiez l'URL du serveur d'identité en
+    // utilisant la clé "IdentityUrl". Pour les paramètres liés à
+    // l'authentification, référez-vous aux configurations de l'application non
+    // confidentielle ou confidentielle.
     {
       "Name": "Orch4",
-      "Description": "Pour Automation Suite ou Orchestrator déployé sur Azure App Service.",
+      "Description": "Pour AS ou Orchestrator déployé sur Azure App Service.",
       "Root": "https://XXX.azurewebsites.net",
       "IdentityUrl": "https://YYY.azurewebsites.net/identity",
       "AppId": "YOUR_APP_ID",
@@ -108,8 +127,9 @@
     },
 
     /* ================== Exemple de configuration proxy =================== */
-    // La section "Proxy" de ce PSDrive remplacera les paramètres proxy globaux définis
-    // au niveau racine, permettant à ce PSDrive d'utiliser une configuration proxy différente de celle des paramètres globaux.
+    // La section "Proxy" de ce PSDrive remplacera les paramètres proxy globaux
+    // définis au niveau racine, permettant à ce PSDrive d'utiliser une
+    // configuration proxy différente de celle des paramètres globaux.
     {
       "Name": "Orch5",
       "Description": "Cette configuration inclut des paramètres proxy.",

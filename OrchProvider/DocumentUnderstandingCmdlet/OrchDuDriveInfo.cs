@@ -19,7 +19,7 @@ public class OrchDuDriveInfo : PSDriveInfo
     {
         get
         {
-            _NameColon ??= Name + Path.VolumeSeparatorChar;
+            _NameColon ??= Name + ':';
             return _NameColon;
         }
     }
@@ -27,7 +27,7 @@ public class OrchDuDriveInfo : PSDriveInfo
     {
         get
         {
-            _NameColonSeparator ??= Name + Path.VolumeSeparatorChar + Path.DirectorySeparatorChar;
+            _NameColonSeparator ??= Name + ':' + Path.DirectorySeparatorChar;
             return _NameColonSeparator;
         }
     }
@@ -46,7 +46,7 @@ public class OrchDuDriveInfo : PSDriveInfo
 
     // このコンストラクタを実行するタイミングでは、NameColonSeparator は利用できない
     public OrchDuDriveInfo(ProviderInfo provider, string driveName, string description, string root) :
-        base(driveName, provider, driveName + ":\\", description, null, root)
+        base(driveName, provider, driveName + ':' + Path.DirectorySeparatorChar, description, null, root)
     {
     }
 
@@ -126,7 +126,7 @@ public class OrchDuDriveInfo : PSDriveInfo
             //if (folder is null) continue;
 
             // Recurse が指定されていて、かつルートフォルダであれば、すべてのプロジェクトを返せばOK
-            if (recurse && p.Path.EndsWith('\\'))
+            if (recurse && p.Path.EndsWith(System.IO.Path.DirectorySeparatorChar))
             {
                 foreach (var project in dicProjects)
                 {
