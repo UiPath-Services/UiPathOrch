@@ -13,7 +13,7 @@ namespace UiPath.PowerShell.Commands;
 class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(NameCompleter))]
+    [ArgumentCompleter(typeof(DuUserNameCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
@@ -29,50 +29,8 @@ class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
-    private class NameCompleter : OrchArgumentCompleter
-    {
-        public override IEnumerable<CompletionResult> CompleteArgument(
-            string commandName,
-            string parameterName,
-            string wordToComplete,
-            CommandAst commandAst,
-            IDictionary fakeBoundParameters)
-        {
-            var recurse = GetSwitchParameterValue(commandAst, "Recurse");
-
-            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
-            var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-            var drivesProjects = OrchDuDriveInfo.EnumFolders(paramPath, recurse);
-
-            // パラメータで選択済みの DocumentTypeName は、候補から除外する
-            var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
-
-            var wp = CreateWPFromWordToComplete(wordToComplete);
-
-            var results = ParallelResults.ForEach(drivesProjects, dp => {
-                var (drive, project) = dp;
-                var partitionGlobalId = drive.ParentDrive.GetPartitionGlobalId();
-                var (_, tenantKey) = drive.ParentDrive.GetTenantId();
-                return drive.GetDuUsers(partitionGlobalId, tenantKey, project);
-            });
-
-            foreach (var result in results)
-            {
-                if (!result.TryGetValue(out var entities)) continue;
-
-                foreach (var user in entities!
-                    .Where(e => wp.IsMatch(e?.displayName))
-                    .ExcludeByWildcards(e => e?.displayName!, wpName)
-                    .OrderBy(e => e?.displayName))
-                {
-                    string tiphelp = user.GetPSPath();
-                    yield return new CompletionResult(PathTools.EscapePSText(user.displayName), user.displayName, CompletionResultType.Text, tiphelp);
-                }
-            }
-        }
-    }
-
-    // TODO: Get-DuRole の completer と共通化する
+    // この RoleCompleter は、ユーザーにアサインされていないロールだけを列挙したい
+    // けど、ユーザーが多いと処理が遅くなるかな？
     private class RoleCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -83,8 +41,19 @@ class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
             IDictionary fakeBoundParameters)
         {
             var drives = ResolveDuDrives(fakeBoundParameters);
+            //var drivesProjects = OrchDuDriveInfo.EnumFolders(Path, Recurse.IsPresent);
 
-            // パラメータで選択済みの DocumentTypeName は、候補から除外する
+            //var (drive, project) = dp;
+            //var partitionGlobalId = drive.ParentDrive.GetPartitionGlobalId();
+            //var (_, tenantKey) = drive.ParentDrive.GetTenantId();
+            //return drive.GetDuUsers(partitionGlobalId, tenantKey, project);
+
+
+            // この名前のユーザーにアサイン済みのロールは除外したい
+            // けど、いったん実装は先送り。。
+            //var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
+
+            // パラメータで選択済みの Name は、候補から除外する
             var wpRole = CreateWPListFromParameter(commandAst, "Role", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);

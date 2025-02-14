@@ -8,11 +8,14 @@ using UiPath.PowerShell.Core;
 
 namespace UiPath.PowerShell.Commands;
 
+// Linux 環境では、うまくエディタが起動できない。
+// current location を移動して、編集してくれとメッセージを出すだけにしておくか。。
 [Cmdlet(VerbsData.Edit, "OrchConfig")]
-public class EditConfigCommand : Cmdlet
+public class EditConfigCommand : PSCmdlet
 {
     [Parameter(Position = 0)]
     [ArgumentCompleter(typeof(EditorTypeCompleter))]
+    //[ValidateSet("Default", "Notepad", "XdgOpen", "Vi", "Nano", IgnoreCase = true)]
     public string? EditorType { get; set; }
 
     internal class EditorTypeCompleter : OrchArgumentCompleter
@@ -31,14 +34,15 @@ public class EditConfigCommand : Cmdlet
             }
             else
             {
-                yield return new CompletionResult(PathTools.EscapePSText("XdgOpen"));
-                yield return new CompletionResult(PathTools.EscapePSText("Vi"));
-                yield return new CompletionResult(PathTools.EscapePSText("Nano"));
+                yield break;
+                //yield return new CompletionResult(PathTools.EscapePSText("XdgOpen"));
+                //yield return new CompletionResult(PathTools.EscapePSText("Vi"));
+                //yield return new CompletionResult(PathTools.EscapePSText("Nano"));
             }
         }
     }
 
-    private Exception? TryLaunchEditors(string?[] editors, string configFilePath)
+    private static Exception? TryLaunchEditors(string?[] editors, string configFilePath)
     {
         Exception ret = null;
         foreach (var ed in editors)
@@ -54,21 +58,35 @@ public class EditConfigCommand : Cmdlet
 
                 string candidate = ed.ToLowerInvariant();
 
-                bool useShellExecute;
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                {
-                    useShellExecute = true;
-                }
-                else
-                {
-                    // Linux: "xdg-open" はシェル経由、それ以外は直接起動
-                    useShellExecute = candidate == "xdg-open";
-                }
-
                 Process.Start(new ProcessStartInfo(candidate, configFilePath)
                 {
-                    UseShellExecute = useShellExecute
+                    UseShellExecute = true
                 });
+
+                //if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                //{
+                //}
+                //else
+                //{
+                    //string folder = System.IO.Path.GetDirectoryName(configFilePath);
+                    //string fileName = Path.GetFileName(configFilePath);
+
+                    //if (candidate == "xdg-open")
+                    //{
+                    //    Process.Start(new ProcessStartInfo(candidate, configFilePath)
+                    //    {
+                    //        UseShellExecute = true
+                    //    });
+                    //}
+                    //else
+                    //{
+                    //    Process.Start(new ProcessStartInfo("/usr/bin/script")
+                    //    {
+                    //        UseShellExecute = true,
+                    //        ArgumentList = { "-q", "-c", $"env TERM=xterm {candidate} {configFilePath}", "/dev/null" }
+                    //    });
+                    //}
+                //}
 
                 return null;
             }
@@ -86,7 +104,7 @@ public class EditConfigCommand : Cmdlet
         Core.OrchProvider.EnsureDefaultConfigFileExists();
         string configFilePath = Core.OrchProvider.GetConfigFilePath();
 
-        string?[] candidates = [];
+        string?[] candidates;
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -99,32 +117,44 @@ public class EditConfigCommand : Cmdlet
             {
                 candidates = [null, "notepad.exe"];
             }
-        }
-        else
-        {
-            string candidate = string.IsNullOrEmpty(EditorType) ? "nano" : EditorType.ToLowerInvariant();
-            if (candidate == "xdgopen")
+            var ex = TryLaunchEditors(candidates, configFilePath);
+
+            if (ex is not null)
             {
-                candidates = ["xdg-open", "vi", "nano"];
+                WriteError(new ErrorRecord(ex, "LaunchEditorFailed", ErrorCategory.ResourceUnavailable, configFilePath));
             }
-            else if (candidate == "vi")
-            {
-                candidates = ["vi", "nano", "xdg-open"];
-            }
-            else
-            {
-                candidates = ["nano", "vi", "xdg-open"];
-            }
+
+            WriteWarning($"Please edit '{configFilePath}'. After saving your changes, restart the PowerShell session and run `Import-Module UiPathOrch` to mount your Orchestrator tenants as PSDrives.");
+            return;
         }
 
-        var ex = TryLaunchEditors(candidates, configFilePath);
-        if (ex is not null)
-        {
-            WriteError(new ErrorRecord(ex, "LaunchEditorFailed", ErrorCategory.ResourceUnavailable, configFilePath));
-        }
-        else
-        {
-            WriteWarning($"Please edit {configFilePath}. Once edited, launch a new PS session and `Import-Module UiPathOrch` to mount your Orchestrator tenants as PSDrives.");
-        }
+        // Linux 環境ではエディタをうまく起動できない。。
+        // ディレクトリを移動して、編集を促すメッセージを出力する。元のディレクトリに戻るには popd を実行する。
+        string folder = Path.GetDirectoryName(configFilePath);
+        string fileName = Path.GetFileName(configFilePath);
+
+        // 現在のロケーションをデフォルトスタックにプッシュ
+        SessionState.Path.PushCurrentLocation("default");
+
+        // 設定ファイルがあるパスに移動
+        SessionState.Path.SetLocation(folder);
+
+        WriteWarning($"Please edit './{fileName}'. After saving your changes, restart the PowerShell session and run Import-Module UiPathOrch to mount your Orchestrator tenants as PSDrives. Use `popd` to return to the previous location.");
+
+
+        //string candidate = string.IsNullOrEmpty(EditorType) ? "nano" : EditorType.ToLowerInvariant();
+        //if (candidate == "xdgopen")
+        //{
+        //    candidates = ["xdg-open", "vi", "nano"];
+        //}
+        //else if (candidate == "vi")
+        //{
+        //    candidates = ["vi", "nano", "xdg-open"];
+        //}
+        //else
+        //{
+        //    candidates = ["nano", "vi", "xdg-open"];
+        //}
+        //}
     }
 }

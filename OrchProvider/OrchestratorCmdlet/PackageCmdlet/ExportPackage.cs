@@ -203,11 +203,11 @@ public class ExportPackageCommand : OrchestratorPSCmdlet
                             string target;
                             if (string.IsNullOrEmpty(folderDisplayName))
                             {
-                                target = drive.NameColonSeparator + version.Id + System.IO.Path.VolumeSeparatorChar + version.Version;
+                                target = drive.NameColonSeparator + version.Id + ':' + version.Version;
                             }
                             else
                             {
-                                target = drive.NameColonSeparator + folderDisplayName + System.IO.Path.DirectorySeparatorChar + version.Id + ":" + version.Version;
+                                target = drive.NameColonSeparator + folderDisplayName + System.IO.Path.DirectorySeparatorChar + version.Id + ':' + version.Version;
                             }
 
                             reporter.WriteProgress(++index, $"{version.GetPSPath()}:{version.Version}");
@@ -289,7 +289,7 @@ public class ExportPackageCommand : OrchestratorPSCmdlet
                         {
                             cancelHandler.Token.ThrowIfCancellationRequested();
 
-                            string target = version.GetPSPath() + ":" + version.Version;
+                            string target = version.GetPSPath() + ':' + version.Version;
                             reporter.WriteProgress(++index, $"{index:D}/{versions.Count} {target}");
                             if (ShouldProcess(target, "Export Package"))
                             {
@@ -371,7 +371,7 @@ public class ExportPackageCommand : OrchestratorPSCmdlet
                         {
                             cancelHandler.Token.ThrowIfCancellationRequested();
 
-                            string target = version.GetPSPath() + ":" + version.Version;
+                            string target = version.GetPSPath() + ':' + version.Version;
                             reporter.WriteProgress(++index, $"{index:D}/{versions.Count} {target}");
                             if (ShouldProcess(target, "Export Package"))
                             {

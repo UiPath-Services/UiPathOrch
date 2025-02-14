@@ -52,12 +52,12 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
             // パラメータで選択済みの Destination は、候補から除外する
             var selectedDestination = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete)
                 .SelectMany(p => SessionState!.Path.GetResolvedPSPathFromPSPath(p))
-                .Select(p => WildcardPattern.Unescape(p.Path.TrimEnd('\\')))
+                .Select(p => WildcardPattern.Unescape(p.Path.TrimEnd(System.IO.Path.DirectorySeparatorChar)))
                 .ToList();
 
-            #region 指定されたパスを解決する
-            if (wordToComplete != "\\" && wordToComplete != "/" && !wordToComplete.EndsWith(':') &&
-                (!string.IsNullOrEmpty(wordToComplete) || wordToComplete.EndsWith('\\') || wordToComplete.EndsWith('/')))
+            #region 指定されたパスを解決する // TODO: 何かこの条件おかしいな？
+            if (wordToComplete != System.IO.Path.DirectorySeparatorChar.ToString() && wordToComplete != "/" && !wordToComplete.EndsWith(':') &&
+                (!string.IsNullOrEmpty(wordToComplete) || wordToComplete.EndsWith(System.IO.Path.DirectorySeparatorChar) || wordToComplete.EndsWith('/')))
             {
                 wordToComplete += '*';
             }
@@ -111,8 +111,9 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            if (wordToComplete != "\\" && wordToComplete != "/" && !wordToComplete.EndsWith(':') &&
-                (!string.IsNullOrEmpty(wordToComplete) || wordToComplete.EndsWith('\\') || wordToComplete.EndsWith('/')))
+            // なんかこの条件おかしいな？
+            if (wordToComplete != System.IO.Path.DirectorySeparatorChar.ToString() && wordToComplete != "/" && !wordToComplete.EndsWith(':') &&
+                (!string.IsNullOrEmpty(wordToComplete) || wordToComplete.EndsWith(System.IO.Path.DirectorySeparatorChar) || wordToComplete.EndsWith('/')))
             {
                 wordToComplete += '*';
             }

@@ -2,30 +2,39 @@
   /* ================== Global Settings Start =================== */
 
   // The global settings in the root node are shared across all PSDrives.
-  // These settings can be overridden by specifying the same keys in individual PSDrive configurations.
-  // To check the values configured for each PSDrive, run: Get-OrchPSDrive | select *
+  // These settings can be overridden by specifying the same keys in
+  // individual PSDrive configurations.
+  // To check the values configured for each PSDrive,
+  // run: Get-OrchPSDrive | select *
 
-  // After creating a non-confidential external application in the tenant's administration page,
-  // set its Redirect URL to the value specified below.
+  // After creating a non-confidential external application in the tenant's
+  // administration page, set its Redirect URL to the value specified below.
   "RedirectUrl": "http://localhost:8085/Temporary_Listen_Addresses",
 
-  // The "Scope" defined here will be overridden by the "Scope" specified in each PSDrive's configuration.
-  // To use this Scope, remove the Scope key from the corresponding PSDrive configuration.
-  // To check the scopes required for executing each cmdlet, run: Get-Help <cmdlet name>
+  // The "Scope" defined here will be overridden by the "Scope" specified in
+  // each PSDrive's configuration.
+  // To use this Scope, remove the Scope key from the corresponding PSDrive
+  // configuration.
+  // To check the scopes required for executing each cmdlet,
+  // run: Get-Help <cmdlet name>
   "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
 
-  // To use cmdlets whose noun starts with OrchPm, add the Platform Management API Access scope.
-  // Note that to operate Active Directory, you need to log in to the organization (not the tenant).
+  // To use cmdlets whose noun starts with OrchPm, add the Platform
+  // Management API Access scope.
+  // Note that to operate Active Directory, you need to log in to the
+  // organization (not the tenant).
 
-  // To log in to the organization using UiPathOrch, first log in to the organization via a browser,
-  // then use UiPathOrch.
-  // To log in to the organization via a browser, first log out from the tenant, then open the
-  // organization's URL (without the tenant name at the end) in a browser and log in.
+  // To log in to the organization using UiPathOrch, first log in to the
+  // organization via a browser, then use UiPathOrch.
+  // To log in to the organization via a browser, first log out from the
+  // tenant, then open the organization's URL
+  // (without the tenant name at the end) in a browser and log in.
 
-  // In addition to Platform Management, you can also specify scopes for Document Understanding
-  // and TestManager.
+  // In addition to Platform Management, you can also specify scopes for
+  // Document Understanding and TestManager.
 
-  // Setting this to true allows connecting to the tenant while ignoring SSL errors.
+  // Setting this to true allows connecting to the tenant while ignoring
+  // SSL errors.
   "IgnoreSslErrors": false,
 
   "Proxy": {
@@ -45,12 +54,14 @@
   "PSDrives": [
 
     /* =========== Non-Confidential App Settings Sample =========== */
-    // After creating an external application in the Orchestrator administration page
-    // and adding user scopes for Orchestrator API Access, enter them in the "Scope" field below.
-    // Copy the Redirect URL from the global settings section of this file and paste it
-    // into the external application settings of your tenant.
+    // After creating an external application in the Orchestrator
+    // administration page and adding user scopes for Orchestrator
+    // API Access, enter them in the "Scope" field below.
+    // Copy the Redirect URL from the global settings section of this file
+    // and paste it into the external application settings of your tenant.
     {
-      // You can set any text for the Name. It is recommended to match it with the tenant name.
+      // You can set any text for the Name.
+      // It is recommended to match it with the tenant name.
       "Name": "Orch1",
       "Description": "Non-Confidential App settings.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
@@ -60,15 +71,16 @@
     },
 
     /* ============= Confidential App Settings Sample ============= */
-    // A Confidential App is generally considered less secure than a Non-Confidential App
-    // because it requires storing an AppSecret in this configuration file.
-    // Since the AppSecret is a sensitive credential, there is a risk of exposure.
-    // Therefore, it should only be used for unattended script executions.
+    // A Confidential App is generally considered less secure than
+    // a Non-Confidential App because it requires storing an AppSecret in
+    // this configuration file. Since the AppSecret is a sensitive credential,
+    // there is a risk of exposure. Therefore, it should only be used for
+    // unattended script executions.
     //
-    // In the Orchestrator admin page, create an external application and add the required
-    // App Scopes for Orchestrator API Access to match or exceed the scopes listed below.
-    // No Redirect URL is needed.
-    // In this configuration, specify the Root, the issued AppId, and the AppSecret.
+    // In the Orchestrator admin page, create an external application and
+    // add the required App Scopes for Orchestrator API Access to match or
+    // exceed the scopes listed below. No Redirect URL is needed.
+    // In this configuration, specify Root, issued AppId, and AppSecret.
     {
       "Name": "Orch2",
       "Description": "Confidential App settings.",
@@ -80,8 +92,8 @@
     },
 
     /* ======= Username and Password Authentication Sample ======== */
-    // This authentication method is deprecated but is necessary when connecting to earlier
-    // versions of on-premises Orchestrator.
+    // This authentication method is deprecated but is necessary when
+    // connecting to earlier versions of on-premises Orchestrator.
     // Support for OAuth external applications was introduced in version 21.4.
     // Ensure that you specify YOUR_TENANT at the end of the URL.
     {
@@ -95,11 +107,12 @@
     },
 
     /* ========== Automation Suite Authentication Sample ========== */
-    // In this configuration, specify the Identity Server URL using the "IdentityUrl" key.
-    // For authentication-related settings, refer to the Non-Confidential App or Confidential App configurations.
+    // In this configuration, specify the Identity Server URL using
+    // the "IdentityUrl" key. For authentication-related settings, refer to
+    // the Non-Confidential App or Confidential App configurations.
     {
       "Name": "Orch4",
-      "Description": "For Automation Suite or Orchestrator deployed on Azure App Service.",
+      "Description": "For AS or Orchestrator deployed on Azure App Service.",
       "Root": "https://XXX.azurewebsites.net",
       "IdentityUrl": "https://YYY.azurewebsites.net/identity",
       "AppId": "YOUR_APP_ID",
@@ -108,8 +121,9 @@
     },
 
     /* ================== Proxy Settings Sample =================== */
-    // The "Proxy" section within this PSDrive will override the global proxy settings defined
-    // at the root level, allowing this PSDrive to use a different proxy configuration from the global settings.
+    // The "Proxy" section within this PSDrive will override the global
+    // proxy settings defined at the root level, allowing this PSDrive to use
+    // a different proxy configuration from the global settings.
     {
       "Name": "Orch5",
       "Description": "This configuration includes proxy settings.",

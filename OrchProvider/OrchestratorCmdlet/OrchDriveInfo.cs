@@ -33,7 +33,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     {
         get
         {
-            _NameColon ??= Name + Path.VolumeSeparatorChar;
+            _NameColon ??= Name + ':';
             return _NameColon;
         }
     }
@@ -41,7 +41,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     {
         get
         {
-            _NameColonSeparator ??= Name + Path.VolumeSeparatorChar + Path.DirectorySeparatorChar;
+            _NameColonSeparator ??= Name + ':' + Path.DirectorySeparatorChar;
             return _NameColonSeparator;
         }
     }
@@ -84,7 +84,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         {
             return "";
         }
-        int colonIndex = path.IndexOf(Path.VolumeSeparatorChar);
+        int colonIndex = path.IndexOf(':');
         if (colonIndex != -1)
         {
             return path[..colonIndex];
@@ -97,7 +97,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     public static string PSPathToOrchPath(string path)
     {
-        int colonIndex = path.IndexOf(Path.VolumeSeparatorChar);
+        int colonIndex = path.IndexOf(':');
         if (colonIndex != -1)
         {
             path = path[(colonIndex + 1)..];
@@ -2542,7 +2542,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     // このコンストラクタを実行するタイミングでは、NameColonSeparator は利用できない
     public OrchDriveInfo(ProviderInfo provider, PSDrive drive) :
-        base(drive.Name, provider, drive.Name + ":" + Path.DirectorySeparatorChar, drive.Description, null, drive.Root)
+        base(drive.Name, provider, drive.Name + ':' + Path.DirectorySeparatorChar, drive.Description, null, drive.Root)
     {
         _psDrive = drive;
         _psDrive.Root = _psDrive.Root?.TrimEnd('/');

@@ -337,7 +337,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
         IEnumerable<ExtendedMachine?> specifiedMachines,
         Int64 credentialStoreId)
     {
-        string target = $"{folder.GetPSPath()}\\{param.Name}"; // TODO: Path.Combine() で書き直す
+        string target = System.IO.Path.Combine(folder.GetPSPath(), param.Name?[0] ?? "");
         //string target = System.IO.Path.Combine(folder.GetPSPath(), param.Name!);
         bool isDirty = false;
 
@@ -695,7 +695,6 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                 var drivesFolders = OrchDriveInfo.EnumFolders([WildcardPattern.Escape(asset.Path!)]);
                 var (drive, folder) = drivesFolders[0];
 
-                //var target = $"{folder.GetPSPath()}\\{asset.Name}";
                 var target = asset.GetPSPath();
 
                 reporter.WriteProgress(++index, $"{index:D}/{parameterSets.Count}");

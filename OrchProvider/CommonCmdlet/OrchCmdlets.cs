@@ -292,7 +292,10 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         var dstFolder = dstDrive.GetFolders().FirstOrDefault(f => string.Compare(f.FullyQualifiedName, strDstFolder, StringComparison.OrdinalIgnoreCase) == 0);
         if (dstFolder is null)
         {
-            strDstFolder = strDstFolder.Replace('/', '\\');
+            if ('/' != System.IO.Path.DirectorySeparatorChar)
+            {
+                strDstFolder = strDstFolder.Replace('/', System.IO.Path.DirectorySeparatorChar);
+            }
             WriteError(new ErrorRecord(
                 new OrchException(srcFolder.GetPSPath(), $"{dstDrive.NameColonSeparator}{strDstFolder} does not exist."),
                 "NoCorrespondingDstFolderError",
