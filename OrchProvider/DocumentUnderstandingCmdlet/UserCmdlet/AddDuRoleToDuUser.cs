@@ -9,8 +9,7 @@ using TPositional = UiPath.PowerShell.Positional.Name_Role;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Add, "DuRoleToDuUser", SupportsShouldProcess = true)]
-[OutputType(typeof(Entities.DuUser))]
-class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
+public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DuUserNameCompleter<TPositional>))]
@@ -29,8 +28,7 @@ class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
-    // この RoleCompleter は、ユーザーにアサインされていないロールだけを列挙したい
-    // けど、ユーザーが多いと処理が遅くなるかな？
+    // この RoleCompleter は、ユーザーにアサインされていないロールだけを列挙する
     private class RoleCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -40,35 +38,38 @@ class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDuDrives(fakeBoundParameters);
-            //var drivesProjects = OrchDuDriveInfo.EnumFolders(Path, Recurse.IsPresent);
+            //var drives = ResolveDuDrives(fakeBoundParameters);
+            var drivesProjects = ResolveDuPath(commandAst, fakeBoundParameters);
 
-            //var (drive, project) = dp;
-            //var partitionGlobalId = drive.ParentDrive.GetPartitionGlobalId();
-            //var (_, tenantKey) = drive.ParentDrive.GetTenantId();
-            //return drive.GetDuUsers(partitionGlobalId, tenantKey, project);
+            // この名前のユーザーにアサイン済みの Role は除外する
+            var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
-
-            // この名前のユーザーにアサイン済みのロールは除外したい
-            // けど、いったん実装は先送り。。
-            //var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
-
-            // パラメータで選択済みの Name は、候補から除外する
+            // パラメータで選択済みの Role は除外する
             var wpRole = CreateWPListFromParameter(commandAst, "Role", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.GetDuRoles());
+            var results = ParallelResults.ForEach(drivesProjects, dp => dp.drive.GetDuRoles());
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (!result.TryGetValue(out var roles)) continue;
+                if (roles is null) continue;
 
-                foreach (var role in entities!
+                var (drive, project) = result.Source;
+
+                var users = drive.GetDuUsers(project)
+                    .FilterByWildcards(u => u?.displayName, wpName).ToList();
+
+                foreach (var role in roles
                     .Where(e => wp.IsMatch(e?.name))
                     .ExcludeByWildcards(e => e?.name!, wpRole)
                     .OrderBy(e => e?.name))
                 {
+                    // 対象のすべてのユーザーについて、このロールがアサイン済みであれば表示しない
+                    // これだと、Inherited のロールも表示しないけど、いいか。
+                    if (users.All(u => u.roleAssignmentDtos?.Select(r => r.roleId).Contains(role.id) ?? false)) continue;
+
                     string tiphelp = role.GetPSPath();
                     yield return new CompletionResult(PathTools.EscapePSText(role.name), role.name, CompletionResultType.Text, tiphelp);
                 }
@@ -85,14 +86,8 @@ class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
         using var results = OrchThreadPool.RunForEach(drivesProjects,
             dp => dp.project.GetPSPath(),
             dp => dp.project,
-            dp =>
-            {
-                var (drive, project) = dp;
-                var partitionGlobalId = drive.ParentDrive.GetPartitionGlobalId();
-                var (_, tenantKey) = drive.ParentDrive.GetTenantId();
-                return drive.GetDuUsers(partitionGlobalId, tenantKey, project);
-            });
-
+            dp => dp.drive.GetDuUsers(dp.project));
+ 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)
         {
@@ -121,13 +116,14 @@ class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
                     }
                     else
                     {
-                        rolesToAdd = targetRoles
-                            .Where(ar => !existingRoles.Any(er => string.Compare(er.roleName, ar.name, true) == 0));
+                        rolesToAdd = targetRoles.Where(tr => existingRoles.All(er => er.roleId != tr.id)).ToList();
                     }
 
                     if (!rolesToAdd.Any()) continue;
 
-                    if (ShouldProcess(user.GetPSPath(), "Add DuRoleToDuUser"))
+                    string target = $"User: '{user.GetPSPath()}' Roles: {string.Join(", ", rolesToAdd.Select(r => $"'{r.name}'"))}";
+
+                    if (ShouldProcess(target, "Add DuRoleToDuUser"))
                     {
                         try
                         {
@@ -153,6 +149,7 @@ class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
                             }
 
                             drive.OrchAPISession.SetDuRoleToDuUser(partitionGlobalId, tenantKey, project.id, payload);
+                            drive._dicDuUsers?.Remove((partitionGlobalId, tenantKey, project.id)!);
                         }
                         catch (Exception ex)
                         {

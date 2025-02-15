@@ -11,6 +11,9 @@ Locale: en-US
 {{ Fill in the Description }}
 
 ## UiPathOrch Cmdlets
+### [Add-DuRoleToDuUser](Add-DuRoleToDuUser.md)
+Adds roles to users in Document Understanding projects.
+
 ### [Add-OrchAssetLink](Add-OrchAssetLink.md)
 Adds links to the specified assets.
 
@@ -469,6 +472,9 @@ Creates triggers.
 
 ### [Redo-OrchQueueItem](Redo-OrchQueueItem.md)
 Retries failed transaction items in the specified queues.
+
+### [Remove-DuRoleFromDuUser](Remove-DuRoleFromDuUser.md)
+Removes roles from users in Document Understanding projects.
 
 ### [Remove-OrchActionCatalog](Remove-OrchActionCatalog.md)
 Removes the action catalogs.

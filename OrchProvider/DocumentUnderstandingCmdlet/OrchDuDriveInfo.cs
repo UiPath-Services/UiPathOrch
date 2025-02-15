@@ -273,8 +273,10 @@ public class OrchDuDriveInfo : PSDriveInfo
 
     internal Dictionary<(string partitionGlobalId, string tenantKey, string projectId), DuUser[]>? _dicDuUsers = null;
     internal readonly ExceptionsCachePer<(string partitionGlobalId, string tenantKey, string projectId)> _dicDuUsers_Exceptions = new();
-    public DuUser[] GetDuUsers(string? partitionGlobalId, string? tenantKey, DuProject? project)
+    public DuUser[] GetDuUsers(DuProject? project)
     {
+        var partitionGlobalId = ParentDrive.GetPartitionGlobalId();
+        var tenantKey = ParentDrive.GetTenantId().key;
         if (partitionGlobalId is null || tenantKey is null || project is null || project.id is null) return [];
 
         _dicDuUsers_Exceptions.ThrowCachedExceptionIfAny((partitionGlobalId, tenantKey, project.id));

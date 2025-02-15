@@ -31,13 +31,7 @@ public class GetDuUserCommand : OrchestratorPSCmdlet
         using var results = OrchThreadPool.RunForEach(drivesProjects,
             dp => dp.project.GetPSPath(),
             dp => dp.project,
-            dp =>
-            {
-                var (drive, project) = dp;
-                var partitionGlobalId = drive.ParentDrive.GetPartitionGlobalId();
-                var (_, tenantKey) = drive.ParentDrive.GetTenantId();
-                return drive.GetDuUsers(partitionGlobalId, tenantKey, project);
-            });
+            dp => dp.drive.GetDuUsers(dp.project));
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)

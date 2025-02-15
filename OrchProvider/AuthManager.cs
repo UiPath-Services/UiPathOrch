@@ -315,7 +315,7 @@ internal class OrchestratorAuthManager
                         if (!string.IsNullOrEmpty(authorizationCode))
                         {
                             // Send a response back to the browser
-                            using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("OrchProvider.MountSuccessNotification.html");
+                            using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("OrchProvider.Resources.en.MountSuccessNotification.html");
                             using StreamReader reader = new(stream!);
                             string htmlTemplate = await reader.ReadToEndAsync();
 

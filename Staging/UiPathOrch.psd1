@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.10.0'
+ModuleVersion = '0.9.10.1'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -326,6 +326,9 @@ CmdletsToExport = @(
 'Get-DuClassifier',
 'Get-DuExtractor',
 
+'Add-DuRoleToDuUser',
+'Remove-DuRoleFromDuUser',
+
 'Get-TmConfiguration',
 'Get-TmProjectSetting',
 'Get-TmProjectPermission',
@@ -379,9 +382,12 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- It now works with PowerShell 7 on Linux. Its functionality was verified on Ubuntu.
+        ReleaseNotes = '- The Add-DuRoleToDuUser and Remove-DuRoleFromDuUser cmdlets have been added.  
+  - These cmdlets are used to assign and remove roles for users in Document Understanding projects.
 
-- The configuration file template''s newline characters were set to CRLF, but have been changed to LF.
+  - Please note that these cmdlets operate on folders (projects) in the PS drives of the UiPathOrchDu provider as their target.  
+
+  - The PS drives of the UiPathOrchDu provider are automatically mounted when scopes starting with Du are specified in the configuration file.
 '
 
         # Prerelease string of this module
