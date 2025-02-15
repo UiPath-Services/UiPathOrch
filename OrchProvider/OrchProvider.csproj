@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <BaseOutputPath></BaseOutputPath>
     <AssemblyName>UiPath.PowerShell.OrchProvider</AssemblyName>
-    <Version>0.9.10.0</Version>
+    <Version>0.9.10.1</Version>
     <GenerateDocumentationFile>False</GenerateDocumentationFile>
   </PropertyGroup>
 
@@ -19,7 +19,7 @@
     <EmbeddedResource Include="bot\receiving.png" />
     <EmbeddedResource Include="bot\recording.png" />
     <EmbeddedResource Include="bot\searching.png" />
-    <EmbeddedResource Include="MountSuccessNotification.html" />
+    <EmbeddedResource Include="Resources\en\MountSuccessNotification.html" />
     <EmbeddedResource Include="Resources\de\UiPathOrchConfig.json" />
     <EmbeddedResource Include="Resources\en\UiPathOrchConfig.json" />
     <EmbeddedResource Include="Resources\fr\UiPathOrchConfig.json" />

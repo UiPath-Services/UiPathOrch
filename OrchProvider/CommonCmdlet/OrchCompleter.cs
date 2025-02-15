@@ -230,15 +230,13 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         return OrchDriveInfo.EnumFolders(paramPath, recurse, depth, includeRoot);
     }
 
-    //protected static List<(OrchDriveInfo drive, Folder folder)> ResolveDuPath(CommandAst commandAst, IDictionary fakeBoundParameters, bool includeRoot = false)
-    //{
-    //    var recurse = GetSwitchParameterValue(commandAst, "Recurse");
-    //    var paramDepth = GetParameterValue(commandAst, "Depth");
-    //    _ = uint.TryParse(paramDepth, out uint depth);
+    protected static List<(OrchDuDriveInfo drive, DuProject project)> ResolveDuPath(CommandAst commandAst, IDictionary fakeBoundParameters) //, bool includeRoot = false)
+    {
+        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
 
-    //    var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-    //    return OrchDriveInfo.EnumFolders(paramPath, recurse, depth, includeRoot);
-    //}
+        var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+        return OrchDuDriveInfo.EnumFolders(paramPath, recurse);
+    }
 
     protected static List<(OrchDriveInfo drive, Folder folder)> ResolvePathWithoutPersonalWorkspace(CommandAst commandAst, IDictionary fakeBoundParameters)
     {
@@ -2366,12 +2364,7 @@ internal class DuUserNameCompleter<TPositional> : OrchArgumentCompleter where TP
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults.ForEach(drivesProjects, dp => {
-            var (drive, project) = dp;
-            var partitionGlobalId = drive.ParentDrive.GetPartitionGlobalId();
-            var (_, tenantKey) = drive.ParentDrive.GetTenantId();
-            return drive.GetDuUsers(partitionGlobalId, tenantKey, project);
-        });
+        var results = ParallelResults.ForEach(drivesProjects, dp => dp.drive.GetDuUsers(dp.project));
 
         foreach (var result in results)
         {

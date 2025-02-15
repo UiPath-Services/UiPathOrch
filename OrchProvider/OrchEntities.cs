@@ -3791,12 +3791,12 @@ public class DuRole // added by UiPathOrch swagger doc にない。
 
 public class RoleAssignmentDto // added by UiPathOrch swagger doc にない。
 {
-    public string? id { get; set; }
+    public Guid? id { get; set; }
     public string? securityPrincipalId { get; set; }
     public string? securityPrincipalType { get; set; }
     public string? type { get; set; }
     public string? scope { get; set; }
-    public string? roleId { get; set; }
+    public Guid? roleId { get; set; }
     public string? roleName { get; set; }
     public string? roleType { get; set; }
     public string? createdBy { get; set; }
@@ -3833,7 +3833,7 @@ public class DuRoleAssignment // added by UiPathOrch
 public class UserRoleAssignmentsCmd // added by UiPathOrch
 {
     public List<DuRoleAssignment>? roleAssignmentsToAdd { get; set; }
-    public List<DuRoleAssignment>? roleAssignmentsToDelete { get; set; }
+    public List<Guid>? roleAssignmentsToDelete { get; set; }
 }
 
 // UiPath.DocumentUnderstanding.Framework.Api.Controllers.Model.Discovery.Project

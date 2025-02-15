@@ -11,6 +11,9 @@ Locale: en-US
 {{ Fill in the Description }}
 
 ## UiPathOrch Cmdlets
+### [Add-DuRoleToDuUser](Add-DuRoleToDuUser.md)
+Document Understanding プロジェクトのユーザーに、ロールを追加します。
+
 ### [Add-OrchAssetLink](Add-OrchAssetLink.md)
 リンクをアセットに追加します。
 
@@ -469,6 +472,9 @@ Identity Server にグループを作成します。
 
 ### [Redo-OrchQueueItem](Redo-OrchQueueItem.md)
 指定したキューに含まれる、失敗したトランザクションアイテムをリトライします。
+
+### [Remove-DuRoleFromDuUser](Remove-DuRoleFromDuUser.md)
+Document Understanding プロジェクトのユーザーから、ロールを削除します。
 
 ### [Remove-OrchActionCatalog](Remove-OrchActionCatalog.md)
 アクションカタログを削除します。

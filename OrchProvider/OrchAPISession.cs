@@ -2891,6 +2891,7 @@ public class OrchAPISession : IDisposable
         return results?.results;
     }
 
+    // 何も返さない
     public void SetDuRoleToDuUser(string? partitionGlobalId, string? tenantKey, string? projectId, UserRoleAssignmentsCmd payload)
     {
         Uri uri = new(_base_url);
