@@ -24,13 +24,12 @@ internal class OrchestratorAuthManager
         get { return _isConfidentialApp; }
     }
 
-    public string? IdentityUrl;
+    //public string? IdentityUrl;
 
     private string? _access_token;
     private string? _refresh_token;
 
     internal bool IsAuthenticated => !string.IsNullOrEmpty(_access_token);
-    internal bool IsCloud => _drive._psDrive.Root?.Contains("uipath.com", StringComparison.InvariantCultureIgnoreCase) ?? false;
 
     internal string? AccessToken => _access_token;
 
@@ -44,10 +43,10 @@ internal class OrchestratorAuthManager
         // 設定されてしまうと、なんだかうまくいかないな。。
         //_isUserScope = !string.IsNullOrEmpty(_drive.RedirectUrl);
         _isUserPassword = !string.IsNullOrEmpty(_drive._psDrive.Password);
-        IdentityUrl = _drive._psDrive.IdentityUrl?.TrimEnd('/');
+        //IdentityUrl = _drive._psDrive.IdentityUrl?.TrimEnd('/');
 
         //_baseUrl = (_drive.Root!.Contains("uipath.com", StringComparison.InvariantCultureIgnoreCase)
-        _baseUrl = IsCloud ? _drive!._psDrive.Root!.Substring(0, _drive._psDrive.Root.IndexOf("uipath.com") + "uipath.com".Length)
+        _baseUrl = drive._psDrive.IsCloud ? _drive!._psDrive.Root!.Substring(0, _drive._psDrive.Root.IndexOf("uipath.com") + "uipath.com".Length)
             : _drive._psDrive.Root!.TrimEnd('/');
 
         if (_isUserPassword) /////////////////////// Non-Conf User Scope
@@ -63,9 +62,6 @@ internal class OrchestratorAuthManager
             _onpremiseTenancy = _baseUrl.Substring(lastSlashIndex + 1).TrimEnd('/');
             _baseUrl = _baseUrl.Substring(0, lastSlashIndex);
         }
-
-        if (!string.IsNullOrEmpty(drive._psDrive.RedirectUrl) && drive._psDrive.RedirectUrl!.EndsWith('/'))
-            _drive._psDrive.RedirectUrl = drive._psDrive.RedirectUrl!.TrimEnd('/');
     }
 
     public string RequestToken()
@@ -168,9 +164,9 @@ internal class OrchestratorAuthManager
     {
         string endPoint;
 
-        if (!string.IsNullOrEmpty(IdentityUrl))
+        if (!string.IsNullOrEmpty(_drive._psDrive.IdentityUrl))
         {
-            endPoint = IdentityUrl + "/connect/token";
+            endPoint = _drive._psDrive.IdentityUrl + "/connect/token";
         }
         else
         {
@@ -247,9 +243,9 @@ internal class OrchestratorAuthManager
     private string GetAuthorizationCode(string? codeVerifier)
     {
         string endPoint;
-        if (!string.IsNullOrEmpty(IdentityUrl))
+        if (!string.IsNullOrEmpty(_drive._psDrive.IdentityUrl))
         {
-            endPoint = IdentityUrl + "/connect/authorize";
+            endPoint = _drive._psDrive.IdentityUrl + "/connect/authorize";
         }
         else
         {
@@ -262,24 +258,10 @@ internal class OrchestratorAuthManager
             ? $"{endPoint}?response_type=code&client_id={_drive._psDrive.AppId}&scope={_drive._psDrive.Scope} offline_access&redirect_uri={WebUtility.UrlEncode(_drive._psDrive.RedirectUrl)}&code_challenge={GetHash(codeVerifier)}&code_challenge_method=S256"
             : $"{endPoint}?response_type=code&client_id={_drive._psDrive.AppId}&scope={_drive._psDrive.Scope} offline_access&redirect_uri={WebUtility.UrlEncode(_drive._psDrive.RedirectUrl)}";
 
-        // 自動で HttpListener プレフィックスを生成
-        string httpListenerPrefix;
-        if (!string.IsNullOrEmpty(_drive._psDrive.HttpListener))
-        {
-            // 設定ファイルの HttpListener の設定を尊重する
-            httpListenerPrefix = _drive._psDrive.HttpListener;
-        }
-        else
-        {
-            // 設定ファイルに HttpListener がない場合は、自動生成する
-            Uri redirectUri = new(_drive._psDrive.RedirectUrl!);
-            httpListenerPrefix = $"{redirectUri.Scheme}://{redirectUri.Host}:{redirectUri.Port}{redirectUri.AbsolutePath}/";
-        }
-
         using var listener = new HttpListener();
         try
         {
-            listener.Prefixes.Add(httpListenerPrefix);
+            listener.Prefixes.Add(_drive._psDrive.HttpListener!);
             listener.Start();
         }
         catch (HttpListenerException ex)
@@ -295,7 +277,7 @@ internal class OrchestratorAuthManager
         Process.Start(new ProcessStartInfo(authUrl) { UseShellExecute = true });
 
         string? authorizationCode = null;
-        Exception capturedException = null;
+        Exception? capturedException = null;
 
         // Manage the Ctrl+C event with ConsoleCancelHandler
         using var consoleCancelHandler = new ConsoleCancelHandler();

@@ -74,7 +74,7 @@ public class RateLimiter : IDisposable
     }
 }
 
-public class OrchAPISession : IDisposable
+public partial class OrchAPISession : IDisposable
 {
     private readonly HttpClient _httpClient;
     private HttpClient HttpClient
@@ -89,27 +89,33 @@ public class OrchAPISession : IDisposable
     // 1秒間の間に送出できるリクエスト数を15に制限
     private readonly RateLimiter limitter = new(15);
 
-    //private int http_call_num = 0; // for debug log
+    private int http_call_num = 0;
     private HttpResponseMessage HttpClient_Send(HttpRequestMessage message, CancellationToken cancellationToken = default)
     {
         //limitter.WaitAsync(cancellationToken).GetAwaiter().GetResult();
         limitter.Wait();
+        HttpResponseMessage ret = null;
+        DateTime reqTime = DateTime.Now;
+        DateTime resTime = reqTime;
+        int callId = Interlocked.Increment(ref http_call_num);
         try
         {
-            // すべての HTTP リクエストをコンソールにログ出力
-            //int num = Interlocked.Increment(ref http_call_num);
-            //Console.WriteLine($"HTTP#{num} {message.Method} {message.RequestUri}");
-
-            var ret = HttpClient!.Send(message, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-
-            // すべての HTTP レスポンスをコンソールにログ出力
-            //Console.WriteLine($"HTTP#{num} {(int)ret.StatusCode} {ret.ReasonPhrase}");
-
+            reqTime = DateTime.Now;
+            ret = HttpClient!.Send(message, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            resTime = DateTime.Now;
             return ret;
         }
         finally
         {
             limitter.Release();
+
+            var logging = _drive._psDrive.Logging;
+            bool logEnabled = logging?.Enabled.GetValueOrDefault() ?? false;
+            if (logEnabled)
+            {
+                string? combinedLogBlock = BuildCombinedLogBlock(reqTime, message, resTime, ret, callId, logging?.InternalLogLevel);
+                WriteLogBlock(combinedLogBlock);
+            }
         }
     }
 
@@ -133,6 +139,8 @@ public class OrchAPISession : IDisposable
 
     public OrchAPISession(OrchDriveInfo drive)
     {
+        _drive = drive;
+
         if (drive._psDrive.Proxy?.Enabled ?? false)
         {
             HttpClientHandler handler;
@@ -204,7 +212,7 @@ public class OrchAPISession : IDisposable
             _base_url = drive._psDrive.Root!;
         }
 
-        if (_authManager.IsCloud)
+        if (drive._psDrive.IsCloud)
         {
             int slashIndex = _base_url.LastIndexOf('/');
             _base_url_identity = string.Concat(_base_url.AsSpan(0, slashIndex), "/identity_");
@@ -216,20 +224,20 @@ public class OrchAPISession : IDisposable
             _base_url_portal = _base_url + "/portal";
         }
 
-        if (!string.IsNullOrEmpty(_authManager.IdentityUrl))
+        if (!string.IsNullOrEmpty(drive._psDrive.IdentityUrl))
         {
-            _base_url_identity = _authManager.IdentityUrl;
+            _base_url_identity = drive._psDrive.IdentityUrl;
         }
 
         _drive = drive;
     }
 
-    private static readonly object _authlock = new();
+    private static readonly object _authLock = new();
     internal void EnsureAuthenticated()
     {
         if (!_isAuthenticated)
         {
-            lock (_authlock)
+            lock (_authLock)
             {
                 if (!_isAuthenticated)
                 {
@@ -258,7 +266,7 @@ public class OrchAPISession : IDisposable
         DateTime now = DateTime.Now;
         if (now > _expiryTime.AddMinutes(-5))
         {
-            lock (_authlock)
+            lock (_authLock)
             {
                 if (now > _expiryTime.AddMinutes(-5))
                 {
@@ -1132,9 +1140,11 @@ public class OrchAPISession : IDisposable
         return HttpRequest<Job>(HttpMethod.Get, $"/odata/Jobs({jobId})?$expand=Robot,Machine,Release", folderId);
     }
 
-    public MachineRuntime[]? GetRuntimesForFolder(Int64 folderId)
+    public MachineRuntime[] GetRuntimesForFolder(Int64 folderId)
     {
-        return GetEnumerableWithoutPaging<MachineRuntime>($"/odata/Machines/UiPath.Server.Configuration.OData.GetRuntimesForFolder(folderId={folderId})", folderId);
+        var ret = GetEnumerableWithoutPaging<MachineRuntime>($"/odata/Machines/UiPath.Server.Configuration.OData.GetRuntimesForFolder(folderId={folderId})", folderId);
+        if (ret is null) return [];
+        return ret;
     }
 
     public Job[] StartJobs(Int64 folderId, string processKey, string? runtimeType, int? jobsCount, string? inputArguments)
@@ -1384,7 +1394,7 @@ public class OrchAPISession : IDisposable
         var request = new HttpRequestMessage(HttpMethod.Get, url);
 
         var response = HttpClient_Send(request);
-        response.EnsureSuccessStatusCode();
+        EnsureSuccessStatusCode(response);
 
         var contentDisposition = response.Content.Headers.ContentDisposition;
 
@@ -1414,11 +1424,15 @@ public class OrchAPISession : IDisposable
 
     public (string? FileName, byte[] FileContent) DownloadPackage(string feedId, string packageId, string packageVersion)
     {
-        string url = _base_url + $"/odata/Processes/UiPath.Server.Configuration.OData.DownloadPackage(key='{HttpUtility.UrlEncode(packageId)}:{packageVersion}')?feedId={feedId}";
+        string url = _base_url + $"/odata/Processes/UiPath.Server.Configuration.OData.DownloadPackage(key='{HttpUtility.UrlEncode(packageId)}:{packageVersion}')";
+        if (!string.IsNullOrEmpty(feedId))
+        {
+            url += $"?feedId={feedId}";
+        }
         var request = new HttpRequestMessage(HttpMethod.Get, url);
 
         var response = HttpClient_Send(request);
-        response.EnsureSuccessStatusCode();
+        EnsureSuccessStatusCode(response);
 
         var contentDisposition = response.Content.Headers.ContentDisposition;
 
@@ -2155,7 +2169,7 @@ public class OrchAPISession : IDisposable
         request.Headers.Add("X-UIPATH-OrganizationUnitId", folderId.ToString());
 
         var response = await _httpClient.SendAsync(request);
-        response.EnsureSuccessStatusCode();
+        EnsureSuccessStatusCode(response);
 
         var contentDisposition = response.Content.Headers.ContentDisposition;
 
@@ -2528,7 +2542,7 @@ public class OrchAPISession : IDisposable
 
     public IEnumerable<PmUser> GetPmUsers(string partitionGlobalId)
     {
-        if (_authManager.IsCloud)
+        if (_drive._psDrive.IsCloud)
         {
             //return GetEnumerableIdentity<PmUser>($"/api/User/users/{partitionGlobalId}");
 

@@ -1,7 +1,21 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Management.Automation;
+using System.Text.RegularExpressions;
 using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Core;
+
+internal class PathInfoComparer : IEqualityComparer<PathInfo>
+{
+    bool IEqualityComparer<PathInfo>.Equals(PathInfo? x, PathInfo? y)
+    {
+        return StringComparer.OrdinalIgnoreCase.Equals(x!.Path, y!.Path);
+    }
+
+    int IEqualityComparer<PathInfo>.GetHashCode(PathInfo obj)
+    {
+        return obj.GetHashCode();
+    }
+}
 
 internal class FolderComparer : IComparer<Folder?>
 {

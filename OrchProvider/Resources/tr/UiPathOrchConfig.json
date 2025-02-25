@@ -30,6 +30,15 @@
   // Platform Yönetimi dışında, Document Understanding ve TestManager için
   // de kapsamlar belirtebilirsiniz.
 
+  // HTTP günlükleri çıkartılabilir.  
+  // Günlük çıktı klasörünü açmak için Open-OrchLogLocation
+  // cmdlet'ini çalıştırın.
+  "Logging": {
+    // Belirtilen seviyeler şunlardır: Error, Info, Trace ve Verbose.
+    "Level": "Info",
+    "Enabled": false
+  },
+
   // Bunu true olarak ayarlamak, SSL hatalarını yoksayarak kiracıya bağlanmaya
   // izin verir.
   "IgnoreSslErrors": false,

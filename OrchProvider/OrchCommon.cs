@@ -112,19 +112,6 @@ public static class PathTools
     }
 }
 
-public class PathInfoComparar : IEqualityComparer<PathInfo>
-{
-    bool IEqualityComparer<PathInfo>.Equals(PathInfo? x, PathInfo? y)
-    {
-        return StringComparer.OrdinalIgnoreCase.Equals(x!.Path, y!.Path);
-    }
-
-    int IEqualityComparer<PathInfo>.GetHashCode(PathInfo obj)
-    {
-        return obj.GetHashCode();
-    }
-}
-
 public class ConsoleCancelHandler : IDisposable
 {
     private readonly CancellationTokenSource _cts;

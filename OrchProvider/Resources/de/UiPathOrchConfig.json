@@ -35,6 +35,15 @@
   // Zusätzlich zu "Platform Management" können auch Scopes für
   // Document Understanding und TestManager angegeben werden.
 
+  // HTTP-Protokolle können ausgegeben werden. 
+  // Um den Protokollausgabefolder zu öffnen, führen Sie das
+  // Cmdlet Open-OrchLogLocation aus.
+  "Logging": {
+    // Die verfügbaren Stufen sind Error, Info, Trace und Verbose.
+    "Level": "Info",
+    "Enabled": false
+  },
+
   // Wenn dieser Wert auf "true" gesetzt wird, können Sie sich mit dem Tenant
   // verbinden, indem SSL-Fehler ignoriert werden.
   "IgnoreSslErrors": false,

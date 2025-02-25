@@ -34,6 +34,15 @@
   // En plus de la gestion de plateforme, vous pouvez également spécifier des
   // scopes pour Document Understanding et TestManager.
 
+  // Les journaux HTTP peuvent être générés. 
+  // Pour ouvrir le dossier de sortie des journaux, exécutez
+  // le cmdlet Open-OrchLogLocation.
+  "Logging": {
+    // Les niveaux disponibles sont Error, Info, Trace et Verbose.
+    "Level": "Info",
+    "Enabled": false
+  },
+
   // Définir cette valeur sur true permet de se connecter au locataire en
   // ignorant les erreurs SSL.
   "IgnoreSslErrors": false,

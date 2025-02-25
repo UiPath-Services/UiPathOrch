@@ -35,6 +35,15 @@
   // Pe lângă Platform Management, puteți specifica și domenii pentru
   // Document Understanding și TestManager.
 
+  // Jurnalele HTTP pot fi generate.  
+  // Pentru a deschide folderul de ieșire al jurnalelor, rulați
+  // cmdlet-ul Open-OrchLogLocation.
+  "Logging": {
+    // Nivelurile disponibile sunt Error, Info, Trace și Verbose.
+    "Level": "Info",
+    "Enabled": false
+  },
+
   // Setarea acestei valori la "true" permite conectarea la tenant
   // ignorând erorile SSL.
   "IgnoreSslErrors": false,

@@ -2267,6 +2267,15 @@ public class Release
     public Int64? RetentionBucketId { get; set; } // ISSUE: this is not mentioned in swagger.
 }
 
+// added by UiPathOrch
+public class InputArgument
+{
+    public string? name { get; set; }
+    public string? type { get; set; }
+    public bool? required { get; set; }
+    public bool? hasDefault { get; set; }
+}
+
 // ReleaseRetentionSettingDto
 public class ReleaseRetentionSetting
 {

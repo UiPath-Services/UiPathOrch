@@ -470,6 +470,9 @@ Identity Server にグループを作成します。
 ### [Open-OrchJob](Open-OrchJob.md)
 ジョブをブラウザーで開きます。
 
+### [Open-OrchLogLocation](Open-OrchLogLocation.md)
+UiPathOrch コマンドレットの HTTP ログが出力されるフォルダーを開きます。
+
 ### [Redo-OrchQueueItem](Redo-OrchQueueItem.md)
 指定したキューに含まれる、失敗したトランザクションアイテムをリトライします。
 

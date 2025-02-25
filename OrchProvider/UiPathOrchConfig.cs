@@ -1,4 +1,6 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Net;
+using System.Text.RegularExpressions;
+using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Core;
 
@@ -22,32 +24,101 @@ public class ProxySettings
     public bool? Enabled { get; set; }
 }
 
+public enum LoggingLevel
+{
+    Error,
+    Info,
+    Trace,
+    Verbose
+}
+
+public class LoggingSettings
+{
+    public bool? Enabled { get; set; }
+
+    private LoggingLevel? _level;
+    public string? Level
+    {
+        get => _level?.ToString();
+        set => _level = value?.Trim().ToLower() switch
+        {
+            null
+                => null,
+            "error"
+                => LoggingLevel.Error,
+            "info" or "information"
+                => LoggingLevel.Info,
+            "trace"
+                => LoggingLevel.Trace,
+            "verbose"
+                => LoggingLevel.Verbose,
+            _ => throw new ArgumentException("Invalid logging level. Valid values are: Error, Info, Trace, Verbose.")
+        };
+    }
+    public LoggingLevel? InternalLogLevel => _level;
+}
+
 public class PSDrive
 {
     public string? Name { get; set; }
     public string? Description { get; set; }
-    public string? Root { get; set; } // これ、BaseUrl と TenancyName に分けて指定できるようにしたいが、
+
+    // これ、BaseUrl と TenancyName に分けて指定できるようにしたいが、
+    private string? _root;
+    public string? Root
+    {
+        get => _root;
+        set
+        {
+            _root = value;
+            _isCloud = _root?.Contains("uipath.com", StringComparison.InvariantCultureIgnoreCase) ?? false;
+        }
+    }
+
     //public string? BaseUrl { get; set; }
     //public string? TenancyName { get; set; }
-    public string? IdentityUrl { get; set; }
+
+    private string? _identityUrl;
+    public string? IdentityUrl
+    {
+        get => _identityUrl;
+        set => _identityUrl = value?.TrimEnd('/');
+    }
+
     public string? AppId { get; set; }
     public string? AppSecret { get; set; }
-    public string? RedirectUrl { get; set; }
+
+    private string? _redirectUrl;
+    public string? RedirectUrl
+    {
+        get => _redirectUrl;
+        set => _redirectUrl = value?.TrimEnd('/');
+    }
+
     public string? HttpListener { get; set; }
+
     private string? _scope;
     public string? Scope
     {
         get => _scope;
-        set => _scope = value is not null ? ShortenScope(value) : null;
+        set => _scope = ShortenScope(value);
     }
+
     public string? Username { get; set; }
     public string? Password { get; set; }
     public bool? Enabled { get; set; }
     public ProxySettings? Proxy { get; set; }
     public bool? IgnoreSslErrors { get; set; }
 
-    internal static string ShortenScope(string scope)
+    public LoggingSettings? Logging { get; set; }
+
+    private bool? _isCloud;
+    internal bool IsCloud => _isCloud.GetValueOrDefault();
+
+    internal static string? ShortenScope(string? scope)
     {
+        if (scope is null) return null;
+
         return string.Join(" ", Regex.Split(scope.Trim(), "\\s+")
             .Distinct()
             .Select(p => p.Split('.'))
@@ -56,6 +127,64 @@ public class PSDrive
                 ? g.Key
                 : string.Join(" ", g.Where(p => !g.Any(q => q.Length == 2)).Select(p => string.Join(".", p))))
             .Order());
+    }
+
+    internal void CascadePSDriveFromGlobalSettings(UiPathOrchConfig? globalSettings)
+    {
+        Name ??= globalSettings?.Name;
+        Description ??= globalSettings?.Description;
+        Root ??= globalSettings?.Root;
+        IdentityUrl ??= globalSettings?.IdentityUrl;
+        AppId ??= globalSettings?.AppId;
+        AppSecret ??= globalSettings?.AppSecret;
+        RedirectUrl ??= globalSettings?.RedirectUrl;
+        HttpListener ??= globalSettings?.HttpListener;
+        Scope ??= globalSettings?.Scope;
+        Username ??= globalSettings?.Username;
+        Password ??= globalSettings?.Password;
+        IgnoreSslErrors ??= globalSettings?.IgnoreSslErrors;
+        Enabled ??= globalSettings?.Enabled;
+
+        // 自動で HttpListener プレフィックスを生成
+        if (string.IsNullOrEmpty(HttpListener))
+        {
+            // 設定ファイルに HttpListener がない場合は、RedirectUrl から自動生成する
+            Uri redirectUri = new(RedirectUrl!);
+            HttpListener = $"{redirectUri.Scheme}://{redirectUri.Host}:{redirectUri.Port}{redirectUri.AbsolutePath}/";
+        }
+
+        // ここで自動で IdentityUrl を生成したいのだけど、何だか分からなくなった。。
+        //if (string.IsNullOrEmpty(IdentityUrl))
+        //{
+        //    IdentityUrl = IsCloud ?
+        //        _baseUrl + "/identity_/connect/token" :
+        //        _baseUrl + "/identity/connect/token";
+        //}
+
+        if (Proxy == null)
+        {
+            Proxy = globalSettings?.Proxy;
+        }
+        else
+        {
+            Proxy.Url ??= globalSettings?.Proxy?.Url;
+            Proxy.BypassProxyOnLocal ??= globalSettings?.Proxy?.BypassProxyOnLocal;
+            Proxy.UseDefaultCredentials ??= globalSettings?.Proxy?.UseDefaultCredentials;
+            Proxy.Credentials ??= new();
+            Proxy.Credentials.Username ??= globalSettings?.Proxy?.Credentials?.Username;
+            Proxy.Credentials.Password ??= globalSettings?.Proxy?.Credentials?.Password;
+            Proxy.Enabled ??= globalSettings?.Proxy?.Enabled;
+        }
+
+        if (Logging == null)
+        {
+            Logging = globalSettings?.Logging;
+        }
+        else
+        {
+            Logging.Enabled ??= globalSettings?.Logging?.Enabled;
+            Logging.Level ??= globalSettings?.Logging?.Level;
+        }
     }
 }
 

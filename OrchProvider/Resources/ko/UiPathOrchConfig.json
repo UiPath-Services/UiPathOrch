@@ -30,6 +30,14 @@
   // 플랫폼 관리 외에도 Document Understanding 및 TestManager에 대한
   // Scope를 지정할 수 있습니다.
 
+  // HTTP 로그를 출력할 수 있습니다.  
+  // 로그 출력 폴더를 열려면 Open-OrchLogLocation cmdlet을 실행하세요.
+  "Logging": {
+    // 설정할 수 있는 로그 레벨은 Error, Info, Trace, Verbose 중 하나입니다.
+    "Level": "Info",
+    "Enabled": false
+  },
+
   // 이 값을 true로 설정하면 SSL 오류를 무시하고 테넌트에 연결할 수 있습니다.
   "IgnoreSslErrors": false,
 

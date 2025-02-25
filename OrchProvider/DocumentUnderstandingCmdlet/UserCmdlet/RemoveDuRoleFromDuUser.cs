@@ -80,7 +80,7 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
     {
         var drivesProjects = OrchDuDriveInfo.EnumFolders(Path, Recurse.IsPresent);
         var wpName = Name.ConvertToWildcardPatternList();
-        var wpRole = Role.ConvertToWildcardPatternList();
+        var wpRole = Role.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
 
         using var results = OrchThreadPool.RunForEach(drivesProjects,
             dp => dp.project.GetPSPath(),
