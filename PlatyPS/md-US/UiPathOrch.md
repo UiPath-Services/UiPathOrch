@@ -470,6 +470,9 @@ Creates triggers.
 ### [Open-OrchJob](Open-OrchJob.md)
 {{ Fill in the Synopsis }}
 
+### [Open-OrchLogLocation](Open-OrchLogLocation.md)
+Opens the folder where the HTTP logs of UiPathOrch cmdlets are output.
+
 ### [Redo-OrchQueueItem](Redo-OrchQueueItem.md)
 Retries failed transaction items in the specified queues.
 

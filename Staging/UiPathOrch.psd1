@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.10.1'
+ModuleVersion = '0.9.10.2'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -346,7 +346,8 @@ CmdletsToExport = @(
 'Clear-OrchCache',
 'Edit-OrchConfig',
 'Get-OrchPSDrive',
-'Set-OrchLocation'
+'Set-OrchLocation',
+'Open-OrchLogLocation'
 )
 
 # Variables to export from this module
@@ -382,12 +383,26 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- The Add-DuRoleToDuUser and Remove-DuRoleFromDuUser cmdlets have been added.  
-  - These cmdlets are used to assign and remove roles for users in Document Understanding projects.
+        ReleaseNotes = '- HTTP logging is now available.
+  - Add the following to the global settings in the configuration file. This can be overridden in each PSDrive setting.
+    "Logging": {
+      "Level": "Info",
+      "Enabled": true
+    }
 
-  - Please note that these cmdlets operate on folders (projects) in the PS drives of the UiPathOrchDu provider as their target.  
+  - The following values can be specified for Level:
+    - Error: Outputs logs equivalent to Verbose only when the response status is not 200.
+    - Info: Outputs a one-line summary for all requests and responses.
+    - Trace: Outputs only request headers that contain "UIPATH" in their name, along with the request body and response body.
+    - Verbose: Outputs all request headers, request bodies, response headers, and response bodies.
 
-  - The PS drives of the UiPathOrchDu provider are automatically mounted when scopes starting with Du are specified in the configuration file.
+  - The folder where logs are output can be opened using the Open-OrchLogLocation cmdlet.
+
+- The completer for the -InputArguments parameter of Start-OrchJob cmdlet now functions correctly.
+
+- Fixed an issue where an incorrect message was displayed when an error occurred during library and package downloads.
+
+- The Get-OrchPSDrive cmdlet did not output automatically configured HttpListener when HttpListener was not specified in the configuration file.
 '
 
         # Prerelease string of this module

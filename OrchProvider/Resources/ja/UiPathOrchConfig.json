@@ -27,6 +27,14 @@
   // Platform Management のほか、Document Understanding や TestManager の
   // スコープも指定できます。
 
+  // HTTP ログを出力できます。
+  // ログ出力フォルダを開くには、Open-OrchLogLocation cmdlet を実行します。
+  "Logging": {
+    // 指定できるレベルは、Error, Info, Trace, Verbose のいずれかです。
+    "Level": "Info",
+    "Enabled": false
+  },
+
   // 下記を true に設定すると、SSL エラーを無視してテナントに接続できます。
   "IgnoreSslErrors": false,
 

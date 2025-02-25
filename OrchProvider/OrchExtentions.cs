@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Management.Automation;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using UiPath.PowerShell.Commands;
@@ -578,4 +579,18 @@ public static class OrchStringExtensions
     //        return null;
     //    }
     //}
-} 
+    public static StringBuilder AppendLineLf(this StringBuilder sb)
+    {
+        return sb.Append('\n');
+    }
+
+    /// <summary>
+    /// LF 改行（\n）を使用して、指定された文字列と改行を追加します。
+    /// </summary>
+    public static StringBuilder AppendLineLf(this StringBuilder sb, string? value)
+    {
+        sb.Append(value);
+        sb.Append('\n');
+        return sb;
+    }
+}

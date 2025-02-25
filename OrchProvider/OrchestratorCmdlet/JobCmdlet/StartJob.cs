@@ -1,8 +1,10 @@
 ﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using UiPath.PowerShell.Core;
+using System.Text.Json;
 using UiPath.PowerShell.Completer;
+using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
 using TPositional = UiPath.PowerShell.Positional.Name_RuntimeType_JobsCount;
 
@@ -33,7 +35,7 @@ public class StartJobCommand : OrchestratorPSCmdlet
     ];
 
     [Parameter(Position = 0, Mandatory = true)]
-    [ArgumentCompleter(typeof(NameCompleter))]
+    [ArgumentCompleter(typeof(ProcessNameCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
@@ -59,41 +61,6 @@ public class StartJobCommand : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
-    private class NameCompleter : OrchArgumentCompleter
-    {
-        public override IEnumerable<CompletionResult> CompleteArgument(
-            string commandName,
-            string parameterName,
-            string wordToComplete,
-            CommandAst commandAst,
-            IDictionary fakeBoundParameters)
-        {
-            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-
-            // パラメータで選択済みの Name は、候補から除外する
-            var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
-
-            var wp = CreateWPFromWordToComplete(wordToComplete);
-
-            foreach (var (drive, folder) in drivesFolders)
-            {
-                var processes = drive!.GetReleases(folder);
-                foreach (var proc in processes
-                    .Where(p => wp.IsMatch(p.Name))
-                    .ExcludeByWildcards(r => r?.Name, wpName)
-                    .OrderBy(proc => proc.Name))
-                {
-                    string tiphelp = proc.Name;
-                    if (!string.IsNullOrEmpty(proc.Description))
-                    {
-                        tiphelp += $" ({proc.Description})";
-                    }
-                    yield return new CompletionResult(PathTools.EscapePSText(proc.Name), proc.Name, CompletionResultType.ParameterValue, tiphelp);
-                }
-            }
-        }
-    }
-
     private class RuntimeTypeCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -105,15 +72,21 @@ public class StartJobCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // TODO: wordToComplete をワイルドカードにして、結果を絞り込む方が良い
+            var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            foreach (var (drive, folder) in drivesFolders)
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.RuntimesForFolder.Get(df.folder));
+
+            foreach (var result in results)
             {
-                var runtimeTypes = drive.OrchAPISession.GetRuntimesForFolder(folder.Id ?? 0);
-                foreach (var type in runtimeTypes?.Where(type => type.Total > 0) ?? [])
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var machineRuntime in entities!
+                    .Where(mr => wp.IsMatch(mr.Type))
+                    .Where(mr => mr.Total > 0)
+                    .OrderBy(mr => mr.Type))
                 {
-                    string tiphelp = $"{type.Available} Runtimes Available, {type.Connected} Connected";
-                    yield return new CompletionResult(type.Type, type.Type, CompletionResultType.ParameterValue, tiphelp);
+                    string tiphelp = $"{machineRuntime.Available} Runtimes Available, {machineRuntime.Connected} Connected";
+                    yield return new CompletionResult(machineRuntime.Type, machineRuntime.Type, CompletionResultType.ParameterValue, tiphelp);
                 }
             }
         }
@@ -134,21 +107,30 @@ public class StartJobCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            foreach (var (drive, folder) in drivesFolders)
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetReleases(df.folder));
+
+            foreach (var result in results)
             {
-                var processes = drive!.GetReleases(folder);
-                foreach (var proc in processes
+                if (!result.TryGetValue(out var entities)) continue;
+
+                foreach (var proc in entities!
                     .Where(p => wp.IsMatch(p.Name))
                     .FilterByWildcards(r => r?.Name, wpName)
                     .OrderBy(proc => proc.Name))
                 {
-                    //if (proc is null || proc.Arguments is not null && !string.IsNullOrEmpty(proc.Arguments.Input))
-                    if (string.IsNullOrEmpty(proc?.InputArguments)) continue;
+                    if (string.IsNullOrEmpty(proc?.Arguments?.Input)) continue;
 
-                    yield return new CompletionResult($"'{proc.InputArguments}'");
+                    var args = JsonSerializer.Deserialize<InputArgument[]>(proc.Arguments.Input);
+                    if (args is null) continue;
+                    string json = "{" + string.Join(",", args.Select(a =>
+                        $"\"{a.name}\":{(a.type!.StartsWith("System.String") ? "\"\"" :
+                                         a.type.StartsWith("System.Int32") ? "0" :
+                                         a.type.StartsWith("System.Boolean") ? "false" :
+                                         a.type.StartsWith("System.DateTime") ? $"\"{DateTime.Today:yyyy-MM-dd HH:mm:ss}\"" :
+                                         "\"\"")}"
+                    )) + "}";
 
-                    // 最初のプロセスの引数のみ処理する
-                    yield break;
+                    yield return new CompletionResult(PathTools.EscapePSText(json), json, CompletionResultType.ParameterValue, proc.GetPSPath());
                 }
             }
         }

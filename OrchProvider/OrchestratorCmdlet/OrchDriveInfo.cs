@@ -2531,6 +2531,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerFolder<TestSet> TestSets;
     public readonly ListCachePerFolder<TestSetSchedule> TestSetSchedules;
     public readonly ListCachePerFolder<UserRobots> UserRobots;
+    public readonly ListCachePerFolder<MachineRuntime> RuntimesForFolder;
 
     // インデックスつきフォルダーエンティティ
     public readonly IndexedListCachePerFolder<MachineFolder, ExtendedRobot> FolderRobots;
@@ -2561,6 +2562,8 @@ public partial class OrchDriveInfo : PSDriveInfo
         ConnectionString       = new(this, OrchAPISession.GetConnectionString,        e => e.Path = NameColonSeparator);
         LicenseSettings        = new(this, OrchAPISession.GetLicenseSettings,         e => e.Path = NameColonSeparator);
         MachineSessionRuntimes = new(this, OrchAPISession.GetMachineSessionRuntimes,  e => e.Path = NameColonSeparator);
+
+        RuntimesForFolder      = new(this, OrchAPISession.GetRuntimesForFolder);
         AllRobotsAcrossFolders = new(this, OrchAPISession.FindAllRobotsAcrossFolders, e => e.Path = NameColonSeparator);
         PersonalWorkspaces     = new(this, OrchAPISession.GetPersonalWorkspaces,      e => e.Path = NameColonSeparator);
         Roles                  = new(this, OrchAPISession.GetRoles,                   e => e.Path = NameColonSeparator);

@@ -33,6 +33,14 @@
   // In addition to Platform Management, you can also specify scopes for
   // Document Understanding and TestManager.
 
+  // HTTP logs can be output.
+  // To open the log output folder, run the Open-OrchLogLocation cmdlet.
+  "Logging": {
+    // The available levels are Error, Info, Trace, and Verbose.
+    "Level": "Info",
+    "Enabled": false
+  },
+
   // Setting this to true allows connecting to the tenant while ignoring
   // SSL errors.
   "IgnoreSslErrors": false,

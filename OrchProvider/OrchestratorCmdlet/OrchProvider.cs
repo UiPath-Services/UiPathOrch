@@ -153,21 +153,38 @@ public partial class OrchProvider : NavigationCmdletProvider
         stream!.CopyTo(fileStream);
     }
 
-    public static string GetConfigFilePath()
+    public static string GetBasePath()
     {
-        string configFileName = "UiPathOrchConfig.json";
         string moduleName = "UiPathOrch";
-
         if (OperatingSystem.IsWindows())
         {
             string documents = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
-            return System.IO.Path.Combine(documents, "PowerShell", "Modules", moduleName, configFileName);
+            return System.IO.Path.Combine(documents, "PowerShell", "Modules", moduleName);
         }
         else // Unix 系 (Linux / macOS)
         {
             string home = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
-            return System.IO.Path.Combine(home, ".local", "share", "powershell", "Modules", moduleName, configFileName);
+            return System.IO.Path.Combine(home, ".local", "share", "powershell", "Modules", moduleName);
         }
+    }
+
+    public static string GetConfigFilePath()
+    {
+        string configFileName = "UiPathOrchConfig.json";
+        return System.IO.Path.Combine(GetBasePath(), configFileName);
+    }
+
+    private static string? _logFolderPath = null;
+    public static string GetLogFolderBasePath()
+    {
+        if (string.IsNullOrEmpty(_logFolderPath))
+        {
+            _logFolderPath = System.IO.Path.Combine(GetBasePath(), "Logs");
+            Directory.CreateDirectory(_logFolderPath);
+            //string logFileName = $"{DateTime.Today:yyyy-MM-dd}.log";
+            //return System.IO.Path.Combine(driveDirectory, logFileName);
+        }
+        return _logFolderPath;
     }
 
     private static readonly string[] configFileLanguages = ["de", "en", "fr", "ja", "ko", "ro", "tr"];
@@ -230,24 +247,6 @@ public partial class OrchProvider : NavigationCmdletProvider
         }
     }
 
-    private static void CascadePSDriveFromGlobalSettings(PSDrive targetDrive, UiPathOrchConfig? globalSettings)
-    {
-        targetDrive.Name            ??= globalSettings?.Name;
-        targetDrive.Description     ??= globalSettings?.Description;
-        targetDrive.Root            ??= globalSettings?.Root;
-        targetDrive.IdentityUrl     ??= globalSettings?.IdentityUrl;
-        targetDrive.AppId           ??= globalSettings?.AppId;
-        targetDrive.AppSecret       ??= globalSettings?.AppSecret;
-        targetDrive.RedirectUrl     ??= globalSettings?.RedirectUrl;
-        targetDrive.HttpListener    ??= globalSettings?.HttpListener;
-        targetDrive.Scope           ??= globalSettings?.Scope;
-        targetDrive.Username        ??= globalSettings?.Username;
-        targetDrive.Password        ??= globalSettings?.Password;
-        targetDrive.Proxy           ??= globalSettings?.Proxy;
-        targetDrive.IgnoreSslErrors ??= globalSettings?.IgnoreSslErrors;
-        targetDrive.Enabled         ??= globalSettings?.Enabled;
-    }
-
     protected override Collection<PSDriveInfo>? InitializeDefaultDrives()
     {
         string configFilePath = GetConfigFilePath();
@@ -297,7 +296,7 @@ public partial class OrchProvider : NavigationCmdletProvider
 
             foreach (var drive in _config!.PSDrives!)
             {
-                CascadePSDriveFromGlobalSettings(drive, _config);
+                drive.CascadePSDriveFromGlobalSettings(_config);
                 if (!drive.Enabled.GetValueOrDefault()) continue;
 
                 WarningPSDriveConfig(drive);
@@ -372,7 +371,7 @@ public partial class OrchProvider : NavigationCmdletProvider
 
     protected override PSDriveInfo? NewDrive(PSDriveInfo drive)
     {
-        // drive が OrchDriveInfo であれば、InitializeDefaultDrives() が実行されている
+        // drive が OrchDriveInfo であれば、InitializeDefaultDrives() が実行されている (New-PSDrive cmdlet の実行ではない)
         if (drive is OrchDriveInfo orchDrive)
         {
             // プロバイダクラスのロード順によっては、このタイミングではまだ UiPathOrchTm プロバイダは未登録。
@@ -435,7 +434,7 @@ public partial class OrchProvider : NavigationCmdletProvider
             Enabled = true
         };
 
-        CascadePSDriveFromGlobalSettings(psDrive, _config);
+        psDrive.CascadePSDriveFromGlobalSettings(_config);
         WarningPSDriveConfig(psDrive);
 
         return new OrchDriveInfo(ProviderInfo, psDrive);
