@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.10.2'
+ModuleVersion = '0.9.10.3'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -383,26 +383,22 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- HTTP logging is now available.
-  - Add the following to the global settings in the configuration file. This can be overridden in each PSDrive setting.
-    "Logging": {
-      "Level": "Info",
-      "Enabled": true
-    }
+        ReleaseNotes = '- Improved the behavior of the Add-OrchUser cmdlet.
+  - Fixed an issue where the -MayHaveUserSession parameter was not functioning.
 
-  - The following values can be specified for Level:
-    - Error: Outputs logs equivalent to Verbose only when the response status is not 200.
-    - Info: Outputs a one-line summary for all requests and responses.
-    - Trace: Outputs only request headers that contain "UIPATH" in their name, along with the request body and response body.
-    - Verbose: Outputs all request headers, request bodies, response headers, and response bodies.
+  - Added the -IsExternalLicensed parameter.
 
-  - The folder where logs are output can be opened using the Open-OrchLogLocation cmdlet.
+  - Previously, the following parameters were not included in the payload when not specified. This has been changed so that they are now automatically included as false when not specified. This change makes the default values more intuitive and user-friendly in the Union of privileges model, where false is a more natural default. Additionally, this change aligns the behavior with the web interface.
+    - -MayHaveRobotSession
+    - -MayHaveUnattendedSession
+    - -MayHavePersonalWorkspace
+    - -MayHaveUserSession
+    - -RestrictToPersonalWorkspace
+    - -IsExternalLicensed
 
-- The completer for the -InputArguments parameter of Start-OrchJob cmdlet now functions correctly.
+- In line with the above changes, the -ExportCsv parameter of the Get-OrchUser cmdlet has been modified to include the IsExternalLicensed column in the output.
 
-- Fixed an issue where an incorrect message was displayed when an error occurred during library and package downloads.
-
-- The Get-OrchPSDrive cmdlet did not output automatically configured HttpListener when HttpListener was not specified in the configuration file.
+- Added the -IsExternalLicensed parameter to the Update-OrchUser cmdlet also.
 '
 
         # Prerelease string of this module

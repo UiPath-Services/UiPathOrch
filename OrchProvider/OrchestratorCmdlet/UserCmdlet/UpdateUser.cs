@@ -25,6 +25,10 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BoolCompleter))]
+    public string? IsExternalLicensed { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(BoolCompleter))]
     public string? MayHaveUserSession { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -201,6 +205,7 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                         postingUser.UnattendedRobot.Password = null;
                     }
 
+                    postingUser.AssignBoolIfNotFalse(IsExternalLicensed,          u => u.IsExternalLicensed,          (u, v) => u.IsExternalLicensed = v);
                     postingUser.AssignBoolIfNotFalse(MayHaveUserSession,          u => u.MayHaveUserSession,          (u, v) => u.MayHaveUserSession = v);
                     postingUser.AssignBoolIfNotFalse(MayHaveRobotSession,         u => u.MayHaveRobotSession,         (u, v) => u.MayHaveRobotSession = v);
                     postingUser.AssignBoolIfNotFalse(MayHavePersonalWorkspace,    u => u.MayHavePersonalWorkspace,    (u, v) => u.MayHavePersonalWorkspace = v);

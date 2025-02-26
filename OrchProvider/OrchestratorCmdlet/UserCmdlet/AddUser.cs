@@ -79,6 +79,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
             }
         }
 
+        public bool? IsExternalLicensed { get; set; }
         public bool? MayHaveUserSession { get; set; }
         public bool? MayHaveRobotSession { get; set; }
         public bool? MayHaveUnattendedSession { get; set; }
@@ -108,10 +109,12 @@ public class AddUserCommand : OrchestratorPSCmdlet
 
         public CsvLine(AddUserCommand cmdlet)
         {
-            MayHaveRobotSession = cmdlet.MayHaveRobotSession.ToNullableBool();
-            MayHaveUnattendedSession = cmdlet.MayHaveUnattendedSession.ToNullableBool();
-            MayHavePersonalWorkspace = cmdlet.MayHavePersonalWorkspace.ToNullableBool();
-            RestrictToPersonalWorkspace = cmdlet.RestrictToPersonalWorkspace.ToNullableBool();
+            IsExternalLicensed = cmdlet.IsExternalLicensed.ToNullableBool() ?? false;
+            MayHaveRobotSession = cmdlet.MayHaveRobotSession.ToNullableBool() ?? false;
+            MayHaveUnattendedSession = cmdlet.MayHaveUnattendedSession.ToNullableBool() ?? false;
+            MayHavePersonalWorkspace = cmdlet.MayHavePersonalWorkspace.ToNullableBool() ?? false;
+            MayHaveUserSession = cmdlet.MayHaveUserSession.ToNullableBool() ?? false;
+            RestrictToPersonalWorkspace = cmdlet.RestrictToPersonalWorkspace.ToNullableBool() ?? false;
 
             UpdatePolicyType = cmdlet.UpdatePolicyType;
             UpdatePolicyVersion = cmdlet.UpdatePolicyVersion;
@@ -137,6 +140,11 @@ public class AddUserCommand : OrchestratorPSCmdlet
 
         public void Update(AddUserCommand cmdl, OrchDriveInfo drive, string identityName)
         {
+            AssignBoolValue(cmdl, drive, identityName,
+                this.IsExternalLicensed,
+                cmdl.IsExternalLicensed, v =>
+                this.IsExternalLicensed = v);
+
             AssignBoolValue(cmdl, drive, identityName,
                 this.MayHaveUserSession,
                 cmdl.MayHaveUserSession, v =>
@@ -268,6 +276,10 @@ public class AddUserCommand : OrchestratorPSCmdlet
     [Alias("TenantRoles")]
     [ArgumentCompleter(typeof(RolesCompleter))]
     public string[]? Roles { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(BoolCompleter))]
+    public string? IsExternalLicensed { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BoolCompleter))]
@@ -572,7 +584,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
         return targetUsers;
     }
 
-    private bool userAlreadyExists(Dictionary<OrchDriveInfo, Dictionary<string, Entities.User>> existingUsersPerDrive, OrchDriveInfo drive, string userName)
+    private bool UserAlreadyExists(Dictionary<OrchDriveInfo, Dictionary<string, Entities.User>> existingUsersPerDrive, OrchDriveInfo drive, string userName)
     {
         // まだキャッシュを未作成なら作成する
         if (!existingUsersPerDrive.TryGetValue(drive, out var existingUsers))
@@ -650,7 +662,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
 
                 reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {target}");
 
-                if (userAlreadyExists(existingUsersPerDrive, drive, userName))
+                if (UserAlreadyExists(existingUsersPerDrive, drive, userName))
                 {
                     continue;
                 }
@@ -687,8 +699,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
                     postingUser.AssignBoolIfNotNull(line.MayHaveUnattendedSession, (u, v) => u.MayHaveUnattendedSession = v);
                     postingUser.AssignBoolIfNotNull(line.MayHavePersonalWorkspace, (u, v) => u.MayHavePersonalWorkspace = v);
 
-                    //postingUser.IsExternalLicensed = false;
-                    //postingUser.AssignBoolIfNotNull(IsExternalLicensed, (u, v) => u.IsExternalLicensed = v);
+                    postingUser.AssignBoolIfNotNull(IsExternalLicensed, (u, v) => u.IsExternalLicensed = v);
                     postingUser.AssignBoolIfNotNull(line.RestrictToPersonalWorkspace, (u, v) => u.RestrictToPersonalWorkspace = v);
 
                     postingUser.AssignUpdatePolicy(UpdatePolicyType, UpdatePolicyVersion);

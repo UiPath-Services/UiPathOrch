@@ -48,6 +48,7 @@ public class GetUserCommand : OrchestratorPSCmdlet
         "UserName",
         "FullName",
         "Type",
+        "IsExternalLicensed",
         "MayHaveUserSession",
         "MayHaveRobotSession",
         "MayHaveUnattendedSession",
@@ -89,6 +90,7 @@ public class GetUserCommand : OrchestratorPSCmdlet
             EscapeCsvValue(p.UserName, true),
             EscapeCsvValue(p.FullName),
             EscapeCsvValue(p.Type),
+            EscapeCsvValue(p.IsExternalLicensed),
             EscapeCsvValue(p.MayHaveUserSession),
             EscapeCsvValue(p.MayHaveRobotSession),
             EscapeCsvValue(p.MayHaveUnattendedSession),
@@ -144,7 +146,6 @@ public class GetUserCommand : OrchestratorPSCmdlet
                 // GetUser(user) を呼び出す
                 if (ExpandDetails.IsPresent || writer is not null)
                 {
-
                     using var results = OrchThreadPool.RunForEach(targetUsers
                             .FilterByWildcards(u => u?.FullName, wpFullName)
                             .FilterByWildcards(u => u?.UserName, wpUserName)
