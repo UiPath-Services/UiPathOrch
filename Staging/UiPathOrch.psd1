@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.10.3'
+ModuleVersion = '0.9.10.4'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -321,12 +321,12 @@ CmdletsToExport = @(
 'Get-OrchPmExternalApplication',
 
 'Get-DuRole',
-'Get-DuUser',
 'Get-DuDocumentType',
 'Get-DuClassifier',
 'Get-DuExtractor',
 
-'Add-DuRoleToDuUser',
+'Get-DuUser',
+'Add-DuUser',
 'Remove-DuRoleFromDuUser',
 
 'Get-TmConfiguration',
@@ -383,22 +383,27 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Improved the behavior of the Add-OrchUser cmdlet.
-  - Fixed an issue where the -MayHaveUserSession parameter was not functioning.
+        ReleaseNotes = '- The Add-DuRoleToDuUser cmdlet has been renamed to Add-DuUser. Additionally, this cmdlet now allows adding directory users and groups to projects.
 
-  - Added the -IsExternalLicensed parameter.
+- The -ExportCsv parameter has been added to the Get-DuUser cmdlet. The CSV file generated using this parameter can be imported with the Add-DuUser cmdlet. Please note that the import destination is the project specified in the Path column of the CSV file. This can be overridden by specifying the -Path parameter in the command line. Use the following command:
 
-  - Previously, the following parameters were not included in the payload when not specified. This has been changed so that they are now automatically included as false when not specified. This change makes the default values more intuitive and user-friendly in the Union of privileges model, where false is a more natural default. Additionally, this change aligns the behavior with the web interface.
-    - -MayHaveRobotSession
-    - -MayHaveUnattendedSession
-    - -MayHavePersonalWorkspace
-    - -MayHaveUserSession
-    - -RestrictToPersonalWorkspace
-    - -IsExternalLicensed
+  PS Orch1Du:\YourProj> Import-Csv c:ExportedDuUsers.csv | Add-DuUser -Path . -WhatIf
 
-- In line with the above changes, the -ExportCsv parameter of the Get-OrchUser cmdlet has been modified to include the IsExternalLicensed column in the output.
+- The Path property values in entities output by the Get-DuUser, Get-DuDocumentType, Get-DuClassifier, and Get-DuExtractor cmdlets were incorrect.
 
-- Added the -IsExternalLicensed parameter to the Update-OrchUser cmdlet also.
+- The output format of the Get-OrchPmGroupMember cmdlet could be inconsistent.
+
+- The Add-OrchPmGroupMember cmdlet did not always function as intended.
+
+- The Update-OrchUser cmdlet now allows unassigning all roles from users.
+  - To unassign all roles from specified user:
+    PS Orch1:\> Update-OrchUser <user name> -Roles ""
+
+  - To unassign all roles from all users, robots, groups and applications:
+    PS Orch1:\> Update-OrchUser * -Roles ""
+
+  - To unassign all roles from users only (excluding robots, groups, and applications):
+    PS Orch1:\> Get-OrchUser -Type DirectoryUser | select UserName | Update-OrchUser -Roles ""
 '
 
         # Prerelease string of this module

@@ -13,7 +13,7 @@ schema: 2.0.0
 ## SYNTAX
 
 ```
-Resolve-OrchPmDirectoryNameBulk [-Kind] <String> [-Name] <String[]> [-Path <String[]>]
+Resolve-OrchPmDirectoryNameBulk -EntityType <String> [-Name] <String[]> [-Path <String[]>]
  [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
@@ -36,21 +36,6 @@ PS C:\> {{ Add example code here }}
 {{ Add example description here }}
 
 ## PARAMETERS
-
-### -Kind
-{{ Fill Kind Description }}
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: True
-Position: 0
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
 
 ### -Name
 {{ Fill Name Description }}
@@ -91,6 +76,21 @@ Parameter Sets: (All)
 Aliases: proga
 
 Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -EntityType
+{{ Fill EntityType Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: True
 Position: Named
 Default value: None
 Accept pipeline input: False

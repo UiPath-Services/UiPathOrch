@@ -2894,6 +2894,16 @@ public partial class OrchAPISession : IDisposable
         return results?.results;
     }
 
+    public DuUser[]? PatchDuUsers(string? partitionGlobalId, string? tenantKey, string? projectId)
+    {
+        Uri uri = new(_base_url);
+        string baseUrl = $"{uri.Scheme}://{uri.Host}/{partitionGlobalId}/pap_/api/userroleassignments?scope=/tenant/{tenantKey}/DocumentUnderstanding/projects/{projectId}";
+
+        string body = HttpRequestImpl(HttpMethod.Patch, baseUrl, "");
+        var results = JsonSerializer.Deserialize<HttpBodyResults<DuUser>>(body);
+        return results?.results;
+    }
+
     // TODO: paging をサポートしないといけないのではないか？
     public DuRole[]? GetDuRoles(string? partitionGlobalId)
     {
@@ -2906,7 +2916,7 @@ public partial class OrchAPISession : IDisposable
     }
 
     // 何も返さない
-    public void SetDuRoleToDuUser(string? partitionGlobalId, string? tenantKey, string? projectId, UserRoleAssignmentsCmd payload)
+    public void SetDuRoleToDuUser(string? partitionGlobalId, UserRoleAssignmentsCmd payload)
     {
         Uri uri = new(_base_url);
         string baseUrl = $"{uri.Scheme}://{uri.Host}/{partitionGlobalId}/pap_/api/userroleassignments";

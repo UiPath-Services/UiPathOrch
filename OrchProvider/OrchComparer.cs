@@ -80,21 +80,69 @@ public class EntityEqualityComparer<T, TKey> : EqualityComparer<T>
 
 // 3要素の tuple を比較する Comparer
 // 最後の要素は必ず string で、case を無視して比較する
-internal class ThirdItemIgnoreCaseComparer<T1, T2> : IEqualityComparer<(T1 Item1, T2 Item2, string UserName)>
+//internal class ThirdItemIgnoreCaseComparer<T1, T2> : IEqualityComparer<(T1 Item1, T2 Item2, string UserName)>
+//{
+//    public bool Equals((T1 Item1, T2 Item2, string UserName) x,
+//                       (T1 Item1, T2 Item2, string UserName) y)
+//    {
+//        return EqualityComparer<T1>.Default.Equals(x.Item1, y.Item1) &&
+//               EqualityComparer<T2>.Default.Equals(x.Item2, y.Item2) &&
+//               string.Equals(x.UserName, y.UserName, StringComparison.OrdinalIgnoreCase);
+//    }
+
+//    public int GetHashCode((T1 Item1, T2 Item2, string UserName) obj)
+//    {
+//        return HashCode.Combine(
+//            EqualityComparer<T1>.Default.GetHashCode(obj.Item1 ?? default!),
+//            EqualityComparer<T2>.Default.GetHashCode(obj.Item2 ?? default!),
+//            StringComparer.OrdinalIgnoreCase.GetHashCode(obj.UserName)
+//        );
+//    }
+//}
+
+// 3要素の tuple を比較する Comparer
+// 2番目と3番目の要素は必ず string で、case を無視して比較する
+internal class SecondAndThirdItemIgnoreCaseComparer<T1, T2> : IEqualityComparer<((T1 drive, T2 folder), string Item2, string Item3)>
 {
-    public bool Equals((T1 Item1, T2 Item2, string UserName) x,
-                       (T1 Item1, T2 Item2, string UserName) y)
+    public bool Equals(
+        ((T1 drive, T2 folder), string Item2, string Item3) x,
+        ((T1 drive, T2 folder), string Item2, string Item3) y)
+    {
+        return EqualityComparer<T1>.Default.Equals(x.Item1.drive, y.Item1.drive) &&
+               EqualityComparer<T2>.Default.Equals(x.Item1.folder, y.Item1.folder) &&
+               string.Equals(x.Item2, y.Item2, StringComparison.OrdinalIgnoreCase) &&
+               string.Equals(x.Item3, y.Item3, StringComparison.OrdinalIgnoreCase);
+    }
+
+    public int GetHashCode(((T1 drive, T2 folder), string Item2, string Item3) obj)
+    {
+        int hashDrive = obj.Item1.drive != null ? EqualityComparer<T1>.Default.GetHashCode(obj.Item1.drive) : 0;
+        int hashFolder = obj.Item1.folder != null ? EqualityComparer<T2>.Default.GetHashCode(obj.Item1.folder) : 0;
+        int hashItem2 = obj.Item2 != null ? StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Item2) : 0;
+        int hashItem3 = obj.Item3 != null ? StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Item3) : 0;
+        return HashCode.Combine(hashDrive, hashFolder, hashItem2, hashItem3);
+    }
+}
+
+// 4要素の tuple を比較する Comparer
+// 最後の要素は必ず string で、case を無視して比較する
+internal class ForthItemIgnoreCaseComparer<T1, T2, T3> : IEqualityComparer<(T1 Item1, T2 Item2, T3 Item3, string UserName)>
+{
+    public bool Equals((T1 Item1, T2 Item2, T3 Item3, string UserName) x,
+                       (T1 Item1, T2 Item2, T3 Item3, string UserName) y)
     {
         return EqualityComparer<T1>.Default.Equals(x.Item1, y.Item1) &&
                EqualityComparer<T2>.Default.Equals(x.Item2, y.Item2) &&
+               EqualityComparer<T3>.Default.Equals(x.Item3, y.Item3) &&
                string.Equals(x.UserName, y.UserName, StringComparison.OrdinalIgnoreCase);
     }
 
-    public int GetHashCode((T1 Item1, T2 Item2, string UserName) obj)
+    public int GetHashCode((T1 Item1, T2 Item2, T3 Item3, string UserName) obj)
     {
         return HashCode.Combine(
             EqualityComparer<T1>.Default.GetHashCode(obj.Item1 ?? default!),
             EqualityComparer<T2>.Default.GetHashCode(obj.Item2 ?? default!),
+            EqualityComparer<T3>.Default.GetHashCode(obj.Item3 ?? default!),
             StringComparer.OrdinalIgnoreCase.GetHashCode(obj.UserName)
         );
     }

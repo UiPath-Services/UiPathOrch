@@ -13,12 +13,9 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsCommon.Add, "OrchPmGroupMember", SupportsShouldProcess = true)]
 public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
 {
-    // Key: (drive, pmGroup), Value: (name, displayName, objectType, identifier)
-    //private readonly Dictionary<(OrchDriveInfo drive, PmGroup group), HashSet<(string name, string displayName, string objectType, string identifier)>> _parameterSets = [];
-    //private HashSet<(OrchDriveInfo drive, string name)>? _warnedNames = null;
-
     // パラメータを、Path と PmGroup だけ展開して保持
-    private List<(OrchDriveInfo Drive, PmGroup Group, string Type, string UserName)>? _csvLines;
+    //private List<(OrchDriveInfo Drive, PmGroup Group, string Type, string UserName)>? _csvLines;
+    //private HashSet<(OrchDriveInfo Drive, PmGroup Group, string Type, string UserName)>? _csvLines;
 
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmGroupNameCompleter<TPositional>))]
@@ -26,7 +23,7 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
     public string[]? GroupName { get; set; }
 
     [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(ValueOfDictionaryCompleter<DirectoryTypes>))]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<DirectoryTypes>))]
     [SupportsWildcards]
     public string[]? Type { get; set; }
 
@@ -65,6 +62,18 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
 
     private class UserNameCompleter : OrchArgumentCompleter
     {
+        private static bool IsMemberOf(PmGroup group, PmDirectoryEntityInfo user)
+        {
+            // identifier では正しく確認できない。identifierName で確認する必要がある。
+            // ひとつでも同じなら true だな
+            return group.members?.Any(m => string.Compare(m.name, user.identityName, true) == 0) ?? false;
+        }
+
+        private static bool IsMemberOfAll(IEnumerable<PmGroup> groups, PmDirectoryEntityInfo user)
+        {
+            return groups.All(g => IsMemberOf(g, user));
+        }
+
         public override IEnumerable<CompletionResult> CompleteArgument(
             string commandName,
             string parameterName,
@@ -80,7 +89,12 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
 
             var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", TPositional.Parameters);
             var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
-            var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
+            //var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
+
+            var type = GetParameterValue(commandAst, "Type", TPositional.Parameters)?.ToLower();
+            //if (type?.ToLower() == "directoryrobotuser") type = "directoryrobot";
+            if (type?.ToLower() == "directoryapplication") type = "application";
+
             //var types = DirectoryTypes.Items.FilterByWildcards(d => d.Value, wpType).Select(d => d.Key);
 
             var drives = ResolveDrives(fakeBoundParameters);
@@ -99,25 +113,18 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
 
                 foreach (var user in users
                     //.Where(u => types.Contains(u?.objectType ?? ""))
-                    .FilterByWildcards(u => u?.objectType, wpType)
                     .ExcludeByWildcards(e => e?.identityName, wpUserName)
-                    .Where(u => u?.objectType == "DirectoryUser") // && u?.source != "local")
+                    .Where(u => u?.objectType?.ToLower() == type) // && u?.source != "local")
                     .OrderBy(e => e.identityName))
                 {
                     // updatingGroups に含まれるすべてのグループが、メンバーとして user を含んでいれば continue する
-                    bool isMemberOfAllGroups = true;
-                    foreach (var group in updatingGroups)
-                    {
-                        if (group!.members is null || !group.members.Any(m => m.identifier == user.identifier))
-                        {
-                            isMemberOfAllGroups = false;
-                            break;
-                        }
-                    }
-                    if (isMemberOfAllGroups) continue;
+                    if (IsMemberOfAll(updatingGroups, user)) continue;
+
+                    // もしローカルグループだったら continue する
+                    if (user.objectType == "DirectoryGroup" && user.source == "local") continue;
 
                     bFound = true;
-                    string tiphelp = TipHelp(user);
+                    string tiphelp = user.TipHelp();
                     yield return new CompletionResult(PathTools.EscapePSText(user?.identityName), user?.identityName, CompletionResultType.Text, tiphelp);
                 }
             }
@@ -128,6 +135,8 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
         }
     }
 
+    private HashSet<(OrchDriveInfo drive, PmGroup group, string type, string userName)>? _csvLines;
+
     protected override void ProcessRecord()
     {
         GroupName = GroupName.Split1stValueByUnescapedCommas()?.ToArray();
@@ -135,12 +144,13 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
         UserName = UserName.Split1stValueByUnescapedCommas()?.ToArray();
         Path = Path.Split1stValueByUnescapedCommas()?.ToArray();
 
-        _csvLines ??= [];
+        // ユーザー名は case を無視して重複チェックする
+        _csvLines ??= new(new ForthItemIgnoreCaseComparer<OrchDriveInfo, PmGroup, string>());
 
         var drives = OrchDriveInfo.EnumOrchDrives(Path);
         var wpGroupName = GroupName.ConvertToWildcardPatternList();
-        var wpType = Type.ConvertToWildcardPatternList();
-        var objectTypes = DirectoryTypes.Items.FilterByWildcards(t => t.Value, wpType).Select(t => t.Key);
+        var wpType = Type.ConvertToWildcardPatternList(); // Type はワイルドカードをサポートしない
+        //var objectTypes = DirectoryTypes.Items.FilterByWildcards(t => t.Value, wpType).Select(t => t.Key);
 
         // bulk でユーザー情報を問い合わせるには、ユーザーを Type でグループ化しなければ。
         // いや、ここでは CSV の情報を集約するだけで十分か。
@@ -148,9 +158,11 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
         foreach (var drive in drives)
         {
             var groups = drive.GetPmGroups();
-            foreach (var group in groups.Values.FilterByWildcards(g => g?.name, wpGroupName))
+            var filteredGroups = groups.Values.FilterByWildcards(g => g?.name, wpGroupName).ToList();
+
+            foreach (var group in filteredGroups)
             {
-                foreach (var type in DirectoryTypes.Items.Values.FilterByWildcards(v => v, wpType))
+                foreach (var type in DirectoryTypes.Parameters.FilterByWildcards(v => v, wpType))
                 {
                     foreach (var userName in UserName!)
                     {
@@ -165,49 +177,36 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
     {
         if (_csvLines is null) return;
 
-        // ユーザー名の重複を除外しておく。
-        // 違うグループに同じユーザーを追加することもあるから、ユーザー名の重複はこの cmdlet の正しい使用の範囲内だ。
-        // この cmdlet においては、ユーザー名はワイルドカードをサポートしない（できない）ことに注意。
-        // ユーザー名の比較は case を無視する。
-        _csvLines = _csvLines
-            .GroupBy(line => (line.Drive, line.Type, line.UserName), new ThirdItemIgnoreCaseComparer<OrchDriveInfo, string>())
-            .Select(group => group.First())
-            .ToList();
-
-        HashSet<string> ignoreList = [];
         // 追加したい名前を一括してディレクトリに問い合わせ。
         // 種別ごとにまとめて、問い合わせる必要がある。
         // ロボットは一括して問い合わせできないので別途。
-        foreach (var drive_type_userNames in _csvLines
-            .Select(csvLine => (csvLine.Drive, csvLine.Type, csvLine.UserName))
-            .Distinct()
-            .GroupBy(g => (g.Drive, g.Type)))
+        foreach (var lines in _csvLines.GroupBy(g => (g.drive, g.type)))
         {
-            var (drive, type) = drive_type_userNames.Key;
+            var (drive, type) = lines.Key;
 
             Dictionary<string, PmGroupMember?>? entries = null;
             switch (type)
             {
                 case "DirectoryUser":
-                    entries = drive.PmBulkResolveByName("user", drive_type_userNames, m => m.UserName);
+                    entries = drive.PmBulkResolveByName("user", lines, line => line.userName);
                     break;
                 case "DirectoryGroup":
-                    entries = drive.PmBulkResolveByName("group", drive_type_userNames, m => m.UserName);
+                    entries = drive.PmBulkResolveByName("group", lines, line => line.userName);
                     break;
                 case "DirectoryApplication":
-                    entries = drive.PmBulkResolveByName("application", drive_type_userNames, m => m.UserName);
+                    entries = drive.PmBulkResolveByName("application", lines, line => line.userName);
                     break;
-                case "DirectoryRobot":
-                    foreach (var name in drive_type_userNames)
+                case "DirectoryRobotUser":
+                    foreach (var name in lines)
                     {
-                        var addingMember = drive.SearchPmDirectory(name.UserName)?
-                            .Where(t => t.objectType == "DirectoryRobot")
-                            .FirstOrDefault(t => string.Compare(t.identityName, name.UserName, true) == 0);
+                        var addingMember = drive.SearchPmDirectory(name.userName)?
+                            .Where(t => t.objectType == type)
+                            .FirstOrDefault(t => string.Compare(t.identityName, name.userName, true) == 0);
 
                         // 当たらなかったら警告を表示
                         if (addingMember is null)
                         {
-                            WriteWarning($"\"{drive.NameColonSeparator}\": \"{name.UserName}\" ({type}) not found. Ignoring.");
+                            WriteWarning($"\"{drive.NameColonSeparator}\": \"{name.userName}\" ({type}) not found. Ignoring.");
                         }
                     }
                     break;
@@ -228,13 +227,12 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
 
         // ここから本番
         // メンバーをグループに追加していく。
-        foreach (var drivesGroups in _csvLines.GroupBy(g => (g.Drive, g.Group)))
+        foreach (var drivesGroups in _csvLines.GroupBy(g => (g.drive, g.group)))
         {
             var (drive, group) = drivesGroups.Key;
 
             try
             {
-
                 var partitionGlobalId = drive.GetPartitionGlobalId();
 
                 // 更新対象の各グループのメンバー一覧を取得
@@ -248,9 +246,9 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
                 {
                     switch (type)
                     {
-                        case "DirectoryRobot":
+                        case "DirectoryRobotUser":
                             robotEntry = drive.SearchPmDirectory(name)?
-                                .Where(t => t.objectType == "DirectoryRobot")
+                                .Where(t => string.Compare(t.objectType, "DirectoryRobotUser", true) == 0)
                                 .FirstOrDefault(t => string.Compare(t.identityName, name, true) == 0);
                             if (robotEntry is not null)
                             {

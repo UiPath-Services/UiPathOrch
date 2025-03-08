@@ -11,8 +11,8 @@ Locale: en-US
 {{ Fill in the Description }}
 
 ## UiPathOrch Cmdlets
-### [Add-DuRoleToDuUser](Add-DuRoleToDuUser.md)
-Document Understanding プロジェクトのユーザーに、ロールを追加します。
+### [Add-DuUser](Add-DuUser.md)
+Document Understanding プロジェクトに、ユーザーを追加します。
 
 ### [Add-OrchAssetLink](Add-OrchAssetLink.md)
 リンクをアセットに追加します。

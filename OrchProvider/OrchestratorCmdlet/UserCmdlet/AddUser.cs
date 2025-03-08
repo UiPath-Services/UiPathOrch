@@ -1,84 +1,45 @@
 ﻿using System.Collections;
+using System.Data;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using UiPath.PowerShell.Commands.CsvHelper;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Positional;
-using System.Data;
 using TPositional = UiPath.PowerShell.Positional.Type_UserName_Roles;
 
 namespace UiPath.PowerShell.Commands;
-
-// UserName を case-insensitive に比較するために必要
-// OrchComparer.cs に移動した方が良いか？
-internal class CsvLineComparer : IEqualityComparer<(OrchDriveInfo drive, int type, string userName)>
-{
-    public bool Equals((OrchDriveInfo drive, int type, string userName) x, (OrchDriveInfo drive, int type, string userName) y)
-    {
-        return EqualityComparer<OrchDriveInfo>.Default.Equals(x.drive, y.drive) &&
-               x.type == y.type &&
-               string.Equals(x.userName, y.userName, StringComparison.OrdinalIgnoreCase);
-    }
-
-    public int GetHashCode((OrchDriveInfo drive, int type, string userName) obj)
-    {
-        return HashCode.Combine(
-            EqualityComparer<OrchDriveInfo>.Default.GetHashCode(obj.drive),
-            obj.type,
-            StringComparer.OrdinalIgnoreCase.GetHashCode(obj.userName)
-        );
-    }
-}
 
 [Cmdlet(VerbsCommon.Add, "OrchUser", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.User))]
 public class AddUserCommand : OrchestratorPSCmdlet
 {
-    Dictionary<(OrchDriveInfo drive, int type, string userName), CsvLine>? _csvLines = null;
-
-    // TODO: 近いうち、これのベースクラスを作るべきだ。
-    private class CsvLine
+    // UserName を case-insensitive に比較するために必要
+    // OrchComparer.cs に移動した方が良いか？
+    internal class CsvLineComparer : IEqualityComparer<(OrchDriveInfo drive, int type, string userName)>
     {
-        // Expression<T> を使えば、もうすこし簡潔に書けそうだけど、そこまでするのもなあ。。
-        private static void AssignStringValue(IWritableHost host, OrchDriveInfo drive, string identityName, string? currentValue, string? newValue, Action<string?> setter)
+        public bool Equals((OrchDriveInfo drive, int type, string userName) x, (OrchDriveInfo drive, int type, string userName) y)
         {
-            if (!string.IsNullOrEmpty(newValue) && currentValue != newValue)
-            {
-                host.WriteWarning($"'{drive.NameColonSeparator}{identityName}': '{nameof(newValue)}' has been specified multiple times. Using the previously specified value '{currentValue}'.");
-            }
-            else
-            {
-                setter(newValue);
-            }
+            return EqualityComparer<OrchDriveInfo>.Default.Equals(x.drive, y.drive) &&
+                   x.type == y.type &&
+                   string.Equals(x.userName, y.userName, StringComparison.OrdinalIgnoreCase);
         }
 
-        private static void AssignIntValue(IWritableHost host, OrchDriveInfo drive, string identityName, int? currentValue, int? newValue, Action<int?> setter)
+        public int GetHashCode((OrchDriveInfo drive, int type, string userName) obj)
         {
-            if (newValue is not null && newValue != 0 && currentValue != newValue)
-            {
-                host.WriteWarning($"'{drive.NameColonSeparator}{identityName}': '{nameof(newValue)}' has been specified multiple times. Using the previously specified value {currentValue}.");
-            }
-            else
-            {
-                setter(newValue);
-            }
+            return HashCode.Combine(
+                EqualityComparer<OrchDriveInfo>.Default.GetHashCode(obj.drive),
+                obj.type,
+                StringComparer.OrdinalIgnoreCase.GetHashCode(obj.userName)
+            );
         }
+    }
 
-        private static void AssignBoolValue(IWritableHost host, OrchDriveInfo drive, string identityName, bool? currentValue, string? newValue, Action<bool?> setter)
-        {
-            if (string.IsNullOrEmpty(newValue)) return;
-            if (!bool.TryParse(newValue, out var boolValue)) return;
-            if (currentValue != boolValue)
-            {
-                host.WriteWarning($"'{drive.NameColonSeparator}{identityName}': '{nameof(newValue)}' has been specified multiple times. Using the previously specified value {currentValue}.");
-            }
-            else
-            {
-                setter(boolValue);
-            }
-        }
+    Dictionary<(OrchDriveInfo drive, int  type, string userName), CsvLine>? _csvLines = null;
 
+    private class CsvLine : CsvLineBase
+    {
         public bool? IsExternalLicensed { get; set; }
         public bool? MayHaveUserSession { get; set; }
         public bool? MayHaveRobotSession { get; set; }

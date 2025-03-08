@@ -94,6 +94,17 @@ public class StartJobCommand : OrchestratorPSCmdlet
 
     private class InputArgumentsCompleter : OrchArgumentCompleter
     {
+        static bool IsNumericType(string? typeName)
+        {
+            if (typeName is null) return false;
+            var type = Type.GetType(typeName);
+            if (type is null)
+                return false;
+            // IsPrimitive は bool や char も含むため、それらは除外する
+            return (type.IsPrimitive && type != typeof(bool) && type != typeof(char))
+                   || type == typeof(decimal);
+        }
+
         public override IEnumerable<CompletionResult> CompleteArgument(
             string commandName,
             string parameterName,
@@ -122,14 +133,17 @@ public class StartJobCommand : OrchestratorPSCmdlet
 
                     var args = JsonSerializer.Deserialize<InputArgument[]>(proc.Arguments.Input);
                     if (args is null) continue;
-                    string json = "{" + string.Join(",", args.Select(a =>
-                        $"\"{a.name}\":{(a.type!.StartsWith("System.String") ? "\"\"" :
-                                         a.type.StartsWith("System.Int32") ? "0" :
-                                         a.type.StartsWith("System.Boolean") ? "false" :
-                                         a.type.StartsWith("System.DateTime") ? $"\"{DateTime.Today:yyyy-MM-dd HH:mm:ss}\"" :
-                                         "\"\"")}"
-                    )) + "}";
-
+                    string json = "{" + string.Join(",", args.Select(a => {
+                        string value;
+                        // 型オブジェクトに変換して正確な比較を行う
+                        var type = Type.GetType(a.type ?? "string");
+                        if (type == typeof(string)) { value = "\"\""; }
+                        else if (type == typeof(bool)) { value = "false"; }
+                        else if (type == typeof(DateTime)) { value = $"\"{DateTime.Today:yyyy-MM-dd HH:mm:ss}\""; }
+                        else if (IsNumericType(a.type)) { value = "0"; }
+                        else { value = "\"\""; }
+                        return $"\"{a.name}\":{value}";
+                    })) + "}";
                     yield return new CompletionResult(PathTools.EscapePSText(json), json, CompletionResultType.ParameterValue, proc.GetPSPath());
                 }
             }

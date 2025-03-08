@@ -703,16 +703,6 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         return tiphelp;
     }
 
-    protected static string TipHelp(PmDirectoryEntityInfo entity)
-    {
-        string tiphelp = entity.GetPSPath();
-        if (!string.IsNullOrEmpty(entity.displayName))
-        {
-            tiphelp += $" ({entity.displayName})";
-        }
-        return tiphelp;
-    }
-
     protected static string TipHelp(DirectoryUser entity)
     {
         string tiphelp = entity.GetPSPath();
@@ -1611,6 +1601,103 @@ internal class WebhookNameCompleter<TPositional> : OrchArgumentCompleter where T
             {
                 string tiphelp = TipHelp(e);
                 yield return new CompletionResult(PathTools.EscapePSText(e.Name), e.Name, CompletionResultType.ParameterValue, tiphelp);
+            }
+        }
+    }
+}
+
+internal class PmDirectoryNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+{
+    public override IEnumerable<CompletionResult> CompleteArgument(
+        string commandName,
+        string parameterName,
+        string wordToComplete,
+        CommandAst commandAst,
+        IDictionary fakeBoundParameters)
+    {
+        if (string.IsNullOrEmpty(wordToComplete))
+        {
+            yield return new CompletionResult(PathTools.EscapePSText("Please enter at least one character to search."));
+            yield break;
+        }
+
+        var entityType = GetParameterValue(commandAst, "EntityType", TPositional.Parameters);
+        string kind = entityType?.ToLower() switch
+        {
+            "user" => "DirectoryUser",
+            "group" => "DirectoryGroup",
+            "application" => "Application",
+            _ => null
+        };
+        if (kind is null) yield break;
+
+        var names = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+        var drives = ResolveDrives(fakeBoundParameters);
+        var wp = CreateWPFromWordToComplete(wordToComplete);
+
+        var results = ParallelResults.ForEach(drives, drive => drive.SearchPmDirectory(wordToComplete));
+
+        foreach (var result in results)
+        {
+            if (!result.TryGetValue(out var entities)) continue;
+            if (entities is null) continue;
+
+            var drive = result.Source;
+
+            foreach (var s in entities
+                .Where(s => !names.Contains(s.identityName)) // 入力済みのものを除く
+                .Where(s => s.objectType == kind)
+                .OrderBy(s => s.identityName))
+            {
+                string tiphelp = drive.NameColonSeparator + s.identityName;
+                yield return new CompletionResult(PathTools.EscapePSText(s.identityName), s.identityName, CompletionResultType.ParameterValue, tiphelp);
+            }
+        }
+    }
+}
+
+internal class PmDirectoryNameCompleter4Du<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+{
+    public override IEnumerable<CompletionResult> CompleteArgument(
+        string commandName,
+        string parameterName,
+        string wordToComplete,
+        CommandAst commandAst,
+        IDictionary fakeBoundParameters)
+    {
+        if (string.IsNullOrEmpty(wordToComplete))
+        {
+            yield return new CompletionResult(PathTools.EscapePSText("Please enter at least one character to search."));
+            yield break;
+        }
+
+        var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
+        var types = DirectoryTypes.Parameters.FilterByWildcards(p => p, wpType);
+        types = types.Select(t => t == "DirectoryApplication" ? "Application" : t);
+
+        var names = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+        var drives = ResolveDuDrives(fakeBoundParameters);
+        var wp = CreateWPFromWordToComplete(wordToComplete);
+
+        var results = ParallelResults.ForEach(drives, drive => drive.ParentDrive.SearchPmDirectory(wordToComplete));
+
+        foreach (var result in results)
+        {
+            if (!result.TryGetValue(out var entities)) continue;
+            if (entities is null) continue;
+
+            var drive = result.Source;
+
+            foreach (var s in entities
+                .Where(s => !names.Contains(s.identityName)) // 入力済みのものを除く
+                .Where(s => types.Contains(s?.objectType))
+                .OrderBy(s => s.identityName))
+            {
+                string tiphelp = drive.NameColonSeparator + s.identityName;
+                string name = !string.IsNullOrEmpty(s.email) ? s.email : s.identityName;
+                yield return new CompletionResult(PathTools.EscapePSText(name), name, CompletionResultType.ParameterValue, tiphelp);
             }
         }
     }

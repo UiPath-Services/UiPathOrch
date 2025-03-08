@@ -1,6 +1,6 @@
 ﻿using UiPath.PowerShell.Entities;
 
-namespace OrchProvider.JobMediaCmdlet;
+namespace UiPath.PowerShell.Commands;
 
 public class JobMediaCommon
 {

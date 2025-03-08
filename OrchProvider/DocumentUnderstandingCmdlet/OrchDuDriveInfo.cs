@@ -303,8 +303,7 @@ public class OrchDuDriveInfo : PSDriveInfo
                     string pathProject = project.GetPSPath();
                     foreach (var user in users)
                     {
-                        user.Path = NameColonSeparator;
-                        user.PathProject = pathProject;
+                        user.Path = pathProject;
                         user.Project = project.name;
                     }
                     _dicDuUsers[(partitionGlobalId, tenantKey, project.id)] = users;
@@ -348,8 +347,7 @@ public class OrchDuDriveInfo : PSDriveInfo
                     string pathProject = project.GetPSPath();
                     foreach (var documentType in documentTypes)
                     {
-                        documentType.Path = NameColonSeparator;
-                        documentType.PathProject = pathProject;
+                        documentType.Path = pathProject;
                         documentType.Project = project.name;
                     }
                     _dicDuDocumentTypes[project.id!] = documentTypes;
@@ -393,8 +391,7 @@ public class OrchDuDriveInfo : PSDriveInfo
                     string pathProject = project.GetPSPath();
                     foreach (var classifier in classifiers)
                     {
-                        classifier.Path = NameColonSeparator;
-                        classifier.PathProject = pathProject;
+                        classifier.Path = pathProject;
                         classifier.Project = project.name;
                     }
                     _dicDuClassifier[project.id!] = classifiers;
@@ -438,8 +435,7 @@ public class OrchDuDriveInfo : PSDriveInfo
                     string pathProject = project.GetPSPath();
                     foreach (var extractor in extractors)
                     {
-                        extractor.Path = NameColonSeparator;
-                        extractor.PathProject = pathProject;
+                        extractor.Path = pathProject;
                         extractor.Project = project.name;
                     }
                     _dicDuExtractors[project.id!] = extractors;

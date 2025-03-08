@@ -3812,6 +3812,11 @@ public class RoleAssignmentDto // added by UiPathOrch swagger doc にない。
     public DateTime? createdOn { get; set; }
     public bool? inherited { get; set; }
     public bool? mutable { get; set; }
+
+    public override string ToString()
+    {
+        return (inherited ?? false) ? $"{roleName} (Inherited from organization)" : $"{roleName}";
+    }
 }
 
 public class DuUser // added by UiPathOrch swagger doc にない。
@@ -3820,8 +3825,6 @@ public class DuUser // added by UiPathOrch swagger doc にない。
     public string? Path { get; set; } // added by UiPathOrch
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Project { get; set; } // added by UiPathOrch
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? PathProject { get; set; } // added by UiPathOrch
 
     public string? securityPrincipalId { get; set; }
     public RoleAssignmentDto[]? roleAssignmentDtos { get; set; }
@@ -3889,8 +3892,6 @@ public class DuDocumentType
     public string? Path { get; set; } // added by UiPathOrch
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Project { get; set; } // added by UiPathOrch
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? PathProject { get; set; } // added by UiPathOrch
     public string? id { get; set; }
     public string? name { get; set; }
     public string? detailsUrl { get; set; }
@@ -3909,8 +3910,6 @@ public class DuClassifier
     public string? Path { get; set; } // added by UiPathOrch
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Project { get; set; } // added by UiPathOrch
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? PathProject { get; set; } // added by UiPathOrch
     public string? id { get; set; }
     public string? name { get; set; }
     public string? status { get; set; }
@@ -3932,8 +3931,6 @@ public class DuExtractor
     public string? Path { get; set; } // added by UiPathOrch
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Project { get; set; } // added by UiPathOrch
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? PathProject { get; set; } // added by UiPathOrch
     public string? id { get; set; }
     public string? name { get; set; }
     public string? documentTypeId { get; set; }
