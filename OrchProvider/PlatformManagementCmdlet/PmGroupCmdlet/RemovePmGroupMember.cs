@@ -127,7 +127,7 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
                         continue;
                     }
 
-                    string target = $"{member.name} ({member.displayName}) from {group?.GetPSPath()}";
+                    string target = $"{member.TipHelp()} from {group?.GetPSPath()}";
                     if (ShouldProcess(target, $"Remove Member From Group"))
                     {
                         _parameterSets ??= [];

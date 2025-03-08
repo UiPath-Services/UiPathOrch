@@ -8,7 +8,7 @@ using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using TPositional = UiPath.PowerShell.Positional.Name_UserName_MachineName_CredentialUsername_CredentialPassword;
 
-namespace OrchProvider.AssetCmdlet;
+namespace UiPath.PowerShell.Commands;
 
 class SetCredentialAssetCommandParameter
 {

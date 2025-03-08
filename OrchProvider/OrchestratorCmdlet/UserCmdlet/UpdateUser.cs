@@ -213,26 +213,33 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                     postingUser.AssignBoolIfNotFalse(RestrictToPersonalWorkspace, u => u.RestrictToPersonalWorkspace, (u, v) => u.RestrictToPersonalWorkspace = v);
 
                     #region RolesList
-                    if (Roles is not null && Roles.Any(r => !string.IsNullOrEmpty(r)))
+                    if (Roles is not null)
                     {
-                        List<Entities.Role> roles = null;
-                        try
+                        if (Roles.Any(r => !string.IsNullOrEmpty(r)))
                         {
-                            roles = drive.Roles.Get()
-                                .Where(r => r.Type != "Folder")
-                                .SelectByWildcards(r => r?.Name, wpRoles)
-                                .ToList();
+                            List<Entities.Role> roles = null;
+                            try
+                            {
+                                roles = drive.Roles.Get()
+                                    .Where(r => r.Type != "Folder")
+                                    .SelectByWildcards(r => r?.Name, wpRoles)
+                                    .ToList();
+                            }
+                            catch
+                            {
+                                WriteError(new ErrorRecord(new OrchException(target, "Failed to retrieve Role. Ignored."), "GetRoleError", ErrorCategory.InvalidOperation, drive));
+                            }
+                            if (roles is not null)
+                            {
+                                postingUser.RolesList = roles.Select(r => r.Name!)
+                                    .Distinct()
+                                    .Order()
+                                    .ToArray();
+                            }
                         }
-                        catch
+                        else
                         {
-                            WriteError(new ErrorRecord(new OrchException(target, "Failed to retrieve Role. Ignored."), "GetRoleError", ErrorCategory.InvalidOperation, drive));
-                        }
-                        if (roles is not null)
-                        {
-                            postingUser.RolesList = roles.Select(r => r.Name!)
-                                .Distinct()
-                                .Order()
-                                .ToArray();
+                            postingUser.RolesList = [];
                         }
                     }
                     #endregion

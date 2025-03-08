@@ -118,6 +118,7 @@ public class ClearCacheCommand : PSCmdlet
             {
                 if (ShouldProcess(drive.NameColonSeparator, "Clear Cache"))
                 {
+                    drive.ParentDrive.ClearAllCache();
                     drive.ClearAllCache();
                 }
             }
@@ -125,6 +126,7 @@ public class ClearCacheCommand : PSCmdlet
             {
                 if (ShouldProcess(drive.NameColonSeparator, "Clear Cache"))
                 {
+                    drive.ParentDrive.ClearAllCache();
                     drive.ClearAllCache();
                 }
             }

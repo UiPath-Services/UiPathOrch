@@ -1564,7 +1564,9 @@
                 <PropertyName>ClientSecret</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>CreationTime</PropertyName>
+                <ScriptBlock>
+                  $_.CreationTime.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
+                </ScriptBlock>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -3949,7 +3951,7 @@
     <View>
       <Name>DirectoryObject</Name>
       <ViewSelectedBy>
-        <TypeName>UiPath.PowerShell.Entities.DirectoryUser</TypeName>
+        <TypeName>UiPath.PowerShell.Entities.PmGroupMember</TypeName>
       </ViewSelectedBy>
       <GroupBy>
         <Label>Directory</Label>
@@ -3990,102 +3992,6 @@
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>email</PropertyName>
-              </TableColumnItem>
-            </TableColumnItems>
-          </TableRowEntry>
-        </TableRowEntries>
-      </TableControl>
-    </View>
-
-    <View>
-      <Name>DirectoryGroup</Name>
-      <ViewSelectedBy>
-        <TypeName>UiPath.PowerShell.Entities.DirectoryGroup</TypeName>
-      </ViewSelectedBy>
-      <GroupBy>
-        <Label>Directory</Label>
-        <PropertyName>Path</PropertyName>
-      </GroupBy>
-      <TableControl>
-        <TableHeaders>
-          <TableColumnHeader>
-            <Label>source</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>name</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>displayName</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>objectType</Label>
-          </TableColumnHeader>
-        </TableHeaders>
-        <TableRowEntries>
-          <TableRowEntry>
-            <TableColumnItems>
-              <TableColumnItem>
-                <PropertyName>source</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>name</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>displayName</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>objectType</PropertyName>
-              </TableColumnItem>
-            </TableColumnItems>
-          </TableRowEntry>
-        </TableRowEntries>
-      </TableControl>
-    </View>
-
-    <View>
-      <Name>DirectoryApplication</Name>
-      <ViewSelectedBy>
-        <TypeName>UiPath.PowerShell.Entities.DirectoryApplication</TypeName>
-      </ViewSelectedBy>
-      <GroupBy>
-        <Label>Directory</Label>
-        <PropertyName>Path</PropertyName>
-      </GroupBy>
-      <TableControl>
-        <TableHeaders>
-          <TableColumnHeader>
-            <Label>source</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>name</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>displayName</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>objectType</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>applicationId</Label>
-          </TableColumnHeader>
-        </TableHeaders>
-        <TableRowEntries>
-          <TableRowEntry>
-            <TableColumnItems>
-              <TableColumnItem>
-                <PropertyName>source</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>name</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>displayName</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>objectType</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>applicationId</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -4507,7 +4413,7 @@
       </ViewSelectedBy>
       <GroupBy>
         <Label>Project</Label>
-        <PropertyName>PathProject</PropertyName>
+        <PropertyName>Path</PropertyName>
       </GroupBy>
       <TableControl>
         <TableHeaders>
@@ -4524,7 +4430,7 @@
             <Label>source</Label>
           </TableColumnHeader>
           <TableColumnHeader>
-            <Label>roles</Label>
+            <Label>roleAssignmentDtos</Label>
           </TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
@@ -4543,16 +4449,7 @@
                 <PropertyName>source</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $roleNames = @($_.roleAssignmentDtos | ForEach-Object {
-                    if ($_.inherited) {
-                      "$($_.roleName) (Inherited from organization)"
-                    } else {
-                      $_.roleName
-                    }
-                  }) -join ', '
-                  $roleNames
-                </ScriptBlock>
+                <PropertyName>roleAssignmentDtos</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -4567,7 +4464,7 @@
       </ViewSelectedBy>
       <GroupBy>
         <Label>Project</Label>
-        <PropertyName>PathProject</PropertyName>
+        <PropertyName>Path</PropertyName>
       </GroupBy>
       <TableControl>
         <TableHeaders>
@@ -4600,7 +4497,7 @@
       </ViewSelectedBy>
       <GroupBy>
         <Label>Project</Label>
-        <PropertyName>PathProject</PropertyName>
+        <PropertyName>Path</PropertyName>
       </GroupBy>
       <TableControl>
         <TableHeaders>

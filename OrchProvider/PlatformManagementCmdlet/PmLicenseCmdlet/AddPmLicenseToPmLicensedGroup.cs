@@ -65,7 +65,7 @@ public class AddPmLicenseToPmLicenseGroup: OrchestratorPSCmdlet
                     .OrderBy(e => e.identityName))
                 {
                     bFound = true;
-                    string tiphelp = TipHelp(group);
+                    string tiphelp = group.TipHelp();
                     yield return new CompletionResult(PathTools.EscapePSText(group?.identityName), group?.identityName, CompletionResultType.Text, tiphelp);
                 }
             }

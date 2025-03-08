@@ -13,7 +13,7 @@ Document Understanding プロジェクトのユーザーから、ロールを削
 ## SYNTAX
 
 ```
-Remove-DuRoleFromDuUser [[-Name] <String[]>] [[-Role] <String[]>] [-Path <String[]>] [-Recurse]
+Remove-DuRoleFromDuUser [[-Name] <String[]>] [-Roles <String[]>] [-Path <String[]>] [-Recurse]
  [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
@@ -97,21 +97,6 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -Role
-{{ Fill Role Description }}
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 1
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
 ### -WhatIf
 Shows what would happen if the cmdlet runs.
 The cmdlet is not run.
@@ -141,6 +126,21 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
+```
+
+### -Roles
+{{ Fill Roles Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
 ```
 
 ### CommonParameters

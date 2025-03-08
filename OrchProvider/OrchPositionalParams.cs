@@ -60,6 +60,16 @@ internal class Item500 : IPositionalParameters
     public static string[] Parameters { get; } = ["500"];
 }
 
+internal class DirectoryTypes : IPositionalParameters
+{
+    public static string[] Parameters { get; } = [
+        "DirectoryUser",
+        "DirectoryGroup", // ローカルグループにローカルグループは追加できないことに注意（ADグループは可能）
+        "DirectoryRobotUser",
+        "DirectoryApplication"
+    ];
+}
+
 internal class AssetTypeItems : IPositionalParameters
 {
     public static string[] Parameters { get; } = ["Text", "Integer", "Bool"];
@@ -488,9 +498,14 @@ internal class DescriptionHere : IPositionalParameters
     public static string[] Parameters { get; } = ["'Description here'"];
 }
 
-internal class Kind_Name : IPositionalParameters
+internal class EntityType_Name : IPositionalParameters
 {
-    public static string[] Parameters { get; } = ["Kind", "Name"];
+    public static string[] Parameters { get; } = ["EntityType", "Name"];
+}
+
+internal class Type_Name_Role : IPositionalParameters
+{
+    public static string[] Parameters { get; } = ["Type", "Name", "Role"];
 }
 
 internal class Name : IPositionalParameters

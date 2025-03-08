@@ -39,17 +39,6 @@ internal class DirectoryTypeItems : IDictionaryItems<int>
     };
 }
 
-internal class DirectoryTypes : IDictionaryItems<string>
-{
-    public static Dictionary<string, string> Items { get; } = new()
-    {
-        { "DirectoryUser",        "DirectoryUser" },
-        { "DirectoryGroup",       "DirectoryGroup" },
-        { "DirectoryRobotUser",   "DirectoryRobot" },
-        { "Application",          "DirectoryApplication" }
-    };
-}
-
 //internal class DirectoryTypes2 : IDictionaryItems<string>
 //{
 //    public static Dictionary<string, string> Items { get; } = new()

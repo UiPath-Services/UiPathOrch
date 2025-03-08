@@ -11,8 +11,8 @@ Locale: en-US
 {{ Fill in the Description }}
 
 ## UiPathOrch Cmdlets
-### [Add-DuRoleToDuUser](Add-DuRoleToDuUser.md)
-Adds roles to users in Document Understanding projects.
+### [Add-DuUser](Add-DuUser.md)
+Adds users in Document Understanding projects.
 
 ### [Add-OrchAssetLink](Add-OrchAssetLink.md)
 Adds links to the specified assets.

@@ -20,7 +20,7 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
     [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(RoleCompleter))]
     [SupportsWildcards]
-    public string[]? Role { get; set; }
+    public string[]? Roles { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -80,7 +80,7 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
     {
         var drivesProjects = OrchDuDriveInfo.EnumFolders(Path, Recurse.IsPresent);
         var wpName = Name.ConvertToWildcardPatternList();
-        var wpRole = Role.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
+        var wpRole = Roles.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
 
         using var results = OrchThreadPool.RunForEach(drivesProjects,
             dp => dp.project.GetPSPath(),
@@ -109,7 +109,7 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
                         .FilterByWildcards(r => r?.roleName, wpRole);
                     if (!rolesToRemove.Any()) continue;
 
-                    string target = $"User: '{user.GetPSPath()}' Roles: {string.Join(", ", rolesToRemove.Select(r => $"'{r.roleName}'"))}";
+                    string target = $"{user.type}: '{user.GetPSPath()}' Roles: {string.Join(", ", rolesToRemove.Select(r => $"'{r.roleName}'"))}";
 
                     if (ShouldProcess(target, "Remove DuRoleFromDuUser"))
                     {
@@ -126,7 +126,7 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
                                     .Select(r => r.id!.Value).ToList()
                             };
 
-                            drive.OrchAPISession.SetDuRoleToDuUser(partitionGlobalId, tenantKey, project.id, payload);
+                            drive.OrchAPISession.SetDuRoleToDuUser(partitionGlobalId, payload);
                             drive._dicDuUsers?.Remove((partitionGlobalId, tenantKey, project.id)!);
                         }
                         catch (Exception ex)
