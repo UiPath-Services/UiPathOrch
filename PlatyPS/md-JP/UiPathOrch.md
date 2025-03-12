@@ -401,6 +401,9 @@ UiPathOrch の PowerShell ドライブを取得します。
 ### [Get-OrchUser](Get-OrchUser.md)
 ユーザーを取得します。
 
+### [Get-OrchUserPrivilege](Get-OrchUserPrivilege.md)
+和集合モデルによるユーザーの権限を取得します。
+
 ### [Get-OrchUserSession](Get-OrchUserSession.md)
 ユーザーセッションを取得します。
 

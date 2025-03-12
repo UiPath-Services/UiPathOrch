@@ -1808,6 +1808,11 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<User>(HttpMethod.Get, $"/odata/Users({userId})?$expand=OrganizationUnits,UserRoles");
     }
 
+    public UserPrivilege? GetUserPrivilege(Int64 userId)
+    {
+        return HttpRequest<UserPrivilege>(HttpMethod.Get, $"/api/Users/GetPrivileges?userId={userId}");
+    }
+
     public User? PostUser(User user)
     {
         return HttpRequest<User>(HttpMethod.Post, "/odata/Users", null, user);

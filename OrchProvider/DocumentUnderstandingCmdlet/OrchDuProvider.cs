@@ -214,8 +214,9 @@ public class OrchDuProvider : NavigationCmdletProvider
         [Parameter(ValueFromPipelineByPropertyName = true)]
         public string? ForceApplyOcr { get; set; }
 
-        //[Parameter(ValueFromPipelineByPropertyName = true)]
-        //public string? Type { get; set; }
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<Modern_Classic>))]
+        public string? ProjectType { get; set; }
 
         [Parameter(ValueFromPipelineByPropertyName = true)]
         public bool? Helix { get; set; }
@@ -233,7 +234,7 @@ public class OrchDuProvider : NavigationCmdletProvider
             dynamicParameters.OcrMethod ??= "uipath";
             dynamicParameters.OcrUrl ??= ""; // TODO
             dynamicParameters.ForceApplyOcr ??= "Auto";
-            //dynamicParameters.Type ??= "Classic";
+            dynamicParameters.ProjectType ??= "Modern";
             dynamicParameters.Helix ??= false;
 
             try
@@ -246,12 +247,13 @@ public class OrchDuProvider : NavigationCmdletProvider
                     ocrMethod = dynamicParameters.OcrMethod,
                     ocrUrl = dynamicParameters.OcrUrl,
                     forceApplyOcr = dynamicParameters.ForceApplyOcr,
-                    type = "Classic", ///////////// TODO
+                    type = dynamicParameters.ProjectType,
                     helix = dynamicParameters.Helix
                 };
 
                 payload.description ??= "";
-                payload.ocrUrl = "https://staging.uipath.com/ytsuda/DefaultTenant/ocr_/ocr";
+                //payload.ocrUrl = "https://staging.uipath.com/ytsuda/DefaultTenant/ocr_/ocr";
+                payload.ocrUrl ??= ""; // TODO
 
                 drive.OrchAPISession.CreateDuProjects(payload);
                 //if (f is not null)

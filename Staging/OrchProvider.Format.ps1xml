@@ -888,6 +888,46 @@
     </View>
 
     <View>
+      <Name>UserPrivilege</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.UserPrivilege</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem>
+                <PropertyName>userId</PropertyName>
+              </ListItem>
+              <ListItem>
+                <PropertyName>UserName</PropertyName>
+              </ListItem>
+              <ListItem>
+                <PropertyName>roles</PropertyName>
+              </ListItem>
+              <ListItem>
+                <PropertyName>access</PropertyName>
+              </ListItem>
+              <ListItem>
+                <PropertyName>attendedSession</PropertyName>
+              </ListItem>
+              <ListItem>
+                <PropertyName>personalWorkspace</PropertyName>
+              </ListItem>
+              <ListItem>
+                <PropertyName>updatePolicy</PropertyName>
+              </ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+
+    <View>
       <Name>UserRoles</Name>
       <ViewSelectedBy>
         <TypeName>UiPath.PowerShell.Entities.UserRoles</TypeName>

@@ -2491,6 +2491,10 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly SingleCachePerTenant<License> LicenseSettings;
     public readonly SingleCachePerTenant<LibraryFeed[]> LibraryFeeds;
 
+    // インデックスつきテナントエンティティ
+    public readonly IndexedCachePerTenant<User, UserPrivilege> UserPrivileges;
+
+    // テナントのリストエンティティ
     public readonly ListCachePerTenant<ResponseDictionaryItem> AuthenticationSettings;
     public readonly ListCachePerTenant<CredentialStore> CredentialStores;
     public readonly ListCachePerTenant<Robot> Robots;
@@ -2690,9 +2694,18 @@ public partial class OrchDriveInfo : PSDriveInfo
             }
         );
 
+        // インデックスつきのテナントエンティティ
+        UserPrivileges = new(this, OrchAPISession.GetUserPrivilege, e => e.Id!.Value, e => e.UserName!,
+            (e, userName) => 
+            { 
+                e.Path = NameColonSeparator;
+                e.UserName = userName;
+            }
+        );
+
         // インデックスなしのフォルダエンティティ
         // 下記は 11.1 ではエラーになることを確認済み。TODO: feedId はどうやって取得するのか？ 12 以降ではどうか？
-        FolderFeedId                   = new(this, OrchAPISession.GetFolderFeedId, null, 12);
+        FolderFeedId = new (this, OrchAPISession.GetFolderFeedId, null, 12);
         ActionCatalogs                 = new(this, OrchAPISession.GetTaskCatalogs,       (e, folderPath) => e.Path = folderPath, 16); // 16 でエラーが返らないことを確認済み
         ApiTriggers                    = new(this, OrchAPISession.GetHttpTriggers,       (e, folderPath) => e.Path = folderPath, 18); // 17 で web interface にないことを確認済み (17 で実行してもエラーは返らないようだが、)
         Buckets                        = new(this, OrchAPISession.GetBuckets,            (e, folderPath) => e.Path = folderPath);
