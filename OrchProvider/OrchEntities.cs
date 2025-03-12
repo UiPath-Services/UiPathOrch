@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities.JsonConverter;
 
@@ -993,10 +994,10 @@ public class User : IEquatable<User>
     public bool? MayHaveUserSession { get; set; }
     public bool? MayHaveRobotSession { get; set; }
     public bool? MayHaveUnattendedSession { get; set; }
-    public bool? BypassBasicAuthRestriction { get; set; }
+    public bool? BypassBasicAuthRestriction { get; set; } // TODO: あれ？ api v18.0 で無くなった？ 除外しても良いのか、
     public bool? MayHavePersonalWorkspace { get; set; }
-    public bool? ExplicitMayHaveRobotSession { get; set; }
     public bool? ExplicitMayHaveUserSession { get; set; }
+    public bool? ExplicitMayHaveRobotSession { get; set; }
     public bool? ExplicitMayHavePersonalWorkspace { get; set; }
     public bool? ExplicitRestrictToPersonalWorkspace { get; set; }
     public UpdatePolicy? UpdatePolicy { get; set; }
@@ -1071,6 +1072,106 @@ public class User : IEquatable<User>
 
         return HashCode.Combine(hash1, hash2, hash3, hash4, hash5, hash6);
     }
+}
+
+public class Item_IdName // added by UiPathOrch 正しいクラス名は不明。
+{
+    public Int64? id { get; set; }
+    public string? name { get; set; }
+}
+
+public class UP_RoleEntry // added by UiPathOrch 正しいクラス名は不明。
+{
+    public string? type { get; set; }
+    public Item_IdName? value { get; set; }
+}
+
+public class UP_Roles // added by UiPathOrch 正しいクラス名は不明。
+{
+    public UP_RoleEntry[]? @explicit { get; set; }
+    public UP_RoleEntry[]? inherited { get; set; }
+    public UP_RoleEntry[]? effective { get; set; }
+
+    public override string ToString()
+    {
+        return JsonSerializer.Serialize(this, JsonTools.jsoOneLine);
+    }
+}
+
+public class Item_TypeValue // added by UiPathOrch 正しいクラス名は不明。
+{
+    public string? type { get; set; }
+    public string? value { get; set; }
+}
+
+public class UP_Access // added by UiPathOrch 正しいクラス名は不明。
+{
+    public Item_TypeValue? @explicit { get; set; }
+    public Item_TypeValue[]? inherited { get; set; }
+    public Item_TypeValue? effective { get; set; }
+
+    public override string ToString()
+    {
+        return JsonSerializer.Serialize(this, JsonTools.jsoOneLine);
+    }
+}
+
+public class UP_PermissionEntry // added by UiPathOrch 正しいクラス名は不明。
+{
+    public string? type { get; set; }
+    public bool? value { get; set; }
+    public Item_IdName[]? groups { get; set; }
+}
+
+public class UP_ProjectPermission // added by UiPathOrch 正しいクラス名は不明。
+{
+    public UP_PermissionEntry? @explicit { get; set; }
+    public UP_PermissionEntry? inherited { get; set; }
+    public UP_PermissionEntry? effective { get; set; }
+
+    public override string ToString()
+    {
+        return JsonSerializer.Serialize(this, JsonTools.jsoOneLine);
+    }
+}
+
+public class UP_UpdatePolicyValue // added by UiPathOrch 正しいクラス名は不明。
+{
+    public string? type { get; set; }
+    public string? specificVersion { get; set; }
+}
+
+public class UP_UpdatePolicyEntry // added by UiPathOrch 正しいクラス名は不明。
+{
+    public string? type { get; set; }
+    public UP_UpdatePolicyValue? value { get; set; }
+}
+
+public class UP_UpdatePolicy // added by UiPathOrch 正しいクラス名は不明。
+{
+    public UP_UpdatePolicyEntry? @explicit { get; set; }
+    public UP_UpdatePolicyEntry[]? inherited { get; set; }
+    public UP_UpdatePolicyEntry? effective { get; set; }
+
+    public override string ToString()
+    {
+        return JsonSerializer.Serialize(this, JsonTools.jsoOneLine);
+    }
+}
+
+public class UserPrivilege // added by UiPathOrch 正しいクラス名は不明。
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? UserName { get; set; } // added by UiPathOrch
+
+    public Int64 userId { get; set; }
+    public UP_Roles? roles { get; set; }
+    public UP_Access? access { get; set; }
+    public UP_ProjectPermission? attendedSession { get; set; }
+    public UP_ProjectPermission? personalWorkspace { get; set; }
+    public UP_UpdatePolicy? updatePolicy { get; set; }
 }
 
 // DirectoryObjectDto

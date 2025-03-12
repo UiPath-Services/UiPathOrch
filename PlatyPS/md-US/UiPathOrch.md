@@ -401,6 +401,9 @@ Gets the update settings.
 ### [Get-OrchUser](Get-OrchUser.md)
 Gets the users.
 
+### [Get-OrchUserPrivilege](Get-OrchUserPrivilege.md)
+Retrieves user privileges based on the union of privileges model.
+
 ### [Get-OrchUserSession](Get-OrchUserSession.md)
 Gets the user sessions.
 

@@ -697,3 +697,8 @@ internal class ValueType_Name_Value_UserName_MachineName : IPositionalParameters
 {
     public static string[] Parameters { get; } = ["ValueType", "Name", "Value", "UserName", "MachineName"];
 };
+
+internal class Modern_Classic : IPositionalParameters
+{
+    public static string[] Parameters { get; } = ["Modern", "Classic"];
+};

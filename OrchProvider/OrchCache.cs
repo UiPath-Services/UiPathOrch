@@ -291,6 +291,89 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
     }
 }
 
+// 今のところ、インデックスとしては Int64 のみをサポート。この型もパラメータ化した方がいいのかもしれない
+// TIndexEntity: インデックスを含むエンティティ
+// getIndex(TIndexEntity): TIndexEntity から Int64 のインデックス値を取得する Func
+// TEntity: 取得してキャッシュするエンティティ
+public class IndexedCachePerTenant<TIndexEntity, TEntity> : ITenantCacheClearable where TIndexEntity : notnull
+{
+    private readonly OrchDriveInfo _drive;
+
+    // key: TIndexEntity.Id
+    private ConcurrentDictionary<Int64, TEntity?>? _cache = null;
+    private readonly ExceptionsCachePer<Int64> _exceptions = new();
+    private readonly Func<Int64, TEntity?> _fetchFunc; // index を渡すと TEntity が返る
+    private readonly Func<TIndexEntity, Int64> _getIdFunc;
+    private readonly Func<TIndexEntity, string> _getNameFunc;
+    private readonly Action<TEntity, string>? _initializer; // 名前
+    private readonly int? _supportedApiVersionFrom;
+
+    public IndexedCachePerTenant(
+        OrchDriveInfo drive,
+        Func<Int64, TEntity?> fetchFunc,
+        Func<TIndexEntity, Int64> getIdFunc,
+        Func<TIndexEntity, string> getNameFunc,
+        Action<TEntity, string>? initializer,
+        int? supportedApiVersionFrom = null)
+    {
+        _drive = drive;
+        _drive._allTenantCache.Add(this);
+        _fetchFunc = fetchFunc;
+        _getIdFunc = getIdFunc;
+        _getNameFunc = getNameFunc;
+        _initializer = initializer;
+        _supportedApiVersionFrom = supportedApiVersionFrom;
+    }
+
+    public TEntity? Get(TIndexEntity indexEntity)
+    {
+        if (_drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom)
+        {
+            return default;
+        }
+
+        Int64 index = _getIdFunc(indexEntity);
+
+        _exceptions.ThrowCachedExceptionIfAny(index);
+
+        if (_cache is null)
+        {
+            lock (this)
+            {
+                _cache ??= [];
+            }
+        }
+
+        if (!_cache.TryGetValue(index, out var entity))
+        {
+            try
+            {
+                entity = _fetchFunc(index);
+                _cache[index] = entity;
+
+                if (entity is not null && _initializer is not null)
+                {
+                    string indexName = _getNameFunc(indexEntity);
+                    _initializer(entity, indexName);
+                }
+            }
+            catch (HttpResponseException ex)
+            {
+                _exceptions.CacheException(index, ex);
+                throw;
+            }
+        }
+
+        return entity;
+    }
+
+    public void ClearCache()
+    {
+        _cache = null;
+        _exceptions.ClearCache();
+    }
+}
+
 public class SingleCachePerFolder<T> : IFolderCacheClearable
 {
     private readonly OrchDriveInfo _drive;
