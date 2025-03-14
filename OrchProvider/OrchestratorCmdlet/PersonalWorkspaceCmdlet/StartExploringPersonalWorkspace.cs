@@ -10,12 +10,12 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.QueueDefinition))]
 class StartExploringPersonalWorkspaceCommand : OrchestratorPSCmdlet
 {
-    //[Parameter(Position = 0)]
+    //[Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     //[ArgumentCompleter(typeof(NameCompleter))]
     //[SupportsWildcards]
     //public string[]? Name { get; set; }
 
-    //[Parameter]
+    //[Parameter(ValueFromPipelineByPropertyName = true)]
     //[SupportsWildcards]
     //public string[]? Path { get; set; }
 

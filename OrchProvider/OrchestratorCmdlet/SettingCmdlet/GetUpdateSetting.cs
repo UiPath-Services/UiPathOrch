@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(UpdateSettings))]
 public class GetUpdateSettingCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Path { get; set; }

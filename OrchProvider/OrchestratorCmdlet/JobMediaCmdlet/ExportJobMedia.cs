@@ -11,15 +11,15 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsData.Export, "OrchJobMedia", SupportsShouldProcess = true)]
 public class SaveJobMediaCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(JobIdCompleter))]
     public Int64[]? JobId { get; set; }
 
-    [Parameter(Position = 1)]
+    [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string? Destination { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

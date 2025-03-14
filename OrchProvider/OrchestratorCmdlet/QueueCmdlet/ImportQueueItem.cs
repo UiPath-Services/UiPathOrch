@@ -22,25 +22,25 @@ public class CSVParseError(int csvRow, string errorType, string csvField, string
 [OutputType(typeof(Entities.FailedQueueItem))]
 public class ImportQueueItemCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0, Mandatory = true)]
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(QueueNameCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
-    [Parameter(Position = 1, Mandatory = true)]
+    [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? ImportCsv { get; set; }
 
-    [Parameter(Position = 2)]
+    [Parameter(Position = 2, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(EncodingCompleter))]
     [EncodingArgumentTransformation]
     public Encoding? CsvEncoding { get; set; }
 
-    [Parameter(Position = 3)]
+    [Parameter(Position = 3, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<QueueItemCommitTypeItems>))]
     public string? CommitType { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

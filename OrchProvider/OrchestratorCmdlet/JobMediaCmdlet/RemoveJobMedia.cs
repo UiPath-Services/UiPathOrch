@@ -11,11 +11,11 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsCommon.Remove, "OrchJobMedia", SupportsShouldProcess = true)]
 public class RemoveJobMediaCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0, Mandatory = true)]
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(JobIdCompleter))]
     public Int64[]? JobId { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

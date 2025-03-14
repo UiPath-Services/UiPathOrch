@@ -12,7 +12,7 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(ExcludedDateNamed))]
 public class GetCalendarCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(CalendarNameCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
@@ -23,7 +23,7 @@ public class GetCalendarCommand : OrchestratorPSCmdlet
     [Parameter]
     public SwitchParameter IncludePastDate { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Path { get; set; }

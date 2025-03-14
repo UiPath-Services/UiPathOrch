@@ -11,15 +11,15 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.Package))]
 public class GetPackageVersionCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(IdCompleter))]
     public string[]? Id { get; set; }
 
-    [Parameter(Position = 1)]
+    [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(VersionCompleter))]
     public string[]? Version { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

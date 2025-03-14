@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.TmServerInfo))]
 public class GetTmServerInfoCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TmDriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 

@@ -17,7 +17,7 @@ class GetTmRoleCommand : OrchestratorPSCmdlet
     //[SupportsWildcards]
     //public string[]? Name { get; set; }
 
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TmDriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 

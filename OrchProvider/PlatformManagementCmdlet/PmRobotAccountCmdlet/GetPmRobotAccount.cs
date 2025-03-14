@@ -16,11 +16,11 @@ public class GetPmRobotAccountCommand : OrchestratorPSCmdlet
     private const string psDefault = "Default";
     private const string psExportCsv = "ExportCsv";
 
-    [Parameter(ParameterSetName = psDefault, Position = 0)]
+    [Parameter(ParameterSetName = psDefault, Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmRobotAccountNameCompleter<TPositional>))]
     public string[]? Name { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 

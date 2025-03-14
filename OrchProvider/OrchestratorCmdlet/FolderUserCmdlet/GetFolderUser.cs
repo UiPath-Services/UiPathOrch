@@ -13,12 +13,12 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.UserRoles))]
 public class GetFolderUserCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(FolderUserUserNameCompleter))]
     [SupportsWildcards]
     public string[]? UserName { get; set; }
 
-    [Parameter(Position = 1)]
+    [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(FolderUserFullNameCompleter))]
     [SupportsWildcards]
     public string[]? FullName { get; set; }
@@ -31,7 +31,7 @@ public class GetFolderUserCommand : OrchestratorPSCmdlet
     [Parameter]
     public SwitchParameter IncludeInherited { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

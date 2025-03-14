@@ -17,7 +17,7 @@ public class UpdateUserURCommand : OrchestratorPSCmdlet
     [Parameter(Mandatory = true, DontShow = true)]
     public SecureString? Confirmation { get; set; }
 
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 

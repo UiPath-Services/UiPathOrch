@@ -12,17 +12,17 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.User))]
 public class GetUserCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     [ArgumentCompleter(typeof(TenantUserUserNameCompleter<TPositional>))]
     public string[]? UserName { get; set; }
 
-    [Parameter(Position = 1)]
+    [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     [ArgumentCompleter(typeof(TenantUserFullNameCompleter<TPositional>))]
     public string[]? FullName { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<DirectoryTypeItems, int>))]
     public string[]? Type{ get; set; }
@@ -30,7 +30,7 @@ public class GetUserCommand : OrchestratorPSCmdlet
     [Parameter]
     public SwitchParameter ExpandDetails { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 

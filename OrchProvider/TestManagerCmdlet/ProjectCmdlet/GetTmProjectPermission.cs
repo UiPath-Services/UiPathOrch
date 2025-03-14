@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.TmProjectPermission))]
 public class GetTmProjectPermissionCommand : OrchestratorPSCmdlet
 {
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

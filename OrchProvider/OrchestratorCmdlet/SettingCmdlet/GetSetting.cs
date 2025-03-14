@@ -12,12 +12,12 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Settings))]
 public class GetSettingCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Path { get; set; }

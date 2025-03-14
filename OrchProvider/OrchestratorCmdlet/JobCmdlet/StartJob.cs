@@ -34,24 +34,24 @@ public class StartJobCommand : OrchestratorPSCmdlet
         "AttendedStudioWeb"
     ];
 
-    [Parameter(Position = 0, Mandatory = true)]
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ProcessNameCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
-    [Parameter(Position = 1)]
+    [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(RuntimeTypeCompleter))]
     public string? RuntimeType { get; set; }
 
-    [Parameter(Position = 2)]
+    [Parameter(Position = 2, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Item1>))]
     public int? JobsCount { get; set; }
 
-    [Parameter(Position = 3)]
+    [Parameter(Position = 3, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(InputArgumentsCompleter))]
     public string? InputArguments { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

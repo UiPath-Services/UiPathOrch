@@ -28,7 +28,7 @@ public class GetUnattendedSessionCommand : OrchestratorPSCmdlet
         "Available", "Busy", "Disconnected", "Unknown"
     ];
 
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StatusCompleter))]
     [SupportsWildcards]
     public string[]? Status { get; set; }
@@ -40,7 +40,7 @@ public class GetUnattendedSessionCommand : OrchestratorPSCmdlet
     //[ArgumentCompleter(typeof(StaticTextsCompleter<Item10>))]
     //public ulong? First { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<Last>))]
     public string[]? Path { get; set; }
 

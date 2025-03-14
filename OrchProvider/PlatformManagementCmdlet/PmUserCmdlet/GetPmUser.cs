@@ -9,13 +9,13 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.PmUser))]
 public class GetPmUserCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmUserEmailCompleter<TPositional>))]
     [SupportsWildcards]
     [Alias("UserName")]
     public string[]? Email { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 

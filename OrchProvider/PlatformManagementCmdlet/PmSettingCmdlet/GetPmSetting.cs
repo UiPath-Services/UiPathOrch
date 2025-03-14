@@ -16,7 +16,7 @@ class GetPmSettingCommand : OrchestratorPSCmdlet
     //[SupportsWildcards]
     //public string[]? UserName { get; set; }
 
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 

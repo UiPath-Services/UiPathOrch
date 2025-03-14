@@ -503,6 +503,11 @@ internal class EntityType_Name : IPositionalParameters
     public static string[] Parameters { get; } = ["EntityType", "Name"];
 }
 
+internal class Type_Name : IPositionalParameters
+{
+    public static string[] Parameters { get; } = ["Type", "Name"];
+}
+
 internal class Type_Name_Role : IPositionalParameters
 {
     public static string[] Parameters { get; } = ["Type", "Name", "Role"];

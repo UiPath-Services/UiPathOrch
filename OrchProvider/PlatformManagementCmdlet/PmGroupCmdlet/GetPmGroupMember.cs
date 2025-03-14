@@ -14,12 +14,12 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.DirectoryApplication))]
 public class GetPmGroupMemberCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmGroupNameCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? GroupName { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 

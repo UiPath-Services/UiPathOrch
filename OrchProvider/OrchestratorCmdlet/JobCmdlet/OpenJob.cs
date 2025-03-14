@@ -13,14 +13,14 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsCommon.Open, "OrchJob")] //, SupportsPaging = true)]
 public class OpenJobCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(IdCompleter))]
     public Int64[]? Id { get; set; }
 
     //[Parameter]
     //public SwitchParameter Expanded { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

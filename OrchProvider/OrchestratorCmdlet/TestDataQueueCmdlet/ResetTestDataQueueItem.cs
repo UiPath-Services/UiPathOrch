@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.TestDataQueue))]
 public class ResetTestDataQueueItemCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TestDataQueueNameCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
@@ -17,7 +17,7 @@ public class ResetTestDataQueueItemCommand : OrchestratorPSCmdlet
     [Parameter]
     public SwitchParameter IsConsumed { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.User))]
 public class GetCurrentUserCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 

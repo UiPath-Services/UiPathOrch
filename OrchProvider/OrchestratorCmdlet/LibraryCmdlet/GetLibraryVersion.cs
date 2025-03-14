@@ -9,12 +9,12 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.Library))]
 public class GetLibraryVersionCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(LibraryIdCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Id { get; set; }
 
-    [Parameter(Position = 1)]
+    [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(LibraryVersionCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Version { get; set; }
@@ -22,7 +22,7 @@ public class GetLibraryVersionCommand : OrchestratorPSCmdlet
     [Parameter]
     public SwitchParameter HostFeed { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 

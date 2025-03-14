@@ -40,7 +40,7 @@ class UpdatePmUserSettingCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string? Language { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 

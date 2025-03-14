@@ -1,4 +1,5 @@
-﻿using System.Management.Automation;
+﻿
+using System.Management.Automation;
 using System.Text;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
@@ -11,12 +12,12 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.Asset))]
 public class GetAssetCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(AssetNameCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(AssetValueTypeCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? ValueType { get; set; }
@@ -24,7 +25,7 @@ public class GetAssetCommand : OrchestratorPSCmdlet
     [Parameter]
     public SwitchParameter ExpandUserValues { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

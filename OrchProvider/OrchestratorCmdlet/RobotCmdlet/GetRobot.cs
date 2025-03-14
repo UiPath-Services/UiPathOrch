@@ -12,17 +12,17 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.Robot))]
 public class GetRobotCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     [ArgumentCompleter(typeof(FullNameCompleter))]
     public string[]? FullName { get; set; }
 
-    [Parameter(Position = 1)]
+    [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     [ArgumentCompleter(typeof(UsernameCompleter))]
     public string[]? Username { get; set; } // Entities.Robot の定義を尊重した capitalization
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 

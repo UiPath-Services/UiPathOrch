@@ -13,12 +13,12 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.OrchRolePermissionExpanded))]
 public class GetRoleCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     [ArgumentCompleter(typeof(RoleNameCompleter<TPositional>))]
     public string[]? Name { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 

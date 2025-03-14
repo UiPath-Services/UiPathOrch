@@ -12,7 +12,7 @@ public class EnableFolderMachineInheritCommandBase<EnableInherit> : Orchestrator
 {
     public virtual string[]? Name { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

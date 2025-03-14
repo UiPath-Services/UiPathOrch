@@ -23,8 +23,8 @@ public class RemoveCalendarDateCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(CalendarDateCompleter))]
     public DateTime[]? ExcludedDate { get; set; }
 
-    [Parameter]
-    [ArgumentCompleter(typeof(DriveCompleter<Positional.Name_ExcludedDate>))]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
