@@ -15,7 +15,7 @@ public class RemoveAssetCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
-    [Parameter(Position = 1)]
+    [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ValueTypeCompleter))]
     [SupportsWildcards]
     public string[]? ValueType { get; set; }

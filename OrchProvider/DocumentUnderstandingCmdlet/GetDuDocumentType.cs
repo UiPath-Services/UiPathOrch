@@ -14,12 +14,12 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.DuDocumentType))]
 public class GetDuDocumentTypeCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DocumentTypeNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

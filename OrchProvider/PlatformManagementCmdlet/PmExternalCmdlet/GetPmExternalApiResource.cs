@@ -11,12 +11,12 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.ExternalResource))]
 public class GetPmExternalApiResourceCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 

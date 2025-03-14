@@ -9,12 +9,12 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsData.Edit, "OrchProcess")]
 public class EditProcessCommand : OrchestratorPSCmdlet
 {
-    [Parameter (Position = 0)]
+    [Parameter (Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ProcessNameCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

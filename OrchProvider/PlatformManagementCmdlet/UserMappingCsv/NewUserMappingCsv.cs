@@ -10,11 +10,11 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsCommon.New, "OrchUserMappingCsv")]
 class NewUserMappingCsvCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0, Mandatory = true)]
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string? SourceTenant { get; set; }
 
-    [Parameter(Position = 1, Mandatory = true)]
+    [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string? DestinationTenant { get; set; }
 

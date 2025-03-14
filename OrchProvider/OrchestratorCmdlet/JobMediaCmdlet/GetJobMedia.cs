@@ -10,14 +10,14 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.ExecutionMedia))]
 public class GetJobMediaCommand : OrchestratorPSCmdlet
 {
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     public ulong? Skip { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Item10>))]
     public ulong? First { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

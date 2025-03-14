@@ -12,12 +12,12 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(ResponseDictionaryItem))]
 public class GetWebSettingCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(KeyCompleter))]
     [SupportsWildcards]
     public string[]? Key { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Path { get; set; }

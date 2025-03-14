@@ -12,12 +12,12 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.RobotUser))]
 public class GetMachineCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(MachineNameCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 

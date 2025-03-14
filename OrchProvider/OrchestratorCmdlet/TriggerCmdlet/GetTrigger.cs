@@ -11,12 +11,12 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.ProcessSchedule))]
 public class GetTriggerCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TriggerNameCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

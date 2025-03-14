@@ -11,18 +11,18 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.NuLicensedUser))]
 public class GetUserLicenseUser: OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NameCompleter))]
     public string[]? Name { get; set; }
 
-    [Parameter(Position = 1)]
+    [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(EmailCompleter))]
     public string[]? Email { get; set; }
 
     //[Parameter]
     //public SwitchParameter ExpandAllocation { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 

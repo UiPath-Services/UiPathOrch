@@ -15,15 +15,15 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(DirectoryApplication))]
 public class SearchPmDirectoryBulkCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0, Mandatory = true)]
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<User_Group_Application>))]
     public string? EntityType { get; set; }
 
-    [Parameter(Position = 1, Mandatory = true)]
+    [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmDirectoryNameCompleter<TPositional>))]
     public string[]? Name { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 

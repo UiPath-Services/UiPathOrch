@@ -9,12 +9,12 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.Package))]
 public class GetPackageCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PackageIdCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Id { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

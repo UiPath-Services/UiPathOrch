@@ -60,7 +60,7 @@ public class SetRoleCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(BoolCompleter))]
     public string? Delete { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 
@@ -268,7 +268,7 @@ public class SetRoleCommand : OrchestratorPSCmdlet
                     }
                     catch (Exception ex)
                     {
-                        WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "AddRoleError", ErrorCategory.InvalidOperation, drive));
+                        WriteError(new ErrorRecord(new OrchException(target, ex), "AddRoleError", ErrorCategory.InvalidOperation, drive));
                     }
                 }
             }

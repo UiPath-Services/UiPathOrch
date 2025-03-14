@@ -12,12 +12,12 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.SimpleFolder))]
 public class GetAssetLinkCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(AssetNameCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

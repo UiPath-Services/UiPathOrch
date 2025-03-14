@@ -12,11 +12,11 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(DirectoryObject))]
 public class SearchDirectoryCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0, Mandatory = true)]
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NameCompleter))]
     public string? Name { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 

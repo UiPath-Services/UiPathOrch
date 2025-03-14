@@ -13,7 +13,7 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.MaintenanceSetting))]
 class GetMaintenanceSettingCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 

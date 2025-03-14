@@ -9,12 +9,12 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.UserPrivilege))]
 public class GetUserPrivilegeCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     [ArgumentCompleter(typeof(TenantUserUserNameCompleter<TPositional>))]
     public string[]? UserName { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 

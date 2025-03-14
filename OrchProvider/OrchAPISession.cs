@@ -542,7 +542,7 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerableWithoutPagingImpl<T[]>(_base_url_portal, endPoint, folderId, query);
     }
 
-    public string HttpRequestImpl(HttpMethod method, string baseUrl, string endPoint, Int64? folderId, string payload)
+    public string HttpRequestImpl(HttpMethod method, string baseUrl, string endPoint, Int64? folderId, string? payload)
     {
         string url = baseUrl + endPoint;
         var request = new HttpRequestMessage(method, url);
@@ -561,6 +561,27 @@ public partial class OrchAPISession : IDisposable
         var body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
         return body;
     }
+
+    //public string HttpRequestGcImpl(HttpMethod method, string baseUrl, string? folderKey, string? payload)
+    //{
+    //    var request = new HttpRequestMessage(method, baseUrl);
+    //    if (payload is not null)
+    //    {
+    //        request.Content = new StringContent(payload, Encoding.UTF8, @"application/json");
+    //    }
+
+    //    if (folderKey is not null)
+    //    {
+    //        request.Headers.Add("X-Uipath-Folderkey", folderKey);
+    //    }
+
+    //    //request.Headers.Add("x-uipath-correlation-id", Guid.NewGuid().ToString());
+
+    //    var response = HttpClient_Send(request);
+    //    EnsureSuccessStatusCode(response);
+    //    var body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+    //    return body;
+    //}
 
     public string HttpRequest(HttpMethod method, string endPoint, Int64? folderId, string payload)
     {
@@ -877,9 +898,10 @@ public partial class OrchAPISession : IDisposable
     //}
 
     // This endpoint cannot be called from OAuth external app..
-    //public void GetAllRolesForUser()
+    //public string GetAllRolesForUser(string userName, string? type = null)
     //{
-    //    HttpRequest(HttpMethod.Get, "/api/FoldersNavigation/GetAllRolesForUser?username=wenqi.li%40uipath.com&type=User");
+    //    type = "User";
+    //    return HttpRequest(HttpMethod.Get, $"/api/FoldersNavigation/GetAllRolesForUser?username={userName}&type={type}");
     //}
 
     public Folder? GetFolderById(Int64 Id)
@@ -3107,6 +3129,16 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerableTm<TmProjectPermission>($"/testmanager_/api/v2/{projectId}/defects");
     }
 
+    #endregion
+
+    #region Context Grounding
+    // 残念、動かない。エラーは返らないが、空っぽのエンティティが返る。。
+    //public string GetCgIndex(string partitionGlobalId, string tenantKey, string folderKey)
+    //{
+    //    Uri uri = new(_base_url);
+    //    string baseUrl = $"{uri.Scheme}://{uri.Host}/{partitionGlobalId}/{tenantKey}/ecs_/v2/indexes?$expand=datasource";
+    //    return HttpRequestGcImpl(HttpMethod.Get, baseUrl, folderKey, null);
+    //}
     #endregion
 }
 

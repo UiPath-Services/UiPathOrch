@@ -14,12 +14,12 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.NuLicensedGroupMember))]
 public class GetUserLicenseGroup: OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? GroupName { get; set; }
 
-    [Parameter(Position = 1)]
+    [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(UserNameCompleter))]
     public string[]? UserName { get; set; }
 
@@ -30,7 +30,7 @@ public class GetUserLicenseGroup: OrchestratorPSCmdlet
     //[Parameter(ParameterSetName = "License")]
     //public SwitchParameter License { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 

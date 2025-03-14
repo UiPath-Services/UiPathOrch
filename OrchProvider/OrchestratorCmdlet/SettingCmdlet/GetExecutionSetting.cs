@@ -18,17 +18,17 @@ public class GetExecutionSettingCommand : OrchestratorPSCmdlet
         { 1, "Robot" }
     };
 
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ScopeCompleter))]
     [SupportsWildcards]
     public string[]? Scope { get; set; }
 
-    [Parameter(Position = 1)]
+    [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DisplayNameCompleter))]
     [SupportsWildcards]
     public string[]? DisplayName { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Path { get; set; }

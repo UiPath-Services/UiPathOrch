@@ -53,7 +53,7 @@ public class UpdatePmUserCommand : OrchestratorPSCmdlet
     //[Parameter(ValueFromPipelineByPropertyName = true)]
     //public string[]? extensionUserAttributesToRemove { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 

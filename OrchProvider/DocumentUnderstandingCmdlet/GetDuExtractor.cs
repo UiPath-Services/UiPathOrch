@@ -14,12 +14,12 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.DuExtractor))]
 public class GetDuExtractorCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ExtractorNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

@@ -12,14 +12,14 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.Session))]
 class EnableClassicRobotCommand : OrchestratorPSCmdlet
 {
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     public ulong? Skip { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Item10>))]
     public ulong? First { get; set; }
 
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 

@@ -10,11 +10,11 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.LicenseStatsModel))]
 public class GetLicenseStatsCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Day_Week_Month_3Month_6Month_Year_3Year>))]
     public string? Last { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 

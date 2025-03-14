@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.Release))]
 public class GetProcessCommand : OrchestratorPSCmdlet
 {
-    [Parameter (Position = 0)]
+    [Parameter (Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ProcessNameCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
@@ -19,7 +19,7 @@ public class GetProcessCommand : OrchestratorPSCmdlet
     [Parameter]
     public SwitchParameter ExpandDetails { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

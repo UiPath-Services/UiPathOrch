@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.TestCaseExecution))]
 public class GetTestCaseExecutionCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TestCaseNameCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
@@ -19,7 +19,7 @@ public class GetTestCaseExecutionCommand : OrchestratorPSCmdlet
     //[SupportsWildcards]
     //public string[]? PackageIdentifier { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

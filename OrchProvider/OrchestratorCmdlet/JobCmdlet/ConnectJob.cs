@@ -26,7 +26,7 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsCommunications.Connect, "OrchJob")]
 public class ConnectMachineCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(JobIdCompleter))]
     public Int64? JobId { get; set; }
 

@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsCommon.Copy, "OrchPmGroup", SupportsShouldProcess = true)]
 class CopyPmGroupCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmGroupNameCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? GroupName { get; set; }
@@ -19,7 +19,7 @@ class CopyPmGroupCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DestinationDriveCompleter<TPositional>))]
     public string[]? Destination { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string? Path { get; set; }
 

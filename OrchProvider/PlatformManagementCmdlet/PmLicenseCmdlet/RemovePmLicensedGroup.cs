@@ -9,12 +9,12 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsCommon.Remove, "OrchPmLicensedGroup", SupportsShouldProcess = true)]
 public class RemoveUserLicenseGroup: OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? GroupName { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 

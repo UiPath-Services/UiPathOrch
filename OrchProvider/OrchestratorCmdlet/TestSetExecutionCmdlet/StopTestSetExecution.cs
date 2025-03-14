@@ -12,11 +12,11 @@ public class StopTestExecutionCommand : OrchestratorPSCmdlet
 {
     private static readonly string[] stoppableStatus = ["Pending", "Running"];
 
-    [Parameter(Position = 0, Mandatory = true)]
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(IdCompleter))]
     public Int64[]? Id { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

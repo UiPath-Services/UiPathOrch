@@ -87,7 +87,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
     [Parameter(ParameterSetName = "Filter")]
     public SwitchParameter OrderAscending { get; set; }
 
-    [Parameter(ParameterSetName = "Filter")]
+    [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Item10>))]
     public ulong? First { get; set; }
 

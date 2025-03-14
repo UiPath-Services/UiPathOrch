@@ -13,12 +13,12 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.MachineFolder))]
 public class GetFolderMachineCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     [ArgumentCompleter(typeof(FolderMachineNameCompleter<TPositional>))]
     public string[]? Name { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

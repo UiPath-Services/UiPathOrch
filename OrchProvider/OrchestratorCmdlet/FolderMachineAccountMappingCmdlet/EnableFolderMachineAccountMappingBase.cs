@@ -14,7 +14,7 @@ public class EnableFolderMachineAccountMappingCommandBase<Enable> : Orchestrator
 
     virtual public string[]? UserName { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
