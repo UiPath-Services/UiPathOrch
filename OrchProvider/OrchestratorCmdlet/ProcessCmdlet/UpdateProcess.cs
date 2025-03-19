@@ -72,9 +72,23 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
     public int? RetentionPeriod { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(BucketNameCompleter<Positional.Name>))]
+    [ArgumentCompleter(typeof(BucketNameCompleter<TPositional, True>))]
     [SupportsWildcards]
     public string? RetentionBucket { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<Delete_Archive>))]
+    public string? StaleRetentionAction { get; set; }
+
+    // 0 だったら 180 に補正する
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<Item180>))]
+    public int? StaleRetentionPeriod { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(BucketNameCompleter<TPositional, True>))]
+    [SupportsWildcards]
+    public string? StaleRetentionBucket { get; set; }
 
     # region ProcessSettings
     // Job recording (Screenshot)
@@ -342,17 +356,22 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                 // 既存のプロセスの内容から、post data を作成
                 Release newRelease = OrchCollectionExtensions.DeepCopy(process)!;
 
-                try
+                // 19.0 以降では、GetReleaseById() を呼び出すことで Retention を取得できるため下記は不要
+                if (drive.OrchAPISession.ApiVersion < 19)
                 {
-                    // 既存の Retention を取得して設定しておく
-                    var retention = drive.OrchAPISession.GetReleaseRetention(folder.Id!.Value, process!.Id!.Value);
-                    newRelease.RetentionAction = retention?.Action;
-                    newRelease.RetentionPeriod = retention?.Period;
-                    newRelease.RetentionBucketId = retention?.BucketId;
-                }
-                catch (Exception ex) {
-                    string msg2 = $"Get release retention failed.";
-                    WriteError(new ErrorRecord(new OrchException(target, msg2, ex), "GetReleaseRetentionError", ErrorCategory.InvalidOperation, target));
+                    try
+                    {
+                        // 既存の Retention を取得して設定しておく
+                        var retention = drive.OrchAPISession.GetReleaseRetention(folder.Id!.Value, process!.Id!.Value);
+                        newRelease.RetentionAction = retention?.Action;
+                        newRelease.RetentionPeriod = retention?.Period;
+                        newRelease.RetentionBucketId = retention?.BucketId;
+                    }
+                    catch (Exception ex)
+                    {
+                        string msg2 = $"Get release retention failed.";
+                        WriteError(new ErrorRecord(new OrchException(target, msg2, ex), "GetReleaseRetentionError", ErrorCategory.InvalidOperation, target));
+                    }
                 }
 
                 #region パラメータで指定された値を設定
@@ -365,6 +384,8 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                 newRelease.AssignStringIfNotNullOrEmpty(RemoteControlAccess,   (r, v) => r.RemoteControlAccess = v);
                 newRelease.AssignStringIfNotNullOrEmpty(RetentionAction,       (r, v) => r.RetentionAction = v);
                 newRelease.AssignNumberIfNotNullOrZero(RetentionPeriod,        (r, v) => r.RetentionPeriod = v);
+                newRelease.AssignStringIfNotNullOrEmpty(StaleRetentionAction,  (r, v) => r.StaleRetentionAction = v);
+                newRelease.AssignNumberIfNotNullOrZero(StaleRetentionPeriod,   (r, v) => r.StaleRetentionPeriod = v);
 
                 #region RetentionBucket を RetentionBucketId に変換する
                 newRelease.AssignIdFromName(
@@ -374,6 +395,14 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                     e => e.Id!,
                     (s, v) => s.RetentionBucketId = v,
                     this, target, "RetentionBucket");
+
+                newRelease.AssignIdFromName(
+                    StaleRetentionBucket,
+                    () => drive.Buckets.Get(folder),
+                    e => e.Name!,
+                    e => e.Id!,
+                    (s, v) => s.StaleRetentionBucketId = v,
+                    this, target, "StaleRetentionBucket");
                 #endregion
 
                 newRelease.AssignTags(Tags, (r, v) => r.Tags = v);
@@ -416,7 +445,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                                 () => drive.GetPackageEntryPoints(feedId, newRelease?.ProcessKey ?? "", newRelease?.ProcessVersion ?? ""),
                                 e => e.Path!,
                                 e => e.Id!,
-                                (s, v) => s!.RetentionBucketId = v,
+                                (s, v) => s!.EntryPointId = v,
                                 this, target, "EntryPoint");
                     }
                     catch (Exception ex)
@@ -436,6 +465,19 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                     newRelease.RetentionBucketId = null;
                 }
                 newRelease.RetentionPeriod ??= 30;
+
+                // GetStaleReleaseRetention() みたいのは呼び出していないから、上みたいな丁寧な処理は不要か。
+                //newRelease.StaleRetentionAction = string.IsNullOrEmpty(StaleRetentionAction) ? "Delete" : StaleRetentionAction;
+                //if (newRelease.StaleRetentionAction == "Delete")
+                //{
+                //    newRelease.StaleRetentionBucketId = null;
+                //}
+                //newRelease.StaleRetentionPeriod ??= 180;
+
+                if (newRelease.SpecificPriorityValue is not null)
+                {
+                    newRelease.JobPriority = null; // これは SpecificPriorityValue で指定する
+                }
 
                 if (ShouldProcess(target, "Update Process"))
                 {

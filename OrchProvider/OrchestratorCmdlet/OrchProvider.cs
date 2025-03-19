@@ -240,6 +240,22 @@ public partial class OrchProvider : NavigationCmdletProvider
             WriteWarning($"\"{drive.Name}\": The \"Root\" value in UiPathOrchConfig.json should not contain '/orchestrator_/'. Run the Edit-OrchConfig cmdlet to open the file and update it manually.");
         }
 
+        if (string.IsNullOrWhiteSpace(drive.AppId))
+        {
+            WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": AppId is not specified!");
+        }
+        else
+        {
+            try
+            {
+                Guid test = new(drive.AppId);
+            }
+            catch
+            {
+                WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": AppId is invalid!");
+            }
+        }
+
         // Username の指定がなく、AppSecret の指定もない場合には、RedirectUrl が指定されてないと。
         if (string.IsNullOrWhiteSpace(drive.Username) && string.IsNullOrWhiteSpace(drive.AppSecret) && string.IsNullOrWhiteSpace(drive.RedirectUrl))
         {

@@ -52,6 +52,9 @@ public class GetProcessCommand : OrchestratorPSCmdlet
         "RetentionAction",
         "RetentionPeriod",
         "RetentionBucket",
+        "StaleRetentionAction",
+        "StaleRetentionPeriod",
+        "StaleRetentionBucket",
         "ErrorRecordingEnabled",
         "Quality",
         "Frequency",
@@ -64,37 +67,42 @@ public class GetProcessCommand : OrchestratorPSCmdlet
         "Tags"
     ];
 
+    private string? getBucketName(Entities.Release release, Int64? bucketId, string bucketIdKind)
+    {
+        if (bucketId is null) return null;
+
+        OrchDriveInfo drive = null;
+        Folder folder = null;
+        try
+        {
+            (drive, folder) = OrchDriveInfo.EnumFolders(release.Path).FirstOrDefault();
+        }
+        catch
+        {
+            WriteWarning($"Path '{release.GetPSPath()}' cannot be resolved.");
+        }
+
+        if ((drive is not null) && (folder is not null))
+        {
+            var buckets = drive.Buckets.Get(folder);
+            var bucket = buckets.FirstOrDefault(b => b.Id == bucketId);
+            if (bucket is not null)
+            {
+                return bucket.Name;
+            }
+            else
+            {
+                WriteWarning($"{release.GetPSPath()}: {bucketIdKind} {release.RetentionBucketId} cannot be resolved.");
+            }
+        }
+        return null;
+    }
+
     private void WriteCsvContent(StreamWriter writer, Entities.Release release)
     {
         // 各プロセスに対してデータ行を書き込む
-        string retentionBucket = null;
-        if (release.RetentionBucketId is not null)
-        {
-            OrchDriveInfo drive = null;
-            Folder folder = null;
-            try
-            {
-                (drive, folder) = OrchDriveInfo.EnumFolders(release.Path).FirstOrDefault();
-            }
-            catch
-            {
-                WriteWarning($"Path '{release.GetPSPath()}' cannot be resolved.");
-            }
-
-            if ((drive is not null) && (folder is not null))
-            {
-                var buckets = drive.Buckets.Get(folder);
-                var bucket = buckets.FirstOrDefault(b => b.Id == release.RetentionBucketId);
-                if (bucket is not null)
-                {
-                    retentionBucket = bucket.Name;
-                }
-                else
-                {
-                    WriteWarning($"{release.GetPSPath()}: RetentionBucketId {release.RetentionBucketId.ToString() ?? ""} cannot be resolved.");
-                }
-            }
-        }
+        string? retentionBucket = getBucketName(release, release.RetentionBucketId, "RetentionBucketId");
+        string? staleRetentionBucket = getBucketName(release, release.StaleRetentionBucketId, "StaleRetentionBucketId");
 
         string[] line = [
             EscapeCsvValue(release.Path, true),
@@ -110,6 +118,9 @@ public class GetProcessCommand : OrchestratorPSCmdlet
             EscapeCsvValue(release.RetentionAction),
             EscapeCsvValue(release.RetentionPeriod),
             EscapeCsvValue(retentionBucket, true),
+            EscapeCsvValue(release.StaleRetentionAction),
+            EscapeCsvValue(release.StaleRetentionPeriod),
+            EscapeCsvValue(staleRetentionBucket, true),
             EscapeCsvValue(release.ProcessSettings?.ErrorRecordingEnabled),
             EscapeCsvValue(release.ProcessSettings?.Quality),
             EscapeCsvValue(release.ProcessSettings?.Frequency),

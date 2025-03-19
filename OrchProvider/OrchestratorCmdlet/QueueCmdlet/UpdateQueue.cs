@@ -65,9 +65,21 @@ public class UpdateQueueCommand : OrchestratorPSCmdlet
     public int? RetentionPeriod { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(BucketNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(BucketNameCompleter<TPositional, True>))]
     [SupportsWildcards]
     public string? RetentionBucket { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<Delete_Archive>))]
+    public string? StaleRetentionAction { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public int? StaleRetentionPeriod { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(BucketNameCompleter<TPositional, True>))]
+    [SupportsWildcards]
+    public string? StaleRetentionBucket { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TagsCompleter))]
@@ -146,7 +158,8 @@ public class UpdateQueueCommand : OrchestratorPSCmdlet
                 cancelHandler.Token.ThrowIfCancellationRequested();
 
                 string target = queue.GetPSPath();
-                QueueDefinitionPosting newQueue = OrchCollectionExtensions.DeepCopyAsSubClass<QueueDefinition, QueueDefinitionPosting>(queue);
+                //QueueDefinition newQueue = OrchCollectionExtensions.DeepCopyAsSubClass<QueueDefinition, QueueDefinitionPosting>(queue);
+                QueueDefinition newQueue = OrchCollectionExtensions.DeepCopy<QueueDefinition>(queue);
 
                 #region 現在の Retention を取得
                 QueueRetentionSetting retention = null;
@@ -171,8 +184,10 @@ public class UpdateQueueCommand : OrchestratorPSCmdlet
                 }
                 #endregion
 
-                newQueue.AssignStringIfNotNullOrEmpty(RetentionAction,   (q, v) => q.RetentionAction = v);
-                newQueue.AssignNumberIfNotNullOrZero(RetentionPeriod,   (q, v) => q.RetentionPeriod = v);
+                newQueue.AssignStringIfNotNullOrEmpty(RetentionAction, (q, v) => q.RetentionAction = v);
+                newQueue.AssignNumberIfNotNullOrZero(RetentionPeriod, (q, v) => q.RetentionPeriod = v);
+                newQueue.AssignStringIfNotNullOrEmpty(StaleRetentionAction, (q, v) => q.StaleRetentionAction = v);
+                newQueue.AssignNumberIfNotNullOrZero(StaleRetentionPeriod, (q, v) => q.StaleRetentionPeriod = v);
 
                 #region RetentionBucket を RetentionBucketId に変換
                 newQueue.AssignIdFromName(
@@ -182,11 +197,32 @@ public class UpdateQueueCommand : OrchestratorPSCmdlet
                     e => e.Id!,
                     (s, v) => s.RetentionBucketId = v,
                     this, target, "RetentionBucket");
+
+                newQueue.AssignIdFromName(
+                    StaleRetentionBucket,
+                    () => drive.Buckets.Get(folder),
+                    e => e.Name!,
+                    e => e.Id!,
+                    (s, v) => s.StaleRetentionBucketId = v,
+                    this, target, "StaleRetentionBucket");
                 #endregion
+
+                if (drive.OrchAPISession.ApiVersion >= 19)
+                {
+                    if (string.IsNullOrEmpty(newQueue.RetentionAction) || newQueue.RetentionAction == "None")
+                    {
+                        newQueue.RetentionAction = "Delete";
+                        newQueue.RetentionPeriod ??= 30;
+                    }
+                }
 
                 if (newQueue.RetentionAction != "Archive")
                 {
                     newQueue.RetentionBucketId = null;
+                }
+                if (newQueue.StaleRetentionAction != "Archive")
+                {
+                    newQueue.StaleRetentionBucketId = null;
                 }
 
                 newQueue.AssignStringIfNotNullOrEmpty(NewName,                 (q, v) => q.Name = v);

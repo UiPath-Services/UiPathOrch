@@ -858,7 +858,7 @@ internal class AssetValueTypeCompleter<TPositional> : OrchArgumentCompleter wher
     }
 }
 
-internal class BucketNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class BucketNameCompleter<TPositional, WritableOnly> : OrchArgumentCompleter where TPositional : IPositionalParameters where WritableOnly : IBoolParameter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -882,6 +882,7 @@ internal class BucketNameCompleter<TPositional> : OrchArgumentCompleter where TP
             if (!result.TryGetValue(out var entities)) continue;
 
             foreach (var bucket in entities!
+                .Where(b => !WritableOnly.Value || !(b.Options?.Contains("ReadOnly") ?? false))
                 .Where(b => wp.IsMatch(b.Name))
                 .ExcludeByWildcards(b => b?.Name, wpName)
                 .OrderBy(b => b.Name))

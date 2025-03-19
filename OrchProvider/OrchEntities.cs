@@ -190,8 +190,8 @@ public class License
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
-    public Int64? HostLicenseId { get; set; }
     public Int64? ExpireDate { get; set; }
+    public Int64? HostLicenseId { get; set; } // removed in V19.0
     public Int64? GracePeriodEndDate { get; set; }
     public Int64? GracePeriod { get; set; }
     public string? VersionControl { get; set; }
@@ -967,19 +967,19 @@ public class User : IEquatable<User>
     public string? DirectoryIdentifier { get; set; } // Guid
     public string? FullName { get; set; }
     public string? EmailAddress { get; set; }
-    public bool? IsEmailConfirmed { get; set; }
+    public bool? IsEmailConfirmed { get; set; } // deprecated in V18.0? removed in V19.0
     //[JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastLoginTime { get; set; }
-    public bool? IsActive { get; set; }
+    public bool? IsActive { get; set; } // deprecated in V19.0
     //[JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public string? AuthenticationSource { get; set; }
-    public string? Password { get; set; }
+    public string? Password { get; set; } // deprecated in V19.0
     public bool? IsExternalLicensed { get; set; }
     public UserRole[]? UserRoles { get; set; }
     public string[]? RolesList { get; set; }
     public string[]? LoginProviders { get; set; }
-    public List<OrganizationUnit>? OrganizationUnits { get; set; }
+    public List<OrganizationUnit>? OrganizationUnits { get; set; } // deprecated in V19.0
     public int? TenantId { get; set; }
     public string? TenancyName { get; set; }
     public string? TenantDisplayName { get; set; }
@@ -994,19 +994,20 @@ public class User : IEquatable<User>
     public bool? MayHaveUserSession { get; set; }
     public bool? MayHaveRobotSession { get; set; }
     public bool? MayHaveUnattendedSession { get; set; }
-    public bool? BypassBasicAuthRestriction { get; set; } // TODO: あれ？ api v18.0 で無くなった？ 除外しても良いのか、
     public bool? MayHavePersonalWorkspace { get; set; }
+    public bool? RestrictToPersonalWorkspace { get; set; }
+    public bool? BypassBasicAuthRestriction { get; set; } // TODO: あれ？ api v18.0 で無くなった？ 除外しても良いのか、
+    public UpdatePolicy? UpdatePolicy { get; set; }
+    public string? AccountId { get; set; }
+    public bool? HasOnlyInheritedPrivileges { get; set; }
     public bool? ExplicitMayHaveUserSession { get; set; }
     public bool? ExplicitMayHaveRobotSession { get; set; }
     public bool? ExplicitMayHavePersonalWorkspace { get; set; }
     public bool? ExplicitRestrictToPersonalWorkspace { get; set; }
-    public UpdatePolicy? UpdatePolicy { get; set; }
-    public string? AccountId { get; set; }
     //[JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastModificationTime { get; set; }
     public Int64? LastModifierUserId { get; set; }
     public Int64? CreatorUserId { get; set; }
-    public bool? RestrictToPersonalWorkspace { get; set; }
 
     public bool Equals(User? other)
     {
@@ -1021,7 +1022,7 @@ public class User : IEquatable<User>
         ret = ret && DirectoryIdentifier == other.DirectoryIdentifier;
         ret = ret && FullName == other.FullName;
         ret = ret && EmailAddress == other.EmailAddress;
-        ret = ret && IsEmailConfirmed == other.IsEmailConfirmed;
+        //ret = ret && IsEmailConfirmed == other.IsEmailConfirmed;
         ret = ret && LastLoginTime == other.LastLoginTime;
         ret = ret && IsActive == other.IsActive;
         ret = ret && CreationTime == other.CreationTime;
@@ -1031,7 +1032,7 @@ public class User : IEquatable<User>
         ret = ret && UserRoles.SafeSequenceEquals(other.UserRoles); // 配列の比較
         ret = ret && RolesList.SafeSequenceEquals(other.RolesList); // 配列の比較
         ret = ret && LoginProviders.SafeSequenceEquals(other.LoginProviders); // 配列の比較
-        ret = ret && OrganizationUnits.SafeSequenceEquals(other.OrganizationUnits); // リストの比較
+        //ret = ret && OrganizationUnits.SafeSequenceEquals(other.OrganizationUnits); // リストの比較
         ret = ret && TenantId == other.TenantId;
         ret = ret && TenancyName == other.TenancyName;
         ret = ret && TenantDisplayName == other.TenantDisplayName;
@@ -1046,14 +1047,19 @@ public class User : IEquatable<User>
         ret = ret && MayHaveUserSession == other.MayHaveUserSession;
         ret = ret && MayHaveRobotSession == other.MayHaveRobotSession;
         ret = ret && MayHaveUnattendedSession == other.MayHaveUnattendedSession;
-        ret = ret && BypassBasicAuthRestriction == other.BypassBasicAuthRestriction;
         ret = ret && MayHavePersonalWorkspace == other.MayHavePersonalWorkspace;
+        ret = ret && RestrictToPersonalWorkspace == other.RestrictToPersonalWorkspace;
+        //ret = ret && BypassBasicAuthRestriction == other.BypassBasicAuthRestriction;
         ret = ret && UpdatePolicy.SafeEquals(other.UpdatePolicy);
         ret = ret && AccountId == other.AccountId;
+        ret = ret && HasOnlyInheritedPrivileges == other.HasOnlyInheritedPrivileges;
+        ret = ret && ExplicitMayHaveUserSession == other.ExplicitMayHaveUserSession;
+        ret = ret && ExplicitMayHaveRobotSession == other.ExplicitMayHaveRobotSession;
+        ret = ret && ExplicitMayHavePersonalWorkspace == other.ExplicitMayHavePersonalWorkspace;
+        ret = ret && ExplicitRestrictToPersonalWorkspace == other.ExplicitRestrictToPersonalWorkspace;
         ret = ret && LastModificationTime == other.LastModificationTime;
         ret = ret && LastModifierUserId == other.LastModifierUserId;
         ret = ret && CreatorUserId == other.CreatorUserId;
-        ret = ret && RestrictToPersonalWorkspace == other.RestrictToPersonalWorkspace;
         return ret;
     }
 
@@ -1581,6 +1587,8 @@ public class Machine
     public int? UnattendedSlots { get; set; } // integer with format int32
     public int? HeadlessSlots { get; set; } // integer with format int32
     public int? TestAutomationSlots { get; set; } // integer with format int32
+    public int? HostingSlots { get; set; } // added in V19.0
+    public int? AppTestSlots { get; set; } // added in V19.0
     public int? AutomationCloudSlots { get; set; } // integer with format int32
     public int? AutomationCloudTestAutomationSlots { get; set; } // integer with format int32
 
@@ -1630,6 +1638,7 @@ public class SimpleRelease
     public string? ProcessType { get; set; }
     public bool? SupportsMultipleEntryPoints { get; set; }
     public bool? RequiresUserInteraction { get; set; }
+    public string? MinRequiredRobotVersion { get; set; } // added in V19.0
     public bool? IsAttended { get; set; }
     public bool? IsCompiled { get; set; }
     public string? AutomationHubIdeaUrl { get; set; }
@@ -1670,6 +1679,16 @@ public class ResourceOverwrite
     public Int64? EntityFolderId { get; set; }
     public NameValuePair[]? Properties2 { get; set; }
     // Properties // unknown type
+}
+
+// JobErrorDto
+public class JobError
+{
+    public string? code { get; set; }
+    public string? title { get; set; }
+    public string? detail { get; set; }
+    public string? category { get; set; }
+    public int? status { get; set; }
 }
 
 // JobDto
@@ -1725,13 +1744,20 @@ public class Job
     public Guid? StartingTriggerId { get; set; }
     public Int64? MaxExpectedRunningTimeSeconds { get; set; }
     public string? ServerlessJobType { get; set; }
+    public Guid? ParentJobKey { get; set; } // added in V19.0
     [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? ResumeTime { get; set; }
     [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastModificationTime { get; set; }
-    public Guid? ProjectKey { get; set; }
-    public Int64? ParentOperationId { get; set; } // undocumented
+    public JobError? JobError { get; set; } // added in V19.0 TODO
+    public string? ErrorCode { get; set; } // added in V19.0
+    public string? FpsProperties { get; set; } // added in V19.0
+    public string? TraceId { get; set; } // added in V19.0
+    public string? ParentSpanId { get; set; } // added in V19.0
+    // public Guid? ProjectKey { get; set; } // deprecated?
+    // public Int64? ParentOperationId { get; set; } // undocumented
     public AutopilotForRobotsSettings? AutopilotForRobots { get; set; }
+    public string? FpsContext { get; set; } // added in V19.0
     //public bool? EnableAutopilotHealing { get; set; } // deprecated
 }
 
@@ -2272,6 +2298,7 @@ public class StartProcess
     public int? SpecificPriorityValue { get; set; }
     public string? RuntimeType { get; set; }
     public string? InputArguments { get; set; }
+    public string? EnvironmentVariables { get; set; } // added in V19.0
     public string? Reference { get; set; }
     public MachineRobot? MachineRobots { get; set; }
     public string? TargetFramework { get; set; }
@@ -2286,7 +2313,14 @@ public class StartProcess
     public string? AlertRunningExpression { get; set; }
     public bool? RunAsMe { get; set; }
     public string? ParentOperationId { get; set; }
-    public bool? EnableAutopilotHealing { get; set; }
+    public AutopilotForRobotsSettings? AutopilotForRobots { get; set; }
+    // public bool? EnableAutopilotHealing { get; set; } // deprecated in V18.0? removed in V19.0
+    public string? ProfilingOptions { get; set; }
+    public string? FpsContext { get; set; } // added in V19.0
+    public string? FpsProperties { get; set; } // added in V19.0
+    public string? TraceId { get; set; } // added in V19.0
+    public string? ParentSpanId { get; set; } // added in V19.0
+    public string? EntryPointPath { get; set; } // added in V19.0
 }
 
 // ProcessSettingsDto
@@ -2330,9 +2364,11 @@ public class Release
     public string? EntryPointPath { get; set; }
     public EntryPoint? EntryPoint { get; set; } // swagger doc には記載があるが、返ってこないようだ。。一応残しておく。
     public string? InputArguments { get; set; }
+    public string? EnvironmentVariables { get; set; } // added in V19.0
     public string? ProcessType { get; set; }
     public bool? SupportsMultipleEntryPoints { get; set; }
     public bool? RequiresUserInteraction { get; set; }
+    public string? MinRequiredRobotVersion { get; set; } // added in V19.0
     public bool? IsAttended { get; set; }
     public bool? IsCompiled { get; set; }
     public string? AutomationHubIdeaUrl { get; set; }
@@ -2347,6 +2383,7 @@ public class Release
     //[JsonIgnore(Condition = JsonIgnoreCondition.Never)]
     public string? JobPriority { get; set; }
     public int? SpecificPriorityValue { get; set; }
+    public Guid? FolderKey { get; set; } // added in V19.0
     public Int64? OrganizationUnitId { get; set; }
     public string? OrganizationUnitFullyQualifiedName { get; set; }
     public string? TargetFramework { get; set; }
@@ -2366,6 +2403,10 @@ public class Release
     public string? RetentionAction { get; set; } // ISSUE: this is not mentioned in swagger.
     public int? RetentionPeriod { get; set; } // ISSUE: this is not mentioned in swagger.
     public Int64? RetentionBucketId { get; set; } // ISSUE: this is not mentioned in swagger.
+
+    public string? StaleRetentionAction { get; set; } // ISSUE: this is not mentioned in swagger.
+    public int? StaleRetentionPeriod { get; set; } // ISSUE: this is not mentioned in swagger.
+    public Int64? StaleRetentionBucketId { get; set; } // ISSUE: this is not mentioned in swagger.
 }
 
 // added by UiPathOrch
@@ -2384,6 +2425,7 @@ public class ReleaseRetentionSetting
     public string? Action { get; set; }
     public int? Period { get; set; }
     public Int64? BucketId { get; set; }
+    public string? Type { get; set; } // added in V19.0
 }
 
 public class CustomKeyValuePair
@@ -2481,7 +2523,7 @@ public class Asset
     public CustomKeyValuePair[]? KeyValueList { get; set; }
     public bool? HasDefaultValue { get; set; }
     public string? Description { get; set; }
-    public AssetRobotValue[]? RobotValues { get; set; }
+    public AssetRobotValue[]? RobotValues { get; set; } // deprecated since v19.0
     //public AssetUserValue[]? UserValues { get; set; }
     public List<AssetUserValue>? UserValues { get; set; }
     public Tag[]? Tags { get; set; }
@@ -2521,6 +2563,14 @@ public class QueueDefinition
     public int? FoldersCount { get; set; }
     public Int64? OrganizationUnitId { get; set; }
     public string? OrganizationUnitFullyQualifiedName { get; set; }
+    public string? RetentionAction { get; set; }
+    public int? RetentionPeriod { get; set; }
+    public Int64? RetentionBucketId { get; set; }
+    public string? RetentionBucketName { get; set; }
+    public string? StaleRetentionAction { get; set; }
+    public int? StaleRetentionPeriod { get; set; }
+    public Int64? StaleRetentionBucketId { get; set; }
+    public string? StaleRetentionBucketName { get; set; }
     public Tag[]? Tags { get; set; }
 }
 
@@ -2531,14 +2581,7 @@ public class QueueRetentionSetting
     public string? Action { get; set; }
     public int? Period { get; set; }
     public Int64? BucketId { get; set; }
-}
-
-// QueueDefinitionPosting
-public class QueueDefinitionPosting : QueueDefinition // added by UiPathOrch
-{
-    public string? RetentionAction { get; set; }
-    public int? RetentionPeriod { get; set; }
-    public Int64? RetentionBucketId { get; set; }
+    public string? Type { get; set; } // added in V19.0
 }
 
 // QueueFoldersShareDto
@@ -2572,19 +2615,19 @@ public class SimpleUser
     public string? DirectoryIdentifier { get; set; }
     public string? FullName { get; set; }
     public string? EmailAddress { get; set; }
-    public bool? IsEmailConfirmed { get; set; }
+    public bool? IsEmailConfirmed { get; set; } // deprecated in V19.0
     //[JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastLoginTime { get; set; }
-    public bool? IsActive { get; set; }
+    public bool? IsActive { get; set; } // deprecated in V19.0
     //[JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public string? AuthenticationSource { get; set; }
-    public string? Password { get; set; }
+    public string? Password { get; set; } // deprecated in V19.0
     public bool IsExternalLicensed { get; set; }
     public UserRole[]? UserRoles { get; set; }
     public string[]? RolesList { get; set; }
     public string[]? LoginProviders { get; set; }
-    public OrganizationUnit[]? OrganizationUnits { get; set; }
+    public OrganizationUnit[]? OrganizationUnits { get; set; } // deprecated in V19.0
     public int? TenantId { get; set; }
     public string? TenancyName { get; set; }
     public string? TenantDisplayName { get; set; }
@@ -2604,6 +2647,10 @@ public class SimpleUser
     public UpdatePolicy? UpdatePolicy { get; set; }
     public string? AccountId { get; set; }
     public bool? HasOnlyInheritedPrivileges { get; set; }
+    public bool? ExplicitMayHaveUserSession { get; set; } // added in V19.0
+    public bool? ExplicitMayHaveRobotSession { get; set; } // added in V19.0
+    public bool? ExplicitMayHavePersonalWorkspace { get; set; } // added in V19.0
+    public bool? ExplicitRestrictToPersonalWorkspace { get; set; } // added in V19.0
     //[JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastModificationTime { get; set; }
     public long? LastModifierUserId { get; set; }
@@ -2757,7 +2804,7 @@ public class FailedQueueItem
 }
 
 // BulkOperationResponseDtoOfFailedQueueItemDto
-// Issue? swagger doc ではメンバが小文字になってたけど、実際には capital だった。
+// Issue? swagger doc ではメンバが小文字になってたけど、実際には capital だった。v19.0 の swagger.json で修正された。
 public class BulkOperationResponseDtoOfFailedQueueItem
 {
     public bool? Success { get; set; }
@@ -2845,6 +2892,7 @@ public class ProcessSchedule
     public Int64? ReleaseId { get; set; }
     public string? ReleaseKey { get; set; }
     public string? ReleaseName { get; set; }
+    public string? EntryPointPath { get; set; } // added in V19.0
     public string? PackageName { get; set; }
     public string? EnvironmentName { get; set; }
     public string? EnvironmentId { get; set; }
@@ -3128,8 +3176,8 @@ public class TestCaseExecution
     public DateTime? EndTime { get; set; }
     public string? Status { get; set; }
     public TestCaseAssertion[]? TestCaseAssertions { get; set; }
-    public TestCaseExecutionAttachment[]? TestCaseExecutionAttachments { get; set; }
     public string? DataVariationIdentifier { get; set; }
+    public TestCaseExecutionAttachment[]? TestCaseExecutionAttachments { get; set; }
     public string? OutputArguments { get; set; }
     public string? InputArguments { get; set; }
     public string? Info { get; set; }
@@ -3140,6 +3188,7 @@ public class TestCaseExecution
     public int? RunId { get; set; }
     public string? TestCaseType { get; set; }
     public int? ExecutionOrder { get; set; }
+    public Guid? TestManagerTestCaseId { get; set; }
 }
 
 public enum TestSetExecutionStatus // added by UiPathOrch
@@ -3174,8 +3223,8 @@ public class TestSetExecution
     //[JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? EndTime { get; set; }
     public string? Status { get; set; }
-    public string? TriggerType { get; set; }
     public Int64? ScheduleId { get; set; }
+    public string? TriggerType { get; set; }
     public string? BatchExecutionKey { get; set; }
     public string? CoverageStatus { get; set; }
     public int RunId { get; set; }

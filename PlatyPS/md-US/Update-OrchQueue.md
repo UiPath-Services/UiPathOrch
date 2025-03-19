@@ -17,8 +17,9 @@ Update-OrchQueue [-Name] <String[]> [-NewName <String>] [-Description <String>]
  [-AcceptAutomaticallyRetry <String>] [-RetryAbandonedItems <String>] [-MaxNumberOfRetries <Int32>]
  [-Release <String>] [-SlaInMinutes <Int32>] [-RiskSlaInMinutes <Int32>] [-SpecificDataJsonSchema <String>]
  [-OutputDataJsonSchema <String>] [-AnalyticsDataJsonSchema <String>] [-RetentionAction <String>]
- [-RetentionPeriod <Int32>] [-RetentionBucket <String>] [-Tags <String[]>] [-Path <String[]>] [-Recurse]
- [-Depth <UInt32>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+ [-RetentionPeriod <Int32>] [-RetentionBucket <String>] [-StaleRetentionAction <String>]
+ [-StaleRetentionPeriod <Int32>] [-StaleRetentionBucket <String>] [-Tags <String[]>] [-Path <String[]>]
+ [-Recurse] [-Depth <UInt32>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -362,6 +363,51 @@ Accept wildcard characters: False
 
 ```yaml
 Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -StaleRetentionAction
+{{ Fill StaleRetentionAction Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -StaleRetentionBucket
+{{ Fill StaleRetentionBucket Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
+```
+
+### -StaleRetentionPeriod
+{{ Fill StaleRetentionPeriod Description }}
+
+```yaml
+Type: Int32
 Parameter Sets: (All)
 Aliases:
 

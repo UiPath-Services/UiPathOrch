@@ -1,6 +1,7 @@
 ﻿using System.Management.Automation;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Positional;
 using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands;
@@ -9,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 public class RemoveBucketCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(BucketNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(BucketNameCompleter<TPositional, False>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

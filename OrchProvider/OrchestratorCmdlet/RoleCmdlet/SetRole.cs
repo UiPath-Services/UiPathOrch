@@ -252,7 +252,7 @@ public class SetRoleCommand : OrchestratorPSCmdlet
             {
                 string nameUnescaped = WildcardPattern.Unescape(name);
                 string target = drive.NameColonSeparator + nameUnescaped;
-                if (ShouldProcess(target, "Add Role"))
+                if (ShouldProcess(target, "New Role"))
                 {
                     try
                     {
@@ -268,7 +268,7 @@ public class SetRoleCommand : OrchestratorPSCmdlet
                     }
                     catch (Exception ex)
                     {
-                        WriteError(new ErrorRecord(new OrchException(target, ex), "AddRoleError", ErrorCategory.InvalidOperation, drive));
+                        WriteError(new ErrorRecord(new OrchException(target, ex), "NewRoleError", ErrorCategory.InvalidOperation, drive));
                     }
                 }
             }

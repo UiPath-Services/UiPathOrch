@@ -538,6 +538,7 @@ public class ListCachePerFolder<T> : IFolderCacheClearable
 }
 
 // 今のところ、インデックスとしては Int64 のみをサポート。この型もパラメータ化した方がいいのかもしれない
+// TODO: GetById() を実装すると良いのではないか？
 // TIndexEntity: インデックスを含むエンティティ
 // getIndex(TIndexEntity): TIndexEntity から Int64 のインデックス値を取得する Func
 // TEntity: 取得してキャッシュするエンティティ

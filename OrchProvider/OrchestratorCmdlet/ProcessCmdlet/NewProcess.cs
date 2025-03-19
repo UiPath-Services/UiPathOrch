@@ -70,9 +70,22 @@ public class AddProcessCommand : OrchestratorPSCmdlet
     public int? RetentionPeriod { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(BucketNameCompleter<Positional.Id_Version>))]
+    [ArgumentCompleter(typeof(BucketNameCompleter<TPositional, True>))]
     [SupportsWildcards]
     public string? RetentionBucket { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<Delete_Archive>))]
+    public string? StaleRetentionAction { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<Item180>))]
+    public int? StaleRetentionPeriod { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(BucketNameCompleter<TPositional, True>))]
+    [SupportsWildcards]
+    public string? StaleRetentionBucket { get; set; }
 
     # region ProcessSettings
     // Job recording (Screenshot)
@@ -397,10 +410,30 @@ public class AddProcessCommand : OrchestratorPSCmdlet
                         this, target, "RetentionBucket");
                     #endregion
 
+                    release.StaleRetentionAction = (string.IsNullOrEmpty(StaleRetentionAction)) ? "Delete" : StaleRetentionAction;
+                    release.StaleRetentionPeriod = (StaleRetentionPeriod is null || StaleRetentionPeriod == 0) ? 30 : StaleRetentionPeriod;
+                    #region StaleRetentionBucket を StaleRetentionBucketId に変換
+                    release.AssignIdFromName(
+                        StaleRetentionBucket,
+                        () => drive.Buckets.Get(folder),
+                        e => e.Name!,
+                        e => e.Id!,
+                        (s, v) => s.StaleRetentionBucketId = v,
+                        this, target, "StaleRetentionBucket");
+                    #endregion
+
                     release.VideoRecordingSettings = new();
                     release.VideoRecordingSettings.AssignStringIfNotNullOrEmpty(VideoRecordingType, (s, v) => s.VideoRecordingType = v);
                     release.VideoRecordingSettings.AssignStringIfNotNullOrEmpty(QueueItemVideoRecordingType, (s, v) => s.QueueItemVideoRecordingType = v);
                     release.VideoRecordingSettings.AssignNumberIfNotNullOrZero(MaxDurationSeconds, (s, v) => s.MaxDurationSeconds = v);
+                }
+
+                if (drive.OrchAPISession.ApiVersion >= 19)
+                {
+                    if (string.IsNullOrEmpty(release.RetentionAction) || release.RetentionAction == "None")
+                    {
+                        release.RetentionAction = "Delete";
+                    }
                 }
 
                 if (ShouldProcess(target + $":{latest.Version}", "Add Process"))
