@@ -1659,7 +1659,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost  //,
                 //reporter.WriteProgress(++index, $"{index:D}/{srcQueues.Count} {queue.Name}");
                 reporter.WriteProgress(++index, $"{index:D}/{srcQueues.Count}");
 
-                QueueDefinitionPosting postingQueue = null;
+                QueueDefinition postingQueue = null;
 
                 // リンクを取得し、ターゲットドライブのリンク先フォルダに同名のエンティティがあれば
                 // そこにリンクを張るだけにする
@@ -1684,21 +1684,6 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost  //,
                     continue;
                 }
 
-                QueueRetentionSetting srcRetention = null;
-                try
-                {
-                    // TODO: 15 で成功するか？ たぶん失敗するような気がする
-                    // 16 で成功することは確認済み
-                    if (srcDrive.OrchAPISession.ApiVersion >= 16)
-                    {
-                        srcRetention = srcDrive.OrchAPISession.GetQueueRetention(srcFolder.Id ?? 0, queue.Id ?? 0);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: Failed to get queue retention settings", ex), "GetQueueError", ErrorCategory.InvalidOperation, target));
-                }
-
                 Int64? releaseId = null;
                 if (srcQueue.ReleaseId is not null && srcQueue.ReleaseId != 0)
                 {
@@ -1711,7 +1696,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost  //,
                 // TODO: ProcessScheduleId がコピーできていない気がする？
                 // どこかから移行しないといけなそうな値だ。
                 // Get-OrchQueue -Recurse | select name,ProcessScheduleId で確認
-                postingQueue = new QueueDefinitionPosting()
+                postingQueue = new QueueDefinition()
                 {
                     Name = srcQueue.Name,
                     Description = srcQueue.Description,
@@ -1726,10 +1711,29 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost  //,
                     AnalyticsDataJsonSchema = srcQueue.AnalyticsDataJsonSchema,
                     SlaInMinutes = srcQueue.SlaInMinutes,
                     RiskSlaInMinutes = srcQueue.RiskSlaInMinutes,
-                    RetentionAction = srcRetention?.Action ?? "Delete", // TODO: OR バージョン依存。CreateQueue() 側で行うべきかも
-                    RetentionPeriod = srcRetention?.Period ?? 30, // TODO: OR バージョン依存。CreateQueue() 側で行うべきかも
+                    RetentionAction = srcQueue.RetentionAction ?? "Delete", // TODO: OR バージョン依存。CreateQueue() 側で行うべきかも
+                    RetentionPeriod = srcQueue.RetentionPeriod ?? 30, // TODO: OR バージョン依存。CreateQueue() 側で行うべきかも
+                    RetentionBucketId = FindDstBucket(_this,
+                            srcDrive, srcFolder, srcQueue.RetentionBucketId,
+                            dstDrive, newFolder, "Copy Process", msg)?.Id,
+                    StaleRetentionAction = srcQueue.RetentionAction ?? "Delete",
+                    StaleRetentionPeriod = srcQueue.StaleRetentionPeriod ?? 180,
+                    StaleRetentionBucketId = FindDstBucket(_this,
+                            srcDrive, srcFolder, srcQueue.StaleRetentionBucketId,
+                            dstDrive, newFolder, "Copy Process", msg)?.Id,
                     Tags = srcQueue.Tags
                 };
+
+                if (dstDrive.OrchAPISession.ApiVersion >= 19 &&
+                    (string.IsNullOrEmpty(postingQueue.RetentionAction) || postingQueue.RetentionAction == "None"))
+                {
+                    postingQueue.RetentionAction = "Delete";
+                }
+
+                if (postingQueue.RetentionPeriod is null || postingQueue.RetentionPeriod == 0)
+                {
+                    postingQueue.RetentionPeriod = 30;
+                }
 
                 try
                 {

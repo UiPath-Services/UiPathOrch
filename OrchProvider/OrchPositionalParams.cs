@@ -349,7 +349,12 @@ internal class RuntimeTypes : IPositionalParameters
         "AutomationKit",
         "ServerlessTestAutomation",
         "AutomationCloudTestAutomation",
-        "AttendedStudioWeb"
+        "AttendedStudioWeb",
+        "Hosting",
+        "AssistantWeb",
+        "ProcessOrchestration",
+        "AgentService",
+        "AppTest"
     ];
 }
 

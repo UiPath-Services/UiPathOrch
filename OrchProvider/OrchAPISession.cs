@@ -701,7 +701,36 @@ public partial class OrchAPISession : IDisposable
 
     public QueueDefinition? GetQueue(Int64 folderId, Int64 queueId)
     {
-        return HttpRequest<QueueDefinition>(HttpMethod.Get, $"/odata/QueueDefinitions({queueId})", folderId);
+        // TODO: ApiVersion が 17 とか 18 のときはどっちを呼び出すべきか？
+        if (ApiVersion >= 19)
+        {
+            return HttpRequest<QueueDefinition>(HttpMethod.Get, $"/odata/QueueDefinitions/UiPath.Server.Configuration.OData.GetQueue(id={queueId})", folderId);
+        }
+        else
+        {
+            var queue = HttpRequest<QueueDefinition>(HttpMethod.Get, $"/odata/QueueDefinitions({queueId})", folderId);
+            if (queue is null) return null;
+
+            if (16 <= ApiVersion) // && ApiVersion < 19)
+            {
+                try
+                {
+                    var retention = GetQueueRetention(folderId, queueId);
+                    if (retention is not null)
+                    {
+                        queue.RetentionAction = retention.Action;
+                        queue.RetentionPeriod = retention.Period;
+                        queue.RetentionBucketId = retention.BucketId;
+                    }
+                }
+                catch
+                {
+                    // ここは握りつぶすので良いか、
+                }
+            }
+
+            return queue;
+        }
     }
 
     public QueueRetentionSetting? GetQueueRetention(Int64 folderId, Int64 queueId)
@@ -710,7 +739,7 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<QueueRetentionSetting>(HttpMethod.Get, $"/odata/QueueRetention({queueId})", folderId);
     }
 
-    public QueueDefinition? CreateQueue(Int64 folderId, QueueDefinitionPosting queue)
+    public QueueDefinition? CreateQueue(Int64 folderId, QueueDefinition queue)
     {
         // OC 22.10.1 (15.0) で動作確認済み POST /odata/QueueDefinitions
         // OC 23.4.0 (16.0) で動作確認済み POST /odata/QueueDefinitions/UiPath.Server.Configuration.OData.CreateQueue
@@ -727,7 +756,7 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    public void EditQueue(Int64 folderId, QueueDefinitionPosting queue)
+    public void EditQueue(Int64 folderId, QueueDefinition queue)
     {
         // 何も返さない
         HttpRequest(HttpMethod.Post, "/odata/QueueDefinitions/UiPath.Server.Configuration.OData.EditQueue", folderId, queue);
@@ -1497,15 +1526,40 @@ public partial class OrchAPISession : IDisposable
 
     public Release? GetReleaseById(Int64 folderId, Int64 releaseId, string? query = null)
     {
-        return HttpRequest<Release>(HttpMethod.Get, $"/odata/Releases({releaseId})", folderId, query);
+        if (ApiVersion >= 19)
+        {
+            return HttpRequest<Release>(HttpMethod.Get, $"/odata/Releases({releaseId})/UiPath.Server.Configuration.OData.GetRelease", folderId, query);
+        }
+        else
+        {
+            return HttpRequest<Release>(HttpMethod.Get, $"/odata/Releases({releaseId})", folderId, query);
+        }
     }
 
     public Release? PostRelease(Int64 folderId, Release release)
     {
+        if (release.RetentionPeriod      == 0) release.RetentionPeriod      = null;
+        if (release.StaleRetentionPeriod == 0) release.StaleRetentionPeriod = null;
+
         // OC 22.10.1 (15.0) で動作確認済み POST /odata/Releases
         // OC 23.4.0 (16.0) で動作確認済み POST /odata/Releases
         // OC 23.10.6 (17.0) で動作確認済み POST /odata/Releases/UiPath.Server.Configuration.OData.CreateRelease
-        if (ApiVersion >= 17)
+        // Automation Cloud (19.0) で動作確認済み POST /odata/Releases/UiPath.Server.Configuration.OData.CreateRelease
+        if (ApiVersion >= 19)
+        {
+            // Automation Cloud に対しては、RetentionAction は "None" は使えないようだ。
+            // TODO: MSI Orchestrator についてはどうか？ Automation Suite に対してはどうか？
+            if (_drive._psDrive.IsCloud)
+            {
+                if (string.IsNullOrEmpty(release.RetentionAction) || release.RetentionAction == "None")
+                {
+                    release.RetentionAction = "Delete";
+                    release.RetentionPeriod ??= 30;
+                }
+            }
+            return HttpRequest<Release>(HttpMethod.Post, "/odata/Releases/UiPath.Server.Configuration.OData.CreateRelease", folderId, release);
+        }
+        else if (ApiVersion >= 17)
         {
             return HttpRequest<Release>(HttpMethod.Post, "/odata/Releases/UiPath.Server.Configuration.OData.CreateRelease", folderId, release);
         }

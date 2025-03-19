@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.10.6'
+ModuleVersion = '0.9.10.7'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -384,11 +384,28 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Some parameters of update-related cmdlets did not support CSV file imports, such as the -Path parameter of the Set-OrchAsset cmdlet.
+        ReleaseNotes = '- Properties have been added to several entity types to align with Automation Cloud API version 19.0.
 
-- Additionally, almost all Get-related cmdlets did not support CSV file imports. All affected cmdlets, including Get-OrchAsset and Get-OrchPackage, have been updated to allow imports from CSV files.
+- Modified the Copy-Item, Copy-OrchProcess, Copy-OrchQueue, New-OrchProcess, Update-OrchProcess, New-OrchQueue, and Update-OrchQueue cmdlets:
+  - In Automation Cloud tenants, processes and queues can no longer be created with RetentionAction set to "None". As a result, these cmdlets will now automatically replace "None" with "Delete" if specified.
 
-- Please note that, at this time, switch parameters do not support CSV imports.
+- The Get-OrchProcess -ExportCsv and Get-OrchQueue -ExportCsv now include the following three columns in the generated CSV files:
+  - StaleRetentionAction
+  - StaleRetentionPeriod
+  - StaleRetentionBucket
+
+  - The New-OrchProcess, Update-OrchProcess, New-OrchQueue, and Update-OrchQueue cmdlets now support parameters with the same names as the newly added CSV columns.
+
+- Improvements to the Update-OrchProcess cmdlet:
+  - When specifying -EntryPoint parameter, its EntryPointId was incorrectly being set to RetentionBucketId.
+
+  - The -RetentionBucket parameter''s completer no longer displays read-only storage buckets.
+
+- Fix for Get-OrchQueue -ExportCsv:
+  - Previously, retention policies were not included in the exported CSV.
+
+- Configuration validation improvement:
+  - A warning is now displayed if the AppId specified in the configuration file is invalid (e.g., an empty string or not in GUID format).
 '
 
         # Prerelease string of this module

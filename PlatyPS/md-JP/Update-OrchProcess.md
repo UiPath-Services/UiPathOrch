@@ -16,7 +16,8 @@ schema: 2.0.0
 Update-OrchProcess [-Name] <String[]> [-NewName <String>] [-Description <String>] [-Version <String>]
  [-EntryPoint <String>] [-InputArguments <String>] [-Priority <String>] [-HiddenForAttendedUser <String>]
  [-RemoteControlAccess <String>] [-RetentionAction <String>] [-RetentionPeriod <Int32>]
- [-RetentionBucket <String>] [-ErrorRecordingEnabled <String>] [-Quality <Int32>] [-Frequency <Int32>]
+ [-RetentionBucket <String>] [-StaleRetentionAction <String>] [-StaleRetentionPeriod <Int32>]
+ [-StaleRetentionBucket <String>] [-ErrorRecordingEnabled <String>] [-Quality <Int32>] [-Frequency <Int32>]
  [-Duration <Int32>] [-AutoStartProcess <String>] [-AlwaysRunning <String>] [-VideoRecordingType <String>]
  [-QueueItemVideoRecordingType <String>] [-MaxDurationSeconds <Int32>] [-Tags <String[]>] [-Path <String[]>]
  [-Recurse] [-Depth <UInt32>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
@@ -453,6 +454,51 @@ Accept wildcard characters: False
 
 ```yaml
 Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -StaleRetentionAction
+{{ Fill StaleRetentionAction Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -StaleRetentionBucket
+{{ Fill StaleRetentionBucket Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
+```
+
+### -StaleRetentionPeriod
+{{ Fill StaleRetentionPeriod Description }}
+
+```yaml
+Type: Int32
 Parameter Sets: (All)
 Aliases:
 

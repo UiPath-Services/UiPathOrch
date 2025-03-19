@@ -435,34 +435,36 @@ public static class OrchStringExtensions
         Func<IEnumerable<TElement>> getEntitiesFunc,
         Func<TElement, string> getNameFunc,
         Func<TElement, TId> getIdFunc,
-        Action<T, TId> setter,
+        Action<T, TId?> setter,
         IWritableHost host,
         string? targetName,
         string nameKind)
     {
-        if (!string.IsNullOrEmpty(name))
+        if (string.IsNullOrEmpty(name))
         {
-            try
+            setter(target, default);
+            return;
+        }
+        try
+        {
+            var wpName = new WildcardPattern(name, WildcardOptions.IgnoreCase);
+            var entities = getEntitiesFunc().Where(e => wpName.IsMatch(getNameFunc(e)));
+            switch (entities.Take(2).Count())
             {
-                var wpName = new WildcardPattern(name, WildcardOptions.IgnoreCase);
-                var entities = getEntitiesFunc().Where(e => wpName.IsMatch(getNameFunc(e)));
-                switch (entities.Take(2).Count())
-                {
-                    case 1:
-                        setter(target, getIdFunc(entities.First()));
-                        break;
-                    case 0:
-                        host.WriteError(new ErrorRecord(new OrchException(targetName, $"No {nameKind} found with \"{name}\". Please ensure that the specified {nameKind} name is correct."), $"Get{nameKind}Error", ErrorCategory.InvalidOperation, target));
-                        break;
-                    default:
-                        host.WriteError(new ErrorRecord(new OrchException(targetName, $"Multiple {nameKind} found with \"{name}\". Please specify a unique {nameKind} name."), $"Get{nameKind}Error", ErrorCategory.InvalidOperation, target));
-                        break;
-                }
+                case 1:
+                    setter(target, getIdFunc(entities.First()));
+                    break;
+                case 0:
+                    host.WriteError(new ErrorRecord(new OrchException(targetName, $"No {nameKind} found with \"{name}\". Please ensure that the specified {nameKind} name is correct."), $"Get{nameKind}Error", ErrorCategory.InvalidOperation, target));
+                    break;
+                default:
+                    host.WriteError(new ErrorRecord(new OrchException(targetName, $"Multiple {nameKind} found with \"{name}\". Please specify a unique {nameKind} name."), $"Get{nameKind}Error", ErrorCategory.InvalidOperation, target));
+                    break;
             }
-            catch (Exception ex)
-            {
-                host.WriteError(new ErrorRecord(new OrchException(targetName, ex), $"Get{nameKind}Error", ErrorCategory.InvalidOperation, target));
-            }
+        }
+        catch (Exception ex)
+        {
+            host.WriteError(new ErrorRecord(new OrchException(targetName, ex), $"Get{nameKind}Error", ErrorCategory.InvalidOperation, target));
         }
     }
 

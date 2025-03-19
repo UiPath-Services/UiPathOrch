@@ -53,15 +53,31 @@ public class GetQueueCommand : OrchestratorPSCmdlet
         "RetentionAction",
         "RetentionPeriod",
         "RetentionBucket",
+        "StaleRetentionAction",
+        "StaleRetentionPeriod",
+        "StaleRetentionBucket",
         "Tags"
     ];
 
+    // TODO: detailedQueue をキャッシュすべきだ。
     private void WriteCsvContent(StreamWriter writer, IEnumerable<Entities.QueueDefinition> output)
     {
         // 各キューに対してデータ行を書き込む
         foreach (var q in output)
         {
             var (drive, folder) = OrchDriveInfo.EnumFolders(q.Path).First();
+
+            QueueDefinition detailedQueue = null;
+            try
+            {
+                detailedQueue = drive.OrchAPISession.GetQueue(folder.Id ?? 0, q.Id ?? 0);
+            }
+            catch (Exception ex)
+            {
+                WriteError(new ErrorRecord(new OrchException(q.GetPSPath(), "Failed to get queue info", ex), "GetQueueError", ErrorCategory.InvalidOperation, q));
+                continue;
+            }
+            detailedQueue ??= q;
 
             string release = null;
             if (q.ReleaseId is not null)
@@ -77,27 +93,15 @@ public class GetQueueCommand : OrchestratorPSCmdlet
                 }
             }
 
-            QueueRetentionSetting retention = null;
-            if (drive.OrchAPISession.ApiVersion >= 16)
-            {
-                try
-                {
-                    retention = drive.OrchAPISession.GetQueueRetention(folder.Id ?? 0, q.Id ?? 0);
-                }
-                catch (Exception ex)
-                {
-                    WriteWarning($"{q.GetPSPath()}: Failed to retrieve QueueRetention: {ex.Message}");
-                }
-            }
-
-            string retentionBucket = null;
-            if (retention?.BucketId is not null)
+            if (detailedQueue.RetentionBucketId is not null &&
+                detailedQueue.RetentionBucketId != 0 &&
+                string.IsNullOrEmpty(detailedQueue.RetentionBucketName))
             {
                 try
                 {
                     var buckets = drive.Buckets.Get(folder);
-                    var bucket = buckets.FirstOrDefault(b => b.Id == retention.BucketId);
-                    retentionBucket = bucket?.Name;
+                    var bucket = buckets.FirstOrDefault(b => b.Id == detailedQueue.RetentionBucketId);
+                    detailedQueue.RetentionBucketName = bucket?.Name;
                 }
                 catch (Exception ex)
                 {
@@ -107,23 +111,26 @@ public class GetQueueCommand : OrchestratorPSCmdlet
 
             string[] line = [
                 EscapeCsvValue(q.Path, true),
-                EscapeCsvValue(q.Name, true),
-                EscapeCsvValue(q.Description),
-                EscapeCsvValue(q.AcceptAutomaticallyRetry),
-                EscapeCsvValue(q.RetryAbandonedItems),
-                EscapeCsvValue(q.MaxNumberOfRetries),
-                EscapeCsvValue(q.EnforceUniqueReference),
-                EscapeCsvValue(q.Encrypted),
+                EscapeCsvValue(detailedQueue.Name, true),
+                EscapeCsvValue(detailedQueue.Description),
+                EscapeCsvValue(detailedQueue.AcceptAutomaticallyRetry),
+                EscapeCsvValue(detailedQueue.RetryAbandonedItems),
+                EscapeCsvValue(detailedQueue.MaxNumberOfRetries),
+                EscapeCsvValue(detailedQueue.EnforceUniqueReference),
+                EscapeCsvValue(detailedQueue.Encrypted),
                 EscapeCsvValue(release),
-                EscapeCsvValue(q.SlaInMinutes),
-                EscapeCsvValue(q.RiskSlaInMinutes),
-                EscapeCsvValue(q.SpecificDataJsonSchema),
-                EscapeCsvValue(q.OutputDataJsonSchema),
-                EscapeCsvValue(q.AnalyticsDataJsonSchema),
-                EscapeCsvValue(retention?.Action),
-                EscapeCsvValue(retention?.Period),
-                EscapeCsvValue(retentionBucket),
-                EscapeCsvValue(q.Tags)
+                EscapeCsvValue(detailedQueue.SlaInMinutes),
+                EscapeCsvValue(detailedQueue.RiskSlaInMinutes),
+                EscapeCsvValue(detailedQueue.SpecificDataJsonSchema),
+                EscapeCsvValue(detailedQueue.OutputDataJsonSchema),
+                EscapeCsvValue(detailedQueue.AnalyticsDataJsonSchema),
+                EscapeCsvValue(detailedQueue.RetentionAction),
+                EscapeCsvValue(detailedQueue.RetentionPeriod),
+                EscapeCsvValue(detailedQueue.RetentionBucketName),
+                EscapeCsvValue(detailedQueue.StaleRetentionAction),
+                EscapeCsvValue(detailedQueue.StaleRetentionPeriod),
+                EscapeCsvValue(detailedQueue.StaleRetentionBucketName),
+                EscapeCsvValue(detailedQueue.Tags)
             ];
             WriteCsvLine(writer, line);
         }
