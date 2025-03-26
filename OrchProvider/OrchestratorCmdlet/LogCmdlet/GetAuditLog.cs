@@ -119,9 +119,9 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .Where(user => wp.IsMatch(user.UserName))
                     .ExcludeByWildcards(user => user?.UserName, wpUserName)
                     .OrderBy(user => user.UserName))

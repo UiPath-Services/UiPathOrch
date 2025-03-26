@@ -52,9 +52,9 @@ public class GetMachineClientSecretIdCommand : OrchestratorPSCmdlet
             bool bFound = false;
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var machine in entities!
+                foreach (var machine in result.Result
                     .Where(m => wp.IsMatch(m.Name))
                     .Where(m => m.Scope != "PersonalWorkspace" && m.Scope != "AutomationCloudRobot") // 共通の処理との差異はここだけ
                     .ExcludeByWildcards(m => m?.Name, wpName)
@@ -94,11 +94,11 @@ public class GetMachineClientSecretIdCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
                 var drive = result.Source;
 
-                foreach (var machine in entities!
+                foreach (var machine in result.Result
                     .Where(m => m.Scope != "PersonalWorkspace" && m.Scope != "AutomationCloudRobot") // 共通の処理との差異はここだけ
                     .FilterByWildcards(m => m?.Name, wpName)
                     .OrderBy(m => m.Name!))

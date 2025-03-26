@@ -42,9 +42,9 @@ public class GetSettingCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var item in entities!
+                foreach (var item in result.Result
                     .Where(e => wp.IsMatch(e.Name))
                     .ExcludeByWildcards(e => e?.Name, wpName)
                     .OrderBy(e => e.Name))

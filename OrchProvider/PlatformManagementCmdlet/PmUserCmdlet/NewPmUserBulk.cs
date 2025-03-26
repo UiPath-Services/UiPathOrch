@@ -50,12 +50,12 @@ internal class DriveGroupIdsComparer : IEqualityComparer<(OrchDriveInfo drive, s
     }
 }
 
-[Cmdlet(VerbsCommon.New, "OrchPmUserBulk", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.New, "OrchPmUser", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.PmUser))]
 public class AddPmUserBulkCommand : OrchestratorPSCmdlet
 {
     // Key: (drive, groupIds) Value: Dictionary<email, csvLine>
-    Dictionary<(OrchDriveInfo drive, string[] groupIds), Dictionary<string, CsvLine>> _params = new(new DriveGroupIdsComparer());
+    Dictionary<(OrchDriveInfo drive, string[] groupNames), Dictionary<string, CsvLine>> _params = new(new DriveGroupIdsComparer());
 
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [Alias("UserName")]
@@ -94,35 +94,47 @@ public class AddPmUserBulkCommand : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         // CSV に指定された GroupName はカンマで区切る
-        var groupName = GroupName?
-             .SelectMany(name => name.Split(',', StringSplitOptions.RemoveEmptyEntries))
-             .Select(name => name.Trim())
-             .ToArray();
+        var groupNameEnum = GroupName.Split1stValueByUnescapedCommas();
 
         _params ??= [];
 
         var drives = OrchDriveInfo.EnumOrchDrives(Path);
-        var wpGroupName = groupName.ConvertToWildcardPatternList();
 
         foreach (var drive in drives)
         {
             var groups = drive.GetPmGroups();
-            var groupIds = groups.Values
-                .SelectByWildcards(g => g?.name, wpGroupName)
-                .Select(g => g!.id)
-                .Distinct()
-                .OrderBy(id => id)
-                .ToArray();
+            // 既存のグループ名はケースを無視する必要はないが、新規作成のグループ名についてはケースを無視しておかないと。
+            HashSet<string> groupNames = new(StringComparer.OrdinalIgnoreCase);
+            
+            foreach (var groupName in groupNameEnum ?? [])
+            {
+                // グループ名がワイルドカードを含んでいれば展開、そうでなければそのまま保持
+                // で、そのまま保持した名前のグループが存在しなければ、後でグループを作成
+                if (WildcardPattern.ContainsWildcardCharacters(groupName))
+                {
+                    var wpGroupName = new WildcardPattern(groupName, WildcardOptions.IgnoreCase);
+                    var targetGroupNames = groups.Values
+                        .Where(g => !string.IsNullOrEmpty(g.name) && wpGroupName.IsMatch(g.name))
+                        .Select(g => g.name!);
+                    groupNames.UnionWith(targetGroupNames);
+                }
+                else
+                {
+                    groupNames.Add(groupName);
+                }
+            }
+
+            string[] orderedGroupNames = [.. groupNames.Order()]; // キーとして利用できるようにソートする
 
             string target = System.IO.Path.Combine(drive.NameColonSeparator, Email!);
-            if (_params.TryGetValue((drive, groupIds)!, out var userName_line))
+            if (_params.TryGetValue((drive, orderedGroupNames)!, out var userName_line))
             {
                 if (userName_line.TryGetValue(Email!, out var line))
                 {
                     WriteWarning($"{drive.NameColonSeparator}{Email}: duplicate entry found. This entry will be ignored.");
                     continue;
                 }
-                if (ShouldProcess(target, "Add PmUser"))
+                if (ShouldProcess(target, "New PmUser"))
                 {
                     line = new(Name, SurName, DisplayName, Type, BypassBasicAuthRestriction, InvitationAccepted);
                     userName_line[Email!] = line;
@@ -130,12 +142,12 @@ public class AddPmUserBulkCommand : OrchestratorPSCmdlet
             }
             else
             {
-                if (ShouldProcess(target, "Add PmUser"))
+                if (ShouldProcess(target, "New PmUser"))
                 {
                     userName_line = [];
                     CsvLine line = new(Name, SurName, DisplayName, Type, BypassBasicAuthRestriction, InvitationAccepted);
                     userName_line[Email!] = line;
-                    _params[(drive, groupIds)!] = userName_line;
+                    _params[(drive, orderedGroupNames)!] = userName_line;
                 }
             }
         }
@@ -146,13 +158,26 @@ public class AddPmUserBulkCommand : OrchestratorPSCmdlet
         foreach (var param in _params)
         {
             var drive = param.Key.drive;
-            var groupIds = param.Key.groupIds;
+            var groupNames = param.Key.groupNames;
+
+            // グループ名からグループ ID を取得
+            List<string> groupIds = [];
+            foreach (var groupName in groupNames)
+            {
+                var group = drive.GetPmGroups().Values.FirstOrDefault(g => g.name?.Equals(groupName, StringComparison.OrdinalIgnoreCase) ?? false);
+                if (group is null)
+                {
+                    group = CreatePmGroup(drive, groupName);
+                }
+                if (string.IsNullOrEmpty(group?.id)) continue;
+                groupIds.Add(group.id);
+            }
 
             CreateUsersCommand payload = new()
             {
                 users = [],
                 partitionGlobalId = drive.GetPartitionGlobalId(),
-                groupIDs = groupIds
+                groupIDs = groupIds.ToArray()
             };
 
             foreach (var userName_line in param.Value)

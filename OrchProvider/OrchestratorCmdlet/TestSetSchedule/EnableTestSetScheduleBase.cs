@@ -49,9 +49,9 @@ public class EnableTestSetScheduleCommandBase<Enable> : OrchestratorPSCmdlet whe
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var entity in entities!
+                foreach (var entity in result.Result
                     .Where(t => Enable.Value
                         ? !t.Enabled.GetValueOrDefault()
                         : t.Enabled.GetValueOrDefault())

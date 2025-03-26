@@ -58,9 +58,9 @@ public class ExportPackageCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .Where(m => wp.IsMatch(m.Id))
                     .ExcludeByWildcards(p => p?.Id, wpId)
                     .FilterByWildcards(p => p?.Version, wpVersion)
@@ -107,13 +107,13 @@ public class ExportPackageCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var package in entities!)
+                foreach (var package in result.Result)
                 {
-                    if (!package.TryGetValue(out var versions)) continue;
+                    if (package.Result is null) continue;
 
-                    foreach (var version in versions!
+                    foreach (var version in package.Result
                         .Where(v => wp.IsMatch(v.Version))
                         .ExcludeByWildcards(v => v?.Version, wpVersion))
                         //.OrderBy(v => v.Version!, VersionComparer.Instance))

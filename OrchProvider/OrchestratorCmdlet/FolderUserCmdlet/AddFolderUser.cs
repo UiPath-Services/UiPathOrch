@@ -114,8 +114,9 @@ public class AddFolderUserCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
-                foreach (var role in entities!
+                if (result.Result is null) continue;
+
+                foreach (var role in result.Result
                     .Where(role => role.Type != "Tenant")
                     .Where(role => wp.IsMatch(role.Name))
                     .ExcludeByWildcards(role => role?.Name, wpRoles)

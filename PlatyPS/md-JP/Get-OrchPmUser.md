@@ -13,7 +13,8 @@ Identity サーバーに登録されたユーザーを取得します。
 ## SYNTAX
 
 ```
-Get-OrchPmUser [-Email <String[]>] [-Path <String[]>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-OrchPmUser [-Email <String[]>] [-Path <String[]>] [-ExportCsv <String>] [-CsvEncoding <Encoding>]
+ [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -79,6 +80,36 @@ Position: Named
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
+```
+
+### -CsvEncoding
+{{ Fill CsvEncoding Description }}
+
+```yaml
+Type: Encoding
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ExportCsv
+{{ Fill ExportCsv Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
 ```
 
 ### CommonParameters

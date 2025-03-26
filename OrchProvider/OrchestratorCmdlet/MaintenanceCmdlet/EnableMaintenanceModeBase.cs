@@ -47,9 +47,9 @@ public class EnableMaintenanceModeCommandBase<Enable> : OrchestratorPSCmdlet whe
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var session in entities!
+                foreach (var session in result.Result
                     .Where(session => session.SessionId is not null)
                     .Where(session => !string.IsNullOrEmpty(session.MachineName))
                     .Where(session => session.Runtimes != 0)
@@ -92,9 +92,9 @@ public class EnableMaintenanceModeCommandBase<Enable> : OrchestratorPSCmdlet whe
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var session in entities!
+                foreach (var session in result.Result
                     .Where(session => session.SessionId is not null)
                     .Where(session => !string.IsNullOrEmpty(session.HostMachineName))
                     .Where(session => session.Runtimes != 0)
@@ -137,9 +137,9 @@ public class EnableMaintenanceModeCommandBase<Enable> : OrchestratorPSCmdlet whe
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var session in entities!
+                foreach (var session in result.Result
                     .Where(session => session.SessionId is not null)
                     .Where(session => !string.IsNullOrEmpty(session.ServiceUserName))
                     .Where(session => session.Runtimes != 0)
@@ -182,9 +182,9 @@ public class EnableMaintenanceModeCommandBase<Enable> : OrchestratorPSCmdlet whe
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var session in entities!
+                foreach (var session in result.Result
                     .Where(session => session.SessionId is not null)
                     .Where(session => session.Runtimes != 0)
                     .Where(session => session.MaintenanceMode == _propValue)

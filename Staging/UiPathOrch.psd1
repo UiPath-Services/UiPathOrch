@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.10.7'
+ModuleVersion = '0.9.10.8'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -301,7 +301,7 @@ CmdletsToExport = @(
 'Get-OrchPmUser',
 'Update-OrchPmUser',
 'Remove-OrchPmUser',
-'New-OrchPmUserBulk',
+'New-OrchPmUser',
 'Copy-OrchPmUser',
 
 'Get-OrchPmRobotAccount',
@@ -384,28 +384,18 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Properties have been added to several entity types to align with Automation Cloud API version 19.0.
+        ReleaseNotes = '- The New-OrchPmUserBulk cmdlet has been renamed to New-OrchPmUser. We apologize for any inconvenience this change may cause.
 
-- Modified the Copy-Item, Copy-OrchProcess, Copy-OrchQueue, New-OrchProcess, Update-OrchProcess, New-OrchQueue, and Update-OrchQueue cmdlets:
-  - In Automation Cloud tenants, processes and queues can no longer be created with RetentionAction set to "None". As a result, these cmdlets will now automatically replace "None" with "Delete" if specified.
+- The New-OrchPmUser cmdlet now automatically creates groups with the specified name if the name provided to the -GroupName parameter does not contain wildcard characters and no existing group matches the name.
 
-- The Get-OrchProcess -ExportCsv and Get-OrchQueue -ExportCsv now include the following three columns in the generated CSV files:
-  - StaleRetentionAction
-  - StaleRetentionPeriod
-  - StaleRetentionBucket
+- The Get-OrchPmUser cmdlet now supports the -ExportCsv parameter. The CSV file generated with this parameter can be imported using the New-OrchPmUser cmdlet.
 
-  - The New-OrchProcess, Update-OrchProcess, New-OrchQueue, and Update-OrchQueue cmdlets now support parameters with the same names as the newly added CSV columns.
-
-- Improvements to the Update-OrchProcess cmdlet:
-  - When specifying -EntryPoint parameter, its EntryPointId was incorrectly being set to RetentionBucketId.
-
-  - The -RetentionBucket parameter''s completer no longer displays read-only storage buckets.
-
-- Fix for Get-OrchQueue -ExportCsv:
-  - Previously, retention policies were not included in the exported CSV.
-
-- Configuration validation improvement:
-  - A warning is now displayed if the AppId specified in the configuration file is invalid (e.g., an empty string or not in GUID format).
+- The -Name parameter completer now works as expected for the following cmdlets:
+  - New-OrchBucket
+  - New-OrchMachine
+  - New-OrchQueue
+  - New-OrchTrigger
+  - New-OrchPmGroup
 '
 
         # Prerelease string of this module

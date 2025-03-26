@@ -36,9 +36,9 @@ public class EnableFolderMachineInheritCommandBase<EnableInherit> : Orchestrator
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .Where(m => wp.IsMatch(m.Name))
                     .Where(m => m.IsAssignedToFolder.GetValueOrDefault())
                     .Where(m => EnableInherit.Value

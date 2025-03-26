@@ -749,6 +749,8 @@ public partial class OrchAPISession : IDisposable
         }
         else
         {
+            // TODO: 下記は ApiVersion < 19 のときにすべきではないか？
+            // EditQueue() でも同じ処理をすべきではないか？
             queue.RetentionAction = null;
             queue.RetentionPeriod = null;
             queue.RetentionBucketId = null;
@@ -1541,6 +1543,8 @@ public partial class OrchAPISession : IDisposable
         if (release.RetentionPeriod      == 0) release.RetentionPeriod      = null;
         if (release.StaleRetentionPeriod == 0) release.StaleRetentionPeriod = null;
 
+        // TODO: ApiVersion < 19 のとき、StaleRetention に null を設定すべきではないか？
+
         // OC 22.10.1 (15.0) で動作確認済み POST /odata/Releases
         // OC 23.4.0 (16.0) で動作確認済み POST /odata/Releases
         // OC 23.10.6 (17.0) で動作確認済み POST /odata/Releases/UiPath.Server.Configuration.OData.CreateRelease
@@ -1584,6 +1588,7 @@ public partial class OrchAPISession : IDisposable
     // 非公開の API だな。
     public void EditRelease(Int64 folderId, Release release)
     {
+        // TODO: ApiVersion < 19 のとき、StaleRetention に null を設定すべきではないか？
         // 何も返さない
         HttpRequest(HttpMethod.Post, "/odata/Releases/UiPath.Server.Configuration.OData.EditRelease", folderId, release);
     }

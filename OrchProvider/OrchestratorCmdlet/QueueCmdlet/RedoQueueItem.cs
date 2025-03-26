@@ -55,11 +55,11 @@ public class RedoQueueItemCommand : OrchestratorPSCmdlet
 
             foreach (var result in queues)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
                 var (drive, folder) = result.Source;
 
-                foreach (var queue in entities!
+                foreach (var queue in result.Result
                     .FilterByWildcards(q => q?.Name, wpName)
                     .OrderBy(q => q.Name))
                 {

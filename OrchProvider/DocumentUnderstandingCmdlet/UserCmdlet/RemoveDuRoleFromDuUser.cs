@@ -53,12 +53,11 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var users)) continue;
-                if (users is null) continue;
+                if (result.Result is null) continue;
 
                 var (drive, project) = result.Source;
 
-                foreach (var user in users
+                foreach (var user in result.Result
                     .FilterByWildcards(u => u?.displayName, wpName)
                     .OrderBy(u => u.displayName))
                 {

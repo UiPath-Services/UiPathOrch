@@ -69,9 +69,9 @@ public class CopyFolderUserCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .Where(fu => wp.IsMatch(fu.UserEntity!.UserName))
                     .ExcludeByWildcards(u => u?.UserEntity?.UserName, wpUserName)
                     .FilterByWildcards(u => u?.UserEntity?.Type, wpType)

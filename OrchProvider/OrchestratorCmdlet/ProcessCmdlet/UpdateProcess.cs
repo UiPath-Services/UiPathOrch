@@ -171,12 +171,11 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
 
             foreach (var result in allProcesses)
             {
-                if (!result.TryGetValue(out var processes)) continue;
-                if (processes is null) continue;
+                if (result.Result is null) continue;
 
                 var (drive, folder) = result.Source;
 
-                foreach (var process in processes)
+                foreach (var process in result.Result)
                 {
                     if (string.IsNullOrEmpty(process.ProcessKey)) continue;
                     var versions = drive.GetPackageVersions(folder, process.ProcessKey);
@@ -245,9 +244,9 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var release in entities!
+                foreach (var release in result.Result
                     .FilterByWildcards(p => p?.Name, wpName)
                     .OrderBy(p => p.Name))
                 {
@@ -294,9 +293,9 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var release in entities!
+                foreach (var release in result.Result
                     .FilterByWildcards(p => p?.Name, wpName)
                     .OrderBy(p => p.Name))
                 {

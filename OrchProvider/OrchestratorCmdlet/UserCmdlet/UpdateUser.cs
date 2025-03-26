@@ -132,11 +132,11 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
                 var drive = result.Source;
 
-                foreach (var role in entities!
+                foreach (var role in result.Result
                     .Where(r => r.Type != "Folder")
                     .ExcludeByWildcards(r => r?.Name, wpRoles)
                     .OrderBy(r => r.Name))

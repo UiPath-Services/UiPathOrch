@@ -2624,8 +2624,8 @@ public partial class OrchDriveInfo : PSDriveInfo
                 List<CredentialStore> ret = [];
                 foreach (var result in results)
                 {
-                    if (!result.TryGetValue(out var store)) continue;
-                    if (store is not null) ret.Add(store);
+                    if (result.Result is null) continue;
+                    ret.Add(result.Result);
                 }
                 return ret;
             },

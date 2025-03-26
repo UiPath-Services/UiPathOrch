@@ -5,27 +5,27 @@ online version:
 schema: 2.0.0
 ---
 
-# New-OrchPmUserBulk
+# New-OrchPmUser
 
 ## SYNOPSIS
-Creates users to the organization.
+組織にユーザーを作成します。
 
 ## SYNTAX
 
 ```
-New-OrchPmUserBulk [-Email] <String> [-Name <String>] [-SurName <String>] [-DisplayName <String>]
- [-Type <String>] [-BypassBasicAuthRestriction <String>] [-InvitationAccepted <String>] [-GroupName <String[]>]
+New-OrchPmUser [-Email] <String> [-Name <String>] [-SurName <String>] [-DisplayName <String>] [-Type <String>]
+ [-BypassBasicAuthRestriction <String>] [-InvitationAccepted <String>] [-GroupName <String[]>]
  [-Path <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-Primary Endpoint: POST /api/User/BulkCreate
+主に呼び出すエンドポイント: POST /api/User/BulkCreate
 
-OAuth required scopes: PM.Group
+OAuth に必要なスコープ: PM.Group
 
-Required permissions:
+必要な権限:
 
 ## EXAMPLES
 
@@ -54,7 +54,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
-Prompts you for confirmation before running the cmdlet.
+コマンドレットを実行する前に、あなたの確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -144,7 +144,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-Specifies the name of the target drives. If not specified, the current drive will be targeted.
+ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
 
 ```yaml
 Type: String[]
@@ -189,8 +189,8 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットは実行されません。
 
 ```yaml
 Type: SwitchParameter
@@ -225,10 +225,13 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String
+
 ### System.String[]
+
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.PmUser
+
 ## NOTES
 
 ## RELATED LINKS

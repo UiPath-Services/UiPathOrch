@@ -124,12 +124,11 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
-                if (entities is null) continue;
+                if (result.Result is null) continue;
 
                 var (drive, folder) = result.Source;
 
-                foreach (var e in entities
+                foreach (var e in result.Result
                     .Where(e => wp.IsMatch(e?.Name))
                     .ExcludeByWildcards(e => e?.Name, wpUserName)
                     .OrderBy(e => e?.Name))
@@ -165,12 +164,11 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
-                if (entities is null) continue;
+                if (result.Result is null) continue;
 
                 var (drive, folder) = result.Source;
 
-                foreach (var e in entities
+                foreach (var e in result.Result
                     .Where(e => wp.IsMatch(e?.UserName))
                     .ExcludeByWildcards(e => e?.UserName, wpUserName)
                     .OrderBy(e => e?.UserName))

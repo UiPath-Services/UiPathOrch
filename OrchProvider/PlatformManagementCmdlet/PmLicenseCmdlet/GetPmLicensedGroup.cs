@@ -90,11 +90,11 @@ public class GetUserLicenseGroup: OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
                 var drive = result.Source;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .FilterByWildcards(g => g?.name!, wpGroupName)
                     .OrderBy(g => g?.name))
                 {

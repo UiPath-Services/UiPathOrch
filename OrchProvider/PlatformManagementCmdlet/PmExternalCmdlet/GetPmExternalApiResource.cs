@@ -40,9 +40,9 @@ public class GetPmExternalApiResourceCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .Where(r => wp.IsMatch(r?.name))
                     .ExcludeByWildcards(r => r?.name!, wpName)
                     .OrderBy(r => r?.name))

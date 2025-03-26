@@ -68,9 +68,9 @@ public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .Where(u => wp.IsMatch(u.UserEntity!.UserName!))
                     .FilterByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
                     .ExcludeByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
@@ -111,9 +111,9 @@ public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .Where(u => wp.IsMatch(u.UserEntity!.FullName!))
                     .ExcludeByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
                     .FilterByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)

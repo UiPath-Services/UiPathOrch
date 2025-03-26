@@ -28,37 +28,6 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string? Path { get; set; }
 
-    private PmGroup? CreatePmGroup(OrchDriveInfo drive, string groupName)
-    {
-        var partitionGlobalId = drive.GetPartitionGlobalId();
-
-        CreateGroupCommand createGroupCommand = new()
-        {
-            partitionGlobalId = partitionGlobalId,
-            id = Guid.NewGuid().ToString(),
-            name = groupName
-        };
-
-        try
-        {
-            var newGroup = drive.OrchAPISession.CreatePmGroup(createGroupCommand);
-            if (newGroup is not null)
-            {
-                newGroup.Path = drive.NameColonSeparator;
-                drive._dicSearchPmDirectory = null;
-                drive._dicSearchDirectory = null;
-                drive._dicPmGroups = null;
-                drive._dicPmGroups_Exception.ClearCache();
-                return newGroup;
-            }
-        }
-        catch (Exception ex)
-        {
-            WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, $"Failed to create PmGroup '{groupName}'", ex), "AddPmGroupError", ErrorCategory.InvalidOperation, createGroupCommand));
-        }
-        return null;
-    }
-
     protected override void ProcessRecord()
     {
         var srcDrive = OrchDriveInfo.GetOrchDrive(Path);

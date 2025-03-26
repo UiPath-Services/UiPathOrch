@@ -47,9 +47,9 @@ public class RemovePersonalWorkspaceCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .Where(q => wp.IsMatch(q.Name))
                     .ExcludeByWildcards(q => q?.Name, wpName)
                     .FilterByWildcards(q => q?.OwnerName, wpOwnerName)
@@ -82,9 +82,9 @@ public class RemovePersonalWorkspaceCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .Where(q => wp.IsMatch(q.OwnerName))
                     .FilterByWildcards(q => q?.Name!, wpName)
                     .ExcludeByWildcards(q => q?.OwnerName, wpOwnerName)

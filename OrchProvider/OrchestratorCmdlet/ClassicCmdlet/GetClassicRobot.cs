@@ -115,9 +115,9 @@ public class GetClassicRobotCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var s in entities!
+                foreach (var s in result.Result
                     .Where(s => wp.IsMatch(s.Robot?.Name))
                     .ExcludeByWildcards(s => s?.Robot?.Name, wpName)
                     .OrderBy(s => s.Robot?.Name))

@@ -114,9 +114,9 @@ public class UpdateQueueCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var release in entities!
+                foreach (var release in result.Result
                     .FilterByWildcards(p => p?.Name, wpName)
                     .OrderBy(p => p.Name))
                 {

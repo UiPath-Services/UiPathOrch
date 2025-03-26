@@ -1,4 +1,6 @@
-﻿using System.Management.Automation;
+﻿using System.Collections;
+using System.Management.Automation;
+using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
@@ -9,10 +11,10 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.New, "OrchBucket", SupportsShouldProcess = true)]
 [OutputType(typeof(Bucket))]
-public class AddBucketCommand : OrchestratorPSCmdlet
+public class NewBucketCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    //[ArgumentCompleter(typeof(BucketNameCompleter<TPositional, True>))] // TODO: NewBucket1 みたいな名前を返す completer がほしい
+    [ArgumentCompleter(typeof(NewBucketNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
@@ -52,6 +54,26 @@ public class AddBucketCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    private class NewBucketNameCompleter : OrchArgumentCompleter
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Buckets.Get(df.folder));
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var names = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var entities = results.SelectMany(e => e.Result ?? []);
+            yield return new CompletionResult(GenerateNewEntityName("NewBucket", names, entities, e => e.Name!));
+        }
+    }
+
     protected override void ProcessRecord()
     {
         var drivesFolders = OrchDriveInfo.EnumFolders(Path);
@@ -64,7 +86,7 @@ public class AddBucketCommand : OrchestratorPSCmdlet
             foreach (var name in Name!)
             {
                 string target = System.IO.Path.Combine(folder.GetPSPath(), name);
-                if (ShouldProcess(target, "Add Bucket"))
+                if (ShouldProcess(target, "New Bucket"))
                 {
                     try
                     {
@@ -97,7 +119,7 @@ public class AddBucketCommand : OrchestratorPSCmdlet
                     }
                     catch (Exception ex)
                     {
-                        WriteError(new ErrorRecord(new OrchException(target, ex), "AddBucketError", ErrorCategory.InvalidOperation, drive));
+                        WriteError(new ErrorRecord(new OrchException(target, ex), "NewBucketError", ErrorCategory.InvalidOperation, drive));
                     }
                 }
             }

@@ -48,13 +48,12 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
         List<string> existingMemberIds = [];
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var group in entities!)
+            foreach (var group in result.Result)
             {
-                if (!group.TryGetValue(out var detailedGroup)) continue;
-
-                existingMemberIds.AddRange(detailedGroup!.members?.Select(m => m.identifier!) ?? []);
+                if (group.Result is null) continue;
+                existingMemberIds.AddRange(group.Result.members?.Select(m => m.identifier!) ?? []);
             }
         }
         return existingMemberIds;

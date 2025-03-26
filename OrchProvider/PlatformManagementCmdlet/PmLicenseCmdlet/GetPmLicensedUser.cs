@@ -70,11 +70,11 @@ public class GetUserLicenseUser: OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
                 var drive = result.Source;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .Where(e => !string.IsNullOrEmpty(e.name))
                     .ExcludeByWildcards(u => u?.name!, wpName)
                     .FilterByWildcards(u => u?.email, wpEmail)
@@ -107,11 +107,11 @@ public class GetUserLicenseUser: OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
                 var drive = result.Source;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .Where(e => !string.IsNullOrEmpty(e.email))
                     .FilterByWildcards(u => u?.name!, wpName)
                     .ExcludeByWildcards(u => u?.email, wpEmail)

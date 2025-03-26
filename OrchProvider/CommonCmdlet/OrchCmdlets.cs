@@ -590,6 +590,39 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         return null;
     }
 
+    internal PmGroup? CreatePmGroup(OrchDriveInfo drive, string groupName)
+    {
+        var partitionGlobalId = drive.GetPartitionGlobalId();
+
+        CreateGroupCommand createGroupCommand = new()
+        {
+            partitionGlobalId = partitionGlobalId,
+            id = Guid.NewGuid().ToString(),
+            name = groupName
+        };
+
+        try
+        {
+            var newGroup = drive.OrchAPISession.CreatePmGroup(createGroupCommand);
+            if (newGroup is not null)
+            {
+                newGroup.Path = drive.NameColonSeparator;
+                drive._dicSearchPmDirectory = null;
+                drive._dicSearchPmDirectory_Exception.ClearCache();
+                drive._dicSearchDirectory = null;
+                drive._dicSearchDirectory_Exception.ClearCache();
+                drive._dicPmGroups = null;
+                drive._dicPmGroups_Exception.ClearCache();
+                return newGroup;
+            }
+        }
+        catch (Exception ex)
+        {
+            WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, $"Failed to create PmGroup '{groupName}'", ex), "AddPmGroupError", ErrorCategory.InvalidOperation, createGroupCommand));
+        }
+        return null;
+    }
+
     internal void WriteCSVExportedMessage(IWritableHost _this, string? filePath)
     {
         if (filePath is not null)

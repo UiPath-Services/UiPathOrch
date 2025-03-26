@@ -89,9 +89,9 @@ public class GetFolderUserCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .Where(fu => wp.IsMatch(fu.UserEntity!.UserName))
                     .FilterByWildcards(u => u?.UserEntity?.FullName, wpFullName)
                     .ExcludeByWildcards(u => u?.UserEntity?.UserName, wpUserName)
@@ -137,9 +137,9 @@ public class GetFolderUserCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .Where(fu => wp.IsMatch(fu.UserEntity?.FullName))
                     .ExcludeByWildcards(u => u?.UserEntity?.FullName, wpFullName)
                     .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName)

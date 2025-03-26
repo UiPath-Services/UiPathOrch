@@ -41,9 +41,9 @@ public class EnableApiTriggerCommandBase<Enable> : OrchestratorPSCmdlet where En
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var trigger in entities!
+                foreach (var trigger in result.Result
                     .Where(t => Enable.Value
                         ? !t.Enabled.GetValueOrDefault()
                         : t.Enabled.GetValueOrDefault())

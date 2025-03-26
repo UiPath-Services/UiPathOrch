@@ -53,9 +53,9 @@ public class RemoveAssetCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var asset in entities!
+                foreach (var asset in result.Result
                     .FilterByWildcards(a => a?.Name, wpName)
                     .Where(a => wp.IsMatch(a.Name))
                     .ExcludeByWildcards(a => a?.ValueType, wpValueType)

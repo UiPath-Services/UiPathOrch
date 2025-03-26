@@ -43,12 +43,11 @@ public class SearchDirectoryCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
-                if (entities is null) continue;
+                if (result.Result is null) continue;
 
                 var drive = result.Source;
 
-                foreach (var s in entities
+                foreach (var s in result.Result
                     .OrderBy(s => s.identityName))
                 {
                     string tiphelp = drive.NameColonSeparator + s.identityName;

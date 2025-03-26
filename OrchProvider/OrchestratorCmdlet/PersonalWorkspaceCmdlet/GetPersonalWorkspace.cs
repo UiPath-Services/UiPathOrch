@@ -41,9 +41,9 @@ public class GetPersonalWorkspaceCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .Where(q => wp.IsMatch(q.Name))
                     .ExcludeByWildcards(q => q?.Name, wpName)
                     .OrderBy(q => q.Name))
