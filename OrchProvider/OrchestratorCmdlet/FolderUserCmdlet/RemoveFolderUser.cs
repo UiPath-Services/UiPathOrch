@@ -63,9 +63,9 @@ public class RemoveFolderUserCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .Where(e => wp.IsMatch(e.UserEntity!.UserName))
                     .ExcludeByWildcards(e => e?.UserEntity?.UserName, wpUserName)
                     .FilterByWildcards(e => e?.UserEntity?.FullName, wpFullName)
@@ -107,9 +107,9 @@ public class RemoveFolderUserCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .Where(e => wp.IsMatch(e.UserEntity!.FullName))
                     .FilterByWildcards(e => e?.UserEntity?.UserName, wpUserName)
                     .ExcludeByWildcards(e => e?.UserEntity?.FullName, wpFullName)

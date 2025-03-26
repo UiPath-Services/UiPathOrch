@@ -178,14 +178,14 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
 
                 foreach (var result in results)
                 {
-                    if (!result.TryGetValue(out var detailedTrigger)) continue;
-                    if (detailedTrigger?.ExecutorRobots is null || detailedTrigger.ExecutorRobots.Length == 0) continue;
+                    if (result.Result is null) continue;
+                    if (result.Result.ExecutorRobots is null || result.Result.ExecutorRobots.Length == 0) continue;
 
-                    var executerRobots = SerializeExecutorRobotArray(drive, detailedTrigger.ExecutorRobots);
+                    var executerRobots = SerializeExecutorRobotArray(drive, result.Result.ExecutorRobots);
                     if (wpExecutorRobots is not null && wpExecutorRobots.Any(wpe => wpe.IsMatch(executerRobots))) continue;
                     if (!string.IsNullOrEmpty(executerRobots))
                     {
-                        string tooltip = detailedTrigger.GetPSPath();
+                        string tooltip = result.Result.GetPSPath();
                         yield return new CompletionResult(PathTools.EscapePSText(executerRobots), executerRobots, CompletionResultType.Text, tooltip);
                     }
                 }
@@ -214,11 +214,11 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
             bool bExists = false;
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
                 var (drive, folder) = result.Source;
 
-                foreach (var trigger in entities!
+                foreach (var trigger in result.Result
                     .Where(t => t.MachineRobots is not null)
                     .FilterByWildcards(e => e?.Name, wpName)
                     .Where(e => e?.MachineRobots is not null)

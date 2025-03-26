@@ -50,9 +50,9 @@ public class GetDuExtractorCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var valueType in entities!
+                foreach (var valueType in result.Result
                     .Where(e => wp.IsMatch(e?.name))
                     .ExcludeByWildcards(e => e?.name!, wpName)
                     .OrderBy(e => e?.name))

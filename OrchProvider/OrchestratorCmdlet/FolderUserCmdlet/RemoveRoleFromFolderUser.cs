@@ -74,9 +74,9 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .Where(eu => wp.IsMatch(eu.UserEntity!.UserName!))
                     .ExcludeByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
                     .FilterByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
@@ -122,9 +122,9 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .Where(eu => wp.IsMatch(eu.UserEntity?.FullName))
                     .ExcludeByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
                     .FilterByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
@@ -168,9 +168,9 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .FilterByWildcards(u => u?.UserEntity?.FullName, wpFullName)
                     .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName)
                     .FilterByWildcards(u => u?.UserEntity?.Type, wpType))

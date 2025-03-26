@@ -49,7 +49,7 @@ public class GetBucketCommand : OrchestratorPSCmdlet
     [EncodingArgumentTransformation]
     public Encoding? CsvEncoding { get; set; }
 
-    private void WriteCsvContent(StreamWriter writer, IEnumerable<Bucket> output)
+    private void WriteCsvContent(StreamWriter writer, OrchDriveInfo drive, IEnumerable<Bucket> output)
     {
         foreach (var bucket in output)
         {
@@ -59,7 +59,6 @@ public class GetBucketCommand : OrchestratorPSCmdlet
             {
                 try
                 {
-                    var (drive, folder) = OrchDriveInfo.EnumFolders(bucket.Path).FirstOrDefault();
                     var credentialStores = drive.CredentialStores.Get();
                     credentialStoreName = credentialStores.FirstOrDefault(c => c.Id == bucket.CredentialStoreId)?.Name;
                 }
@@ -114,7 +113,8 @@ public class GetBucketCommand : OrchestratorPSCmdlet
 
                 if (writer is not null)
                 {
-                    WriteCsvContent(writer, targetEntities);
+                    var (drive, _) = result.Source;
+                    WriteCsvContent(writer, drive, targetEntities);
                 }
                 else
                 {

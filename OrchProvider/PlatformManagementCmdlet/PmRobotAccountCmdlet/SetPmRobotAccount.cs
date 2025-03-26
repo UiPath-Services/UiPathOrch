@@ -96,9 +96,9 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .Where(r => r is not null)
                     .Where(r => wp.IsMatch(r!.name!))
                     .ExcludeByWildcards(r => r!.name!, wpName)
@@ -137,9 +137,9 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
             {
                 foreach (var result in results)
                 {
-                    if (!result.TryGetValue(out var entities)) continue;
+                    if (result.Result is null) continue;
 
-                    foreach (var e in entities!.Values
+                    foreach (var e in result.Result.Values
                         .Where(e => e is not null)
                         .Where(e => wp.IsMatch(e?.name))
                         .ExcludeByWildcards(e => e?.name!, wpGroupName)

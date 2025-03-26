@@ -18,7 +18,7 @@ namespace UiPath.PowerShell.Commands;
 public class NewTriggerCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    //[ArgumentCompleter(typeof(TriggerNameCompleter<TPositional>))] // TODO: 新規エンティティの名前のための completer を書く。
+    [ArgumentCompleter(typeof(NewTriggerNameCompleter))]
     public string[]? Name { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
@@ -146,6 +146,26 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
     //[Parameter]
     //public uint Depth { get; set; }
 
+    private class NewTriggerNameCompleter : OrchArgumentCompleter
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetTriggers(df.folder));
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var names = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var entities = results.SelectMany(e => e.Result ?? []);
+            yield return new CompletionResult(GenerateNewEntityName("NewTrigger", names, entities, e => e.Name!));
+        }
+    }
+
     // 利用可能なユーザー名一覧を候補に表示。New-OrchTrigger のための実装。
     // Update-OrchTrigger では、現在の内容を表示する方が使いやすいと思うので、この実装を共有はしない。。
     private class ExecutorRobotsCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
@@ -168,12 +188,12 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
                 var (drive, folder) = result.Source;
                 var users = drive.GetUsers();
 
-                foreach (var user in entities!
+                foreach (var user in result.Result
                     .Where(e => e.Type == "Unattended")
                     .Select(e => users.FirstOrDefault(u => u.Id == e.UserId))
                     .Where(u => !string.IsNullOrEmpty(u?.UnattendedRobot?.UserName))
@@ -227,22 +247,22 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
             List<UserRoles> users = [null];
             foreach (var usersPerFolder in usersPerFolders)
             {
-                if (!usersPerFolder.TryGetValue(out var entities)) continue;
-                if (entities is not null) users.AddRange(entities);
+                if (usersPerFolder.Result is null) continue;
+                users.AddRange(usersPerFolder.Result);
             }
 
             List<MachineFolder> machines = [null];
             foreach (var robotsPerFolder in robotsPerFolders)
             {
-                if (!robotsPerFolder.TryGetValue(out var entities)) continue;
-                if (entities is not null) machines.AddRange(entities);
+                if (robotsPerFolder.Result is null) continue;
+                machines.AddRange(robotsPerFolder.Result);
             }
 
             List<MachineSessionRuntime> sessions = [null];
             foreach (var sessionsPerFolder in sessionsPerFolders)
             {
-                if (!sessionsPerFolder.TryGetValue(out var entities)) continue;
-                if (entities is not null) sessions.AddRange(entities);
+                if (sessionsPerFolder.Result is null) continue;
+                sessions.AddRange(sessionsPerFolder.Result);
             }
 
             // すべての組み合わせを生成して処理

@@ -47,9 +47,9 @@ public class GetDuClassifierCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var classifier in entities!
+                foreach (var classifier in result.Result
                     .Where(e => wp.IsMatch(e?.name))
                     .ExcludeByWildcards(e => e?.name!, wpName)
                     .OrderBy(e => e?.name))

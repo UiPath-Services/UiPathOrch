@@ -102,9 +102,9 @@ public class SetAssetCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var asset in entities!
+                foreach (var asset in result.Result
                     .Where(a => wp.IsMatch(a.ValueType))
                     .FilterByWildcards(a => a?.ValueType, wpValueType)
                     .ExcludeByWildcards(a => a?.Name, wpName)
@@ -144,9 +144,9 @@ public class SetAssetCommand : OrchestratorPSCmdlet
             bool isEmpty = true;
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var asset in entities!
+                foreach (var asset in result.Result
                     .Where(a => a.ValueType != "Credential")
                     .Where(a => wp.IsMatch(a.Description))
                     .FilterByWildcards(a => a?.ValueType, wpValueType)
@@ -218,9 +218,9 @@ public class SetAssetCommand : OrchestratorPSCmdlet
             bool bValueExists = false;
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var asset in entities!
+                foreach (var asset in result.Result
                     .Where(a => a.ValueType != "Credential")
                     .FilterByWildcards(a => a?.ValueType, wpValueType)
                     .FilterByWildcards(a => a?.Name, wpName))
@@ -280,9 +280,9 @@ public class SetAssetCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var userRole in entities!
+                foreach (var userRole in result.Result
                     .Where(u => u.UserEntity!.Type != "DirectoryGroup")
                     .Where(ur => wp.IsMatch(ur.UserEntity!.UserName))
                     .ExcludeByWildcards(ur => ur?.UserEntity?.UserName, wpUserName)
@@ -318,9 +318,9 @@ public class SetAssetCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var machine in entities!
+                foreach (var machine in result.Result
                     .Where(m => wp.IsMatch(m.Name))
                     .ExcludeByWildcards(m => m?.Name, wpMachineName)
                     .OrderBy(m => m.Name))

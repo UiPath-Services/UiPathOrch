@@ -54,19 +54,17 @@ public class RemoveCalendarDateCommand : OrchestratorPSCmdlet
 
             foreach (var calendarsResult in calendarsResults)
             {
-                if (!calendarsResult.TryGetValue(out var calendars)) continue;
-                if (calendars is null) continue;
+                if (calendarsResult.Result is null) continue;
 
                 var drive = calendarsResult.Source;
 
-                var detailedCalendarResults = ParallelResults.ForEach(calendars
+                var detailedCalendarResults = ParallelResults.ForEach(calendarsResult.Result
                     .FilterByWildcards(c => c?.Name, wpCalendarName), calendar => drive.GetCalendar(calendar));
                 foreach (var detailedCalendarResult in detailedCalendarResults)
                 {
-                    if (!detailedCalendarResult.TryGetValue(out var detailedCalendar)) continue;
-                    if (detailedCalendar is null) continue;
+                    if (detailedCalendarResult.Result is null) continue;
 
-                    var targetDates = detailedCalendar.ExcludedDates?
+                    var targetDates = detailedCalendarResult.Result.ExcludedDates?
                         .Where(d => d >= DateTime.Today)
                         .Select(d => d.Date)
                         .OrderBy(d => d);
@@ -76,7 +74,7 @@ public class RemoveCalendarDateCommand : OrchestratorPSCmdlet
                     {
                         if (paramExcludedDate.Contains(date)) continue; // 指定済みの日付を除外
                         string dateString = date.Date.ToShortDateString();
-                        string tiphelp = detailedCalendar.GetPSPath();
+                        string tiphelp = detailedCalendarResult.Result.GetPSPath();
                         if (string.IsNullOrEmpty(tiphelp)) tiphelp = dateString;
                         yield return new CompletionResult(PathTools.EscapePSText(dateString), dateString, CompletionResultType.ParameterValue, tiphelp);
                     }

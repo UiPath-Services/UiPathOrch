@@ -47,9 +47,9 @@ public class AddMachineClientSecretCommand : OrchestratorPSCmdlet
             bool bFound = false;
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var machine in entities!
+                foreach (var machine in result.Result
                     .Where(m => wp.IsMatch(m.Name))
                     .Where(m => m.Scope != "PersonalWorkspace" && m.Scope != "AutomationCloudRobot") // 共通の処理との差異はここだけ
                     .ExcludeByWildcards(m => m?.Name, wpName)

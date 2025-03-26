@@ -42,9 +42,9 @@ public class EnableTriggerCommandBase<Enable> : OrchestratorPSCmdlet where Enabl
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .Where(t => Enable.Value
                         ? !t.Enabled.GetValueOrDefault()
                         : t.Enabled.GetValueOrDefault())

@@ -68,15 +68,15 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var releasesPackages)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var releasePackages in releasesPackages!)
+                foreach (var releasePackages in result.Result)
                 {
-                    if (releasePackages.TryGetValue(out var packages))
+                    if (releasePackages.Result is not null)
                     {
                         // パッケージが複数ないプロセスは、update/reset できない
                         // 最新バージョン以外のバージョンにアップデートする場合もあることに注意
-                        if (packages!.Count <= 1) continue;
+                        if (releasePackages.Result.Count <= 1) continue;
                     }
 
                     var release = releasePackages.Source;
@@ -120,15 +120,15 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var releasesPackages)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var releasePackages in releasesPackages!)
+                foreach (var releasePackages in result.Result)
                 {
-                    if (releasePackages.TryGetValue(out var packages))
+                    if (releasePackages.Result is not null)
                     {
                         // パッケージが複数ないプロセスは、update/reset できない
                         // 最新バージョン以外のバージョンにアップデートする場合もあることに注意
-                        if (packages!.Count <= 1) continue;
+                        if (releasePackages.Result.Count <= 1) continue;
                     }
 
                     var release = releasePackages.Source;
@@ -175,13 +175,13 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var releasesPackages)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var releasePackages in releasesPackages!)
+                foreach (var releasePackages in result.Result)
                 {
-                    if (!releasePackages.TryGetValue(out var packages)) continue;
+                    if (releasePackages.Result is null) continue;
 
-                    foreach (var version in packages!
+                    foreach (var version in releasePackages.Result
                         .Where(v => wp.IsMatch(v.Version))
                         .ExcludeByWildcards(v => v?.Version, wpVersion))
                         //.OrderBy(v => v.Version!, VersionComparer.Instance))

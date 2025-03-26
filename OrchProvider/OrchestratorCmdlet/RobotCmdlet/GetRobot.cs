@@ -46,9 +46,9 @@ public class GetRobotCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var robot in entities!
+                foreach (var robot in result.Result
                     .Where(r => wp.IsMatch(r.Name))
                     .ExcludeByWildcards(r => r?.User?.FullName, wpFullName)
                     .FilterByWildcards(r => r?.Username, wpUsername)
@@ -81,9 +81,9 @@ public class GetRobotCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var robot in entities!
+                foreach (var robot in result.Result
                     .Where(r => !string.IsNullOrEmpty(r.Username))
                     .Where(r => wp.IsMatch(r.Name))
                     .FilterByWildcards(r => r?.User?.FullName, wpFullName)

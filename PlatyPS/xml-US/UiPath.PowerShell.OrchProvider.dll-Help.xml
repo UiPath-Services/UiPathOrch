@@ -23672,6 +23672,30 @@ Displays the average, longest, and shortest execution times of cached jobs. `%` 
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>CsvEncoding</maml:name>
+          <maml:description>
+            <maml:para>{{ Fill CsvEncoding Description }}</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">Encoding</command:parameterValue>
+          <dev:type>
+            <maml:name>Encoding</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>ExportCsv</maml:name>
+          <maml:description>
+            <maml:para>{{ Fill ExportCsv Description }}</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
@@ -23707,6 +23731,30 @@ Displays the average, longest, and shortest execution times of cached jobs. `%` 
         <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
         <dev:type>
           <maml:name>String[]</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>CsvEncoding</maml:name>
+        <maml:description>
+          <maml:para>{{ Fill CsvEncoding Description }}</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">Encoding</command:parameterValue>
+        <dev:type>
+          <maml:name>Encoding</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>ExportCsv</maml:name>
+        <maml:description>
+          <maml:para>{{ Fill ExportCsv Description }}</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
           <maml:uri />
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
@@ -31313,9 +31361,9 @@ Displays the average, longest, and shortest execution times of cached jobs. `%` 
   </command:command>
   <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
     <command:details>
-      <command:name>New-OrchPmUserBulk</command:name>
+      <command:name>New-OrchPmUser</command:name>
       <command:verb>New</command:verb>
-      <command:noun>OrchPmUserBulk</command:noun>
+      <command:noun>OrchPmUser</command:noun>
       <maml:description>
         <maml:para>Creates users to the organization.</maml:para>
       </maml:description>
@@ -31328,7 +31376,7 @@ Displays the average, longest, and shortest execution times of cached jobs. `%` 
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
-        <maml:name>New-OrchPmUserBulk</maml:name>
+        <maml:name>New-OrchPmUser</maml:name>
         <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="0" aliases="UserName">
           <maml:name>Email</maml:name>
           <maml:description>

@@ -49,9 +49,9 @@ public class AddFolderMachineCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var entity in entities!
+                foreach (var entity in result.Result
                     .Where(b => wp.IsMatch(b.Name))
                     .ExcludeByWildcards(b => b?.Name, wpName)
                     .OrderBy(b => b.Name))

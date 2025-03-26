@@ -61,13 +61,13 @@ public class GetBucketItemCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var bucket in entities!)
+                foreach (var bucket in result.Result)
                 {
-                    if (!bucket.TryGetValue(out var items)) continue;
+                    if (bucket.Result is null) continue;
 
-                    foreach (var item in items!
+                    foreach (var item in bucket.Result
                         .Where(e => wp.IsMatch(e.FullPath))
                         .ExcludeByWildcards(e => e?.FullPath, wpFullPath)
                         .OrderBy(e => e.FullPath))

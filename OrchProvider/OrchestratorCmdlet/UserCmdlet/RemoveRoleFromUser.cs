@@ -57,9 +57,9 @@ public class RemoveRoleFromUserCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .FilterByWildcards(u => u?.UserName, wpUserName)
                     .FilterByWildcards(u => u?.FullName, wpFullName)
                     .OrderBy(u => u.UserName))

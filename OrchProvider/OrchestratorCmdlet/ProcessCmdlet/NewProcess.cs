@@ -181,20 +181,19 @@ public class AddProcessCommand : OrchestratorPSCmdlet
                 List<IEnumerable<PackageEntryPoint>> r = [];
                 foreach (var r3 in r2)
                 {
-                    if (!r3.TryGetValue(out var entities)) continue;
-                    if (entities is not null)
-                        r.Add(entities);
+                    if (r3.Result is null) continue;
+                    r.Add(r3.Result);
                 }
                 return r;
             });
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
                 var (drive, folder) = result.Source;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .SelectMany(e => e)
                     .Where(e => wp.IsMatch(e.Path))
                     .OrderBy(e => e.Path))
@@ -240,19 +239,18 @@ public class AddProcessCommand : OrchestratorPSCmdlet
                 List<(Package, IEnumerable<PackageEntryPoint>)> r = [];
                 foreach (var r3 in r2)
                 {
-                    if (!r3.TryGetValue(out var entities)) continue;
+                    if (r3.Result is null) continue;
                     var package = r3.Source;
-                    if (entities is not null)
-                        r.Add((package, entities));
+                    r.Add((package, r3.Result));
                 }
                 return r;
             });
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var (package, entryPoints) in entities!)
+                foreach (var (package, entryPoints) in result.Result)
                 {
                     foreach (var entryPoint in entryPoints
                         .FilterByWildcards(e => e?.Path, wpEntryPoint)

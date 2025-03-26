@@ -104,9 +104,9 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var asset in entities!
+                foreach (var asset in result.Result
                     .Where(a => a.ValueType == "Credential")
                     .Where(a => wp.IsMatch(a.Name))
                     .ExcludeByWildcards(a => a?.Name, wpName))
@@ -147,9 +147,9 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var userRoles in entities!
+                foreach (var userRoles in result.Result
                     .Where(u => u.UserEntity!.Type != "DirectoryGroup")
                     .Where(ur => wp.IsMatch(ur.UserEntity?.UserName))
                     .ExcludeByWildcards(ur => ur?.UserEntity?.UserName, wpUserName)
@@ -185,9 +185,9 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var machine in entities!
+                foreach (var machine in result.Result
                     .Where(m => wp.IsMatch(m.Name))
                     .ExcludeByWildcards(m => m?.Name, wpMachineName)
                     .OrderBy(m => m.Name))
@@ -247,9 +247,9 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
             bool bEmpty = true;
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var asset in entities!
+                foreach (var asset in result.Result
                     .Where(a => a.ValueType == "Credential")
                     .FilterByWildcards(a => a?.Name, wpName))
                 {

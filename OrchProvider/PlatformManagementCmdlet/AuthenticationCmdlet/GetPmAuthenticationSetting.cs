@@ -43,9 +43,9 @@ public class GetPmAuthenticationSettingCommand : OrchestratorPSCmdlet
             {
                 foreach (var result in results)
                 {
-                    if (!result.TryGetValue(out var entities)) continue;
+                    if (result.Result is null) continue;
 
-                    foreach (var e in entities!
+                    foreach (var e in result.Result
                         .Where(g => wp.IsMatch(g?.userName))
                         .ExcludeByWildcards(u => u?.userName!, wpUserName)
                         .OrderBy(u => u?.userName))

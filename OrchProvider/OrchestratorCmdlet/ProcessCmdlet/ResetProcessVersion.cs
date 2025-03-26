@@ -46,9 +46,9 @@ public class ResetProcessVersionCommand: OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var release in entities!
+                foreach (var release in result.Result
                     .Where(p => p.ProcessType != "TestAutomationProcess")
                     .Where(p => p.ReleaseVersions is not null && p.ReleaseVersions.Length >= 2)
                     .Where(p => wp.IsMatch(p.Name))

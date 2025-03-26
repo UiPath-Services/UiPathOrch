@@ -38,9 +38,9 @@ public class EnableWebhookCommandBase<Enable> : OrchestratorPSCmdlet where Enabl
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var e in entities!
+                foreach (var e in result.Result
                     .Where(e => Enable.Value
                         ? !e.Enabled.GetValueOrDefault()
                         : e.Enabled.GetValueOrDefault())

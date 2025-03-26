@@ -45,9 +45,9 @@ public class StopTestExecutionCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var te in entities!
+                foreach (var te in result.Result
                     .Where(te => stoppableStatus.Contains(te.Status))
                     .Where(te => wp.IsMatch(te.Id.ToString()))
                     .ExcludeByStructValues(te => te.Id ?? 0, paramId))

@@ -336,30 +336,6 @@ public class ParallelResult<TSource, TResult>(TSource source, TResult? result, E
     public TSource Source { get; private set; } = source;
     public TResult? Result { get; private set; } = result;
     public Exception? Exception { get; private set; } = ex;
-    public bool TryGetValue(out TResult? result)
-    {
-        if (Result is not null)
-        {
-            result = Result;
-            return true;
-        }
-        else
-        {
-            result = default;
-            return false;
-        }
-    }
-    public TResult? GetValue()
-    {
-        if (Exception is null)
-        {
-            return Result;
-        }
-        else
-        {
-            throw Exception;
-        }
-    }
 }
 
 // この ForEach は、すべてのスレッドが終了するまでブロックする。

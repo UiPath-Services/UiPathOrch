@@ -458,7 +458,7 @@ Creates machines.
 ### [New-OrchPmGroup](New-OrchPmGroup.md)
 Adds groups to the Identity server.
 
-### [New-OrchPmUserBulk](New-OrchPmUserBulk.md)
+### [New-OrchPmUser](New-OrchPmUser.md)
 Creates users to the organization.
 
 ### [New-OrchProcess](New-OrchProcess.md)

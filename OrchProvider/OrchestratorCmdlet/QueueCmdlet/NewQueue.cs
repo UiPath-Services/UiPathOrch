@@ -1,4 +1,6 @@
-﻿using System.Management.Automation;
+﻿using System.Collections;
+using System.Management.Automation;
+using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
@@ -12,7 +14,7 @@ namespace UiPath.PowerShell.Commands;
 public class AddQueueCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(QueueNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(NewQueueNameCompleter))]
     public string[]? Name { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -94,6 +96,26 @@ public class AddQueueCommand : OrchestratorPSCmdlet
 
     //[Parameter]
     //public uint Depth { get; set; }
+
+    private class NewQueueNameCompleter : OrchArgumentCompleter
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Queues.Get(df.folder));
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var names = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var entities = results.SelectMany(e => e.Result ?? []);
+            yield return new CompletionResult(GenerateNewEntityName("NewQueue", names, entities, e => e.Name!));
+        }
+    }
 
     protected override void ProcessRecord()
     {

@@ -72,15 +72,14 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var roles)) continue;
-                if (roles is null) continue;
+                if (result.Result is null) continue;
 
                 var (drive, project) = result.Source;
 
                 var users = drive.GetDuUsers(project)
                     .FilterByWildcards(u => u?.displayName, wpName).ToList();
 
-                foreach (var role in roles
+                foreach (var role in result.Result
                     .Where(e => wp.IsMatch(e?.name))
                     .ExcludeByWildcards(e => e?.name!, wpRole)
                     .OrderBy(e => e?.name))

@@ -50,9 +50,9 @@ public class GetFolderMachineAccountMappingCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var machine in entities!
+                foreach (var machine in result.Result
                     .Where(m => !m.PropagateToSubFolders.GetValueOrDefault())
                     .Where(m => wp.IsMatch(m.Name))
                     .ExcludeByWildcards(m => m?.Name, wpName)

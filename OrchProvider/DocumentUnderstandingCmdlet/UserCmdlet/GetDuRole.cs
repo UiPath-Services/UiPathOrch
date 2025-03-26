@@ -40,9 +40,9 @@ public class GetDuRoleCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var role in entities!
+                foreach (var role in result.Result
                     .Where(e => wp.IsMatch(e?.name))
                     .ExcludeByWildcards(e => e?.name!, wpName)
                     .OrderBy(e => e?.name))

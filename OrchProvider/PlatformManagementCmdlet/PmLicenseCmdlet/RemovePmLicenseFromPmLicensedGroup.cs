@@ -51,11 +51,11 @@ public class RemoveLicenseFromLicenseGroup: OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
                 var drive = result.Source;
 
-                foreach (var group in entities!
+                foreach (var group in result.Result
                     .FilterByWildcards(g => g?.name!, wpGroupName)
                     .OrderBy(g => g?.name))
                 {

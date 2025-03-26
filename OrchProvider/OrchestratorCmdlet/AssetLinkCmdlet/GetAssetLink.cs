@@ -48,9 +48,9 @@ public class GetAssetLinkCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var asset in entities!
+                foreach (var asset in result.Result
                     .Where(a => wp.IsMatch(a.Name))
                     .Where(a => (a.UserValues is null || !a.UserValues.Any()) && a.ValueScope != "PerRobot")
                     .ExcludeByWildcards(a => a?.Name, wpName)

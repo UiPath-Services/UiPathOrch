@@ -44,9 +44,9 @@ public class GetClassicEnvironmentCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var s in entities!
+                foreach (var s in result.Result
                     .Where(s => wp.IsMatch(s.Name))
                     .ExcludeByWildcards(s => s?.Name, wpName)
                     .OrderBy(s => s.Name))

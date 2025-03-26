@@ -1,4 +1,6 @@
-﻿using System.Management.Automation;
+﻿using System.Collections;
+using System.Management.Automation;
+using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
@@ -12,6 +14,7 @@ namespace UiPath.PowerShell.Commands;
 public class AddMachineCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(NewMachineNameCompleter))]
     public string[]? Name { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -55,6 +58,26 @@ public class AddMachineCommand : OrchestratorPSCmdlet
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
+
+    private class NewMachineNameCompleter : OrchArgumentCompleter
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = ResolveDrives(fakeBoundParameters);
+            var results = ParallelResults.ForEach(drives, drive => drive.Machines.Get());
+
+            // パラメータで選択済みの Name は、候補から除外する
+            var names = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var entities = results.SelectMany(e => e.Result ?? []);
+            yield return new CompletionResult(GenerateNewEntityName("NewMachine", names, entities, e => e.Name!));
+        }
+    }
 
     protected override void ProcessRecord()
     {

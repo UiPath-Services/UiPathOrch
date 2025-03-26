@@ -2,7 +2,6 @@
 using System.Data;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using UiPath.PowerShell.Core;
@@ -279,6 +278,29 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         return new WildcardPattern(wordToComplete, WildcardOptions.IgnoreCase);
     }
 
+    internal static string GenerateNewEntityName<T>(
+        string newNamePrefix,
+        IEnumerable<string>? specifiedNames,
+        IEnumerable<T>? existingEntities,
+        Func<T, string> getNameFunc)
+    {
+        int index = 1;
+        string newName;
+        while (true)
+        {
+            newName = $"{newNamePrefix}{index}";
+            if ((specifiedNames?.Any(e => string.Compare(e, newName, true) == 0) ?? false) ||
+                (existingEntities?.Any(e => string.Compare(getNameFunc(e), newName, true) == 0) ?? false))
+            {
+                ++index;
+                continue;
+            }
+            break;
+        }
+        // ここで、newName は存在しない、新しい名前として適切であるはず
+        return newName;
+    }
+
     protected static List<PmGroupMember> GetExistingMembers(List<OrchDriveInfo> drives, List<WildcardPattern>? wpGroupName)
     {
         var results = ParallelResults.ForEach(drives, drive =>
@@ -292,13 +314,12 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         List<PmGroupMember> existingMembers = [];
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var group in entities!)
+            foreach (var group in result.Result)
             {
-                if (!group.TryGetValue(out var detailedGroup)) continue;
-
-                existingMembers.AddRange(detailedGroup?.members ?? []);
+                if (group.Result is null) continue;
+                existingMembers.AddRange(group.Result.members ?? []);
             }
         }
         return existingMembers;
@@ -735,9 +756,9 @@ internal class ActionCatalogNameCompleter<TPositional> : OrchArgumentCompleter w
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var catalog in entities!
+            foreach (var catalog in result.Result
                 .Where(b => wp.IsMatch(b.Name))
                 .ExcludeByWildcards(e => e?.Name, wpName)
                 .OrderBy(e => e.Name))
@@ -769,9 +790,9 @@ internal class ApiTriggerNameCompleter<TPositional> : OrchArgumentCompleter wher
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var trigger in entities!
+            foreach (var trigger in result.Result
                 .Where(t => wp.IsMatch(t.Name))
                 .ExcludeByWildcards(t => t?.Name, wpName))
             {
@@ -805,9 +826,9 @@ internal class AssetNameCompleter<TPositional> : OrchArgumentCompleter where TPo
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var asset in entities!
+            foreach (var asset in result.Result
                 .Where(a => wp.IsMatch(a.Name))
                 .FilterByWildcards(a => a?.ValueType, wpValueType)
                 .ExcludeByWildcards(a => a?.Name, wpName)
@@ -841,8 +862,8 @@ internal class AssetValueTypeCompleter<TPositional> : OrchArgumentCompleter wher
         HashSet<string> valueTypes = [];
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
-            foreach (var asset in entities!.FilterByWildcards(a => a?.Name, wpName))
+            if (result.Result is null) continue;
+            foreach (var asset in result.Result.FilterByWildcards(a => a?.Name, wpName))
             {
                 valueTypes.Add(asset.ValueType!);
             }
@@ -879,9 +900,9 @@ internal class BucketNameCompleter<TPositional, WritableOnly> : OrchArgumentComp
         bool bFound = false;
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var bucket in entities!
+            foreach (var bucket in result.Result
                 .Where(b => !WritableOnly.Value || !(b.Options?.Contains("ReadOnly") ?? false))
                 .Where(b => wp.IsMatch(b.Name))
                 .ExcludeByWildcards(b => b?.Name, wpName)
@@ -921,9 +942,9 @@ internal class CalendarNameCompleter<TPositional> : OrchArgumentCompleter where 
         bool bFound = false;
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var calendar in entities!
+            foreach (var calendar in result.Result
                 .Where(c => wp.IsMatch(c.Name))
                 .ExcludeByWildcards(c => c?.Name, wpName)
                 .OrderBy(b => b.Name))
@@ -961,15 +982,14 @@ internal class CredentialStoreNameCompleter<TPositional> : OrchArgumentCompleter
         bool bFound = false;
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            if (entities?.Count != 0) bFound = true;
-
-            foreach (var credentialStore in entities!
+            foreach (var credentialStore in result.Result
                 .Where(c => wp.IsMatch(c.Name))
                 .ExcludeByWildcards(c => c?.Name, wpName)
                 .OrderBy(c => c.Name!))
             {
+                bFound = true;
                 string tiphelp = TipHelp(credentialStore);
                 yield return new CompletionResult(PathTools.EscapePSText(credentialStore.Name), credentialStore.Name, CompletionResultType.ParameterValue, tiphelp);
             }
@@ -1001,9 +1021,9 @@ internal class FolderMachineNameCompleter<TPositional> : OrchArgumentCompleter w
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var machine in entities!
+            foreach (var machine in result.Result
                 .Where(m => wp.IsMatch(m.Name))
                 .ExcludeByWildcards(m => m?.Name, wpName)
                 .OrderBy(m => m.Name))
@@ -1035,9 +1055,9 @@ internal class MachineNameCompleter<TPositional> : OrchArgumentCompleter where T
         bool bFound = false;
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var machine in entities!
+            foreach (var machine in result.Result
                 .Where(m => wp.IsMatch(m.Name))
                 .ExcludeByWildcards(m => m?.Name, wpName)
                 .OrderBy(m => m.Name!))
@@ -1074,9 +1094,9 @@ internal class MachineRobotUsersCompleter<TPositional> : OrchArgumentCompleter w
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var robot in entities!
+            foreach (var robot in result.Result
                 .Where(r => wp.IsMatch(r?.User?.FullName))
                 .ExcludeByWildcards(p => p?.User?.FullName, wpRobotUsers)
                 .OrderBy(p => p.User?.FullName))
@@ -1114,9 +1134,9 @@ internal class LibraryIdCompleter<TPositional> : OrchArgumentCompleter where TPo
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var library in entities!
+            foreach (var library in result.Result
                 .Where(l => wp.IsMatch(l.Id))
                 .ExcludeByWildcards(l => l?.Id, wpId)
                 .FilterByWildcards(l => l?.Version, wpVersion)
@@ -1162,13 +1182,13 @@ internal class LibraryVersionCompleter<TPositional> : OrchArgumentCompleter wher
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var library in entities!)
+            foreach (var library in result.Result)
             {
-                if (!library.TryGetValue(out var versions)) continue;
+                if (library.Result is null) continue;
 
-                foreach (var version in versions!
+                foreach (var version in library.Result
                     .Where(v => wp.IsMatch(v.Version))
                     .ExcludeByWildcards(v => v?.Version, wpVersion))
                 //.OrderBy(v => v.Version!, VersionComparer.Instance))
@@ -1205,9 +1225,9 @@ internal class PackageIdCompleter<TPositional> : OrchArgumentCompleter where TPo
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var e in entities!
+            foreach (var e in result.Result
                 .Where(m => wp.IsMatch(m.Id))
                 .ExcludeByWildcards(p => p?.Id, wpId)
                 .OrderBy(l => l.Id))
@@ -1250,13 +1270,13 @@ internal class PackageVersionCompleter<TPositional> : OrchArgumentCompleter wher
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var packages)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var results2 in packages!)
+            foreach (var results2 in result.Result)
             {
-                if (!results2.TryGetValue(out var versions)) continue;
+                if (results2.Result is null) continue;
 
-                foreach (var version in versions!
+                foreach (var version in results2.Result
                     .Where(v => wp.IsMatch(v.Version))
                     .ExcludeByWildcards(v => v?.Version, wpVersion))
                     //.OrderBy(v => v.Version!, VersionComparer.Instance))
@@ -1289,9 +1309,9 @@ internal class ProcessNameCompleter<TPositional> : OrchArgumentCompleter where T
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var release in entities!
+            foreach (var release in result.Result
                 .Where(p => wp.IsMatch(p.Name))
                 .ExcludeByWildcards(p => p?.Name, wpName)
                 .OrderBy(p => p.Name))
@@ -1323,9 +1343,9 @@ internal class QueueNameCompleter<TPositional> : OrchArgumentCompleter where TPo
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var e in entities!
+            foreach (var e in result.Result
                 .Where(q => wp.IsMatch(q.Name))
                 .ExcludeByWildcards(q => q?.Name, wpName)
                 .OrderBy(q => q.Name))
@@ -1364,9 +1384,9 @@ internal class ListReleasesCompleter<TPositional> : OrchArgumentCompleter where 
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var release in entities!
+            foreach (var release in result.Result
                 .Where(r => wp.IsMatch(r.Name))
                 .ExcludeByWildcards(r => r?.Name, wpName)
                 .OrderBy(r => r.Name))
@@ -1398,9 +1418,9 @@ internal class RoleNameCompleter<TPositional> : OrchArgumentCompleter where TPos
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var role in entities!
+            foreach (var role in result.Result
                 .Where(r => wp.IsMatch(r.Name))
                 .ExcludeByWildcards(r => r?.Name, wpName)
                 .OrderBy(role => role.Name))
@@ -1437,9 +1457,9 @@ public class TenantUserUserNameCompleter<TPositional> : OrchArgumentCompleter wh
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var e in entities!
+            foreach (var e in result.Result
                 .Where(u => wp.IsMatch(u.UserName))
                 .ExcludeByWildcards(u => u?.UserName, wpUserName)
                 .FilterByWildcards(u => u?.FullName, wpFullName)
@@ -1478,9 +1498,9 @@ public class TenantUserFullNameCompleter<TPositional> : OrchArgumentCompleter wh
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var e in entities!
+            foreach (var e in result.Result
                 .Where(u => wp.IsMatch(u.FullName))
                 .FilterByWildcards(u => u?.UserName, wpUserName)
                 .ExcludeByWildcards(u => u?.FullName, wpFullName)
@@ -1534,9 +1554,9 @@ internal class TriggerNameCompleter<TPositional> : OrchArgumentCompleter where T
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var e in entities!
+            foreach (var e in result.Result
                 .Where(t => wp.IsMatch(t.Name))
                 .ExcludeByWildcards(t => t?.Name, wpName)
                 .OrderBy(t => t.Name))
@@ -1593,9 +1613,9 @@ internal class WebhookNameCompleter<TPositional> : OrchArgumentCompleter where T
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var e in entities!
+            foreach (var e in result.Result
                 .Where(e => wp.IsMatch(e.Name))
                 .ExcludeByWildcards(e => e?.Name, wpName)
                 .OrderBy(e => e.Name!))
@@ -1641,12 +1661,11 @@ internal class PmDirectoryNameCompleter<TPositional> : OrchArgumentCompleter whe
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
-            if (entities is null) continue;
+            if (result.Result is null) continue;
 
             var drive = result.Source;
 
-            foreach (var s in entities
+            foreach (var s in result.Result
                 .Where(s => !names.Contains(s.identityName)) // 入力済みのものを除く
                 .Where(s => s.objectType == kind)
                 .OrderBy(s => s.identityName))
@@ -1686,12 +1705,11 @@ internal class PmDirectoryNameCompleter4Du<TPositional> : OrchArgumentCompleter 
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
-            if (entities is null) continue;
+            if (result.Result is null) continue;
 
             var drive = result.Source;
 
-            foreach (var s in entities
+            foreach (var s in result.Result
                 .Where(s => !names.Contains(s.identityName)) // 入力済みのものを除く
                 .Where(s => types.Contains(s?.objectType))
                 .OrderBy(s => s.identityName))
@@ -1738,13 +1756,13 @@ internal class UserNameInPmGroupCompleter<TPositional> : OrchArgumentCompleter w
         List<PmGroupMember> users = [];
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var e in entities!)
+            foreach (var e in result.Result)
             {
-                if (!e.TryGetValue(out var detailedGroup)) continue;
+                if (e.Result is null) continue;
 
-                foreach (var member in detailedGroup?.members?
+                foreach (var member in e.Result.members?
                     .FilterByWildcards(m => m?.objectType, wpType) ?? [])
                 {
                     users.Add(member);
@@ -1823,9 +1841,9 @@ internal class TestCaseNameCompleter<TPositional> : OrchArgumentCompleter where 
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var testCase in entities!
+            foreach (var testCase in result.Result
                 .Where(tc => wp.IsMatch(tc.Name!))
                 .ExcludeByWildcards(tc => tc?.Name, wpName)
                 .OrderBy(tc => tc.Name))
@@ -1863,9 +1881,9 @@ internal class TestDataQueueNameCompleter<TPositional> : OrchArgumentCompleter w
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var testDataQueue in entities!
+            foreach (var testDataQueue in result.Result
                 .Where(e => wp.IsMatch(e.Name!))
                 .ExcludeByWildcards(e => e?.Name, wpName)
                 .OrderBy(e => e.Name))
@@ -1903,9 +1921,9 @@ internal class TestScheduleNameCompleter<TPositional> : OrchArgumentCompleter wh
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var testSet in entities!
+            foreach (var testSet in result.Result
                 .Where(tc => wp.IsMatch(tc.Name!))
                 .ExcludeByWildcards(tc => tc?.Name, wpName)
                 .OrderBy(tc => tc.Name))
@@ -1943,9 +1961,9 @@ internal class TestSetNameCompleter<TPositional> : OrchArgumentCompleter where T
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var testSet in entities!
+            foreach (var testSet in result.Result
                 .Where(te => wp.IsMatch(te.Name!))
                 .ExcludeByWildcards(te => te?.Name, wpName)
                 .OrderBy(te => te.Name))
@@ -1978,9 +1996,9 @@ public class PmGroupNameCompleter<TPositional> : OrchArgumentCompleter where TPo
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var e in entities!.Values
+            foreach (var e in result.Result.Values
                 .Where(g => wp.IsMatch(g?.name))
                 .ExcludeByWildcards(g => g?.name!, wpName)
                 .OrderBy(g => g?.name))
@@ -2012,9 +2030,9 @@ internal class PmRobotAccountNameCompleter<TPositional> : OrchArgumentCompleter 
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var e in entities!
+            foreach (var e in result.Result
                 .Where(r => r is not null)
                 .Where(r => wp.IsMatch(r!.name!))
                 .ExcludeByWildcards(r => r!.name!, wpName)
@@ -2047,9 +2065,9 @@ internal class PmUserEmailCompleter<TPositional> : OrchArgumentCompleter where T
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var user in entities!
+            foreach (var user in result.Result
                 .Where(g => !string.IsNullOrEmpty(g?.email))
                 .Where(g => wp.IsMatch(g?.email))
                 .ExcludeByWildcards(u => u?.email!, wpEmail)
@@ -2084,9 +2102,9 @@ internal class PmLicensedGroupNameCompleter<TPositional> : OrchArgumentCompleter
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var e in entities!
+            foreach (var e in result.Result
                 .Where(g => wp.IsMatch(g?.name))
                 .ExcludeByWildcards(g => g?.name!, wpGroupName)
                 .OrderBy(g => g?.name))
@@ -2125,9 +2143,9 @@ internal class TmRequirementNameCompleter<TPositional> : OrchArgumentCompleter w
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var e in entities!
+            foreach (var e in result.Result
                 .Where(e => wp.IsMatch(e.name))
                 .ExcludeByWildcards(e => e?.name, wpName)
                 .OrderBy(e => e.name))
@@ -2163,9 +2181,9 @@ internal class TmTestSetNameCompleter<TPositional> : OrchArgumentCompleter where
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var e in entities!
+            foreach (var e in result.Result
                 .Where(e => wp.IsMatch(e.name))
                 .ExcludeByWildcards(e => e?.name, wpName)
                 .OrderBy(e => e.name))
@@ -2201,9 +2219,9 @@ internal class TmTestCaseNameCompleter<TPositional> : OrchArgumentCompleter wher
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var e in entities!
+            foreach (var e in result.Result
                 .Where(e => wp.IsMatch(e.name))
                 .ExcludeByWildcards(e => e?.name, wpName)
                 .OrderBy(e => e.name))
@@ -2456,9 +2474,9 @@ internal class DuUserNameCompleter<TPositional> : OrchArgumentCompleter where TP
 
         foreach (var result in results)
         {
-            if (!result.TryGetValue(out var entities)) continue;
+            if (result.Result is null) continue;
 
-            foreach (var user in entities!
+            foreach (var user in result.Result
                 .Where(e => wp.IsMatch(e?.displayName))
                 .ExcludeByWildcards(e => e?.displayName!, wpName)
                 .OrderBy(e => e?.displayName))

@@ -78,9 +78,9 @@ public class StartJobCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var machineRuntime in entities!
+                foreach (var machineRuntime in result.Result
                     .Where(mr => wp.IsMatch(mr.Type))
                     .Where(mr => mr.Total > 0)
                     .OrderBy(mr => mr.Type))
@@ -122,9 +122,9 @@ public class StartJobCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
-                if (!result.TryGetValue(out var entities)) continue;
+                if (result.Result is null) continue;
 
-                foreach (var proc in entities!
+                foreach (var proc in result.Result
                     .Where(p => wp.IsMatch(p.Name))
                     .FilterByWildcards(r => r?.Name, wpName)
                     .OrderBy(proc => proc.Name))
