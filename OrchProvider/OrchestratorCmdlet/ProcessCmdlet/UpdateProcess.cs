@@ -117,6 +117,14 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<True_False>))]
     public string? AlwaysRunning { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(BoolCompleter))]
+    public string? A4R_Enabled { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(BoolCompleter))]
+    public string? A4R_HealingEnabled { get; set; }
     #endregion
 
     #region VideoRecordingSettings
@@ -413,6 +421,10 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                 newRelease.ProcessSettings.AssignNumberIfNotNullOrZero(Quality,       (r, v) => r.Quality = v);
                 newRelease.ProcessSettings.AssignBoolIfNotNull(AutoStartProcess,      (r, v) => r.AutoStartProcess = v);
                 newRelease.ProcessSettings.AssignBoolIfNotNull(AlwaysRunning,         (r, v) => r.AlwaysRunning = v);
+
+                newRelease.ProcessSettings.AutopilotForRobots ??= new();
+                newRelease.ProcessSettings.AutopilotForRobots.AssignBoolIfNotNull(A4R_Enabled,        (r, v) => r.Enabled = v);
+                newRelease.ProcessSettings.AutopilotForRobots.AssignBoolIfNotNull(A4R_HealingEnabled, (r, v) => r.HealingEnabled = v);
 
                 newRelease.VideoRecordingSettings ??= new();
                 newRelease.VideoRecordingSettings.AssignStringIfNotNullOrEmpty(VideoRecordingType,          (r, v) => r.VideoRecordingType = v);

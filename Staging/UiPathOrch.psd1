@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.10.8'
+ModuleVersion = '0.9.10.9'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -384,18 +384,9 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- The New-OrchPmUserBulk cmdlet has been renamed to New-OrchPmUser. We apologize for any inconvenience this change may cause.
+        ReleaseNotes = '- Two parameters, -A4R_Enabled and -A4R_HealingEnabled, have been added to the New-OrchProcess and Update-OrchProcess cmdlets.
 
-- The New-OrchPmUser cmdlet now automatically creates groups with the specified name if the name provided to the -GroupName parameter does not contain wildcard characters and no existing group matches the name.
-
-- The Get-OrchPmUser cmdlet now supports the -ExportCsv parameter. The CSV file generated with this parameter can be imported using the New-OrchPmUser cmdlet.
-
-- The -Name parameter completer now works as expected for the following cmdlets:
-  - New-OrchBucket
-  - New-OrchMachine
-  - New-OrchQueue
-  - New-OrchTrigger
-  - New-OrchPmGroup
+- Additionally, two columns, A4R_Enabled and A4R_HealingEnabled, have been added to the CSV file output by Get-OrchProcess -ExportCsv. This CSV file can be imported using the New-OrchProcess and Update-OrchProcess cmdlets.
 '
 
         # Prerelease string of this module

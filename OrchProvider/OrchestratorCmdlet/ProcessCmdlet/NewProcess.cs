@@ -114,6 +114,14 @@ public class AddProcessCommand : OrchestratorPSCmdlet
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BoolCompleter))]
     public string? AlwaysRunning { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(BoolCompleter))]
+    public string? A4R_Enabled { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(BoolCompleter))]
+    public string? A4R_HealingEnabled { get; set; }
     #endregion
 
     #region VideoRecordingSettings
@@ -383,6 +391,10 @@ public class AddProcessCommand : OrchestratorPSCmdlet
                 release.ProcessSettings.AssignNumberIfNotNullOrZero(Quality, (p, v) => p.Quality = v);
                 release.ProcessSettings.AssignNumberIfNotNullOrZero(Frequency, (p, v) => p.Frequency = v);
                 release.ProcessSettings.AssignNumberIfNotNullOrZero(Duration, (p, v) => p.Duration = v);
+
+                release.ProcessSettings.AutopilotForRobots = new();
+                release.ProcessSettings.AssignBoolIfNotNull(A4R_Enabled,        (p, v) => p.AutopilotForRobots!.Enabled = v);
+                release.ProcessSettings.AssignBoolIfNotNull(A4R_HealingEnabled, (p, v) => p.AutopilotForRobots!.HealingEnabled = v);
 
                 //release.ProcessSettings.ErrorRecordingEnabled ??= false;
                 //release.ProcessSettings.Duration ??= 40;

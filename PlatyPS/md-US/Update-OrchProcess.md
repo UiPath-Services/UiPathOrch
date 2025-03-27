@@ -18,9 +18,10 @@ Update-OrchProcess [-Name] <String[]> [-NewName <String>] [-Description <String>
  [-RemoteControlAccess <String>] [-RetentionAction <String>] [-RetentionPeriod <Int32>]
  [-RetentionBucket <String>] [-StaleRetentionAction <String>] [-StaleRetentionPeriod <Int32>]
  [-StaleRetentionBucket <String>] [-ErrorRecordingEnabled <String>] [-Quality <Int32>] [-Frequency <Int32>]
- [-Duration <Int32>] [-AutoStartProcess <String>] [-AlwaysRunning <String>] [-VideoRecordingType <String>]
- [-QueueItemVideoRecordingType <String>] [-MaxDurationSeconds <Int32>] [-Tags <String[]>] [-Path <String[]>]
- [-Recurse] [-Depth <UInt32>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+ [-Duration <Int32>] [-AutoStartProcess <String>] [-AlwaysRunning <String>] [-A4R_Enabled <String>]
+ [-A4R_HealingEnabled <String>] [-VideoRecordingType <String>] [-QueueItemVideoRecordingType <String>]
+ [-MaxDurationSeconds <Int32>] [-Tags <String[]>] [-Path <String[]>] [-Recurse] [-Depth <UInt32>]
+ [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -499,6 +500,36 @@ Accept wildcard characters: True
 
 ```yaml
 Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -A4R_Enabled
+{{ Fill A4R_Enabled Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -A4R_HealingEnabled
+{{ Fill A4R_HealingEnabled Description }}
+
+```yaml
+Type: String
 Parameter Sets: (All)
 Aliases:
 
