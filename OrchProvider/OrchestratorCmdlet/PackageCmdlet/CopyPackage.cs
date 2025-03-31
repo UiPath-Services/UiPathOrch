@@ -169,7 +169,8 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
         return false;
     }
 
-    private bool DownloadPackage(OrchDriveInfo srcDrive, string? srcFeedId, Package srcVersion, out string? fileName, out byte[]? fileContent)
+    // TODO: IWritableHost の拡張メソッドにするべきか？
+    private static bool DownloadPackage(IWritableHost _this, OrchDriveInfo srcDrive, string? srcFeedId, Package srcVersion, out string? fileName, out byte[]? fileContent)
     {
         try
         {
@@ -177,7 +178,7 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
         }
         catch (Exception ex)
         {
-            WriteError(new ErrorRecord(new OrchException(srcVersion.GetPSPath(), ex), "DownloadPackageError", ErrorCategory.InvalidOperation, srcVersion));
+            _this.WriteError(new ErrorRecord(new OrchException(srcVersion.GetPSPath(), ex), "DownloadPackageError", ErrorCategory.InvalidOperation, srcVersion));
             fileName = null;
             fileContent = null;
             return false;
@@ -185,7 +186,7 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
         return true;
     }
 
-    private bool UploadPackage(Package srcVersion, OrchDriveInfo dstDrive, Folder dstFolder, string? fileName, byte[]? fileContent)
+    private static bool UploadPackage(IWritableHost _this, Package srcVersion, OrchDriveInfo dstDrive, Folder dstFolder, string? fileName, byte[]? fileContent)
     {
         if (string.IsNullOrEmpty(fileName) || fileContent is null) return false;
         try
@@ -209,10 +210,121 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
         catch (Exception ex)
         {
             string target = $"{srcVersion.GetPSPath()}:{srcVersion.Version}";
-            WriteError(new ErrorRecord(new OrchException(target, ex), "UploadPackageError", ErrorCategory.InvalidOperation, target));
+            _this.WriteError(new ErrorRecord(new OrchException(target, ex), "UploadPackageError", ErrorCategory.InvalidOperation, target));
         }
 
         return false;
+    }
+
+    internal static void CopyPackages(
+        IWritableHost _this,
+        List<(OrchDriveInfo, Folder)> srcDrivesFolders, Folder srcRootFolder,
+        List<WildcardPattern>? wpId, List<WildcardPattern>? wpVersion,
+        List<(OrchDriveInfo, Folder)> dstDrivesFolders,
+        bool shouldProcess, CancellationToken cancelToken)
+    {
+        string msg1 = "Processing folders...";
+        int index1 = 0;
+        using var reporterMain = new ProgressReporter(_this, 1, srcDrivesFolders.Count, msg1, msg1);
+        foreach (var (srcDrive, srcFolder) in srcDrivesFolders)
+        {
+            cancelToken.ThrowIfCancellationRequested();
+
+            //reporterMain.WriteProgress(++indexMain, $"{indexMain:D}/{srcDrivesFolders.Count} {srcFolder.GetPSPath()}");
+            if (srcDrivesFolders.Count > 1) reporterMain.WriteProgress(++index1, $"{index1:D}/{srcDrivesFolders.Count}");
+            try
+            {
+                var srcPackages = srcDrive.GetPackages(srcFolder)
+                    .FilterByWildcards(p => p?.Id, wpId)
+                    .OrderBy(p => p.Id)
+                    .ToList();
+
+                var srcFeedId = srcDrive.FolderFeedId.Get(srcFolder);
+
+                string msg2 = "Processing packages...";
+                int index2 = 0;
+                using var reporter2 = new ProgressReporter(_this, 2, srcPackages.Count, msg2, msg2);
+                foreach (var srcPackage in srcPackages)
+                {
+                    cancelToken.ThrowIfCancellationRequested();
+
+                    if (reporter2.TotalNum > 1) reporter2.WriteProgress(++index2, $"{index2:D}/{reporter2.TotalNum}");
+
+                    var srcVersions = srcDrive.GetPackageVersions(srcFolder, srcPackage.Id!)
+                        .FilterByWildcards(p => p?.Version, wpVersion)
+                        //.OrderBy(p => p.Version!, VersionComparer.Instance)
+                        .ToList();
+
+                    string msg3 = "Copying versions...   ";
+                    int index3 = 0;
+                    using var reporter3 = new ProgressReporter(_this, 3, srcVersions.Count * dstDrivesFolders.Count, msg3, msg3);
+                    foreach (var srcVersion in srcVersions)
+                    {
+                        string fileName = null;
+                        byte[] fileContent = null;
+
+                        foreach (var (dstDrive, dstRootFolder) in dstDrivesFolders)
+                        {
+                            cancelToken.ThrowIfCancellationRequested();
+
+                            Folder? dstFolder = _this.GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder, true);
+                            // 同名のフォルダがない場合は、コピー処理をスキップする
+                            if (dstFolder is null) throw new NoCorrespondDestinatoinFolderException();
+
+                            if (srcDrive == dstDrive && srcFolder == dstFolder) continue;
+
+                            // 同名のフォルダはあるが、フォルダフィードがない場合には、コピー処理をスキップする
+                            // （テナントフィードにコピーすることはしない）
+                            if (dstFolder != dstDrive.RootFolder && dstFolder.FeedType != "FolderHierarchy")
+                            {
+                                _this.WriteError(new ErrorRecord(
+                                    new OrchException(srcFolder.GetPSPath(), $"Skipping folder '{dstFolder.GetPSPath()}' as its FeedType is not 'FolderHierarchy'."),
+                                    "CopyFolderEntityToRootFolderError",
+                                    ErrorCategory.InvalidOperation,
+                                    dstDrive));
+                                throw new NoCorrespondDestinatoinFolderException();
+                            }
+
+                            // dstFolder に同名のパッケージがあれば、警告を表示してコピーをスキップする
+                            if (PackageExists(dstDrive, dstFolder, srcVersion))
+                            {
+                                _this.WriteError(new ErrorRecord(new InvalidOperationException($"\"{srcVersion.GetPSPath()}:{srcVersion.Version}\": Package already exists in {dstFolder.GetPSPath()}. Skipping the copy."), "CopyPackageError", ErrorCategory.WriteError, dstFolder));
+                                continue;
+                            }
+
+                            string key = $"{srcVersion.GetPSPath()}:{srcVersion.Version}";
+                            string target = $"Item: {key} Destination: {dstFolder.GetPSPath()}";
+
+                            if (shouldProcess || _this.ShouldProcess(target, $"Copy Package"))
+                            {
+                                // 進捗は、実際にコピーするときにだけ表示された方が良い
+                                reporter3.WriteProgress(++index3, $"{index3:D}/{reporter3.TotalNum} {key}.nupkg to {dstDrive.NameColonSeparator}");
+
+                                if (fileName is null)
+                                {
+                                    if (!DownloadPackage(_this, srcDrive, srcFeedId, srcVersion, out fileName, out fileContent)) break;
+                                }
+                                UploadPackage(_this, srcVersion, dstDrive, dstFolder, fileName, fileContent);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (NoCorrespondDestinatoinFolderException)
+            {
+                // この例外は、コピー先フォルダーがない場合に処理をスキップするときにスローされる。
+                // 警告はコンソールに出力済みなので、ここでは何もしない
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                // だいぶ雑だな。。とりあえずいいか、、
+                _this.WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, ex), "CopyFolderMachineError", ErrorCategory.InvalidOperation, srcDrive));
+            }
+        }
     }
 
     protected override void ProcessRecord()
@@ -234,108 +346,7 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
             throw new Exception("The -Recurse can only be used when the source folder is the root folder.");
         }
 
-        string msg1 = "Processing folders...";
-        int index1 = 0;
-        using var reporterMain = new ProgressReporter(this, 1, srcDrivesFolders.Count, msg1, msg1);
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (_, srcFolder) in srcDrivesFolders)
-        {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
-            //reporterMain.WriteProgress(++indexMain, $"{indexMain:D}/{srcDrivesFolders.Count} {srcFolder.GetPSPath()}");
-            if (srcDrivesFolders.Count > 1) reporterMain.WriteProgress(++index1, $"{index1:D}/{srcDrivesFolders.Count}");
-            try
-            {
-                var srcPackages = srcDrive.GetPackages(srcFolder)
-                    .FilterByWildcards(p => p?.Id, wpId)
-                    .OrderBy(p => p.Id)
-                    .ToList();
-
-                var srcFeedId = srcDrive.FolderFeedId.Get(srcFolder);
-
-                string msg2 = "Processing packages...";
-                int index2 = 0;
-                using var reporter2 = new ProgressReporter(this, 2, srcPackages.Count, msg2, msg2);
-                foreach (var srcPackage in srcPackages)
-                {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
-                    if (reporter2.TotalNum > 1) reporter2.WriteProgress(++index2, $"{index2:D}/{reporter2.TotalNum}");
-
-                    var srcVersions = srcDrive.GetPackageVersions(srcFolder, srcPackage.Id!)
-                        .FilterByWildcards(p => p?.Version, wpVersion)
-                        //.OrderBy(p => p.Version!, VersionComparer.Instance)
-                        .ToList();
-
-                    string msg3 = "Copying versions...   ";
-                    int index3 = 0;
-                    using var reporter3 = new ProgressReporter(this, 3, srcVersions.Count * dstDrivesFolders.Count, msg3, msg3);
-                    foreach (var srcVersion in srcVersions)
-                    {
-                        string fileName = null;
-                        byte[] fileContent = null;
-
-                        foreach (var (dstDrive, dstRootFolder) in dstDrivesFolders)
-                        {
-                            cancelHandler.Token.ThrowIfCancellationRequested();
-
-                            Folder? dstFolder = GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder, true);
-                            // 同名のフォルダがない場合は、コピー処理をスキップする
-                            if (dstFolder is null) throw new NoCorrespondDestinatoinFolderException();
-
-                            if (srcDrive == dstDrive && srcFolder == dstFolder) continue;
-
-                            // 同名のフォルダはあるが、フォルダフィードがない場合には、コピー処理をスキップする
-                            // （テナントフィードにコピーすることはしない）
-                            if (dstFolder != dstDrive.RootFolder && dstFolder.FeedType != "FolderHierarchy")
-                            {
-                                WriteError(new ErrorRecord(
-                                    new OrchException(srcFolder.GetPSPath(), $"Skipping folder '{dstFolder.GetPSPath()}' as its FeedType is not 'FolderHierarchy'."),
-                                    "CopyFolderEntityToRootFolderError",
-                                    ErrorCategory.InvalidOperation,
-                                    dstDrive));
-                                throw new NoCorrespondDestinatoinFolderException();
-                            }
-
-                            // dstFolder に同名のパッケージがあれば、警告を表示してコピーをスキップする
-                            if (PackageExists(dstDrive, dstFolder, srcVersion))
-                            {
-                                WriteError(new ErrorRecord(new InvalidOperationException($"\"{srcVersion.GetPSPath()}:{srcVersion.Version}\": Package already exists in {dstFolder.GetPSPath()}. Skipping the copy."), "CopyPackageError", ErrorCategory.WriteError, dstFolder));
-                                continue;
-                            }
-
-                            string key = $"{srcVersion.GetPSPath()}:{srcVersion.Version}";
-                            string target = $"Item: {key} Destination: {dstFolder.GetPSPath()}";
-
-                            if (ShouldProcess(target, $"Copy Package"))
-                            {
-                                // 進捗は、実際にコピーするときにだけ表示された方が良い
-                                reporter3.WriteProgress(++index3, $"{index3:D}/{reporter3.TotalNum} {key}.nupkg to {dstDrive.NameColonSeparator}");
-
-                                if (fileName is null)
-                                {
-                                    if (!DownloadPackage(srcDrive, srcFeedId, srcVersion, out fileName, out fileContent)) break;
-                                }
-                                UploadPackage(srcVersion, dstDrive, dstFolder, fileName, fileContent);
-                            }
-                        }
-                    }
-                }
-            }
-            catch (NoCorrespondDestinatoinFolderException)
-            {
-                // この例外は、コピー先フォルダーがない場合に処理をスキップするときにスローされる。
-                // 警告はコンソールに出力済みなので、ここでは何もしない
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                // だいぶ雑だな。。とりあえずいいか、、
-                WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, ex), "CopyFolderMachineError", ErrorCategory.InvalidOperation, srcDrive));
-            }
-        }
+        CopyPackages(this, srcDrivesFolders, srcRootFolder, wpId, wpVersion, dstDrivesFolders, false, cancelHandler.Token);
     }
 }

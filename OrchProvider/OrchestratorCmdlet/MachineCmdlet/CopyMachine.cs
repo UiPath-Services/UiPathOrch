@@ -25,12 +25,13 @@ public class CopyMachineCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string? Path { get; set; }
 
-    protected override void ProcessRecord()
+    internal static void CopyMachines(
+        IWritableHost _this,
+        OrchDriveInfo srcDrive,
+        List<WildcardPattern>? wpName,
+        IEnumerable<OrchDriveInfo> dstDrives,
+        bool shouldProcess, CancellationToken cancelToken)
     {
-        var wpName = Name.ConvertToWildcardPatternList();
-        var srcDrive = OrchDriveInfo.GetOrchDrive(Path!);
-        var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
-
         srcDrive.Machines.ClearCache();
 
         List<ExtendedMachine> srcMachines;
@@ -44,17 +45,16 @@ public class CopyMachineCommand : OrchestratorPSCmdlet
         }
         catch (Exception ex)
         {
-            WriteError(new ErrorRecord(new OrchException(srcDrive?.NameColonSeparator ?? "", ex), "CopyMachineError", ErrorCategory.InvalidOperation, srcDrive));
+            _this.WriteError(new ErrorRecord(new OrchException(srcDrive?.NameColonSeparator ?? "", ex), "CopyMachineError", ErrorCategory.InvalidOperation, srcDrive));
             return;
         }
 
         string msg = "Copying machines";
-        using var reporter = new ProgressReporter(this, 1, 100, msg, msg);
+        using var reporter = new ProgressReporter(_this, 1, 100, msg, msg);
 
         int index = 0;
-        reporter.TotalNum = dstDrives.Count * srcMachines.Count;
+        reporter.TotalNum = dstDrives.Count() * srcMachines.Count;
 
-        using var cancelHandler = new ConsoleCancelHandler();
         foreach (var dstDrive in dstDrives)
         {
             if (srcDrive == dstDrive) continue;
@@ -65,16 +65,16 @@ public class CopyMachineCommand : OrchestratorPSCmdlet
                 var dstRobots = dstDrive.Robots.Get();
                 foreach (var machine in srcMachines)
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
+                    cancelToken.ThrowIfCancellationRequested();
 
                     reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {machine.GetPSPath()} to {dstDrive.NameColonSeparator}");
 
                     string targetMachine = machine.GetPSPath();
-                    if (ShouldProcess($"Item: {targetMachine} Destination: {dstDrive.NameColonSeparator}", $"Copy Machine"))
+                    if (shouldProcess || _this.ShouldProcess($"Item: {targetMachine} Destination: {dstDrive.NameColonSeparator}", $"Copy Machine"))
                     {
                         if (machine.Scope == "Cloud")
                         {
-                            WriteWarning($"{System.IO.Path.Combine(srcDrive.NameColonSeparator, machine.Name!)}: Copying cloud machine is not supported.");
+                            _this.WriteWarning($"{System.IO.Path.Combine(srcDrive.NameColonSeparator, machine.Name!)}: Copying cloud machine is not supported.");
                             continue;
                         }
 
@@ -100,7 +100,7 @@ public class CopyMachineCommand : OrchestratorPSCmdlet
 
                                     if (srcRobot is null)
                                     {
-                                        WriteError(
+                                        _this.WriteError(
                                             new ErrorRecord(new OrchException(machine.GetPSPath(), $"Robot does not exist with Id = {robotUser.RobotId}."),
                                             "FindRobotError",
                                             ErrorCategory.InvalidArgument,
@@ -112,7 +112,7 @@ public class CopyMachineCommand : OrchestratorPSCmdlet
                                         var dstRobot = dstRobots.FirstOrDefault(r => string.Compare(r.Name, srcRobot.Name, true) == 0);
                                         if (dstRobot is null)
                                         {
-                                            WriteError(
+                                            _this.WriteError(
                                                 new ErrorRecord(new OrchException(machine.GetPSPath(), $"Robot does not exist with name = {srcRobot.Name} in {dstDrive.NameColonSeparator}."),
                                                 "FindRobotError",
                                                 ErrorCategory.InvalidArgument,
@@ -132,17 +132,17 @@ public class CopyMachineCommand : OrchestratorPSCmdlet
                             }
 
                             var addedMachine = dstDrive.OrchAPISession.AddMachine(newMachine);
-                            if (addedMachine is not null)
-                            {
-                                addedMachine.Path = dstDrive.NameColonSeparator;
-                                WriteObject(addedMachine);
-                            }
+                            //if (addedMachine is not null)
+                            //{
+                            //    addedMachine.Path = dstDrive.NameColonSeparator;
+                            //    _this.WriteObject(addedMachine); // provider cmdlet からは実行できないな。。
+                            //}
                             dstDrive.Machines.ClearCache();
                         }
                         catch (Exception ex)
                         {
                             string dstTarget = $"{dstDrive.NameColonSeparator}{machine.Name}";
-                            WriteError(new ErrorRecord(new OrchException(dstTarget, ex), "CopyMachineError", ErrorCategory.InvalidOperation, dstTarget));
+                            _this.WriteError(new ErrorRecord(new OrchException(dstTarget, ex), "CopyMachineError", ErrorCategory.InvalidOperation, dstTarget));
                         }
                     }
                 }
@@ -150,8 +150,18 @@ public class CopyMachineCommand : OrchestratorPSCmdlet
             catch (Exception ex)
             {
                 var errorRecord = new ErrorRecord(new OrchException(target, ex), "CopyMachineError", ErrorCategory.InvalidOperation, target);
-                WriteError(errorRecord);
+                _this.WriteError(errorRecord);
             }
         }
+    }
+
+    protected override void ProcessRecord()
+    {
+        var wpName = Name.ConvertToWildcardPatternList();
+        var srcDrive = OrchDriveInfo.GetOrchDrive(Path!);
+        var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        CopyMachines(this, srcDrive, wpName, dstDrives, false, cancelHandler.Token);
     }
 }

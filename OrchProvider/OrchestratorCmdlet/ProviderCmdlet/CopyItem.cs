@@ -7,6 +7,8 @@ using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Core;
 
+// Cmdlet class のインスタンスと、CmdletProvider class のインスタンスを統一的に扱えるようにするためのインターフェイス。
+// Cmdlet と CmdletProvider のサブクラスで実装しておくと便利だ。
 public interface IWritableHost
 {
     public void WriteError(ErrorRecord errorRecord);
@@ -15,6 +17,62 @@ public interface IWritableHost
     public bool ShouldProcess(string target, string action);
     //public void WriteObject(object sendToPipeline, bool enumerateCollection);
     //public void WriteObject(object sendToPipeline);
+    //public void ThrowTerminatingError(ErrorRecord errorRecord);
+}
+
+// 画面にエラーを出力する処理は、このクラスに集約する。
+public static class IWritableHostExtensions
+{
+    public static Folder? GetRelativeDstFolder(this IWritableHost _this, Folder srcRootFolder, Folder srcFolder, OrchDriveInfo dstDrive, Folder dstRootFolder, bool includeRoot = false)
+    {
+        var strDstRootFolder = dstRootFolder.FullyQualifiedName;
+        //if (strDstRootFolder != "") strDstRootFolder += '/';
+
+        // srcFolder の、srcRootFolder からの相対パスを取得
+        string relativePath = srcFolder.FullyQualifiedName![srcRootFolder.FullyQualifiedName!.Length..];
+        relativePath = relativePath.TrimStart('/').TrimEnd('/');
+
+        string strDstFolder = null;
+        if (strDstRootFolder == "")
+        {
+            if (!includeRoot && relativePath == "")
+            {
+                _this.WriteError(new ErrorRecord(
+                    new OrchException(dstDrive.NameColonSeparator, $"Folder entities cannot be copied to {dstDrive.NameColonSeparator}."),
+                    "CopyFolderEntityToRootFolderError",
+                    ErrorCategory.InvalidOperation,
+                    dstDrive));
+                return null;
+            }
+            strDstFolder = relativePath;
+        }
+        else
+        {
+            strDstFolder = (strDstRootFolder + '/' + relativePath).Trim('/');
+        }
+
+        if (string.IsNullOrEmpty(strDstFolder))
+        {
+            return dstDrive.RootFolder;
+        }
+
+        var dstFolder = dstDrive.GetFolders().FirstOrDefault(f => string.Compare(f.FullyQualifiedName, strDstFolder, StringComparison.OrdinalIgnoreCase) == 0);
+        if (dstFolder is null)
+        {
+            if ('/' != System.IO.Path.DirectorySeparatorChar)
+            {
+                strDstFolder = strDstFolder.Replace('/', System.IO.Path.DirectorySeparatorChar);
+            }
+            _this.WriteError(new ErrorRecord(
+                new OrchException(srcFolder.GetPSPath(), $"{dstDrive.NameColonSeparator}{strDstFolder} does not exist."),
+                "NoCorrespondingDstFolderError",
+                ErrorCategory.InvalidOperation,
+                dstDrive));
+            return null;
+        }
+
+        return dstFolder;
+    }
 }
 
 public class CopyItem_DynamicParameters
@@ -25,7 +83,7 @@ public class CopyItem_DynamicParameters
 
 // Copy-Item cmdlet
 // TODO: フォルダの Description を更新する手段として、Set-ItemProperty を実装したい。
-public partial class OrchProvider : NavigationCmdletProvider, IWritableHost  //, IPropertyCmdletProvider TODO
+public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 {
     private bool ExcludeEntities = false;
 
@@ -2594,7 +2652,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost  //,
         Folder srcFolder,
         OrchDriveInfo dstDrive,
         Folder dstFolder,
-        bool recurse)
+        bool recurse,
+        CancellationToken cancelToken)
     {
         if (srcFolder.FolderType == "Personal")
         {
@@ -2655,15 +2714,13 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost  //,
 
                 Folder newFolder;
                 using ProgressReporter reporter = new(this, 1, totalStageNum, msg, msg);
-                using var cancelHandler = new ConsoleCancelHandler();
-                // ↑この親 reporter は、なるべくチカチカしない方が良いので、下↓のスコープには入れない。
                 // 次から始まるスコープ↓は、子供 reporter がタイムリーに消えるように導入したもの。
                 {
                     reporter.WriteProgress(0, $"\"{srcFolder.GetPSPath()}\" to \"{dstFolder.GetPSPath()}\"");
 
                     // #0 フォルダー自身をコピー
                     reporter.WriteProgress(0);
-                    newFolder = CopyFolder(srcDrive, srcFolder, dstDrive, dstFolder, feedType!, cancelHandler.Token);
+                    newFolder = CopyFolder(srcDrive, srcFolder, dstDrive, dstFolder, feedType!, cancelToken);
                     if (newFolder is null) return false;
 
                     srcDrive._dicReleases?.TryRemove(srcFolder.Id ?? 0, out _);
@@ -2678,60 +2735,60 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost  //,
                         srcDrive.FolderUsersWithInherited.ClearCache(srcFolder);
                         srcDrive.FolderUsersWithNoInherited.ClearCache(srcFolder);
                         using var reporterFolderUsers = new ProgressReporter(this, 100, Int32.MaxValue, msg, msg);
-                        CopyFolderUsers(this, srcDrive, srcFolder, null, null, dstDrive, newFolder, reporterFolderUsers, true, cancelHandler.Token);
+                        CopyFolderUsers(this, srcDrive, srcFolder, null, null, dstDrive, newFolder, reporterFolderUsers, true, cancelToken);
 
                         // #2 フォルダーマシンをコピー
                         msg = "Copying folder machines...   ";
                         reporter.WriteProgress(2);
                         srcDrive.FolderMachinesAssigned.ClearCache(srcFolder);
                         using var reporterFolderMachines = new ProgressReporter(this, 200, Int32.MaxValue, msg, msg);
-                        CopyFolderMachines(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterFolderMachines, true, cancelHandler.Token);
+                        CopyFolderMachines(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterFolderMachines, true, cancelToken);
 
                         // #3 バケットをコピー
                         // プロセスをコピーする前に、先にバケットをコピーしておく必要がある
                         msg = "Copying buckets...           ";
                         reporter.WriteProgress(3);
                         using var reporterBuckets = new ProgressReporter(this, 300, Int32.MaxValue, msg, msg);
-                        CopyBuckets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterBuckets, true, cancelHandler.Token);
+                        CopyBuckets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterBuckets, true, cancelToken);
 
                         // #4 フォルダーパッケージをコピー
                         msg = "Copying packages...          ";
                         reporter.WriteProgress(4);
                         using var reporterPackages = new ProgressReporter(this, 400, Int32.MaxValue, msg, msg);
-                        CopyPackages(this, srcDrive, srcFolder, dstDrive, newFolder, reporterPackages, cancelHandler.Token);
+                        CopyPackages(this, srcDrive, srcFolder, dstDrive, newFolder, reporterPackages, cancelToken);
 
                         // #5 プロセスをコピー
                         msg = "Copying processes...         ";
                         reporter.WriteProgress(5);
                         using var reporterProcesses = new ProgressReporter(this, 500, Int32.MaxValue, msg, msg);
-                        CopyProcesses(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterProcesses, true, cancelHandler.Token);
+                        CopyProcesses(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterProcesses, true, cancelToken);
 
                         // #6 アセットをコピー
                         msg = "Copying assets...            ";
                         reporter.WriteProgress(6);
                         srcDrive.Assets.ClearCache(srcFolder);
                         using var reporterAssets = new ProgressReporter(this, 600, Int32.MaxValue, msg, msg);
-                        CopyAssets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterAssets, true, cancelHandler.Token);
+                        CopyAssets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterAssets, true, cancelToken);
 
                         // #7 キューをコピー
                         msg = "Copying queues...            ";
                         reporter.WriteProgress(7);
                         using var reporterQueues = new ProgressReporter(this, 700, Int32.MaxValue, msg, msg);
-                        CopyQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterQueues, true, cancelHandler.Token);
+                        CopyQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterQueues, true, cancelToken);
 
                         // #8 トリガーをコピー
                         msg = "Copying triggers...          ";
                         reporter.WriteProgress(8);
                         srcDrive._dicTriggers?.TryRemove(srcFolder.Id ?? 0, out _);
                         using var reporterTriggers = new ProgressReporter(this, 800, Int32.MaxValue, msg, msg);
-                        CopyTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTriggers, true, cancelHandler.Token);
+                        CopyTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTriggers, true, cancelToken);
 
                         // #8 APIトリガーをコピー
                         msg = "Copying API triggers...      ";
                         reporter.WriteProgress(9);
                         srcDrive.ApiTriggers.ClearCache(srcFolder);
                         using var reporterApiTriggers = new ProgressReporter(this, 900, Int32.MaxValue, msg, msg);
-                        CopyApiTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterApiTriggers, true, cancelHandler.Token);
+                        CopyApiTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterApiTriggers, true, cancelToken);
 
                         // #xx テストケースはコピーする必要がない。
                         // パッケージとプロセスをコピーすれば、自動で出てくる。
@@ -2744,26 +2801,26 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost  //,
                         msg = "Copying test sets...         ";
                         reporter.WriteProgress(10);
                         using var reporterTestSets = new ProgressReporter(this, 1000, Int32.MaxValue, msg, msg);
-                        CopyTestSets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestSets, true, cancelHandler.Token);
+                        CopyTestSets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestSets, true, cancelToken);
 
                         // #11 テストセットスケジュールをコピー
                         msg = "Copying test schedules...    ";
                         reporter.WriteProgress(11);
                         using var reporterTestSchedules = new ProgressReporter(this, 1100, Int32.MaxValue, msg, msg);
-                        CopyTestSetSchedules(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestSchedules, true, cancelHandler.Token);
+                        CopyTestSetSchedules(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestSchedules, true, cancelToken);
 
                         // #12 テストデータキューをコピー
                         msg = "Copying test data queues...  ";
                         reporter.WriteProgress(12);
                         using var reporterTestDataQueues = new ProgressReporter(this, 1200, Int32.MaxValue, msg, msg);
-                        CopyTestDataQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestDataQueues, true, cancelHandler.Token);
+                        CopyTestDataQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestDataQueues, true, cancelToken);
 
                         // #13 アクションカタログをコピー
                         msg = "Copying action catalogs...   ";
                         reporter.WriteProgress(12);
                         using var reporterActionCatalogs = new ProgressReporter(this, 1300, Int32.MaxValue, msg, msg);
                         //srcDrive.ActionCatalogs.ClearCache(srcFolder);
-                        CopyActionCatalogs(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestDataQueues, true, cancelHandler.Token);
+                        CopyActionCatalogs(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestDataQueues, true, cancelToken);
                     }
                 }
 
@@ -2772,7 +2829,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost  //,
                     var subfolders = GetDirectChildFolders(srcDrive.GetFolders(), srcFolder);
                     foreach (var subfolder in subfolders)
                     {
-                        CopyItemRecurse(srcDrive, subfolder, dstDrive, newFolder, true);
+                        CopyItemRecurse(srcDrive, subfolder, dstDrive, newFolder, true, cancelToken);
                     }
                 }
 
@@ -2796,6 +2853,15 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost  //,
         return new CopyItem_DynamicParameters();
     }
 
+    private bool ShouldCopyTenantEntities<T>(string kind, OrchDriveInfo srcDrive, IEnumerable<T>? srcEntities, OrchDriveInfo dstDrive)
+    {
+        if (srcEntities?.Any() ?? false)
+        {
+            return ShouldProcess($"Item: '{srcDrive.NameColonSeparator}*' Destination: '{dstDrive.NameColonSeparator}'", $"Copy {kind}");
+        }
+        return false;
+    }
+
     protected override void CopyItem(string path, string copyPath, bool recurse)
     {
         var dynamicParameters = DynamicParameters as CopyItem_DynamicParameters;
@@ -2807,13 +2873,16 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost  //,
         OrchDriveInfo srcDrive = ExtractOrchDriveInfo(path);
         OrchDriveInfo dstDrive = ExtractOrchDriveInfo(copyPath);
 
-        srcDrive!.OrchAPISession.EnsureAuthenticated();
-        dstDrive!.OrchAPISession.EnsureAuthenticated();
-
         if (srcDrive is null || dstDrive is null)
         {
             return;
         }
+
+        // この親 reporter は、なるべくチカチカしない方が良いので、広いスコープに置く。
+        using var cancelHandler = new ConsoleCancelHandler();
+
+        srcDrive.OrchAPISession.EnsureAuthenticated();
+        dstDrive.OrchAPISession.EnsureAuthenticated();
 
         // cache the folders
         Parallel.ForEach(Enumerable.Range(0, 2), index =>
@@ -2839,6 +2908,50 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost  //,
             return;
         }
 
+        // まず、ルートからルートにコピーする場合には、すべてのテナントエンティティをコピーする。
+        if (!ExcludeEntities && srcFolder == srcDrive.RootFolder && dstFolder == dstDrive.RootFolder)
+        {
+            if (ShouldCopyTenantEntities("Library", srcDrive, srcDrive.LibrariesInTenant.Get(), dstDrive))
+            {
+                CopyLibraryCommand.CopyLibraries(this, [srcDrive], null, null, [dstDrive], true, cancelHandler.Token);
+            }
+
+            if (ShouldCopyTenantEntities("Package", srcDrive, srcDrive.GetPackages(srcDrive.RootFolder), dstDrive))
+            {
+                CopyPackageCommand.CopyPackages(this, [(srcDrive, srcDrive.RootFolder)], srcDrive.RootFolder, null, null, [(dstDrive, dstDrive.RootFolder)], true, cancelHandler.Token);
+            }
+
+            if (ShouldCopyTenantEntities("CredentialStore", srcDrive, srcDrive.CredentialStores.Get(), dstDrive))
+            {
+                CopyCredentialStoreCommand.CopyCredentialStores(this, srcDrive, null, [dstDrive], true, cancelHandler.Token);
+            }
+
+            if (ShouldCopyTenantEntities("Role", srcDrive, srcDrive.Roles.Get(), dstDrive))
+            {
+                CopyRoleCommand.CopyRoles(this, srcDrive, null, [dstDrive], true, cancelHandler.Token);
+            }
+
+            if (ShouldCopyTenantEntities("User", srcDrive, srcDrive.GetUsers(), dstDrive))
+            {
+                CopyUserCommand.CopyUsers(this, srcDrive, null, null, null, [dstDrive], true, cancelHandler.Token);
+            }
+
+            if (ShouldCopyTenantEntities("Machine", srcDrive, srcDrive.Machines.Get(), dstDrive))
+            {
+                CopyMachineCommand.CopyMachines(this, srcDrive, null, [dstDrive], true, cancelHandler.Token);
+            }
+
+            if (ShouldCopyTenantEntities("Calendar", srcDrive, srcDrive.GetCalendars(), dstDrive))
+            {
+                CopyCalendarCommand.CopyCalendars(this, srcDrive, null, [dstDrive], true, cancelHandler.Token);
+            }
+
+            if (ShouldCopyTenantEntities("Webhook", srcDrive, srcDrive.Webhooks.Get(), dstDrive))
+            {
+                CopyWebhookCommand.CopyWebhooks(this, srcDrive, null, [dstDrive], true, cancelHandler.Token);
+            }
+        }
+
         // ルートフォルダに対して ShouldProcess("/") を呼び出したくないので
         // ルートフォルダーを recursive copy する場合には特別扱いする
         if (srcFolder == srcDrive.RootFolder)
@@ -2851,7 +2964,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost  //,
                 var foldersToBeCopied = srcDrive.GetFolders().Where((f => f.ParentId is null && f != srcDrive.RootFolder));
                 foreach (var folderToBeCopied in foldersToBeCopied)
                 {
-                    isDirty = CopyItemRecurse(srcDrive, folderToBeCopied, dstDrive, dstFolder ?? dstDrive.RootFolder!, true);
+                    isDirty = CopyItemRecurse(srcDrive, folderToBeCopied, dstDrive, dstFolder ?? dstDrive.RootFolder!, true, cancelHandler.Token);
                 }
             }
             if (isDirty)
@@ -2864,7 +2977,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost  //,
         bool bDirty = false;
         try
         {
-            bDirty = CopyItemRecurse(srcDrive, srcFolder, dstDrive, dstFolder ?? dstDrive.RootFolder!, recurse);
+            bDirty = CopyItemRecurse(srcDrive, srcFolder, dstDrive, dstFolder ?? dstDrive.RootFolder!, recurse, cancelHandler.Token);
         }
         catch (Exception)
         {

@@ -38,18 +38,15 @@ public class CopyUserCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string? Path { get; set; }
 
-    protected override void ProcessRecord()
+    internal static void CopyUsers(
+        IWritableHost _this,
+        OrchDriveInfo srcDrive,
+        List<WildcardPattern>? wpUserName,
+        List<WildcardPattern>? wpFullName,
+        List<WildcardPattern>? wpType,
+        IEnumerable<OrchDriveInfo> dstDrives,
+        bool shouldProcess, CancellationToken cancelToken)
     {
-        if (UserName?.Length == 0 || string.IsNullOrEmpty(UserName?[0])) UserName = null;
-        if (FullName?.Length == 0 || string.IsNullOrEmpty(FullName?[0])) FullName = null;
-
-        var wpUserName = UserName.ConvertToWildcardPatternList();
-        var wpFullName = FullName.ConvertToWildcardPatternList();
-        var wpType = Type.ConvertToWildcardPatternList();
-
-        var srcDrive = OrchDriveInfo.GetOrchDrive(Path!) ?? throw new Exception("Path is not OrchDrive.");
-        var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
-
         srcDrive._dicUsers = null;
         srcDrive._dicUsersDetailed = null;
 
@@ -63,19 +60,18 @@ public class CopyUserCommand : OrchestratorPSCmdlet
             .ToList();
 
         string msg = "Copying users";
-        using var reporter = new ProgressReporter(this, 1, 100, msg, msg);
+        using var reporter = new ProgressReporter(_this, 1, 100, msg, msg);
 
         int index = 0;
-        reporter.TotalNum = dstDrives.Count * srcUsers.Count;
+        reporter.TotalNum = dstDrives.Count() * srcUsers.Count;
 
-        using var cancelHandler = new ConsoleCancelHandler();
         foreach (var dstDrive in dstDrives)
         {
             if (srcDrive == dstDrive) continue;
 
             foreach (var srcUser in srcUsers)
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
+                cancelToken.ThrowIfCancellationRequested();
 
                 if (dstDrive.NameColonSeparator == srcUser.Path) continue;
 
@@ -83,7 +79,7 @@ public class CopyUserCommand : OrchestratorPSCmdlet
 
                 reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {srcUser.GetPSPath()} to {dstDrive.NameColonSeparator}");
 
-                if (ShouldProcess(target, "Copy User"))
+                if (shouldProcess || _this.ShouldProcess(target, "Copy User"))
                 {
                     try
                     {
@@ -103,7 +99,7 @@ public class CopyUserCommand : OrchestratorPSCmdlet
                         User detailedUser = srcDrive.GetUser(srcUser);
                         if (detailedUser is null)
                         {
-                            WriteError(new ErrorRecord(new OrchException(target, $"Failed to retrieve {target}."), "GetUserError", ErrorCategory.InvalidOperation, srcUser));
+                            _this.WriteError(new ErrorRecord(new OrchException(target, $"Failed to retrieve {target}."), "GetUserError", ErrorCategory.InvalidOperation, srcUser));
                             continue;
                         }
 
@@ -176,7 +172,7 @@ public class CopyUserCommand : OrchestratorPSCmdlet
                                 rolesToBeRemoved.Add(role);
                                 targetUser = System.IO.Path.Combine(dstDrive.NameColonSeparator, srcUser.UserName!);
 
-                                WriteError(new ErrorRecord(
+                                _this.WriteError(new ErrorRecord(
                                     new OrchException(
                                         System.IO.Path.Combine(srcDrive.NameColonSeparator, srcUser.UserName!), $"No role with the same name exists for '{role}' in {dstDrive.NameColonSeparator}. This role will be ignored."),
                                     "NoMatchedRoleError",
@@ -191,7 +187,7 @@ public class CopyUserCommand : OrchestratorPSCmdlet
                                 rolesToBeRemoved ??= [];
                                 rolesToBeRemoved.Add(role);
                                 targetUser ??= System.IO.Path.Combine(dstDrive.NameColonSeparator, OrchArgumentCompleter.TipHelp(srcUser));
-                                WriteWarning($"{targetUser}: Folder role '{destinationRole.Name}' will be removed.");
+                                _this.WriteWarning($"{targetUser}: Folder role '{destinationRole.Name}' will be removed.");
                             }
                             #endregion
                         }
@@ -214,7 +210,7 @@ public class CopyUserCommand : OrchestratorPSCmdlet
                             //if (newUser.UnattendedRobot.CredentialType != "NoCredential")
                             {
                                 newUser.UnattendedRobot.CredentialStoreId = Core.OrchProvider.FindDstCredentialStore(
-                                    this, srcDrive, dstDrive, dstDrive.RootFolder!,
+                                    _this, srcDrive, dstDrive, dstDrive.RootFolder!,
                                     newUser.UnattendedRobot.CredentialStoreId, srcUser.GetPSPath())?.Id;
                             }
 
@@ -271,7 +267,7 @@ public class CopyUserCommand : OrchestratorPSCmdlet
                             //WriteObject(createdUser);
                             if (newUser.UnattendedRobot is not null && !string.IsNullOrEmpty(newUser.UnattendedRobot.Password))
                             {
-                                WriteWarning($"{System.IO.Path.Combine(dstDrive.NameColonSeparator, OrchArgumentCompleter.TipHelp(srcUser))}: Please update -UR_Password with Update-OrchUser cmdlet.");
+                                _this.WriteWarning($"{System.IO.Path.Combine(dstDrive.NameColonSeparator, OrchArgumentCompleter.TipHelp(srcUser))}: Please update -UR_Password with Update-OrchUser cmdlet.");
                             }
                             dstDrive._dicUsers = null;
                             dstDrive._dicUsersDetailed = null;
@@ -279,10 +275,26 @@ public class CopyUserCommand : OrchestratorPSCmdlet
                     }
                     catch (Exception ex)
                     {
-                        WriteError(new ErrorRecord(new OrchException(srcUser.GetPSPath(), ex), "CreateUserError", ErrorCategory.InvalidOperation, srcUser));
+                        _this.WriteError(new ErrorRecord(new OrchException(srcUser.GetPSPath(), ex), "CreateUserError", ErrorCategory.InvalidOperation, srcUser));
                     }
                 }
             }
         }
+    }
+
+    protected override void ProcessRecord()
+    {
+        if (UserName?.Length == 0 || string.IsNullOrEmpty(UserName?[0])) UserName = null;
+        if (FullName?.Length == 0 || string.IsNullOrEmpty(FullName?[0])) FullName = null;
+
+        var wpUserName = UserName.ConvertToWildcardPatternList();
+        var wpFullName = FullName.ConvertToWildcardPatternList();
+        var wpType = Type.ConvertToWildcardPatternList();
+
+        var srcDrive = OrchDriveInfo.GetOrchDrive(Path!) ?? throw new Exception("Path is not OrchDrive.");
+        var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        CopyUsers(this, srcDrive, wpUserName, wpFullName, wpType, dstDrives, false, cancelHandler.Token);
     }
 }

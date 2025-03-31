@@ -1,4 +1,6 @@
-﻿using System.Management.Automation;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Management.Automation;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
@@ -50,7 +52,7 @@ public class CopyLibraryCommand : OrchestratorPSCmdlet
         return false;
     }
 
-    private bool DownloadLibrary(OrchDriveInfo srcDrive, LibraryVersion version, out string? fileName, out byte[]? fileContent, string target)
+    private static bool DownloadLibrary(IWritableHost _this, OrchDriveInfo srcDrive, LibraryVersion version, out string? fileName, out byte[]? fileContent, string target)
     {
         try
         {
@@ -61,12 +63,12 @@ public class CopyLibraryCommand : OrchestratorPSCmdlet
         {
             fileName = null;
             fileContent = null;
-            WriteError(new ErrorRecord(new OrchException(target, ex), "DownloadLibraryError", ErrorCategory.InvalidOperation, target));
+            _this.WriteError(new ErrorRecord(new OrchException(target, ex), "DownloadLibraryError", ErrorCategory.InvalidOperation, target));
         }
         return false;
     }
 
-    private bool UploadLibrary(LibraryVersion version, string? fileName, byte[]? fileContent, OrchDriveInfo dstDrive)
+    private static bool UploadLibrary(IWritableHost _this, LibraryVersion version, string? fileName, byte[]? fileContent, OrchDriveInfo dstDrive)
     {
         if (string.IsNullOrEmpty(fileName) || fileContent is null) return false;
         try
@@ -82,9 +84,102 @@ public class CopyLibraryCommand : OrchestratorPSCmdlet
         }
         catch (Exception ex)
         {
-            WriteError(new ErrorRecord(new OrchException($"{version.Id}:{version.Version}", ex), "CopyLibraryError", ErrorCategory.InvalidOperation, version));
+            _this.WriteError(new ErrorRecord(new OrchException($"{version.Id}:{version.Version}", ex), "CopyLibraryError", ErrorCategory.InvalidOperation, version));
         }
         return false;
+    }
+
+    internal static void CopyLibraries(
+        IWritableHost _this,
+        IEnumerable<OrchDriveInfo> srcDrives, List<WildcardPattern>? wpId, List<WildcardPattern>? wpVersion,
+        IEnumerable<OrchDriveInfo> dstDrives,
+        bool shouldProcess, CancellationToken cancelToken)
+    {
+        foreach (var srcDrive in srcDrives)
+        {
+            var srcLibraries = srcDrive.LibrariesInTenant.Get()
+            .Where(l => l is not null)
+                .FilterByWildcards(l => l!.Id, wpId)
+                .OrderBy(l => l.Id);
+
+            string msg1 = "Processing libraries...";
+            int index1 = 0;
+            using var reporter1 = new ProgressReporter(_this, 1, srcLibraries.Count(), msg1, msg1);
+            foreach (var library in srcLibraries)
+            {
+                cancelToken.ThrowIfCancellationRequested();
+
+                reporter1.WriteProgress(++index1, $"{index1:D}/{reporter1.TotalNum}");
+                try
+                {
+                    srcDrive._dicLibraryVersions = null;
+                    var versions = srcDrive.GetLibraryVersions(library.Id!)
+                        .FilterByWildcards(l => l?.Version, wpVersion)
+                        //.OrderBy(version => version.Version!, VersionComparer.Instance)
+                        .ToList();
+
+                    string msg2 = "Copying versions...    ";
+                    using var reporter2 = new ProgressReporter(_this, 2, dstDrives.Count() * versions.Count, msg2, msg2);
+                    int index2 = 0;
+                    foreach (var version in versions)
+                    {
+                        string? fileName = null;
+                        byte[]? fileContent = null;
+                        foreach (var dstDrive in dstDrives)
+                        {
+                            cancelToken.ThrowIfCancellationRequested();
+
+                            var dstSettings = dstDrive.Settings.Get();
+                            if (dstSettings is not null)
+                            {
+                                var feedScope = dstSettings.FirstOrDefault(s => s.Id == "Deployment.Libraries.FeedScope");
+                                if (feedScope is not null && feedScope.Value == "Host")
+                                {
+                                    string errmsg = $"\"{dstDrive.NameColonSeparator}\": Library copying is disabled because the library feed is set to 'Only host feed'. " +
+                                                    $"To enable copying, please go to the tenant settings page and change the Library feeds setting to 'Only tenant feed' " +
+                                                    $"or 'Both host and tenant feeds'.";
+                                    // 残りの処理は全部スキップで良いな。
+                                    _this.WriteError(new ErrorRecord(new InvalidOperationException(errmsg), "CopyLibraryError", ErrorCategory.WriteError, dstDrive));
+                                    return;
+                                }
+                            }
+
+                            string key = $"{version.GetPSPath()}:{version.Version}";
+                            string target = $"Item: {key} Destination: {dstDrive.NameColonSeparator}";
+
+                            if (srcDrive == dstDrive) continue;
+
+                            // dstDrive に同名のパッケージがあれば、警告を表示してコピーをスキップする
+                            if (LibraryExists(dstDrive, version))
+                            {
+                                _this.WriteError(new ErrorRecord(new InvalidOperationException($"\"{version.GetPSPath()}:{version.Version}\": Library already exists in {dstDrive.NameColonSeparator}. Skipping the copy."), "CopyLibraryError", ErrorCategory.WriteError, dstDrive));
+                                continue;
+                            }
+
+                            if (shouldProcess || _this.ShouldProcess(target, $"Copy Library"))
+                            {
+                                // 進捗は、実際にコピーするときにだけ表示された方が良い
+                                reporter2.WriteProgress(++index2, $"{index2:D}/{reporter2.TotalNum} {key}.nupkg to {dstDrive.NameColonSeparator}");
+
+                                if (fileName is null)
+                                {
+                                    if (!DownloadLibrary(_this, srcDrive, version, out fileName, out fileContent, target)) break;
+                                }
+                                UploadLibrary(_this, version, fileName, fileContent, dstDrive);
+                            }
+                        }
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    _this.WriteError(new ErrorRecord(new OrchException(library.GetPSPath(), ex), "GetLibraryVersionError", ErrorCategory.InvalidOperation, library));
+                }
+            }
+        }
     }
 
     protected override void ProcessRecord()
@@ -98,73 +193,8 @@ public class CopyLibraryCommand : OrchestratorPSCmdlet
             .ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var srcDrive in srcDrives)
-        {
-            var srcLibraries = srcDrive.LibrariesInTenant.Get();
+        CopyLibraries(this, srcDrives, wpId, wpVersion, dstDrives, false, cancelHandler.Token);
 
-            string msg1 = "Processing libraries...";
-            int index1 = 0;
-            using var reporter1 = new ProgressReporter(this, 1, srcLibraries.Count, msg1, msg1);
-            foreach (var library in srcLibraries)
-            {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
-                reporter1.WriteProgress(++index1, $"{index1:D}/{reporter1.TotalNum}");
-                try
-                {
-                    srcDrive._dicLibraryVersions = null;
-                    var versions = srcDrive.GetLibraryVersions(library.Id!)
-                        .FilterByWildcards(l => l?.Version, wpVersion)
-                        //.OrderBy(version => version.Version!, VersionComparer.Instance)
-                        .ToList();
-
-                    string msg2 = "Copying versions...    ";
-                    using var reporter2 = new ProgressReporter(this, 2, dstDrives.Count * versions.Count, msg2, msg2);
-                    int index2 = 0;
-                    foreach (var version in versions)
-                    {
-                        string? fileName = null;
-                        byte[]? fileContent = null;
-                        foreach (var dstDrive in dstDrives)
-                        {
-                            cancelHandler.Token.ThrowIfCancellationRequested();
-
-                            string key = $"{version.GetPSPath()}:{version.Version}";
-                            string target = $"Item: {key} Destination: {dstDrive.NameColonSeparator}";
-
-                            if (srcDrive == dstDrive) continue;
-
-                            // dstDrive に同名のパッケージがあれば、警告を表示してコピーをスキップする
-                            if (LibraryExists(dstDrive, version))
-                            {
-                                WriteError(new ErrorRecord(new InvalidOperationException($"\"{version.GetPSPath()}:{version.Version}\": Library already exists in {dstDrive.NameColonSeparator}. Skipping the copy."), "CopyLibraryError", ErrorCategory.WriteError, dstDrive));
-                                continue;
-                            }
-
-                            if (ShouldProcess(target, $"Copy Library"))
-                            {
-                                // 進捗は、実際にコピーするときにだけ表示された方が良い
-                                reporter2.WriteProgress(++index2, $"{index2:D}/{reporter2.TotalNum} {key}.nupkg to {dstDrive.NameColonSeparator}");
-
-                                if (fileName is null)
-                                {
-                                    if (!DownloadLibrary(srcDrive, version, out fileName, out fileContent, target)) break;
-                                }
-                                UploadLibrary(version, fileName, fileContent, dstDrive);
-                            }
-                        }
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    throw;
-                }
-                catch (Exception ex)
-                {
-                    WriteError(new ErrorRecord(new OrchException(library.GetPSPath(), ex), "GetLibraryVersionError", ErrorCategory.InvalidOperation, library));
-                }
-            }
-        }
 
 
         // マルチスレッド版。ちゃんと動作しているが、シングルスレッドで書き直すことにした。

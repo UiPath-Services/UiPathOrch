@@ -61,7 +61,7 @@ public class CopyApiTriggerCommand : OrchestratorPSCmdlet
                 continue;
             }
 
-            Folder? dstFolder = GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
+            Folder? dstFolder = this.GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
             if (dstFolder is null || (srcDrive == dstDrive && srcFolder == dstFolder)) continue;
 
             //srcDrive._dicReleases?.TryRemove(srcFolder.Id ?? 0, out _);

@@ -1184,38 +1184,4 @@ public partial class OrchProvider : NavigationCmdletProvider
     }
 
     #endregion
-
-    #region IPropertyCmdletProvider
-
-    public void ClearProperty(string path, Collection<string> propertyToClear)
-    {
-        throw new NotImplementedException();
-    }
-
-    public object ClearPropertyDynamicParameters(string path, Collection<string> propertyToClear)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void GetProperty(string path, Collection<string> providerSpecificPickList)
-    {
-        throw new NotImplementedException();
-    }
-
-    public object GetPropertyDynamicParameters(string path, Collection<string> providerSpecificPickList)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void SetProperty(string path, PSObject propertyValue)
-    {
-        throw new NotImplementedException();
-    }
-
-    public object SetPropertyDynamicParameters(string path, PSObject propertyValue)
-    {
-        throw new NotImplementedException();
-    }
-
-    #endregion
 }
