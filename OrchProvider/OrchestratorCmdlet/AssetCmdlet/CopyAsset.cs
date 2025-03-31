@@ -75,7 +75,7 @@ public class CopyAssetCommand : OrchestratorPSCmdlet
                 continue;
             }
 
-            Folder? dstFolder = GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
+            Folder? dstFolder = this.GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
             if (dstFolder is null || (srcDrive == dstDrive && srcFolder == dstFolder)) continue;
 
             try

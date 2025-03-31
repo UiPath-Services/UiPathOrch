@@ -24,6 +24,59 @@ public class CopyRoleCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string? Path { get; set; }
 
+    internal static void CopyRoles(
+        IWritableHost _this,
+        OrchDriveInfo srcDrive, List<WildcardPattern>? wpName,
+        IEnumerable<OrchDriveInfo> dstDrives,
+        bool shouldProcess, CancellationToken cancelToken)
+    {
+        var srcRoles = srcDrive!.Roles.Get()
+            .FilterByWildcards(role => role?.Name, wpName)
+            .OrderBy(role => role.Name)
+            .ToList();
+
+        string msg = "Copying roles";
+        using var reporter = new ProgressReporter(_this, 1, 100, msg, msg);
+
+        int index = 0;
+        reporter.TotalNum = dstDrives.Count() * srcRoles.Count;
+
+        foreach (var dstDrive in dstDrives)
+        {
+            if (srcDrive == dstDrive) continue;
+
+            string target = dstDrive.NameColonSeparator;
+
+            foreach (var role in srcRoles
+                //.Where(r => !r.IsStatic.GetValueOrDefault())
+                .OrderBy(r => r.Name))
+            {
+                cancelToken.ThrowIfCancellationRequested();
+
+                string item = System.IO.Path.Combine(srcDrive.NameColon, role.Name!);
+                string destination = dstDrive.NameColonSeparator;
+
+                reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {role.GetPSPath()} to {dstDrive.NameColonSeparator}");
+
+                if (shouldProcess || _this.ShouldProcess($"Item: {item} Destination: {destination}", $"Copy Role"))
+                {
+                    try
+                    {
+                        var addedRole = dstDrive.OrchAPISession.PostRole(role);
+                        //addedRole.Path = dstDrive.NameColonSeparator;
+                        //WriteObject(addedRole);
+                        dstDrive.Roles.ClearCache();
+                    }
+                    catch (Exception ex)
+                    {
+                        var errorRecord = new ErrorRecord(new OrchException(item, ex), "CopyRoleError", ErrorCategory.InvalidOperation, destination);
+                        _this.WriteError(errorRecord);
+                    }
+                }
+            }
+        }
+    }
+
     protected override void ProcessRecord()
     {
         var wpName = Name.ConvertToWildcardPatternList();
@@ -36,48 +89,7 @@ public class CopyRoleCommand : OrchestratorPSCmdlet
 
         srcDrive.Roles.ClearCache();
 
-        var srcRoles = srcDrive!.Roles.Get()
-            .FilterByWildcards(role => role?.Name, wpName)
-            .OrderBy(role => role.Name)
-            .ToList();
-
-        string msg = "Copying roles";
-        using var reporter = new ProgressReporter(this, 1, 100, msg, msg);
-
-        int index = 0;
-        reporter.TotalNum = dstDrives.Count * srcRoles.Count;
-
-        foreach (var dstDrive in dstDrives)
-        {
-            if (srcDrive == dstDrive) continue;
-
-            string target = dstDrive.NameColonSeparator;
-
-            foreach (var role in srcRoles
-                //.Where(r => !r.IsStatic.GetValueOrDefault())
-                .OrderBy(r => r.Name))
-            {
-                string item = System.IO.Path.Combine(srcDrive.NameColon, role.Name!);
-                string destination = dstDrive.NameColonSeparator;
-
-                reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {role.GetPSPath()} to {dstDrive.NameColonSeparator}");
-
-                if (ShouldProcess($"Item: {item} Destination: {destination}", $"Copy Role"))
-                {
-                    try
-                    {
-                        var addedRole = dstDrive.OrchAPISession.PostRole(role);
-                        //addedRole.Path = dstDrive.NameColonSeparator;
-                        //WriteObject(addedRole);
-                        dstDrive.Roles.ClearCache();
-                    }
-                    catch (Exception ex)
-                    {
-                        var errorRecord = new ErrorRecord(new OrchException(item, ex), "CopyRoleError", ErrorCategory.InvalidOperation, destination);
-                        WriteError(errorRecord);
-                    }
-                }
-            }
-        }
+        using var cancelHandler = new ConsoleCancelHandler();
+        CopyRoles(this, srcDrive, wpName, dstDrives, false, cancelHandler.Token);
     }
 }

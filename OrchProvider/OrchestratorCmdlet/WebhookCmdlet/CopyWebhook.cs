@@ -26,17 +26,13 @@ public class CopyWebhookCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string? Path { get; set; }
 
-    protected override void ProcessRecord()
+    internal static void CopyWebhooks(
+        IWritableHost _this,
+        OrchDriveInfo srcDrive,
+        List<WildcardPattern>? wpName,
+        IEnumerable<OrchDriveInfo> dstDrives,
+        bool shouldProcess, CancellationToken cancelToken)
     {
-        var srcDrive = OrchDriveInfo.GetOrchDrive(Path!);
-        if (srcDrive is null)
-            throw new Exception("Path is not OrchDrive.");
-
-        var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
-
-        var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();
-        //var wpName = Name.ConvertToWildcardPatternList();
-
         srcDrive.Webhooks.ClearCache();
 
         // この実装はこれで良い。
@@ -47,7 +43,7 @@ public class CopyWebhookCommand : OrchestratorPSCmdlet
         }
         catch (Exception ex)
         {
-            WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, ex), "GetWebhookError", ErrorCategory.InvalidOperation, srcDrive));
+            _this.WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, ex), "GetWebhookError", ErrorCategory.InvalidOperation, srcDrive));
             return;
         }
         if (srcWebhooks is null) return;
@@ -59,9 +55,11 @@ public class CopyWebhookCommand : OrchestratorPSCmdlet
                 .FilterByWildcards(e => e?.Name, wpName)
                 .OrderBy(e => e.Name))
             {
+                cancelToken.ThrowIfCancellationRequested();
+
                 string item = srcWebhook.GetPSPath();
                 string destination = dstDrive.NameColonSeparator;
-                if (ShouldProcess($"Item: {item} Destination: {destination}", "Copy Webhook"))
+                if (shouldProcess || _this.ShouldProcess($"Item: {item} Destination: {destination}", "Copy Webhook"))
                 {
                     try
                     {
@@ -79,10 +77,25 @@ public class CopyWebhookCommand : OrchestratorPSCmdlet
                     }
                     catch (Exception ex)
                     {
-                        WriteError(new ErrorRecord(new OrchException(item, ex), "CreateCalendarError", ErrorCategory.InvalidOperation, destination));
+                        _this.WriteError(new ErrorRecord(new OrchException(item, ex), "CreateCalendarError", ErrorCategory.InvalidOperation, destination));
                     }
                 }
             }
         }
+    }
+
+    protected override void ProcessRecord()
+    {
+        var srcDrive = OrchDriveInfo.GetOrchDrive(Path!);
+        if (srcDrive is null)
+            throw new Exception("Path is not OrchDrive.");
+
+        var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
+
+        var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();
+        //var wpName = Name.ConvertToWildcardPatternList();
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        CopyWebhooks(this, srcDrive, wpName, dstDrives, false, cancelHandler.Token);
     }
 }

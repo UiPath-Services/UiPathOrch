@@ -26,14 +26,13 @@ public class CopyCalendarCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string? Path { get; set; }
 
-    protected override void ProcessRecord()
+    internal static void CopyCalendars(
+        IWritableHost _this,
+        OrchDriveInfo srcDrive,
+        List<WildcardPattern>? wpName,
+        IEnumerable<OrchDriveInfo> dstDrives,
+        bool shouldProcess, CancellationToken cancelToken)
     {
-        var srcDrive = OrchDriveInfo.GetOrchDrive(Path!);
-
-        var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
-
-        var wpName = Name.ConvertToWildcardPatternList();
-
         srcDrive._dicCalendars = null;
         srcDrive._dicCalendars_Exceptions.ClearCache();
 
@@ -45,18 +44,17 @@ public class CopyCalendarCommand : OrchestratorPSCmdlet
         }
         catch (Exception ex)
         {
-            WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, ex), "GetCalendarError", ErrorCategory.InvalidOperation, srcDrive));
+            _this.WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, ex), "GetCalendarError", ErrorCategory.InvalidOperation, srcDrive));
             return;
         }
         if (srcCalendars is null) return;
 
         string msg = "Copying calendars";
-        using var reporter = new ProgressReporter(this, 1, 100, msg, msg);
+        using var reporter = new ProgressReporter(_this, 1, 100, msg, msg);
 
         int index = 0;
-        reporter.TotalNum = dstDrives.Count * srcCalendars.Count;
+        reporter.TotalNum = dstDrives.Count() * srcCalendars.Count;
 
-        using var cancelHandler = new ConsoleCancelHandler();
         foreach (var dstDrive in dstDrives)
         {
             foreach (var srcCalendar in srcCalendars
@@ -66,11 +64,11 @@ public class CopyCalendarCommand : OrchestratorPSCmdlet
                 string item = srcCalendar.GetPSPath();
                 string destination = dstDrive.NameColonSeparator;
 
-                cancelHandler.Token.ThrowIfCancellationRequested();
+                cancelToken.ThrowIfCancellationRequested();
 
                 reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {srcCalendar.GetPSPath()} to {dstDrive.NameColonSeparator}");
 
-                if (ShouldProcess($"Item: {item} Destination: {destination}", "Copy Calendar"))
+                if (shouldProcess || _this.ShouldProcess($"Item: {item} Destination: {destination}", "Copy Calendar"))
                 {
                     try
                     {
@@ -94,10 +92,20 @@ public class CopyCalendarCommand : OrchestratorPSCmdlet
                     }
                     catch (Exception ex)
                     {
-                        WriteError(new ErrorRecord(new OrchException(item, ex), "CreateCalendarError", ErrorCategory.InvalidOperation, destination));
+                        _this.WriteError(new ErrorRecord(new OrchException(item, ex), "CreateCalendarError", ErrorCategory.InvalidOperation, destination));
                     }
                 }
             }
         }
+    }
+
+    protected override void ProcessRecord()
+    {
+        var srcDrive = OrchDriveInfo.GetOrchDrive(Path!);
+        var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
+        var wpName = Name.ConvertToWildcardPatternList();
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        CopyCalendars(this, srcDrive, wpName, dstDrives, false, cancelHandler.Token);
     }
 }

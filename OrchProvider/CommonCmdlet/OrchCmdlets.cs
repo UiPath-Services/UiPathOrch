@@ -256,57 +256,6 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         writer.WriteLine(); // 最後に改行を追加
     }
 
-    protected Folder? GetRelativeDstFolder(Folder srcRootFolder, Folder srcFolder, OrchDriveInfo dstDrive, Folder dstRootFolder, bool includeRoot = false)
-    {
-        var strDstRootFolder = dstRootFolder.FullyQualifiedName;
-        //if (strDstRootFolder != "") strDstRootFolder += '/';
-
-        // srcFolder の、srcRootFolder からの相対パスを取得
-        string relativePath = srcFolder.FullyQualifiedName![srcRootFolder.FullyQualifiedName!.Length..];
-        relativePath = relativePath.TrimStart('/').TrimEnd('/');
-
-        string strDstFolder = null;
-        if (strDstRootFolder == "")
-        {
-            if (!includeRoot && relativePath == "")
-            {
-                WriteError(new ErrorRecord(
-                    new OrchException(dstDrive.NameColonSeparator, $"Folder entities cannot be copied to {dstDrive.NameColonSeparator}."),
-                    "CopyFolderEntityToRootFolderError",
-                    ErrorCategory.InvalidOperation,
-                    dstDrive));
-                return null;
-            }
-            strDstFolder = relativePath;
-        }
-        else
-        {
-            strDstFolder = (strDstRootFolder + '/' + relativePath).Trim('/');
-        }
-
-        if (string.IsNullOrEmpty(strDstFolder))
-        {
-            return dstDrive.RootFolder;
-        }
-
-        var dstFolder = dstDrive.GetFolders().FirstOrDefault(f => string.Compare(f.FullyQualifiedName, strDstFolder, StringComparison.OrdinalIgnoreCase) == 0);
-        if (dstFolder is null)
-        {
-            if ('/' != System.IO.Path.DirectorySeparatorChar)
-            {
-                strDstFolder = strDstFolder.Replace('/', System.IO.Path.DirectorySeparatorChar);
-            }
-            WriteError(new ErrorRecord(
-                new OrchException(srcFolder.GetPSPath(), $"{dstDrive.NameColonSeparator}{strDstFolder} does not exist."),
-                "NoCorrespondingDstFolderError",
-                ErrorCategory.InvalidOperation,
-                dstDrive));
-            return null;
-        }
-
-        return dstFolder;
-    }
-
     protected static int? ConvertPriorityToSpecificPriorityValue(string? specificPriorityValue)
     {
         return specificPriorityValue switch

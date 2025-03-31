@@ -48,13 +48,12 @@ public class CopyCredentialStoreCommand : OrchestratorPSCmdlet
         }
     }
 
-    protected override void ProcessRecord()
+    internal static void CopyCredentialStores(
+        IWritableHost _this,
+        OrchDriveInfo srcDrive, List<WildcardPattern>? wpName,
+        IEnumerable<OrchDriveInfo> dstDrives,
+        bool shouldProcess, CancellationToken cancelToken)
     {
-        var srcDrive = OrchDriveInfo.GetOrchDrive(Path);
-
-        var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
-        var wpName = Name.ConvertToWildcardPatternList();
-
         srcDrive.CredentialStores.ClearCache();
 
         // この実装はこれで良い
@@ -66,29 +65,27 @@ public class CopyCredentialStoreCommand : OrchestratorPSCmdlet
         }
         catch (Exception ex)
         {
-            WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, ex), "GetCredentialStoreError", ErrorCategory.InvalidOperation, srcDrive));
+            _this.WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, ex), "GetCredentialStoreError", ErrorCategory.InvalidOperation, srcDrive));
             return;
         }
 
-
         string msg = "Copying credential stores";
-        using var reporter = new ProgressReporter(this, 1, 100, msg, msg);
+        using var reporter = new ProgressReporter(_this, 1, 100, msg, msg);
 
         int index = 0;
-        reporter.TotalNum = dstDrives.Count * stores.Count;
+        reporter.TotalNum = dstDrives.Count() * stores.Count;
 
-        using var cancelHandler = new ConsoleCancelHandler();
         foreach (var dstDrive in dstDrives)
         {
             foreach (var store in stores)
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
+                cancelToken.ThrowIfCancellationRequested();
 
                 var target = $"Item: {store.GetPSPath()} Destination: {dstDrive.NameColonSeparator}";
 
                 reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {store.GetPSPath()} to {dstDrive.NameColonSeparator}");
 
-                if (ShouldProcess(store.GetPSPath(), "Copy CredentialStore"))
+                if (shouldProcess || _this.ShouldProcess(store.GetPSPath(), "Copy CredentialStore"))
                 {
                     CredentialStore postingStore = OrchCollectionExtensions.DeepCopy(store);
                     // postingStore.Path = null; // JsonIgnore 属性がついているので不要
@@ -108,16 +105,27 @@ public class CopyCredentialStoreCommand : OrchestratorPSCmdlet
                             if (!string.IsNullOrEmpty(strKeys))
                             {
                                 createdStore.Path = dstDrive.NameColonSeparator;
-                                WriteWarning($"'{createdStore.GetPSPath()}': Please update '{strKeys}' manually.");
+                                _this.WriteWarning($"'{createdStore.GetPSPath()}': Please update '{strKeys}' manually.");
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        WriteError(new ErrorRecord(new OrchException(store.GetPSPath(), ex), "CreateCredentialStoreError", ErrorCategory.InvalidOperation, postingStore));
+                        _this.WriteError(new ErrorRecord(new OrchException(store.GetPSPath(), ex), "CreateCredentialStoreError", ErrorCategory.InvalidOperation, postingStore));
                     }
                 }
             }
         }
+    }
+
+    protected override void ProcessRecord()
+    {
+        var srcDrive = OrchDriveInfo.GetOrchDrive(Path);
+
+        var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
+        var wpName = Name.ConvertToWildcardPatternList();
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        CopyCredentialStores(this, srcDrive, wpName, dstDrives, false, cancelHandler.Token);
     }
 }
