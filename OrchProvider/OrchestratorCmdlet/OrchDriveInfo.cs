@@ -2046,8 +2046,7 @@ public partial class OrchDriveInfo : PSDriveInfo
                 _dicSearchPmDirectory ??= [];
             }
         }
-        PmDirectoryEntityInfo[] ret;
-        if (!_dicSearchPmDirectory.TryGetValue(key, out ret))
+        if (!_dicSearchPmDirectory.TryGetValue(key, out PmDirectoryEntityInfo[] ret))
         {
             try
             {
@@ -2104,16 +2103,19 @@ public partial class OrchDriveInfo : PSDriveInfo
             try
             {
                 var partitionGlobalId = GetPartitionGlobalId();
-                var result = OrchAPISession.PmBulkResolveByName(partitionGlobalId!, kind,
-                    needQueryUsers.Select(u => getSearchKeyFunc(u)));
-
-                foreach (var kvp in result ?? [])
+                foreach (var chunk in needQueryUsers.Chunk(20))
                 {
-                    if (kvp.Value is not null)
+                    var result = OrchAPISession.PmBulkResolveByName(partitionGlobalId!, kind,
+                        chunk.Select(u => getSearchKeyFunc(u)));
+
+                    foreach (var kvp in result ?? [])
                     {
-                        kvp.Value.Path = NameColonSeparator;
+                        if (kvp.Value is not null)
+                        {
+                            kvp.Value.Path = NameColonSeparator;
+                        }
+                        _dicPmBulkResolveByName.AddOrUpdate((kind, kvp.Key), kvp.Value, (key, oldValue) => kvp.Value);
                     }
-                    _dicPmBulkResolveByName.AddOrUpdate((kind, kvp.Key), kvp.Value, (key, oldValue) => kvp.Value);
                 }
             }
             catch (HttpResponseException ex)

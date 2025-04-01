@@ -3982,6 +3982,21 @@ public class DuUser // added by UiPathOrch swagger doc にない。
     public string? email { get; set; }
     public string? type { get; set; }
     public string? source { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    private string? _name; // added by UiPathOrch
+    internal string? Name // 多分 null になることはないと思うが、
+    {
+        get
+        {
+            if (_name is null)
+            {
+                _name = (type == "DirectoryUser" && !string.IsNullOrEmpty(email)) ? email : displayName;
+                if (string.IsNullOrEmpty(_name)) _name = securityPrincipalId;
+            }
+            return _name;
+        }
+    }
 }
 
 public class DuRoleAssignment // added by UiPathOrch

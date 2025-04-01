@@ -39,10 +39,13 @@ public class GetLibraryCommand : OrchestratorPSCmdlet
                 var libraries = result.GetResult(cancelHandler.Token);
                 if (libraries is null) continue;
 
-                WriteObject(libraries
-                    .FilterByWildcards(l => l?.Id, wpId)
-                    .OrderBy(l => l.Id!.ToLower()),
-                    true);
+                // WriteObject(coll, true) で出力すると、処理が遅いときに Ctrl+C で止まらないな。。
+                // 次のように、ひとつずつ出力した方がいいのかもしれない。
+                foreach (var library in libraries.FilterByWildcards(l => l?.Id, wpId).OrderBy(l => l.Id!.ToLower()))
+                {
+                    cancelHandler.Token.ThrowIfCancellationRequested();
+                    WriteObject(library);
+                }
             }
             catch (OrchException ex)
             {

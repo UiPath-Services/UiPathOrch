@@ -259,6 +259,7 @@ public class OrchDuDriveInfo : PSDriveInfo
                                 project.FullName = NameColonSeparator + project.name;
                             }
                         }
+                        _dicDuProjects = _dicDuProjects.OrderBy(p => p.name).ToArray();
                     }
                     catch (HttpResponseException ex)
                     {

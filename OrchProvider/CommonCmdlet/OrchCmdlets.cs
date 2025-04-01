@@ -104,9 +104,9 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         if (escapeWildcard)
         {
             return EscapeCsvValue(string.Join(',', values
-                .Where(r => r is not null)
-                .OrderBy(r => r)
-                .Select(r => WildcardPattern.Escape(r)) ?? []));
+                .Where(r => !string.IsNullOrEmpty(r))
+                .Select(r => WildcardPattern.Escape(r))
+                .OrderBy(r => r)));
         }
         else
         {

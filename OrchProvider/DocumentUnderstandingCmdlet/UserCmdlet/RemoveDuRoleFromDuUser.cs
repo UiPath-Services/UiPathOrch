@@ -58,8 +58,8 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
                 var (drive, project) = result.Source;
 
                 foreach (var user in result.Result
-                    .FilterByWildcards(u => u?.displayName, wpName)
-                    .OrderBy(u => u.displayName))
+                    .FilterByWildcards(u => u?.Name, wpName)
+                    .OrderBy(u => u.Name))
                 {
                     foreach (var role in user.roleAssignmentDtos?
                         .Where(r => !string.IsNullOrEmpty(r.roleName) && !r.inherited.GetValueOrDefault())
@@ -97,8 +97,8 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
                 var (drive, project) = result.Source;
 
                 foreach (var user in entities
-                    .FilterByWildcards(u => u?.displayName, wpName)
-                    .OrderBy(u => u.displayName))
+                    .FilterByWildcards(u => u?.Name, wpName)
+                    .OrderBy(u => u.Name))
                 {
                     var existingRoles = user.roleAssignmentDtos;
                     if (existingRoles is null || existingRoles.Length == 0) continue;

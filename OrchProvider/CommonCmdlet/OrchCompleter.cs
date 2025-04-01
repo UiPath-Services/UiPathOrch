@@ -2477,12 +2477,12 @@ internal class DuUserNameCompleter<TPositional> : OrchArgumentCompleter where TP
             if (result.Result is null) continue;
 
             foreach (var user in result.Result
-                .Where(e => wp.IsMatch(e?.displayName))
-                .ExcludeByWildcards(e => e?.displayName!, wpName)
-                .OrderBy(e => e?.displayName))
+                .Where(u => wp.IsMatch(u.Name))
+                .ExcludeByWildcards(u => u?.Name, wpName)
+                .OrderBy(u => u.Name))
             {
                 string tiphelp = user.GetPSPath();
-                yield return new CompletionResult(PathTools.EscapePSText(user.displayName), user.displayName, CompletionResultType.Text, tiphelp);
+                yield return new CompletionResult(PathTools.EscapePSText(user.Name), user.Name, CompletionResultType.Text, tiphelp);
             }
         }
     }

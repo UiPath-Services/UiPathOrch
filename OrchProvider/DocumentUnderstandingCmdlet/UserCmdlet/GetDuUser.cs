@@ -47,20 +47,10 @@ public class GetDuUserCommand : OrchestratorPSCmdlet
         {
             if (user is null) continue;
 
-            //string? key = !string.IsNullOrEmpty(user.displayName) ? user.displayName : user.email;
-            //if (string.IsNullOrEmpty(key)) continue;
-
-            //var pmUsers = drive.SearchPmDirectory(key);
-            //if (pmUsers is null) continue;
-            //PmDirectoryEntityInfo pmUser = pmUsers.Where(u => u.identifier == user.securityPrincipalId).FirstOrDefault();
-
-            string name = !string.IsNullOrEmpty(user.email) ? user.email : user.displayName;
-            if (string.IsNullOrEmpty(name)) name = user.securityPrincipalId;
-
             string[] line = [
                 EscapeCsvValue(user.Path, true),
                 EscapeCsvValue(user.type, true),
-                EscapeCsvValue(name), // Add-DuUser の -Name はワイルドカードをサポートしない
+                EscapeCsvValue(user.Name), // Add-DuUser の -DisplayName はワイルドカードをサポートしない
                 EscapeCsvValue(user.roleAssignmentDtos?.Select(r => r.roleName), true)
             ];
 
@@ -92,8 +82,8 @@ public class GetDuUserCommand : OrchestratorPSCmdlet
                 var (drive, _) = result.Source;
 
                 var targetEntities = entities
-                        .FilterByWildcards(u => u?.displayName, wpName)
-                        .OrderBy(e => e.displayName);
+                        .FilterByWildcards(u => u?.Name, wpName)
+                        .OrderBy(e => e.Name);
 
                 if (writer is not null)
                 {
