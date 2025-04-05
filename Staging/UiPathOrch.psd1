@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.11.1'
+ModuleVersion = '0.9.11.2'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -384,16 +384,22 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Improved the behavior of the Add-OrchPmGroupMember cmdlet.
-  - When more than 21 usernames were specified simultaneously with the -UserName parameter, the operation would fail. Since this cmdlet aggregates multiple rows from the imported CSV file before calling the API, this issue could occur in practice.
+        ReleaseNotes = '- You can now connect to a tenant using a personal access token. Please configure the PSDrive in your settings file as follows:
 
-  - This issue was due to restrictions of the following endpoint: POST /api/Directory/BulkResolveByName/{partitionGlobalId}
+"PSDrives": [
+  {
+    "Name": "Orch1",
+    "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
+    "AccessToken": "YOUR_PERSONAL_ACCESS_TOKEN",
+    "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+    "Enabled": true
+  }
+]
 
-  - When calling this endpoint with a large number of usernames, the call is now automatically split into batches of 20 users to work around this limitation.
+- The following changes were made to prevent meaningless errors from appearing when copying entities:
+  - In the Copy-OrchRole and Copy-Item cmdlets, if the source role is static and a role with the same name already exists in the destination tenant, the role is now skipped.  
 
-- In the provider for UiPathOrchDu (the Document Understanding PS drive), outputs from Get-ChildItem and from other cmdlets that use the -Recurse parameter (such as Get-DuUser) are now sorted by project name.
-
-- For the -Name parameter of the Remove-DuRoleFromDuUser cmdlet, it was previously required to pass the displayName. However, in the Name column of Get-DuUser -ExportCsv, the email is output for users while groups and apps output the displayName. To maintain consistent behavior, when removing a user from a project using Remove-DuRoleFromDuUser, the -Name parameter now requires specifying the user''s email.
+  - In the Copy-OrchCredentialStore cmdlet, if the source credential store is "Orchestrator Database" and a credential store with the same name exists in the destination, the credential store is now skipped.
 '
 
         # Prerelease string of this module

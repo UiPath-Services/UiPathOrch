@@ -80,10 +80,17 @@ public class CopyCredentialStoreCommand : OrchestratorPSCmdlet
             foreach (var store in stores)
             {
                 cancelToken.ThrowIfCancellationRequested();
+                reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {store.GetPSPath()} to {dstDrive.NameColonSeparator}");
+
+                // コピー元の store が "Orchestrator Database" で、かつコピー先に同名の store がある場合にはスキップ
+                if (string.Compare(store.Name, "Orchestrator Database", true) == 0)
+                {
+                    var dstStores = dstDrive.CredentialStores.Get();
+                    var existingStore = dstStores.FirstOrDefault(s => string.Compare(s.Name, "Orchestrator Database", true) == 0);
+                    if (existingStore is not null) continue;
+                }
 
                 var target = $"Item: {store.GetPSPath()} Destination: {dstDrive.NameColonSeparator}";
-
-                reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {store.GetPSPath()} to {dstDrive.NameColonSeparator}");
 
                 if (shouldProcess || _this.ShouldProcess(store.GetPSPath(), "Copy CredentialStore"))
                 {

@@ -61,6 +61,19 @@
 
   "PSDrives": [
 
+    /* =============== Personal Access Token Sample =============== */
+    // A personal access token can be created on the Orchestrator's
+    // Preferences page. When using this configuration, it is not
+    // necessary to create an OAuth external application.
+    {
+      "Name": "Orch1",
+      "Description": "This configuration includes personal access token.",
+      "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
+      "AccessToken": "YOUR_PERSONAL_ACCESS_TOKEN",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": true
+    },
+
     /* =========== Non-Confidential App Settings Sample =========== */
     // After creating an external application in the Orchestrator
     // administration page and adding user scopes for Orchestrator
@@ -70,12 +83,12 @@
     {
       // You can set any text for the Name.
       // It is recommended to match it with the tenant name.
-      "Name": "Orch1",
+      "Name": "Orch2",
       "Description": "Non-Confidential App settings.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
       "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
-      "Enabled": true
+      "Enabled": false
     },
 
     /* ============= Confidential App Settings Sample ============= */
@@ -90,7 +103,7 @@
     // exceed the scopes listed below. No Redirect URL is needed.
     // In this configuration, specify Root, issued AppId, and AppSecret.
     {
-      "Name": "Orch2",
+      "Name": "Orch3",
       "Description": "Confidential App settings.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
@@ -105,7 +118,7 @@
     // Support for OAuth external applications was introduced in version 21.4.
     // Ensure that you specify YOUR_TENANT at the end of the URL.
     {
-      "Name": "Orch3",
+      "Name": "Orch4",
       "Description": "Username and password authentication.",
       "Root": "https://YOUR_ORCHESTRATOR_URL/YOUR_TENANT",
       "Username": "USERNAME_OR_EMAILADDR",
@@ -119,7 +132,7 @@
     // the "IdentityUrl" key. For authentication-related settings, refer to
     // the Non-Confidential App or Confidential App configurations.
     {
-      "Name": "Orch4",
+      "Name": "Orch5",
       "Description": "For AS or Orchestrator deployed on Azure App Service.",
       "Root": "https://XXX.azurewebsites.net",
       "IdentityUrl": "https://YYY.azurewebsites.net/identity",
@@ -133,7 +146,7 @@
     // proxy settings defined at the root level, allowing this PSDrive to use
     // a different proxy configuration from the global settings.
     {
-      "Name": "Orch5",
+      "Name": "Orch6",
       "Description": "This configuration includes proxy settings.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
@@ -150,6 +163,6 @@
         },
         "Enabled": true
       }
-    }
+    },
   ]
 }

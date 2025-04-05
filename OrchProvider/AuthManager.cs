@@ -66,6 +66,12 @@ internal class OrchestratorAuthManager
 
     public string RequestToken()
     {
+        if (!string.IsNullOrEmpty(_drive._psDrive.AccessToken))
+        {
+            _access_token = _drive._psDrive.AccessToken;
+            return _access_token;
+        }
+
         if (_isConfidentialApp)
         {
             //if (_isUserScope) ////// Conf User Scope // 機密アプリのユーザースコープ。ここ動くようにしたい、、

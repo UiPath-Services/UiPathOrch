@@ -52,11 +52,18 @@ public class CopyRoleCommand : OrchestratorPSCmdlet
                 .OrderBy(r => r.Name))
             {
                 cancelToken.ThrowIfCancellationRequested();
+                reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {role.GetPSPath()} to {dstDrive.NameColonSeparator}");
+
+                // コピー元のロールが IsStatic で、かつコピー先に同名のロールがある場合にはスキップ
+                if (role.IsStatic.GetValueOrDefault())
+                {
+                    var dstRoles = dstDrive.Roles.Get();
+                    var existingRole = dstRoles.FirstOrDefault(r => string.Compare(r.Name, role.Name, true) == 0);
+                    if (existingRole is not null) continue;
+                }
 
                 string item = System.IO.Path.Combine(srcDrive.NameColon, role.Name!);
                 string destination = dstDrive.NameColonSeparator;
-
-                reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {role.GetPSPath()} to {dstDrive.NameColonSeparator}");
 
                 if (shouldProcess || _this.ShouldProcess($"Item: {item} Destination: {destination}", $"Copy Role"))
                 {

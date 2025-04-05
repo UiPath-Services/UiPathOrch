@@ -65,6 +65,19 @@
 
   "PSDrives": [
 
+    /* ========== Beispiel für ein persönliches Zugriffstoken =========== */
+    // Ein persönliches Zugriffstoken kann auf der Seite „Einstellungen“
+    // von Orchestrator erstellt werden. Bei Verwendung dieser Konfiguration
+    // ist es nicht erforderlich, eine externe OAuth-Anwendung zu erstellen.
+    {
+      "Name": "Orch1",
+      "Description": "Diese Konfiguration enthält ein persönliches Zugriffstoken.",
+      "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
+      "AccessToken": "YOUR_PERSONAL_ACCESS_TOKEN",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": true
+    },
+
     /* ======== Beispiel für nicht-vertrauliche App-Einstellungen ======== */
     // Erstellen Sie eine externe Anwendung auf der
     // Orchestrator-Administrationsseite und fügen Sie Benutzer-Scopes für
@@ -75,12 +88,12 @@
     {
       // Sie können beliebigen Text für "Name" festlegen.
       // Es wird empfohlen, diesen mit dem Tenant-Namen abzugleichen.
-      "Name": "Orch1",
+      "Name": "Orch2",
       "Description": "Einstellungen für nicht-vertrauliche Apps.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
       "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
-      "Enabled": true
+      "Enabled": false
     },
 
     /* =========== Beispiel für vertrauliche App-Einstellungen =========== */
@@ -98,7 +111,7 @@
     // erforderlich. In dieser Konfiguration geben Sie den Root, die
     // ausgegebene AppId und das AppSecret an.
     {
-      "Name": "Orch2",
+      "Name": "Orch3",
       "Description": "Einstellungen für vertrauliche Apps.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
@@ -114,7 +127,7 @@
     // in Version 21.4 eingeführt. Stellen Sie sicher, dass Sie YOUR_TENANT am
     // Ende der URL angeben.
     {
-      "Name": "Orch3",
+      "Name": "Orch4",
       "Description": "Benutzername- und Passwort-Authentifizierung.",
       "Root": "https://YOUR_ORCHESTRATOR_URL/YOUR_TENANT",
       "Username": "USERNAME_OR_EMAILADDR",
@@ -129,7 +142,7 @@
     // Einstellungen siehe die Konfigurationen für Nicht-Vertrauliche oder
     // Vertrauliche Apps.
     {
-      "Name": "Orch4",
+      "Name": "Orch5",
       "Description": "Für AS oder Orchestrator, der auf Azure App Service bereitgestellt wird.",
       "Root": "https://XXX.azurewebsites.net",
       "IdentityUrl": "https://YYY.azurewebsites.net/identity",
@@ -144,7 +157,7 @@
     // sodass dieses PSDrive eine andere Proxy-Konfiguration als die globale
     // verwenden kann.
     {
-      "Name": "Orch5",
+      "Name": "Orch6",
       "Description": "Diese Konfiguration enthält Proxy-Einstellungen.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
@@ -160,6 +173,6 @@
         },
         "Enabled": true
       }
-    }
+    },
   ]
 }

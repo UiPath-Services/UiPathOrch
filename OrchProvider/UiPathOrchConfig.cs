@@ -87,6 +87,7 @@ public class PSDrive
 
     public string? AppId { get; set; }
     public string? AppSecret { get; set; }
+    public string? AccessToken { get; set; }
 
     private string? _redirectUrl;
     public string? RedirectUrl
@@ -137,6 +138,7 @@ public class PSDrive
         IdentityUrl ??= globalSettings?.IdentityUrl;
         AppId ??= globalSettings?.AppId;
         AppSecret ??= globalSettings?.AppSecret;
+        AccessToken ??= globalSettings?.AccessToken;
         RedirectUrl ??= globalSettings?.RedirectUrl;
         HttpListener ??= globalSettings?.HttpListener;
         Scope ??= globalSettings?.Scope;
@@ -146,7 +148,7 @@ public class PSDrive
         Enabled ??= globalSettings?.Enabled;
 
         // 自動で HttpListener プレフィックスを生成
-        if (string.IsNullOrEmpty(HttpListener))
+        if (string.IsNullOrEmpty(HttpListener) && !string.IsNullOrEmpty(RedirectUrl))
         {
             // 設定ファイルに HttpListener がない場合は、RedirectUrl から自動生成する
             Uri redirectUri = new(RedirectUrl!);

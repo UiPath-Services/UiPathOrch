@@ -65,6 +65,19 @@
 
   "PSDrives": [
 
+    /* ============== Exemplu de token de acces personal ============= */
+    // Un token de acces personal poate fi creat în pagina de setări
+    // a Orchestratorului. Atunci când se utilizează această configurație,
+    // nu este necesar să se creeze o aplicație externă OAuth.
+    {
+      "Name": "Orch1",
+      "Description": "Această configurație include un token de acces personal.",
+      "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
+      "AccessToken": "YOUR_PERSONAL_ACCESS_TOKEN",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": true
+    },
+
     /* ======= Exemplar de setări pentru aplicații neconfidențiale ======= */
     // După ce creați o aplicație externă în pagina de administrare
     // a Orchestratorului și adăugați domenii de utilizator pentru accesul
@@ -74,12 +87,12 @@
     {
       // Puteți seta orice text pentru "Name".
       // Se recomandă să fie același cu numele tenantului.
-      "Name": "Orch1",
+      "Name": "Orch2",
       "Description": "Setări pentru aplicații neconfidențiale.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
       "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
-      "Enabled": true
+      "Enabled": false
     },
 
     /* ======== Exemplar de setări pentru aplicații confidențiale ======== */
@@ -94,7 +107,7 @@
     // mai jos. Nu este necesar un URL de redirecționare.
     // În această configurație, specificați Root, AppId și AppSecret emis.
     {
-      "Name": "Orch2",
+      "Name": "Orch3",
       "Description": "Setări pentru aplicații confidențiale.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
@@ -110,7 +123,7 @@
     // în versiunea 21.4.
     // Asigurați-vă că specificați YOUR_TENANT la sfârșitul URL-ului.
     {
-      "Name": "Orch3",
+      "Name": "Orch4",
       "Description": "Autentificare cu utilizator și parolă.",
       "Root": "https://YOUR_ORCHESTRATOR_URL/YOUR_TENANT",
       "Username": "USERNAME_OR_EMAILADDR",
@@ -124,7 +137,7 @@
     // folosind cheia "IdentityUrl". Pentru setările legate de autentificare,
     // consultați configurațiile aplicațiilor neconfidențiale sau confidențiale.
     {
-      "Name": "Orch4",
+      "Name": "Orch5",
       "Description": "Pentru AS sau Orchestrator implementat pe Azure App Service.",
       "Root": "https://XXX.azurewebsites.net",
       "IdentityUrl": "https://YYY.azurewebsites.net/identity",
@@ -138,7 +151,7 @@
     // globale definite la nivelul rădăcinii, permițând acestui PSDrive să
     // utilizeze o configurație proxy diferită de cea globală.
     {
-      "Name": "Orch5",
+      "Name": "Orch6",
       "Description": "Această configurație include setări proxy.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
@@ -155,6 +168,6 @@
         },
         "Enabled": true
       }
-    }
+    },
   ]
 }

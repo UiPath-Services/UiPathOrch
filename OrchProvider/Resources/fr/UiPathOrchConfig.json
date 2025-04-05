@@ -64,6 +64,20 @@
 
   "PSDrives": [
 
+    /* ================= Exemple de jeton d'accès personnel ================ */
+    // Un jeton d'accès personnel peut être créé dans la page
+    // Préférences d'Orchestrator. Lors de l'utilisation de cette
+    // configuration, il n'est pas nécessaire de créer une application
+    // externe OAuth.
+    {
+      "Name": "Orch1",
+      "Description": "Cette configuration inclut un jeton d'accès personnel.",
+      "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
+      "AccessToken": "YOUR_PERSONAL_ACCESS_TOKEN",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": true
+    },
+
     /* ==== Exemple de configuration d'application non confidentielle ==== */
     // Après avoir créé une application externe dans la page d'administration
     // d'Orchestrator et ajouté les scopes utilisateur pour l'accès à l'API
@@ -74,12 +88,12 @@
     {
       // Vous pouvez définir n'importe quel texte pour le champ Name.
       // Il est recommandé qu'il corresponde au nom du locataire.
-      "Name": "Orch1",
+      "Name": "Orch2",
       "Description": "Paramètres pour les applications non confidentielles.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
       "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
-      "Enabled": true
+      "Enabled": false
     },
 
     /* ====== Exemple de configuration d'application confidentielle ====== */
@@ -96,7 +110,7 @@
     // ci-dessous. Aucune URL de redirection n'est nécessaire. Dans cette
     // configuration, spécifiez la racine, l'AppId émise et l'AppSecret.
     {
-      "Name": "Orch2",
+      "Name": "Orch3",
       "Description": "Paramètres pour les applications confidentielles.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
@@ -111,7 +125,7 @@
     // prise en charge des applications externes OAuth a été introduite dans la
     // version 21.4. Assurez-vous de spécifier YOUR_TENANT à la fin de l'URL.
     {
-      "Name": "Orch3",
+      "Name": "Orch4",
       "Description": "Authentification par nom d'utilisateur et mot de passe.",
       "Root": "https://YOUR_ORCHESTRATOR_URL/YOUR_TENANT",
       "Username": "USERNAME_OR_EMAILADDR",
@@ -126,7 +140,7 @@
     // l'authentification, référez-vous aux configurations de l'application non
     // confidentielle ou confidentielle.
     {
-      "Name": "Orch4",
+      "Name": "Orch5",
       "Description": "Pour AS ou Orchestrator déployé sur Azure App Service.",
       "Root": "https://XXX.azurewebsites.net",
       "IdentityUrl": "https://YYY.azurewebsites.net/identity",
@@ -140,7 +154,7 @@
     // définis au niveau racine, permettant à ce PSDrive d'utiliser une
     // configuration proxy différente de celle des paramètres globaux.
     {
-      "Name": "Orch5",
+      "Name": "Orch6",
       "Description": "Cette configuration inclut des paramètres proxy.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
@@ -156,6 +170,6 @@
         },
         "Enabled": true
       }
-    }
+    },
   ]
 }
