@@ -57,6 +57,19 @@
 
   "PSDrives": [
 
+    /* ================ 개인 액세스 토큰 예시 ================ */
+    // 개인 액세스 토큰은 Orchestrator의 환경 설정 페이지에서
+    // 생성할 수 있습니다. 이 구성을 사용하는 경우에는
+    // OAuth 외부 애플리케이션을 생성할 필요가 없습니다.
+    {
+      "Name": "Orch1",
+      "Description": "이 구성에는 개인 액세스 토큰이 포함되어 있습니다.",
+      "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
+      "AccessToken": "YOUR_PERSONAL_ACCESS_TOKEN",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": true
+    },
+
     /* =========== 기밀이 아닌 애플리케이션 설정 샘플 =========== */
     // Orchestrator 관리 페이지에서 외부 애플리케이션을 생성한 후
     // Orchestrator API 액세스를 위한 사용자 스코프를 추가하고, 아래 "Scope"
@@ -65,12 +78,12 @@
     {
       // Name에 원하는 텍스트를 설정할 수 있습니다.
       // 테넌트 이름과 동일하게 설정하는 것을 권장합니다.
-      "Name": "Orch1",
+      "Name": "Orch2",
       "Description": "기밀이 아닌 애플리케이션 설정.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
       "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
-      "Enabled": true
+      "Enabled": false
     },
 
     /* ============= 기밀 애플리케이션 설정 샘플 ============= */
@@ -85,7 +98,7 @@
     // 리디렉션 URL은 필요하지 않습니다.
     // 이 구성에서 Root, 발급된 AppId, AppSecret을 지정하세요.
     {
-      "Name": "Orch2",
+      "Name": "Orch3",
       "Description": "기밀 애플리케이션 설정.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
@@ -100,7 +113,7 @@
     // OAuth 외부 애플리케이션 지원은 버전 21.4에서 도입되었습니다.
     // URL 끝에 YOUR_TENANT을 반드시 지정하세요.
     {
-      "Name": "Orch3",
+      "Name": "Orch4",
       "Description": "사용자 이름 및 비밀번호 인증.",
       "Root": "https://YOUR_ORCHESTRATOR_URL/YOUR_TENANT",
       "Username": "USERNAME_OR_EMAILADDR",
@@ -114,7 +127,7 @@
     // 인증 관련 설정은 비기밀 애플리케이션 또는 기밀 애플리케이션 설정을
     // 참조하세요.
     {
-      "Name": "Orch4",
+      "Name": "Orch5",
       "Description": "AS 또는 Azure App Service에 배포된 Orchestrator용.",
       "Root": "https://XXX.azurewebsites.net",
       "IdentityUrl": "https://YYY.azurewebsites.net/identity",
@@ -128,7 +141,7 @@
     // 설정을 재정의하여, 이 PSDrive가 글로벌 설정과 다른 프록시 구성을
     // 사용할 수 있도록 합니다.
     {
-      "Name": "Orch5",
+      "Name": "Orch6",
       "Description": "이 구성에는 프록시 설정이 포함됩니다.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
@@ -144,6 +157,6 @@
         },
         "Enabled": true
       }
-    }
+    },
   ]
 }

@@ -214,19 +214,22 @@ public partial class OrchProvider : NavigationCmdletProvider
             {
                 string lowerScope = drive.Scope?.ToLower() ?? "";
 
-                if (!lowerScope.Contains("or.folders"))
+                if (lowerScope.Contains("or."))
                 {
-                    WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Folders.Read\" scope is included to retrieve folder information.");
-                }
+                    if (!lowerScope.Contains("or.folders"))
+                    {
+                        WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Folders.Read\" scope is included to retrieve folder information.");
+                    }
 
-                if (!lowerScope.Contains("or.settings"))
-                {
-                    WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Settings.Read\" scope is included to retrieve the API version needed to properly call Orchestrator APIs.");
-                }
+                    if (!lowerScope.Contains("or.settings"))
+                    {
+                        WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Settings.Read\" scope is included to retrieve the API version needed to properly call Orchestrator APIs.");
+                    }
 
-                if (string.IsNullOrEmpty(drive.AppSecret) && !lowerScope.Contains("or.users"))
-                {
-                    WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Users.Read\" scope is included to access your personal workspace folder.");
+                    if (string.IsNullOrEmpty(drive.AppSecret) && !lowerScope.Contains("or.users"))
+                    {
+                        WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Users.Read\" scope is included to access your personal workspace folder.");
+                    }
                 }
             }
         }
@@ -240,24 +243,31 @@ public partial class OrchProvider : NavigationCmdletProvider
             WriteWarning($"\"{drive.Name}\": The \"Root\" value in UiPathOrchConfig.json should not contain '/orchestrator_/'. Run the Edit-OrchConfig cmdlet to open the file and update it manually.");
         }
 
-        if (string.IsNullOrWhiteSpace(drive.AppId))
+        if (string.IsNullOrEmpty(drive.AccessToken))
         {
-            WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": AppId is not specified!");
-        }
-        else
-        {
-            try
+            if (string.IsNullOrWhiteSpace(drive.AppId))
             {
-                Guid test = new(drive.AppId);
+                WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": AppId is not specified!");
             }
-            catch
+            else
             {
-                WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": AppId is invalid!");
+                try
+                {
+                    Guid test = new(drive.AppId);
+                }
+                catch
+                {
+                    WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": AppId is invalid!");
+                }
             }
         }
 
-        // Username の指定がなく、AppSecret の指定もない場合には、RedirectUrl が指定されてないと。
-        if (string.IsNullOrWhiteSpace(drive.Username) && string.IsNullOrWhiteSpace(drive.AppSecret) && string.IsNullOrWhiteSpace(drive.RedirectUrl))
+        // Username の指定がなく、AppSecret の指定がなく、AccessToken の指定もない場合には
+        // RedirectUrl が指定されてないと。
+        if (string.IsNullOrWhiteSpace(drive.Username) &&
+            string.IsNullOrWhiteSpace(drive.AppSecret) &&
+            string.IsNullOrEmpty(drive.AccessToken) &&
+            string.IsNullOrWhiteSpace(drive.RedirectUrl))
         {
             WriteWarning($"\"{drive.Name}\": The \"RedirectUrl\" value should be specified.");
         }

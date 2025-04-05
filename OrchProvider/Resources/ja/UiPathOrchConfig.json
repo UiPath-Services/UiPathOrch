@@ -55,6 +55,19 @@
 
   "PSDrives": [
 
+    /* ============== 個人用アクセストークンの設定例 ============== */
+    // 個人用アクセストークンは、Orchestrator の設定ページで
+    // 作成できます。この構成を使用する場合には
+    // OAuth 外部アプリケーションを作成する必要はありません。
+    {
+      "Name": "Orch1",
+      "Description": "個人用アクセストークンを使用した設定。",
+      "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
+      "AccessToken": "YOUR_PERSONAL_ACCESS_TOKEN",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": true
+    },
+
     /* =================== 非機密アプリの設定例 =================== */
     // Orchestrator の管理ページで外部アプリを作成し、Orchestrator API
     // Access のユーザースコープを追加したら、下記の "Scope" に転記して
@@ -64,12 +77,12 @@
     {
       // "Name" には任意のテキストを設定できます。
       // テナント名と同じにすることをお勧めします。
-      "Name": "Orch1",
+      "Name": "Orch2",
       "Description": "非機密アプリの設定。",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
       "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
-      "Enabled": true
+      "Enabled": false
     },
 
     /* ==================== 機密アプリの設定例 ==================== */
@@ -82,7 +95,7 @@
     // Access の必要なアプリスコープを下記のスコープ以上に設定してください。
     // リダイレクト URL の設定は不要です。
     {
-      "Name": "Orch2",
+      "Name": "Orch3",
       "Description": "機密アプリの設定。",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
@@ -97,7 +110,7 @@
     // 外部アプリがサポートされたバージョン 21.4 以降では、外部アプリを
     // 使用してください。URL の末尾に YOUR_TENANT を必ず記載してください。
     {
-      "Name": "Orch3",
+      "Name": "Orch4",
       "Description": "ユーザー名とパスワード認証。",
       "Root": "https://YOUR_ORCHESTRATOR_URL/YOUR_TENANT",
       "Username": "USERNAME_OR_EMAILADDR",
@@ -111,7 +124,7 @@
     // ください。 認証に関するその他の設定については、非機密アプリまたは
     // 機密アプリの設定を参照してください。
     {
-      "Name": "Orch4",
+      "Name": "Orch5",
       "Description": "AS または Azure App Service にデプロイされた Orchestrator の設定。",
       "Root": "https://XXX.azurewebsites.net",
       "IdentityUrl": "https://YYY.azurewebsites.net/identity",
@@ -125,7 +138,7 @@
     // グローバルプロキシ設定を上書きし、この PSDrive に対して異なる
     // プロキシ設定を使用できるようにします。
     {
-      "Name": "Orch5",
+      "Name": "Orch6",
       "Description": "この設定にはプロキシ設定が含まれます。",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
@@ -142,6 +155,6 @@
         },
         "Enabled": true
       }
-    }
+    },
   ]
 }

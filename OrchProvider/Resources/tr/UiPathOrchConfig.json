@@ -60,6 +60,19 @@
 
   "PSDrives": [
 
+    /* ============= Kişisel Erişim Belirteci Örneği ============== */
+    // Kişisel erişim belirteci Orchestrator’ın Tercihler sayfasında
+    // oluşturulabilir. Bu yapılandırma kullanıldığında
+    // harici bir OAuth uygulaması oluşturmanız gerekmez.
+    {
+      "Name": "Orch1",
+      "Description": "Bu yapılandırma kişisel erişim belirteci içerir.",
+      "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
+      "AccessToken": "YOUR_PERSONAL_ACCESS_TOKEN",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": true
+    },
+
     /* =========== Gizli Olmayan Uygulama Ayarları Örneği =========== */
     // Orchestrator yönetim sayfasında harici bir uygulama oluşturduktan
     // sonra ve Orchestrator API Erişimi için kullanıcı kapsamlarını
@@ -69,12 +82,12 @@
     {
       // Ad için herhangi bir metin belirleyebilirsiniz.
       // Kiracı adıyla eşleşmesi önerilir.
-      "Name": "Orch1",
+      "Name": "Orch2",
       "Description": "Gizli Olmayan Uygulama Ayarları.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
       "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
-      "Enabled": true
+      "Enabled": false
     },
 
     /* ============= Gizli Uygulama Ayarları Örneği ============= */
@@ -89,7 +102,7 @@
     // Orchestrator API Erişim kapsamlarını ekleyin. Yönlendirme URL'si gerekli
     // değildir. Bu yapılandırmada Root, verilen AppId ve AppSecret belirleyin.
     {
-      "Name": "Orch2",
+      "Name": "Orch3",
       "Description": "Gizli Uygulama Ayarları.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
@@ -104,7 +117,7 @@
     // OAuth harici uygulama desteği sürüm 21.4'te tanıtılmıştır.
     // URL'nin sonunda YOUR_TENANT belirttiğinizden emin olun.
     {
-      "Name": "Orch3",
+      "Name": "Orch4",
       "Description": "Kullanıcı Adı ve Parola Kimlik Doğrulama.",
       "Root": "https://YOUR_ORCHESTRATOR_URL/YOUR_TENANT",
       "Username": "USERNAME_OR_EMAILADDR",
@@ -118,7 +131,7 @@
     // URL'sini belirtin. Kimlik doğrulama ile ilgili ayarlar için Gizli
     // Olmayan Uygulama veya Gizli Uygulama yapılandırmalarına bakın.
     {
-      "Name": "Orch4",
+      "Name": "Orch5",
       "Description": "AS veya Azure App Service üzerine dağıtılmış Orchestrator için.",
       "Root": "https://XXX.azurewebsites.net",
       "IdentityUrl": "https://YYY.azurewebsites.net/identity",
@@ -132,7 +145,7 @@
     // proxy ayarlarını geçersiz kılarak, bu PSDrive'ın küresel ayarlardan
     // farklı bir proxy yapılandırması kullanmasına izin verir.
     {
-      "Name": "Orch5",
+      "Name": "Orch6",
       "Description": "Bu yapılandırma proxy ayarlarını içerir.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
@@ -148,6 +161,6 @@
         },
         "Enabled": true
       }
-    }
+    },
   ]
 }

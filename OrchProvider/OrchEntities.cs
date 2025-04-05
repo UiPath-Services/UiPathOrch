@@ -49,7 +49,7 @@ public class OrchPSDrive
     public string? PartitionGlobalId { get; set; }
     public int? TenantId { get; set; }
     public string? TenantKey { get; set; }
-    public string? BearerToken { get; set; }
+    public string? AccessToken { get; set; }
 
     public OrchPSDrive(OrchDriveInfo drive)
     {
@@ -68,7 +68,7 @@ public class OrchPSDrive
         PartitionGlobalId = drive._dicPartitionGlobalId;
         TenantId = drive._dicTenantId;
         TenantKey = drive._dicTenantKey;
-        BearerToken = drive.OrchAPISession.AuthManager.AccessToken;
+        AccessToken = drive.OrchAPISession.AuthManager.AccessToken;
         if (drive._psDrive.Proxy is not null)
         {
             ProxySettings = new()

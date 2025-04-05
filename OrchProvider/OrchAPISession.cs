@@ -246,7 +246,8 @@ public partial class OrchAPISession : IDisposable
                     _isAuthenticated = true;
                     _expiryTime = DateTime.Now.AddHours(1);
 
-                    if (ApiVersion is null && _drive is not null)
+                    if (ApiVersion is null && _drive is not null &&
+                        (_drive._psDrive.Scope?.Contains("OR.Settings") ?? false))
                     {
                         try
                         {
