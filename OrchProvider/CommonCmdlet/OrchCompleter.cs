@@ -2450,7 +2450,7 @@ internal class TmDriveCompleter<T> : OrchArgumentCompleter where T : IPositional
     }
 }
 
-internal class DuUserNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class DuNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -2487,6 +2487,48 @@ internal class DuUserNameCompleter<TPositional> : OrchArgumentCompleter where TP
         }
     }
 }
+
+// 三嶋さん(KDDI)からのリクエスト Add-DuUser に User Principal Name を指定できるように
+// するなら、次が必要だと思うが、良い実装が思いつかない。
+// パフォーマンスを犠牲にするか、あるいは複雑なパラメータを追加するか。。
+// 自分としては、どちらも受け入れがたいな。。
+//internal class DuUserNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+//{
+//    public override IEnumerable<CompletionResult> CompleteArgument(
+//        string commandName,
+//        string parameterName,
+//        string wordToComplete,
+//        CommandAst commandAst,
+//        IDictionary fakeBoundParameters)
+//    {
+//        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+
+//        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+//        var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+//        var drivesProjects = OrchDuDriveInfo.EnumFolders(paramPath, recurse);
+
+//        // パラメータで選択済みの Name は、候補から除外する
+//        var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+//        var wp = CreateWPFromWordToComplete(wordToComplete);
+
+//        var results = ParallelResults.ForEach(drivesProjects, dp => dp.drive.GetDuUsers(dp.project));
+
+//        foreach (var result in results)
+//        {
+//            if (result.Result is null) continue;
+
+//            foreach (var user in result.Result
+//                .Where(u => wp.IsMatch(u.UserName))
+//                .ExcludeByWildcards(u => u?.UserName, wpUserName)
+//                .OrderBy(u => u.UserName))
+//            {
+//                string tiphelp = user.GetPSPath();
+//                yield return new CompletionResult(PathTools.EscapePSText(user.UserName), user.UserName, CompletionResultType.Text, tiphelp);
+//            }
+//        }
+//    }
+//}
 
 public class EncodingCompleter : OrchArgumentCompleter
 {

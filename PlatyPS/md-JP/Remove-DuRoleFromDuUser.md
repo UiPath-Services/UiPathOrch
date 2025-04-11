@@ -13,7 +13,7 @@ Document Understanding プロジェクトのユーザーから、ロールを削
 ## SYNTAX
 
 ```
-Remove-DuRoleFromDuUser [[-Name] <String[]>] [-Roles <String[]>] [-Path <String[]>] [-Recurse]
+Remove-DuRoleFromDuUser [-Name] <String[]> [-Roles <String[]>] [-Path <String[]>] [-Recurse]
  [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
@@ -60,7 +60,7 @@ Type: String[]
 Parameter Sets: (All)
 Aliases:
 
-Required: False
+Required: True
 Position: 0
 Default value: None
 Accept pipeline input: True (ByPropertyName)

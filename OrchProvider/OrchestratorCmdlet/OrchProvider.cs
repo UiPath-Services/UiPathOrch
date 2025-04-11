@@ -53,6 +53,9 @@ public class NewDrive_Parameters
     // パラメータセット2: Username + Password
     private const string UserAuthParamSet = "UserAuth";
 
+    // パラメータセット3: AccessToken
+    private const string TokenAuthParamSet = "TokenAuth";
+
     [Parameter(ParameterSetName = AppAuthParamSet)]
     public string? IdentityUrl { get; set; }
 
@@ -69,7 +72,11 @@ public class NewDrive_Parameters
     public string? HttpListener { get; set; }
 
     [Parameter(ParameterSetName = AppAuthParamSet)]
+    [Parameter(ParameterSetName = TokenAuthParamSet)]
     public string? OAuthScope { get; set; }
+
+    [Parameter(ParameterSetName = TokenAuthParamSet)]
+    public string? AccessToken { get; set; }
 
     [Parameter(ParameterSetName = UserAuthParamSet)]
     public string? Username { get; set; }
@@ -454,6 +461,7 @@ public partial class OrchProvider : NavigationCmdletProvider
             RedirectUrl = parameters?.RedirectUrl,
             HttpListener = parameters?.HttpListener,
             Scope = parameters?.OAuthScope,
+            AccessToken = parameters?.AccessToken,
             Username = parameters?.Username,
             Password = parameters?.Password,
             IgnoreSslErrors = parameters?.IgnoreSslErrors,

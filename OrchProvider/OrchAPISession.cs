@@ -2645,15 +2645,16 @@ public partial class OrchAPISession : IDisposable
 
     // entityType: "user", "group", or "application"
     // "robot" を渡すとエラーになる。
+    // No "PM.xxx" scope needed
     public Dictionary<string, PmGroupMember>? PmBulkResolveByName(string partitionGlobalId, string entityType, IEnumerable<string> names)
     {
-        var postdata = new BulkResolveByNameCommand()
+        var postData = new BulkResolveByNameCommand()
         {
             entityNames = names as string[] ?? names.ToArray(),
             entityType = entityType
         };
 
-        string body = HttpRequestIdentity(HttpMethod.Post, $"/api/Directory/BulkResolveByName/{partitionGlobalId}", null, postdata);
+        string body = HttpRequestIdentity(HttpMethod.Post, $"/api/Directory/BulkResolveByName/{partitionGlobalId}", null, postData);
         return JsonSerializer.Deserialize<Dictionary<string, PmGroupMember>>(body, jsoMemberConverter);
     }
 

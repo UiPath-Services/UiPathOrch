@@ -1,4 +1,5 @@
-﻿using System.Management.Automation;
+﻿using System.Collections.Concurrent;
+using System.Management.Automation;
 using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Entities;
@@ -272,7 +273,7 @@ public class OrchDuDriveInfo : PSDriveInfo
         return _dicDuProjects;
     }
 
-    internal Dictionary<(string partitionGlobalId, string tenantKey, string projectId), DuUser[]>? _dicDuUsers = null;
+    internal ConcurrentDictionary<(string partitionGlobalId, string tenantKey, string projectId), DuUser[]>? _dicDuUsers = null;
     internal readonly ExceptionsCachePer<(string partitionGlobalId, string tenantKey, string projectId)> _dicDuUsers_Exceptions = new();
     public DuUser[] GetDuUsers(DuProject? project)
     {
@@ -308,6 +309,31 @@ public class OrchDuDriveInfo : PSDriveInfo
                         user.Project = project.name;
                     }
                     _dicDuUsers[(partitionGlobalId, tenantKey, project.id)] = users;
+
+                    // 三嶋さん(KDDI)からのリクエスト Add-DuUser に User Principal Name を指定できるように
+                    // するなら、次が必要だと思うが、良い実装が思いつかない。
+                    // パフォーマンスを犠牲にするか、あるいは複雑なパラメータを追加するか。。
+                    // 自分としては、どちらも受け入れがたいな。。
+                    //#region UserName をバルクで問い合わせる
+                    //foreach (var groupedUsers in users.GroupBy(u => u.type))
+                    //{
+                    //    var entityType = groupedUsers.Key switch
+                    //    {
+                    //        "DirectoryGroup" => "group",
+                    //        "DirectoryApplication" => "application",
+                    //        _ => "user"
+                    //    };
+
+                    //    var dic = ParentDrive.PmBulkResolveByName(entityType, groupedUsers, user => user.Name ?? user.email ?? "");
+                    //    foreach (var user in groupedUsers)
+                    //    {
+                    //        if (!string.IsNullOrEmpty(user.Name) && dic.TryGetValue(user.Name, out var pmUser))
+                    //        {
+                    //            user.UserName = pmUser?.name;
+                    //        }
+                    //    }
+                    //}
+                    //#endregion
                 }
             }
             catch (HttpResponseException ex)
@@ -320,7 +346,7 @@ public class OrchDuDriveInfo : PSDriveInfo
     }
 
     // key: projectId
-    internal Dictionary<string, DuDocumentType[]>? _dicDuDocumentTypes = null;
+    internal ConcurrentDictionary<string, DuDocumentType[]>? _dicDuDocumentTypes = null;
     internal readonly ExceptionsCachePer<string> _dicDuDocumentTypes_Exceptions = new();
     public DuDocumentType[]? GetDuDocumentTypes(DuProject project)
     {
@@ -364,7 +390,7 @@ public class OrchDuDriveInfo : PSDriveInfo
     }
 
     // key: projectId
-    internal Dictionary<string, DuClassifier[]>? _dicDuClassifier = null;
+    internal ConcurrentDictionary<string, DuClassifier[]>? _dicDuClassifier = null;
     internal readonly ExceptionsCachePer<string> _dicDuClassifier_Exceptions = new();
     public DuClassifier[]? GetDuClassifiers(DuProject project)
     {
@@ -408,7 +434,7 @@ public class OrchDuDriveInfo : PSDriveInfo
     }
 
     // key: projectId
-    internal Dictionary<string, DuExtractor[]>? _dicDuExtractors = null;
+    internal ConcurrentDictionary<string, DuExtractor[]>? _dicDuExtractors = null;
     internal readonly ExceptionsCachePer<string> _dicDuExtractorsExceptions = new();
     public DuExtractor[]? GetDuExtractors(DuProject project)
     {

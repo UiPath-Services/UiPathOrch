@@ -78,6 +78,11 @@ public class GetJobCommand : OrchestratorPSCmdlet
     public string[]? ProcessType { get; set; }
 
     [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(RobotCompleter))]
+    [SupportsWildcards]
+    public string[]? Robot { get; set; }
+
+    [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
     public ulong? Skip { get; set; }
 
     [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
@@ -180,6 +185,40 @@ public class GetJobCommand : OrchestratorPSCmdlet
             foreach (var candidate in candidates.Where(c => wp.IsMatch(c)))
             {
                 yield return new CompletionResult(candidate);
+            }
+        }
+    }
+
+
+    private class RobotCompleter : OrchArgumentCompleter
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = ResolveDrives(fakeBoundParameters);
+
+            var wpRobot = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults.ForEach(drives, drive => drive.Robots.Get());
+
+            foreach (var result in results)
+            {
+                if (result.Result is null) continue;
+
+                foreach (var robot in result.Result
+                    .Where(r => wp.IsMatch(r.Name))
+                    .ExcludeByWildcards(r => r?.Name, wpRobot)
+                    .OrderBy(r => r.Name))
+                {
+                    string tiphelp = robot.GetPSPath();
+                    yield return new CompletionResult(PathTools.EscapePSText(robot.Name), robot.Name, CompletionResultType.ParameterValue, tiphelp);
+                }
             }
         }
     }
@@ -331,6 +370,17 @@ public class GetJobCommand : OrchestratorPSCmdlet
             .CreateOrFilter(i => $"ProcessType eq '{i}'"));
         #endregion
 
+        #region Robot
+        if (Robot is not null && Robot.Length > 0 && !Robot.Any(r => r == "*"))
+        {
+            var wpRobot= Robot.ConvertToWildcardPatternList();
+            var robots = drive.Robots.Get();
+            var targetRobots = robots.SelectByWildcards(r => r?.Name, wpRobot);
+            if (!targetRobots.Any()) return "null";
+            filter.AddIfNotNull(targetRobots.Select(r => r.Id).CreateOrFilter(i => $"Robot/Id eq {i}"));
+        }
+        #endregion
+
         filter.AddIfNotNull(JobSourceTypeItems.Items
             .SelectByWildcards(i => i.Key, SourceType)
             .CreateOrFilter(i => $"SourceType eq '{i.Value}'"));
@@ -368,6 +418,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
             ReleaseName is null &&
             ProcessType is null &&
             SourceType is null &&
+            Robot is null &&
             State is null &&
             Skip is null && First is null);
 

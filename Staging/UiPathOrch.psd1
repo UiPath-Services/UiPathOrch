@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.11.2'
+ModuleVersion = '0.9.11.3'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -384,22 +384,28 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- You can now connect to a tenant using a personal access token. Please configure the PSDrive in your settings file as follows:
+        ReleaseNotes = '- Starting with version 0.9.9.7, you can add a UiPathOrch PSDrive using the New-PSDrive cmdlet. Version 0.9.11.3 (this release) adds support for using a personal access token (PAT) via the new -AccessToken parameter. This allows you to mount a PSDrive without a configuration file or an external app registration:
 
-"PSDrives": [
-  {
-    "Name": "Orch1",
-    "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
-    "AccessToken": "YOUR_PERSONAL_ACCESS_TOKEN",
-    "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
-    "Enabled": true
-  }
-]
+  PS> New-PSDrive -PSProvider UiPathOrch -Name Orch1 -Root https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT -AccessToken YOUR_ACCESS_TOKEN -OAuthScope "OR.Folders OR.Users OR.Settings"
 
-- The following changes were made to prevent meaningless errors from appearing when copying entities:
-  - In the Copy-OrchRole and Copy-Item cmdlets, if the source role is static and a role with the same name already exists in the destination tenant, the role is now skipped.  
+  - For the -AccessToken parameter, specify either a personal access token or a bearer token obtained through another external application connection.
 
-  - In the Copy-OrchCredentialStore cmdlet, if the source credential store is "Orchestrator Database" and a credential store with the same name exists in the destination, the credential store is now skipped.
+  - Please note that the parameter name for specifying the scopes is -OAuthScope, not -Scope.
+
+  - You must run Import-Module UiPathOrch before executing the New-PSDrive cmdlet.
+
+  - If no configuration file exists when the module is imported, one is automatically created and opened in Notepad. To suppress this behavior, set the environment variable UIPATHORCH_SUPPRESS_CONFIG_CREATION to 1 before importing UiPathOrch. This feature was introduced in UiPathOrch 0.9.9.7.
+
+- Added the -Robot filter parameter to the Get-OrchJob cmdlet. Wildcards are supported.
+  - The robot names specified in the -Robot parameter of Get-OrchJob can also be constructed from the output of Get-OrchRobot. For example:
+
+    PS Orch1:\Shared> Get-OrchJob -Robot (Get-OrchRobot | ? Type -eq Unattended | select -ExpandProperty Name) -State Successful -OrderBy EndTime
+
+- Included the robot Name in the default view of the Get-OrchRobot cmdlet.
+
+- The roleAssignmentDtos property, which belongs to the DuUser entity, was not properly expanded when the output of the Get-DuUser cmdlet was piped to ConvertTo-Json.
+
+- Operations on the Document Understanding entity cache were not thread-safe.
 '
 
         # Prerelease string of this module

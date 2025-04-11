@@ -46,6 +46,64 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
+    // AddFolderUser.cs の同名のクラスと、実装がほぼ同一だ。
+    //private class UserNameCompleter4Du : OrchArgumentCompleter
+    //{
+    //    //  0: User, 1: Group, 2: Machine, 3: Robot, 4: ExternalApplication
+
+    //    public override IEnumerable<CompletionResult> CompleteArgument(
+    //        string commandName,
+    //        string parameterName,
+    //        string wordToComplete,
+    //        CommandAst commandAst,
+    //        IDictionary fakeBoundParameters)
+    //    {
+    //        if (string.IsNullOrEmpty(wordToComplete))
+    //        {
+    //            yield return new CompletionResult(PathTools.EscapePSText("Please enter at least one character to search."));
+    //            yield break;
+    //        }
+
+    //        var paramType = GetParameterValue(commandAst, "Type", TPositional.Parameters);
+    //        if (!DirectoryTypeItems.Items.TryGetValue(paramType ?? "", out var objectType))
+    //        {
+    //            //yield return new CompletionResult(PathTools.EscapePSText("Invalid Type."));
+    //            yield break;
+    //        }
+
+    //        var drives = ResolveDuDrives(fakeBoundParameters);
+
+    //        // フォルダに割り当て済みのユーザーを候補から除外する処理は、いったん実装せずとした
+    //        //var existingMemberIds = GetExistingMemberIds(drives, wpName);
+    //        // アサイン済みのユーザーを除外するため、アサイン済みのユーザーを取得
+    //        //ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
+
+    //        var paramUserName = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+    //        bool bFound = false;
+    //        foreach (var drive in drives)
+    //        {
+    //            string partitionGlobalId = drive.ParentDrive.GetPartitionGlobalId();
+    //            var ret = drive.ParentDrive.SearchDirectory(wordToComplete);
+    //            if (ret is null) continue;
+
+    //            foreach (var e in ret
+    //                .Where(e => e.type == objectType)
+    //                //.ExcludeByTexts(e => e.identityName!, assignedUsers?.Select(u => u.Id.ToString()!) ?? [])
+    //                .ExcludeByClassValues(e => e?.identityName, paramUserName)
+    //                .OrderBy(e => e.identityName))
+    //            {
+    //                bFound = true;
+    //                string tiphelp = e.identityName;
+    //                yield return new CompletionResult(PathTools.EscapePSText(e?.identityName), e?.identityName, CompletionResultType.Text, tiphelp);
+    //            }
+    //        }
+    //        if (!bFound)
+    //        {
+    //            yield return new CompletionResult($"\"No results matching '{wordToComplete}'\".");
+    //        }
+    //    }
+    //}
+
     // この RoleCompleter は、ユーザーにアサインされていないロールだけを列挙する
     private class RoleCompleter : OrchArgumentCompleter
     {
@@ -282,7 +340,7 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
 
                 foreach (var project in updatedProjects)
                 {
-                    drive._dicDuUsers?.Remove((partitionGlobalId, tenantKey, project.id)!);
+                    drive._dicDuUsers?.TryRemove((partitionGlobalId, tenantKey, project.id)!, out _);
                 }
             }
             catch (Exception ex)
