@@ -2493,6 +2493,9 @@ public class Tag
     public string? DisplayName { get; set; }
     public string? Value { get; set; }
     public string? DisplayValue { get; set; }
+
+    // TODO: これ除去しないとだめだな。。ConvertTo-Json の結果が不正になる。
+    // 代わりに、ビュー定義ファイルにこれと同じのを書いておくと良さげだ。
     public override string? ToString()
     {
         if (string.IsNullOrEmpty(DisplayName)) return null;
@@ -3962,11 +3965,6 @@ public class RoleAssignmentDto // added by UiPathOrch swagger doc にない。
     public DateTime? createdOn { get; set; }
     public bool? inherited { get; set; }
     public bool? mutable { get; set; }
-
-    public override string ToString()
-    {
-        return (inherited ?? false) ? $"{roleName} (Inherited from organization)" : $"{roleName}";
-    }
 }
 
 public class DuUser // added by UiPathOrch swagger doc にない。
@@ -3997,6 +3995,13 @@ public class DuUser // added by UiPathOrch swagger doc にない。
             return _name;
         }
     }
+
+    // 三嶋さん(KDDI)からのリクエスト Add-DuUser に User Principal Name を指定できるように
+    // するなら、次が必要だと思うが、良い実装が思いつかない。
+    // パフォーマンスを犠牲にするか、あるいは複雑なパラメータを追加するか。。
+    // 自分としては、どちらも受け入れがたいな。。
+    //[JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    //internal string? UserName { get; set; }// 多分 null になることはないと思うが、
 }
 
 public class DuRoleAssignment // added by UiPathOrch

@@ -11,8 +11,20 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.DuUser))]
 public class GetDuUserCommand : OrchestratorPSCmdlet
 {
+    //private const string UserNameSet = "UserNameSet";
+    //private const string UserSet = "UserSet";
+
+    // 三嶋さん(KDDI)からのリクエスト Add-DuUser に User Principal Name を指定できるように
+    // するなら、次が必要だと思うが、良い実装が思いつかない。
+    // パフォーマンスを犠牲にするか、あるいは複雑なパラメータを追加するか。。
+    // 自分としては、どちらも受け入れがたいな。。
+    //[Parameter(ParameterSetName = UserNameSet, Position = 0, ValueFromPipelineByPropertyName = true)]
+    //[ArgumentCompleter(typeof(DuUserNameCompleter<TPositional>))]
+    //[SupportsWildcards]
+    //public string[]? UserName { get; set; }
+
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DuUserNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DuNameCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
@@ -50,7 +62,7 @@ public class GetDuUserCommand : OrchestratorPSCmdlet
             string[] line = [
                 EscapeCsvValue(user.Path, true),
                 EscapeCsvValue(user.type, true),
-                EscapeCsvValue(user.Name), // Add-DuUser の -DisplayName はワイルドカードをサポートしない
+                EscapeCsvValue(user.Name), // Add-DuUser の -DisplayName はワイルドカードをサポートしない 
                 EscapeCsvValue(user.roleAssignmentDtos?.Select(r => r.roleName), true)
             ];
 
@@ -61,6 +73,7 @@ public class GetDuUserCommand : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesProjects = OrchDuDriveInfo.EnumFolders(Path, Recurse.IsPresent);
+        //var wpUserName = UserName.ConvertToWildcardPatternList();
         var wpName = Name.ConvertToWildcardPatternList();
 
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
@@ -82,6 +95,7 @@ public class GetDuUserCommand : OrchestratorPSCmdlet
                 var (drive, _) = result.Source;
 
                 var targetEntities = entities
+                        //.FilterByWildcards(u => u?.UserName, wpUserName)
                         .FilterByWildcards(u => u?.Name, wpName)
                         .OrderBy(e => e.Name);
 

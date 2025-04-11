@@ -2162,6 +2162,9 @@
             <Label>Id</Label>
           </TableColumnHeader>
           <TableColumnHeader>
+            <Label>Name</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
             <Label>User.FullName</Label>
           </TableColumnHeader>
           <TableColumnHeader>
@@ -2183,6 +2186,9 @@
               <TableColumnItem>
                 <PropertyName>Id</PropertyName>
                 <Alignment>right</Alignment>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Name</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <ScriptBlock>
@@ -4489,7 +4495,15 @@
                 <PropertyName>source</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>roleAssignmentDtos</PropertyName>
+               <ScriptBlock>
+                 ($_.roleAssignmentDtos | Where-Object { $_ -ne $null } | ForEach-Object {
+                   if ($_.inherited) {
+                     "$($_.roleName) (Inherited from organization)"
+                   } else {
+                     "$($_.roleName)"
+                   }
+                 }) -join ", "
+               </ScriptBlock>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>

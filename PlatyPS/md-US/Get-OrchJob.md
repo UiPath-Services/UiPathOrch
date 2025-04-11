@@ -24,8 +24,8 @@ Get-OrchJob [-Last <String>] [-CreationTimeAfter <DateTime>] [-CreationTimeBefor
  [-StartTimeAfter <DateTime>] [-StartTimeBefore <DateTime>] [-EndTimeAfter <DateTime>]
  [-EndTimeBefore <DateTime>] [-ResumeTimeAfter <DateTime>] [-ResumeTimeBefore <DateTime>] [-Priority <String>]
  [-ReleaseName <String[]>] [-SourceType <String[]>] [-State <String[]>] [-ProcessType <String[]>]
- [-Skip <UInt64>] [-OrderBy <String>] [-OrderAscending] [-First <UInt64>] [-Path <String[]>] [-Recurse]
- [-Depth <UInt32>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+ [-Robot <String[]>] [-Skip <UInt64>] [-OrderBy <String>] [-OrderAscending] [-First <UInt64>]
+ [-Path <String[]>] [-Recurse] [-Depth <UInt32>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -594,6 +594,21 @@ Position: Named
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
+```
+
+### -Robot
+{{ Fill Robot Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: Filter
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
 ```
 
 ### CommonParameters

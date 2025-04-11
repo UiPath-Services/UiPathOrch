@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
@@ -12,8 +11,21 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsCommon.Remove, "DuRoleFromDuUser", SupportsShouldProcess = true)]
 public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DuUserNameCompleter<TPositional>))]
+    //private const string UserNameSet = "UserNameSet";
+    //private const string UserSet = "UserSet";
+
+    // 三嶋さん(KDDI)からのリクエスト Add-DuUser に User Principal Name を指定できるように
+    // するなら、次が必要だと思うが、良い実装が思いつかない。
+    // パフォーマンスを犠牲にするか、あるいは複雑なパラメータを追加するか。。
+    // 自分としては、どちらも受け入れがたいな。。
+    //[Parameter(ParameterSetName = UserNameSet, Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true)]
+    //[ArgumentCompleter(typeof(DuUserNameCompleter<TPositional>))]
+    //[SupportsWildcards]
+    //public string[]? UserName { get; set; }
+
+    // 本当は、Inherited でないロールがひとつもないユーザーの名前はリストしないようにしたい。
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(DuNameCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
@@ -44,6 +56,9 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
             // この名前のユーザーにアサイン済みの Role は除外する
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
+            // この名前のユーザーにアサイン済みの Role は除外する
+            //var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
+
             // パラメータで選択済みの Role は除外する
             var wpRole = CreateWPListFromParameter(commandAst, "Role", TPositional.Parameters, wordToComplete);
 
@@ -59,6 +74,7 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
 
                 foreach (var user in result.Result
                     .FilterByWildcards(u => u?.Name, wpName)
+                    //.FilterByWildcards(u => u?.UserName, wpUserName)
                     .OrderBy(u => u.Name))
                 {
                     foreach (var role in user.roleAssignmentDtos?
@@ -79,6 +95,7 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
     {
         var drivesProjects = OrchDuDriveInfo.EnumFolders(Path, Recurse.IsPresent);
         var wpName = Name.ConvertToWildcardPatternList();
+        //var wpUserName = UserName.ConvertToWildcardPatternList();
         var wpRole = Roles.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
 
         using var results = OrchThreadPool.RunForEach(drivesProjects,
@@ -98,6 +115,7 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
 
                 foreach (var user in entities
                     .FilterByWildcards(u => u?.Name, wpName)
+                    //.FilterByWildcards(u => u?.UserName, wpUserName)
                     .OrderBy(u => u.Name))
                 {
                     var existingRoles = user.roleAssignmentDtos;
@@ -126,7 +144,7 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
                             };
 
                             drive.OrchAPISession.SetDuRoleToDuUser(partitionGlobalId, payload);
-                            drive._dicDuUsers?.Remove((partitionGlobalId, tenantKey, project.id)!);
+                            drive._dicDuUsers?.TryRemove((partitionGlobalId, tenantKey, project.id)!, out _);
                         }
                         catch (Exception ex)
                         {
