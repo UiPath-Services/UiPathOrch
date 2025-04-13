@@ -167,7 +167,7 @@ public class AddPmUserBulkCommand : OrchestratorPSCmdlet
                 var group = drive.GetPmGroups().Values.FirstOrDefault(g => g.name?.Equals(groupName, StringComparison.OrdinalIgnoreCase) ?? false);
                 if (group is null)
                 {
-                    group = CreatePmGroup(drive, groupName);
+                    group = this.CreatePmGroup(drive, groupName);
                 }
                 if (string.IsNullOrEmpty(group?.id)) continue;
                 groupIds.Add(group.id);

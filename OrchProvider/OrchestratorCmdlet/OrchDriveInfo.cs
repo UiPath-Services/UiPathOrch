@@ -2341,6 +2341,30 @@ public partial class OrchDriveInfo : PSDriveInfo
         return null;
     }
 
+    internal PmGroup? CreatePmGroup(string? name, IEnumerable<string>? memberIds = null)
+    {
+        CreateGroupCommand createGroupCommand = new()
+        {
+            partitionGlobalId = GetPartitionGlobalId(),
+            id = Guid.NewGuid().ToString(),
+            name = name,
+            directoryUserMemberIDs = memberIds?.ToArray()
+        };
+
+        var newGroup = OrchAPISession.CreatePmGroup(createGroupCommand);
+        if (newGroup is not null)
+        {
+            newGroup.Path = NameColonSeparator;
+            _dicSearchPmDirectory = null;
+            _dicSearchPmDirectory_Exception.ClearCache();
+            _dicSearchDirectory = null;
+            _dicSearchDirectory_Exception.ClearCache();
+            _dicPmGroups = null;
+            _dicPmGroups_Exception.ClearCache();
+        }
+        return newGroup;
+    }
+
     #endregion
 
     internal ConcurrentDictionary<string, AvailableUserBundles>? _dicPmAvailableUserBundles = null;
