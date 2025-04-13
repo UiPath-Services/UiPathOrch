@@ -294,30 +294,17 @@ class CopyPmGroupCommand : OrchestratorPSCmdlet
 #endif
                     #endregion
 
-                    CreateGroupCommand createGroupCommand = new()
-                    {
-                        partitionGlobalId = dstPartitionGlobalId,
-                        id = Guid.NewGuid().ToString(),
-                        name = srcGroup.name,
-                        directoryUserMemberIDs = directoryUserMemberIDs.ToArray()
-                    };
-
                     try
                     {
-                        var newGroup = dstDrive.OrchAPISession.CreatePmGroup(createGroupCommand);
+                        var newGroup = dstDrive.CreatePmGroup(srcGroup.name, directoryUserMemberIDs);
                         if (newGroup is not null)
                         {
-                            newGroup.Path = dstDrive.NameColonSeparator;
                             WriteObject(newGroup);
-                            dstDrive._dicSearchPmDirectory = null;
-                            dstDrive._dicSearchDirectory = null;
-                            dstDrive._dicPmGroups = null;
-                            dstDrive._dicPmGroups_Exception.ClearCache();
                         }
                     }
                     catch (Exception ex)
                     {
-                        WriteError(new ErrorRecord(new OrchException(target, ex), "CopyPmGroupError", ErrorCategory.InvalidOperation, createGroupCommand));
+                        WriteError(new ErrorRecord(new OrchException(target, ex), "CopyPmGroupError", ErrorCategory.InvalidOperation, dstDrive));
                     }
                 }
             }

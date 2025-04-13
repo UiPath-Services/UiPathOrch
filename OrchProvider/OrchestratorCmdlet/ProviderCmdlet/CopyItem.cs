@@ -23,7 +23,8 @@ public interface IWritableHost
 // 画面にエラーを出力する処理は、このクラスに集約する。
 public static class IWritableHostExtensions
 {
-    public static Folder? GetRelativeDstFolder(this IWritableHost _this, Folder srcRootFolder, Folder srcFolder, OrchDriveInfo dstDrive, Folder dstRootFolder, bool includeRoot = false)
+    // この実装の一部は Folder の拡張メソッドにした方がいいような気がするが、
+    internal static Folder? GetRelativeDstFolder(this IWritableHost _this, Folder srcRootFolder, Folder srcFolder, OrchDriveInfo dstDrive, Folder dstRootFolder, bool includeRoot = false)
     {
         var strDstRootFolder = dstRootFolder.FullyQualifiedName;
         //if (strDstRootFolder != "") strDstRootFolder += '/';
@@ -72,6 +73,20 @@ public static class IWritableHostExtensions
         }
 
         return dstFolder;
+    }
+
+    // 例外処理とコンソールへのエラーメッセージ出力が不要の場合には、drive.CreatePmGroup() を直接呼び出してほしい。
+    internal static PmGroup? CreatePmGroup(this IWritableHost _this, OrchDriveInfo drive, string? groupName, IEnumerable<string>? memberIds = null)
+    {
+        try
+        {
+            drive.CreatePmGroup(groupName, memberIds);
+        }
+        catch (Exception ex)
+        {
+            _this.WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, $"Failed to create PmGroup '{groupName}'", ex), "AddPmGroupError", ErrorCategory.InvalidOperation, drive));
+        }
+        return null;
     }
 }
 
@@ -885,6 +900,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
     }
 
+    // コピー先にグループがない場合には、同じ名前のグループを作成する
     // TODO: List<PmGroup> を返すようにした方が、コード保守が安全になるような気がする
     internal static IEnumerable<PmGroup>? FindDstPmGroups(IWritableHost _this,
         OrchDriveInfo srcDrive, IEnumerable<string>? srcPmGroupIds,
@@ -938,8 +954,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             var dstPmGroup = dstPmGroups.FirstOrDefault(g => string.Compare(g!.displayName, srcPmGroup.displayName, StringComparison.OrdinalIgnoreCase) == 0);
             if (dstPmGroup is null)
             {
-                _this.WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, $"{msg}: {dstDrive.NameColon} does not have PmGroup with name = '{srcPmGroup.displayName}'. Ignoring this group."), "GetGroupIdError", ErrorCategory.InvalidOperation, dstDrive));
-                continue;
+                dstPmGroup = _this.CreatePmGroup(dstDrive, srcPmGroup.name);
+                if (dstPmGroup is null) continue;
             }
             yield return dstPmGroup;
         }

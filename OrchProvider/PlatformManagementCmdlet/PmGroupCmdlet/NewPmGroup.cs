@@ -58,30 +58,17 @@ public class AddPmGroupCommand : OrchestratorPSCmdlet
                 string target = System.IO.Path.Combine(drive.NameColonSeparator, groupName);
                 if (ShouldProcess(target, "Add PmGroup"))
                 {
-                    CreateGroupCommand createGroupCommand = new()
-                    {
-                        partitionGlobalId = partitionGlobalId,
-                        id = Guid.NewGuid().ToString(),
-                        name = WildcardPattern.Unescape(groupName),
-                        directoryUserMemberIDs = []
-                    };
-
                     try
                     {
-                        var newGroup = drive.OrchAPISession.CreatePmGroup(createGroupCommand);
-                        if (newGroup  is not null)
+                        var newGroup = drive.CreatePmGroup(WildcardPattern.Unescape(groupName));
+                        if (newGroup is not null)
                         {
-                            newGroup.Path = drive.NameColonSeparator;
                             WriteObject(newGroup);
-                            drive._dicSearchPmDirectory = null;
-                            drive._dicSearchDirectory = null;
-                            drive._dicPmGroups = null;
-                            drive._dicPmGroups_Exception.ClearCache();
                         }
                     }
                     catch (Exception ex)
                     {
-                        WriteError(new ErrorRecord(new OrchException(target, ex), "AddPmGroupError", ErrorCategory.InvalidOperation, createGroupCommand));
+                        WriteError(new ErrorRecord(new OrchException(target, ex), "AddPmGroupError", ErrorCategory.InvalidOperation, drive));
                     }
                 }
             }

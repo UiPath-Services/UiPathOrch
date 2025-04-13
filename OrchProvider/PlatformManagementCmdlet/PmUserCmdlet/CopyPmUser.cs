@@ -129,7 +129,7 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
                         //continue;
 
                         // この名前のグループがないので、作成してしまえ。
-                        dstGroup = CreatePmGroup(dstDrive, groupName);
+                        dstGroup = this.CreatePmGroup(dstDrive, groupName);
                         if (dstGroup is not null)
                         {
                             dstGroups[dstGroup.name!] = dstGroup;
