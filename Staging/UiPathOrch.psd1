@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.11.4'
+ModuleVersion = '0.9.12.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -135,15 +135,15 @@ CmdletsToExport = @(
 'Enable-OrchLicenseRuntime',
 'Disable-OrchLicenseRuntime',
 
-'Get-OrchPmAuditLog',
+'Get-PmAuditLog',
 
-'Get-OrchPmLicensedUser',
+'Get-PmLicensedUser',
 
-'Get-OrchPmLicensedGroup',
-'Remove-OrchPmLicensedGroup',
-'Add-OrchPmLicenseToPmLicensedGroup',
-'Remove-OrchPmAllocationFromPmLicensedGroup',
-'Remove-OrchPmLicenseFromPmLicensedGroup',
+'Get-PmLicensedGroup',
+'Remove-PmLicensedGroup',
+'Add-PmLicenseToPmLicensedGroup',
+'Remove-PmAllocationFromPmLicensedGroup',
+'Remove-PmLicenseFromPmLicensedGroup',
 
 'Get-OrchClassicRobot',
 'Get-OrchClassicEnvironment',
@@ -295,31 +295,31 @@ CmdletsToExport = @(
 'Remove-OrchActionCatalog',
 
 'Search-OrchDirectory',
-'Search-OrchPmDirectory',
-'Resolve-OrchPmDirectoryNameBulk',
+'Search-PmDirectory',
+'Resolve-PmDirectoryNameBulk',
 
-'Get-OrchPmUser',
-'Update-OrchPmUser',
-'Remove-OrchPmUser',
-'New-OrchPmUser',
-'Copy-OrchPmUser',
+'Get-PmUser',
+'Update-PmUser',
+'Remove-PmUser',
+'New-PmUser',
+'Copy-PmUser',
 
-'Get-OrchPmRobotAccount',
-'Set-OrchPmRobotAccount',
-'Copy-OrchPmRobotAccount',
-'Remove-OrchPmRobotAccount',
+'Get-PmRobotAccount',
+'Set-PmRobotAccount',
+'Copy-PmRobotAccount',
+'Remove-PmRobotAccount',
 
-'Get-OrchPmGroup',
-'New-OrchPmGroup',
-'Remove-OrchPmGroup',
+'Get-PmGroup',
+'New-PmGroup',
+'Remove-PmGroup',
 
-'Get-OrchPmGroupMember',
-'Add-OrchPmGroupMember',
-'Move-OrchPmGroupMember',
-'Remove-OrchPmGroupMember',
+'Get-PmGroupMember',
+'Add-PmGroupMember',
+'Move-PmGroupMember',
+'Remove-PmGroupMember',
 
-'Get-OrchPmExternalApiResource',
-'Get-OrchPmExternalApplication',
+'Get-PmExternalApiResource',
+'Get-PmExternalApplication',
 
 'Get-DuRole',
 'Get-DuDocumentType',
@@ -384,7 +384,9 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- The Copy-OrchPmRobotAccount cmdlet now automatically creates groups with the same names in the target organization if the groups to which the robots being copied belong do not already exist there.
+        ReleaseNotes = '- Cmdlets whose noun names begin with OrchPm (such as Get-OrchPmUser) can now also be used with PSDrives provided by the UiPathOrchDu and UiPathOrchTm providers. These drives are automatically mounted when the corresponding scopes (Document Understanding and Test Manager, respectively) are configured in the settings file. After importing the UiPathOrch module, you can verify the mounted drives using the Get-PSDrive cmdlet.
+
+- Along with this update, the cmdlet names with the OrchPm noun prefix have been renamed to use the shorter Pm prefix instead. For example, Get-OrchPmUser is now renamed to Get-PmUser. We apologize for any inconvenience caused by this change.
 '
 
         # Prerelease string of this module

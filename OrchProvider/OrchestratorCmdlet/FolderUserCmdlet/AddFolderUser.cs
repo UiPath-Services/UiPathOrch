@@ -61,7 +61,7 @@ public class AddFolderUserCommand : OrchestratorPSCmdlet
                 yield break;
             }
 
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             // フォルダに割り当て済みのユーザーを候補から除外する処理は、いったん実装せずとした
             //var existingMemberIds = GetExistingMemberIds(drives, wpName);
@@ -103,7 +103,7 @@ public class AddFolderUserCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             // パラメータで選択済みの Roles は、候補から除外する
             var wpRoles = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);

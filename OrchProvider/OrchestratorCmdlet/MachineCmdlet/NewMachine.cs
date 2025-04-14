@@ -68,7 +68,7 @@ public class AddMachineCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
             var results = ParallelResults.ForEach(drives, drive => drive.Machines.Get());
 
             // パラメータで選択済みの Name は、候補から除外する

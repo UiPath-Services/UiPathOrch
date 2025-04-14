@@ -10,7 +10,7 @@ using TPositional = UiPath.PowerShell.Positional.GroupName_Type_UserName;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Add, "OrchPmGroupMember", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.Add, "PmGroupMember", SupportsShouldProcess = true)]
 public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
 {
     // パラメータを、Path と PmGroup だけ展開して保持
@@ -28,7 +28,7 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
     public string[]? Type { get; set; }
 
     [Parameter(Position = 2, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(UserNameCompleter))]
+    [ArgumentCompleter(typeof(PmUserNameCompleter))]
     public string[]? UserName { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -59,7 +59,7 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
         return existingMemberIds;
     }
 
-    private class UserNameCompleter : OrchArgumentCompleter
+    private class PmUserNameCompleter : OrchArgumentCompleter
     {
         private static bool IsMemberOf(PmGroup group, PmDirectoryEntityInfo user)
         {
@@ -96,7 +96,7 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
 
             //var types = DirectoryTypes.Items.FilterByWildcards(d => d.Value, wpType).Select(d => d.Key);
 
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolvePmDrives(fakeBoundParameters);
 
             GetExistingMemberIds(drives, wpGroupName);
             //var existingMemberIds = GetExistingMemberIds(drives, wpGroupName);
@@ -146,7 +146,7 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
         // ユーザー名は case を無視して重複チェックする
         _csvLines ??= new(new ForthItemIgnoreCaseComparer<OrchDriveInfo, PmGroup, string>());
 
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
         var wpGroupName = GroupName.ConvertToWildcardPatternList();
         var wpType = Type.ConvertToWildcardPatternList(); // Type はワイルドカードをサポートしない
         //var objectTypes = DirectoryTypes.Items.FilterByWildcards(t => t.Value, wpType).Select(t => t.Key);

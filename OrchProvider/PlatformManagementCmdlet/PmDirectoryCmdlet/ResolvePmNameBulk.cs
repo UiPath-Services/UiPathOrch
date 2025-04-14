@@ -9,7 +9,7 @@ using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsDiagnostic.Resolve, "OrchPmDirectoryNameBulk")]
+[Cmdlet(VerbsDiagnostic.Resolve, "PmDirectoryNameBulk")]
 [OutputType(typeof(DirectoryUser))]
 [OutputType(typeof(DirectoryGroup))]
 [OutputType(typeof(DirectoryApplication))]
@@ -29,7 +29,7 @@ public class SearchPmDirectoryBulkCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
 
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,

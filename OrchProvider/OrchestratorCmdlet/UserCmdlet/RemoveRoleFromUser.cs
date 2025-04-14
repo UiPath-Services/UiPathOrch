@@ -45,7 +45,7 @@ public class RemoveRoleFromUserCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
             var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);

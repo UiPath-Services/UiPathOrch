@@ -5,7 +5,7 @@ using TPositional = UiPath.PowerShell.Positional.GroupName;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Remove, "OrchPmGroup", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.Remove, "PmGroup", SupportsShouldProcess = true)]
 public class RemovePmGroupCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
@@ -19,7 +19,7 @@ public class RemovePmGroupCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
         var wpGroupName = GroupName.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
@@ -69,7 +69,7 @@ public class RemovePmGroupCommand : OrchestratorPSCmdlet
     // HTTP call を cap した状態では逆に遅くなる場合があるため、シングルスレッドで書き直した
     //protected override void ProcessRecord()
     //{
-    //    var drives = OrchDriveInfo.EnumOrchDrives(Path);
+    //    var drives = OrchDriveInfo.EnumPmDrives(Path);
     //    var wpDisplayName = Name.ConvertToWildcardPatternList();
 
     //    using var results = OrchThreadPool.RunForEach(drives,

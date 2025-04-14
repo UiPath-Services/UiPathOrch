@@ -138,7 +138,7 @@ public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
             IDictionary fakeBoundParameters)
         {
             var drivesFolders = ResolvePathWithoutPersonalWorkspace(commandAst, fakeBoundParameters);
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             // 操作対象の User を抽出する
 

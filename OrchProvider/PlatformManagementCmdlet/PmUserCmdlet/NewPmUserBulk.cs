@@ -50,7 +50,7 @@ internal class DriveGroupIdsComparer : IEqualityComparer<(OrchDriveInfo drive, s
     }
 }
 
-[Cmdlet(VerbsCommon.New, "OrchPmUser", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.New, "PmUser", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.PmUser))]
 public class AddPmUserBulkCommand : OrchestratorPSCmdlet
 {
@@ -98,7 +98,7 @@ public class AddPmUserBulkCommand : OrchestratorPSCmdlet
 
         _params ??= [];
 
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
 
         foreach (var drive in drives)
         {

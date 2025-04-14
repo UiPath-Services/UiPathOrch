@@ -66,7 +66,7 @@ public class GetExecutionSettingCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             var wpScope = CreateWPListFromOtherParameters(commandAst, "Scope", TPositional.Parameters);
 

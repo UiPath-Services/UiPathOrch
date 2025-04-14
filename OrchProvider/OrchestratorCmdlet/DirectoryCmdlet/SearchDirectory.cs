@@ -36,7 +36,7 @@ public class SearchDirectoryCommand : OrchestratorPSCmdlet
                 yield break;
             }
 
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
             var results = ParallelResults.ForEach(drives, drive => drive.SearchDirectory(name));

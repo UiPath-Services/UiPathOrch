@@ -6,7 +6,7 @@ using TPositional = UiPath.PowerShell.Positional.Email;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Remove, "OrchPmUser", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.Remove, "PmUser", SupportsShouldProcess = true)]
 [OutputType(typeof(PmUser))]
 public class RemovePmUserCommand : OrchestratorPSCmdlet
 {
@@ -25,7 +25,7 @@ public class RemovePmUserCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
         var wpEmail = Email.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();

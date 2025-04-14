@@ -8,7 +8,7 @@ using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Get, "OrchPmRobotAccount", DefaultParameterSetName = psDefault)]
+[Cmdlet(VerbsCommon.Get, "PmRobotAccount", DefaultParameterSetName = psDefault)]
 [OutputType(typeof(Entities.PmRobotAccount))]
 [OutputType(typeof(Entities.PmRobotAccountExpanded))]
 public class GetPmRobotAccountCommand : OrchestratorPSCmdlet
@@ -63,7 +63,7 @@ public class GetPmRobotAccountCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
         var wpName = Name.ConvertToWildcardPatternList();
 
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);

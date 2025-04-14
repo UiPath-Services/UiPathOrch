@@ -6,7 +6,7 @@ using TPositional = UiPath.PowerShell.Positional.Email;
 namespace UiPath.PowerShell.Commands;
 
 // この API は無効化されているため使えない
-[Cmdlet(VerbsCommon.Get, "OrchPmUserLoginAttempt")]
+//[Cmdlet(VerbsCommon.Get, "PmUserLoginAttempt")]
 //[OutputType(typeof(Entities.IdUser))]
 class GetPmUserLoginAttemptCommand : OrchestratorPSCmdlet
 {
@@ -21,7 +21,7 @@ class GetPmUserLoginAttemptCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
         var wpEmail = Email.ConvertToWildcardPatternList();
 
 

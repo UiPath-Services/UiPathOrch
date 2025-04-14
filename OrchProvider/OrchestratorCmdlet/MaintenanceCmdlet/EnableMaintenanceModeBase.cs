@@ -33,7 +33,7 @@ public class EnableMaintenanceModeCommandBase<Enable> : OrchestratorPSCmdlet whe
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             var wpMachineName     = CreateWPListFromParameter(commandAst, "MachineName", TPositional.Parameters, wordToComplete);
             var wpHostMachineName = CreateWPListFromOtherParameters(commandAst, "HostMachineName", TPositional.Parameters);
@@ -78,7 +78,7 @@ public class EnableMaintenanceModeCommandBase<Enable> : OrchestratorPSCmdlet whe
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             var wpMachineName     = CreateWPListFromOtherParameters(commandAst, "MachineName", TPositional.Parameters);
             var wpHostMachineName = CreateWPListFromParameter(commandAst, "HostMachineName", TPositional.Parameters, wordToComplete);
@@ -123,7 +123,7 @@ public class EnableMaintenanceModeCommandBase<Enable> : OrchestratorPSCmdlet whe
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             var wpMachineName     = CreateWPListFromOtherParameters(commandAst, "MachineName", TPositional.Parameters);
             var wpHostMachineName = CreateWPListFromOtherParameters(commandAst, "HostMachineName", TPositional.Parameters);
@@ -168,7 +168,7 @@ public class EnableMaintenanceModeCommandBase<Enable> : OrchestratorPSCmdlet whe
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             var wpMachineName     = CreateWPListFromOtherParameters(commandAst, "MachineName", TPositional.Parameters);
             var wpHostMachineName = CreateWPListFromOtherParameters(commandAst, "HostMachineName", TPositional.Parameters);

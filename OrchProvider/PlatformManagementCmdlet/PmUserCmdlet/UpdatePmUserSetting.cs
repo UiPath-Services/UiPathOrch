@@ -9,7 +9,7 @@ using TPositional = UiPath.PowerShell.Positional.Email_Language;
 namespace UiPath.PowerShell.Commands;
 
 // なんだかうまく動かないな。。いったん保留で。
-[Cmdlet(VerbsData.Update, "OrchPmUserSetting")]
+[Cmdlet(VerbsData.Update, "PmUserSetting")]
 //[OutputType(typeof(Entities.PmUser))]
 class UpdatePmUserSettingCommand : OrchestratorPSCmdlet
 {
@@ -63,7 +63,7 @@ class UpdatePmUserSettingCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
         var wpEmail = Email.ConvertToWildcardPatternList();
 
         var (locale, localeCode) = _languages.FirstOrDefault(l => l.Locale == Language);

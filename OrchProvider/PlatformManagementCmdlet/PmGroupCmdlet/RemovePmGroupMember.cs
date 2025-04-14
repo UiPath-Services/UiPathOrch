@@ -6,7 +6,7 @@ using TPositional = UiPath.PowerShell.Positional.GroupName_Type_UserName;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Remove, "OrchPmGroupMember", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.Remove, "PmGroupMember", SupportsShouldProcess = true)]
 //[OutputType(typeof(Entities.IdGroup))]
 public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
 {
@@ -56,7 +56,7 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
 
         // CSV に指定された GroupName はカンマで区切る
         var groupName = GroupName!

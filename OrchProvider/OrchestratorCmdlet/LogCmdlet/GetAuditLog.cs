@@ -70,7 +70,7 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             // パラメータで選択済みの Id は、候補から除外する
             var paramId = GetParameterValues(commandAst, "Id", TPositional.Parameters, wordToComplete);
@@ -107,7 +107,7 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             // パラメータで選択済みの User は、候補から除外する
             var paramUserName = GetParameterValues(commandAst, "UserName", TPositional.Parameters, wordToComplete);

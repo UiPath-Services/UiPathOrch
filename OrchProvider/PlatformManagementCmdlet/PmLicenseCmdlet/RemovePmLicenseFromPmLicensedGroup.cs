@@ -10,7 +10,7 @@ using TPositional = UiPath.PowerShell.Positional.GroupName_License;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Remove, "OrchPmLicenseFromPmLicensedGroup", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.Remove, "PmLicenseFromPmLicensedGroup", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.UpdateLicensedGroupResponse))]
 public class RemoveLicenseFromLicenseGroup: OrchestratorPSCmdlet
 {
@@ -23,7 +23,7 @@ public class RemoveLicenseFromLicenseGroup: OrchestratorPSCmdlet
     public string[]? GroupName { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(LicenseCompleter))]
+    [ArgumentCompleter(typeof(PmLicenseCompleter))]
     [SupportsWildcards]
     public string[]? License { get; set; }
 
@@ -31,7 +31,7 @@ public class RemoveLicenseFromLicenseGroup: OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 
-    private class LicenseCompleter : OrchArgumentCompleter
+    private class PmLicenseCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
             string commandName,
@@ -40,7 +40,7 @@ public class RemoveLicenseFromLicenseGroup: OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolvePmDrives(fakeBoundParameters);
 
             var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", TPositional.Parameters);
             var wpLicense = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -85,7 +85,7 @@ public class RemoveLicenseFromLicenseGroup: OrchestratorPSCmdlet
     {
         _parameterSets ??= [];
 
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
 
         var wpGroupName = GroupName.ConvertToWildcardPatternList();
         var wpLicense = License.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();

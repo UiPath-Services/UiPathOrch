@@ -169,9 +169,63 @@ public partial class OrchDriveInfo : PSDriveInfo
     }
 
     // paths を指定しない場合、カレントドライブのみを返す
+    public static List<OrchDriveInfo> EnumPmDrives(IEnumerable<string?>? path = null)
+    {
+        static void AddOrchDrive(HashSet<OrchDriveInfo> drives, PSDriveInfo drive)
+        {
+            if (drive is OrchDriveInfo orchDrive)
+            {
+                drives.Add(orchDrive);
+            }
+            else if (SessionState!.Path.CurrentLocation.Drive is OrchDuDriveInfo orchDuDrive)
+            {
+                drives.Add(orchDuDrive.ParentDrive);
+            }
+            else if (SessionState!.Path.CurrentLocation.Drive is OrchTmDriveInfo orchTmDrive)
+            {
+                drives.Add(orchTmDrive.ParentDrive);
+            }
+        }
+
+        var drives = new HashSet<OrchDriveInfo>();
+        if (path is null || !path.Any() || path.All(p => p is null))
+        {
+            if (SessionState is not null)
+            {
+                AddOrchDrive(drives, SessionState.Path.CurrentLocation.Drive);
+            }
+        }
+        else
+        {
+            var psPaths = path.Select(p => SessionState!.Path.GetResolvedPSPathFromPSPath(p)).SelectMany(p => p);
+            foreach (var p in psPaths)
+            {
+                AddOrchDrive(drives, p.Drive);
+            }
+        }
+        return drives.OrderBy(d => d.Name).ToList();
+    }
+
+    // paths を指定しない場合、カレントドライブのみを返す
     public static List<OrchDuDriveInfo> EnumDuDrives(IEnumerable<string?>? path = null)
     {
         return EnumOrchDrivesImpl<OrchDuDriveInfo>(path);
+    }
+
+    // すこし実装が重複しているような。。きれいにできたい
+    public static OrchDriveInfo GetPmDrive(string? path = null)
+    {
+        var srcDrives = EnumPmDrives([path]);
+        if (srcDrives.Count > 1)
+        {
+            throw new Exception($"'{path}' resolved to multiple containers.");
+        }
+        if (srcDrives.Count == 0)
+        {
+            // たぶん先に EnumPmDrives() が例外を投げているはずなので、ここは実行されないと思う。
+            throw new Exception($"Cannot find path '{path}' because it does not exist.");
+        }
+        return srcDrives[0];
     }
 
     public static OrchDriveInfo GetOrchDrive(string? path = null)

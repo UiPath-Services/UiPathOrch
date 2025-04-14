@@ -7,7 +7,7 @@ using TPositional = UiPath.PowerShell.Positional.GroupName_UserName;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Remove, "OrchPmAllocationFromPmLicensedGroup", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.Remove, "PmAllocationFromPmLicensedGroup", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.PmGroupMember))]
 public class RemoveAllocationFromUserLicenseGroup: OrchestratorPSCmdlet
 {
@@ -37,7 +37,7 @@ public class RemoveAllocationFromUserLicenseGroup: OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolvePmDrives(fakeBoundParameters);
 
             var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", TPositional.Parameters);
             var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -72,7 +72,7 @@ public class RemoveAllocationFromUserLicenseGroup: OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
 
         var wpGroupName = GroupName.ConvertToWildcardPatternList();
         var wpUserName = UserName.ConvertToWildcardPatternList();

@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 // このコマンドレットからは、メンバーを追加する機能は外す。
 // 空っぽのグループを追加するだけのコマンドレットでないと、ShouldProcess がうまいことサポートできないため。
 
-[Cmdlet(VerbsCommon.New, "OrchPmGroup", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.New, "PmGroup", SupportsShouldProcess = true)]
 public class AddPmGroupCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
@@ -32,7 +32,7 @@ public class AddPmGroupCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolvePmDrives(fakeBoundParameters);
             var results = ParallelResults.ForEach(drives, drive => drive.GetPmGroups());
 
             // パラメータで選択済みの Name は、候補から除外する
@@ -45,7 +45,7 @@ public class AddPmGroupCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)

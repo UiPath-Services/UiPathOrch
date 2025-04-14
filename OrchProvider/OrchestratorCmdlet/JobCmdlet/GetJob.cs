@@ -199,7 +199,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             var wpRobot = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 

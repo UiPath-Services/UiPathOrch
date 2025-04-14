@@ -7,7 +7,7 @@ using TPositional = UiPath.PowerShell.Positional.Email;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Get, "OrchPmUser")]
+[Cmdlet(VerbsCommon.Get, "PmUser")]
 [OutputType(typeof(Entities.PmUser))]
 public class GetPmUserCommand : OrchestratorPSCmdlet
 {
@@ -103,7 +103,7 @@ public class GetPmUserCommand : OrchestratorPSCmdlet
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
         var wpEmail = Email.ConvertToWildcardPatternList();
 
         using var results = OrchThreadPool.RunForEach(drives,

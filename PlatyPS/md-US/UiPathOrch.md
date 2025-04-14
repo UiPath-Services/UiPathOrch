@@ -29,17 +29,17 @@ Assigns the users to folders.
 ### [Add-OrchMachineClientSecret](Add-OrchMachineClientSecret.md)
 {{ Fill in the Synopsis }}
 
-### [Add-OrchPmGroupMember](Add-OrchPmGroupMember.md)
-Adds members to groups.
-
-### [Add-OrchPmLicenseToPmLicensedGroup](Add-OrchPmLicenseToPmLicensedGroup.md)
-{{ Fill in the Synopsis }}
-
 ### [Add-OrchRoleToFolderUser](Add-OrchRoleToFolderUser.md)
 Assigns the roles to folder users.
 
 ### [Add-OrchUser](Add-OrchUser.md)
 Adds users to tenants.
+
+### [Add-PmGroupMember](Add-PmGroupMember.md)
+Adds members to groups.
+
+### [Add-PmLicenseToPmLicensedGroup](Add-PmLicenseToPmLicensedGroup.md)
+{{ Fill in the Synopsis }}
 
 ### [Clear-OrchCache](Clear-OrchCache.md)
 Clear the in-memory cache in UiPathOrch drives.
@@ -77,12 +77,6 @@ Copies storage buckets.
 ### [Copy-OrchPackage](Copy-OrchPackage.md)
 {{ Fill in the Synopsis }}
 
-### [Copy-OrchPmRobotAccount](Copy-OrchPmRobotAccount.md)
-{{ Fill in the Synopsis }}
-
-### [Copy-OrchPmUser](Copy-OrchPmUser.md)
-Copies organizational users between organizations.
-
 ### [Copy-OrchProcess](Copy-OrchProcess.md)
 {{ Fill in the Synopsis }}
 
@@ -109,6 +103,12 @@ Copy the test schedules.
 
 ### [Copy-OrchWebhook](Copy-OrchWebhook.md)
 {{ Fill in the Synopsis }}
+
+### [Copy-PmRobotAccount](Copy-PmRobotAccount.md)
+{{ Fill in the Synopsis }}
+
+### [Copy-PmUser](Copy-PmUser.md)
+Copies organizational users between organizations.
 
 ### [Disable-OrchApiTrigger](Disable-OrchApiTrigger.md)
 Disables the API triggers.
@@ -317,33 +317,6 @@ Gets the versions of process packages.
 ### [Get-OrchPersonalWorkspace](Get-OrchPersonalWorkspace.md)
 Gets the personal workspaces.
 
-### [Get-OrchPmAuditLog](Get-OrchPmAuditLog.md)
-{{ Fill in the Synopsis }}
-
-### [Get-OrchPmExternalApiResource](Get-OrchPmExternalApiResource.md)
-{{ Fill in the Synopsis }}
-
-### [Get-OrchPmExternalApplication](Get-OrchPmExternalApplication.md)
-{{ Fill in the Synopsis }}
-
-### [Get-OrchPmGroup](Get-OrchPmGroup.md)
-{{ Fill in the Synopsis }}
-
-### [Get-OrchPmGroupMember](Get-OrchPmGroupMember.md)
-{{ Fill in the Synopsis }}
-
-### [Get-OrchPmLicensedGroup](Get-OrchPmLicensedGroup.md)
-Gets the group assigned with the User named license.
-
-### [Get-OrchPmLicensedUser](Get-OrchPmLicensedUser.md)
-{{ Fill in the Synopsis }}
-
-### [Get-OrchPmRobotAccount](Get-OrchPmRobotAccount.md)
-{{ Fill in the Synopsis }}
-
-### [Get-OrchPmUser](Get-OrchPmUser.md)
-{{ Fill in the Synopsis }}
-
 ### [Get-OrchProcess](Get-OrchProcess.md)
 Gets the processes.
 
@@ -413,6 +386,33 @@ Gets webhooks.
 ### [Get-OrchWebSetting](Get-OrchWebSetting.md)
 Gets the web settings.
 
+### [Get-PmAuditLog](Get-PmAuditLog.md)
+{{ Fill in the Synopsis }}
+
+### [Get-PmExternalApiResource](Get-PmExternalApiResource.md)
+{{ Fill in the Synopsis }}
+
+### [Get-PmExternalApplication](Get-PmExternalApplication.md)
+{{ Fill in the Synopsis }}
+
+### [Get-PmGroup](Get-PmGroup.md)
+{{ Fill in the Synopsis }}
+
+### [Get-PmGroupMember](Get-PmGroupMember.md)
+{{ Fill in the Synopsis }}
+
+### [Get-PmLicensedGroup](Get-PmLicensedGroup.md)
+Gets the group assigned with the User named license.
+
+### [Get-PmLicensedUser](Get-PmLicensedUser.md)
+{{ Fill in the Synopsis }}
+
+### [Get-PmRobotAccount](Get-PmRobotAccount.md)
+{{ Fill in the Synopsis }}
+
+### [Get-PmUser](Get-PmUser.md)
+{{ Fill in the Synopsis }}
+
 ### [Get-TmConfiguration](Get-TmConfiguration.md)
 {{ Fill in the Synopsis }}
 
@@ -446,7 +446,7 @@ Gets the test sets from projects in Test Manager.
 ### [Move-OrchFolderUser](Move-OrchFolderUser.md)
 Removes users assigned to a folder and assigns them to another folders.
 
-### [Move-OrchPmGroupMember](Move-OrchPmGroupMember.md)
+### [Move-PmGroupMember](Move-PmGroupMember.md)
 Moves users between two groups within an organization.
 
 ### [New-OrchBucket](New-OrchBucket.md)
@@ -454,12 +454,6 @@ Creates storage buckets.
 
 ### [New-OrchMachine](New-OrchMachine.md)
 Creates machines.
-
-### [New-OrchPmGroup](New-OrchPmGroup.md)
-Adds groups to the Identity server.
-
-### [New-OrchPmUser](New-OrchPmUser.md)
-Creates users to the organization.
 
 ### [New-OrchProcess](New-OrchProcess.md)
 Creates processes.
@@ -469,6 +463,12 @@ Creates queues.
 
 ### [New-OrchTrigger](New-OrchTrigger.md)
 Creates triggers.
+
+### [New-PmGroup](New-PmGroup.md)
+Adds groups to organizations.
+
+### [New-PmUser](New-PmUser.md)
+Creates users to the organization.
 
 ### [Open-OrchJob](Open-OrchJob.md)
 {{ Fill in the Synopsis }}
@@ -527,27 +527,6 @@ Removes the process packages.
 ### [Remove-OrchPersonalWorkspace](Remove-OrchPersonalWorkspace.md)
 Removes the personal workspace folders.
 
-### [Remove-OrchPmAllocationFromPmLicensedGroup](Remove-OrchPmAllocationFromPmLicensedGroup.md)
-Removes license allocations from users within license groups.
-
-### [Remove-OrchPmGroup](Remove-OrchPmGroup.md)
-{{ Fill in the Synopsis }}
-
-### [Remove-OrchPmGroupMember](Remove-OrchPmGroupMember.md)
-Removes members from groups.
-
-### [Remove-OrchPmLicensedGroup](Remove-OrchPmLicensedGroup.md)
-{{ Fill in the Synopsis }}
-
-### [Remove-OrchPmLicenseFromPmLicensedGroup](Remove-OrchPmLicenseFromPmLicensedGroup.md)
-{{ Fill in the Synopsis }}
-
-### [Remove-OrchPmRobotAccount](Remove-OrchPmRobotAccount.md)
-{{ Fill in the Synopsis }}
-
-### [Remove-OrchPmUser](Remove-OrchPmUser.md)
-Removes users registered with the Identity Server.
-
 ### [Remove-OrchProcess](Remove-OrchProcess.md)
 Remove the processes.
 
@@ -584,6 +563,27 @@ Removes the users.
 ### [Remove-OrchWebhook](Remove-OrchWebhook.md)
 Removes the webhooks.
 
+### [Remove-PmAllocationFromPmLicensedGroup](Remove-PmAllocationFromPmLicensedGroup.md)
+Removes license allocations from users within license groups.
+
+### [Remove-PmGroup](Remove-PmGroup.md)
+{{ Fill in the Synopsis }}
+
+### [Remove-PmGroupMember](Remove-PmGroupMember.md)
+Removes members from groups.
+
+### [Remove-PmLicensedGroup](Remove-PmLicensedGroup.md)
+{{ Fill in the Synopsis }}
+
+### [Remove-PmLicenseFromPmLicensedGroup](Remove-PmLicenseFromPmLicensedGroup.md)
+{{ Fill in the Synopsis }}
+
+### [Remove-PmRobotAccount](Remove-PmRobotAccount.md)
+{{ Fill in the Synopsis }}
+
+### [Remove-PmUser](Remove-PmUser.md)
+Removes users registered with organizations.
+
 ### [Remove-TmRequirement](Remove-TmRequirement.md)
 Removes the requirements from projects in Test Manager.
 
@@ -599,13 +599,13 @@ Reverts the package version of the processes to the last version.
 ### [Reset-OrchTestDataQueueItem](Reset-OrchTestDataQueueItem.md)
 Resets the consumption state of items in the test data queues.
 
-### [Resolve-OrchPmDirectoryNameBulk](Resolve-OrchPmDirectoryNameBulk.md)
+### [Resolve-PmDirectoryNameBulk](Resolve-PmDirectoryNameBulk.md)
 Resolves the names of directory entries.
 
 ### [Search-OrchDirectory](Search-OrchDirectory.md)
 Searches Directory.
 
-### [Search-OrchPmDirectory](Search-OrchPmDirectory.md)
+### [Search-PmDirectory](Search-PmDirectory.md)
 Searches Directory.
 
 ### [Set-OrchAsset](Set-OrchAsset.md)
@@ -617,11 +617,11 @@ Creates, updates, and removes the assets.
 ### [Set-OrchLocation](Set-OrchLocation.md)
 Sets the current location to the UiPathOrch module's installation directory.
 
-### [Set-OrchPmRobotAccount](Set-OrchPmRobotAccount.md)
-Creates or updates robot accounts in the Identity server.
-
 ### [Set-OrchRole](Set-OrchRole.md)
 Adds or updates a role.
+
+### [Set-PmRobotAccount](Set-PmRobotAccount.md)
+Creates or updates robot accounts in organizations.
 
 ### [Start-OrchJob](Start-OrchJob.md)
 {{ Fill in the Synopsis }}
@@ -641,9 +641,6 @@ Adds or updates a role.
 ### [Update-OrchMachine](Update-OrchMachine.md)
 Updates machines.
 
-### [Update-OrchPmUser](Update-OrchPmUser.md)
-Updates users.
-
 ### [Update-OrchProcess](Update-OrchProcess.md)
 Updates processes.
 
@@ -657,5 +654,8 @@ Updates queues.
 Updates triggers.
 
 ### [Update-OrchUser](Update-OrchUser.md)
+Updates users.
+
+### [Update-PmUser](Update-PmUser.md)
 Updates users.
 

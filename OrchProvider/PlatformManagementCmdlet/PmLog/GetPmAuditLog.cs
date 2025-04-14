@@ -6,7 +6,7 @@ using TPositional = UiPath.PowerShell.Positional.Empty;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Get, "OrchPmAuditLog")]
+[Cmdlet(VerbsCommon.Get, "PmAuditLog")]
 [OutputType(typeof(Entities.PmAuditLog))]
 public class GetPmAuditLogCommand : OrchestratorPSCmdlet
 {
@@ -56,7 +56,7 @@ public class GetPmAuditLogCommand : OrchestratorPSCmdlet
         else
         {
             // ここは return null としても適切に動作するようだが
-            // 別の version の Orchstrator でも動作するのか良く分からないので
+            // 別の version の Orchestrator でも動作するのか良く分からないので
             // ソート条件を明示しておく
             return "&sortBy=CreatedOn&sortOrder=desc";
         }
@@ -71,7 +71,7 @@ public class GetPmAuditLogCommand : OrchestratorPSCmdlet
         ulong skip = Skip ?? 0;
         ulong first = First ?? ulong.MaxValue;
 
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
 
         // すべてのパラメータが指定されていなければ、キャッシュの内容を返す
         bool bOutCache = (Skip is null && First is null);
