@@ -37,7 +37,7 @@ public class RemoveCalendarDateCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             var wpCalendarName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
             var paramExcludedDate = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete)

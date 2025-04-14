@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 
 // このエンドポイントからは空が返ってきてしまう。。
 // いったん非公開で残しておく。
-//[Cmdlet(VerbsCommon.Get, "OrchPmUserProfile")]
+//[Cmdlet(VerbsCommon.Get, "PmUserProfile")]
 [OutputType(typeof(Entities.UserProfile))]
 class GetPmUserProfileCommand : OrchestratorPSCmdlet
 {
@@ -17,7 +17,7 @@ class GetPmUserProfileCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
 
         foreach (var drive in drives)
         {

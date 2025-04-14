@@ -7,7 +7,7 @@ using TPositional = UiPath.PowerShell.Positional.Email_Destination;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Copy, "OrchPmUser", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.Copy, "PmUser", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.PmUser))]
 public class CopyPmUserCommand : OrchestratorPSCmdlet
 {
@@ -30,8 +30,8 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var srcDrive = OrchDriveInfo.GetOrchDrive(Path);
-        var dstDrives = OrchDriveInfo.EnumOrchDrives(Destination);
+        var srcDrive = OrchDriveInfo.GetPmDrive(Path);
+        var dstDrives = OrchDriveInfo.EnumPmDrives(Destination);
         var wpEmail = Email.ConvertToWildcardPatternList();
 
         #region コピーするユーザーの一覧を作成

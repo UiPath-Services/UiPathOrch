@@ -30,7 +30,7 @@ public class GetPersonalWorkspaceCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             // パラメータで選択済みの Name は、候補から除外する
             var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);

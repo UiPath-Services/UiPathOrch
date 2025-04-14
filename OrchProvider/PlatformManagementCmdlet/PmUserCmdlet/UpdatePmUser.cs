@@ -5,7 +5,7 @@ using TPositional = UiPath.PowerShell.Positional.Email;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsData.Update, "OrchPmUser", SupportsShouldProcess = true)]
+[Cmdlet(VerbsData.Update, "PmUser", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.PmUser))]
 public class UpdatePmUserCommand : OrchestratorPSCmdlet
 {
@@ -59,7 +59,7 @@ public class UpdatePmUserCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
         var wpEmail = Email.ConvertToWildcardPatternList();
 
         foreach (var drive in drives)

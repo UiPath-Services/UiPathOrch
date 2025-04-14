@@ -2,12 +2,11 @@
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Positional;
 using TPositional = UiPath.PowerShell.Positional.GroupName_Destination;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Copy, "OrchPmGroup", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.Copy, "PmGroup", SupportsShouldProcess = true)]
 class CopyPmGroupCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
@@ -85,8 +84,8 @@ class CopyPmGroupCommand : OrchestratorPSCmdlet
         GroupName = GroupName.Split1stValueByUnescapedCommas()?.ToArray();
         Destination = Destination.Split1stValueByUnescapedCommas()?.ToArray();
 
-        var srcDrive = OrchDriveInfo.GetOrchDrive(Path);
-        var dstDrives = OrchDriveInfo.EnumOrchDrives(Destination);
+        var srcDrive = OrchDriveInfo.GetPmDrive(Path);
+        var dstDrives = OrchDriveInfo.EnumPmDrives(Destination);
         var wpGroupName = GroupName.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();

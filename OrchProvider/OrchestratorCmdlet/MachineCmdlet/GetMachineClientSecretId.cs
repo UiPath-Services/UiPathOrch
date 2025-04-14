@@ -40,7 +40,7 @@ public class GetMachineClientSecretIdCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             // パラメータで選択済みの Name は、候補から除外する
             var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -81,7 +81,7 @@ public class GetMachineClientSecretIdCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 

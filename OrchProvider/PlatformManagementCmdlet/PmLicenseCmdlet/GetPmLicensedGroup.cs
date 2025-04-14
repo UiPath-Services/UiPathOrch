@@ -9,7 +9,7 @@ using TPositional = UiPath.PowerShell.Positional.GroupName_UserName;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Get, "OrchPmLicensedGroup")]
+[Cmdlet(VerbsCommon.Get, "PmLicensedGroup")]
 [OutputType(typeof(Entities.NuLicensedGroup))]
 [OutputType(typeof(Entities.NuLicensedGroupMember))]
 public class GetUserLicenseGroup: OrchestratorPSCmdlet
@@ -79,7 +79,7 @@ public class GetUserLicenseGroup: OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolvePmDrives(fakeBoundParameters);
 
             var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", TPositional.Parameters);
             var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);

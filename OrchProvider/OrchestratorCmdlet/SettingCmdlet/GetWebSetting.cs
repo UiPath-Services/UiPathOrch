@@ -31,7 +31,7 @@ public class GetWebSettingCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             // パラメータで選択済みの Key は、候補から除外する
             var wpKey = CreateWPListFromParameter(commandAst, "Key", TPositional.Parameters, wordToComplete);

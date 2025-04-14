@@ -7,7 +7,7 @@ using TPositional = UiPath.PowerShell.Positional.GroupName;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Get, "OrchPmGroup")]
+[Cmdlet(VerbsCommon.Get, "PmGroup")]
 [OutputType(typeof(Entities.PmGroup))]
 public class GetPmGroupCommand : OrchestratorPSCmdlet
 {
@@ -45,7 +45,7 @@ public class GetPmGroupCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
         var wpGroupName = GroupName.ConvertToWildcardPatternList();
 
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);

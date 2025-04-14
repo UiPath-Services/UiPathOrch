@@ -6,7 +6,7 @@ using TPositional = UiPath.PowerShell.Positional.Name_Destination;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Copy, "OrchPmRobotAccount", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.Copy, "PmRobotAccount", SupportsShouldProcess = true)]
 public class CopyPmRobotAccountCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
@@ -24,7 +24,7 @@ public class CopyPmRobotAccountCommand : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         // TODO: この例外は GetOrchDrive() の中からスローして良いのではないか？
-        var srcDrive = OrchDriveInfo.GetOrchDrive(Path!) ?? throw new Exception("Path is not OrchDrive.");
+        var srcDrive = OrchDriveInfo.GetPmDrive(Path!) ?? throw new Exception("Path is not OrchDrive.");
 
         var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
         var wpDisplayName = Name.ConvertToWildcardPatternList();

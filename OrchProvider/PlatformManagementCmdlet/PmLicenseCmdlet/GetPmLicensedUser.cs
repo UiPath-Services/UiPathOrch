@@ -7,7 +7,7 @@ using TPositional = UiPath.PowerShell.Positional.Name_Email;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Get, "OrchPmLicensedUser")]
+[Cmdlet(VerbsCommon.Get, "PmLicensedUser")]
 [OutputType(typeof(Entities.NuLicensedUser))]
 public class GetUserLicenseUser: OrchestratorPSCmdlet
 {
@@ -59,7 +59,7 @@ public class GetUserLicenseUser: OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolvePmDrives(fakeBoundParameters);
 
             var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
             var wpEmail = CreateWPListFromOtherParameters(commandAst, "Email", TPositional.Parameters);
@@ -96,7 +96,7 @@ public class GetUserLicenseUser: OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolvePmDrives(fakeBoundParameters);
 
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
             var wpEmail = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -126,7 +126,7 @@ public class GetUserLicenseUser: OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
 
         var wpName = Name.ConvertToWildcardPatternList();
         var wpEmail = Email.ConvertToWildcardPatternList();

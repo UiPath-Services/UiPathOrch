@@ -9,7 +9,7 @@ using TPositional = UiPath.PowerShell.Positional.UserName_GroupName;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Set, "OrchPmRobotAccount", DefaultParameterSetName = psDefault, SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.Set, "PmRobotAccount", DefaultParameterSetName = psDefault, SupportsShouldProcess = true)]
 [OutputType(typeof(PmRobotAccount))]
 public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
 {
@@ -85,7 +85,7 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolvePmDrives(fakeBoundParameters);
 
             // パラメータで選択済みのライブラリ名は、候補から除外する
             var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
@@ -124,7 +124,7 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolvePmDrives(fakeBoundParameters);
 
             // パラメータで選択済みのライブラリ名は、候補から除外する
             var wpGroupName = CreateWPListFromParameter(commandAst, "GroupName", TPositional.Parameters, wordToComplete);
@@ -166,7 +166,7 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
 
         // CSV インポート時に適切に処理できるようするため、GroupName を変更してはいけない
         string[] groupNames = GroupName ?? [];

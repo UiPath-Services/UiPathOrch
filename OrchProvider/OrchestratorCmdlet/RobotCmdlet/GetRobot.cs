@@ -35,7 +35,7 @@ public class GetRobotCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             var wpFullName = CreateWPListFromParameter(commandAst, "FullName", TPositional.Parameters, wordToComplete);
             var wpUsername = CreateWPListFromOtherParameters(commandAst, "Username", TPositional.Parameters);
@@ -70,7 +70,7 @@ public class GetRobotCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
             var wpUsername = CreateWPListFromParameter(commandAst, "Username", TPositional.Parameters, wordToComplete);

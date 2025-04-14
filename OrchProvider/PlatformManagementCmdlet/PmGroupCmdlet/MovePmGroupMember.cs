@@ -7,7 +7,7 @@ using TPositional = UiPath.PowerShell.Positional.GroupName_UserName_Destination;
 namespace UiPath.PowerShell.Commands;
 
 // -Type が未実装だけど、これで良いのかな。。
-[Cmdlet(VerbsCommon.Move, "OrchPmGroupMember", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.Move, "PmGroupMember", SupportsShouldProcess = true)]
 public class MoveOrchPmGroupMemberCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
@@ -45,7 +45,7 @@ public class MoveOrchPmGroupMemberCommand : OrchestratorPSCmdlet
         Destination = Destination.Split1stValueByUnescapedCommas()?.ToArray();
         Path = Path.Split1stValueByUnescapedCommas()?.ToArray();
 
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
         var wpGroupName = new WildcardPattern(GroupName, WildcardOptions.IgnoreCase);
 
         //var wpType = Type.ConvertToWildcardPatternList();

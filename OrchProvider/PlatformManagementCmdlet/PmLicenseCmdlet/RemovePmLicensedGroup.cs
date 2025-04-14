@@ -6,7 +6,7 @@ using TPositional = UiPath.PowerShell.Positional.GroupName;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Remove, "OrchPmLicensedGroup", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.Remove, "PmLicensedGroup", SupportsShouldProcess = true)]
 public class RemoveUserLicenseGroup: OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
@@ -20,7 +20,7 @@ public class RemoveUserLicenseGroup: OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
 
         var wpGroupName = GroupName
             .Split1stValueByUnescapedCommas()

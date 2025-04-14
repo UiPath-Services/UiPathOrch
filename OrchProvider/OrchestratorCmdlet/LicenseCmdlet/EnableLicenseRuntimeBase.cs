@@ -29,7 +29,7 @@ public class EnableLicenseRuntimeCommandBase<Enable> : OrchestratorPSCmdlet wher
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             // パラメータで選択された RobotType のみ対象とする
             var wpRobotTypes = CreateWPListFromOtherParameters(commandAst, "RobotType", TPositional.Parameters);

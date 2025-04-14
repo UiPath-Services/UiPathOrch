@@ -205,7 +205,14 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         }
     }
 
-    protected static List<OrchDriveInfo> ResolveDrives(IDictionary fakeBoundParameters)
+    protected static List<OrchDriveInfo> ResolvePmDrives(IDictionary fakeBoundParameters)
+    {
+        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+        var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+        return OrchDriveInfo.EnumPmDrives(paramPath);
+    }
+
+    protected static List<OrchDriveInfo> ResolveOrchDrives(IDictionary fakeBoundParameters)
     {
         // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
@@ -930,7 +937,7 @@ internal class CalendarNameCompleter<TPositional> : OrchArgumentCompleter where 
         IDictionary fakeBoundParameters)
     {
         // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
-        var drives = ResolveDrives(fakeBoundParameters);
+        var drives = ResolveOrchDrives(fakeBoundParameters);
 
         // パラメータで選択済みの Name は、候補から除外する
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -970,7 +977,7 @@ internal class CredentialStoreNameCompleter<TPositional> : OrchArgumentCompleter
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var drives = ResolveDrives(fakeBoundParameters);
+        var drives = ResolveOrchDrives(fakeBoundParameters);
 
         // パラメータで選択済みの Name は、候補から除外する
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -1043,7 +1050,7 @@ internal class MachineNameCompleter<TPositional> : OrchArgumentCompleter where T
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var drives = ResolveDrives(fakeBoundParameters);
+        var drives = ResolveOrchDrives(fakeBoundParameters);
 
         // パラメータで選択済みの Name は、候補から除外する
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -1083,7 +1090,7 @@ internal class MachineRobotUsersCompleter<TPositional> : OrchArgumentCompleter w
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var drives = ResolveDrives(fakeBoundParameters);
+        var drives = ResolveOrchDrives(fakeBoundParameters);
 
         // パラメータで選択済みの Name は、候補から除外する
         var wpRobotUsers = CreateWPListFromParameter(commandAst, "RobotUsers", TPositional.Parameters, wordToComplete);
@@ -1119,7 +1126,7 @@ internal class LibraryIdCompleter<TPositional> : OrchArgumentCompleter where TPo
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var drives = ResolveDrives(fakeBoundParameters);
+        var drives = ResolveOrchDrives(fakeBoundParameters);
         var hostFeed = GetSwitchParameterValue(commandAst, "HostFeed");
 
         // パラメータで選択済みの Id は、候補から除外する
@@ -1158,7 +1165,7 @@ internal class LibraryVersionCompleter<TPositional> : OrchArgumentCompleter wher
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var drives = ResolveDrives(fakeBoundParameters);
+        var drives = ResolveOrchDrives(fakeBoundParameters);
         var hostFeed = GetSwitchParameterValue(commandAst, "HostFeed");
 
         // パラメータで選択済みの Id は、候補から除外する
@@ -1407,7 +1414,7 @@ internal class RoleNameCompleter<TPositional> : OrchArgumentCompleter where TPos
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var drives = ResolveDrives(fakeBoundParameters);
+        var drives = ResolveOrchDrives(fakeBoundParameters);
 
         // パラメータで選択済みのライブラリ名は、候補から除外する
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -1441,7 +1448,7 @@ public class TenantUserUserNameCompleter<TPositional> : OrchArgumentCompleter wh
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var drives = ResolveDrives(fakeBoundParameters);
+        var drives = ResolveOrchDrives(fakeBoundParameters);
 
         // パラメータで選択済みのユーザー名は、候補から除外する
         var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -1482,7 +1489,7 @@ public class TenantUserFullNameCompleter<TPositional> : OrchArgumentCompleter wh
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var drives = ResolveDrives(fakeBoundParameters);
+        var drives = ResolveOrchDrives(fakeBoundParameters);
 
         // パラメータで選択された UserName のみ対象とする
         var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
@@ -1602,7 +1609,7 @@ internal class WebhookNameCompleter<TPositional> : OrchArgumentCompleter where T
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var drives = ResolveDrives(fakeBoundParameters);
+        var drives = ResolveOrchDrives(fakeBoundParameters);
 
         // パラメータで選択済みの Name は、候補から除外する
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -1654,7 +1661,7 @@ internal class PmDirectoryNameCompleter<TPositional> : OrchArgumentCompleter whe
 
         var names = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
-        var drives = ResolveDrives(fakeBoundParameters);
+        var drives = ResolvePmDrives(fakeBoundParameters);
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
         var results = ParallelResults.ForEach(drives, drive => drive.SearchPmDirectory(wordToComplete));
@@ -1731,7 +1738,7 @@ internal class UserNameInPmGroupCompleter<TPositional> : OrchArgumentCompleter w
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var drives = ResolveDrives(fakeBoundParameters);
+        var drives = ResolvePmDrives(fakeBoundParameters);
 
         // パラメータで選択済みの UserName は、候補から除外する
         var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -1791,7 +1798,7 @@ internal class TypeInPmGroupCompleter<TPositional> : OrchArgumentCompleter where
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var drives = ResolveDrives(fakeBoundParameters);
+        var drives = ResolvePmDrives(fakeBoundParameters);
 
         // パラメータで選択済みの UserName は、候補から除外する
         var wpType = CreateWPListFromParameter(commandAst, "Type", TPositional.Parameters, wordToComplete);
@@ -1985,7 +1992,7 @@ public class PmGroupNameCompleter<TPositional> : OrchArgumentCompleter where TPo
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var drives = ResolveDrives(fakeBoundParameters);
+        var drives = ResolvePmDrives(fakeBoundParameters);
 
         // パラメータで選択済みの Name は、候補から除外する
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -2019,7 +2026,7 @@ internal class PmRobotAccountNameCompleter<TPositional> : OrchArgumentCompleter 
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var drives = ResolveDrives(fakeBoundParameters);
+        var drives = ResolvePmDrives(fakeBoundParameters);
 
         // パラメータで選択済みの Name は、候補から除外する
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -2054,7 +2061,7 @@ internal class PmUserEmailCompleter<TPositional> : OrchArgumentCompleter where T
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var drives = ResolveDrives(fakeBoundParameters);
+        var drives = ResolvePmDrives(fakeBoundParameters);
 
         // パラメータで選択済みの Name は、候補から除外する
         var wpEmail = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -2091,7 +2098,7 @@ internal class PmLicensedGroupNameCompleter<TPositional> : OrchArgumentCompleter
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var drives = ResolveDrives(fakeBoundParameters);
+        var drives = ResolvePmDrives(fakeBoundParameters);
 
         // パラメータで選択済みの Name は、候補から除外する
         var wpGroupName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -2401,7 +2408,7 @@ internal class DestinationDriveCompleter<TPositional> : OrchArgumentCompleter wh
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var sourceDrives = ResolveDrives(fakeBoundParameters);
+        var sourceDrives = ResolveOrchDrives(fakeBoundParameters);
         var drives = OrchDriveInfo.EnumAllOrchDrives();
 
         // パラメータで選択済みのドライブは、候補から除外する

@@ -363,7 +363,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
                 yield break;
             }
 
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             // パラメータで選択済みのユーザー名は、候補から除外する
             var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
@@ -407,7 +407,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
             var wpRoles = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);

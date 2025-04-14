@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 
 // host admin のみ
 
-//[Cmdlet(VerbsCommon.Get, "OrchPmSetting")]
+//[Cmdlet(VerbsCommon.Get, "PmSetting")]
 //[OutputType(typeof(Entities.PmUser))]
 class GetPmSettingCommand : OrchestratorPSCmdlet
 {
@@ -61,7 +61,7 @@ class GetPmSettingCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
         //var wpUserName = UserName.ConvertToWildcardPatternList();
 
         foreach (var drive in drives)

@@ -7,7 +7,7 @@ using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Get, "OrchPmExternalApiResource")]
+[Cmdlet(VerbsCommon.Get, "PmExternalApiResource")]
 [OutputType(typeof(Entities.ExternalResource))]
 public class GetPmExternalApiResourceCommand : OrchestratorPSCmdlet
 {
@@ -29,7 +29,7 @@ public class GetPmExternalApiResourceCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolvePmDrives(fakeBoundParameters);
 
             // パラメータで選択済みの Name は、候補から除外する
             var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
@@ -56,7 +56,7 @@ public class GetPmExternalApiResourceCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
         var wpName = Name.ConvertToWildcardPatternList();
 
         using var results = OrchThreadPool.RunForEach(drives,

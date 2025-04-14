@@ -9,7 +9,7 @@ using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Search, "OrchPmDirectory")]
+[Cmdlet(VerbsCommon.Search, "PmDirectory")]
 [OutputType(typeof(PmDirectoryEntityInfo))]
 public class SearchPmDirectoryCommand : OrchestratorPSCmdlet
 {
@@ -37,7 +37,7 @@ public class SearchPmDirectoryCommand : OrchestratorPSCmdlet
                 yield break;
             }
 
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolvePmDrives(fakeBoundParameters);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
             var results = ParallelResults.ForEach(drives, drive => drive.SearchPmDirectory(name));
@@ -60,7 +60,7 @@ public class SearchPmDirectoryCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
 
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,

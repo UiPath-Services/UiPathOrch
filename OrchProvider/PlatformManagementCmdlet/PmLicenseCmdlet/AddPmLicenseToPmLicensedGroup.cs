@@ -9,7 +9,7 @@ using TPositional = UiPath.PowerShell.Positional.GroupName_License;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Add, "OrchPmLicenseToPmLicensedGroup", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.Add, "PmLicenseToPmLicensedGroup", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.UpdateLicensedGroupResponse))]
 public class AddPmLicenseToPmLicenseGroup: OrchestratorPSCmdlet
 {
@@ -48,7 +48,7 @@ public class AddPmLicenseToPmLicenseGroup: OrchestratorPSCmdlet
 
             var wpGroupName = CreateWPListFromParameter(commandAst, "GroupName", TPositional.Parameters, wordToComplete);
 
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolvePmDrives(fakeBoundParameters);
 
             bool bFound = false;
             foreach (var drive in drives)
@@ -85,7 +85,7 @@ public class AddPmLicenseToPmLicenseGroup: OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolvePmDrives(fakeBoundParameters);
 
             var groupNames = GetParameterValues(commandAst, "GroupName", TPositional.Parameters);
             var wpLicense = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -126,7 +126,7 @@ public class AddPmLicenseToPmLicenseGroup: OrchestratorPSCmdlet
     {
         _parameterSets ??= [];
 
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
 
         GroupName = GroupName.Split1stValueByUnescapedCommas()?.ToArray();
         var wpLicense = License.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();

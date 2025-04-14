@@ -7,7 +7,7 @@ using TPositional = UiPath.PowerShell.Positional.UserName;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Get, "OrchPmAuthenticationSetting")]
+[Cmdlet(VerbsCommon.Get, "PmAuthenticationSetting")]
 [OutputType(typeof(Entities.PmAuthenticationSetting))]
 public class GetPmAuthenticationSettingCommand : OrchestratorPSCmdlet
 {
@@ -30,7 +30,7 @@ public class GetPmAuthenticationSettingCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolvePmDrives(fakeBoundParameters);
 
             // パラメータで選択済みの Name は、候補から除外する
             var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
@@ -61,7 +61,7 @@ public class GetPmAuthenticationSettingCommand : OrchestratorPSCmdlet
     // TODO: まじめに実装しないと。キャッシュも作らないと。
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = OrchDriveInfo.EnumPmDrives(Path);
         var wpUserName = UserName.ConvertToWildcardPatternList();
 
         foreach (var drive in drives)

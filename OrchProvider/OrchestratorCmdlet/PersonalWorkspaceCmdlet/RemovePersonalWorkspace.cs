@@ -36,7 +36,7 @@ public class RemovePersonalWorkspaceCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
             var wpOwnerName = CreateWPListFromOtherParameters(commandAst, "OwnerName", TPositional.Parameters);
@@ -71,7 +71,7 @@ public class RemovePersonalWorkspaceCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolveDrives(fakeBoundParameters);
+            var drives = ResolveOrchDrives(fakeBoundParameters);
 
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
             var wpOwnerName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
