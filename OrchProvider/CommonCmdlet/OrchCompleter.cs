@@ -1822,6 +1822,40 @@ internal class TypeInPmGroupCompleter<TPositional> : OrchArgumentCompleter where
     }
 }
 
+internal class ExternalApplicationNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+{
+    public override IEnumerable<CompletionResult> CompleteArgument(
+        string commandName,
+        string parameterName,
+        string wordToComplete,
+        CommandAst commandAst,
+        IDictionary fakeBoundParameters)
+    {
+        var drives = ResolvePmDrives(fakeBoundParameters);
+
+        // パラメータで選択済みの Name は、候補から除外する
+        var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
+
+        var wp = CreateWPFromWordToComplete(wordToComplete);
+
+        var results = ParallelResults.ForEach(drives, drive => drive.PmExternalClients.Get());
+
+        foreach (var result in results)
+        {
+            if (result.Result is null) continue;
+
+            foreach (var e in result.Result
+                .Where(a => wp.IsMatch(a?.name))
+                .ExcludeByWildcards(a => a?.name!, wpName)
+                .OrderBy(a => a?.name))
+            {
+                string tooltip = e?.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(e?.name), e?.name, CompletionResultType.Text, tooltip);
+            }
+        }
+    }
+}
+
 internal class TestCaseNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
 {
     public override IEnumerable<CompletionResult> CompleteArgument(

@@ -85,7 +85,7 @@ public class RemovePmGroupCommand : OrchestratorPSCmdlet
     //            var groups = result.GetResult(cancelHandler.Token);
     //            if (groups is null) continue;
 
-    //            var drive = result.Source!;
+    //            var drive = result.Source;
     //            var partitionGlobalId = drive.GetPartitionGlobalId();
 
     //            foreach (var group in groups.Values

@@ -131,7 +131,7 @@ public class ExportLibraryCommand : OrchestratorPSCmdlet
             try
             {
                 var libraries = result.GetResult(cancelHandler.Token);
-                var drive = result.Source!; // Source プロパティを参照するのは、GetResult() の後にする必要がある
+                var drive = result.Source; // Source プロパティを参照するのは、GetResult() の後にする必要がある
 
                 foreach (var library in libraries!
                     .FilterByWildcards(l => l?.Id, wpId)

@@ -215,7 +215,7 @@ public class CopyLibraryCommand : OrchestratorPSCmdlet
         //    try
         //    {
         //        var entities = result.GetResult(cancelHandler.Token);
-        //        var srcDrive = result.Source!;
+        //        var srcDrive = result.Source;
 
         //        foreach (var library in entities!)
         //        {

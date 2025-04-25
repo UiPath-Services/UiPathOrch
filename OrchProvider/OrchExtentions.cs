@@ -365,6 +365,8 @@ public static class OrchStringExtensions
     // Generic method for nullable numeric types
     // ゼロは設定しない。CSV の空列を int? のパラメータで受け取ると、ゼロになってしまうため。
     // このメソッドを使えば、CSV で int のパラメータに空欄を指定してもゼロで既存データを上書きすることはない。
+    // TODO: いや、CSV でもコマンドラインでも、"" を指定した場合には null を設定すべきではないか？
+    // このメソッドは廃止して AssignNumberIfNotNull() で置換した方が良さそうな気がする。
     public static void AssignNumberIfNotNullOrZero<T, N>(this T target, N? value, Action<T, N?> setter) where N : struct, IComparable
     {
         if (value.HasValue && !value.Value.Equals(default(N)))
@@ -376,6 +378,7 @@ public static class OrchStringExtensions
     // ゼロを受け付けるメンバの場合には、こちらを使う。
     // CSV で空列を指定した場合には、パラメータにゼロが渡されるので注意が必要。
     // 既存の値が不明な場合には、CSV からその列を削除しておく。そうすれば、その列の int 型パラメータには null が渡される。
+    // TODO: cmdlet の int パラメータは、すべて string? に修正すべきだ。
     public static void AssignNumberIfNotNull<T, N>(this T target, N? value, Action<T, N?> setter) where N : struct, IComparable
     {
         if (value.HasValue)
@@ -384,12 +387,36 @@ public static class OrchStringExtensions
         }
     }
 
+    // string 値を int に変換して設定する。"" などの数値でない値を指定した場合には、null を設定する。
+    // null を指定した場合には何もしない
+    public static void AssignNumberIfNotNull<T>(this T target, string? value, Action<T, int?> setter)
+    {
+        if (value is not null)
+        {
+            if (int.TryParse(value, out var result))
+            {
+                setter(target, result);
+            }
+            else if (value == "")
+            {
+                setter(target, null);
+            }
+        }
+    }
+
     // Method for bool properties
     public static void AssignBoolIfNotNull<T>(this T target, string? value, Action<T, bool?> setter)
     {
-        if (value is not null && bool.TryParse(value, out var result))
+        if (value is not null)
         {
-            setter(target, result);
+            if (bool.TryParse(value, out var result))
+            {
+                setter(target, result);
+            }
+            else
+            {
+                setter(target, null);
+            }
         }
     }
 

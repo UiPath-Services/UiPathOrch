@@ -109,48 +109,15 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
                 var srcGroupIds = groupedUsers.Key;
                 var srcUsers = groupedUsers.Value; // 同じ srcGroups に所属する srcUser 一覧
 
-                // dstDrive の groupIds を作成
-                List<string> dstTargetGroups = [];
-                foreach (var srcGroupId in srcGroupIds)
-                {
-                    #region srcGroup の id から、sourceGroup の名前をひく
-                    if (!srcGroups.TryGetValue(srcGroupId, out var srcGroup))
-                    {
-                        WriteWarning($"{srcDrive.NameColonSeparator}: Group with id {srcGroupId} not found. Ignored.");
-                        continue;
-                    }
-                    #endregion
-
-                    #region srcGroup の名前から、dstGroup をひく
-                    var groupName = srcGroup.name!;
-                    if (!dstGroups.TryGetValue(groupName, out var dstGroup))
-                    {
-                        //WriteWarning($"{dstDrive.NameColonSeparator}: Group with name {groupName} not found. Ignored.");
-                        //continue;
-
-                        // この名前のグループがないので、作成してしまえ。
-                        dstGroup = this.CreatePmGroup(dstDrive, groupName);
-                        if (dstGroup is not null)
-                        {
-                            dstGroups[dstGroup.name!] = dstGroup;
-                        }
-                    }
-                    #endregion
-
-                    #region ひいた dstGroup の id を、dstUser に追加
-                    if (dstGroup?.id is not null)
-                    {
-                        dstTargetGroups.Add(dstGroup.id);
-                    }
-                    #endregion
-                }
 
                 #region payload を作成
                 var payload = new CreateUsersCommand()
                 {
                     users = [],
                     partitionGlobalId = dstDrive.GetPartitionGlobalId(),
-                    groupIDs = dstTargetGroups.ToArray()
+                    groupIDs = Core.OrchProvider.FindDstPmGroups(
+                        this, srcDrive, srcGroupIds,
+                        dstDrive, "Copying PmUser")?.Select(group => group.id!).ToArray()
                 };
                 #endregion
 
@@ -205,12 +172,7 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
 
                 try
                 {
-                    var response = dstDrive.OrchAPISession.CreatePmUserBulk(payload);
-                    dstDrive.PmUsers.ClearCache();
-                    dstDrive._dicPmGroups = null;
-                    dstDrive._dicPmGroups_Exception.ClearCache();
-                    dstDrive._dicSearchDirectory = null;
-                    dstDrive._dicSearchDirectory_Exception.ClearCache();
+                    var response = dstDrive.CreatePmUserBulk(payload);
 
                     if (response?.result?.succeeded ?? false)
                     {
@@ -223,7 +185,7 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
                 }
                 catch (Exception ex)
                 {
-                    WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, "Failed to add PmUsers", ex), "CopyPmUserError", ErrorCategory.InvalidOperation, dstDrive));
+                    WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, "Failed to new PmUsers", ex), "CopyPmUserError", ErrorCategory.InvalidOperation, dstDrive));
                 }
             }
         }

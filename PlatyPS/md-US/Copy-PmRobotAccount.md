@@ -8,7 +8,7 @@ schema: 2.0.0
 # Copy-PmRobotAccount
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+Copies robot accounts between organizations.
 
 ## SYNTAX
 
@@ -18,7 +18,7 @@ Copy-PmRobotAccount [-Name] <String[]> [-Destination] <String[]> [-Path <String>
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+If the groups to which the robot accounts belong do not exist in the destination organization, they are automatically created.
 
 Primary Endpoint:
 

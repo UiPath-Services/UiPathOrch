@@ -39,15 +39,16 @@ internal class DirectoryTypeItems : IDictionaryItems<int>
     };
 }
 
-//internal class DirectoryTypes2 : IDictionaryItems<string>
-//{
-//    public static Dictionary<string, string> Items { get; } = new()
-//    {
-//        { "DirectoryUser",        "user" },
-//        { "DirectoryGroup",       "group" },
-//        { "DirectoryApplication", "application" }
-//    };
-//}
+internal class DirectoryTypes2 : IDictionaryItems<string>
+{
+    public static Dictionary<string, string> Items { get; } = new()
+    {
+        { "DirectoryUser",        "DirectoryUser" },
+        { "DirectoryGroup",       "DirectoryGroup" },
+        { "DirectoryRobotUser",   "DirectoryRobotUser" },
+        { "DirectoryApplication", "Application" }
+    };
+}
 
 internal class AlertComponentItems : IDictionaryItems<int>
 {

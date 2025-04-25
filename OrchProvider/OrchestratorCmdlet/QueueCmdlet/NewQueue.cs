@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.New, "OrchQueue", SupportsShouldProcess = true)]
 [OutputType(typeof(QueueDefinition))]
-public class AddQueueCommand : OrchestratorPSCmdlet
+public class NewQueueCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NewQueueNameCompleter))]
@@ -214,7 +214,7 @@ public class AddQueueCommand : OrchestratorPSCmdlet
                     }
                     catch (Exception ex)
                     {
-                        WriteError(new ErrorRecord(new OrchException(target, ex), "AddQueueError", ErrorCategory.InvalidOperation, folder));
+                        WriteError(new ErrorRecord(new OrchException(target, ex), "NewQueueError", ErrorCategory.InvalidOperation, folder));
                     }
                 }
             }

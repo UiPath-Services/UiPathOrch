@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.New, "OrchMachine", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.CreatedMachine))]
-public class AddMachineCommand : OrchestratorPSCmdlet
+public class NewMachineCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NewMachineNameCompleter))]
@@ -102,7 +102,7 @@ public class AddMachineCommand : OrchestratorPSCmdlet
                 }
 
                 string target = System.IO.Path.Combine(drive.NameColonSeparator, name);
-                if (ShouldProcess(target, "Add Machine"))
+                if (ShouldProcess(target, "New Machine"))
                 {
                    List<RobotUser>? lstRobotUsers = null;
                    if (RobotUsers is not null)
@@ -154,7 +154,7 @@ public class AddMachineCommand : OrchestratorPSCmdlet
                     }
                     catch (Exception ex)
                     {
-                        WriteError(new ErrorRecord(new OrchException(target, ex), "AddMachineError", ErrorCategory.InvalidOperation, machine));
+                        WriteError(new ErrorRecord(new OrchException(target, ex), "NewMachineError", ErrorCategory.InvalidOperation, machine));
                     }
                 }
             }

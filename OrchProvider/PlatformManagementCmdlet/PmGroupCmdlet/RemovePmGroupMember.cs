@@ -163,17 +163,11 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
 
             try
             {
-                UpdateGroupCommand updateGroupCommand = new()
+                var updatedGroup = drive.RemoveMemberFromPmGroup(group.id, group.name, toBeRemoved?.Select(m => m.identifier));
+                if (updatedGroup is not null)
                 {
-                    partitionGlobalId = partitionGlobalId,
-                    name = group!.name,
-                    directoryUserIDsToAdd = [],
-                    directoryUserIDsToRemove = toBeRemoved.Select(m => m.identifier).ToList()!
-                };
-
-                drive.OrchAPISession.PutPmGroup(group.id, updateGroupCommand);
-                drive._dicPmGroups = null;
-                drive._dicPmGroups_Exception.ClearCache();
+                    WriteObject(updatedGroup);
+                }
             }
             catch (Exception ex)
             {

@@ -417,7 +417,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
                 // MachineRobots をデシリアライズ
                 schedule.MachineRobots = DeserializeMachineRobotSessions(this, drive, folder, schedule.GetPSPath(), MachineRobots);
 
-                if (ShouldProcess(target, "Add Trigger"))
+                if (ShouldProcess(target, "New Trigger"))
                 {
                     try
                     {
@@ -434,7 +434,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
                     }
                     catch (Exception ex)
                     {
-                        WriteError(new ErrorRecord(new OrchException(target, ex), "AddTriggerError", ErrorCategory.InvalidOperation, folder));
+                        WriteError(new ErrorRecord(new OrchException(target, ex), "NewTriggerError", ErrorCategory.InvalidOperation, folder));
                     }
                 }
             }

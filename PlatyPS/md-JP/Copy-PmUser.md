@@ -8,7 +8,7 @@ schema: 2.0.0
 # Copy-PmUser
 
 ## SYNOPSIS
-組織ユーザーを組織間でコピーします。
+組織のローカルユーザーを組織間でコピーします。
 
 ## SYNTAX
 
@@ -18,7 +18,7 @@ Copy-PmUser [-Email] <String[]> [-Destination] <String[]> [-Path <String>] [-Pro
 ```
 
 ## DESCRIPTION
-このコマンドレットは、組織ユーザーを組織間でコピーします。ユーザーが所属するグループがコピー先の組織に存在しない場合は、自動的に作成されます。
+ユーザーが所属するグループがコピー先の組織に存在しないときは、自動的に作成します。
 
 ## EXAMPLES
 
