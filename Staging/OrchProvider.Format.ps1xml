@@ -4320,6 +4320,45 @@
     </View>
 
     <View>
+      <Name>ExternalClientCreated</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.ExternalClientCreated</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>name</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>id</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>secret</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>name</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>id</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>secret</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
       <Name>PmAuditLog</Name>
       <ViewSelectedBy>
         <TypeName>UiPath.PowerShell.Entities.PmAuditLog</TypeName>
