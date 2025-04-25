@@ -52,7 +52,7 @@ internal class DriveGroupIdsComparer : IEqualityComparer<(OrchDriveInfo drive, s
 
 [Cmdlet(VerbsCommon.New, "PmUser", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.PmUser))]
-public class AddPmUserBulkCommand : OrchestratorPSCmdlet
+public class NewPmUserCommand : OrchestratorPSCmdlet
 {
     // Key: (drive, groupIds) Value: Dictionary<email, csvLine>
     Dictionary<(OrchDriveInfo drive, string[] groupNames), Dictionary<string, CsvLine>> _params = new(new DriveGroupIdsComparer());
@@ -206,11 +206,6 @@ public class AddPmUserBulkCommand : OrchestratorPSCmdlet
             try
             {
                 var response = drive.OrchAPISession.CreatePmUserBulk(payload);
-                drive.PmUsers.ClearCache();
-                drive._dicPmGroups = null;
-                drive._dicPmGroups_Exception.ClearCache();
-                drive._dicSearchDirectory = null;
-                drive._dicSearchDirectory_Exception.ClearCache();
 
                 if (response?.result?.succeeded ?? false)
                 {
@@ -223,7 +218,7 @@ public class AddPmUserBulkCommand : OrchestratorPSCmdlet
             }
             catch (Exception ex)
             {
-                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "AddPmUserBulkError", ErrorCategory.InvalidOperation, payload));
+                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "NewPmUserError", ErrorCategory.InvalidOperation, payload));
             }
         }
     }

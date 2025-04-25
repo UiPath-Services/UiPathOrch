@@ -18,7 +18,7 @@ Copy-PmUser [-Email] <String[]> [-Destination] <String[]> [-Path <String>] [-Pro
 ```
 
 ## DESCRIPTION
-This cmdlet copies organizational users between organizations. If the groups to which the users belong do not exist in the destination organization, they are automatically created.
+If the groups to which the users belong do not exist in the destination organization, they are automatically created.
 
 ## EXAMPLES
 

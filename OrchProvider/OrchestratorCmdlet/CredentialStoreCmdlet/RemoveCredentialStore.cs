@@ -80,7 +80,7 @@ public class RemoveCredentialStoreCommand : OrchestratorPSCmdlet
     //            var entities = result.GetResult(cancelHandler.Token);
     //            if (entities is null) continue;
 
-    //            var drive = result.Source!;
+    //            var drive = result.Source;
 
     //            foreach (var cs in entities.FilterByWildcards(c => c.Name!, wpName).OrderBy(c => c.Name))
     //            {

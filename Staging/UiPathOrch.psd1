@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.12.0'
+ModuleVersion = '0.9.12.1'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -311,6 +311,7 @@ CmdletsToExport = @(
 
 'Get-PmGroup',
 'New-PmGroup',
+'Copy-PmGroup',
 'Remove-PmGroup',
 
 'Get-PmGroupMember',
@@ -320,6 +321,8 @@ CmdletsToExport = @(
 
 'Get-PmExternalApiResource',
 'Get-PmExternalApplication',
+'Copy-PmExternalApplication',
+'Remove-PmExternalApplication',
 
 'Get-DuRole',
 'Get-DuDocumentType',
@@ -384,9 +387,37 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Cmdlets whose noun names begin with OrchPm (such as Get-OrchPmUser) can now also be used with PSDrives provided by the UiPathOrchDu and UiPathOrchTm providers. These drives are automatically mounted when the corresponding scopes (Document Understanding and Test Manager, respectively) are configured in the settings file. After importing the UiPathOrch module, you can verify the mounted drives using the Get-PSDrive cmdlet.
+        ReleaseNotes = '- Added Copy-PmGroup and Copy-PmExternalApplication cmdlets.
 
-- Along with this update, the cmdlet names with the OrchPm noun prefix have been renamed to use the shorter Pm prefix instead. For example, Get-OrchPmUser is now renamed to Get-PmUser. We apologize for any inconvenience caused by this change.
+- The following cmdlets are now available for copying organization entities. When all of these cmdlets are executed, the final set of entities created in the destination will be the same, regardless of the order in which the cmdlets are run:
+  - Copy-PmUser
+  - Copy-PmRobotAccount
+  - Copy-PmExternalApplication 
+  - Copy-PmGroup
+
+- All of these cmdlets share the same usage pattern. For example, the following command copies all local users from Orch1: to Orch2:
+
+  PS Orch1:\> Copy-PmUser * Orch2: -WhatIf
+
+  - If the output looks correct, remove the -WhatIf switch and run the command again.
+
+  - Note: If Orch1: and Orch2: belong to the same organization, no action will be taken.
+
+- Copy-PmUser, Copy-PmRobotAccount, and Copy-PmExternalApplication automatically add copied entities to groups with the same name in the destination. If no such group exists, one is automatically created.
+
+- Copy-PmGroup automatically adds local users, robot accounts, external applications, directory users, and directory groups with the same name to the copied group. However, if such entities with the same names do not exist in the destination, they will not be created automatically.
+
+- Added Remove-PmExternalApplication cmdlet.
+  - Note: External applications currently in use for the UiPathOrch connection cannot be deleted unless the -Force switch is specified.
+
+- Updated Remove-PmUser to prevent deletion of users currently used for connecting via non-confidential apps in UiPathOrch.
+
+- Fixed an issue where New-OrchProcess did not work in environments using API versions earlier than 19. This issue was introduced in version 0.9.10.9.
+  - Note: You can check the Web API version of the target Orchestrator using the Get-OrchPSDrive cmdlet.
+
+- Triggers copied with Copy-OrchTrigger or Copy-Item are now always created as disabled, even if the source trigger is enabled.
+
+- When using the Orch-UpdateUser cmdlet with parameters that modify ExecutionSettings (such as -ES_TracingLevel or -ES_StudioNotifyServer), the settings were previously applied only to the user''s UnattendedRobot property. Now, the cmdlet also applies the same values to the user''s RobotProvision property. Additionally, these property updates are no longer applied to users whose Type is DirectoryExternalApplication.
 '
 
         # Prerelease string of this module

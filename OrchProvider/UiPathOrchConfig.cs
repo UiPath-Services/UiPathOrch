@@ -17,6 +17,7 @@ public class Credentials
 
 public class ProxySettings
 {
+    public bool? UseDefaultWebProxy { get; set; }
     public string? Url { get; set; }
     public bool? BypassProxyOnLocal { get; set; }
     public bool? UseDefaultCredentials { get; set; }

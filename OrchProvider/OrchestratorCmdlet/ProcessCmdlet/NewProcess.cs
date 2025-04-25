@@ -13,7 +13,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.New, "OrchProcess", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.Release))]
-public class AddProcessCommand : OrchestratorPSCmdlet
+public class NewProcessCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PackageIdCompleter<TPositional>))]
@@ -325,7 +325,7 @@ public class AddProcessCommand : OrchestratorPSCmdlet
 
                 if (!versions.Any())
                 {
-                    WriteError(new ErrorRecord(new OrchException(target, $"No versions mathced with '{Version}'"), "AddProcessError", ErrorCategory.InvalidOperation, folder));
+                    WriteError(new ErrorRecord(new OrchException(target, $"No versions matched with '{Version}'"), "NewProcessError", ErrorCategory.InvalidOperation, folder));
                     continue;
                 }
 
@@ -446,7 +446,7 @@ public class AddProcessCommand : OrchestratorPSCmdlet
                     }
                 }
 
-                if (ShouldProcess(target + $":{latest.Version}", "Add Process"))
+                if (ShouldProcess(target + $":{latest.Version}", "New Process"))
                 {
                     try
                     {
@@ -461,7 +461,7 @@ public class AddProcessCommand : OrchestratorPSCmdlet
                     }
                     catch (Exception ex)
                     {
-                        WriteError(new ErrorRecord(new OrchException(target, ex), "AddProcessError", ErrorCategory.InvalidOperation, folder));
+                        WriteError(new ErrorRecord(new OrchException(target, ex), "NewProcessError", ErrorCategory.InvalidOperation, folder));
                     }
                 }
             }

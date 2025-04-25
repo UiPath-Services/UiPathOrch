@@ -53,6 +53,8 @@ public class CopyPmRobotAccountCommand : OrchestratorPSCmdlet
             {
                 foreach (var dstDrive in dstDrives)
                 {
+                    if (srcDrive.GetPartitionGlobalId() == dstDrive.GetPartitionGlobalId()) continue;
+
                     try
                     {
                         var dstPartitionGlobalId = dstDrive.GetPartitionGlobalId();
@@ -68,28 +70,24 @@ public class CopyPmRobotAccountCommand : OrchestratorPSCmdlet
 
                         string target = $"Item: {System.IO.Path.Combine(srcDrive!.NameColon, srcRobotAccount!.displayName!)} Destination: {dstDrive.NameColonSeparator}";
 
-                        // この名前のロボットを新規追加
-                        var cmd = new CreateRobotAccountCommand()
-                        {
-                            partitionGlobalId = dstPartitionGlobalId,
-                            name = srcRobotAccount.name,
-                            displayName = srcRobotAccount.displayName,
-                            groupIDsToAdd = Core.OrchProvider.FindDstPmGroups(
-                                this, srcDrive, srcRobotAccount.groupIds,
-                                dstDrive, "Copying PmRobotAccount")?.Select(group => group.id!).ToList()
-                        };
-
                         if (ShouldProcess(target, "Copy PmRobotAccount"))
                         {
                             try
                             {
-                                var newRobot = dstDrive.OrchAPISession.CreatePmRobot(cmd);
-                                dstDrive.PmRobotAccounts.ClearCache();
-                                dstDrive._dicSearchPmDirectory = null;
-                                dstDrive._dicSearchDirectory = null;
+                                // この名前のロボットを新規追加
+                                var cmd = new CreateRobotAccountCommand()
+                                {
+                                    partitionGlobalId = dstPartitionGlobalId,
+                                    name = srcRobotAccount.name,
+                                    displayName = srcRobotAccount.displayName,
+                                    groupIDsToAdd = Core.OrchProvider.FindDstPmGroups(
+                                        this, srcDrive, srcRobotAccount.groupIds,
+                                        dstDrive, "Copying PmRobotAccount")?.Select(group => group.id!).ToList()
+                                };
+
+                                var newRobot = dstDrive.CreatePmRobot(cmd);
                                 if (newRobot is not null)
                                 {
-                                    newRobot.Path = dstDrive.NameColonSeparator;
                                     WriteObject(newRobot);
                                 }
                             }

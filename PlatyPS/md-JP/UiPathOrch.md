@@ -104,11 +104,17 @@ API トリガーをコピーします。
 ### [Copy-OrchWebhook](Copy-OrchWebhook.md)
 Webhook をコピーします。
 
+### [Copy-PmExternalApplication](Copy-PmExternalApplication.md)
+外部アプリケーションを組織間でコピーします。
+
+### [Copy-PmGroup](Copy-PmGroup.md)
+組織のローカルグループを組織間でコピーします。
+
 ### [Copy-PmRobotAccount](Copy-PmRobotAccount.md)
-ロボットアカウントをコピーします。
+ロボットアカウントを組織間でコピーします。
 
 ### [Copy-PmUser](Copy-PmUser.md)
-組織ユーザーを組織間でコピーします。
+組織のローカルユーザーを組織間でコピーします。
 
 ### [Disable-OrchApiTrigger](Disable-OrchApiTrigger.md)
 API トリガーを無効にします。
@@ -565,6 +571,9 @@ Webhook を削除します。
 
 ### [Remove-PmAllocationFromPmLicensedGroup](Remove-PmAllocationFromPmLicensedGroup.md)
 ライセンスグループに含まれるユーザーから、ライセンスの割り当てを削除します。
+
+### [Remove-PmExternalApplication](Remove-PmExternalApplication.md)
+外部アプリケーションを削除します。
 
 ### [Remove-PmGroup](Remove-PmGroup.md)
 組織のローカルグループを削除します。

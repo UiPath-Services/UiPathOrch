@@ -4,6 +4,7 @@ using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
 using TPositional = UiPath.PowerShell.Positional.UserName;
 
@@ -90,13 +91,13 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
     public string? ES_LoginToConsole { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    public int? ES_ResolutionWidth { get; set; }
+    public string? ES_ResolutionWidth { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    public int? ES_ResolutionHeight { get; set; }
+    public string? ES_ResolutionHeight { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    public int? ES_ResolutionDepth { get; set; }
+    public string? ES_ResolutionDepth { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BoolCompleter))]
@@ -277,52 +278,61 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
 
                     postingUser.AssignUpdatePolicy(UpdatePolicyType, UpdatePolicyVersion);
 
-                    if (!string.IsNullOrEmpty(ES_TracingLevel) ||
-                        !string.IsNullOrEmpty(ES_StudioNotifyServer) ||
-                        !string.IsNullOrEmpty(ES_LoginToConsole) ||
-                        (ES_ResolutionWidth is not null && ES_ResolutionWidth != 0) ||
-                        (ES_ResolutionHeight is not null && ES_ResolutionHeight != 0) ||
-                        (ES_ResolutionDepth is not null && ES_ResolutionDepth != 0) ||
-                        !string.IsNullOrEmpty(ES_FontSmoothing) ||
-                        !string.IsNullOrEmpty(ES_AutoDownloadProcess))
+                    void UpdateExecutionSettings(ExecutionSettings executionSettings)
                     {
-                        postingUser.UnattendedRobot ??= new();
-
-                        postingUser.UnattendedRobot.ExecutionSettings ??= new();
-
-                        postingUser.UnattendedRobot.ExecutionSettings.AssignStringIfNotNullOrEmpty(
+                        executionSettings.AssignStringIfNotNullOrEmpty(
                             ES_TracingLevel, (es, v) =>
                             es.TracingLevel = v);
 
-                        postingUser.UnattendedRobot.ExecutionSettings.AssignBoolIfNotNull(
+                        executionSettings.AssignBoolIfNotNull(
                             ES_StudioNotifyServer, (es, v) =>
                             es.StudioNotifyServer = v);
 
-                        postingUser.UnattendedRobot.ExecutionSettings.AssignBoolIfNotNull(
+                        executionSettings.AssignBoolIfNotNull(
                             ES_LoginToConsole, (es, v) =>
                             es.LoginToConsole = v);
 
-                        postingUser.UnattendedRobot.ExecutionSettings.AssignNumberIfNotNullOrZero(
+                        executionSettings.AssignNumberIfNotNull(
                             ES_ResolutionWidth, (es, v) =>
                             es.ResolutionWidth = v);
 
-                        postingUser.UnattendedRobot.ExecutionSettings.AssignNumberIfNotNullOrZero(
+                        executionSettings.AssignNumberIfNotNull(
                             ES_ResolutionHeight, (es, v) =>
                             es.ResolutionHeight = v);
 
-                        postingUser.UnattendedRobot.ExecutionSettings.AssignNumberIfNotNullOrZero(
+                        executionSettings.AssignNumberIfNotNull(
                             ES_ResolutionDepth, (es, v) =>
                             es.ResolutionDepth = v);
 
-                        postingUser.UnattendedRobot.ExecutionSettings.AssignBoolIfNotNull(
+                        executionSettings.AssignBoolIfNotNull(
                             ES_FontSmoothing, (es, v) =>
                             es.FontSmoothing = v);
 
-                        postingUser.UnattendedRobot.ExecutionSettings.AssignBoolIfNotNull(
+                        executionSettings.AssignBoolIfNotNull(
                             ES_AutoDownloadProcess, (es, v) =>
                             es.AutoDownloadProcess = v);
+                    }
 
-                        // TODO: RobotProvision.ExecutionSettings も同じように修正する必要はあるか？
+                    if (postingUser.Type != "DirectoryExternalApplication" && (
+                        ES_TracingLevel is not null ||
+                        ES_StudioNotifyServer is not null ||
+                        ES_LoginToConsole is not null ||
+                        ES_ResolutionWidth is not null ||
+                        ES_ResolutionHeight is not null ||
+                        ES_ResolutionDepth is not null ||
+                        ES_FontSmoothing is not null ||
+                        ES_AutoDownloadProcess is not null))
+                    {
+                        // UnattendedRobot.ExecutionSetting と合わせて、
+                        // RobotProvision.ExecutionSettings も同じように更新するように修正した。
+                        postingUser.RobotProvision ??= new();
+                        postingUser.RobotProvision.ExecutionSettings ??= new();
+                        UpdateExecutionSettings(postingUser.RobotProvision.ExecutionSettings);
+
+                        postingUser.UnattendedRobot ??= new();
+                        postingUser.UnattendedRobot.ExecutionSettings ??= new();
+                        UpdateExecutionSettings(postingUser.UnattendedRobot.ExecutionSettings);
+
                         //if (postingUser.type == 3) // robot の場合
                         //{
 

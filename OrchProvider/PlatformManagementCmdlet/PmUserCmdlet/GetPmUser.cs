@@ -127,7 +127,7 @@ public class GetPmUserCommand : OrchestratorPSCmdlet
 
                 if (writer is not null)
                 {
-                    var drive = result.Source!;
+                    var drive = result.Source;
                     WriteCsvContent(writer, drive, targetUsers);
                 }
                 else

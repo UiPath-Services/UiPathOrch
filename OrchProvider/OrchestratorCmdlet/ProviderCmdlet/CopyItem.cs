@@ -78,15 +78,16 @@ public static class IWritableHostExtensions
     // 例外処理とコンソールへのエラーメッセージ出力が不要の場合には、drive.CreatePmGroup() を直接呼び出してほしい。
     internal static PmGroup? CreatePmGroup(this IWritableHost _this, OrchDriveInfo drive, string? groupName, IEnumerable<string>? memberIds = null)
     {
+        PmGroup ret = null;
         try
         {
-            drive.CreatePmGroup(groupName, memberIds);
+            ret = drive.CreatePmGroup(groupName, memberIds);
         }
         catch (Exception ex)
         {
             _this.WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, $"Failed to create PmGroup '{groupName}'", ex), "AddPmGroupError", ErrorCategory.InvalidOperation, drive));
         }
-        return null;
+        return ret;
     }
 }
 
@@ -901,12 +902,11 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
     // コピー先にグループがない場合には、同じ名前のグループを作成する
-    // TODO: List<PmGroup> を返すようにした方が、コード保守が安全になるような気がする
-    internal static IEnumerable<PmGroup>? FindDstPmGroups(IWritableHost _this,
+    internal static List<PmGroup>? FindDstPmGroups(IWritableHost _this,
         OrchDriveInfo srcDrive, IEnumerable<string>? srcPmGroupIds,
         OrchDriveInfo dstDrive, string msg)
     {
-        if (srcPmGroupIds is null) yield break;
+        if (srcPmGroupIds is null) return null;
 
         string target = srcDrive.NameColonSeparator;
         ICollection<PmGroup>? srcPmGroups = null;
@@ -917,12 +917,12 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         catch (Exception ex)
         {
             _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "GetPmGroupError", ErrorCategory.InvalidOperation, dstDrive));
-            yield break;
+            return null;
         }
         if (srcPmGroups is null)
         {
             _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: Failed to retrieve PmGroup."), "GetPmGroupError", ErrorCategory.InvalidOperation, dstDrive));
-            yield break;
+            return null;
         }
 
         target = dstDrive.NameColonSeparator;
@@ -934,14 +934,15 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         catch (Exception ex)
         {
             _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "GetPmGroupError", ErrorCategory.InvalidOperation, dstDrive));
-            yield break;
+            return null;
         }
         if (dstPmGroups is null)
         {
             _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: Failed to retrieve PmGroup."), "GetPmGroupError", ErrorCategory.InvalidOperation, dstDrive));
-            yield break;
+            return null;
         }
 
+        List<PmGroup> ret = [];
         foreach (var srcPmGroupId in srcPmGroupIds)
         {
             var srcPmGroup = srcPmGroups.FirstOrDefault(g => g?.id == srcPmGroupId);
@@ -957,8 +958,9 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 dstPmGroup = _this.CreatePmGroup(dstDrive, srcPmGroup.name);
                 if (dstPmGroup is null) continue;
             }
-            yield return dstPmGroup;
+            ret.Add(dstPmGroup);
         }
+        return ret;
     }
 
     internal static CredentialStore? FindDstCredentialStore(IWritableHost _this,
@@ -1930,6 +1932,16 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 postingTrigger.StartProcessCronSummary = null;
                 postingTrigger.PackageName = null;
                 if (postingTrigger.SpecificPriorityValue.HasValue) postingTrigger.JobPriority = null;
+
+                // API で取得したトリガーの Enabled は null になることはないようだ。
+                // また、Enabled を null としてトリガーを POST すると、この Enabled は true になるようだ。
+                if (postingTrigger.Enabled.GetValueOrDefault())
+                {
+                    // コピー元のトリガーが true である場合に限り警告
+                    _this.WriteWarning($"'{newFolder.GetPSPath()}\\{srcTrigger.Name}': This trigger will be disabled. Please enable it if necessary.");
+                }
+                // どんな場合であれ、false を代入しておく方が安全だ。
+                postingTrigger.Enabled = false; // コピーしたエンティティは無効にしておく
 
                 // キューIDを移行
                 // TODO: この条件式不要、中身だけあればいい気がする

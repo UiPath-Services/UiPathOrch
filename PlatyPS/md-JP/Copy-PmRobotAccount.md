@@ -8,7 +8,7 @@ schema: 2.0.0
 # Copy-PmRobotAccount
 
 ## SYNOPSIS
-ロボットアカウントをコピーします。
+ロボットアカウントを組織間でコピーします。
 
 ## SYNTAX
 
@@ -18,7 +18,7 @@ Copy-PmRobotAccount [-Name] <String[]> [-Destination] <String[]> [-Path <String>
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+ロボットアカウントが所属するグループがコピー先の組織にないときは、自動的に作成します。
 
 主に呼び出すエンドポイント: 
 

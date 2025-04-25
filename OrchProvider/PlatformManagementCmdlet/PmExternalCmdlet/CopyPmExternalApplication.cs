@@ -1,0 +1,137 @@
+﻿using System.Management.Automation;
+using UiPath.PowerShell.Completer;
+using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
+using TPositional = UiPath.PowerShell.Positional.Name_Destination;
+
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsCommon.Copy, "PmExternalApplication", SupportsShouldProcess = true)]
+[OutputType(typeof(Entities.ExternalClientCreated))]
+public class CopyPmExternalApplicationCommand : OrchestratorPSCmdlet
+{
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(ExternalApplicationNameCompleter<TPositional>))]
+    [SupportsWildcards]
+    public string[]? Name { get; set; }
+
+    [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(DestinationDriveCompleter<TPositional>))]
+    public string[]? Destination { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    public string? Path { get; set; }
+
+    protected override void ProcessRecord()
+    {
+        var srcDrive = OrchDriveInfo.GetPmDrive(Path);
+        var dstDrives = OrchDriveInfo.EnumPmDrives(Destination.Split1stValueByUnescapedCommas());
+        var wpName = Name.ConvertToWildcardPatternList();
+
+        var srcClients = srcDrive.PmExternalClients.Get();
+        var srcPartitionGlobalId = srcDrive.GetPartitionGlobalId();
+        if (string.IsNullOrEmpty(srcPartitionGlobalId)) return;
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var srcApp in srcClients
+            .FilterByWildcards(app => app?.name, wpName)
+            .OrderBy(app => app.name))
+        {
+            string target = srcApp.GetPSPath();
+            foreach (var dstDrive in dstDrives)
+            {
+                var dstPartitionGlobalId = dstDrive.GetPartitionGlobalId();
+                if (string.IsNullOrEmpty(dstPartitionGlobalId)) continue;
+                if (srcPartitionGlobalId == dstPartitionGlobalId) continue;
+
+                if (ShouldProcess(target, "Copy ExternalApplication"))
+                {
+                    try
+                    {
+                        #region 同名のアプリが宛先組織にあればスキップ
+                        // API 側でエラーにならないので一応やっとくか。。
+                        var dstApps = dstDrive.PmExternalClients.Get();
+                        var dstApp = dstApps.FirstOrDefault(src => string.Compare(src.name, srcApp.name, true) == 0);
+                        if (dstApp is not null)
+                        {
+                            WriteWarning($"\"{srcApp.GetPSPath()}\": An external application named '{srcApp.name}' already exists in \"{dstDrive.NameColonSeparator}\".");
+                            continue;
+                        }
+                        #endregion
+
+                        ExternalClient detailedClient = srcDrive.OrchAPISession.GetPmExternalClient(srcPartitionGlobalId, srcApp.id ?? "");
+                        if (detailedClient is null) continue;
+
+                        CreateExternalClientCommand cmd = new()
+                        {
+                            partitionGlobalId = dstDrive.GetPartitionGlobalId(),
+                            name = detailedClient.name,
+                            isConfidential = detailedClient.isConfidential,
+                            redirectUri = detailedClient.redirectUri,
+                            scopes = detailedClient.resources?.SelectMany(r => r.scopes!)?.Select(s => new ExternalScope()
+                            {
+                                name = s.name,
+                                type = s.type
+                            }).ToArray()
+                        };
+
+                        var newApp = dstDrive.OrchAPISession.PostPmExternalClient(cmd);
+                        if (newApp is null)
+                        {
+                            WriteWarning($"\"{dstDrive.NameColonSeparator}\": Failed to create an external application '{srcApp.name}'.");
+                            continue;
+                        }
+
+                        newApp.Path = dstDrive.NameColonSeparator;
+                        WriteObject(newApp);
+                        dstDrive.PmExternalClients.ClearCache();
+
+                        // 非機密アプリはグループに所属できないので、後続の処理は不要
+                        if (!newApp.isConfidential.GetValueOrDefault())
+                        {
+                            continue;
+                        }
+
+                        // グループを探して追加しないと。。
+                        var dirEntries = dstDrive.PmBulkResolveByName("application", [newApp], app => app.name!);
+                        var newAppDirEntry = dirEntries.Values.FirstOrDefault(e => string.Compare(e?.name, newApp.name, true) == 0);
+                        if (newAppDirEntry is null) continue;
+                        var srcGroups = srcDrive.GetPmGroups();
+                        foreach (var srcGroup in srcGroups.Values)
+                        {
+                            try
+                            {
+                                var detailedSrcGroup = srcDrive.GetPmGroup(srcGroup.id);
+                                if (detailedSrcGroup?.members?.Any(m => string.Compare(m.name, srcApp.name, true) == 0) ?? false)
+                                {
+                                    // srcApp は srcGroup に所属している
+                                    // 同名のグループを dstDrive で検索し、なければ同名のグループを dstDrive に追加
+                                    var dstGroups = dstDrive.GetPmGroups().Values;
+                                    var dstGroup = dstGroups.FirstOrDefault(g => string.Compare(g.name, srcGroup.name, true) == 0);
+                                    if (dstGroup is null) // dstDrive に新規グループを作成して、newApp.id を追加
+                                    {
+                                        dstGroup = dstDrive.CreatePmGroup(srcGroup.name, [newAppDirEntry.identifier!]);
+                                    }
+                                    else // dstDrive の既存グループに newApp を追加
+                                    {
+                                        dstDrive.AddMemberToPmGroup(dstGroup.id, dstGroup.name, [newAppDirEntry.identifier]);
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                string msg = OrchException.ExtractMessage(ex);
+                                WriteWarning($"\"{dstDrive.NameColonSeparator}\": Failed to add {newApp.name} to PmGroup {srcGroup.name}.");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteError(new ErrorRecord(new OrchException(dstDrive, ex), "PostPmExternalApplicationError", ErrorCategory.InvalidOperation, dstDrive));
+                    }
+                }
+            }
+        }
+    }
+}

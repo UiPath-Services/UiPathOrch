@@ -144,27 +144,37 @@ public partial class OrchAPISession : IDisposable
         if (drive._psDrive.Proxy?.Enabled ?? false)
         {
             HttpClientHandler handler;
+            IWebProxy iWebProxy;
             try
             {
-                Uri proxyUri = new(drive._psDrive.Proxy.Url ?? "");
-
-                var proxy = new WebProxy
+                if (drive._psDrive.Proxy.UseDefaultWebProxy.GetValueOrDefault())
                 {
-                    Address = proxyUri,
-                    BypassProxyOnLocal = drive._psDrive.Proxy.BypassProxyOnLocal ?? true,
-                    UseDefaultCredentials = drive._psDrive.Proxy.UseDefaultCredentials ?? false
-                };
-
-                if (drive._psDrive.Proxy?.Credentials is not null && !proxy.UseDefaultCredentials)
+                    iWebProxy = WebRequest.DefaultWebProxy;
+                }
+                else
                 {
-                    proxy.Credentials = new NetworkCredential(
-                        userName: drive._psDrive.Proxy.Credentials.Username,
-                        password: drive._psDrive.Proxy.Credentials.Password);
+                    Uri proxyUri = new(drive._psDrive.Proxy.Url ?? "");
+
+                    var proxy = new WebProxy
+                    {
+                        Address = proxyUri,
+                        BypassProxyOnLocal = drive._psDrive.Proxy.BypassProxyOnLocal ?? true,
+                        UseDefaultCredentials = drive._psDrive.Proxy.UseDefaultCredentials ?? false
+                    };
+
+                    if (drive._psDrive.Proxy?.Credentials is not null && !proxy.UseDefaultCredentials)
+                    {
+                        proxy.Credentials = new NetworkCredential(
+                            userName: drive._psDrive.Proxy.Credentials.Username,
+                            password: drive._psDrive.Proxy.Credentials.Password);
+                    }
+
+                    iWebProxy = proxy;
                 }
 
                 handler = new HttpClientHandler
                 {
-                    Proxy = proxy,
+                    Proxy = iWebProxy,
                     UseProxy = true
                 };
 
@@ -1544,7 +1554,17 @@ public partial class OrchAPISession : IDisposable
         if (release.RetentionPeriod      == 0) release.RetentionPeriod      = null;
         if (release.StaleRetentionPeriod == 0) release.StaleRetentionPeriod = null;
 
-        // TODO: ApiVersion < 19 のとき、StaleRetention に null を設定すべきではないか？
+        // TODO: この条件は正しいか？
+        // ApiVersion = 17: Retention はある、StaleRetention はない
+        if (ApiVersion < 19)
+        {
+            release.StaleRetentionPeriod = null;
+            release.StaleRetentionAction = null;
+            if (release.ProcessSettings is not null)
+            {
+                release.ProcessSettings.AutopilotForRobots = null;
+            }
+        }
 
         // OC 22.10.1 (15.0) で動作確認済み POST /odata/Releases
         // OC 23.4.0 (16.0) で動作確認済み POST /odata/Releases
@@ -2783,7 +2803,7 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerablePortal<NuLicensedUser>("/portal_/api/license/accountant/UserLicense/user/page");
     }
 
-    private static readonly JsonSerializerOptions jsoMemberConverter = new()
+    internal static readonly JsonSerializerOptions jsoMemberConverter = new()
     {
         Converters = { new MemberConverter() }
     };
@@ -2861,9 +2881,26 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerableWithoutPagingIdentity<ExternalResource>("/api/ExternalApiResource") ?? [];
     }
 
-    public IEnumerable<ExternalClient> GetPmExternalClient(string partitionGlobalId)
+    public IEnumerable<ExternalClient> GetPmExternalClients(string partitionGlobalId)
     {
         return GetEnumerableWithoutPagingIdentity<ExternalClient>($"/api/ExternalClient/{partitionGlobalId}") ?? [];
+    }
+
+    public ExternalClient? GetPmExternalClient(string? partitionGlobalId, string id)
+    {
+        return HttpRequestIdentity<ExternalClient>(HttpMethod.Get, $"/api/ExternalClient/{partitionGlobalId}/{id}");
+    }
+
+    // これは、OrchDriveInfo にラッパーメソッドを作成しなくても良いかな。。
+    public ExternalClientCreated? PostPmExternalClient(CreateExternalClientCommand app)
+    {
+        return HttpRequestIdentity<ExternalClientCreated>(HttpMethod.Post, "/api/ExternalClient", null, app);
+    }
+
+    // 何も返さない
+    public void DeletePmExternalClient(string partitionGlobalId, string id)
+    {
+        HttpRequestIdentity(HttpMethod.Delete, $"/api/ExternalClient/{partitionGlobalId}/{id}");
     }
 
     // Forbidden for external app

@@ -73,6 +73,7 @@ public class OrchPSDrive
         {
             ProxySettings = new()
             {
+                UseDefaultWebProxy = drive._psDrive.Proxy.UseDefaultWebProxy,
                 Url = drive._psDrive.Proxy.Url,
                 BypassProxyOnLocal = drive._psDrive.Proxy.BypassProxyOnLocal,
                 UseDefaultCredentials = drive._psDrive.Proxy.UseDefaultCredentials,
@@ -897,6 +898,8 @@ public class UserNotificationSubscription : IEquatable<UserNotificationSubscript
     public bool? Export { get; set; }
     public bool? RateLimitsDaily { get; set; }
     public bool? RateLimitsRealTime { get; set; }
+    public bool? AutopilotForRobotsDetectedIssues { get; set; }
+    public bool? Webhooks { get; set; }
 
     public bool Equals(UserNotificationSubscription? other)
     {
@@ -913,7 +916,9 @@ public class UserNotificationSubscription : IEquatable<UserNotificationSubscript
                Serverless == other.Serverless &&
                Export == other.Export &&
                RateLimitsDaily == other.RateLimitsDaily &&
-               RateLimitsRealTime == other.RateLimitsRealTime;
+               RateLimitsRealTime == other.RateLimitsRealTime &&
+               AutopilotForRobotsDetectedIssues == other.AutopilotForRobotsDetectedIssues &&
+               Webhooks == other.Webhooks;
     }
 
     // object.Equals のオーバーライド
@@ -978,6 +983,7 @@ public class User : IEquatable<User>
     public bool? IsExternalLicensed { get; set; }
     public UserRole[]? UserRoles { get; set; }
     public string[]? RolesList { get; set; }
+    // TODO: ExternalRoles がない。
     public string[]? LoginProviders { get; set; }
     public List<OrganizationUnit>? OrganizationUnits { get; set; } // deprecated in V19.0
     public int? TenantId { get; set; }
@@ -3499,6 +3505,17 @@ public class UpdateRobotAccountCommand
     public List<string>? groupIDsToRemove { get; set; } // Guid
 }
 
+// CreateExternalClientCommand
+public class CreateExternalClientCommand
+{
+    public string? partitionGlobalId { get; set; }
+    public string? name { get; set; }
+    public bool? isConfidential { get; set; }
+    public string? redirectUri { get; set; }
+    public ExternalScope[]? scopes { get; set; }
+    //public xxx? clientCertificates
+}
+
 // CreateUserCommandBase
 public class CreateUserCommandBase
 {
@@ -3810,6 +3827,16 @@ public class ExternalResource
     public ExternalScope[]? scopes { get; set; }
 }
 
+// SecretDto
+public class Secret
+{
+    public Int64 id { get; set; }
+    public string? description { get; set; }
+    public string? secret { get; set; }
+    public DateTime? creationTime { get; set; }
+    public DateTime? expiryTime { get; set; }
+}
+
 // ExternalClientDto
 public class ExternalClient
 {
@@ -3821,6 +3848,13 @@ public class ExternalClient
     public bool? isConfidential { get; set; }
     public string? redirectUri { get; set; }
     public ExternalResource[]? resources { get; set; }
+    public Secret[]? secrets { get; set; }
+}
+
+// Copy-PmExternalApplication の返り値として使用
+// 既定のビューを変更するために必要
+public class ExternalClientCreated: ExternalClient
+{
 }
 
 // ExternalIdentityProviderDto

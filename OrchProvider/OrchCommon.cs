@@ -174,7 +174,8 @@ public class ConsoleCancelHandler : IDisposable
 public class OrchTask<TSource, TResult> : IDisposable
 {
     public ManualResetEventSlim CompletedEvent { get; }
-    public TSource? Source { get; private set; }
+    private TSource? _source;
+    public TSource Source => _source ?? throw new InvalidOperationException("Call GetResult() before accessing Source.");
     public string? Path { get; private set; }
     public object? Target { get; private set; }
     public TResult? Result { get; private set; }
@@ -187,14 +188,14 @@ public class OrchTask<TSource, TResult> : IDisposable
 
     public void SetResult(TSource source, TResult result)
     {
-        Source = source;
+        _source = source;
         Result = result;
         CompletedEvent.Set(); // 処理が完了したことを示す
     }
 
     public void SetException(TSource source, string path, object target, Exception ex)
     {
-        Source = source;
+        _source = source;
         Path = path;
         Target = target;
         Exception = ex;

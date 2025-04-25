@@ -56,7 +56,7 @@ public class AddPmGroupCommand : OrchestratorPSCmdlet
                 cancelHandler.Token.ThrowIfCancellationRequested();
 
                 string target = System.IO.Path.Combine(drive.NameColonSeparator, groupName);
-                if (ShouldProcess(target, "Add PmGroup"))
+                if (ShouldProcess(target, "New PmGroup"))
                 {
                     try
                     {
@@ -68,7 +68,7 @@ public class AddPmGroupCommand : OrchestratorPSCmdlet
                     }
                     catch (Exception ex)
                     {
-                        WriteError(new ErrorRecord(new OrchException(target, ex), "AddPmGroupError", ErrorCategory.InvalidOperation, drive));
+                        WriteError(new ErrorRecord(new OrchException(target, ex), "NewPmGroupError", ErrorCategory.InvalidOperation, drive));
                     }
                 }
             }

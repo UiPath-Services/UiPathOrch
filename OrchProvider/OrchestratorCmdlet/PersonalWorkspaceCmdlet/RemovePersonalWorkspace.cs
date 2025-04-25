@@ -126,7 +126,7 @@ public class RemovePersonalWorkspaceCommand : OrchestratorPSCmdlet
                 var wss = result.GetResult(cancelHandler.Token);
                 if (wss is null) continue;
 
-                var drive = result.Source!;
+                var drive = result.Source;
 
                 foreach (var ws in wss
                     .Where(ws => ws is not null && ws.Id is not null)

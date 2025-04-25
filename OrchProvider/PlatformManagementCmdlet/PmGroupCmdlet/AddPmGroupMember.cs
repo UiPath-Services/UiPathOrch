@@ -35,7 +35,7 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 
-    private static List<string> GetExistingMemberIds(List<OrchDriveInfo> drives, List<WildcardPattern>? wpGroupName)
+    private static void CacheExistingMemberIds(List<OrchDriveInfo> drives, List<WildcardPattern>? wpGroupName)
     {
         var results = ParallelResults.ForEach(drives, drive =>
         {
@@ -44,19 +44,6 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
                 .OrderBy(g => g?.name);
             return ParallelResults.ForEach(groups, group => drive.GetPmGroup(group?.id));
         });
-
-        List<string> existingMemberIds = [];
-        foreach (var result in results)
-        {
-            if (result.Result is null) continue;
-
-            foreach (var group in result.Result)
-            {
-                if (group.Result is null) continue;
-                existingMemberIds.AddRange(group.Result.members?.Select(m => m.identifier!) ?? []);
-            }
-        }
-        return existingMemberIds;
     }
 
     private class PmUserNameCompleter : OrchArgumentCompleter
@@ -88,18 +75,12 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
 
             var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", TPositional.Parameters);
             var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
-            //var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
-
-            var type = GetParameterValue(commandAst, "Type", TPositional.Parameters)?.ToLower();
-            //if (type?.ToLower() == "directoryrobotuser") type = "directoryrobot";
-            if (type?.ToLower() == "directoryapplication") type = "application";
-
-            //var types = DirectoryTypes.Items.FilterByWildcards(d => d.Value, wpType).Select(d => d.Key);
+            var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
+            var wpType2 = DirectoryTypes2.Items.FilterByWildcards(d => d.Key, wpType).Select(d => d.Value).ConvertToWildcardPatternList();
 
             var drives = ResolvePmDrives(fakeBoundParameters);
 
-            GetExistingMemberIds(drives, wpGroupName);
-            //var existingMemberIds = GetExistingMemberIds(drives, wpGroupName);
+            CacheExistingMemberIds(drives, wpGroupName);
 
             bool bFound = false;
             foreach (var drive in drives)
@@ -111,9 +92,8 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
                 if (users is null) continue;
 
                 foreach (var user in users
-                    //.Where(u => types.Contains(u?.objectType ?? ""))
                     .ExcludeByWildcards(e => e?.identityName, wpUserName)
-                    .Where(u => u?.objectType?.ToLower() == type) // && u?.source != "local")
+                    .FilterByWildcards(u => u?.objectType, wpType2)
                     .OrderBy(e => e.identityName))
                 {
                     // updatingGroups に含まれるすべてのグループが、メンバーとして user を含んでいれば continue する
@@ -121,6 +101,8 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
 
                     // もしローカルグループだったら continue する
                     if (user.objectType == "DirectoryGroup" && user.source == "local") continue;
+
+                    // ちなみに、SearchPmDirectory() は 非機密アプリを返さないのでこれで OK
 
                     bFound = true;
                     string tiphelp = user.TipHelp();
@@ -205,7 +187,7 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
                         // 当たらなかったら警告を表示
                         if (addingMember is null)
                         {
-                            WriteWarning($"\"{drive.NameColonSeparator}\": \"{name.userName}\" ({type}) not found. Ignoring.");
+                            WriteWarning($"\"{drive.NameColonSeparator}\": {type} \"{name.userName}\" not found. Ignoring.");
                         }
                     }
                     break;
@@ -215,11 +197,11 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
             {
                 if (entry.Value is null)
                 {
-                    WriteWarning($"\"{drive.NameColonSeparator}\": \"{entry.Key}\" ({type}) not found. Ignoring.");
+                    WriteWarning($"\"{drive.NameColonSeparator}\": {type} \"{entry.Key}\" not found. Ignoring.");
                 }
                 else if (entry.Value.objectType == "DirectoryGroup" && entry.Value.source == "local")
                 {
-                    WriteWarning($"\"{drive.NameColonSeparator}\": \"{entry.Key}\" ({type}) cannot be added because it is a local group. Ignoring.");
+                    WriteWarning($"\"{drive.NameColonSeparator}\": {type} \"{entry.Key}\" cannot be added because it is a local group. Ignoring.");
                 }
             }
         }
@@ -232,8 +214,6 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
 
             try
             {
-                var partitionGlobalId = drive.GetPartitionGlobalId();
-
                 // 更新対象の各グループのメンバー一覧を取得
                 var detailedGroup = drive.GetPmGroup(group.id);
                 if (detailedGroup is null) continue;
@@ -253,7 +233,7 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
                             {
                                 if (group.members?.Any(m => m.identifier == robotEntry.identifier) ?? false)
                                 {
-                                    WriteWarning($"\"{group.GetPSPath()}\" already includes \"{robotEntry.identityName}\" ({type}).");
+                                    WriteWarning($"\"{group.GetPSPath()}\" already includes {type} \"{robotEntry.identityName}\".");
                                     continue;
                                 }
                                 if (ShouldProcess($"Item: {name} Destination: {group.GetPSPath()}", $"Add {type} to PmGroup"))
@@ -278,7 +258,7 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
                     {
                         if (group.members?.Any(m => m.identifier == entry.identifier) ?? false)
                         {
-                            WriteWarning($"\"{group.GetPSPath()}\" already includes \"{entry.name}\" ({type}).");
+                            WriteWarning($"\"{group.GetPSPath()}\" already includes {type} \"{entry.name}\".");
                             continue;
                         }
                         if (ShouldProcess($"Item: {name} Destination: {group.GetPSPath()}", $"Add {type} to PmGroup"))
@@ -292,23 +272,10 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
                 if (identifiers.Count > 0)
                 {
                     // 既存のグループにメンバーを追加
-                    UpdateGroupCommand updateGroupCommand = new()
+                    var updatedGroup = drive.AddMemberToPmGroup(group.id, group.name, identifiers);
+                    if (updatedGroup is not null)
                     {
-                        partitionGlobalId = partitionGlobalId,
-                        name = group!.name,
-                        directoryUserIDsToAdd = identifiers.ToList(),
-                        directoryUserIDsToRemove = []
-                    };
-
-                    var newGroup = drive.OrchAPISession.PutPmGroup(group.id, updateGroupCommand);
-                    if (newGroup is not null)
-                    {
-                        newGroup.Path = drive.NameColonSeparator;
-                        WriteObject(newGroup);
-                        drive._dicPmGroups = null;
-                        drive._dicPmGroups_Exception.ClearCache();
-                        drive._dicSearchPmDirectory = null;
-                        drive._dicSearchDirectory = null;
+                        WriteObject(updatedGroup);
                     }
                 }
             }

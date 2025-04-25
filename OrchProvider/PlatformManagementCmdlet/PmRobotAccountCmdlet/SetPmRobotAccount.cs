@@ -263,11 +263,9 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
                         };
                         try
                         {
-                            var newRobot = drive.OrchAPISession.CreatePmRobot(cmd);
-                            drive.PmRobotAccounts.ClearCache();
+                            var newRobot = drive.CreatePmRobot(cmd);
                             if (newRobot is not null)
                             {
-                                newRobot.Path = drive.NameColonSeparator;
                                 WriteObject(newRobot);
                             }
                         }

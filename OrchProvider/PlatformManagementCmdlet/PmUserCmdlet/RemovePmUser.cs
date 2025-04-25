@@ -31,6 +31,14 @@ public class RemovePmUserCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
+            User? currentUser = null;
+            try
+            {
+                // 先に OR.User.Read があるか確認してから呼び出す方が良いが。。
+                currentUser = drive.GetCurrentUser();
+            }
+            catch { }
+
             try
             {
                 var users = drive.PmUsers.Get();
@@ -50,6 +58,8 @@ public class RemovePmUserCommand : OrchestratorPSCmdlet
                 foreach (var user in targetUsers.OrderBy(u => u.email))
                 {
                     cancelHandler.Token.ThrowIfCancellationRequested();
+
+                    if (user.id == currentUser?.Key) continue;                    
 
                     string target = user.GetPSPath();
                     if (ShouldProcess(target, "Remove PmUser"))

@@ -2395,6 +2395,27 @@ public partial class OrchDriveInfo : PSDriveInfo
         return null;
     }
 
+    internal BulkCreateResponse? CreatePmUserBulk(CreateUsersCommand cmd)
+    {
+        var ret = OrchAPISession.CreatePmUserBulk(cmd);
+
+        PmUsers.ClearCache();
+        foreach (var g in _dicPmGroups ?? [])
+        {
+            if (cmd.groupIDs?.Contains(g.Key) ?? false)
+            {
+                g.Value.members = null;
+            }
+        }
+        _dicPmGroups_Exception.ClearCache();
+        _dicSearchDirectory = null;
+        _dicSearchDirectory_Exception.ClearCache();
+        _dicSearchPmDirectory = null;
+        _dicSearchPmDirectory_Exception.ClearCache();
+
+        return ret;
+    }
+
     internal PmGroup? CreatePmGroup(string? name, IEnumerable<string>? memberIds = null)
     {
         CreateGroupCommand createGroupCommand = new()
@@ -2409,14 +2430,109 @@ public partial class OrchDriveInfo : PSDriveInfo
         if (newGroup is not null)
         {
             newGroup.Path = NameColonSeparator;
-            _dicSearchPmDirectory = null;
-            _dicSearchPmDirectory_Exception.ClearCache();
             _dicSearchDirectory = null;
             _dicSearchDirectory_Exception.ClearCache();
-            _dicPmGroups = null;
-            _dicPmGroups_Exception.ClearCache();
+            _dicSearchPmDirectory = null;
+            _dicSearchPmDirectory_Exception.ClearCache();
+
+            // PmGroup のキャッシュを削除すると、直後 GetPmGroups() を呼び出したとき、この戻り値に
+            // 作成したばかりの PmGroup が含まれない場合があるようだ。
+            // そのため、ここではキャッシュを削除せず、キャッシュを更新するようにしておく。
+            // CreateXxx() が正しい結果を返さないことがあったので、一貫したキャッシュを構築するため
+            // CreateXxx() を呼び出した後は、キャッシュをクリアするようにしていたのだけど、ちと困るな。。
+            if (newGroup.id is not null)
+            {
+                foreach (var m in newGroup.members ?? [])
+                {
+                    m.Path = NameColonSeparator;
+                    m.PathGroupName = NameColonSeparator + name;
+                }
+                _dicPmGroups?.TryAdd(newGroup.id, newGroup);
+            }
         }
         return newGroup;
+    }
+
+    internal PmRobotAccount? CreatePmRobot(CreateRobotAccountCommand cmd)
+    {
+        var ret = OrchAPISession.CreatePmRobot(cmd);
+        if (ret is not null)
+        {
+            ret.Path = NameColonSeparator;
+        }
+        PmRobotAccounts.ClearCache();
+        foreach (var g in _dicPmGroups ?? [])
+        {
+            if (cmd.groupIDsToAdd?.Contains(g.Key) ?? false)
+            {
+                g.Value.members = null;
+            }
+        }
+        _dicSearchDirectory = null;
+        _dicSearchDirectory_Exception.ClearCache();
+        _dicSearchPmDirectory = null;
+        _dicSearchPmDirectory_Exception.ClearCache();
+        return ret;
+    }
+
+    internal PmGroup? AddMemberToPmGroup(string? groupId, string? groupName, IEnumerable<string?>? memberIds)
+    {
+        if (groupId is null) return null;
+        UpdateGroupCommand updateGroupCommand = new()
+        {
+            partitionGlobalId = GetPartitionGlobalId(),
+            name = groupName,
+            directoryUserIDsToAdd = memberIds?
+                .Where(id => !string.IsNullOrEmpty(id))
+                .Select(id => id!)
+                .ToList() ?? [],
+            directoryUserIDsToRemove = []
+        };
+        var ret = OrchAPISession.PutPmGroup(groupId, updateGroupCommand);
+        if (ret is not null)
+        {
+            ret.Path = NameColonSeparator;
+        }
+        if (_dicPmGroups?.TryGetValue(groupId, out var updatedGroup) ?? false)
+        {
+            updatedGroup.members = null;
+        }
+
+        PmUsers.ClearCache(); // 内部にグループIDを含む
+        PmRobotAccounts.ClearCache(); // 内部にグループIDを含む
+        // PmExternalClients.ClearCache(); // この中にグループIDはない
+
+        return ret;
+    }
+
+    internal PmGroup? RemoveMemberFromPmGroup(string? groupId, string? groupName, IEnumerable<string?>? memberIds)
+    {
+        if (groupId is null) return null;
+        UpdateGroupCommand updateGroupCommand = new()
+        {
+            partitionGlobalId = GetPartitionGlobalId(),
+            name = groupName,
+            directoryUserIDsToAdd = [],
+            directoryUserIDsToRemove = memberIds?
+                .Where(id => !string.IsNullOrEmpty(id))
+                .Select(id => id!)
+                .ToList() ?? []
+        };
+        var ret = OrchAPISession.PutPmGroup(groupId, updateGroupCommand);
+        if (ret is not null)
+        {
+            ret.Path = NameColonSeparator;
+        }
+        if (_dicPmGroups?.TryGetValue(groupId, out var updatedGroup) ?? false)
+        {
+            updatedGroup.members = null;
+        }
+
+        PmUsers.ClearCache(); // 内部にグループIDを含む
+        PmRobotAccounts.ClearCache(); // 内部にグループIDを含む
+        // PmExternalClients.ClearCache(); // この中にグループIDはない
+
+        return ret;
     }
 
     #endregion
@@ -2638,7 +2754,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         // 組織のリストエンティティ
         PmUsers                = new(this, OrchAPISession.GetPmUsers,                e => e.Path = NameColonSeparator);
         PmRobotAccounts        = new(this, OrchAPISession.GetPmRobotAccounts,        e => e.Path = NameColonSeparator);
-        PmExternalClients      = new(this, OrchAPISession.GetPmExternalClient,       e => e.Path = NameColonSeparator);
+        PmExternalClients      = new(this, OrchAPISession.GetPmExternalClients,      e => e.Path = NameColonSeparator);
         PmExternalApiResources = new(this, OrchAPISession.GetPmExternalApiResource,  e => e.Path = NameColonSeparator);
 
         // インデックスなしのテナントエンティティ

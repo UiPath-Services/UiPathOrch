@@ -114,7 +114,7 @@ public class GetMachineCommand : OrchestratorPSCmdlet
                 var machines = result.GetResult(cancelHandler.Token);
                 if (machines is null) continue;
 
-                var drive = result.Source!;
+                var drive = result.Source;
 
                 var filteredMachines = machines
                         .FilterByWildcards(m => m?.Name, wpName)

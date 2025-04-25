@@ -104,8 +104,14 @@ Copy the test schedules.
 ### [Copy-OrchWebhook](Copy-OrchWebhook.md)
 {{ Fill in the Synopsis }}
 
+### [Copy-PmExternalApplication](Copy-PmExternalApplication.md)
+Copies external applications between organizations.
+
+### [Copy-PmGroup](Copy-PmGroup.md)
+Copies groups between organizations.
+
 ### [Copy-PmRobotAccount](Copy-PmRobotAccount.md)
-{{ Fill in the Synopsis }}
+Copies robot accounts between organizations.
 
 ### [Copy-PmUser](Copy-PmUser.md)
 Copies organizational users between organizations.
@@ -565,6 +571,9 @@ Removes the webhooks.
 
 ### [Remove-PmAllocationFromPmLicensedGroup](Remove-PmAllocationFromPmLicensedGroup.md)
 Removes license allocations from users within license groups.
+
+### [Remove-PmExternalApplication](Remove-PmExternalApplication.md)
+Removes external applications.
 
 ### [Remove-PmGroup](Remove-PmGroup.md)
 {{ Fill in the Synopsis }}
