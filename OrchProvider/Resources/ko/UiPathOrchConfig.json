@@ -42,15 +42,20 @@
   "IgnoreSslErrors": false,
 
   "Proxy": {
+    // 이 값을 true로 설정하면 모든 PSDrive에서 프록시 설정이 활성화됩니다.
+    "Enabled": false,
+
+    // true로 설정하면 인터넷 옵션에 구성된 프록시 설정을 사용합니다.
+    // 이 경우, 이후의 모든 설정("Url" 등)은 무시됩니다.
+    "UseDefaultWebProxy": true,
+
     "Url": "http://proxy.example.com:8080",
     "BypassProxyOnLocal": true,
     "UseDefaultCredentials": false,
     "Credentials": {
       "Username": "PROXY_USERNAME",
       "Password": "PROXY_PASSWORD"
-    },
-    // 이 값을 true로 설정하면 모든 PSDrive에서 프록시 설정이 활성화됩니다.
-    "Enabled": false
+    }
   },
 
   /* =================== 글로벌 설정 종료 ==================== */
@@ -148,6 +153,7 @@
       "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
       "Enabled": false,
       "Proxy": {
+        "UseDefaultWebProxy": false,
         "Url": "http://proxy.example.com:8081",
         "BypassProxyOnLocal": true,
         "UseDefaultCredentials": false,

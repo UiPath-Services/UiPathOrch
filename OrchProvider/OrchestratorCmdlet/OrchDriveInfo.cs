@@ -292,10 +292,11 @@ public partial class OrchDriveInfo : PSDriveInfo
             OrchDriveInfo drive = p.Drive as OrchDriveInfo;
             if (drive is null) continue;
 
-            var dicFolders = drive!.GetFolders(); // sorted by OrchDirectory and DisplayName
+            drive.GetFolders(); // sorted by OrchDirectory and DisplayName
+            var dicFolders = drive._dicFoldersForEnumFolders;
             if (dicFolders is null) continue;
 
-            Folder folder = drive?.GetFolder(OrchDriveInfo.PSPathToOrchPath(WildcardPattern.Unescape(p.ProviderPath)));
+            Folder folder = drive.GetFolder(OrchDriveInfo.PSPathToOrchPath(WildcardPattern.Unescape(p.ProviderPath)));
             if (folder is null) continue;
 
             string orchPathStart;
@@ -333,9 +334,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         {
             throw new Exception("Use Set-Location cmdlet (alias: cd) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.");
         }
-        return ret
-            .OrderBy(df => df.folder.FolderType)
-            .ThenBy(df => df.folder.FullyQualifiedNameOrderable).ToList();
+        return ret;
     }
 
     // planned to be obsoleted
@@ -3001,6 +3000,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     }
 
     internal List<Folder>? _dicFolders; // sorted by OrchDirectory and DisplayName
+    internal List<Folder>? _dicFoldersForEnumFolders;
     public ReadOnlyCollection<Folder> GetFolders()
     {
         if (_dicFolders is null)
@@ -3045,11 +3045,12 @@ public partial class OrchDriveInfo : PSDriveInfo
                 personalWorkspaceName = user.PersonalWorkspace.DisplayName;
                 user.PersonalWorkspace.ParentId = null; // なぜか値が入っていることがあるので修正
                 user.PersonalWorkspace.Path = NameColonSeparator;
-                user.PersonalWorkspace.FolderType = "Personal"; // なぜか ApiVer == 11.1 では null になっているので修正
+                user.PersonalWorkspace.FolderType ??= "Personal"; // なぜか ApiVer == 11.1 では null になっているので修正
                 user.PersonalWorkspace.FeedType = "FolderHierarchy"; // なぜか "Processes" が入っているので修正
                 //user.PersonalWorkspace.FullName = NameColonSeparator + WildcardPattern.Escape(user.PersonalWorkspace.DisplayName);
                 user.PersonalWorkspace.FullName = NameColonSeparator + user.PersonalWorkspace.DisplayName;
                 _dicFolders = [user.PersonalWorkspace];
+                _dicFoldersForEnumFolders = [user.PersonalWorkspace];
             }
 
             // personal workspaces that being explored の戻りを処理
@@ -3065,8 +3066,7 @@ public partial class OrchDriveInfo : PSDriveInfo
                     // (explore していないワークスペースには、権限がなくアクセスできないため)
 //                        if (user is not null && ws.ExploringUserIds is not null && ws.ExploringUserIds.Any(id => id == user?.Id))
                     {
-                        _dicFolders ??= [];
-                        _dicFolders.Add(new Folder()
+                        var pwFolder = new Folder()
                         {
                             DisplayName = ws.Name,
                             FullyQualifiedName = ws.Name,
@@ -3080,7 +3080,11 @@ public partial class OrchDriveInfo : PSDriveInfo
                             PermissionModel = "FineGrained",
                             Path = NameColonSeparator,
                             FullName = NameColonSeparator + WildcardPattern.Escape(ws.Name)
-                        });
+                        };
+                        _dicFolders ??= [];
+                        _dicFolders.Add(pwFolder);
+                        _dicFoldersForEnumFolders ??= [];
+                        _dicFoldersForEnumFolders.Add(pwFolder);
                     }
                 }
             }
@@ -3089,7 +3093,8 @@ public partial class OrchDriveInfo : PSDriveInfo
             // folders の戻りを処理
             foreach (var folder in folders ?? [])
             {
-                folder.FolderType = "Standard"; // なぜか ApiVer == 11.1 では null になっているので修正
+                // 追加済みのフォルダーをスキップ
+                folder.FolderType ??= "Standard"; // なぜか ApiVer == 11.1 では null になっているので修正
 
                 // Path メンバに、親フォルダの名前を入れておく
                 int idx = folder.FullyQualifiedName!.LastIndexOf('/');
@@ -3108,12 +3113,47 @@ public partial class OrchDriveInfo : PSDriveInfo
                     //folder.FullName = NameColon + WildcardPattern.Escape(orchPath);
                 }
             }
+            // _dicFolders は、GetChildItems 用だ。
             _dicFolders ??= [];
+            _dicFoldersForEnumFolders ??= [];
             if (folders is not null)
             {
+                #region _dicFolders を構築
+                // 1. 最初に、ルート直下のフォルダをすべて追加
+                // 1-1. personal workspace folder をすべて追加（これはすでに済み）
+                // 1-2. それ以外のルート直下のフォルダを追加
                 _dicFolders.AddRange(folders
-                    .OrderBy(f => f.Path!) //, StringComparer.Ordinal)
-                    .ThenBy(f => f.DisplayName)); // , StringComparer.Ordinal).ToList();
+                    .Where(f => !f.FullyQualifiedName!.Contains('/'))
+                    .OrderBy(f => f.FullyQualifiedNameOrderable));
+
+                // 2. personal workspace folder 配下にあるフォルダをすべて追加
+                _dicFolders.AddRange(folders
+                    .Where(f => f.FeedType == "PersonalWorkspace")
+                    .Where(f => f.FullyQualifiedName!.Contains('/')) // これはなくても良い気がするが、
+                    .OrderBy(f => f.FullyQualifiedNameOrderable));
+
+                // 3. 残りのフォルダをすべて追加
+                _dicFolders.AddRange(folders
+                    .Where(f => f.FeedType != "PersonalWorkspace")
+                    .Where(f => f.FullyQualifiedName!.Contains('/'))
+                    .OrderBy(f => f.FullyQualifiedNameOrderable));
+                #endregion
+
+                #region _dicFoldersForEnumFolders を構築
+                // _dicFoldersForEnumFolders は、OrchDriveInfo.EnumFolders() 用だ。微妙にソート順が違う。
+                // 1. 最初に、personal workspace folder をすべて追加 (ルート直下のものだけ済みだ)
+                // personal workspace folder 配下にあるフォルダを追加してから、FullyQualifiedName でソートし直すのが良かろう
+                _dicFoldersForEnumFolders.AddRange(folders
+                    .Where(f => f.FeedType == "PersonalWorkspace"));
+                _dicFoldersForEnumFolders = _dicFoldersForEnumFolders
+                    .OrderBy(f => f.FullyQualifiedNameOrderable)
+                    .ToList();
+
+                // 2. 残りのフォルダをすべて追加
+                _dicFoldersForEnumFolders.AddRange(folders
+                    .Where(f => f.FeedType != "PersonalWorkspace")
+                    .OrderBy(f => f.FullyQualifiedNameOrderable));
+                #endregion
             }
         }
 

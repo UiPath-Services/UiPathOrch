@@ -93,7 +93,7 @@ public class GetClassicRobotCommand : OrchestratorPSCmdlet
                 EscapeCsvValue(r.Robot?.Username),
                 EscapeCsvValue(r.Robot?.RobotEnvironments)
             ];
-            WriteCsvLine(writer, line);
+            writer.WriteCsvLine(line);
         }
     }
 

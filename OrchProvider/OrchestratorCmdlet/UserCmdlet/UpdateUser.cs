@@ -19,6 +19,10 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? UserName { get; set; }
 
+    //[Parameter(ValueFromPipelineByPropertyName = true)]
+    ////[ArgumentCompleter(typeof(TenantUserUserNameCompleter<TPositional>))]
+    //public string? FullName { get; set; }
+
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [Alias("TenantRoles")]
     [ArgumentCompleter(typeof(RolesCompleter))]
@@ -139,6 +143,7 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
 
                 foreach (var role in result.Result
                     .Where(r => r.Type != "Folder")
+                    .Where(r => wp.IsMatch(r.Name))
                     .ExcludeByWildcards(r => r?.Name, wpRoles)
                     .OrderBy(r => r.Name))
                 {
@@ -206,6 +211,7 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                         postingUser.UnattendedRobot.Password = null;
                     }
 
+                    //postingUser.AssignStringIfNotNull(FullName,                   (u, v) => u.FullName = v);
                     postingUser.AssignBoolIfNotFalse(IsExternalLicensed,          u => u.IsExternalLicensed,          (u, v) => u.IsExternalLicensed = v);
                     postingUser.AssignBoolIfNotFalse(MayHaveUserSession,          u => u.MayHaveUserSession,          (u, v) => u.MayHaveUserSession = v);
                     postingUser.AssignBoolIfNotFalse(MayHaveRobotSession,         u => u.MayHaveRobotSession,         (u, v) => u.MayHaveRobotSession = v);

@@ -90,7 +90,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
 
     internal static string EscapeCsvValue(bool? value)
     {
-        return value?.ToString() ?? "";
+        return value?.ToString().ToUpper() ?? "";
     }
 
     internal static string EscapeCsvValue(DateTime? value)
@@ -234,26 +234,9 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         }
 
         var writer = new StreamWriter(filePath, false, encoding);
-        WriteCsvLine(writer, headers);
+        writer.WriteCsvLine(headers);
 
         return writer;
-    }
-
-    // writer.WriteLine(string.Join(',', values) とすると、内部で string を連結してしまう。
-    // 逐次 writer.Write() を呼ぶ方が効率的だ。
-    internal static void WriteCsvLine(TextWriter writer, string?[] values)
-    {
-        if (writer is null) return;
-
-        for (int i = 0; i < values.Length; i++)
-        {
-            writer.Write(values[i]); // 各値を直接書き込む
-            if (i < values.Length - 1)
-            {
-                writer.Write(','); // フィールド間のカンマを挿入
-            }
-        }
-        writer.WriteLine(); // 最後に改行を追加
     }
 
     protected static int? ConvertPriorityToSpecificPriorityValue(string? specificPriorityValue)

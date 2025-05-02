@@ -271,7 +271,7 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
                             // 同名のフォルダがない場合は、コピー処理をスキップする
                             if (dstFolder is null) throw new NoCorrespondDestinatoinFolderException();
 
-                            if (srcDrive == dstDrive && srcFolder == dstFolder) continue;
+                            if (srcFolder == dstFolder) continue;
 
                             // 同名のフォルダはあるが、フォルダフィードがない場合には、コピー処理をスキップする
                             // （テナントフィードにコピーすることはしない）

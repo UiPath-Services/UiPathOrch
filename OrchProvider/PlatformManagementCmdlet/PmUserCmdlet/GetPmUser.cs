@@ -94,7 +94,7 @@ public class GetPmUserCommand : OrchestratorPSCmdlet
                     EscapeCsvValue(groupNames)
                 ];
             }
-            WriteCsvLine(writer, line);
+            writer.WriteCsvLine(line);
         }
     }
 

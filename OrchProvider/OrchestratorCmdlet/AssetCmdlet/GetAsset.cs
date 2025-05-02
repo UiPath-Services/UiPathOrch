@@ -57,46 +57,42 @@ public class GetAssetCommand : OrchestratorPSCmdlet
         // 各アセットに対してデータ行を書き込む
         foreach (var asset in output.Where(a => a.ValueType != "Credential"))
         {
-            var line = new StringBuilder();
             bool isDescriptionOut = false;
 
             if (!string.IsNullOrEmpty(asset.Value))
             {
                 isDescriptionOut = true;
-                line.Append($"{EscapeCsvValue(asset.Path, true)},");
-                line.Append($"{EscapeCsvValue(asset.Name, true)},");
-                line.Append($"{asset.Description},");
-                line.Append($"{asset.ValueType},");
-                line.Append($"{asset.Value!},");
-                line.Append($"{EscapeCsvValue("")},");
-                line.Append($"{EscapeCsvValue("")}");
-                writer.WriteLine(line.ToString());
+                string?[] line = [
+                    EscapeCsvValue(asset.Path, true),
+                    EscapeCsvValue(asset.Name, true),
+                    EscapeCsvValue(asset.Description),
+                    asset.ValueType,
+                    EscapeCsvValue(asset.Value),
+                    "",
+                    ""
+                ];
+                writer.WriteCsvLine(line);
             }
 
             if (asset.UserValues is not null)
             {
                 foreach (var userValue in asset.UserValues)
                 {
-                    line = new StringBuilder();
-                    line.Append($"{EscapeCsvValue(userValue.Path, true)},");
-                    line.Append($"{EscapeCsvValue(userValue.Name, true)},");
-                    if (isDescriptionOut)
-                    {
-                        isDescriptionOut = true;
-                        line.Append($"{EscapeCsvValue("")},");
-                    }
-                    else
-                    {
-                        line.Append($"{asset.Description!},");
-                    }
-                    line.Append($"{userValue.ValueType!},");
-                    if (userValue.ValueType == "Bool")
-                        line.Append($"{userValue.Value!.ToUpper()},");
-                    else
-                        line.Append($"{userValue.Value!},");
-                    line.Append($"{EscapeCsvValue(userValue.UserName, true)},");
-                    line.Append($"{EscapeCsvValue(userValue.MachineName, true)}");
-                    writer.WriteLine(line.ToString());
+                    string? description = isDescriptionOut ? "" : asset.Description;
+                    isDescriptionOut = true;
+                    string? value = userValue.ValueType == "Bool" ? userValue.Value?.ToUpper() : userValue.Value;
+
+                    string?[] line = [
+                        EscapeCsvValue(userValue.Path, true),
+                        EscapeCsvValue(userValue.Name, true),
+                        EscapeCsvValue(description),
+                        userValue.ValueType,
+                        EscapeCsvValue(value),
+                        EscapeCsvValue(userValue.UserName, true),
+                        EscapeCsvValue(userValue.MachineName, true)
+                    ];
+
+                    writer.WriteCsvLine(line);
                 }
             }
         }

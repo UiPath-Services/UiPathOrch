@@ -89,7 +89,7 @@ public class GetMachineCommand : OrchestratorPSCmdlet
                 EscapeCsvValue(machine.MaintenanceWindow?.TimezoneId),
                 EscapeCsvValue(machine.Tags)
             ];
-            WriteCsvLine(writer, line);
+            writer.WriteCsvLine(line);
         }
     }
 

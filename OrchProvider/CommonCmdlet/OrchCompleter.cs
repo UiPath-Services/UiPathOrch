@@ -2452,6 +2452,7 @@ internal class DestinationDriveCompleter<TPositional> : OrchArgumentCompleter wh
 
         foreach (var drive in drives
             .Where(d => sourceDrives.All(sd => sd != d))
+            .Where(d => wp.IsMatch(d.NameColon))
             .ExcludeByWildcards(d => d?.NameColon, wpDestination)
             .Where(d => wp.IsMatch(d.NameColon)))
         {

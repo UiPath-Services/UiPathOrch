@@ -423,6 +423,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
                 var drive = result.Source;
 
                 foreach (var role in result.Result
+                    .Where(r => wp.IsMatch(r.Name))
                     .Where(r => r.Type != "Folder")
                     .ExcludeByWildcards(r => r?.Name, wpRoles)
                     .OrderBy(r => r.Name))

@@ -39,16 +39,20 @@
   "IgnoreSslErrors": false,
 
   "Proxy": {
+    // これを true にすると、すべての PSDrive でプロキシ設定が有効になります。
+    "Enabled": false,
+
+    // これを true にすると、インターネットオプションで構成されたプロキシ設定を
+    // 使用します。その場合、以降の設定（"Url"など）はすべて無視されます。
+    "UseDefaultWebProxy": true,
+
     "Url": "http://proxy.example.com:8080",
     "BypassProxyOnLocal": true,
     "UseDefaultCredentials": false,
     "Credentials": {
       "Username": "PROXY_USERNAME",
       "Password": "PROXY_PASSWORD"
-    },
-    // これを true に設定すると、すべての PSDrive でプロキシ設定が
-    // 有効になります。
-    "Enabled": false
+    }
   },
 
   /* ================= グローバル設定 ここまで ================== */
@@ -146,6 +150,7 @@
       "Enabled": false,
 
       "Proxy": {
+        "UseDefaultWebProxy": false,
         "Url": "http://proxy.example.com:8081",
         "BypassProxyOnLocal": true,
         "UseDefaultCredentials": false,

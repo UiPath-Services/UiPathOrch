@@ -49,16 +49,21 @@
   "IgnoreSslErrors": false,
 
   "Proxy": {
+    // Setarea acestei valori la "true" activează setările proxy pentru
+    // toate PSDrive-urile.
+    "Enabled": false,
+
+    // Utilizează setările proxy din Opțiuni Internet dacă este setat pe true.
+    // În acest caz, toate setările ulterioare ("Url" etc.) vor fi ignorate.
+    "UseDefaultWebProxy": true,
+
     "Url": "http://proxy.example.com:8080",
     "BypassProxyOnLocal": true,
     "UseDefaultCredentials": false,
     "Credentials": {
       "Username": "PROXY_USERNAME",
       "Password": "PROXY_PASSWORD"
-    },
-    // Setarea acestei valori la "true" activează setările proxy pentru
-    // toate PSDrive-urile.
-    "Enabled": false
+    }
   },
 
   /* =================== Setări globale - Sfârșit ==================== */
@@ -159,6 +164,7 @@
       "Enabled": false,
 
       "Proxy": {
+        "UseDefaultWebProxy": false,
         "Url": "http://proxy.example.com:8081",
         "BypassProxyOnLocal": true,
         "UseDefaultCredentials": false,

@@ -66,7 +66,7 @@ public class GetUserLicenseGroup: OrchestratorPSCmdlet
                 EscapeCsvValue(member.email),
                 EscapeCsvValue(member.lastInUse?.ToLocalTime())
             ];
-            WriteCsvLine(writer, line);
+            writer.WriteCsvLine(line);
         }
     }
 

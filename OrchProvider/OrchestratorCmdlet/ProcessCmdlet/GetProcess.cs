@@ -137,7 +137,7 @@ public class GetProcessCommand : OrchestratorPSCmdlet
             EscapeCsvValue(release.Tags)
         ];
 
-        WriteCsvLine(writer, line);
+        writer.WriteCsvLine(line);
     }
 
     private void Output(StreamWriter? writer, Release release)

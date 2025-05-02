@@ -48,16 +48,21 @@
   "IgnoreSslErrors": false,
 
   "Proxy": {
+    // Définir cette valeur sur true active les paramètres proxy
+    // pour tous les PSDrives.
+    "Enabled": false,
+
+    // Utilise les paramètres proxy des Options Internet si défini sur true.
+    // Dans ce cas, tous les paramètres suivants ("Url", etc.) seront ignorés.
+    "UseDefaultWebProxy": true,
+
     "Url": "http://proxy.example.com:8080",
     "BypassProxyOnLocal": true,
     "UseDefaultCredentials": false,
     "Credentials": {
       "Username": "PROXY_USERNAME",
       "Password": "PROXY_PASSWORD"
-    },
-    // Définir cette valeur sur true active les paramètres proxy
-    // pour tous les PSDrives.
-    "Enabled": false
+    }
   },
 
   /* =================== Paramètres globaux - Fin ==================== */
@@ -161,6 +166,7 @@
       "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
       "Enabled": false,
       "Proxy": {
+        "UseDefaultWebProxy": false,
         "Url": "http://proxy.example.com:8081",
         "BypassProxyOnLocal": true,
         "UseDefaultCredentials": false,

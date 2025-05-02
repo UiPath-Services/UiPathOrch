@@ -9,7 +9,7 @@ using Path = System.IO.Path;
 
 namespace UiPath.PowerShell.Core;
 
-public static class FolderExtensions
+internal static class FolderExtensions
 {
     // returns orchPath
     public static string GetPackageFeedFolder(this Folder folder)
@@ -86,7 +86,7 @@ public static class FolderExtensions
     public static string TipHelp(this PmDirectoryEntityInfo? entity) => $"{entity?.GetPSPath()}{(string.IsNullOrEmpty(entity?.displayName) ? "" : $" ({entity.displayName})")}";
 }
 
-public static class OrchCollectionExtensions
+internal static class OrchCollectionExtensions
 {
     // 次のメソッドは、T& を比較するときにパフォーマンスが == よりも悪くなる。null もチェックしてないな。。
     // これを使うのはやめて、== で比較すべきだ。
@@ -292,7 +292,7 @@ public static class OrchCollectionExtensions
     }
 }
 
-//public static class OrchObjectExtentions
+//internal static class OrchObjectExtensions
 //{
 //    public static bool AreAllPropertiesNull<T>(this T obj)
 //    {
@@ -307,7 +307,7 @@ public static class OrchCollectionExtensions
 //    }
 //}
 
-public static class OrchStringExtensions
+internal static class OrchStringExtensions
 {
     public delegate bool TryParseHandler<T>(string str, out T result);
 
@@ -624,5 +624,27 @@ public static class OrchStringExtensions
         sb.Append(value);
         sb.Append('\n');
         return sb;
+    }
+}
+
+internal static class OrchWriterExtensions
+{
+    // writer.WriteLine(string.Join(',', values) とすると、内部で string を連結してしまう。
+    // 逐次 writer.Write() を呼ぶ方が効率的だ。
+    internal static void WriteCsvLine(this TextWriter? writer, IEnumerable<string?> values)
+    {
+        if (writer is null) return;
+
+        bool first = true;
+        foreach (var value in values)
+        {
+            if (!first)
+            {
+                writer.Write(','); // 2個目以降はカンマを入れる
+            }
+            else first = false;
+            writer.Write(value);
+        }
+        writer.WriteLine(); // 最後に改行を追加
     }
 }

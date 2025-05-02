@@ -2735,7 +2735,7 @@ public class QueueItem
 
 // QueueItemDataDto
 // DeferDate とかは DateTime なんだけど、CSV インポートする都合で string にしてある。。
-public class QueueItemData
+public class QueueItemData4CsvImport
 {
     public string? Name { get; set; }
     public string? Priority { get; set; }
@@ -2746,6 +2746,45 @@ public class QueueItemData
     public string? Reference { get; set; }
     public string? Progress { get; set; }
     public string? Source { get; set; }
+}
+
+// TransactionDataDto
+public class TransactionData
+{
+    public string? Name { get; set; }
+    public Guid? RobotIdentifier { get; set; }
+    public Dictionary<string, string?>? SpecificContent { get; set; }
+    public DateTimeOffset? DeferDate { get; set; }
+    public DateTimeOffset? DueDate { get; set; }
+    public string? Reference { get; set; }
+    public string? ReferenceFilterOption { get; set; }
+    public string? ParentOperationId { get; set; }
+}
+
+// BulkAddQueueItemsRequest
+public class BulkAddQueueItemsRequest4CsvImport
+{
+    public string? queueName { get; set; }
+    public string? commitType { get; set; }
+    public QueueItemData4CsvImport[]? queueItems { get; set; }
+}
+
+// QueueItemDataDto
+public class QueueItemData
+{
+    public string? Name { get; set; }
+    public string? Priority { get; set; }
+    public Dictionary<string, object>? SpecificContent { get; set; }
+    public DateTime? DeferDate { get; set; }
+    public DateTime? DueDate { get; set; }
+    public DateTime? RiskSlaDate { get; set; }
+    public string? Reference { get; set; }
+    public string? Progress { get; set; }
+    public string? Source { get; set; }
+    public string? ParentOperationId { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    internal Int64? Id { get; set; } // added by UiPathOrch
 }
 
 // BulkAddQueueItemsRequest
@@ -2819,6 +2858,39 @@ public class BulkOperationResponseDtoOfFailedQueueItem
     public bool? Success { get; set; }
     public string? Message { get; set; }
     public FailedQueueItem[]? FailedItems { get; set; }
+}
+
+
+// LongVersionedEntity
+public class LongVersionedEntity
+{
+    public string? RowVersion { get; set; }
+    public Int64? Id { get; set; }
+}
+
+// QueueItemDeleteBulkRequest
+public class QueueItemDeleteBulkRequest
+{
+    public List<LongVersionedEntity>? queueItems { get; set; }
+}
+
+// BulkOperationResponseDtoOfInt64
+public class BulkOperationResponseOfInt64
+{
+    public bool? Success { get; set; }
+    public string? Message { get; set; }
+    public Int64[]? FailedItems { get; set; }
+}
+
+// QueueItemCommentDto
+public class QueueItemComment
+{
+//    public Int64 Id { get; set; }
+    public string? Text { get; set; }
+    public Int64? QueueItemId { get; set; }
+    //public DateTime? CreationTime { get; set; } // deprecated
+    //public Int64? UserId { get; set; }
+    //public string? UserName { get; set; }
 }
 
 // PersonalWorkspaceDto
