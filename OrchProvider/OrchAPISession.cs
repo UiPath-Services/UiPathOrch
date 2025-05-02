@@ -744,6 +744,13 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
+    // 非公開の API のようだ
+    // Copy-OrchQueueItem cmdlet の進捗を表示するのに使いたいが。。
+    //public void ListQueues()
+    //{
+    //  GET "/odata/QueueDefinitions/UiPath.Server.Configuration.OData.ListQueues"
+    //}
+
     public QueueRetentionSetting? GetQueueRetention(Int64 folderId, Int64 queueId)
     {
         EnsureVersionSupport(14);
@@ -845,6 +852,21 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<BulkOperationResponse>(HttpMethod.Post, "/odata/QueueItems/UiPathODataSvc.SetItemReviewStatus", folderId, payload);
     }
 
+    public QueueItem? PostQueueItemComments(Int64 folderId, Int64 queueItemId, string comment)
+    {
+        QueueItemComment payload = new()
+        {
+            QueueItemId = queueItemId,
+            Text = comment
+        };
+        return HttpRequest<QueueItem>(HttpMethod.Post, "/odata/QueueItemComments", folderId, payload);
+    }
+
+    public BulkOperationResponseOfInt64? DeleteBulkQueueItem(Int64 folderId, QueueItemDeleteBulkRequest payload)
+    {
+        return HttpRequest<BulkOperationResponseOfInt64>(HttpMethod.Post, "/odata/QueueItems/UiPathODataSvc.DeleteBulk", folderId, payload);
+    }
+
     public IEnumerable<RobotsFromFolderModel> GetRobotsFromFolder(Int64 folderId)
     {
         return GetEnumerable<RobotsFromFolderModel>($"/odata/Robots/UiPath.Server.Configuration.OData.GetRobotsFromFolder(folderId={folderId})");
@@ -862,10 +884,26 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<SimpleUser>("/odata/QueueItems/UiPath.Server.Configuration.OData.GetReviewers()", folderId, "&$filter=(Type%20eq%20%27DirectoryUser%27)");
     }
 
+    public BulkOperationResponseDtoOfFailedQueueItem? BulkAddQueueItem(Int64 folderId, BulkAddQueueItemsRequest payload)
+    {
+        return HttpRequest<BulkOperationResponseDtoOfFailedQueueItem>(HttpMethod.Post, "/odata/Queues/UiPathODataSvc.BulkAddQueueItems", folderId, payload);
+    }
+
     public BulkOperationResponseDtoOfFailedQueueItem? BulkAddQueueItem(Int64 folderId, string payload)
     {
         return HttpRequest<BulkOperationResponseDtoOfFailedQueueItem>(HttpMethod.Post, "/odata/Queues/UiPathODataSvc.BulkAddQueueItems", folderId, payload);
     }
+
+    // この API は、Robot からしか呼びだすことができない。。
+    //public QueueItem? StartTransaction(Int64 folderId, TransactionData payload)
+    //{
+    //    QueuesStartTransactionRequest pl = new()
+    //    {
+    //        transactionData = payload
+    //    };
+    //    var ret = HttpRequest(HttpMethod.Post, "/odata/Queues/UiPathODataSvc.StartTransaction", folderId, pl);
+    //    return null;
+    //}
 
     #endregion
 

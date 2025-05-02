@@ -123,7 +123,7 @@ public class CopyFolderUserCommand : OrchestratorPSCmdlet
             }
 
             Folder? dstFolder = this.GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
-            if (dstFolder is null || (srcDrive == dstDrive && srcFolder == dstFolder)) continue;
+            if (dstFolder is null || srcFolder == dstFolder) continue;
 
             try
             {

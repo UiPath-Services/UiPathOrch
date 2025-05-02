@@ -721,7 +721,7 @@ public partial class OrchProvider : NavigationCmdletProvider
                 OrchestratorPSCmdlet.EscapeCsvValue(folder.Description),
                 OrchestratorPSCmdlet.EscapeCsvValue(folder.FeedType)
             ];
-            OrchestratorPSCmdlet.WriteCsvLine(writer, line);
+            writer.WriteCsvLine(line);
         }
 
         return providerCsvPath;

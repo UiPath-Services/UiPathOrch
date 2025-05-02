@@ -132,7 +132,7 @@ public class GetQueueCommand : OrchestratorPSCmdlet
                 EscapeCsvValue(detailedQueue.StaleRetentionBucketName),
                 EscapeCsvValue(detailedQueue.Tags)
             ];
-            WriteCsvLine(writer, line);
+            writer.WriteCsvLine(line);
         }
     }
 

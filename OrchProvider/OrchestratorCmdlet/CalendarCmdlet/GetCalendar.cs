@@ -47,7 +47,7 @@ public class GetCalendarCommand : OrchestratorPSCmdlet
             EscapeCsvValue(output.Name, true),
             EscapeCsvValue(output.ExcludedDate?.ToShortDateString())
         ];
-        WriteCsvLine(writer, line);
+        writer.WriteCsvLine(line);
     }
 
     protected override void ProcessRecord()

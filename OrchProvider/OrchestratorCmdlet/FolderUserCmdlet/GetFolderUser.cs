@@ -165,7 +165,7 @@ public class GetFolderUserCommand : OrchestratorPSCmdlet
                 EscapeCsvValue(p?.UserEntity?.FullName),
                 EscapeCsvValue(string.Join(",", p?.Roles?.Select(r => WildcardPattern.Escape(r.Name))!))
             ];
-            WriteCsvLine(writer, line);
+            writer.WriteCsvLine(line);
         }
     }
 

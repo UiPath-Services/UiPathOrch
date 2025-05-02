@@ -39,7 +39,7 @@ public class GetPmGroupCommand : OrchestratorPSCmdlet
                 EscapeCsvValue(group.Path, true),
                 EscapeCsvValue(group.name, true)
             ];
-            WriteCsvLine(writer, line);
+            writer.WriteCsvLine(line);
         }
     }
 

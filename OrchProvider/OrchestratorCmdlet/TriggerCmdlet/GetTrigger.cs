@@ -137,7 +137,7 @@ public class GetTriggerCommand : OrchestratorPSCmdlet
             EscapeCsvValue(executorRobots),
             EscapeCsvValue(machineRobots)
         ];
-        WriteCsvLine(writer, line);
+        writer.WriteCsvLine(line);
     }
 
     private void Output(StreamWriter? writer, ProcessSchedule? trigger)

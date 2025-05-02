@@ -82,7 +82,7 @@ public class GetBucketCommand : OrchestratorPSCmdlet
                 EscapeCsvValue(bucket.Options),
                 EscapeCsvValue(bucket.Tags)
             ];
-            WriteCsvLine(writer, line);
+            writer.WriteCsvLine(line);
         }
     }
 

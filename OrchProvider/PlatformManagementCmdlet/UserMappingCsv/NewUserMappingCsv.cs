@@ -49,7 +49,7 @@ class NewUserMappingCsvCommand : OrchestratorPSCmdlet
                 EscapeCsvValue(user.SourceSource),
                 EscapeCsvValue(user.DestinationUserName)
             ];
-            WriteCsvLine(writer, line);
+            writer.WriteCsvLine(line);
         }
     }
 

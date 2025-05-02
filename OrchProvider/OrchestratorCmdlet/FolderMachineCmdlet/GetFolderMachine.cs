@@ -51,7 +51,7 @@ public class GetFolderMachineCommand : OrchestratorPSCmdlet
                 EscapeCsvValue(m.PropagateToSubFolders)
             ];
 
-            WriteCsvLine(writer, line);
+            writer.WriteCsvLine(line);
         }
     }
 

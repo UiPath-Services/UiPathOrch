@@ -52,7 +52,7 @@ public class GetPmGroupMemberCommand : OrchestratorPSCmdlet
                 member.email ?? "",
                 member.source ?? ""
             ];
-            WriteCsvLine(writer, line);
+            writer.WriteCsvLine(line);
         }
     }
 

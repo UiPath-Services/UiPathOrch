@@ -59,7 +59,7 @@ public class GetRoleCommand : OrchestratorPSCmdlet
                 EscapeCsvValue(permission.Create),
                 EscapeCsvValue(permission.Delete)
             ];
-            WriteCsvLine(writer, line);
+            writer.WriteCsvLine(line);
         }
     }
 

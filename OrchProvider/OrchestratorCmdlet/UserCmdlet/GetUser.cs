@@ -115,7 +115,7 @@ public class GetUserCommand : OrchestratorPSCmdlet
             EscapeCsvValue(p.RolesList, true)
         ];
 
-        WriteCsvLine(writer, line);
+        writer.WriteCsvLine(line);
     }
 
     protected override void ProcessRecord()

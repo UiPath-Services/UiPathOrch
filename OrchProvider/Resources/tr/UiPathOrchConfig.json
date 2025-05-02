@@ -44,16 +44,22 @@
   "IgnoreSslErrors": false,
 
   "Proxy": {
+    // Bunu true olarak ayarlamak, tüm PSDrive'lar için proxy ayarlarını
+    // etkinleştirir.
+    "Enabled": false,
+
+    // true olarak ayarlanırsa, Internet Seçenekleri'nde yapılandırılan proxy
+    // ayarları kullanılır.
+    // Bu durumda, sonraki tüm ayarlar ("Url" vb.) yok sayılır.
+    "UseDefaultWebProxy": true,
+
     "Url": "http://proxy.example.com:8080",
     "BypassProxyOnLocal": true,
     "UseDefaultCredentials": false,
     "Credentials": {
       "Username": "PROXY_USERNAME",
       "Password": "PROXY_PASSWORD"
-    },
-    // Bunu true olarak ayarlamak, tüm PSDrive'lar için proxy ayarlarını
-    // etkinleştirir.
-    "Enabled": false
+    }
   },
 
   /* =================== Küresel Ayarlar Sonu ==================== */
@@ -152,6 +158,7 @@
       "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
       "Enabled": false,
       "Proxy": {
+        "UseDefaultWebProxy": false,
         "Url": "http://proxy.example.com:8081",
         "BypassProxyOnLocal": true,
         "UseDefaultCredentials": false,

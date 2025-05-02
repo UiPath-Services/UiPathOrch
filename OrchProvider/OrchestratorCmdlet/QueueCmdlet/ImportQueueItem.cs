@@ -183,7 +183,7 @@ public class ImportQueueItemCommand : OrchestratorPSCmdlet
         foreach (var values in contents)
         {
             ++currentRowNumber;
-            var queueItem = new QueueItemData();
+            var queueItem = new QueueItemData4CsvImport();
             foreach (var column in headers.Zip(values, (header, value) => (header, value)))
             {
                 var (header, value) = column;

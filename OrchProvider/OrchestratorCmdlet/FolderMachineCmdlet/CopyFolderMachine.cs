@@ -37,7 +37,7 @@ public class CopyFolderMachineCommand : OrchestratorPSCmdlet
         var (dstDrive, dstRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Destination);
 
         // コピー元とコピー先が同じなら、何もしない
-        if (srcDrive == dstDrive && srcRootFolder == dstRootFolder) return;
+        if (srcRootFolder == dstRootFolder) return;
 
         var wpName = Name.ConvertToWildcardPatternList();
 
@@ -64,7 +64,7 @@ public class CopyFolderMachineCommand : OrchestratorPSCmdlet
             }
 
             Folder? dstFolder = this.GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
-            if (dstFolder is null || (srcDrive == dstDrive && srcFolder == dstFolder)) continue;
+            if (dstFolder is null || srcFolder == dstFolder) continue;
 
             try
             {

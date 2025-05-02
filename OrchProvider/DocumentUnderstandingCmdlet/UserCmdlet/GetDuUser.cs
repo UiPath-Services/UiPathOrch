@@ -66,7 +66,7 @@ public class GetDuUserCommand : OrchestratorPSCmdlet
                 EscapeCsvValue(user.roleAssignmentDtos?.Select(r => r.roleName), true)
             ];
 
-            WriteCsvLine(writer, line);
+            writer.WriteCsvLine(line);
         }
     }
 
