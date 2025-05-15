@@ -2785,6 +2785,8 @@ public class QueueItemData
 
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     internal Int64? Id { get; set; } // added by UiPathOrch
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    internal string? Key { get; set; } // added by UiPathOrch
 }
 
 // BulkAddQueueItemsRequest

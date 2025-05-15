@@ -70,7 +70,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         }
 
         // CSV特有のエスケープ処理
-        if (value.Contains(',') || value.Contains('"') || value.Contains('\n'))
+        if (value.IndexOfAny([',', '"', '\n', '\r']) >= 0)
         {
             return $"\"{value.Replace("\"", "\"\"")}\"";
         }

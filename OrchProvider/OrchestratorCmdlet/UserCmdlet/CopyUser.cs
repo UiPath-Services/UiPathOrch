@@ -59,8 +59,7 @@ public class CopyUserCommand : OrchestratorPSCmdlet
             .OrderBy(user => user.UserName)
             .ToList();
 
-        string msg = "Copying users";
-        using var reporter = new ProgressReporter(_this, 1, 100, msg, msg);
+        using var reporter = new ProgressReporter(_this, 1, 100, "Copying users");
 
         int index = 0;
         reporter.TotalNum = dstDrives.Count() * srcUsers.Count;
@@ -77,7 +76,7 @@ public class CopyUserCommand : OrchestratorPSCmdlet
 
                 var target = $"Item: {srcDrive.NameColonSeparator}{OrchArgumentCompleter.TipHelp(srcUser)} Destination: {dstDrive.NameColonSeparator}";
 
-                reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {srcUser.GetPSPath()} to {dstDrive.NameColonSeparator}");
+                reporter.WriteProgress(++index, $"{srcUser.GetPSPath()} to {dstDrive.NameColonSeparator}");
 
                 if (shouldProcess || _this.ShouldProcess(target, "Copy User"))
                 {

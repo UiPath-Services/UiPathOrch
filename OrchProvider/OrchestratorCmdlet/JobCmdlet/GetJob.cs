@@ -483,8 +483,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         if (Id is null || Id.Length == 0)
         {
-            string msg = $"Get Job";
-            using ProgressReporter reporter = new(this, 1, drivesFolders.Count, msg, msg);
+            using ProgressReporter reporter = new(this, 1, drivesFolders.Count, "Get Job");
             int index = 0;
             foreach (var (drive, folder) in drivesFolders)
             {
@@ -492,7 +491,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
 
                 string filter = MakeFilter(drive, folder);
                 if (filter == "null") continue;
-                reporter.WriteProgress(++index, $"{index:D}/{drivesFolders.Count} {folder.GetPSPath()}");
+                reporter.WriteProgress(++index, $"{folder.GetPSPath()}");
                 try
                 {
                     var jobs = drive.GetJobs(folder, filter, skip, first, OrderBy, OrderAscending.IsPresent);

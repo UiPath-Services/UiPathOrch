@@ -433,11 +433,11 @@ public static class ParallelResults
 
 // このクラスのインスタンスを保持する変数のスコープが終わると、自動でプログレスバーを破棄する。
 // この変数は、using を伴って定義することが必要。
-public class ProgressReporter(IWritableHost provider, int id, int totalNum, string activity, string statusDescription) : IDisposable
+public class ProgressReporter(IWritableHost provider, int id, int totalNum, string activity) : IDisposable
 {
     private IWritableHost? provider = provider;
     //private Cmdlet? cmdlet;
-    private readonly ProgressRecord progressRecord = new(id, activity, statusDescription);
+    private readonly ProgressRecord progressRecord = new(id, activity, activity);
     private int totalNum = totalNum;
 
     public int TotalNum
@@ -453,15 +453,12 @@ public class ProgressReporter(IWritableHost provider, int id, int totalNum, stri
 
     public void WriteProgress(int index, string? statusDescription = null, string? activity = null)
     {
-        progressRecord.PercentComplete = (index * 100) / totalNum;
+        progressRecord.PercentComplete = (index * 100) / this.totalNum;
         if (!string.IsNullOrEmpty(activity))
         {
             progressRecord.Activity = activity;
         }
-        if (!string.IsNullOrEmpty(statusDescription))
-        {
-            progressRecord.StatusDescription = statusDescription;
-        }
+        progressRecord.StatusDescription = $"{index:D}/{totalNum} {statusDescription}".TrimEnd();
         WriteProgress();
     }
 

@@ -132,8 +132,7 @@ public class SaveJobMediaCommand : OrchestratorPSCmdlet
         }
         #endregion
 
-        string msg = "Saving Media";
-        using var reporter = new ProgressReporter(this, 1, totalFileNum, msg, msg);
+        using var reporter = new ProgressReporter(this, 1, totalFileNum, "Saving Media");
 
         int index = 0;
         foreach (var (drive, folder) in drivesFolders)
@@ -173,7 +172,7 @@ public class SaveJobMediaCommand : OrchestratorPSCmdlet
 
                 if (ShouldProcess(target, "Export JobMedia"))
                 {
-                    reporter.WriteProgress(++index, $"{index:D}/{totalFileNum}");
+                    reporter.WriteProgress(++index);
 
                     try
                     {

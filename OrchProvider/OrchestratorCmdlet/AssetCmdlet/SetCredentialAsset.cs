@@ -674,8 +674,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
 
         List<(OrchDriveInfo drive, Int64 id)> folderIdsThatShouldRemoveCache = [];
 
-        string msg = "Updating Credential Assets";
-        using var reporter = new ProgressReporter(this, 1, parameterSets.Count, msg, msg);
+        using var reporter = new ProgressReporter(this, 1, parameterSets.Count, "Updating credential assets");
 
         // グループ化したパラメータセットを処理する
         try
@@ -697,7 +696,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
 
                 var target = asset.GetPSPath();
 
-                reporter.WriteProgress(++index, $"{index:D}/{parameterSets.Count}");
+                reporter.WriteProgress(++index);
 
                 var existingAssets = drive.Assets.Get(folder);
                 var existingAsset = existingAssets.FirstOrDefault(a => a.Name == asset.Name);

@@ -45,8 +45,7 @@ public class CopyQueueCommand : OrchestratorPSCmdlet
 
         // コピーの直前でキャッシュを削除するので、ここで取得しておくのは意味がない
 
-        string msg = "Copying queues...";
-        using var reporterQueues = new ProgressReporter(this, 700, Int32.MaxValue, msg, msg);
+        using var reporterQueues = new ProgressReporter(this, 700, Int32.MaxValue, "Copying queues...");
         using var cancelHandler = new ConsoleCancelHandler();
 
         foreach (var (_, srcFolder) in srcDrivesFolders)

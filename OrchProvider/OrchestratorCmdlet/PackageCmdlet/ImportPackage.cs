@@ -58,8 +58,7 @@ public class ImportPackageCommand : OrchestratorPSCmdlet
 
         int totalNum = tasks.Count;
 
-        string msg = "Importing Packages";
-        using var reporter = new ProgressReporter(this, 1, totalNum, msg, msg);
+        using var reporter = new ProgressReporter(this, 1, totalNum, "Importing Packages");
 
         int index = 0;
         using var cancelHandler = new ConsoleCancelHandler();
@@ -101,7 +100,7 @@ public class ImportPackageCommand : OrchestratorPSCmdlet
             string target2 = target + System.IO.Path.GetFileName(fullPath);
             if (ShouldProcess(target, $"Import Package {fullPath}"))
             {
-                reporter.WriteProgress(++index, $"{index:D}/{totalNum}");
+                reporter.WriteProgress(++index);
                 try
                 {
                     // targetFolder に同名のパッケージがあれば、警告を表示してコピーをスキップする

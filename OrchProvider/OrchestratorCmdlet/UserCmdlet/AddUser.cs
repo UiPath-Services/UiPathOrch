@@ -587,8 +587,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
         Dictionary<OrchDriveInfo, Dictionary<string, Entities.User>> existingUsersPerDrive = [];
 
         int index = 0;
-        string msg = "Add users... ";
-        using var reporter = new ProgressReporter(this, 1, _csvLines.Count, msg, msg);
+        using var reporter = new ProgressReporter(this, 1, _csvLines.Count, "Add users... ");
         foreach (var key_line in _csvLines
             .OrderBy(kl => kl.Key.drive.NameColon)
             .ThenBy(kl => kl.Key.userName)
@@ -609,7 +608,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
             if (!users.Any())
             {
                 string target = System.IO.Path.Combine(drive.NameColonSeparator, userName);
-                reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {target}");
+                reporter.WriteProgress(++index, target);
                 continue;
             }
 
@@ -622,7 +621,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
                 if (!string.IsNullOrEmpty(user.displayName))
                     target += $" ({user.displayName})";
 
-                reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {target}");
+                reporter.WriteProgress(++index, target);
 
                 if (UserAlreadyExists(existingUsersPerDrive, drive, userName))
                 {

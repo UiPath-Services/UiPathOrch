@@ -41,8 +41,7 @@ public class CopyTriggerCommand : OrchestratorPSCmdlet
 
         var wpName = Name.ConvertToWildcardPatternList();
 
-        string msg = "Copying triggers...";
-        using var reporterTriggers = new ProgressReporter(this, 800, Int32.MaxValue, msg, msg);
+        using var reporterTriggers = new ProgressReporter(this, 800, Int32.MaxValue, "Copying triggers...");
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (_, srcFolder) in srcDrivesFolders)
         {

@@ -49,8 +49,7 @@ public class CopyMachineCommand : OrchestratorPSCmdlet
             return;
         }
 
-        string msg = "Copying machines";
-        using var reporter = new ProgressReporter(_this, 1, 100, msg, msg);
+        using var reporter = new ProgressReporter(_this, 1, 100, "Copying machines");
 
         int index = 0;
         reporter.TotalNum = dstDrives.Count() * srcMachines.Count;
@@ -67,7 +66,7 @@ public class CopyMachineCommand : OrchestratorPSCmdlet
                 {
                     cancelToken.ThrowIfCancellationRequested();
 
-                    reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {machine.GetPSPath()} to {dstDrive.NameColonSeparator}");
+                    reporter.WriteProgress(++index, $"{machine.GetPSPath()} to {dstDrive.NameColonSeparator}");
 
                     string targetMachine = machine.GetPSPath();
                     if (shouldProcess || _this.ShouldProcess($"Item: {targetMachine} Destination: {dstDrive.NameColonSeparator}", $"Copy Machine"))

@@ -155,8 +155,7 @@ public class GetUserCommand : OrchestratorPSCmdlet
                         user => drive.GetUser(user));
 
                     int index = 0;
-                    string msg = "Get users... ";
-                    using var reporter = new ProgressReporter(this, 1, targetUsers.Count, msg, msg);
+                    using var reporter = new ProgressReporter(this, 1, targetUsers.Count, "Get users... ");
                     foreach (var result in results)
                     {
                         try
@@ -164,7 +163,7 @@ public class GetUserCommand : OrchestratorPSCmdlet
                             var detailedUser = result.GetResult(cancelHandler.Token);
                             if (detailedUser is null) continue;
 
-                            reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {detailedUser.GetPSPath()}");
+                            reporter.WriteProgress(++index, detailedUser.GetPSPath());
 
                             if (writer is not null) WriteCsvContent(writer, drive, detailedUser);
                             else WriteObject(detailedUser);

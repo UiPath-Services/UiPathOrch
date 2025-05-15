@@ -330,7 +330,7 @@ public class ExportPackageCommand : OrchestratorPSCmdlet
 
         // 完全にシングルスレッドで処理するバージョン
         using var cancelHandler = new ConsoleCancelHandler();
-        using ProgressReporter reporter = new(this, 1, 100, "Export Package", "Export Package");
+        using ProgressReporter reporter = new(this, 1, 100, "Export packages");
         foreach (var (drive, folder) in drivesFolders)
         {
             try
@@ -372,7 +372,7 @@ public class ExportPackageCommand : OrchestratorPSCmdlet
                             cancelHandler.Token.ThrowIfCancellationRequested();
 
                             string target = version.GetPSPath() + ':' + version.Version;
-                            reporter.WriteProgress(++index, $"{index:D}/{versions.Count} {target}");
+                            reporter.WriteProgress(++index, target);
                             if (ShouldProcess(target, "Export Package"))
                             {
                                 try

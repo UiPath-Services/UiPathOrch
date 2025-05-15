@@ -41,8 +41,7 @@ public class CopyTestSetCommand : OrchestratorPSCmdlet
 
         var wpName = Name.ConvertToWildcardPatternList();
 
-        string msg = "Copying test sets...";
-        using var reporterTestSets = new ProgressReporter(this, 1100, Int32.MaxValue, msg, msg);
+        using var reporterTestSets = new ProgressReporter(this, 1100, Int32.MaxValue, "Copying test sets...");
         using var cancelHandler = new ConsoleCancelHandler();
 
         foreach (var (_, srcFolder) in srcDrivesFolders)

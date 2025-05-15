@@ -42,8 +42,7 @@ public class CopyPmRobotAccountCommand : OrchestratorPSCmdlet
                 .OrderBy(r => r!.displayName)
                 .ToList();
 
-            string msg = "Copying PmRobotAccount";
-            using var reporter = new ProgressReporter(this, 1, 100, msg, msg);
+            using var reporter = new ProgressReporter(this, 1, 100, "Copying PmRobotAccount");
 
             using var cancelHandler = new ConsoleCancelHandler();
 
@@ -66,7 +65,7 @@ public class CopyPmRobotAccountCommand : OrchestratorPSCmdlet
                             continue;
                         }
 
-                        reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {srcRobotAccount.GetPSPath()} to {dstDrive.NameColonSeparator}");
+                        reporter.WriteProgress(++index, $"{srcRobotAccount.GetPSPath()} to {dstDrive.NameColonSeparator}");
 
                         string target = $"Item: {System.IO.Path.Combine(srcDrive!.NameColon, srcRobotAccount!.displayName!)} Destination: {dstDrive.NameColonSeparator}";
 

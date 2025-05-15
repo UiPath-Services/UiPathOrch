@@ -335,8 +335,7 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
         }
 
         using var cancelHandler = new ConsoleCancelHandler();
-        string msgFolder = "Folder";
-        using ProgressReporter reporterFolder = new(this, 1, drivesFolders.Count, msgFolder, msgFolder);
+        using ProgressReporter reporterFolder = new(this, 1, drivesFolders.Count, "Folder");
         int indexFolder = 0;
         foreach (var (drive, folder) in drivesFolders)
         {
@@ -344,7 +343,7 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
 
             if (drivesFolders.Count > 1)
             {
-                reporterFolder.WriteProgress(++indexFolder, $"{indexFolder:D}/{drivesFolders.Count} {folder.GetPSPath()}");
+                reporterFolder.WriteProgress(++indexFolder, folder.GetPSPath());
             }
 
             IEnumerable<QueueDefinition> queues = null;
@@ -361,40 +360,30 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
             var targetQueues = queues
                 .FilterByWildcards(q => q?.Name, wpName)
                 .OrderBy(q => q.Name).ToList();
-            string msgQueue = "Queue ";
-            using ProgressReporter reporterQueue = new(this, 2, targetQueues.Count, msgQueue, msgQueue);
+            using ProgressReporter reporterQueue = new(this, 2, targetQueues.Count, "Queue ");
             int indexQueue = 0;
             foreach (var queue in targetQueues)
             {
                 cancelHandler.Token.ThrowIfCancellationRequested();
 
-                //reporterQueue.WriteProgress(++indexQueue, $"{indexQueue:D}/{drivesFolders.Count} {queue.GetPSPath()}");
-                reporterQueue.WriteProgress(++indexQueue, $"{indexQueue:D}/{targetQueues.Count}");
+                //reporterQueue.WriteProgress(++indexQueue, queue.GetPSPath());
+                reporterQueue.WriteProgress(++indexQueue);
 
                 string query = MakeFilter(drive, folder, queue);
                 int first = First ?? int.MaxValue; // first は、キューごとにリセット
                 int skip = Skip ?? 0;
 
-                string msgItem  = "Item  ";
                 int intReporterItemTotal;
                 string strReporterItemTotal;
-                if (first > int.MaxValue)
-                {
-                    intReporterItemTotal = 1000;
-                    strReporterItemTotal = "Unknown";
-                }
-                else
-                {
-                    intReporterItemTotal = (int)first;
-                    strReporterItemTotal = $"{first}";
-                }
-                using ProgressReporter reporterItem = new(this, 3, intReporterItemTotal, msgItem, msgItem);
+                intReporterItemTotal = (int)first;
+                strReporterItemTotal = $"{first}";
+                using ProgressReporter reporterItem = new(this, 3, intReporterItemTotal, "Item  ");
                 try
                 {
                     while (first > 0)
                     {
                         cancelHandler.Token.ThrowIfCancellationRequested();
-                        reporterItem?.WriteProgress((int)(skip % intReporterItemTotal), $"{(int)skip:D}/{strReporterItemTotal}");
+                        reporterItem?.WriteProgress(skip % intReporterItemTotal);
 
                         var first2 = int.Min(100, first);
                         var items = drive.GetQueueItems(folder, queue, query, (ulong)skip, (ulong)first2, OrderBy, OrderAscending.IsPresent);

@@ -42,8 +42,7 @@ public class CopyBucketCommand : OrchestratorPSCmdlet
 
         var wpName = Name.ConvertToWildcardPatternList();
 
-        string msg = "Copying buckets...";
-        using var reporterBuckets = new ProgressReporter(this, 1000, Int32.MaxValue, msg, msg);
+        using var reporterBuckets = new ProgressReporter(this, 1000, Int32.MaxValue, "Copying buckets...");
         using var cancelHandler = new ConsoleCancelHandler();
 
         foreach (var (_, srcFolder) in srcDrivesFolders)

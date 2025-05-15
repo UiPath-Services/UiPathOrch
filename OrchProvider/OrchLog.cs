@@ -149,7 +149,7 @@ public partial class OrchAPISession : IDisposable
         {
             if (outputSummary)
             {
-                sb.AppendLineLf($"{resTime:HH:mm:ss.fff} {(int)response.StatusCode} {response.ReasonPhrase}");
+                sb.AppendLineLf($"{resTime:HH:mm:ss.fff} RES Status: {(int)response.StatusCode} {response.ReasonPhrase}");
             }
 
             if (outputHeader)

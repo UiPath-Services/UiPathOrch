@@ -99,8 +99,7 @@ public class CopyFolderUserCommand : OrchestratorPSCmdlet
         var wpUserName = UserName.ConvertToWildcardPatternList();
         var wpType = Type.ConvertToWildcardPatternList();
 
-        string msg = "Copying folder users...";
-        using var reporter = new ProgressReporter(this, 200, Int32.MaxValue, msg, msg);
+        using var reporter = new ProgressReporter(this, 200, Int32.MaxValue, "Copying folder users...");
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (_, srcFolder) in srcDrivesFolders)
         {

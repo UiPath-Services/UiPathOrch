@@ -35,8 +35,7 @@ public class CopyRoleCommand : OrchestratorPSCmdlet
             .OrderBy(role => role.Name)
             .ToList();
 
-        string msg = "Copying roles";
-        using var reporter = new ProgressReporter(_this, 1, 100, msg, msg);
+        using var reporter = new ProgressReporter(_this, 1, 100, "Copying roles");
 
         int index = 0;
         reporter.TotalNum = dstDrives.Count() * srcRoles.Count;
@@ -52,7 +51,7 @@ public class CopyRoleCommand : OrchestratorPSCmdlet
                 .OrderBy(r => r.Name))
             {
                 cancelToken.ThrowIfCancellationRequested();
-                reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {role.GetPSPath()} to {dstDrive.NameColonSeparator}");
+                reporter.WriteProgress(++index, $"{role.GetPSPath()} to {dstDrive.NameColonSeparator}");
 
                 // コピー元のロールが IsStatic で、かつコピー先に同名のロールがある場合にはスキップ
                 if (role.IsStatic.GetValueOrDefault())
