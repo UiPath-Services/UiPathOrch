@@ -538,6 +538,11 @@ internal class Name_Destination : IPositionalParameters
     public static string[] Parameters { get; } = ["Name", "Destination"];
 }
 
+internal class Name_Id_RowVersion : IPositionalParameters
+{
+    public static string[] Parameters { get; } = ["Name", "Id", "RowVersion"];
+}
+
 internal class Name_DirectoryUserMember : IPositionalParameters
 {
     public static string[] Parameters { get; } = ["Name", "DirectoryUserMember"];

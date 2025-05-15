@@ -83,6 +83,9 @@ API トリガーをコピーします。
 ### [Copy-OrchQueue](Copy-OrchQueue.md)
 キューをコピーします。
 
+### [Copy-OrchQueueItem](Copy-OrchQueueItem.md)
+Status が New となっているキューアイテムを、別の場所にある同名のキューにコピーします。
+
 ### [Copy-OrchRole](Copy-OrchRole.md)
 ロールをコピーします。
 
@@ -538,6 +541,9 @@ API トリガーを削除します。
 
 ### [Remove-OrchQueue](Remove-OrchQueue.md)
 キューを削除します。
+
+### [Remove-OrchQueueItem](Remove-OrchQueueItem.md)
+キューアイテムを削除します。
 
 ### [Remove-OrchRole](Remove-OrchRole.md)
 ロールを削除します。

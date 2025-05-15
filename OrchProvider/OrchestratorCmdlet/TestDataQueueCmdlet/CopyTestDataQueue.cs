@@ -41,8 +41,7 @@ public class CopyTestDataQueueCommand : OrchestratorPSCmdlet
 
         var wpName = Name.ConvertToWildcardPatternList();
 
-        string msg = "Copying test data queues...";
-        using var reporterTestDataQueues = new ProgressReporter(this, 1300, Int32.MaxValue, msg, msg);
+        using var reporterTestDataQueues = new ProgressReporter(this, 1300, Int32.MaxValue, "Copying test data queues...");
         using var cancelHandler = new ConsoleCancelHandler();
 
         foreach (var (_, srcFolder) in srcDrivesFolders)

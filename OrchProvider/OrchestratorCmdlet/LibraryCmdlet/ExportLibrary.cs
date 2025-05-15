@@ -124,7 +124,7 @@ public class ExportLibraryCommand : OrchestratorPSCmdlet
             //drive => HostFeed ? drive.LibrariesInHost.Get() : drive.LibrariesInTenant.Get());
             drive => drive.LibrariesInTenant.Get());
 
-        using var reporter = new ProgressReporter(this, 1, 100, "Export Library", "Export Library");
+        using var reporter = new ProgressReporter(this, 1, 100, "Export Library");
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)
         {
@@ -152,7 +152,7 @@ public class ExportLibraryCommand : OrchestratorPSCmdlet
                             cancelHandler.Token.ThrowIfCancellationRequested();
 
                             string target = $"{version.Id}.{version.Version}.nupkg";
-                            reporter.WriteProgress(++index, $"{index:D}/{versions.Count} {target}");
+                            reporter.WriteProgress(++index, target);
                             if (ShouldProcess(target, "Export Library"))
                             {
                                 try

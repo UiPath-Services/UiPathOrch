@@ -69,8 +69,7 @@ public class CopyCredentialStoreCommand : OrchestratorPSCmdlet
             return;
         }
 
-        string msg = "Copying credential stores";
-        using var reporter = new ProgressReporter(_this, 1, 100, msg, msg);
+        using var reporter = new ProgressReporter(_this, 1, 100, "Copying credential stores");
 
         int index = 0;
         reporter.TotalNum = dstDrives.Count() * stores.Count;
@@ -80,7 +79,7 @@ public class CopyCredentialStoreCommand : OrchestratorPSCmdlet
             foreach (var store in stores)
             {
                 cancelToken.ThrowIfCancellationRequested();
-                reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {store.GetPSPath()} to {dstDrive.NameColonSeparator}");
+                reporter.WriteProgress(++index, $"{store.GetPSPath()} to {dstDrive.NameColonSeparator}");
 
                 // コピー元の store が "Orchestrator Database" で、かつコピー先に同名の store がある場合にはスキップ
                 if (string.Compare(store.Name, "Orchestrator Database", true) == 0)

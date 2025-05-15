@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Management.Automation;
 using System.Management.Automation.Provider;
+using System.Threading;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
@@ -261,7 +262,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             cancelToken.ThrowIfCancellationRequested();
 
             //reporter.WriteProgress(++index, $"{index:D}/{srcFolderUsers.Count} {userRole.UserEntity!.UserName}");
-            reporter.WriteProgress(++index, $"{index:D}/{srcFolderUsers.Count}");
+            reporter.WriteProgress(++index);
 
             if (shouldProcess || _this.ShouldProcess($"Item: '{userRole.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy FolderUser"))
             {
@@ -481,7 +482,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         if (machinesToBeAdded.Count == 0) return;
         
         reporter.TotalNum = machinesToBeAdded.Count;
-        reporter.WriteProgress(machinesToBeAdded.Count, $"{machinesToBeAdded.Count}/{machinesToBeAdded.Count}");
+        reporter.WriteProgress(machinesToBeAdded.Count);
         try
         {
             dstDrive.OrchAPISession.AddMachinesToFolder(newFolder.Id ?? 0, machinesToBeAdded.Select(m => m.Id ?? 0));
@@ -586,8 +587,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             {
                 cancelToken.ThrowIfCancellationRequested();
 
-                //reporter.WriteProgress(++index, $"{index:D}/{totalNum} {version.Id}:{version.Version}");
-                reporter.WriteProgress(++index, $"{index:D}/{totalNum}");
+                //reporter.WriteProgress(++index, $"{version.Id}:{version.Version}");
+                reporter.WriteProgress(++index);
 
                 string fileName;
                 byte[] fileContent;
@@ -691,7 +692,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 //var releaseInCache = processes.FirstOrDefault(p => p.Id == process.Id);
 
                 //reporter.WriteProgress(++index, $"{index:D}/{processes.Count} {process.Name}");
-                reporter.WriteProgress(++index, $"{index:D}/{processes.Count}");
+                reporter.WriteProgress(++index);
 
                 #region src の release 情報を取得
                 Release srcRelease = null;
@@ -1494,8 +1495,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             if (shouldProcess || _this.ShouldProcess($"Item: '{asset.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy Asset"))
             {
                 msg = $"Copying asset {asset.GetPSPath()}";
-                //reporter.WriteProgress(++index, $"{index:D}/{srcAssets.Count} {asset.Name}");
-                reporter.WriteProgress(++index, $"{index:D}/{srcAssets.Count}");
+                //reporter.WriteProgress(++index, asset.Name);
+                reporter.WriteProgress(++index);
 
                 // リンクを取得し、ターゲットドライブのリンク先フォルダに同名のエンティティがあれば
                 // そこにリンクを張るだけにする
@@ -1732,8 +1733,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             {
                 target = srcFolder.GetPSPath();
                 msg = $"Copying queue {queue.GetPSPath()}";
-                //reporter.WriteProgress(++index, $"{index:D}/{srcQueues.Count} {queue.Name}");
-                reporter.WriteProgress(++index, $"{index:D}/{srcQueues.Count}");
+                //reporter.WriteProgress(++index, queue.Name);
+                reporter.WriteProgress(++index);
 
                 QueueDefinition postingQueue = null;
 
@@ -1914,8 +1915,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 target = newFolder.GetPSPath();
                 msg = $"Copying trigger {srcTrigger.GetPSPath()}";
 
-                //reporter.WriteProgress(++index, $"{index:D}/{srcTriggers.Count} {srcTrigger.Name}");
-                reporter.WriteProgress(++index, $"{index:D}/{srcTriggers.Count}");
+                //reporter.WriteProgress(++index, srcTrigger.Name);
+                reporter.WriteProgress(++index);
 
                 var detailedSrcTrigger = srcDrive.GetTrigger(srcFolder, srcTrigger);
 
@@ -2048,8 +2049,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             if (shouldProcess || _this.ShouldProcess($"Item: '{trigger.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy ApiTrigger"))
             {
                 msg = $"Copying API trigger {trigger.GetPSPath()}";
-                //reporter.WriteProgress(++index, $"{index:D}/{srcTriggers.Count} {trigger.Name}");
-                reporter.WriteProgress(++index, $"{index:D}/{srcTriggers.Count}");
+                //reporter.WriteProgress(++index, trigger.Name);
+                reporter.WriteProgress(++index);
 
                 //var detailedTrigger = srcDrive.OrchAPISession.GetHttpTrigger(srcFolder.Id ?? 0, trigger.Id!);
                 //detailedTrigger ??= trigger;
@@ -2193,8 +2194,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             if (shouldProcess || _this.ShouldProcess(bucket.GetPSPath(), "Copy Bucket"))
             {
                 msg = $"Copying bucket {System.IO.Path.Combine(bucket.GetPSPath())}";
-                //reporter.WriteProgress(++index, $"{index:D}/{srcBuckets.Count} {bucket.Name}");
-                reporter.WriteProgress(++index, $"{index:D}/{srcBuckets.Count}");
+                //reporter.WriteProgress(++index, bucket.Name);
+                reporter.WriteProgress(++index);
 
                 // リンクを取得し、ターゲットドライブのリンク先フォルダに同名のエンティティがあれば
                 // そこにリンクを張るだけにする
@@ -2304,8 +2305,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 if (shouldProcess || _this.ShouldProcess(target, "Copy TestSet"))
                 {
                     msg = $"Copying test set {ts.GetPSPath()}";
-                    //reporter.WriteProgress(++index, $"{index:D}/{srcTestSets.Count} {testSetSchedule.Name}");
-                    reporter.WriteProgress(++index, $"{index:D}/{srcTestSets.Count}");
+                    //reporter.WriteProgress(++index, testSetSchedule.Name);
+                    reporter.WriteProgress(++index);
                     try
                     {
                         var postingTestSet = srcDrive.OrchAPISession.GetTestSetForEdit(srcFolder.Id ?? 0, ts.Id ?? 0);
@@ -2470,8 +2471,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             if (shouldProcess || _this.ShouldProcess(target, "Copy TestSetSchedule"))
             {
                 msg = $"Copying test schedule {System.IO.Path.Combine(srcFolder.GetPSPath(), testSetSchedule.Name!)}";
-                //reporter.WriteProgress(++index, $"{index:D}/{srcTestSetSchedules.Count} {testSetSchedule.Name}");
-                reporter.WriteProgress(++index, $"{index:D}/{srcTestSetSchedules.Count}");
+                //reporter.WriteProgress(++index, testSetSchedule.Name);
+                reporter.WriteProgress(++index);
 
                 var postingTestSetSchedule = OrchCollectionExtensions.DeepCopy(testSetSchedule);
                 postingTestSetSchedule.Id = null;
@@ -2539,8 +2540,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             if (shouldProcess || _this.ShouldProcess(target, "Copy TestDataQueue"))
             {
                 msg = $"Copying test data queue {System.IO.Path.Combine(srcFolder.GetPSPath(), testDataQueue.Name!)}";
-                //reporter.WriteProgress(++index, $"{index:D}/{srcTestDataQueues.Count} {testDataQueue.Name}");
-                reporter.WriteProgress(++index, $"{index:D}/{srcTestDataQueues.Count}");
+                //reporter.WriteProgress(++index, testDataQueue.Name);
+                reporter.WriteProgress(++index);
 
                 var postingTestDataQueue = OrchCollectionExtensions.DeepCopy(testDataQueue);
                 postingTestDataQueue.Id = null;
@@ -2599,8 +2600,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             if (shouldProcess || _this.ShouldProcess(target, "Copy ActionCatalog"))
             {
                 msg = $"Copying action catalog {System.IO.Path.Combine(srcFolder.GetPSPath(), srcTaskCatalog.Name!)}";
-                //reporter.WriteProgress(++index, $"{index:D}/{srcTestDataQueues.Count} {testDataQueue.Name}");
-                reporter.WriteProgress(++index, $"{index:D}/{srcTaskCatalogs.Count}");
+                //reporter.WriteProgress(++index, testDataQueue.Name);
+                reporter.WriteProgress(++index);
 
                 var postingTaskCatalog = OrchCollectionExtensions.DeepCopy(srcTaskCatalog);
                 postingTaskCatalog.Id = null;
@@ -2717,12 +2718,9 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
         if (ShouldProcess(target, $"Copy Folder"))
         {
-            // ここは複数形ではない
-            string msg = $"Copying folder";
-
             // totalNum: folder itself, users, machines, packages, processes, assets, 
             // queues, triggers, API triggers, buckets, testsets, testschedules, testdataqueues
-            int totalStageNum = 12;
+            int totalStageNum = 13;
             if (srcFolder.FolderType == "Personal") totalStageNum = 9;
             // Apps はコピーできるんだっけ？
 
@@ -2741,7 +2739,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 }
 
                 Folder newFolder;
-                using ProgressReporter reporter = new(this, 1, totalStageNum, msg, msg);
+                using ProgressReporter reporter = new(this, 1, totalStageNum, "Copying folder");
                 // 次から始まるスコープ↓は、子供 reporter がタイムリーに消えるように導入したもの。
                 {
                     reporter.WriteProgress(0, $"\"{srcFolder.GetPSPath()}\" to \"{dstFolder.GetPSPath()}\"");
@@ -2757,98 +2755,127 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                     if (!ExcludeEntities)
                     {
+                        int rootIndex = 0;
+
                         // #1 フォルダーユーザーをコピー
+                        string msg;
                         msg = "Copying folder users...      ";
-                        reporter.WriteProgress(1);
+                        reporter.WriteProgress(++rootIndex);
                         srcDrive.FolderUsersWithInherited.ClearCache(srcFolder);
                         srcDrive.FolderUsersWithNoInherited.ClearCache(srcFolder);
-                        using var reporterFolderUsers = new ProgressReporter(this, 100, Int32.MaxValue, msg, msg);
+                        using var reporterFolderUsers = new ProgressReporter(this, 100, Int32.MaxValue, msg);
                         CopyFolderUsers(this, srcDrive, srcFolder, null, null, dstDrive, newFolder, reporterFolderUsers, true, cancelToken);
+
+                        cancelToken.ThrowIfCancellationRequested();
 
                         // #2 フォルダーマシンをコピー
                         msg = "Copying folder machines...   ";
-                        reporter.WriteProgress(2);
+                        reporter.WriteProgress(++rootIndex);
                         srcDrive.FolderMachinesAssigned.ClearCache(srcFolder);
-                        using var reporterFolderMachines = new ProgressReporter(this, 200, Int32.MaxValue, msg, msg);
+                        using var reporterFolderMachines = new ProgressReporter(this, 200, Int32.MaxValue, msg);
                         CopyFolderMachines(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterFolderMachines, true, cancelToken);
+
+                        cancelToken.ThrowIfCancellationRequested();
 
                         // #3 バケットをコピー
                         // プロセスをコピーする前に、先にバケットをコピーしておく必要がある
                         msg = "Copying buckets...           ";
-                        reporter.WriteProgress(3);
-                        using var reporterBuckets = new ProgressReporter(this, 300, Int32.MaxValue, msg, msg);
+                        reporter.WriteProgress(++rootIndex);
+                        using var reporterBuckets = new ProgressReporter(this, 300, Int32.MaxValue, msg);
                         CopyBuckets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterBuckets, true, cancelToken);
+
+                        cancelToken.ThrowIfCancellationRequested();
 
                         // #4 フォルダーパッケージをコピー
                         msg = "Copying packages...          ";
-                        reporter.WriteProgress(4);
-                        using var reporterPackages = new ProgressReporter(this, 400, Int32.MaxValue, msg, msg);
+                        reporter.WriteProgress(++rootIndex);
+                        using var reporterPackages = new ProgressReporter(this, 400, Int32.MaxValue, msg);
                         CopyPackages(this, srcDrive, srcFolder, dstDrive, newFolder, reporterPackages, cancelToken);
+
+                        cancelToken.ThrowIfCancellationRequested();
 
                         // #5 プロセスをコピー
                         msg = "Copying processes...         ";
-                        reporter.WriteProgress(5);
-                        using var reporterProcesses = new ProgressReporter(this, 500, Int32.MaxValue, msg, msg);
+                        reporter.WriteProgress(++rootIndex);
+                        using var reporterProcesses = new ProgressReporter(this, 500, Int32.MaxValue, msg);
                         CopyProcesses(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterProcesses, true, cancelToken);
+
+                        cancelToken.ThrowIfCancellationRequested();
 
                         // #6 アセットをコピー
                         msg = "Copying assets...            ";
-                        reporter.WriteProgress(6);
+                        reporter.WriteProgress(++rootIndex);
                         srcDrive.Assets.ClearCache(srcFolder);
-                        using var reporterAssets = new ProgressReporter(this, 600, Int32.MaxValue, msg, msg);
+                        using var reporterAssets = new ProgressReporter(this, 600, Int32.MaxValue, msg);
                         CopyAssets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterAssets, true, cancelToken);
+
+                        cancelToken.ThrowIfCancellationRequested();
 
                         // #7 キューをコピー
                         msg = "Copying queues...            ";
-                        reporter.WriteProgress(7);
-                        using var reporterQueues = new ProgressReporter(this, 700, Int32.MaxValue, msg, msg);
+                        reporter.WriteProgress(++rootIndex);
+                        using var reporterQueues = new ProgressReporter(this, 700, Int32.MaxValue, msg);
                         CopyQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterQueues, true, cancelToken);
+
+                        cancelToken.ThrowIfCancellationRequested();
 
                         // #8 トリガーをコピー
                         msg = "Copying triggers...          ";
-                        reporter.WriteProgress(8);
+                        reporter.WriteProgress(++rootIndex);
                         srcDrive._dicTriggers?.TryRemove(srcFolder.Id ?? 0, out _);
-                        using var reporterTriggers = new ProgressReporter(this, 800, Int32.MaxValue, msg, msg);
+                        using var reporterTriggers = new ProgressReporter(this, 800, Int32.MaxValue, msg);
                         CopyTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTriggers, true, cancelToken);
+
+                        cancelToken.ThrowIfCancellationRequested();
 
                         // #8 APIトリガーをコピー
                         msg = "Copying API triggers...      ";
-                        reporter.WriteProgress(9);
+                        reporter.WriteProgress(++rootIndex);
                         srcDrive.ApiTriggers.ClearCache(srcFolder);
-                        using var reporterApiTriggers = new ProgressReporter(this, 900, Int32.MaxValue, msg, msg);
+                        using var reporterApiTriggers = new ProgressReporter(this, 900, Int32.MaxValue, msg);
                         CopyApiTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterApiTriggers, true, cancelToken);
+
+                        cancelToken.ThrowIfCancellationRequested();
 
                         // #xx テストケースはコピーする必要がない。
                         // パッケージとプロセスをコピーすれば、自動で出てくる。
                         //msg = "Copying test cases...        ";
                         //reporter.WriteProgress();
-                        //using var reporterTestCases = new ProgressReporter(this, 1100, Int32.MaxValue, msg, msg);
+                        //using var reporterTestCases = new ProgressReporter(this, 1100, Int32.MaxValue, msg);
                         //CopyTestCases(this, srcDrive, srcFolder, dstDrive, newFolder, reporterTestCases);
 
                         // #10 テストセットをコピー
                         msg = "Copying test sets...         ";
-                        reporter.WriteProgress(10);
-                        using var reporterTestSets = new ProgressReporter(this, 1000, Int32.MaxValue, msg, msg);
+                        reporter.WriteProgress(++rootIndex);
+                        using var reporterTestSets = new ProgressReporter(this, 1000, Int32.MaxValue, msg);
                         CopyTestSets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestSets, true, cancelToken);
+
+                        cancelToken.ThrowIfCancellationRequested();
 
                         // #11 テストセットスケジュールをコピー
                         msg = "Copying test schedules...    ";
-                        reporter.WriteProgress(11);
-                        using var reporterTestSchedules = new ProgressReporter(this, 1100, Int32.MaxValue, msg, msg);
+                        reporter.WriteProgress(++rootIndex);
+                        using var reporterTestSchedules = new ProgressReporter(this, 1100, Int32.MaxValue, msg);
                         CopyTestSetSchedules(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestSchedules, true, cancelToken);
+
+                        cancelToken.ThrowIfCancellationRequested();
 
                         // #12 テストデータキューをコピー
                         msg = "Copying test data queues...  ";
-                        reporter.WriteProgress(12);
-                        using var reporterTestDataQueues = new ProgressReporter(this, 1200, Int32.MaxValue, msg, msg);
+                        reporter.WriteProgress(++rootIndex);
+                        using var reporterTestDataQueues = new ProgressReporter(this, 1200, Int32.MaxValue, msg);
                         CopyTestDataQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestDataQueues, true, cancelToken);
+
+                        cancelToken.ThrowIfCancellationRequested();
 
                         // #13 アクションカタログをコピー
                         msg = "Copying action catalogs...   ";
-                        reporter.WriteProgress(12);
-                        using var reporterActionCatalogs = new ProgressReporter(this, 1300, Int32.MaxValue, msg, msg);
+                        reporter.WriteProgress(++rootIndex);
+                        using var reporterActionCatalogs = new ProgressReporter(this, 1300, Int32.MaxValue, msg);
                         //srcDrive.ActionCatalogs.ClearCache(srcFolder);
                         CopyActionCatalogs(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestDataQueues, true, cancelToken);
+
+                        cancelToken.ThrowIfCancellationRequested();
                     }
                 }
 
@@ -2858,6 +2885,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     foreach (var subfolder in subfolders)
                     {
                         CopyItemRecurse(srcDrive, subfolder, dstDrive, newFolder, true, cancelToken);
+                        cancelToken.ThrowIfCancellationRequested();
                     }
                 }
 

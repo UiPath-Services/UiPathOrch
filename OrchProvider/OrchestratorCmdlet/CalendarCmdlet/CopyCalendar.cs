@@ -49,8 +49,7 @@ public class CopyCalendarCommand : OrchestratorPSCmdlet
         }
         if (srcCalendars is null) return;
 
-        string msg = "Copying calendars";
-        using var reporter = new ProgressReporter(_this, 1, 100, msg, msg);
+        using var reporter = new ProgressReporter(_this, 1, 100, "Copying calendars");
 
         int index = 0;
         reporter.TotalNum = dstDrives.Count() * srcCalendars.Count;
@@ -66,7 +65,7 @@ public class CopyCalendarCommand : OrchestratorPSCmdlet
 
                 cancelToken.ThrowIfCancellationRequested();
 
-                reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {srcCalendar.GetPSPath()} to {dstDrive.NameColonSeparator}");
+                reporter.WriteProgress(++index, $"{srcCalendar.GetPSPath()} to {dstDrive.NameColonSeparator}");
 
                 if (shouldProcess || _this.ShouldProcess($"Item: {item} Destination: {destination}", "Copy Calendar"))
                 {

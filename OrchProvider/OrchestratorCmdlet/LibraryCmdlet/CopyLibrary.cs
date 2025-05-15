@@ -102,14 +102,13 @@ public class CopyLibraryCommand : OrchestratorPSCmdlet
                 .FilterByWildcards(l => l!.Id, wpId)
                 .OrderBy(l => l.Id);
 
-            string msg1 = "Processing libraries...";
             int index1 = 0;
-            using var reporter1 = new ProgressReporter(_this, 1, srcLibraries.Count(), msg1, msg1);
+            using var reporter1 = new ProgressReporter(_this, 1, srcLibraries.Count(), "Processing libraries...");
             foreach (var library in srcLibraries)
             {
                 cancelToken.ThrowIfCancellationRequested();
 
-                reporter1.WriteProgress(++index1, $"{index1:D}/{reporter1.TotalNum}");
+                reporter1.WriteProgress(++index1);
                 try
                 {
                     srcDrive._dicLibraryVersions = null;
@@ -118,8 +117,7 @@ public class CopyLibraryCommand : OrchestratorPSCmdlet
                         //.OrderBy(version => version.Version!, VersionComparer.Instance)
                         .ToList();
 
-                    string msg2 = "Copying versions...    ";
-                    using var reporter2 = new ProgressReporter(_this, 2, dstDrives.Count() * versions.Count, msg2, msg2);
+                    using var reporter2 = new ProgressReporter(_this, 2, dstDrives.Count() * versions.Count, "Copying versions...    ");
                     int index2 = 0;
                     foreach (var version in versions)
                     {
@@ -159,7 +157,7 @@ public class CopyLibraryCommand : OrchestratorPSCmdlet
                             if (shouldProcess || _this.ShouldProcess(target, $"Copy Library"))
                             {
                                 // 進捗は、実際にコピーするときにだけ表示された方が良い
-                                reporter2.WriteProgress(++index2, $"{index2:D}/{reporter2.TotalNum} {key}.nupkg to {dstDrive.NameColonSeparator}");
+                                reporter2.WriteProgress(++index2, $"{key}.nupkg to {dstDrive.NameColonSeparator}");
 
                                 if (fileName is null)
                                 {

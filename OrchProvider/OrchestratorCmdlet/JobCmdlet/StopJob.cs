@@ -87,9 +87,9 @@ public class StopJobCommand : OrchestratorPSCmdlet
 
             foreach (var job in results
                 .SelectMany(te => te!)
-                .Where(job => wp.IsMatch((job.Id ?? 0).ToString()))
+                .Where(job => wp.IsMatch(job.Id.ToString()))
                 .Where(job => !alreadyStoppedStates.Contains(job.State))
-                .ExcludeByStructValues(job => (job.Id ?? 0), paramId))
+                .ExcludeByStructValues(job => job!.Id.GetValueOrDefault(), paramId))
             {
                     string tiphelp = $"{job.Id} C{job.CreationTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")}";
                     if (job.StartTime is not null)

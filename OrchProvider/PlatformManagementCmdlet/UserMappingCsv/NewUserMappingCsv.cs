@@ -83,7 +83,7 @@ class NewUserMappingCsvCommand : OrchestratorPSCmdlet
 
             try
             {
-                reporter.WriteProgress(++index, $"{index:D}/{srcGroups.Count}");
+                reporter.WriteProgress(++index);
                 var detailedSrcGroup = result.GetResult(cancelToken);
 
                 if (detailedSrcGroup is null || detailedSrcGroup.members is null) continue;
@@ -168,7 +168,7 @@ class NewUserMappingCsvCommand : OrchestratorPSCmdlet
 
             try
             {
-                reporter.WriteProgress(++index, $"{index:D}/{folders.Count}");
+                reporter.WriteProgress(++index);
                 var folderUsers = result.GetResult(cancelToken);
 
                 if (folderUsers is null) continue;
@@ -278,27 +278,27 @@ class NewUserMappingCsvCommand : OrchestratorPSCmdlet
 
         string msg = "Generating user mapping csv...";
         using var cancelHandler = new ConsoleCancelHandler();
-        using ProgressReporter reporter = new(this, 1, totalStageNum, msg, msg);
+        using ProgressReporter reporter = new(this, 1, totalStageNum, msg);
         try
         {
             msg = "Enumerating PmGroup Members...          ";
-            using ProgressReporter reporterPmGroups = new(this, 100, Int32.MaxValue, msg, msg);
+            using ProgressReporter reporterPmGroups = new(this, 100, Int32.MaxValue, msg);
             EnumeratePmGroupMembers(srcDrive, userMappings, reporterPmGroups, cancelHandler.Token);
 
             msg = "Enumerating Tenant Users...             ";
-            using ProgressReporter reporterUsers = new(this, 200, Int32.MaxValue, msg, msg);
+            using ProgressReporter reporterUsers = new(this, 200, Int32.MaxValue, msg);
             EnumerateTenantUsers(srcDrive, userMappings, reporterUsers, cancelHandler.Token);
 
             // テナントユーザー以外にも、ディレクトリユーザーをフォルダに assign できるから、これは必要だろう。
             msg = "Enumerating Users assigned in Folders...";
-            using ProgressReporter reporterFolderUsers = new(this, 300, Int32.MaxValue, msg, msg);
+            using ProgressReporter reporterFolderUsers = new(this, 300, Int32.MaxValue, msg);
             EnumerateFolderUsers(srcDrive, userMappings, reporterFolderUsers, cancelHandler.Token);
 
             // 良く考えたら、アセットは検索する必要がないな。
             // フォルダに割り当てられたユーザーでないと、アセットに割り当てることができないはずだ。
             // アセット作成後に、ユーザーを unassign したらどうなるのか？ でもそれは考慮しなくていいや。
             //msg = "Enumerating Users assigned in Assets... ";
-            //using ProgressReporter reporterAssets = new(this, 400, Int32.MaxValue, msg, msg);
+            //using ProgressReporter reporterAssets = new(this, 400, Int32.MaxValue, msg);
             //EnumerateAssetUsers(srcDrive, userMappings, reporterAssets, cancelHandler.Token);
 
             msg = $"Searching Source directory...          ";

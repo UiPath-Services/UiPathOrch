@@ -55,8 +55,7 @@ public class CopyAssetCommand : OrchestratorPSCmdlet
         //dstDrive._dicUsers = null;
         //srcDrive._dicExtendedMachines = null; // dstDrive のキャッシュはクリア不要。フォルダマシンを取得するため。
 
-        string msg = "Copying assets...";
-        using var reporterAssets = new ProgressReporter(this, 600, Int32.MaxValue, msg, msg);
+        using var reporterAssets = new ProgressReporter(this, 600, Int32.MaxValue, "Copying assets...");
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (_, srcFolder) in srcDrivesFolders)
         {

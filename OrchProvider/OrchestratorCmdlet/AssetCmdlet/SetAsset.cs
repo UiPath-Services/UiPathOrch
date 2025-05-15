@@ -769,8 +769,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
 
         List<(OrchDriveInfo drive, Int64 id)> folderIdsThatShouldRemoveCache = [];
 
-        string msg = "Updating Assets";
-        using var reporter = new ProgressReporter(this, 1, parameterSets.Count, msg, msg);
+        using var reporter = new ProgressReporter(this, 1, parameterSets.Count, "Updating Assets");
 
         // グループ化したパラメータセットを処理する
         try
@@ -786,7 +785,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
 
                 var target = System.IO.Path.Combine(folder.GetPSPath(), asset.Name ?? "");
 
-                reporter.WriteProgress(++index, $"{index:D}/{parameterSets.Count}");
+                reporter.WriteProgress(++index);
 
                 var existingAssets = drive.Assets.Get(folder);
                 var existingAsset = existingAssets.FirstOrDefault(a => a.Name == asset.Name);

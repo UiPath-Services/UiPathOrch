@@ -84,6 +84,8 @@ internal static class FolderExtensions
 
     public static string TipHelp(this PmGroupMember? entity)         => $"{entity?.name}{(string.IsNullOrEmpty(entity?.displayName) ? "" : $" ({entity.displayName})")}";
     public static string TipHelp(this PmDirectoryEntityInfo? entity) => $"{entity?.GetPSPath()}{(string.IsNullOrEmpty(entity?.displayName) ? "" : $" ({entity.displayName})")}";
+    public static string TipHelp(this ExtendedRobot entity)          => $"{entity?.GetPSPath()}{(string.IsNullOrEmpty(entity?.Username) ? "" : $" ({entity.Username})")}";
+    public static string TipHelp(this Library? entity)               => $"{entity?.GetPSPath()}";
 }
 
 internal static class OrchCollectionExtensions
@@ -233,6 +235,11 @@ internal static class OrchCollectionExtensions
     {
         if (values is null || !values.Any()) return source;
         return source.Where(item => !values.Contains(selector(item)));
+
+        //return source
+        //    .Where(item => item is not null)
+        //    .Select(item => item!)
+        //    .Where(item => !values.Contains(selector(item!)));
     }
 
     public static IEnumerable<T> ExcludeByWildcards<T>(
@@ -240,9 +247,15 @@ internal static class OrchCollectionExtensions
         Func<T?, string?> selector,
         List<WildcardPattern>? patterns)
     {
-        if (patterns is null || !patterns.Any()) return source;
+        if (patterns is null || patterns.Count == 0) return source;
         return source.Where(item => !patterns.Any(pattern => pattern.IsMatch(selector(item))));
     }
+
+    //public static bool TryAddIfNotNullOrEmpty(this Dictionary<string, object> dic, string key, string? value)
+    //{
+    //    if (string.IsNullOrEmpty(value)) return false;
+    //    return dic.TryAdd(key, value);
+    //}
 
     #region
     private static string UnescapeBackticks(string input)

@@ -507,16 +507,6 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         return tiphelp;
     }
 
-    protected static string TipHelp(Library library)
-    {
-        string tiphelp = library.GetPSPath();
-        //if (!string.IsNullOrEmpty(library.Description))
-        //{
-        //    tiphelp += $" ({library.Description})";
-        //}
-        return tiphelp;
-    }
-
     protected static string TipHelp(LibraryVersion version)
     {
         string tiphelp = $"{version.GetPSPath()}:{version.Version}";
@@ -1108,10 +1098,7 @@ internal class MachineRobotUsersCompleter<TPositional> : OrchArgumentCompleter w
                 .ExcludeByWildcards(p => p?.User?.FullName, wpRobotUsers)
                 .OrderBy(p => p.User?.FullName))
             {
-                string tiphelp = robot.GetPSPath();
-                if (!string.IsNullOrEmpty(robot.Username))
-                    tiphelp += $" ({robot.Username})";
-                yield return new CompletionResult(PathTools.EscapePSText(robot.User?.FullName), robot.User?.FullName, CompletionResultType.Text, tiphelp);
+                yield return new CompletionResult(PathTools.EscapePSText(robot.User?.FullName), robot.User?.FullName, CompletionResultType.Text, robot.TipHelp());
             }
         }
     }
@@ -1149,8 +1136,7 @@ internal class LibraryIdCompleter<TPositional> : OrchArgumentCompleter where TPo
                 .FilterByWildcards(l => l?.Version, wpVersion)
                 .OrderBy(l => l.Id))
             {
-                string tiphelp = TipHelp(library);
-                yield return new CompletionResult(PathTools.EscapePSText(library.Id), library.Id, CompletionResultType.ParameterValue, tiphelp);
+                yield return new CompletionResult(PathTools.EscapePSText(library.Id), library.Id, CompletionResultType.ParameterValue, library.TipHelp());
             }
         }
     }

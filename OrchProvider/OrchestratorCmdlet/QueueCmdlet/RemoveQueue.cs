@@ -39,10 +39,9 @@ public class RemoveQueueCommand : OrchestratorPSCmdlet
                 {
                     cancelHandler.Token.ThrowIfCancellationRequested();
 
-                    string target = queue.Name + " on " + targetFolder;
                     try
                     {
-                        if (ShouldProcess(folder.GetPSPath(), "Remove Queue " + queue.Name))
+                        if (ShouldProcess(queue.GetPSPath(), "Remove Queue"))
                         {
                             drive.OrchAPISession.RemoveQueue(folder.Id ?? 0, queue.Id ?? 0);
                             drive.Queues.ClearCache(folder);
@@ -50,7 +49,7 @@ public class RemoveQueueCommand : OrchestratorPSCmdlet
                     }
                     catch (Exception ex)
                     {
-                        var errorRecord = new ErrorRecord(new OrchException(target, ex), "RemoveQueueError", ErrorCategory.InvalidOperation, target);
+                        var errorRecord = new ErrorRecord(new OrchException(queue.GetPSPath(), ex), "RemoveQueueError", ErrorCategory.InvalidOperation, queue);
                         WriteError(errorRecord);
                     }
                 }
@@ -61,7 +60,7 @@ public class RemoveQueueCommand : OrchestratorPSCmdlet
             }
             catch (Exception ex)
             {
-                var errorRecord = new ErrorRecord(new OrchException(targetFolder, ex), "RemoveQueueError", ErrorCategory.InvalidOperation, targetFolder);
+                var errorRecord = new ErrorRecord(new OrchException(targetFolder, ex), "GetQueueError", ErrorCategory.InvalidOperation, targetFolder);
                 WriteError(errorRecord);
             }
         }

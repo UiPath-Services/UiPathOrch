@@ -636,6 +636,7 @@ public partial class OrchAPISession : IDisposable
     public T? HttpRequest<T>(HttpMethod method, string endPoint, Int64? folderId = null, object? query = null)
     {
         string body = HttpRequest(method, endPoint, folderId, query);
+        if (string.IsNullOrEmpty(body)) return default;
         return JsonSerializer.Deserialize<T>(body);
     }
 

@@ -223,15 +223,14 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
         List<(OrchDriveInfo, Folder)> dstDrivesFolders,
         bool shouldProcess, CancellationToken cancelToken)
     {
-        string msg1 = "Processing folders...";
         int index1 = 0;
-        using var reporterMain = new ProgressReporter(_this, 1, srcDrivesFolders.Count, msg1, msg1);
+        using var reporterMain = new ProgressReporter(_this, 1, srcDrivesFolders.Count, "Processing folders...");
         foreach (var (srcDrive, srcFolder) in srcDrivesFolders)
         {
             cancelToken.ThrowIfCancellationRequested();
 
             //reporterMain.WriteProgress(++indexMain, $"{indexMain:D}/{srcDrivesFolders.Count} {srcFolder.GetPSPath()}");
-            if (srcDrivesFolders.Count > 1) reporterMain.WriteProgress(++index1, $"{index1:D}/{srcDrivesFolders.Count}");
+            if (srcDrivesFolders.Count > 1) reporterMain.WriteProgress(++index1);
             try
             {
                 var srcPackages = srcDrive.GetPackages(srcFolder)
@@ -241,23 +240,21 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
 
                 var srcFeedId = srcDrive.FolderFeedId.Get(srcFolder);
 
-                string msg2 = "Processing packages...";
                 int index2 = 0;
-                using var reporter2 = new ProgressReporter(_this, 2, srcPackages.Count, msg2, msg2);
+                using var reporter2 = new ProgressReporter(_this, 2, srcPackages.Count, "Processing packages...");
                 foreach (var srcPackage in srcPackages)
                 {
                     cancelToken.ThrowIfCancellationRequested();
 
-                    if (reporter2.TotalNum > 1) reporter2.WriteProgress(++index2, $"{index2:D}/{reporter2.TotalNum}");
+                    if (reporter2.TotalNum > 1) reporter2.WriteProgress(++index2);
 
                     var srcVersions = srcDrive.GetPackageVersions(srcFolder, srcPackage.Id!)
                         .FilterByWildcards(p => p?.Version, wpVersion)
                         //.OrderBy(p => p.Version!, VersionComparer.Instance)
                         .ToList();
 
-                    string msg3 = "Copying versions...   ";
                     int index3 = 0;
-                    using var reporter3 = new ProgressReporter(_this, 3, srcVersions.Count * dstDrivesFolders.Count, msg3, msg3);
+                    using var reporter3 = new ProgressReporter(_this, 3, srcVersions.Count * dstDrivesFolders.Count, "Copying versions...   ");
                     foreach (var srcVersion in srcVersions)
                     {
                         string fileName = null;
@@ -298,7 +295,7 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
                             if (shouldProcess || _this.ShouldProcess(target, $"Copy Package"))
                             {
                                 // 進捗は、実際にコピーするときにだけ表示された方が良い
-                                reporter3.WriteProgress(++index3, $"{index3:D}/{reporter3.TotalNum} {key}.nupkg to {dstDrive.NameColonSeparator}");
+                                reporter3.WriteProgress(++index3, $"{key}.nupkg to {dstDrive.NameColonSeparator}");
 
                                 if (fileName is null)
                                 {

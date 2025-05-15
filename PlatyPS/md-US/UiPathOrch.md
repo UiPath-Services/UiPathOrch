@@ -83,6 +83,9 @@ Copies storage buckets.
 ### [Copy-OrchQueue](Copy-OrchQueue.md)
 {{ Fill in the Synopsis }}
 
+### [Copy-OrchQueueItem](Copy-OrchQueueItem.md)
+Copies queue items with a status of New to a queue with the same name located elsewhere.
+
 ### [Copy-OrchRole](Copy-OrchRole.md)
 Copy the roles.
 
@@ -538,6 +541,9 @@ Remove the processes.
 
 ### [Remove-OrchQueue](Remove-OrchQueue.md)
 Removes the queues.
+
+### [Remove-OrchQueueItem](Remove-OrchQueueItem.md)
+Removes queue items.
 
 ### [Remove-OrchRole](Remove-OrchRole.md)
 Remove the roles.

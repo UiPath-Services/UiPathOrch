@@ -41,8 +41,7 @@ public class CopyTestSetScheduleCommand : OrchestratorPSCmdlet
 
         var wpName = Name.ConvertToWildcardPatternList();
 
-        string msg = "Copying test schedules...";
-        using var reporterTestSchedules = new ProgressReporter(this, 1200, Int32.MaxValue, msg, msg);
+        using var reporterTestSchedules = new ProgressReporter(this, 1200, Int32.MaxValue, "Copying test schedules...");
         using var cancelHandler = new ConsoleCancelHandler();
 
         foreach (var (_, srcFolder) in srcDrivesFolders)

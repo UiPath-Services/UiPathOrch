@@ -41,8 +41,7 @@ public class CopyProcessCommand : OrchestratorPSCmdlet
 
         var wpName = Name.ConvertToWildcardPatternList();
 
-        string msg = "Copying processes...";
-        using var reporterProcesses = new ProgressReporter(this, 500, Int32.MaxValue, msg, msg);
+        using var reporterProcesses = new ProgressReporter(this, 500, Int32.MaxValue, "Copying processes...");
         using var cancelHandler = new ConsoleCancelHandler();
 
         foreach (var (_, srcFolder) in srcDrivesFolders)

@@ -48,8 +48,7 @@ public class ImportLibraryCommand : OrchestratorPSCmdlet
 
         int totalNum = importTasks.Count;
 
-        string msg = "Importing Libraries";
-        using var reporter = new ProgressReporter(this, 1, totalNum, msg, msg);
+        using var reporter = new ProgressReporter(this, 1, totalNum, "Importing libraries");
 
         int index = 0;
         using var cancelHandler = new ConsoleCancelHandler();
@@ -61,7 +60,7 @@ public class ImportLibraryCommand : OrchestratorPSCmdlet
             string target = drive.NameColonSeparator;
             if (ShouldProcess(target, $"Import Library {fullPath}"))
             {
-                reporter.WriteProgress(++index, $"{index:D}/{totalNum}");
+                reporter.WriteProgress(++index);
                 try
                 {
                     // drive に同名のライブラリがあれば、警告を表示してインポートをスキップする
