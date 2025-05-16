@@ -760,8 +760,17 @@ public partial class OrchAPISession : IDisposable
 
     public QueueDefinition? CreateQueue(Int64 folderId, QueueDefinition queue)
     {
+        if (ApiVersion < 19)
+        {
+            queue.StaleRetentionAction = null;
+            queue.StaleRetentionPeriod = null;
+            queue.StaleRetentionBucketId = null;
+            queue.StaleRetentionBucketName = null;
+        }
+
         // OC 22.10.1 (15.0) で動作確認済み POST /odata/QueueDefinitions
         // OC 23.4.0 (16.0) で動作確認済み POST /odata/QueueDefinitions/UiPath.Server.Configuration.OData.CreateQueue
+        // OC 23.10.0 (17.0) で動作確認済み POST /odata/QueueDefinitions/UiPath.Server.Configuration.OData.CreateQueue
         if (ApiVersion >= 16)
         {
             return HttpRequest<QueueDefinition>(HttpMethod.Post, "/odata/QueueDefinitions/UiPath.Server.Configuration.OData.CreateQueue", folderId, queue);
@@ -773,6 +782,7 @@ public partial class OrchAPISession : IDisposable
             queue.RetentionAction = null;
             queue.RetentionPeriod = null;
             queue.RetentionBucketId = null;
+            queue.RetentionBucketName = null;
             return HttpRequest<QueueDefinition>(HttpMethod.Post, "/odata/QueueDefinitions", folderId, queue);
         }
     }

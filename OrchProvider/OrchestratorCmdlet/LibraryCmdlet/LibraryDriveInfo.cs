@@ -36,5 +36,6 @@ public class LibraryDriveInfo : PSDriveInfo
     public void ClearAllCache()
     {
 //            _dicFolders = null;
+//            _dicFoldersForEnumFolders = null;
     }
 }

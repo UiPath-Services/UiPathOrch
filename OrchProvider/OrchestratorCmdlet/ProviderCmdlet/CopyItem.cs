@@ -3026,6 +3026,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             if (isDirty)
             {
                 dstDrive._dicFolders = null;
+                dstDrive._dicFoldersForEnumFolders = null;
             }
             return;
         }
@@ -3040,6 +3041,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             // 例外が漏れた場合は、フォルダーが作成されたかされていないか分からない。。
             // ので、フォルダキャッシュをクリアしちゃう。
             dstDrive._dicFolders = null;
+            dstDrive._dicFoldersForEnumFolders = null;
             throw;
         }
         finally
@@ -3047,6 +3049,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             if (bDirty)
             {
                 dstDrive._dicFolders = null;
+                dstDrive._dicFoldersForEnumFolders = null;
             }
         }
     }

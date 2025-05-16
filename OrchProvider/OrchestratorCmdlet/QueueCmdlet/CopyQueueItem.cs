@@ -44,6 +44,13 @@ public class CopyQueueItemCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         using ProgressReporter reporterQueue = new(this, 3, int.MaxValue, "Copying new items");
 
+        // 処理対象とするキューの数を数える
+        reporterQueue.TotalNum = srcDrivesFolders.CountEntities(
+            drive => drive.Queues,
+            e => e.FilterByWildcards(q => q?.Name, wpName)
+        );
+
+        int idxQueue = 0;
         foreach (var (_, srcFolder) in srcDrivesFolders)
         {
             cancelHandler.Token.ThrowIfCancellationRequested();
@@ -55,22 +62,21 @@ public class CopyQueueItemCommand : OrchestratorPSCmdlet
             {
                 var srcQueues = srcDrive.Queues.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
                 if (srcQueues.Count == 0) continue;
-                reporterQueue.TotalNum = srcQueues.Count;
 
                 var dstQueues = dstDrive.Queues.Get(dstFolder);
 
-                int idxQueue = 0;
                 foreach (var srcQueue in srcQueues.OrderBy(q => q.Name))
                 {
-                    string progressNew = $"{{0}} {srcQueue.GetPSPath()}";
-                    reporterQueue.WriteProgress(++idxQueue, string.Format(progressNew, 0)); // 最後のゼロは処理中のアイテム数だ。
-
+                    ++idxQueue;
                     var dstQueue = dstQueues.FirstOrDefault(q => string.Compare(q.Name, srcQueue.Name, true) == 0);
                     if (dstQueue is null)
                     {
                         WriteWarning($"'{srcQueue.GetPSPath()}': A queue named as '{srcQueue.Name}' doesn't exist in {dstFolder.GetPSPath()}.");
                         continue;
                     }
+
+                    string progressNew = $"{{0}} {srcQueue.GetPSPath()} to {dstQueue.GetPSPath()}";
+                    reporterQueue.WriteProgress(idxQueue, string.Format(progressNew, 0)); // 最後のゼロは処理中のアイテム数だ。
 
                     string target = $"Items in '{srcQueue.GetPSPath()}' Destination: '{dstQueue.GetPSPath()}'";
 
@@ -91,6 +97,7 @@ public class CopyQueueItemCommand : OrchestratorPSCmdlet
                         ulong first = 0;
 
                         // このループ内で、srcQueue の items を100個ずつ取得して、dstQueue に100個ずつ追加する。
+                        DateTime getQueueItemsCalled = DateTime.Now;
                         while (true)
                         {
                             cancelHandler.Token.ThrowIfCancellationRequested();
@@ -192,7 +199,7 @@ public class CopyQueueItemCommand : OrchestratorPSCmdlet
                                 WriteError(new ErrorRecord(new OrchException(dstQueue.GetPSPath(), ex), "GetQueueItemError", ErrorCategory.InvalidOperation, dstQueue));
                             }
 
-                            Thread.Sleep(600); // API call rate limit を回避するため待機する
+                            Thread.Sleep(int.Max(0, (int)(601 - (DateTime.Now - getQueueItemsCalled).TotalMilliseconds))); // API call rate limit を回避するため待機する
                         }
                     }
                 }

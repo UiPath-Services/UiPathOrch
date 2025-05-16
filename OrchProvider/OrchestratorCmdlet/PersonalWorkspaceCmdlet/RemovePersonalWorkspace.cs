@@ -141,6 +141,7 @@ public class RemovePersonalWorkspaceCommand : OrchestratorPSCmdlet
                             drive.DisablePersonalWorkspace(ws.OwnerId);
                             drive!.OrchAPISession.RemoveFolder(ws.Id ?? 0);
                             drive._dicFolders = null;
+                            drive._dicFoldersForEnumFolders = null;
                             drive.PersonalWorkspaces.ClearCache();
                         }
                         catch (Exception ex)

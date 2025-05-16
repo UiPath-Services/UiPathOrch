@@ -90,6 +90,7 @@ class StartExploringPersonalWorkspaceCommand : OrchestratorPSCmdlet
     //            if (bDirty)
     //            {
     //                drive!._dicFolders = null;
+    //                drive._dicFoldersForEnumFolders = null;
     //            }
     //        }
     //        catch (OrchException ex)

@@ -739,6 +739,7 @@ public partial class OrchProvider : NavigationCmdletProvider
         if (parameters is not null && parameters.Reload.IsPresent)
         {
             drive._dicFolders = null;
+            drive._dicFoldersForEnumFolders = null;
             drive.PersonalWorkspaces.ClearCache();
         }
 
@@ -1003,6 +1004,7 @@ public partial class OrchProvider : NavigationCmdletProvider
                     WriteItemObject(f, path, true);
                 }
                 drive._dicFolders = null;
+                drive._dicFoldersForEnumFolders = null;
             }
             catch (Exception ex)
             {
@@ -1036,6 +1038,7 @@ public partial class OrchProvider : NavigationCmdletProvider
                     return;
                 drive.OrchAPISession.EditFolder(folder, newName!);
                 drive._dicFolders = null;
+                drive._dicFoldersForEnumFolders = null;
 
                 //if (DynamicParameters is RuntimeDefinedParameterDictionary parameters)
                 //{
@@ -1053,6 +1056,7 @@ public partial class OrchProvider : NavigationCmdletProvider
 
                 //    drive.OrchAPISession.EditFolder(folder, newName!, description!);
                 //    drive._dicFolders = null;
+                //    drive._dicFoldersForEnumFolders = null;
                 //}
             }
             catch (Exception ex)
@@ -1135,6 +1139,7 @@ public partial class OrchProvider : NavigationCmdletProvider
                 // いまいちなんだけど、GetFolders() の実装に合わせて、個人ワークスペースを削除した場合も _dicFolders をクリアしておく。。
                 // これにより GetFolders() が正しく動作する。いつか直したい
                 drive._dicFolders = null;
+                drive._dicFoldersForEnumFolders = null;
 
                 drive.ClearFolderCache(folder);
             }
@@ -1187,6 +1192,7 @@ public partial class OrchProvider : NavigationCmdletProvider
 
                 drive.OrchAPISession.MoveFolder(srcFolder?.Id ?? 0, dstId);
                 drive._dicFolders = null;
+                drive._dicFoldersForEnumFolders = null;
             }
             catch (Exception ex)
             {

@@ -640,6 +640,21 @@ internal static class OrchStringExtensions
     }
 }
 
+internal static class OrchDriveFolderExtensions
+{
+    public static int CountEntities<T>(
+        this IEnumerable<(OrchDriveInfo drive, Folder folder)> drivesFolders,
+        Func<OrchDriveInfo, ListCachePerFolder<T>> list,
+        Func<IEnumerable<T>, IEnumerable<T>>? applyFilter = null)
+    {
+        return drivesFolders.Sum(df =>
+        {
+            var items = list(df.drive).Get(df.folder);
+            return (applyFilter?.Invoke(items) ?? items).Count();
+        });
+    }
+}
+
 internal static class OrchWriterExtensions
 {
     // writer.WriteLine(string.Join(',', values) とすると、内部で string を連結してしまう。
