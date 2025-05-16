@@ -590,6 +590,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         #region Orchestrator API cache
         _dicFolders = null;
+        _dicFoldersForEnumFolders = null;
 
         _dicAssetLinks = null;
         _dicAssetLinks_Exception.ClearCache();

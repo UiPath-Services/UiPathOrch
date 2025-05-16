@@ -263,6 +263,7 @@ public class OrchDuProvider : NavigationCmdletProvider
                 //    WriteItemObject(f, path, true);
                 //}
                 //drive._dicFolders = null;
+                //drive._dicFoldersForEnumFolders = null;
             }
             catch (Exception ex)
             {
