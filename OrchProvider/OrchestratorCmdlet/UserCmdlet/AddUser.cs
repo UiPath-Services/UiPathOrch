@@ -743,10 +743,10 @@ public class AddUserCommand : OrchestratorPSCmdlet
 
                     if (user.type == 3) // robot の場合
                     {
-                        postingUser.MayHaveUserSession ??= false; // prohibit 'Standard Interface'
-                        postingUser.MayHaveUnattendedSession ??= true;
-                        postingUser.MayHavePersonalWorkspace ??= false;
-                        postingUser.MayHaveRobotSession ??= false; // これがないと失敗する
+                        postingUser.MayHaveUserSession = false; // prohibit 'Standard Interface'
+                        postingUser.MayHaveUnattendedSession = true; // 必ず true でないと。
+                        postingUser.MayHavePersonalWorkspace = false; // 必ず false でいいや。
+                        postingUser.MayHaveRobotSession = false; // これがないと失敗する
 
                         postingUser.UnattendedRobot ??= new();
 

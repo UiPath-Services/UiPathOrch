@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.12.3'
+ModuleVersion = '0.9.12.4'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -389,32 +389,12 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Folder cache was not properly cleared in some cases after executing Clear-OrchCache, or after creating or deleting folders. This issue was introduced in version 0.9.12.2.
+        ReleaseNotes = '- The Add-OrchUser cmdlet could previously fail when attempting to add robot accounts. This issue has been resolved by explicitly setting the following property values when adding a robot account:
 
-- Copy-Item and Copy-OrchQueue failed to copy queues from Automation Cloud to MSI Orchestrator. This issue was introduced in version 0.9.10.7.
-
-- New cmdlets Copy-OrchQueueItem and Remove-OrchQueueItem have been added.
-  - Copy-OrchQueueItem copies all queue items with the status New to a queue with the same name in a different folder, and outputs the items that were successfully copied. The output can be piped to Remove-OrchQueueItem to remove those items from the source queue, preventing duplicate transaction processing.
-
-  - Remove-OrchQueueItem outputs any items that failed to be removed. These can be exported to a CSV file using Export-Csv, and later re-imported to retry deletion. To use Remove-OrchQueueItem independently, specify the queue name and the IDs of the items to remove.
-
-- Below is an example of using the Copy-OrchQueueItem and Remove-OrchQueueItem cmdlets:
-  - To move items from the MyQueue queue in the \Shared folder to a queue with the same name in the \dst folder:
-    PS Orch1\Shared> Copy-OrchQueueItem MyQueue \dst | Remove-OrchQueueItem | Export-Csv c:itemsToRemove.csv -Encoding utf8BOM
-
-  - To move items from all queues in one tenant to the corresponding queues in another tenant with the same folder structure:
-    PS Orch1:\> Copy-OrchQueueItem -Recurse * Orch2:\ | Remove-OrchQueueItem | Export-Csv c:itemsToRemove.csv -Encoding utf8BOM
-
-- Note: The Copy-OrchQueueItem cmdlet does not copy the queues themselves. If the destination folder does not contain a queue with the same name, you need to copy the queues beforehand using the Copy-OrchQueue cmdlet. Keep in mind that Copy-OrchQueue copies only the queue definitions. It does not copy the items contained in the queues.
-  - To copy all queues in the \Shared folder to the \dst folder:
-    PS Orch1\Shared> Copy-OrchQueue * \dst
-
-  - To copy all queues in a tenant to another tenant that has the same folder structure:
-    PS Orch1:\> Copy-OrchQueue -Recurse * Orch2:\
-
-- To ensure safe operation, it is strongly recommended to disable triggers and stop automation processes in both source and destination folders before copying queue items.
-  - To disable all triggers in both Orch1: and Orch2::
-    PS> Disable-OrchTrigger -Path Orch1:\,Orch2:\ -Recurse *
+  - "MayHavePersonalWorkspace": false
+  - "MayHaveRobotSession": false
+  - "MayHaveUnattendedSession": true
+  - "MayHaveUserSession": false
 '
 
         # Prerelease string of this module
