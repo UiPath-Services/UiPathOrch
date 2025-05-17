@@ -1966,6 +1966,27 @@ public partial class OrchAPISession : IDisposable
 
     public User? PostUser(User user)
     {
+        if (ApiVersion < 18)
+        {
+            if (user.NotificationSubscription is not null)
+            {
+                // ApiVersion 18 で追加された。
+                user.NotificationSubscription.RateLimitsDaily = null;
+                user.NotificationSubscription.RateLimitsRealTime = null;
+            }
+        }
+        else
+        {
+            user.BypassBasicAuthRestriction = null; // ApiVersion 18 で deprecated だ。
+        }
+
+        //if (user.UnattendedRobot is not null)
+        //{
+        //    user.UnattendedRobot.ExecutionSettings ??= new();
+        //}
+
+        //user.UpdatePolicy ??= new() { Type = "None" };
+
         return HttpRequest<User>(HttpMethod.Post, "/odata/Users", null, user);
     }
 
