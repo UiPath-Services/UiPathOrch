@@ -13,10 +13,11 @@ schema: 2.0.0
 ## SYNTAX
 
 ```
-Update-OrchUser [-UserName] <String[]> [-Roles <String[]>] [-IsExternalLicensed <String>]
- [-MayHaveUserSession <String>] [-MayHaveRobotSession <String>] [-MayHaveUnattendedSession <String>]
- [-MayHavePersonalWorkspace <String>] [-RestrictToPersonalWorkspace <String>] [-UpdatePolicyType <String>]
- [-UpdatePolicyVersion <String>] [-UR_UserName <String>] [-UR_CredentialStore <String>] [-UR_Password <String>]
+Update-OrchUser [-UserName] <String[]> [-Name <String>] [-Surname <String>] [-Roles <String[]>]
+ [-IsExternalLicensed <String>] [-MayHaveUserSession <String>] [-MayHaveRobotSession <String>]
+ [-MayHaveUnattendedSession <String>] [-MayHavePersonalWorkspace <String>]
+ [-RestrictToPersonalWorkspace <String>] [-UpdatePolicyType <String>] [-UpdatePolicyVersion <String>]
+ [-UR_UserName <String>] [-UR_CredentialStore <String>] [-UR_Password <String>]
  [-UR_CredentialExternalName <String>] [-UR_CredentialType <String>] [-UR_LimitConcurrentExecution <String>]
  [-ES_TracingLevel <String>] [-ES_StudioNotifyServer <String>] [-ES_LoginToConsole <String>]
  [-ES_ResolutionWidth <String>] [-ES_ResolutionHeight <String>] [-ES_ResolutionDepth <String>]
@@ -457,6 +458,36 @@ Accept wildcard characters: False
 Type: String
 Parameter Sets: (All)
 Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -Name
+ユーザーの新しい Name (FirstName) を指定します。このパラメータは、MSI Orchestrator でのみ機能することに留意してください。
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases: FirstName
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -Surname
+ユーザーの新しい Surname (LastName) を指定します。このパラメータは、MSI Orchestrator でのみ機能することに留意してください。
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases: LastName
 
 Required: False
 Position: Named

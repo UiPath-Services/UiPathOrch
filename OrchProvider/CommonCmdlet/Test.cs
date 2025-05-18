@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchTest")]
 [OutputType(typeof(Bucket))]
-class GetTestCommand : OrchestratorPSCmdlet
+public class GetTestCommand : OrchestratorPSCmdlet
 {
     //[Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     //[ArgumentCompleter(typeof(BucketNameCompleter<TPositional>))]
@@ -29,12 +29,24 @@ class GetTestCommand : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
 //           var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+    //    var drives = OrchDriveInfo.EnumOrchDrives(Path);
 
-        foreach (var drive in drives)
+    //    foreach (var drive in drives)
+    //    {
+    //        var feeds = drive.LibraryFeeds.Get();
+    //        WriteObject(feeds, true);
+    //    }
+    }
+
+    protected override void EndProcessing()
+    {
+        Task.Run(() =>
         {
-            var feeds = drive.LibraryFeeds.Get();
-            WriteObject(feeds, true);
-        }
+            Thread.Sleep(2000); // 2秒待機
+
+            // PSReadLine の Insert を呼び出す
+            var script = $@"[Microsoft.PowerShell.PSConsoleReadLine]::Insert(""cd orch1:"")";
+            this.InvokeCommand.InvokeScript(script);
+        });
     }
 }

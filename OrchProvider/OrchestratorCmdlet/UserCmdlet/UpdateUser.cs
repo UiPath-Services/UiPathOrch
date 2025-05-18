@@ -19,9 +19,13 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? UserName { get; set; }
 
-    //[Parameter(ValueFromPipelineByPropertyName = true)]
-    ////[ArgumentCompleter(typeof(TenantUserUserNameCompleter<TPositional>))]
-    //public string? FullName { get; set; }
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("FirstName")]
+    public string? Name { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("LastName")]
+    public string? Surname { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [Alias("TenantRoles")]
@@ -212,6 +216,10 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                     }
 
                     //postingUser.AssignStringIfNotNull(FullName,                   (u, v) => u.FullName = v);
+
+                    postingUser.AssignStringIfNotNullOrEmpty(Name,    (u, v) => u.Name = v);
+                    postingUser.AssignStringIfNotNullOrEmpty(Surname, (u, v) => u.Surname = v);
+
                     postingUser.AssignBoolIfNotFalse(IsExternalLicensed,          u => u.IsExternalLicensed,          (u, v) => u.IsExternalLicensed = v);
                     postingUser.AssignBoolIfNotFalse(MayHaveUserSession,          u => u.MayHaveUserSession,          (u, v) => u.MayHaveUserSession = v);
                     postingUser.AssignBoolIfNotFalse(MayHaveRobotSession,         u => u.MayHaveRobotSession,         (u, v) => u.MayHaveRobotSession = v);

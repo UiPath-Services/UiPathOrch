@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.12.4'
+ModuleVersion = '0.9.12.5'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -389,12 +389,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- The Add-OrchUser cmdlet could previously fail when attempting to add robot accounts. This issue has been resolved by explicitly setting the following property values when adding a robot account:
-
-  - "MayHavePersonalWorkspace": false
-  - "MayHaveRobotSession": false
-  - "MayHaveUnattendedSession": true
-  - "MayHaveUserSession": false
+        ReleaseNotes = '- Added support for the -Name (alias: -FirstName) and -Surname (alias: -LastName) parameters to the Update-OrchUser cmdlet, enabling user name updates. Please note that these parameters are effective only in MSI Orchestrator. In Automation Cloud, specifying these parameters has no effect.
 '
 
         # Prerelease string of this module
