@@ -39074,7 +39074,7 @@
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="2" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="2" aliases="none">
           <maml:name>RowVersion</maml:name>
           <maml:description>
             <maml:para>{{ Fill RowVersion Description }}</maml:para>
@@ -39183,7 +39183,7 @@
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="2" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="2" aliases="none">
         <maml:name>RowVersion</maml:name>
         <maml:description>
           <maml:para>{{ Fill RowVersion Description }}</maml:para>
@@ -51019,6 +51019,30 @@
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="FirstName">
+          <maml:name>Name</maml:name>
+          <maml:description>
+            <maml:para>ユーザーの新しい Name (FirstName) を指定します。このパラメータは、MSI Orchestrator でのみ機能することに留意してください。</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="LastName">
+          <maml:name>Surname</maml:name>
+          <maml:description>
+            <maml:para>ユーザーの新しい Surname (LastName) を指定します。このパラメータは、MSI Orchestrator でのみ機能することに留意してください。</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
@@ -51350,6 +51374,30 @@
         <maml:name>IsExternalLicensed</maml:name>
         <maml:description>
           <maml:para>{{ Fill IsExternalLicensed Description }}</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="FirstName">
+        <maml:name>Name</maml:name>
+        <maml:description>
+          <maml:para>ユーザーの新しい Name (FirstName) を指定します。このパラメータは、MSI Orchestrator でのみ機能することに留意してください。</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="LastName">
+        <maml:name>Surname</maml:name>
+        <maml:description>
+          <maml:para>ユーザーの新しい Surname (LastName) を指定します。このパラメータは、MSI Orchestrator でのみ機能することに留意してください。</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>

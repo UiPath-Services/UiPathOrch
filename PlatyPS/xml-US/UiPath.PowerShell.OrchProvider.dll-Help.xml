@@ -39128,7 +39128,7 @@ Displays the average, longest, and shortest execution times of cached jobs. `%` 
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="2" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="2" aliases="none">
           <maml:name>RowVersion</maml:name>
           <maml:description>
             <maml:para>{{ Fill RowVersion Description }}</maml:para>
@@ -39237,7 +39237,7 @@ Displays the average, longest, and shortest execution times of cached jobs. `%` 
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="true" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="2" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="2" aliases="none">
         <maml:name>RowVersion</maml:name>
         <maml:description>
           <maml:para>{{ Fill RowVersion Description }}</maml:para>
@@ -51079,6 +51079,30 @@ Updates the package version of the `MyProcess` process in the current folder to 
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="FirstName">
+          <maml:name>Name</maml:name>
+          <maml:description>
+            <maml:para>Specifies the new Name (FirstName) of the user. Please note that this parameter is only effective in MSI Orchestrator.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="LastName">
+          <maml:name>Surname</maml:name>
+          <maml:description>
+            <maml:para>Specifies the new Surname (LastName) of the user. Please note that this parameter is only effective in MSI Orchestrator.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
@@ -51410,6 +51434,30 @@ Updates the package version of the `MyProcess` process in the current folder to 
         <maml:name>IsExternalLicensed</maml:name>
         <maml:description>
           <maml:para>{{ Fill IsExternalLicensed Description }}</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="FirstName">
+        <maml:name>Name</maml:name>
+        <maml:description>
+          <maml:para>Specifies the new Name (FirstName) of the user. Please note that this parameter is only effective in MSI Orchestrator.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="LastName">
+        <maml:name>Surname</maml:name>
+        <maml:description>
+          <maml:para>Specifies the new Surname (LastName) of the user. Please note that this parameter is only effective in MSI Orchestrator.</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>

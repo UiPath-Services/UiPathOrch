@@ -13,7 +13,7 @@ Removes queue items.
 ## SYNTAX
 
 ```
-Remove-OrchQueueItem [-Name] <String> [-Id] <Int64[]> [-RowVersion] <String> [-Path <String>]
+Remove-OrchQueueItem [-Name] <String> [-Id] <Int64[]> [[-RowVersion] <String>] [-Path <String>]
  [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
@@ -102,7 +102,7 @@ Type: String
 Parameter Sets: (All)
 Aliases:
 
-Required: True
+Required: False
 Position: 2
 Default value: None
 Accept pipeline input: True (ByPropertyName)
@@ -146,9 +146,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String
-
 ### System.Int64[]
-
 ## OUTPUTS
 
 ### System.Object
