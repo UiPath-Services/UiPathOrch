@@ -1,11 +1,16 @@
-﻿using System.Net;
-using System.Text.RegularExpressions;
-using UiPath.PowerShell.Entities;
+﻿using System.Text.RegularExpressions;
 
 namespace UiPath.PowerShell.Core;
 
+public class McpServerSettings
+{
+    public string? Url { get; set; }
+    public bool? Enabled { get; set; }
+}
+
 public class UiPathOrchConfig : PSDrive
 {
+    public McpServerSettings? McpServer { get; set; }
     public List<PSDrive>? PSDrives { get; set; }
 }
 

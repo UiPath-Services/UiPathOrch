@@ -339,14 +339,17 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                     {
                         // UnattendedRobot.ExecutionSetting と合わせて、
                         // RobotProvision.ExecutionSettings も同じように更新するように修正した。
-                        postingUser.RobotProvision ??= new();
-                        postingUser.RobotProvision.ExecutionSettings ??= new();
-                        UpdateExecutionSettings(postingUser.RobotProvision.ExecutionSettings);
+                        if (postingUser.RobotProvision is not null)
+                        {
+                            postingUser.RobotProvision.ExecutionSettings ??= new();
+                            UpdateExecutionSettings(postingUser.RobotProvision.ExecutionSettings);
+                        }
 
-                        postingUser.UnattendedRobot ??= new();
-                        postingUser.UnattendedRobot.ExecutionSettings ??= new();
-                        UpdateExecutionSettings(postingUser.UnattendedRobot.ExecutionSettings);
-
+                        if (postingUser.UnattendedRobot is not null)
+                        {
+                            postingUser.UnattendedRobot.ExecutionSettings ??= new();
+                            UpdateExecutionSettings(postingUser.UnattendedRobot.ExecutionSettings);
+                        }
                         //if (postingUser.type == 3) // robot の場合
                         //{
 

@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.12.5'
+ModuleVersion = '0.9.12.6'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -389,7 +389,9 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Added support for the -Name (alias: -FirstName) and -Surname (alias: -LastName) parameters to the Update-OrchUser cmdlet, enabling user name updates. Please note that these parameters are effective only in MSI Orchestrator. In Automation Cloud, specifying these parameters has no effect.
+        ReleaseNotes = '- When copying queues using the Copy-Item or Copy-OrchQueue cmdlet, if the source queue does not have StaleRetention policy configured, the destination queue is now automatically set to Delete as the StaleRetentionAction and 180 as the StaleRetentionPeriod.
+
+- The Update-OrchUser cmdlet could fail with an error when ExecutionSetting parameters (-ES_*) were specified. This was because the ExecutionSetting values were applied to both the UnattendedRobot and RobotProvision properties of the user, regardless of whether those properties were present. This behavior has been adjusted: -ES_* parameters are now only applied to UnattendedRobot and RobotProvision if they are not null.
 '
 
         # Prerelease string of this module

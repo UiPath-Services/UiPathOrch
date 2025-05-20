@@ -1,5 +1,6 @@
 ﻿//#undef DEBUG
 
+using OrchProvider.MCP;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Diagnostics;
@@ -317,6 +318,72 @@ public partial class OrchProvider : NavigationCmdletProvider
                 //    SessionState.Path.SetLocation(folder);
                 //    WriteWarning($"Please edit ./{fileName}. Once edited, launch a new PS session and `Import-Module UiPathOrch` to mount your Orchestrator tenants as PSDrives.");
                 //}
+            }
+
+            if (_config?.McpServer?.Enabled == true && !string.IsNullOrEmpty(_config.McpServer.Url))
+            {
+                this.InvokeCommand.InvokeScript(@"
+    $timer = New-Object System.Timers.Timer
+    $timer.Interval = 500
+    $timer.AutoReset = $true
+
+    Register-ObjectEvent -InputObject $timer -EventName Elapsed -SourceIdentifier MCP_Poll -Action {
+        $refCmd = [ref] ''
+        while ([OrchProvider.MCP.McpHost]::Queue.TryDequeue($refCmd)) {
+            [Microsoft.PowerShell.PSConsoleReadLine]::Insert($refCmd.Value)
+        }
+    }
+
+    $timer.Start()
+");
+                // 下記も動作した
+                //            this.InvokeCommand.InvokeScript(@"
+                //    # グローバルなスクリプトキューを作成
+                //    $global:McpScriptQueue = [System.Collections.Queue]::new()
+
+                //    # タイマーの作成と設定
+                //    $timer = New-Object System.Timers.Timer
+                //    $timer.Interval = 1000
+                //    $timer.AutoReset = $true
+
+                //    # イベントハンドラの登録
+                //    Register-ObjectEvent -InputObject $timer -EventName Elapsed -SourceIdentifier MCPTestTimer -Action {
+                //        while ($global:McpScriptQueue.Count -gt 0) {
+                //            $req = $global:McpScriptQueue.Dequeue()
+                //            Write-Host ('[MCP Timer] Script = ' + $req.Script)
+                //        }
+                //    }
+
+                //    # タイマースタート
+                //    $timer.Start()
+                //");
+
+
+                // 下記は動作した
+                //            this.InvokeCommand.InvokeScript(@"
+                //    # タイマーインスタンスを作成
+                //    $timer = New-Object System.Timers.Timer
+                //    $timer.Interval = 2000
+                //    $timer.AutoReset = $true
+
+                //    # イベント登録（実行されれば Write-Host される）
+                //    Register-ObjectEvent -InputObject $timer -EventName Elapsed -SourceIdentifier MCPTestTimer -Action {
+                //        Write-Host ('[MCP Timer] 発火: ' + (Get-Date))
+                //    }
+
+                //    $timer.Start()
+                //");
+
+
+
+                // 2.MCP HTTP サーバーを別スレッドで起動
+                var tokenSource = new CancellationTokenSource();
+                Task.Run(() =>
+                {
+                    McpHost.StartServer(_config.McpServer.Url, tokenSource.Token);
+                }, tokenSource.Token);
+
+                Console.WriteLine($"[UiPathOrch] MCP server started at {_config.McpServer.Url}");
             }
 
             Collection<PSDriveInfo> ret = base.InitializeDefaultDrives();
