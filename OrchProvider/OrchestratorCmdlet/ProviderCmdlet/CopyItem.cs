@@ -1801,15 +1801,26 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     Tags = srcQueue.Tags
                 };
 
-                if (dstDrive.OrchAPISession.ApiVersion >= 19 &&
-                    (string.IsNullOrEmpty(postingQueue.RetentionAction) || postingQueue.RetentionAction == "None"))
+                if (dstDrive.OrchAPISession.ApiVersion >= 19)
                 {
-                    postingQueue.RetentionAction = "Delete";
-                }
+                    // None は Keep という意味。Automation Cloud では、None は使えない。
+                    if (string.IsNullOrEmpty(postingQueue.RetentionAction) || postingQueue.RetentionAction == "None")
+                    {
+                        postingQueue.RetentionAction = "Delete";
+                    }
+                    if (postingQueue.RetentionPeriod is null || postingQueue.RetentionPeriod == 0)
+                    {
+                        postingQueue.RetentionPeriod = 30;
+                    }
 
-                if (postingQueue.RetentionPeriod is null || postingQueue.RetentionPeriod == 0)
-                {
-                    postingQueue.RetentionPeriod = 30;
+                    if (string.IsNullOrEmpty(postingQueue.StaleRetentionAction) || postingQueue.StaleRetentionAction == "None")
+                    {
+                        postingQueue.StaleRetentionAction = "Delete";
+                    }
+                    if (postingQueue.StaleRetentionPeriod is null || postingQueue.StaleRetentionPeriod == 0)
+                    {
+                        postingQueue.StaleRetentionPeriod = 180;
+                    }
                 }
 
                 try

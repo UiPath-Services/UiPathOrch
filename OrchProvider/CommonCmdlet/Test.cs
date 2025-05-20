@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchTest")]
 [OutputType(typeof(Bucket))]
-public class GetTestCommand : OrchestratorPSCmdlet
+class GetTestCommand : OrchestratorPSCmdlet
 {
     //[Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     //[ArgumentCompleter(typeof(BucketNameCompleter<TPositional>))]

@@ -760,6 +760,7 @@ public partial class OrchAPISession : IDisposable
 
     public QueueDefinition? CreateQueue(Int64 folderId, QueueDefinition queue)
     {
+        // StaleRetention は、ApiVersion = 17 では web interface にないことを確認済み 
         if (ApiVersion < 19)
         {
             queue.StaleRetentionAction = null;
