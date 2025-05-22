@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "script": {
+      "type": "string",
+      "description": "PowerShell cmdlet(s) or script to execute. Example: Get-OrchJob -Path '/Shared/Processes'",
+      "examples": [
+        {
+          "value": "Get-OrchJob -Path '/Shared/Processes'",
+          "description": "Retrieve all jobs in the 'Processes' folder"
+        },
+        {
+          "value": "Copy-OrchQueue -Source '/Shared/QueueA' -Destination '/Shared/QueueB'",
+          "description": "Copy all items from QueueA to QueueB"
+        }
+      ]
+    }
+  },
+  "required": ["script"]
+}
