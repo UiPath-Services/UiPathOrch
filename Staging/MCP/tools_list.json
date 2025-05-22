@@ -1,0 +1,49 @@
+{
+  "result":{
+    "tools":[
+      {
+        "name":"Execute-Script",
+        "title": "Execute arbitrary PowerShell script",
+        "description": "Runs any PowerShell code you provide.",
+        "inputSchema":{
+          "type":"object",
+          "properties":{
+            "script":{
+              "type":"string",
+              "description": "The PowerShell script to run, e.g. \"Get-OrchProcess -Path Orch1:\\Shared | ConvertTo-Json\""
+            }
+          },
+          "required":[
+            "script"
+          ],
+          "additionalProperties":false,
+          "$schema":"http://json-schema.org/draft-07/schema#"
+        }
+      },
+      {
+        "name":"Get-OrchProcess",
+        "title": "Get-OrchProcess",
+        "description":"Gets processes from Orchestrator modern folders.",
+        "inputSchema":{
+          "type":"object",
+          "properties":{
+            "-Path":{
+              "type":"string"
+            },
+            "-Recurse":{
+              "type":"boolean",
+              "description":"Recursively searches through subfolders"
+            }
+          },
+          "required":[
+          ],
+          "additionalProperties":false,
+          "$schema":"http://json-schema.org/draft-07/schema#"
+        }
+      }
+
+    ]
+  },
+  "jsonrpc":"2.0",
+  "id":0
+}
