@@ -1,4 +1,4 @@
-{
+﻿{
   "result":{
     "tools":[
       {
@@ -11,6 +11,10 @@
             "script":{
               "type":"string",
               "description": "The PowerShell script to run, e.g. \"Get-OrchProcess -Path Orch1:\\Shared | ConvertTo-Json\""
+            },
+            "executeImmediately": {
+              "type":"boolean",
+              "description": "When true, the command is executed immediately and its output is returned to the LLM. Because this can be slow, it should generally be set to false. When false, the command is only inserted into the PowerShell console and not returned to the LLM; the user can press Enter to run it and view the result in the console. Note that immediate execution applies only to this tool—other tools always run in queued mode. To execute other commands immediately, it should be wrapped with `Execute-Script`."
             }
           },
           "required":[
