@@ -338,6 +338,7 @@ if (-not (Test-Path Variable:global:McpTimer)) {
             $cmd = [OrchProvider.MCP.McpHost]::insertCommand
 
             if ($cmd) {
+                [Microsoft.PowerShell.PSConsoleReadLine]::AddToHistory($cmd)
                 [OrchProvider.MCP.McpHost]::insertCommand = $null
                 [Microsoft.PowerShell.PSConsoleReadLine]::DeleteLine()
                 [Microsoft.PowerShell.PSConsoleReadLine]::Insert($cmd)
@@ -346,8 +347,20 @@ if (-not (Test-Path Variable:global:McpTimer)) {
             $cmd = [OrchProvider.MCP.McpHost]::executeCommand
             if ($cmd) {
                 [OrchProvider.MCP.McpHost]::executeCommand = $null
+                [Microsoft.PowerShell.PSConsoleReadLine]::AddToHistory($cmd)
                 try {
-                    [OrchProvider.MCP.McpHost]::outputFromCommand = (Invoke-Expression $cmd | Out-String -Width 200).Trim()
+                    # 1) 結果を画面に逐次出力しつつキャプチャ
+                    $results = @()
+                    Invoke-Expression $cmd | Tee-Object -Variable results | Out-Default
+
+                    # 2) キャプチャした結果を文字列化し 200 文字に切り落とし
+                    $text = ($results | Out-String -Width 200).Trim()
+                    if ($text.Length -gt 200) {
+                        $text = $text.Substring(0, 200)
+                    }
+
+                    # 3) C# へ返却
+                    [OrchProvider.MCP.McpHost]::outputFromCommand = $text
                 }
                 catch {
                     #Write-Host ""[ERROR] Command execution failed: $($_.Exception.Message)""
