@@ -1,6 +1,7 @@
 ﻿//#undef DEBUG
 
 using OrchProvider.MCP;
+using System;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Diagnostics;
@@ -322,60 +323,339 @@ public partial class OrchProvider : NavigationCmdletProvider
 
             if (_config?.McpServer?.Enabled == true && !string.IsNullOrEmpty(_config.McpServer.Url))
             {
+                //プロンプトに表示するだけ版
+                //                this.InvokeCommand.InvokeScript(@"
+                //    if (-not (Test-Path Variable:global:McpTimer)) {
+                //        $global:McpTimer = New-Object System.Timers.Timer 500
+                //        $global:McpTimer.AutoReset = $true
+
+                //        Register-ObjectEvent `
+                //            -InputObject    $global:McpTimer `
+                //            -EventName      Elapsed `
+                //            -SourceIdentifier MCP_Poll `
+                //            -Action {
+                //                $queue = [OrchProvider.MCP.McpHost]::Queue
+                //                if ($null -ne $queue) {
+                //                    $cmd = ''
+                //                    while ($queue.TryDequeue([ref]$cmd)) {
+                //                        [Microsoft.PowerShell.PSConsoleReadLine]::Insert($cmd)
+                //                    }
+                //                }
+                //            } | Out-Null
+
+                //        $global:McpTimer.Start()
+                //    }
+                //");
+
+
+                //プロンプトに表示するだけ、BlockingCollection 版
+                //                this.InvokeCommand.InvokeScript(@"
+                //    # タイマーが未定義なら一度だけ登録
+                //    if (-not (Test-Path Variable:global:McpTimer)) {
+                //        # グローバルスコープにタイマーを保持
+                //        $global:McpTimer = New-Object System.Timers.Timer 500
+                //        $global:McpTimer.AutoReset = $true
+
+                //        Register-ObjectEvent `
+                //            -InputObject    $global:McpTimer `
+                //            -EventName      Elapsed `
+                //            -SourceIdentifier MCP_Poll `
+                //            -Action {
+                //                # BlockingCollection<string>? を取得
+                //                $queue = [OrchProvider.MCP.McpHost]::Queue
+
+                //                # nullチェック
+                //                if ($null -ne $queue) {
+                //                    # out用変数を宣言
+                //                    $cmd = ''
+
+                //                    # 非ブロッキングで取り出し（タイムアウト0ms）
+                //                    while ($queue.TryTake([ref]$cmd, 0)) {
+                //                        # メインスレッドのプロンプトに挿入
+                //                        [Microsoft.PowerShell.PSConsoleReadLine]::Insert($cmd)
+                //                    }
+                //                }
+                //            } | Out-Null
+
+                //        # タイマー起動
+                //        $global:McpTimer.Start()
+                //    }
+                //");
+
+
+                // コマンドを Invoke-Expression で実行
+                //                this.InvokeCommand.InvokeScript(@"
+                //    # タイマーが未定義なら一度だけ登録
+                //    if (-not (Test-Path Variable:global:McpTimer)) {
+                //        # グローバルスコープにタイマーを保持
+                //        $global:McpTimer = New-Object System.Timers.Timer 500
+                //        $global:McpTimer.AutoReset = $true
+
+                //        Register-ObjectEvent `
+                //            -InputObject    $global:McpTimer `
+                //            -EventName      Elapsed `
+                //            -SourceIdentifier MCP_Poll `
+                //            -Action {
+                //                # BlockingCollection<string>? を取得
+                //                $queue = [OrchProvider.MCP.McpHost]::Queue
+
+                //                if ($null -ne $queue) {
+                //                    # out用変数を宣言
+                //                    $cmd = ''
+
+                //                    # 非ブロッキングで取り出し
+                //                    while ($queue.TryTake([ref]$cmd, 0)) {
+                //                        try {
+                //                            # コマンドをメインスレッドで即時実行
+                //                            Invoke-Expression $cmd | Out-Null
+                //                        }
+                //                        catch {
+                //                            Write-Host ""[ERROR] $($_.Exception.Message)""
+                //                        }
+                //                    }
+                //                }
+                //            } | Out-Null
+
+                //        # タイマー起動
+                //        $global:McpTimer.Start()
+                //    }
+                //");
+
+
+                // Queue が BlockingCollection で ResponseQueue が ConcurrentQueue
+                //                this.InvokeCommand.InvokeScript(@"
+                //    # タイマーが未定義なら一度だけ登録
+                //    if (-not (Test-Path Variable:global:McpTimer)) {
+                //        # グローバルスコープにタイマーを保持（GC対策）
+                //        $global:McpTimer = New-Object System.Timers.Timer 500
+                //        $global:McpTimer.AutoReset = $true
+
+                //        Register-ObjectEvent `
+                //            -InputObject    $global:McpTimer `
+                //            -EventName      Elapsed `
+                //            -SourceIdentifier MCP_Poll `
+                //            -Action {
+                //                # キュー定義を取得（BlockingCollection<string>?）
+                //                $queue = [OrchProvider.MCP.McpHost]::Queue
+                //                # レスポンスキュー（ConcurrentQueue<object>）
+                //                $respQ = [OrchProvider.MCP.McpHost]::ResponseQueue
+
+                //                if ($null -ne $queue) {
+                //                    # Dequeue 用のローカル変数
+                //                    $cmd = ''
+
+                //                    # 非ブロッキングでコマンドをすべて取り出し
+                //                    while ($queue.TryTake([ref]$cmd, 0)) {
+                //                        try {
+                //                            # コマンドをメインスレッドで実行
+                //                            $results = Invoke-Expression $cmd
+
+                //                            # レスポンスキューにオブジェクトを積む
+                //                            if ($null -ne $respQ) {
+                //                                if ($results -is [System.Collections.IEnumerable] -and -not ($results -is [string])) {
+                //                                    foreach ($item in $results) {
+                //                                        $respQ.Enqueue($item)
+                //                                    }
+                //                                }
+                //                                else {
+                //                                    $respQ.Enqueue($results)
+                //                                }
+                //                            }
+                //                        }
+                //                        catch {
+                //                            Write-Host ""[ERROR] $($_.Exception.Message)""
+                //                        }
+                //                    }
+                //                }
+                //            } | Out-Null
+
+                //        # タイマー開始
+                //        $global:McpTimer.Start()
+                //    }
+                //");
+
+                // Queue と ResponseQueue の両方が BlockingCollection
+                //                this.InvokeCommand.InvokeScript(@"
+                //    # タイマーが未定義なら一度だけ登録
+                //    if (-not (Test-Path Variable:global:McpTimer)) {
+                //        $global:McpTimer = New-Object System.Timers.Timer 500
+                //        $global:McpTimer.AutoReset = $true
+
+                //        Register-ObjectEvent `
+                //            -InputObject    $global:McpTimer `
+                //            -EventName      Elapsed `
+                //            -SourceIdentifier MCP_Poll `
+                //            -Action {
+                //                $cmdQ  = [OrchProvider.MCP.McpHost]::Queue
+                //                $respQ = [OrchProvider.MCP.McpHost]::ResponseQueue
+
+                //                if ($null -ne $cmdQ) {
+                //                    $cmd = ''
+
+                //                    # コマンドをすべて取り出して実行・格納
+                //                    while ($cmdQ.TryTake([ref]$cmd, 0)) {
+                //                        try {
+                //                            $results = Invoke-Expression $cmd
+                //                            if ($null -ne $respQ) {
+                //                                # 結果オブジェクト全体を JSON 化（ネスト深さは例として 100）
+                //                                $json = $results
+                //                                $respQ.Add($json)
+                //                            }
+                //                        }
+                //                        catch {
+                //                            Write-Host ""[ERROR] $($_.Exception.Message)""
+                //                        }
+                //                    }
+
+                //                    $respQ.CompleteAdding()
+                //                }
+                //            } | Out-Null
+
+                //        $global:McpTimer.Start()
+                //    }
+                //");
+
+                // Insert と Invoke-Expression を切り替え可能版
+                //                this.InvokeCommand.InvokeScript(@"
+                //# タイマーが未定義なら一度だけ登録
+                //if (-not (Test-Path Variable:global:McpTimer)) {
+                //    $global:McpTimer = New-Object System.Timers.Timer 500
+                //    $global:McpTimer.AutoReset = $true
+
+                //    Register-ObjectEvent `
+                //        -InputObject    $global:McpTimer `
+                //        -EventName      Elapsed `
+                //        -SourceIdentifier MCP_Poll `
+                //        -Action {
+                //            $cmdQ       = [OrchProvider.MCP.McpHost]::Queue
+                //            $respQ      = [OrchProvider.MCP.McpHost]::ResponseQueue
+                //            # フラグが $true のときは Invoke-Expression、そうでなければ Insert
+                //            $executeImmediately  = [OrchProvider.MCP.McpHost]::executeImmediately -eq $true
+
+                //            if ($null -ne $cmdQ) {
+                //                $cmd = ''
+                //                while ($cmdQ.TryTake([ref]$cmd, 0)) {
+                //                    try {
+                //                        if ($useInsert) {
+                //                            # 通常の実行＆キューに格納
+                //                            $results = Invoke-Expression $cmd
+                //                            if ($null -ne $respQ) {
+                //                                # 必要なら JSON 化の深度も調整
+                //                                $json = $results | ConvertTo-Json -Depth 100
+                //                                $respQ.Add($json)
+                //                            }
+                //                        }
+                //                        else {
+                //                            # PowerShell コンソールに挿入して終了
+                //                            [Microsoft.PowerShell.PSConsoleReadLine]::DeleteLine($null, $null)
+                //                            [Microsoft.PowerShell.PSConsoleReadLine]::Insert($cmd)
+                //                        }
+                //                    }
+                //                    catch {
+                //                        Write-Host ""[ERROR] $($_.Exception.Message)""
+                //                    }
+                //                }
+
+                //                # Insert モードでなければ CompleteAdding() して列挙を終了可能に
+                //                if (-not $useInsert -and $null -ne $respQ) {
+                //                    $respQ.CompleteAdding()
+                //                }
+                //            }
+                //        } | Out-Null
+
+                //    $global:McpTimer.Start()
+                //}
+                //");
+
                 this.InvokeCommand.InvokeScript(@"
-    $timer = New-Object System.Timers.Timer
-    $timer.Interval = 500
-    $timer.AutoReset = $true
-
-    Register-ObjectEvent -InputObject $timer -EventName Elapsed -SourceIdentifier MCP_Poll -Action {
-        $refCmd = [ref] ''
-        while ([OrchProvider.MCP.McpHost]::Queue.TryDequeue($refCmd)) {
-            [Microsoft.PowerShell.PSConsoleReadLine]::Insert($refCmd.Value)
-        }
-    }
-
-    $timer.Start()
+# タイマーが未定義なら一度だけ登録
+if (-not (Test-Path Variable:global:McpTimer)) {
+    $global:McpTimer = New-Object System.Timers.Timer 500
+    $global:McpTimer.AutoReset = $true
+    Register-ObjectEvent `
+        -InputObject    $global:McpTimer `
+        -EventName      Elapsed `
+        -SourceIdentifier MCP_Poll `
+        -Action {
+            $cmdQ = [OrchProvider.MCP.McpHost]::Queue
+            $respQ = [OrchProvider.MCP.McpHost]::ResponseQueue
+            $executeImmediately = [OrchProvider.MCP.McpHost]::executeImmediately -eq $true
+            
+            if ($null -ne $cmdQ) {
+                $processedCommands = 0
+                $cmd = ''
+                
+                while ($cmdQ.TryTake([ref]$cmd, 0)) {
+                    $processedCommands++
+                    try {
+                        if ($executeImmediately) {
+                            # 即座実行
+                            $results = Invoke-Expression $cmd
+                            
+                            if ($null -ne $respQ) {
+                                try {
+                                    # JSONシリアライゼーションを試行
+                                    $json = $results | ConvertTo-Json -Depth 10 -ErrorAction Stop -WarningAction SilentlyContinue
+                                    $respQ.Add($json)
+                                }
+                                catch {
+                                    # JSONシリアライゼーションに失敗した場合
+                                    Write-Host ""[DEBUG] JSON serialization failed: $($_.Exception.Message)""
+                                    
+                                    # フォールバック：文字列変換を試行
+                                    try {
+                                        $stringResult = $results | Out-String -Width 1000
+                                        $fallbackJson = @{ 
+                                            result = $stringResult
+                                            warning = ""JSON serialization failed, converted to string""
+                                        } | ConvertTo-Json -Depth 5
+                                        $respQ.Add($fallbackJson)
+                                    }
+                                    catch {
+                                        # 最後の手段：エラーメッセージのみ
+                                        $errorJson = @{ 
+                                            error = ""Failed to serialize results: $($_.Exception.Message)""
+                                        } | ConvertTo-Json
+                                        $respQ.Add($errorJson)
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            # PowerShell コンソールに挿入
+                            [Microsoft.PowerShell.PSConsoleReadLine]::DeleteLine()
+                            [Microsoft.PowerShell.PSConsoleReadLine]::Insert($cmd)
+                        }
+                    }
+                    catch {
+                        Write-Host ""[ERROR] Command execution failed: $($_.Exception.Message)""
+                        
+                        if ($executeImmediately -and $null -ne $respQ) {
+                            # 実行エラーもレスポンスキューに追加
+                            $errorJson = @{ 
+                                error = ""Command execution failed: $($_.Exception.Message)""
+                            } | ConvertTo-Json
+                            $respQ.Add($errorJson)
+                        }
+                    }
+                }
+                
+                # **重要**: executeImmediatelyモードでコマンドを処理した場合は必ずCompleteAdding()
+                if ($executeImmediately -and $processedCommands -gt 0 -and $null -ne $respQ) {
+                    try {
+                        $respQ.CompleteAdding()
+                        #Write-Host ""[DEBUG] CompleteAdding() called successfully""
+                    }
+                    catch {
+                        Write-Host ""[ERROR] CompleteAdding() failed: $($_.Exception.Message)""
+                    }
+                }
+            }
+        } | Out-Null
+    $global:McpTimer.Start()
+    Write-Host ""[DEBUG] Timer started""
+}
 ");
-                // 下記も動作した
-                //            this.InvokeCommand.InvokeScript(@"
-                //    # グローバルなスクリプトキューを作成
-                //    $global:McpScriptQueue = [System.Collections.Queue]::new()
-
-                //    # タイマーの作成と設定
-                //    $timer = New-Object System.Timers.Timer
-                //    $timer.Interval = 1000
-                //    $timer.AutoReset = $true
-
-                //    # イベントハンドラの登録
-                //    Register-ObjectEvent -InputObject $timer -EventName Elapsed -SourceIdentifier MCPTestTimer -Action {
-                //        while ($global:McpScriptQueue.Count -gt 0) {
-                //            $req = $global:McpScriptQueue.Dequeue()
-                //            Write-Host ('[MCP Timer] Script = ' + $req.Script)
-                //        }
-                //    }
-
-                //    # タイマースタート
-                //    $timer.Start()
-                //");
-
-
-                // 下記は動作した
-                //            this.InvokeCommand.InvokeScript(@"
-                //    # タイマーインスタンスを作成
-                //    $timer = New-Object System.Timers.Timer
-                //    $timer.Interval = 2000
-                //    $timer.AutoReset = $true
-
-                //    # イベント登録（実行されれば Write-Host される）
-                //    Register-ObjectEvent -InputObject $timer -EventName Elapsed -SourceIdentifier MCPTestTimer -Action {
-                //        Write-Host ('[MCP Timer] 発火: ' + (Get-Date))
-                //    }
-
-                //    $timer.Start()
-                //");
-
-
-
                 // 2.MCP HTTP サーバーを別スレッドで起動
                 var tokenSource = new CancellationTokenSource();
                 Task.Run(() =>
