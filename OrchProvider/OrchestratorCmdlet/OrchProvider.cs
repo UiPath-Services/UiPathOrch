@@ -1,7 +1,5 @@
 ﻿//#undef DEBUG
 
-using OrchProvider.MCP;
-using System;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Diagnostics;
@@ -319,67 +317,6 @@ public partial class OrchProvider : NavigationCmdletProvider
                 //    SessionState.Path.SetLocation(folder);
                 //    WriteWarning($"Please edit ./{fileName}. Once edited, launch a new PS session and `Import-Module UiPathOrch` to mount your Orchestrator tenants as PSDrives.");
                 //}
-            }
-
-            if (_config?.McpServer?.Enabled == true && !string.IsNullOrEmpty(_config.McpServer.Url))
-            {
-                this.InvokeCommand.InvokeScript(@"
-# タイマーが未定義なら一度だけ登録
-if (-not (Test-Path Variable:global:McpTimer)) {
-    $global:McpTimer = New-Object System.Timers.Timer 500
-    $global:McpTimer.AutoReset = $true
-    Register-ObjectEvent `
-        -InputObject    $global:McpTimer `
-        -EventName      Elapsed `
-        -SourceIdentifier MCP_Poll `
-        -Action {
-            #Write-Host ""[DEBUG] fired.""
-
-            $cmd = [OrchProvider.MCP.McpHost]::insertCommand
-
-            if ($cmd) {
-                [Microsoft.PowerShell.PSConsoleReadLine]::AddToHistory($cmd)
-                [OrchProvider.MCP.McpHost]::insertCommand = $null
-                [Microsoft.PowerShell.PSConsoleReadLine]::DeleteLine()
-                [Microsoft.PowerShell.PSConsoleReadLine]::Insert($cmd)
-            }
-
-            $cmd = [OrchProvider.MCP.McpHost]::executeCommand
-            if ($cmd) {
-                [OrchProvider.MCP.McpHost]::executeCommand = $null
-                [Microsoft.PowerShell.PSConsoleReadLine]::AddToHistory($cmd)
-                try {
-                    # 1) 結果を画面に逐次出力しつつキャプチャ
-                    $results = @()
-                    Invoke-Expression $cmd | Tee-Object -Variable results | Out-Default
-
-                    # 2) キャプチャした結果を文字列化し 200 文字に切り落とし
-                    $text = ($results | Out-String -Width 200).Trim()
-                    if ($text.Length -gt 200) {
-                        $text = $text.Substring(0, 200)
-                    }
-
-                    # 3) C# へ返却
-                    [OrchProvider.MCP.McpHost]::outputFromCommand = $text
-                }
-                catch {
-                    #Write-Host ""[ERROR] Command execution failed: $($_.Exception.Message)""
-                    [OrchProvider.MCP.McpHost]::outputFromCommand = ""Command execution failed: $($_.Exception.Message)""
-                }
-            }
-        } | Out-Null
-
-    $global:McpTimer.Start()
-}
-");
-                // 2.MCP HTTP サーバーを別スレッドで起動
-                var tokenSource = new CancellationTokenSource();
-                Task.Run(() =>
-                {
-                    McpHost.StartServer(_config.McpServer.Url, tokenSource.Token);
-                }, tokenSource.Token);
-
-                Console.WriteLine($"[UiPathOrch] MCP server started at {_config.McpServer.Url}");
             }
 
             Collection<PSDriveInfo> ret = base.InitializeDefaultDrives();
