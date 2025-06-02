@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.12.6'
+ModuleVersion = '0.9.12.7'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -389,9 +389,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- When copying queues using the Copy-Item or Copy-OrchQueue cmdlet, if the source queue does not have StaleRetention policy configured, the destination queue is now automatically set to Delete as the StaleRetentionAction and 180 as the StaleRetentionPeriod.
-
-- The Update-OrchUser cmdlet could fail with an error when ExecutionSetting parameters (-ES_*) were specified. This was because the ExecutionSetting values were applied to both the UnattendedRobot and RobotProvision properties of the user, regardless of whether those properties were present. This behavior has been adjusted: -ES_* parameters are now only applied to UnattendedRobot and RobotProvision if they are not null.
+        ReleaseNotes = '- In Get-OrchUser -ExportCsv, if an Exp* property (for example, ExplicitMayHaveUserSession or ExplicitMayHaveRobotSession) is null, the corresponding May* column (for example, MayHaveUserSession or MayHaveRobotSession) now falls back to its original value.
 '
 
         # Prerelease string of this module
