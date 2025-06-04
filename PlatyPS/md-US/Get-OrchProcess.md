@@ -18,7 +18,9 @@ Get-OrchProcess [[-Name] <String[]>] [-ExpandDetails] [-Path <String[]>] [-Recur
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Multiple values for the -Path parameter can be specified using comma-separated text that includes wildcards. Additionally, you can use autocomplete for these values by pressing [Ctrl+Space] or [Tab].
+
+When specifying the -Path, -Recurse, and -Depth parameters, place them immediately after the cmdlet name. This placement ensures that autocomplete for subsequent parameters functions correctly.
 
 Primary Endpoint: GET /odata/Releases/?$expand=Environment,CurrentVersion,ReleaseVersions,EntryPoint
 
@@ -30,10 +32,39 @@ Required permissions: Processes.View
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Get-OrchProcess
 ```
 
-{{ Add example description here }}
+  
+
+Show the processes assigned to the current folder.
+
+### Example 2
+```powershell
+PS Orch1:\> Get-OrchProcess -Recurse
+```
+
+  
+
+Show the processes assigned to the current folder and all its subfolders. When run in the root folder, it displays all processes from folders included in that tenant.
+
+### Example 3
+```powershell
+PS Orch1:\> Get-OrchProcess -Recurse *proc*
+```
+
+  
+
+Search all folders for processes that contain proc in the process name.
+
+### Example 4
+```powershell
+PS Orch1:\> Get-OrchProcess -Recurse -ExpandDetails -ExportCsv <filePath> -CsvEncoding Shift-JIS
+```
+
+  
+
+Export process detailed information for all folders in CSV.
 
 ## PARAMETERS
 

@@ -37,10 +37,12 @@ Required permissions:
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Import-Csv <filePath> | Update-OrchProcess
 ```
 
-{{ Add example description here }}
+  
+
+Update process information using import from CSV.
 
 ## PARAMETERS
 
