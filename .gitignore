@@ -363,3 +363,5 @@ MigrationBackup/
 FodyWeavers.xsd
 /Functions(ボツ)/Move-OrchPmMemberBetweenPmGroup.ps1
 /PlatyPS/new
+
+PlatyPS/Build-Xml.ps1
