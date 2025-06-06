@@ -2219,7 +2219,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 postingBucket.Id = null;
                 // postingBucket.Path = null; // JsonIgnore 属性がついているので不要
                 postingBucket.FoldersCount = null;
-                postingBucket.Identifier = Guid.NewGuid();
+                postingBucket.Identifier = Guid.NewGuid().ToString();
 
                 bool bPasswordExists = !string.IsNullOrEmpty(postingBucket.Password);
                 if (bPasswordExists)
