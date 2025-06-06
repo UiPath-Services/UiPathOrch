@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.12.7'
+ModuleVersion = '0.9.12.8'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -349,6 +349,7 @@ CmdletsToExport = @(
 'Get-TmTestSet',
 'Remove-TmTestSet',
 
+'Get-OrchHelp',
 'Clear-OrchCache',
 'Edit-OrchConfig',
 'Get-OrchPSDrive',
@@ -389,7 +390,13 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- In Get-OrchUser -ExportCsv, if an Exp* property (for example, ExplicitMayHaveUserSession or ExplicitMayHaveRobotSession) is null, the corresponding May* column (for example, MayHaveUserSession or MayHaveRobotSession) now falls back to its original value.
+        ReleaseNotes = '- Corrected the CSV output of Get-OrchTrigger -ExportCsv, which had invalid values in the ExecutorRobots column.
+
+- Enabled specifying machines inherited from a parent folder with the -MachineRobots parameter of Update-OrchTrigger.
+
+- The validity check for tenant URLs specified in the configuration file was incorrect, causing URLs such as https://orchestrator.local/ to be mistakenly treated as invalid. MSI Orchestrator URLs can indeed take this form.
+
+- Introduced a Get-OrchHelp cmdlet for LLM with MCP scenarios, intended to allow an LLM to learn how to use the UiPathOrch module. Please try the PowerShell.MCP module: https://www.powershellgallery.com/packages/PowerShell.MCP
 '
 
         # Prerelease string of this module
