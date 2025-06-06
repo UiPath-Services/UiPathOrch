@@ -1315,12 +1315,12 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<CreatedMachine>(HttpMethod.Post, "/odata/Machines", null, machine);
     }
 
-    public MachineClientSecretResponse[]? GetMachineClientSecret(Guid licenseKey)
+    public MachineClientSecretResponse[]? GetMachineClientSecret(string licenseKey)
     {
         return HttpRequest<MachineClientSecretResponse[]>(HttpMethod.Get, $"/api/clientsecrets/{licenseKey}");
     }
 
-    public MachineClientSecretResponse? AddMachineClientSecret(Guid licenseKey)
+    public MachineClientSecretResponse? AddMachineClientSecret(string licenseKey)
     {
         return HttpRequest<MachineClientSecretResponse>(HttpMethod.Post, $"/api/clientsecrets/{licenseKey}");
     }
