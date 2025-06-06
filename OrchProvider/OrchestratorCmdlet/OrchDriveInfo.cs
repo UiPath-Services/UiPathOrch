@@ -1719,9 +1719,9 @@ public partial class OrchDriveInfo : PSDriveInfo
     #endregion
 
     #region OrchMachineClientSecret cache
-    internal Dictionary<Guid, MachineClientSecretResponse[]?>? _dicMachineClientSecrets = null;
-    internal readonly ExceptionsCachePer<Guid> _dicMachineClientSecrets_Exception = new();
-    public MachineClientSecretResponse[]? GetMachineClientSecret(Guid licenseKey)
+    internal Dictionary<string, MachineClientSecretResponse[]?>? _dicMachineClientSecrets = null;
+    internal readonly ExceptionsCachePer<string> _dicMachineClientSecrets_Exception = new();
+    public MachineClientSecretResponse[]? GetMachineClientSecret(string licenseKey)
     {
         _dicMachineClientSecrets_Exception.ThrowCachedExceptionIfAny(licenseKey);
 

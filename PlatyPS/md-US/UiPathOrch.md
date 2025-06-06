@@ -150,7 +150,7 @@ Disables the triggers.
 Disables the webhooks.
 
 ### [Edit-OrchConfig](Edit-OrchConfig.md)
-{{ Fill in the Synopsis }}
+Opens the UiPath Orchestrator configuration file for editing.
 
 ### [Edit-OrchProcess](Edit-OrchProcess.md)
 {{ Fill in the Synopsis }}
@@ -330,7 +330,7 @@ Gets the personal workspaces.
 Gets the processes.
 
 ### [Get-OrchPSDrive](Get-OrchPSDrive.md)
-{{ Fill in the Synopsis }}
+Lists all configured UiPath Orchestrator drives and their connection status.
 
 ### [Get-OrchQueue](Get-OrchQueue.md)
 Gets the queues.
@@ -447,7 +447,7 @@ Gets the test sets from projects in Test Manager.
 {{ Fill in the Synopsis }}
 
 ### [Import-OrchPackage](Import-OrchPackage.md)
-{{ Fill in the Synopsis }}
+Uploads packages.
 
 ### [Import-OrchQueueItem](Import-OrchQueueItem.md)
 {{ Fill in the Synopsis }}
@@ -639,7 +639,7 @@ Adds or updates a role.
 Creates or updates robot accounts in organizations.
 
 ### [Start-OrchJob](Start-OrchJob.md)
-{{ Fill in the Synopsis }}
+Starts UiPath robot jobs for specified processes.
 
 ### [Start-OrchTestSet](Start-OrchTestSet.md)
 {{ Fill in the Synopsis }}

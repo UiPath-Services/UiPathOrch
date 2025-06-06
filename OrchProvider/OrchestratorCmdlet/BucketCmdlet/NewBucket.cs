@@ -92,7 +92,7 @@ public class NewBucketCommand : OrchestratorPSCmdlet
                         Bucket postingBucket = new()
                         {
                             Name = WildcardPattern.Unescape(name),
-                            Identifier = Guid.NewGuid(),
+                            Identifier = Guid.NewGuid().ToString(),
                         };
                         postingBucket.AssignStringIfNotNullOrEmpty(Description,       (b, v) => b.Description = v);
                         postingBucket.AssignStringIfNotNullOrEmpty(StorageProvider,   (b, v) => b.StorageProvider = v);
