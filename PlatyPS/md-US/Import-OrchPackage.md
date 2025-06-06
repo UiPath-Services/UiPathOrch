@@ -50,13 +50,7 @@ Uploads the specified package files to both the tenant process feed of Orch1: an
 ```powershell
 PS Orch1:\> Import-OrchPackage c:\pkg -Recurse
 ```
-Running with the -Recurse parameter in the root folder will upload in bulk to the tenant feed and all folders with a feed. Note that only folders directly under the root folder can have a feed, so specifying the -Recurse option only makes sense when executed in the root folder.
-
-### Example 5
-```powershell
-PS Orch1:\> Import-OrchPackage c:\pkg -SourceRecurse
-```
-Specifying the -SourceRecurse switch parameter uploads *.nupkg files located in subfolders of the folder specified in -Source (in this case, c:\pkg) to the feed of a modern folder with the same name. This parameter assumes that folders with the same name as personal workspace folders or folders with a feed exist under c:\pkg. It is useful for migrating packages downloaded with Export-OrchPackage -Recurse to another tenant in bulk.
+Running with the -Recurse parameter in the root folder will upload in bulk to the tenant feed and all folders with a feed. Note that only folders directly under the root folder can have a feed, so specifying the -Recurse option only makes sense when the root folder is targeted. In other words, when this cmdlet is run at the root folder of the UiPathOrch drive or when the -Path parameter specifies the root folder of the UiPathOrch drive. It is useful for migrating packages downloaded with Export-OrchPackage -Recurse to another tenant in bulk.
 
 
 ## PARAMETERS
