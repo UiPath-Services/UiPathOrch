@@ -49,18 +49,58 @@ internal class OrchestratorAuthManager
         _baseUrl = drive._psDrive.IsCloud ? _drive!._psDrive.Root!.Substring(0, _drive._psDrive.Root.IndexOf("uipath.com") + "uipath.com".Length)
             : _drive._psDrive.Root!.TrimEnd('/');
 
-        if (_isUserPassword) /////////////////////// Non-Conf User Scope
+        if (_isUserPassword) // Non-Conf User Scope
         {
-            // 最後のスラッシュの位置を取得
-            int lastSlashIndex = _baseUrl.LastIndexOf('/');
-
-            // 最後のスラッシュの位置が見つかった場合に分割
-            if (lastSlashIndex < 0)
+            // 1. 空チェック
+            if (string.IsNullOrWhiteSpace(_baseUrl))
             {
-                throw new InvalidOperationException("The provided Root is not in the expected format 'https://domain/tenancy'.");
+                throw new InvalidOperationException("The provided URL is null or empty.");
             }
-            _onpremiseTenancy = _baseUrl.Substring(lastSlashIndex + 1).TrimEnd('/');
-            _baseUrl = _baseUrl.Substring(0, lastSlashIndex);
+
+            // 2. Uri としてパースを試みる
+            if (!Uri.TryCreate(_baseUrl, UriKind.Absolute, out var uri))
+            {
+                throw new InvalidOperationException("The provided URL is not a valid absolute URI.");
+            }
+
+            // 3. 絶対パスから末尾のスラッシュを除去し、'/' 区切りで分割
+            var path = uri.AbsolutePath.TrimEnd('/'); // "/" → ""
+            var segments = path.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+
+            // 4. ドメインに "uipath.com" を含む場合は、必ずパスにテナンシーが存在すること
+            if (uri.Host.Contains("uipath.com", StringComparison.OrdinalIgnoreCase) && segments.Length == 0)
+            {
+                throw new InvalidOperationException(
+                    "For domains containing 'uipath.com', the URL must be in the format 'https://domain/tenancy'."
+                );
+            }
+
+            if (segments.Length == 0)
+            {
+                // 【ケース1】テナンシーが指定されていない場合（かつ uipath.com 以外のドメイン）
+                _onpremiseTenancy = string.Empty;
+                _baseUrl = uri.GetLeftPart(UriPartial.Authority); // 例: "https://orchestrator.local"
+            }
+            else
+            {
+                // 【ケース2】テナンシーが指定されている場合
+                _onpremiseTenancy = segments.Last();
+
+                // テナンシーを除いた残りのパスを再構築
+                var remainingSegments = segments.Take(segments.Length - 1);
+                string newPath = remainingSegments.Any()
+                    ? "/" + string.Join("/", remainingSegments) // 例: "/folder1"
+                    : "/"; // ドメイン直下しかない場合は "/" をセット
+
+                // UriBuilder で scheme+authority+新しいパスを組み立て
+                var builder = new UriBuilder(uri)
+                {
+                    Path = newPath
+                };
+
+                // 末尾のスラッシュを除去して _baseUrl にセット
+                _baseUrl = builder.Uri.ToString().TrimEnd('/');
+            }
         }
     }
 

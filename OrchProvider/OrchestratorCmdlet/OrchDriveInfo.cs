@@ -2715,6 +2715,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerFolder<Asset> Assets;
     public readonly ListCachePerFolder<Bucket> Buckets;
     public readonly ListCachePerFolder<Entities.Environment> Environments;
+    public readonly ListCachePerFolder<MachineFolder> FolderMachines;
     public readonly ListCachePerFolder<MachineFolder> FolderMachinesAssigned;
     public readonly ListCachePerFolder<MachineFolder> FolderMachinesAssignable;
     public readonly ListCachePerFolder<UserRoles> FolderUsersWithNoInherited;
@@ -2934,6 +2935,11 @@ public partial class OrchDriveInfo : PSDriveInfo
                 }
             }
         });
+
+        FolderMachines = new(this,
+            fid => OrchAPISession.GetMachinesAssignedTo(fid),
+            (e, folderPath) => e.Path = folderPath
+        );
 
         // 15: ?$filter=((((IsAssignedToFolder eq true) or (IsInherited eq true))))
         FolderMachinesAssigned = new(this,

@@ -1,0 +1,497 @@
+============================================
+UiPathOrch Module - Essential Guide for LLMs
+============================================
+
+ATTENTION: This document provides operational guidelines for safely using the
+UiPathOrch PowerShell module to control UiPath Orchestrator. This module
+operates on live production systems.
+
+🚨 CRITICAL LLM EXECUTION RULES
+
+NEVER VIOLATE THESE RULES:
+1. START SESSION: Execute Get-OrchPSDrive once to verify available drives
+2. ALWAYS confirm target drive with user when multiple drives exist
+3. ALWAYS use -WhatIf first for destructive operations
+4. ALWAYS use executeImmediately=true (never false - you lose visibility)
+5. ALWAYS run Clear-OrchCache before retrying after errors
+
+IMMEDIATE FAILURE CONDITIONS:
+- No drives found → Tell user to run Edit-OrchConfig
+- Permission error → Follow error protocol below
+- Connection timeout → Clear-OrchCache and retry once
+
+⚡ MANDATORY LLM DECISION FLOW
+
+Step 1: Environment Verification (ALWAYS REQUIRED)
+--------------------------------------------------
+Get-OrchPSDrive  # executeImmediately=true
+
+Decision Logic:
+- 0 drives → "No UiPath drives configured. Please run Edit-OrchConfig first"
+- 1 drive → Proceed to Step 2
+- Multiple drives → "Found drives: [list]. Which should I use?" → Wait for user response
+
+CRITICAL: Check drive constraints before proceeding
+- If IsConfidential = True: Warn user of limited diagnostic capabilities
+- If CurrentUser = N/A: Most diagnostic steps will be unavailable
+
+Step 2: Command Classification
+------------------------------
+Read-Only Operations (executeImmediately=true):
+- Get-*, dir, cd, Clear-OrchCache, Get-Help
+
+Destructive Operations (Two-Step Process):
+- Start-*, Stop-*, New-*, Add-*, Remove-*, Update-*, Set-*, Import-*
+
+Step 3: Safe Execution Protocol
+-------------------------------
+FOR READ-ONLY OPERATIONS:
+Get-OrchPSDrive [DriveName]:  # Verify target
+dir -Recurse
+[actual command]
+
+FOR DESTRUCTIVE OPERATIONS (Two-Step Process):
+1. FIRST: Execute with -WhatIf (executeImmediately=true)
+   Example: Start-OrchJob -ProcessName 'MyProcess' -WhatIf
+2. SHOW results to user and ask: 'Should I proceed with this operation?'
+3. IF user confirms: Execute without -WhatIf (executeImmediately=true)
+   Example: Start-OrchJob -ProcessName 'MyProcess' -Verbose
+
+🛠 ERROR HANDLING PROTOCOL
+
+Automatic Error Classification
+------------------------------
+IF error contains ["Unauthorized", "AppId", "OAuth"]:
+    → OAuth/Connection issue
+    → Action: Check drive configuration, suggest Edit-OrchConfig
+
+IF error contains ["Forbidden", "Access denied", "Permission"]:
+    → Permission issue
+    → Action: Get-OrchCurrentUser check, folder context verification
+
+IF error contains ["timeout", "network", "connection"]:
+    → Connection issue
+    → Action: Clear-OrchCache, retry once
+
+IF error contains ["not found", "does not exist"]:
+    → Object not found
+    → Action: Verify object name/path, check folder context
+
+Standard LLM Error Response Template
+------------------------------------
+❌ [Command] failed: [error message]
+🔧 Diagnosis: [error type from above]
+💡 Action: [specific action taken]
+📋 Result: [outcome of recovery attempt]
+
+🏗 UIPATH ORCHESTRATOR ARCHITECTURE
+
+Hierarchy Structure
+-------------------
+Organization (Cloud Account)
+└── Tenant (Licensed Instance)
+    ├── Tenant Users (Local User, Directory User, Local Group, Robot Account, External Application)
+    ├── Machines (Machine Template, Elastic Robot Pool, Cloud Robot-VM, Cloud Robot-Serverless)
+    ├── Libraries
+    ├── Packages in tenant feed
+    ├── Audit
+    ├── Credential Stores
+    ├── Webhooks
+    ├── Monitoring
+    └── Folder (Logical Grouping) - up to 7 levels deep
+        ├── Folder Users (Tenant Users assigned to folder)
+        ├── Folder Machines (Machines assigned to folder)
+        ├── Processes (Runnable Automation)
+        ├── Jobs (Process Execution Instance)
+        ├── Logs (Process Execution Log)
+        ├── Triggers (Time Trigger/Queue Trigger to Start Job Automatically)
+        ├── Queues (Data Processing Pipeline)
+        ├── Assets (Configuration Storage)
+        ├── Robots (Execution Agent)
+        └── Buckets (External File Storage)
+
+Important: Orchestrator Root Folder Concept
+While UiPath Orchestrator has no actual root folder concept, tenant-level entities
+(Tenant Users, Machines, Libraries, etc.) are presented as if they exist in the
+root folder of the UiPathOrch drive for operational convenience. These tenant
+entities can be accessed and operated from any folder within the drive, provided
+the correct drive is specified.
+
+Entity Relationships
+--------------------
+- Organization: Billing and user management boundary
+- Tenant: Isolated automation environment within organization
+- Folder: Security and organization boundary within tenant
+- Process: Deployed automation package assigned to folder
+- Job: Runtime instance of a process execution
+
+📁 FOLDER SYSTEM KNOWLEDGE
+
+Folder Types
+------------
+Standard Folder:
+- Purpose: Regular automation projects
+- FolderType = "Standard"
+- Features: Full entity management capabilities
+- Users: Can be assigned to multiple users/machines
+
+Personal Workspace:
+- Purpose: Individual user development environment
+- FolderType = "Personal"
+- Features: Private folder per user, no user/machine assignments
+- Access: Only owner + administrators (with "Start Exploring" in web UI)
+- Limitation: Cannot assign users or machines
+
+Solution Folder:
+- Purpose: Container for solution deployments
+- FolderType = "Solution"  
+- Special behavior: Although Personal Workspaces typically cannot contain subfolders, when a Solution is deployed to a Personal Workspace, it automatically creates the necessary subfolder structure.
+
+Folder Provisioning Types
+-------------------------
+Automatic (Modern - Recommended):
+- ProvisionType = "Automatic"
+- Managed by Orchestrator, consistent structure
+- Supports up to 7 levels of folder hierarchy
+- Can create subfolders
+
+Manual (Classic - Deprecated):
+- ProvisionType = "Manual"  
+- Legacy folder creation method, being phased out
+- Cannot create subfolders
+- Flat structure only
+
+Feed System Understanding
+-------------------------
+Tenant Feed (Tenant-wide):
+- Scope: Available only to folders without their own feed
+- Content: Both Libraries and Packages (managed separately)
+- Purpose: Shared libraries and common processes
+- Usage: Default package source for folders without feed
+
+Folder Feed (Folder-specific):
+- Scope: Available to folder with feed and all its subfolders
+- Content: Packages only
+- Purpose: Environment isolation (dev/test/prod)
+- Restriction: Only root-level folders can have feeds
+
+Feed Exclusivity Rule:
+- Folders without feed: Use tenant feed for package assignments
+- Folders with feed: Use ONLY their folder feed for package assignments
+- No mixing: Cannot access both tenant feed and folder feed simultaneously
+
+Feed Configuration Rules:
+- Root folders: Can have their own feed OR use tenant feed
+- Subfolders: ALWAYS inherit parent folder's feed configuration
+- Post-creation: Feed configuration CANNOT be changed
+
+Process Assignment Rules:
+- Folders without feed: Can only assign packages from tenant feed
+- Folders with feed: Can only assign packages from their folder feed
+
+Library Usage:
+- Libraries are referenced by packages, not directly by folders
+- All library references are resolved from tenant feed
+
+Package vs Library vs Process
+-----------------------------
+Library (.nupkg):
+- Purpose: Reusable functionality/components
+- Deployment: Always to tenant feed
+- Usage: Referenced by other packages
+
+Package (.nupkg):
+- Purpose: Complete automation with entry point
+- Deployment: Tenant feed OR folder feed (if configured)
+- Entry Point: Main.xaml or specified workflow
+
+Process:
+- Definition: Package assigned to a specific folder
+- State: Runnable automation in folder context
+- Execution: Creates Jobs when started
+
+📁 FOLDER CONTEXT MANAGEMENT
+
+Critical Context Rules
+----------------------
+- Folder operations REQUIRE proper context: cd [FolderName] OR -Path parameter
+- Always run dir -Recurse first to understand structure
+- Personal Workspace requires special navigation (admin "Start Exploring" in web UI)
+
+Navigation Pattern
+------------------
+Get-OrchPSDrive                    # 1. Verify environment
+dir -Recurse | Select-Object FullName, FolderType, ProvisionType  # 1. Map structure
+cd [TargetFolder]                  # 2. Set context
+Get-OrchCurrentUser                # 3. Verify access
+[folder operations]                # 4. Execute
+
+🔐 PERMISSION MODEL UNDERSTANDING
+
+Three-Level Permission Model
+----------------------------
+OAuth Scope Level:
+- Defines API access capabilities at connection level
+- Required scopes vary by cmdlet (check Get-Help [cmdlet] DESCRIPTION)
+- Current scope: Get-OrchPSDrive shows 'Scope' column
+
+Tenant Role Level:
+- Controls tenant-wide entity access (users, licenses, settings)
+- Assigned to users/applications at tenant level
+- Check with: Get-OrchUser (shows RolesList for all user types)
+- External applications: Visible in Get-OrchUser output (Type = "DirectoryExternalApplication")
+
+Folder Role Level:
+- Controls folder-specific entity access (processes, jobs, queues, assets)
+- Users/apps must be assigned to folders: Get-OrchFolderUser
+- Folder assignment includes specific folder roles
+
+Permission Verification Commands
+--------------------------------
+Get-OrchRole -ExpandPermission  # See detailed role permissions
+Get-OrchUserPrivilege           # Check current user's effective permissions
+Get-OrchCurrentUser             # Who am I? What tenant roles?
+Get-OrchFolderUser              # Am I assigned to this folder?
+
+OAuth Security Model
+--------------------
+Non-Confidential App (RECOMMENDED):
+- No AppSecret required - eliminates password leakage risk
+- User authenticates directly via browser - true identity verification
+- More secure (no secret management)
+
+Confidential App (SECURITY RISK):
+- Requires AppSecret - introduces password management vulnerabilities
+- Application authentication only - no user verification
+- Higher attack surface due to secret storage requirements
+
+User Types Hierarchy
+--------------------
+Organization Level:
+- Organization User: AD-linked, local user, robot account, external app
+- Organization Group: Container for organization users (no nested groups)
+
+Tenant Level:
+- Tenant User: Organization user granted tenant access
+- Tenant Roles: Administrator, User, Robot, etc.
+
+Folder Level:
+- Folder User: Tenant user assigned to specific folder
+- Folder Roles: Folder Administrator, Folder User, etc.
+
+📋 COMMAND CATEGORIES & PATTERNS
+
+Job Management
+--------------
+# Pattern: Monitor → Start → Monitor → Stop
+Get-OrchJob -Last Day              # Check recent jobs
+Start-OrchJob -Name "Name"         # Start with -WhatIf first
+Get-OrchJob -Id [JobId]            # Monitor specific job
+Stop-OrchJob -Id [JobId]           # Stop with -WhatIf first
+
+Queue Operations
+----------------
+# Pattern: Check → Import → Monitor
+Get-OrchQueue                      # List queues
+Get-OrchQueueItem -Name "QueueName" -Status New
+
+Asset Management
+----------------
+# Pattern: Get → Set/Update
+Get-OrchAsset                      # List assets
+Set-OrchAsset -ValueType Text -Name "AssetName" -Value "NewValue"  # Use -WhatIf first
+
+Environment Navigation
+----------------------
+# Pattern: Map → Navigate → Verify → Operate
+dir -Recurse                       # Map folder structure
+cd [TargetFolder]                  # Navigate to target
+Get-OrchFolderUser                 # Verify access
+[folder operations]                # Perform work
+
+User & Permission Management
+----------------------------
+Get-OrchUser, Add-OrchUser                      # User management
+Get-OrchRole, Set-OrchRole                      # Role management
+Get-OrchFolderUser, Add-OrchFolderUser          # Folder permissions
+
+Infrastructure Management
+-------------------------
+Get-OrchMachine, New-OrchMachine                # Machine management
+Get-OrchRobot                                   # Robot management
+Get-OrchLicense                                 # License monitoring
+
+🚀 STANDARD LLM RESPONSE TEMPLATES
+
+When showing entity information:
+Always include Path in Select-Object to show entity context and location.
+
+Environment Verification
+------------------------
+🔍 Checking UiPath environment...
+[Already verified at session start]
+✅ Found [N] drives: [list]
+Which drive should I use for this operation?
+
+Pre-Execution for Destructive Operations
+-----------------------------------------
+⚠ This operation will modify data. Checking impact...
+[Execute: command -WhatIf]
+📋 Impact: [WhatIf results]
+Should I proceed with this operation? (yes/no)
+If user confirms: Execute the command with -Verbose (without -WhatIf)
+
+📊 Results: [summary of key results]
+💡 Next steps: [relevant follow-up actions if applicable]
+
+🎯 CRITICAL SUCCESS PATTERNS
+
+📊 COMMON WORKFLOW PATTERNS
+
+1. Batch Job Execution
+----------------------
+# Navigate to target folder first
+cd [folder path]
+# Execute multiple processes with -WhatIf first
+Start-OrchJob -ProcessName Process1 -WhatIf
+Start-OrchJob -ProcessName "Test*" -WhatIf
+Start-OrchJob -ProcessName Process3 -WhatIf
+
+
+2. Search for folders with specific machines assigned across all tenant folders
+Get-OrchFolderMachine -Path [drivename]:\ -Recurse [machine names]
+Supports wildcards and comma-separated multiple values (e.g., Server*,Robot1,Test*).
+Other folder entities can be searched using the same pattern with other cmdlets.
+
+3. License Usage Monitoring
+---------------------------
+# Regular license usage checking
+$licenses = Get-OrchLicense
+$usage = Get-OrchLicenseStats
+if ($usage.Used/$licenses.Total -gt 0.8) {
+    Write-Host "License Usage Alert: $($usage.Used)/$($licenses.Total)"
+}
+
+⚡ PERFORMANCE & CACHE MANAGEMENT
+
+Cache Behavior Understanding
+----------------------------
+Once retrieved entities are cached within the PSDrive, so repeated cmdlet executions
+do not generate API calls. However, if entities are updated by other external
+applications or Orchestrator web, the UiPathOrch cache becomes stale.
+
+When to Clear Cache:
+- Before critical operations, if intentionally obtaining the latest information
+- After any error to ensure fresh connection state
+- After large data operations to free memory
+
+Caching Behavior by Command Type:
+- Get-OrchQueueItem, Get-OrchJob, Get-OrchLog, Get-OrchAuditLog with filter parameters: Always make API calls
+- Same commands without filter parameters: Display cached content (if available)
+
+Important Cache Behavior:
+These four cmdlets (Get-OrchQueueItem, Get-OrchJob, Get-OrchLog, Get-OrchAuditLog) behave
+differently from other cmdlets - they always make API calls regardless of cache status.
+Therefore, when searching previously retrieved entities, avoid filter parameters for optimal
+performance. Use cache whenever possible unless conditions have changed or significant
+time has passed since the last retrieval.
+
+Performance Best Practices
+---------------------------
+# Large environments: Target specific folders instead of -Recurse
+Get-OrchAsset -Path [folder path] 'SpecificAsset*'  # -Path and asset name support wildcards and comma-separated multiple values
+
+# Batch operations: Navigate to target folder first
+cd [DriveName]:\[TargetFolder]
+Get-OrchJob -First 10 # Gets first 10 jobs from current folder
+
+📚 QUICK REFERENCE
+
+Essential Commands (Use in Order)
+---------------------------------
+1. Get-OrchPSDrive - List and verify available drives (execute once per session)
+2. Get-OrchCurrentUser - Verify connection and identity
+3. dir -Recurse | Select-Object FullName, FolderType, ProvisionType - Map structure
+4. cd [TargetFolder] - Set folder context
+5. Clear-OrchCache - Reset cache when errors occur
+
+Command Syntax Help
+-------------------
+- Get-Help [Command] -Examples - Verify syntax before execution
+- [Command] -WhatIf - Preview destructive operations
+
+Permission Diagnosis
+--------------------
+- Get-OrchRole -ExpandPermission - Check role permissions
+- Get-OrchFolderUser - Check folder assignments
+- Get-OrchUserPrivilege - Check effective permissions
+
+
+Path Information Best Practice
+------------------------------
+Always include Path when using Select-Object to show entity context:
+
+# Recommended: Always include Path
+Get-OrchUser | Select-Object Path, UserName, FullName
+Get-OrchProcess | Select-Object Path, Name, ProcessVersion
+Get-OrchAsset | Select-Object Path, Name, ValueType
+
+# Path shows entity context:
+# - Tenant entities: Path = "Orch1:\" (root level)
+# - Folder entities: Path = "Orch1:\[FolderName]" (folder specific)
+
+TROUBLESHOOTING QUICK FIXES
+
+Common Issues and Solutions
+---------------------------
+Connection Issues:
+# Clear cache and reconnect
+Clear-OrchCache
+Get-OrchCurrentUser  # Test connection
+
+Permission Errors:
+# Quick permission check sequence
+# Drive configuration already verified at session start
+Get-OrchCurrentUser  # Check WHO am I
+Get-OrchFolderUser   # Check folder assignments
+
+Performance Issues:
+# For large environments, use specific filters
+Get-OrchJob -Last Day              # Instead of Get-OrchJob -Recurse
+Get-OrchAsset -Path [folder path]  # Instead of Get-OrchAsset -Recurse
+
+Drive Mount Issues:
+# Re-configure problematic drives
+Edit-OrchConfig  # Opens UiPathOrchConfig.json in Notepad
+
+Configuration and Setup
+-----------------------
+Configuration File Location:
+([Environment]::GetFolderPath('MyDocuments'))\PowerShell\Modules\UiPathOrch\UiPathOrchConfig.json
+
+# Check if configuration file exists
+Test-Path "([Environment]::GetFolderPath('MyDocuments'))\PowerShell\Modules\UiPathOrch\UiPathOrchConfig.json"
+
+# View current configuration
+Get-Content "([Environment]::GetFolderPath('MyDocuments'))\PowerShell\Modules\UiPathOrch\UiPathOrchConfig.json" | ConvertFrom-Json
+
+Initial Setup:
+# Check current drive configuration
+Get-OrchPSDrive
+
+# If drives are already listed with proper Root URLs, you can proceed
+# For first-time setup or configuration changes:
+Edit-OrchConfig  # Opens UiPathOrchConfig.json in Notepad
+
+# After making changes, restart pwsh.exe and import required modules:
+Import-Module UiPathOrch, PowerShell.MCP, PSReadLine
+
+PSDrive Basic Operations:
+cd <DriveName>:\  # Example: cd Orch1:\
+Get-OrchCurrentUser         # Check current user (OAuth non-conf app or PAT only)
+dir                         # List subfolders in current folder
+
+================================================================================
+Version: 1.0 | Last Updated: June 2025 | Target: LLM Operations
+For tenant migration procedures, see: 02-TenantMigration.txt
+================================================================================

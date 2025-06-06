@@ -250,7 +250,7 @@ public partial class OrchProvider : NavigationCmdletProvider
             WriteWarning($"\"{drive.Name}\": The \"Root\" value in UiPathOrchConfig.json should not contain '/orchestrator_/'. Run the Edit-OrchConfig cmdlet to open the file and update it manually.");
         }
 
-        if (string.IsNullOrEmpty(drive.AccessToken))
+        if (string.IsNullOrEmpty(drive.AccessToken) && string.IsNullOrEmpty(drive.Username))
         {
             if (string.IsNullOrWhiteSpace(drive.AppId))
             {
