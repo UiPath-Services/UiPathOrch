@@ -140,7 +140,7 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
                                 roleAssignmentsToAdd = [],
                                 roleAssignmentsToDelete = rolesToRemove
                                     .Where(r => r.id is not null)
-                                    .Select(r => r.id!.Value).ToList()
+                                    .Select(r => r.id!).ToList()
                             };
 
                             drive.OrchAPISession.SetDuRoleToDuUser(partitionGlobalId, payload);

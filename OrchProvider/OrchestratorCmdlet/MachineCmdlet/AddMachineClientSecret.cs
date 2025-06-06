@@ -90,7 +90,7 @@ public class AddMachineClientSecretCommand : OrchestratorPSCmdlet
                 {
                     try
                     {
-                        var key = drive.OrchAPISession.AddMachineClientSecret(m.LicenseKey!.Value);
+                        var key = drive.OrchAPISession.AddMachineClientSecret(m.LicenseKey!);
                         drive._dicMachineClientSecrets = null;
                         if (key is not null)
                         {
