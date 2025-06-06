@@ -32,7 +32,7 @@ Required permissions: Processes.View
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-OrchProcess
+PS Orch1:\Shared> Get-OrchProcess
 ```
 
   
@@ -59,12 +59,93 @@ Search all folders for processes that contain proc in the process name.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchProcess -Recurse -ExpandDetails -ExportCsv <filePath> -CsvEncoding Shift-JIS
+PS Orch1:\> Get-OrchProcess -Recurse -ExportCsv "C:\tmp\Get-OrchProcess.csv"
 ```
 
   
 
-Export process detailed information for all folders in CSV.
+Export process details of all folders to CSV with UTF-8 BOM using module's function.
+
+### Example 5
+```powershell
+PS Orch1:\> Get-OrchProcess -Recurse -ExportCsv c:
+```
+
+  
+
+Export process details of all folders to C drive current directory as CSV with UTF-8 BOM using module's function.
+
+### Example 6
+```powershell
+PS Orch1:\> Get-OrchProcess -Recurse -ExportCsv "C:\tmp\Get-OrchProcess.csv" -CsvEncoding Shift-JIS
+```
+
+  
+
+Export process details of all folders to CSV with Shift-JIS using module's function.
+
+### Example 7
+```powershell
+PS Orch1:\> Get-OrchProcess -Recurse | Export-Csv "C:\tmp\Get-OrchProcess.csv"
+```
+
+  
+
+Export process details of all folders to CSV with UTF-8 using PowerShell cmdlet.
+
+### Example 8
+```powershell
+PS Orch1:\> Get-OrchProcess -Path "Shared\Finance", "Shared\HR" -Recurse
+```
+
+  
+
+Get processes from specific multiple folders and their subfolders.
+
+### Example 9
+```powershell
+PS Orch1:\> Get-OrchProcess -Depth 2
+```
+
+  
+
+Get processes from the current folder and subfolders up to 2 levels deep.
+
+### Example 10
+```powershell
+PS Orch1:\> Get-OrchProcess -Name "*Invoice*", "*Payment*" -Recurse
+```
+
+  
+
+Search for processes with names containing "Invoice" or "Payment" in all folders.
+
+### Example 11
+```powershell
+PS Orch1:\> Get-OrchProcess -ExpandDetails -Recurse
+```
+
+  
+
+Get processes with expanded details from all folders.
+
+### Example 12
+```powershell
+PS Orch1:\> Get-OrchProcess -Path "Shared\*" -Depth 1
+```
+
+  
+
+Get processes from all immediate subfolders under Shared folder (1 level deep only).
+
+### Example 13
+```powershell
+PS Orch1:\> Get-OrchProcess -Recurse -ExportCsv "C:\tmp\Get-OrchProcesses_$(Get-Date -Format 'yyyyMMdd_HHmmss').csv"
+```
+
+  
+
+Export processes to a timestamped CSV using module's function.
 
 ## PARAMETERS
 
