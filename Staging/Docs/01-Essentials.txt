@@ -143,6 +143,7 @@ Performance Best Practices
 ---------------------------
 # Target specific folders instead of -Recurse for large environments
 Get-OrchAsset -Path [folder path] 'SpecificAsset*'
+
 # Navigate to target folder first for batch operations
 cd [DriveName]:\[TargetFolder]
 
