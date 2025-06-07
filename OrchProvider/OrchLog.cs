@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities.JsonConverter;
@@ -251,18 +251,56 @@ public partial class OrchAPISession : IDisposable
         return _logFilePath;
     }
 
-    private readonly object _logLock = new object();
-    private void WriteLogBlock(string? logBlock)
+
+    // 新しい非同期ログシステム
+    private AsyncLogWriter? _asyncLogWriter;
+
+    private AsyncLogWriter GetAsyncLogWriter()
     {
-        if (string.IsNullOrEmpty(logBlock)) return;
-        string logFilePath = GetLogFilePath();
-        lock (_logLock)
+        if (_asyncLogWriter == null)
         {
-            try
+            lock (this)
             {
-                File.AppendAllText(logFilePath, logBlock);
+                _asyncLogWriter ??= new AsyncLogWriter(GetLogFilePath());
             }
-            catch { }
+        }
+        return _asyncLogWriter;
+    }
+
+    // 同期版
+    //private void WriteLogBlock(string? logBlock)
+    //{
+    //    if (string.IsNullOrEmpty(logBlock))
+    //        return;
+
+    //    // 非同期ログライターを使用（ノンブロッキング）
+    //    GetAsyncLogWriter().Write(logBlock);
+    //}
+
+    private async ValueTask WriteLogBlockAsync(string? logBlock, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(logBlock)) 
+            return;
+
+        await GetAsyncLogWriter().WriteAsync(logBlock, cancellationToken);
+    }
+
+    // ログ統計情報を取得
+    public LogStatistics GetLogStatistics()
+    {
+        return _asyncLogWriter?.GetStatistics() ?? default;
+    }
+
+    partial void DisposeAsyncLogWriter()
+    {
+        try
+        {
+            _asyncLogWriter?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            // ログ処理のエラーは無視（再帰的なログ書き込みを避けるため）
+            System.Diagnostics.Debug.WriteLine($"Log writer disposal error: {ex}");
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿#pragma warning disable IDE1006 // 命名スタイル
+#pragma warning disable IDE1006 // 命名スタイル
 
 using System.Net;
 using System.Net.Http.Headers;
@@ -76,6 +76,9 @@ public class RateLimiter : IDisposable
 
 public partial class OrchAPISession : IDisposable
 {
+    // Partial method for async log writer disposal
+    partial void DisposeAsyncLogWriter();
+
     private readonly HttpClient _httpClient;
     private HttpClient HttpClient
     {
@@ -114,7 +117,18 @@ public partial class OrchAPISession : IDisposable
             if (logEnabled)
             {
                 string? combinedLogBlock = BuildCombinedLogBlock(reqTime, message, resTime, ret, callId, logging?.InternalLogLevel);
-                WriteLogBlock(combinedLogBlock);
+                // Fire-and-forget 非同期ログ書き込み（HTTP応答をブロックしない）
+                _ = Task.Run(async () => {
+                    try
+                    {
+                        await WriteLogBlockAsync(combinedLogBlock, CancellationToken.None);
+                    }
+                    catch (Exception ex)
+                    {
+                        // ログエラーは無視（デバッグ出力のみ、再帰防止）
+                        System.Diagnostics.Debug.WriteLine($"Async log write failed: {ex.Message}");
+                    }
+                });
             }
         }
     }
@@ -341,6 +355,9 @@ public partial class OrchAPISession : IDisposable
             {
                 // Dispose managed resources
                 _httpClient?.Dispose();
+                
+                // 非同期ログライターのDispose
+                DisposeAsyncLogWriter();
             }
         }
     }
