@@ -146,6 +146,14 @@ Get-OrchAsset -Path [folder path] 'SpecificAsset*'
 # Navigate to target folder first for batch operations
 cd [DriveName]:\[TargetFolder]
 
+Tenant-Wide Operations
+----------------------
+# Use -Recurse * from root folder to target all entities
+Disable-OrchTrigger -Recurse * -WhatIf
+Enable-OrchTrigger -Recurse *
+Get-OrchProcess -Recurse *
+Get-OrchAsset -Recurse "MyAsset*"         # Pattern matching
+
 🔍 PROPERTY VERIFICATION
 
 (Get-Command [CmdletName]).OutputType.Type.GetProperties() | Select-Object Name | Sort-Object Name
