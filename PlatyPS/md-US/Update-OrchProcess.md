@@ -37,10 +37,118 @@ Required permissions:
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Import-Csv "C:\tmp\Get-OrchProcess.csv" | Update-OrchProcess
 ```
 
-{{ Add example description here }}
+  
+
+Update process information using import from CSV.
+
+### Example 2
+```powershell
+PS Orch1:\Shared> Update-OrchProcess -Name "InvoiceProcess" -Description "Updated invoice processing workflow" -Priority "High"
+```
+
+  
+
+Update a specific process with new description and priority in the current folder.
+
+### Example 3
+```powershell
+PS Orch1:\> Update-OrchProcess -Name "PaymentProcess" -Path "Shared\Finance" -Tags "Finance", "Production", "Critical"
+```
+
+  
+
+Update a process in a specific folder with new tags.
+
+### Example 4
+```powershell
+PS Orch1:\> Update-OrchProcess -Name "*Invoice*" -Recurse -MaxDurationSeconds 3600 -WhatIf
+```
+
+  
+
+Preview what would happen when updating all processes containing "Invoice" in their name across all folders with a new maximum duration.
+
+### Example 5
+```powershell
+PS Orch1:\> Update-OrchProcess -Name "DataEntry" -NewName "DataEntryV2" -Version "2.0.0" -Description "Updated data entry process"
+```
+
+  
+
+Rename a process and update its version and description.
+
+### Example 6
+```powershell
+PS Orch1:\> Update-OrchProcess -Name "ReportGenerator" -InputArguments '{"OutputPath": "C:\\Reports", "Format": "PDF"}' -VideoRecordingType "OnError"
+```
+
+  
+
+Update a process with new input arguments and video recording settings.
+
+### Example 7
+```powershell
+PS Orch1:\> Get-OrchProcess -Name "LegacyProcess*" | Update-OrchProcess -RetentionPeriod 90 -RetentionAction "Delete"
+```
+
+  
+
+Update retention settings for all processes starting with "LegacyProcess" using pipeline input.
+
+### Example 8
+```powershell
+PS Orch1:\> Update-OrchProcess -Name "AttendedProcess" -HiddenForAttendedUser "False" -RemoteControlAccess "Enabled" -Confirm
+```
+
+  
+
+Update attended process settings with confirmation prompt.
+
+### Example 9
+```powershell
+PS Orch1:\> Import-Csv "C:\tmp\BulkProcessUpdate.csv" | Where-Object {$_.Priority -eq "Low"} | Update-OrchProcess -Priority "Normal"
+```
+
+  
+
+Import processes from CSV, filter by current priority, and update to a new priority level.
+
+### Example 10
+```powershell
+PS Orch1:\> Update-OrchProcess -Name "CriticalProcess" -Path "Production" -A4R_Enabled "True" -A4R_HealingEnabled "True" -ErrorRecordingEnabled "True"
+```
+
+  
+
+Enable Action for Recovery (A4R) and error recording features for a critical production process.
+
+### Example 11
+```powershell
+PS Orch1:\> Update-OrchProcess -Name "ScheduledProcess" -Recurse -Depth 2 -AutoStartProcess "True" -AlwaysRunning "False"
+```
+
+  
+
+Update scheduled process settings across folders up to 2 levels deep.
+
+### Example 12
+```powershell
+$processUpdates = @{
+    Name = "22.4"
+    Description = "Complex business process with multiple steps"
+    Quality = 95
+    Duration = 1800
+    Frequency = 24
+}
+Update-OrchProcess @processUpdates
+```
+
+  
+
+Update multiple process properties using parameter splatting for better readability.
 
 ## PARAMETERS
 
