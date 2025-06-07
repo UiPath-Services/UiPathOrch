@@ -18,7 +18,9 @@ Get-OrchProcess [[-Name] <String[]>] [-ExpandDetails] [-Path <String[]>] [-Recur
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Multiple values for the -Path parameter can be specified using comma-separated text that includes wildcards. Additionally, you can use autocomplete for these values by pressing [Ctrl+Space] or [Tab].
+
+When specifying the -Path, -Recurse, and -Depth parameters, place them immediately after the cmdlet name. This placement ensures that autocomplete for subsequent parameters functions correctly.
 
 Primary Endpoint: GET /odata/Releases/?$expand=Environment,CurrentVersion,ReleaseVersions,EntryPoint
 
@@ -30,10 +32,120 @@ Required permissions: Processes.View
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Get-OrchProcess
 ```
 
-{{ Add example description here }}
+  
+
+Show the processes assigned to the current folder.
+
+### Example 2
+```powershell
+PS Orch1:\> Get-OrchProcess -Recurse
+```
+
+  
+
+Show the processes assigned to the current folder and all its subfolders. When run in the root folder, it displays all processes from folders included in that tenant.
+
+### Example 3
+```powershell
+PS Orch1:\> Get-OrchProcess -Recurse *proc*
+```
+
+  
+
+Search all folders for processes that contain proc in the process name.
+
+### Example 4
+```powershell
+PS Orch1:\> Get-OrchProcess -Recurse -ExportCsv "C:\tmp\Get-OrchProcess.csv"
+```
+
+  
+
+Export process details of all folders to CSV with UTF-8 BOM using module's function.
+
+### Example 5
+```powershell
+PS Orch1:\> Get-OrchProcess -Recurse -ExportCsv c:
+```
+
+  
+
+Export process details of all folders to C drive current directory as CSV with UTF-8 BOM using module's function.
+
+### Example 6
+```powershell
+PS Orch1:\> Get-OrchProcess -Recurse -ExportCsv "C:\tmp\Get-OrchProcess.csv" -CsvEncoding Shift-JIS
+```
+
+  
+
+Export process details of all folders to CSV with Shift-JIS using module's function.
+
+### Example 7
+```powershell
+PS Orch1:\> Get-OrchProcess -Recurse | Export-Csv "C:\tmp\Get-OrchProcess.csv"
+```
+
+  
+
+Export process details of all folders to CSV with UTF-8 using PowerShell cmdlet.
+
+### Example 8
+```powershell
+PS Orch1:\> Get-OrchProcess -Path "Shared\Finance", "Shared\HR" -Recurse
+```
+
+  
+
+Get processes from specific multiple folders and their subfolders.
+
+### Example 9
+```powershell
+PS Orch1:\> Get-OrchProcess -Depth 2
+```
+
+  
+
+Get processes from the current folder and subfolders up to 2 levels deep.
+
+### Example 10
+```powershell
+PS Orch1:\> Get-OrchProcess -Name "*Invoice*", "*Payment*" -Recurse
+```
+
+  
+
+Search for processes with names containing "Invoice" or "Payment" in all folders.
+
+### Example 11
+```powershell
+PS Orch1:\> Get-OrchProcess -ExpandDetails -Recurse
+```
+
+  
+
+Get processes with expanded details from all folders.
+
+### Example 12
+```powershell
+PS Orch1:\> Get-OrchProcess -Path "Shared\*" -Depth 1
+```
+
+  
+
+Get processes from all immediate subfolders under Shared folder (1 level deep only).
+
+### Example 13
+```powershell
+PS Orch1:\> Get-OrchProcess -Recurse -ExportCsv "C:\tmp\Get-OrchProcesses_$(Get-Date -Format 'yyyyMMdd_HHmmss').csv"
+```
+
+  
+
+Export processes to a timestamped CSV using module's function.
 
 ## PARAMETERS
 
