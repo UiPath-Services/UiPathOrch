@@ -6,7 +6,6 @@ using System.Security;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using UiPath.OrchAPI;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Entities.JsonConverter;
@@ -261,14 +260,22 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
     {
         if (robotExecutors is null || robotExecutors.Length == 0) return null;
 
-        var users = drive.GetUsers();
+        var robots = drive.Robots.Get();
+        if (robots is null) return null;
 
-        var targetUsers = robotExecutors
-            .Select(re => users.FirstOrDefault(u => u.UnattendedRobot?.RobotId == re.Id))
-            .Where(user => user?.UnattendedRobot?.UserName is not null); // null を除外
+        var robotsById = robots.ToDictionary(m => m.Id!.Value);
 
-        if (!targetUsers.Any()) return null;
-        return string.Join(',', targetUsers.Select(u => u!.UnattendedRobot!.UserName)); //.Order());
+        var targetRobots = new List<Robot>();
+        foreach (var re in robotExecutors)
+        {
+            if (robotsById.TryGetValue(re.Id!.Value, out var robot))
+            {
+                targetRobots.Add(robot);
+            }
+        }
+
+        if (targetRobots.Count == 0) return null;
+        return string.Join(',', targetRobots.Select(r => r.Name).Order());
     }
 
     internal static string? SerializeMachineRobotSessions(IWritableHost? _this, OrchDriveInfo drive, Folder folder, string? target, IEnumerable<MachineRobotSession>? machineRobots)
@@ -324,7 +331,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
     private readonly Lazy<HashSet<string>> ValidScopes = new(() =>
         ["Default", "Shared", "PersonalWorkspace", "Cloud", "AutomationCloudRobot", "ElasticRobot"]);
 
-    // executorRobots は UserName の列挙を渡す
+    // executorRobots は RobotName の列挙を渡す
     // SelectMany() の結果を連結しているから、内部で List<RobotExecutor> を構築する必要はない。その方が効率的。
     internal static RobotExecutor[]? DeserializeExecutorRobots(IWritableHost? _this, OrchDriveInfo drive, Folder folder, string target, IEnumerable<string>? executorRobots)
     {
@@ -332,18 +339,17 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
 
         try
         {
-            var robotsPerFolder = drive.RobotsFromFolder.Get(folder);
-
+            var robots = drive.Robots.Get();
             var result = executorRobots
                 .SelectMany(executorRobot =>
                 {
-                    // 合致するユーザー一覧を抽出
-                    var wpUserName = new WildcardPattern(executorRobot, WildcardOptions.IgnoreCase);
-                    var targetRobots = robotsPerFolder.Where(r => wpUserName.IsMatch(r.Username));
+                    // 合致するロボット一覧を抽出
+                    var wpRobotName = new WildcardPattern(executorRobot, WildcardOptions.IgnoreCase);
+                    var targetRobots = robots.Where(r => wpRobotName.IsMatch(r.Name));
 
                     if (!targetRobots.Any())
                     {
-                        _this?.WriteWarning($"'{target}': The robot with user name '{executorRobot}' is not configured in '{folder.GetPSPath()}'.");
+                        _this?.WriteWarning($"'{target}': The robot with name '{executorRobot}' is not found.");
                     }
 
                     return targetRobots;
@@ -408,7 +414,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
                 if (!string.IsNullOrEmpty(mrs?.MachineName))
                 {
                     var wpMachineName = new WildcardPattern(mrs.MachineName, WildcardOptions.IgnoreCase);
-                    machines = drive.FolderMachinesAssigned.Get(folder)
+                    machines = drive.FolderMachines.Get(folder)
                         .Where(m => wpMachineName.IsMatch(m.Name))
                         .Where(m => ValidScopes.Value.Contains(m.Scope!))
                         .ToList();

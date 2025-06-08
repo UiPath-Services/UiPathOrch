@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.9.12.7'
+ModuleVersion = '0.9.12.9'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -349,6 +349,7 @@ CmdletsToExport = @(
 'Get-TmTestSet',
 'Remove-TmTestSet',
 
+'Get-OrchHelp',
 'Clear-OrchCache',
 'Edit-OrchConfig',
 'Get-OrchPSDrive',
@@ -389,7 +390,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- In Get-OrchUser -ExportCsv, if an Exp* property (for example, ExplicitMayHaveUserSession or ExplicitMayHaveRobotSession) is null, the corresponding May* column (for example, MayHaveUserSession or MayHaveRobotSession) now falls back to its original value.
+        ReleaseNotes = '- In entities returned from the Web API, fields that should have been Guids were sometimes returned in a non-Guid format, causing JSON deserialization to fail. Therefore, all of those fields have been changed to the string type. As a result, the reliability of JSON deserialization has been improved.
 '
 
         # Prerelease string of this module

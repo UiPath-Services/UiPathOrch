@@ -330,14 +330,14 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
                 postTrigger.AssignNumberIfNotNullOrZero(ItemsPerJobActivationTarget, (s, v) => s.ItemsPerJobActivationTarget = v);
                 postTrigger.MaxJobsForActivation = null;
                 postTrigger.AssignNumberIfNotNullOrZero(MaxJobsForActivation,        (s, v) => s.MaxJobsForActivation = v);
-                postTrigger.AssignBoolIfNotNull(ActivateOnJobComplete,         (s, v) => s.ActivateOnJobComplete = v);
+                postTrigger.AssignBoolIfNotNull(ActivateOnJobComplete,               (s, v) => s.ActivateOnJobComplete = v);
 
                 postTrigger.StartProcessCronSummary = null;
                 postTrigger.StartProcessNextOccurrence = null;
-                postTrigger.AssignStringIfNotNullOrEmpty(StartProcessCron,            (s, v) => s.StartProcessCron = v);
+                postTrigger.AssignStringIfNotNullOrEmpty(StartProcessCron,           (s, v) => s.StartProcessCron = v);
                 postTrigger.StartProcessCron ??= "0 0/1 * 1/1 * ? *";
 
-                postTrigger.AssignStringIfNotNullOrEmpty(StartProcessCronDetails,     (s, v) => s.StartProcessCronDetails = v);
+                postTrigger.AssignStringIfNotNullOrEmpty(StartProcessCronDetails,    (s, v) => s.StartProcessCronDetails = v);
                 postTrigger.StartProcessCronDetails ??= $"\"{{advancedCron\":\"{postTrigger.StartProcessCron}\"}}";
 
                 // SpecificPriorityValue を先に適用、specificPriorityValue が非 null ならそれで上書き

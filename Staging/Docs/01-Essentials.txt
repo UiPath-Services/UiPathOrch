@@ -1,0 +1,209 @@
+============================================
+UiPathOrch Module - Essential Guide for LLMs
+============================================
+
+ATTENTION: This document provides operational guidelines for safely using the
+UiPathOrch PowerShell module to control UiPath Orchestrator. This module
+operates on live production systems.
+
+🚨 CRITICAL LLM EXECUTION RULES
+
+NEVER VIOLATE THESE RULES:
+1. START SESSION: Execute Get-OrchPSDrive once to verify available drives
+2. ALWAYS confirm target drive with user when multiple drives exist
+3. ALWAYS use -WhatIf first for destructive operations
+4. ALWAYS use executeImmediately=true (never false - you lose visibility)
+5. ALWAYS run Clear-OrchCache before retrying after errors
+
+IMMEDIATE FAILURE CONDITIONS:
+- No drives found → Tell user to run Edit-OrchConfig
+- Permission error → Follow error protocol below
+- Connection timeout → Clear-OrchCache and retry once
+
+⚡ MANDATORY LLM DECISION FLOW
+
+Step 1: Environment Verification (ALWAYS REQUIRED)
+--------------------------------------------------
+Execute: Get-OrchPSDrive  # executeImmediately=true
+CRITICAL: Use Get-Help Get-OrchPSDrive -Examples for decision logic patterns
+
+Step 2: Command Classification
+------------------------------
+Read-Only Operations (executeImmediately=true):
+- Get-*, dir, cd, Clear-OrchCache, Get-Help
+
+Destructive Operations (Two-Step Process):
+- Start-*, Stop-*, New-*, Add-*, Remove-*, Update-*, Set-*, Import-*
+- CRITICAL: See Get-Help Start-OrchJob -Examples for safe execution patterns
+
+Step 3: Safe Execution Protocol
+-------------------------------
+FOR DESTRUCTIVE OPERATIONS:
+1. FIRST: Execute with -WhatIf (executeImmediately=true)
+2. SHOW results to user and ask: 'Should I proceed with this operation?'
+3. IF user confirms: Execute without -WhatIf (executeImmediately=true)
+
+🛠 ERROR HANDLING PROTOCOL
+
+Automatic Error Classification
+------------------------------
+IF error contains ["Unauthorized", "AppId", "OAuth"]:
+    → OAuth/Connection issue → Check drive configuration, suggest Edit-OrchConfig
+
+IF error contains ["Forbidden", "Access denied", "Permission"]:
+    → Permission issue → Get-OrchCurrentUser check, folder context verification
+
+IF error contains ["timeout", "network", "connection"]:
+    → Connection issue → Clear-OrchCache, retry once
+
+IF error contains ["not found", "does not exist"]:
+    → Object not found → Verify object name/path, check folder context
+
+Standard LLM Error Response Template
+------------------------------------
+❌ [Command] failed: [error message]
+🔧 Diagnosis: [error type from above]
+💡 Action: [specific action taken]
+📋 Result: [outcome of recovery attempt]
+
+🏗 UIPATH ORCHESTRATOR ARCHITECTURE
+
+Hierarchy Structure
+-------------------
+Organization → Tenant → Folder (up to 7 levels)
+- Tenant: Contains Users, Machines, Libraries, Packages, Audit, Webhooks
+- Folder: Contains Processes, Jobs, Queues, Assets, Robots, Triggers
+
+Important: Tenant-level entities appear in root folder of UiPathOrch drive.
+
+📁 FOLDER SYSTEM KNOWLEDGE
+
+Folder Types
+------------
+Standard Folder (FolderType = "Standard"): Regular automation projects, full entity management
+Personal Workspace (FolderType = "Personal"): Individual user environment, owner + admin access only
+Solution Folder (FolderType = "Solution"): Container for solution deployments
+
+Folder Provisioning
+-------------------
+Modern (ProvisionType = "Automatic"): Up to 7 levels hierarchy, can create subfolders
+Classic (ProvisionType = "Manual"): Deprecated, flat structure only
+
+Folder Feed
+-----------
+Folders with feed (FeedType = "FolderHierarchy"): Can only assign packages from their own folder feed (cannot use tenant packages)
+Folders without feed (FeedType = "Processes"): Can only assign packages from tenant feed
+
+Feed System Understanding
+-------------------------
+Tenant-Level Feeds:
+- Tenant Package Feed: Contains packages available tenant-wide
+- Tenant Library Feed: Contains libraries available tenant-wide
+- Packages and Libraries are managed in separate feeds at tenant level
+
+Folder Feed (Folder-specific):
+- Only root-level folders can have their own package feed
+- Folder feeds contain Packages only (not Libraries)
+- Subfolders automatically inherit parent folder's package feed
+
+Feed Configuration Rules:
+- Feed configuration cannot be changed after folder creation
+- Libraries are always sourced from tenant library feed (regardless of folder configuration)
+- Package source depends on folder's feed configuration:
+  * Folders without feed: Use tenant package feed
+  * Folders with feed: Use folder package feed only
+
+Process Assignment and Execution:
+- Packages from feeds can be assigned to folders as Processes
+- Libraries are referenced by packages during execution
+- Assigned Processes can then be executed as Jobs
+
+🔐 PERMISSION MODEL
+
+Three-Level Permission Model
+----------------------------
+1. OAuth Scope Level: API access capabilities at connection level
+2. Tenant Role Level: Tenant-wide entity access (users, licenses, settings)
+3. Folder Role Level: Folder-specific entity access (processes, jobs, queues, assets)
+
+⚡ PERFORMANCE & CACHE MANAGEMENT
+
+Cache Behavior Understanding
+----------------------------
+STANDARD CMDLETS (Get-OrchUser, Get-OrchProcess, Get-OrchAsset, etc.):
+- Automatically retrieve ALL entities in folder and cache them
+- Subsequent executions return cached data (no API calls)
+
+SPECIAL CMDLETS (Get-OrchQueueItem, Get-OrchJob, Get-OrchLog, Get-OrchAuditLog):
+- Do NOT automatically retrieve all entities (due to large volume)
+- WITH filter parameters: Always make API calls
+- WITHOUT filter parameters: Display cached content only (NO API calls)
+
+Performance Best Practices
+---------------------------
+# Target specific folders instead of -Recurse for large environments
+Get-OrchAsset -Path [folder path] 'SpecificAsset*'
+# Navigate to target folder first for batch operations
+cd [DriveName]:\[TargetFolder]
+
+🔍 PROPERTY VERIFICATION
+
+(Get-Command [CmdletName]).OutputType.Type.GetProperties() | Select-Object Name | Sort-Object Name
+
+📚 QUICK REFERENCE
+
+Session Initialization
+----------------------
+1. Get-OrchPSDrive               # Verify environment
+2. Get-OrchCurrentUser           # Verify connection
+3. dir -Recurse | Select-Object FullName, FolderType  # Map structure
+4. cd [TargetFolder]             # Set context
+
+Essential Operations
+-------------------
+# Asset management
+Get-OrchAsset | Select-Object Path, Name, ValueType
+Set-OrchAsset -ValueType Text -Name "AssetName" -Value "NewValue" -WhatIf
+
+# Always include Path for entity context
+Get-OrchUser | Select-Object Path, UserName, FullName
+
+Permission Verification
+----------------------
+Get-OrchPSDrive | Select-Object Name, Root, Scope  # View OAuth scopes per drive
+Get-OrchRole -ExpandPermission   # See detailed role permissions
+Get-OrchUserPrivilege            # Check current user's effective permissions
+Get-OrchFolderUser               # Check folder assignments
+
+Troubleshooting Quick Fixes
+---------------------------
+Connection Issues:    Clear-OrchCache; Get-OrchCurrentUser
+Permission Errors:    Get-OrchCurrentUser; Get-OrchFolderUser
+Performance Issues:   Specify specific folder path with -Path instead of -Recurse
+Drive Mount Issues:   Edit-OrchConfig
+
+🎯 CMDLET-SPECIFIC GUIDANCE
+
+CRITICAL: Use cmdlet-specific help for detailed operations:
+- Get-Help Get-OrchJob -Examples     # Practical examples including failure analysis
+- Get-Help Start-OrchJob -Examples   # Safe execution patterns
+- Get-Help Edit-OrchConfig -Examples # Configuration procedures
+
+LLM Decision Flow for Complex Operations
+----------------------------------------
+1. ALWAYS start with: Get-Help [CmdletName] -Examples
+2. Check cmdlet help BEFORE creating custom procedures
+3. Refer to 01-Essentials.txt only for:
+   - Environment verification (Get-OrchPSDrive)
+   - Error handling protocols
+   - Safety procedures (-WhatIf usage)
+   - Architecture understanding
+
+📚 OFFICIAL RESOURCES
+
+UiPath Marketplace: https://marketplace.uipath.com/listings/uipathorch
+PowerShell Gallery: https://www.powershellgallery.com/packages/UiPathOrch
+
+================================================================================
+Version: 1.2 | Last Updated: June 2025 | Target: LLM Operations
+================================================================================
