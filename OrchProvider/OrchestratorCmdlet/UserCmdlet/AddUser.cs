@@ -695,6 +695,41 @@ public class AddUserCommand : OrchestratorPSCmdlet
                         }
                     }
 
+                    void UpdateExecutionSettings(ExecutionSettings executionSettings)
+                    {
+                        executionSettings.AssignStringIfNotNullOrEmpty(
+                            ES_TracingLevel, (es, v) =>
+                            es.TracingLevel = v);
+
+                        executionSettings.AssignBoolIfNotNull(
+                            ES_StudioNotifyServer, (es, v) =>
+                            es.StudioNotifyServer = v);
+
+                        executionSettings.AssignBoolIfNotNull(
+                            ES_LoginToConsole, (es, v) =>
+                            es.LoginToConsole = v);
+
+                        executionSettings.AssignNumberIfNotNull(
+                            ES_ResolutionWidth, (es, v) =>
+                            es.ResolutionWidth = v);
+
+                        executionSettings.AssignNumberIfNotNull(
+                            ES_ResolutionHeight, (es, v) =>
+                            es.ResolutionHeight = v);
+
+                        executionSettings.AssignNumberIfNotNull(
+                            ES_ResolutionDepth, (es, v) =>
+                            es.ResolutionDepth = v);
+
+                        executionSettings.AssignBoolIfNotNull(
+                            ES_FontSmoothing, (es, v) =>
+                            es.FontSmoothing = v);
+
+                        executionSettings.AssignBoolIfNotNull(
+                            ES_AutoDownloadProcess, (es, v) =>
+                            es.AutoDownloadProcess = v);
+                    }
+
                     if (!string.IsNullOrEmpty(line.ES_TracingLevel) ||
                         line.ES_StudioNotifyServer is not null ||
                         line.ES_LoginToConsole is not null ||
@@ -704,41 +739,22 @@ public class AddUserCommand : OrchestratorPSCmdlet
                         line.ES_FontSmoothing is not null ||
                         line.ES_AutoDownloadProcess is not null)
                     {
-                        postingUser.UnattendedRobot ??= new();
+                        //  0: User, 1: Group, 2: Machine, 3: Robot, 4: ExternalApplication
+                        // UnattendedRobot は、User と Robot で構成可能だ。
+                        if (user.type == 0 || user.type == 3)
+                        {
+                            postingUser.UnattendedRobot ??= new();
+                            postingUser.UnattendedRobot.ExecutionSettings ??= new();
+                            UpdateExecutionSettings(postingUser.UnattendedRobot.ExecutionSettings);
+                        }
 
-                        postingUser.UnattendedRobot.ExecutionSettings ??= new();
-
-                        postingUser.UnattendedRobot.ExecutionSettings.AssignStringIfNotNullOrEmpty(line.
-                            ES_TracingLevel, (es, v) =>
-                            es.TracingLevel = v);
-
-                        postingUser.UnattendedRobot.ExecutionSettings.AssignBoolIfNotNull(line.
-                            ES_StudioNotifyServer, (es, v) =>
-                            es.StudioNotifyServer = v);
-
-                        postingUser.UnattendedRobot.ExecutionSettings.AssignBoolIfNotNull(line.
-                            ES_LoginToConsole, (es, v) =>
-                            es.LoginToConsole = v);
-
-                        postingUser.UnattendedRobot.ExecutionSettings.AssignNumberIfNotNull(line.
-                            ES_ResolutionWidth, (es, v) =>
-                            es.ResolutionWidth = v);
-
-                        postingUser.UnattendedRobot.ExecutionSettings.AssignNumberIfNotNull(line.
-                            ES_ResolutionHeight, (es, v) =>
-                            es.ResolutionHeight = v);
-
-                        postingUser.UnattendedRobot.ExecutionSettings.AssignNumberIfNotNull(line.
-                            ES_ResolutionDepth, (es, v) =>
-                            es.ResolutionDepth = v);
-
-                        postingUser.UnattendedRobot.ExecutionSettings.AssignBoolIfNotNull(line.
-                            ES_FontSmoothing, (es, v) =>
-                            es.FontSmoothing = v);
-
-                        postingUser.UnattendedRobot.ExecutionSettings.AssignBoolIfNotNull(line.
-                            ES_AutoDownloadProcess, (es, v) =>
-                            es.AutoDownloadProcess = v);
+                        // RobotProvision は Attended だから User のみ構成可能だ。
+                        if (user.type == 0)
+                        {
+                            postingUser.RobotProvision ??= new();
+                            postingUser.RobotProvision.ExecutionSettings ??= new();
+                            UpdateExecutionSettings(postingUser.RobotProvision.ExecutionSettings);
+                        }
                     }
 
                     if (user.type == 3) // robot の場合

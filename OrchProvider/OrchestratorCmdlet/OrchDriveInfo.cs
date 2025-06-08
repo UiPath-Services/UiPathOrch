@@ -1719,9 +1719,9 @@ public partial class OrchDriveInfo : PSDriveInfo
     #endregion
 
     #region OrchMachineClientSecret cache
-    internal Dictionary<Guid, MachineClientSecretResponse[]?>? _dicMachineClientSecrets = null;
-    internal readonly ExceptionsCachePer<Guid> _dicMachineClientSecrets_Exception = new();
-    public MachineClientSecretResponse[]? GetMachineClientSecret(Guid licenseKey)
+    internal Dictionary<string, MachineClientSecretResponse[]?>? _dicMachineClientSecrets = null;
+    internal readonly ExceptionsCachePer<string> _dicMachineClientSecrets_Exception = new();
+    public MachineClientSecretResponse[]? GetMachineClientSecret(string licenseKey)
     {
         _dicMachineClientSecrets_Exception.ThrowCachedExceptionIfAny(licenseKey);
 
@@ -2715,6 +2715,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerFolder<Asset> Assets;
     public readonly ListCachePerFolder<Bucket> Buckets;
     public readonly ListCachePerFolder<Entities.Environment> Environments;
+    public readonly ListCachePerFolder<MachineFolder> FolderMachines;
     public readonly ListCachePerFolder<MachineFolder> FolderMachinesAssigned;
     public readonly ListCachePerFolder<MachineFolder> FolderMachinesAssignable;
     public readonly ListCachePerFolder<UserRoles> FolderUsersWithNoInherited;
@@ -2934,6 +2935,11 @@ public partial class OrchDriveInfo : PSDriveInfo
                 }
             }
         });
+
+        FolderMachines = new(this,
+            fid => OrchAPISession.GetMachinesAssignedTo(fid),
+            (e, folderPath) => e.Path = folderPath
+        );
 
         // 15: ?$filter=((((IsAssignedToFolder eq true) or (IsInherited eq true))))
         FolderMachinesAssigned = new(this,

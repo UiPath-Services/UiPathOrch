@@ -547,7 +547,7 @@ public class ExtendedMachine : IEquatable<ExtendedMachine>
     public string? Name { get; set; }
     public string? Description { get; set; }
     public string? Type { get; set; }
-    public Guid? LicenseKey { get; set; }
+    public string? LicenseKey { get; set; } // Guid
     public string? ClientSecret { get; set; }
     public string? Scope { get; set; }
     public int? NonProductionSlots { get; set; }
@@ -659,7 +659,7 @@ public class MachineSecretKey // added by UiPathOrch
 {
     public string? Path { get; set; }
     public string? Name { get; set; }
-    public Guid? ClientId { get; set; }
+    public string? ClientId { get; set; } // Guid
     public Int64? SecretId { get; set; }
     public string? ClientSecret { get; set; }
     public DateTime? CreationTime { get; set; }
@@ -1598,7 +1598,7 @@ public class Machine
     public int? AutomationCloudSlots { get; set; } // integer with format int32
     public int? AutomationCloudTestAutomationSlots { get; set; } // integer with format int32
 
-    public Guid? Key { get; set; } // UUID format for the key
+    public string? Key { get; set; } // Guid
 
     // Enum for Endpoint Detection Status (NotAvailable / Mixed / Enabled)
     public string? EndpointDetectionStatus { get; set; }
@@ -1655,7 +1655,7 @@ public class SimpleRelease
     public VideoRecordingSettings? VideoRecordingSettings { get; set; }
     public bool? AutoUpdate { get; set; }
     public bool? HiddenForAttendedUser { get; set; }
-    public Guid? FeedId { get; set; }
+    public string? FeedId { get; set; } // Guid
     public string? JobPriority { get; set; }
     public int? SpecificPriorityValue { get; set; }
     public long? OrganizationUnitId { get; set; }
@@ -1679,8 +1679,8 @@ public class NameValuePair
 public class ResourceOverwrite
 {
     public string? ResourceType { get; set; }
-    public Guid? ResourceKey { get; set; }
-    public Guid? EntityId { get; set; }
+    public string? ResourceKey { get; set; } // Guid
+    public string? EntityId { get; set; } // Guid
     public string? EntityDisplayName { get; set; }
     public Int64? EntityFolderId { get; set; }
     public NameValuePair[]? Properties2 { get; set; }
@@ -1747,10 +1747,10 @@ public class Job
     public string? LocalSystemAccount { get; set; }
     public string? OrchestratorUserIdentity { get; set; }
     public string? RemoteControlAccess { get; set; }
-    public Guid? StartingTriggerId { get; set; }
+    public string? StartingTriggerId { get; set; } // Guid
     public Int64? MaxExpectedRunningTimeSeconds { get; set; }
     public string? ServerlessJobType { get; set; }
-    public Guid? ParentJobKey { get; set; } // added in V19.0
+    public string? ParentJobKey { get; set; } // Guid // added in V19.0
     [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? ResumeTime { get; set; }
     [JsonConverter(typeof(LocalDateTimeConverter))]
@@ -1760,7 +1760,7 @@ public class Job
     public string? FpsProperties { get; set; } // added in V19.0
     public string? TraceId { get; set; } // added in V19.0
     public string? ParentSpanId { get; set; } // added in V19.0
-    // public Guid? ProjectKey { get; set; } // deprecated?
+    // public string? ProjectKey { get; set; } // Guid // deprecated?
     // public Int64? ParentOperationId { get; set; } // undocumented
     public AutopilotForRobotsSettings? AutopilotForRobots { get; set; }
     public string? FpsContext { get; set; } // added in V19.0
@@ -2309,7 +2309,7 @@ public class StartProcess
     public MachineRobot? MachineRobots { get; set; }
     public string? TargetFramework { get; set; }
     public bool? ResumeOnSameContext { get; set; }
-    public Guid? BatchExecutionKey { get; set; }
+    public string? BatchExecutionKey { get; set; } // Guid
     public bool? RequiresUserInteraction { get; set; }
     public string? StopProcessExpression { get; set; }
     public string? StopStrategy { get; set; }
@@ -2389,7 +2389,7 @@ public class Release
     //[JsonIgnore(Condition = JsonIgnoreCondition.Never)]
     public string? JobPriority { get; set; }
     public int? SpecificPriorityValue { get; set; }
-    public Guid? FolderKey { get; set; } // added in V19.0
+    public string? FolderKey { get; set; } // Guid // added in V19.0
     public Int64? OrganizationUnitId { get; set; }
     public string? OrganizationUnitFullyQualifiedName { get; set; }
     public string? TargetFramework { get; set; }
@@ -2752,7 +2752,7 @@ public class QueueItemData4CsvImport
 public class TransactionData
 {
     public string? Name { get; set; }
-    public Guid? RobotIdentifier { get; set; }
+    public string? RobotIdentifier { get; set; } // Guid
     public Dictionary<string, string?>? SpecificContent { get; set; }
     public DateTimeOffset? DeferDate { get; set; }
     public DateTimeOffset? DueDate { get; set; }
@@ -3271,7 +3271,7 @@ public class TestCaseExecution
     public int? RunId { get; set; }
     public string? TestCaseType { get; set; }
     public int? ExecutionOrder { get; set; }
-    public Guid? TestManagerTestCaseId { get; set; }
+    public string? TestManagerTestCaseId { get; set; } // Guid
 }
 
 public enum TestSetExecutionStatus // added by UiPathOrch
@@ -3431,7 +3431,7 @@ public class Bucket
     public Int64? Id { get; set; }
     public string? Name { get; set; }
     public string? Description { get; set; }
-    public Guid? Identifier { get; set; }
+    public string? Identifier { get; set; } // Guid
     public string? StorageProvider { get; set; }
     public string? StorageContainer { get; set; }
     public string? StorageParameters { get; set; }
@@ -4048,7 +4048,7 @@ public class DuRole // added by UiPathOrch swagger doc にない。
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
-    public Guid? id { get; set; }
+    public string? id { get; set; }
     public string? name { get; set; }
     public string? description { get; set; }
     public string? type { get; set; }
@@ -4061,12 +4061,12 @@ public class DuRole // added by UiPathOrch swagger doc にない。
 
 public class RoleAssignmentDto // added by UiPathOrch swagger doc にない。
 {
-    public Guid? id { get; set; }
+    public string? id { get; set; }
     public string? securityPrincipalId { get; set; }
     public string? securityPrincipalType { get; set; }
     public string? type { get; set; }
     public string? scope { get; set; }
-    public Guid? roleId { get; set; }
+    public string? roleId { get; set; }
     public string? roleName { get; set; }
     public string? roleType { get; set; }
     public string? createdBy { get; set; }
@@ -4114,7 +4114,7 @@ public class DuUser // added by UiPathOrch swagger doc にない。
 
 public class DuRoleAssignment // added by UiPathOrch
 {
-    public Guid? roleId { get; set; }
+    public string? roleId { get; set; }
     public string? scope { get; set; }
     public string? securityPrincipalId { get; set; } // Guid っぽいけど、user id なので string にしておく。
     public int? securityPrincipalType { get; set; }
@@ -4123,7 +4123,7 @@ public class DuRoleAssignment // added by UiPathOrch
 public class UserRoleAssignmentsCmd // added by UiPathOrch
 {
     public List<DuRoleAssignment>? roleAssignmentsToAdd { get; set; }
-    public List<Guid>? roleAssignmentsToDelete { get; set; }
+    public List<string>? roleAssignmentsToDelete { get; set; }
 }
 
 // UiPath.DocumentUnderstanding.Framework.Api.Controllers.Model.Discovery.Project
