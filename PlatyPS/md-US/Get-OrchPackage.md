@@ -44,31 +44,17 @@ Gets all process packages from the "Shared" folder.
 
 ### Example 3
 ```powershell
-PS C:\> Get-OrchPackage -Path "Shared" -Recurse
-```
-
-Gets all process packages from the "Shared" folder and all its subfolders recursively.
-
-### Example 4
-```powershell
 PS C:\> Get-OrchPackage -Id "ProcessA*"
 ```
 
 Gets process packages with IDs that start with "ProcessA" using wildcard matching.
 
-### Example 5
+### Example 4
 ```powershell
-PS C:\> Get-OrchPackage -Id "MyProcess.1.0.0", "AnotherProcess.2.1.0"
+PS C:\> Get-OrchPackage -Path "Production", "Development"
 ```
 
-Gets specific process packages by their exact IDs.
-
-### Example 6
-```powershell
-PS C:\> Get-OrchPackage -Path "Production", "Development" -Recurse
-```
-
-Gets all process packages from both "Production" and "Development" folders, including their subfolders.
+Gets all process packages from both "Production" and "Development" folders.
 
 ## PARAMETERS
 
@@ -137,8 +123,8 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
-You cannot pipe objects to this cmdlet.
+### System.String[]
+You can pipe objects to this cmdlet.
 
 ## OUTPUTS
 
