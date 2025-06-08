@@ -8,7 +8,7 @@ schema: 2.0.0
 # Copy-OrchPackage
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+Copies packages.
 
 ## SYNTAX
 
