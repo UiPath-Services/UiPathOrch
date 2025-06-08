@@ -123,9 +123,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-You can pipe objects to this cmdlet.
-
+### None
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.Package
