@@ -35,16 +35,12 @@ Required permissions: Processes.View
 PS Orch1:\Shared> Get-OrchProcess
 ```
 
-  
-
 Show the processes assigned to the current folder.
 
 ### Example 2
 ```powershell
 PS Orch1:\> Get-OrchProcess -Recurse
 ```
-
-  
 
 Show the processes assigned to the current folder and all its subfolders. When run in the root folder, it displays all processes from folders included in that tenant.
 
@@ -53,16 +49,12 @@ Show the processes assigned to the current folder and all its subfolders. When r
 PS Orch1:\> Get-OrchProcess -Recurse *proc*
 ```
 
-  
-
 Search all folders for processes that contain proc in the process name.
 
 ### Example 4
 ```powershell
 PS Orch1:\> Get-OrchProcess -Recurse -ExportCsv "C:\tmp\Get-OrchProcess.csv"
 ```
-
-  
 
 Export process details of all folders to CSV with UTF-8 BOM using module's function.
 
@@ -71,16 +63,12 @@ Export process details of all folders to CSV with UTF-8 BOM using module's funct
 PS Orch1:\> Get-OrchProcess -Recurse -ExportCsv c:
 ```
 
-  
-
 Export process details of all folders to C drive current directory as CSV with UTF-8 BOM using module's function.
 
 ### Example 6
 ```powershell
 PS Orch1:\> Get-OrchProcess -Recurse -ExportCsv "C:\tmp\Get-OrchProcess.csv" -CsvEncoding Shift-JIS
 ```
-
-  
 
 Export process details of all folders to CSV with Shift-JIS using module's function.
 
@@ -98,16 +86,12 @@ Export process details of all folders to CSV with UTF-8 using PowerShell cmdlet.
 PS Orch1:\> Get-OrchProcess -Path "Shared\Finance", "Shared\HR" -Recurse
 ```
 
-  
-
 Get processes from specific multiple folders and their subfolders.
 
 ### Example 9
 ```powershell
 PS Orch1:\> Get-OrchProcess -Depth 2
 ```
-
-  
 
 Get processes from the current folder and subfolders up to 2 levels deep.
 
@@ -116,16 +100,12 @@ Get processes from the current folder and subfolders up to 2 levels deep.
 PS Orch1:\> Get-OrchProcess -Name "*Invoice*", "*Payment*" -Recurse
 ```
 
-  
-
 Search for processes with names containing "Invoice" or "Payment" in all folders.
 
 ### Example 11
 ```powershell
 PS Orch1:\> Get-OrchProcess -ExpandDetails -Recurse
 ```
-
-  
 
 Get processes with expanded details from all folders.
 
@@ -134,8 +114,6 @@ Get processes with expanded details from all folders.
 PS Orch1:\> Get-OrchProcess -Path "Shared\*" -Depth 1
 ```
 
-  
-
 Get processes from all immediate subfolders under Shared folder (1 level deep only).
 
 ### Example 13
@@ -143,9 +121,14 @@ Get processes from all immediate subfolders under Shared folder (1 level deep on
 PS Orch1:\> Get-OrchProcess -Recurse -ExportCsv "C:\tmp\Get-OrchProcesses_$(Get-Date -Format 'yyyyMMdd_HHmmss').csv"
 ```
 
-  
-
 Export processes to a timestamped CSV using module's function.
+
+### Example 14
+```powershell
+PS Orch1:\Shared> Get-OrchProcess MyProcess -ExpandDetails | Select-Object Path, Name, @{N="A4R_Enabled";E={$_.ProcessSettings.AutopilotForRobots.Enabled}}, @{N="A4R_HealingEnabled";E={$_.ProcessSettings.AutopilotForRobots.HealingEnabled}}
+```
+
+Get 'Healing Agent' and 'Healing Agent self-healing' settings for MyProcess. The A4R_Enabled shows if Healing Agent is enabled, and A4R_HealingEnabled shows if self-healing is enabled. To get these properties, you should specify -ExpandDetails switch parameter.
 
 ## PARAMETERS
 

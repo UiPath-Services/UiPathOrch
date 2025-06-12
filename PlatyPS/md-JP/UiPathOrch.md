@@ -275,6 +275,9 @@ API トリガーを取得します。
 ### [Get-OrchFolderUser](Get-OrchFolderUser.md)
 フォルダーに割り当てられたユーザーを取得します。
 
+### [Get-OrchHelp](Get-OrchHelp.md)
+UiPathOrch モジュールのドキュメントとクイックスタートガイドを表示します。
+
 ### [Get-OrchJob](Get-OrchJob.md)
 ジョブを取得します。
 

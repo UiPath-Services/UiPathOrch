@@ -275,6 +275,9 @@ Get the machines assigned to folders.
 ### [Get-OrchFolderUser](Get-OrchFolderUser.md)
 Get the users assigned to folders.
 
+### [Get-OrchHelp](Get-OrchHelp.md)
+Displays documentation and quick start guide for the UiPathOrch module.
+
 ### [Get-OrchJob](Get-OrchJob.md)
 Gets jobs.
 
@@ -318,7 +321,7 @@ Retrieves the creation date and time of client secrets from multiple machines.
 Gets machine runtime sessions.
 
 ### [Get-OrchPackage](Get-OrchPackage.md)
-Gets the process packages.
+Gets the process packages from UiPath Orchestrator.
 
 ### [Get-OrchPackageVersion](Get-OrchPackageVersion.md)
 Gets the versions of process packages.

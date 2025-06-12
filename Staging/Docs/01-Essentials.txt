@@ -43,6 +43,39 @@ FOR DESTRUCTIVE OPERATIONS:
 2. SHOW results to user and ask: 'Should I proceed with this operation?'
 3. IF user confirms: Execute without -WhatIf (executeImmediately=true)
 
+🗂️ PATH PROPERTY - CRITICAL FOR CONTEXT
+========================================
+
+⚠️  UiPathOrch vs Standard PowerShell Properties
+------------------------------------------------
+UiPathOrch objects use custom .Path property (NOT PSPath):
+- .Path = "Orch1:\Shared\Production" ✅ Shows UiPath folder structure
+- .PSPath = "" (empty/unreliable) ❌ Standard PowerShell property
+- .PSParentPath = "" (empty/unreliable) ❌ Standard PowerShell property
+
+🚫 COMMON LLM MISTAKES TO AVOID
+-------------------------------
+❌ Using PSPath/PSParentPath for folder location
+❌ Creating custom FolderPath calculations  
+❌ Assuming standard PowerShell path properties work
+✅ ALWAYS use the .Path property for UiPathOrch objects
+
+📋 CORRECT PATH USAGE EXAMPLES
+------------------------------
+# Show all triggers with their locations
+Get-OrchTrigger -Recurse | Select-Object Path, Name, Enabled, ReleaseName
+
+# Show all assets with folder context  
+Get-OrchAsset -Recurse | Select-Object Path, Name, ValueType, Value
+
+# Show all users with organizational context
+Get-OrchUser | Select-Object Path, UserName, FullName
+
+# Show all processes with their folder locations
+Get-OrchProcess -Recurse | Select-Object Path, Name, ProcessVersion
+
+KEY RULE: Always include Path in Select-Object for clarity and troubleshooting.
+
 🛠 ERROR HANDLING PROTOCOL
 
 Automatic Error Classification
@@ -51,7 +84,7 @@ IF error contains ["Unauthorized", "AppId", "OAuth"]:
     → OAuth/Connection issue → Check drive configuration, suggest Edit-OrchConfig
 
 IF error contains ["Forbidden", "Access denied", "Permission"]:
-    → Permission issue → Get-OrchCurrentUser check, folder context verification
+    → Permission issue → Try alternative commands, check folder context
 
 IF error contains ["timeout", "network", "connection"]:
     → Connection issue → Clear-OrchCache, retry once
@@ -59,12 +92,35 @@ IF error contains ["timeout", "network", "connection"]:
 IF error contains ["not found", "does not exist"]:
     → Object not found → Verify object name/path, check folder context
 
+IF error contains ["This operation is not supported in a Confidential app"]:
+    → Confidential App Limitation → This is normal for certain commands (e.g., Get-OrchCurrentUser)
+
 Standard LLM Error Response Template
 ------------------------------------
 ❌ [Command] failed: [error message]
 🔧 Diagnosis: [error type from above]
 💡 Action: [specific action taken]
 📋 Result: [outcome of recovery attempt]
+
+🔐 CONFIDENTIAL APP CONSIDERATIONS
+
+Understanding Confidential App Limitations
+------------------------------------------
+- Confidential apps have OAuth2 restrictions on certain user information endpoints
+- Commands that typically fail in Confidential apps:
+  * Get-OrchCurrentUser (user verification)
+  * Some user management operations
+- Commands that work normally in Confidential apps:
+  * All Get-Orch* commands for processes, jobs, queues, assets, triggers
+  * All folder navigation (cd, dir)
+  * Most management operations (Start-OrchJob, etc.)
+
+Workarounds for Confidential Apps
+---------------------------------
+Instead of Get-OrchCurrentUser for verification:
+1. Use successful drive mounting as connection proof
+2. Use Get-OrchPSDrive to verify drive status
+3. Test with simple operations like 'dir' or 'Get-OrchProcess'
 
 🏗 UIPATH ORCHESTRATOR ARCHITECTURE
 
@@ -79,140 +135,155 @@ Important: Tenant-level entities appear in root folder of UiPathOrch drive.
 📁 FOLDER SYSTEM KNOWLEDGE
 
 Folder Types
-------------
-Standard Folder (FolderType = "Standard"): Regular automation projects, full entity management
-Personal Workspace (FolderType = "Personal"): Individual user environment, owner + admin access only
-Solution Folder (FolderType = "Solution"): Container for solution deployments
+-----------
+1. **Standard Folder** (FolderType = "Standard"): 
+   - Normal project folders where you deploy and run automations
+   - Full access to all features (processes, jobs, queues, assets, etc.)
+
+2. **Personal Workspace** (FolderType = "Personal"): 
+   - Private folder for individual users
+   - Only the owner and admins can access
+
+3. **Solution Folder** (FolderType = "Solution"): 
+   - Container for complete solution deployments
+   - Groups related automation projects together
 
 Folder Provisioning
--------------------
-Modern (ProvisionType = "Automatic"): Up to 7 levels hierarchy, can create subfolders
-Classic (ProvisionType = "Manual"): Deprecated, flat structure only
+------------------
+- **Modern (ProvisionType = "Automatic")**: Current standard, supports up to 7 folder levels
+- **Classic (ProvisionType = "Manual")**: Legacy method, flat structure only (deprecated)
 
-Folder Feed
------------
-Folders with feed (FeedType = "FolderHierarchy"): Can only assign packages from their own folder feed (cannot use tenant packages)
-Folders without feed (FeedType = "Processes"): Can only assign packages from tenant feed
+Feed System
+----------
+1. **Tenant Feed (FeedType = "Processes")**:
+   - Folder uses centralized tenant package storage
 
-Feed System Understanding
--------------------------
-Tenant-Level Feeds:
-- Tenant Package Feed: Contains packages available tenant-wide
-- Tenant Library Feed: Contains libraries available tenant-wide
-- Packages and Libraries are managed in separate feeds at tenant level
+2. **Folder Feed (FeedType = "FolderHierarchy")**:
+   - Folder has its own isolated package storage
+   - Can only use packages uploaded to this specific folder feed
+   - More restrictive but provides better isolation
 
-Folder Feed (Folder-specific):
-- Only root-level folders can have their own package feed
-- Folder feeds contain Packages only (not Libraries)
-- Subfolders automatically inherit parent folder's package feed
+KEY RULES:
+- Libraries are ALWAYS sourced from tenant-level feeds (regardless of folder type)
+- Feed type cannot be changed after folder creation
+- Only root-level folders can have their own feeds; subfolders inherit parent settings
 
-Feed Configuration Rules:
-- Feed configuration cannot be changed after folder creation
-- Libraries are always sourced from tenant library feed (regardless of folder configuration)
-- Package source depends on folder's feed configuration:
-  * Folders without feed: Use tenant package feed
-  * Folders with feed: Use folder package feed only
-
-Process Assignment and Execution:
-- Packages from feeds can be assigned to folders as Processes
-- Libraries are referenced by packages during execution
-- Assigned Processes can then be executed as Jobs
+Process Deployment Flow:
+1. Upload Package to appropriate Feed (tenant or folder-specific)
+2. Assign Package to Folder as a Process
+3. Execute Process as Jobs
 
 🔐 PERMISSION MODEL
 
-Three-Level Permission Model
-----------------------------
-1. OAuth Scope Level: API access capabilities at connection level
-2. Tenant Role Level: Tenant-wide entity access (users, licenses, settings)
-3. Folder Role Level: Folder-specific entity access (processes, jobs, queues, assets)
+Three-Level Permission System (Simplified)
+------------------------------------------
+1. **OAuth Scope Level**: What API operations your connection can perform
+2. **Tenant Role Level**: Access to tenant-wide resources (users, machines, settings)
+3. **Folder Role Level**: Access to folder-specific resources (processes, jobs, queues)
+
+Think of it as: Connection Permission → Tenant Permission → Folder Permission
 
 ⚡ PERFORMANCE & CACHE MANAGEMENT
 
-Cache Behavior Understanding
-----------------------------
-STANDARD CMDLETS (Get-OrchUser, Get-OrchProcess, Get-OrchAsset, etc.):
-- Automatically retrieve ALL entities in folder and cache them
-- Subsequent executions return cached data (no API calls)
+Cache Behavior
+-------------
+**STANDARD CMDLETS** (Get-OrchUser, Get-OrchProcess, Get-OrchAsset, etc.):
+- First execution: Downloads ALL entities and caches them locally
+- Subsequent executions: Returns cached data instantly (no network calls)
 
-SPECIAL CMDLETS (Get-OrchQueueItem, Get-OrchJob, Get-OrchLog, Get-OrchAuditLog):
-- Do NOT automatically retrieve all entities (due to large volume)
-- WITH filter parameters: Always make API calls
-- WITHOUT filter parameters: Display cached content only (NO API calls)
+**VOLUME CMDLETS** (Get-OrchQueueItem, Get-OrchJob, Get-OrchLog, Get-OrchAuditLog):
+- WITH filter parameters: Always queries server (real-time data)
+- WITHOUT filter parameters: Shows cached data only (may be empty initially)
 
-Performance Best Practices
----------------------------
-# Target specific folders instead of -Recurse for large environments
-Get-OrchAsset -Path [folder path] 'SpecificAsset*'
+Performance Tips
+---------------
+# For large environments - target specific folders
+Get-OrchAsset -Path "Shared\Production" 'Config*'
 
-# Navigate to target folder first for batch operations
-cd [DriveName]:\[TargetFolder]
+# Navigate to folder first for batch operations
+cd MyDrive:\TargetFolder
+Get-OrchProcess  # Now operates on current folder
 
-Tenant-Wide Operations
-----------------------
-# Use -Recurse * from root folder to target all entities
-Disable-OrchTrigger -Recurse * -WhatIf
-Enable-OrchTrigger -Recurse *
-Get-OrchProcess -Recurse *
-Get-OrchAsset -Recurse "MyAsset*"         # Pattern matching
-
-🔍 PROPERTY VERIFICATION
-
-(Get-Command [CmdletName]).OutputType.Type.GetProperties() | Select-Object Name | Sort-Object Name
+Cache Management
+---------------
+Clear-OrchCache  # Force refresh all cached data
 
 📚 QUICK REFERENCE
 
 Session Initialization
 ----------------------
-1. Get-OrchPSDrive               # Verify environment
-2. Get-OrchCurrentUser           # Verify connection
-3. dir -Recurse | Select-Object FullName, FolderType  # Map structure
-4. cd [TargetFolder]             # Set context
+# 1. Check available connections
+Get-OrchPSDrive
+
+# 2. Connect to target environment
+cd MyDrive:
+
+# 3. Verify connection (skip if Confidential app)
+Get-OrchCurrentUser  # May fail in Confidential apps - this is normal
+
+# 4. Explore folder structure
+dir -Recurse | Select-Object FullName, FolderType
 
 Essential Operations
--------------------
-# Asset management
-Get-OrchAsset | Select-Object Path, Name, ValueType
-Set-OrchAsset -ValueType Text -Name "AssetName" -Value "NewValue" -WhatIf
+------------------
+# Asset management with Path
+Get-OrchAsset -Recurse | Select-Object Path, Name, ValueType, Value
+Set-OrchAsset -ValueType Text -Name "ConfigValue" -Value "NewSetting" -WhatIf
 
-# Always include Path for entity context
+# Process and Job management with Path
+Get-OrchProcess -Recurse | Select-Object Path, Name, ProcessVersion
+Start-OrchJob -ProcessName "MyProcess" -WhatIf
+
+# Trigger management with Path
+Get-OrchTrigger -Recurse | Select-Object Path, Name, Enabled, ReleaseName
+
+# User management with Path
 Get-OrchUser | Select-Object Path, UserName, FullName
 
 Permission Verification
 ----------------------
-Get-OrchPSDrive | Select-Object Name, Root, Scope  # View OAuth scopes per drive
-Get-OrchRole -ExpandPermission   # See detailed role permissions
-Get-OrchUserPrivilege            # Check current user's effective permissions
-Get-OrchFolderUser               # Check folder assignments
+Get-OrchPSDrive | Select-Object Name, Root, Scope, IsConf  # Drive status
+Get-OrchRole -ExpandPermission   # Detailed role permissions
+Get-OrchUserPrivilege            # Your effective permissions
+Get-OrchFolderUser               # Folder access assignments
 
 Troubleshooting Quick Fixes
 ---------------------------
-Connection Issues:    Clear-OrchCache; Get-OrchCurrentUser
-Permission Errors:    Get-OrchCurrentUser; Get-OrchFolderUser
-Performance Issues:   Specify specific folder path with -Path instead of -Recurse
-Drive Mount Issues:   Edit-OrchConfig
+- **Connection Issues**: Clear-OrchCache; then retry operation
+- **Permission Errors**: Check Get-OrchUserPrivilege and Get-OrchFolderUser
+- **Performance Issues**: Use specific folder paths with -Path instead of -Recurse
+- **Drive Mount Issues**: Run Edit-OrchConfig to reconfigure
+- **Confidential App Errors**: Normal for user info commands, try alternative verification
 
 🎯 CMDLET-SPECIFIC GUIDANCE
 
-CRITICAL: Use cmdlet-specific help for detailed operations:
-- Get-Help Get-OrchJob -Examples     # Practical examples including failure analysis
-- Get-Help Start-OrchJob -Examples   # Safe execution patterns
-- Get-Help Edit-OrchConfig -Examples # Configuration procedures
-
-LLM Decision Flow for Complex Operations
-----------------------------------------
-1. ALWAYS start with: Get-Help [CmdletName] -Examples
-2. Check cmdlet help BEFORE creating custom procedures
-3. Refer to 01-Essentials.txt only for:
+Best Practice Approach
+----------------------
+1. **ALWAYS start with**: Get-Help [CmdletName] -Examples
+2. **Check cmdlet help BEFORE** creating custom procedures
+3. **Use 01-Essentials.txt** only for:
    - Environment verification (Get-OrchPSDrive)
-   - Error handling protocols
+   - Error handling protocols  
    - Safety procedures (-WhatIf usage)
+   - Path property usage
    - Architecture understanding
+
+Example Help Commands:
+Get-Help Get-OrchJob -Examples     # Practical job management examples
+Get-Help Start-OrchJob -Examples   # Safe job execution patterns
+Get-Help Edit-OrchConfig -Examples # Configuration procedures
 
 📚 OFFICIAL RESOURCES
 
-UiPath Marketplace: https://marketplace.uipath.com/listings/uipathorch
-PowerShell Gallery: https://www.powershellgallery.com/packages/UiPathOrch
+- UiPath Marketplace: https://marketplace.uipath.com/listings/uipathorch
+- PowerShell Gallery: https://www.powershellgallery.com/packages/UiPathOrch
 
 ================================================================================
-Version: 1.2 | Last Updated: June 2025 | Target: LLM Operations
+Version: 1.4 | Last Updated: June 2025 | Target: LLM Operations
+Key Improvements: 
+- Dedicated PATH PROPERTY section with clear examples
+- Emphasized .Path vs PSPath/PSParentPath differences
+- Added common LLM mistakes section
+- Reorganized structure for better flow
+- Enhanced examples with Path property usage
 ================================================================================

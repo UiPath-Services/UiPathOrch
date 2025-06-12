@@ -14260,6 +14260,108 @@
   </command:command>
   <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
     <command:details>
+      <command:name>Find-OrchFolderNoUserAssigned</command:name>
+      <command:verb>Find</command:verb>
+      <command:noun>OrchFolderNoUserAssigned</command:noun>
+      <maml:description>
+        <maml:para>This script lists folders that have no direct user assignments.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>This script recursively checks all folders under a specified path and lists folders where no users are assigned.  Users inherited from parent folders are not considered by default, but you can include them using the -IncludeInherited switch.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Find-OrchFolderNoUserAssigned</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
+          <maml:name>Path</maml:name>
+          <maml:description>
+            <maml:para>Specifies the path to the folder where the script should start the recursive search. The default value is "Orch1:\".</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>IncludeInherited</maml:name>
+          <maml:description>
+            <maml:para>When this switch is used, the script will consider users inherited from parent folders as part of the user assignments.  Without this switch, only direct user assignments will be checked.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
+        <maml:name>Path</maml:name>
+        <maml:description>
+          <maml:para>Specifies the path to the folder where the script should start the recursive search. The default value is "Orch1:\".</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>IncludeInherited</maml:name>
+        <maml:description>
+          <maml:para>When this switch is used, the script will consider users inherited from parent folders as part of the user assignments.  Without this switch, only direct user assignments will be checked.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes />
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>UiPath.PowerShell.Entities.Folder</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>By default, users inherited from parent folders are ignored in this script. If the -IncludeInherited switch is provided, inherited users will be included in the check.</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>.\Find-FoldersNoUserAssigned.ps1 Orch1:\
+This will recursively check all folders under "Orch1:\" and list those without direct user assignments.</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 2 --------------------------</maml:title>
+        <dev:code>.\Find-FoldersNoUserAssigned.ps1 Orch1:\ -IncludeInherited
+This will recursively check all folders under "Orch1:\" and list those without any user assignments. Folders with inherited user assignments from parent folders will not be included, even if they have no direct user assignments.</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks />
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
       <command:name>Get-DuClassifier</command:name>
       <command:verb>Get</command:verb>
       <command:noun>DuClassifier</command:noun>
@@ -19375,11 +19477,17 @@
       <command:verb>Get</command:verb>
       <command:noun>OrchHelp</command:noun>
       <maml:description>
-        <maml:para>{{ Fill in the Synopsis }}</maml:para>
+        <maml:para>UiPathOrch モジュールのドキュメントとクイックスタートガイドを表示します。</maml:para>
       </maml:description>
     </command:details>
     <maml:description>
-      <maml:para>{{ Fill in the Description }}</maml:para>
+      <maml:para>Get-OrchHelp は、UiPathOrch モジュールの包括的なドキュメントとクイックスタートガイドを表示します。このコマンドレットは以下の情報を提供します：</maml:para>
+      <maml:para>- モジュールのインストールパス</maml:para>
+      <maml:para>- 利用可能なドキュメント（LLM向けテキストファイルとPDFマニュアル）</maml:para>
+      <maml:para>- 重要なコマンドの一覧</maml:para>
+      <maml:para>- LLM（大規模言語モデル）向けの使用方法とヒント</maml:para>
+      <maml:para></maml:para>
+      <maml:para>初回利用時やモジュールの機能を確認したい場合に実行することで、効率的にUiPath Orchestratorの操作を開始できます。</maml:para>
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
@@ -19387,7 +19495,7 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
           <maml:name>ProgressAction</maml:name>
           <maml:description>
-            <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+            <maml:para>スクリプト、コマンドレット、またはプロバイダーによって生成される進行状況の更新に PowerShell がどのように応答するかを指定します。</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
           <dev:type>
@@ -19402,7 +19510,7 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
         <maml:name>ProgressAction</maml:name>
         <maml:description>
-          <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+          <maml:para>スクリプト、コマンドレット、またはプロバイダーによって生成される進行状況の更新に PowerShell がどのように応答するかを指定します。</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
         <dev:type>
@@ -19434,19 +19542,35 @@
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para></maml:para>
+        <maml:para>- このコマンドレットは、UiPath Orchestrator を操作する LLM（AI）エージェントに特に有用です</maml:para>
+        <maml:para>- 利用可能な PSDrives を確認するため、常に最初に Get-OrchPSDrive を実行してください</maml:para>
+        <maml:para>- 必須の実行ルールについては、01-Essentials.txt ファイルを確認してください</maml:para>
+        <maml:para>- PDF マニュアルは英語版と日本語版の両方が利用可能です</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
       <command:example>
         <maml:title>-------------------------- Example 1 --------------------------</maml:title>
-        <dev:code>PS C:\&gt; {{ Add example code here }}</dev:code>
+        <dev:code>PS C:\&gt; Get-OrchHelp</dev:code>
         <dev:remarks>
-          <maml:para>{{ Add example description here }}</maml:para>
+          <maml:para>UiPathOrch モジュールの完全なヘルプ情報を表示します。モジュールパス、利用可能なドキュメント、重要なコマンド、クイックスタートガイドが表示されます。</maml:para>
         </dev:remarks>
       </command:example>
     </command:examples>
-    <command:relatedLinks />
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Get-OrchPSDrive</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Get-OrchCurrentUser</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Clear-OrchCache</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
   <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
     <command:details>
@@ -19576,7 +19700,7 @@
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
           <maml:name>State</maml:name>
           <maml:description>
             <maml:para>{{ Fill State Description }}</maml:para>
@@ -19916,7 +20040,7 @@
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
         <maml:name>State</maml:name>
         <maml:description>
           <maml:para>{{ Fill State Description }}</maml:para>
@@ -46266,9 +46390,9 @@
     </command:details>
     <maml:description>
       <maml:para>{{ Fill in the Description }}</maml:para>
-      <maml:para>主に呼び出すエンドポイント:</maml:para>
-      <maml:para>OAuth に必要なスコープ:</maml:para>
-      <maml:para>必要な権限:</maml:para>
+      <maml:para>主に呼び出すエンドポイント: POST /odata/Jobs/UiPath.Server.Configuration.OData.StartJobs</maml:para>
+      <maml:para>OAuth に必要なスコープ: OR.Jobs.Write OR.Execution.Read</maml:para>
+      <maml:para>必要な権限: Jobs.Create Processes.View</maml:para>
     </maml:description>
     <command:syntax>
       <command:syntaxItem>

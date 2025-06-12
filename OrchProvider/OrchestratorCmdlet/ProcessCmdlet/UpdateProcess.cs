@@ -120,11 +120,11 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BoolCompleter))]
-    public string? A4R_Enabled { get; set; }
+    public string? A4R_Enabled { get; set; } // Enable Healing Agent
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BoolCompleter))]
-    public string? A4R_HealingEnabled { get; set; }
+    public string? A4R_HealingEnabled { get; set; } // Enable Healing Agent self-healing
     #endregion
 
     #region VideoRecordingSettings

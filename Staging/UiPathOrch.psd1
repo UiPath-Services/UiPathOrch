@@ -9,10 +9,10 @@
 @{
 
 # Script module or binary module file associated with this manifest.
-RootModule = 'UiPathOrch.psm1'
+RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.12.9'
+ModuleVersion = '0.9.12.10'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -30,7 +30,7 @@ CompanyName = 'UiPath'
 Copyright = '(c) UiPath All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'PowerShell providers for managing UiPath Orchestrator entities via cmdlets.'
+Description = 'PSDrives and cmdlets for UiPath Orchestrator. 💡 First time? Run: Get-OrchHelp'
 
 # Minimum version of the PowerShell engine required by this module
 PowerShellVersion = '7.4.2'
@@ -65,9 +65,8 @@ PowerShellVersion = '7.4.2'
 # Format files (.ps1xml) to be loaded when importing this module
 FormatsToProcess = @('OrchProvider.Format.ps1xml')
 
-
 # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
-NestedModules = @('UiPath.PowerShell.OrchProvider.dll')
+NestedModules = @('UiPathOrch.psm1')
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 FunctionsToExport = @(
@@ -79,7 +78,6 @@ FunctionsToExport = @(
 'Find-OrchFolderNoUserAssigned',
 'Get-OrchJobVideo'
 )
-
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @(
@@ -361,7 +359,7 @@ CmdletsToExport = @(
 VariablesToExport = '*'
 
 # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
-#AliasesToExport = @('job', 'log', 'stop')
+AliasesToExport = @('!Show-OrchGuide')
 
 # DSC resources to export from this module
 # DscResourcesToExport = @()
@@ -390,7 +388,13 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- In entities returned from the Web API, fields that should have been Guids were sometimes returned in a non-Guid format, causing JSON deserialization to fail. Therefore, all of those fields have been changed to the string type. As a result, the reliability of JSON deserialization has been improved.
+        ReleaseNotes = '- Made HTTP log output asynchronous, improving performance.
+
+- Updated the module manifest (UiPathOrch.psd1) so that RootModule now points to the .dll, slightly reducing Import-Module time.
+
+- Changed the Get-OrchJob cmdlet to no longer support wildcards for the -State parameter; specifying an invalid state now throws a runtime error to prevent LLMs from passing unsupported values.
+
+- Added the Get-OrchHelp cmdlet, enabling LLMs to retrieve guidance on using the UiPathOrch module.
 '
 
         # Prerelease string of this module
