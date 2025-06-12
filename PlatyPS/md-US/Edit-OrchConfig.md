@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -51,6 +51,7 @@ PS C:\> if ((Get-OrchPSDrive).Count -eq 0) {
 ```
 
 Shows the typical initial setup workflow when no drives are configured.
+
 ### Example 3: Open with specific editor
 ```powershell
 PS C:\> Edit-OrchConfig Notepad

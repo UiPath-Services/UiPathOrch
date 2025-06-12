@@ -1545,20 +1545,6 @@ public class Folder
     public string? FeedType { get; set; }
 }
 
-// ★ TODO: planned to be obsoleted
-public enum JobState
-{
-    Pending = 0,
-    Running,
-    Stopping,
-    Terminating,
-    Faulted,
-    Successful,
-    Stopped,
-    Suspended,
-    Resumed
-}
-
 // MachineRuntimeDto
 public class MachineRuntime
 {

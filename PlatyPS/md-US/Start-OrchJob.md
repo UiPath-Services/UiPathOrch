@@ -25,9 +25,9 @@ IMPORTANT: Use the -Name parameter (not -ProcessName) to specify the process nam
 
 Primary Endpoint: POST /odata/Jobs/UiPath.Server.Configuration.OData.StartJobs
 
-OAuth required scopes: OR.Jobs or OR.Jobs.Write
+OAuth required scopes: OR.Jobs.Write OR.Execution.Read
 
-Required permissions: Jobs.Create
+Required permissions: Jobs.Create Processes.View
 
 ## EXAMPLES
 

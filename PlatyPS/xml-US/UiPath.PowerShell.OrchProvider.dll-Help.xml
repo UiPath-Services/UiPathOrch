@@ -14310,6 +14310,108 @@ PS C:\&gt; if ((Get-OrchPSDrive).Count -eq 0) {
   </command:command>
   <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
     <command:details>
+      <command:name>Find-OrchFolderNoUserAssigned</command:name>
+      <command:verb>Find</command:verb>
+      <command:noun>OrchFolderNoUserAssigned</command:noun>
+      <maml:description>
+        <maml:para>This script lists folders that have no direct user assignments.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>This script recursively checks all folders under a specified path and lists folders where no users are assigned.  Users inherited from parent folders are not considered by default, but you can include them using the -IncludeInherited switch.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Find-OrchFolderNoUserAssigned</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
+          <maml:name>Path</maml:name>
+          <maml:description>
+            <maml:para>Specifies the path to the folder where the script should start the recursive search. The default value is "Orch1:\".</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>IncludeInherited</maml:name>
+          <maml:description>
+            <maml:para>When this switch is used, the script will consider users inherited from parent folders as part of the user assignments.  Without this switch, only direct user assignments will be checked.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
+        <maml:name>Path</maml:name>
+        <maml:description>
+          <maml:para>Specifies the path to the folder where the script should start the recursive search. The default value is "Orch1:\".</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>IncludeInherited</maml:name>
+        <maml:description>
+          <maml:para>When this switch is used, the script will consider users inherited from parent folders as part of the user assignments.  Without this switch, only direct user assignments will be checked.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes />
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>UiPath.PowerShell.Entities.Folder</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>By default, users inherited from parent folders are ignored in this script. If the -IncludeInherited switch is provided, inherited users will be included in the check.</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 1 --------------------------</maml:title>
+        <dev:code>.\Find-FoldersNoUserAssigned.ps1 Orch1:\
+This will recursively check all folders under "Orch1:\" and list those without direct user assignments.</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- EXAMPLE 2 --------------------------</maml:title>
+        <dev:code>.\Find-FoldersNoUserAssigned.ps1 Orch1:\ -IncludeInherited
+This will recursively check all folders under "Orch1:\" and list those without any user assignments. Folders with inherited user assignments from parent folders will not be included, even if they have no direct user assignments.</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+    <command:relatedLinks />
+  </command:command>
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
       <command:name>Get-DuClassifier</command:name>
       <command:verb>Get</command:verb>
       <command:noun>DuClassifier</command:noun>
@@ -19427,11 +19529,17 @@ PS C:\&gt; if ((Get-OrchPSDrive).Count -eq 0) {
       <command:verb>Get</command:verb>
       <command:noun>OrchHelp</command:noun>
       <maml:description>
-        <maml:para>{{ Fill in the Synopsis }}</maml:para>
+        <maml:para>Displays documentation and quick start guide for the UiPathOrch module.</maml:para>
       </maml:description>
     </command:details>
     <maml:description>
-      <maml:para>{{ Fill in the Description }}</maml:para>
+      <maml:para>Get-OrchHelp displays comprehensive documentation and quick start guide for the UiPathOrch module. This cmdlet provides the following information:</maml:para>
+      <maml:para>- Module installation path</maml:para>
+      <maml:para>- Available documentation (LLM text files and PDF manuals)</maml:para>
+      <maml:para>- Essential commands list</maml:para>
+      <maml:para>- LLM (Large Language Model) usage tips and guidelines</maml:para>
+      <maml:para></maml:para>
+      <maml:para>Execute this cmdlet when starting with the module for the first time or when you need to review the module's capabilities to efficiently begin UiPath Orchestrator operations.</maml:para>
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
@@ -19439,7 +19547,7 @@ PS C:\&gt; if ((Get-OrchPSDrive).Count -eq 0) {
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
           <maml:name>ProgressAction</maml:name>
           <maml:description>
-            <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+            <maml:para>Specifies how PowerShell responds to progress updates generated by a script, cmdlet, or provider.</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
           <dev:type>
@@ -19454,7 +19562,7 @@ PS C:\&gt; if ((Get-OrchPSDrive).Count -eq 0) {
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
         <maml:name>ProgressAction</maml:name>
         <maml:description>
-          <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+          <maml:para>Specifies how PowerShell responds to progress updates generated by a script, cmdlet, or provider.</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
         <dev:type>
@@ -19486,19 +19594,35 @@ PS C:\&gt; if ((Get-OrchPSDrive).Count -eq 0) {
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para></maml:para>
+        <maml:para>- This cmdlet is particularly useful for LLM (AI) agents working with UiPath Orchestrator</maml:para>
+        <maml:para>- Always run Get-OrchPSDrive first to verify available PSDrives</maml:para>
+        <maml:para>- Review the 01-Essentials.txt file for mandatory execution rules</maml:para>
+        <maml:para>- PDF manuals are available in both English and Japanese</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
       <command:example>
         <maml:title>-------------------------- Example 1 --------------------------</maml:title>
-        <dev:code>PS C:\&gt; {{ Add example code here }}</dev:code>
+        <dev:code>PS C:\&gt; Get-OrchHelp</dev:code>
         <dev:remarks>
-          <maml:para>{{ Add example description here }}</maml:para>
+          <maml:para>Displays complete help information for the UiPathOrch module. Shows module path, available documentation, essential commands, and quick start guide.</maml:para>
         </dev:remarks>
       </command:example>
     </command:examples>
-    <command:relatedLinks />
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Get-OrchPSDrive</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Get-OrchCurrentUser</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Clear-OrchCache</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
   <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
     <command:details>
@@ -19629,7 +19753,7 @@ PS C:\&gt; if ((Get-OrchPSDrive).Count -eq 0) {
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
           <maml:name>State</maml:name>
           <maml:description>
             <maml:para>{{ Fill State Description }}</maml:para>
@@ -19969,7 +20093,7 @@ PS C:\&gt; if ((Get-OrchPSDrive).Count -eq 0) {
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
         <maml:name>State</maml:name>
         <maml:description>
           <maml:para>{{ Fill State Description }}</maml:para>
@@ -22510,11 +22634,11 @@ Displays the average, longest, and shortest execution times of cached jobs. `%` 
       <command:verb>Get</command:verb>
       <command:noun>OrchPackage</command:noun>
       <maml:description>
-        <maml:para>Gets the process packages.</maml:para>
+        <maml:para>Gets the process packages from UiPath Orchestrator.</maml:para>
       </maml:description>
     </command:details>
     <maml:description>
-      <maml:para>{{ Fill in the Description }}</maml:para>
+      <maml:para>The Get-OrchPackage cmdlet retrieves process packages from UiPath Orchestrator. This cmdlet allows you to list packages from tenant feeds or folder feeds, with options to filter by ID, specify target folders, and include subfolders recursively.</maml:para>
       <maml:para>Primary Endpoint: GET /odata/Processes&amp;feedId={feedId}</maml:para>
       <maml:para>OAuth required scopes: OR.Execution or OR.Execution.Read</maml:para>
       <maml:para>Required permissions: (Packages.View - Lists packages in a Tenant Feed) and (FolderPackages.View - Lists packages in a Folder Feed)</maml:para>
@@ -22525,7 +22649,7 @@ Displays the average, longest, and shortest execution times of cached jobs. `%` 
         <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
           <maml:name>Id</maml:name>
           <maml:description>
-            <maml:para>Specifies the Id of the process packages to be retrieved.</maml:para>
+            <maml:para>Specifies the Id of the process packages to be retrieved. Supports wildcard characters and multiple values.</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
           <dev:type>
@@ -22537,7 +22661,7 @@ Displays the average, longest, and shortest execution times of cached jobs. `%` 
         <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder. If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder will be targeted. Supports multiple folder paths.</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
           <dev:type>
@@ -22549,7 +22673,7 @@ Displays the average, longest, and shortest execution times of cached jobs. `%` 
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
           <maml:name>ProgressAction</maml:name>
           <maml:description>
-            <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+            <maml:para>Determines how PowerShell responds to progress updates generated by a script, cmdlet, or provider.</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
           <dev:type>
@@ -22575,7 +22699,7 @@ Displays the average, longest, and shortest execution times of cached jobs. `%` 
       <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
         <maml:name>Id</maml:name>
         <maml:description>
-          <maml:para>Specifies the Id of the process packages to be retrieved.</maml:para>
+          <maml:para>Specifies the Id of the process packages to be retrieved. Supports wildcard characters and multiple values.</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
         <dev:type>
@@ -22587,7 +22711,7 @@ Displays the average, longest, and shortest execution times of cached jobs. `%` 
       <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder. If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder will be targeted. Supports multiple folder paths.</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
         <dev:type>
@@ -22599,7 +22723,7 @@ Displays the average, longest, and shortest execution times of cached jobs. `%` 
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
         <maml:name>ProgressAction</maml:name>
         <maml:description>
-          <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+          <maml:para>Determines how PowerShell responds to progress updates generated by a script, cmdlet, or provider.</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
         <dev:type>
@@ -22643,19 +22767,53 @@ Displays the average, longest, and shortest execution times of cached jobs. `%` 
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para></maml:para>
+        <maml:para>- If no active connection exists, the cmdlet will automatically establish a connection to UiPath Orchestrator. For non-confidential applications, PKCE authentication (browser login) will be initiated on the first cmdlet execution.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
       <command:example>
         <maml:title>-------------------------- Example 1 --------------------------</maml:title>
-        <dev:code>PS C:\&gt; {{ Add example code here }}</dev:code>
+        <dev:code>PS Orch1:\&gt; Get-OrchPackage</dev:code>
         <dev:remarks>
-          <maml:para>{{ Add example description here }}</maml:para>
+          <maml:para>Gets all process packages in the current folder context.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 2 --------------------------</maml:title>
+        <dev:code>PS Orch1:\&gt; Get-OrchPackage -Path Shared</dev:code>
+        <dev:remarks>
+          <maml:para>Gets all process packages from the "Shared" folder.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 3 --------------------------</maml:title>
+        <dev:code>PS Orch1:\&gt; Get-OrchPackage ProcessA*</dev:code>
+        <dev:remarks>
+          <maml:para>Gets process packages with IDs that start with "ProcessA" using wildcard matching.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 4 --------------------------</maml:title>
+        <dev:code>PS Orch1:\&gt; Get-OrchPackage -Path Orch1:\Production, Orch1:\Development</dev:code>
+        <dev:remarks>
+          <maml:para>Gets all process packages from both "Production" and "Development" folders.</maml:para>
         </dev:remarks>
       </command:example>
     </command:examples>
-    <command:relatedLinks />
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Import-OrchPackage</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Export-OrchPackage</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Remove-OrchPackage</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
   <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
     <command:details>
@@ -22974,7 +23132,8 @@ Displays the average, longest, and shortest execution times of cached jobs. `%` 
       </maml:description>
     </command:details>
     <maml:description>
-      <maml:para>{{ Fill in the Description }}</maml:para>
+      <maml:para>Multiple values for the -Path parameter can be specified using comma-separated text that includes wildcards. Additionally, you can use autocomplete for these values by pressing [Ctrl+Space] or [Tab].</maml:para>
+      <maml:para>When specifying the -Path, -Recurse, and -Depth parameters, place them immediately after the cmdlet name. This placement ensures that autocomplete for subsequent parameters functions correctly.</maml:para>
       <maml:para>Primary Endpoint: GET /odata/Releases/?$expand=Environment,CurrentVersion,ReleaseVersions,EntryPoint</maml:para>
       <maml:para>OAuth required scopes: OR.Execution or OR.Execution.Read</maml:para>
       <maml:para>Required permissions: Processes.View</maml:para>
@@ -23204,9 +23363,101 @@ Displays the average, longest, and shortest execution times of cached jobs. `%` 
     <command:examples>
       <command:example>
         <maml:title>-------------------------- Example 1 --------------------------</maml:title>
-        <dev:code>PS C:\&gt; {{ Add example code here }}</dev:code>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchProcess</dev:code>
         <dev:remarks>
-          <maml:para>{{ Add example description here }}</maml:para>
+          <maml:para>Show the processes assigned to the current folder.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 2 --------------------------</maml:title>
+        <dev:code>PS Orch1:\&gt; Get-OrchProcess -Recurse</dev:code>
+        <dev:remarks>
+          <maml:para>Show the processes assigned to the current folder and all its subfolders. When run in the root folder, it displays all processes from folders included in that tenant.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 3 --------------------------</maml:title>
+        <dev:code>PS Orch1:\&gt; Get-OrchProcess -Recurse *proc*</dev:code>
+        <dev:remarks>
+          <maml:para>Search all folders for processes that contain proc in the process name.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 4 --------------------------</maml:title>
+        <dev:code>PS Orch1:\&gt; Get-OrchProcess -Recurse -ExportCsv "C:\tmp\Get-OrchProcess.csv"</dev:code>
+        <dev:remarks>
+          <maml:para>Export process details of all folders to CSV with UTF-8 BOM using module's function.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 5 --------------------------</maml:title>
+        <dev:code>PS Orch1:\&gt; Get-OrchProcess -Recurse -ExportCsv c:</dev:code>
+        <dev:remarks>
+          <maml:para>Export process details of all folders to C drive current directory as CSV with UTF-8 BOM using module's function.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 6 --------------------------</maml:title>
+        <dev:code>PS Orch1:\&gt; Get-OrchProcess -Recurse -ExportCsv "C:\tmp\Get-OrchProcess.csv" -CsvEncoding Shift-JIS</dev:code>
+        <dev:remarks>
+          <maml:para>Export process details of all folders to CSV with Shift-JIS using module's function.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 7 --------------------------</maml:title>
+        <dev:code>PS Orch1:\&gt; Get-OrchProcess -Recurse | Export-Csv "C:\tmp\Get-OrchProcess.csv"</dev:code>
+        <dev:remarks>
+          <maml:para>
+Export process details of all folders to CSV with UTF-8 using PowerShell cmdlet.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 8 --------------------------</maml:title>
+        <dev:code>PS Orch1:\&gt; Get-OrchProcess -Path "Shared\Finance", "Shared\HR" -Recurse</dev:code>
+        <dev:remarks>
+          <maml:para>Get processes from specific multiple folders and their subfolders.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 9 --------------------------</maml:title>
+        <dev:code>PS Orch1:\&gt; Get-OrchProcess -Depth 2</dev:code>
+        <dev:remarks>
+          <maml:para>Get processes from the current folder and subfolders up to 2 levels deep.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 10 --------------------------</maml:title>
+        <dev:code>PS Orch1:\&gt; Get-OrchProcess -Name "*Invoice*", "*Payment*" -Recurse</dev:code>
+        <dev:remarks>
+          <maml:para>Search for processes with names containing "Invoice" or "Payment" in all folders.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 11 --------------------------</maml:title>
+        <dev:code>PS Orch1:\&gt; Get-OrchProcess -ExpandDetails -Recurse</dev:code>
+        <dev:remarks>
+          <maml:para>Get processes with expanded details from all folders.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 12 --------------------------</maml:title>
+        <dev:code>PS Orch1:\&gt; Get-OrchProcess -Path "Shared\*" -Depth 1</dev:code>
+        <dev:remarks>
+          <maml:para>Get processes from all immediate subfolders under Shared folder (1 level deep only).</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 13 --------------------------</maml:title>
+        <dev:code>PS Orch1:\&gt; Get-OrchProcess -Recurse -ExportCsv "C:\tmp\Get-OrchProcesses_$(Get-Date -Format 'yyyyMMdd_HHmmss').csv"</dev:code>
+        <dev:remarks>
+          <maml:para>Export processes to a timestamped CSV using module's function.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 14 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchProcess MyProcess -ExpandDetails | Select-Object Path, Name, @{N="A4R_Enabled";E={$_.ProcessSettings.AutopilotForRobots.Enabled}}, @{N="A4R_HealingEnabled";E={$_.ProcessSettings.AutopilotForRobots.HealingEnabled}}</dev:code>
+        <dev:remarks>
+          <maml:para>Get 'Healing Agent' and 'Healing Agent self-healing' settings for MyProcess. The A4R_Enabled shows if Healing Agent is enabled, and A4R_HealingEnabled shows if self-healing is enabled. To get these properties, you should specify -ExpandDetails switch parameter.</maml:para>
         </dev:remarks>
       </command:example>
     </command:examples>
@@ -46417,8 +46668,8 @@ PS C:\&gt; if ($drives.Count -eq 0) {
       <maml:para>The Start-OrchJob cmdlet initiates job execution for specified UiPath processes. This cmdlet creates job instances that will be executed by available robots according to the folder's robot assignments and process configurations.</maml:para>
       <maml:para>IMPORTANT: Use the -Name parameter (not -ProcessName) to specify the process names to execute.</maml:para>
       <maml:para>Primary Endpoint: POST /odata/Jobs/UiPath.Server.Configuration.OData.StartJobs</maml:para>
-      <maml:para>OAuth required scopes: OR.Jobs or OR.Jobs.Write</maml:para>
-      <maml:para>Required permissions: Jobs.Create</maml:para>
+      <maml:para>OAuth required scopes: OR.Jobs.Write OR.Execution.Read</maml:para>
+      <maml:para>Required permissions: Jobs.Create Processes.View</maml:para>
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
@@ -48924,9 +49175,107 @@ PS Orch1:\Shared&gt; Get-OrchJob -Id [ReturnedJobId]</dev:code>
     <command:examples>
       <command:example>
         <maml:title>-------------------------- Example 1 --------------------------</maml:title>
-        <dev:code>PS C:\&gt; {{ Add example code here }}</dev:code>
+        <dev:code>PS Orch1:\&gt; Import-Csv "C:\tmp\Get-OrchProcess.csv" | Update-OrchProcess</dev:code>
         <dev:remarks>
-          <maml:para>{{ Add example description here }}</maml:para>
+          <maml:para>Update process information using import from CSV.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 2 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Update-OrchProcess -Name "InvoiceProcess" -Description "Updated invoice processing workflow" -Priority "High"</dev:code>
+        <dev:remarks>
+          <maml:para>Update a specific process with new description and priority in the current folder.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 3 --------------------------</maml:title>
+        <dev:code>PS Orch1:\&gt; Update-OrchProcess -Name "PaymentProcess" -Path "Shared\Finance" -Tags "Finance", "Production", "Critical"</dev:code>
+        <dev:remarks>
+          <maml:para>Update a process in a specific folder with new tags.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 4 --------------------------</maml:title>
+        <dev:code>PS Orch1:\&gt; Update-OrchProcess -Name "*Invoice*" -Recurse -MaxDurationSeconds 3600 -WhatIf</dev:code>
+        <dev:remarks>
+          <maml:para>Preview what would happen when updating all processes containing "Invoice" in their name across all folders with a new maximum duration.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 5 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Update-OrchProcess -Name "DataEntry" -NewName "DataEntryV2" -Version "2.0.0" -Description "Updated data entry process"</dev:code>
+        <dev:remarks>
+          <maml:para>Rename a process and update its version and description.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 6 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Update-OrchProcess -Name "ReportGenerator" -InputArguments '{"OutputPath": "C:\\Reports", "Format": "PDF"}' -VideoRecordingType "OnError"</dev:code>
+        <dev:remarks>
+          <maml:para>Update a process with new input arguments and video recording settings.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 7 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Get-OrchProcess -Name "LegacyProcess*" | Update-OrchProcess -RetentionPeriod 90 -RetentionAction "Delete"</dev:code>
+        <dev:remarks>
+          <maml:para>Update retention settings for all processes starting with "LegacyProcess" using pipeline input.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 8 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Update-OrchProcess -Name "AttendedProcess" -HiddenForAttendedUser "False" -RemoteControlAccess "Enabled" -Confirm</dev:code>
+        <dev:remarks>
+          <maml:para>Update attended process settings with confirmation prompt.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 9 --------------------------</maml:title>
+        <dev:code>PS Orch1:\&gt; Import-Csv "C:\tmp\BulkProcessUpdate.csv" | Where-Object {$_.Priority -eq "Low"} | Update-OrchProcess -Priority "Normal"</dev:code>
+        <dev:remarks>
+          <maml:para>Import processes from CSV, filter by current priority, and update to a new priority level.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 10 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Update-OrchProcess -Name "CriticalProcess" -Path "Production" -A4R_Enabled "True" -A4R_HealingEnabled "True" -ErrorRecordingEnabled "True"</dev:code>
+        <dev:remarks>
+          <maml:para>Enable Action for Recovery (A4R) and error recording features for a critical production process.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 11 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Update-OrchProcess -Name "ScheduledProcess" -Recurse -Depth 2 -AutoStartProcess "True" -AlwaysRunning "False"</dev:code>
+        <dev:remarks>
+          <maml:para>Update scheduled process settings across folders up to 2 levels deep.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 12 --------------------------</maml:title>
+        <dev:code>$processUpdates = @{
+    Name = "22.4"
+    Description = "Complex business process with multiple steps"
+    Quality = 95
+    Duration = 1800
+    Frequency = 24
+}
+PS Orch1:\Shared&gt; Update-OrchProcess @processUpdates</dev:code>
+        <dev:remarks>
+          <maml:para>Update multiple process properties using parameter splatting for better readability.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 13 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Update-OrchProcess MyProcess -A4R_Enabled True</dev:code>
+        <dev:remarks>
+          <maml:para>Enable Healing Agent of MyProcess process in Shared directry.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-------------------------- Example 14 --------------------------</maml:title>
+        <dev:code>PS Orch1:\Shared&gt; Update-OrchProcess MyProcess -A4R_Enabled True -A4R_HealingEnabled True</dev:code>
+        <dev:remarks>
+          <maml:para>Enable both Healing Agent and Healing Agent self-healing for MyProcess in the Shared directory.</maml:para>
         </dev:remarks>
       </command:example>
     </command:examples>

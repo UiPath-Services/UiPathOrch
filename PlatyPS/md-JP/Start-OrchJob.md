@@ -21,11 +21,11 @@ Start-OrchJob [-Name] <String[]> [[-RuntimeType] <String>] [[-JobsCount] <Int32>
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-主に呼び出すエンドポイント:
+主に呼び出すエンドポイント: POST /odata/Jobs/UiPath.Server.Configuration.OData.StartJobs
 
-OAuth に必要なスコープ:
+OAuth に必要なスコープ: OR.Jobs.Write OR.Execution.Read
 
-必要な権限:
+必要な権限: Jobs.Create Processes.View
 
 ## EXAMPLES
 

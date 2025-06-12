@@ -469,7 +469,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         if (ret is null || ret.Count == 0)
         {
-            throw new Exception("Use Set-Location (cd) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.");
+            throw new Exception("Use Set-Location (cd) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters."); // 🤖 LLM: Run 'Get-OrchHelp' for guidance!");
         }
         return ret;
     }
