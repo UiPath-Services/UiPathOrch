@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.12.10'
+ModuleVersion = '0.9.12.11'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -388,13 +388,9 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Made HTTP log output asynchronous, improving performance.
+        ReleaseNotes = '- Automation Cloud organization-user creation and deletion API has been deprecated, causing the Get-PmUser, Remove-PmUser, Update-PmUser and Copy-PmUser cmdlets to stop working. These cmdlets now invoke the new private API (version 19.0 remains unchanged), restoring correct operation.
 
-- Updated the module manifest (UiPathOrch.psd1) so that RootModule now points to the .dll, slightly reducing Import-Module time.
-
-- Changed the Get-OrchJob cmdlet to no longer support wildcards for the -State parameter; specifying an invalid state now throws a runtime error to prevent LLMs from passing unsupported values.
-
-- Added the Get-OrchHelp cmdlet, enabling LLMs to retrieve guidance on using the UiPathOrch module.
+- The New-PmUser, Remove-PmUser, Update-PmUser and Copy-PmUser cmdlets now clear the PmUser and PmGroup caches after execution to ensure data consistency.
 '
 
         # Prerelease string of this module

@@ -66,8 +66,27 @@ public class RemovePmUserCommand : OrchestratorPSCmdlet
                     {
                         try
                         {
-                            drive.OrchAPISession.RemovePmUser(user.id!);
+                            if (drive.OrchAPISession.PmApiDeprecated)
+                            {
+                                try
+                                {
+                                    // これを呼び出すなら、バルクで呼び出した方がいいんだけど、とりあえずいいか。。
+                                    drive.OrchAPISession.RemovePmUser(partitionGlobalId!, user.id!);
+                                }
+                                catch
+                                {
+                                    drive.OrchAPISession.RemovePmUserDeprecated(user.id!);
+                                    // RemovePmUserDeprecated() が呼び出せたら、まだ deprecated していない
+                                    drive.OrchAPISession.PmApiDeprecated = false;
+                                }
+                            }
+                            else
+                            {
+                                drive.OrchAPISession.RemovePmUserDeprecated(user.id!);
+                            }
                             drive.PmUsers.ClearCache();
+                            drive._dicPmGroups = null;
+                            drive._dicPmGroups_Exception.ClearCache();
                         }
                         catch (Exception ex)
                         {

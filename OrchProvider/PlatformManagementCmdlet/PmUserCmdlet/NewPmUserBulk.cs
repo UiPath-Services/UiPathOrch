@@ -206,6 +206,9 @@ public class NewPmUserCommand : OrchestratorPSCmdlet
             try
             {
                 var response = drive.OrchAPISession.CreatePmUserBulk(payload);
+                drive.PmUsers.ClearCache();
+                drive._dicPmGroups = null;
+                drive._dicPmGroups_Exception.ClearCache();
 
                 if (response?.result?.succeeded ?? false)
                 {

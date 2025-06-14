@@ -173,6 +173,9 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
                 try
                 {
                     var response = dstDrive.CreatePmUserBulk(payload);
+                    dstDrive.PmUsers.ClearCache();
+                    dstDrive._dicPmGroups = null;
+                    dstDrive._dicPmGroups_Exception.ClearCache();
 
                     if (response?.result?.succeeded ?? false)
                     {
