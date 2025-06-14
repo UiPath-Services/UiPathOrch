@@ -3660,6 +3660,14 @@ public class UpdateUserCommand
     public string[]? extensionUserAttributesToRemove { get; set; }
 }
 
+public class RemoveUserCommand
+{
+    public string? partitionGlobalId { get; set; }
+    public string[]? userIds { get; set; }
+    public bool? deleteCurrentUser { get; set; }
+    public bool? isHostMode { get; set; }
+}
+
 public class KeyValuePair(string? key, string? value) // added by UiPathOrch
 {
     public string? key { get; set; } = key;

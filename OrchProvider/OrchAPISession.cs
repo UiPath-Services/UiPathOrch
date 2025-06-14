@@ -2657,6 +2657,17 @@ public partial class OrchAPISession : IDisposable
 
     #endregion
 
+    #region Integration Service
+
+    // 残念ながら、これは OAuth app からは動かないようだ。
+    //public void GetConnections(Int64 folderId)
+    //{
+    //    //var ret = HttpRequest(HttpMethod.Get, "/connections_/api/v1/Connections", folderId);
+    //    var ret = HttpRequest(HttpMethod.Get, "/api/v1/Connections", folderId);
+    //}
+
+    #endregion
+
     #region Platform Management
 
     //private static string TrimUrl(string url)
@@ -2735,14 +2746,56 @@ public partial class OrchAPISession : IDisposable
         string body = HttpRequestIdentity(HttpMethod.Get, "/api/Setting");
     }
 
+    private bool _pmApiDeprecated = true;
+    public bool PmApiDeprecated
+    {
+        get
+        {
+            // ApiVersion < 19 であれば必ず false だ。
+            if (ApiVersion < 19) _pmApiDeprecated = false;
+
+            // ApiVersion == 19 だと、どっちだか分からない。。
+            // まず新しい方の API を呼んでみるしかない。
+
+            // ApiVersion >= 20 であれば必ず true だ。
+            if (ApiVersion >= 20) _pmApiDeprecated = true;
+
+            return _pmApiDeprecated;
+        }
+        set
+        {
+            _pmApiDeprecated = value;
+        }
+    }
+
     public IEnumerable<PmUser> GetPmUsers(string partitionGlobalId)
     {
         if (_drive._psDrive.IsCloud)
         {
-            //return GetEnumerableIdentity<PmUser>($"/api/User/users/{partitionGlobalId}");
+            if (PmApiDeprecated)
+            {
+                try
+                {
+                    // 現在の Automation Cloud は次を呼び出せるようだ。
+                    return GetEnumerablePortal<PmUser>("/api/identity/User/users/licenses");
+                }
+                catch
+                {
+                    // TODO: 今はすべての例外において deprecated API にフォールバックしているが、本来は
+                    // not found みたいなエラーの場合に限り、PmApiDeprecated = false とすべきだ。
+                    // Automation Cloud だけなら、フォールバックしない方が安全なのだけど
+                    // Automation Suite で動作しなくなってしまう可能性を考慮し、フォールバックしておく。
+                    PmApiDeprecated = false;
 
-            // 現在の Automation Cloud は次を実行しているようだ。
-            return GetEnumerablePortal<PmUser>($"/api/identity/UserPartition/licenses", null, $"&partitionGlobalId={partitionGlobalId}");
+                    // 2025/6/12 つい最近までこれが動いていたはずだが、次のエラーが返るようになった。
+                    // User Partition API is deprecated
+                    return GetEnumerablePortal<PmUser>($"/api/identity/UserPartition/licenses", null, $"&partitionGlobalId={partitionGlobalId}");
+                }
+            }
+            else
+            {
+                return GetEnumerablePortal<PmUser>($"/api/identity/UserPartition/licenses", null, $"&partitionGlobalId={partitionGlobalId}");
+            }
         }
         else
         {
@@ -2801,12 +2854,24 @@ public partial class OrchAPISession : IDisposable
         HttpRequestIdentity(HttpMethod.Put, $"/api/User/{userId}", null, command);
     }
 
-    public void RemovePmUser(string userId)
+    public void RemovePmUserDeprecated(string userId)
     {
         HttpRequestIdentity(HttpMethod.Delete, $"/api/User/{userId}");
     }
 
-    //
+    public void RemovePmUser(string partitionGlobalId, string userId)
+    {
+        RemoveUserCommand payload = new()
+        {
+            partitionGlobalId = partitionGlobalId,
+            userIds = [userId],
+            deleteCurrentUser = false,
+            isHostMode = false
+        };
+
+        HttpRequestPortal(HttpMethod.Delete, "/portal_/api/identity/User", null, payload);
+    }
+
     public void PutPmUserSetting(UpdatePmUserSettingPayload payload)
     {
         //HttpRequestPortal(HttpMethod.Put, $"/portal_/api/identity/Setting", null, payload);

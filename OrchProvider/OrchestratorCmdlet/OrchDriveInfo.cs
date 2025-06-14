@@ -588,6 +588,11 @@ public partial class OrchDriveInfo : PSDriveInfo
             cache.ClearCache();
         }
 
+        if (_orchAPISession is not null)
+        {
+            _orchAPISession.PmApiDeprecated = true;
+        }
+
         #region Orchestrator API cache
         _dicFolders = null;
         _dicFoldersForEnumFolders = null;

@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchUser", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.User))]
-public class RemoveUserCommand : OrchestratorPSCmdlet
+public class RemoveUserCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]

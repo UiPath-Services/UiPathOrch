@@ -105,6 +105,8 @@ public class UpdatePmUserCommand : OrchestratorPSCmdlet
                             {
                                 drive.OrchAPISession.PutPmUser(user.id!, dst);
                                 drive.PmUsers.ClearCache();
+                                drive._dicPmGroups = null;
+                                drive._dicPmGroups_Exception.ClearCache();
                             }
                             catch (Exception ex)
                             {
