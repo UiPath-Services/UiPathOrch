@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.ObjectModel;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using System.Text.Json;
@@ -174,45 +173,18 @@ public class NewProcessCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            //var packages = ParallelResults.ForEach(drivesFolders, df => df.drive.GetPackages(df.folder).FilterByWildcards(p => p?.Id, wpId));
-            //foreach (var result in packages)
-            //{
-            //    if (result.Result is null) continue;
-            //    var (drive, folder) = result.Source;
-
-            //    var versions = ParallelResults.ForEach(
-            //        //result.Result.Where(e => wp.IsMatch(e.Path)).OrderBy(e => e.Path), e => drive.GetPackageVersions(folder, e.Id))
-            //        result.Result.FilterByWildcards(p => p?.Id, wpId), e => drive.GetPackageVersions(folder, e.Id!));
-
-            //    foreach (var result2 in versions)
-            //    {
-            //        if (result2.Result is null) continue;
-
-            //        var entryPoints = ParallelResults.ForEach(
-            //            versions.Result.FilterByWildcards(v => v.ve), v => drive.GetPackageEntryPoints(folder.FeedId, v.Id!, v.Version!));
-
-            //    }
-
-
-                //drivesFolders, df => df.drive.GetPackages(df.folder).FilterByWildcards(p => p?.Id, wpId));
-
-                //foreach (var package in result.Result
-                //    .Where(e => wp.IsMatch(e.Path))
-                //    .OrderBy(e => e.Path))
-                //{
-//                    var versions = ParallelResults.ForEach(drivesFolders, df => df.drive.GetPackages(df.folder).FilterByWildcards(p => p?.Id, wpId));
-
-
-                    //    foreach (var version in versions.FilterByWildcards(v => v?.Version, wpVersion))
-
-
-
-            foreach (var (drive, folder) in drivesFolders)
+            var results = ParallelResults3.GroupBy(drivesFolders, df =>
             {
-                var feedId = drive.FolderFeedId.Get(folder);
-                var packages = drive.GetPackages(folder).FilterByWildcards(p => p?.Id, wpId);
+                var feedId = df.drive.FolderFeedId.Get(df.folder);
+                return df.drive.GetPackages(df.folder).FilterByWildcards(p => p?.Id, wpId);
+            });
 
-                foreach (var package in packages)
+            foreach (var result in results)
+            {
+                var (drive, folder) = result.Source;
+                var feedId = drive.FolderFeedId.Get(folder);
+
+                foreach (var package in result)
                 {
                     var versions = drive.GetPackageVersions(folder, package.Id!);
 
@@ -228,46 +200,6 @@ public class NewProcessCommand : OrchestratorPSCmdlet
                     }
                 }
             }
-
-
-
-            //var results = ParallelResults.ForEach(drivesFolders, df =>
-            //{
-            //    var packages = df.drive.GetPackages(df.folder)
-            //        .FilterByWildcards(p => p?.Id, wpId)
-            //        .FilterByWildcards(p => p?.Version, wpVersion);
-
-            //    var feedId = df.drive.FolderFeedId.Get(df.folder);
-
-            //    var r2 = ParallelResults.ForEach(packages, package =>
-            //    {
-            //        return df.drive.GetPackageEntryPoints(feedId, package.Id!, package.Version!);
-            //    });
-
-            //    List<IEnumerable<PackageEntryPoint>> r = [];
-            //    foreach (var r3 in r2)
-            //    {
-            //        if (r3.Result is null) continue;
-            //        r.Add(r3.Result);
-            //    }
-            //    return r;
-            //});
-
-            //foreach (var result in results)
-            //{
-            //    if (result.Result is null) continue;
-
-            //    var (drive, folder) = result.Source;
-
-            //    foreach (var e in result.Result
-            //        .SelectMany(e => e)
-            //        .Where(e => wp.IsMatch(e.Path))
-            //        .OrderBy(e => e.Path))
-            //    {
-            //        //string tiphelp = TipHelp(e);
-            //        yield return new CompletionResult(PathTools.EscapePSText(e.Path), e.Path, CompletionResultType.ParameterValue, e.Path);
-            //    }
-            //}
         }
     }
 
@@ -423,13 +355,16 @@ public class NewProcessCommand : OrchestratorPSCmdlet
 
                 #region EntryPoint を EntryPointid に変換
                 var feedId = drive.FolderFeedId.Get(folder);
-                release.AssignIdFromName(
+                if (!release.AssignIdFromName(
                     EntryPoint,
                     () => drive.GetPackageEntryPoints(feedId, id!, version.Version!),
                     e => e.Path!,
                     e => e.Id!,
                     (s, v) => s.EntryPointId = v,
-                    this, target, "EntryPoint");
+                    this, target, "EntryPoint"))
+                {
+                    continue;
+                }
                 #endregion
 
                 // EntryPoint が指定されていなければ、既定の MainEntryPoint を取り出す
