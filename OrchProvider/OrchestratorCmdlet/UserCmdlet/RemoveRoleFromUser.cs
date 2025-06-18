@@ -53,28 +53,24 @@ public class RemoveRoleFromUserCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.GetUsers());
+            var results = ParallelResults2.ForEachMany(drives, drive => drive.GetUsers());
 
-            foreach (var result in results)
+            foreach (var user in results
+                .Select(r => r.Item)
+                .FilterByWildcards(u => u?.UserName, wpUserName)
+                .FilterByWildcards(u => u?.FullName, wpFullName)
+                .OrderBy(u => u.UserName))
             {
-                if (result.Result is null) continue;
-
-                foreach (var e in result.Result
-                    .FilterByWildcards(u => u?.UserName, wpUserName)
-                    .FilterByWildcards(u => u?.FullName, wpFullName)
-                    .OrderBy(u => u.UserName))
+                if (user.UserRoles is not null)
                 {
-                    if (e.UserRoles is not null)
+                    foreach (var role in user.UserRoles
+                        .Where(r => wp.IsMatch(r.RoleName))
+                        .ExcludeByWildcards(r => r?.RoleName, wpRoles)
+                        .OrderBy(r => r.RoleName))
                     {
-                        foreach (var role in e.UserRoles
-                            .Where(r => wp.IsMatch(r.RoleName))
-                            .ExcludeByWildcards(r => r?.RoleName, wpRoles)
-                            .OrderBy(r => r.RoleName))
-                        {
-                            string tiphelp = TipHelp2(e);
-                            var ret = new CompletionResult(PathTools.EscapePSText(role.RoleName), role.RoleName, CompletionResultType.ParameterValue, tiphelp);
-                            yield return ret;
-                        }
+                        string tiphelp = TipHelp2(user);
+                        var ret = new CompletionResult(PathTools.EscapePSText(role.RoleName), role.RoleName, CompletionResultType.ParameterValue, tiphelp);
+                        yield return ret;
                     }
                 }
             }

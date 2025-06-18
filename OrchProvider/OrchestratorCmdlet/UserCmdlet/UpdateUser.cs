@@ -137,24 +137,18 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.Roles.Get());
+            var results = ParallelResults2.ForEachMany(drives, drive => drive.Roles.Get());
 
-            foreach (var result in results)
+            foreach (var role in results
+                .Select(r => r.Item)
+                .Where(r => r.Type != "Folder")
+                .Where(r => wp.IsMatch(r.Name))
+                .ExcludeByWildcards(r => r?.Name, wpRoles)
+                .OrderBy(r => r.Name))
             {
-                if (result.Result is null) continue;
-
-                var drive = result.Source;
-
-                foreach (var role in result.Result
-                    .Where(r => r.Type != "Folder")
-                    .Where(r => wp.IsMatch(r.Name))
-                    .ExcludeByWildcards(r => r?.Name, wpRoles)
-                    .OrderBy(r => r.Name))
-                {
-                    string tiphelp = TipHelp(role);
-                    var ret = new CompletionResult(PathTools.EscapePSText(role.Name), role.Name, CompletionResultType.ParameterValue, tiphelp);
-                    yield return ret;
-                }
+                string tiphelp = TipHelp(role);
+                var ret = new CompletionResult(PathTools.EscapePSText(role.Name), role.Name, CompletionResultType.ParameterValue, tiphelp);
+                yield return ret;
             }
         }
     }

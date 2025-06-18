@@ -37,22 +37,18 @@ public class EnableApiTriggerCommandBase<Enable> : OrchestratorPSCmdlet where En
             var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Parameters, wordToComplete);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.ApiTriggers.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.ApiTriggers.Get(df.folder));
 
-            foreach (var result in results)
+            foreach (var trigger in results
+                .Select(r => r.Item)
+                .Where(t => Enable.Value
+                    ? !t.Enabled.GetValueOrDefault()
+                    : t.Enabled.GetValueOrDefault())
+                .Where(t => wp.IsMatch(t.Name))
+                .ExcludeByWildcards(t => t?.Name, wpName))
             {
-                if (result.Result is null) continue;
-
-                foreach (var trigger in result.Result
-                    .Where(t => Enable.Value
-                        ? !t.Enabled.GetValueOrDefault()
-                        : t.Enabled.GetValueOrDefault())
-                    .Where(t => wp.IsMatch(t.Name))
-                    .ExcludeByWildcards(t => t?.Name, wpName))
-                {
-                    string tooltip = trigger.GetPSPath();
-                    yield return new CompletionResult(PathTools.EscapePSText(trigger.Name), trigger.Name, CompletionResultType.Text, tooltip);
-                }
+                string tooltip = trigger.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(trigger.Name), trigger.Name, CompletionResultType.Text, tooltip);
             }
         }
     }

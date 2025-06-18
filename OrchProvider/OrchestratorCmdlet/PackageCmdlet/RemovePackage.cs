@@ -54,21 +54,17 @@ public class RemovePackageCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetPackages(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.GetPackages(df.folder));
 
-            foreach (var result in results)
+            foreach (var package in results
+                .Select(r => r.Item)
+                .Where(m => wp.IsMatch(m.Id))
+                .ExcludeByWildcards(p => p?.Id, wpId)
+                .FilterByWildcards(p => p?.Version, wpVersion)
+                .OrderBy(m => m.Id))
             {
-                if (result.Result is null) continue;
-
-                foreach (var e in result.Result
-                    .Where(m => wp.IsMatch(m.Id))
-                    .ExcludeByWildcards(p => p?.Id, wpId)
-                    .FilterByWildcards(p => p?.Version, wpVersion)
-                    .OrderBy(m => m.Id))
-                {
-                    string tiphelp = TipHelp(e);
-                    yield return new CompletionResult(PathTools.EscapePSText(e.Id), e.Id, CompletionResultType.ParameterValue, tiphelp);
-                }
+                string tiphelp = TipHelp(package);
+                yield return new CompletionResult(PathTools.EscapePSText(package.Id), package.Id, CompletionResultType.ParameterValue, tiphelp);
             }
         }
     }
@@ -97,31 +93,22 @@ public class RemovePackageCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, driveFolder =>
+            var results = ParallelResults2.ForEachMany(drivesFolders, driveFolder =>
             {
                 var (drive, folder) = driveFolder;
                 var packages = drive.GetPackages(folder).FilterByWildcards(p => p?.Id, wpId);
-                return ParallelResults.ForEach(packages, package =>
+                return ParallelResults2.ForEachMany(packages, package =>
                     drive.GetPackageVersions(folder, package.Id!));
             });
 
-            foreach (var result in results)
+            foreach (var version in results
+                .Select(r => r.Item.Item)
+                .Where(v => wp.IsMatch(v.Version!))
+                .ExcludeByWildcards(v => v?.Version, wpVersion))
+                //.OrderBy(v => v.Version!, VersionComparer.Instance))
             {
-                if (result.Result is null) continue;
-
-                foreach (var package in result.Result)
-                {
-                    if (package.Result is null) continue;
-
-                    foreach (var version in package.Result
-                        .Where(v => wp.IsMatch(v.Version!))
-                        .ExcludeByWildcards(v => v?.Version, wpVersion))
-                        //.OrderBy(v => v.Version!, VersionComparer.Instance))
-                    {
-                        string tiphelp = TipHelp(version);
-                        yield return new CompletionResult(PathTools.EscapePSText(version.Version), version.Version, CompletionResultType.ParameterValue, tiphelp);
-                    }
-                }
+                string tiphelp = TipHelp(version);
+                yield return new CompletionResult(PathTools.EscapePSText(version.Version), version.Version, CompletionResultType.ParameterValue, tiphelp);
             }
         }
     }

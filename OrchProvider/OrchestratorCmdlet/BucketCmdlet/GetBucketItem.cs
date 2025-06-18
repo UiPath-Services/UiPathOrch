@@ -52,30 +52,21 @@ public class GetBucketItemCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df =>
+            var results = ParallelResults2.ForEachMany(drivesFolders, df =>
             {
                 var buckets = df.drive.Buckets.Get(df.folder).FilterByWildcards(e => e?.Name, wpName);
-                return ParallelResults.ForEach(buckets, bucket =>
+                return ParallelResults2.ForEachMany(buckets, bucket =>
                     df.drive.BucketFiles.Get(df.folder, bucket));
             });
 
-            foreach (var result in results)
+            foreach (var item in results
+                .Select(r => r.Item.Item)
+                .Where(e => wp.IsMatch(e.FullPath))
+                .ExcludeByWildcards(e => e?.FullPath, wpFullPath)
+                .OrderBy(e => e.FullPath))
             {
-                if (result.Result is null) continue;
-
-                foreach (var bucket in result.Result)
-                {
-                    if (bucket.Result is null) continue;
-
-                    foreach (var item in bucket.Result
-                        .Where(e => wp.IsMatch(e.FullPath))
-                        .ExcludeByWildcards(e => e?.FullPath, wpFullPath)
-                        .OrderBy(e => e.FullPath))
-                    {
-                        string tiphelp = TipHelp(item);
-                        yield return new CompletionResult(PathTools.EscapePSText(item.FullPath), item.FullPath, CompletionResultType.ParameterValue, tiphelp);
-                    }
-                }
+                string tiphelp = TipHelp(item);
+                yield return new CompletionResult(PathTools.EscapePSText(item.FullPath), item.FullPath, CompletionResultType.ParameterValue, tiphelp);
             }
         }
     }

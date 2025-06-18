@@ -39,20 +39,15 @@ public class SearchDirectoryCommand : OrchestratorPSCmdlet
             var drives = ResolveOrchDrives(fakeBoundParameters);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.SearchDirectory(name));
+            var results = ParallelResults2.ForEachMany(drives, drive => drive.SearchDirectory(name));
 
-            foreach (var result in results)
+            foreach (var result in results
+                .OrderBy(s => s.Item.identityName))
             {
-                if (result.Result is null) continue;
-
                 var drive = result.Source;
-
-                foreach (var s in result.Result
-                    .OrderBy(s => s.identityName))
-                {
-                    string tiphelp = drive.NameColonSeparator + s.identityName;
-                    yield return new CompletionResult(PathTools.EscapePSText(s.identityName), s.identityName, CompletionResultType.ParameterValue, tiphelp);
-                }
+                var obj = result.Item;
+                string tiphelp = drive.NameColonSeparator + obj.identityName;
+                yield return new CompletionResult(PathTools.EscapePSText(obj.identityName), obj.identityName, CompletionResultType.ParameterValue, tiphelp);
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.ObjectModel;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using System.Text.Json;
@@ -173,43 +174,100 @@ public class NewProcessCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df =>
+            //var packages = ParallelResults.ForEach(drivesFolders, df => df.drive.GetPackages(df.folder).FilterByWildcards(p => p?.Id, wpId));
+            //foreach (var result in packages)
+            //{
+            //    if (result.Result is null) continue;
+            //    var (drive, folder) = result.Source;
+
+            //    var versions = ParallelResults.ForEach(
+            //        //result.Result.Where(e => wp.IsMatch(e.Path)).OrderBy(e => e.Path), e => drive.GetPackageVersions(folder, e.Id))
+            //        result.Result.FilterByWildcards(p => p?.Id, wpId), e => drive.GetPackageVersions(folder, e.Id!));
+
+            //    foreach (var result2 in versions)
+            //    {
+            //        if (result2.Result is null) continue;
+
+            //        var entryPoints = ParallelResults.ForEach(
+            //            versions.Result.FilterByWildcards(v => v.ve), v => drive.GetPackageEntryPoints(folder.FeedId, v.Id!, v.Version!));
+
+            //    }
+
+
+                //drivesFolders, df => df.drive.GetPackages(df.folder).FilterByWildcards(p => p?.Id, wpId));
+
+                //foreach (var package in result.Result
+                //    .Where(e => wp.IsMatch(e.Path))
+                //    .OrderBy(e => e.Path))
+                //{
+//                    var versions = ParallelResults.ForEach(drivesFolders, df => df.drive.GetPackages(df.folder).FilterByWildcards(p => p?.Id, wpId));
+
+
+                    //    foreach (var version in versions.FilterByWildcards(v => v?.Version, wpVersion))
+
+
+
+            foreach (var (drive, folder) in drivesFolders)
             {
-                var packages = df.drive.GetPackages(df.folder)
-                    .FilterByWildcards(p => p?.Id, wpId)
-                    .FilterByWildcards(p => p?.Version, wpVersion);
+                var feedId = drive.FolderFeedId.Get(folder);
+                var packages = drive.GetPackages(folder).FilterByWildcards(p => p?.Id, wpId);
 
-                var feedId = df.drive.FolderFeedId.Get(df.folder);
-
-                var r2 = ParallelResults.ForEach(packages, package =>
+                foreach (var package in packages)
                 {
-                    return df.drive.GetPackageEntryPoints(feedId, package.Id!, package.Version!);
-                });
+                    var versions = drive.GetPackageVersions(folder, package.Id!);
 
-                List<IEnumerable<PackageEntryPoint>> r = [];
-                foreach (var r3 in r2)
-                {
-                    if (r3.Result is null) continue;
-                    r.Add(r3.Result);
-                }
-                return r;
-            });
-
-            foreach (var result in results)
-            {
-                if (result.Result is null) continue;
-
-                var (drive, folder) = result.Source;
-
-                foreach (var e in result.Result
-                    .SelectMany(e => e)
-                    .Where(e => wp.IsMatch(e.Path))
-                    .OrderBy(e => e.Path))
-                {
-                    //string tiphelp = TipHelp(e);
-                    yield return new CompletionResult(PathTools.EscapePSText(e.Path), e.Path, CompletionResultType.ParameterValue, e.Path);
+                    foreach (var version in versions.FilterByWildcards(v => v?.Version, wpVersion))
+                    {
+                        var entryPoints = drive.GetPackageEntryPoints(feedId, version.Id!, version.Version!);
+                        foreach (var entryPoint in entryPoints
+                            .Where(e => wp.IsMatch(e.Path))
+                            .OrderBy(e => e.Path))
+                        {
+                            yield return new CompletionResult(PathTools.EscapePSText(entryPoint.Path), entryPoint.Path, CompletionResultType.ParameterValue, version.GetPSPath());
+                        }
+                    }
                 }
             }
+
+
+
+            //var results = ParallelResults.ForEach(drivesFolders, df =>
+            //{
+            //    var packages = df.drive.GetPackages(df.folder)
+            //        .FilterByWildcards(p => p?.Id, wpId)
+            //        .FilterByWildcards(p => p?.Version, wpVersion);
+
+            //    var feedId = df.drive.FolderFeedId.Get(df.folder);
+
+            //    var r2 = ParallelResults.ForEach(packages, package =>
+            //    {
+            //        return df.drive.GetPackageEntryPoints(feedId, package.Id!, package.Version!);
+            //    });
+
+            //    List<IEnumerable<PackageEntryPoint>> r = [];
+            //    foreach (var r3 in r2)
+            //    {
+            //        if (r3.Result is null) continue;
+            //        r.Add(r3.Result);
+            //    }
+            //    return r;
+            //});
+
+            //foreach (var result in results)
+            //{
+            //    if (result.Result is null) continue;
+
+            //    var (drive, folder) = result.Source;
+
+            //    foreach (var e in result.Result
+            //        .SelectMany(e => e)
+            //        .Where(e => wp.IsMatch(e.Path))
+            //        .OrderBy(e => e.Path))
+            //    {
+            //        //string tiphelp = TipHelp(e);
+            //        yield return new CompletionResult(PathTools.EscapePSText(e.Path), e.Path, CompletionResultType.ParameterValue, e.Path);
+            //    }
+            //}
         }
     }
 
@@ -329,14 +387,18 @@ public class NewProcessCommand : OrchestratorPSCmdlet
                     continue;
                 }
 
-                // GetPackageVersions は Version でソートした結果を返してくるので
-                // Last() が最新バージョンとなる
-                var latest = versions.Last();
+                if (versions.Count() > 1)
+                {
+                    WriteError(new ErrorRecord(new OrchException(target, $"Resolved to multiple versions with '{Version}'"), "NewProcessError", ErrorCategory.InvalidOperation, folder));
+                    continue;
+                }
+
+                var version = versions.Last();
 
                 Release release = new()
                 {
                     ProcessKey = id,
-                    ProcessVersion = latest.Version,
+                    ProcessVersion = version.Version,
                     Name = WildcardPattern.Unescape(name),
                 };
 
@@ -363,7 +425,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
                 var feedId = drive.FolderFeedId.Get(folder);
                 release.AssignIdFromName(
                     EntryPoint,
-                    () => drive.GetPackageEntryPoints(feedId, id!, latest.Version!),
+                    () => drive.GetPackageEntryPoints(feedId, id!, version.Version!),
                     e => e.Path!,
                     e => e.Id!,
                     (s, v) => s.EntryPointId = v,
@@ -375,7 +437,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
                 {
                     try
                     {
-                        var entryPoint = drive.OrchAPISession.GetPackageMainEntryPoint(feedId, id!, latest.Version!);
+                        var entryPoint = drive.OrchAPISession.GetPackageMainEntryPoint(feedId, id!, version.Version!);
                         release.EntryPointId = entryPoint?.Id;
                     }
                     catch (Exception ex)
@@ -446,7 +508,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
                     }
                 }
 
-                if (ShouldProcess(target + $":{latest.Version}", "New Process"))
+                if (ShouldProcess(target + $":{version.Version}", "New Process"))
                 {
                     try
                     {

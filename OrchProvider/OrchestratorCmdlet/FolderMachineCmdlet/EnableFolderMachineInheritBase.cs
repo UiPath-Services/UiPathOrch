@@ -32,23 +32,19 @@ public class EnableFolderMachineInheritCommandBase<EnableInherit> : Orchestrator
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
 
-            foreach (var result in results)
+            foreach (var machineFolder in results
+                .Select(r => r.Item)
+                .Where(m => wp.IsMatch(m.Name))
+                .Where(m => m.IsAssignedToFolder.GetValueOrDefault())
+                .Where(m => EnableInherit.Value
+                    ? !m.PropagateToSubFolders.GetValueOrDefault()
+                    : m.PropagateToSubFolders.GetValueOrDefault())
+                .ExcludeByWildcards(m => m?.Name, wpName)
+                .OrderBy(m => m.Name))
             {
-                if (result.Result is null) continue;
-
-                foreach (var e in result.Result
-                    .Where(m => wp.IsMatch(m.Name))
-                    .Where(m => m.IsAssignedToFolder.GetValueOrDefault())
-                    .Where(m => EnableInherit.Value
-                        ? !m.PropagateToSubFolders.GetValueOrDefault()
-                        : m.PropagateToSubFolders.GetValueOrDefault())
-                    .ExcludeByWildcards(m => m?.Name, wpName)
-                    .OrderBy(m => m.Name))
-                {
-                    yield return new CompletionResult(PathTools.EscapePSText(e.Name), e.Name, CompletionResultType.ParameterValue, TipHelp(e));
-                }
+                yield return new CompletionResult(PathTools.EscapePSText(machineFolder.Name), machineFolder.Name, CompletionResultType.ParameterValue, TipHelp(machineFolder));
             }
         }
     }

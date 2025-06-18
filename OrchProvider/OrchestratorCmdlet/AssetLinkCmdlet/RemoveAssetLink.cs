@@ -49,23 +49,19 @@ class RemoveAssetLinkCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Assets.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.Assets.Get(df.folder));
 
             // TODO: link も取得する。link を複数もつアセットだけを候補に表示したい。
 
-            foreach (var result in results)
+            foreach (var asset in results
+                .Select(r => r.Item)
+                .Where(a => wp.IsMatch(a.Name))
+                .Where(a => (a.UserValues is null || !a.UserValues.Any()) && a.ValueScope != "PerRobot")
+                .ExcludeByWildcards(a => a?.Name, wpName)
+                .OrderBy(a => a.Name))
             {
-                if (result.Result is null) continue;
-
-                foreach (var asset in result.Result
-                    .Where(a => wp.IsMatch(a.Name))
-                    .Where(a => (a.UserValues is null || !a.UserValues.Any()) && a.ValueScope != "PerRobot")
-                    .ExcludeByWildcards(a => a?.Name, wpName)
-                    .OrderBy(a => a.Name))
-                {
-                    string tooltip = System.IO.Path.Combine(asset.Path!, asset.Name!);
-                    yield return new CompletionResult(PathTools.EscapePSText(asset.Name), asset.Name, CompletionResultType.Text, tooltip);
-                }
+                string tooltip = System.IO.Path.Combine(asset.Path!, asset.Name!);
+                yield return new CompletionResult(PathTools.EscapePSText(asset.Name), asset.Name, CompletionResultType.Text, tooltip);
             }
         }
     }

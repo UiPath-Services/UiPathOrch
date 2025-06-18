@@ -43,20 +43,16 @@ public class GetDuClassifierCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesProjects, dp => dp.drive.GetDuClassifiers(dp.project));
+            var results = ParallelResults2.ForEachMany(drivesProjects, dp => dp.drive.GetDuClassifiers(dp.project));
 
-            foreach (var result in results)
+            foreach (var classifier in results
+                .Select(r => r.Item)
+                .Where(e => wp.IsMatch(e?.name))
+                .ExcludeByWildcards(e => e?.name!, wpName)
+                .OrderBy(e => e?.name))
             {
-                if (result.Result is null) continue;
-
-                foreach (var classifier in result.Result
-                    .Where(e => wp.IsMatch(e?.name))
-                    .ExcludeByWildcards(e => e?.name!, wpName)
-                    .OrderBy(e => e?.name))
-                {
-                    string tooltip = classifier.GetPSPath();
-                    yield return new CompletionResult(PathTools.EscapePSText(classifier.name), classifier.name, CompletionResultType.Text, tooltip);
-                }
+                string tooltip = classifier.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(classifier.name), classifier.name, CompletionResultType.Text, tooltip);
             }
         }
     }

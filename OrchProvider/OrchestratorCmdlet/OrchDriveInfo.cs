@@ -2822,12 +2822,11 @@ public partial class OrchDriveInfo : PSDriveInfo
         CredentialStores = new(this, () =>
             {
                 var stores = OrchAPISession.GetCredentialStores();
-                var results = ParallelResults.ForEach(stores, store => OrchAPISession.GetCredentialStore(store.Id!.Value));
+                var results = ParallelResults2.ForEach(stores, store => OrchAPISession.GetCredentialStore(store.Id!.Value));
                 List<CredentialStore> ret = [];
                 foreach (var result in results)
                 {
-                    if (result.Result is null) continue;
-                    ret.Add(result.Result);
+                    if (result.Result is not null) ret.Add(result.Result);
                 }
                 return ret;
             },

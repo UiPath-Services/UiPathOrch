@@ -39,20 +39,16 @@ class GetTmRoleCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.GetTmProjects());
+            var results = ParallelResults2.ForEachMany(drives, drive => drive.GetTmProjects());
 
-            foreach (var result in results)
+            foreach (var project in results
+                .Select(r => r.Item)
+                .Where(e => wp.IsMatch(e?.name))
+                .ExcludeByWildcards(e => e?.name!, wpname)
+                .OrderBy(e => e?.name))
             {
-                if (result.Result is null) continue;
-
-                foreach (var e in result.Result
-                    .Where(e => wp.IsMatch(e?.name))
-                    .ExcludeByWildcards(e => e?.name!, wpname)
-                    .OrderBy(e => e?.name))
-                {
-                    string tooltip = e.GetPSPath();
-                    yield return new CompletionResult(PathTools.EscapePSText(e.name), e.name, CompletionResultType.Text, tooltip);
-                }
+                string tooltip = project.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(project.name), project.name, CompletionResultType.Text, tooltip);
             }
         }
     }

@@ -160,26 +160,22 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Reviewers.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.Reviewers.Get(df.folder));
 
-            foreach (var result in results)
+            foreach (var result in results
+                .Where(e => wp.IsMatch(e?.Item.UserName))
+                .ExcludeByWildcards(e => e?.Item.UserName, wpUserName)
+                .OrderBy(e => e?.Item.UserName))
             {
-                if (result.Result is null) continue;
-
                 var (drive, folder) = result.Source;
+                var user = result.Item;
 
-                foreach (var e in result.Result
-                    .Where(e => wp.IsMatch(e?.UserName))
-                    .ExcludeByWildcards(e => e?.UserName, wpUserName)
-                    .OrderBy(e => e?.UserName))
+                string tiphelp = System.IO.Path.Combine(drive.NameColonSeparator, user.UserName ?? "");
+                if (!string.IsNullOrEmpty(user.FullName))
                 {
-                    string tiphelp = System.IO.Path.Combine(drive.NameColonSeparator, e.UserName ?? "");
-                    if (!string.IsNullOrEmpty(e.FullName))
-                    {
-                        tiphelp += $" ({e.FullName})";
-                    }
-                    yield return new CompletionResult(PathTools.EscapePSText(e?.UserName), e?.UserName, CompletionResultType.Text, tiphelp);
+                    tiphelp += $" ({user.FullName})";
                 }
+                yield return new CompletionResult(PathTools.EscapePSText(user?.UserName), user?.UserName, CompletionResultType.Text, tiphelp);
             }
         }
     }

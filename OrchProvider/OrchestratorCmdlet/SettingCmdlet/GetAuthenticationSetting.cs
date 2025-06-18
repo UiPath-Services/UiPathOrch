@@ -38,20 +38,16 @@ public class GetAuthenticationSettingCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.AuthenticationSettings.Get());
+            var results = ParallelResults2.ForEachMany(drives, drive => drive.AuthenticationSettings.Get());
 
-            foreach (var result in results)
+            foreach (var item in results
+                .Select(r => r.Item)
+                .Where(b => wp.IsMatch(b.Key))
+                .ExcludeByWildcards(b => b?.Key, wpKey)
+                .OrderBy(b => b.Key))
             {
-                if (result.Result is null) continue;
-
-                foreach (var item in result.Result
-                    .Where(b => wp.IsMatch(b.Key))
-                    .ExcludeByWildcards(b => b?.Key, wpKey)
-                    .OrderBy(b => b.Key))
-                {
-                    string tooltip = item.GetPSPath();
-                    yield return new CompletionResult(PathTools.EscapePSText(item.Key), item.Key, CompletionResultType.Text, tooltip);
-                }
+                string tooltip = item.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(item.Key), item.Key, CompletionResultType.Text, tooltip);
             }
         }
     }

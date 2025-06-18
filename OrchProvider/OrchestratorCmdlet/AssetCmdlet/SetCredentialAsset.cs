@@ -100,20 +100,16 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Assets.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.Assets.Get(df.folder));
 
-            foreach (var result in results)
+            foreach (var asset in results
+                .Select(r => r.Item)
+                .Where(a => a.ValueType == "Credential")
+                .Where(a => wp.IsMatch(a.Name))
+                .ExcludeByWildcards(a => a?.Name, wpName))
             {
-                if (result.Result is null) continue;
-
-                foreach (var asset in result.Result
-                    .Where(a => a.ValueType == "Credential")
-                    .Where(a => wp.IsMatch(a.Name))
-                    .ExcludeByWildcards(a => a?.Name, wpName))
-                {
-                    string tiphelp = TipHelp(asset);
-                    yield return new CompletionResult(PathTools.EscapePSText(asset.Name), asset.Name, CompletionResultType.Text, tiphelp);
-                }
+                string tiphelp = TipHelp(asset);
+                yield return new CompletionResult(PathTools.EscapePSText(asset.Name), asset.Name, CompletionResultType.Text, tiphelp);
             }
 
             var newAssetName = "New asset name here";
@@ -143,21 +139,17 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderUsersWithInherited.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderUsersWithInherited.Get(df.folder));
 
-            foreach (var result in results)
+            foreach (var userRoles in results
+                .Select(r => r.Item)
+                .Where(u => u.UserEntity!.Type != "DirectoryGroup")
+                .Where(ur => wp.IsMatch(ur.UserEntity?.UserName))
+                .ExcludeByWildcards(ur => ur?.UserEntity?.UserName, wpUserName)
+                .OrderBy(ur => ur.UserEntity!.UserName))
             {
-                if (result.Result is null) continue;
-
-                foreach (var userRoles in result.Result
-                    .Where(u => u.UserEntity!.Type != "DirectoryGroup")
-                    .Where(ur => wp.IsMatch(ur.UserEntity?.UserName))
-                    .ExcludeByWildcards(ur => ur?.UserEntity?.UserName, wpUserName)
-                    .OrderBy(ur => ur.UserEntity!.UserName))
-                {
-                    string tiphelp = TipHelp(userRoles);
-                    yield return new CompletionResult(PathTools.EscapePSText(userRoles.UserEntity!.UserName), userRoles.UserEntity!.UserName, CompletionResultType.ParameterValue, tiphelp);
-                }
+                string tiphelp = TipHelp(userRoles);
+                yield return new CompletionResult(PathTools.EscapePSText(userRoles.UserEntity!.UserName), userRoles.UserEntity!.UserName, CompletionResultType.ParameterValue, tiphelp);
             }
         }
     }
@@ -181,20 +173,16 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
 
-            foreach (var result in results)
+            foreach (var machine in results
+                .Select(r => r.Item)
+                .Where(m => wp.IsMatch(m.Name))
+                .ExcludeByWildcards(m => m?.Name, wpMachineName)
+                .OrderBy(m => m.Name))
             {
-                if (result.Result is null) continue;
-
-                foreach (var machine in result.Result
-                    .Where(m => wp.IsMatch(m.Name))
-                    .ExcludeByWildcards(m => m?.Name, wpMachineName)
-                    .OrderBy(m => m.Name))
-                {
-                    string tiphelp = TipHelp(machine);
-                    yield return new CompletionResult(PathTools.EscapePSText(machine.Name), machine.Name, CompletionResultType.ParameterValue, tiphelp);
-                }
+                string tiphelp = TipHelp(machine);
+                yield return new CompletionResult(PathTools.EscapePSText(machine.Name), machine.Name, CompletionResultType.ParameterValue, tiphelp);
             }
         }
     }
@@ -242,23 +230,19 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
 
             //var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Assets.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.Assets.Get(df.folder));
 
             bool bEmpty = true;
-            foreach (var result in results)
+            foreach (var asset in results
+                .Select(r => r.Item)
+                .Where(a => a.ValueType == "Credential")
+                .FilterByWildcards(a => a?.Name, wpName))
             {
-                if (result.Result is null) continue;
-
-                foreach (var asset in result.Result
-                    .Where(a => a.ValueType == "Credential")
-                    .FilterByWildcards(a => a?.Name, wpName))
+                if (!string.IsNullOrEmpty(asset.Description))
                 {
-                    if (!string.IsNullOrEmpty(asset.Description))
-                    {
-                        bEmpty = false;
-                        string tooltip = $" (current description of '{asset.Name}')";
-                        yield return new CompletionResult(PathTools.EscapeNonWildcardText(asset.Description), asset.Description, CompletionResultType.Text, tooltip);
-                    }
+                    bEmpty = false;
+                    string tooltip = $" (current description of '{asset.Name}')";
+                    yield return new CompletionResult(PathTools.EscapeNonWildcardText(asset.Description), asset.Description, CompletionResultType.Text, tooltip);
                 }
             }
 

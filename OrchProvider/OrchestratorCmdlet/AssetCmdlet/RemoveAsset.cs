@@ -49,21 +49,17 @@ public class RemoveAssetCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Assets.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.Assets.Get(df.folder));
 
-            foreach (var result in results)
+            foreach (var asset in results
+                .Select(r => r.Item)
+                .FilterByWildcards(a => a?.Name, wpName)
+                .Where(a => wp.IsMatch(a.Name))
+                .ExcludeByWildcards(a => a?.ValueType, wpValueType)
+                .OrderBy(a => a.Name))
             {
-                if (result.Result is null) continue;
-
-                foreach (var asset in result.Result
-                    .FilterByWildcards(a => a?.Name, wpName)
-                    .Where(a => wp.IsMatch(a.Name))
-                    .ExcludeByWildcards(a => a?.ValueType, wpValueType)
-                    .OrderBy(a => a.Name))
-                {
-                    string tiphelp = TipHelp(asset);
-                    yield return new CompletionResult(PathTools.EscapePSText(asset.ValueType), asset.ValueType, CompletionResultType.Text, tiphelp);
-                }
+                string tiphelp = TipHelp(asset);
+                yield return new CompletionResult(PathTools.EscapePSText(asset.ValueType), asset.ValueType, CompletionResultType.Text, tiphelp);
             }
         }
     }

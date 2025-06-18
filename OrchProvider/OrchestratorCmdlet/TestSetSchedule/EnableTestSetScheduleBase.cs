@@ -45,23 +45,19 @@ public class EnableTestSetScheduleCommandBase<Enable> : OrchestratorPSCmdlet whe
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.TestSetSchedules.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.TestSetSchedules.Get(df.folder));
 
-            foreach (var result in results)
+            foreach (var entity in results
+                .Select(r => r.Item)
+                .Where(t => Enable.Value
+                    ? !t.Enabled.GetValueOrDefault()
+                    : t.Enabled.GetValueOrDefault())
+                .Where(e => wp.IsMatch(e.Name!))
+                .ExcludeByWildcards(e => e?.Name, wpName)
+                .OrderBy(e => e.Name))
             {
-                if (result.Result is null) continue;
-
-                foreach (var entity in result.Result
-                    .Where(t => Enable.Value
-                        ? !t.Enabled.GetValueOrDefault()
-                        : t.Enabled.GetValueOrDefault())
-                    .Where(e => wp.IsMatch(e.Name!))
-                    .ExcludeByWildcards(e => e?.Name, wpName)
-                    .OrderBy(e => e.Name))
-                {
-                    string tiphelp = TipHelp(entity);
-                    yield return new CompletionResult(PathTools.EscapePSText(entity.Name), entity.Name, CompletionResultType.ParameterValue, tiphelp);
-                }
+                string tiphelp = TipHelp(entity);
+                yield return new CompletionResult(PathTools.EscapePSText(entity.Name), entity.Name, CompletionResultType.ParameterValue, tiphelp);
             }
         }
     }

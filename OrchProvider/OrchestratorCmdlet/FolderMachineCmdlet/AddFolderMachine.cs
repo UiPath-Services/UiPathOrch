@@ -45,20 +45,16 @@ public class AddFolderMachineCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderMachinesAssignable.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderMachinesAssignable.Get(df.folder));
 
-            foreach (var result in results)
+            foreach (var entity in results
+                .Select(r => r.Item)
+                .Where(b => wp.IsMatch(b.Name))
+                .ExcludeByWildcards(b => b?.Name, wpName)
+                .OrderBy(b => b.Name))
             {
-                if (result.Result is null) continue;
-
-                foreach (var entity in result.Result
-                    .Where(b => wp.IsMatch(b.Name))
-                    .ExcludeByWildcards(b => b?.Name, wpName)
-                    .OrderBy(b => b.Name))
-                {
-                    string tooltip = entity.GetPSPath();
-                    yield return new CompletionResult(PathTools.EscapePSText(entity.Name), entity.Name, CompletionResultType.Text, tooltip);
-                }
+                string tooltip = entity.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(entity.Name), entity.Name, CompletionResultType.Text, tooltip);
             }
         }
     }

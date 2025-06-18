@@ -64,23 +64,19 @@ public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
             // このフォルダに追加済みのユーザーのみ表示する
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
-            foreach (var result in results)
+            foreach (var userRoles in results
+                .Select(r => r.Item)
+                .Where(u => wp.IsMatch(u.UserEntity!.UserName!))
+                .FilterByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
+                .ExcludeByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
+                .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
+                .OrderBy(u => u.UserEntity!.UserName))
             {
-                if (result.Result is null) continue;
-
-                foreach (var e in result.Result
-                    .Where(u => wp.IsMatch(u.UserEntity!.UserName!))
-                    .FilterByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
-                    .ExcludeByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
-                    .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
-                    .OrderBy(u => u.UserEntity!.UserName))
-                {
-                    string tiphelp = TipHelp(e);
-                    var ret = new CompletionResult(PathTools.EscapePSText(e.UserEntity!.UserName), e.UserEntity.UserName, CompletionResultType.ParameterValue, tiphelp);
-                    yield return ret;
-                }
+                string tiphelp = TipHelp(userRoles);
+                var ret = new CompletionResult(PathTools.EscapePSText(userRoles.UserEntity!.UserName), userRoles.UserEntity.UserName, CompletionResultType.ParameterValue, tiphelp);
+                yield return ret;
             }
         }
     }
@@ -107,23 +103,19 @@ public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
             // このフォルダに追加済みのユーザーのみ表示する
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
-            foreach (var result in results)
+            foreach (var userRoles in results
+                .Select(r => r.Item)
+                .Where(u => wp.IsMatch(u.UserEntity!.FullName!))
+                .ExcludeByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
+                .FilterByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
+                .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
+                .OrderBy(u => u.UserEntity!.FullName))
             {
-                if (result.Result is null) continue;
-
-                foreach (var e in result.Result
-                    .Where(u => wp.IsMatch(u.UserEntity!.FullName!))
-                    .ExcludeByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
-                    .FilterByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
-                    .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
-                    .OrderBy(u => u.UserEntity!.FullName))
-                {
-                    string tiphelp = TipHelp(e);
-                    var ret = new CompletionResult(PathTools.EscapePSText(e.UserEntity!.FullName), e.UserEntity.FullName, CompletionResultType.ParameterValue, tiphelp);
-                    yield return ret;
-                }
+                string tiphelp = TipHelp(userRoles);
+                var ret = new CompletionResult(PathTools.EscapePSText(userRoles.UserEntity!.FullName), userRoles.UserEntity.FullName, CompletionResultType.ParameterValue, tiphelp);
+                yield return ret;
             }
         }
     }
@@ -150,9 +142,9 @@ public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            ParallelResults.ForEach(drives, drive => drive.Roles.Get());
+            ParallelResults2.ForEachMany(drives, drive => drive.Roles.Get());
 
-            ParallelResults.ForEach(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
+            ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
             foreach (var (drive, folder) in drivesFolders)
             {
