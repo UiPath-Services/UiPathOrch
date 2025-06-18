@@ -74,16 +74,18 @@ public class StartJobCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.RuntimesForFolder.Get(df.folder));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.RuntimesForFolder.Get(df.folder));
 
-            foreach (var machineRuntime in results
-                .Select(r => r.Item)
-                .Where(mr => wp.IsMatch(mr.Type))
-                .Where(mr => mr.Total > 0)
-                .OrderBy(mr => mr.Type))
+            foreach (var result in results)
             {
-                string tiphelp = $"{machineRuntime.Available} Runtimes Available, {machineRuntime.Connected} Connected";
-                yield return new CompletionResult(machineRuntime.Type, machineRuntime.Type, CompletionResultType.ParameterValue, tiphelp);
+                foreach (var machineRuntime in result
+                    .Where(mr => wp.IsMatch(mr.Type))
+                    .Where(mr => mr.Total > 0)
+                    .OrderBy(mr => mr.Type))
+                {
+                    string tiphelp = $"{machineRuntime.Available} Runtimes Available, {machineRuntime.Connected} Connected";
+                    yield return new CompletionResult(machineRuntime.Type, machineRuntime.Type, CompletionResultType.ParameterValue, tiphelp);
+                }
             }
         }
     }
@@ -114,30 +116,33 @@ public class StartJobCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.GetReleases(df.folder));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder));
 
-            foreach (var proc in results
-                .Select(r => r.Item)
-                .Where(p => wp.IsMatch(p.Name))
-                .FilterByWildcards(r => r?.Name, wpName)
-                .OrderBy(proc => proc.Name))
+            foreach (var result in results)
             {
-                if (string.IsNullOrEmpty(proc?.Arguments?.Input)) continue;
+                foreach (var proc in result
+                    .Where(p => wp.IsMatch(p.Name))
+                    .FilterByWildcards(r => r?.Name, wpName)
+                    .OrderBy(proc => proc.Name))
+                {
+                    if (string.IsNullOrEmpty(proc?.Arguments?.Input)) continue;
 
-                var args = JsonSerializer.Deserialize<InputArgument[]>(proc.Arguments.Input);
-                if (args is null) continue;
-                string json = "{" + string.Join(",", args.Select(a => {
-                    string value;
-                    // 型オブジェクトに変換して正確な比較を行う
-                    var type = Type.GetType(a.type ?? "string");
-                    if (type == typeof(string)) { value = "\"\""; }
-                    else if (type == typeof(bool)) { value = "false"; }
-                    else if (type == typeof(DateTime)) { value = $"\"{DateTime.Today:yyyy-MM-dd HH:mm:ss}\""; }
-                    else if (IsNumericType(a.type)) { value = "0"; }
-                    else { value = "\"\""; }
-                    return $"\"{a.name}\":{value}";
-                })) + "}";
-                yield return new CompletionResult(PathTools.EscapePSText(json), json, CompletionResultType.ParameterValue, proc.GetPSPath());
+                    var args = JsonSerializer.Deserialize<InputArgument[]>(proc.Arguments.Input);
+                    if (args is null) continue;
+                    string json = "{" + string.Join(",", args.Select(a =>
+                    {
+                        string value;
+                        // 型オブジェクトに変換して正確な比較を行う
+                        var type = Type.GetType(a.type ?? "string");
+                        if (type == typeof(string)) { value = "\"\""; }
+                        else if (type == typeof(bool)) { value = "false"; }
+                        else if (type == typeof(DateTime)) { value = $"\"{DateTime.Today:yyyy-MM-dd HH:mm:ss}\""; }
+                        else if (IsNumericType(a.type)) { value = "0"; }
+                        else { value = "\"\""; }
+                        return $"\"{a.name}\":{value}";
+                    })) + "}";
+                    yield return new CompletionResult(PathTools.EscapePSText(json), json, CompletionResultType.ParameterValue, proc.GetPSPath());
+                }
             }
         }
     }

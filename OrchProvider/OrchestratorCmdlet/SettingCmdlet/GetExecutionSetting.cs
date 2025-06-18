@@ -77,7 +77,7 @@ public class GetExecutionSettingCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drives, drive =>
+            var results = ParallelResults3.GroupBy(drives, drive =>
             {
                 List<string> existingDisplayNames = [];
 
@@ -89,13 +89,15 @@ public class GetExecutionSettingCommand : OrchestratorPSCmdlet
                 return existingDisplayNames;
             });
 
-            foreach (var item in results
-                .Select(r => r.Item)
-                .Where(e => wp.IsMatch(e))
-                .ExcludeByWildcards(e => e, wpDisplayName)
-                .OrderBy(e => e))
+            foreach (var result in results)
             {
-                yield return new CompletionResult(PathTools.EscapePSText(item), item, CompletionResultType.Text, item);
+                foreach (var item in result
+                    .Where(e => wp.IsMatch(e))
+                    .ExcludeByWildcards(e => e, wpDisplayName)
+                    .OrderBy(e => e))
+                {
+                    yield return new CompletionResult(PathTools.EscapePSText(item), item, CompletionResultType.Text, item);
+                }
             }
         }
     }

@@ -110,20 +110,22 @@ public class UpdateQueueCommand : OrchestratorPSCmdlet
             // パラメータで選択済みの Id は、候補から除外する
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
-            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.Queues.Get(df.folder));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Queues.Get(df.folder));
 
-            foreach (var release in results
-                .Select(r => r.Item)
-                .FilterByWildcards(p => p?.Name, wpName)
-                .OrderBy(p => p.Name))
+            foreach (var result in results)
             {
-                if (release?.Tags is null) continue;
+                foreach (var release in result
+                    .FilterByWildcards(p => p?.Name, wpName)
+                    .OrderBy(p => p.Name))
+                {
+                    if (release?.Tags is null) continue;
 
-                var values = release.Tags.ConvertToString();
-                if (string.IsNullOrEmpty(values)) continue;
+                    var values = release.Tags.ConvertToString();
+                    if (string.IsNullOrEmpty(values)) continue;
 
-                string tiphelp = TipHelp(release);
-                yield return new CompletionResult(PathTools.EscapePSText(values), values, CompletionResultType.Text, tiphelp);
+                    string tiphelp = TipHelp(release);
+                    yield return new CompletionResult(PathTools.EscapePSText(values), values, CompletionResultType.Text, tiphelp);
+                }
             }
         }
     }

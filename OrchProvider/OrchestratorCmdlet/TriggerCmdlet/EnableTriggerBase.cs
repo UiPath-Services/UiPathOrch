@@ -38,19 +38,21 @@ public class EnableTriggerCommandBase<Enable> : OrchestratorPSCmdlet where Enabl
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.GetTriggers(df.folder));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetTriggers(df.folder));
 
-            foreach (var trigger in results
-                .Select(r => r.Item)
-                .Where(t => Enable.Value
-                    ? !t.Enabled.GetValueOrDefault()
-                    : t.Enabled.GetValueOrDefault())
-                .Where(t => wp.IsMatch(t.Name))
-                .ExcludeByWildcards(t => t?.Name, wpName)
-                .OrderBy(t => t.Name))
+            foreach (var result in results)
             {
-                string tiphelp = TipHelp(trigger);
-                yield return new CompletionResult(PathTools.EscapePSText(trigger.Name), trigger.Name, CompletionResultType.Text, tiphelp);
+                foreach (var trigger in result
+                    .Where(t => Enable.Value
+                        ? !t.Enabled.GetValueOrDefault()
+                        : t.Enabled.GetValueOrDefault())
+                    .Where(t => wp.IsMatch(t.Name))
+                    .ExcludeByWildcards(t => t?.Name, wpName)
+                    .OrderBy(t => t.Name))
+                {
+                    string tiphelp = TipHelp(trigger);
+                    yield return new CompletionResult(PathTools.EscapePSText(trigger.Name), trigger.Name, CompletionResultType.Text, tiphelp);
+                }
             }
         }
     }

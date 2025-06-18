@@ -749,16 +749,18 @@ internal class ActionCatalogNameCompleter<TPositional> : OrchArgumentCompleter w
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.ActionCatalogs.Get(df.folder));
+        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.ActionCatalogs.Get(df.folder));
 
-        foreach (var result in results
-            .Where(b => wp.IsMatch(b.Item.Name))
-            .ExcludeByWildcards(e => e?.Item.Name, wpName)
-            .OrderBy(e => e.Item.Name))
+        foreach (var result in results)
         {
-            var catalog = result.Item;
-            string tooltip = catalog.GetPSPath();
-            yield return new CompletionResult(PathTools.EscapePSText(catalog.Name), catalog.Name, CompletionResultType.Text, tooltip);
+            foreach (var catalog in result
+                .Where(b => wp.IsMatch(b.Name))
+                .ExcludeByWildcards(e => e?.Name, wpName)
+                .OrderBy(e => e.Name))
+            {
+                string tooltip = catalog.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(catalog.Name), catalog.Name, CompletionResultType.Text, tooltip);
+            }
         }
     }
 }
@@ -779,15 +781,17 @@ internal class ApiTriggerNameCompleter<TPositional> : OrchArgumentCompleter wher
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.ApiTriggers.Get(df.folder));
+        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.ApiTriggers.Get(df.folder));
 
-        foreach (var result in results
-            .Where(t => wp.IsMatch(t.Item.Name))
-            .ExcludeByWildcards(t => t?.Item.Name, wpName))
+        foreach (var result in results)
         {
-            var trigger = result.Item;
-            string tooltip = trigger.GetPSPath();
-            yield return new CompletionResult(PathTools.EscapePSText(trigger.Name), trigger.Name, CompletionResultType.Text, tooltip);
+            foreach (var trigger in result
+                .Where(t => wp.IsMatch(t.Name))
+                .ExcludeByWildcards(t => t?.Name, wpName))
+            {
+                string tooltip = trigger.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(trigger.Name), trigger.Name, CompletionResultType.Text, tooltip);
+            }
         }
     }
 }
@@ -811,17 +815,19 @@ internal class AssetNameCompleter<TPositional> : OrchArgumentCompleter where TPo
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.Assets.Get(df.folder));
+        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Assets.Get(df.folder));
 
-        foreach (var result in results
-            .Where(a => wp.IsMatch(a.Item.Name))
-            .FilterByWildcards(a => a?.Item.ValueType, wpValueType)
-            .ExcludeByWildcards(a => a?.Item.Name, wpName)
-            .OrderBy(a => a.Item.Name))
+        foreach (var result in results)
         {
-            var asset = result.Item;
-            string toolhelp = asset.GetPSPath();
-            yield return new CompletionResult(PathTools.EscapePSText(asset.Name), asset.Name, CompletionResultType.Text, toolhelp);
+            foreach (var asset in result
+                .Where(a => wp.IsMatch(a.Name))
+                .FilterByWildcards(a => a?.ValueType, wpValueType)
+                .ExcludeByWildcards(a => a?.Name, wpName)
+                .OrderBy(a => a.Name))
+            {
+                string toolhelp = asset.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(asset.Name), asset.Name, CompletionResultType.Text, toolhelp);
+            }
         }
     }
 }
@@ -842,14 +848,16 @@ internal class AssetValueTypeCompleter<TPositional> : OrchArgumentCompleter wher
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.Assets.Get(df.folder));
+        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Assets.Get(df.folder));
 
         HashSet<string> valueTypes = [];
-        foreach (var result in results
-            .FilterByWildcards(a => a?.Item.Name, wpName))
+        foreach (var result in results)
         {
-            var asset = result.Item;
-            valueTypes.Add(asset.ValueType!);
+            foreach (var asset in result
+                .FilterByWildcards(a => a?.Name, wpName))
+            {
+                valueTypes.Add(asset.ValueType!);
+            }
         }
 
         foreach (var valueType in valueTypes
@@ -878,19 +886,21 @@ internal class BucketNameCompleter<TPositional, WritableOnly> : OrchArgumentComp
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.Buckets.Get(df.folder));
+        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Buckets.Get(df.folder));
 
         bool bFound = false;
-        foreach (var result in results
-            .Where(b => !WritableOnly.Value || !(b.Item.Options?.Contains("ReadOnly") ?? false))
-            .Where(b => wp.IsMatch(b.Item.Name))
-            .ExcludeByWildcards(b => b?.Item.Name, wpName)
-            .OrderBy(b => b.Item.Name))
+        foreach (var result in results)
         {
-            bFound = true;
-            var bucket = result.Item;
-            string tooltip = bucket.GetPSPath();
-            yield return new CompletionResult(PathTools.EscapePSText(bucket.Name), bucket.Name, CompletionResultType.Text, tooltip);
+            foreach (var bucket in result
+                .Where(b => !WritableOnly.Value || !(b.Options?.Contains("ReadOnly") ?? false))
+                .Where(b => wp.IsMatch(b.Name))
+                .ExcludeByWildcards(b => b?.Name, wpName)
+                .OrderBy(b => b.Name))
+            {
+                bFound = true;
+                string tooltip = bucket.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(bucket.Name), bucket.Name, CompletionResultType.Text, tooltip);
+            }
         }
 
         if (!bFound)
@@ -917,18 +927,20 @@ internal class CalendarNameCompleter<TPositional> : OrchArgumentCompleter where 
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drives, drive => drive.GetCalendars());
+        var results = ParallelResults3.GroupBy(drives, drive => drive.GetCalendars());
 
         bool bFound = false;
-        foreach (var result in results
-            .Where(c => wp.IsMatch(c.Item.Name))
-            .ExcludeByWildcards(c => c?.Item.Name, wpName)
-            .OrderBy(b => b.Item.Name))
+        foreach (var result in results)
         {
-            bFound = true;
-            var calendar = result.Item;
-            string tooltip = calendar.GetPSPath();
-            yield return new CompletionResult(PathTools.EscapePSText(calendar.Name), calendar.Name, CompletionResultType.Text, tooltip);
+            foreach (var calendar in result
+                .Where(c => wp.IsMatch(c.Name))
+                .ExcludeByWildcards(c => c?.Name, wpName)
+                .OrderBy(b => b.Name))
+            {
+                bFound = true;
+                string tooltip = calendar.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(calendar.Name), calendar.Name, CompletionResultType.Text, tooltip);
+            }
         }
         if (!bFound)
         {
@@ -953,18 +965,20 @@ internal class CredentialStoreNameCompleter<TPositional> : OrchArgumentCompleter
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drives, drive => drive.CredentialStores.Get());
+        var results = ParallelResults3.GroupBy(drives, drive => drive.CredentialStores.Get());
 
         bool bFound = false;
-        foreach (var result in results
-            .Where(c => wp.IsMatch(c.Item.Name))
-            .ExcludeByWildcards(c => c?.Item.Name, wpName)
-            .OrderBy(c => c.Item.Name!))
+        foreach (var result in results)
         {
-            bFound = true;
-            var credentialStore = result.Item;
-            string tiphelp = TipHelp(credentialStore);
-            yield return new CompletionResult(PathTools.EscapePSText(credentialStore.Name), credentialStore.Name, CompletionResultType.ParameterValue, tiphelp);
+            foreach (var credentialStore in result
+                .Where(c => wp.IsMatch(c.Name))
+                .ExcludeByWildcards(c => c?.Name, wpName)
+                .OrderBy(c => c.Name!))
+            {
+                bFound = true;
+                string tiphelp = TipHelp(credentialStore);
+                yield return new CompletionResult(PathTools.EscapePSText(credentialStore.Name), credentialStore.Name, CompletionResultType.ParameterValue, tiphelp);
+            }
         }
         if (!bFound)
         {
@@ -989,15 +1003,17 @@ internal class FolderMachineNameCompleter<TPositional> : OrchArgumentCompleter w
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
+        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
 
-        foreach (var result in results
-            .Where(m => wp.IsMatch(m.Item.Name))
-            .ExcludeByWildcards(m => m?.Item.Name, wpName)
-            .OrderBy(m => m.Item.Name))
+        foreach (var result in results)
         {
-            var machine = result.Item;
-            yield return new CompletionResult(PathTools.EscapePSText(machine.Name), machine.Name, CompletionResultType.ParameterValue, TipHelp(machine));
+            foreach (var machine in result
+                .Where(m => wp.IsMatch(m.Name))
+                .ExcludeByWildcards(m => m?.Name, wpName)
+                .OrderBy(m => m.Name))
+            {
+                yield return new CompletionResult(PathTools.EscapePSText(machine.Name), machine.Name, CompletionResultType.ParameterValue, TipHelp(machine));
+            }
         }
     }
 }
@@ -1018,18 +1034,20 @@ internal class MachineNameCompleter<TPositional> : OrchArgumentCompleter where T
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drives, drive => drive.Machines.Get());
+        var results = ParallelResults3.GroupBy(drives, drive => drive.Machines.Get());
 
         bool bFound = false;
-        foreach (var result in results
-            .Where(m => wp.IsMatch(m.Item.Name))
-            .ExcludeByWildcards(m => m?.Item.Name, wpName)
-            .OrderBy(m => m.Item.Name!))
+        foreach (var result in results)
         {
-            bFound = true;
-            var machine = result.Item;
-            string tiphelp = TipHelp(machine);
-            yield return new CompletionResult(PathTools.EscapePSText(machine.Name), machine.Name, CompletionResultType.ParameterValue, tiphelp);
+            foreach (var machine in result
+                .Where(m => wp.IsMatch(m.Name))
+                .ExcludeByWildcards(m => m?.Name, wpName)
+                .OrderBy(m => m.Name!))
+            {
+                bFound = true;
+                string tiphelp = TipHelp(machine);
+                yield return new CompletionResult(PathTools.EscapePSText(machine.Name), machine.Name, CompletionResultType.ParameterValue, tiphelp);
+            }
         }
         if (!bFound)
         {
@@ -1054,15 +1072,17 @@ internal class MachineRobotUsersCompleter<TPositional> : OrchArgumentCompleter w
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drives, drive => drive.AllRobotsAcrossFolders.Get());
+        var results = ParallelResults3.GroupBy(drives, drive => drive.AllRobotsAcrossFolders.Get());
 
-        foreach (var robot in results
-            .Select(r => r.Item)
-            .Where(r => wp.IsMatch(r?.User?.FullName))
-            .ExcludeByWildcards(p => p?.User?.FullName, wpRobotUsers)
-            .OrderBy(p => p.User?.FullName))
+        foreach (var result in results)
         {
-            yield return new CompletionResult(PathTools.EscapePSText(robot.User?.FullName), robot.User?.FullName, CompletionResultType.Text, robot.TipHelp());
+            foreach (var robot in result
+                .Where(r => wp.IsMatch(r?.User?.FullName))
+                .ExcludeByWildcards(p => p?.User?.FullName, wpRobotUsers)
+                .OrderBy(p => p.User?.FullName))
+            {
+                yield return new CompletionResult(PathTools.EscapePSText(robot.User?.FullName), robot.User?.FullName, CompletionResultType.Text, robot.TipHelp());
+            }
         }
     }
 }
@@ -1087,16 +1107,18 @@ internal class LibraryIdCompleter<TPositional> : OrchArgumentCompleter where TPo
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drives, drive => hostFeed ? drive.LibrariesInHost.Get() : drive.LibrariesInTenant.Get());
+        var results = ParallelResults3.GroupBy(drives, drive => hostFeed ? drive.LibrariesInHost.Get() : drive.LibrariesInTenant.Get());
 
-        foreach (var result in results
-            .Where(l => wp.IsMatch(l.Item.Id))
-            .ExcludeByWildcards(l => l?.Item.Id, wpId)
-            .FilterByWildcards(l => l?.Item.Version, wpVersion)
-            .OrderBy(l => l.Item.Id))
+        foreach (var result in results)
         {
-            var library = result.Item;
-            yield return new CompletionResult(PathTools.EscapePSText(library.Id), library.Id, CompletionResultType.ParameterValue, library.TipHelp());
+            foreach (var library in result
+                .Where(l => wp.IsMatch(l.Id))
+                .ExcludeByWildcards(l => l?.Id, wpId)
+                .FilterByWildcards(l => l?.Version, wpVersion)
+                .OrderBy(l => l.Id))
+            {
+                yield return new CompletionResult(PathTools.EscapePSText(library.Id), library.Id, CompletionResultType.ParameterValue, library.TipHelp());
+            }
         }
     }
 }
@@ -1121,25 +1143,30 @@ internal class LibraryVersionCompleter<TPositional> : OrchArgumentCompleter wher
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drives, drive =>
+        var results = ParallelResults3.GroupBy(drives, drive =>
         {
             var libraries = hostFeed ?
                 drive.LibrariesInHost.Get().FilterByWildcards(l => l?.Id, wpId) :
                 drive.LibrariesInTenant.Get().FilterByWildcards(l => l?.Id, wpId);
 
-            return ParallelResults2.ForEachMany(libraries, library => hostFeed ?
+            return ParallelResults3.GroupBy(libraries, library => hostFeed ?
                 drive.GetLibraryVersionsInHostFeed(library.Id!) :
                 drive.GetLibraryVersions(library.Id!));
         });
 
-        foreach (var result in results
-            .Where(v => wp.IsMatch(v.Item.Item.Version))
-            .ExcludeByWildcards(v => v?.Item.Item.Version, wpVersion))
-        //.OrderBy(v => v.Item.Item.Version!, VersionComparer.Instance))
+        foreach (var libraries in results)
         {
-            var version = result.Item.Item;
-            string tiphelp = TipHelp(version);
-            yield return new CompletionResult(PathTools.EscapePSText(version.Version), version.Version, CompletionResultType.ParameterValue, tiphelp);
+            foreach (var library in libraries)
+            {
+                foreach (var version in library
+                    .Where(v => wp.IsMatch(v.Version))
+                    .ExcludeByWildcards(v => v?.Version, wpVersion))
+                    //.OrderBy(v => v.Item.Item.Version!, VersionComparer.Instance))
+                {
+                    string tiphelp = TipHelp(version);
+                    yield return new CompletionResult(PathTools.EscapePSText(version.Version), version.Version, CompletionResultType.ParameterValue, tiphelp);
+                }
+            }
         }
     }
 }
@@ -1164,16 +1191,18 @@ internal class PackageIdCompleter<TPositional> : OrchArgumentCompleter where TPo
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.GetPackages(df.folder));
+        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetPackages(df.folder));
 
-        foreach (var result in results
-            .Where(m => wp.IsMatch(m.Item.Id))
-            .ExcludeByWildcards(p => p?.Item.Id, wpId)
-            .OrderBy(l => l.Item.Id))
+        foreach (var result in results)
         {
-            var package = result.Item;
-            string tiphelp = TipHelp(package);
-            yield return new CompletionResult(PathTools.EscapePSText(package.Id), package.Id, CompletionResultType.ParameterValue, tiphelp);
+            foreach (var package in result
+                .Where(m => wp.IsMatch(m.Id))
+                .ExcludeByWildcards(p => p?.Id, wpId)
+                .OrderBy(l => l.Id))
+            {
+                string tiphelp = TipHelp(package);
+                yield return new CompletionResult(PathTools.EscapePSText(package.Id), package.Id, CompletionResultType.ParameterValue, tiphelp);
+            }
         }
     }
 }
@@ -1201,20 +1230,25 @@ internal class PackageVersionCompleter<TPositional> : OrchArgumentCompleter wher
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drivesFolders, df =>
+        var results = ParallelResults3.GroupBy(drivesFolders, df =>
         {
             var packages = df.drive.GetPackages(df.folder).FilterByWildcards(p => p?.Id, wpId); ;
-            return ParallelResults2.ForEachMany(packages, package => df.drive.GetPackageVersions(df.folder, package.Id!));
+            return ParallelResults3.GroupBy(packages, package => df.drive.GetPackageVersions(df.folder, package.Id!));
         });
 
-        foreach (var result in results
-            .Where(v => wp.IsMatch(v.Item.Item.Version))
-            .ExcludeByWildcards(v => v?.Item.Item.Version, wpVersion))
-            //.OrderBy(v => v.Item.Item.Version!, VersionComparer.Instance))
+        foreach (var result in results)
         {
-            var version = result.Item.Item;
-            string tiphelp = TipHelp(version);
-            yield return new CompletionResult(PathTools.EscapePSText(version.Version), version.Version, CompletionResultType.ParameterValue, tiphelp);
+            foreach (var versions in result)
+            {
+                foreach (var version in versions
+                    .Where(v => wp.IsMatch(v.Version))
+                    .ExcludeByWildcards(v => v?.Version, wpVersion))
+                    //.OrderBy(v => v.Item.Item.Version!, VersionComparer.Instance))
+                {
+                    string tiphelp = TipHelp(version);
+                    yield return new CompletionResult(PathTools.EscapePSText(version.Version), version.Version, CompletionResultType.ParameterValue, tiphelp);
+                }
+            }
         }
     }
 }
@@ -1235,16 +1269,18 @@ internal class ProcessNameCompleter<TPositional> : OrchArgumentCompleter where T
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.GetReleases(df.folder));
+        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder));
 
-        foreach (var result in results
-            .Where(p => wp.IsMatch(p.Item.Name))
-            .ExcludeByWildcards(p => p?.Item.Name, wpName)
-            .OrderBy(p => p.Item.Name))
+        foreach (var result in results)
         {
-            var release = result.Item;
-            string tiphelp = TipHelp(release);
-            yield return new CompletionResult(PathTools.EscapePSText(release.Name), release.Name, CompletionResultType.ParameterValue, tiphelp);
+            foreach (var release in result
+                .Where(p => wp.IsMatch(p.Name))
+                .ExcludeByWildcards(p => p?.Name, wpName)
+                .OrderBy(p => p.Name))
+            {
+                string tiphelp = TipHelp(release);
+                yield return new CompletionResult(PathTools.EscapePSText(release.Name), release.Name, CompletionResultType.ParameterValue, tiphelp);
+            }
         }
     }
 }
@@ -1265,16 +1301,18 @@ internal class QueueNameCompleter<TPositional> : OrchArgumentCompleter where TPo
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.Queues.Get(df.folder));
+        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Queues.Get(df.folder));
 
-        foreach (var result in results
-            .Where(q => wp.IsMatch(q.Item.Name))
-            .ExcludeByWildcards(q => q?.Item.Name, wpName)
-            .OrderBy(q => q.Item.Name))
+        foreach (var result in results)
         {
-            var queue = result.Item;
-            string tiphelp = TipHelp(queue);
-            yield return new CompletionResult(PathTools.EscapePSText(queue.Name), queue.Name, CompletionResultType.ParameterValue, tiphelp);
+            foreach (var queue in result
+                .Where(q => wp.IsMatch(q.Name))
+                .ExcludeByWildcards(q => q?.Name, wpName)
+                .OrderBy(q => q.Name))
+            {
+                string tiphelp = TipHelp(queue);
+                yield return new CompletionResult(PathTools.EscapePSText(queue.Name), queue.Name, CompletionResultType.ParameterValue, tiphelp);
+            }
         }
     }
 }
@@ -1299,19 +1337,21 @@ internal class ListReleasesCompleter<TPositional> : OrchArgumentCompleter where 
 
         // ListReleases は非公開の API のようだから、GetReleases を使った方が良さそうだ。
         // ApiVersion == 13 のとき、ListReleases は動作しなかった。
-        var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.GetReleases(df.folder));
+        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder));
 
         // こっちの方が、Orchestrator に対する負荷が少ないとか、処理が早いとか、あるのかもしれない。。
         // var results = ParallelResults.ForEach(drivesFolders, df => df.drive.ListReleases(df.folder));
 
-        foreach (var result in results
-            .Where(r => wp.IsMatch(r.Item.Name))
-            .ExcludeByWildcards(r => r?.Item.Name, wpName)
-            .OrderBy(r => r.Item.Name))
+        foreach (var result in results)
         {
-            var release = result.Item;
-            string tooltip = TipHelp(release);
-            yield return new CompletionResult(PathTools.EscapePSText(release.Name), release.Name, CompletionResultType.Text, tooltip);
+            foreach (var release in result
+                .Where(r => wp.IsMatch(r.Name))
+                .ExcludeByWildcards(r => r?.Name, wpName)
+                .OrderBy(r => r.Name))
+            {
+                string tooltip = TipHelp(release);
+                yield return new CompletionResult(PathTools.EscapePSText(release.Name), release.Name, CompletionResultType.Text, tooltip);
+            }
         }
     }
 }
@@ -1332,16 +1372,18 @@ internal class RoleNameCompleter<TPositional> : OrchArgumentCompleter where TPos
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drives, drive => drive.Roles.Get());
+        var results = ParallelResults3.GroupBy(drives, drive => drive.Roles.Get());
 
-        foreach (var result in results
-            .Where(r => wp.IsMatch(r.Item.Name))
-            .ExcludeByWildcards(r => r?.Item.Name, wpName)
-            .OrderBy(role => role.Item.Name))
+        foreach (var result in results)
         {
-            var role = result.Item;
-            string tiphelp = TipHelp(role);
-            yield return new CompletionResult(PathTools.EscapePSText(role.Name), role.Name, CompletionResultType.ParameterValue, tiphelp);
+            foreach (var role in result
+                .Where(r => wp.IsMatch(r.Name))
+                .ExcludeByWildcards(r => r?.Name, wpName)
+                .OrderBy(role => role.Name))
+            {
+                string tiphelp = TipHelp(role);
+                yield return new CompletionResult(PathTools.EscapePSText(role.Name), role.Name, CompletionResultType.ParameterValue, tiphelp);
+            }
         }
     }
 }
@@ -1367,18 +1409,20 @@ public class TenantUserUserNameCompleter<TPositional> : OrchArgumentCompleter wh
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drives, drive => drive.GetUsers());
+        var results = ParallelResults3.GroupBy(drives, drive => drive.GetUsers());
 
-        foreach (var result in results
-            .Where(u => wp.IsMatch(u.Item.UserName))
-            .ExcludeByWildcards(u => u?.Item.UserName, wpUserName)
-            .FilterByWildcards(u => u?.Item.FullName, wpFullName)
-            .FilterByWildcards(u => u?.Item.Type, wpType)
-            .OrderBy(u => u.Item.UserName))
+        foreach (var result in results)
         {
-            var e = result.Item;
-            string tiphelp = TipHelp2(e);
-            yield return new CompletionResult(PathTools.EscapePSText(e.UserName), e.UserName, CompletionResultType.ParameterValue, tiphelp);
+            foreach (var user in result
+                .Where(u => wp.IsMatch(u.UserName))
+                .ExcludeByWildcards(u => u?.UserName, wpUserName)
+                .FilterByWildcards(u => u?.FullName, wpFullName)
+                .FilterByWildcards(u => u?.Type, wpType)
+                .OrderBy(u => u.UserName))
+            {
+                string tiphelp = TipHelp2(user);
+                yield return new CompletionResult(PathTools.EscapePSText(user.UserName), user.UserName, CompletionResultType.ParameterValue, tiphelp);
+            }
         }
     }
 }
@@ -1404,18 +1448,20 @@ public class TenantUserFullNameCompleter<TPositional> : OrchArgumentCompleter wh
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drives, drive => drive.GetUsers());
+        var results = ParallelResults3.GroupBy(drives, drive => drive.GetUsers());
 
-        foreach (var result in results
-            .Where(u => wp.IsMatch(u.Item.FullName))
-            .FilterByWildcards(u => u?.Item.UserName, wpUserName)
-            .ExcludeByWildcards(u => u?.Item.FullName, wpFullName)
-            .FilterByWildcards(u => u?.Item.Type, wpType)
-            .OrderBy(u => u.Item.FullName))
+        foreach (var result in results)
         {
-            var e = result.Item;
-            string tiphelp = TipHelp2(e);
-            yield return new CompletionResult(PathTools.EscapePSText(e.FullName), e.FullName, CompletionResultType.ParameterValue, tiphelp);
+            foreach (var e in result
+                .Where(u => wp.IsMatch(u.FullName))
+                .FilterByWildcards(u => u?.UserName, wpUserName)
+                .ExcludeByWildcards(u => u?.FullName, wpFullName)
+                .FilterByWildcards(u => u?.Type, wpType)
+                .OrderBy(u => u.FullName))
+            {
+                string tiphelp = TipHelp2(e);
+                yield return new CompletionResult(PathTools.EscapePSText(e.FullName), e.FullName, CompletionResultType.ParameterValue, tiphelp);
+            }
         }
     }
 }
@@ -1456,16 +1502,18 @@ internal class TriggerNameCompleter<TPositional> : OrchArgumentCompleter where T
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.GetTriggers(df.folder));
+        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetTriggers(df.folder));
 
-        foreach (var result in results
-            .Where(t => wp.IsMatch(t.Item.Name))
-            .ExcludeByWildcards(t => t?.Item.Name, wpName)
-            .OrderBy(t => t.Item.Name))
+        foreach (var result in results)
         {
-            var trigger = result.Item;
-            string tiphelp = TipHelp(trigger);
-            yield return new CompletionResult(PathTools.EscapePSText(trigger.Name), trigger.Name, CompletionResultType.Text, tiphelp);
+            foreach (var trigger in result
+                .Where(t => wp.IsMatch(t.Name))
+                .ExcludeByWildcards(t => t?.Name, wpName)
+                .OrderBy(t => t.Name))
+            {
+                string tiphelp = TipHelp(trigger);
+                yield return new CompletionResult(PathTools.EscapePSText(trigger.Name), trigger.Name, CompletionResultType.Text, tiphelp);
+            }
         }
     }
 }
@@ -1511,16 +1559,18 @@ internal class WebhookNameCompleter<TPositional> : OrchArgumentCompleter where T
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drives, drive => drive.Webhooks.Get());
+        var results = ParallelResults3.GroupBy(drives, drive => drive.Webhooks.Get());
 
-        foreach (var result in results
-            .Where(e => wp.IsMatch(e.Item.Name))
-            .ExcludeByWildcards(e => e?.Item.Name, wpName)
-            .OrderBy(e => e.Item.Name!))
+        foreach (var result in results)
         {
-            var webhook = result.Item;
-            string tiphelp = TipHelp(webhook);
-            yield return new CompletionResult(PathTools.EscapePSText(webhook.Name), webhook.Name, CompletionResultType.ParameterValue, tiphelp);
+            foreach (var webhook in result
+                .Where(e => wp.IsMatch(e.Name))
+                .ExcludeByWildcards(e => e?.Name, wpName)
+                .OrderBy(e => e.Name!))
+            {
+                string tiphelp = TipHelp(webhook);
+                yield return new CompletionResult(PathTools.EscapePSText(webhook.Name), webhook.Name, CompletionResultType.ParameterValue, tiphelp);
+            }
         }
     }
 }
@@ -1555,17 +1605,19 @@ internal class PmDirectoryNameCompleter<TPositional> : OrchArgumentCompleter whe
         var drives = ResolvePmDrives(fakeBoundParameters);
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drives, drive => drive.SearchPmDirectory(wordToComplete));
+        var results = ParallelResults3.GroupBy(drives, drive => drive.SearchPmDirectory(wordToComplete));
 
-        foreach (var result in results
-            .Where(s => !names.Contains(s.Item.identityName)) // 入力済みのものを除く
-            .Where(s => s.Item.objectType == kind)
-            .OrderBy(s => s.Item.identityName))
+        foreach (var result in results)
         {
-            var s = result.Item;
-            var drive = result.Source;
-            string tiphelp = drive.NameColonSeparator + s.identityName;
-            yield return new CompletionResult(PathTools.EscapePSText(s.identityName), s.identityName, CompletionResultType.ParameterValue, tiphelp);
+            foreach (var entityInfo in result
+                .Where(s => !names.Contains(s.identityName)) // 入力済みのものを除く
+                .Where(s => s.objectType == kind)
+                .OrderBy(s => s.identityName))
+            {
+                var drive = result.Source;
+                string tiphelp = drive.NameColonSeparator + entityInfo.identityName;
+                yield return new CompletionResult(PathTools.EscapePSText(entityInfo.identityName), entityInfo.identityName, CompletionResultType.ParameterValue, tiphelp);
+            }
         }
     }
 }
@@ -1594,18 +1646,20 @@ internal class PmDirectoryNameCompleter4Du<TPositional> : OrchArgumentCompleter 
         var drives = ResolveDuDrives(fakeBoundParameters);
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drives, drive => drive.ParentDrive.SearchPmDirectory(wordToComplete));
+        var results = ParallelResults3.GroupBy(drives, drive => drive.ParentDrive.SearchPmDirectory(wordToComplete));
 
-        foreach (var result in results
-            .Where(s => !names.Contains(s.Item.identityName)) // 入力済みのものを除く
-            .Where(s => types.Contains(s?.Item.objectType))
-            .OrderBy(s => s.Item.identityName))
+        foreach (var result in results)
         {
-            var s = result.Item;
             var drive = result.Source;
-            string tiphelp = drive.NameColonSeparator + s.identityName;
-            string name = !string.IsNullOrEmpty(s.email) ? s.email : s.identityName;
-            yield return new CompletionResult(PathTools.EscapePSText(name), name, CompletionResultType.ParameterValue, tiphelp);
+            foreach (var entityInfo in result
+                .Where(s => !names.Contains(s.identityName)) // 入力済みのものを除く
+                .Where(s => types.Contains(s?.objectType))
+                .OrderBy(s => s.identityName))
+            {
+                string tiphelp = drive.NameColonSeparator + entityInfo.identityName;
+                string name = !string.IsNullOrEmpty(entityInfo.email) ? entityInfo.email : entityInfo.identityName;
+                yield return new CompletionResult(PathTools.EscapePSText(name), name, CompletionResultType.ParameterValue, tiphelp);
+            }
         }
     }
 }
@@ -1719,16 +1773,18 @@ internal class ExternalApplicationNameCompleter<TPositional> : OrchArgumentCompl
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drives, drive => drive.PmExternalClients.Get());
+        var results = ParallelResults3.GroupBy(drives, drive => drive.PmExternalClients.Get());
 
-        foreach (var result in results
-            .Where(a => wp.IsMatch(a?.Item.name))
-            .ExcludeByWildcards(a => a?.Item.name!, wpName)
-            .OrderBy(a => a?.Item.name))
+        foreach (var result in results)
         {
-            var client = result.Item;
-            string tooltip = client?.GetPSPath();
-            yield return new CompletionResult(PathTools.EscapePSText(client?.name), client?.name, CompletionResultType.Text, tooltip);
+            foreach (var client in result
+                .Where(a => wp.IsMatch(a?.name))
+                .ExcludeByWildcards(a => a?.name!, wpName)
+                .OrderBy(a => a?.name))
+            {
+                string tooltip = client?.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(client?.name), client?.name, CompletionResultType.Text, tooltip);
+            }
         }
     }
 }
@@ -1755,16 +1811,18 @@ internal class TestCaseNameCompleter<TPositional> : OrchArgumentCompleter where 
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.TestCases.Get(df.folder));
+        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.TestCases.Get(df.folder));
 
-        foreach (var result in results
-            .Where(tc => wp.IsMatch(tc.Item.Name!))
-            .ExcludeByWildcards(tc => tc?.Item.Name, wpName)
-            .OrderBy(tc => tc.Item.Name))
+        foreach (var result in results)
         {
-            var testCase = result.Item;
-            string tiphelp = TipHelp(testCase);
-            yield return new CompletionResult(PathTools.EscapePSText(testCase.Name), testCase.Name, CompletionResultType.ParameterValue, tiphelp);
+            foreach (var testCase in result
+                .Where(tc => wp.IsMatch(tc.Name!))
+                .ExcludeByWildcards(tc => tc?.Name, wpName)
+                .OrderBy(tc => tc.Name))
+            {
+                string tiphelp = TipHelp(testCase);
+                yield return new CompletionResult(PathTools.EscapePSText(testCase.Name), testCase.Name, CompletionResultType.ParameterValue, tiphelp);
+            }
         }
     }
 }
@@ -1791,16 +1849,18 @@ internal class TestDataQueueNameCompleter<TPositional> : OrchArgumentCompleter w
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.TestDataQueues.Get(df.folder));
+        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.TestDataQueues.Get(df.folder));
 
-        foreach (var result in results
-            .Where(e => wp.IsMatch(e.Item.Name!))
-            .ExcludeByWildcards(e => e?.Item.Name, wpName)
-            .OrderBy(e => e.Item.Name))
+        foreach (var result in results)
         {
-            var testDataQueue = result.Item;
-            string tiphelp = TipHelp(testDataQueue);
-            yield return new CompletionResult(PathTools.EscapePSText(testDataQueue.Name), testDataQueue.Name, CompletionResultType.ParameterValue, tiphelp);
+            foreach (var testDataQueue in result
+                .Where(e => wp.IsMatch(e.Name!))
+                .ExcludeByWildcards(e => e?.Name, wpName)
+                .OrderBy(e => e.Name))
+            {
+                string tiphelp = TipHelp(testDataQueue);
+                yield return new CompletionResult(PathTools.EscapePSText(testDataQueue.Name), testDataQueue.Name, CompletionResultType.ParameterValue, tiphelp);
+            }
         }
     }
 }
@@ -1827,16 +1887,18 @@ internal class TestScheduleNameCompleter<TPositional> : OrchArgumentCompleter wh
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.TestSetSchedules.Get(df.folder));
+        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.TestSetSchedules.Get(df.folder));
 
-        foreach (var result in results
-            .Where(tc => wp.IsMatch(tc.Item.Name!))
-            .ExcludeByWildcards(tc => tc?.Item.Name, wpName)
-            .OrderBy(tc => tc.Item.Name))
+        foreach (var result in results)
         {
-            var testSet = result.Item;
-            string tiphelp = TipHelp(testSet);
-            yield return new CompletionResult(PathTools.EscapePSText(testSet.Name), testSet.Name, CompletionResultType.ParameterValue, tiphelp);
+            foreach (var testSet in result
+                .Where(tc => wp.IsMatch(tc.Name!))
+                .ExcludeByWildcards(tc => tc?.Name, wpName)
+                .OrderBy(tc => tc.Name))
+            {
+                string tiphelp = TipHelp(testSet);
+                yield return new CompletionResult(PathTools.EscapePSText(testSet.Name), testSet.Name, CompletionResultType.ParameterValue, tiphelp);
+            }
         }
     }
 }
@@ -1863,16 +1925,18 @@ internal class TestSetNameCompleter<TPositional> : OrchArgumentCompleter where T
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.TestSets.Get(df.folder));
+        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.TestSets.Get(df.folder));
 
-        foreach (var result in results
-            .Where(te => wp.IsMatch(te.Item.Name!))
-            .ExcludeByWildcards(te => te?.Item.Name, wpName)
-            .OrderBy(te => te.Item.Name))
+        foreach (var result in results)
         {
-            var testSet = result.Item;
-            string tiphelp = TipHelp(testSet);
-            yield return new CompletionResult(PathTools.EscapePSText(testSet!.Name), testSet.Name, CompletionResultType.ParameterValue, tiphelp);
+            foreach (var testSet in result
+                .Where(te => wp.IsMatch(te.Name!))
+                .ExcludeByWildcards(te => te?.Name, wpName)
+                .OrderBy(te => te.Name))
+            {
+                string tiphelp = TipHelp(testSet);
+                yield return new CompletionResult(PathTools.EscapePSText(testSet!.Name), testSet.Name, CompletionResultType.ParameterValue, tiphelp);
+            }
         }
     }
 }
@@ -1894,16 +1958,19 @@ public class PmGroupNameCompleter<TPositional> : OrchArgumentCompleter where TPo
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drives, drive => drive.GetPmGroups());
+        var results = ParallelResults3.GroupBy(drives, drive => drive.GetPmGroups());
 
-        foreach (var result in results
-            .Where(g => wp.IsMatch(g?.Item.Value.name))
-            .ExcludeByWildcards(g => g?.Item.Value.name!, wpName)
-            .OrderBy(g => g?.Item.Value.name))
+        foreach (var result in results)
         {
-            var pmGroup = result.Item.Value;
-            string tiphelp = pmGroup?.GetPSPath();
-            yield return new CompletionResult(PathTools.EscapePSText(pmGroup?.name), pmGroup?.name, CompletionResultType.Text, tiphelp);
+            foreach (var pmGroupKV in result
+                .Where(g => wp.IsMatch(g.Value.name))
+                .ExcludeByWildcards(g => g.Value.name!, wpName)
+                .OrderBy(g => g.Value.name))
+            {
+                var pmGroup = pmGroupKV.Value;
+                string tiphelp = pmGroup.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(pmGroup?.name), pmGroup?.name, CompletionResultType.Text, tiphelp);
+            }
         }
     }
 }
@@ -1924,17 +1991,19 @@ internal class PmRobotAccountNameCompleter<TPositional> : OrchArgumentCompleter 
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drives, drive => drive.PmRobotAccounts.Get());
+        var results = ParallelResults3.GroupBy(drives, drive => drive.PmRobotAccounts.Get());
 
-        foreach (var result in results
-            .Where(r => r.Item is not null)
-            .Where(r => wp.IsMatch(r!.Item.name!))
-            .ExcludeByWildcards(r => r!.Item.name!, wpName)
-            .OrderBy(r => r!.Item.name))
+        foreach (var result in results)
         {
-            var pmRobotAccount = result.Item;
-            string tiphelp = pmRobotAccount.GetPSPath();
-            yield return new CompletionResult(PathTools.EscapePSText(pmRobotAccount.name), pmRobotAccount.name, CompletionResultType.Text, tiphelp);
+            foreach (var pmRobotAccount in result
+                .Where(r => r is not null)
+                .Where(r => wp.IsMatch(r!.name!))
+                .ExcludeByWildcards(r => r!.name!, wpName)
+                .OrderBy(r => r!.name))
+            {
+                string tiphelp = pmRobotAccount.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(pmRobotAccount.name), pmRobotAccount.name, CompletionResultType.Text, tiphelp);
+            }
         }
     }
 }
@@ -1955,19 +2024,21 @@ internal class PmUserEmailCompleter<TPositional> : OrchArgumentCompleter where T
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drives, drive => drive.PmUsers.Get());
+        var results = ParallelResults3.GroupBy(drives, drive => drive.PmUsers.Get());
 
-        foreach (var result in results
-            .Where(g => !string.IsNullOrEmpty(g.Item.email))
-            .Where(g => wp.IsMatch(g.Item.email))
-            .ExcludeByWildcards(u => u?.Item.email!, wpEmail)
-            .OrderBy(u => u?.Item.email))
+        foreach (var result in results)
         {
-            var user = result.Item;
-            string tooltip = user.GetPSPath();
-            if (!string.IsNullOrEmpty(user.displayName))
-                tooltip += $" ({user.displayName})";
-            yield return new CompletionResult(PathTools.EscapePSText(user?.email), user?.email, CompletionResultType.Text, tooltip);
+            foreach (var user in result
+                .Where(g => !string.IsNullOrEmpty(g.email))
+                .Where(g => wp.IsMatch(g.email))
+                .ExcludeByWildcards(u => u?.email!, wpEmail)
+                .OrderBy(u => u?.email))
+            {
+                string tooltip = user.GetPSPath();
+                if (!string.IsNullOrEmpty(user.displayName))
+                    tooltip += $" ({user.displayName})";
+                yield return new CompletionResult(PathTools.EscapePSText(user?.email), user?.email, CompletionResultType.Text, tooltip);
+            }
         }
     }
 }
@@ -1988,16 +2059,18 @@ internal class PmLicensedGroupNameCompleter<TPositional> : OrchArgumentCompleter
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drives, drive => drive.PmLicensedGroups.Get());
+        var results = ParallelResults3.GroupBy(drives, drive => drive.PmLicensedGroups.Get());
 
-        foreach (var result in results
-            .Where(g => wp.IsMatch(g?.Item.name))
-            .ExcludeByWildcards(g => g?.Item.name!, wpGroupName)
-            .OrderBy(g => g?.Item.name))
+        foreach (var result in results)
         {
-            var licenseGroup = result.Item;
-            string tiphelp = licenseGroup?.GetPSPath();
-            yield return new CompletionResult(PathTools.EscapePSText(licenseGroup?.name), licenseGroup?.name, CompletionResultType.Text, tiphelp);
+            foreach (var licensedGroup in result
+                .Where(g => wp.IsMatch(g?.name))
+                .ExcludeByWildcards(g => g?.name!, wpGroupName)
+                .OrderBy(g => g?.name))
+            {
+                string tiphelp = licensedGroup?.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(licensedGroup?.name), licensedGroup?.name, CompletionResultType.Text, tiphelp);
+            }
         }
     }
 }
@@ -2025,16 +2098,18 @@ internal class TmRequirementNameCompleter<TPositional> : OrchArgumentCompleter w
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drivesFolders, dp => dp.drive.GetTmRequirements(dp.project));
+        var results = ParallelResults3.GroupBy(drivesFolders, dp => dp.drive.GetTmRequirements(dp.project));
 
-        foreach (var result in results
-            .Where(e => wp.IsMatch(e.Item.name))
-            .ExcludeByWildcards(e => e?.Item.name, wpName)
-            .OrderBy(e => e.Item.name))
+        foreach (var result in results)
         {
-            var requirement = result.Item;
-            string tooltip = requirement.GetPSPath();
-            yield return new CompletionResult(PathTools.EscapePSText(requirement.name), requirement.name, CompletionResultType.Text, tooltip);
+            foreach (var requirement in result
+                .Where(e => wp.IsMatch(e.name))
+                .ExcludeByWildcards(e => e?.name, wpName)
+                .OrderBy(e => e.name))
+            {
+                string tooltip = requirement.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(requirement.name), requirement.name, CompletionResultType.Text, tooltip);
+            }
         }
     }
 }
@@ -2059,16 +2134,18 @@ internal class TmTestSetNameCompleter<TPositional> : OrchArgumentCompleter where
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drivesFolders, dp => dp.drive.GetTmTestSets(dp.project));
+        var results = ParallelResults3.GroupBy(drivesFolders, dp => dp.drive.GetTmTestSets(dp.project));
 
-        foreach (var result in results
-            .Where(e => wp.IsMatch(e.Item.name))
-            .ExcludeByWildcards(e => e?.Item.name, wpName)
-            .OrderBy(e => e.Item.name))
+        foreach (var result in results)
         {
-            var testSet = result.Item;
-            string tooltip = testSet.GetPSPath();
-            yield return new CompletionResult(PathTools.EscapePSText(testSet.name), testSet.name, CompletionResultType.Text, tooltip);
+            foreach (var testSet in result
+                .Where(e => wp.IsMatch(e.name))
+                .ExcludeByWildcards(e => e?.name, wpName)
+                .OrderBy(e => e.name))
+            {
+                string tooltip = testSet.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(testSet.name), testSet.name, CompletionResultType.Text, tooltip);
+            }
         }
     }
 }
@@ -2093,16 +2170,18 @@ internal class TmTestCaseNameCompleter<TPositional> : OrchArgumentCompleter wher
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drivesFolders, dp => dp.drive.GetTmTestCases(dp.project));
+        var results = ParallelResults3.GroupBy(drivesFolders, dp => dp.drive.GetTmTestCases(dp.project));
 
-        foreach (var result in results
-            .Where(e => wp.IsMatch(e.Item.name))
-            .ExcludeByWildcards(e => e?.Item.name, wpName)
-            .OrderBy(e => e.Item.name))
+        foreach (var result in results)
         {
-            var testCase = result.Item;
-            string tooltip = testCase.GetPSPath();
-            yield return new CompletionResult(PathTools.EscapePSText(testCase.name), testCase.name, CompletionResultType.Text, tooltip);
+            foreach (var testCase in result
+                .Where(e => wp.IsMatch(e.name))
+                .ExcludeByWildcards(e => e?.name, wpName)
+                .OrderBy(e => e.name))
+            {
+                string tooltip = testCase.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(testCase.name), testCase.name, CompletionResultType.Text, tooltip);
+            }
         }
     }
 }
@@ -2345,16 +2424,18 @@ internal class DuNameCompleter<TPositional> : OrchArgumentCompleter where TPosit
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults2.ForEachMany(drivesProjects, dp => dp.drive.GetDuUsers(dp.project));
+        var results = ParallelResults3.GroupBy(drivesProjects, dp => dp.drive.GetDuUsers(dp.project));
 
-        foreach (var result in results
-            .Where(u => wp.IsMatch(u.Item.Name))
-            .ExcludeByWildcards(u => u?.Item.Name, wpName)
-            .OrderBy(u => u.Item.Name))
+        foreach (var result in results)
         {
-            var user = result.Item;
-            string tiphelp = user.GetPSPath();
-            yield return new CompletionResult(PathTools.EscapePSText(user.Name), user.Name, CompletionResultType.Text, tiphelp);
+            foreach (var user in result
+                .Where(u => wp.IsMatch(u.Name))
+                .ExcludeByWildcards(u => u?.Name, wpName)
+                .OrderBy(u => u.Name))
+            {
+                string tiphelp = user.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(user.Name), user.Name, CompletionResultType.Text, tiphelp);
+            }
         }
     }
 }

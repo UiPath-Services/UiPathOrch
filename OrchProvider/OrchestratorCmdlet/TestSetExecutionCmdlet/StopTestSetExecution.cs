@@ -38,22 +38,24 @@ public class StopTestExecutionCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drivesFolders, df =>
+            var results = ParallelResults3.GroupBy(drivesFolders, df =>
             {
                 return df.drive.GetTestSetExecutions(df.folder, "&$filter=(((Status%20eq%20%270%27)%20or%20(Status%20eq%20%271%27)))");
             });
 
-            foreach (var te in results
-                .Select(r => r.Item)
-                .Where(te => stoppableStatus.Contains(te.Status))
-                .Where(te => wp.IsMatch(te.Id.ToString()))
-                .ExcludeByStructValues(te => te.Id ?? 0, paramId))
+            foreach (var result in results)
             {
-                string tiphelp = $"{te.Id}  {te.Name!}";
-                if (!string.IsNullOrEmpty(te?.TestSet?.Description))
-                    tiphelp += $" ({te?.TestSet?.Description})  ";
-                tiphelp += $"  StartTime: {te!.StartTime}  Status: {te.Status}";
-                yield return new CompletionResult((te!.Id ?? 0).ToString(), (te.Id ?? 0).ToString(), CompletionResultType.ParameterValue, tiphelp);
+                foreach (var te in result
+                    .Where(te => stoppableStatus.Contains(te.Status))
+                    .Where(te => wp.IsMatch(te.Id.ToString()))
+                    .ExcludeByStructValues(te => te.Id ?? 0, paramId))
+                {
+                    string tiphelp = $"{te.Id}  {te.Name!}";
+                    if (!string.IsNullOrEmpty(te?.TestSet?.Description))
+                        tiphelp += $" ({te?.TestSet?.Description})  ";
+                    tiphelp += $"  StartTime: {te!.StartTime}  Status: {te.Status}";
+                    yield return new CompletionResult((te!.Id ?? 0).ToString(), (te.Id ?? 0).ToString(), CompletionResultType.ParameterValue, tiphelp);
+                }
             }
         }
     }

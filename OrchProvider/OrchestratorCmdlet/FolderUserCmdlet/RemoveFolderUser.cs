@@ -59,17 +59,19 @@ public class RemoveFolderUserCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
-            foreach (var userRoles in results
-                .Select(r => r.Item)
-                .Where(e => wp.IsMatch(e.UserEntity!.UserName))
-                .ExcludeByWildcards(e => e?.UserEntity?.UserName, wpUserName)
-                .FilterByWildcards(e => e?.UserEntity?.FullName, wpFullName)
-                .OrderBy(e => e.UserEntity!.UserName))
+            foreach (var result in results)
             {
-                string tiphelp = TipHelp(userRoles);
-                yield return new CompletionResult(PathTools.EscapePSText(userRoles.UserEntity!.UserName), userRoles.UserEntity.UserName, CompletionResultType.ParameterValue, tiphelp);
+                foreach (var userRoles in result
+                    .Where(e => wp.IsMatch(e.UserEntity!.UserName))
+                    .ExcludeByWildcards(e => e?.UserEntity?.UserName, wpUserName)
+                    .FilterByWildcards(e => e?.UserEntity?.FullName, wpFullName)
+                    .OrderBy(e => e.UserEntity!.UserName))
+                {
+                    string tiphelp = TipHelp(userRoles);
+                    yield return new CompletionResult(PathTools.EscapePSText(userRoles.UserEntity!.UserName), userRoles.UserEntity.UserName, CompletionResultType.ParameterValue, tiphelp);
+                }
             }
         }
     }
@@ -99,17 +101,19 @@ public class RemoveFolderUserCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
-            foreach (var userRoles in results
-                .Select(r => r.Item)
-                .Where(e => wp.IsMatch(e.UserEntity!.FullName))
-                .FilterByWildcards(e => e?.UserEntity?.UserName, wpUserName)
-                .ExcludeByWildcards(e => e?.UserEntity?.FullName, wpFullName)
-                .OrderBy(e => e.UserEntity!.FullName))
+            foreach (var result in results)
             {
-                string tiphelp = TipHelp(userRoles);
-                yield return new CompletionResult(PathTools.EscapePSText(userRoles.UserEntity!.FullName), userRoles.UserEntity.FullName, CompletionResultType.ParameterValue, tiphelp);
+                foreach (var userRoles in result
+                    .Where(e => wp.IsMatch(e.UserEntity!.FullName))
+                    .FilterByWildcards(e => e?.UserEntity?.UserName, wpUserName)
+                    .ExcludeByWildcards(e => e?.UserEntity?.FullName, wpFullName)
+                    .OrderBy(e => e.UserEntity!.FullName))
+                {
+                    string tiphelp = TipHelp(userRoles);
+                    yield return new CompletionResult(PathTools.EscapePSText(userRoles.UserEntity!.FullName), userRoles.UserEntity.FullName, CompletionResultType.ParameterValue, tiphelp);
+                }
             }
         }
     }

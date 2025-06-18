@@ -38,16 +38,18 @@ public class GetWebSettingCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drives, drive => drive.WebSettings.Get());
+            var results = ParallelResults3.GroupBy(drives, drive => drive.WebSettings.Get());
 
-            foreach (var item in results
-                .Select(r => r.Item)
-                .Where(b => wp.IsMatch(b.Key))
-                .ExcludeByWildcards(b => b?.Key, wpKey)
-                .OrderBy(b => b.Key))
+            foreach (var result in results)
             {
-                string tooltip = item.GetPSPath();
-                yield return new CompletionResult(PathTools.EscapePSText(item.Key), item.Key, CompletionResultType.Text, tooltip);
+                foreach (var item in result
+                    .Where(b => wp.IsMatch(b.Key))
+                    .ExcludeByWildcards(b => b?.Key, wpKey)
+                    .OrderBy(b => b.Key))
+                {
+                    string tooltip = item.GetPSPath();
+                    yield return new CompletionResult(PathTools.EscapePSText(item.Key), item.Key, CompletionResultType.Text, tooltip);
+                }
             }
         }
     }

@@ -36,16 +36,18 @@ public class GetPmExternalApiResourceCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drives, drive => drive.PmExternalApiResources.Get());
+            var results = ParallelResults3.GroupBy(drives, drive => drive.PmExternalApiResources.Get());
 
-            foreach (var resource in results
-                .Select(r => r.Item)
-                .Where(r => wp.IsMatch(r?.name))
-                .ExcludeByWildcards(r => r?.name!, wpName)
-                .OrderBy(r => r?.name))
+            foreach (var result in results)
             {
-                string tiphelp = resource.GetPSPath();
-                yield return new CompletionResult(PathTools.EscapePSText(resource?.name), resource?.name, CompletionResultType.Text, tiphelp);
+                foreach (var resource in result
+                    .Where(r => wp.IsMatch(r?.name))
+                    .ExcludeByWildcards(r => r?.name!, wpName)
+                    .OrderBy(r => r?.name))
+                {
+                    string tiphelp = resource.GetPSPath();
+                    yield return new CompletionResult(PathTools.EscapePSText(resource?.name), resource?.name, CompletionResultType.Text, tiphelp);
+                }
             }
         }
     }

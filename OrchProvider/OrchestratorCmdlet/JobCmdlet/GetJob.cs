@@ -205,16 +205,18 @@ public class GetJobCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drives, drive => drive.Robots.Get());
+            var results = ParallelResults3.GroupBy(drives, drive => drive.Robots.Get());
 
-            foreach (var robot in results
-                .Select(r => r.Item)
-                .Where(r => wp.IsMatch(r.Name))
-                .ExcludeByWildcards(r => r?.Name, wpRobot)
-                .OrderBy(r => r.Name))
+            foreach (var result in results)
             {
-                string tiphelp = robot.GetPSPath();
-                yield return new CompletionResult(PathTools.EscapePSText(robot.Name), robot.Name, CompletionResultType.ParameterValue, tiphelp);
+                foreach (var robot in result
+                    .Where(r => wp.IsMatch(r.Name))
+                    .ExcludeByWildcards(r => r?.Name, wpRobot)
+                    .OrderBy(r => r.Name))
+                {
+                    string tiphelp = robot.GetPSPath();
+                    yield return new CompletionResult(PathTools.EscapePSText(robot.Name), robot.Name, CompletionResultType.ParameterValue, tiphelp);
+                }
             }
         }
     }

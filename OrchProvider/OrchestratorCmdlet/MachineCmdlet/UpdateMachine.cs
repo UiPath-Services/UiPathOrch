@@ -102,21 +102,22 @@ public class UpdateMachineCommand : OrchestratorPSCmdlet
             // パラメータで選択済みの Name は、候補から除外する
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
-            var results = ParallelResults2.ForEachMany(drives, drive => drive.Machines.Get());
+            var results = ParallelResults3.GroupBy(drives, drive => drive.Machines.Get());
 
-            foreach (var result in results
-                .Select(r => r.Item)
-                .FilterByWildcards(p => p?.Name, wpName)
-                .OrderBy(p => p.Name))
+            foreach (var result in results)
             {
-                var release = result;
-                if (release?.Tags is null) continue;
+                foreach (var release in result
+                    .FilterByWildcards(p => p?.Name, wpName)
+                    .OrderBy(p => p.Name))
+                {
+                    if (release?.Tags is null) continue;
 
-                var values = release.Tags.ConvertToString();
-                if (string.IsNullOrEmpty(values)) continue;
+                    var values = release.Tags.ConvertToString();
+                    if (string.IsNullOrEmpty(values)) continue;
 
-                string tiphelp = TipHelp(release);
-                yield return new CompletionResult(PathTools.EscapePSText(values), values, CompletionResultType.Text, tiphelp);
+                    string tiphelp = TipHelp(release);
+                    yield return new CompletionResult(PathTools.EscapePSText(values), values, CompletionResultType.Text, tiphelp);
+                }
             }
         }
     }

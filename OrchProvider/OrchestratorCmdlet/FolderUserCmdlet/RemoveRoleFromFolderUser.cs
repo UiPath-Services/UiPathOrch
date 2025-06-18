@@ -70,19 +70,21 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
-            foreach (var userRoles in results
-                .Select(r => r.Item)
-                .Where(eu => wp.IsMatch(eu.UserEntity!.UserName!))
-                .ExcludeByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
-                .FilterByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
-                .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
-                .OrderBy(u => u.UserEntity!.UserName))
+            foreach (var result in results)
             {
-                string tiphelp = TipHelp(userRoles);
-                var ret = new CompletionResult(PathTools.EscapePSText(userRoles.UserEntity!.UserName), userRoles.UserEntity.UserName, CompletionResultType.ParameterValue, tiphelp);
-                yield return ret;
+                foreach (var userRoles in result
+                    .Where(eu => wp.IsMatch(eu.UserEntity!.UserName!))
+                    .ExcludeByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
+                    .FilterByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
+                    .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
+                    .OrderBy(u => u.UserEntity!.UserName))
+                {
+                    string tiphelp = TipHelp(userRoles);
+                    var ret = new CompletionResult(PathTools.EscapePSText(userRoles.UserEntity!.UserName), userRoles.UserEntity.UserName, CompletionResultType.ParameterValue, tiphelp);
+                    yield return ret;
+                }
             }
         }
     }
@@ -114,19 +116,21 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
-            foreach (var userRoles in results
-                .Select(r => r.Item)
-                .Where(eu => wp.IsMatch(eu.UserEntity?.FullName))
-                .ExcludeByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
-                .FilterByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
-                .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
-                .OrderBy(u => u.UserEntity!.FullName))
+            foreach (var result in results)
             {
-                string tiphelp = TipHelp(userRoles);
-                var ret = new CompletionResult(PathTools.EscapePSText(userRoles.UserEntity!.FullName), userRoles.UserEntity.FullName, CompletionResultType.ParameterValue, tiphelp);
-                yield return ret;
+                foreach (var userRoles in result
+                    .Where(eu => wp.IsMatch(eu.UserEntity?.FullName))
+                    .ExcludeByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
+                    .FilterByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
+                    .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
+                    .OrderBy(u => u.UserEntity!.FullName))
+                {
+                    string tiphelp = TipHelp(userRoles);
+                    var ret = new CompletionResult(PathTools.EscapePSText(userRoles.UserEntity!.FullName), userRoles.UserEntity.FullName, CompletionResultType.ParameterValue, tiphelp);
+                    yield return ret;
+                }
             }
         }
     }
@@ -156,24 +160,26 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
-            foreach (var userRoles in results
-                .Select(r => r.Item)
-                .FilterByWildcards(u => u?.UserEntity?.FullName, wpFullName)
-                .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName)
-                .FilterByWildcards(u => u?.UserEntity?.Type, wpType))
+            foreach (var result in results)
             {
-                if (userRoles.Roles is not null)
+                foreach (var userRoles in result
+                    .FilterByWildcards(u => u?.UserEntity?.FullName, wpFullName)
+                    .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName)
+                    .FilterByWildcards(u => u?.UserEntity?.Type, wpType))
                 {
-                    foreach (var role in userRoles.Roles
-                        .Where(r => wp.IsMatch(r.Name))
-                        .ExcludeByWildcards(role => role?.Name, wpRoles)
-                        .OrderBy(role => role.Name))
+                    if (userRoles.Roles is not null)
                     {
-                        string tiphelp = TipHelp(userRoles);
-                        var ret = new CompletionResult(PathTools.EscapePSText(role.Name), role.Name, CompletionResultType.ParameterValue, tiphelp);
-                        yield return ret;
+                        foreach (var role in userRoles.Roles
+                            .Where(r => wp.IsMatch(r.Name))
+                            .ExcludeByWildcards(role => role?.Name, wpRoles)
+                            .OrderBy(role => role.Name))
+                        {
+                            string tiphelp = TipHelp(userRoles);
+                            var ret = new CompletionResult(PathTools.EscapePSText(role.Name), role.Name, CompletionResultType.ParameterValue, tiphelp);
+                            yield return ret;
+                        }
                     }
                 }
             }

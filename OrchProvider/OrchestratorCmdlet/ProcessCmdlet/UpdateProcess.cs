@@ -175,20 +175,22 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var allProcesses = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.GetReleases(df.folder).FilterByWildcards(p => p?.Name, wpName));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder).FilterByWildcards(p => p?.Name, wpName));
 
-            foreach (var result in allProcesses)
+            foreach (var result in results)
             {
-                var process = result.Item;
-                if (string.IsNullOrEmpty(process.ProcessKey)) continue;
-
-                var (drive, folder) = result.Source;
-                var versions = drive.GetPackageVersions(folder, process.ProcessKey);
-                foreach (var version in versions
-                    .Where(v => v.Version != process.ProcessVersion))
+                foreach (var process in result)
                 {
-                    string tiphelp = process.GetPSPath();
-                    yield return new CompletionResult(PathTools.EscapePSText(version.Version), version.Version, CompletionResultType.ParameterValue, tiphelp);
+                    if (string.IsNullOrEmpty(process.ProcessKey)) continue;
+
+                    var (drive, folder) = result.Source;
+                    var versions = drive.GetPackageVersions(folder, process.ProcessKey);
+                    foreach (var version in versions
+                        .Where(v => v.Version != process.ProcessVersion))
+                    {
+                        string tiphelp = process.GetPSPath();
+                        yield return new CompletionResult(PathTools.EscapePSText(version.Version), version.Version, CompletionResultType.ParameterValue, tiphelp);
+                    }
                 }
             }
         }
@@ -244,32 +246,34 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
             // パラメータで選択済みの Id は、候補から除外する
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Positional.Name.Parameters);
 
-            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.GetReleases(df.folder));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder));
 
-            foreach (var release in results
-                .Select(r => r.Item)
-                .FilterByWildcards(p => p?.Name, wpName)
-                .OrderBy(p => p.Name))
+            foreach (var result in results)
             {
-                var jsonArray = JsonNode.Parse(release.Arguments?.Input ?? "")?.AsArray();
-                var nameDictionary = jsonArray?
-                    .OfType<JsonObject>()
-                    .Select(obj =>
-                    {
-                        if (obj.TryGetPropertyValue("name", out var nameNode) && nameNode is JsonValue nameValue && nameValue.TryGetValue(out string? name))
+                foreach (var release in result
+                    .FilterByWildcards(p => p?.Name, wpName)
+                    .OrderBy(p => p.Name))
+                {
+                    var jsonArray = JsonNode.Parse(release.Arguments?.Input ?? "")?.AsArray();
+                    var nameDictionary = jsonArray?
+                        .OfType<JsonObject>()
+                        .Select(obj =>
                         {
-                            return new { name, obj };
-                        }
-                        return null;
-                    })
-                    .Where(x => x is not null)
-                    .ToDictionary(x => x!.name ?? "", x => "");
+                            if (obj.TryGetPropertyValue("name", out var nameNode) && nameNode is JsonValue nameValue && nameValue.TryGetValue(out string? name))
+                            {
+                                return new { name, obj };
+                            }
+                            return null;
+                        })
+                        .Where(x => x is not null)
+                        .ToDictionary(x => x!.name ?? "", x => "");
 
-                // Serialize the dictionary back to JSON
-                string outputJson = JsonSerializer.Serialize(nameDictionary, JsonTools.jsoOneLine);
+                    // Serialize the dictionary back to JSON
+                    string outputJson = JsonSerializer.Serialize(nameDictionary, JsonTools.jsoOneLine);
 
-                string tiphelp = TipHelp(release);
-                yield return new CompletionResult($"'{outputJson}'", outputJson, CompletionResultType.ParameterValue, tiphelp);
+                    string tiphelp = TipHelp(release);
+                    yield return new CompletionResult($"'{outputJson}'", outputJson, CompletionResultType.ParameterValue, tiphelp);
+                }
             }
         }
     }
@@ -289,20 +293,22 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
             // パラメータで選択済みの Id は、候補から除外する
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
-            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.GetReleases(df.folder));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder));
 
-            foreach (var release in results
-                .Select(r => r.Item)
-                .FilterByWildcards(p => p?.Name, wpName)
-                .OrderBy(p => p.Name))
+            foreach (var result in results)
             {
-                if (release?.Tags is null) continue;
+                foreach (var release in result
+                    .FilterByWildcards(p => p?.Name, wpName)
+                    .OrderBy(p => p.Name))
+                {
+                    if (release?.Tags is null) continue;
 
-                var values = release.Tags.ConvertToString();
-                if (string.IsNullOrEmpty(values)) continue;
+                    var values = release.Tags.ConvertToString();
+                    if (string.IsNullOrEmpty(values)) continue;
 
-                string tiphelp = TipHelp(release);
-                yield return new CompletionResult(PathTools.EscapePSText(values), values, CompletionResultType.Text, tiphelp);
+                    string tiphelp = TipHelp(release);
+                    yield return new CompletionResult(PathTools.EscapePSText(values), values, CompletionResultType.Text, tiphelp);
+                }
             }
         }
     }

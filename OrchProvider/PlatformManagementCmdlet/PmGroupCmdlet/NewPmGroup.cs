@@ -33,12 +33,13 @@ public class AddPmGroupCommand : OrchestratorPSCmdlet
             IDictionary fakeBoundParameters)
         {
             var drives = ResolvePmDrives(fakeBoundParameters);
-            var results = ParallelResults2.ForEachMany(drives, drive => drive.GetPmGroups());
+            var results = ParallelResults3.GroupBy(drives, drive => drive.GetPmGroups());
 
             // パラメータで選択済みの Name は、候補から除外する
             var names = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
-            yield return new CompletionResult(GenerateNewEntityName("NewGroup", names, results, e => e.Item.Value.name!));
+            var entities = results.SelectMany(e => e);
+            yield return new CompletionResult(GenerateNewEntityName("NewGroup", names, entities, e => e.Value.name!));
         }
     }
 

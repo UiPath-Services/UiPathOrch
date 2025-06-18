@@ -47,30 +47,33 @@ public class RemoveLicenseFromLicenseGroup: OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drives, drive => drive.PmLicensedGroups.Get());
+            var results = ParallelResults3.GroupBy(drives, drive => drive.PmLicensedGroups.Get());
 
-            foreach (var result in results
-                .FilterByWildcards(g => g?.Item.name!, wpGroupName)
-                .OrderBy(g => g?.Item.name))
+            foreach (var result in results)
             {
-                var group = result.Item;
-                if (group.userBundleLicenses is null) continue;
-
                 var drive = result.Source;
-                var availableUserBundles = drive.GetPmUserLicenseGroupsAvailableLicenses(group.id, group.name!);
 
-                foreach (var bundle in group.userBundleLicenses
-                    .Select(bundle => (bundle, AvailableUserBundlesItems.Items[bundle]))
-                    .ExcludeByWildcards(b => b.Item2, wpLicense)
-                    .OrderBy(b => b.Item2))
+                foreach (var group in result
+                    .FilterByWildcards(g => g?.name!, wpGroupName)
+                    .OrderBy(g => g?.name))
                 {
-                    string tiphelp = $"{drive.NameColonSeparator}{bundle.bundle}";
-                    var availableUserBundle = availableUserBundles?.availableUserBundles?.FirstOrDefault(b => string.Compare(b.code, bundle.bundle, true) == 0);
-                    if (availableUserBundle is not null)
+                    if (group.userBundleLicenses is null) continue;
+
+                    var availableUserBundles = drive.GetPmUserLicenseGroupsAvailableLicenses(group.id, group.name!);
+
+                    foreach (var bundle in group.userBundleLicenses
+                        .Select(bundle => (bundle, AvailableUserBundlesItems.Items[bundle]))
+                        .ExcludeByWildcards(b => b.Item2, wpLicense)
+                        .OrderBy(b => b.Item2))
                     {
-                        tiphelp += $"  Available: {availableUserBundle.total - availableUserBundle.allocated}";
+                        string tiphelp = $"{drive.NameColonSeparator}{bundle.bundle}";
+                        var availableUserBundle = availableUserBundles?.availableUserBundles?.FirstOrDefault(b => string.Compare(b.code, bundle.bundle, true) == 0);
+                        if (availableUserBundle is not null)
+                        {
+                            tiphelp += $"  Available: {availableUserBundle.total - availableUserBundle.allocated}";
+                        }
+                        yield return new CompletionResult(PathTools.EscapePSText(bundle.Item2), bundle.Item2, CompletionResultType.Text, tiphelp);
                     }
-                    yield return new CompletionResult(PathTools.EscapePSText(bundle.Item2), bundle.Item2, CompletionResultType.Text, tiphelp);
                 }
             }
         }
