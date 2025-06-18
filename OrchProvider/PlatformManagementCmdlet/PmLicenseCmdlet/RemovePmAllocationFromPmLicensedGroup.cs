@@ -44,27 +44,23 @@ public class RemoveAllocationFromUserLicenseGroup: OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.PmLicensedGroups.Get());
+            var results = ParallelResults2.ForEachMany(drives, drive => drive.PmLicensedGroups.Get());
 
-            foreach (var result in results)
+            foreach (var result in results
+                .FilterByWildcards(g => g?.Item.name!, wpGroupName)
+                .OrderBy(g => g?.Item.name))
             {
-                if (result.Result is null) continue;
-
                 var drive = result.Source;
+                var group = result.Item;
 
-                foreach (var e in result.Result
-                    .FilterByWildcards(g => g?.name!, wpGroupName)
-                    .OrderBy(g => g?.name))
+                var users = drive.GetPmLicensedGroupAllocations(group);
+                foreach (var user in users
+                    .Where(u => wp.IsMatch(u?.name))
+                    .ExcludeByWildcards(u => u?.name!, wpUserName)
+                    .OrderBy(u => u?.name))
                 {
-                    var users = drive.GetPmLicensedGroupAllocations(e);
-                    foreach (var user in users
-                        .Where(u => wp.IsMatch(u?.name))
-                        .ExcludeByWildcards(u => u?.name!, wpUserName)
-                        .OrderBy(u => u?.name))
-                    {
-                        string tiphelp = TipHelp(user);
-                        yield return new CompletionResult(PathTools.EscapePSText(user?.name), user?.name, CompletionResultType.Text, tiphelp);
-                    }
+                    string tiphelp = TipHelp(user);
+                    yield return new CompletionResult(PathTools.EscapePSText(user?.name), user?.name, CompletionResultType.Text, tiphelp);
                 }
             }
         }

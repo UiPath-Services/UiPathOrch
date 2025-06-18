@@ -76,7 +76,7 @@ public class GetPmRobotAccountCommand : OrchestratorPSCmdlet
 
         if (ExpandGroup.IsPresent)
         {
-            ParallelResults.ForEach(drives, drive => drive.GetPmGroups());
+            ParallelResults2.ForEachMany(drives, drive => drive.GetPmGroups());
         }
 
         using var cancelHandler = new ConsoleCancelHandler();

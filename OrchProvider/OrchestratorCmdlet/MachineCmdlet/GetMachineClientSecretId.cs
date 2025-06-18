@@ -47,23 +47,20 @@ public class GetMachineClientSecretIdCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.Machines.Get());
+            var results = ParallelResults2.ForEachMany(drives, drive => drive.Machines.Get());
 
             bool bFound = false;
-            foreach (var result in results)
+            foreach (var result in results
+                .Select(r => r.Item)
+                .Where(m => wp.IsMatch(m.Name))
+                .Where(m => m.Scope != "PersonalWorkspace" && m.Scope != "AutomationCloudRobot") // 共通の処理との差異はここだけ
+                .ExcludeByWildcards(m => m?.Name, wpName)
+                .OrderBy(m => m.Name!))
             {
-                if (result.Result is null) continue;
-
-                foreach (var machine in result.Result
-                    .Where(m => wp.IsMatch(m.Name))
-                    .Where(m => m.Scope != "PersonalWorkspace" && m.Scope != "AutomationCloudRobot") // 共通の処理との差異はここだけ
-                    .ExcludeByWildcards(m => m?.Name, wpName)
-                    .OrderBy(m => m.Name!))
-                {
-                    bFound = true;
-                    string tiphelp = TipHelp(machine);
-                    yield return new CompletionResult(PathTools.EscapePSText(machine.Name), machine.Name, CompletionResultType.ParameterValue, tiphelp);
-                }
+                bFound = true;
+                var machine = result;
+                string tiphelp = TipHelp(machine);
+                yield return new CompletionResult(PathTools.EscapePSText(machine.Name), machine.Name, CompletionResultType.ParameterValue, tiphelp);
             }
             if (!bFound)
             {
@@ -90,35 +87,30 @@ public class GetMachineClientSecretIdCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.Machines.Get());
+            var results = ParallelResults2.ForEachMany(drives, drive => drive.Machines.Get());
 
-            foreach (var result in results)
+            foreach (var result in results
+                .Where(m => m.Item.Scope != "PersonalWorkspace" && m.Item.Scope != "AutomationCloudRobot") // 共通の処理との差異はここだけ
+                .FilterByWildcards(m => m?.Item.Name, wpName)
+                .OrderBy(m => m.Item.Name!))
             {
-                if (result.Result is null) continue;
+                var machine = result.Item;
+                if (machine.LicenseKey is null) continue;
 
                 var drive = result.Source;
+                var secrets = drive.GetMachineClientSecret(machine.LicenseKey);
+                if (secrets is null) continue;
 
-                foreach (var machine in result.Result
-                    .Where(m => m.Scope != "PersonalWorkspace" && m.Scope != "AutomationCloudRobot") // 共通の処理との差異はここだけ
-                    .FilterByWildcards(m => m?.Name, wpName)
-                    .OrderBy(m => m.Name!))
+                foreach (var secret in secrets
+                    .Select(secret => (secret, secret.id.ToString()))
+                    .Where(secret_id => wp.IsMatch(secret_id.Item2))
+                    .ExcludeByWildcards(secret_id => secret_id.Item2, wpSecretId)
+                    .OrderBy(secret_id => secret_id.Item2))
                 {
-                    if (machine.LicenseKey is null) continue;
-
-                    var secrets = drive.GetMachineClientSecret(machine.LicenseKey);
-                    if (secrets is null) continue;
-
-                    foreach (var secret in secrets
-                        .Select(secret => (secret, secret.id.ToString()))
-                        .Where(secret_id => wp.IsMatch(secret_id.Item2))
-                        .ExcludeByWildcards(secret_id => secret_id.Item2, wpSecretId)
-                        .OrderBy(secret_id => secret_id.Item2))
-                    {
-                        string id = secret.Item2;
-                        string target = System.IO.Path.Combine(machine.GetPSPath(), secret.Item2!);
-                        string tiphelp = $"{target}  Created: {secret.Item1.creationTime}  ClientId: {machine.LicenseKey}";
-                        yield return new CompletionResult(PathTools.EscapePSText(id), id, CompletionResultType.ParameterValue, tiphelp);
-                    }
+                    string id = secret.Item2;
+                    string target = System.IO.Path.Combine(machine.GetPSPath(), secret.Item2!);
+                    string tiphelp = $"{target}  Created: {secret.Item1.creationTime}  ClientId: {machine.LicenseKey}";
+                    yield return new CompletionResult(PathTools.EscapePSText(id), id, CompletionResultType.ParameterValue, tiphelp);
                 }
             }
         }

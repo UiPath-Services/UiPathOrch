@@ -46,20 +46,16 @@ public class GetFolderMachineAccountMappingCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
 
-            foreach (var result in results)
+            foreach (var machine in results
+                .Select(r => r.Item)
+                .Where(m => !m.PropagateToSubFolders.GetValueOrDefault())
+                .Where(m => wp.IsMatch(m.Name))
+                .ExcludeByWildcards(m => m?.Name, wpName)
+                .OrderBy(m => m.Name))
             {
-                if (result.Result is null) continue;
-
-                foreach (var machine in result.Result
-                    .Where(m => !m.PropagateToSubFolders.GetValueOrDefault())
-                    .Where(m => wp.IsMatch(m.Name))
-                    .ExcludeByWildcards(m => m?.Name, wpName)
-                    .OrderBy(m => m.Name))
-                {
-                    yield return new CompletionResult(PathTools.EscapePSText(machine.Name), machine.Name, CompletionResultType.ParameterValue, TipHelp(machine));
-                }
+                yield return new CompletionResult(PathTools.EscapePSText(machine.Name), machine.Name, CompletionResultType.ParameterValue, TipHelp(machine));
             }
         }
     }

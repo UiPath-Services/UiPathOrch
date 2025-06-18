@@ -37,20 +37,16 @@ public class GetPersonalWorkspaceCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.PersonalWorkspaces.Get());
+            var results = ParallelResults2.ForEachMany(drives, drive => drive.PersonalWorkspaces.Get());
 
-            foreach (var result in results)
+            foreach (var personalWorkspace in results
+                .Select(r => r.Item)
+                .Where(q => wp.IsMatch(q.Name))
+                .ExcludeByWildcards(q => q?.Name, wpName)
+                .OrderBy(q => q.Name))
             {
-                if (result.Result is null) continue;
-
-                foreach (var e in result.Result
-                    .Where(q => wp.IsMatch(q.Name))
-                    .ExcludeByWildcards(q => q?.Name, wpName)
-                    .OrderBy(q => q.Name))
-                {
-                    string tiphelp = TipHelp(e);
-                    yield return new CompletionResult(PathTools.EscapePSText(e.Name), e.Name, CompletionResultType.ParameterValue, tiphelp);
-                }
+                string tiphelp = TipHelp(personalWorkspace);
+                yield return new CompletionResult(PathTools.EscapePSText(personalWorkspace.Name), personalWorkspace.Name, CompletionResultType.ParameterValue, tiphelp);
             }
         }
     }

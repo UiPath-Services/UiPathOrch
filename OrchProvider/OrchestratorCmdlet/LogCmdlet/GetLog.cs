@@ -123,20 +123,16 @@ public class GetLogCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
 
-            foreach (var result in results)
+            foreach (var machineFolder in results
+                .Select(r => r.Item)
+                .Where(q => wp.IsMatch(q.Name))
+                .ExcludeByWildcards(q => q?.Name, wpName)
+                .OrderBy(q => q.Name))
             {
-                if (result.Result is null) continue;
-
-                foreach (var e in result.Result
-                    .Where(q => wp.IsMatch(q.Name))
-                    .ExcludeByWildcards(q => q?.Name, wpName)
-                    .OrderBy(q => q.Name))
-                {
-                    //string tiphelp = TipHelp(e);
-                    yield return new CompletionResult(PathTools.EscapePSText(e.Name), e.Name, CompletionResultType.ParameterValue, e.Name);
-                }
+                //string tiphelp = TipHelp(e);
+                yield return new CompletionResult(PathTools.EscapePSText(machineFolder.Name), machineFolder.Name, CompletionResultType.ParameterValue, machineFolder.Name);
             }
         }
     }
@@ -157,21 +153,17 @@ public class GetLogCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.UserRobots.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.UserRobots.Get(df.folder));
 
-            foreach (var result in results)
+            foreach (var userRobots in results
+                .Select(r => r.Item)
+                .Where(e => !string.IsNullOrEmpty(e.UserName))
+                .Where(e => wp.IsMatch(e.UserName))
+                .ExcludeByWildcards(e => e?.UserName, wpWindowsIdentity)
+                .OrderBy(q => q.UserName))
             {
-                if (result.Result is null) continue;
-
-                foreach (var e in result.Result
-                    .Where(e => !string.IsNullOrEmpty(e.UserName))
-                    .Where(e => wp.IsMatch(e.UserName))
-                    .ExcludeByWildcards(e => e?.UserName, wpWindowsIdentity)
-                    .OrderBy(q => q.UserName))
-                {
-                    //string tiphelp = TipHelp(e);
-                    yield return new CompletionResult(PathTools.EscapePSText(e.UserName), e.UserName, CompletionResultType.ParameterValue, e.UserName);
-                }
+                //string tiphelp = TipHelp(e);
+                yield return new CompletionResult(PathTools.EscapePSText(userRobots.UserName), userRobots.UserName, CompletionResultType.ParameterValue, userRobots.UserName);
             }
         }
     }

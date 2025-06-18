@@ -92,21 +92,17 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.PmRobotAccounts.Get());
+            var results = ParallelResults2.ForEachMany(drives, drive => drive.PmRobotAccounts.Get());
 
-            foreach (var result in results)
+            foreach (var robotAccount in results
+                .Select(r => r.Item)
+                .Where(r => r is not null)
+                .Where(r => wp.IsMatch(r!.name!))
+                .ExcludeByWildcards(r => r!.name!, wpName)
+                .OrderBy(r => r!.name))
             {
-                if (result.Result is null) continue;
-
-                foreach (var e in result.Result
-                    .Where(r => r is not null)
-                    .Where(r => wp.IsMatch(r!.name!))
-                    .ExcludeByWildcards(r => r!.name!, wpName)
-                    .OrderBy(r => r!.name))
-                {
-                    string tiphelp = e.GetPSPath();
-                    yield return new CompletionResult(PathTools.EscapePSText(e.name), e.name, CompletionResultType.ParameterValue, tiphelp);
-                }
+                string tiphelp = robotAccount.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(robotAccount.name), robotAccount.name, CompletionResultType.ParameterValue, tiphelp);
             }
 
             string newRobotName = "New robot name here";
@@ -131,24 +127,17 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.GetPmGroups());
+            var results = ParallelResults2.ForEachMany(drives, drive => drive.GetPmGroups());
 
-            foreach (var drive in drives)
+            foreach (var group in results
+                .Select(r => r.Item.Value)
+                .Where(e => e is not null)
+                .Where(e => wp.IsMatch(e?.name))
+                .ExcludeByWildcards(e => e?.name!, wpGroupName)
+                .OrderBy(e => e?.name))
             {
-                foreach (var result in results)
-                {
-                    if (result.Result is null) continue;
-
-                    foreach (var e in result.Result.Values
-                        .Where(e => e is not null)
-                        .Where(e => wp.IsMatch(e?.name))
-                        .ExcludeByWildcards(e => e?.name!, wpGroupName)
-                        .OrderBy(e => e?.name))
-                    {
-                        string tiphelp = e!.GetPSPath();
-                        yield return new CompletionResult(PathTools.EscapePSText(e!.name), e.name, CompletionResultType.ParameterValue, tiphelp);
-                    }
-                }
+                string tiphelp = group!.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(group!.name), group.name, CompletionResultType.ParameterValue, tiphelp);
             }
         }
     }

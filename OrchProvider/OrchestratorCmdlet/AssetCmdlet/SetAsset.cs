@@ -98,21 +98,17 @@ public class SetAssetCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Assets.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.Assets.Get(df.folder));
 
-            foreach (var result in results)
+            foreach (var asset in results
+                .Select(r => r.Item)
+                .Where(a => wp.IsMatch(a.ValueType))
+                .FilterByWildcards(a => a?.ValueType, wpValueType)
+                .ExcludeByWildcards(a => a?.Name, wpName)
+                .OrderBy(a => a.Name))
             {
-                if (result.Result is null) continue;
-
-                foreach (var asset in result.Result
-                    .Where(a => wp.IsMatch(a.ValueType))
-                    .FilterByWildcards(a => a?.ValueType, wpValueType)
-                    .ExcludeByWildcards(a => a?.Name, wpName)
-                    .OrderBy(a => a.Name))
-                {
-                    string tiphelp = asset.GetPSPath();
-                    yield return new CompletionResult(PathTools.EscapePSText(asset.Name), asset.Name, CompletionResultType.Text, tiphelp);
-                }
+                string tiphelp = asset.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(asset.Name), asset.Name, CompletionResultType.Text, tiphelp);
             }
 
             if (wordToComplete == "")
@@ -139,26 +135,22 @@ public class SetAssetCommand : OrchestratorPSCmdlet
             var wpDescription = CreateWPListFromParameter(commandAst, "Description", TPositional.Parameters, wordToComplete);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Assets.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.Assets.Get(df.folder));
 
             bool isEmpty = true;
-            foreach (var result in results)
+            foreach (var asset in results
+                .Select(r => r.Item)
+                .Where(a => a.ValueType != "Credential")
+                .Where(a => wp.IsMatch(a.Description))
+                .FilterByWildcards(a => a?.ValueType, wpValueType)
+                .FilterByWildcards(a => a?.Name, wpName)
+                .ExcludeByWildcards(a => a?.Description, wpDescription))
             {
-                if (result.Result is null) continue;
-
-                foreach (var asset in result.Result
-                    .Where(a => a.ValueType != "Credential")
-                    .Where(a => wp.IsMatch(a.Description))
-                    .FilterByWildcards(a => a?.ValueType, wpValueType)
-                    .FilterByWildcards(a => a?.Name, wpName)
-                    .ExcludeByWildcards(a => a?.Description, wpDescription))
+                if (!string.IsNullOrEmpty(asset.Description))
                 {
-                    if (!string.IsNullOrEmpty(asset.Description))
-                    {
-                        isEmpty = false;
-                        string tooltip = $" (current description of '{asset.Name}')";
-                        yield return new CompletionResult(PathTools.EscapeNonWildcardText(asset.Description), asset.Description, CompletionResultType.Text, tooltip);
-                    }
+                    isEmpty = false;
+                    string tooltip = $" (current description of '{asset.Name}')";
+                    yield return new CompletionResult(PathTools.EscapeNonWildcardText(asset.Description), asset.Description, CompletionResultType.Text, tooltip);
                 }
             }
 
@@ -213,38 +205,34 @@ public class SetAssetCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Assets.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.Assets.Get(df.folder));
 
             bool bValueExists = false;
-            foreach (var result in results)
+            foreach (var asset in results
+                .Select(r => r.Item)
+                .Where(a => a.ValueType != "Credential")
+                .FilterByWildcards(a => a?.ValueType, wpValueType)
+                .FilterByWildcards(a => a?.Name, wpName))
             {
-                if (result.Result is null) continue;
-
-                foreach (var asset in result.Result
-                    .Where(a => a.ValueType != "Credential")
-                    .FilterByWildcards(a => a?.ValueType, wpValueType)
-                    .FilterByWildcards(a => a?.Name, wpName))
+                if ((wpUserName is not null && wpUserName.Count != 0) || (wpMachineName is not null && wpMachineName.Count != 0))
                 {
-                    if ((wpUserName is not null && wpUserName.Count != 0) || (wpMachineName is not null && wpMachineName.Count != 0))
+                    var userValues = asset.UserValues?
+                        .FilterByWildcards(uv => uv?.UserName, wpUserName)
+                        .FilterByWildcards(uv => uv?.MachineName, wpMachineName);
+                    foreach (var userValue in userValues!)
                     {
-                        var userValues = asset.UserValues?
-                            .FilterByWildcards(uv => uv?.UserName, wpUserName)
-                            .FilterByWildcards(uv => uv?.MachineName, wpMachineName);
-                        foreach (var userValue in userValues!)
-                        {
-                            bValueExists = true;
-                            string tiphelp = TipHelp(asset);
-                            yield return new CompletionResult(PathTools.EscapePSText(userValue.Value), userValue.Value, CompletionResultType.Text, tiphelp);
-                        }
+                        bValueExists = true;
+                        string tiphelp = TipHelp(asset);
+                        yield return new CompletionResult(PathTools.EscapePSText(userValue.Value), userValue.Value, CompletionResultType.Text, tiphelp);
                     }
-                    else
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(asset.Value))
                     {
-                        if (!string.IsNullOrEmpty(asset.Value))
-                        {
-                            bValueExists = true;
-                            string tiphelp = TipHelp(asset);
-                            yield return new CompletionResult(PathTools.EscapePSText(asset.Value), asset.Value, CompletionResultType.Text, tiphelp);
-                        }
+                        bValueExists = true;
+                        string tiphelp = TipHelp(asset);
+                        yield return new CompletionResult(PathTools.EscapePSText(asset.Value), asset.Value, CompletionResultType.Text, tiphelp);
                     }
                 }
             }
@@ -276,21 +264,17 @@ public class SetAssetCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderUsersWithInherited.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderUsersWithInherited.Get(df.folder));
 
-            foreach (var result in results)
+            foreach (var userRoles in results
+                .Select(r => r.Item)
+                .Where(u => u.UserEntity!.Type != "DirectoryGroup")
+                .Where(ur => wp.IsMatch(ur.UserEntity!.UserName))
+                .ExcludeByWildcards(ur => ur?.UserEntity?.UserName, wpUserName)
+                .OrderBy(ur => ur.UserEntity!.UserName))
             {
-                if (result.Result is null) continue;
-
-                foreach (var userRole in result.Result
-                    .Where(u => u.UserEntity!.Type != "DirectoryGroup")
-                    .Where(ur => wp.IsMatch(ur.UserEntity!.UserName))
-                    .ExcludeByWildcards(ur => ur?.UserEntity?.UserName, wpUserName)
-                    .OrderBy(ur => ur.UserEntity!.UserName))
-                {
-                    string tiphelp = TipHelp(userRole);
-                    yield return new CompletionResult(PathTools.EscapePSText(userRole.UserEntity!.UserName), userRole.UserEntity!.UserName, CompletionResultType.ParameterValue, tiphelp);
-                }
+                string tiphelp = TipHelp(userRoles);
+                yield return new CompletionResult(PathTools.EscapePSText(userRoles.UserEntity!.UserName), userRoles.UserEntity!.UserName, CompletionResultType.ParameterValue, tiphelp);
             }
         }
     }
@@ -314,20 +298,16 @@ public class SetAssetCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
 
-            foreach (var result in results)
+            foreach (var machine in results
+                .Select(r => r.Item)
+                .Where(m => wp.IsMatch(m.Name))
+                .ExcludeByWildcards(m => m?.Name, wpMachineName)
+                .OrderBy(m => m.Name))
             {
-                if (result.Result is null) continue;
-
-                foreach (var machine in result.Result
-                    .Where(m => wp.IsMatch(m.Name))
-                    .ExcludeByWildcards(m => m?.Name, wpMachineName)
-                    .OrderBy(m => m.Name))
-                {
-                    string tiphelp = machine.GetPSPath();
-                    yield return new CompletionResult(PathTools.EscapePSText(machine.Name), machine.Name, CompletionResultType.ParameterValue, tiphelp);
-                }
+                string tiphelp = machine.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(machine.Name), machine.Name, CompletionResultType.ParameterValue, tiphelp);
             }
         }
     }

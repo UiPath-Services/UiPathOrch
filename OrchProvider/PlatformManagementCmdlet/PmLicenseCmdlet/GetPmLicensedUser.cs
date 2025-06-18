@@ -66,23 +66,18 @@ public class GetUserLicenseUser: OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.PmLicensedUsers.Get());
+            var results = ParallelResults2.ForEachMany(drives, drive => drive.PmLicensedUsers.Get());
 
-            foreach (var result in results)
+            foreach (var result in results
+                .Where(e => !string.IsNullOrEmpty(e.Item.name))
+                .ExcludeByWildcards(u => u?.Item.name!, wpName)
+                .FilterByWildcards(u => u?.Item.email, wpEmail)
+                .OrderBy(u => u?.Item.name))
             {
-                if (result.Result is null) continue;
-
                 var drive = result.Source;
-
-                foreach (var e in result.Result
-                    .Where(e => !string.IsNullOrEmpty(e.name))
-                    .ExcludeByWildcards(u => u?.name!, wpName)
-                    .FilterByWildcards(u => u?.email, wpEmail)
-                    .OrderBy(u => u?.name))
-                {
-                    string tiphelp = System.IO.Path.Combine(drive.NameColonSeparator, e.name!);
-                    yield return new CompletionResult(PathTools.EscapePSText(e.name), e.name, CompletionResultType.Text, tiphelp);
-                }
+                var e = result.Item;
+                string tiphelp = System.IO.Path.Combine(drive.NameColonSeparator, e.name!);
+                yield return new CompletionResult(PathTools.EscapePSText(e.name), e.name, CompletionResultType.Text, tiphelp);
             }
         }
     }
@@ -103,23 +98,18 @@ public class GetUserLicenseUser: OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.PmLicensedUsers.Get());
+            var results = ParallelResults2.ForEachMany(drives, drive => drive.PmLicensedUsers.Get());
 
-            foreach (var result in results)
+            foreach (var result in results
+                .Where(e => !string.IsNullOrEmpty(e.Item.email))
+                .FilterByWildcards(u => u?.Item.name!, wpName)
+                .ExcludeByWildcards(u => u?.Item.email, wpEmail)
+                .OrderBy(u => u?.Item.email))
             {
-                if (result.Result is null) continue;
-
                 var drive = result.Source;
-
-                foreach (var e in result.Result
-                    .Where(e => !string.IsNullOrEmpty(e.email))
-                    .FilterByWildcards(u => u?.name!, wpName)
-                    .ExcludeByWildcards(u => u?.email, wpEmail)
-                    .OrderBy(u => u?.email))
-                {
-                    string tiphelp = System.IO.Path.Combine(drive.NameColonSeparator, e.email!);
-                    yield return new CompletionResult(PathTools.EscapePSText(e.email), e.email, CompletionResultType.Text, tiphelp);
-                }
+                var e = result.Item;
+                string tiphelp = System.IO.Path.Combine(drive.NameColonSeparator, e.email!);
+                yield return new CompletionResult(PathTools.EscapePSText(e.email), e.email, CompletionResultType.Text, tiphelp);
             }
         }
     }

@@ -107,13 +107,12 @@ public class NewQueueCommand : OrchestratorPSCmdlet
             IDictionary fakeBoundParameters)
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Queues.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.Queues.Get(df.folder));
 
             // パラメータで選択済みの Name は、候補から除外する
             var names = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
-            var entities = results.SelectMany(e => e.Result ?? []);
-            yield return new CompletionResult(GenerateNewEntityName("NewQueue", names, entities, e => e.Name!));
+            yield return new CompletionResult(GenerateNewEntityName("NewQueue", names, results, e => e.Item.Name!));
         }
     }
 

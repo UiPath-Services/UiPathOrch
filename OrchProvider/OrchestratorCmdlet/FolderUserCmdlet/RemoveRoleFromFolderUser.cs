@@ -70,23 +70,19 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
-            foreach (var result in results)
+            foreach (var userRoles in results
+                .Select(r => r.Item)
+                .Where(eu => wp.IsMatch(eu.UserEntity!.UserName!))
+                .ExcludeByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
+                .FilterByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
+                .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
+                .OrderBy(u => u.UserEntity!.UserName))
             {
-                if (result.Result is null) continue;
-
-                foreach (var e in result.Result
-                    .Where(eu => wp.IsMatch(eu.UserEntity!.UserName!))
-                    .ExcludeByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
-                    .FilterByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
-                    .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
-                    .OrderBy(u => u.UserEntity!.UserName))
-                {
-                    string tiphelp = TipHelp(e);
-                    var ret = new CompletionResult(PathTools.EscapePSText(e.UserEntity!.UserName), e.UserEntity.UserName, CompletionResultType.ParameterValue, tiphelp);
-                    yield return ret;
-                }
+                string tiphelp = TipHelp(userRoles);
+                var ret = new CompletionResult(PathTools.EscapePSText(userRoles.UserEntity!.UserName), userRoles.UserEntity.UserName, CompletionResultType.ParameterValue, tiphelp);
+                yield return ret;
             }
         }
     }
@@ -118,23 +114,19 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
-            foreach (var result in results)
+            foreach (var userRoles in results
+                .Select(r => r.Item)
+                .Where(eu => wp.IsMatch(eu.UserEntity?.FullName))
+                .ExcludeByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
+                .FilterByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
+                .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
+                .OrderBy(u => u.UserEntity!.FullName))
             {
-                if (result.Result is null) continue;
-
-                foreach (var e in result.Result
-                    .Where(eu => wp.IsMatch(eu.UserEntity?.FullName))
-                    .ExcludeByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
-                    .FilterByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
-                    .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
-                    .OrderBy(u => u.UserEntity!.FullName))
-                {
-                    string tiphelp = TipHelp(e);
-                    var ret = new CompletionResult(PathTools.EscapePSText(e.UserEntity!.FullName), e.UserEntity.FullName, CompletionResultType.ParameterValue, tiphelp);
-                    yield return ret;
-                }
+                string tiphelp = TipHelp(userRoles);
+                var ret = new CompletionResult(PathTools.EscapePSText(userRoles.UserEntity!.FullName), userRoles.UserEntity.FullName, CompletionResultType.ParameterValue, tiphelp);
+                yield return ret;
             }
         }
     }
@@ -164,28 +156,24 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
-            foreach (var result in results)
+            foreach (var userRoles in results
+                .Select(r => r.Item)
+                .FilterByWildcards(u => u?.UserEntity?.FullName, wpFullName)
+                .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName)
+                .FilterByWildcards(u => u?.UserEntity?.Type, wpType))
             {
-                if (result.Result is null) continue;
-
-                foreach (var e in result.Result
-                    .FilterByWildcards(u => u?.UserEntity?.FullName, wpFullName)
-                    .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName)
-                    .FilterByWildcards(u => u?.UserEntity?.Type, wpType))
+                if (userRoles.Roles is not null)
                 {
-                    if (e.Roles is not null)
+                    foreach (var role in userRoles.Roles
+                        .Where(r => wp.IsMatch(r.Name))
+                        .ExcludeByWildcards(role => role?.Name, wpRoles)
+                        .OrderBy(role => role.Name))
                     {
-                        foreach (var role in e.Roles
-                            .Where(r => wp.IsMatch(r.Name))
-                            .ExcludeByWildcards(role => role?.Name, wpRoles)
-                            .OrderBy(role => role.Name))
-                        {
-                            string tiphelp = TipHelp(e);
-                            var ret = new CompletionResult(PathTools.EscapePSText(role.Name), role.Name, CompletionResultType.ParameterValue, tiphelp);
-                            yield return ret;
-                        }
+                        string tiphelp = TipHelp(userRoles);
+                        var ret = new CompletionResult(PathTools.EscapePSText(role.Name), role.Name, CompletionResultType.ParameterValue, tiphelp);
+                        yield return ret;
                     }
                 }
             }

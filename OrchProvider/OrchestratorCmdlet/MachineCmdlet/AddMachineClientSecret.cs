@@ -42,24 +42,21 @@ public class AddMachineClientSecretCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.Machines.Get());
+            var results = ParallelResults2.ForEachMany(drives, drive => drive.Machines.Get());
 
             bool bFound = false;
-            foreach (var result in results)
+            foreach (var machine in results
+                .Select(r => r.Item)
+                .Where(m => wp.IsMatch(m.Name))
+                .Where(m => m.Scope != "PersonalWorkspace" && m.Scope != "AutomationCloudRobot") // 共通の処理との差異はここだけ
+                .ExcludeByWildcards(m => m?.Name, wpName)
+                .OrderBy(m => m.Name!))
             {
-                if (result.Result is null) continue;
-
-                foreach (var machine in result.Result
-                    .Where(m => wp.IsMatch(m.Name))
-                    .Where(m => m.Scope != "PersonalWorkspace" && m.Scope != "AutomationCloudRobot") // 共通の処理との差異はここだけ
-                    .ExcludeByWildcards(m => m?.Name, wpName)
-                    .OrderBy(m => m.Name!))
-                {
-                    bFound = true;
-                    string tiphelp = TipHelp(machine);
-                    yield return new CompletionResult(PathTools.EscapePSText(machine.Name), machine.Name, CompletionResultType.ParameterValue, tiphelp);
-                }
+                bFound = true;
+                string tiphelp = TipHelp(machine);
+                yield return new CompletionResult(PathTools.EscapePSText(machine.Name), machine.Name, CompletionResultType.ParameterValue, tiphelp);
             }
+
             if (!bFound)
             {
                 yield return new CompletionResult("'(No credential stores found)'");

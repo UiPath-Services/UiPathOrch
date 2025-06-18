@@ -51,51 +51,46 @@ public class RedoQueueItemCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var queues = ParallelResults.ForEach(drivesFolders, df => df.drive.Queues.Get(df.folder));
+            var queues = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.Queues.Get(df.folder));
 
-            foreach (var result in queues)
+            foreach (var result in queues
+                .FilterByWildcards(q => q?.Item.Name, wpName)
+                .OrderBy(q => q.Item.Name))
             {
-                if (result.Result is null) continue;
-
                 var (drive, folder) = result.Source;
+                var queue = result.Item;
+                List<QueueItem> items = null;
 
-                foreach (var queue in result.Result
-                    .FilterByWildcards(q => q?.Name, wpName)
-                    .OrderBy(q => q.Name))
+                #region キャッシュされたアイテムを取得
+                if (drive._dicQueueItems?.TryGetValue(folder.Id!.Value, out var itemsPerFolder) ?? false)
                 {
-                    List<QueueItem> items = null;
-
-                    #region キャッシュされたアイテムを取得
-                    if (drive._dicQueueItems?.TryGetValue(folder.Id!.Value, out var itemsPerFolder) ?? false)
+                    if (itemsPerFolder.TryGetValue(queue.Name!, out var itemsPerQueue))
                     {
-                        if (itemsPerFolder.TryGetValue(queue.Name!, out var itemsPerQueue))
+                        if (itemsPerQueue is not null)
                         {
-                            if (itemsPerQueue is not null)
-                            {
-                                items = itemsPerQueue.Values.ToList();
-                            }
+                            items = itemsPerQueue.Values.ToList();
                         }
                     }
-                    #endregion
+                }
+                #endregion
 
-                    // キャッシュが空なら、リトライ可能な最初の 100 個のアイテムを取得
-                    if (items is null)
-                    {
-                        items = drive.GetQueueItems(folder, queue, MakeFilter(queue), 0, 100);
-                    }
+                // キャッシュが空なら、リトライ可能な最初の 100 個のアイテムを取得
+                if (items is null)
+                {
+                    items = drive.GetQueueItems(folder, queue, MakeFilter(queue), 0, 100);
+                }
 
-                    if (items is null) continue;
+                if (items is null) continue;
 
-                    foreach (var item in items
-                        .Where(i => wp.IsMatch(i.Id!.Value.ToString()))
-                        .Where(i => i.Status == "Failed" && i.ReviewStatus != "Retried" && i.ReviewStatus != "Verified")
-                        .ExcludeByWildcards(i => i!.Id.ToString(), wpId)
-                        .OrderBy(i => i.Id))
-                    {
-                        string tooltip = TipHelp(item);
-                        string strId = item.Id.ToString();
-                        yield return new CompletionResult(strId, strId, CompletionResultType.Text, tooltip);
-                    }
+                foreach (var item in items
+                    .Where(i => wp.IsMatch(i.Id!.Value.ToString()))
+                    .Where(i => i.Status == "Failed" && i.ReviewStatus != "Retried" && i.ReviewStatus != "Verified")
+                    .ExcludeByWildcards(i => i!.Id.ToString(), wpId)
+                    .OrderBy(i => i.Id))
+                {
+                    string tooltip = TipHelp(item);
+                    string strId = item.Id.ToString();
+                    yield return new CompletionResult(strId, strId, CompletionResultType.Text, tooltip);
                 }
             }
         }

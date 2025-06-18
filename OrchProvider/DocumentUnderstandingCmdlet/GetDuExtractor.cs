@@ -46,20 +46,16 @@ public class GetDuExtractorCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesProjects, dp => dp.drive.GetDuDocumentTypes(dp.project));
+            var results = ParallelResults2.ForEachMany(drivesProjects, dp => dp.drive.GetDuDocumentTypes(dp.project));
 
-            foreach (var result in results)
+            foreach (var documentType in results
+                .Select(r => r.Item)
+                .Where(e => wp.IsMatch(e?.name))
+                .ExcludeByWildcards(e => e?.name!, wpName)
+                .OrderBy(e => e?.name))
             {
-                if (result.Result is null) continue;
-
-                foreach (var valueType in result.Result
-                    .Where(e => wp.IsMatch(e?.name))
-                    .ExcludeByWildcards(e => e?.name!, wpName)
-                    .OrderBy(e => e?.name))
-                {
-                    string tooltip = valueType.GetPSPath();
-                    yield return new CompletionResult(PathTools.EscapePSText(valueType.name), valueType.name, CompletionResultType.Text, tooltip);
-                }
+                string tooltip = documentType.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(documentType.name), documentType.name, CompletionResultType.Text, tooltip);
             }
         }
     }

@@ -110,26 +110,22 @@ public class AddFolderUserCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drives, drive => drive.Roles.Get());
+            var results = ParallelResults2.ForEachMany(drives, drive => drive.Roles.Get());
 
-            foreach (var result in results)
+            foreach (var role in results
+                .Select(r => r.Item)
+                .Where(role => role.Type != "Tenant")
+                .Where(role => wp.IsMatch(role.Name))
+                .ExcludeByWildcards(role => role?.Name, wpRoles)
+                .OrderBy(role => role.Type)
+                .ThenBy(role => role.Name))
             {
-                if (result.Result is null) continue;
-
-                foreach (var role in result.Result
-                    .Where(role => role.Type != "Tenant")
-                    .Where(role => wp.IsMatch(role.Name))
-                    .ExcludeByWildcards(role => role?.Name, wpRoles)
-                    .OrderBy(role => role.Type)
-                    .ThenBy(role => role.Name))
+                string tiphelp = role.GetPSPath();
+                if (!string.IsNullOrEmpty(role.Type))
                 {
-                    string tiphelp = role.GetPSPath();
-                    if (!string.IsNullOrEmpty(role.Type))
-                    {
-                        tiphelp += $" ({role.Type})";
-                    }
-                    yield return new CompletionResult(PathTools.EscapePSText(role.Name), role.Name, CompletionResultType.ParameterValue, tiphelp);
+                    tiphelp += $" ({role.Type})";
                 }
+                yield return new CompletionResult(PathTools.EscapePSText(role.Name), role.Name, CompletionResultType.ParameterValue, tiphelp);
             }
         }
     }

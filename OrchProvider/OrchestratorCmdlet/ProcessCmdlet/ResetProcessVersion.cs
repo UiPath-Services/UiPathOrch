@@ -42,22 +42,18 @@ public class ResetProcessVersionCommand: OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetReleases(df.folder));
+            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.GetReleases(df.folder));
 
-            foreach (var result in results)
+            foreach (var release in results
+                .Select(r => r.Item)
+                .Where(p => p.ProcessType != "TestAutomationProcess")
+                .Where(p => p.ReleaseVersions is not null && p.ReleaseVersions.Length >= 2)
+                .Where(p => wp.IsMatch(p.Name))
+                .ExcludeByWildcards(p => p?.Name, wpName)
+                .OrderBy(p => p.Name))
             {
-                if (result.Result is null) continue;
-
-                foreach (var release in result.Result
-                    .Where(p => p.ProcessType != "TestAutomationProcess")
-                    .Where(p => p.ReleaseVersions is not null && p.ReleaseVersions.Length >= 2)
-                    .Where(p => wp.IsMatch(p.Name))
-                    .ExcludeByWildcards(p => p?.Name, wpName)
-                    .OrderBy(p => p.Name))
-                {
-                    string tiphelp = TipHelp(release);
-                    yield return new CompletionResult(PathTools.EscapePSText(release.Name), release.Name, CompletionResultType.ParameterValue, tiphelp);
-                }
+                string tiphelp = TipHelp(release);
+                yield return new CompletionResult(PathTools.EscapePSText(release.Name), release.Name, CompletionResultType.ParameterValue, tiphelp);
             }
         }
     }
