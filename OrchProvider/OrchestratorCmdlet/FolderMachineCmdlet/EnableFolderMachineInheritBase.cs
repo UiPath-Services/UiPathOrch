@@ -32,19 +32,21 @@ public class EnableFolderMachineInheritCommandBase<EnableInherit> : Orchestrator
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
 
-            foreach (var machineFolder in results
-                .Select(r => r.Item)
-                .Where(m => wp.IsMatch(m.Name))
-                .Where(m => m.IsAssignedToFolder.GetValueOrDefault())
-                .Where(m => EnableInherit.Value
-                    ? !m.PropagateToSubFolders.GetValueOrDefault()
-                    : m.PropagateToSubFolders.GetValueOrDefault())
-                .ExcludeByWildcards(m => m?.Name, wpName)
-                .OrderBy(m => m.Name))
+            foreach (var result in results)
             {
-                yield return new CompletionResult(PathTools.EscapePSText(machineFolder.Name), machineFolder.Name, CompletionResultType.ParameterValue, TipHelp(machineFolder));
+                foreach (var machineFolder in result
+                    .Where(m => wp.IsMatch(m.Name))
+                    .Where(m => m.IsAssignedToFolder.GetValueOrDefault())
+                    .Where(m => EnableInherit.Value
+                        ? !m.PropagateToSubFolders.GetValueOrDefault()
+                        : m.PropagateToSubFolders.GetValueOrDefault())
+                    .ExcludeByWildcards(m => m?.Name, wpName)
+                    .OrderBy(m => m.Name))
+                {
+                    yield return new CompletionResult(PathTools.EscapePSText(machineFolder.Name), machineFolder.Name, CompletionResultType.ParameterValue, TipHelp(machineFolder));
+                }
             }
         }
     }

@@ -36,16 +36,18 @@ public class GetDuRoleCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drives, drive => drive.GetDuRoles());
+            var results = ParallelResults3.GroupBy(drives, drive => drive.GetDuRoles());
 
-            foreach (var role in results
-                .Select(r => r.Item)
-                .Where(e => wp.IsMatch(e?.name))
-                .ExcludeByWildcards(e => e?.name!, wpName)
-                .OrderBy(e => e?.name))
+            foreach (var result in results)
             {
-                string tiphelp = role.GetPSPath();
-                yield return new CompletionResult(PathTools.EscapePSText(role.name), role.name, CompletionResultType.Text, tiphelp);
+                foreach (var role in result
+                    .Where(e => wp.IsMatch(e?.name))
+                    .ExcludeByWildcards(e => e?.name!, wpName)
+                    .OrderBy(e => e?.name))
+                {
+                    string tiphelp = role.GetPSPath();
+                    yield return new CompletionResult(PathTools.EscapePSText(role.name), role.name, CompletionResultType.Text, tiphelp);
+                }
             }
         }
     }

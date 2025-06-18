@@ -86,23 +86,25 @@ public class GetUserLicenseGroup: OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drives, drive => drive.PmLicensedGroups.Get());
+            var results = ParallelResults3.GroupBy(drives, drive => drive.PmLicensedGroups.Get());
 
-            foreach (var result in results
-                .FilterByWildcards(g => g?.Item.name!, wpGroupName)
-                .OrderBy(g => g?.Item.name))
+            foreach (var result in results)
             {
                 var drive = result.Source;
-                var group = result.Item;
 
-                var users = drive.GetPmLicensedGroupAllocations(group);
-                foreach (var user in users
-                    .Where(u => wp.IsMatch(u?.name))
-                    .ExcludeByWildcards(u => u?.name!, wpUserName)
-                    .OrderBy(u => u?.name))
+                foreach (var group in result
+                    .FilterByWildcards(g => g?.name!, wpGroupName)
+                    .OrderBy(g => g?.name))
                 {
-                    string tiphelp = TipHelp(user);
-                    yield return new CompletionResult(PathTools.EscapePSText(user?.name), user?.name, CompletionResultType.Text, tiphelp);
+                    var users = drive.GetPmLicensedGroupAllocations(group);
+                    foreach (var user in users
+                        .Where(u => wp.IsMatch(u?.name))
+                        .ExcludeByWildcards(u => u?.name!, wpUserName)
+                        .OrderBy(u => u?.name))
+                    {
+                        string tiphelp = TipHelp(user);
+                        yield return new CompletionResult(PathTools.EscapePSText(user?.name), user?.name, CompletionResultType.Text, tiphelp);
+                    }
                 }
             }
         }

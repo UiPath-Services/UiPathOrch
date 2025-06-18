@@ -45,19 +45,21 @@ public class EnableTestSetScheduleCommandBase<Enable> : OrchestratorPSCmdlet whe
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.TestSetSchedules.Get(df.folder));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.TestSetSchedules.Get(df.folder));
 
-            foreach (var entity in results
-                .Select(r => r.Item)
-                .Where(t => Enable.Value
-                    ? !t.Enabled.GetValueOrDefault()
-                    : t.Enabled.GetValueOrDefault())
-                .Where(e => wp.IsMatch(e.Name!))
-                .ExcludeByWildcards(e => e?.Name, wpName)
-                .OrderBy(e => e.Name))
+            foreach (var result in results)
             {
-                string tiphelp = TipHelp(entity);
-                yield return new CompletionResult(PathTools.EscapePSText(entity.Name), entity.Name, CompletionResultType.ParameterValue, tiphelp);
+                foreach (var entity in result
+                    .Where(t => Enable.Value
+                        ? !t.Enabled.GetValueOrDefault()
+                        : t.Enabled.GetValueOrDefault())
+                    .Where(e => wp.IsMatch(e.Name!))
+                    .ExcludeByWildcards(e => e?.Name, wpName)
+                    .OrderBy(e => e.Name))
+                {
+                    string tiphelp = TipHelp(entity);
+                    yield return new CompletionResult(PathTools.EscapePSText(entity.Name), entity.Name, CompletionResultType.ParameterValue, tiphelp);
+                }
             }
         }
     }

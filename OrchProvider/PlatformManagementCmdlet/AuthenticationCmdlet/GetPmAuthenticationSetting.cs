@@ -37,16 +37,18 @@ public class GetPmAuthenticationSettingCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drives, drive => drive.PmUsers.Get());
+            var results = ParallelResults3.GroupBy(drives, drive => drive.PmUsers.Get());
 
-            foreach (var user in results
-                .Select(r => r.Item)
-                .Where(g => wp.IsMatch(g?.userName))
-                .ExcludeByWildcards(u => u?.userName!, wpUserName)
-                .OrderBy(u => u?.userName))
+            foreach (var result in results)
             {
-                string tooltip = user.GetPSPath();
-                yield return new CompletionResult(PathTools.EscapePSText(user.userName), user.userName, CompletionResultType.Text, tooltip);
+                foreach (var user in result
+                    .Where(g => wp.IsMatch(g?.userName))
+                    .ExcludeByWildcards(u => u?.userName!, wpUserName)
+                    .OrderBy(u => u?.userName))
+                {
+                    string tooltip = user.GetPSPath();
+                    yield return new CompletionResult(PathTools.EscapePSText(user.userName), user.userName, CompletionResultType.Text, tooltip);
+                }
             }
         }
     }

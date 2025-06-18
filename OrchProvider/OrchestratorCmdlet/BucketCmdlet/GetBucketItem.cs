@@ -52,21 +52,26 @@ public class GetBucketItemCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drivesFolders, df =>
+            var results = ParallelResults3.GroupBy(drivesFolders, df =>
             {
                 var buckets = df.drive.Buckets.Get(df.folder).FilterByWildcards(e => e?.Name, wpName);
-                return ParallelResults2.ForEachMany(buckets, bucket =>
+                return ParallelResults3.GroupBy(buckets, bucket =>
                     df.drive.BucketFiles.Get(df.folder, bucket));
             });
 
-            foreach (var item in results
-                .Select(r => r.Item.Item)
-                .Where(e => wp.IsMatch(e.FullPath))
-                .ExcludeByWildcards(e => e?.FullPath, wpFullPath)
-                .OrderBy(e => e.FullPath))
+            foreach (var result in results)
             {
-                string tiphelp = TipHelp(item);
-                yield return new CompletionResult(PathTools.EscapePSText(item.FullPath), item.FullPath, CompletionResultType.ParameterValue, tiphelp);
+                foreach (var bucket in result)
+                {
+                    foreach (var item in bucket
+                        .Where(e => wp.IsMatch(e.FullPath))
+                        .ExcludeByWildcards(e => e?.FullPath, wpFullPath)
+                        .OrderBy(e => e.FullPath))
+                    {
+                        string tiphelp = TipHelp(item);
+                        yield return new CompletionResult(PathTools.EscapePSText(item.FullPath), item.FullPath, CompletionResultType.ParameterValue, tiphelp);
+                    }
+                }
             }
         }
     }

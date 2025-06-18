@@ -69,12 +69,13 @@ public class NewMachineCommand : OrchestratorPSCmdlet
             IDictionary fakeBoundParameters)
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
-            var results = ParallelResults2.ForEachMany(drives, drive => drive.Machines.Get());
+            var results = ParallelResults3.GroupBy(drives, drive => drive.Machines.Get());
 
             // パラメータで選択済みの Name は、候補から除外する
             var names = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
-            yield return new CompletionResult(GenerateNewEntityName("NewMachine", names, results, e => e.Item.Name!));
+            var entities = results.SelectMany(e => e);
+            yield return new CompletionResult(GenerateNewEntityName("NewMachine", names, entities, e => e.Name!));
         }
     }
 

@@ -115,16 +115,18 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drives, drive => drive.GetUsers());
+            var results = ParallelResults3.GroupBy(drives, drive => drive.GetUsers());
 
-            foreach (var user in results
-                .Select(r => r.Item)
-                .Where(user => wp.IsMatch(user.UserName))
-                .ExcludeByWildcards(user => user?.UserName, wpUserName)
-                .OrderBy(user => user.UserName))
+            foreach (var result in results)
             {
-                string tiphelp = TipHelp2(user);
-                yield return new CompletionResult(PathTools.EscapePSText(user.UserName), user.UserName, CompletionResultType.Text, tiphelp);
+                foreach (var user in result
+                    .Where(user => wp.IsMatch(user.UserName))
+                    .ExcludeByWildcards(user => user?.UserName, wpUserName)
+                    .OrderBy(user => user.UserName))
+                {
+                    string tiphelp = TipHelp2(user);
+                    yield return new CompletionResult(PathTools.EscapePSText(user.UserName), user.UserName, CompletionResultType.Text, tiphelp);
+                }
             }
         }
     }

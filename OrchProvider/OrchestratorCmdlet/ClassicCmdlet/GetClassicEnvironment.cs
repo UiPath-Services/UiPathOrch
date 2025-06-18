@@ -40,16 +40,18 @@ public class GetClassicEnvironmentCommand : OrchestratorPSCmdlet
             var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.Environments.Get(df.folder));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Environments.Get(df.folder));
 
-            foreach (var env in results
-                .Select(s => s.Item)
-                .Where(s => wp.IsMatch(s.Name))
-                .ExcludeByWildcards(s => s?.Name, wpName)
-                .OrderBy(s => s.Name))
+            foreach (var result in results)
             {
-                string tiphelp = env.GetPSPath();
-                yield return new CompletionResult(PathTools.EscapePSText(env?.Name), env?.Name, CompletionResultType.ParameterValue, tiphelp);
+                foreach (var env in result
+                    .Where(s => wp.IsMatch(s.Name))
+                    .ExcludeByWildcards(s => s?.Name, wpName)
+                    .OrderBy(s => s.Name))
+                {
+                    string tiphelp = env.GetPSPath();
+                    yield return new CompletionResult(PathTools.EscapePSText(env?.Name), env?.Name, CompletionResultType.ParameterValue, tiphelp);
+                }
             }
         }
     }

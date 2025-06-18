@@ -53,24 +53,26 @@ public class RemoveRoleFromUserCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drives, drive => drive.GetUsers());
+            var results = ParallelResults3.GroupBy(drives, drive => drive.GetUsers());
 
-            foreach (var user in results
-                .Select(r => r.Item)
-                .FilterByWildcards(u => u?.UserName, wpUserName)
-                .FilterByWildcards(u => u?.FullName, wpFullName)
-                .OrderBy(u => u.UserName))
+            foreach (var result in results)
             {
-                if (user.UserRoles is not null)
+                foreach (var user in result
+                    .FilterByWildcards(u => u?.UserName, wpUserName)
+                    .FilterByWildcards(u => u?.FullName, wpFullName)
+                    .OrderBy(u => u.UserName))
                 {
-                    foreach (var role in user.UserRoles
-                        .Where(r => wp.IsMatch(r.RoleName))
-                        .ExcludeByWildcards(r => r?.RoleName, wpRoles)
-                        .OrderBy(r => r.RoleName))
+                    if (user.UserRoles is not null)
                     {
-                        string tiphelp = TipHelp2(user);
-                        var ret = new CompletionResult(PathTools.EscapePSText(role.RoleName), role.RoleName, CompletionResultType.ParameterValue, tiphelp);
-                        yield return ret;
+                        foreach (var role in user.UserRoles
+                            .Where(r => wp.IsMatch(r.RoleName))
+                            .ExcludeByWildcards(r => r?.RoleName, wpRoles)
+                            .OrderBy(r => r.RoleName))
+                        {
+                            string tiphelp = TipHelp2(user);
+                            var ret = new CompletionResult(PathTools.EscapePSText(role.RoleName), role.RoleName, CompletionResultType.ParameterValue, tiphelp);
+                            yield return ret;
+                        }
                     }
                 }
             }

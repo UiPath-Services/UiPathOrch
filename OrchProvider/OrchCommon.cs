@@ -385,6 +385,7 @@ public static class OrchThreadPool
 //    }
 //}
 
+// planned to be deprecated
 public static class ParallelResults
 {
     public static ParallelResult<TSource, TResult>[] ForEach<TSource, TResult>(IEnumerable<TSource> sources, Func<TSource, TResult> forEachBody)
@@ -482,192 +483,70 @@ public sealed class ParallelResult<TSource, TResult>
     }
 }
 
-/// <summary>
-/// ソースごとに並列実行し、結果を flatten して返すユーティリティ。
-/// </summary>
-//public static class ParallelResults2
-//{
-//    public static IEnumerable<WithSource<TSource, TItem>> ForEach<TSource, TItem>(
-//        IEnumerable<TSource> sources,
-//        Func<TSource, IEnumerable<TItem>?> forEachBody,
-//        int maxDegreeOfParallelism = 4,
-//        CancellationToken cancellationToken = default)
-//    {
-//        // IEnumerable を IList に変換（ToList も O(n)）
-//        var sourceList = sources as IList<TSource> ?? sources.ToList();
-//        int count = sourceList.Count;
-
-//        var resultsArray = new List<WithSource<TSource, TItem>>[count];
-//        for (int i = 0; i < count; i++)
-//            resultsArray[i] = [];
-
-//        using var semaphore = new SemaphoreSlim(maxDegreeOfParallelism);
-
-//        var tasks = new Task[count];
-//        for (int i = 0; i < count; i++)
-//        {
-//            int index = i;
-//            tasks[i] = Task.Run(async () =>
-//            {
-//                await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-//                try
-//                {
-//                    var source = sourceList[index];
-//                    var items = forEachBody(source);
-//                    if (items != null)
-//                    {
-//                        var slot = resultsArray[index];
-//                        foreach (var item in items)
-//                        {
-//                            slot.Add(new WithSource<TSource, TItem>(source, item));
-//                        }
-//                    }
-//                }
-//                finally
-//                {
-//                    semaphore.Release();
-//                }
-//            }, cancellationToken);
-//        }
-
-//        Task.WaitAll(tasks, cancellationToken);
-
-//        foreach (var list in resultsArray)
-//            foreach (var result in list)
-//                yield return result;
-//    }
-
-//    /*------------------------------------------------------------*
-//     * TItem（単一値）を返す関数用                                *
-//     *------------------------------------------------------------*/
-//    public static IEnumerable<WithSource<TSource, TItem>> ForEachSingle<TSource, TItem>(
-//        IEnumerable<TSource> sources,
-//        Func<TSource, TItem> forEachBody,
-//        int maxDegreeOfParallelism = 4,
-//        CancellationToken cancellationToken = default)
-//    {
-//        // 単一値を 1 要素の IEnumerable に包んで上位メソッドへ委譲
-//        return ForEach(
-//            sources,
-//            src =>
-//            {
-//                var item = forEachBody(src);
-//                return item is null ? Enumerable.Empty<TItem>() : [item];
-//            },
-//            maxDegreeOfParallelism,
-//            cancellationToken);
-//    }
-//}
-
-
-/// <summary>
-/// ソースごとに並列実行し、結果を返すユーティリティ。
-/// ForEach: 単一値を返す関数用
-/// ForEachMany: 複数の値を返す関数用（flatten）
-/// </summary>
-public static class ParallelResults2
+public sealed class SourceGroup<TSource, TItem> : IEnumerable<TItem>
 {
-    /// <summary>
-    /// 各ソースから単一の結果を返す関数に対応。
-    /// </summary>
-    public static ParallelResult<TSource, TResult>[] ForEach<TSource, TResult>(
-        IEnumerable<TSource> sources,
-        Func<TSource, TResult> forEachBody)
+    public TSource Source { get; }
+    private readonly IReadOnlyList<WithSource<TSource, TItem>> _items;
+
+    public SourceGroup(TSource source, IReadOnlyList<WithSource<TSource, TItem>> items)
     {
-        var sourceList = sources as IList<TSource> ?? sources.ToList();
-        int count = sourceList.Count;
-        var resultsArray = new ParallelResult<TSource, TResult>[count];
-        using var cancelHandler = new ConsoleCancelHandler();
-        using var semaphore = new SemaphoreSlim(4);
-
-        var tasks = new Task[count];
-        for (int i = 0; i < count; i++)
-        {
-            int index = i;
-            tasks[i] = Task.Run(async () =>
-            {
-                await semaphore.WaitAsync(cancelHandler.Token).ConfigureAwait(false);
-                try
-                {
-                    var source = sourceList[index];
-                    var result = forEachBody(source);
-                    resultsArray[index] = new ParallelResult<TSource, TResult>(source, result, null);
-                }
-                catch (OperationCanceledException)
-                {
-                    throw;
-                }
-                catch (Exception ex)
-                {
-                    resultsArray[index] = new ParallelResult<TSource, TResult>(sourceList[index], default!, ex);
-                }
-                finally
-                {
-                    semaphore.Release();
-                }
-            }, cancelHandler.Token);
-        }
-
-        try
-        {
-            Task.WaitAll(tasks, cancelHandler.Token);
-        }
-        catch (AggregateException ae) when (ae.InnerExceptions.All(e => e is OperationCanceledException))
-        {
-            throw new OperationCanceledException("The operation was canceled.", ae);
-        }
-
-        return resultsArray;
+        Source = source;
+        _items = items;
     }
 
-    /// <summary>
-    /// 各ソースから複数の結果を返す関数に対応（flatten して返す）。
-    /// </summary>
-    public static IEnumerable<WithSource<TSource, TItem>> ForEachMany<TSource, TItem>(
+    public IEnumerator<TItem> GetEnumerator() => _items.Select(x => x.Item).GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    public IEnumerable<WithSource<TSource, TItem>> WithSourceItems => _items;
+}
+
+/// <summary>
+/// ソースごとに並列実行し、結果をグループで返すユーティリティ。
+/// </summary>
+public static class ParallelResults3
+{
+    public static IEnumerable<SourceGroup<TSource, TItem>> GroupBy<TSource, TItem>(
         IEnumerable<TSource> sources,
-        Func<TSource, IEnumerable<TItem>?> forEachBody,
+        Func<TSource, IEnumerable<TItem>?> selector,
         int maxDegreeOfParallelism = 4,
-        CancellationToken cancellationToken = default)
+        CancellationToken token = default)
     {
-        var sourceList = sources as IList<TSource> ?? sources.ToList();
-        int count = sourceList.Count;
+        var srcList = sources as IList<TSource> ?? sources.ToList();
+        int count = srcList.Count;
 
-        var resultsArray = new List<WithSource<TSource, TItem>>[count];
-        for (int i = 0; i < count; i++)
-            resultsArray[i] = [];
+        var slotArr = new List<WithSource<TSource, TItem>>[count];
+        for (int i = 0; i < count; i++) slotArr[i] = [];
 
-        using var semaphore = new SemaphoreSlim(maxDegreeOfParallelism);
-
+        using var sem = new SemaphoreSlim(maxDegreeOfParallelism);
         var tasks = new Task[count];
+
         for (int i = 0; i < count; i++)
         {
-            int index = i;
+            int idx = i;
             tasks[i] = Task.Run(async () =>
             {
-                await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+                await sem.WaitAsync(token).ConfigureAwait(false);
                 try
                 {
-                    var source = sourceList[index];
-                    var items = forEachBody(source);
+                    var src = srcList[idx];
+                    var items = selector(src);
                     if (items != null)
                     {
-                        var slot = resultsArray[index];
-                        foreach (var item in items)
-                            slot.Add(new WithSource<TSource, TItem>(source, item));
+                        var slot = slotArr[idx];
+                        foreach (var it in items)
+                            slot.Add(new WithSource<TSource, TItem>(src, it));
                     }
                 }
-                finally
-                {
-                    semaphore.Release();
-                }
-            }, cancellationToken);
+                finally { sem.Release(); }
+            }, token);
         }
 
-        Task.WaitAll(tasks, cancellationToken);
+        Task.WaitAll(tasks, token);
 
-        foreach (var list in resultsArray)
-            foreach (var result in list)
-                yield return result;
+        for (int i = 0; i < count; i++)
+        {
+            yield return new SourceGroup<TSource, TItem>(srcList[i], slotArr[i]);
+        }
     }
 }
 

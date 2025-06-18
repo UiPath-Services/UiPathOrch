@@ -54,17 +54,19 @@ public class RemovePackageCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.GetPackages(df.folder));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetPackages(df.folder));
 
-            foreach (var package in results
-                .Select(r => r.Item)
-                .Where(m => wp.IsMatch(m.Id))
-                .ExcludeByWildcards(p => p?.Id, wpId)
-                .FilterByWildcards(p => p?.Version, wpVersion)
-                .OrderBy(m => m.Id))
+            foreach (var result in results)
             {
-                string tiphelp = TipHelp(package);
-                yield return new CompletionResult(PathTools.EscapePSText(package.Id), package.Id, CompletionResultType.ParameterValue, tiphelp);
+                foreach (var package in result
+                    .Where(m => wp.IsMatch(m.Id))
+                    .ExcludeByWildcards(p => p?.Id, wpId)
+                    .FilterByWildcards(p => p?.Version, wpVersion)
+                    .OrderBy(m => m.Id))
+                {
+                    string tiphelp = TipHelp(package);
+                    yield return new CompletionResult(PathTools.EscapePSText(package.Id), package.Id, CompletionResultType.ParameterValue, tiphelp);
+                }
             }
         }
     }
@@ -93,22 +95,27 @@ public class RemovePackageCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drivesFolders, driveFolder =>
+            var results = ParallelResults3.GroupBy(drivesFolders, driveFolder =>
             {
                 var (drive, folder) = driveFolder;
                 var packages = drive.GetPackages(folder).FilterByWildcards(p => p?.Id, wpId);
-                return ParallelResults2.ForEachMany(packages, package =>
+                return ParallelResults3.GroupBy(packages, package =>
                     drive.GetPackageVersions(folder, package.Id!));
             });
 
-            foreach (var version in results
-                .Select(r => r.Item.Item)
-                .Where(v => wp.IsMatch(v.Version!))
-                .ExcludeByWildcards(v => v?.Version, wpVersion))
-                //.OrderBy(v => v.Version!, VersionComparer.Instance))
+            foreach (var result in results)
             {
-                string tiphelp = TipHelp(version);
-                yield return new CompletionResult(PathTools.EscapePSText(version.Version), version.Version, CompletionResultType.ParameterValue, tiphelp);
+                foreach (var package in result)
+                {
+                    foreach (var version in package
+                        .Where(v => wp.IsMatch(v.Version!))
+                        .ExcludeByWildcards(v => v?.Version, wpVersion))
+                        //.OrderBy(v => v.Version!, VersionComparer.Instance))
+                    {
+                        string tiphelp = TipHelp(version);
+                        yield return new CompletionResult(PathTools.EscapePSText(version.Version), version.Version, CompletionResultType.ParameterValue, tiphelp);
+                    }
+                }
             }
         }
     }

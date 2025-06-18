@@ -111,16 +111,18 @@ public class GetClassicRobotCommand : OrchestratorPSCmdlet
             var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.Sessions.Get(df.folder));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Sessions.Get(df.folder));
 
-            foreach (var session in results
-                .Select(s => s.Item)
-                .Where(s => wp.IsMatch(s.Robot?.Name))
-                .ExcludeByWildcards(s => s?.Robot?.Name, wpName)
-                .OrderBy(s => s.Robot?.Name))
+            foreach (var result in results)
             {
-                string tiphelp = TipHelp(session);
-                yield return new CompletionResult(PathTools.EscapePSText(session.Robot?.Name), session.Robot?.Name, CompletionResultType.ParameterValue, tiphelp);
+                foreach (var session in result
+                    .Where(s => wp.IsMatch(s.Robot?.Name))
+                    .ExcludeByWildcards(s => s?.Robot?.Name, wpName)
+                    .OrderBy(s => s.Robot?.Name))
+                {
+                    string tiphelp = TipHelp(session);
+                    yield return new CompletionResult(PathTools.EscapePSText(session.Robot?.Name), session.Robot?.Name, CompletionResultType.ParameterValue, tiphelp);
+                }
             }
         }
     }

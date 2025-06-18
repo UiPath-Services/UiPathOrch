@@ -42,16 +42,18 @@ public class EnableFolderMachineAccountMappingCommandBase<Enable> : Orchestrator
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
 
-            foreach (var machine in results
-                .Select(r => r.Item)
-                .Where(m => !m.PropagateToSubFolders.GetValueOrDefault())
-                .Where(m => wp.IsMatch(m.Name))
-                .ExcludeByWildcards(m => m?.Name, wpName)
-                .OrderBy(m => m.Name))
+            foreach (var result in results)
             {
-                yield return new CompletionResult(PathTools.EscapePSText(machine.Name), machine.Name, CompletionResultType.ParameterValue, TipHelp(machine));
+                foreach (var machine in result
+                    .Where(m => !m.PropagateToSubFolders.GetValueOrDefault())
+                    .Where(m => wp.IsMatch(m.Name))
+                    .ExcludeByWildcards(m => m?.Name, wpName)
+                    .OrderBy(m => m.Name))
+                {
+                    yield return new CompletionResult(PathTools.EscapePSText(machine.Name), machine.Name, CompletionResultType.ParameterValue, TipHelp(machine));
+                }
             }
         }
     }
@@ -73,36 +75,38 @@ public class EnableFolderMachineAccountMappingCommandBase<Enable> : Orchestrator
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
 
-            foreach (var result in results
-                .Where(m => !m.Item.PropagateToSubFolders.GetValueOrDefault())
-                .OrderBy(m => m.Item.Name))
+            foreach (var result in results)
             {
                 var (drive, folder) = result.Source;
-                var folderMachine = result.Item;
 
-                var machinesRobots = drive.MachinesRobots.Get(folder, folderMachine);
-
-                var folderRobots = drive.FolderRobots.Get(folder, folderMachine);
-                foreach (var folderRobot in folderRobots
-                    .Where(fr => wp.IsMatch(fr.User!.UserName))
-                    .ExcludeByWildcards(fr => fr?.User!.UserName, wpUserName)
-                    .Where(fr => Enable.Value
-                        ?  machinesRobots.All(mr => mr.RobotId != fr.Id)
-                        : !machinesRobots.All(mr => mr.RobotId != fr.Id))
-                    .OrderBy(fr => fr.User!.UserName))
+                foreach (var folderMachine in result
+                    .Where(m => !m.PropagateToSubFolders.GetValueOrDefault())
+                    .OrderBy(m => m.Name))
                 {
-                    string tiphelp = $"{drive.NameColonSeparator}{folderRobot.User!.UserName}";
-                    if (!string.IsNullOrEmpty(folderRobot.User.FullName))
+                    var machinesRobots = drive.MachinesRobots.Get(folder, folderMachine);
+
+                    var folderRobots = drive.FolderRobots.Get(folder, folderMachine);
+                    foreach (var folderRobot in folderRobots
+                        .Where(fr => wp.IsMatch(fr.User!.UserName))
+                        .ExcludeByWildcards(fr => fr?.User!.UserName, wpUserName)
+                        .Where(fr => Enable.Value
+                            ? machinesRobots.All(mr => mr.RobotId != fr.Id)
+                            : !machinesRobots.All(mr => mr.RobotId != fr.Id))
+                        .OrderBy(fr => fr.User!.UserName))
                     {
-                        tiphelp += $" ({folderRobot.User.FullName})";
+                        string tiphelp = $"{drive.NameColonSeparator}{folderRobot.User!.UserName}";
+                        if (!string.IsNullOrEmpty(folderRobot.User.FullName))
+                        {
+                            tiphelp += $" ({folderRobot.User.FullName})";
+                        }
+                        if (!string.IsNullOrEmpty(folderRobot.Username))
+                        {
+                            tiphelp += $" ({folderRobot.Username})";
+                        }
+                        yield return new CompletionResult(PathTools.EscapePSText(folderRobot.User!.UserName), folderRobot.User.UserName, CompletionResultType.ParameterValue, tiphelp);
                     }
-                    if (!string.IsNullOrEmpty(folderRobot.Username))
-                    {
-                        tiphelp += $" ({folderRobot.Username})";
-                    }
-                    yield return new CompletionResult(PathTools.EscapePSText(folderRobot.User!.UserName), folderRobot.User.UserName, CompletionResultType.ParameterValue, tiphelp);
                 }
             }
         }

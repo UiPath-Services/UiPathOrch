@@ -34,19 +34,21 @@ public class EnableWebhookCommandBase<Enable> : OrchestratorPSCmdlet where Enabl
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drives, drive => drive.Webhooks.Get());
+            var results = ParallelResults3.GroupBy(drives, drive => drive.Webhooks.Get());
 
-            foreach (var webhook in results
-                .Select(r => r.Item)
-                .Where(e => Enable.Value
-                    ? !e.Enabled.GetValueOrDefault()
-                    : e.Enabled.GetValueOrDefault())
-                .Where(e => wp.IsMatch(e.Name))
-                .ExcludeByWildcards(e => e?.Name, wpName)
-                .OrderBy(e => e.Name!))
+            foreach (var result in results)
             {
-                string tiphelp = TipHelp(webhook);
-                yield return new CompletionResult(PathTools.EscapePSText(webhook.Name), webhook.Name, CompletionResultType.ParameterValue, tiphelp);
+                foreach (var webhook in result
+                    .Where(e => Enable.Value
+                        ? !e.Enabled.GetValueOrDefault()
+                        : e.Enabled.GetValueOrDefault())
+                    .Where(e => wp.IsMatch(e.Name))
+                    .ExcludeByWildcards(e => e?.Name, wpName)
+                    .OrderBy(e => e.Name!))
+                {
+                    string tiphelp = TipHelp(webhook);
+                    yield return new CompletionResult(PathTools.EscapePSText(webhook.Name), webhook.Name, CompletionResultType.ParameterValue, tiphelp);
+                }
             }
         }
     }

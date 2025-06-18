@@ -64,24 +64,25 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drivesProjects, dp => dp.drive.GetDuUsers(dp.project));
+            var results = ParallelResults3.GroupBy(drivesProjects, dp => dp.drive.GetDuUsers(dp.project));
 
-            foreach (var result in results
-                .FilterByWildcards(u => u?.Item.Name, wpName)
-                //.FilterByWildcards(u => u?.UserName, wpUserName)
-                .OrderBy(u => u.Item.Name))
+            foreach (var result in results)
             {
                 var (drive, project) = result.Source;
-                var user = result.Item;
-
-                foreach (var role in user.roleAssignmentDtos?
-                    .Where(r => !string.IsNullOrEmpty(r.roleName) && !r.inherited.GetValueOrDefault())
-                    .Where(r => wp.IsMatch(r.roleName))
-                    .ExcludeByWildcards(r => r?.roleName, wpRole)
-                    .OrderBy(r => r?.roleName)!)
+                foreach (var user in result
+                    .FilterByWildcards(u => u?.Name, wpName)
+                    //.FilterByWildcards(u => u?.UserName, wpUserName)
+                    .OrderBy(u => u.Name))
                 {
-                    string tiphelp = System.IO.Path.Combine(project.GetPSPath(), role.roleName!);
-                    yield return new CompletionResult(PathTools.EscapePSText(role.roleName), role.roleName, CompletionResultType.Text, tiphelp);
+                    foreach (var role in user.roleAssignmentDtos?
+                        .Where(r => !string.IsNullOrEmpty(r.roleName) && !r.inherited.GetValueOrDefault())
+                        .Where(r => wp.IsMatch(r.roleName))
+                        .ExcludeByWildcards(r => r?.roleName, wpRole)
+                        .OrderBy(r => r?.roleName)!)
+                    {
+                        string tiphelp = System.IO.Path.Combine(project.GetPSPath(), role.roleName!);
+                        yield return new CompletionResult(PathTools.EscapePSText(role.roleName), role.roleName, CompletionResultType.Text, tiphelp);
+                    }
                 }
             }
         }

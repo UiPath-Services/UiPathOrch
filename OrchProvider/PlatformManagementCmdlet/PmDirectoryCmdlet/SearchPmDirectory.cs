@@ -40,14 +40,16 @@ public class SearchPmDirectoryCommand : OrchestratorPSCmdlet
             var drives = ResolvePmDrives(fakeBoundParameters);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults2.ForEachMany(drives, drive => drive.SearchPmDirectory(name));
+            var results = ParallelResults3.GroupBy(drives, drive => drive.SearchPmDirectory(name));
 
-            foreach (var directoryEntry in results
-                .Select(r => r.Item)
-                .OrderBy(s => s.identityName))
+            foreach (var result in results)
             {
-                string tiphelp = directoryEntry.GetPSPath();
-                yield return new CompletionResult(PathTools.EscapePSText(directoryEntry.identityName), directoryEntry.identityName, CompletionResultType.ParameterValue, tiphelp);
+                foreach (var directoryEntry in result
+                    .OrderBy(s => s.identityName))
+                {
+                    string tiphelp = directoryEntry.GetPSPath();
+                    yield return new CompletionResult(PathTools.EscapePSText(directoryEntry.identityName), directoryEntry.identityName, CompletionResultType.ParameterValue, tiphelp);
+                }
             }
         }
     }
