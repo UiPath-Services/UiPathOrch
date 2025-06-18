@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.12.11'
+ModuleVersion = '0.9.12.12'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -388,9 +388,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Automation Cloud organization-user creation and deletion API has been deprecated, causing the Get-PmUser, Remove-PmUser, Update-PmUser and Copy-PmUser cmdlets to stop working. These cmdlets now invoke the new private API (version 19.0 remains unchanged), restoring correct operation.
-
-- The New-PmUser, Remove-PmUser, Update-PmUser and Copy-PmUser cmdlets now clear the PmUser and PmGroup caches after execution to ensure data consistency.
+        ReleaseNotes = '- The completer for the -EntryPoint parameter of New-OrchProcess did not work as expected when a non-latest version was specified for the -Version parameter.
 '
 
         # Prerelease string of this module

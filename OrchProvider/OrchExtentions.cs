@@ -469,7 +469,7 @@ internal static class OrchStringExtensions
     }
 
     // nameKind には capitalized の名前を渡すこと。
-    public static void AssignIdFromName<T, TElement, TId>(
+    public static bool AssignIdFromName<T, TElement, TId>(
         this T target,
         string? name,
         Func<IEnumerable<TElement>> getEntitiesFunc,
@@ -483,7 +483,7 @@ internal static class OrchStringExtensions
         if (string.IsNullOrEmpty(name))
         {
             setter(target, default);
-            return;
+            return true;
         }
         try
         {
@@ -493,19 +493,20 @@ internal static class OrchStringExtensions
             {
                 case 1:
                     setter(target, getIdFunc(entities.First()));
-                    break;
+                    return true;
                 case 0:
                     host.WriteError(new ErrorRecord(new OrchException(targetName, $"No {nameKind} found with \"{name}\". Please ensure that the specified {nameKind} name is correct."), $"Get{nameKind}Error", ErrorCategory.InvalidOperation, target));
-                    break;
+                    return false;
                 default:
                     host.WriteError(new ErrorRecord(new OrchException(targetName, $"Multiple {nameKind} found with \"{name}\". Please specify a unique {nameKind} name."), $"Get{nameKind}Error", ErrorCategory.InvalidOperation, target));
-                    break;
+                    return false;
             }
         }
         catch (Exception ex)
         {
             host.WriteError(new ErrorRecord(new OrchException(targetName, ex), $"Get{nameKind}Error", ErrorCategory.InvalidOperation, target));
         }
+        return false;
     }
 
     private static string? ReplaceLastPartWithAsterisk(string? input)

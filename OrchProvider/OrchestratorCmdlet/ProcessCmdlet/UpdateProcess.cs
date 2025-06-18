@@ -445,17 +445,21 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                                 .FirstOrDefault(e => e.Id == newRelease?.EntryPointId);
                             EntryPoint = entryPoint?.Path;
                         }
-                        newRelease.AssignIdFromName(
+                        if (!newRelease.AssignIdFromName(
                                 EntryPoint,
                                 () => drive.GetPackageEntryPoints(feedId, newRelease?.ProcessKey ?? "", newRelease?.ProcessVersion ?? ""),
                                 e => e.Path!,
                                 e => e.Id!,
                                 (s, v) => s!.EntryPointId = v,
-                                this, target, "EntryPoint");
+                                this, target, "EntryPoint"))
+                        {
+                            continue;
+                        }
                     }
                     catch (Exception ex)
                     {
                         WriteError(new ErrorRecord(new OrchException(target, ex), "GetEntryPointError", ErrorCategory.InvalidOperation, folder));
+                        continue;
                     }
                 }
                 #endregion
