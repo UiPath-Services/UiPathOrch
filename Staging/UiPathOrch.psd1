@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.12.12'
+ModuleVersion = '0.9.13.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -388,7 +388,9 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- The completer for the -EntryPoint parameter of New-OrchProcess did not work as expected when a non-latest version was specified for the -Version parameter.
+        ReleaseNotes = '- The caches for PmUser, PmRobotAccounts, PmExternalClients, and PmExternalApiResources are now shared across tenants (PSDrives) that belong to the same organization. This change improves performance, reduces memory usage, and ensures consistent behavior when working with multiple tenants within the same organization. Note that caches for other organization-level entities, such as PmGroup, are still managed separately per PSDrive.
+
+- A ReleaseNotes.txt file has been added to the module installation folder. You can navigate to this folder using the Set-OrchLocation cmdlet.
 '
 
         # Prerelease string of this module

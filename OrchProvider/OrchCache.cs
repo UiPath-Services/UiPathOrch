@@ -235,58 +235,73 @@ public class ListCachePerTenant<T> : ITenantCacheClearable
 //    }
 //}
 
-public class ListCachePerOrganization<T> : ITenantCacheClearable
+// partitionGlobalId をキーとする、組織エンティティ
+// これはすべての組織の、固有のエンティティのキャッシュを表す。
+public class ListCachePerOrganization<T> // : ITenantCacheClearable
 {
     private readonly OrchDriveInfo _drive;
-    private List<T>? _cache = null;
-    private readonly ExceptionCachePerTenant _exception = new();
-    private readonly Func<string, IEnumerable<T>> getter;
-    private readonly Action<T>? initializer;
+    private readonly ConcurrentDictionary<string, List<T>> _cache;
+    private readonly ExceptionsCachePer<string> _exception = new(); // per org の例外をこれで保持
+    // input: partitionGlobalId
+    private readonly Func<string, IEnumerable<T>> _getter;
+    private readonly Action<T>? _initializer;
 
-    public ListCachePerOrganization(OrchDriveInfo drive, Func<string, IEnumerable<T>> getter, Action<T>? initializer = null)
+    public ListCachePerOrganization(
+        ConcurrentDictionary<string, List<T>> cache,
+        OrchDriveInfo drive, 
+        Func<string, IEnumerable<T>> getter,
+        Action<T>? initializer)
     {
+        _cache = cache;
         _drive = drive;
-        _drive._allTenantCache.Add(this);
-        this.getter = getter;
-        this.initializer = initializer;
+        _getter = getter;
+        _initializer = initializer;
     }
 
-    public List<T> Get()
+    public IEnumerable<T> Get()
     {
-        _exception.ThrowCachedExceptionIfAny();
+        var partitionGlobalId = _drive.GetPartitionGlobalId()!;
 
-        if (_cache is null)
+        _exception.ThrowCachedExceptionIfAny(partitionGlobalId);
+
+        if (!_cache.TryGetValue(partitionGlobalId, out var cachePerOrg))
         {
-            try
+            lock (this)
             {
-                lock (this)
+                if (!_cache.TryGetValue(partitionGlobalId, out cachePerOrg))
                 {
-                    if (_cache is null)
+                    try
                     {
-                        var partitionGlobalId = _drive.GetPartitionGlobalId();
-                        _cache = getter(partitionGlobalId!).ToList();
-                        if (initializer is not null)
-                        {
-                            foreach (var entity in _cache)
-                            {
-                                initializer(entity);
-                            }
-                        }
+                        cachePerOrg = _getter(partitionGlobalId).ToList();
+                        _cache[partitionGlobalId] = cachePerOrg;
+                    }
+                    catch (HttpResponseException ex)
+                    {
+                        _exception.CacheException(partitionGlobalId, ex);
+                        throw;
                     }
                 }
             }
-            catch (HttpResponseException ex)
-            {
-                _exception.CacheException(ex);
-                throw;
-            }
         }
-        return _cache;
+        foreach (var t in cachePerOrg)
+        {
+            if (_initializer is not null)
+            {
+                _initializer(t);
+            }
+            yield return t;
+        }
+    }
+
+    public void ClearCache(string partitionGlobalId)
+    {
+        _cache.TryRemove(partitionGlobalId, out var _);
+        _exception.ClearCache(partitionGlobalId);
     }
 
     public void ClearCache()
     {
-        _cache = null;
+        _cache.Clear();
         _exception.ClearCache();
     }
 }

@@ -578,6 +578,14 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     public void ClearAllCache()
     {
+        if (!string.IsNullOrEmpty(_dicPartitionGlobalId))
+        {
+            PmUsers.ClearCache(_dicPartitionGlobalId);
+            PmRobotAccounts.ClearCache(_dicPartitionGlobalId);
+            PmExternalClients.ClearCache(_dicPartitionGlobalId);
+            PmExternalApiResources.ClearCache(_dicPartitionGlobalId);
+        }
+
         foreach (var cache in _allTenantCache)
         {
             cache.ClearCache();
@@ -637,7 +645,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicPackageEntryPoint = null;
         _dicPackageEntryPoint_Exception?.ClearCache();
 
-        _dicPartitionGlobalId = null;
+        //_dicPartitionGlobalId = null; // これは変わらないから、クリアしなくていいだろう。。
 
         _dicTriggers = null;
         _dicTriggers_Exceptions?.ClearCache();
@@ -2674,15 +2682,22 @@ public partial class OrchDriveInfo : PSDriveInfo
         }
     }
 
+    // 組織のリストエンティティ
+    private static readonly ConcurrentDictionary<string, List<PmUser>> _cachePmUser = [];
+    public readonly ListCachePerOrganization<PmUser> PmUsers;
+
+    public static readonly ConcurrentDictionary<string, List<PmRobotAccount>> _cachePmRobotAccounts = [];
+    public readonly ListCachePerOrganization<PmRobotAccount> PmRobotAccounts;
+
+    public static readonly ConcurrentDictionary<string, List<ExternalClient>> _cachePmExternalClients = [];
+    public readonly ListCachePerOrganization<ExternalClient> PmExternalClients;
+
+    public static readonly ConcurrentDictionary<string, List<ExternalResource>> _cachePmExternalApiResources = []; // なぜか globalPartitionId は API call に不要。
+    public readonly ListCachePerOrganization<ExternalResource> PmExternalApiResources; // だがキャッシュの構築には必要だ。
+
     // これらはドライブごとに保持する必要があるため、 Cache クラスの static メンバにはできない
     internal readonly List<ITenantCacheClearable> _allTenantCache = [];
     internal readonly List<IFolderCacheClearable> _allFolderCache = [];
-
-    // 組織のリストエンティティ
-    public readonly ListCachePerOrganization<PmUser> PmUsers;
-    public readonly ListCachePerOrganization<PmRobotAccount> PmRobotAccounts;
-    public readonly ListCachePerOrganization<ExternalClient> PmExternalClients;
-    public readonly ListCachePerTenant<ExternalResource> PmExternalApiResources; // なぜか globalPartitionId が不要。
 
     // インデックスなしのテナントエンティティ
     public readonly SingleCachePerTenant<ActivitySettings> ActivitySettings;
@@ -2758,10 +2773,10 @@ public partial class OrchDriveInfo : PSDriveInfo
         // キャッシュを初期化
 
         // 組織のリストエンティティ
-        PmUsers                = new(this, OrchAPISession.GetPmUsers,                e => e.Path = NameColonSeparator);
-        PmRobotAccounts        = new(this, OrchAPISession.GetPmRobotAccounts,        e => e.Path = NameColonSeparator);
-        PmExternalClients      = new(this, OrchAPISession.GetPmExternalClients,      e => e.Path = NameColonSeparator);
-        PmExternalApiResources = new(this, OrchAPISession.GetPmExternalApiResource,  e => e.Path = NameColonSeparator);
+        PmUsers                = new(_cachePmUser,                 this, OrchAPISession.GetPmUsers,                e => e.Path = NameColonSeparator);
+        PmRobotAccounts        = new(_cachePmRobotAccounts,        this, OrchAPISession.GetPmRobotAccounts,        e => e.Path = NameColonSeparator);
+        PmExternalClients      = new(_cachePmExternalClients,      this, OrchAPISession.GetPmExternalClients,      e => e.Path = NameColonSeparator);
+        PmExternalApiResources = new(_cachePmExternalApiResources, this, OrchAPISession.GetPmExternalApiResource,  e => e.Path = NameColonSeparator);
 
         // インデックスなしのテナントエンティティ
         ActivitySettings       = new(this, OrchAPISession.GetActivitySettings,        e => e.Path = NameColonSeparator);

@@ -2903,6 +2903,12 @@ public partial class OrchAPISession : IDisposable
     }
 
     // 非公開の API だな。。
+    public AvailableUserBundle[]? GetPmLicensedUsersAvailableLicenses()
+    {
+        return HttpRequestPortal<AvailableUserBundle[]>(HttpMethod.Get, $"/api/license/accountant/UserLicense");
+    }
+
+    // 非公開の API だな。。
     public AvailableUserBundles? GetPmLicensedGroupsAvailableLicenses(string? groupId)
     {
         if (groupId is null) return null;
@@ -2954,6 +2960,11 @@ public partial class OrchAPISession : IDisposable
     public IEnumerable<NuLicensedUser> GetPmLicensedUsers()
     {
         return GetEnumerablePortal<NuLicensedUser>("/portal_/api/license/accountant/UserLicense/user/page");
+    }
+
+    public void PutLicensedUser(AddLicensedUserCommand payload)
+    {
+        HttpRequestPortal(HttpMethod.Post, "/portal_/api/license/accountant/UserLicense/users", null, payload);
     }
 
     internal static readonly JsonSerializerOptions jsoMemberConverter = new()
@@ -3028,8 +3039,8 @@ public partial class OrchAPISession : IDisposable
         HttpRequestIdentity(HttpMethod.Delete, $"/api/RobotAccount/{partitionGlobalId}", null, payload);
     }
 
-    // なぜかpartitionGlobalId は不要
-    public IEnumerable<ExternalResource> GetPmExternalApiResource()
+    // なぜか partitionGlobalId は不要だが、キャッシュと統合するために引数を追加してある。
+    public IEnumerable<ExternalResource> GetPmExternalApiResource(string partitionGlobalId)
     {
         return GetEnumerableWithoutPagingIdentity<ExternalResource>("/api/ExternalApiResource") ?? [];
     }
