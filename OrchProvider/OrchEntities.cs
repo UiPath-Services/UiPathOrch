@@ -3668,6 +3668,11 @@ public class RemoveUserCommand
     public bool? isHostMode { get; set; }
 }
 
+public class AddLicensedUserCommand
+{
+    public string[]? userIds { get; set; }
+}
+
 public class KeyValuePair(string? key, string? value) // added by UiPathOrch
 {
     public string? key { get; set; } = key;

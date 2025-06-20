@@ -388,6 +388,11 @@ internal class GroupName_License : IPositionalParameters
     public static string[] Parameters { get; } = ["GroupName", "License"];
 }
 
+internal class Email_License : IPositionalParameters
+{
+    public static string[] Parameters { get; } = ["Email", "License"];
+}
+
 internal class GroupName_UserName : IPositionalParameters
 {
     public static string[] Parameters { get; } = ["GroupName", "UserName"];
