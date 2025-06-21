@@ -38,3 +38,6 @@ Resolve-OrchPmDirectoryNameBulk
 {"errors":{"entityType":["Error converting value \"robot\" to type 'UiPath.IdentityServer.Directory.Abstractions.DataContracts.DirectoryEntityType'. Path 'entityType', line 1, position 54."]},"type":"https://tools.ietf.org/html/rfc9110#section-15.5.1","title":"One or more validation errors occurred.","status":400,"traceId":"00-ce6d7689c5815396278aa54077e685f7-169adffa28d8a60d-00"}
 
 {"result":{"succeeded":false,"errors":[{"code":"DuplicateUserName","description":"Username 'akari.tsuda@uipath.com' is already taken."},{"code":"DuplicateEmail","description":"Email 'akari.tsuda@uipath.com' is already taken."}]},"users":[]}
+
+Add-PmGroupMember:
+{"StatusCode":400,"StatusDescription":"BadRequest","Message":"Duplicate usernames found in database for specified input. (Parameter 'userNamesOrEmails')"}

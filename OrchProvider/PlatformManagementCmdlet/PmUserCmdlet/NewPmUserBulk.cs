@@ -102,7 +102,7 @@ public class NewPmUserCommand : OrchestratorPSCmdlet
 
         foreach (var drive in drives)
         {
-            var groups = drive.GetPmGroups();
+            var groups = drive.PmGroups.Get();
             // 既存のグループ名はケースを無視する必要はないが、新規作成のグループ名についてはケースを無視しておかないと。
             HashSet<string> groupNames = new(StringComparer.OrdinalIgnoreCase);
             
@@ -113,7 +113,7 @@ public class NewPmUserCommand : OrchestratorPSCmdlet
                 if (WildcardPattern.ContainsWildcardCharacters(groupName))
                 {
                     var wpGroupName = new WildcardPattern(groupName, WildcardOptions.IgnoreCase);
-                    var targetGroupNames = groups.Values
+                    var targetGroupNames = groups
                         .Where(g => !string.IsNullOrEmpty(g.name) && wpGroupName.IsMatch(g.name))
                         .Select(g => g.name!);
                     groupNames.UnionWith(targetGroupNames);
@@ -164,7 +164,7 @@ public class NewPmUserCommand : OrchestratorPSCmdlet
             List<string> groupIds = [];
             foreach (var groupName in groupNames)
             {
-                var group = drive.GetPmGroups().Values.FirstOrDefault(g => g.name?.Equals(groupName, StringComparison.OrdinalIgnoreCase) ?? false);
+                var group = drive.PmGroups.Get().FirstOrDefault(g => g.name?.Equals(groupName, StringComparison.OrdinalIgnoreCase) ?? false);
                 if (group is null)
                 {
                     group = this.CreatePmGroup(drive, groupName);
@@ -207,8 +207,7 @@ public class NewPmUserCommand : OrchestratorPSCmdlet
             {
                 var response = drive.OrchAPISession.CreatePmUserBulk(payload);
                 drive.PmUsers.ClearCache();
-                drive._dicPmGroups = null;
-                drive._dicPmGroups_Exception.ClearCache();
+                drive.PmGroups.ClearCache();
 
                 if (response?.result?.succeeded ?? false)
                 {

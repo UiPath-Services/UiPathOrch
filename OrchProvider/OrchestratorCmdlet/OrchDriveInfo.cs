@@ -581,6 +581,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         if (!string.IsNullOrEmpty(_dicPartitionGlobalId))
         {
             PmUsers.ClearCache(_dicPartitionGlobalId);
+            PmGroups.ClearCache(_dicPartitionGlobalId);
             PmRobotAccounts.ClearCache(_dicPartitionGlobalId);
             PmExternalClients.ClearCache(_dicPartitionGlobalId);
             PmExternalApiResources.ClearCache(_dicPartitionGlobalId);
@@ -695,8 +696,8 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicSearchPmDirectory = null;
         _dicSearchPmDirectory_Exception.ClearCache();
 
-        _dicPmGroups = null;
-        _dicPmGroups_Exception?.ClearCache();
+        //_dicPmGroups = null;
+        //_dicPmGroups_Exception?.ClearCache();
 
         _dicPmUserLicenseGroupAllocations = null;
         _dicPmUserLicenseGroupAllocations_Exceptions.ClearCache();
@@ -2278,149 +2279,18 @@ public partial class OrchDriveInfo : PSDriveInfo
     }
 
     #region PmGroup Cache
-    // key: groupId
-    // 機密アプリの場合、繰り返し API call することを避けるためにキャッシュに null を入れた方が良いか？
-    // TODO: ConcurrentDictionary ではなく PmGroup[] で良いのではないか？
-    internal ConcurrentDictionary<string, PmGroup>? _dicPmGroups = null;
-    internal readonly ExceptionCachePerTenant _dicPmGroups_Exception = new();
-    public ConcurrentDictionary<string, PmGroup> GetPmGroups()
-    {
-        _dicPmGroups_Exception.ThrowCachedExceptionIfAny();
-
-        if (_dicPmGroups is null)
-        {
-            lock (_dicPmGroups_Exception)
-            {
-                if (_dicPmGroups is null)
-                {
-                    _dicPmGroups = new();
-                    var partitionGlobalId = GetPartitionGlobalId();
-
-                    try
-                    {
-                        var groups = OrchAPISession.GetPmGroups(partitionGlobalId!);
-
-                        #region ここで各グループの詳細を取得するならこっち。
-                        // でもグループの数が多い場合、API call の数が多くなるので、ここでは取得しない方が良いか。。
-                        //Parallel.ForEach(groups!, group =>
-                        //{
-                        //    var detailedGroup = OrchAPISession.GetIdentityGroup(partitionGlobalId!, group.id!);
-                        //    if (detailedGroup is not null)
-                        //    {
-                        //        detailedGroup.Path = NameColonSeparator;
-                        //        if (detailedGroup.members is not null)
-                        //        {
-                        //            foreach (var member in detailedGroup.members)
-                        //            {
-                        //                member.setGroupName(group.name);
-                        //                member.setPath(Path.Combine(NameColon, group.name!));
-                        //            }
-                        //        }
-                        //        _dicIdGroups[detailedGroup.id ?? ""] = detailedGroup;
-                        //    }
-                        //});
-                        #endregion
-
-                        #region 各グループの詳細は、Get-OrchPmGroup -ExpandMember を指定したときに
-                        // 指定されたグループだけについて詳細を取得するならこっち。
-                        foreach (var group in groups ?? [])
-                        {
-                            group.Path = NameColonSeparator;
-                            _dicPmGroups[group.id!] = group;
-                            if (group.members is not null && group.members.Length == 0)
-                            {
-                                group.members = null;
-                            }
-                        }
-                        #endregion
-                    }
-                    catch (HttpResponseException ex)
-                    {
-                        _dicPmGroups_Exception.CacheException(ex);
-                        throw;
-                    }
-                }
-            }
-        }
-        return _dicPmGroups;
-    }
-
-    public PmGroup? GetPmGroup(string? groupId)
-    {
-        if (groupId is null) return null;
-
-        if (_dicPmGroups is null)
-        {
-            lock (_dicPmGroups_Exception)
-            {
-                _dicPmGroups ??= new();
-            }
-        }
-
-        if (_dicPmGroups.TryGetValue(groupId, out var group))
-        {
-            if (group is null) return null;
-            // members があれば、すでにキャッシュ済みなのでそのまま返す
-            //if (group.members is not null && group.members.Length != 0) return group;
-            if (group.members is not null) return group;
-        }
-
-        #region Get partitionGlobalId
-        var partitionGlobalId = GetPartitionGlobalId();
-        if (string.IsNullOrEmpty(partitionGlobalId))
-        {
-            return group;
-        }
-        #endregion
-
-        var group2 = OrchAPISession.GetPmGroup(partitionGlobalId!, groupId);
-        if (group2 is not null)
-        {
-            group2.Path = NameColonSeparator;
-            if (group2.members is not null)
-            {
-                foreach (var member in group2.members)
-                {
-                    member.Path = NameColonSeparator;
-                    member.PathGroupName = Path.Combine(NameColonSeparator, group?.name ?? "");
-                    member.groupName = group?.name;
-                }
-            }
-
-            if (group is not null)
-            {
-                group.name = group2.name;
-                group.displayName = group2.displayName;
-                group.type = group2.type;
-                group.creationTime = group2.creationTime;
-                group.lastModificationTime = group2.lastModificationTime;
-                group.members = group2.members;
-                group.mappingRole = group2.mappingRole;
-                group.scope = group2.scope;
-                return group;
-            }
-            else
-            {
-                _dicPmGroups[groupId] = group2;
-                return group2;
-            }
-        }
-        return null;
-    }
 
     internal BulkCreateResponse? CreatePmUserBulk(CreateUsersCommand cmd)
     {
         var ret = OrchAPISession.CreatePmUserBulk(cmd);
 
         PmUsers.ClearCache();
-        foreach (var g in _dicPmGroups ?? [])
+
+        foreach (var groupId in cmd.groupIDs ?? [])
         {
-            if (cmd.groupIDs?.Contains(g.Key) ?? false)
-            {
-                g.Value.members = null;
-            }
+            PmGroups.ClearCache(groupId);
         }
-        _dicPmGroups_Exception.ClearCache();
+
         _dicSearchDirectory = null;
         _dicSearchDirectory_Exception.ClearCache();
         _dicSearchPmDirectory = null;
@@ -2442,26 +2312,18 @@ public partial class OrchDriveInfo : PSDriveInfo
         var newGroup = OrchAPISession.CreatePmGroup(createGroupCommand);
         if (newGroup is not null)
         {
-            newGroup.Path = NameColonSeparator;
+            newGroup.Path = NameColonSeparator; // キャッシュに入れる必要はないが、このメソッドが返す PmGroup に設定するのは必要だ。
             _dicSearchDirectory = null;
             _dicSearchDirectory_Exception.ClearCache();
             _dicSearchPmDirectory = null;
             _dicSearchPmDirectory_Exception.ClearCache();
 
-            // PmGroup のキャッシュを削除すると、直後 GetPmGroups() を呼び出したとき、この戻り値に
+            // PmGroup のキャッシュを削除すると、直後に PmGroups.Get() を呼び出したとき、この戻り値に
             // 作成したばかりの PmGroup が含まれない場合があるようだ。
             // そのため、ここではキャッシュを削除せず、キャッシュを更新するようにしておく。
             // CreateXxx() が正しい結果を返さないことがあったので、一貫したキャッシュを構築するため
             // CreateXxx() を呼び出した後は、キャッシュをクリアするようにしていたのだけど、ちと困るな。。
-            if (newGroup.id is not null)
-            {
-                foreach (var m in newGroup.members ?? [])
-                {
-                    m.Path = NameColonSeparator;
-                    m.PathGroupName = NameColonSeparator + name;
-                }
-                _dicPmGroups?.TryAdd(newGroup.id, newGroup);
-            }
+            PmGroups.Set(newGroup);
         }
         return newGroup;
     }
@@ -2474,13 +2336,11 @@ public partial class OrchDriveInfo : PSDriveInfo
             ret.Path = NameColonSeparator;
         }
         PmRobotAccounts.ClearCache();
-        foreach (var g in _dicPmGroups ?? [])
+        foreach (var groupId in cmd.groupIDsToAdd ?? [])
         {
-            if (cmd.groupIDsToAdd?.Contains(g.Key) ?? false)
-            {
-                g.Value.members = null;
-            }
+            PmGroups.ClearCache(groupId);
         }
+
         _dicSearchDirectory = null;
         _dicSearchDirectory_Exception.ClearCache();
         _dicSearchPmDirectory = null;
@@ -2506,10 +2366,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         {
             ret.Path = NameColonSeparator;
         }
-        if (_dicPmGroups?.TryGetValue(groupId, out var updatedGroup) ?? false)
-        {
-            updatedGroup.members = null;
-        }
+        PmGroups.ClearCache(groupId);
 
         PmUsers.ClearCache(); // 内部にグループIDを含む
         PmRobotAccounts.ClearCache(); // 内部にグループIDを含む
@@ -2536,10 +2393,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         {
             ret.Path = NameColonSeparator;
         }
-        if (_dicPmGroups?.TryGetValue(groupId, out var updatedGroup) ?? false)
-        {
-            updatedGroup.members = null;
-        }
+        PmGroups.ClearCache(ret?.id);
 
         PmUsers.ClearCache(); // 内部にグループIDを含む
         PmRobotAccounts.ClearCache(); // 内部にグループIDを含む
@@ -2683,17 +2537,11 @@ public partial class OrchDriveInfo : PSDriveInfo
     }
 
     // 組織のリストエンティティ
-    private static readonly ConcurrentDictionary<string, List<PmUser>> _cachePmUser = [];
     public readonly ListCachePerOrganization<PmUser> PmUsers;
-
-    public static readonly ConcurrentDictionary<string, List<PmRobotAccount>> _cachePmRobotAccounts = [];
+    public readonly ListCachePerOrganization<PmGroup> PmGroups;
     public readonly ListCachePerOrganization<PmRobotAccount> PmRobotAccounts;
-
-    public static readonly ConcurrentDictionary<string, List<ExternalClient>> _cachePmExternalClients = [];
     public readonly ListCachePerOrganization<ExternalClient> PmExternalClients;
-
-    public static readonly ConcurrentDictionary<string, List<ExternalResource>> _cachePmExternalApiResources = []; // なぜか globalPartitionId は API call に不要。
-    public readonly ListCachePerOrganization<ExternalResource> PmExternalApiResources; // だがキャッシュの構築には必要だ。
+    public readonly ListCachePerOrganization<ExternalResource> PmExternalApiResources;
 
     // これらはドライブごとに保持する必要があるため、 Cache クラスの static メンバにはできない
     internal readonly List<ITenantCacheClearable> _allTenantCache = [];
@@ -2773,10 +2621,21 @@ public partial class OrchDriveInfo : PSDriveInfo
         // キャッシュを初期化
 
         // 組織のリストエンティティ
-        PmUsers                = new(_cachePmUser,                 this, OrchAPISession.GetPmUsers,                e => e.Path = NameColonSeparator);
-        PmRobotAccounts        = new(_cachePmRobotAccounts,        this, OrchAPISession.GetPmRobotAccounts,        e => e.Path = NameColonSeparator);
-        PmExternalClients      = new(_cachePmExternalClients,      this, OrchAPISession.GetPmExternalClients,      e => e.Path = NameColonSeparator);
-        PmExternalApiResources = new(_cachePmExternalApiResources, this, OrchAPISession.GetPmExternalApiResource,  e => e.Path = NameColonSeparator);
+        PmUsers                = new(this, OrchAPISession.GetPmUsers,                 e => e.Path = NameColonSeparator);
+        PmGroups               = new(this, OrchAPISession.GetPmGroups,                e =>
+            {
+                e.Path = NameColonSeparator;
+                foreach (var m in e.members ?? [])
+                {
+                    m.Path = NameColonSeparator;
+                    m.PathGroupName = NameColonSeparator + e.name;
+                }
+            },
+                                e => e.id, OrchAPISession.GetPmGroup);
+
+        PmRobotAccounts        = new(this, OrchAPISession.GetPmRobotAccounts,         e => e.Path = NameColonSeparator);
+        PmExternalClients      = new(this, OrchAPISession.GetPmExternalClients,       e => e.Path = NameColonSeparator);
+        PmExternalApiResources = new(this, OrchAPISession.GetPmExternalApiResource,   e => e.Path = NameColonSeparator);
 
         // インデックスなしのテナントエンティティ
         ActivitySettings       = new(this, OrchAPISession.GetActivitySettings,        e => e.Path = NameColonSeparator);

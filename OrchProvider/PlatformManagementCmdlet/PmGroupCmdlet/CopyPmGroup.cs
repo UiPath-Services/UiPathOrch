@@ -83,7 +83,7 @@ public class CopyPmGroupCommand : OrchestratorPSCmdlet
         var dstDrives = OrchDriveInfo.EnumPmDrives(Destination.Split1stValueByUnescapedCommas());
         var wpGroupName = GroupName.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
 
-        var srcGroups = srcDrive.GetPmGroups().Values;
+        var srcGroups = srcDrive.PmGroups.Get();
         var targetGroups = srcGroups.FilterByWildcards(g => g?.name, wpGroupName);
 
         using var cancelHandler = new ConsoleCancelHandler();
@@ -93,7 +93,7 @@ public class CopyPmGroupCommand : OrchestratorPSCmdlet
             PmGroup srcDetailedGroup = null;
             try
             {
-                srcDetailedGroup = srcDrive.GetPmGroup(srcGroup.id);
+                srcDetailedGroup = srcDrive.PmGroups.Get(srcGroup.id);
             }
             catch (Exception ex)
             {
@@ -161,8 +161,8 @@ public class CopyPmGroupCommand : OrchestratorPSCmdlet
                         // ここまでで、グループに追加するメンバーをすべて抽出済み
 
                         // 同名のグループを探して、あればそのグループに entries を追加する
-                        var dstGroups = dstDrive.GetPmGroups();
-                        var dstGroup = dstGroups.Values.FirstOrDefault(g => string.Compare(srcDetailedGroup.name, g.name, true) == 0);
+                        var dstGroups = dstDrive.PmGroups.Get();
+                        var dstGroup = dstGroups.FirstOrDefault(g => string.Compare(srcDetailedGroup.name, g.name, true) == 0);
 
                         PmGroup? newGroup = null;
                         if (dstGroup is null)

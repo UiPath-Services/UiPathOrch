@@ -61,7 +61,7 @@ class NewUserMappingCsvCommand : OrchestratorPSCmdlet
         ICollection<PmGroup> srcGroups = null;
         try
         {
-            srcGroups = srcDrive.GetPmGroups().Values;
+            srcGroups = srcDrive.PmGroups.Get().ToList();
             reporter.TotalNum = srcGroups.Count;
         }
         catch
@@ -73,7 +73,7 @@ class NewUserMappingCsvCommand : OrchestratorPSCmdlet
         using var results = OrchThreadPool.RunForEach(srcGroups,
             group => group.GetPSPath(),
             group => group,
-            group => srcDrive.GetPmGroup(group.id)
+            group => srcDrive.PmGroups.Get(group.id)
         );
 
         int index = 0;

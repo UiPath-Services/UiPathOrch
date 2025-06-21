@@ -27,11 +27,11 @@ public class RemovePmGroupCommand : OrchestratorPSCmdlet
         {
             try
             {
-                var groups = drive.GetPmGroups();
+                var groups = drive.PmGroups.Get();
 
                 var partitionGlobalId = drive.GetPartitionGlobalId();
 
-                foreach (var group in groups.Values
+                foreach (var group in groups
                     .Where(g => g is not null)
                     .FilterByWildcards(g => g?.name!, wpGroupName)
                     .OrderBy(g => g?.name))
@@ -43,7 +43,7 @@ public class RemovePmGroupCommand : OrchestratorPSCmdlet
                         try
                         {
                             drive.OrchAPISession.RemovePmGroup(partitionGlobalId!, group?.id);
-                            drive._dicPmGroups?.TryRemove(group!.id!, out _);
+                            drive.PmGroups.ClearCache(group?.id);
                             drive._dicSearchPmDirectory = null;
                             drive._dicSearchDirectory = null;
                         }

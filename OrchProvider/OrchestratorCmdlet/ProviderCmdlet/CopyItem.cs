@@ -910,10 +910,10 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         if (srcPmGroupIds is null) return null;
 
         string target = srcDrive.NameColonSeparator;
-        ICollection<PmGroup>? srcPmGroups = null;
+        IEnumerable<PmGroup>? srcPmGroups = null;
         try
         {
-            srcPmGroups = srcDrive.GetPmGroups()?.Values;
+            srcPmGroups = srcDrive.PmGroups.Get();
         }
         catch (Exception ex)
         {
@@ -927,10 +927,10 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
 
         target = dstDrive.NameColonSeparator;
-        ICollection<PmGroup>? dstPmGroups = null;
+        IEnumerable<PmGroup>? dstPmGroups = null;
         try
         {
-            dstPmGroups = dstDrive.GetPmGroups()?.Values;
+            dstPmGroups = dstDrive.PmGroups.Get();
         }
         catch (Exception ex)
         {

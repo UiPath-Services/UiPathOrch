@@ -62,10 +62,10 @@ public class MoveOrchPmGroupMemberCommand : OrchestratorPSCmdlet
         {
             cancelHandler.Token.ThrowIfCancellationRequested();
 
-            ICollection<PmGroup> existingGroups = null;
+            IEnumerable<PmGroup> existingGroups = null;
             try
             {
-                existingGroups = drive.GetPmGroups().Values;
+                existingGroups = drive.PmGroups.Get();
             }
             catch (Exception ex)
             {
@@ -183,8 +183,7 @@ public class MoveOrchPmGroupMemberCommand : OrchestratorPSCmdlet
             try
             {
                 drive.OrchAPISession.PutPmGroup(group.id, command);
-                drive._dicPmGroups = null;
-                drive._dicPmGroups_Exception.ClearCache();
+                drive.PmGroups.ClearCache();
             }
             catch (Exception ex)
             {

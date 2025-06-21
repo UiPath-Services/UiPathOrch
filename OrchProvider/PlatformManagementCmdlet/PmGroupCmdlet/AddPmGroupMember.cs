@@ -39,10 +39,10 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
     {
         var results = ParallelResults.ForEach(drives, drive =>
         {
-            var groups = drive.GetPmGroups().Values
+            var groups = drive.PmGroups.Get()
                 .FilterByWildcards(g => g?.name!, wpGroupName)
                 .OrderBy(g => g?.name);
-            return ParallelResults.ForEach(groups, group => drive.GetPmGroup(group?.id));
+            return ParallelResults.ForEach(groups, group => drive.PmGroups.Get(group?.id));
         });
     }
 
@@ -85,7 +85,7 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
             bool bFound = false;
             foreach (var drive in drives)
             {
-                var existingGroups = drive.GetPmGroups().Values;
+                var existingGroups = drive.PmGroups.Get();
                 var updatingGroups = existingGroups.FilterByWildcards(u => u!.name!, wpGroupName);
 
                 var users = drive.SearchPmDirectory(wordToComplete);
@@ -138,8 +138,8 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
         // TODO: 指定したワイルドカードが、どのグループ名にも合致しない場合には警告出した方が良さそうだけど、ちと面倒だね。。
         foreach (var drive in drives)
         {
-            var groups = drive.GetPmGroups();
-            var filteredGroups = groups.Values.FilterByWildcards(g => g?.name, wpGroupName).ToList();
+            var groups = drive.PmGroups.Get();
+            var filteredGroups = groups.FilterByWildcards(g => g?.name, wpGroupName).ToList();
 
             foreach (var group in filteredGroups)
             {
@@ -215,7 +215,7 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
             try
             {
                 // 更新対象の各グループのメンバー一覧を取得
-                var detailedGroup = drive.GetPmGroup(group.id);
+                var detailedGroup = drive.PmGroups.Get(group.id);
                 if (detailedGroup is null) continue;
 
                 HashSet<string> identifiers = [];

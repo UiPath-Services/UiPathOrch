@@ -53,7 +53,7 @@ public class GetPmGroupCommand : OrchestratorPSCmdlet
 
         foreach (var drive in drives)
         {
-            var groups = drive.GetPmGroups().Values
+            var groups = drive.PmGroups.Get()
                 .Where(g => g is not null)
                 .FilterByWildcards(g => g?.name!, wpGroupName)
                 .OrderBy(g => g.name);
