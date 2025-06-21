@@ -39,7 +39,8 @@ public class GetPmRobotAccountCommand : OrchestratorPSCmdlet
     private static readonly string[] CsvHeaders = 
         ["Path", "UserName", "GroupName0", "GroupName1", "GroupName2", "GroupName3", "GroupName4", "GroupName5", "GroupName6", "GroupName7", "GroupName8", "GroupName9"];
 
-    private static void WriteCsvContent(StreamWriter writer, IEnumerable<PmRobotAccount> robotAccounts, ConcurrentDictionary<string, PmGroup> groups)
+    //private static void WriteCsvContent(StreamWriter writer, IEnumerable<PmRobotAccount> robotAccounts, ConcurrentDictionary<string, PmGroup> groups)
+    private static void WriteCsvContent(StreamWriter writer, IEnumerable<PmRobotAccount> robotAccounts, Dictionary<string, PmGroup> groups)
     {
         // データ行を書き込む
         foreach (var robotAccount in robotAccounts
@@ -76,7 +77,7 @@ public class GetPmRobotAccountCommand : OrchestratorPSCmdlet
 
         if (ExpandGroup.IsPresent)
         {
-            ParallelResults3.GroupBy(drives, drive => drive.GetPmGroups());
+            ParallelResults3.GroupBy(drives, drive => drive.PmGroups.Get());
         }
 
         using var cancelHandler = new ConsoleCancelHandler();
@@ -92,13 +93,15 @@ public class GetPmRobotAccountCommand : OrchestratorPSCmdlet
                 if (robotAccounts is null) continue;
                 var drive = result.Source;
 
+                var dicGroups = drive.PmGroups.Get().ToDictionary(g => g.id!);
+
                 if (writer is not null)
                 {
-                    WriteCsvContent(writer, robotAccounts, drive!.GetPmGroups());
+                    WriteCsvContent(writer, robotAccounts, dicGroups);
                 }
                 else if (ExpandGroup.IsPresent)
                 {
-                    var groups = drive!.GetPmGroups().Values;
+                    var groups = drive.PmGroups.Get();
 
                     foreach (var robot in robotAccounts)
                     {

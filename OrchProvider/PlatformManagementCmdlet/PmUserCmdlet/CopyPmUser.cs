@@ -71,10 +71,10 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
         }
 
         #region srcDrive のグループ一覧を取得
-        ConcurrentDictionary<string, PmGroup> srcGroups;
+        IEnumerable<PmGroup> srcGroups;
         try
         {
-            srcGroups = srcDrive.GetPmGroups();
+            srcGroups = srcDrive.PmGroups.Get();
         }
         catch (Exception ex)
         {
@@ -95,7 +95,7 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
             Dictionary<string, PmGroup> dstGroups;
             try
             {
-                dstGroups = dstDrive.GetPmGroups().Values.ToDictionary(g => g.name!, g => g, StringComparer.OrdinalIgnoreCase);
+                dstGroups = dstDrive.PmGroups.Get().ToDictionary(g => g.name!, g => g, StringComparer.OrdinalIgnoreCase);
             }
             catch (Exception ex)
             {
@@ -174,8 +174,7 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
                 {
                     var response = dstDrive.CreatePmUserBulk(payload);
                     dstDrive.PmUsers.ClearCache();
-                    dstDrive._dicPmGroups = null;
-                    dstDrive._dicPmGroups_Exception.ClearCache();
+                    dstDrive.PmGroups.ClearCache();
 
                     if (response?.result?.succeeded ?? false)
                     {

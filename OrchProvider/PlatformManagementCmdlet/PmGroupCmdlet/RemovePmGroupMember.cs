@@ -78,9 +78,7 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
         // ドライブ、グループ、ユーザーは展開する
         foreach (var drive in drives)
         {
-            var existingGroups = drive.GetPmGroups();
-
-            var targetGroups = existingGroups.Values
+            var targetGroups = drive.PmGroups.Get()
                 .Where(g => g is not null)
                 .FilterByWildcards(g => g!.name ?? "", wpGroupName);
 
@@ -93,7 +91,7 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
             foreach (var group in targetGroups)
             {
                 // このグループのメンバを取得
-                var detailedGroup = drive.GetPmGroup(group?.id);
+                var detailedGroup = drive.PmGroups.Get(group?.id);
 
                 var targetMembers = detailedGroup?.members?
                     .FilterByWildcards(m => m?.objectType, wpType)

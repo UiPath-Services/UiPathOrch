@@ -312,10 +312,10 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
     {
         var results = ParallelResults.ForEach(drives, drive =>
         {
-            var groups = drive.GetPmGroups().Values
+            var groups = drive.PmGroups.Get()
                 .FilterByWildcards(g => g?.name!, wpGroupName)
                 .OrderBy(g => g?.name);
-            return ParallelResults.ForEach(groups, group => drive.GetPmGroup(group?.id));
+            return ParallelResults.ForEach(groups, group => drive.PmGroups.Get(group?.id));
         });
 
         List<PmGroupMember> existingMembers = [];
@@ -1688,10 +1688,10 @@ internal class UserNameInPmGroupCompleter<TPositional> : OrchArgumentCompleter w
         // 各グループの詳細を取得する
         var results = ParallelResults.ForEach(drives, drive =>
         {
-            var groups = drive.GetPmGroups().Values
+            var groups = drive.PmGroups.Get()
                 .FilterByWildcards(g => g?.name!, wpGroupName)
                 .OrderBy(g => g?.name);
-            return ParallelResults.ForEach(groups, group => drive.GetPmGroup(group?.id));
+            return ParallelResults.ForEach(groups, group => drive.PmGroups.Get(group?.id));
         });
 
         // グループのメンバーとなっている DirectoryUser を収集する
@@ -1958,16 +1958,15 @@ public class PmGroupNameCompleter<TPositional> : OrchArgumentCompleter where TPo
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults3.GroupBy(drives, drive => drive.GetPmGroups());
+        var results = ParallelResults3.GroupBy(drives, drive => drive.PmGroups.Get());
 
         foreach (var result in results)
         {
-            foreach (var pmGroupKV in result
-                .Where(g => wp.IsMatch(g.Value.name))
-                .ExcludeByWildcards(g => g.Value.name!, wpName)
-                .OrderBy(g => g.Value.name))
+            foreach (var pmGroup in result
+                .Where(g => wp.IsMatch(g.name))
+                .ExcludeByWildcards(g => g?.name, wpName)
+                .OrderBy(g => g.name))
             {
-                var pmGroup = pmGroupKV.Value;
                 string tiphelp = pmGroup.GetPSPath();
                 yield return new CompletionResult(PathTools.EscapePSText(pmGroup?.name), pmGroup?.name, CompletionResultType.Text, tiphelp);
             }

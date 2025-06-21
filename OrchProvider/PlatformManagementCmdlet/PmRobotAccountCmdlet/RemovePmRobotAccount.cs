@@ -43,7 +43,7 @@ public class RemovePmRobotAccountCommand : OrchestratorPSCmdlet
                         {
                             drive!.OrchAPISession.RemovePmRobot(partitionGlobalId!, robot.id!);
                             drive.PmRobotAccounts.ClearCache();
-                            drive._dicPmGroups = null;
+                            drive.PmGroups.ClearCache();
                             drive._dicSearchPmDirectory = null;
                             drive._dicSearchDirectory = null;
                         }

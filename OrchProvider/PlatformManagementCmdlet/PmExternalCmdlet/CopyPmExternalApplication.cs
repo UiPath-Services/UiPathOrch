@@ -97,17 +97,17 @@ public class CopyPmExternalApplicationCommand : OrchestratorPSCmdlet
                         var dirEntries = dstDrive.PmBulkResolveByName("application", [newApp], app => app.name!);
                         var newAppDirEntry = dirEntries.Values.FirstOrDefault(e => string.Compare(e?.name, newApp.name, true) == 0);
                         if (newAppDirEntry is null) continue;
-                        var srcGroups = srcDrive.GetPmGroups();
-                        foreach (var srcGroup in srcGroups.Values)
+                        var srcGroups = srcDrive.PmGroups.Get();
+                        foreach (var srcGroup in srcGroups)
                         {
                             try
                             {
-                                var detailedSrcGroup = srcDrive.GetPmGroup(srcGroup.id);
+                                var detailedSrcGroup = srcDrive.PmGroups.Get(srcGroup.id);
                                 if (detailedSrcGroup?.members?.Any(m => string.Compare(m.name, srcApp.name, true) == 0) ?? false)
                                 {
                                     // srcApp は srcGroup に所属している
                                     // 同名のグループを dstDrive で検索し、なければ同名のグループを dstDrive に追加
-                                    var dstGroups = dstDrive.GetPmGroups().Values;
+                                    var dstGroups = dstDrive.PmGroups.Get();
                                     var dstGroup = dstGroups.FirstOrDefault(g => string.Compare(g.name, srcGroup.name, true) == 0);
                                     if (dstGroup is null) // dstDrive に新規グループを作成して、newApp.id を追加
                                     {

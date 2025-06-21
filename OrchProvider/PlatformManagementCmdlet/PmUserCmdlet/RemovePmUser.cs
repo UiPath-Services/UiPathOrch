@@ -85,8 +85,7 @@ public class RemovePmUserCommand : OrchestratorPSCmdlet
                                 drive.OrchAPISession.RemovePmUserDeprecated(user.id!);
                             }
                             drive.PmUsers.ClearCache();
-                            drive._dicPmGroups = null;
-                            drive._dicPmGroups_Exception.ClearCache();
+                            drive.PmGroups.ClearCache();
                         }
                         catch (Exception ex)
                         {

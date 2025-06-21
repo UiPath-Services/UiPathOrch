@@ -50,10 +50,11 @@ public class GetPmUserCommand : OrchestratorPSCmdlet
             List<string> groupNames = [];
             if (user.groupIDs is not null && user.groupIDs.Any())
             {
-                var groups = drive.GetPmGroups();
+                var groups = drive.PmGroups.Get();
                 foreach (var groupId in user.groupIDs)
                 {
-                    if (groups.TryGetValue(groupId, out var group))
+                    var group = groups.FirstOrDefault(g => g.id == groupId); // 辞書にしてから検索すべきなのか？
+                    if (group is not null)
                     {
                         if (!string.IsNullOrEmpty(group.name))
                         {

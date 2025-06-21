@@ -129,12 +129,11 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.GetPmGroups());
+            var results = ParallelResults3.GroupBy(drives, drive => drive.PmGroups.Get());
 
             foreach (var result in results)
             {
                 foreach (var group in result
-                    .Select(e => e.Value)
                     .Where(e => e is not null)
                     .Where(e => wp.IsMatch(e?.name))
                     .ExcludeByWildcards(e => e?.name!, wpGroupName)
@@ -214,19 +213,19 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
                 continue;
             }
 
-            var existingGroups = drive.GetPmGroups();
+            var existingGroups = drive.PmGroups.Get();
 
             List<string> groupIdsToSet = null;
             if (wpGroupName is not null)
             {
-                groupIdsToSet = existingGroups?.Values
+                groupIdsToSet = existingGroups
                     .SelectByWildcards(g => g?.name!, wpGroupName)
                     .Select(g => g!.id!)
                     .ToList();
             }
 
             #region Everyone グループの id を追加
-            var everyoneGroup = existingGroups?.Values
+            var everyoneGroup = existingGroups
                 .FirstOrDefault(g => string.Compare(g!.name, "Everyone", StringComparison.OrdinalIgnoreCase) == 0);
             if (everyoneGroup is not null)
             {
@@ -288,9 +287,9 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
                             // この名前のロボットを更新
 
                             #region 指定されなかったグループの id を列挙
-                            List<string> groupIDsToRemove = existingGroups!
-                                .Where(g => !(groupIdsToSet?.Contains(g.Key) ?? false))
-                                .Select(g => g.Key)
+                            List<string> groupIDsToRemove = existingGroups
+                                .Where(g => !(groupIdsToSet?.Contains(g.id!) ?? false))
+                                .Select(g => g.id!)
                                 .ToList();
                             #endregion
 

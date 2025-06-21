@@ -66,7 +66,7 @@ public class GetPmGroupMemberCommand : OrchestratorPSCmdlet
 
         foreach (var drive in drives)
         {
-            var groups = drive.GetPmGroups().Values
+            var groups = drive.PmGroups.Get()
                 .Where(g => g is not null)
                 .FilterByWildcards(g => g?.name!, wpGroupName)
                 .OrderBy(g => g.name);
@@ -74,7 +74,7 @@ public class GetPmGroupMemberCommand : OrchestratorPSCmdlet
             using var results = OrchThreadPool.RunForEach(groups,
                 group => group.GetPSPath(),
                 group => group,
-                group => drive.GetPmGroup(group.id)
+                group => drive.PmGroups.Get(group.id)
             );
 
             using var cancelHandler = new ConsoleCancelHandler();

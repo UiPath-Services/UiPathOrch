@@ -2878,15 +2878,15 @@ public partial class OrchAPISession : IDisposable
         HttpRequestIdentity(HttpMethod.Put, $"/api/Setting", null, payload);
     }
 
-    public PmGroup[]? GetPmGroups(string partitionGlobalId)
+    public PmGroup[] GetPmGroups(string partitionGlobalId)
     {
-        return GetEnumerableWithoutPagingIdentity<PmGroup>($"/api/Group/{partitionGlobalId}");
+        return GetEnumerableWithoutPagingIdentity<PmGroup>($"/api/Group/{partitionGlobalId}") ?? [];
     }
 
-    public PmGroup[]? GetPmGroups2(string partitionGlobalId)
-    {
-        return GetEnumerableWithoutPagingPortal<PmGroup>($"/api/identity/Group/{partitionGlobalId}/licenses");
-    }
+    //public PmGroup[] GetPmGroups2(string partitionGlobalId)
+    //{
+    //    return GetEnumerableWithoutPagingPortal<PmGroup>($"/api/identity/Group/{partitionGlobalId}/licenses") ?? [];
+    //}
 
     // 非公開の API だな。。なんじゃこりゃ簡単に URL を構築できない。
     // "/portal_/api/orchestrator/tags/yotsuda/svc3?skip=0&take=10&startsWith=&type=Label"
@@ -2903,10 +2903,10 @@ public partial class OrchAPISession : IDisposable
     }
 
     // 非公開の API だな。。
-    public AvailableUserBundle[]? GetPmLicensedUsersAvailableLicenses()
-    {
-        return HttpRequestPortal<AvailableUserBundle[]>(HttpMethod.Get, $"/api/license/accountant/UserLicense");
-    }
+    //public AvailableUserBundle[] GetPmLicensedUsersAvailableLicenses()
+    //{
+    //    return HttpRequestPortal<AvailableUserBundle[]>(HttpMethod.Get, $"/api/license/accountant/UserLicense") ?? [];
+    //}
 
     // 非公開の API だな。。
     public AvailableUserBundles? GetPmLicensedGroupsAvailableLicenses(string? groupId)

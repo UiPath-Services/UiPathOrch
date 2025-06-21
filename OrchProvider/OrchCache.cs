@@ -240,27 +240,40 @@ public class ListCachePerTenant<T> : ITenantCacheClearable
 public class ListCachePerOrganization<T> // : ITenantCacheClearable
 {
     private readonly OrchDriveInfo _drive;
-    private readonly ConcurrentDictionary<string, List<T>> _cache;
+    private static readonly ConcurrentDictionary<string, List<T>> _cache = [];
     private readonly ExceptionsCachePer<string> _exception = new(); // per org の例外をこれで保持
     // input: partitionGlobalId
     private readonly Func<string, IEnumerable<T>> _getter;
     private readonly Action<T>? _initializer;
 
+    // -ExpandDetail できるエンティティについては、下記も必要となる
+    private readonly Func<T, string?>? _getterId;
+    // (partitionGlobalId, id) をキーとする、組織エンティティの詳細キャッシュ
+    private static ConcurrentDictionary<(string partitionGlobalId, string id), T?>? _cacheDetailed = null;
+    private readonly Func<string, string, T?>? _getterDetailed;
+    // (partitionGlobalId, id) をキーとする、組織エンティティの詳細取得時の例外キャッシュ
+    private readonly ExceptionsCachePer<(string partitionGlobalId, string id)> _exceptionDetailed = new(); // per (org, id) の例外をこれで保持
+
     public ListCachePerOrganization(
-        ConcurrentDictionary<string, List<T>> cache,
-        OrchDriveInfo drive, 
+        OrchDriveInfo drive,
+        //ConcurrentDictionary<string, List<T>> cache,
         Func<string, IEnumerable<T>> getter,
-        Action<T>? initializer)
+        Action<T>? initializer,
+        Func<T, string?>? getterId = null,
+        Func<string, string, T?>? getterDetailed = null)
     {
-        _cache = cache;
         _drive = drive;
         _getter = getter;
         _initializer = initializer;
+
+        _getterId = getterId;
+        _getterDetailed = getterDetailed;
     }
 
     public IEnumerable<T> Get()
     {
-        var partitionGlobalId = _drive.GetPartitionGlobalId()!;
+        var partitionGlobalId = _drive.GetPartitionGlobalId();
+        if (string.IsNullOrEmpty(partitionGlobalId)) yield break;
 
         _exception.ThrowCachedExceptionIfAny(partitionGlobalId);
 
@@ -283,27 +296,143 @@ public class ListCachePerOrganization<T> // : ITenantCacheClearable
                 }
             }
         }
-        foreach (var t in cachePerOrg)
+        foreach (var t in cachePerOrg.Where(t => t is not null))
         {
-            if (_initializer is not null)
+            // 詳細キャッシュがあれば、それを返す
+            if (_cacheDetailed is not null && _cacheDetailed.TryGetValue((partitionGlobalId, _getterId!(t)!), out var detailedEntity))
             {
-                _initializer(t);
+                if (_initializer is not null && detailedEntity is not null)
+                {
+                    _initializer(detailedEntity);
+                    yield return detailedEntity;
+                }
             }
-            yield return t;
+            else
+            {
+                if (_initializer is not null)
+                {
+                    _initializer(t);
+                }
+                yield return t;
+            }
         }
     }
 
-    public void ClearCache(string partitionGlobalId)
+    public T? Get(string? id)
     {
-        _cache.TryRemove(partitionGlobalId, out var _);
-        _exception.ClearCache(partitionGlobalId);
+        if (_getterDetailed is null) throw new NotSupportedException();
+
+        if (string.IsNullOrEmpty(id)) return default;
+
+        var partitionGlobalId = _drive.GetPartitionGlobalId()!;
+
+        _exceptionDetailed.ThrowCachedExceptionIfAny((partitionGlobalId, id));
+
+        if (_cacheDetailed is null)
+        {
+            lock (this)
+            {
+                _cacheDetailed ??= [];
+            }
+        }
+
+        if (!_cacheDetailed.TryGetValue((partitionGlobalId, id), out var cachePerOrgDetailed))
+        {
+            lock (this)
+            {
+                if (!_cacheDetailed.TryGetValue((partitionGlobalId, id), out cachePerOrgDetailed))
+                {
+                    try
+                    {
+                        cachePerOrgDetailed = _getterDetailed(partitionGlobalId, id);
+                        _cacheDetailed[(partitionGlobalId, id)] = cachePerOrgDetailed;
+                    }
+                    catch (HttpResponseException ex)
+                    {
+                        _exception.CacheException(partitionGlobalId, ex);
+                        throw;
+                    }
+                }
+            }
+        }
+        if (_initializer is not null && cachePerOrgDetailed is not null)
+        {
+            _initializer(cachePerOrgDetailed);
+        }
+
+        return cachePerOrgDetailed;
+    }
+
+    public void Set(T t)
+    {
+        var partitionGlobalId = _drive.GetPartitionGlobalId();
+        var id = _getterId?.Invoke(t);
+        if (string.IsNullOrEmpty(partitionGlobalId) || string.IsNullOrEmpty(id)) return;
+
+        // _cache の更新（リストが存在しなければ何もしない）
+        if (_cache.TryGetValue(partitionGlobalId, out var list))
+        {
+            // メインスレッドのみから呼ばれる前提なので lock は不要
+            bool replaced = false;
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (string.Compare(_getterId?.Invoke(list[i]), id, true) == 0)
+                {
+                    list[i] = t;
+                    replaced = true;
+                    break;
+                }
+            }
+            if (!replaced)
+            {
+                list.Add(t);
+            }
+        }
+
+        // _cacheDetailed の Upsert
+        if (_cacheDetailed is not null)
+        {
+            _cacheDetailed[(partitionGlobalId, id)] = t;
+        }
+    }
+
+    public void ClearCache(string? id)
+    {
+        if (string.IsNullOrEmpty(_drive._dicPartitionGlobalId)) return;
+
+        if (!string.IsNullOrEmpty(id))
+        {
+            _cacheDetailed?.TryRemove((_drive._dicPartitionGlobalId, id), out var _);
+        }
+        _cache.TryRemove(_drive._dicPartitionGlobalId, out var _);
+        _exception.ClearCache(_drive._dicPartitionGlobalId);
     }
 
     public void ClearCache()
     {
-        _cache.Clear();
-        _exception.ClearCache();
+        if (string.IsNullOrEmpty(_drive._dicPartitionGlobalId)) return;
+
+        if (_cacheDetailed != null && !_cacheDetailed.IsEmpty)
+        {
+            foreach (var pair in _cacheDetailed)
+            {
+                var key = pair.Key;
+                if (key.partitionGlobalId == _drive._dicPartitionGlobalId)
+                {
+                    _cacheDetailed.TryRemove(key, out _);
+                }
+            }
+        }
+
+        _cache.TryRemove(_drive._dicPartitionGlobalId, out _);
+        _exception.ClearCache(_drive._dicPartitionGlobalId);
     }
+
+    //public void ClearCacheAll()
+    //{
+    //    _cache.Clear();
+    //    _exception.ClearCache();
+    //}
 }
 
 // 今のところ、インデックスとしては Int64 のみをサポート。この型もパラメータ化した方がいいのかもしれない
