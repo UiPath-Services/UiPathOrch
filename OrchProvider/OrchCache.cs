@@ -237,11 +237,11 @@ public class ListCachePerTenant<T> : ITenantCacheClearable
 
 // partitionGlobalId をキーとする、組織エンティティ
 // これはすべての組織の、固有のエンティティのキャッシュを表す。
-public class ListCachePerOrganization<T> // : ITenantCacheClearable
+public class ListCachePerOrganization<T> : ITenantCacheClearable
 {
     private readonly OrchDriveInfo _drive;
     private static readonly ConcurrentDictionary<string, List<T>> _cache = [];
-    private readonly ExceptionsCachePer<string> _exception = new(); // per org の例外をこれで保持
+    private static readonly ExceptionsCachePer<string> _exception = new(); // per org の例外をこれで保持
     // input: partitionGlobalId
     private readonly Func<string, IEnumerable<T>> _getter;
     private readonly Action<T>? _initializer;
@@ -252,7 +252,7 @@ public class ListCachePerOrganization<T> // : ITenantCacheClearable
     private static ConcurrentDictionary<(string partitionGlobalId, string id), T?>? _cacheDetailed = null;
     private readonly Func<string, string, T?>? _getterDetailed;
     // (partitionGlobalId, id) をキーとする、組織エンティティの詳細取得時の例外キャッシュ
-    private readonly ExceptionsCachePer<(string partitionGlobalId, string id)> _exceptionDetailed = new(); // per (org, id) の例外をこれで保持
+    private static readonly ExceptionsCachePer<(string partitionGlobalId, string id)> _exceptionDetailed = new(); // per (org, id) の例外をこれで保持
 
     public ListCachePerOrganization(
         OrchDriveInfo drive,
@@ -263,6 +263,7 @@ public class ListCachePerOrganization<T> // : ITenantCacheClearable
         Func<string, string, T?>? getterDetailed = null)
     {
         _drive = drive;
+        _drive._allTenantCache.Add(this);
         _getter = getter;
         _initializer = initializer;
 

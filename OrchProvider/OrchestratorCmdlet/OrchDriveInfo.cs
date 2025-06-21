@@ -578,15 +578,6 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     public void ClearAllCache()
     {
-        if (!string.IsNullOrEmpty(_dicPartitionGlobalId))
-        {
-            PmUsers.ClearCache(_dicPartitionGlobalId);
-            PmGroups.ClearCache(_dicPartitionGlobalId);
-            PmRobotAccounts.ClearCache(_dicPartitionGlobalId);
-            PmExternalClients.ClearCache(_dicPartitionGlobalId);
-            PmExternalApiResources.ClearCache(_dicPartitionGlobalId);
-        }
-
         foreach (var cache in _allTenantCache)
         {
             cache.ClearCache();
@@ -2542,6 +2533,8 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerOrganization<PmRobotAccount> PmRobotAccounts;
     public readonly ListCachePerOrganization<ExternalClient> PmExternalClients;
     public readonly ListCachePerOrganization<ExternalResource> PmExternalApiResources;
+    public readonly ListCachePerOrganization<NuLicensedGroup> PmLicensedGroups;
+    public readonly ListCachePerOrganization<NuLicensedUser> PmLicensedUsers;
 
     // これらはドライブごとに保持する必要があるため、 Cache クラスの static メンバにはできない
     internal readonly List<ITenantCacheClearable> _allTenantCache = [];
@@ -2572,8 +2565,6 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerTenant<Settings> Settings;
     public readonly ListCachePerTenant<Webhook> Webhooks;
     public readonly ListCachePerTenant<ResponseDictionaryItem> WebSettings;
-    public readonly ListCachePerTenant<NuLicensedGroup> PmLicensedGroups;
-    public readonly ListCachePerTenant<NuLicensedUser> PmLicensedUsers;
 
     // インデックスなしのフォルダーエンティティ
     public readonly SingleCachePerFolder<string> FolderFeedId;
@@ -2636,6 +2627,24 @@ public partial class OrchDriveInfo : PSDriveInfo
         PmRobotAccounts        = new(this, OrchAPISession.GetPmRobotAccounts,         e => e.Path = NameColonSeparator);
         PmExternalClients      = new(this, OrchAPISession.GetPmExternalClients,       e => e.Path = NameColonSeparator);
         PmExternalApiResources = new(this, OrchAPISession.GetPmExternalApiResource,   e => e.Path = NameColonSeparator);
+
+        PmLicensedGroups = new(this,
+            OrchAPISession.GetPmLicensedGroups,
+            e =>
+            {
+                e.Path = NameColonSeparator;
+                e.userBundleLicenseNames = e.userBundleLicenses?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
+            }
+        );
+
+        PmLicensedUsers = new(this,
+            OrchAPISession.GetPmLicensedUsers,
+            e =>
+            {
+                e.Path = NameColonSeparator;
+                e.userBundleLicenseNames = e.userBundleLicenses?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
+            }
+        );
 
         // インデックスなしのテナントエンティティ
         ActivitySettings       = new(this, OrchAPISession.GetActivitySettings,        e => e.Path = NameColonSeparator);
@@ -2748,24 +2757,6 @@ public partial class OrchDriveInfo : PSDriveInfo
                     Value = value
                 });
                 return list ?? [];
-            }
-        );
-
-        PmLicensedGroups = new(this,
-            OrchAPISession.GetPmLicensedGroups,
-            e =>
-            {
-                e.Path = NameColonSeparator;
-                e.userBundleLicenseNames = e.userBundleLicenses?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
-            }
-        );
-
-        PmLicensedUsers = new(this,
-            OrchAPISession.GetPmLicensedUsers,
-            e =>
-            {
-                e.Path = NameColonSeparator;
-                e.userBundleLicenseNames = e.userBundleLicenses?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
             }
         );
 

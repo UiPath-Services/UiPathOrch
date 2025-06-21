@@ -77,10 +77,10 @@ public class ExceptionsCachePer<T> where T : IEquatable<T>
         }
     }
 
-    public void ClearCache(T? key)
+    public bool ClearCache(T? key)
     {
-        if (key is null) return;
-        _exceptionsCache.Value.TryRemove(key, out var _);
+        if (key is null) return false;
+        return _exceptionsCache.Value.TryRemove(key, out var _);
     }
 
     public void ClearCache()

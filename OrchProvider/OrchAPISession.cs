@@ -2916,7 +2916,8 @@ public partial class OrchAPISession : IDisposable
     }
 
     // 非公開の API だな。。
-    public IEnumerable<NuLicensedGroup> GetPmLicensedGroups()
+    // なぜか partitionGlobalId は不要だが、キャッシュと統合するために引数を追加してある。
+    public IEnumerable<NuLicensedGroup> GetPmLicensedGroups(string? partitionGlobalId)
     {
         return GetEnumerablePortal<NuLicensedGroup>("/api/license/accountant/UserLicense/group/page");
     }
@@ -2957,7 +2958,8 @@ public partial class OrchAPISession : IDisposable
     }
 
     // 非公開の API だな。。
-    public IEnumerable<NuLicensedUser> GetPmLicensedUsers()
+    // なぜか partitionGlobalId は不要だが、キャッシュと統合するために引数を追加してある。
+    public IEnumerable<NuLicensedUser> GetPmLicensedUsers(string? partitionGlobalId)
     {
         return GetEnumerablePortal<NuLicensedUser>("/portal_/api/license/accountant/UserLicense/user/page");
     }
