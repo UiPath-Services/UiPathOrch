@@ -469,6 +469,7 @@ internal static class OrchStringExtensions
     }
 
     // nameKind には capitalized の名前を渡すこと。
+    // 処理が継続できない場合に false を返す。
     public static bool AssignIdFromName<T, TElement, TId>(
         this T target,
         string? name,
@@ -480,7 +481,7 @@ internal static class OrchStringExtensions
         string? targetName,
         string nameKind)
     {
-        if (name is null) return false;
+        if (name is null) return true;
 
         if (name == "")
         {

@@ -1071,29 +1071,50 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
     internal static RobotsFromFolderModel? FindDstRobotByUnattendedAccount(IWritableHost _this,
-        OrchDriveInfo srcDrive,
+        OrchDriveInfo srcDrive, Folder srcFolder,
         OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcRobotId, string msg)
     {
         if (srcRobotId is null || srcRobotId == 0) return null;
         try
         {
-            var srcRobot = srcDrive.Robots.Get()?.FirstOrDefault(r => r.Id == srcRobotId);
-            if (srcRobot is null)
+            string? srcRobot_Type = null;
+            string? srcRobot_Username = null;
+            if (srcFolder.ProvisionType == "Manual")
             {
-                _this.WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, $"{msg}: {srcDrive.NameColon} does not have robot with Id = {srcRobotId}."), "MigrateRobotIdError", ErrorCategory.InvalidOperation, srcDrive));
-                return null;
+                // クラシックフォルダの場合には、GET /odata/Sessions でクラシックロボットを探す
+                var sessions = srcDrive.Sessions.Get(srcFolder);
+                var srcRobot = sessions.FirstOrDefault(s => s.Robot?.Id == srcRobotId);
+                if (srcRobot is null)
+                {
+                    _this.WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, $"{msg}: {srcDrive.NameColon} does not have robot with Id = {srcRobotId}."), "MigrateRobotIdError", ErrorCategory.InvalidOperation, srcDrive));
+                    return null;
+                }
+                srcRobot_Type = srcRobot.Robot?.Type;
+                srcRobot_Username = srcRobot.Robot?.Username;
             }
+            else
+            {
+                var srcRobot = srcDrive.Robots.Get()?.FirstOrDefault(r => r.Id == srcRobotId);
+                if (srcRobot is null)
+                {
+                    _this.WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, $"{msg}: {srcDrive.NameColon} does not have robot with Id = {srcRobotId}."), "MigrateRobotIdError", ErrorCategory.InvalidOperation, srcDrive));
+                    return null;
+                }
+                srcRobot_Type = srcRobot.Type;
+                srcRobot_Username = srcRobot.Username;
+            }
+
             //msg = $"Migrating id of the robot {Path.Combine(srcDrive.NameColon, srcRobot.Name!)}";
 
             var dstRobots = dstDrive.RobotsFromFolder.Get(dstFolder);
             var dstRobot = dstRobots?.FirstOrDefault(r => 
-                r.Type == srcRobot.Type && // たぶん、この srcRobot.Type は必ず "Unattended" になっているはず。。
-                string.Compare(r.Username, srcRobot.Username, StringComparison.OrdinalIgnoreCase) == 0);
+                r.Type == srcRobot_Type && // たぶん、この srcRobot.Type は必ず "Unattended" になっているはず。。
+                string.Compare(r.Username, srcRobot_Username, StringComparison.OrdinalIgnoreCase) == 0);
             if (dstRobot is null)
             {
                 string target = dstFolder.GetPSPath();
                 //_this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: A Robot with the user name '{srcRobot.Username}' is not configured in {dstFolder.GetPSPath()}."), "MigrateRobotIdError", ErrorCategory.InvalidOperation, target));
-                _this.WriteWarning($"{msg}: An unattended robot with the user name '{srcRobot.Username}' ({srcRobot.User?.UserName}) is not configured in {dstFolder.GetPSPath()}.");
+                _this.WriteWarning($"{msg}: An unattended robot with the user name '{srcRobot_Username}' ({srcRobot_Username}) is not configured in {dstFolder.GetPSPath()}.");
                 return null;
             }
             return dstRobot;
@@ -1844,7 +1865,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
     private static RobotExecutor[]? MigrateExecutorRobots(IWritableHost _this, string msg,
-        OrchDriveInfo srcDrive,
+        OrchDriveInfo srcDrive, Folder srcFolder,
         OrchDriveInfo dstDrive, Folder newFolder,
         RobotExecutor[]? executorRobots)
     {
@@ -1853,7 +1874,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         List<RobotsFromFolderModel?> dstRobots = [];
         foreach (var executorRobot in executorRobots.Where(er => er is not null))
         {
-            var dstExecutorRobot = FindDstRobotByUnattendedAccount(_this, srcDrive, dstDrive, newFolder, executorRobot.Id, msg);
+            var dstExecutorRobot = FindDstRobotByUnattendedAccount(_this, srcDrive, srcFolder, dstDrive, newFolder, executorRobot.Id, msg);
             dstRobots.Add(dstExecutorRobot);
         }
 
@@ -1874,7 +1895,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         List<MachineRobotSession> dstSessions = [];
         foreach (var machineRobot in machineRobots.Where(mr => mr is not null))
         {
-            var robotId = FindDstRobotByUnattendedAccount(_this, srcDrive, dstDrive, newFolder, machineRobot.RobotId, msg)?.Id;
+            var robotId = FindDstRobotByUnattendedAccount(_this, srcDrive, srcFolder, dstDrive, newFolder, machineRobot.RobotId, msg)?.Id;
             var machineId = FindDstMachine(_this, srcDrive, srcFolder, dstDrive, newFolder, machineRobot.MachineId, msg)?.Id;
 
             if (robotId is not null || machineId is not null)
@@ -1979,7 +2000,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                 // ExecutorRobots を移行
                 postingTrigger.ExecutorRobots = MigrateExecutorRobots(_this, msg,
-                    srcDrive,
+                    srcDrive, srcFolder,
                     dstDrive, newFolder,
                     postingTrigger.ExecutorRobots);
 
