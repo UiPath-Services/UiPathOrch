@@ -1,3 +1,7 @@
+Version: 0.9.13.4
+- When copying a trigger using the Copy-OrchTrigger cmdlet, if the source folder is a classic folder, the ExecutorRobots property of the destination trigger is now constructed by referencing the classic robot from the source.
+
+
 Version: 0.9.13.3
 - Improved the behavior of the New-OrchProcess cmdlet.
   - When the -EntryPoint parameter is specified, execution could fail in folders with a feed.

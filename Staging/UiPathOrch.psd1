@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.13.3'
+ModuleVersion = '0.9.13.4'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -388,13 +388,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Improved the behavior of the New-OrchProcess cmdlet.
-  - When the -EntryPoint parameter is specified, execution could fail in folders with a feed.
-  - When the -Version parameter is not specified, the latest version is now selected automatically.
-
-- The Remove-OrchPackage cmdlet did not previously clear the package cache after execution.
-
-- In cmdlets that update entities, such as Update-OrchTrigger, even for parameters that require resolving names to IDs, omitted parameters no longer overwrite existing values with null. Existing values are now preserved instead.
+        ReleaseNotes = '- When copying a trigger using the Copy-OrchTrigger cmdlet, if the source folder is a classic folder, the ExecutorRobots property of the destination trigger is now constructed by referencing the classic robot from the source.
 '
 
         # Prerelease string of this module
