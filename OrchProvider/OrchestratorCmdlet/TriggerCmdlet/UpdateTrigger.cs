@@ -149,6 +149,7 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
 
     // 現在トリガに設定されているユーザー名を候補に表示。Update-OrchTrigger のための実装。
     // New-OrchTrigger では、利用可能なユーザーをすべて表示する方が使いやすいと思うので、この実装を共有はしない。。
+    // TODO: いや、これ設定できる値を全部列挙した方が使いやすいような気がするが。。
     private class ExecutorRobotsCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -174,18 +175,17 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
                     .FilterByWildcards(t => t?.Name, wpName)
                     .OrderBy(t => t.Name);
 
-                var results = ParallelResults.ForEach(triggers, trigger => drive.GetTrigger(folder, trigger));
+                var results = ParallelResults3.ForEach(triggers, trigger => drive.GetTrigger(folder, trigger));
 
                 foreach (var result in results)
                 {
-                    if (result.Result is null) continue;
-                    if (result.Result.ExecutorRobots is null || result.Result.ExecutorRobots.Length == 0) continue;
+                    if (result.Item.ExecutorRobots is null || result.Item.ExecutorRobots.Length == 0) continue;
 
-                    var executerRobots = SerializeExecutorRobotArray(drive, result.Result.ExecutorRobots);
+                    var executerRobots = SerializeExecutorRobotArray(drive, result.Item.ExecutorRobots);
                     if (wpExecutorRobots is not null && wpExecutorRobots.Any(wpe => wpe.IsMatch(executerRobots))) continue;
                     if (!string.IsNullOrEmpty(executerRobots))
                     {
-                        string tooltip = result.Result.GetPSPath();
+                        string tooltip = result.Item.GetPSPath();
                         yield return new CompletionResult(PathTools.EscapePSText(executerRobots), executerRobots, CompletionResultType.Text, tooltip);
                     }
                 }

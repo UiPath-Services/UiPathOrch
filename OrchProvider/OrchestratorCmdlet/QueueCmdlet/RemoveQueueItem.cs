@@ -60,16 +60,15 @@ public class RemoveQueueItemCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.Queues.Get(df.folder));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Queues.Get(df.folder));
 
-            foreach (var result in results)
+            foreach (var queues in results)
             {
-                if (result.Result is null) continue;
-                var (drive, folder) = result.Source;
+                var (drive, folder) = queues.Source;
 
                 if (drive._dicQueueItems?.TryGetValue(folder.Id!.Value, out var itemsPerFolder) ?? false)
                 {
-                    foreach (var q in result.Result
+                    foreach (var q in queues
                         .FilterByWildcards(q => q?.Name, wpName)
                         .OrderBy(q => q.Name))
                     {

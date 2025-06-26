@@ -50,21 +50,18 @@ public class RemoveCalendarDateCommand : OrchestratorPSCmdlet
                 .Select(date => date!.Value)
                 .ToList();
 
-            var calendarsResults = ParallelResults.ForEach(drives, drive => drive.GetCalendars());
+            var calendarsResults = ParallelResults3.GroupBy(drives, drive => drive.GetCalendars());
 
             foreach (var calendarsResult in calendarsResults)
             {
-                if (calendarsResult.Result is null) continue;
-
                 var drive = calendarsResult.Source;
 
-                var detailedCalendarResults = ParallelResults.ForEach(calendarsResult.Result
+                var detailedCalendarResults = ParallelResults3.ForEach(calendarsResult
                     .FilterByWildcards(c => c?.Name, wpCalendarName), calendar => drive.GetCalendar(calendar));
-                foreach (var detailedCalendarResult in detailedCalendarResults)
-                {
-                    if (detailedCalendarResult.Result is null) continue;
 
-                    var targetDates = detailedCalendarResult.Result.ExcludedDates?
+                foreach (var (calendar, calendarDetailed) in detailedCalendarResults)
+                {
+                    var targetDates = calendarDetailed.ExcludedDates?
                         .Where(d => d >= DateTime.Today)
                         .Select(d => d.Date)
                         .OrderBy(d => d);
@@ -74,7 +71,7 @@ public class RemoveCalendarDateCommand : OrchestratorPSCmdlet
                     {
                         if (paramExcludedDate.Contains(date)) continue; // 指定済みの日付を除外
                         string dateString = date.Date.ToShortDateString();
-                        string tiphelp = detailedCalendarResult.Result.GetPSPath();
+                        string tiphelp = calendarDetailed.GetPSPath();
                         if (string.IsNullOrEmpty(tiphelp)) tiphelp = dateString;
                         yield return new CompletionResult(PathTools.EscapePSText(dateString), dateString, CompletionResultType.ParameterValue, tiphelp);
                     }

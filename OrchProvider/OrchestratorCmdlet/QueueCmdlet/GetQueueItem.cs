@@ -120,15 +120,13 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.RobotsFromFolder.Get(df.folder));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.RobotsFromFolder.Get(df.folder));
 
             foreach (var result in results)
             {
-                if (result.Result is null) continue;
-
                 var (drive, folder) = result.Source;
 
-                foreach (var e in result.Result
+                foreach (var e in result
                     .Where(e => wp.IsMatch(e?.Name))
                     .ExcludeByWildcards(e => e?.Name, wpUserName)
                     .OrderBy(e => e?.Name))
