@@ -191,8 +191,9 @@ public class RemovePackageCommand : OrchestratorPSCmdlet
                                     drive._dicPackages?.TryRemove(feedId ?? "", out _);
                                     if (drive._dicPackageVersions?.TryGetValue(feedId ?? "", out var packageVersionsByPackageId) ?? false)
                                     {
-                                        packageVersionsByPackageId.TryRemove(version.Id!, out var _);
+                                        packageVersionsByPackageId.TryRemove(version.Id!, out _);
                                     }
+                                    drive._dicPackageVersions?.TryRemove(feedId ?? "", out _);
                                 }
                                 catch (Exception ex)
                                 {

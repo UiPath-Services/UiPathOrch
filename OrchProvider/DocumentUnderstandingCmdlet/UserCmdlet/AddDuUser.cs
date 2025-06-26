@@ -125,18 +125,16 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesProjects, dp => dp.drive.GetDuRoles());
+            var results = ParallelResults3.GroupBy(drivesProjects, dp => dp.drive.GetDuRoles());
 
             foreach (var result in results)
             {
-                if (result.Result is null) continue;
-
                 var (drive, project) = result.Source;
 
                 var users = drive.GetDuUsers(project)
                     .FilterByWildcards(u => u?.displayName, wpName).ToList();
 
-                foreach (var role in result.Result
+                foreach (var role in result
                     .Where(e => wp.IsMatch(e?.name))
                     .ExcludeByWildcards(e => e?.name!, wpRole)
                     .OrderBy(e => e?.name))

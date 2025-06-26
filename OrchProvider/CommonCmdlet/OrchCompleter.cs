@@ -310,23 +310,20 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
 
     protected static List<PmGroupMember> GetExistingMembers(List<OrchDriveInfo> drives, List<WildcardPattern>? wpGroupName)
     {
-        var results = ParallelResults.ForEach(drives, drive =>
+        var results = ParallelResults3.GroupBy(drives, drive =>
         {
             var groups = drive.PmGroups.Get()
                 .FilterByWildcards(g => g?.name!, wpGroupName)
                 .OrderBy(g => g?.name);
-            return ParallelResults.ForEach(groups, group => drive.PmGroups.Get(group?.id));
+            return ParallelResults3.ForEach(groups, group => drive.PmGroups.Get(group?.id));
         });
 
         List<PmGroupMember> existingMembers = [];
         foreach (var result in results)
         {
-            if (result.Result is null) continue;
-
-            foreach (var group in result.Result)
+            foreach (var (group, groupDetailed) in result)
             {
-                if (group.Result is null) continue;
-                existingMembers.AddRange(group.Result.members ?? []);
+                existingMembers.AddRange(groupDetailed.members ?? []);
             }
         }
         return existingMembers;
@@ -1686,25 +1683,21 @@ internal class UserNameInPmGroupCompleter<TPositional> : OrchArgumentCompleter w
         var existingMemberIds = GetExistingMembers(drives, wpGroupName);
 
         // 各グループの詳細を取得する
-        var results = ParallelResults.ForEach(drives, drive =>
+        var results = ParallelResults3.GroupBy(drives, drive =>
         {
             var groups = drive.PmGroups.Get()
                 .FilterByWildcards(g => g?.name!, wpGroupName)
                 .OrderBy(g => g?.name);
-            return ParallelResults.ForEach(groups, group => drive.PmGroups.Get(group?.id));
+            return ParallelResults3.ForEach(groups, group => drive.PmGroups.Get(group?.id));
         });
 
         // グループのメンバーとなっている DirectoryUser を収集する
         List<PmGroupMember> users = [];
         foreach (var result in results)
         {
-            if (result.Result is null) continue;
-
-            foreach (var e in result.Result)
+            foreach (var (group, groupDetailed) in result)
             {
-                if (e.Result is null) continue;
-
-                foreach (var member in e.Result.members?
+                foreach (var member in groupDetailed.members?
                     .FilterByWildcards(m => m?.objectType, wpType) ?? [])
                 {
                     users.Add(member);

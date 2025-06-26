@@ -480,7 +480,9 @@ internal static class OrchStringExtensions
         string? targetName,
         string nameKind)
     {
-        if (string.IsNullOrEmpty(name))
+        if (name is null) return false;
+
+        if (name == "")
         {
             setter(target, default);
             return true;

@@ -468,6 +468,8 @@ public sealed class WithSource<TSource, TItem>
 
 /// <summary>
 /// ForEach 内部で使う結果コンテナ。外部へは公開しませんが、必要なら public でも OK。
+/// planned to be deprecated
+/// ParallelResult3 を使うように直すべきだ。
 /// </summary>
 public sealed class ParallelResult<TSource, TResult>
 {
@@ -547,6 +549,46 @@ public static class ParallelResults3
         {
             yield return new SourceGroup<TSource, TItem>(srcList[i], slotArr[i]);
         }
+    }
+
+    public static List<WithSource<TSource, TItem>> ForEach<TSource, TItem>(
+            IEnumerable<TSource> sources,
+            Func<TSource, TItem?> selector,
+            int maxDegreeOfParallelism = 4,
+            CancellationToken token = default)
+            where TItem : class
+    {
+        var srcList = sources as IList<TSource> ?? sources.ToList();
+        int count = srcList.Count;
+
+        var results = new List<WithSource<TSource, TItem>>[count];
+        for (int i = 0; i < count; i++) results[i] = [];
+
+        using var sem = new SemaphoreSlim(maxDegreeOfParallelism);
+        var tasks = new Task[count];
+
+        for (int i = 0; i < count; i++)
+        {
+            int idx = i;
+            tasks[i] = Task.Run(async () =>
+            {
+                await sem.WaitAsync(token).ConfigureAwait(false);
+                try
+                {
+                    var src = srcList[idx];
+                    var item = selector(src);
+                    if (item != null)
+                    {
+                        results[idx].Add(new WithSource<TSource, TItem>(src, item));
+                    }
+                }
+                finally { sem.Release(); }
+            }, token);
+        }
+
+        Task.WaitAll(tasks, token);
+
+        return results.SelectMany(x => x).ToList();
     }
 }
 

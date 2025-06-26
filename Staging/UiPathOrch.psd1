@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.13.2'
+ModuleVersion = '0.9.13.3'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -388,7 +388,13 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- The caches for PmLicensedUser and PmLicensedGroup are now also shared across tenants (PSDrives) that belong to the same organization.
+        ReleaseNotes = '- Improved the behavior of the New-OrchProcess cmdlet.
+  - When the -EntryPoint parameter is specified, execution could fail in folders with a feed.
+  - When the -Version parameter is not specified, the latest version is now selected automatically.
+
+- The Remove-OrchPackage cmdlet did not previously clear the package cache after execution.
+
+- In cmdlets that update entities, such as Update-OrchTrigger, even for parameters that require resolving names to IDs, omitted parameters no longer overwrite existing values with null. Existing values are now preserved instead.
 '
 
         # Prerelease string of this module

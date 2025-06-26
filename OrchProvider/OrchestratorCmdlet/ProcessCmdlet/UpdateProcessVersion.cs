@@ -52,7 +52,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df =>
+            var results = ParallelResults3.GroupBy(drivesFolders, df =>
             {
                 var (drive, folder) = df;
                 var releases = drive.GetReleases(folder)
@@ -63,23 +63,18 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
                     .ToList();
 
                 // 対象のリリースに対応するパッケージをフィードから取り出す
-                return ParallelResults.ForEach(releases, release => drive.GetPackageVersions(folder, release.Name!));
+                return ParallelResults3.GroupBy(releases, release => drive.GetPackageVersions(folder, release.Name!));
             });
 
-            foreach (var result in results)
+            foreach (var releases in results)
             {
-                if (result.Result is null) continue;
-
-                foreach (var releasePackages in result.Result)
+                foreach (var versions in releases)
                 {
-                    if (releasePackages.Result is not null)
-                    {
-                        // パッケージが複数ないプロセスは、update/reset できない
-                        // 最新バージョン以外のバージョンにアップデートする場合もあることに注意
-                        if (releasePackages.Result.Count <= 1) continue;
-                    }
+                    // パッケージが複数ないプロセスは、update/reset できない
+                    // 最新バージョン以外のバージョンにアップデートする場合もあることに注意
+                    if (versions.Take(2).Count() < 2) continue;
 
-                    var release = releasePackages.Source;
+                    var release = versions.Source;
                     string tiphelp = TipHelp(release);
                     yield return new CompletionResult(PathTools.EscapePSText(release.Name), release.Name, CompletionResultType.ParameterValue, tiphelp);
                 }
@@ -104,7 +99,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df =>
+            var results = ParallelResults3.GroupBy(drivesFolders, df =>
             {
                 var (drive, folder) = df;
                 var releases = drive.GetReleases(folder)
@@ -115,23 +110,18 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
                     .ToList();
 
                 // 対象のリリースに対応するパッケージをフィードから取り出す
-                return ParallelResults.ForEach(releases, release => drive.GetPackageVersions(folder, release.Name!));
+                return ParallelResults3.GroupBy(releases, release => drive.GetPackageVersions(folder, release.Name!));
             });
 
-            foreach (var result in results)
+            foreach (var releases in results)
             {
-                if (result.Result is null) continue;
-
-                foreach (var releasePackages in result.Result)
+                foreach (var versions in releases)
                 {
-                    if (releasePackages.Result is not null)
-                    {
-                        // パッケージが複数ないプロセスは、update/reset できない
-                        // 最新バージョン以外のバージョンにアップデートする場合もあることに注意
-                        if (releasePackages.Result.Count <= 1) continue;
-                    }
+                    // パッケージが複数ないプロセスは、update/reset できない
+                    // 最新バージョン以外のバージョンにアップデートする場合もあることに注意
+                    if (versions.Take(2).Count() < 2) continue;
 
-                    var release = releasePackages.Source;
+                    var release = versions.Source;
                     string tiphelp = TipHelp(release);
                     yield return new CompletionResult(PathTools.EscapePSText(release.Id.ToString()), release.Id.ToString(), CompletionResultType.ParameterValue, tiphelp);
                 }
@@ -158,7 +148,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df =>
+            var results = ParallelResults3.GroupBy(drivesFolders, df =>
             {
                 var (drive, folder) = df;
                 var releases = drive.GetReleases(folder)
@@ -168,20 +158,16 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
                     .ToList();
 
                 // 対象のリリースに対応するパッケージをフィードから取り出す
-                return ParallelResults.ForEach(releases, release => drive.GetPackageVersions(folder, release.Name!)
+                return ParallelResults3.GroupBy(releases, release => drive.GetPackageVersions(folder, release.Name!)
                     .Where(version => version.Version != release.CurrentVersion!.VersionNumber)
                 );
             });
 
-            foreach (var result in results)
+            foreach (var releases in results)
             {
-                if (result.Result is null) continue;
-
-                foreach (var releasePackages in result.Result)
+                foreach (var versions in releases)
                 {
-                    if (releasePackages.Result is null) continue;
-
-                    foreach (var version in releasePackages.Result
+                    foreach (var version in versions
                         .Where(v => wp.IsMatch(v.Version))
                         .ExcludeByWildcards(v => v?.Version, wpVersion))
                         //.OrderBy(v => v.Version!, VersionComparer.Instance))

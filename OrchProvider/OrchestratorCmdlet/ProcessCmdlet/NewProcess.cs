@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using System.Text.Json;
@@ -221,7 +222,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
 
             //var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df =>
+            var results = ParallelResults3.GroupBy(drivesFolders, df =>
             {
                 var packages = df.drive.GetPackages(df.folder)
                     .FilterByWildcards(p => p?.Id, wpId)
@@ -229,7 +230,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
 
                 var feedId = df.drive.FolderFeedId.Get(df.folder);
 
-                var r2 = ParallelResults.ForEach(packages, package =>
+                var r2 = ParallelResults3.GroupBy(packages, package =>
                 {
                     return df.drive.GetPackageEntryPoints(feedId, package.Id!, package.Version!);
                 });
@@ -237,18 +238,15 @@ public class NewProcessCommand : OrchestratorPSCmdlet
                 List<(Package, IEnumerable<PackageEntryPoint>)> r = [];
                 foreach (var r3 in r2)
                 {
-                    if (r3.Result is null) continue;
                     var package = r3.Source;
-                    r.Add((package, r3.Result));
+                    r.Add((package, r3));
                 }
                 return r;
             });
 
             foreach (var result in results)
             {
-                if (result.Result is null) continue;
-
-                foreach (var (package, entryPoints) in result.Result)
+                foreach (var (package, entryPoints) in result)
                 {
                     foreach (var entryPoint in entryPoints
                         .FilterByWildcards(e => e?.Path, wpEntryPoint)
@@ -289,63 +287,64 @@ public class NewProcessCommand : OrchestratorPSCmdlet
             var packages = drive.GetPackages(folder);
             if (packages is null || packages.Count == 0) continue;
 
-            var targetPackageIds = packages.Select(p => p.Id).SelectByWildcards(id => id, wpPackageId);
-            if (!targetPackageIds.Any())
+            var targetPackages = packages.SelectByWildcards(id => id?.Id, wpPackageId);
+            if (!targetPackages.Any())
             {
                 WriteWarning($"{folder.GetPSPath()}: No packages found with PackageId '{Id![0]}'.");
                 continue;
             }
 
             //foreach (var id in packages.Select(p => p.Id).SelectByWildcards(id => id, wpPackageId))
-            foreach (var id in targetPackageIds)
+            foreach (var targetPackage in targetPackages)
             {
                 cancelHandler.Token.ThrowIfCancellationRequested();
 
                 string name = Name;
                 if (string.IsNullOrEmpty(name))
                 {
-                    name = id;
+                    name = targetPackage.Id;
                 }
 
                 string target = System.IO.Path.Combine(folder.GetPSPath(), name!);
 
-                // 当該パッケージの最新のバージョンを確認する
-                var versions = drive.GetPackageVersions(folder, id!)
-                    .Where(v => wpVersion?.IsMatch(v.Version) ?? true); // wpVersion が null なら全てのバージョンを対象にする
-
-                if (!versions.Any())
+                Package? version = null;
+                if (Version is null)
                 {
-                    WriteError(new ErrorRecord(new OrchException(target, $"No versions matched with '{Version}'"), "NewProcessError", ErrorCategory.InvalidOperation, folder));
-                    continue;
+                    // 当該パッケージの最新のバージョンを確認する
+                    version = targetPackage;
                 }
-
-                if (versions.Count() > 1)
+                else
                 {
-                    WriteError(new ErrorRecord(new OrchException(target, $"Resolved to multiple versions with '{Version}'"), "NewProcessError", ErrorCategory.InvalidOperation, folder));
-                    continue;
-                }
+                    var versions = drive.GetPackageVersions(folder, targetPackage.Id!)
+                        .Where(v => wpVersion?.IsMatch(v.Version) ?? true); // wpVersion が null なら全てのバージョンを対象にする
 
-                var version = versions.Last();
+                    if (!versions.Any())
+                    {
+                        WriteError(new ErrorRecord(new OrchException(target, $"No versions matched with '{Version}'"), "NewProcessError", ErrorCategory.InvalidOperation, folder));
+                        continue;
+                    }
+
+                    if (versions.Count() > 1)
+                    {
+                        WriteError(new ErrorRecord(new OrchException(target, $"Resolved to multiple versions with '{Version}'"), "NewProcessError", ErrorCategory.InvalidOperation, folder));
+                        continue;
+                    }
+                    version = versions.Last();
+                }
 
                 Release release = new()
                 {
-                    ProcessKey = id,
+                    ProcessKey = targetPackage.Id,
                     ProcessVersion = version.Version,
                     Name = WildcardPattern.Unescape(name),
                 };
 
-                release.AssignStringIfNotNull(Description, (r, v) => r.Description = v);
                 // Description をパッケージから継承する
                 if (string.IsNullOrEmpty(Description))
                 {
-                    var package = drive.GetPackages(folder)
-                        .Where(p => p.Id == id)
-                        .FirstOrDefault(p => p?.Version == Version);
-                    if (package is not null)
-                    {
-                        Description = package.Description;
-                    }
+                    Description = version?.Description;
                 }
+                release.AssignStringIfNotNull(Description, (r, v) => r.Description = v);
 
                 release.AssignBoolIfNotNull(HiddenForAttendedUser,   (r, v) => r.HiddenForAttendedUser = v);
                 release.AssignStringIfNotNullOrEmpty(RemoteControlAccess,   (r, v) => r.RemoteControlAccess = v);
@@ -353,11 +352,11 @@ public class NewProcessCommand : OrchestratorPSCmdlet
                 release.AssignNumberIfNotNullOrZero(SpecificPriorityValue, (r, v) => r.SpecificPriorityValue = v);
                 release.AssignTags(Tags, (r, v) => r.Tags = v);
 
-                #region EntryPoint を EntryPointid に変換
+                #region EntryPoint を EntryPointId に変換
                 var feedId = drive.FolderFeedId.Get(folder);
                 if (!release.AssignIdFromName(
                     EntryPoint,
-                    () => drive.GetPackageEntryPoints(feedId, id!, version.Version!),
+                    () => drive.GetPackageEntryPoints(feedId, targetPackage.Id!, version?.Version!),
                     e => e.Path!,
                     e => e.Id!,
                     (s, v) => s.EntryPointId = v,
@@ -372,7 +371,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
                 {
                     try
                     {
-                        var entryPoint = drive.OrchAPISession.GetPackageMainEntryPoint(feedId, id!, version.Version!);
+                        var entryPoint = drive.OrchAPISession.GetPackageMainEntryPoint(feedId, targetPackage.Id!, version?.Version!);
                         release.EntryPointId = entryPoint?.Id;
                     }
                     catch (Exception ex)
@@ -443,7 +442,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
                     }
                 }
 
-                if (ShouldProcess(target + $":{version.Version}", "New Process"))
+                if (ShouldProcess(target + $":{version?.Version}", "New Process"))
                 {
                     try
                     {

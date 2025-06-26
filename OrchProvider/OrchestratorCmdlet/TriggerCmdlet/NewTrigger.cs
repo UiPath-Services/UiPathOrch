@@ -184,16 +184,14 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.RobotsFromFolder.Get(df.folder));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.RobotsFromFolder.Get(df.folder));
 
             foreach (var result in results)
             {
-                if (result.Result is null) continue;
-
                 var (drive, folder) = result.Source;
                 var users = drive.GetUsers();
 
-                foreach (var user in result.Result
+                foreach (var user in result
                     .Where(e => e.Type == "Unattended")
                     .Select(e => users.FirstOrDefault(u => u.Id == e.UserId))
                     .Where(u => !string.IsNullOrEmpty(u?.UnattendedRobot?.UserName))

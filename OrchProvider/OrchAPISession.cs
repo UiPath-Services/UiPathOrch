@@ -1408,15 +1408,18 @@ public partial class OrchAPISession : IDisposable
     public PackageEntryPoint? GetPackageMainEntryPoint(string? feedId, string packageId, string packageVersion)
     {
         if (ApiVersion < 12) return null; // 11.1 では Not found になることを確認済み TODO: 12 以降では？ New-OrchProcess で確認。
-        string endPoint = $"/odata/Processes/UiPath.Server.Configuration.OData.GetPackageMainEntryPoint(key='{HttpUtility.UrlEncode(packageId)}:{packageVersion}')";
+
+        // TODO: コロンもエンコードすべきな気がするが、
+        //string endPoint = $"/odata/Processes/UiPath.Server.Configuration.OData.GetPackageMainEntryPoint(key='{HttpUtility.UrlEncode(packageId)}:{packageVersion}')";
+
+        string key = $"{packageId}:{packageVersion}";
+        string encodedKey = HttpUtility.UrlEncode(key);
+        string endPoint = $"/odata/Processes/UiPath.Server.Configuration.OData.GetPackageMainEntryPoint(key='{encodedKey}')";
         if (!string.IsNullOrEmpty(feedId))
         {
-            return HttpRequest<PackageEntryPoint>(HttpMethod.Get, endPoint, null, $"&feedId={feedId}");
+            endPoint += $"?feedId={feedId}";
         }
-        else
-        {
-            return HttpRequest<PackageEntryPoint>(HttpMethod.Get, endPoint);
-        }
+        return HttpRequest<PackageEntryPoint>(HttpMethod.Get, endPoint);
     }
 
     public IEnumerable<PackageEntryPoint> GetPackageEntryPoints(string? feedId, string packageId, string packageVersion)
