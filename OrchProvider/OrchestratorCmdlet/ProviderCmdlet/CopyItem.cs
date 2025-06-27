@@ -1,7 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Management.Automation;
 using System.Management.Automation.Provider;
-using System.Threading;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
@@ -1106,6 +1105,10 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
             //msg = $"Migrating id of the robot {Path.Combine(srcDrive.NameColon, srcRobot.Name!)}";
 
+            // 現在の実装では、ロボットを UR の Windows アカウント名 (domain\user みたいな ID) で探している
+            // ロボット自体の名前で探す方が良いのか？（できるのか？）
+            // クラシックロボットでは、それっぽいロボット名が見つからない
+
             var dstRobots = dstDrive.RobotsFromFolder.Get(dstFolder);
             var dstRobot = dstRobots?.FirstOrDefault(r => 
                 r.Type == srcRobot_Type && // たぶん、この srcRobot.Type は必ず "Unattended" になっているはず。。
@@ -1888,27 +1891,50 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     private static MachineRobotSession[]? MigrateMachineRobots(IWritableHost _this, string msg,
         OrchDriveInfo srcDrive, Folder srcFolder,
         OrchDriveInfo dstDrive, Folder newFolder,
-        MachineRobotSession[]? machineRobots)
+        MachineRobotSession[]? machineRobots,
+        RobotExecutor[]? executorRobots = null)
     {
         if (machineRobots is null) return null;
 
         List<MachineRobotSession> dstSessions = [];
-        foreach (var machineRobot in machineRobots.Where(mr => mr is not null))
-        {
-            var robotId = FindDstRobotByUnattendedAccount(_this, srcDrive, srcFolder, dstDrive, newFolder, machineRobot.RobotId, msg)?.Id;
-            var machineId = FindDstMachine(_this, srcDrive, srcFolder, dstDrive, newFolder, machineRobot.MachineId, msg)?.Id;
 
-            if (robotId is not null || machineId is not null)
+        if (srcFolder.ProvisionType == "Manual")
+        {
+            var srcSessions = srcDrive.Sessions.Get(srcFolder);
+            foreach (var executorRobot in executorRobots ?? [])
             {
+                var dstRobotId = FindDstRobotByUnattendedAccount(_this, srcDrive, srcFolder, dstDrive, newFolder, executorRobot?.Id, msg)?.Id;
+
+                var srcSession = srcSessions.FirstOrDefault(s => s.Robot?.Id == executorRobot?.Id);
+                var dstMachineId = FindDstMachine(_this, srcDrive, srcFolder, dstDrive, newFolder, srcSession?.MachineId, msg)?.Id;
+
                 dstSessions.Add(new MachineRobotSession()
                 {
-                    // RobotId を移行
-                    RobotId = robotId,
-                    MachineId = machineId,
-                    SessionId = (machineId is null) ? null : FindDstSession(_this, srcDrive, srcFolder, dstDrive, newFolder, machineRobot.SessionId, msg)?.SessionId
+                    RobotId = dstRobotId,
+                    MachineId = dstMachineId
                 });
             }
         }
+        else
+        {
+            foreach (var machineRobot in machineRobots.Where(mr => mr is not null))
+            {
+                var robotId = FindDstRobotByUnattendedAccount(_this, srcDrive, srcFolder, dstDrive, newFolder, machineRobot.RobotId, msg)?.Id;
+                var machineId = FindDstMachine(_this, srcDrive, srcFolder, dstDrive, newFolder, machineRobot.MachineId, msg)?.Id;
+
+                if (robotId is not null || machineId is not null)
+                {
+                    dstSessions.Add(new MachineRobotSession()
+                    {
+                        // RobotId を移行
+                        RobotId = robotId,
+                        MachineId = machineId,
+                        SessionId = (machineId is null) ? null : FindDstSession(_this, srcDrive, srcFolder, dstDrive, newFolder, machineRobot.SessionId, msg)?.SessionId
+                    });
+                }
+            }
+        }
+
         dstSessions = dstSessions.DistinctBy(s => (s.RobotId, s.MachineId, s.SessionId)).ToList();
         if (dstSessions.Count != 0)
         {
@@ -1998,17 +2024,18 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     continue;
                 }
 
+                // MachineRobots を移行
+                postingTrigger.MachineRobots = MigrateMachineRobots(_this, msg,
+                    srcDrive, srcFolder,
+                    dstDrive, newFolder,
+                    postingTrigger.MachineRobots,
+                    postingTrigger.ExecutorRobots);
+
                 // ExecutorRobots を移行
                 postingTrigger.ExecutorRobots = MigrateExecutorRobots(_this, msg,
                     srcDrive, srcFolder,
                     dstDrive, newFolder,
                     postingTrigger.ExecutorRobots);
-
-                // MachineRobots を移行
-                postingTrigger.MachineRobots = MigrateMachineRobots(_this, msg,
-                    srcDrive, srcFolder,
-                    dstDrive, newFolder,
-                    postingTrigger.MachineRobots);
 
                 // カレンダー Id を移行
                 postingTrigger.CalendarId = FindDstCalendar(_this, srcDrive, dstDrive,
