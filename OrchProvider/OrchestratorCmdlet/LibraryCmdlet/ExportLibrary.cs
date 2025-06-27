@@ -41,11 +41,14 @@ public class ExportLibraryCommand : OrchestratorPSCmdlet
         {
             Destination = SessionState.Path.CurrentFileSystemLocation.Path;
         }
+
+        // PSDrive のパスを、実際のファイルシステムのパスに変換
+        Destination = SessionState.Path.GetUnresolvedProviderPathFromPSPath(Destination);
+
         if (!Directory.Exists(Destination))
         {
-            throw new DirectoryNotFoundException($"Directory {Destination} doesn't exist.");
+            throw new DirectoryNotFoundException($"A directory '{Destination}' does not exist.");
         }
-
 
         // 最初にすべてまとめて非同期に API call するバージョン
         // ちゃんと動いているけど、API call の数が多すぎてしまうかも。

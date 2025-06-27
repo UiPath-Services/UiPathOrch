@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.13.4'
+ModuleVersion = '0.9.13.5'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -388,7 +388,18 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- When copying a trigger using the Copy-OrchTrigger cmdlet, if the source folder is a classic folder, the ExecutorRobots property of the destination trigger is now constructed by referencing the classic robot from the source.
+        ReleaseNotes = '- The Export-OrchLibrary cmdlet did not correctly resolve the current location when only a drive name was specified for the -Destination parameter. The following usage is now supported:
+
+  # Exports to the current location of the C: drive:
+  Export-OrchLibrary -Path Orch1: YourLibrary 1.0.1 c:
+
+  # Paths on FileSystem PSDrives, such as Temp:, are now handled correctly
+  Export-OrchLibrary -Path Orch1: YourLibrary 1.0.1 temp:
+
+  # If -Destination is omitted, exports to the current location of the last-used FileSystem drive:
+  Export-OrchLibrary -Path Orch1: YourLibrary 1.0.1
+
+  Note: This issue had already been addressed for Export-OrchPackage in version 0.9.9.1, but the fix for Export-OrchLibrary had been unintentionally omitted until now.
 '
 
         # Prerelease string of this module

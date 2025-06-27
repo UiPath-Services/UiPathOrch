@@ -138,9 +138,6 @@ public class ExportPackageCommand : OrchestratorPSCmdlet
             throw new DirectoryNotFoundException($"A directory '{Destination}' does not exist.");
         }
 
-        // c: のようなパスを、現在のパスを考慮して完全パスに変換しておく
-        Destination = SessionState.Path.GetUnresolvedProviderPathFromPSPath(Destination);
-
         // 最初にすべてまとめて非同期に API call するバージョン
         // ちゃんと動いているけど、API call の数が多すぎてしまうかも。
 #if false
