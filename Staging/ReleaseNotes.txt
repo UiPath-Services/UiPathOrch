@@ -1,3 +1,7 @@
+Version: 0.9.13.6
+- When copying a trigger from a classic folder using the Copy-OrchTrigger cmdlet, the associated machine is now also taken into consideration. Robot accounts were already handled as of version 0.9.13.4, and this change complements that enhancement.
+
+
 Version: 0.9.13.5
 - The Export-OrchLibrary cmdlet did not correctly resolve the current location when only a drive name was specified for the -Destination parameter. The following usage is now supported:
 
