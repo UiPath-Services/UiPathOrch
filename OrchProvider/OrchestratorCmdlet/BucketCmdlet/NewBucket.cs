@@ -75,7 +75,7 @@ public class NewBucketCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumFolders(Path);
+        var drivesFolders = SessionState.EnumFolders(Path);
         WildcardPattern? wpCredentialStore = CredentialStore.ConvertToWildcardPattern();
 
         using var cancelHandler = new ConsoleCancelHandler();

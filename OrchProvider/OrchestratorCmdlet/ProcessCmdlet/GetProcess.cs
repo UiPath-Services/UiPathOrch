@@ -77,7 +77,7 @@ public class GetProcessCommand : OrchestratorPSCmdlet
         Folder folder = null;
         try
         {
-            (drive, folder) = OrchDriveInfo.EnumFolders(release.Path).FirstOrDefault();
+            (drive, folder) = SessionState.EnumFolders(release.Path).FirstOrDefault();
         }
         catch
         {
@@ -169,7 +169,7 @@ public class GetProcessCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
 
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);

@@ -93,7 +93,7 @@ public class EnableLicenseRuntimeCommandBase<Enable> : OrchestratorPSCmdlet wher
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
         var wpRobotType = RobotType.ConvertToWildcardPatternList();
         var wpKey = Key.ConvertToWildcardPatternList();
 

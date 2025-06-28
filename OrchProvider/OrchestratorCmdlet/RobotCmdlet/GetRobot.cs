@@ -95,7 +95,7 @@ public class GetRobotCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
         var wpFullName = FullName.ConvertToWildcardPatternList();
         var wpUsername = Username.ConvertToWildcardPatternList();
 

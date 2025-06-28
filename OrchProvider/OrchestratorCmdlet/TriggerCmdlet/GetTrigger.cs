@@ -79,7 +79,7 @@ public class GetTriggerCommand : OrchestratorPSCmdlet
         {
             try
             {
-                var (drive, folder) = OrchDriveInfo.ResolveToSingleFolder(t.Path);
+                var (drive, folder) = SessionState.ResolveToSingleFolder(t.Path);
                 executorRobots = SerializeExecutorRobotArray(drive, t.ExecutorRobots);
             }
             catch (Exception ex)
@@ -95,7 +95,7 @@ public class GetTriggerCommand : OrchestratorPSCmdlet
         {
             try
             {
-                var (drive, folder) = OrchDriveInfo.ResolveToSingleFolder(t.Path);
+                var (drive, folder) = SessionState.ResolveToSingleFolder(t.Path);
                 machineRobots = SerializeMachineRobotSessions(this, drive, folder!, t.GetPSPath(), t.MachineRobots);
             }
             catch (Exception ex)
@@ -156,7 +156,7 @@ public class GetTriggerCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
 
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);

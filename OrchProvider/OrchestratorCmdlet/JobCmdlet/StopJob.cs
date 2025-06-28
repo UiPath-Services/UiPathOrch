@@ -117,7 +117,7 @@ public class StopJobCommand : OrchestratorPSCmdlet
                 return;
 
             // Path を展開した上で、parameters に追加
-            var drivesFolders = OrchDriveInfo.EnumFolders(new string[] { Job.Path! });
+            var drivesFolders = SessionState.EnumFolders(new string[] { Job.Path! });
             foreach (var (drive, folder) in drivesFolders)
             {
                 var parameter = new StopJobCommandParameter()
@@ -132,7 +132,7 @@ public class StopJobCommand : OrchestratorPSCmdlet
         else
         {
             // コマンドラインから入力
-            var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+            var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
 
             foreach (var (drive, folder) in drivesFolders)
             {

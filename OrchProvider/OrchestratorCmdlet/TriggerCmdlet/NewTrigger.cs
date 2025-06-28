@@ -279,7 +279,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
                 //if (c.user is null && c.machine is null) continue;
                 if (c.user is null) continue;
 
-                var drive = OrchDriveInfo.GetOrchDrive(c.user?.Path);
+                var drive = SessionState.GetOrchDrive(c.user?.Path);
                 var targetUser = drive.GetUsers().Where(u => u.Id == c.user?.Id).FirstOrDefault();
                 if (targetUser?.UnattendedRobot?.UserName is null) continue;
 
@@ -295,7 +295,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumFolders(Path);
+        var drivesFolders = SessionState.EnumFolders(Path);
         int? specificPriorityValue = ConvertPriorityToSpecificPriorityValue(Priority);
 
         Path = Path.Split1stValueByUnescapedCommas()?.ToArray();

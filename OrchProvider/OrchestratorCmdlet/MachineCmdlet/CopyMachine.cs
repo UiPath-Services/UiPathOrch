@@ -157,8 +157,8 @@ public class CopyMachineCommand : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var wpName = Name.ConvertToWildcardPatternList();
-        var srcDrive = OrchDriveInfo.GetOrchDrive(Path!);
-        var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
+        var srcDrive = SessionState.GetOrchDrive(Path!);
+        var dstDrives = SessionState.EnumDestinationDrives(Destination!);
 
         using var cancelHandler = new ConsoleCancelHandler();
         CopyMachines(this, srcDrive, wpName, dstDrives, false, cancelHandler.Token);

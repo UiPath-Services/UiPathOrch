@@ -271,7 +271,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
         var wpPackageId = Id.ConvertToWildcardPatternList();
 
         if (Version == "") Version = null;

@@ -216,14 +216,14 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
     {
         // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-        return OrchDriveInfo.EnumOrchDrives(paramPath);
+        return SessionState.EnumOrchDrives(paramPath);
     }
 
     protected static List<OrchDuDriveInfo> ResolveDuDrives(IDictionary fakeBoundParameters)
     {
         // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-        return OrchDriveInfo.EnumDuDrives(paramPath);
+        return SessionState.EnumDuDrives(paramPath);
     }
 
     protected static List<(OrchDriveInfo drive, Folder folder)> ResolvePath(CommandAst commandAst, IDictionary fakeBoundParameters, bool includeRoot = false)
@@ -233,7 +233,7 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         _ = uint.TryParse(paramDepth, out uint depth);
 
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-        return OrchDriveInfo.EnumFolders(paramPath, recurse, depth, includeRoot);
+        return SessionState.EnumFolders(paramPath, recurse, depth, includeRoot);
     }
 
     protected static List<(OrchDuDriveInfo drive, DuProject project)> ResolveDuPath(CommandAst commandAst, IDictionary fakeBoundParameters) //, bool includeRoot = false)
@@ -251,7 +251,7 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         _ = uint.TryParse(paramDepth, out uint depth);
 
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-        return OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
+        return SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
     }
 
     protected static List<WildcardPattern>? CreateWPListFromParameter(CommandAst commandAst, string parameterName, string[]? positionalParams, string? wordToComplete)
@@ -1181,7 +1181,7 @@ internal class PackageIdCompleter<TPositional> : OrchArgumentCompleter where TPo
 
         // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-        var drivesFolders = OrchDriveInfo.EnumPackageFeedFolders(paramPath, recurse); ////////////////////////TODO★
+        var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse); ////////////////////////TODO★
 
         // パラメータで選択済みの Id は、候補から除外する
         var wpId = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -1217,7 +1217,7 @@ internal class PackageVersionCompleter<TPositional> : OrchArgumentCompleter wher
 
         // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-        var drivesFolders = OrchDriveInfo.EnumPackageFeedFolders(paramPath, recurse);
+        var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse);
 
         // パラメータで選択された Id のみ対象とする
         var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
@@ -1525,7 +1525,7 @@ internal class UpdatePolicyVersionCompleter : OrchArgumentCompleter
         IDictionary fakeBoundParameters)
     {
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-        var drives = OrchDriveInfo.EnumOrchDrives(paramPath);
+        var drives = SessionState.EnumOrchDrives(paramPath);
 
         foreach (var drive in drives)
         {
@@ -1797,7 +1797,7 @@ internal class TestCaseNameCompleter<TPositional> : OrchArgumentCompleter where 
 
         // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-        var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth); ///////// ★TODO
+        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth); ///////// ★TODO
         
         // パラメータで選択済みの Name は、候補から除外する
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -1835,7 +1835,7 @@ internal class TestDataQueueNameCompleter<TPositional> : OrchArgumentCompleter w
 
         // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-        var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
+        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
         // パラメータで選択済みの Name は、候補から除外する
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -1873,7 +1873,7 @@ internal class TestScheduleNameCompleter<TPositional> : OrchArgumentCompleter wh
 
         // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-        var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
+        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
         // パラメータで選択済みの Name は、候補から除外する
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -1911,7 +1911,7 @@ internal class TestSetNameCompleter<TPositional> : OrchArgumentCompleter where T
 
         // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-        var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
+        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
         // パラメータで選択済みの Name は、候補から除外する
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -2311,7 +2311,7 @@ public class DriveCompleter<TPositional> : OrchArgumentCompleter where TPosition
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var drives = OrchDriveInfo.EnumAllOrchDrives();
+        var drives = SessionState.EnumAllOrchDrives();
 
         // パラメータで選択済みのドライブは、候補から除外する
         var wpPath = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -2347,7 +2347,7 @@ internal class DestinationDriveCompleter<TPositional> : OrchArgumentCompleter wh
         IDictionary fakeBoundParameters)
     {
         var sourceDrives = ResolveOrchDrives(fakeBoundParameters);
-        var drives = OrchDriveInfo.EnumAllOrchDrives();
+        var drives = SessionState.EnumAllOrchDrives();
 
         // パラメータで選択済みのドライブは、候補から除外する
         var wpDestination = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);

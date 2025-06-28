@@ -187,7 +187,7 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
         {
             try
             {
-                var drives = OrchDriveInfo.EnumOrchDrives(Path);
+                var drives = SessionState.EnumOrchDrives(Path);
                 var wpUserName = UserName.ConvertToWildcardPatternList();
                 var userIds = new HashSet<Int64>();
                 foreach (var drive in drives)
@@ -307,7 +307,7 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
 
         // すべてのパラメータが指定されていなければ、キャッシュの内容を返す
         bool bOutCache = (

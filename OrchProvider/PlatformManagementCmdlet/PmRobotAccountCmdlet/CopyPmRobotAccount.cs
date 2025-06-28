@@ -26,7 +26,7 @@ public class CopyPmRobotAccountCommand : OrchestratorPSCmdlet
         // TODO: この例外は GetOrchDrive() の中からスローして良いのではないか？
         var srcDrive = OrchDriveInfo.GetPmDrive(Path!) ?? throw new Exception("Path is not OrchDrive.");
 
-        var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
+        var dstDrives = SessionState.EnumDestinationDrives(Destination!);
         var wpDisplayName = Name.ConvertToWildcardPatternList();
 
         srcDrive.PmRobotAccounts.ClearCache();

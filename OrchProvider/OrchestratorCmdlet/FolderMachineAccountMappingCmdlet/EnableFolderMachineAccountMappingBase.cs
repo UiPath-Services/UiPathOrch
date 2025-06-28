@@ -114,7 +114,7 @@ public class EnableFolderMachineAccountMappingCommandBase<Enable> : Orchestrator
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
         var wpName = Name.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
         var wpUserName = UserName.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
 

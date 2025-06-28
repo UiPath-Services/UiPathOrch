@@ -26,10 +26,10 @@ public class AddAssetLinkCommand : OrchestratorPSCmdlet
     // Parallel.ForEach は使わないようにすべきだ。
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumFolders(Path);
+        var drivesFolders = SessionState.EnumFolders(Path);
         var wpName = Name.ConvertToWildcardPatternList();
 
-        var drivesLinks = OrchDriveInfo.EnumFolders(Link);
+        var drivesLinks = SessionState.EnumFolders(Link);
 
         Parallel.ForEach(drivesFolders, driveFolder =>
         {

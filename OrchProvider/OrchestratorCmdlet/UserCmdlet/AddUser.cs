@@ -442,7 +442,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
         UserName = UserName.Split1stValueByUnescapedCommas()?.ToArray();
         Roles = Roles.Split1stValueByUnescapedCommas()?.ToArray();
 
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
         var wpType = Type.ConvertToWildcardPatternList();
         var specifiedTypes = Types.SelectByWildcards(t => t.Value, wpType).Select(t => t.Key);
 

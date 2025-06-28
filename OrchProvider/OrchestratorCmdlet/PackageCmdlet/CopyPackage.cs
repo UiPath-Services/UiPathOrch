@@ -334,9 +334,9 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
         var wpId = Id.ConvertToWildcardPatternList();
         var wpVersion = Version.ConvertToWildcardPatternList();
 
-        var (srcDrive, srcRootFolder) = OrchDriveInfo.ResolveToSingleFeedFolder(Path);
-        var srcDrivesFolders = OrchDriveInfo.EnumPackageFeedFolders([srcRootFolder.GetPSPath()], Recurse.IsPresent);
-        var dstDrivesFolders = OrchDriveInfo.EnumPackageFeedFolders(Destination);
+        var (srcDrive, srcRootFolder) = SessionState.ResolveToSingleFeedFolder(Path);
+        var srcDrivesFolders = SessionState.EnumPackageFeedFolders([srcRootFolder.GetPSPath()], Recurse.IsPresent);
+        var dstDrivesFolders = SessionState.EnumPackageFeedFolders(Destination);
 
         if (srcRootFolder != srcDrive.RootFolder && Recurse.IsPresent)
         {

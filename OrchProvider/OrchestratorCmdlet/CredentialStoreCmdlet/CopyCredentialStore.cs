@@ -126,9 +126,9 @@ public class CopyCredentialStoreCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var srcDrive = OrchDriveInfo.GetOrchDrive(Path);
+        var srcDrive = SessionState.GetOrchDrive(Path);
 
-        var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
+        var dstDrives = SessionState.EnumDestinationDrives(Destination!);
         var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();

@@ -313,7 +313,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
         // 対象のフォルダの Asset を、非同期にまとめて取得する
         var _ = ParallelResults.ForEach(parameters, param =>
         {
-            var drivesFolders = OrchDriveInfo.EnumFolders(param.Path);
+            var drivesFolders = SessionState.EnumFolders(param.Path);
 
             // 展開済みなので、フォルダはいっこしか展開されないはずだが、いちおう繰り返す
             return ParallelResults.ForEach(drivesFolders, driveFolder =>
@@ -587,7 +587,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
             if (!string.IsNullOrEmpty(param.CredentialStore))
                 wpCredentialStore = new WildcardPattern(param.CredentialStore, WildcardOptions.IgnoreCase);
 
-            var drivesFolders = OrchDriveInfo.EnumFolders(param.Path);
+            var drivesFolders = SessionState.EnumFolders(param.Path);
             foreach (var (drive, folder) in drivesFolders)
             {
                 string targetFolder = $"{folder.GetPSPath()}";
@@ -683,7 +683,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                     asset.CredentialStoreId = null;
                 }
 
-                var drivesFolders = OrchDriveInfo.EnumFolders([WildcardPattern.Escape(asset.Path!)]);
+                var drivesFolders = SessionState.EnumFolders([WildcardPattern.Escape(asset.Path!)]);
                 var (drive, folder) = drivesFolders[0];
 
                 var target = asset.GetPSPath();

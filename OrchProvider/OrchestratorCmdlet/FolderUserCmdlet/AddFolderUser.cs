@@ -174,8 +174,8 @@ public class AddFolderUserCommand : OrchestratorPSCmdlet
             throw new Exception("Invalid Type.");
         }
 
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
-        var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
+        var drives = SessionState.EnumOrchDrives(Path);
+        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
         var wpUserName = UserName.ConvertToWildcardPatternList();
 
         // 先頭の要素は CSV から入力されている可能性があるので、先頭の要素についてはカンマで区切る

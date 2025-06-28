@@ -76,7 +76,7 @@ public class OpenJobCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumFolders(Path);
+        var drivesFolders = SessionState.EnumFolders(Path);
 
         foreach (var (drive, folder) in drivesFolders)
         {

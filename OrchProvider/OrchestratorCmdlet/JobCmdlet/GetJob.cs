@@ -396,7 +396,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
         ulong skip = Skip ?? 0;
         ulong first = First ?? ulong.MaxValue;
 
-        var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
 
         if (string.IsNullOrEmpty(OrderBy)) OrderBy = "CreationTime";
 

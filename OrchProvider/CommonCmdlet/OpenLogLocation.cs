@@ -19,7 +19,7 @@ public class OpenOrchLogLocationCommand : OrchestratorPSCmdlet
         string logFolderPath;
         try
         {
-            var drive = OrchDriveInfo.GetOrchDrive(Path);
+            var drive = SessionState.GetOrchDrive(Path);
             logFolderPath = drive.OrchAPISession.GetLogFolderPath();
         }
         catch

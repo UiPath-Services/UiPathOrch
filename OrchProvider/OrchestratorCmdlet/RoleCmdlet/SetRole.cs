@@ -70,7 +70,7 @@ public class SetRoleCommand : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         _parameterSet ??= [];
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
 
         foreach (var drive in drives)
         {

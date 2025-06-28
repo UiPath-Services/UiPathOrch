@@ -31,10 +31,10 @@ public class CopyTriggerCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var (srcDrive, srcRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Path);
-        var srcDrivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var (srcDrive, srcRootFolder) = SessionState.ResolveToSingleFolder(Path);
+        var srcDrivesFolders = SessionState.EnumFolders([Path], Recurse.IsPresent, Depth, false);
 
-        var (dstDrive, dstRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Destination);
+        var (dstDrive, dstRootFolder) = SessionState.ResolveToSingleFolder(Destination);
 
         // コピー元とコピー先が同じなら、何もしない
         if (srcRootFolder == dstRootFolder) return;

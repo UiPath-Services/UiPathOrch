@@ -54,7 +54,7 @@ public class GetDuRoleCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumDuDrives(Path);
+        var drives = SessionState.EnumDuDrives(Path);
         var wpName = Name.ConvertToWildcardPatternList();
 
         using var results = OrchThreadPool.RunForEach(drives,

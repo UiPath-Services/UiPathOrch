@@ -57,7 +57,7 @@ public class EnableApiTriggerCommandBase<Enable> : OrchestratorPSCmdlet where En
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
 
         string action = $"{(Enable.Value ? "Enable" : "Disable")} ApiTrigger";

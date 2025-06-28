@@ -13,7 +13,7 @@ class ImportConfigCommand : PSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumAllOrchDrives();
+        var drives = SessionState.EnumAllOrchDrives();
         foreach (var drive in drives)
         {
             SessionState.Drive.Remove(drive.Name, true, null);

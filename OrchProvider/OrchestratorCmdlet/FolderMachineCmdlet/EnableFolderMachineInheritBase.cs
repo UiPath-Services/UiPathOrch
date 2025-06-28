@@ -53,7 +53,7 @@ public class EnableFolderMachineInheritCommandBase<EnableInherit> : Orchestrator
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumFolders(Path);
+        var drivesFolders = SessionState.EnumFolders(Path);
         var wpName = Name.ConvertToWildcardPatternList();
 
         string action = $"{(EnableInherit.Value ? "Enable" : "Disable")} FolderMachineInherit";

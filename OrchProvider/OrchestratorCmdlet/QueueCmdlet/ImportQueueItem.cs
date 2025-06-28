@@ -253,7 +253,7 @@ public class ImportQueueItemCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumFolders(Path);
+        var drivesFolders = SessionState.EnumFolders(Path);
         var wpName = Name.ConvertToWildcardPatternList();
 
         if (string.IsNullOrEmpty(CommitType))
@@ -261,7 +261,7 @@ public class ImportQueueItemCommand : OrchestratorPSCmdlet
             CommitType = "ProcessAllIndependently";
         }
 
-        var csvPathExpanded = OrchDriveInfo.ExpandLocalPath(SessionState, ImportCsv, "*.csv");
+        var csvPathExpanded = SessionState.ExpandLocalPath(ImportCsv, "*.csv");
 
         var queueItemData = new List<(string csvPath, (int rowNum, string content))>();
         foreach (var p in csvPathExpanded)

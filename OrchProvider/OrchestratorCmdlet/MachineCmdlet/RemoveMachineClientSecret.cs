@@ -121,7 +121,7 @@ public class RemoveMachineClientSecretCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
 
         var wpName = Name.Split1stValueByUnescapedCommas()?.ConvertToWildcardPatternList();
         var wpSecretId = SecretId.Split1stValueByUnescapedCommas()?.ConvertToWildcardPatternList();

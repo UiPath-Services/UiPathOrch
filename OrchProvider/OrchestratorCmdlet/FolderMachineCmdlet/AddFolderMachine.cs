@@ -70,7 +70,7 @@ public class AddFolderMachineCommand : OrchestratorPSCmdlet
         //List<(OrchDriveInfo drive, Folder folder)> drivesFolders;
         //try
         //{
-        var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
         //}
         //catch (Exception ex)
         //{

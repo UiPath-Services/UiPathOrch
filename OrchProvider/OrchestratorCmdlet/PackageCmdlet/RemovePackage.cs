@@ -44,7 +44,7 @@ public class RemovePackageCommand : OrchestratorPSCmdlet
 
             // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-            var drivesFolders = OrchDriveInfo.EnumPackageFeedFolders(paramPath, recurse);
+            var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse);
 
             // パラメータで選択済みの Id は、候補から除外する
             var wpId = CreateWPListFromParameter(commandAst, "Id", TPositional.Parameters, wordToComplete);
@@ -85,7 +85,7 @@ public class RemovePackageCommand : OrchestratorPSCmdlet
 
             // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-            var drivesFolders = OrchDriveInfo.EnumPackageFeedFolders(paramPath, recurse);
+            var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse);
 
             // パラメータで選択された Id のみ対象とする
             var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
@@ -129,10 +129,10 @@ public class RemovePackageCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = OrchDriveInfo.EnumAllOrchDrives()
+            var drives = SessionState.EnumAllOrchDrives()
                 .Where(d => d.OrchAPISession.AuthManager.IsAuthenticated);
 
-            var feedFolders = OrchDriveInfo.EnumPackageFeedFolders(drives.SelectMany(d => new[] { $"{d.Name}:{System.IO.Path.DirectorySeparatorChar}", $"{d.Name}:{System.IO.Path.DirectorySeparatorChar}*" }))
+            var feedFolders = SessionState.EnumPackageFeedFolders(drives.SelectMany(d => new[] { $"{d.Name}:{System.IO.Path.DirectorySeparatorChar}", $"{d.Name}:{System.IO.Path.DirectorySeparatorChar}*" }))
                 .Select(df => df.folder.GetPSPath());
 
             // パラメータで選択済みの Path は、候補から除外する
@@ -155,7 +155,7 @@ public class RemovePackageCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumPackageFeedFolders(Path, Recurse.IsPresent);
+        var drivesFolders = SessionState.EnumPackageFeedFolders(Path, Recurse.IsPresent);
 
         var wpId = Id.ConvertToWildcardPatternList();
         var wpVersion = Version.ConvertToWildcardPatternList();

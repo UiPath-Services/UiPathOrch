@@ -321,7 +321,7 @@ public class GetLogCommand : OrchestratorPSCmdlet
             JobKey is null &&
             Skip is null && First is null);
 
-        var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
 
         if (bOutCache)
         {

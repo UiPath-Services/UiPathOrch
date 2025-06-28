@@ -136,7 +136,7 @@ public class GetAlertCommand : OrchestratorPSCmdlet
         ulong skip = Skip ?? 0;
         ulong first = First ?? ulong.MaxValue;
 
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
         var query = MakeFilter();
 
         using var results = OrchThreadPool.RunForEach(drives,

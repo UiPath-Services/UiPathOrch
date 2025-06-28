@@ -81,7 +81,7 @@ public class NewMachineCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
         RobotUsers = RobotUsers?.Split1stValueByUnescapedCommas()?.ToArray();
 
         if (string.IsNullOrEmpty(Type))            { Type = "Template"; }

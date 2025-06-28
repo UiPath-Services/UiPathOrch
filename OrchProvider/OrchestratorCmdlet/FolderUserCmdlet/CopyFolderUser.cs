@@ -84,10 +84,10 @@ public class CopyFolderUserCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var (srcDrive, srcRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Path);
-        var srcDrivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var (srcDrive, srcRootFolder) = SessionState.ResolveToSingleFolder(Path);
+        var srcDrivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
 
-        var (dstDrive, dstRootFolder) = OrchDriveInfo.ResolveToSingleFolder(Destination);
+        var (dstDrive, dstRootFolder) = SessionState.ResolveToSingleFolder(Destination);
 
         //var userMappingCsv = OrchDriveInfo.LoadUserMappingCsv(this, srcDrive, dstDrive, UserMappingCsv);
 

@@ -96,7 +96,7 @@ public class RemoveQueueItemCommand : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         #region この line の drive, folder, queue を解決する
-        var (drive, folder) = OrchDriveInfo.ResolveToSingleFolder(Path);
+        var (drive, folder) = SessionState.ResolveToSingleFolder(Path);
         var wpName = new string[] { Name! }.ConvertToWildcardPatternList();
 
         var queues = drive.Queues.Get(folder).FilterByWildcards(q => q?.Name, wpName);

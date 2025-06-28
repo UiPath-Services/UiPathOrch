@@ -58,7 +58,7 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
 
             // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-            var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
+            var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
             // パラメータで選択済みの UserName は、候補から除外する
             var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
@@ -104,7 +104,7 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
 
             // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-            var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
+            var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
             // パラメータで選択された UserName のみ対象とする
             var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
@@ -150,7 +150,7 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
 
             // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-            var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
+            var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
             var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
             var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
@@ -198,7 +198,7 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
             return;
         }
 
-        var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
 
         var wpFullName = FullName.ConvertToWildcardPatternList();
         var wpUserName = UserName.ConvertToWildcardPatternList();

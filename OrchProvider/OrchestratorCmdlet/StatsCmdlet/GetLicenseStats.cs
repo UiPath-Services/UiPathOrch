@@ -20,7 +20,7 @@ public class GetLicenseStatsCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
 
         int days = 7;
         if (Last is not null)

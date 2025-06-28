@@ -21,7 +21,7 @@ class GetSessionStatsCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
 
         foreach (var drive in drives)
         {

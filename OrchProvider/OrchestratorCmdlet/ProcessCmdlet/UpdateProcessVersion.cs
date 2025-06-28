@@ -188,7 +188,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
             return;
         }
 
-        var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
         WildcardPattern wpVersion = null;
         if (!string.IsNullOrEmpty(Version))

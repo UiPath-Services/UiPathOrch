@@ -130,7 +130,7 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
         {
             // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-            var drives = OrchDriveInfo.EnumOrchDrives(paramPath);
+            var drives = SessionState.EnumOrchDrives(paramPath);
 
             var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
             var wpRoles = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -157,7 +157,7 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
 
         // CSV に指定された Roles はカンマで区切る
         Roles = Roles?

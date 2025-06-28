@@ -112,7 +112,7 @@ public class GetUserLicenseGroup: OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
 
         var wpGroupName = GroupName.ConvertToWildcardPatternList();
         var wpUserName = UserName.ConvertToWildcardPatternList();

@@ -37,8 +37,8 @@ public class ImportLibraryCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
-        var pkgFilePaths = OrchDriveInfo.ExpandLocalPath(SessionState, Source, "*.nupkg").OrderByFileNameVersion();
+        var drives = SessionState.EnumOrchDrives(Path);
+        var pkgFilePaths = SessionState.ExpandLocalPath(Source, "*.nupkg").OrderByFileNameVersion();
 
         // この実装は、このままで良いか。
         var importTasks = drives

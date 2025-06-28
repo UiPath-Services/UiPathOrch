@@ -65,7 +65,7 @@ public class GetQueueCommand : OrchestratorPSCmdlet
         // 各キューに対してデータ行を書き込む
         foreach (var q in output)
         {
-            var (drive, folder) = OrchDriveInfo.EnumFolders(q.Path).First();
+            var (drive, folder) = SessionState.EnumFolders(q.Path).First();
 
             QueueDefinition detailedQueue = null;
             try
@@ -150,7 +150,7 @@ public class GetQueueCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
 
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);

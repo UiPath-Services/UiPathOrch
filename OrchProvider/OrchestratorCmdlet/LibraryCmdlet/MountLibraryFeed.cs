@@ -14,7 +14,7 @@ class MountLibraryFeedCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
         var providerInfo = this.SessionState.Provider.GetOne("UiPathOrchLib");
 
         foreach (var drive in drives)

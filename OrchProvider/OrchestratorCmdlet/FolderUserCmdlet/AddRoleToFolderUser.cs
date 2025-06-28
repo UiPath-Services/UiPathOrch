@@ -197,8 +197,8 @@ public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
             return;
         }
 
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
-        var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
+        var drives = SessionState.EnumOrchDrives(Path);
+        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
 
         var wpFullName = FullName.ConvertToWildcardPatternList();
         var wpUserName = UserName.ConvertToWildcardPatternList();

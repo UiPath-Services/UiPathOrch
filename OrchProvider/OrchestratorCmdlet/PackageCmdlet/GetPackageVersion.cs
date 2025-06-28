@@ -41,7 +41,7 @@ public class GetPackageVersionCommand : OrchestratorPSCmdlet
 
             // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-            var drivesFolders = OrchDriveInfo.EnumPackageFeedFolders(paramPath, recurse);
+            var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse);
             int totalFolderCount = drivesFolders.Count;
 
             // パラメータで選択済みの Id は、候補から除外する
@@ -78,7 +78,7 @@ public class GetPackageVersionCommand : OrchestratorPSCmdlet
 
             // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-            var drivesFolders = OrchDriveInfo.EnumPackageFeedFolders(paramPath, recurse);
+            var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse);
 
             // パラメータで選択された Id のみ対象とする
             var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
@@ -116,7 +116,7 @@ public class GetPackageVersionCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumPackageFeedFolders(Path, Recurse.IsPresent);
+        var drivesFolders = SessionState.EnumPackageFeedFolders(Path, Recurse.IsPresent);
         var wpId = Id.ConvertToWildcardPatternList();
         var wpVersion = Version.ConvertToWildcardPatternList();
 

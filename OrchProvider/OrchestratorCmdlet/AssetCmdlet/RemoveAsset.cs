@@ -68,7 +68,7 @@ public class RemoveAssetCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
         var wpValueType = ValueType.ConvertToWildcardPatternList();
         var wpName = Name.ConvertToWildcardPatternList();
 

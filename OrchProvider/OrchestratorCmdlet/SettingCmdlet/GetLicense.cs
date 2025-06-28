@@ -17,7 +17,7 @@ public class GetLicenseCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
 
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,

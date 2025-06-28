@@ -196,7 +196,7 @@ public class EnableMaintenanceModeCommandBase<Enable> : OrchestratorPSCmdlet whe
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
 
         var wpMachineName = MachineName.ConvertToWildcardPatternList();
         var wpHostMachineName = HostMachineName.ConvertToWildcardPatternList();
