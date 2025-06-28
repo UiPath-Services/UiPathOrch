@@ -42,7 +42,7 @@ public class RemoveUserCmdlet : OrchestratorPSCmdlet
             return;
         }
 
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
 
         var wpUserName = UserName.ConvertToWildcardPatternList();
         var wpFullName = FullName.ConvertToWildcardPatternList();

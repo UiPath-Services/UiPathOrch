@@ -255,8 +255,8 @@ class NewUserMappingCsvCommand : OrchestratorPSCmdlet
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
-        var srcDrive = OrchDriveInfo.GetOrchDrive(SourceTenant);
-        var dstDrive = OrchDriveInfo.GetOrchDrive(DestinationTenant);
+        var srcDrive = SessionState.GetOrchDrive(SourceTenant);
+        var dstDrive = SessionState.GetOrchDrive(DestinationTenant);
 
         if (srcDrive == dstDrive)
         {

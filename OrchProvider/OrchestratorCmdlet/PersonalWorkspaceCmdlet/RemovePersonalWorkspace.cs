@@ -95,7 +95,7 @@ public class RemovePersonalWorkspaceCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
 
         if (Name?.Length == 0      || string.IsNullOrEmpty(Name?[0])) Name = null;
         if (OwnerName?.Length == 0 || string.IsNullOrEmpty(OwnerName?[0])) OwnerName = null;

@@ -72,7 +72,7 @@ public class GetTestSetExecutionCommand : OrchestratorPSCmdlet
 
             // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-            var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
+            var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
             // パラメータで選択済みの Name は、候補から除外する
             var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
@@ -266,7 +266,7 @@ public class GetTestSetExecutionCommand : OrchestratorPSCmdlet
         ulong skip = Skip ?? 0;
         ulong first = First ?? ulong.MaxValue;
 
-        var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
 
         string filter = MakeFilter();

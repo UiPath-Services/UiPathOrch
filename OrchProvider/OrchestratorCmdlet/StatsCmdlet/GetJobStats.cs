@@ -15,7 +15,7 @@ public class GetJobStatsCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
 
         // ToList() は遅延評価を抑止し、各スレッド内で問い合わせを行えるようにするために必要
         using var results = OrchThreadPool.RunForEach(drives,

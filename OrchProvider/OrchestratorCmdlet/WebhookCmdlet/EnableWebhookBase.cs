@@ -54,7 +54,7 @@ public class EnableWebhookCommandBase<Enable> : OrchestratorPSCmdlet where Enabl
     }
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
         var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();
         //var wpName = Name.ConvertToWildcardPatternList();
 

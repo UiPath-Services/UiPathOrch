@@ -62,7 +62,7 @@ public class ResetProcessVersionCommand: OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();

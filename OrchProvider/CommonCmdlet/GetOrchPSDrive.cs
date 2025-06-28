@@ -51,8 +51,8 @@ public class GetOrchPSDriveCommand : OrchestratorPSCmdlet
     private void WriteOrchProviderInfo()
     {
         IEnumerable<OrchDriveInfo> drives;
-        if (Path is null) drives = OrchDriveInfo.EnumAllOrchDrives();
-        else              drives = OrchDriveInfo.EnumOrchDrives(Path);
+        if (Path is null) drives = SessionState.EnumAllOrchDrives();
+        else              drives = SessionState.EnumOrchDrives(Path);
 
         foreach (var drive in drives)
         {

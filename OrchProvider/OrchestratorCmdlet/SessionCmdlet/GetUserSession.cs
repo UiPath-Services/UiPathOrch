@@ -80,7 +80,7 @@ public class GetUserSessionCommand : OrchestratorPSCmdlet
         ulong skip = Skip ?? 0;
         ulong first = First ?? ulong.MaxValue;
 
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
 
         foreach (var drive in drives)
         {

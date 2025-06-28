@@ -182,8 +182,8 @@ public class CopyLibraryCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var srcDrives = OrchDriveInfo.EnumOrchDrives([Path]);
-        var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
+        var srcDrives = SessionState.EnumOrchDrives([Path]);
+        var dstDrives = SessionState.EnumDestinationDrives(Destination!);
 
         var wpId = Id.ConvertToWildcardPatternList();
         var wpVersion = Version

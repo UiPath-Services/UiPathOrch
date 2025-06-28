@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.13.6'
+ModuleVersion = '0.9.14.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -388,7 +388,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- When copying a trigger from a classic folder using the Copy-OrchTrigger cmdlet, the associated machine is now also taken into consideration. Robot accounts were already handled as of version 0.9.13.4, and this change complements that enhancement.
+        ReleaseNotes = '- When used together with PowerShell.MCP, the current location could sometimes not be resolved correctly. This issue was caused by using a cached SessionState in both the context of the PSCmdlet and external components such as parameter completers. The implementation has been modified so that the PSCmdlet context now refers to its own SessionState, resolving the issue.
 '
 
         # Prerelease string of this module

@@ -344,7 +344,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
         // 対象のフォルダの Asset を、非同期にまとめて取得する
         var _ = ParallelResults.ForEach(parameters, param =>
         {
-            var drivesFolders = OrchDriveInfo.EnumFolders(param.Path);
+            var drivesFolders = SessionState.EnumFolders(param.Path);
 
             // 展開済みなので、フォルダはいっこしか展開されないはずだが、いちおう繰り返す
             return ParallelResults.ForEach(drivesFolders, driveFolder =>
@@ -674,7 +674,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
             if (param.MachineName is not null && param.MachineName.Any(mn => !string.IsNullOrEmpty(mn)))
                 wpMachineName = param.MachineName.ConvertToWildcardPatternList();
 
-            var drivesFolders = OrchDriveInfo.EnumFolders(param.Path);
+            var drivesFolders = SessionState.EnumFolders(param.Path);
             foreach (var (drive, folder) in drivesFolders)
             {
                 cancelHandler.Token.ThrowIfCancellationRequested();
@@ -768,7 +768,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
             {
                 cancelHandler.Token.ThrowIfCancellationRequested();
 
-                var drivesFolders = OrchDriveInfo.EnumFolders([WildcardPattern.Escape(asset.Path!)]);
+                var drivesFolders = SessionState.EnumFolders([WildcardPattern.Escape(asset.Path!)]);
                 var (drive, folder) = drivesFolders[0];
 
                 var target = System.IO.Path.Combine(folder.GetPSPath(), asset.Name ?? "");

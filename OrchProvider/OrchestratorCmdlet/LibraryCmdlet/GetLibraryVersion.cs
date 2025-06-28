@@ -28,7 +28,7 @@ public class GetLibraryVersionCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
         var wpId = Id.ConvertToWildcardPatternList();
         var wpVersion = Version.ConvertToWildcardPatternList();
 

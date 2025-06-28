@@ -57,7 +57,7 @@ public class MoveFolderUserCommand : OrchestratorPSCmdlet
 
             // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-            var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
+            var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
             // パラメータで選択済みの UserName は、候補から除外する
             var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
@@ -95,8 +95,8 @@ public class MoveFolderUserCommand : OrchestratorPSCmdlet
         //    return;
         //}
 
-        var srcDrivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(Path);
-        var dstDrivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(Destination);
+        var srcDrivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path);
+        var dstDrivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Destination);
 
         var wpUserName = UserName.ConvertToWildcardPatternList();
         //var wpFullName = FullName?.Select(fn => new WildcardPattern(fn, WildcardOptions.IgnoreCase)).ToList();

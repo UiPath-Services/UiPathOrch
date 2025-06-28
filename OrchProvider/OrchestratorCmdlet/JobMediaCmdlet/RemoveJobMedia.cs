@@ -75,7 +75,7 @@ public class RemoveJobMediaCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
 
         // ワイルドカードをサポートしないため、
         // あらかじめ非同期で対象の ExecutionMedia を取得しておくことは不要

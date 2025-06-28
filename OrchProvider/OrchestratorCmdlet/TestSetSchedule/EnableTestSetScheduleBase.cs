@@ -38,7 +38,7 @@ public class EnableTestSetScheduleCommandBase<Enable> : OrchestratorPSCmdlet whe
 
             // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-            var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
+            var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
             // パラメータで選択済みの Name は、候補から除外する
             var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
@@ -66,7 +66,7 @@ public class EnableTestSetScheduleCommandBase<Enable> : OrchestratorPSCmdlet whe
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
 
         string action = $"{(Enable.Value ? "Enable" : "Disable")} TestSetSchedule";

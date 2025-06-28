@@ -87,11 +87,11 @@ public class CopyRoleCommand : OrchestratorPSCmdlet
     {
         var wpName = Name.ConvertToWildcardPatternList();
 
-        var srcDrive = OrchDriveInfo.GetOrchDrive(Path!);
+        var srcDrive = SessionState.GetOrchDrive(Path!);
         if (srcDrive is null)
             throw new Exception("Path is not OrchDrive.");
 
-        var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
+        var dstDrives = SessionState.EnumDestinationDrives(Destination!);
 
         srcDrive.Roles.ClearCache();
 

@@ -31,7 +31,7 @@ public class StopTestExecutionCommand : OrchestratorPSCmdlet
         {
             // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-            var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(paramPath);
+            var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath);
 
             // パラメータで選択済みの Id は、候補から除外する
             var paramId = GetParameterValues(commandAst, "Id", TPositional.Parameters, wordToComplete).Select(id => long.Parse(id));
@@ -62,7 +62,7 @@ public class StopTestExecutionCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumFoldersWithoutPersonalWorkspace(Path);
+        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path);
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)

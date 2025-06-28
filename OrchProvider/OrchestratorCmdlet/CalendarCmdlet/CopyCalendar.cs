@@ -100,8 +100,8 @@ public class CopyCalendarCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var srcDrive = OrchDriveInfo.GetOrchDrive(Path!);
-        var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
+        var srcDrive = SessionState.GetOrchDrive(Path!);
+        var dstDrives = SessionState.EnumDestinationDrives(Destination!);
         var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();

@@ -26,7 +26,7 @@ public class GetPackageCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumPackageFeedFolders(Path, Recurse.IsPresent);
+        var drivesFolders = SessionState.EnumPackageFeedFolders(Path, Recurse.IsPresent);
         var wpId = Id.ConvertToWildcardPatternList();
 
         using var results = OrchThreadPool.RunForEach(drivesFolders,

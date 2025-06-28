@@ -103,7 +103,7 @@ public class RedoQueueItemCommand : OrchestratorPSCmdlet
     {
         _csvLines ??= [];
 
-        var drivesFolders = OrchDriveInfo.EnumFolders(Path);
+        var drivesFolders = SessionState.EnumFolders(Path);
         var wpName = Name.ConvertToWildcardPatternList();
 
         foreach (var (drive, folder) in drivesFolders)
@@ -160,7 +160,7 @@ public class RedoQueueItemCommand : OrchestratorPSCmdlet
     {
         if (_csvLines is null) return;
 
-        var drivesFolders = OrchDriveInfo.EnumFolders(Path);
+        var drivesFolders = SessionState.EnumFolders(Path);
         var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();

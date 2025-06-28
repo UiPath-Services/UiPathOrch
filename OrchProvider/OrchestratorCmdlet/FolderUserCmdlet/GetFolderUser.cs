@@ -167,7 +167,7 @@ public class GetFolderUserCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
         var wpUserName = UserName.ConvertToWildcardPatternList();
         var wpFullName = FullName.ConvertToWildcardPatternList();
         var wpType = Type.ConvertToWildcardPatternList();

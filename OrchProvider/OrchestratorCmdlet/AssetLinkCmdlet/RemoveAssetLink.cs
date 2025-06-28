@@ -71,7 +71,7 @@ class RemoveAssetLinkCommand : OrchestratorPSCmdlet
     // TODO: シングルスレッド化しないと。
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
 
         Parallel.ForEach(drivesFolders, driveFolder =>

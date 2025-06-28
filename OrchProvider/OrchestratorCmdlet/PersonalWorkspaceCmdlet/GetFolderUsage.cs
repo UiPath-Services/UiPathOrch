@@ -63,7 +63,7 @@ public class GetFolderUsageCommand : OrchestratorPSCmdlet
     {
         if (Id is not null)
         {
-            var drives = OrchDriveInfo.EnumOrchDrives(Path!);
+            var drives = SessionState.EnumOrchDrives(Path!);
             if (drives is null || !drives.Any())
             {
                 return;
@@ -88,7 +88,7 @@ public class GetFolderUsageCommand : OrchestratorPSCmdlet
         }
         else
         {
-            var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+            var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
             foreach (var (drive, folder) in drivesFolders)
             {
                 inputParameters ??= [];

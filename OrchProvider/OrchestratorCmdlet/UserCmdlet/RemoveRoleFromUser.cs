@@ -81,7 +81,7 @@ public class RemoveRoleFromUserCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
 
         if (UserName?.Length == 0 || string.IsNullOrEmpty(UserName?[0])) UserName = null;
         if (FullName?.Length == 0 || string.IsNullOrEmpty(FullName?[0])) FullName = null;

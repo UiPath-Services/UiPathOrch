@@ -290,8 +290,8 @@ public class CopyUserCommand : OrchestratorPSCmdlet
         var wpFullName = FullName.ConvertToWildcardPatternList();
         var wpType = Type.ConvertToWildcardPatternList();
 
-        var srcDrive = OrchDriveInfo.GetOrchDrive(Path!) ?? throw new Exception("Path is not OrchDrive.");
-        var dstDrives = OrchDriveInfo.EnumDestinationDrives(Destination!);
+        var srcDrive = SessionState.GetOrchDrive(Path!) ?? throw new Exception("Path is not OrchDrive.");
+        var dstDrives = SessionState.EnumDestinationDrives(Destination!);
 
         using var cancelHandler = new ConsoleCancelHandler();
         CopyUsers(this, srcDrive, wpUserName, wpFullName, wpType, dstDrives, false, cancelHandler.Token);

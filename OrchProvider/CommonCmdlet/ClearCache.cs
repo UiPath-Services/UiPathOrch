@@ -32,7 +32,7 @@ public class ClearCacheCommand : PSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var drives = OrchDriveInfo.EnumAllOrchDrives();
+            var drives = SessionState.EnumAllOrchDrives();
             foreach (var drive in drives
                 .ExcludeByWildcards(d => d?.NameColon, wpPath)
                 .Where(d => wp.IsMatch(d.NameColon)))
@@ -75,7 +75,7 @@ public class ClearCacheCommand : PSCmdlet
         List<OrchTmDriveInfo> tmDrives = null;
         if (!AllDrives.IsPresent)
         {
-            drives = OrchDriveInfo.EnumOrchDrives(Path).ToList();
+            drives = SessionState.EnumOrchDrives(Path).ToList();
             duDrives = OrchDuDriveInfo.EnumOrchDuDrives(Path).ToList();
             tmDrives = OrchTmDriveInfo.EnumOrchTmDrives(Path).ToList();
         }
@@ -83,7 +83,7 @@ public class ClearCacheCommand : PSCmdlet
         // Path の指定がなく、カレントドライブが OrchDrive でない場合は、すべての OrchDrive のキャッシュをクリアする
         if (AllDrives.IsPresent || (drives!.Count == 0 && duDrives!.Count == 0 && tmDrives!.Count == 0))
         {
-            foreach (var drive in OrchDriveInfo.EnumAllOrchDrives())
+            foreach (var drive in SessionState.EnumAllOrchDrives())
             {
                 if (ShouldProcess(drive.NameColonSeparator, "Clear Cache"))
                 {

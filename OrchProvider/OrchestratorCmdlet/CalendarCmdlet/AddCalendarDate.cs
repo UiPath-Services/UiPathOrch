@@ -52,7 +52,7 @@ public class AddCalendarDateCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
 
         // 指定された日時は、時刻成分をゼロにして UTC として解釈する
         ExcludedDate = ExcludedDate?.Select(d => DateTime.SpecifyKind(d.Date, DateTimeKind.Utc)).ToArray();

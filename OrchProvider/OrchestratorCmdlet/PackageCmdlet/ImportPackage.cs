@@ -40,7 +40,7 @@ public class ImportPackageCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = OrchDriveInfo.EnumPackageFeedFolders(Path);
+        var drivesFolders = SessionState.EnumPackageFeedFolders(Path);
         if (Recurse && drivesFolders.Any(df => df.folder != df.drive.RootFolder))
         {
             throw new Exception("The -Recurse parameter can only be specified for the tenant's root folder.");
@@ -48,7 +48,7 @@ public class ImportPackageCommand : OrchestratorPSCmdlet
 
         Source = Source?.Select(s => SessionState.Path.GetUnresolvedProviderPathFromPSPath(s)).ToArray();
 
-        var pkgFilePaths = OrchDriveInfo.ExpandLocalPath(SessionState, Source, "*.nupkg", Recurse, Recurse ? 1 : 0)
+        var pkgFilePaths = SessionState.ExpandLocalPath(Source, "*.nupkg", Recurse, Recurse ? 1 : 0)
             .OrderByFileNameVersion();
 
         var tasks = drivesFolders

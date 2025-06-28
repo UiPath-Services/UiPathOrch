@@ -23,7 +23,7 @@ public class GetLibraryCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(Path);
         var wpId = Id.ConvertToWildcardPatternList();
 
         using var results = OrchThreadPool.RunForEach(drives,
