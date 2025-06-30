@@ -45,7 +45,7 @@ public class MoveOrchPmGroupMemberCommand : OrchestratorPSCmdlet
         Destination = Destination.Split1stValueByUnescapedCommas()?.ToArray();
         Path = Path.Split1stValueByUnescapedCommas()?.ToArray();
 
-        var drives = OrchDriveInfo.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(Path);
         var wpGroupName = new WildcardPattern(GroupName, WildcardOptions.IgnoreCase);
 
         //var wpType = Type.ConvertToWildcardPatternList();

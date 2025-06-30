@@ -16,7 +16,7 @@ public class GetTmProjectSettingCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesProjects = OrchTmDriveInfo.EnumFolders(Path, Recurse.IsPresent);
+        var drivesProjects = SessionState.EnumTmFolders(Path, Recurse.IsPresent);
 
         //foreach (var driveProject in drivesProjects)
         //{

@@ -15,7 +15,7 @@ public class GetTmServerInfoCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchTmDriveInfo.EnumOrchTmDrives(Path);
+        var drives = SessionState.EnumTmDrives(Path);
 
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,

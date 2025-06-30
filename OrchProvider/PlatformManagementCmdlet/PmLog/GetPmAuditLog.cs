@@ -71,7 +71,7 @@ public class GetPmAuditLogCommand : OrchestratorPSCmdlet
         ulong skip = Skip ?? 0;
         ulong first = First ?? ulong.MaxValue;
 
-        var drives = OrchDriveInfo.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(Path);
 
         // すべてのパラメータが指定されていなければ、キャッシュの内容を返す
         bool bOutCache = (Skip is null && First is null);

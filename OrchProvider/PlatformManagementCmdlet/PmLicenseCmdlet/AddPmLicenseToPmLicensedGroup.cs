@@ -126,7 +126,7 @@ public class AddPmLicenseToPmLicenseGroup: OrchestratorPSCmdlet
     {
         _parameterSets ??= [];
 
-        var drives = OrchDriveInfo.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(Path);
 
         GroupName = GroupName.Split1stValueByUnescapedCommas()?.ToArray();
         var wpLicense = License.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();

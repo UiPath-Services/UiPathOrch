@@ -159,14 +159,14 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(Path);
 
         // CSV インポート時に適切に処理できるようするため、GroupName を変更してはいけない
-        string[] groupNames = GroupName ?? [];
+        string?[] groupNames = GroupName ?? [];
 
         // CSV に指定された GroupName はカンマで区切る
         groupNames = groupNames
-             .SelectMany(name => name.Split(separator, StringSplitOptions.RemoveEmptyEntries))
+             .SelectMany(name => (name ?? "").Split(separator, StringSplitOptions.RemoveEmptyEntries))
              .Select(name => name.Trim())
              .ToArray();
 

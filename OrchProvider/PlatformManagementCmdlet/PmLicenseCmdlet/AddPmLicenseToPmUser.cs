@@ -120,7 +120,7 @@ public class AddPmLicenseToPmUserCmdlet : OrchestratorPSCmdlet
     {
         _parameterSets ??= [];
 
-        var drives = OrchDriveInfo.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(Path);
 
         Email = Email.Split1stValueByUnescapedCommas()?.ToArray();
         var wpLicense = License.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();

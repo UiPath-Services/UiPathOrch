@@ -25,8 +25,8 @@ public class CopyPmExternalApplicationCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var srcDrive = OrchDriveInfo.GetPmDrive(Path);
-        var dstDrives = OrchDriveInfo.EnumPmDrives(Destination.Split1stValueByUnescapedCommas());
+        var srcDrive = SessionState.GetPmDrive(Path);
+        var dstDrives = SessionState.EnumPmDrives(Destination.Split1stValueByUnescapedCommas());
         var wpName = Name.ConvertToWildcardPatternList();
 
         var srcClients = srcDrive.PmExternalClients.Get();

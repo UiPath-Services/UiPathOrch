@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
@@ -29,7 +27,7 @@ public class SearchPmDirectoryBulkCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(Path);
 
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,

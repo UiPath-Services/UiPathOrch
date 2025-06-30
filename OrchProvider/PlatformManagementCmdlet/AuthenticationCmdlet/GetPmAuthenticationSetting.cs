@@ -56,7 +56,7 @@ public class GetPmAuthenticationSettingCommand : OrchestratorPSCmdlet
     // TODO: まじめに実装しないと。キャッシュも作らないと。
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(Path);
         var wpUserName = UserName.ConvertToWildcardPatternList();
 
         foreach (var drive in drives)

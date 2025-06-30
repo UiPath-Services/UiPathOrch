@@ -19,13 +19,13 @@ class ImportConfigCommand : PSCmdlet
             SessionState.Drive.Remove(drive.Name, true, null);
         }
 
-        var duDrives = OrchDuDriveInfo.EnumAllOrchDrives();
+        var duDrives = SessionState.EnumAllDuDrives();
         foreach (var drive in duDrives)
         {
             SessionState.Drive.Remove(drive.Name, true, null);
         }
 
-        var tmDrives = OrchTmDriveInfo.EnumAllOrchDrives();
+        var tmDrives = SessionState.EnumAllTmDrives();
         foreach (var drive in tmDrives)
         {
             SessionState.Drive.Remove(drive.Name, true, null);

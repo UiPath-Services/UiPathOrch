@@ -15,7 +15,7 @@ public class GetTmConfigurationCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchTmDriveInfo.EnumOrchTmDrives(Path);
+        var drives = SessionState.EnumTmDrives(Path);
 
         //foreach (var drive in drives)
         //{

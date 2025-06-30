@@ -24,6 +24,7 @@ public class OrchDuDriveInfo : PSDriveInfo
             return _NameColon;
         }
     }
+
     internal string NameColonSeparator
     {
         get
@@ -31,16 +32,6 @@ public class OrchDuDriveInfo : PSDriveInfo
             _NameColonSeparator ??= Name + ':' + Path.DirectorySeparatorChar;
             return _NameColonSeparator;
         }
-    }
-
-    // OrchDuProvider の Start で初期化する
-    internal static SessionState? SessionState;
-
-    public static IEnumerable<OrchDuDriveInfo> EnumAllOrchDrives()
-    {
-        return SessionState!.Drive.GetAllForProvider("UiPathOrchDu")
-            .Cast<OrchDuDriveInfo>()
-            .OrderBy(d => d.Name);
     }
 
     protected internal Folder? RootFolder;
@@ -51,122 +42,10 @@ public class OrchDuDriveInfo : PSDriveInfo
     {
     }
 
-    // paths を指定しない場合、カレントドライブのみを返す
-    public static List<OrchDuDriveInfo> EnumOrchDuDrives(IEnumerable<string?>? paths = null)
-    {
-        var drives = new List<OrchDuDriveInfo>();
-        if (paths is null || !paths.Any() || paths.All(p => p is null))
-        {
-            if (SessionState!.Path.CurrentLocation.Drive is OrchDuDriveInfo orchDrive)
-                drives.Add(orchDrive);
-        }
-        else
-        {
-            var psPaths = paths.Select(p => SessionState!.Path.GetResolvedPSPathFromPSPath(p)).SelectMany(p => p);
-            foreach (var p in psPaths)
-            {
-                if (p.Drive is OrchDuDriveInfo orchDrive)
-                    drives.Add(orchDrive);
-            }
-        }
-        //return drives.DistinctBy(drive => drive.Name).ToList();
-        return drives.Distinct().ToList();
-    }
-
-    public static OrchDuDriveInfo GetOrchDuDrive(string? path = null)
-    {
-        var srcDrives = EnumOrchDuDrives([path]);
-        if (srcDrives.Count > 1)
-        {
-            throw new Exception($"'{path}' resolved to multiple containers.");
-        }
-        if (srcDrives.Count == 0)
-        {
-            // たぶん先に EnumOrchDrives() が例外を投げているはずなので、ここは実行されないと思う。
-            throw new Exception($"Cannot find path '{path}' because it does not exist.");
-        }
-        return srcDrives[0];
-    }
-
-    public static IEnumerable<PathInfo> ResolveOrchDrivePaths(IEnumerable<string?>? paths = null)
-    {
-        if (paths is null || !paths.Any() || paths.All(p => p is null))
-        {
-            PathInfo pathInfo = SessionState!.Path.CurrentLocation;
-            if (pathInfo.Drive is OrchDuDriveInfo)
-            {
-                yield return SessionState!.Path.CurrentLocation;
-            }
-        }
-        else
-        {
-            var psPaths = paths.Where(p => p is not null).Select(p => SessionState!.Path.GetResolvedPSPathFromPSPath(p)).SelectMany(p => p);
-            foreach (var pathInfo in psPaths.Where(p => p.Provider.Name == "UiPathOrchDu"))
-            {
-                yield return pathInfo;
-            }
-        }
-    }
-
-    public static List<(OrchDuDriveInfo drive, DuProject project)> EnumFolders(IEnumerable<string?>? path, bool recurse = false) ///, bool includeRoot = false)
-    {
-        var paths = ResolveOrchDrivePaths(path);
-
-        List<(OrchDuDriveInfo drive, DuProject project)> ret = [];
-
-        HashSet<string> visited = [];
-        foreach (var p in paths)
-        {
-            OrchDuDriveInfo drive = p.Drive as OrchDuDriveInfo;
-            if (drive is null) continue;
-
-            var dicProjects = drive!.GetDuProjects();
-            if (dicProjects is null) continue;
-
-            //Folder folder = null; // drive?.GetFolder(OrchDriveInfo.PSPathToOrchPath(WildcardPattern.Unescape(p.ProviderPath)));
-            //if (folder is null) continue;
-
-            // Recurse が指定されていて、かつルートフォルダであれば、すべてのプロジェクトを返せばOK
-            if (recurse && p.Path.EndsWith(System.IO.Path.DirectorySeparatorChar))
-            {
-                foreach (var project in dicProjects)
-                {
-                    if (!visited.Add(project.id!)) continue;
-                    ret.Add((drive!, project));
-                }
-                continue;
-            }
-
-            // dicFolders にはルートフォルダーが含まれないため、ルートだけ先にここで探して追加する
-            //if (includeRoot)
-            //{
-            //    ret.Add((drive!, null));
-            //}
-
-            // p からプロジェクト名を取り出す
-            string projectName = Path.GetFileName(p.Path);
-
-            foreach (var project in dicProjects)
-            {
-                if (string.Compare(project.name, projectName, StringComparison.OrdinalIgnoreCase) == 0)
-                {
-                    if (!visited.Add(project.id!)) continue;
-                    ret.Add((drive!, project));
-                }
-            }
-        }
-
-        if (ret is null || ret.Count == 0)
-        {
-            throw new Exception("Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters on UiPathOrchDu drive.");
-        }
-        return ret;
-    }
-
     public void ClearAllCache()
     {
-        ParentDrive._dicTenantId = null;
-        ParentDrive._dicTenantKey = null;
+        //ParentDrive._dicTenantId = null;
+        //ParentDrive._dicTenantKey = null;
 
         #region DU cache
         _dicDuClassifier = null;

@@ -17,7 +17,7 @@ class GetPmUserProfileCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(Path);
 
         foreach (var drive in drives)
         {

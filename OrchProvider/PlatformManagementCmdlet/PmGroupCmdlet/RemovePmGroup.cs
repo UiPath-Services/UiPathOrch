@@ -19,7 +19,7 @@ public class RemovePmGroupCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(Path);
         var wpGroupName = GroupName.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();

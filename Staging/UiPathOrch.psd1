@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.14.0'
+ModuleVersion = '0.9.14.1'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -388,7 +388,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- When used together with PowerShell.MCP, the current location could sometimes not be resolved correctly. This issue was caused by using a cached SessionState in both the context of the PSCmdlet and external components such as parameter completers. The implementation has been modified so that the PSCmdlet context now refers to its own SessionState, resolving the issue.
+        ReleaseNotes = '- The *-Du* and *-Tm* cmdlets now also use the SessionState of their PSCmdlet context. This improves robustness.
 '
 
         # Prerelease string of this module

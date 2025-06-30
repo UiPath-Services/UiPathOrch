@@ -98,7 +98,7 @@ public class NewPmUserCommand : OrchestratorPSCmdlet
 
         _params ??= [];
 
-        var drives = OrchDriveInfo.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(Path);
 
         foreach (var drive in drives)
         {

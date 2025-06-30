@@ -83,7 +83,7 @@ public class RemoveLicenseFromLicenseGroup: OrchestratorPSCmdlet
     {
         _parameterSets ??= [];
 
-        var drives = OrchDriveInfo.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(Path);
 
         var wpGroupName = GroupName.ConvertToWildcardPatternList();
         var wpLicense = License.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();

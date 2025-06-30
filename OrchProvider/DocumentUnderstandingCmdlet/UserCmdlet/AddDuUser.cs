@@ -160,7 +160,7 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
         Name = Name.Split1stValueByUnescapedCommas()?.ToArray();
         Roles = Roles.Split1stValueByUnescapedCommas()?.ToArray();
 
-        var projects = OrchDuDriveInfo.EnumFolders(Path);
+        var projects = SessionState.EnumDuFolders(Path);
         var wpEntityType = Type.ConvertToWildcardPatternList();
         var specifiedTypes = DirectoryTypes.Parameters.SelectByWildcards(t => t, wpEntityType);
 
