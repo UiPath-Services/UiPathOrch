@@ -42,11 +42,10 @@ public class OrchDuProvider : NavigationCmdletProvider
 
     #region CmdletProvider overrides
 
-    protected override ProviderInfo Start(ProviderInfo providerInfo)
-    {
-        OrchDuDriveInfo.SessionState = base.SessionState;
-        return base.Start(providerInfo);
-    }
+    //protected override ProviderInfo Start(ProviderInfo providerInfo)
+    //{
+    //    return base.Start(providerInfo);
+    //}
 
     #endregion CmdletProvider overrides
 
@@ -122,7 +121,7 @@ public class OrchDuProvider : NavigationCmdletProvider
 
     protected override void InvokeDefaultAction(string path)
     {
-        var drives = OrchDuDriveInfo.EnumOrchDuDrives([path]);
+        var drives = SessionState.EnumDuDrives([path]);
         if (drives is null)
         {
             return;

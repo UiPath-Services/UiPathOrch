@@ -64,8 +64,8 @@ public class GetOrchPSDriveCommand : OrchestratorPSCmdlet
     private void WriteDuProviderInfo()
     {
         IEnumerable<OrchDuDriveInfo> drives;
-        if (Path is null) drives = OrchDuDriveInfo.EnumAllOrchDrives();
-        else              drives = OrchDuDriveInfo.EnumOrchDuDrives(Path);
+        if (Path is null) drives = SessionState.EnumAllDuDrives();
+        else              drives = SessionState.EnumDuDrives(Path);
 
         foreach (var drive in drives)
         {
@@ -77,8 +77,8 @@ public class GetOrchPSDriveCommand : OrchestratorPSCmdlet
     private void WriteTmProviderInfo()
     {
         IEnumerable<OrchTmDriveInfo> drives;
-        if (Path is null) drives = OrchTmDriveInfo.EnumAllOrchDrives();
-        else              drives = OrchTmDriveInfo.EnumOrchTmDrives(Path);
+        if (Path is null) drives = SessionState.EnumAllTmDrives();
+        else              drives = SessionState.EnumTmDrives(Path);
 
         foreach (var drive in drives)
         {

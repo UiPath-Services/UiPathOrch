@@ -23,7 +23,7 @@ public class GetTmRequirementCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesProjects = OrchTmDriveInfo.EnumFolders(Path, Recurse.IsPresent);
+        var drivesProjects = SessionState.EnumTmFolders(Path, Recurse.IsPresent);
         var wpName = Name.ConvertToWildcardPatternList();
 
         //foreach (var driveProject in drivesProjects)

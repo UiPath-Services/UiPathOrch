@@ -1,3 +1,7 @@
+Version: 0.9.14.1
+- The *-Du* and *-Tm* cmdlets now also use the SessionState of their PSCmdlet context. This improves robustness.
+
+
 Version: 0.9.14.0
 - When used together with PowerShell.MCP, the current location could sometimes not be resolved correctly. This issue was caused by using a cached SessionState in both the context of the PSCmdlet and external components such as parameter completers. The implementation has been modified so that the PSCmdlet context now refers to its own SessionState, resolving the issue.
 

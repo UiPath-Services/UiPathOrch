@@ -128,7 +128,7 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
         // ユーザー名は case を無視して重複チェックする
         _csvLines ??= new(new ForthItemIgnoreCaseComparer<OrchDriveInfo, PmGroup, string>());
 
-        var drives = OrchDriveInfo.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(Path);
         var wpGroupName = GroupName.ConvertToWildcardPatternList();
         var wpType = Type.ConvertToWildcardPatternList(); // Type はワイルドカードをサポートしない
         //var objectTypes = DirectoryTypes.Items.FilterByWildcards(t => t.Value, wpType).Select(t => t.Key);

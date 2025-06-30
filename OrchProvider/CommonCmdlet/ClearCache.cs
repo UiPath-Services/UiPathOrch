@@ -44,7 +44,7 @@ public class ClearCacheCommand : PSCmdlet
                 yield return new CompletionResult(PathTools.EscapePSText(driveName), driveName, CompletionResultType.ParameterValue, tiphelp);
             }
 
-            var duDrives = OrchDuDriveInfo.EnumAllOrchDrives();
+            var duDrives = SessionState.EnumAllDuDrives();
             foreach (var drive in duDrives
                 .ExcludeByWildcards(d => d?.NameColon, wpPath)
                 .Where(d => wp.IsMatch(d.NameColon)))
@@ -55,7 +55,7 @@ public class ClearCacheCommand : PSCmdlet
                 yield return new CompletionResult(PathTools.EscapePSText(drive.NameColon), drive.NameColon, CompletionResultType.ParameterValue, tiphelp);
             }
 
-            var tmDrives = OrchTmDriveInfo.EnumAllOrchDrives();
+            var tmDrives = SessionState.EnumAllTmDrives();
             foreach (var drive in tmDrives
                 .ExcludeByWildcards(d => d?.NameColon, wpPath)
                 .Where(d => wp.IsMatch(d.NameColon)))
@@ -76,8 +76,8 @@ public class ClearCacheCommand : PSCmdlet
         if (!AllDrives.IsPresent)
         {
             drives = SessionState.EnumOrchDrives(Path).ToList();
-            duDrives = OrchDuDriveInfo.EnumOrchDuDrives(Path).ToList();
-            tmDrives = OrchTmDriveInfo.EnumOrchTmDrives(Path).ToList();
+            duDrives = SessionState.EnumDuDrives(Path).ToList();
+            tmDrives = SessionState.EnumTmDrives(Path).ToList();
         }
 
         // Path の指定がなく、カレントドライブが OrchDrive でない場合は、すべての OrchDrive のキャッシュをクリアする
@@ -90,14 +90,14 @@ public class ClearCacheCommand : PSCmdlet
                     drive.ClearAllCache();
                 }
             }
-            foreach (var drive in OrchDuDriveInfo.EnumAllOrchDrives())
+            foreach (var drive in SessionState.EnumAllDuDrives())
             {
                 if (ShouldProcess(drive.NameColonSeparator, "Clear Cache"))
                 {
                     drive.ClearAllCache();
                 }
             }
-            foreach (var drive in OrchTmDriveInfo.EnumAllOrchDrives())
+            foreach (var drive in SessionState.EnumAllTmDrives())
             {
                 if (ShouldProcess(drive.NameColonSeparator, "Clear Cache"))
                 {

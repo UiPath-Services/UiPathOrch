@@ -21,7 +21,7 @@ class GetPmUserLoginAttemptCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(Path);
         var wpEmail = Email.ConvertToWildcardPatternList();
 
 

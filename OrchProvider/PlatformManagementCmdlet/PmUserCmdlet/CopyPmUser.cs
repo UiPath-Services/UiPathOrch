@@ -30,8 +30,8 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var srcDrive = OrchDriveInfo.GetPmDrive(Path);
-        var dstDrives = OrchDriveInfo.EnumPmDrives(Destination);
+        var srcDrive = SessionState.GetPmDrive(Path);
+        var dstDrives = SessionState.EnumPmDrives(Destination);
         var wpEmail = Email.ConvertToWildcardPatternList();
 
         #region コピーするユーザーの一覧を作成

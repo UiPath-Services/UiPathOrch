@@ -34,16 +34,6 @@ public class OrchTmDriveInfo : PSDriveInfo
         }
     }
 
-    // OrchTmProvider の Start で初期化する
-    internal static SessionState? SessionState;
-
-    public static IEnumerable<OrchTmDriveInfo> EnumAllOrchDrives()
-    {
-        return SessionState!.Drive.GetAllForProvider("UiPathOrchTm")
-            .Cast<OrchTmDriveInfo>()
-            .OrderBy(d => d.Name);
-    }
-
     protected internal Folder? RootFolder;
 
     // このコンストラクタを実行するタイミングでは、NameColonSeparator は利用できない
@@ -51,103 +41,6 @@ public class OrchTmDriveInfo : PSDriveInfo
         base(driveName, provider, driveName + ':' + Path.DirectorySeparatorChar, description, null, root)
     {
 //            _parentDrive = parent;
-    }
-
-    // paths を指定しない場合、カレントドライブのみを返す
-    public static List<OrchTmDriveInfo> EnumOrchTmDrives(IEnumerable<string?>? paths = null)
-    {
-        var drives = new List<OrchTmDriveInfo>();
-        if (paths is null || !paths.Any() || paths.All(p => p is null))
-        {
-            if (SessionState!.Path.CurrentLocation.Drive is OrchTmDriveInfo orchDrive)
-                drives.Add(orchDrive);
-        }
-        else
-        {
-            var psPaths = paths.Select(p => SessionState!.Path.GetResolvedPSPathFromPSPath(p)).SelectMany(p => p);
-            foreach (var p in psPaths)
-            {
-                if (p.Drive is OrchTmDriveInfo orchDrive)
-                    drives.Add(orchDrive);
-            }
-        }
-        //return drives.DistinctBy(drive => drive.Name).ToList();
-        return drives.Distinct().ToList();
-    }
-
-    public static IEnumerable<PathInfo> ResolveOrchDrivePaths(IEnumerable<string?>? paths = null)
-    {
-        if (paths is null || !paths.Any() || paths.All(p => p is null))
-        {
-            PathInfo pathInfo = SessionState!.Path.CurrentLocation;
-            if (pathInfo.Drive is OrchTmDriveInfo)
-            {
-                yield return SessionState!.Path.CurrentLocation;
-            }
-        }
-        else
-        {
-            var psPaths = paths.Where(p => p is not null).Select(p => SessionState!.Path.GetResolvedPSPathFromPSPath(p)).SelectMany(p => p);
-            foreach (var pathInfo in psPaths.Where(p => p.Provider.Name == "UiPathOrchTm"))
-            {
-                yield return pathInfo;
-            }
-        }
-    }
-
-    public static List<(OrchTmDriveInfo drive, TmProject project)> EnumFolders(IEnumerable<string?>? path, bool recurse = false) ///, bool includeRoot = false)
-    {
-        var paths = ResolveOrchDrivePaths(path);
-
-        List<(OrchTmDriveInfo drive, TmProject project)> ret = [];
-
-        HashSet<string> visited = [];
-        foreach (var p in paths)
-        {
-            OrchTmDriveInfo drive = p.Drive as OrchTmDriveInfo;
-            if (drive is null) continue;
-
-            var dicProjects = drive!.GetTmProjects();
-            if (dicProjects is null) continue;
-
-            //Folder folder = null; // drive?.GetFolder(OrchDriveInfo.PSPathToOrchPath(WildcardPattern.Unescape(p.ProviderPath)));
-            //if (folder is null) continue;
-
-            // Recurse が指定されていて、かつルートフォルダであれば、すべてのプロジェクトを返せばOK
-            if (recurse && p.Path.EndsWith(System.IO.Path.DirectorySeparatorChar))
-            {
-                foreach (var project in dicProjects)
-                {
-                    if (!visited.Add(project.id!)) continue;
-                    ret.Add((drive!, project));
-                }
-                continue;
-            }
-
-            // dicFolders にはルートフォルダーが含まれないため、ルートだけ先にここで探して追加する
-            //if (includeRoot)
-            //{
-            //    ret.Add((drive!, null));
-            //}
-
-            // p からプロジェクト名を取り出す
-            string projectPrefix = Path.GetFileName(p.Path);
-
-            foreach (var project in dicProjects)
-            {
-                if (string.Compare(project.projectPrefix, projectPrefix, StringComparison.OrdinalIgnoreCase) == 0)
-                {
-                    if (!visited.Add(project.id!)) continue;
-                    ret.Add((drive!, project));
-                }
-            }
-        }
-
-        if (ret is null || ret.Count == 0)
-        {
-            throw new Exception("Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters on UiPathOrchTm drive.");
-        }
-        return ret;
     }
 
     public void ClearAllCache()

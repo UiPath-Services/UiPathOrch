@@ -70,7 +70,7 @@ public class RemoveAllocationFromUserLicenseGroup: OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(Path);
 
         var wpGroupName = GroupName.ConvertToWildcardPatternList();
         var wpUserName = UserName.ConvertToWildcardPatternList();

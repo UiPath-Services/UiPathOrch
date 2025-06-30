@@ -33,11 +33,10 @@ public class OrchTmProvider : NavigationCmdletProvider
 
     #region CmdletProvider overrides
 
-    protected override ProviderInfo Start(ProviderInfo providerInfo)
-    {
-        OrchTmDriveInfo.SessionState = base.SessionState;
-        return base.Start(providerInfo);
-    }
+    //protected override ProviderInfo Start(ProviderInfo providerInfo)
+    //{
+    //    return base.Start(providerInfo);
+    //}
 
     #endregion CmdletProvider overrides
 
@@ -118,7 +117,7 @@ public class OrchTmProvider : NavigationCmdletProvider
 
     protected override void InvokeDefaultAction(string path)
     {
-        var drives = OrchTmDriveInfo.EnumOrchTmDrives([path]);
+        var drives = SessionState.EnumTmDrives([path]);
         if (drives is null)
         {
             return;
@@ -195,7 +194,7 @@ public class OrchTmProvider : NavigationCmdletProvider
 
     protected override void RenameItem(string path, string newName)
     {
-        var drives = OrchTmDriveInfo.EnumOrchTmDrives([path]);
+        var drives = SessionState.EnumTmDrives([path]);
         if (drives is null)
         {
             return;
@@ -231,7 +230,7 @@ public class OrchTmProvider : NavigationCmdletProvider
 
     protected override void RemoveItem(string path, bool recurse)
     {
-        var drives = OrchTmDriveInfo.EnumOrchTmDrives([path]);
+        var drives = SessionState.EnumTmDrives([path]);
         if (drives is null)
         {
             return;

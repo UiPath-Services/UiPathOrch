@@ -72,7 +72,7 @@ public class GetDuUserCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesProjects = OrchDuDriveInfo.EnumFolders(Path, Recurse.IsPresent);
+        var drivesProjects = SessionState.EnumDuFolders(Path, Recurse.IsPresent);
         //var wpUserName = UserName.ConvertToWildcardPatternList();
         var wpName = Name.ConvertToWildcardPatternList();
 

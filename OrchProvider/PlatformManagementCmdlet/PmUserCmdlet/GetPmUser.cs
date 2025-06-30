@@ -104,7 +104,7 @@ public class GetPmUserCommand : OrchestratorPSCmdlet
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
-        var drives = OrchDriveInfo.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(Path);
         var wpEmail = Email.ConvertToWildcardPatternList();
 
         using var results = OrchThreadPool.RunForEach(drives,

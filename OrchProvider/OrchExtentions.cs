@@ -156,7 +156,7 @@ internal static class OrchCollectionExtensions
     //}
 
     // WildcardPattern の列挙は、なんども繰り返して使用することになるので、ここで List にして返しておく方が良い。
-    public static List<WildcardPattern>? ConvertToWildcardPatternList(this IEnumerable<string>? input)
+    public static List<WildcardPattern>? ConvertToWildcardPatternList(this IEnumerable<string?>? input)
     {
         // PathTools.UnescapePSText(n) はしなくても良いのだっけ？
         return input?.Select(n => new WildcardPattern(n, WildcardOptions.IgnoreCase)).ToList();
@@ -692,27 +692,37 @@ internal static class SessionStateExtentios
 {
     public static IEnumerable<OrchDriveInfo> EnumAllOrchDrives(this SessionState? sessionState)
     {
+        OrchDriveInfo.SessionState = sessionState;
+
         return sessionState!.Drive.GetAllForProvider("UiPathOrch")
             .Cast<OrchDriveInfo>()
             .OrderBy(d => d.Name);
     }
 
-    // paths を指定しない場合、カレントドライブのみを返す
-    public static List<OrchDriveInfo> EnumOrchDrives(this SessionState? sessionState, IEnumerable<string?>? path = null)
+    public static IEnumerable<OrchDuDriveInfo> EnumAllDuDrives(this SessionState? sessionState)
     {
-        return sessionState.EnumOrchDrivesImpl<OrchDriveInfo>(path);
+        OrchDriveInfo.SessionState = sessionState;
+
+        return sessionState!.Drive.GetAllForProvider("UiPathOrchDu")
+            .Cast<OrchDuDriveInfo>()
+            .OrderBy(d => d.Name);
     }
 
-    // paths を指定しない場合、カレントドライブのみを返す
-    public static List<OrchDuDriveInfo> EnumDuDrives(this SessionState? sessionState, IEnumerable<string?>? path = null)
+    public static IEnumerable<OrchTmDriveInfo> EnumAllTmDrives(this SessionState? sessionState)
     {
-        return sessionState.EnumOrchDrivesImpl<OrchDuDriveInfo>(path);
+        OrchDriveInfo.SessionState = sessionState;
+
+        return sessionState!.Drive.GetAllForProvider("UiPathOrchTm")
+            .Cast<OrchTmDriveInfo>()
+            .OrderBy(d => d.Name);
     }
 
     // paths を指定しない場合、カレントドライブのみを返す
     // T には OrchDriveInfo, OrchDuDriveInfo などを指定できる
     public static List<T> EnumOrchDrivesImpl<T>(this SessionState? sessionState, IEnumerable<string?>? path = null) where T : PSDriveInfo
     {
+        OrchDriveInfo.SessionState = sessionState;
+
         var drives = new List<T>();
         if (path is null || !path.Any() || path.All(p => p is null))
         {
@@ -731,10 +741,72 @@ internal static class SessionStateExtentios
         return drives.Distinct().ToList();
     }
 
+    // paths を指定しない場合、カレントドライブのみを返す
+    public static List<OrchDriveInfo> EnumOrchDrives(this SessionState? sessionState, IEnumerable<string?>? path = null)
+    {
+        return sessionState.EnumOrchDrivesImpl<OrchDriveInfo>(path);
+    }
+
+    // paths を指定しない場合、カレントドライブのみを返す
+    public static List<OrchDuDriveInfo> EnumDuDrives(this SessionState? sessionState, IEnumerable<string?>? path = null)
+    {
+        return sessionState.EnumOrchDrivesImpl<OrchDuDriveInfo>(path);
+    }
+
+    public static List<OrchTmDriveInfo> EnumTmDrives(this SessionState? sessionState, IEnumerable<string?>? path = null)
+    {
+        return sessionState.EnumOrchDrivesImpl<OrchTmDriveInfo>(path);
+    }
+
+    // paths を指定しない場合、カレントドライブのみを返す
+    // PmDrive は、任意のドライブから検索できないといけないから実装が別だ。
+
+    public static List<OrchDriveInfo> EnumPmDrives(this SessionState? sessionState, IEnumerable<string?>? path = null)
+    {
+        OrchDriveInfo.SessionState = sessionState;
+
+        static void AddOrchDrive(SessionState sessionState, HashSet<OrchDriveInfo> drives, PSDriveInfo drive)
+        {
+            if (drive is OrchDriveInfo orchDrive)
+            {
+                drives.Add(orchDrive);
+            }
+            else if (sessionState!.Path.CurrentLocation.Drive is OrchDuDriveInfo orchDuDrive)
+            {
+                drives.Add(orchDuDrive.ParentDrive);
+            }
+            else if (sessionState!.Path.CurrentLocation.Drive is OrchTmDriveInfo orchTmDrive)
+            {
+                drives.Add(orchTmDrive.ParentDrive);
+            }
+        }
+
+        var drives = new HashSet<OrchDriveInfo>();
+        if (path is null || !path.Any() || path.All(p => p is null))
+        {
+            if (sessionState is not null)
+            {
+                AddOrchDrive(sessionState, drives, sessionState.Path.CurrentLocation.Drive);
+            }
+        }
+        else
+        {
+            var psPaths = path.Select(p => sessionState!.Path.GetResolvedPSPathFromPSPath(p)).SelectMany(p => p);
+            foreach (var p in psPaths)
+            {
+                AddOrchDrive(sessionState!, drives, p.Drive);
+            }
+        }
+        return drives.OrderBy(d => d.Name).ToList();
+    }
+
+
     // EnumOrchDrive と似ているけど、こちらはカレントドライブを考慮しない。
     // Destination を解決するのに使う。
     public static List<OrchDriveInfo> EnumDestinationDrives(this SessionState? sessionState, IEnumerable<string> paths)
     {
+        OrchDriveInfo.SessionState = sessionState;
+
         return paths
             .Select(p => sessionState!.Path.GetResolvedPSPathFromPSPath(p))
             .SelectMany(p => p)
@@ -747,6 +819,8 @@ internal static class SessionStateExtentios
 
     public static IEnumerable<PathInfo> ResolveOrchDrivePaths(this SessionState? sessionState, IEnumerable<string?>? paths = null)
     {
+        OrchDriveInfo.SessionState = sessionState;
+
         if (paths is null || !paths.Any() || paths.All(p => p is null))
         {
             PathInfo pathInfo = sessionState!.Path.CurrentLocation;
@@ -768,6 +842,8 @@ internal static class SessionStateExtentios
     // TODO: 引数に IWritableHost を追加して、パスをひとつずつ解釈するようにしたい。
     public static List<(OrchDriveInfo drive, Folder folder)> EnumFolders(this SessionState? sessionState, IEnumerable<string?>? path, bool recurse = false, uint depth = 0, bool includeRoot = false)
     {
+        OrchDriveInfo.SessionState = sessionState;
+
         var paths = sessionState.ResolveOrchDrivePaths(path);
 
         List<(OrchDriveInfo drive, Folder folder)> ret = [];
@@ -833,6 +909,8 @@ internal static class SessionStateExtentios
 
     public static OrchDriveInfo GetOrchDrive(this SessionState? sessionState, string? path = null)
     {
+        OrchDriveInfo.SessionState = sessionState;
+
         var srcDrives = sessionState.EnumOrchDrives([path]);
         if (srcDrives.Count > 1)
         {
@@ -841,6 +919,24 @@ internal static class SessionStateExtentios
         if (srcDrives.Count == 0)
         {
             // たぶん先に EnumOrchDrives() が例外を投げているはずなので、ここは実行されないと思う。
+            throw new Exception($"Cannot find path '{path}' because it does not exist.");
+        }
+        return srcDrives[0];
+    }
+
+    // 実装がだいぶ重複している。きれいにしたいが、EnumOrchDrives() と EnumPmDrives() の実装が結構違う。。
+    public static OrchDriveInfo GetPmDrive(this SessionState sessionState, string? path = null)
+    {
+        OrchDriveInfo.SessionState = sessionState;
+
+        var srcDrives = sessionState.EnumPmDrives([path]);
+        if (srcDrives.Count > 1)
+        {
+            throw new Exception($"'{path}' resolved to multiple containers.");
+        }
+        if (srcDrives.Count == 0)
+        {
+            // たぶん先に EnumPmDrives() が例外を投げているはずなので、ここは実行されないと思う。
             throw new Exception($"Cannot find path '{path}' because it does not exist.");
         }
         return srcDrives[0];
@@ -867,6 +963,8 @@ internal static class SessionStateExtentios
 
     public static IEnumerable<(string FullPath, string RelativePath)> ExpandLocalPath(this SessionState? sessionState, string[]? localPaths, string wildcard, bool recurse = false, int depth = 0)
     {
+        OrchDriveInfo.SessionState = sessionState;
+
         localPaths = localPaths?.Select(p => sessionState!.Path.GetUnresolvedProviderPathFromPSPath(p)).ToArray();
 
         HashSet<string> uniquePath = [];
@@ -1005,6 +1103,8 @@ internal static class SessionStateExtentios
 
     public static Dictionary<string, string>? LoadUserMappingCsv(this SessionState? sessionState, IWritableHost _this, OrchDriveInfo srcDrive, OrchDriveInfo dstDrive, string? path)
     {
+        OrchDriveInfo.SessionState = sessionState;
+
         if (path is null) return null;
 
         if (srcDrive == dstDrive)
@@ -1073,4 +1173,166 @@ internal static class SessionStateExtentios
 
         return userMapping;
     }
+
+    #region DuDrive
+
+    public static IEnumerable<PathInfo> ResolveDuDrivePaths(this SessionState? sessionState, IEnumerable<string?>? paths = null)
+    {
+        OrchDriveInfo.SessionState = sessionState;
+
+        if (paths is null || !paths.Any() || paths.All(p => p is null))
+        {
+            PathInfo pathInfo = sessionState!.Path.CurrentLocation;
+            if (pathInfo.Drive is OrchDuDriveInfo)
+            {
+                yield return sessionState!.Path.CurrentLocation;
+            }
+        }
+        else
+        {
+            var psPaths = paths.Where(p => p is not null).Select(p => sessionState!.Path.GetResolvedPSPathFromPSPath(p)).SelectMany(p => p);
+            foreach (var pathInfo in psPaths.Where(p => p.Provider.Name == "UiPathOrchDu"))
+            {
+                yield return pathInfo;
+            }
+        }
+    }
+
+    public static List<(OrchDuDriveInfo drive, DuProject project)> EnumDuFolders(this SessionState? sessionState, IEnumerable<string?>? path, bool recurse = false) ///, bool includeRoot = false)
+    {
+        var paths = sessionState.ResolveDuDrivePaths(path);
+
+        List<(OrchDuDriveInfo drive, DuProject project)> ret = [];
+
+        HashSet<string> visited = [];
+        foreach (var p in paths)
+        {
+            OrchDuDriveInfo drive = p.Drive as OrchDuDriveInfo;
+            if (drive is null) continue;
+
+            var dicProjects = drive!.GetDuProjects();
+            if (dicProjects is null) continue;
+
+            //Folder folder = null; // drive?.GetFolder(OrchDriveInfo.PSPathToOrchPath(WildcardPattern.Unescape(p.ProviderPath)));
+            //if (folder is null) continue;
+
+            // Recurse が指定されていて、かつルートフォルダであれば、すべてのプロジェクトを返せばOK
+            if (recurse && p.Path.EndsWith(System.IO.Path.DirectorySeparatorChar))
+            {
+                foreach (var project in dicProjects)
+                {
+                    if (!visited.Add(project.id!)) continue;
+                    ret.Add((drive!, project));
+                }
+                continue;
+            }
+
+            // dicFolders にはルートフォルダーが含まれないため、ルートだけ先にここで探して追加する
+            //if (includeRoot)
+            //{
+            //    ret.Add((drive!, null));
+            //}
+
+            // p からプロジェクト名を取り出す
+            string projectName = Path.GetFileName(p.Path);
+
+            foreach (var project in dicProjects)
+            {
+                if (string.Compare(project.name, projectName, StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    if (!visited.Add(project.id!)) continue;
+                    ret.Add((drive!, project));
+                }
+            }
+        }
+
+        if (ret is null || ret.Count == 0)
+        {
+            throw new Exception("Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters on UiPathOrchDu drive.");
+        }
+        return ret;
+    }
+
+    #endregion
+
+    #region TmDrive
+
+    public static IEnumerable<PathInfo> ResolveTmDrivePaths(this SessionState? sessionState, IEnumerable<string?>? paths = null)
+    {
+        OrchDriveInfo.SessionState = sessionState;
+
+        if (paths is null || !paths.Any() || paths.All(p => p is null))
+        {
+            PathInfo pathInfo = sessionState!.Path.CurrentLocation;
+            if (pathInfo.Drive is OrchTmDriveInfo)
+            {
+                yield return sessionState!.Path.CurrentLocation;
+            }
+        }
+        else
+        {
+            var psPaths = paths.Where(p => p is not null).Select(p => sessionState!.Path.GetResolvedPSPathFromPSPath(p)).SelectMany(p => p);
+            foreach (var pathInfo in psPaths.Where(p => p.Provider.Name == "UiPathOrchTm"))
+            {
+                yield return pathInfo;
+            }
+        }
+    }
+
+    public static List<(OrchTmDriveInfo drive, TmProject project)> EnumTmFolders(this SessionState? sessionState, IEnumerable<string?>? path, bool recurse = false) ///, bool includeRoot = false)
+    {
+        var paths = sessionState.ResolveTmDrivePaths(path);
+
+        List<(OrchTmDriveInfo drive, TmProject project)> ret = [];
+
+        HashSet<string> visited = [];
+        foreach (var p in paths)
+        {
+            OrchTmDriveInfo drive = p.Drive as OrchTmDriveInfo;
+            if (drive is null) continue;
+
+            var dicProjects = drive!.GetTmProjects();
+            if (dicProjects is null) continue;
+
+            //Folder folder = null; // drive?.GetFolder(OrchDriveInfo.PSPathToOrchPath(WildcardPattern.Unescape(p.ProviderPath)));
+            //if (folder is null) continue;
+
+            // Recurse が指定されていて、かつルートフォルダであれば、すべてのプロジェクトを返せばOK
+            if (recurse && p.Path.EndsWith(System.IO.Path.DirectorySeparatorChar))
+            {
+                foreach (var project in dicProjects)
+                {
+                    if (!visited.Add(project.id!)) continue;
+                    ret.Add((drive!, project));
+                }
+                continue;
+            }
+
+            // dicFolders にはルートフォルダーが含まれないため、ルートだけ先にここで探して追加する
+            //if (includeRoot)
+            //{
+            //    ret.Add((drive!, null));
+            //}
+
+            // p からプロジェクト名を取り出す
+            string projectPrefix = Path.GetFileName(p.Path);
+
+            foreach (var project in dicProjects)
+            {
+                if (string.Compare(project.projectPrefix, projectPrefix, StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    if (!visited.Add(project.id!)) continue;
+                    ret.Add((drive!, project));
+                }
+            }
+        }
+
+        if (ret is null || ret.Count == 0)
+        {
+            throw new Exception("Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters on UiPathOrchTm drive.");
+        }
+        return ret;
+    }
+
+    #endregion
 }

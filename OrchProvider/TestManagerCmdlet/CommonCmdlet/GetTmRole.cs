@@ -32,7 +32,7 @@ class GetTmRoleCommand : OrchestratorPSCmdlet
         {
             // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-            var drives = OrchTmDriveInfo.EnumOrchTmDrives(paramPath);
+            var drives = SessionState.EnumTmDrives(paramPath);
 
             // パラメータで選択済みの Name は、候補から除外する
             var wpname = CreateWPListFromParameter(commandAst, "name", TPositional.Parameters, wordToComplete);
@@ -57,7 +57,7 @@ class GetTmRoleCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchTmDriveInfo.EnumOrchTmDrives(Path);
+        var drives = SessionState.EnumTmDrives(Path);
         //var wpProjectName = Name.ConvertToWildcardPatternList();
 
         foreach (var drive in drives)

@@ -61,7 +61,7 @@ class GetPmSettingCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(Path);
         //var wpUserName = UserName.ConvertToWildcardPatternList();
 
         foreach (var drive in drives)

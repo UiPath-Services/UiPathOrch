@@ -39,7 +39,7 @@ public class GetDuDocumentTypeCommand : OrchestratorPSCmdlet
 
             // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-            var drivesProjects = OrchDuDriveInfo.EnumFolders(paramPath, recurse);
+            var drivesProjects = SessionState.EnumDuFolders(paramPath, recurse);
 
             // パラメータで選択済みの DocumentTypeName は、候補から除外する
             var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
@@ -64,7 +64,7 @@ public class GetDuDocumentTypeCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesProjects = OrchDuDriveInfo.EnumFolders(Path, Recurse.IsPresent);
+        var drivesProjects = SessionState.EnumDuFolders(Path, Recurse.IsPresent);
         var wpName = Name.ConvertToWildcardPatternList();
 
         // 同期バージョン

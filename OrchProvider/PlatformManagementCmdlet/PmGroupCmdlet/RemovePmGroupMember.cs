@@ -56,7 +56,7 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(Path);
 
         // CSV に指定された GroupName はカンマで区切る
         var groupName = GroupName!

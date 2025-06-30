@@ -122,7 +122,7 @@ public class GetUserLicenseUser: OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = OrchDriveInfo.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(Path);
 
         var wpName = Name.ConvertToWildcardPatternList();
         var wpEmail = Email.ConvertToWildcardPatternList();

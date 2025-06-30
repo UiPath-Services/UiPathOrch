@@ -79,8 +79,8 @@ public class CopyPmGroupCommand : OrchestratorPSCmdlet
     // 各グループごとに、そのメンバーをバルクでディレクトリに問い合わせるのが妥当な実装であろう。。
     protected override void ProcessRecord()
     {
-        var srcDrive = OrchDriveInfo.GetPmDrive(Path);
-        var dstDrives = OrchDriveInfo.EnumPmDrives(Destination.Split1stValueByUnescapedCommas());
+        var srcDrive = SessionState.GetPmDrive(Path);
+        var dstDrives = SessionState.EnumPmDrives(Destination.Split1stValueByUnescapedCommas());
         var wpGroupName = GroupName.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
 
         var srcGroups = srcDrive.PmGroups.Get();
