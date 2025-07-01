@@ -39,18 +39,22 @@ public class SearchDirectoryCommand : OrchestratorPSCmdlet
             var drives = ResolveOrchDrives(fakeBoundParameters);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.SearchDirectory(name));
-
-            foreach (var result in results)
+            bool bFound = false;
+            foreach (var drive in drives)
             {
-                var drive = result.Source;
+                var users = drive.SearchDirectory(name);
 
-                foreach (var obj in result
-                    .OrderBy(s => s.identityName))
+                foreach (var obj in users.OrderBy(s => s.identityName))
                 {
+                    bFound = true;
                     string tiphelp = drive.NameColonSeparator + obj.identityName;
                     yield return new CompletionResult(PathTools.EscapePSText(obj.identityName), obj.identityName, CompletionResultType.ParameterValue, tiphelp);
                 }
+            }
+            if (!bFound)
+            {
+                string text = $@"""(No users found for '{name}')""";
+                yield return new CompletionResult(text, text, CompletionResultType.Text, text);
             }
         }
     }
@@ -59,24 +63,22 @@ public class SearchDirectoryCommand : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumOrchDrives(Path);
 
-        using var results = OrchThreadPool.RunForEach(drives,
-            drive => drive.NameColonSeparator,
-            drive => drive,
-            drive => drive.SearchDirectory(Name!));
-
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var result in results)
+
+        foreach (var drive in drives)
         {
+            cancelHandler.Token.ThrowIfCancellationRequested();
+
             try
             {
-                var directoryObjects = result.GetResult(cancelHandler.Token);
+                var directoryObjects = drive.SearchDirectory(Name!);
                 if (directoryObjects is null) continue;
 
                 WriteObject(directoryObjects, true);
             }
-            catch (OrchException ex)
+            catch (Exception ex)
             {
-                WriteError(new ErrorRecord(ex, "SearchDirectoryError", ErrorCategory.InvalidOperation, ex.Target));
+                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "SearchDirectoryError", ErrorCategory.InvalidOperation, drive));
             }
         }
     }

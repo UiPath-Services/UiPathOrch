@@ -2063,8 +2063,25 @@ public partial class OrchAPISession : IDisposable
 
     #region DirectoryService
 
+    // この API の quota は、300回/5分だ。
+    // https://uipath-japan.slack.com/archives/C0175DZP4PQ/p1751336407409919?thread_ts=1751275792.210139&cid=C0175DZP4PQ
+    private DateTime        _lastSearchDirectory = DateTime.MinValue;
+    private readonly object _lockSearchDirectory = new object();
     public DirectoryObject[]? SearchDirectory(string prefix)
     {
+        lock (_lockSearchDirectory)
+        {
+            var now = DateTime.UtcNow;
+            var elapsed = now - _lastSearchDirectory;
+            var waitTime = TimeSpan.FromSeconds(1) - elapsed;
+
+            if (waitTime > TimeSpan.Zero)
+            {
+                Thread.Sleep(waitTime);
+            }
+
+            _lastSearchDirectory = DateTime.UtcNow;
+        }
         return HttpRequest<DirectoryObject[]>(HttpMethod.Get, $"/api/DirectoryService/SearchForUsersAndGroups?domain=autogen&prefix={prefix}&searchContext=All");
     }
 
