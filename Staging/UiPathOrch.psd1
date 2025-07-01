@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.14.1'
+ModuleVersion = '0.9.14.2'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -388,7 +388,12 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- The *-Du* and *-Tm* cmdlets now also use the SessionState of their PSCmdlet context. This improves robustness.
+        ReleaseNotes = '- Calls to the GET /api/DirectoryService/SearchForUsersAndGroups endpoint are now made with appropriate rate limiting to respect the API quota. As a result, CSV files containing a large number of users can now be successfully imported using the following cmdlets:
+  - Add-OrchUser
+  - Add-OrchFolderUser
+  - Copy-OrchUser
+  - Add-PmLicenseToPmUser
+  - Copy-Item
 '
 
         # Prerelease string of this module
