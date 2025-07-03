@@ -487,6 +487,33 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         }
     }
 
+    protected static DirectoryObject? ResolveDirectoryName(IWritableHost _host, OrchDriveInfo drive, string name, int type)
+    {
+        string strType = type switch
+        {
+            0 => "users",
+            1 => "groups",
+            2 => "machines",
+            3 => "robots",
+            4 => "applications",
+            _ => throw new InvalidOperationException()
+        };
+
+        var resolved = drive.SearchDirectory(name).Where(g => g.type == type).ToList();
+
+        if (resolved.Count == 0)
+        {
+            _host.WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, $"No {strType} found for '{name}'."), "SearchForUsersAndGroupsError", ErrorCategory.InvalidOperation, drive));
+            return null;
+        }
+        if (resolved.Count > 1)
+        {
+            _host.WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, $"Duplicated {strType} found for '{name}'."), "SearchForUsersAndGroupsError", ErrorCategory.InvalidOperation, drive));
+            return null;
+        }
+        return resolved.First();
+    }
+
     internal static (string?, string?) ExtractPackageIdVersionFromFilePath(string fullPath)
     {
         string fileName = System.IO.Path.GetFileNameWithoutExtension(fullPath);

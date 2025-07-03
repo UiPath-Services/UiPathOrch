@@ -4026,6 +4026,16 @@ public class PmAuditLog : IEquatable<PmAuditLog> // added by UiPathOrch 適切�
     }
 }
 
+// DirectoryScope
+public class DirectoryScope
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    public string? name { get; set; }
+    public bool? isDefault { get; set; }
+}
+
 #endregion
 
 

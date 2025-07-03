@@ -2082,7 +2082,7 @@ public partial class OrchAPISession : IDisposable
 
             _lastSearchDirectory = DateTime.UtcNow;
         }
-        return HttpRequest<DirectoryObject[]>(HttpMethod.Get, $"/api/DirectoryService/SearchForUsersAndGroups?domain=autogen&prefix={prefix}&searchContext=All");
+        return HttpRequest<DirectoryObject[]>(HttpMethod.Get, $"/api/DirectoryService/SearchForUsersAndGroups?domain=autogen&prefix={HttpUtility.UrlEncode(prefix)}&searchContext=All");
     }
 
     #endregion
@@ -2764,6 +2764,11 @@ public partial class OrchAPISession : IDisposable
     public void GetPmSetting()
     {
         string body = HttpRequestIdentity(HttpMethod.Get, "/api/Setting");
+    }
+
+    public DirectoryScope[]? GetPmDirectoryScope(string partitionGlobalId)
+    {
+        return HttpRequestIdentity<DirectoryScope[]>(HttpMethod.Get, $"/api/Directory/Scopes/{partitionGlobalId}");
     }
 
     private bool _pmApiDeprecated = true;

@@ -29,22 +29,24 @@ public class SearchDirectoryCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            string name = GetParameterValue(commandAst, parameterName, TPositional.Parameters);
-            if (string.IsNullOrEmpty(name))
+            wordToComplete = RemoveEnclosingQuotes(wordToComplete);
+            if (string.IsNullOrEmpty(wordToComplete))
             {
                 yield return new CompletionResult(PathTools.EscapePSText("Please enter at least one character to search."));
                 yield break;
             }
 
             var drives = ResolveOrchDrives(fakeBoundParameters);
-            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = ParallelResults3.GroupBy(drives, drive => drive.SearchDirectory(wordToComplete));
 
             bool bFound = false;
-            foreach (var drive in drives)
+            foreach (var result in results)
             {
-                var users = drive.SearchDirectory(name);
+                var drive = result.Source;
 
-                foreach (var obj in users.OrderBy(s => s.identityName))
+                foreach (var obj in result
+                    .OrderBy(s => s.identityName))
                 {
                     bFound = true;
                     string tiphelp = drive.NameColonSeparator + obj.identityName;
@@ -53,8 +55,7 @@ public class SearchDirectoryCommand : OrchestratorPSCmdlet
             }
             if (!bFound)
             {
-                string text = $@"""(No users found for '{name}')""";
-                yield return new CompletionResult(text, text, CompletionResultType.Text, text);
+                yield return new CompletionResult($@"""(No users found for '{wordToComplete}')""");
             }
         }
     }
@@ -63,22 +64,24 @@ public class SearchDirectoryCommand : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumOrchDrives(Path);
 
+        using var results = OrchThreadPool.RunForEach(drives,
+            drive => drive.NameColonSeparator,
+            drive => drive,
+            drive => drive.SearchDirectory(Name!));
+
         using var cancelHandler = new ConsoleCancelHandler();
-
-        foreach (var drive in drives)
+        foreach (var result in results)
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             try
             {
-                var directoryObjects = drive.SearchDirectory(Name!);
+                var directoryObjects = result.GetResult(cancelHandler.Token);
                 if (directoryObjects is null) continue;
 
                 WriteObject(directoryObjects, true);
             }
-            catch (Exception ex)
+            catch (OrchException ex)
             {
-                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "SearchDirectoryError", ErrorCategory.InvalidOperation, drive));
+                WriteError(new ErrorRecord(ex, "SearchDirectoryError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }

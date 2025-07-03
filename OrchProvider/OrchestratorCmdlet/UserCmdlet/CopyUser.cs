@@ -104,27 +104,34 @@ public class CopyUserCommand : OrchestratorPSCmdlet
 
                         User newUser = OrchCollectionExtensions.DeepCopy(detailedUser);
 
+                        // srcType は、変な値なら "DirectoryUser" に対応する数字にしておく。
+                        // でも変な値は将来のバージョンで出てくる可能性があるから、なにか警告した方がいいのかもしれない。
+                        var srcType = DirectoryTypeItems.Items.GetValueOrDefault(detailedUser.Type ?? "DirectoryUser", DirectoryTypeItems.Items["DirectoryUser"]);
+
                         // 組織の PmUser の中に見つかれば、その identifier を DirectoryIdentifier を設定しておく
-                        if (DirectoryTypeItems.Items.TryGetValue(detailedUser.Type ?? "DirectoryUser", out var srcType))
+                        var dstPmUsers = dstDrive.SearchDirectory(newUser.UserName!)
+                            .Where(u => string.Compare(u.identityName, newUser.UserName, true) == 0 && u.type == srcType)
+                            .ToList();
+                        DirectoryObject dstPmUser = null;
+                        if (dstPmUsers.Count == 1) dstPmUser = dstPmUsers.First(); // ひとつだけ見つかった場合に限り処理
+
+                        if (dstPmUser is null && !string.IsNullOrEmpty(newUser.EmailAddress) && newUser.UserName != newUser.EmailAddress)
                         {
-                            var dstPmUser = dstDrive.SearchDirectory(newUser.UserName!)
-                                .Where(u => string.Compare(u.identityName, newUser.UserName, true) == 0 && u.type == srcType)
+                            // 見つからない場合は、メールアドレスでも探してみる
+                            dstPmUser = dstDrive.SearchDirectory(newUser.EmailAddress)
+                                .Where(u => string.Compare(u.identityName, newUser.EmailAddress, true) == 0 && u.type == srcType)
                                 .FirstOrDefault();
+                        }
 
-                            if (dstPmUser is null && !string.IsNullOrEmpty(newUser.EmailAddress) && newUser.UserName != newUser.EmailAddress)
-                            {
-                                // 見つからない場合は、メールアドレスでも探してみる
-                                dstPmUser = dstDrive.SearchDirectory(newUser.EmailAddress)
-                                    .Where(u => string.Compare(u.identityName, newUser.EmailAddress, true) == 0 && u.type == srcType)
-                                    .FirstOrDefault();
-                            }
-
-                            if (dstPmUser is not null)
-                            {
-                                //WriteError(new ErrorRecord(new OrchException(srcUser.GetPSPath(), $"A user with the same name does not exist in the organization of {dstDrive.NameColonSeparator}."), "SearchUserError", ErrorCategory.InvalidOperation, srcUser));
-                                newUser.DirectoryIdentifier = dstPmUser?.identifier;
-                                newUser.Domain = dstPmUser?.domain;
-                            }
+                        if (dstPmUser is not null)
+                        {
+                            //WriteError(new ErrorRecord(new OrchException(srcUser.GetPSPath(), $"A user with the same name does not exist in the organization of {dstDrive.NameColonSeparator}."), "SearchUserError", ErrorCategory.InvalidOperation, srcUser));
+                            newUser.DirectoryIdentifier = dstPmUser?.identifier;
+                            newUser.Domain = dstPmUser?.domain;
+                        }
+                        else
+                        {
+                            _this.WriteWarning($"\"{dstDrive.NameColonSeparator}\": Failed to retrieve {newUser.UserName}. Ignoring.");
                         }
 
                         if (!string.IsNullOrEmpty(newUser.DirectoryIdentifier))

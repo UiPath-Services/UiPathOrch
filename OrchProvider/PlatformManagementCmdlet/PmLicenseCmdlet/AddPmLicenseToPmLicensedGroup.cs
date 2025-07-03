@@ -50,6 +50,8 @@ public class AddPmLicenseToPmLicenseGroup: OrchestratorPSCmdlet
 
             var drives = ResolvePmDrives(fakeBoundParameters);
 
+            wordToComplete = RemoveEnclosingQuotes(wordToComplete);
+
             bool bFound = false;
             foreach (var drive in drives)
             {
@@ -71,7 +73,7 @@ public class AddPmLicenseToPmLicenseGroup: OrchestratorPSCmdlet
             }
             if (!bFound)
             {
-                yield return new CompletionResult($"\"No results matching '{wordToComplete}'\".");
+                yield return new CompletionResult($@"""(No groups found for '{wordToComplete}')""");
             }
         }
     }

@@ -69,6 +69,9 @@ public class AddFolderUserCommand : OrchestratorPSCmdlet
             //ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
 
             var paramUserName = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+            wordToComplete = RemoveEnclosingQuotes(wordToComplete);
+
             bool bFound = false;
             foreach (var drive in drives)
             {
@@ -89,7 +92,7 @@ public class AddFolderUserCommand : OrchestratorPSCmdlet
             }
             if (!bFound)
             {
-                yield return new CompletionResult($"\"No results matching '{wordToComplete}'\".");
+                yield return new CompletionResult($@"""(No users found for '{RemoveEnclosingQuotes(wordToComplete)}')""");
             }
         }
     }
@@ -130,41 +133,6 @@ public class AddFolderUserCommand : OrchestratorPSCmdlet
                 }
             }
         }
-    }
-
-    // このメソッドはほかの cmdlet でも使うか？
-    // そうであれば、OrchestratorPSCmdlet class に移動すべきだが、
-    protected DirectoryObject? SearchDirectory(OrchDriveInfo drive, string name, int type)
-    {
-        string strType = type switch
-        {
-            0 => "users",
-            1 => "groups",
-            2 => "machines",
-            3 => "robots",
-            4 => "applications",
-            _ => throw new InvalidOperationException()
-        };
-
-        var resolved = drive.SearchDirectory(name)?.Where(g => g.type == type).ToList();
-
-        if (resolved is null || resolved.Count == 0)
-        {
-            WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, $"No {strType} found for '{name}'."), "SearchForUsersAndGroupsError", ErrorCategory.InvalidOperation, drive));
-            return null;
-        }
-        if (resolved.Count > 1)
-        {
-            WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, $"Duplicated {strType} found for '{name}'."), "SearchForUsersAndGroupsError", ErrorCategory.InvalidOperation, drive));
-            return null;
-        }
-        DirectoryObject found = resolved.First();
-        if (string.Compare(found.identityName, name, true) != 0)
-        {
-            WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, $"No {strType} found for '{name}'."), "SearchForUsersAndGroupsError", ErrorCategory.InvalidOperation, drive));
-            return null;
-        }
-        return found;
     }
 
     protected override void ProcessRecord()
@@ -232,7 +200,7 @@ public class AddFolderUserCommand : OrchestratorPSCmdlet
                 DirectoryObject? member = null;
                 try
                 {
-                    member = SearchDirectory(drive, userName, objectType);
+                    member = ResolveDirectoryName(this, drive, userName, objectType);
                 }
                 catch (Exception ex)
                 {

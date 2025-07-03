@@ -82,6 +82,8 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
 
             CacheExistingMemberIds(drives, wpGroupName);
 
+            wordToComplete = RemoveEnclosingQuotes(wordToComplete);
+
             bool bFound = false;
             foreach (var drive in drives)
             {
@@ -111,7 +113,7 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
             }
             if (!bFound)
             {
-                yield return new CompletionResult($"\"No results matching '{wordToComplete}'\".");
+                yield return new CompletionResult($@"""(No users found for '{wordToComplete}')""");
             }
         }
     }
