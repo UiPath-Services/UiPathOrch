@@ -1828,7 +1828,12 @@ public partial class OrchDriveInfo : PSDriveInfo
             }
         }
 
-        return value?.Where(obj => obj.identityName?.StartsWith(name, StringComparison.OrdinalIgnoreCase) ?? false) ?? [];
+        // name で前方一致検索して、当たればそれを返す
+        var ret = value?.Where(obj => obj.identityName?.StartsWith(name, StringComparison.OrdinalIgnoreCase) ?? false) ?? [];
+        if (ret.Any()) return ret;
+
+        // 当たらなければ、全部返す。この中に含まれているエントリがひとつだけなら、それが検索したいユーザーであるはずだ。
+        return value ?? [];
     }
 
     #region PmGroup Cache

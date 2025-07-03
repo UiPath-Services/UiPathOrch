@@ -268,17 +268,26 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         return param.ConvertToWildcardPatternList();
     }
 
-    protected static WildcardPattern CreateWPFromWordToComplete(string? wordToComplete)
+    static internal string RemoveEnclosingQuotes(string? str)
     {
-        if (!string.IsNullOrEmpty(wordToComplete))
+        if (!string.IsNullOrEmpty(str) && str.Length >= 2)
         {
-            if (wordToComplete.StartsWith('\'') && wordToComplete.EndsWith('\''))
+            if (str.StartsWith('\'') && str.EndsWith('\''))
             {
-                wordToComplete = wordToComplete.Substring(1, wordToComplete.Length - 2).Replace("''", "'");
+                return str.Substring(1, str.Length - 2).Replace("''", "'");
+            }
+            else if (str.StartsWith('"') && str.EndsWith('"'))
+            {
+                return str.Substring(1, str.Length - 2);
             }
         }
+        return str ?? "";
+    }
 
-        wordToComplete ??= "*";
+    protected static WildcardPattern CreateWPFromWordToComplete(string? wordToComplete)
+    {
+        wordToComplete = RemoveEnclosingQuotes(wordToComplete);
+        if (string.IsNullOrEmpty(wordToComplete)) wordToComplete = "*";
 
         string checker = wordToComplete.Replace("`*", "").Replace("`+", "");
         if (!checker.Contains('*') && !checker.Contains('?'))
@@ -904,7 +913,7 @@ internal class BucketNameCompleter<TPositional, WritableOnly> : OrchArgumentComp
 
         if (!bFound)
         {
-            yield return new CompletionResult("'(No buckets found)'");
+            yield return new CompletionResult($@"""(No buckets found for '{RemoveEnclosingQuotes(wordToComplete)}')""");
         }
     }
 }
@@ -943,7 +952,7 @@ internal class CalendarNameCompleter<TPositional> : OrchArgumentCompleter where 
         }
         if (!bFound)
         {
-            yield return new CompletionResult("'(No calendars found)'");
+            yield return new CompletionResult($@"""(No calendars found for '{RemoveEnclosingQuotes(wordToComplete)}')""");
         }
     }
 }
@@ -981,7 +990,7 @@ internal class CredentialStoreNameCompleter<TPositional> : OrchArgumentCompleter
         }
         if (!bFound)
         {
-            yield return new CompletionResult("'(No credential stores found)'");
+            yield return new CompletionResult($@"""(No credential stores found for '{RemoveEnclosingQuotes(wordToComplete)}')""");
         }
     }
 }
@@ -1050,7 +1059,7 @@ internal class MachineNameCompleter<TPositional> : OrchArgumentCompleter where T
         }
         if (!bFound)
         {
-            yield return new CompletionResult("'(No machines found)'");
+            yield return new CompletionResult($@"""(No machines found for '{RemoveEnclosingQuotes(wordToComplete)}')""");
         }
     }
 }
@@ -1604,7 +1613,8 @@ internal class PmDirectoryNameCompleter<TPositional> : OrchArgumentCompleter whe
         var drives = ResolvePmDrives(fakeBoundParameters);
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults3.GroupBy(drives, drive => drive.SearchPmDirectory(wordToComplete));
+        wordToComplete = RemoveEnclosingQuotes(wordToComplete);
+        var results = ParallelResults3.GroupBy(drives, drive => drive.SearchPmDirectory(RemoveEnclosingQuotes(wordToComplete)));
 
         foreach (var result in results)
         {
@@ -1645,6 +1655,7 @@ internal class PmDirectoryNameCompleter4Du<TPositional> : OrchArgumentCompleter 
         var drives = ResolveDuDrives(fakeBoundParameters);
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
+        wordToComplete = RemoveEnclosingQuotes(wordToComplete);
         var results = ParallelResults3.GroupBy(drives, drive => drive.ParentDrive.SearchPmDirectory(wordToComplete));
 
         foreach (var result in results)
@@ -1955,6 +1966,7 @@ public class PmGroupNameCompleter<TPositional> : OrchArgumentCompleter where TPo
 
         var results = ParallelResults3.GroupBy(drives, drive => drive.PmGroups.Get());
 
+        bool bFound = false;
         foreach (var result in results)
         {
             foreach (var pmGroup in result
@@ -1962,9 +1974,14 @@ public class PmGroupNameCompleter<TPositional> : OrchArgumentCompleter where TPo
                 .ExcludeByWildcards(g => g?.name, wpName)
                 .OrderBy(g => g.name))
             {
+                bFound = true;
                 string tiphelp = pmGroup.GetPSPath();
                 yield return new CompletionResult(PathTools.EscapePSText(pmGroup?.name), pmGroup?.name, CompletionResultType.Text, tiphelp);
             }
+        }
+        if (!bFound)
+        {
+            yield return new CompletionResult($@"""(No groups found for '{RemoveEnclosingQuotes(wordToComplete)}')""");
         }
     }
 }

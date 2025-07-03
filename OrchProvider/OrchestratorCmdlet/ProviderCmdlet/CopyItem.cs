@@ -305,11 +305,22 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     }
 
                     // ディレクトリを検索しなければ。。
-                    var resolved = dstDrive.SearchDirectory(userName)?
-                        .Where(u => u.type == type)
-                        .Where(u => string.Compare(u.identityName, userName, true) == 0)
-                        .FirstOrDefault();
-                    if (resolved is null)
+                    var resolvedUsers = dstDrive.SearchDirectory(userName)?
+                        .Where(u => u.type == type).ToList();
+
+                    DirectoryObject resolved = null;
+
+                    if (resolvedUsers?.Count == 1)
+                    {
+                        resolved = resolvedUsers.First();
+                    }
+
+                    else if (resolvedUsers?.Count > 1)
+                    {
+                        _this.WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, $"Duplicated {type} found for '{userName}'."), "SearchForUsersAndGroupsError", ErrorCategory.InvalidOperation, dstDrive));
+                    }
+
+                    else if (resolvedUsers is null || resolvedUsers.Count == 0)
                     {
                         // srcDrive のユーザーと同名のユーザーが、dstDrive のディレクトリに見つからない！
                         // そこで、このユーザーの email でも dstDrive で検索する。

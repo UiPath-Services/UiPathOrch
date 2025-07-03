@@ -60,7 +60,7 @@ public class AddMachineClientSecretCommand : OrchestratorPSCmdlet
 
                 if (!bFound)
                 {
-                    yield return new CompletionResult("'(No credential stores found)'");
+                    yield return new CompletionResult($@"""(No machines found for '{RemoveEnclosingQuotes(wordToComplete)}')""");
                 }
             }
         }

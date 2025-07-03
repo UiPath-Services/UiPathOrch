@@ -1,3 +1,18 @@
+Version: 0.9.14.3
+- When searching Active Directory integrated with a tenant, it is now possible to search by values other than identityName. This improves the behavior of the following cmdlets:
+  - Add-OrchUser
+  - Add-OrchFolderUser
+  - Add-PmLicenseToPmUser
+  - Search-OrchDirectory
+
+- For the following cmdlets, completion suggestions did not work as expected when pressing Ctrl+Space or Tab with input enclosed in double quotes:
+  - Add-OrchFolderUser
+  - Add-PmGroupMember
+  - Add-PmLicenseToPmUser
+  - Add-PmLicenseToPmLicensedGroup
+  - Search-OrchDirectory
+
+
 Version: 0.9.14.2
 - Calls to the GET /api/DirectoryService/SearchForUsersAndGroups endpoint are now made with appropriate rate limiting to respect the API quota. As a result, CSV files containing a large number of users can now be successfully imported using the following cmdlets:
   - Add-OrchUser

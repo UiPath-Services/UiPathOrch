@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.14.2'
+ModuleVersion = '0.9.14.3'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -388,12 +388,18 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Calls to the GET /api/DirectoryService/SearchForUsersAndGroups endpoint are now made with appropriate rate limiting to respect the API quota. As a result, CSV files containing a large number of users can now be successfully imported using the following cmdlets:
+        ReleaseNotes = '- When searching Active Directory integrated with a tenant, it is now possible to search by values other than identityName. This improves the behavior of the following cmdlets:
   - Add-OrchUser
   - Add-OrchFolderUser
-  - Copy-OrchUser
   - Add-PmLicenseToPmUser
-  - Copy-Item
+  - Search-OrchDirectory
+
+- For the following cmdlets, completion suggestions did not work as expected when pressing Ctrl+Space or Tab with input enclosed in double quotes:
+  - Add-OrchFolderUser
+  - Add-PmGroupMember
+  - Add-PmLicenseToPmUser
+  - Add-PmLicenseToPmLicensedGroup
+  - Search-OrchDirectory
 '
 
         # Prerelease string of this module
