@@ -1,3 +1,6 @@
+Version: 0.9.14.4
+- The list of personal workspace folders is no longer retrieved when connecting to a tenant configured with a confidential application. This improves connection speed.
+
 Version: 0.9.14.3
 - When searching Active Directory integrated with a tenant, it is now possible to search by values other than identityName. This improves the behavior of the following cmdlets:
   - Add-OrchUser
@@ -510,7 +513,6 @@ Version: 0.9.9.5
 Version: 0.9.9.4
 - Added the -HostFeed switch parameter to the following cmdlets. When specified, it retrieves library packages from the host feed.
   - Get-OrchLibrary
-
   - Get-OrchLibraryVersion
 
 

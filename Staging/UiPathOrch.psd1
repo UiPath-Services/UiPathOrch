@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.14.3'
+ModuleVersion = '0.9.14.4'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -388,18 +388,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- When searching Active Directory integrated with a tenant, it is now possible to search by values other than identityName. This improves the behavior of the following cmdlets:
-  - Add-OrchUser
-  - Add-OrchFolderUser
-  - Add-PmLicenseToPmUser
-  - Search-OrchDirectory
-
-- For the following cmdlets, completion suggestions did not work as expected when pressing Ctrl+Space or Tab with input enclosed in double quotes:
-  - Add-OrchFolderUser
-  - Add-PmGroupMember
-  - Add-PmLicenseToPmUser
-  - Add-PmLicenseToPmLicensedGroup
-  - Search-OrchDirectory
+        ReleaseNotes = '- The list of personal workspace folders is no longer retrieved when connecting to a tenant configured with a confidential application. This improves connection speed.
 '
 
         # Prerelease string of this module
