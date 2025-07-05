@@ -2454,6 +2454,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
             // get current user to get my own personal workspace
             ExtendedUser user = null;
+            List<PersonalWorkspace> personalWorkspaces = null;
             if (!OrchAPISession.AuthManager.IsConfidentialApp)
             {
                 tasks.Add(Task.Run(() =>
@@ -2461,15 +2462,14 @@ public partial class OrchDriveInfo : PSDriveInfo
                     // この例外は握りつぶす
                     try { user = GetCurrentUser() as ExtendedUser; } catch { }
                 }));
-            }
 
-            // get personal workspaces that being explored
-            List<PersonalWorkspace> personalWorkspaces = null;
-            tasks.Add(Task.Run(() =>
-            {
-                // この例外は握りつぶす
-                try { personalWorkspaces = PersonalWorkspaces.Get(); } catch { }
-            }));
+                // get personal workspaces that being explored
+                tasks.Add(Task.Run(() =>
+                {
+                    // この例外は握りつぶす
+                    try { personalWorkspaces = PersonalWorkspaces.Get(); } catch { }
+                }));
+            }
 
             // get folders
             List<Folder> folders = null;
