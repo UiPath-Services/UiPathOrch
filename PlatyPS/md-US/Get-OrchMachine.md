@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-OrchMachine
 
 ## SYNOPSIS
-Get the machines.
+Gets machines from UiPath Orchestrator.
 
 ## SYNTAX
 
@@ -18,9 +18,13 @@ Get-OrchMachine [[-Name] <String[]>] [-Path <String[]>] [-ExpandRobotUser] [-Exp
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Gets machine information from UiPath Orchestrator tenants. Machines represent the compute resources where robots execute automation processes, including both physical machines and machine templates used for robot provisioning.
 
-Primary Endpoint: /odata/Machines&$expand=UpdateInfo
+This cmdlet returns comprehensive machine information including machine types (Standard, Template), scopes (Default, PersonalWorkspace, Serverless, AgentService), license slot allocations, robot user assignments, and configuration details.
+
+Machines are tenant entities that operate across the entire tenant scope. Use the -Path parameter to specify target tenants by drive name.
+
+Primary Endpoint: GET /odata/Machines?$expand=UpdateInfo
 
 OAuth required scopes: OR.Machines or OR.Machines.Read
 
@@ -30,15 +34,57 @@ Required permissions: Machines.View
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Get-OrchMachine
 ```
 
-{{ Add example description here }}
+Gets all machines from the current tenant.
+
+### Example 2
+```powershell
+PS Orch1:\> Get-OrchMachine *Template*
+```
+
+Gets machines containing "Template" in their name.
+
+### Example 3
+```powershell
+PS Orch1:\> Get-OrchMachine -Path Orch1:, Orch2:
+```
+
+Gets machines from multiple tenants.
+
+### Example 4
+```powershell
+PS Orch1:\> Get-OrchMachine | Where-Object {$_.Type -eq "Standard"}
+```
+
+Gets standard (non-template) machines.
+
+### Example 5
+```powershell
+PS Orch1:\> Get-OrchMachine | Where-Object {$_.UnattendedSlots -gt 0}
+```
+
+Gets machines with unattended robot slots allocated.
+
+### Example 6
+```powershell
+PS Orch1:\> Get-OrchMachine -ExpandRobotUser
+```
+
+Gets machines with expanded robot user details.
+
+### Example 7
+```powershell
+PS Orch1:\> Get-OrchMachine -ExportCsv C:\Reports\Machines.csv
+```
+
+Exports all machines to CSV with UTF-8 BOM encoding.
 
 ## PARAMETERS
 
 ### -ExpandRobotUser
-{{ Fill ExpandRobotUser Description }}
+Expands robot user details for each machine, showing which users are assigned to run robots on the machines.
 
 ```yaml
 Type: SwitchParameter
@@ -47,13 +93,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -Name
-Specifies the Name of the machines to be retrieved.
+Specifies the names of machines to retrieve. Supports wildcards and multiple values.
 
 ```yaml
 Type: String[]
@@ -68,7 +114,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the name of the target drives. If not specified, the current drive will be targeted.
+Specifies target tenants by drive name. Use comma-separated values for multiple tenants. If not specified, targets the current tenant.
 
 ```yaml
 Type: String[]
@@ -83,7 +129,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during cmdlet execution.
 
 ```yaml
 Type: ActionPreference
@@ -98,7 +144,7 @@ Accept wildcard characters: False
 ```
 
 ### -CsvEncoding
-{{ Fill CsvEncoding Description }}
+Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compatibility.
 
 ```yaml
 Type: Encoding
@@ -107,13 +153,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: UTF8 with BOM
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -ExportCsv
-{{ Fill ExportCsv Description }}
+Exports results to CSV file with UTF-8 BOM encoding. Automatically converts internal IDs to human-readable names. The exported CSV can be used with Import-Csv and piped to New-OrchMachine for bulk operations.
 
 ```yaml
 Type: String
@@ -138,5 +184,20 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### UiPath.PowerShell.Entities.ExtendedMachine
 ### UiPath.PowerShell.Entities.RobotUser
 ## NOTES
+Machine entities are tenant-scoped and operate across the entire tenant.
+
+Machine types include Standard (physical machines) and Template (machine templates for provisioning). Scopes include Default, PersonalWorkspace, Serverless, and AgentService.
+
+Use -ExpandRobotUser when you need detailed information about which users are assigned to run robots on specific machines.
+
+The -ExportCsv parameter creates import-ready CSV files with human-readable names instead of internal IDs.
 
 ## RELATED LINKS
+
+[New-OrchMachine](New-OrchMachine.md)
+
+[Update-OrchMachine](Update-OrchMachine.md)
+
+[Remove-OrchMachine](Remove-OrchMachine.md)
+
+[Copy-OrchMachine](Copy-OrchMachine.md)

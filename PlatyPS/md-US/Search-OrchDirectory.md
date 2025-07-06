@@ -18,7 +18,19 @@ Search-OrchDirectory [-Name] <String> [-Path <String[]>] [-ProgressAction <Actio
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The `Search-OrchDirectory` cmdlet searches for directory users and groups in UiPath Orchestrator's directory service. This cmdlet provides a way to find users and groups by searching for names that start with the specified search term within the Orchestrator's directory context.
+
+The search results include directory objects such as users and robot accounts, along with their identifiers, display names, domains, and type information. This cmdlet specifically searches within the Orchestrator's directory service scope, which may include different results compared to Platform Management directory searches.
+
+The search is performed using a "starts with" pattern and includes domain context (typically "autogen" for local users), making it suitable for finding directory objects within the Orchestrator's authentication and user management context.
+
+This cmdlet is useful for user discovery, administrative tasks, and integration scenarios where you need to find and identify directory objects within the Orchestrator environment.
+
+Primary Endpoint: GET /api/DirectoryService/SearchForUsersAndGroups?domain=autogen&prefix={prefix}&searchContext=All
+
+OAuth required scopes: [PLACEHOLDER - Directory search scopes]
+
+Required permissions: [PLACEHOLDER - Directory search permissions]
 
 Primary Endpoint: GET /api/DirectoryService/SearchForUsersAndGroups?domain=autogen&prefix={prefix}&searchContext=All
 

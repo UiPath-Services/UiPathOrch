@@ -8,7 +8,7 @@ schema: 2.0.0
 # Find-OrchFolderNoUserAssigned
 
 ## SYNOPSIS
-This script lists folders that have no direct user assignments.
+Finds folders that have no direct user assignments in UiPath Orchestrator.
 
 ## SYNTAX
 
@@ -17,28 +17,81 @@ Find-OrchFolderNoUserAssigned [[-Path] <String>] [-IncludeInherited] [<CommonPar
 ```
 
 ## DESCRIPTION
-This script recursively checks all folders under a specified path and lists folders where no users are assigned. 
-Users inherited from parent folders are not considered by default, but you can include them using the -IncludeInherited switch.
+The `Find-OrchFolderNoUserAssigned` cmdlet searches for folders within UiPath Orchestrator that have no users directly assigned to them. This is useful for identifying orphaned folders, conducting security audits, and ensuring proper folder access management across the organization.
+
+The cmdlet analyzes folder structures and user assignments to identify folders that may be inaccessible to users or require attention from administrators. By default, it only considers direct user assignments, but can optionally include inherited permissions from parent folders.
+
+This cmdlet operates on tenant entities and can be run from any location within an Orchestrator drive. It provides comprehensive folder information including folder type, feed type, and provision type to help administrators understand the nature of unassigned folders.
+
+Primary Endpoint: GET /odata/Folders with custom filtering logic
+
+OAuth required scopes: OR.Folders or OR.Folders.Read
+
+Required permissions: Folders.View
 
 ## EXAMPLES
 
-### EXAMPLE 1
-```
-.\Find-FoldersNoUserAssigned.ps1 Orch1:\
-This will recursively check all folders under "Orch1:\" and list those without direct user assignments.
+### Example 1
+```powershell
+PS Orch1:\> Find-OrchFolderNoUserAssigned
 ```
 
-### EXAMPLE 2
+Finds all folders in the current tenant that have no direct user assignments.
+
+### Example 2
+```powershell
+PS Orch1:\> Find-OrchFolderNoUserAssigned -IncludeInherited
 ```
-.\Find-FoldersNoUserAssigned.ps1 Orch1:\ -IncludeInherited
-This will recursively check all folders under "Orch1:\" and list those without any user assignments. Folders with inherited user assignments from parent folders will not be included, even if they have no direct user assignments.
+
+Finds folders with no user assignments, including those that might inherit permissions from parent folders.
+
+### Example 3
+```powershell
+PS C:\> Find-OrchFolderNoUserAssigned Orch1:
 ```
+
+Finds folders with no user assignments in the Orch1 tenant, specifying the path explicitly.
+
+### Example 4
+```powershell
+PS Orch1:\> Find-OrchFolderNoUserAssigned | Where-Object {$_.FolderType -eq "Standard"} | Select-Object Path, DisplayName, FolderType, ProvisionType
+```
+
+Finds unassigned folders, filters for Standard folders only, and displays key properties. Note that Path is selected first to identify the location of each folder.
+
+### Example 5
+```powershell
+PS Orch1:\> Find-OrchFolderNoUserAssigned | Group-Object FolderType | Select-Object Name, Count
+```
+
+Groups unassigned folders by type and shows the count for each type.
+
+### Example 6
+```powershell
+PS Orch1:\> Find-OrchFolderNoUserAssigned | Where-Object {$_.ProvisionType -eq "Manual"} | Format-Table DisplayName, FolderType, Description
+```
+
+Finds manually provisioned folders with no user assignments and displays them in a formatted table.
+
+### Example 7
+```powershell
+PS Orch1:\> $unassignedFolders = Find-OrchFolderNoUserAssigned
+PS Orch1:\> $unassignedFolders | ConvertTo-Json -Depth 3
+```
+
+Gets all unassigned folders and displays the complete object structure for detailed analysis.
+
+### Example 8
+```powershell
+PS Orch1:\> Find-OrchFolderNoUserAssigned | Where-Object {$_.FeedType -eq "Processes"} | Select-Object Path, DisplayName, Description, Id
+```
+
+Finds process-type folders with no user assignments and displays their key identification information.
 
 ## PARAMETERS
 
 ### -Path
-Specifies the path to the folder where the script should start the recursive search.
-The default value is "Orch1:\".
+Specifies the tenant path to search. If not specified, the current tenant is used. Use tenant drive names (e.g., Orch1:, Orch2:).
 
 ```yaml
 Type: String
@@ -47,14 +100,13 @@ Aliases:
 
 Required: False
 Position: 1
-Default value: None
+Default value: Current tenant
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -IncludeInherited
-When this switch is used, the script will consider users inherited from parent folders as part of the user assignments. 
-Without this switch, only direct user assignments will be checked.
+When specified, includes folders that might inherit user permissions from parent folders in the analysis. By default, only direct user assignments are considered.
 
 ```yaml
 Type: SwitchParameter
@@ -77,7 +129,54 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.Folder
 ## NOTES
-By default, users inherited from parent folders are ignored in this script.
-If the -IncludeInherited switch is provided, inherited users will be included in the check.
+
+**Important Administrative Use Cases:**
+- **Security Audits**: Identify folders that may be inaccessible to users
+- **Cleanup Operations**: Find orphaned folders that can be safely removed
+- **Access Management**: Ensure all folders have appropriate user assignments
+- **Compliance**: Verify that organizational access policies are properly implemented
+
+**Folder Information Returned:**
+- Path: Full path to the folder within the tenant
+- DisplayName: Human-readable name of the folder
+- Id: Unique identifier for the folder
+- FolderType: Type of folder (Standard, Personal, Solution, etc.)
+- FeedType: Feed type (Processes, FolderHierarchy, PersonalWorkspace, etc.)
+- ProvisionType: How the folder was created (Manual, Automatic)
+- PermissionModel: Permission model applied to the folder
+
+**Common Folder Types:**
+- Standard: Regular organizational folders
+- Personal: User-specific personal workspace folders
+- Solution: Folders associated with UiPath Solutions
+- Department: Departmental folders
+
+**Common Feed Types:**
+- Processes: Folders designed for storing automation processes
+- FolderHierarchy: Structural folders for organization
+- PersonalWorkspace: Individual user workspace folders
+
+**Interpretation Guidelines:**
+- Personal workspace folders with no assignments may be normal (user-specific)
+- Standard process folders with no assignments typically require attention
+- Solution folders may have specialized permission models
+- Automatically provisioned folders might be system-generated
+
+**Best Practices:**
+- Run this cmdlet periodically as part of access management reviews
+- Investigate Standard folders with no assignments for potential security issues
+- Consider using -IncludeInherited to understand the complete permission picture
+- Document any intentionally unassigned folders for future reference
+
+**Important Note about Path Selection:**
+When using Select-Object with the results, always include Path as the first property to identify which tenant and location each folder belongs to. This is essential for managing folders across multiple tenants.
+
+Use ConvertTo-Json to explore the complete folder object structure including detailed permission and configuration information.
 
 ## RELATED LINKS
+
+[Get-OrchFolderUser](Get-OrchFolderUser.md)
+
+[Add-OrchFolderUser](Add-OrchFolderUser.md)
+
+[Get-OrchFolderUsage](Get-OrchFolderUsage.md)

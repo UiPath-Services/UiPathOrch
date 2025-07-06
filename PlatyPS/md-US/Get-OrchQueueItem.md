@@ -22,7 +22,17 @@ Get-OrchQueueItem [[-Name] <String[]>] [-Status <String[]>] [-Revision <String[]
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The `Get-OrchQueueItem` cmdlet retrieves queue items from UiPath Orchestrator queues. Queue items represent individual work units that flow through automation processes, containing data, status information, processing results, and error details.
+
+This cmdlet provides comprehensive filtering capabilities to retrieve specific queue items based on various criteria including status, priority, processing dates, assigned robots, and review status. It supports complex queries to analyze work item patterns, track processing performance, and investigate automation issues.
+
+Queue items contain structured data (SpecificContent), processing exceptions, robot assignments, review information, and audit trails. The cmdlet requires at least one filter parameter to query the Orchestrator efficiently, otherwise it displays cached results.
+
+The cmdlet operates on folder entities and supports recursive retrieval across folder hierarchies. It provides essential functionality for monitoring automation workflows, analyzing queue performance, and managing work item processing.
+
+Multiple values for the -Name and -Path parameters can be specified using comma-separated text that includes wildcards. Additionally, you can use autocomplete for these values by pressing [Ctrl+Space] or [Tab].
+
+When specifying the -Path, -Recurse, and -Depth parameters, place them immediately after the cmdlet name. This placement ensures that autocomplete for subsequent parameters functions correctly.
 
 Primary Endpoint: GET /odata/QueueItems?$filter=(QueueDefinitionId eq {queueId})&$expand=Robot,ReviewerUser&orderby=Id
 

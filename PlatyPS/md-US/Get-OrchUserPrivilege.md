@@ -18,7 +18,19 @@ Get-OrchUserPrivilege [[-UserName] <String[]>] [-Path <String[]>] [-ProgressActi
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The `Get-OrchUserPrivilege` cmdlet retrieves comprehensive user privilege information from UiPath Orchestrator. This cmdlet provides detailed insights into user permissions, role assignments, access levels, and session privileges across the Orchestrator environment.
+
+The cmdlet returns extensive privilege information including explicit and inherited roles, access permissions, attended session privileges, personal workspace permissions, and update policies. Each privilege category shows explicit assignments, inherited permissions from group memberships, and the effective (final) permissions that apply to the user.
+
+This information is essential for understanding the complete permission landscape for users, troubleshooting access issues, auditing user privileges, and ensuring proper security configuration. The privilege data includes the inheritance chain showing which groups contribute to inherited permissions.
+
+The privilege information covers multiple dimensions including roles (with explicit, inherited, and effective assignments), access levels (None, Standard, PersonalWorkspace), session permissions (attendedSession, personalWorkspace), and update policies.
+
+Primary Endpoint: GET /api/Users/GetPrivileges?userId={userId}
+
+OAuth required scopes: [PLACEHOLDER - User privileges scopes]
+
+Required permissions: [PLACEHOLDER - User privileges view permissions]
 
 Primary Endpoint: GET /api/Users/GetPrivileges?userId={userId}
 

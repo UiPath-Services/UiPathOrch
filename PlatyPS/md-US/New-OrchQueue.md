@@ -24,22 +24,68 @@ New-OrchQueue [-Name] <String[]> [-Description <String>] [-AcceptAutomaticallyRe
 ```
 
 ## DESCRIPTION
-Supports import from CSV. The format of the importable CSV can be obtained using Get-OrchQueue -Recurse -ExportCsv c:.
+Creates new queues in UiPath Orchestrator folders. Queues are data repositories that enable robots to exchange information and work items in an organized manner, supporting both attended and unattended automation scenarios.
+
+This cmdlet supports CSV import functionality. The format of the importable CSV can be obtained using Get-OrchQueue -Recurse -ExportCsv. This allows for bulk queue creation and configuration.
+
+Queue entities are folder-scoped. You must navigate to a folder or use -Path parameters to specify target folders.
 
 Primary Endpoint: POST /odata/QueueDefinitions/UiPath.Server.Configuration.OData.CreateQueue, GET /odata/Releases, GET /odata/Buckets
 
-OAuth required scopes: OR.Queues OR.Execution.Read OR.Administration.Read
+OAuth required scopes: OR.Queues.Write
 
-Required permissions: Queues.Edit Processes.View Buckets.View
+Required permissions: Queues.Create
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> New-OrchQueue InvoiceQueue -WhatIf
 ```
 
-{{ Add example description here }}
+Shows what would happen when creating a queue without actually creating it.
+
+### Example 2
+```powershell
+PS Orch1:\Shared> New-OrchQueue InvoiceQueue -Description "Queue for invoice processing"
+```
+
+Creates a basic queue with description.
+
+### Example 3
+```powershell
+PS Orch1:\Shared> New-OrchQueue PaymentQueue -MaxNumberOfRetries 5 -Encrypted true
+```
+
+Creates an encrypted queue with custom retry settings.
+
+### Example 4
+```powershell
+PS Orch1:\Shared> New-OrchQueue OrderQueue -SlaInMinutes 240 -RiskSlaInMinutes 480
+```
+
+Creates a queue with SLA configurations for standard and risk processing.
+
+### Example 5
+```powershell
+PS Orch1:\> New-OrchQueue -Path Orch1:\Shared, Orch1:\Finance TestQueue
+```
+
+Creates queues in multiple folders.
+
+### Example 6
+```powershell
+PS Orch1:\Shared> Import-Csv queues.csv | New-OrchQueue
+```
+
+Creates multiple queues from CSV file using pipeline input.
+
+### Example 7
+```powershell
+PS Orch1:\Shared> New-OrchQueue CriticalQueue -EnforceUniqueReference true -Tags Priority, Urgent
+```
+
+Creates a queue with unique reference enforcement and tags.
 
 ## PARAMETERS
 
@@ -74,7 +120,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
-Prompts you for confirmation before running the cmdlet.
+Prompts for confirmation before creating queues. Recommended when creating multiple queues.
 
 ```yaml
 Type: SwitchParameter
@@ -83,13 +129,13 @@ Aliases: cf
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -Description
-Specifies the Description of the queues to be created.
+Specifies the description for the queue, explaining its purpose and usage.
 
 ```yaml
 Type: String
@@ -104,7 +150,7 @@ Accept wildcard characters: False
 ```
 
 ### -Encrypted
-Specifies the Encrypted of the queues to be created.
+Specifies whether queue data should be encrypted. Valid values: true, false.
 
 ```yaml
 Type: String
@@ -119,7 +165,7 @@ Accept wildcard characters: False
 ```
 
 ### -EnforceUniqueReference
-Specifies the EnforceUniqueReference of the queues to be created.
+Specifies whether queue items must have unique references. Valid values: true, false.
 
 ```yaml
 Type: String
@@ -134,7 +180,7 @@ Accept wildcard characters: False
 ```
 
 ### -MaxNumberOfRetries
-Specifies the MaxNumberOfRetries of the queues to be created.
+Specifies the maximum number of retry attempts for failed queue items. Default is typically 1.
 
 ```yaml
 Type: Int32
@@ -149,7 +195,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-Specifies the Name of the queues to be created.
+Specifies the names of queues to create. Supports multiple values for bulk creation.
 
 ```yaml
 Type: String[]
@@ -179,7 +225,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-Specifies the target folder. If not specified, the current folder will be targeted.
+Specifies target folders. Use comma-separated values for multiple folders. Supports wildcards. If not specified, targets the current folder.
 
 ```yaml
 Type: String[]
@@ -209,7 +255,7 @@ Accept wildcard characters: True
 ```
 
 ### -RetentionAction
-Specifies the RetentionAction of the queues to be created.
+Specifies the action to take when retention period expires. Valid values include: Delete, Move.
 
 ```yaml
 Type: String
@@ -239,7 +285,7 @@ Accept wildcard characters: True
 ```
 
 ### -RetentionPeriod
-Specifies the RetentionPeriod of the queues to be created.
+Specifies the retention period in days for completed queue items.
 
 ```yaml
 Type: Int32
@@ -269,7 +315,7 @@ Accept wildcard characters: False
 ```
 
 ### -RiskSlaInMinutes
-Specifies the RiskSlaInMinutes of the queues to be created.
+Specifies the Service Level Agreement time in minutes for risk processing scenarios.
 
 ```yaml
 Type: Int32
@@ -284,7 +330,7 @@ Accept wildcard characters: False
 ```
 
 ### -SlaInMinutes
-Specifies the SlaInMinutes of the queues to be created.
+Specifies the Service Level Agreement time in minutes for standard processing.
 
 ```yaml
 Type: Int32
@@ -314,7 +360,7 @@ Accept wildcard characters: False
 ```
 
 ### -Tags
-Specifies the Tags of the queues to be created.
+Specifies tags for categorizing and organizing the queue.
 
 ```yaml
 Type: String[]
@@ -329,8 +375,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+Shows what would happen if the cmdlet runs without actually creating queues. Recommended for safety verification.
 
 ```yaml
 Type: SwitchParameter
@@ -339,13 +384,13 @@ Aliases: wi
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during cmdlet execution.
 
 ```yaml
 Type: ActionPreference
@@ -360,7 +405,7 @@ Accept wildcard characters: False
 ```
 
 ### -StaleRetentionAction
-{{ Fill StaleRetentionAction Description }}
+Specifies the action to take for stale queue items when retention period expires.
 
 ```yaml
 Type: String
@@ -390,7 +435,7 @@ Accept wildcard characters: True
 ```
 
 ### -StaleRetentionPeriod
-{{ Fill StaleRetentionPeriod Description }}
+Specifies the retention period in days for stale queue items.
 
 ```yaml
 Type: Int32
@@ -416,5 +461,22 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.QueueDefinition
 ## NOTES
+Queue entities are folder-scoped. You must navigate to a folder or use -Path parameters to specify target folders.
+
+This cmdlet supports CSV import functionality using Import-Csv | New-OrchQueue for bulk queue creation. Use Get-OrchQueue -ExportCsv to generate the correct CSV format.
+
+Use -WhatIf to preview queue creation before actual execution, especially when creating multiple queues.
+
+Queue configuration includes retry policies, encryption settings, SLA configurations, and retention policies for managing automation workflows.
 
 ## RELATED LINKS
+
+[Get-OrchQueue](Get-OrchQueue.md)
+
+[Update-OrchQueue](Update-OrchQueue.md)
+
+[Remove-OrchQueue](Remove-OrchQueue.md)
+
+[Copy-OrchQueue](Copy-OrchQueue.md)
+
+

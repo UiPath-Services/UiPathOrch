@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-TmProjectPermission
 
 ## SYNOPSIS
-Gets the permissions of projects in Test Manager.
+Gets user permissions for projects in UiPath Test Manager.
 
 ## SYNTAX
 
@@ -17,27 +17,82 @@ Get-TmProjectPermission [-Path <String[]>] [-Recurse] [-ProgressAction <ActionPr
 ```
 
 ## DESCRIPTION
+The Get-TmProjectPermission cmdlet retrieves user permission information for Test Manager projects. This includes details about which users have access to specific projects, their assigned roles, ownership status, and permission modification history.
+
+This cmdlet operates on the UiPathOrchTm provider and is a folder entity operation. You must either navigate to a specific Test Manager project folder using Set-Location (cd) or use the -Path or -Recurse parameters to specify target folders.
+
 This cmdlet operates on the PSDrive of the UiPathOrchTm provider. If the scope in the configuration file includes "TM.", the PSDrive of the UiPathOrchTm provider will be automatically added. You can confirm this with the Get-PSDrive cmdlet. The configuration file can be opened with the Edit-OrchConfig cmdlet.
 
-Primary Endpoint: GET /testmanager_/api/v2/{projectId}/permissions/project
+Primary Endpoint: [PLACEHOLDER - GET /testmanager_/api/v2/{projectId}/permissions/project]
 
-OAuth Required scopes: TM.Projects or TM.Projects.Read
+OAuth required scopes: [PLACEHOLDER - TM.Projects or TM.Projects.Read]
 
-Permission(s): ProjectSettings.Update
+Required permissions: [PLACEHOLDER - ProjectSettings.Update]
 
 ## EXAMPLES
 
-### Example 1
+### Example 1: Get project permissions from current folder
 ```powershell
-PS C:\> {{ Add example code here }}
+PS C:\> cd Orch1Tm:\TestProject
+PS Orch1Tm:\TestProject> Get-TmProjectPermission
 ```
 
-{{ Add example description here }}
+Navigates to a specific Test Manager project folder and retrieves user permissions for that project.
+
+### Example 2: Get project permissions recursively
+```powershell
+PS C:\> Set-Location Orch1Tm:\
+PS Orch1Tm:\> Get-TmProjectPermission -Recurse
+```
+
+Retrieves user permissions for all Test Manager projects recursively from the root folder.
+
+### Example 3: Get project permissions from specific path
+```powershell
+PS C:\> Get-TmProjectPermission -Path "Orch1Tm:\TestProject"
+```
+
+Retrieves user permissions for the specified Test Manager project without changing the current location.
+
+### Example 4: Get project permissions from multiple paths
+```powershell
+PS C:\> Get-TmProjectPermission -Path "Orch1Tm:\TestProject", "Orch1Tm:\MyProject"
+```
+
+Retrieves user permissions from multiple Test Manager projects using specific paths.
+
+### Example 5: Get permission details and examine structure
+```powershell
+PS C:\> Get-TmProjectPermission -Recurse | Select-Object -First 1 | ConvertTo-Json -Depth 5
+```
+
+Retrieves the first permission record and displays the complete object structure in JSON format for detailed analysis.
+
+### Example 6: Filter project owners
+```powershell
+PS C:\> Get-TmProjectPermission -Recurse | Where-Object {$_.isOwner -eq $true} | Select-Object Project, user, roles
+```
+
+Gets all project permissions and filters for project owners, displaying project name, user information, and assigned roles.
+
+### Example 7: Group permissions by role
+```powershell
+PS C:\> Get-TmProjectPermission -Recurse | ForEach-Object { $_.roles } | Group-Object | Sort-Object Count -Descending
+```
+
+Gets all project permissions and analyzes the distribution of roles across all projects.
+
+### Example 8: Check recent permission changes
+```powershell
+PS C:\> Get-TmProjectPermission -Recurse | Where-Object {$_.lastUpdated -gt (Get-Date).AddDays(-30)} | Select-Object Project, user, lastUpdated, roles
+```
+
+Gets project permissions that were updated in the last 30 days to track recent permission changes.
 
 ## PARAMETERS
 
 ### -Path
-Specifies the target folder. If not specified, the current folder will be targeted.
+Specifies the target folder paths for Test Manager projects. Supports wildcard characters (* and ?) for pattern matching. Use this parameter when you want to target specific project folders without changing the current location.
 
 ```yaml
 Type: String[]
@@ -52,7 +107,7 @@ Accept wildcard characters: True
 ```
 
 ### -Recurse
-Specifies that the operation should include the target folder and all its subfolders.
+Searches for project permissions in all subfolders recursively. When specified, the cmdlet searches through the entire Test Manager project hierarchy.
 
 ```yaml
 Type: SwitchParameter
@@ -61,13 +116,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Specifies how PowerShell responds to progress updates generated by a script, cmdlet, or provider.
 
 ```yaml
 Type: ActionPreference
@@ -91,5 +146,21 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.TmProjectPermission
 ## NOTES
+- This cmdlet operates on folder entities within the UiPathOrchTm provider
+- Requires access to Test Manager functionality and appropriate TM scopes in configuration
+- For optimal performance, place -Path and -Recurse parameters immediately after the cmdlet name to enable proper autocompletion
+- Common roles include "Project Owner", "Test Manager", and "Viewer"
+- The user object contains detailed information about the assigned user including email, display name, and identity information
+- isOwner property indicates whether the user has ownership privileges for the project
+- Use filtering operations to analyze permission patterns and identify security compliance issues
 
 ## RELATED LINKS
+
+[Get-TmProjectSetting]()
+
+[Get-TmTestCase]()
+
+[Get-TmTestSet]()
+
+[Get-TmRequirement]()
+

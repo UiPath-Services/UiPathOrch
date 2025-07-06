@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-DuUser
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+Gets Document Understanding users from UiPath Orchestrator projects.
 
 ## SYNTAX
 
@@ -18,27 +18,73 @@ Get-DuUser [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-ExportCsv <Strin
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The `Get-DuUser` cmdlet retrieves Document Understanding user information from UiPath Orchestrator Document Understanding projects. This cmdlet shows users and groups that have been assigned roles within specific Document Understanding projects, including their role assignments, inheritance information, and security principal details.
 
-Primary Endpoint: GET /{partitionGlobalId}/pap_/api/userroleassignments?scope=/tenant/{tenantKey}/DocumentUnderstanding/projects/{projectId}&serviceName=DocumentUnderstanding
+This is a folder entity operation cmdlet that requires either navigating to a specific Document Understanding project folder or using the -Path, -Recurse, or -Depth parameters to specify target projects. The cmdlet operates within the context of Document Understanding projects and returns users with their assigned roles and permissions within those projects.
 
-OAuth required scopes:
+The cmdlet returns comprehensive user information including role assignments (roleAssignmentDtos), inheritance status, security principal IDs, and project-specific permissions. Each user may have multiple role assignments with different scopes and inheritance properties.
 
-Required permissions:
+Multiple values for the -Name and -Path parameters can be specified using comma-separated text that includes wildcards. Additionally, you can use autocomplete for these values by pressing [Ctrl+Space] or [Tab].
+
+When specifying the -Path, -Recurse, and -Depth parameters, place them immediately after the cmdlet name. This placement ensures that autocomplete for subsequent parameters functions correctly.
+
+Primary Endpoint: [PLACEHOLDER - Document Understanding users API endpoint]
+
+OAuth required scopes: [PLACEHOLDER - Document Understanding user scopes]
+
+Required permissions: [PLACEHOLDER - Document Understanding user permissions]
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS C:\> Set-Location "Orch1Du:\MyProject"
+PS Orch1Du:\MyProject> Get-DuUser
 ```
 
-{{ Add example description here }}
+Gets all users assigned to the current Document Understanding project.
+
+### Example 2
+```powershell
+PS C:\> Set-Location Orch1Du:\
+PS Orch1Du:\> Get-DuUser -Recurse
+```
+
+Gets all users from all Document Understanding projects recursively.
+
+### Example 3
+```powershell
+PS Orch1Du:\> Get-DuUser -Path "Orch1Du:\MyProject"
+```
+
+Gets users from a specific Document Understanding project without changing the current location.
+
+### Example 4
+```powershell
+PS Orch1Du:\MyProject> Get-DuUser | Where-Object type -eq "DirectoryUser"
+```
+
+Gets only individual users (not groups) from the current Document Understanding project.
+
+### Example 5
+```powershell
+PS Orch1Du:\MyProject> $user = Get-DuUser | Where-Object displayName -eq "Yoko Tsuda"
+PS Orch1Du:\MyProject> $user | ConvertTo-Json -Depth 3
+```
+
+Gets a specific user and displays their complete structure in JSON format to explore role assignments and security details.
+
+### Example 6
+```powershell
+PS Orch1Du:\> Get-DuUser -Recurse | Where-Object { $_.roleAssignmentDtos.inherited -eq $false }
+```
+
+Gets all users across projects who have direct (non-inherited) role assignments.
 
 ## PARAMETERS
 
 ### -Name
-{{ Fill Name Description }}
+Specifies the name(s) of the Document Understanding users to retrieve. Supports wildcards and multiple values. You can use autocomplete by pressing [Ctrl+Space] or [Tab]. If not specified, all users are returned.
 
 ```yaml
 Type: String[]
@@ -47,13 +93,13 @@ Aliases:
 
 Required: False
 Position: 0
-Default value: None
+Default value: All users
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the target folder. If not specified, the current folder will be targeted.
+Specifies the Document Understanding project path(s). If not specified, the current location is used. This parameter accepts pipeline input and supports wildcards for specifying multiple project paths.
 
 ```yaml
 Type: String[]
@@ -62,13 +108,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: Current location
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
 ```
 
 ### -Recurse
-Specifies that the operation should include the target folder and all its subfolders.
+Includes users from subprojects when retrieving users. This is a folder entity operation parameter that allows scanning multiple projects.
 
 ```yaml
 Type: SwitchParameter
@@ -77,13 +123,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Specifies how PowerShell responds to progress updates generated by a script, cmdlet, or provider, such as the progress bars generated by the Write-Progress cmdlet. Valid values are: SilentlyContinue, Stop, Continue, Inquire, Ignore, Suspend.
 
 ```yaml
 Type: ActionPreference
@@ -137,5 +183,18 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.DuUser
 ## NOTES
+- This is a folder entity operation cmdlet that requires navigation to a Document Understanding project or use of -Path/-Recurse/-Depth parameters
+- If you see the error "Use Set-Location cmdlet to navigate to the target folder first...", you need to either navigate to a project folder or use the folder operation parameters
+- User types include DirectoryUser (individual users) and DirectoryGroup (groups)
+- The roleAssignmentDtos property contains detailed role assignment information including inheritance status and scope
+- Role assignments can be inherited from organizational units or directly assigned to the project
+- Use ConvertTo-Json to explore the complete roleAssignmentDtos structure and understand role details
+- The securityPrincipalId links users to their security context within the Document Understanding system
 
 ## RELATED LINKS
+
+[Get-DuRole](Get-DuRole.md)
+[Add-DuUser](Add-DuUser.md)
+[Remove-DuRoleFromDuUser](Remove-DuRoleFromDuUser.md)
+[about_UiPathOrch](about_UiPathOrch.md)
+

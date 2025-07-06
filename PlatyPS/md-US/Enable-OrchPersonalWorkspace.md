@@ -1,11 +1,11 @@
 ﻿---
-external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
+external help file: UiPath.PowerShell.OrchProvider.dll-help.xml
 Module Name: UiPathOrch
 online version:
 schema: 2.0.0
 ---
 
-# Enable-OrchMaintenanceMode
+# Enable-OrchPersonalWorkspace
 
 ## SYNOPSIS
 Enables maintenance mode of unattended sessions.
@@ -13,9 +13,8 @@ Enables maintenance mode of unattended sessions.
 ## SYNTAX
 
 ```
-Enable-OrchMaintenanceMode [[-MachineName] <String[]>] [[-HostMachineName] <String[]>]
- [[-ServiceUserName] <String[]>] [[-SessionId] <Int64[]>] [-Force] [-Path <String[]>]
- [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Enable-OrchPersonalWorkspace [-UserName] <String[]> [-Path <String[]>] [-ProgressAction <ActionPreference>]
+ [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -53,51 +52,6 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -Force
-Specifies to kill all running jobs immediately.
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -HostMachineName
-Specifies the HostMachineName of the unattended sessions to enable their maintenance mode.
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 1
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: False
-```
-
-### -MachineName
-Specifies the MachineName of the unattended sessions to enable their maintenance mode.
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 0
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: False
-```
-
 ### -Path
 Specifies the name of the target drives. If not specified, the current drive will be targeted.
 
@@ -113,34 +67,19 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
-### -ServiceUserName
-Specifies the ServiceUserName of the unattended sessions to enable their maintenance mode.
+### -UserName
+{{ Fill UserName Description }}
 
 ```yaml
 Type: String[]
 Parameter Sets: (All)
 Aliases:
 
-Required: False
-Position: 2
+Required: True
+Position: 0
 Default value: None
 Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: False
-```
-
-### -SessionId
-Specifies the SessionId of the unattended sessions to enable their maintenance mode.
-
-```yaml
-Type: Int64[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 3
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: False
+Accept wildcard characters: True
 ```
 
 ### -WhatIf
@@ -179,7 +118,8 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+
 ## OUTPUTS
 
 ### System.Object

@@ -7982,7 +7982,15 @@
     <command:inputTypes>
       <command:inputType>
         <dev:type>
-          <maml:name>None</maml:name>
+          <maml:name>System.String[]</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para></maml:para>
+        </maml:description>
+      </command:inputType>
+      <command:inputType>
+        <dev:type>
+          <maml:name>System.String</maml:name>
         </dev:type>
         <maml:description>
           <maml:para></maml:para>
@@ -9326,7 +9334,7 @@
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Disable-OrchFolderMachineInherit</maml:name>
-        <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
+        <command:parameter required="true" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
           <maml:name>Name</maml:name>
           <maml:description>
             <maml:para>{{ Fill Name Description }}</maml:para>
@@ -9399,7 +9407,7 @@
         </dev:type>
         <dev:defaultValue>False</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
+      <command:parameter required="true" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
         <maml:name>Name</maml:name>
         <maml:description>
           <maml:para>{{ Fill Name Description }}</maml:para>
@@ -11795,7 +11803,7 @@
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Enable-OrchFolderMachineInherit</maml:name>
-        <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
+        <command:parameter required="true" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
           <maml:name>Name</maml:name>
           <maml:description>
             <maml:para>{{ Fill Name Description }}</maml:para>
@@ -11868,7 +11876,7 @@
         </dev:type>
         <dev:defaultValue>False</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
+      <command:parameter required="true" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
         <maml:name>Name</maml:name>
         <maml:description>
           <maml:para>{{ Fill Name Description }}</maml:para>
@@ -11920,7 +11928,7 @@
     <command:inputTypes>
       <command:inputType>
         <dev:type>
-          <maml:name>None</maml:name>
+          <maml:name>System.String[]</maml:name>
         </dev:type>
         <maml:description>
           <maml:para></maml:para>
@@ -14479,7 +14487,7 @@ This will recursively check all folders under "Orch1:\" and list those without a
     <command:inputTypes>
       <command:inputType>
         <dev:type>
-          <maml:name>None</maml:name>
+          <maml:name>System.String[]</maml:name>
         </dev:type>
         <maml:description>
           <maml:para></maml:para>
@@ -14631,7 +14639,7 @@ This will recursively check all folders under "Orch1:\" and list those without a
     <command:inputTypes>
       <command:inputType>
         <dev:type>
-          <maml:name>None</maml:name>
+          <maml:name>System.String[]</maml:name>
         </dev:type>
         <maml:description>
           <maml:para></maml:para>
@@ -16303,6 +16311,17 @@ This will recursively check all folders under "Orch1:\" and list those without a
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Recurse</maml:name>
+          <maml:description>
+            <maml:para>ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
           <maml:name>ProgressAction</maml:name>
           <maml:description>
@@ -16314,17 +16333,6 @@ This will recursively check all folders under "Orch1:\" and list those without a
             <maml:uri />
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
-        </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
-          <maml:name>Recurse</maml:name>
-          <maml:description>
-            <maml:para>ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。</maml:para>
-          </maml:description>
-          <dev:type>
-            <maml:name>SwitchParameter</maml:name>
-            <maml:uri />
-          </dev:type>
-          <dev:defaultValue>False</dev:defaultValue>
         </command:parameter>
       </command:syntaxItem>
     </command:syntax>
@@ -16365,18 +16373,6 @@ This will recursively check all folders under "Orch1:\" and list those without a
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
-        <maml:name>ProgressAction</maml:name>
-        <maml:description>
-          <maml:para>{{ Fill ProgressAction Description }}</maml:para>
-        </maml:description>
-        <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
-        <dev:type>
-          <maml:name>ActionPreference</maml:name>
-          <maml:uri />
-        </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
-      </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
@@ -16389,11 +16385,23 @@ This will recursively check all folders under "Orch1:\" and list those without a
         </dev:type>
         <dev:defaultValue>False</dev:defaultValue>
       </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
+        <maml:name>ProgressAction</maml:name>
+        <maml:description>
+          <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
+        <dev:type>
+          <maml:name>ActionPreference</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
     </command:parameters>
     <command:inputTypes>
       <command:inputType>
         <dev:type>
-          <maml:name>None</maml:name>
+          <maml:name>System.String[]</maml:name>
         </dev:type>
         <maml:description>
           <maml:para></maml:para>
@@ -17799,7 +17807,7 @@ This will recursively check all folders under "Orch1:\" and list those without a
     <command:inputTypes>
       <command:inputType>
         <dev:type>
-          <maml:name>None</maml:name>
+          <maml:name>System.String[]</maml:name>
         </dev:type>
         <maml:description>
           <maml:para></maml:para>
@@ -18075,7 +18083,7 @@ This will recursively check all folders under "Orch1:\" and list those without a
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Get-OrchConnectionString</maml:name>
-        <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。</maml:para>
@@ -18102,7 +18110,7 @@ This will recursively check all folders under "Orch1:\" and list those without a
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
-      <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="true" pipelineInput="True (ByPropertyName)" position="0" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。</maml:para>
@@ -18130,7 +18138,7 @@ This will recursively check all folders under "Orch1:\" and list those without a
     <command:inputTypes>
       <command:inputType>
         <dev:type>
-          <maml:name>None</maml:name>
+          <maml:name>System.String[]</maml:name>
         </dev:type>
         <maml:description>
           <maml:para></maml:para>
@@ -18520,7 +18528,7 @@ This will recursively check all folders under "Orch1:\" and list those without a
     <command:inputTypes>
       <command:inputType>
         <dev:type>
-          <maml:name>None</maml:name>
+          <maml:name>System.String[]</maml:name>
         </dev:type>
         <maml:description>
           <maml:para></maml:para>
@@ -25189,7 +25197,7 @@ This will recursively check all folders under "Orch1:\" and list those without a
     <command:inputTypes>
       <command:inputType>
         <dev:type>
-          <maml:name>None</maml:name>
+          <maml:name>System.String[]</maml:name>
         </dev:type>
         <maml:description>
           <maml:para></maml:para>
@@ -25454,6 +25462,17 @@ This will recursively check all folders under "Orch1:\" and list those without a
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Recurse</maml:name>
+          <maml:description>
+            <maml:para>ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
           <maml:name>ProgressAction</maml:name>
           <maml:description>
@@ -25465,17 +25484,6 @@ This will recursively check all folders under "Orch1:\" and list those without a
             <maml:uri />
           </dev:type>
           <dev:defaultValue>None</dev:defaultValue>
-        </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
-          <maml:name>Recurse</maml:name>
-          <maml:description>
-            <maml:para>ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。</maml:para>
-          </maml:description>
-          <dev:type>
-            <maml:name>SwitchParameter</maml:name>
-            <maml:uri />
-          </dev:type>
-          <dev:defaultValue>False</dev:defaultValue>
         </command:parameter>
       </command:syntaxItem>
     </command:syntax>
@@ -25516,18 +25524,6 @@ This will recursively check all folders under "Orch1:\" and list those without a
         </dev:type>
         <dev:defaultValue>None</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
-        <maml:name>ProgressAction</maml:name>
-        <maml:description>
-          <maml:para>{{ Fill ProgressAction Description }}</maml:para>
-        </maml:description>
-        <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
-        <dev:type>
-          <maml:name>ActionPreference</maml:name>
-          <maml:uri />
-        </dev:type>
-        <dev:defaultValue>None</dev:defaultValue>
-      </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
@@ -25540,11 +25536,23 @@ This will recursively check all folders under "Orch1:\" and list those without a
         </dev:type>
         <dev:defaultValue>False</dev:defaultValue>
       </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="proga">
+        <maml:name>ProgressAction</maml:name>
+        <maml:description>
+          <maml:para>{{ Fill ProgressAction Description }}</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">ActionPreference</command:parameterValue>
+        <dev:type>
+          <maml:name>ActionPreference</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
     </command:parameters>
     <command:inputTypes>
       <command:inputType>
         <dev:type>
-          <maml:name>None</maml:name>
+          <maml:name>System.String[]</maml:name>
         </dev:type>
         <maml:description>
           <maml:para></maml:para>
@@ -26066,7 +26074,7 @@ This will recursively check all folders under "Orch1:\" and list those without a
     <command:inputTypes>
       <command:inputType>
         <dev:type>
-          <maml:name>None</maml:name>
+          <maml:name>System.String[]</maml:name>
         </dev:type>
         <maml:description>
           <maml:para></maml:para>
@@ -29621,7 +29629,7 @@ This will recursively check all folders under "Orch1:\" and list those without a
     <command:inputTypes>
       <command:inputType>
         <dev:type>
-          <maml:name>None</maml:name>
+          <maml:name>System.String[]</maml:name>
         </dev:type>
         <maml:description>
           <maml:para></maml:para>
@@ -29631,7 +29639,7 @@ This will recursively check all folders under "Orch1:\" and list those without a
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <maml:name>UiPath.PowerShell.Entities.TMRequirement</maml:name>
+          <maml:name>UiPath.PowerShell.Entities.TmRequirement</maml:name>
         </dev:type>
         <maml:description>
           <maml:para></maml:para>
