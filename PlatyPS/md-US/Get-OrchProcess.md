@@ -18,6 +18,8 @@ Get-OrchProcess [[-Name] <String[]>] [-ExpandDetails] [-Path <String[]>] [-Recur
 ```
 
 ## DESCRIPTION
+Gets process information from Orchestrator folders. This cmdlet retrieves basic process metadata by default, with option to expand detailed information including process settings, arguments, and runtime configurations.
+
 Multiple values for the -Path parameter can be specified using comma-separated text that includes wildcards. Additionally, you can use autocomplete for these values by pressing [Ctrl+Space] or [Tab].
 
 When specifying the -Path, -Recurse, and -Depth parameters, place them immediately after the cmdlet name. This placement ensures that autocomplete for subsequent parameters functions correctly.
@@ -35,105 +37,61 @@ Required permissions: Processes.View
 PS Orch1:\Shared> Get-OrchProcess
 ```
 
-Show the processes assigned to the current folder.
+Gets processes from the current folder.
 
 ### Example 2
 ```powershell
 PS Orch1:\> Get-OrchProcess -Recurse
 ```
 
-Show the processes assigned to the current folder and all its subfolders. When run in the root folder, it displays all processes from folders included in that tenant.
+Gets processes from the current folder and all subfolders.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchProcess -Recurse *proc*
+PS Orch1:\> Get-OrchProcess -Recurse *Invoice*
 ```
 
-Search all folders for processes that contain proc in the process name.
+Gets processes containing "Invoice" in their name from all folders.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchProcess -Recurse -ExportCsv "C:\tmp\Get-OrchProcess.csv"
+PS Orch1:\> Get-OrchProcess -Path Orch1:\Shared, Orch1:\Finance -Recurse
 ```
 
-Export process details of all folders to CSV with UTF-8 BOM using module's function.
+Gets processes from specific folders and their subfolders.
 
 ### Example 5
 ```powershell
-PS Orch1:\> Get-OrchProcess -Recurse -ExportCsv c:
+PS Orch1:\> Get-OrchProcess -Recurse MainProcess, *Test*
 ```
 
-Export process details of all folders to C drive current directory as CSV with UTF-8 BOM using module's function.
+Gets specific processes by name pattern from all folders.
 
 ### Example 6
 ```powershell
-PS Orch1:\> Get-OrchProcess -Recurse -ExportCsv "C:\tmp\Get-OrchProcess.csv" -CsvEncoding Shift-JIS
+PS Orch1:\> Get-OrchProcess -ExpandDetails | Where-Object {$_.ProcessSettings.AutopilotForRobots.Enabled}
 ```
 
-Export process details of all folders to CSV with Shift-JIS using module's function.
+Gets processes with Autopilot for Robots enabled using expanded details.
 
 ### Example 7
 ```powershell
-PS Orch1:\> Get-OrchProcess -Recurse | Export-Csv "C:\tmp\Get-OrchProcess.csv"
+PS Orch1:\> Get-OrchProcess -Recurse | Where-Object {$_.JobPriority -eq "High"}
 ```
 
-  
-
-Export process details of all folders to CSV with UTF-8 using PowerShell cmdlet.
+Gets high-priority processes from all folders.
 
 ### Example 8
 ```powershell
-PS Orch1:\> Get-OrchProcess -Path "Shared\Finance", "Shared\HR" -Recurse
+PS Orch1:\> Get-OrchProcess -Recurse -ExportCsv "C:\Reports\Processes.csv"
 ```
 
-Get processes from specific multiple folders and their subfolders.
-
-### Example 9
-```powershell
-PS Orch1:\> Get-OrchProcess -Depth 2
-```
-
-Get processes from the current folder and subfolders up to 2 levels deep.
-
-### Example 10
-```powershell
-PS Orch1:\> Get-OrchProcess -Name "*Invoice*", "*Payment*" -Recurse
-```
-
-Search for processes with names containing "Invoice" or "Payment" in all folders.
-
-### Example 11
-```powershell
-PS Orch1:\> Get-OrchProcess -ExpandDetails -Recurse
-```
-
-Get processes with expanded details from all folders.
-
-### Example 12
-```powershell
-PS Orch1:\> Get-OrchProcess -Path "Shared\*" -Depth 1
-```
-
-Get processes from all immediate subfolders under Shared folder (1 level deep only).
-
-### Example 13
-```powershell
-PS Orch1:\> Get-OrchProcess -Recurse -ExportCsv "C:\tmp\Get-OrchProcesses_$(Get-Date -Format 'yyyyMMdd_HHmmss').csv"
-```
-
-Export processes to a timestamped CSV using module's function.
-
-### Example 14
-```powershell
-PS Orch1:\Shared> Get-OrchProcess MyProcess -ExpandDetails | Select-Object Path, Name, @{N="A4R_Enabled";E={$_.ProcessSettings.AutopilotForRobots.Enabled}}, @{N="A4R_HealingEnabled";E={$_.ProcessSettings.AutopilotForRobots.HealingEnabled}}
-```
-
-Get 'Healing Agent' and 'Healing Agent self-healing' settings for MyProcess. The A4R_Enabled shows if Healing Agent is enabled, and A4R_HealingEnabled shows if self-healing is enabled. To get these properties, you should specify -ExpandDetails switch parameter.
+Exports all processes to CSV with UTF-8 BOM encoding.
 
 ## PARAMETERS
 
 ### -Depth
-Specifies the depth for recursion into the target folders. A depth of 0 indicates the current location only, with no subfolders included.
+Specifies the depth of folder recursion. A depth of 0 targets only the current folder.
 
 ```yaml
 Type: UInt32
@@ -148,7 +106,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-Specifies the Name of the processes to be retrieved.
+Specifies the names of processes to retrieve. Supports wildcards and multiple values.
 
 ```yaml
 Type: String[]
@@ -163,7 +121,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the target folder. If not specified, the current folder will be targeted.
+Specifies target folders. Use comma-separated values for multiple folders. Supports wildcards. If not specified, targets the current folder.
 
 ```yaml
 Type: String[]
@@ -178,7 +136,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during cmdlet execution.
 
 ```yaml
 Type: ActionPreference
@@ -193,7 +151,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-Specifies that the operation should include the target folder and all its subfolders.
+Includes the target folder and all its subfolders in the operation.
 
 ```yaml
 Type: SwitchParameter
@@ -202,13 +160,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -CsvEncoding
-{{ Fill CsvEncoding Description }}
+Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compatibility.
 
 ```yaml
 Type: Encoding
@@ -217,13 +175,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: UTF8 with BOM
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -ExportCsv
-{{ Fill ExportCsv Description }}
+Exports results to CSV file with UTF-8 BOM encoding. Automatically converts internal IDs to human-readable names. Can be used with corresponding Import cmdlets.
 
 ```yaml
 Type: String
@@ -238,7 +196,7 @@ Accept wildcard characters: False
 ```
 
 ### -ExpandDetails
-{{ Fill ExpandDetails Description }}
+Retrieves detailed process information including ProcessSettings, Arguments, and VideoRecordingSettings. Without this parameter, these properties return null values.
 
 ```yaml
 Type: SwitchParameter
@@ -247,7 +205,7 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -262,5 +220,19 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.Release
 ## NOTES
+Process entities are folder-scoped. You must navigate to a folder or use -Path, -Recurse, or -Depth parameters to specify target folders.
+
+Use -ExpandDetails when you need access to ProcessSettings properties such as AutopilotForRobots, VideoRecordingSettings, or detailed Arguments metadata.
+
+The -ExportCsv parameter creates import-ready CSV files with human-readable names instead of internal IDs.
 
 ## RELATED LINKS
+
+[New-OrchProcess](New-OrchProcess.md)
+
+[Update-OrchProcess](Update-OrchProcess.md)
+
+[Remove-OrchProcess](Remove-OrchProcess.md)
+
+[Copy-OrchProcess](Copy-OrchProcess.md)
+

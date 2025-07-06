@@ -8,7 +8,7 @@ schema: 2.0.0
 # Remove-OrchRole
 
 ## SYNOPSIS
-Remove the roles.
+Removes roles from the Orchestrator.
 
 ## SYNTAX
 
@@ -18,7 +18,11 @@ Remove-OrchRole -Name <String[]> [-Path <String[]>] [-ProgressAction <ActionPref
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Permanently removes roles from UiPath Orchestrator tenants. Roles define permissions and access levels for users and groups within the organization.
+
+Only custom roles that are not currently assigned to users or groups can be removed. Static (built-in) roles cannot be deleted as they are essential for Orchestrator functionality.
+
+The cmdlet supports safety features like -WhatIf to preview operations and -Confirm to request confirmation before deletion.
 
 Primary Endpoint: DELETE /odata/Roles({roleId})
 
@@ -30,15 +34,36 @@ Required permissions: Roles.Delete
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Remove-OrchRole CustomRole1 -WhatIf
 ```
 
-{{ Add example description here }}
+Shows what would happen when removing the role without actually performing the deletion.
+
+### Example 2
+```powershell
+PS Orch1:\> Remove-OrchRole Test* -Confirm
+```
+
+Removes roles whose names start with "Test", prompting for confirmation before each removal.
+
+### Example 3
+```powershell
+PS Orch1:\> Remove-OrchRole TemporaryRole -Path Orch1:, Orch2:
+```
+
+Removes the role from multiple tenants.
+
+### Example 4
+```powershell
+PS Orch1:\> Get-OrchRole | Where-Object {$_.IsStatic -eq $false} | Remove-OrchRole -WhatIf
+```
+
+Shows which custom (non-static) roles would be removed using pipeline input.
 
 ## PARAMETERS
 
 ### -Path
-Specifies the name of the target drives. If not specified, the current drive will be targeted.
+Specifies target tenants by drive name. Use comma-separated values for multiple tenants. If not specified, targets the current tenant.
 
 ```yaml
 Type: String[]
@@ -53,7 +78,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during cmdlet execution.
 
 ```yaml
 Type: ActionPreference
@@ -68,7 +93,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
-Prompts you for confirmation before running the cmdlet.
+Prompts for confirmation before running the cmdlet. Recommended for destructive operations.
 
 ```yaml
 Type: SwitchParameter
@@ -77,14 +102,13 @@ Aliases: cf
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -WhatIf
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+Shows what would happen if the cmdlet runs without actually performing the operation. Recommended for safety verification.
 
 ```yaml
 Type: SwitchParameter
@@ -93,13 +117,13 @@ Aliases: wi
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -Name
-Specifies the Name of the roles to be removed.
+Specifies the names of roles to remove. Supports wildcards and multiple values.
 
 ```yaml
 Type: String[]
@@ -123,5 +147,20 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Object
 ## NOTES
+Role entities are tenant-scoped and operate across the entire tenant.
+
+Before removing roles, ensure they are not assigned to any users or groups. Use Get-OrchRole to check assignments and Remove-OrchRoleFromUser or Remove-OrchRoleFromFolderUser to remove assignments.
+
+Static roles (IsStatic = $true) cannot be removed as they are essential for Orchestrator functionality.
+
+The removal operation is irreversible. Use -WhatIf to preview operations before execution.
 
 ## RELATED LINKS
+
+[Get-OrchRole](Get-OrchRole.md)
+
+[Set-OrchRole](Set-OrchRole.md)
+
+[Copy-OrchRole](Copy-OrchRole.md)
+
+[Remove-OrchRoleFromUser](Remove-OrchRoleFromUser.md)

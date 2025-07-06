@@ -8,37 +8,84 @@ schema: 2.0.0
 # Copy-OrchRole
 
 ## SYNOPSIS
-Copy the roles.
+Copies roles between tenants.
 
 ## SYNTAX
 
 ```
-Copy-OrchRole -Name <String[]> [-Destination] <String[]> [-Path <String>] [-ProgressAction <ActionPreference>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Copy-OrchRole [-Name] <String[]> [-Destination] <String[]> [-Path <String>]
+ [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Copies roles from the current tenant to one or more destination tenants. This cmdlet enables role configuration replication across multiple UiPath Orchestrator environments.
 
-Primary Endpoint:
+Only custom (non-static) roles can be copied. Static roles are built-in and cannot be replicated as they already exist in all tenants.
 
-OAuth required scopes:
+The cmdlet preserves role permissions, descriptions, and other configuration details during the copy operation.
 
-Required permissions:
+Primary Endpoint: POST /odata/Roles
+
+OAuth required scopes: OR.Users.Write
+
+Required permissions: Roles.Create (destination), Roles.View (source)
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Copy-OrchRole CustomRole1 Orch2: -WhatIf
 ```
 
-{{ Add example description here }}
+Shows what would happen when copying a role without actually copying it.
+
+### Example 2
+```powershell
+PS Orch1:\> Copy-OrchRole CustomRole1 Orch2:
+```
+
+Copies CustomRole1 from the current tenant to Orch2.
+
+### Example 3
+```powershell
+PS Orch1:\> Copy-OrchRole TestRole Orch2:, Orch3: -Confirm
+```
+
+Copies TestRole to multiple tenants with confirmation prompts.
+
+### Example 4
+```powershell
+PS Orch1:\> Copy-OrchRole Custom* Orch2:
+```
+
+Copies all roles starting with "Custom" to Orch2.
+
+### Example 5
+```powershell
+PS Orch1:\> Get-OrchRole | Where-Object {$_.IsStatic -eq $false} | Copy-OrchRole -Destination Orch2: -WhatIf
+```
+
+Shows which custom (non-static) roles would be copied using pipeline input.
 
 ## PARAMETERS
 
+### -Confirm
+Prompts for confirmation before copying roles. Recommended when copying multiple roles.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: cf
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -Destination
-Specifies the destination drive names.
+Specifies the destination tenants by drive name. Use comma-separated values for multiple destinations.
 
 ```yaml
 Type: String[]
@@ -52,8 +99,23 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
+### -Name
+Specifies the names of roles to copy. Supports wildcards and multiple values.
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: 0
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
+```
+
 ### -Path
-Specifies the source drive name. If not specified, the current drive will be used as the source.
+Specifies the source tenant by drive name. If not specified, uses the current tenant.
 
 ```yaml
 Type: String
@@ -67,8 +129,23 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
 ```
 
+### -WhatIf
+Shows what would happen if the cmdlet runs without actually copying roles. Recommended for safety verification.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: wi
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during cmdlet execution.
 
 ```yaml
 Type: ActionPreference
@@ -82,61 +159,36 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -Confirm
-Prompts you for confirmation before running the cmdlet.
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases: cf
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -WhatIf
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases: wi
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -Name
-Specifies the Name of the roles to be copied.
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: True
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
-### None
+### System.String[]
+
+### System.String
+
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.Role
+
 ## NOTES
+Role entities are tenant-scoped and this cmdlet enables cross-tenant replication.
+
+Only custom roles (IsStatic = $false) can be copied. Static roles are built-in and already exist in all tenants.
+
+The copy operation preserves all role configuration including permissions, descriptions, and metadata.
+
+Use -WhatIf to preview copy operations before execution, especially when using wildcards that might match multiple roles.
+
+Ensure you have appropriate permissions in both source and destination tenants.
 
 ## RELATED LINKS
+
+[Get-OrchRole](Get-OrchRole.md)
+
+[Set-OrchRole](Set-OrchRole.md)
+
+[Remove-OrchRole](Remove-OrchRole.md)
+
+[New-OrchRole](New-OrchRole.md)
