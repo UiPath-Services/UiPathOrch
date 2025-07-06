@@ -29,17 +29,15 @@ Get-OrchJob [-Last <String>] [-CreationTimeAfter <DateTime>] [-CreationTimeBefor
 ```
 
 ## DESCRIPTION
-In the Filter parameter set, you can specify conditions for retrieving jobs using various parameters.
+Gets job information from UiPath Orchestrator folders. Jobs represent process executions and contain details about automation runs including status, timing, robot assignments, and execution results.
 
-In the JobId parameter set, the `-Id` parameter allows you to directly specify the ID of the job to retrieve. The completion list for this `-Id` parameter only includes job IDs that have been previously retrieved and cached in memory by UiPathOrch.
+This cmdlet provides powerful filtering capabilities to query jobs by various criteria such as time ranges, status, process names, robots, and priorities. It operates on folder entities and supports recursive retrieval across folder hierarchies.
 
-After retrieving multiple jobs using the first parameter set, if you want to examine a specific job in detail, you can specify its ID using the `-Id` parameter. Even if a job entity with the specified ID exists in the cache, `Get-OrchJob` will check and display the latest state of that job.
-
-Multiple values for the -Path parameter can be specified using comma-separated text that includes wildcards. Additionally, you can use autocomplete for these values by pressing [Ctrl+Space] or [Tab].
+Multiple values for parameters can be specified using comma-separated text that includes wildcards. Additionally, you can use autocomplete for these values by pressing [Ctrl+Space] or [Tab].
 
 When specifying the -Path, -Recurse, and -Depth parameters, place them immediately after the cmdlet name. This placement ensures that autocomplete for subsequent parameters functions correctly.
 
-Primary Endpoint: GET /odata/Jobs?{filter}&$expand=Robot,Machine,Release&$orderby=CreationTime%20desc, GET /odata/Jobs({jobId})?$expand=Robot,Machine,Release
+Primary Endpoint: GET /odata/Jobs
 
 OAuth required scopes: OR.Jobs or OR.Jobs.Read
 
@@ -49,208 +47,57 @@ Required permissions: Jobs.View
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-OrchJob -Recurse -First 10
+PS Orch1:\Shared> Get-OrchJob -First 5
 ```
 
-  
-
-Retrieves the 10 most recent jobs across all folders.  
+Gets the first 5 jobs from the current folder.
 
 ### Example 2
 ```powershell
-PS Orch1:\> Get-OrchJob -Recurse
+PS Orch1:\> Get-OrchJob -Recurse -State Faulted -First 10
 ```
 
-  
-
-Retrieves cached jobs across all folders. Since this does not call the Orchestrator Web API, previously retrieved jobs can be displayed quickly. To fetch the latest information, specify any parameter.  
+Gets the first 10 failed jobs from all folders.
 
 ### Example 3
 ```powershell
-PS Orch1:\Shared> Get-OrchJob -Last Day
+PS Orch1:\> Get-OrchJob -Last Day -State Successful
 ```
 
-  
-
-Displays jobs from the past day in the current folder. The `-Last` parameter supports values like `Hour`, `Day`, `Week`, and `Month`.  
+Gets all successful jobs from the last day.
 
 ### Example 4
 ```powershell
-PS Orch1:\Shared> Get-OrchJob -State Pending,Suspended
+PS Orch1:\> Get-OrchJob -ReleaseName BlankProcess19 -First 5
 ```
 
-  
-
-Displays jobs in the current folder that are in the `Pending` or `Suspended` state. To display only failed jobs, specify `Faulted` for the `-State` parameter.  
+Gets the first 5 jobs for a specific process.
 
 ### Example 5
 ```powershell
-PS Orch1:\Shared> Get-OrchJob -SourceType Queue
+PS Orch1:\> Get-OrchJob -Recurse -Priority High -State Running
 ```
 
-  
-
-Displays jobs in the current folder that were started by a queue trigger.  
+Gets running high-priority jobs from all folders.
 
 ### Example 6
 ```powershell
-PS Orch1:\Shared> Get-OrchJob -CreationTimeAfter '2025/01/15 14:00:00' -CreationTimeBefore '2025/01/30 15:00:00'
+PS Orch1:\> Get-OrchJob -CreationTimeAfter (Get-Date).AddHours(-1) -First 10
 ```
 
-  
-
-Filters jobs based on their creation time using the `-CreationTimeAfter` and `-CreationTimeBefore` parameters. Other available time-based filters include `-StartTimeAfter`, `-StartTimeBefore`, `-EndTimeAfter`, and `-EndTimeBefore`.  
+Gets jobs created in the last hour.
 
 ### Example 7
 ```powershell
-PS Orch1:\Shared> Get-OrchJob | ? StopStrategy -eq Kill
+PS Orch1:\> Get-OrchJob -Robot Robot1 -State Successful -OrderBy CreationTime
 ```
 
-  
-
-Displays only cached jobs that were forcefully stopped.  
-
-### Example 8
-```powershell
-PS Orch1:\Shared> Get-OrchJob | group ReleaseName -NoElement
-```
-
-  
-
-Groups cached jobs by process name. The property names can be completed using tab completion. `group` is an alias for `Group-Object`.  
-
-### Example 9
-```powershell
-PS Orch1:\Shared> Get-OrchJob | group HostMachineName -NoElement
-```
-
-  
-
-Groups cached jobs by machine name.  
-
-### Example 10
-```powershell
-PS Orch1:\Shared> Get-OrchJob | group HostMachineName,State -NoElement
-```
-
-  
-
-Groups cached jobs by machine name and job status.  
-
-### Example 11
-```powershell
-PS Orch1:\Shared> Get-OrchJob | group LocalSystemAccount,State -NoElement | Format-Table -AutoSize
-```
-
-  
-
-Groups cached jobs by the account that executed them. `Format-Table -AutoSize` is used to ensure that the output is not truncated.  
-
-### Example 12
-```powershell
-PS Orch1:\Shared> Get-OrchJob | group { $_.CreationTime.Date } -NoElement
-```
-
-  
-
-Groups cached jobs by creation date.  
-
-### Example 13
-```powershell
-PS Orch1:\Shared> Get-OrchJob | group { $_.CreationTime.ToString('yyyy/MM') } -NoElement
-```
-
-  
-
-Groups cached jobs by creation month.  
-
-### Example 14
-```powershell
-PS Orch1:\Shared> Get-OrchJob | group { $_.CreationTime.DayOfWeek } -NoElement
-```
-
-  
-
-Groups cached jobs by the day of the week they were created.  
-
-### Example 15
-```powershell
-PS Orch1:\Shared> Get-OrchJob | group { $_.CreationTime.DayOfWeek },State -NoElement
-```
-
-  
-
-Groups cached jobs by the day of the week they were created and their status.  
-
-### Example 16
-```powershell
-PS Orch1:\Shared> Get-OrchJob | ? { $_.CreationTime.DayOfWeek -eq 'Sunday' }
-```
-
-  
-
-Displays only cached jobs that were created on a Sunday.  
-
-### Example 17
-```powershell
-PS Orch1:\Shared> Get-OrchJob | ? StartTime -ne $null | group { $_.StartTime.Hour },State -NoElement
-```
-
-  
-
-Groups cached jobs by the hour they started and their status. This allows for quick analysis of when jobs were executed and their status trends.  
-
-### Example 18
-```powershell
-PS Orch1:\Shared> Get-OrchJob | group ReleaseName -NoElement | sort Count -Descending
-```
-
-  
-
-Displays grouped job information sorted by count in descending order. `sort` is an alias for `Sort-Object`.  
-
-### Example 19
-```powershell
-PS Orch1:\Shared> Get-OrchJob -State Faulted | group ReleaseName | sort Count -Descending
-```
-
-  
-
-Groups only failed jobs by process name and displays them in descending order of occurrence. This helps identify processes that fail frequently.  
-
-Note: Using the `-State` parameter queries Orchestrator, so for faster processing with cached jobs, use `| ? State -eq Faulted` instead.  
-
-### Example 20
-```powershell
-PS Orch1:\Shared> Get-OrchJob | sort { ($_.EndTime - $_.StartTime).TotalSeconds } -Descending
-```
-
-  
-
-Sorts cached jobs in descending order by execution duration.  
-
-### Example 21
-```powershell
-PS Orch1:\Shared> Get-OrchJob | select Id, ReleaseName, @{ Name='TotalSeconds'; Expression={ ($_.EndTime - $_.StartTime).TotalSeconds }} | sort TotalSeconds -Descending
-```
-
-  
-
-Sorts cached jobs in descending order by execution duration and displays the execution time.  
-
-### Example 22
-```powershell
-PS Orch1:\Shared> Get-OrchJob | % { ($_.EndTime - $_.StartTime).TotalMinutes } | Measure-Object -Average -Sum -Maximum -Minimum
-```
-
-  
-
-Displays the average, longest, and shortest execution times of cached jobs. `%` is an alias for `ForEach-Object`.
+Gets successful jobs for a specific robot ordered by creation time.
 
 ## PARAMETERS
 
 ### -CreationTimeAfter
-{{ Fill CreationTimeAfter Description }}
+Specifies the earliest creation time for jobs to retrieve.
 
 ```yaml
 Type: DateTime
@@ -265,7 +112,7 @@ Accept wildcard characters: False
 ```
 
 ### -CreationTimeBefore
-{{ Fill CreationTimeBefore Description }}
+Specifies the latest creation time for jobs to retrieve.
 
 ```yaml
 Type: DateTime
@@ -280,7 +127,7 @@ Accept wildcard characters: False
 ```
 
 ### -Depth
-Specifies the depth for recursion into the target folders. A depth of 0 indicates the current location only, with no subfolders included.
+Specifies the depth of folder recursion. A depth of 0 targets only the current folder.
 
 ```yaml
 Type: UInt32
@@ -295,7 +142,7 @@ Accept wildcard characters: False
 ```
 
 ### -Last
-{{ Fill Last Description }}
+Specifies a time period for recent jobs. Valid values: Hour, Day, Week, Month, 3Months, 6Months, Year, 3Years.
 
 ```yaml
 Type: String
@@ -310,7 +157,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-Specifies the target folder. If not specified, the current folder will be targeted.
+Specifies target folders. Use comma-separated values for multiple folders. Supports wildcards. If not specified, targets the current folder.
 
 ```yaml
 Type: String[]
@@ -325,7 +172,7 @@ Accept wildcard characters: True
 ```
 
 ### -Priority
-{{ Fill Priority Description }}
+Specifies job priority to filter by. Valid values: Low, Normal, High.
 
 ```yaml
 Type: String
@@ -340,7 +187,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during cmdlet execution.
 
 ```yaml
 Type: ActionPreference
@@ -355,7 +202,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-Specifies that the operation should include the target folder and all its subfolders.
+Includes the target folder and all its subfolders in the operation.
 
 ```yaml
 Type: SwitchParameter
@@ -364,13 +211,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -SourceType
-{{ Fill SourceType Description }}
+Specifies job source types to filter by. Valid values include: Manual, Schedule, Agent, Robot.
 
 ```yaml
 Type: String[]
@@ -385,7 +232,7 @@ Accept wildcard characters: True
 ```
 
 ### -State
-{{ Fill State Description }}
+Specifies job states to filter by. Valid values include: Pending, Running, Successful, Faulted, Stopped, Suspended.
 
 ```yaml
 Type: String[]
@@ -400,8 +247,7 @@ Accept wildcard characters: False
 ```
 
 ### -Skip
-Ignores the specified number of objects and then gets the remaining objects.
-Enter the number of objects to skip.
+Ignores the specified number of objects and then gets the remaining objects. Enter the number of objects to skip.
 
 ```yaml
 Type: UInt64
@@ -416,8 +262,7 @@ Accept wildcard characters: False
 ```
 
 ### -First
-Gets only the specified number of objects.
-Enter the number of objects to get.
+Specifies the maximum number of jobs to return.
 
 ```yaml
 Type: UInt64
@@ -432,7 +277,7 @@ Accept wildcard characters: False
 ```
 
 ### -ReleaseName
-{{ Fill ReleaseName Description }}
+Specifies process names to filter by. Supports wildcards and multiple values.
 
 ```yaml
 Type: String[]
@@ -447,7 +292,7 @@ Accept wildcard characters: True
 ```
 
 ### -OrderAscending
-{{ Fill OrderAscending Description }}
+Sorts results in ascending order. Default is descending.
 
 ```yaml
 Type: SwitchParameter
@@ -456,13 +301,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -OrderBy
-{{ Fill OrderBy Description }}
+Specifies the property to sort by. Valid values include: Id, CreationTime, StartTime, EndTime, State.
 
 ```yaml
 Type: String
@@ -582,7 +427,7 @@ Accept wildcard characters: False
 ```
 
 ### -Id
-{{ Fill Id Description }}
+Specifies job IDs to retrieve. Supports multiple values.
 
 ```yaml
 Type: Int64[]
@@ -597,7 +442,7 @@ Accept wildcard characters: False
 ```
 
 ### -Robot
-{{ Fill Robot Description }}
+Specifies robot names to filter by. Supports wildcards and multiple values.
 
 ```yaml
 Type: String[]
@@ -621,5 +466,18 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.Job
 ## NOTES
+Job entities are folder-scoped. You must navigate to a folder or use -Path, -Recurse, or -Depth parameters to specify target folders.
+
+Use the Filter parameter set for complex queries with time ranges, status filters, and sorting options. The JobId parameter set is optimized for retrieving specific jobs by ID.
+
+Jobs represent the execution history of automation processes and provide detailed information about robot performance and process outcomes.
 
 ## RELATED LINKS
+
+[Start-OrchJob](Start-OrchJob.md)
+
+[Stop-OrchJob](Stop-OrchJob.md)
+
+[Get-OrchJobMedia](Get-OrchJobMedia.md)
+
+[Open-OrchJob](Open-OrchJob.md)

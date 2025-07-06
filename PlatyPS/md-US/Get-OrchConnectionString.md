@@ -13,7 +13,7 @@ Gets connection string.
 ## SYNTAX
 
 ```
-Get-OrchConnectionString [-Path <String[]>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-OrchConnectionString [[-Path] <String[]>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -45,7 +45,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: Named
+Position: 0
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
@@ -71,10 +71,12 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.ODataValueOfString
+
 ## NOTES
 
 ## RELATED LINKS

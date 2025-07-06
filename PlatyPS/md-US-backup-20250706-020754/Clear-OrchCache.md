@@ -1,0 +1,151 @@
+﻿---
+external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
+Module Name: UiPathOrch
+online version:
+schema: 2.0.0
+---
+
+# Clear-OrchCache
+
+## SYNOPSIS
+Clear the in-memory cache in UiPathOrch drives.
+
+## SYNTAX
+
+```
+Clear-OrchCache [[-Path] <String[]>] [-AllDrives] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm]
+ [<CommonParameters>]
+```
+
+## DESCRIPTION
+The UiPathOrch module caches entities retrieved from the Orchestrator on each drive to optimize response times and reduce the load on the Orchestrator server. In particular, this cache is used to display appropriate candidates for auto-completion of parameter values.
+
+If you want the PowerShell console to reflect updates to entities on Orchestrator (such as creating or removing folders) made via Orchestrator Web or other external applications, clear the in-memory cache with this cmdlet.
+
+For the -Path parameter, specify the drive on which you want to clear the cache. If the -Path parameter is not specified, the cache on the current drive is cleared. If the current drive is not an UiPathOrch drive, the cache on all UiPathOrch drives are cleared.
+
+Primary Endpoint: (none)
+
+OAuth required scopes: (none)
+
+Required permissions: (none)
+
+## EXAMPLES
+
+### Example 1
+```powershell
+PS Orch1:\> Clear-OrchCache
+```
+
+Clears the in-memory cache on the Orch1: as the current drive.
+
+### Example 2
+```powershell
+PS C:\> Clear-OrchCache
+```
+
+Clears the in-memory cache on all drives managed by UiPathOrch, because the current drive (C:) is not an UiPathOrch drive.
+
+### Example 3
+```powershell
+PS C:\> Clear-OrchCache Orch1:,Orch2:
+```
+
+Clears the in-memory cache on the Orch1: and Orch2: drives.
+
+### Example 4
+```powershell
+PS Orch1:\> Clear-OrchCache .,Orch2:
+```
+
+The current drive can be specified using a period (.), which represents the current location. In this command, the cache is cleared on both the current drive (Orch1:) and Orch2:.
+
+## PARAMETERS
+
+### -Path
+Specifies the name of the target drives. If not specified, the current drive will be targeted.
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 0
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Confirm
+Prompts you for confirmation before running the cmdlet.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: cf
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -WhatIf
+Shows what would happen if the cmdlet runs. The cmdlet is not run.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: wi
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -AllDrives
+{{ Fill AllDrives Description }}
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### CommonParameters
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+
+## INPUTS
+
+### None
+## OUTPUTS
+
+### None
+## NOTES
+
+## RELATED LINKS

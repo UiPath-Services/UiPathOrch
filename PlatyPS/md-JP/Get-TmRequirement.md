@@ -102,10 +102,12 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.TMRequirement
+### UiPath.PowerShell.Entities.TmRequirement
+
 ## NOTES
 
 ## RELATED LINKS
