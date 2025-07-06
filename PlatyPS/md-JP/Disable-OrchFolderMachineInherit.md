@@ -13,7 +13,7 @@ schema: 2.0.0
 ## SYNTAX
 
 ```
-Disable-OrchFolderMachineInherit [[-Name] <String[]>] [-Path <String[]>] [-ProgressAction <ActionPreference>]
+Disable-OrchFolderMachineInherit [-Name] <String[]> [-Path <String[]>] [-ProgressAction <ActionPreference>]
  [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
@@ -60,7 +60,7 @@ Type: String[]
 Parameter Sets: (All)
 Aliases:
 
-Required: False
+Required: True
 Position: 0
 Default value: None
 Accept pipeline input: True (ByPropertyName)

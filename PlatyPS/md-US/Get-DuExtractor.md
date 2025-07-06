@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-DuExtractor
 
 ## SYNOPSIS
-Gets extractors of Document Understanding.
+Gets extractors of Document Understanding from UiPath Orchestrator.
 
 ## SYNTAX
 
@@ -18,25 +18,80 @@ Get-DuExtractor [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-ProgressAct
 ```
 
 ## DESCRIPTION
-Retrieve all extractors from projects. These can be either Forms AI or deep-learning extraction skills. This cmdlet operates on the PSDrive of the UiPathOrchDu provider. If the scope in the configuration file includes "Du.", the PSDrive of the UiPathOrchDu provider will be automatically added. You can confirm this with the Get-PSDrive cmdlet. The configuration file can be opened with the Edit-OrchConfig cmdlet.
+The `Get-DuExtractor` cmdlet retrieves extractor information from UiPath Document Understanding projects in Orchestrator. Extractors are machine learning models or rule-based components that extract specific data fields from documents during the document processing workflow.
 
-Primary Endpoint: GET /du_/api/framework/projects/{projectId}/extractors?api-version=1
+This cmdlet operates on folder entities within Document Understanding projects and requires either navigation to the target project folder or specification of target folders using -Path, -Recurse parameters. It can retrieve both custom extractors created within the project and pretrained extractors available for use.
 
-OAuth Required scopes: Du.Digitization.Api or Du.Classification.Api or Du.Extraction.Api or Du.Validation.Api
+Multiple values for the -Name and -Path parameters can be specified using comma-separated text that includes wildcards. Additionally, you can use autocomplete for these values by pressing [Ctrl+Space] or [Tab].
+
+Primary Endpoint: GET /odata/ML/Extractors
+
+OAuth required scopes: OR.ML or OR.ML.Read
+
+Required permissions: ML.Extractor.View
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1Du:\MyProject> Get-DuExtractor
 ```
 
-{{ Add example description here }}
+Gets all extractors in the current Document Understanding project.
+
+### Example 2
+```powershell
+PS Orch1Du:\> Get-DuExtractor -Recurse
+```
+
+Gets all extractors from all Document Understanding projects recursively.
+
+### Example 3
+```powershell
+PS Orch1Du:\MyProject> Get-DuExtractor "Invoice*"
+```
+
+Gets extractors whose names start with "Invoice" using wildcard pattern matching.
+
+### Example 4
+```powershell
+PS Orch1Du:\> Get-DuExtractor -Recurse | Where-Object {$_.ExtractorType -eq "MachineLearning"} | Select-Object Path, Name, ExtractorType, Status
+```
+
+Gets all machine learning extractors from all projects and displays key properties. Note that Path is selected first to identify which project each extractor belongs to.
+
+### Example 5
+```powershell
+PS Orch1Du:\MyProject> Get-DuExtractor | Where-Object {$_.Status -eq "Published"}
+```
+
+Gets only published extractors from the current project.
+
+### Example 6
+```powershell
+PS Orch1Du:\> Get-DuExtractor -Path "Orch1Du:\InvoiceProject", "Orch1Du:\ContractProject"
+```
+
+Gets extractors from specific Document Understanding projects without changing the current location.
+
+### Example 7
+```powershell
+PS Orch1Du:\MyProject> Get-DuExtractor | ConvertTo-Json -Depth 3
+```
+
+Gets all extractors and displays the complete object structure including detailed properties.
+
+### Example 8
+```powershell
+PS Orch1Du:\> Get-DuExtractor -Recurse | Group-Object ExtractorType | Select-Object Name, Count
+```
+
+Groups extractors by type and shows the count for each type across all projects.
 
 ## PARAMETERS
 
 ### -Name
-Specifies the name of the extractors to be retrieved.
+Specifies the name(s) of the extractors to retrieve. Supports wildcards (* and ?) for pattern matching. You can use autocomplete by pressing [Ctrl+Space] or [Tab].
 
 ```yaml
 Type: String[]
@@ -45,13 +100,13 @@ Aliases:
 
 Required: False
 Position: 0
-Default value: None
+Default value: All extractors
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the target folder. If not specified, the current folder will be targeted.
+Specifies the Document Understanding project path(s) to search for extractors. Supports wildcards and multiple values. If not specified, the current location is used.
 
 ```yaml
 Type: String[]
@@ -60,13 +115,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: Current location
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
 ```
 
 ### -Recurse
-Specifies that the operation should include the target folder and all its subfolders.
+Includes extractors from all subprojects when retrieving extractors. This is a folder entity operation parameter.
 
 ```yaml
 Type: SwitchParameter
@@ -75,13 +130,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Specifies how PowerShell responds to progress updates generated by a script, cmdlet, or provider.
 
 ```yaml
 Type: ActionPreference
@@ -106,4 +161,45 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### UiPath.PowerShell.Entities.DuExtractor
 ## NOTES
 
+This cmdlet operates on folder entities within Document Understanding projects and requires either:
+- Navigation to the target project using Set-Location (cd), OR  
+- Specification of target projects using the -Path or -Recurse parameters
+
+**Important:** For optimal PowerShell IntelliSense support, specify -Path or -Recurse before other parameters when using multiple parameters.
+
+**Extractor Information:**
+- Name: The display name of the extractor
+- ExtractorType: Type of extractor (MachineLearning, Regex, etc.)
+- Status: Current status (Published, Draft, Training, etc.)
+- CreatedBy: User who created the extractor
+- CreatedDate: When the extractor was created
+- Version: Current version of the extractor
+
+**Common Extractor Types:**
+- MachineLearning: AI-based extractors trained on labeled data
+- Regex: Rule-based extractors using regular expressions
+- FormExtractor: Extractors for structured forms
+- KeywordBased: Extractors that look for specific keywords
+
+**Common Status Values:**
+- Published: Extractor is ready for use in production
+- Draft: Extractor is in development
+- Training: Machine learning extractor is being trained
+- Failed: Training or deployment failed
+
+**Use Cases:**
+- Monitor extractor development across projects
+- Identify available extractors for document processing workflows
+- Check training status of machine learning extractors
+- Audit extractor usage and performance across the organization
+
+**Important Note about Path Selection:**
+When using Select-Object with folder entities, always include Path as the first property to identify which project each extractor belongs to. This is essential for managing extractors across multiple Document Understanding projects.
+
+Use ConvertTo-Json to explore the complete extractor object structure including detailed configuration and performance metrics.
+
 ## RELATED LINKS
+
+[Get-DuClassifier](Get-DuClassifier.md)
+
+[Get-DuDocumentType](Get-DuDocumentType.md)

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-OrchLicenseStats
 
 ## SYNOPSIS
-Gets the licensing usage statistics.
+Gets the licensing usage statistics from UiPath Orchestrator.
 
 ## SYNTAX
 
@@ -18,7 +18,13 @@ Get-OrchLicenseStats [[-Last] <String>] [-Path <String[]>] [-ProgressAction <Act
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The `Get-OrchLicenseStats` cmdlet retrieves historical licensing usage statistics from UiPath Orchestrator. This provides valuable insights into license consumption patterns over time, helping administrators monitor usage trends, plan capacity, and ensure license compliance.
+
+The cmdlet returns time-series data showing license usage counts by robot type (e.g., Unattended, RpaDeveloperPro) across different time periods. This data is essential for understanding licensing patterns, identifying peak usage periods, and making informed decisions about license allocation.
+
+The statistics include daily snapshots of license usage, allowing administrators to track how different types of licenses are consumed over time and identify trends in automation activity.
+
+Multiple values for the -Path parameter can be specified using comma-separated text. Additionally, you can use autocomplete for these values by pressing [Ctrl+Space] or [Tab].
 
 Primary Endpoint: GET /api/Stats/GetLicenseStats?tenantId={tenantId}&days={days}
 
@@ -30,15 +36,94 @@ Required permissions: License.View
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS C:\> Set-Location Orch1:\
+PS Orch1:\> Get-OrchLicenseStats
 ```
 
-{{ Add example description here }}
+Gets the default licensing usage statistics for the current Orchestrator instance.
+
+### Example 2
+```powershell
+PS Orch1:\> Get-OrchLicenseStats -Last "Week"
+```
+
+Gets licensing usage statistics for the last week.
+
+### Example 3
+```powershell
+PS Orch1:\> Get-OrchLicenseStats -Last "Month" | Group-Object robotType | Select-Object Name, Count
+```
+
+Gets monthly license statistics grouped by robot type to see usage distribution.
+
+### Example 4
+```powershell
+PS Orch1:\> $stats = Get-OrchLicenseStats -Last "Month"
+PS Orch1:\> $stats | Where-Object robotType -eq "Unattended" | Measure-Object count -Sum
+```
+
+Gets monthly statistics and calculates total Unattended license usage.
+
+### Example 5
+```powershell
+PS Orch1:\> Get-OrchLicenseStats -Last "Week" | ConvertTo-Json -Depth 5
+```
+
+Gets weekly license statistics and converts to JSON format to see the complete object structure, including numeric robot type values.
+
+### Example 6
+```powershell
+PS Orch1:\> $stats = Get-OrchLicenseStats -Last "3Months"
+PS Orch1:\> $stats | Sort-Object timestamp | Select-Object -Last 10
+```
+
+Gets 3-month statistics and displays the 10 most recent entries.
+
+### Example 7
+```powershell
+PS Orch1:\> Get-OrchLicenseStats -Last "Month" | 
+>> Group-Object robotType | 
+>> ForEach-Object { 
+>>     [PSCustomObject]@{
+>>         RobotType = $_.Name
+>>         TotalUsage = ($_.Group | Measure-Object count -Sum).Sum
+>>         AverageDaily = [Math]::Round(($_.Group | Measure-Object count -Average).Average, 2)
+>>     }
+>> }
+```
+
+Creates a summary report showing total and average daily usage by robot type.
+
+### Example 8
+```powershell
+PS Orch1:\> Get-OrchLicenseStats -Last "Year" | 
+>> Where-Object count -gt 1 | 
+>> Sort-Object timestamp
+```
+
+Gets yearly statistics and filters for days with more than 1 license usage, sorted by date.
+
+### Example 9
+```powershell
+PS Orch1:\> $weeklyStats = Get-OrchLicenseStats -Last "Week"
+PS Orch1:\> $monthlyStats = Get-OrchLicenseStats -Last "Month"
+PS Orch1:\> Write-Host "Weekly entries: $($weeklyStats.Count), Monthly entries: $($monthlyStats.Count)"
+```
+
+Compares the volume of data across different time periods.
+
+### Example 10
+```powershell
+PS Orch1:\> Get-OrchLicenseStats -Last "6Months" | 
+>> Export-Csv "C:\Reports\LicenseUsage.csv" -NoTypeInformation
+```
+
+Exports 6-month license statistics to a CSV file for further analysis.
 
 ## PARAMETERS
 
 ### -Last
-Specifies the most recent period for retrieving statistics.
+Specifies the most recent period for retrieving licensing statistics. Valid values are: 'Day', 'Week', 'Month', '3Months', '6Months', 'Year', '3Years'. If not specified, a default period is used.
 
 ```yaml
 Type: String
@@ -47,13 +132,13 @@ Aliases:
 
 Required: False
 Position: 0
-Default value: None
+Default value: Default period (approximately last week)
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
 ### -Path
-Specifies the name of the target drives. If not specified, the current drive will be targeted.
+Specifies the name of the target drives. If not specified, the current drive will be targeted. This parameter accepts pipeline input for specifying multiple Orchestrator instances.
 
 ```yaml
 Type: String[]
@@ -62,13 +147,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: Current location
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Specifies how PowerShell responds to progress updates generated by a script, cmdlet, or provider, such as the progress bars generated by the Write-Progress cmdlet. Valid values are: SilentlyContinue, Stop, Continue, Inquire, Ignore, Suspend.
 
 ```yaml
 Type: ActionPreference
@@ -92,5 +177,20 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.LicenseStatsModel
 ## NOTES
+- License statistics provide historical usage data to help with capacity planning and compliance monitoring
+- The robotType property shows license types such as "Unattended", "RpaDeveloperPro", etc., but is stored internally as numeric values
+- Data represents daily snapshots of license usage, not real-time consumption
+- Statistics may not include the current day depending on data processing schedules
+- The count property indicates the number of licenses of that type in use on the given date
+- Use ConvertTo-Json to see the complete object structure including numeric robot type values
+- Valid -Last parameter values are case-sensitive: 'Day', 'Week', 'Month', '3Months', '6Months', 'Year', '3Years'
+- The timestamp is provided in UTC format
 
 ## RELATED LINKS
+
+[Get-OrchLicense](Get-OrchLicense.md)
+[Get-OrchLicenseRuntime](Get-OrchLicenseRuntime.md)
+[Get-OrchLicenseNamedUser](Get-OrchLicenseNamedUser.md)
+[Get-OrchJobStats](Get-OrchJobStats.md)
+[about_UiPathOrch](about_UiPathOrch.md)
+

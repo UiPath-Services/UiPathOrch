@@ -18,7 +18,19 @@ Get-OrchWebSetting [[-Key] <String[]>] [-Path <String[]>] [-ProgressAction <Acti
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The `Get-OrchWebSetting` cmdlet retrieves web application configuration settings from UiPath Orchestrator. These settings control various aspects of the Orchestrator web interface, integrations, features, and operational behavior.
+
+The cmdlet returns a comprehensive collection of web settings organized into multiple categories including AI Fabric integration, telemetry configuration, logging settings, deployment parameters, monitoring settings, feature toggles, licensing information, and user interface customization options.
+
+These settings are essential for understanding how the Orchestrator instance is configured, troubleshooting integration issues, verifying feature availability, and managing operational parameters. The settings cover a wide range of functionality from basic application settings to advanced integration configurations.
+
+Major setting categories include AiFabric (AI Center integration), Telemetry (monitoring and analytics), Deployment (package and library management), Features (feature toggles), General (basic application settings), Authentication, Monitoring, and many others.
+
+Primary Endpoint: GET /odata/Settings/UiPath.Server.Configuration.OData.GetWebSettings
+
+OAuth required scopes: [PLACEHOLDER - Web settings scopes]
+
+Required permissions: [PLACEHOLDER - Web settings view permissions]
 
 Primary Endpoint: GET /odata/Settings/UiPath.Server.Configuration.OData.GetWebSettings
 

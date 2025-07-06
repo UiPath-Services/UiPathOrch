@@ -18,7 +18,19 @@ Get-OrchAuthenticationSetting [[-Key] <String[]>] [-Path <String[]>] [-ProgressA
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The `Get-OrchAuthenticationSetting` cmdlet retrieves authentication configuration settings from UiPath Orchestrator. These settings control various aspects of user authentication, password policies, external authentication integration, and access token management.
+
+The cmdlet returns authentication-related settings including password change policies, self-service capabilities, external logout configuration, and token authentication enablement for different types of access (user, robot, and service-to-service authentication). Additionally, it includes basic application settings, build information, localization settings, and telemetry configuration.
+
+Key authentication settings include controls for password management (Auth.AllowChangePassword), user self-service features (Auth.AllowSelfEmailUpdate), external authentication integration (Auth.ExternalLogoutUrl), and access token authentication enablement for various client types (UserAccessTokenAuthentication.Enabled, RobotAccessTokenAuthentication.Enabled, S2SAccessTokenAuthentication.Enabled).
+
+These settings are essential for understanding the authentication landscape of the Orchestrator instance, configuring security policies, troubleshooting authentication issues, and ensuring proper integration with external identity providers and authentication systems.
+
+Primary Endpoint: GET /odata/Settings/UiPath.Server.Configuration.OData.GetAuthenticationSettings
+
+OAuth required scopes: [PLACEHOLDER - Authentication settings scopes]
+
+Required permissions: [PLACEHOLDER - Authentication settings view permissions]
 
 Primary Endpoint: GET /odata/Settings/UiPath.Server.Configuration.OData.GetAuthenticationSettings
 
