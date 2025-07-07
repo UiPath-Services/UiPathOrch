@@ -8,7 +8,7 @@ schema: 2.0.0
 # Add-PmLicenseToPmLicensedGroup
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+Adds licenses to licensed groups.
 
 ## SYNTAX
 
@@ -18,22 +18,63 @@ Add-PmLicenseToPmLicensedGroup [-GroupName] <String[]> [-License] <String[]> [-P
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Add-PmLicenseToPmLicensedGroup cmdlet assigns licenses to licensed groups within UiPath Platform Management. This cmdlet manages license allocation at the organization level, allowing you to distribute UiPath licenses to groups that can then assign them to their members.
+
+Licensed groups are special groups that can hold and distribute UiPath licenses (such as Studio, Attended Robot, Unattended Robot licenses) to their members. Adding licenses to these groups makes those licenses available for automatic assignment to group members based on their roles and requirements.
+
+Use the -GroupName parameter to specify which licensed groups to assign licenses to, and the -License parameter to specify which license types to assign. The -Path parameter enables working with multiple platform instances.
+
+This is a tenant entity cmdlet. The -Path parameter specifies drive names (e.g., Orch1:, Orch2:) for targeting specific platform instances when working with multiple environments.
 
 Primary Endpoint: PUT /api/license/accountant/UserLicense/group
 
-OAuth required scopes:
+OAuth required scopes: [PLACEHOLDER]
 
-Required permissions:
+Required permissions: License management permissions at the organization level
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Add-PmLicenseToPmLicensedGroup Developers StudioPro
 ```
 
-{{ Add example description here }}
+Adds StudioPro licenses to the Developers licensed group in the current platform instance.
+
+### Example 2
+```powershell
+PS C:\> Add-PmLicenseToPmLicensedGroup -Path Orch1:, Orch2: "Automation Team" UnattendedRobot
+```
+
+Adds UnattendedRobot licenses to the "Automation Team" licensed group in both Orch1 and Orch2 platform instances.
+
+### Example 3
+```powershell
+PS Orch1:\> Add-PmLicenseToPmLicensedGroup TestTeam StudioPro, AttendedRobot -WhatIf
+```
+
+Shows what would happen when adding both StudioPro and AttendedRobot licenses to the TestTeam licensed group.
+
+### Example 4
+```powershell
+PS C:\> Add-PmLicenseToPmLicensedGroup -GroupName "Production Bots" -License UnattendedRobot -Confirm
+```
+
+Adds UnattendedRobot licenses to the "Production Bots" licensed group with confirmation prompts.
+
+### Example 5
+```powershell
+PS Orch1:\> Add-PmLicenseToPmLicensedGroup "Business Users", "Power Users" StudioX
+```
+
+Adds StudioX licenses to both "Business Users" and "Power Users" licensed groups.
+
+### Example 6
+```powershell
+PS C:\> Get-PmLicensedGroup | Where-Object {$_.Name -like "*Dev*"} | Add-PmLicenseToPmLicensedGroup -License StudioPro
+```
+
+Gets all licensed groups with names containing "Dev" and adds StudioPro licenses to them using pipeline input.
 
 ## PARAMETERS
 
@@ -53,7 +94,7 @@ Accept wildcard characters: False
 ```
 
 ### -GroupName
-{{ Fill GroupName Description }}
+Specifies the name of the licensed groups to assign licenses to.
 
 ```yaml
 Type: String[]
@@ -68,7 +109,7 @@ Accept wildcard characters: True
 ```
 
 ### -License
-{{ Fill License Description }}
+Specifies the license types to assign to the licensed groups.
 
 ```yaml
 Type: String[]
@@ -83,7 +124,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the name of the target drives. If not specified, the current drive will be targeted.
+Specifies the platform instances to target.
 
 ```yaml
 Type: String[]
@@ -134,9 +175,27 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
+Group names and license types can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.LicensedGroup
+Licensed group objects from Get-PmLicensedGroup can be piped to this cmdlet. The GroupName property will be automatically mapped to the -GroupName parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.UpdateLicensedGroupResponse
+### None
+This cmdlet does not generate any output.
+
 ## NOTES
+This is a tenant entity cmdlet. The -Path parameter specifies drive names (e.g., Orch1:, Orch2:) for targeting specific platform instances.
+
+This cmdlet operates at the organization level through Platform Management for license allocation. Licensed groups can automatically distribute assigned licenses to their members. Common license types include StudioPro, StudioX, AttendedRobot, and UnattendedRobot. Use -WhatIf for testing before actual execution.
 
 ## RELATED LINKS
+
+[Get-PmLicensedGroup](Get-PmLicensedGroup.md)
+
+[Remove-PmLicenseFromPmLicensedGroup](Remove-PmLicenseFromPmLicensedGroup.md)
+
+[Get-PmLicense](Get-PmLicense.md)
+
+[Get-PmLicensedGroupMember](Get-PmLicensedGroupMember.md)

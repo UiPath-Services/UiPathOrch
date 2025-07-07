@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -81,7 +81,7 @@ Gets queues with more than 3 retry attempts configured.
 PS Orch1:\> Get-OrchQueue -Recurse -ExportCsv C:\Reports\Queues.csv
 ```
 
-Exports all queues to CSV with UTF-8 BOM encoding.
+Exports all queues to CSV with UTF-8 BOM encoding. The exported CSV can be imported using New-OrchQueue and Update-OrchQueue cmdlets.
 
 ## PARAMETERS
 
@@ -215,3 +215,4 @@ The -ExportCsv parameter creates import-ready CSV files with human-readable name
 [Remove-OrchQueue](Remove-OrchQueue.md)
 
 [Copy-OrchQueue](Copy-OrchQueue.md)
+

@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-OrchUserSession
 
 ## SYNOPSIS
-Gets the user sessions.
+Gets user session information.
 
 ## SYNTAX
 
@@ -18,22 +18,68 @@ Get-OrchUserSession [-State <String[]>] [-Type <String[]>] [-OrderBy <String[]>]
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Get-OrchUserSession cmdlet retrieves active and historical user session information from UiPath Orchestrator. User sessions represent interactive connections between users and Orchestrator, including login times, session duration, and connection details.
 
-Primary Endpoint: GET /odata/Sessions/UiPath.Server.Configuration.OData.GetGlobalSessions
+This is a tenant entity cmdlet. The -Path parameter specifies target tenants using drive names (e.g., Orch1:, Orch2:). If not specified, the current tenant will be targeted.
 
-OAuth required scopes: OR.Robots or OR.Robots.Read
+Session information is useful for monitoring user activity, security auditing, license usage tracking, and troubleshooting connection issues. The cmdlet provides insights into user access patterns and system utilization.
 
-Required permissions: (Robots.View and Users.View - Classic and modern robot sessions are returned.) and (Users.View or Machines.Create or Machines.Edit - Modern robot sessions are returned. Users.View is required only when the robot is expanded) and (Robots.View - Classic robot sessions are returned. Users.View is required only when the robot is expanded)
+Primary Endpoint: GET /odata/UserSessions
+
+OAuth required scopes: OR.Users or OR.Users.Read
+
+Required permissions: Users.View
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+Get-OrchUserSession
 ```
 
-{{ Add example description here }}
+Gets session information for all users in the current tenant.
+
+### Example 2
+```powershell
+Get-OrchUserSession john.doe
+```
+
+Gets session information for the user "john.doe".
+
+### Example 3
+```powershell
+Get-OrchUserSession *admin*
+```
+
+Gets session information for all users whose names contain "admin".
+
+### Example 4
+```powershell
+Get-OrchUserSession -Path Orch1:, Orch2: developer
+```
+
+Gets session information for the "developer" user across multiple tenants.
+
+### Example 5
+```powershell
+Get-OrchUserSession | Where-Object {$_.IsActive -eq $true}
+```
+
+Gets all currently active user sessions.
+
+### Example 6
+```powershell
+Get-OrchUserSession | Select-Object UserName, LoginTime, LastActivity, IsActive, SessionDuration
+```
+
+Gets all user sessions and displays key timing and status information.
+
+### Example 7
+```powershell
+Get-OrchUser | Get-OrchUserSession | Where-Object {$_.LastActivity -gt (Get-Date).AddHours(-1)}
+```
+
+Gets session information for all users who have been active within the last hour. User information is passed via pipeline using ByPropertyName binding.
 
 ## PARAMETERS
 
@@ -53,7 +99,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-Specifies the name of the target drives. If not specified, the current drive will be targeted.
+Specifies the name of the target tenants using drive names. If not specified, the current tenant will be targeted.
 
 ```yaml
 Type: String[]
@@ -113,8 +159,7 @@ Accept wildcard characters: False
 ```
 
 ### -Skip
-Ignores the specified number of objects and then gets the remaining objects.
-Enter the number of objects to skip.
+Ignores the specified number of objects and then gets the remaining objects. Enter the number of objects to skip.
 
 ```yaml
 Type: UInt64
@@ -129,8 +174,7 @@ Accept wildcard characters: False
 ```
 
 ### -First
-Gets only the specified number of objects.
-Enter the number of objects to get.
+Gets only the specified number of objects. Enter the number of objects to get.
 
 ```yaml
 Type: UInt64
@@ -149,10 +193,16 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+User names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.User
+User objects can be piped to this cmdlet. The UserName property will be automatically mapped to the -UserName parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.Session
+### UiPath.PowerShell.Entities.UserSession
+
 ## NOTES
 
 ## RELATED LINKS

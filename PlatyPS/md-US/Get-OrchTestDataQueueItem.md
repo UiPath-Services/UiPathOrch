@@ -18,7 +18,11 @@ Get-OrchTestDataQueueItem [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-D
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Get-OrchTestDataQueueItem cmdlet retrieves items from test data queues. Test data queue items contain structured data used for test automation scenarios.
+
+This is a folder entity cmdlet. To use this cmdlet, you must first navigate to the target folder using Set-Location (cd), or specify the target folders using -Path, -Recurse, or -Depth parameters.
+
+If no parameters are specified, all test data queue items in the current folder are returned.
 
 Primary Endpoint: GET /odata/TestDataQueueItems?$filter=(TestDataQueueId eq {testDataQueueId})
 
@@ -30,10 +34,45 @@ Required permissions: TestDataQueueItems.View
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+Get-OrchTestDataQueueItem
 ```
 
-{{ Add example description here }}
+Gets all test data queue items in the current folder.
+
+### Example 2
+```powershell
+Get-OrchTestDataQueueItem CustomerData
+```
+
+Gets all items from the test data queue named "CustomerData" in the current folder.
+
+### Example 3
+```powershell
+Get-OrchTestDataQueueItem *Data*
+```
+
+Gets all items from test data queues whose names contain "Data".
+
+### Example 4
+```powershell
+Get-OrchTestDataQueueItem -Recurse
+```
+
+Gets all test data queue items from the current folder and all its subfolders.
+
+### Example 5
+```powershell
+Get-OrchTestDataQueueItem -Path Orch1:\Development, Orch1:\Testing UserTestData
+```
+
+Gets all items from the "UserTestData" queue in both Development and Testing folders.
+
+### Example 6
+```powershell
+Get-OrchTestDataQueue TestData* | Get-OrchTestDataQueueItem
+```
+
+Gets all test data queue items from queues whose names start with "TestData". The queue names are passed via pipeline using ByPropertyName binding.
 
 ## PARAMETERS
 
@@ -117,10 +156,15 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
-## OUTPUTS
+### System.String[]
+Test data queue names can be piped to this cmdlet.
 
 ### UiPath.PowerShell.Entities.TestDataQueue
+Test data queue objects can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
+
+## OUTPUTS
+
+### UiPath.PowerShell.Entities.TestDataQueueItem
 ## NOTES
 
 ## RELATED LINKS

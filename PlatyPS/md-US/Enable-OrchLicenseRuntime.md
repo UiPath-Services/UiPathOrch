@@ -18,7 +18,11 @@ Enable-OrchLicenseRuntime [-RobotType] <String[]> [-Key] <String[]> [-Path <Stri
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Enable-OrchLicenseRuntime cmdlet enables runtime licenses for specific robot types and machine keys. Runtime licenses control the ability for robots to execute automation processes.
+
+This is a tenant entity cmdlet. The -Path parameter specifies target tenants using drive names (e.g., Orch1:, Orch2:). If not specified, the current tenant will be targeted.
+
+Enabling runtime licenses allows robots to execute automation jobs. This is essential for activating automation capabilities after license allocation or maintenance periods.
 
 Primary Endpoint: POST /odata/LicensesRuntime('{machineName}')/UiPath.Server.Configuration.OData.ToggleEnabled
 
@@ -30,15 +34,50 @@ Required permissions: Machines.Edit
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+Enable-OrchLicenseRuntime Unattended Machine01 -WhatIf
 ```
 
-{{ Add example description here }}
+Shows what would happen when enabling the Unattended runtime license for Machine01.
+
+### Example 2
+```powershell
+Enable-OrchLicenseRuntime Unattended Machine01
+```
+
+Enables the Unattended runtime license for Machine01 in the current tenant.
+
+### Example 3
+```powershell
+Enable-OrchLicenseRuntime Studio, StudioX *DevMachine*
+```
+
+Enables Studio and StudioX runtime licenses for all machines whose keys contain "DevMachine".
+
+### Example 4
+```powershell
+Enable-OrchLicenseRuntime -Path Orch1:, Orch2: Unattended ProdMachine01, ProdMachine02 -Confirm
+```
+
+Enables Unattended runtime licenses for ProdMachine01 and ProdMachine02 across multiple tenants with confirmation.
+
+### Example 5
+```powershell
+Enable-OrchLicenseRuntime NonProduction *Test*
+```
+
+Enables NonProduction runtime licenses for all machines with keys containing "Test".
+
+### Example 6
+```powershell
+Get-OrchLicenseRuntime -RobotType Unattended | Where-Object {$_.IsEnabled -eq $false} | Enable-OrchLicenseRuntime
+```
+
+Enables all currently disabled Unattended runtime licenses. License information is passed via pipeline using ByPropertyName binding.
 
 ## PARAMETERS
 
 ### -Key
-Specifies the Key of the runtime licenses to be enabled.
+Specifies the Key of the runtime licenses to be enabled. This typically corresponds to machine names or identifiers.
 
 ```yaml
 Type: String[]
@@ -53,7 +92,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the name of the target drives. If not specified, the current drive will be targeted.
+Specifies the name of the target tenants using drive names. If not specified, the current tenant will be targeted.
 
 ```yaml
 Type: String[]
@@ -83,7 +122,7 @@ Accept wildcard characters: False
 ```
 
 ### -RobotType
-Specifies the RobotType of the runtime licenses to be enabled.
+Specifies the RobotType of the runtime licenses to be enabled. Common values include: Unattended, Attended, Studio, StudioX, NonProduction.
 
 ```yaml
 Type: String[]
@@ -133,10 +172,16 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+Robot types and machine keys can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.LicenseRuntime
+License runtime objects can be piped to this cmdlet. The RobotType and Key properties will be automatically mapped to the respective parameters via ByPropertyName binding.
+
 ## OUTPUTS
 
 ### System.Object
+
 ## NOTES
 
 ## RELATED LINKS

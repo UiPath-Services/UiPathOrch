@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-OrchBucket
 
 ## SYNOPSIS
-Gets storage buckets.
+Retrieves storage buckets configured in UiPath Orchestrator folders.
 
 ## SYNTAX
 
@@ -18,7 +18,11 @@ Get-OrchBucket [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-Depth <UInt3
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Get-OrchBucket cmdlet retrieves storage buckets configured within UiPath Orchestrator folders. Storage buckets provide external storage capabilities for automation processes, enabling secure storage and retrieval of files, documents, and other artifacts used by automation workflows.
+
+Storage buckets serve as external storage providers integrated with Orchestrator, supporting various cloud storage services and file systems. Each bucket contains properties such as Name, Description, Identifier (GUID), StorageProvider, StorageContainer, Options, and FoldersCount.
+
+This cmdlet operates as a folder entity operation, requiring navigation to the appropriate folder context or specification of target folders using the -Path parameter. Use the -Recurse parameter to include buckets in subfolders, and -Depth to control recursion levels.
 
 Primary Endpoint: GET /odata/Buckets
 
@@ -30,15 +34,50 @@ Required permissions: Buckets.View
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+Get-OrchBucket
 ```
 
-{{ Add example description here }}
+Retrieves all storage buckets configured in the current folder using positional parameters.
+
+### Example 2
+```powershell
+Get-OrchBucket -Path Orch1:\Production *Data*
+```
+
+Gets all storage buckets with names containing "Data" in the Production folder, demonstrating -Path parameter priority and positional parameter usage.
+
+### Example 3
+```powershell
+Get-OrchBucket -Recurse ProjectBucket
+```
+
+Gets the "ProjectBucket" storage bucket across all folders recursively, showing -Recurse parameter priority.
+
+### Example 4
+```powershell
+Get-OrchBucket | Where-Object {$_.FoldersCount -gt 0}
+```
+
+Gets all storage buckets that contain items (FoldersCount > 0) using pipeline processing.
+
+### Example 5
+```powershell
+Get-OrchBucket | ConvertTo-Json -Depth 2
+```
+
+Displays detailed bucket properties in JSON format, including Path, Id, Name, Identifier GUID, StorageProvider, StorageContainer, Options, FoldersCount, and Tags array.
+
+### Example 6
+```powershell
+Get-OrchBucket -Path Orch1:\Development -ExportCsv StorageBuckets.csv
+```
+
+Exports storage bucket configurations to CSV file for documentation and backup purposes.
 
 ## PARAMETERS
 
 ### -Depth
-Specifies the depth for recursion into the target folders. A depth of 0 indicates the current location only, with no subfolders included.
+Specifies the depth for recursion into target folders. A depth of 0 indicates the current location only. Higher values include more subfolder levels.
 
 ```yaml
 Type: UInt32
@@ -53,7 +92,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-Specifies the Name of the storage buckets to be retrieved.
+Specifies the names of storage buckets to be retrieved. Supports wildcard patterns for flexible bucket selection.
 
 ```yaml
 Type: String[]
@@ -68,7 +107,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the target folder. If not specified, the current folder will be targeted.
+Specifies the target folders to search. If not specified, the current folder context will be used. For folder entity operations requiring path specification.
 
 ```yaml
 Type: String[]
@@ -98,7 +137,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-Specifies that the operation should include the target folder and all its subfolders.
+Includes the target folder and all its subfolders in the search operation. Essential for comprehensive storage bucket discovery.
 
 ```yaml
 Type: SwitchParameter
@@ -113,7 +152,7 @@ Accept wildcard characters: False
 ```
 
 ### -CsvEncoding
-{{ Fill CsvEncoding Description }}
+Specifies the character encoding for CSV export. Supports various encoding formats for international compatibility.
 
 ```yaml
 Type: Encoding
@@ -122,13 +161,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: UTF8 with BOM
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -ExportCsv
-{{ Fill ExportCsv Description }}
+Specifies the file path for exporting storage bucket information to CSV format. Includes configuration details for documentation and analysis.
 
 ```yaml
 Type: String
@@ -147,10 +186,27 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+Bucket names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.Bucket
+Bucket objects can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.Bucket
+Returns Bucket objects containing information about configured storage buckets. Key properties include Id, Name, Description, Identifier (GUID), StorageProvider, StorageContainer, Options, and FoldersCount.
+
 ## NOTES
+This cmdlet is a folder entity operation requiring navigation to a folder context or path specification using -Path parameter. Storage buckets provide external storage integration for automation processes. Use -Recurse and -Depth parameters to control the scope of bucket discovery across folder hierarchies. This operation requires Buckets.View permissions in the target folders.
 
 ## RELATED LINKS
+
+[Get-OrchBucketItem](Get-OrchBucketItem.md)
+
+[Add-OrchBucket](Add-OrchBucket.md)
+
+[Set-OrchBucket](Set-OrchBucket.md)
+
+[Remove-OrchBucket](Remove-OrchBucket.md)
+

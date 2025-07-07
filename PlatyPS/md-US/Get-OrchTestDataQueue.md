@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-OrchTestDataQueue
 
 ## SYNOPSIS
-Gets the test data queues.
+Retrieves test data queues from UiPath Orchestrator.
 
 ## SYNTAX
 
@@ -18,7 +18,11 @@ Get-OrchTestDataQueue [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-Depth
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Get-OrchTestDataQueue cmdlet retrieves test data queues from UiPath Orchestrator. Test data queues provide structured test data management for automation testing, enabling organized storage and retrieval of test datasets used in automation validation and quality assurance processes.
+
+Test data queues contain structured data sets that can be consumed by test automation workflows, supporting data-driven testing scenarios. These queues enable separation of test data from test logic, facilitating maintainable and scalable test automation practices.
+
+This cmdlet operates as a folder entity operation, requiring navigation to the appropriate folder context or specification of target folders using the -Path parameter. Use the -Recurse parameter to include test data queues from subfolders, and -Depth to control recursion levels.
 
 Primary Endpoint: GET /odata/TestDataQueues
 
@@ -30,15 +34,50 @@ Required permissions: TestDataQueues.View
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Get-OrchTestDataQueue
 ```
 
-{{ Add example description here }}
+Retrieves all test data queues from the current folder.
+
+### Example 2
+```powershell
+PS C:\> Get-OrchTestDataQueue -Path Orch1:\TestFolder -Name "*UserData*"
+```
+
+Gets test data queues with names containing "UserData" from the TestFolder.
+
+### Example 3
+```powershell
+PS Orch1:\> Get-OrchTestDataQueue -Recurse | Where-Object {$_.ItemCount -gt 0}
+```
+
+Retrieves all test data queues across folders that contain test data items.
+
+### Example 4
+```powershell
+PS Orch1:\TestFolder> Get-OrchTestDataQueue | ConvertTo-Json -Depth 3
+```
+
+Displays detailed test data queue properties in JSON format.
+
+### Example 5
+```powershell
+PS Orch1:\> Get-OrchTestDataQueue -Recurse | Select-Object Name, Description, ItemCount, CreatedTime
+```
+
+Displays summary information for all test data queues including item counts and creation timestamps.
+
+### Example 6
+```powershell
+PS Orch1:\Shared> Get-OrchTestDataQueue TestUserQueue, LoginTestData
+```
+
+Retrieves specific test data queues by name.
 
 ## PARAMETERS
 
 ### -Depth
-Specifies the depth for recursion into the target folders. A depth of 0 indicates the current location only, with no subfolders included.
+Specifies the depth for recursion into target folders. A depth of 0 indicates the current location only. Higher values include more subfolder levels.
 
 ```yaml
 Type: UInt32
@@ -53,7 +92,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-Specifies the Name of the test data queues to be retrieved.
+Specifies the names of test data queues to be retrieved. Supports wildcard patterns for flexible queue selection.
 
 ```yaml
 Type: String[]
@@ -68,7 +107,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the target folder. If not specified, the current folder will be targeted.
+Specifies the target folders to search. If not specified, the current folder context will be used. For folder entity operations requiring path specification.
 
 ```yaml
 Type: String[]
@@ -83,7 +122,7 @@ Accept wildcard characters: True
 ```
 
 ### -Recurse
-Specifies that the operation should include the target folder and all its subfolders.
+Includes the target folder and all its subfolders in the search operation. Essential for comprehensive test data queue discovery.
 
 ```yaml
 Type: SwitchParameter
@@ -118,11 +157,25 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
+Test data queue names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.TestDataQueue
+TestDataQueue objects can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
 
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.TestDataQueue
+Returns TestDataQueue objects containing information about test data queues. Key properties typically include Name, Description, ItemCount, Schema definition, CreatedTime, and folder association information.
 
 ## NOTES
+This cmdlet is a folder entity operation for accessing test data queue configurations. Test data queues support data-driven testing by providing structured datasets for automation validation. Queues organize test data separately from test logic, enabling maintainable test automation practices. Use in conjunction with Get-OrchTestDataQueueItem to access individual test data entries. This operation requires TestDataQueues.View permissions in the target folders.
 
 ## RELATED LINKS
+
+[Get-OrchTestDataQueueItem](Get-OrchTestDataQueueItem.md)
+
+[Add-OrchTestDataQueue](Add-OrchTestDataQueue.md)
+
+[Set-OrchTestDataQueue](Set-OrchTestDataQueue.md)
+
+[Remove-OrchTestDataQueue](Remove-OrchTestDataQueue.md)

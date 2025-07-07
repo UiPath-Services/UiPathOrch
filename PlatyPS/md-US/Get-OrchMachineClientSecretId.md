@@ -18,41 +18,73 @@ Get-OrchMachineClientSecretId [[-Name] <String[]>] [[-SecretId] <String[]>] [-Pa
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Get-OrchMachineClientSecretId cmdlet retrieves client secret information for machines, including creation dates and identifiers. Client secrets are used for machine authentication to Orchestrator and have expiration policies for security management.
+
+This is a tenant entity cmdlet. The -Path parameter specifies target tenants using drive names (e.g., Orch1:, Orch2:). If not specified, the current tenant will be targeted.
+
+This cmdlet is useful for security audits, secret rotation management, and identifying secrets that need renewal based on their creation dates.
 
 Primary Endpoint: GET /api/clientsecrets/{licenseKey}
 
 OAuth required scopes: OR.Machines
 
-Required permissions:
+Required permissions: Machines.View
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-OrchMachineClientSecretId
+Get-OrchMachineClientSecretId
 ```
 
-Outputs the issuance date and time of client secrets for all machines in this tenant.
+Outputs the issuance date and time of client secrets for all machines in the current tenant.
 
 ### Example 2
 ```powershell
-PS Orch1:\> Get-OrchMachineClientSecretId <machine names>
+Get-OrchMachineClientSecretId Machine01, Machine02
 ```
 
 Outputs the issuance date and time of client secrets for the specified machines.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchMachineClientSecretId | ? CreationTime -LT '2024/10/01' | Remove-OrchMachineClientSecret
+Get-OrchMachineClientSecretId *Prod*
 ```
 
-Deletes all client secrets issued before 2024/10/01 for all machines in this tenant.
+Gets client secret information for all machines whose names contain "Prod".
+
+### Example 4
+```powershell
+Get-OrchMachineClientSecretId -Path Orch1:, Orch2: Machine01
+```
+
+Gets client secret information for Machine01 across multiple tenants.
+
+### Example 5
+```powershell
+Get-OrchMachineClientSecretId -SecretId *abc123*
+```
+
+Gets client secret information for secrets whose IDs contain "abc123".
+
+### Example 6
+```powershell
+Get-OrchMachineClientSecretId | Where-Object {$_.CreationTime -LT '2024/10/01'} | Remove-OrchMachineClientSecret
+```
+
+Deletes all client secrets issued before 2024/10/01 for all machines in the current tenant.
+
+### Example 7
+```powershell
+Get-OrchMachine | Get-OrchMachineClientSecretId | Select-Object MachineName, SecretId, CreationTime
+```
+
+Gets client secret information for all machines via pipeline and displays key properties.
 
 ## PARAMETERS
 
 ### -Name
-{{ Fill Name Description }}
+Specifies the names of the machines for which client secret information should be retrieved.
 
 ```yaml
 Type: String[]
@@ -67,7 +99,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-{{ Fill Path Description }}
+Specifies the name of the target tenants using drive names. If not specified, the current tenant will be targeted.
 
 ```yaml
 Type: String[]
@@ -82,7 +114,7 @@ Accept wildcard characters: False
 ```
 
 ### -SecretId
-{{ Fill SecretId Description }}
+Specifies the client secret IDs to be retrieved. This can be used to query specific secrets by their identifiers.
 
 ```yaml
 Type: String[]
@@ -117,6 +149,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
+Machine names and secret IDs can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.Machine
+Machine objects can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
 
 ## OUTPUTS
 

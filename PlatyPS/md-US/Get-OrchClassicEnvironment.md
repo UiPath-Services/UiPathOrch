@@ -18,7 +18,11 @@ Get-OrchClassicEnvironment [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Get-OrchClassicEnvironment cmdlet retrieves classic environment configurations from UiPath Orchestrator. Classic environments are the legacy robot grouping mechanism used before the modern folder-based approach, containing robot collections and their associated processes.
+
+This is a folder entity cmdlet. To use this cmdlet, you must first navigate to the target folder using Set-Location (cd), or specify the target folders using -Path, -Recurse, or -Depth parameters.
+
+Classic environments provide backward compatibility for existing robot deployments and are primarily used for migrating from older Orchestrator versions to the modern folder structure.
 
 Primary Endpoint: GET /odata/Environments?$expand=Robots
 
@@ -30,10 +34,52 @@ Required permissions: Environments.View
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+Get-OrchClassicEnvironment
 ```
 
-{{ Add example description here }}
+Gets all classic environments in the current folder.
+
+### Example 2
+```powershell
+Get-OrchClassicEnvironment Production
+```
+
+Gets the classic environment named "Production" from the current folder.
+
+### Example 3
+```powershell
+Get-OrchClassicEnvironment *Test*
+```
+
+Gets all classic environments whose names contain "Test".
+
+### Example 4
+```powershell
+Get-OrchClassicEnvironment -Recurse
+```
+
+Gets all classic environments from the current folder and all its subfolders.
+
+### Example 5
+```powershell
+Get-OrchClassicEnvironment -Path Orch1:\Legacy, Orch1:\Migration
+```
+
+Gets classic environments from the Legacy and Migration folders.
+
+### Example 6
+```powershell
+Get-OrchClassicEnvironment | Where-Object {$_.Robots.Count -gt 0}
+```
+
+Gets all classic environments that contain at least one robot.
+
+### Example 7
+```powershell
+Get-OrchClassicEnvironment -Depth 1 | Select-Object Name, Description, @{Name="RobotCount"; Expression={$_.Robots.Count}}
+```
+
+Gets classic environments from the current folder only (no subfolders) and displays their names, descriptions, and robot counts.
 
 ## PARAMETERS
 
@@ -118,6 +164,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
+Environment names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.Environment
+Environment objects can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
 
 ## OUTPUTS
 

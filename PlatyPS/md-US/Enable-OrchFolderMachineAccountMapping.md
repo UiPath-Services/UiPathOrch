@@ -8,7 +8,7 @@ schema: 2.0.0
 # Enable-OrchFolderMachineAccountMapping
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+Enables machine account mapping for folder-scoped machines.
 
 ## SYNTAX
 
@@ -18,22 +18,61 @@ Enable-OrchFolderMachineAccountMapping [-Name] <String[]> [[-UserName] <String[]
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Enable-OrchFolderMachineAccountMapping cmdlet enables the mapping between machines and user accounts within specific folders. This creates an association that allows specific users to connect to machines in the folder context.
+
+This is a folder entity cmdlet. To use this cmdlet, you must first navigate to the target folder using Set-Location (cd), or specify the target folders using -Path, -Recurse, or -Depth parameters.
+
+When account mapping is enabled, the specified users can establish dedicated connections to the specified machines through the folder context, providing controlled access to automation resources.
 
 Primary Endpoint: GET /odata/Folders/UiPath.Server.Configuration.OData.GetMachineRobots(folderId={folderId},machineId={machineId}), POST /odata/Folders/UiPath.Server.Configuration.OData.SetMachineRobots
 
 OAuth required scopes: OR.Robots
 
-Required permissions:
+Required permissions: Robots.Edit
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+Enable-OrchFolderMachineAccountMapping Machine01 john.doe -WhatIf
 ```
 
-{{ Add example description here }}
+Shows what would happen when enabling account mapping between Machine01 and user john.doe in the current folder.
+
+### Example 2
+```powershell
+Enable-OrchFolderMachineAccountMapping Machine01 john.doe
+```
+
+Enables the account mapping between Machine01 and user john.doe in the current folder.
+
+### Example 3
+```powershell
+Enable-OrchFolderMachineAccountMapping *Prod* automation.user
+```
+
+Enables account mappings for all machines containing "Prod" and the automation.user account.
+
+### Example 4
+```powershell
+Enable-OrchFolderMachineAccountMapping -Path Orch1:\Development Machine01, Machine02 developer1, developer2
+```
+
+Enables account mappings between multiple machines and users in the Development folder.
+
+### Example 5
+```powershell
+Enable-OrchFolderMachineAccountMapping -Recurse *Robot* service.account -Confirm
+```
+
+Enables account mappings for all machines containing "Robot" and the service.account in the current folder and all subfolders with confirmation.
+
+### Example 6
+```powershell
+Get-OrchMachine -Status Available | Enable-OrchFolderMachineAccountMapping -UserName qa.tester
+```
+
+Enables account mappings between all available machines and the qa.tester account. Machine names are passed via pipeline using ByPropertyName binding.
 
 ## PARAMETERS
 
@@ -68,7 +107,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-{{ Fill Name Description }}
+Specifies the name of the machines for which account mapping should be enabled.
 
 ```yaml
 Type: String[]
@@ -113,7 +152,7 @@ Accept wildcard characters: False
 ```
 
 ### -UserName
-{{ Fill UserName Description }}
+Specifies the user names for which account mapping should be enabled. Multiple users can be specified to create mappings with multiple machines.
 
 ```yaml
 Type: String[]
@@ -163,10 +202,16 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+Machine names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.Machine
+Machine objects can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
 ### System.Object
+
 ## NOTES
 
 ## RELATED LINKS

@@ -18,7 +18,11 @@ Get-OrchTestSet [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-Depth <UInt
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Get-OrchTestSet cmdlet retrieves test sets from UiPath Orchestrator. Test sets are collections of test cases that can be executed together to validate automation processes.
+
+This is a folder entity cmdlet. To use this cmdlet, you must first navigate to the target folder using Set-Location (cd), or specify the target folders using -Path, -Recurse, or -Depth parameters.
+
+If no parameters are specified, all test sets in the current folder are returned.
 
 Primary Endpoint: GET /odata/TestSets?$filter=(SourceType eq 'User')&$expand=Environment
 
@@ -30,10 +34,45 @@ Required permissions: TestSets.View
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+Get-OrchTestSet
 ```
 
-{{ Add example description here }}
+Gets all test sets in the current folder.
+
+### Example 2
+```powershell
+Get-OrchTestSet RegressionTests
+```
+
+Gets the test set named "RegressionTests" from the current folder.
+
+### Example 3
+```powershell
+Get-OrchTestSet *Smoke*
+```
+
+Gets all test sets whose names contain "Smoke".
+
+### Example 4
+```powershell
+Get-OrchTestSet -Recurse
+```
+
+Gets all test sets from the current folder and all its subfolders.
+
+### Example 5
+```powershell
+Get-OrchTestSet -Path Orch1:\Development, Orch1:\Testing UITests
+```
+
+Gets the "UITests" test set from both Development and Testing folders.
+
+### Example 6
+```powershell
+Get-OrchTestSet | Where-Object {$_.TestCases.Count -gt 5}
+```
+
+Gets all test sets that contain more than 5 test cases.
 
 ## PARAMETERS
 
@@ -118,6 +157,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
+Test set names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.TestSet
+Test set objects can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
 
 ## OUTPUTS
 

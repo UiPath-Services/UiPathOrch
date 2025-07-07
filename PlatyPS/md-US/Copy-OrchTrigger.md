@@ -8,7 +8,7 @@ schema: 2.0.0
 # Copy-OrchTrigger
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+Copies triggers to destination folders.
 
 ## SYNTAX
 
@@ -18,27 +18,68 @@ Copy-OrchTrigger [-Name] <String[]> [-Destination] <String> [-Path <String>] [-R
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Copy-OrchTrigger cmdlet copies triggers from source folders to destination folders within UiPath Orchestrator tenants or across different tenants. This cmdlet creates complete copies of triggers, including their scheduling configurations, process associations, and execution parameters.
 
-Primary Endpoint:
+The cmdlet supports both intra-tenant copying (within the same tenant) and inter-tenant copying (between different tenants). Triggers define automated process execution schedules and conditions, making this cmdlet essential for deploying automation schedules across different environments.
 
-OAuth required scopes:
+Use the -Name parameter to specify which triggers to copy and the -Destination parameter to specify the target folder. The cmdlet supports wildcard patterns for copying multiple triggers efficiently. Note that copied triggers may need adjustment if the associated processes have different names in the destination folder.
 
-Required permissions:
+This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters. The -Recurse parameter enables copying triggers from all subfolders, maintaining the folder structure in the destination.
+
+Primary Endpoint: [PLACEHOLDER - 具体的なAPIエンドポイント]
+
+OAuth required scopes: [PLACEHOLDER]
+
+Required permissions: [PLACEHOLDER]
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Development> Copy-OrchTrigger DailyReportTrigger Orch1:\Production
 ```
 
-{{ Add example description here }}
+Copies the DailyReportTrigger from the current folder (Development) to the Production folder within the same tenant using positional parameters.
+
+### Example 2
+```powershell
+PS C:\> Copy-OrchTrigger -Path Orch1:\Development ScheduledBackup Orch2:\Production
+```
+
+Copies the ScheduledBackup trigger from Orch1:\Development to Orch2:\Production, demonstrating inter-tenant trigger copying.
+
+### Example 3
+```powershell
+PS Orch1:\Development> Copy-OrchTrigger *Daily*, *Weekly* Orch1:\Production -WhatIf
+```
+
+Shows what would happen when copying multiple triggers with names containing Daily or Weekly from the current folder to the Production folder using -WhatIf for safety.
+
+### Example 4
+```powershell
+PS C:\> Copy-OrchTrigger -Path Orch1:\Development *Scheduled* Orch2:\Production
+```
+
+Copies all triggers containing Scheduled in their name from Orch1:\Development to Orch2:\Production using wildcards for inter-tenant copying.
+
+### Example 5
+```powershell
+PS Orch1:\> Copy-OrchTrigger -Recurse *Automated* Orch2:\Finance -WhatIf
+```
+
+Shows what would happen when copying all triggers containing Automated from all subfolders recursively to Orch2:\Finance.
+
+### Example 6
+```powershell
+PS Orch1:\Development> Get-OrchTrigger *Batch* | Copy-OrchTrigger -Destination Orch2:\Production
+```
+
+Gets all triggers containing Batch in their names and copies them to Orch2:\Production using pipeline input.
 
 ## PARAMETERS
 
 ### -Destination
-Specifies the destination folders.
+Specifies the destination folder where triggers should be copied.
 
 ```yaml
 Type: String
@@ -68,7 +109,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the source folders. If not specified, the current folder will be used as the source.
+Specifies the source folder. If not specified, the current folder will be used as the source.
 
 ```yaml
 Type: String
@@ -129,7 +170,7 @@ Accept wildcard characters: False
 ```
 
 ### -Depth
-Specifies the depth for recursion into the target folders. A depth of 0 indicates the current location only, with no subfolders included.
+Specifies the maximum number of subfolder levels to include when using -Recurse parameter.
 
 ```yaml
 Type: UInt32
@@ -144,7 +185,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-Specifies that the operation should include the target folder and all its subfolders.
+Specifies that triggers should be copied from all subfolders recursively, maintaining the folder structure in the destination.
 
 ```yaml
 Type: SwitchParameter
@@ -163,10 +204,28 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+Trigger names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.Trigger
+Trigger objects from Get-OrchTrigger can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.ProcessSchedule
+### None
+This cmdlet does not generate any output.
+
 ## NOTES
+This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.
+
+Triggers contain scheduling configurations and process associations. When copying across environments, verify that associated processes exist in the destination folder and adjust trigger configurations if necessary. Use wildcards for efficient bulk operations and -WhatIf for testing before actual execution.
 
 ## RELATED LINKS
+
+[Get-OrchTrigger](Get-OrchTrigger.md)
+
+[Remove-OrchTrigger](Remove-OrchTrigger.md)
+
+[Set-OrchTrigger](Set-OrchTrigger.md)
+
+[Start-OrchTrigger](Start-OrchTrigger.md)

@@ -8,7 +8,7 @@ schema: 2.0.0
 # Remove-OrchBucket
 
 ## SYNOPSIS
-Removes the storage buckets.
+Removes storage buckets.
 
 ## SYNTAX
 
@@ -18,27 +18,64 @@ Remove-OrchBucket [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Depth <UInt
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Remove-OrchBucket cmdlet removes storage buckets from UiPath Orchestrator. This operation permanently deletes the bucket and any contained folders or files, so use with caution.
 
-Primary Endpoint: DELETE /odata/Buckets({bucketId})
+**This is a folder entity cmdlet.** To use this cmdlet, you must first navigate to the target folder using Set-Location (cd), or specify the target folders using the -Path, -Recurse, or -Depth parameters. If you attempt to run this cmdlet without being in a folder context, you will receive the error: \"Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.\"
 
-OAuth required scopes: OR.Administration
+**Warning**: This operation is destructive and cannot be undone. All data stored in the bucket will be permanently deleted. Consider using -WhatIf to preview the operation before execution, and -Confirm for additional safety.
 
+Primary Endpoint: DELETE /odata/Buckets({id})
+OAuth required scopes: OR.Buckets or OR.Buckets.Write  
 Required permissions: Buckets.Delete
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+Remove-OrchBucket TestBucket -WhatIf
 ```
 
-{{ Add example description here }}
+Shows what would happen when removing the \"TestBucket\" bucket without actually deleting it.
+
+### Example 2
+```powershell
+Remove-OrchBucket OldBucket -Confirm
+```
+
+Removes the \"OldBucket\" bucket with confirmation prompt for safety.
+
+### Example 3
+```powershell
+Remove-OrchBucket Temp* -WhatIf
+```
+
+Shows what would happen when removing all buckets starting with \"Temp\" using wildcard pattern.
+
+### Example 4
+```powershell
+Get-OrchBucket | Where-Object {$_.Description -like \"*obsolete*\"} | Remove-OrchBucket -WhatIf
+```
+
+Shows what would happen when removing buckets that have \"obsolete\" in their description using pipeline processing.
+
+### Example 5
+```powershell
+Remove-OrchBucket -Path Orch1:\Development Archive*, Backup* -Confirm
+```
+
+Removes buckets matching \"Archive*\" and \"Backup*\" patterns in the Development folder with confirmation.
+
+### Example 6
+```powershell
+Remove-OrchBucket -Recurse TempData -WhatIf
+```
+
+Shows what would happen when removing \"TempData\" buckets recursively across all subfolders.
 
 ## PARAMETERS
 
 ### -Depth
-Specifies the depth for recursion into the target folders. A depth of 0 indicates the current location only, with no subfolders included.
+Specifies the maximum depth of recursion when used with -Recurse parameter.
 
 ```yaml
 Type: UInt32
@@ -53,7 +90,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-Specifies the Name of the storage buckets to be removed.
+Specifies the name(s) of the bucket(s) to remove. Supports wildcard patterns for bulk operations.
 
 ```yaml
 Type: String[]
@@ -68,7 +105,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the target folder. If not specified, the current folder will be targeted.
+Specifies the path(s) to the target folder(s) containing the buckets to remove. Use this parameter to remove buckets from specific folders without changing your current location.
 
 ```yaml
 Type: String[]
@@ -98,7 +135,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-Specifies that the operation should include the target folder and all its subfolders.
+Indicates that the cmdlet should process all subfolders recursively when used with -Path.
 
 ```yaml
 Type: SwitchParameter
@@ -113,7 +150,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
-Prompts you for confirmation before running the cmdlet.
+Prompts you for confirmation before running the cmdlet. Recommended for production environments.
 
 ```yaml
 Type: SwitchParameter
@@ -128,8 +165,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+Shows what would happen if the cmdlet runs. The cmdlet is not run. This is highly recommended for destructive operations.
 
 ```yaml
 Type: SwitchParameter
@@ -148,10 +184,27 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+Bucket names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.Bucket
+Bucket objects can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
-### System.Object
+### None
+This cmdlet does not generate any output when buckets are successfully removed.
+
 ## NOTES
+- **DESTRUCTIVE OPERATION**: This command permanently deletes buckets and all their contents
+- Always use -WhatIf first to preview the operation
+- Consider using -Confirm for additional safety in production environments
+- Wildcard patterns allow bulk deletion but require extra caution
+- Pipeline processing enables complex filtering scenarios
+- Ensure proper backup procedures before removing important buckets
 
 ## RELATED LINKS
+
+[Get-OrchBucket](Get-OrchBucket.md)
+[New-OrchBucket](New-OrchBucket.md)
+[Copy-OrchBucket](Copy-OrchBucket.md)

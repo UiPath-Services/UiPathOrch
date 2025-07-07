@@ -8,7 +8,7 @@ schema: 2.0.0
 # Disable-OrchTrigger
 
 ## SYNOPSIS
-Disables the triggers.
+Disables specified automation triggers to prevent scheduled execution.
 
 ## SYNTAX
 
@@ -18,7 +18,13 @@ Disable-OrchTrigger [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Depth <UI
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Disable-OrchTrigger cmdlet disables specified automation triggers within UiPath Orchestrator, preventing them from executing according to their configured schedules or conditions. Triggers define when and how automation processes should be executed, and disabling them temporarily suspends automation execution.
+
+Disabling triggers is useful for maintenance periods, troubleshooting, testing scenarios, or when you need to temporarily halt specific automation processes without deleting the trigger configuration. The trigger settings are preserved and can be easily re-enabled using Enable-OrchTrigger.
+
+This cmdlet operates as a folder entity operation, requiring navigation to the appropriate folder context or specification of target folders using the -Path parameter. Use the -Recurse parameter to include triggers in subfolders, and -Depth to control recursion levels.
+
+Disabling triggers directly affects automation execution schedules. Use -WhatIf to preview the operation and -Confirm for confirmation prompts when disabling multiple triggers that may impact business processes.
 
 Primary Endpoint: POST /odata/ProcessSchedules/UiPath.Server.Configuration.OData.SetEnabled
 
@@ -30,15 +36,50 @@ Required permissions: Schedules.Edit
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Production> Disable-OrchTrigger DailyReportTrigger -WhatIf
 ```
 
-{{ Add example description here }}
+Shows what would happen when disabling the DailyReportTrigger in the current Production folder.
+
+### Example 2
+```powershell
+PS C:\> Disable-OrchTrigger -Path Orch1:\Production -Name *Maintenance* -Confirm
+```
+
+Disables all triggers with names containing "Maintenance" in the Production folder with confirmation prompts.
+
+### Example 3
+```powershell
+PS Orch1:\> Disable-OrchTrigger -Recurse TestTrigger1, TestTrigger2
+```
+
+Disables TestTrigger1 and TestTrigger2 across all folders.
+
+### Example 4
+```powershell
+PS Orch1:\Development> Disable-OrchTrigger *Debug* -WhatIf
+```
+
+Shows what would happen when disabling all triggers with names containing "Debug" in the Development folder.
+
+### Example 5
+```powershell
+PS C:\> Disable-OrchTrigger -Path Orch1:\Production -Recurse -Depth 1 -Name WeekendTrigger
+```
+
+Disables WeekendTrigger in the Production folder and its immediate subfolders.
+
+### Example 6
+```powershell
+PS Orch1:\> Get-OrchTrigger | Where-Object {$_.NextExecution -lt (Get-Date).AddDays(1)} | Disable-OrchTrigger -Confirm
+```
+
+Disables all triggers scheduled to execute within the next day with confirmation prompts.
 
 ## PARAMETERS
 
 ### -Depth
-Specifies the depth for recursion into the target folders. A depth of 0 indicates the current location only, with no subfolders included.
+Specifies the depth for recursion into target folders. A depth of 0 indicates the current location only. Higher values include more subfolder levels.
 
 ```yaml
 Type: UInt32
@@ -53,7 +94,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-Specifies the Name of the triggers to be disabled.
+Specifies the names of triggers to be disabled. Supports wildcard patterns for flexible trigger selection.
 
 ```yaml
 Type: String[]
@@ -68,7 +109,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the target folder. If not specified, the current folder will be targeted.
+Specifies the target folders to search. If not specified, the current folder context will be used. For folder entity operations requiring path specification.
 
 ```yaml
 Type: String[]
@@ -98,7 +139,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-Specifies that the operation should include the target folder and all its subfolders.
+Includes the target folder and all its subfolders in the operation. Essential for comprehensive trigger management across folder hierarchies.
 
 ```yaml
 Type: SwitchParameter
@@ -113,7 +154,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
-Prompts you for confirmation before running the cmdlet.
+Prompts you for confirmation before running the cmdlet. Highly recommended when disabling triggers that affect business processes.
 
 ```yaml
 Type: SwitchParameter
@@ -128,8 +169,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+Shows what would happen if the cmdlet runs without actually disabling the triggers. Highly recommended for previewing the operation scope.
 
 ```yaml
 Type: SwitchParameter
@@ -148,10 +188,26 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+Trigger names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.ProcessSchedule
+Trigger objects from Get-OrchTrigger can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
-### System.Object
+### None
+This cmdlet does not generate any output.
+
 ## NOTES
+This cmdlet is a folder entity operation that suspends automation trigger execution without deleting trigger configuration. Disabling triggers directly affects automation schedules and may impact business processes. Use -WhatIf to preview operations and -Confirm for safety when disabling multiple triggers. The operation requires Schedules.Edit permissions in the target folders. Disabled triggers can be re-enabled using Enable-OrchTrigger while preserving all configuration settings.
 
 ## RELATED LINKS
+
+[Enable-OrchTrigger](Enable-OrchTrigger.md)
+
+[Get-OrchTrigger](Get-OrchTrigger.md)
+
+[Set-OrchTrigger](Set-OrchTrigger.md)
+
+[Remove-OrchTrigger](Remove-OrchTrigger.md)

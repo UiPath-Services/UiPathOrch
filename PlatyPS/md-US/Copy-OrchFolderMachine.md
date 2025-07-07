@@ -8,7 +8,7 @@ schema: 2.0.0
 # Copy-OrchFolderMachine
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+Copies folder machine assignments to destination folders.
 
 ## SYNTAX
 
@@ -18,27 +18,68 @@ Copy-OrchFolderMachine [-Name] <String[]> [-Destination] <String> [-Path <String
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Copy-OrchFolderMachine cmdlet copies machine assignments from source folders to destination folders within UiPath Orchestrator tenants or across different tenants. This cmdlet replicates the machine-to-folder relationships, ensuring that the same machines are available in the destination folders.
 
-Primary Endpoint:
+The cmdlet supports both intra-tenant copying (within the same tenant) and inter-tenant copying (between different tenants). This is useful for maintaining consistent machine availability across different environments or for setting up parallel folder structures.
 
-OAuth required scopes:
+Use the -Name parameter to specify which machines to copy assignments for and the -Destination parameter to specify the target folder. The cmdlet copies the machine assignments rather than the machines themselves.
 
-Required permissions:
+This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters. The -Recurse parameter enables copying machine assignments from all subfolders, maintaining the folder structure in the destination.
+
+Primary Endpoint: [PLACEHOLDER - 具体的なAPIエンドポイント]
+
+OAuth required scopes: [PLACEHOLDER]
+
+Required permissions: [PLACEHOLDER]
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Development> Copy-OrchFolderMachine Robot01 Orch1:\Production
 ```
 
-{{ Add example description here }}
+Copies the Robot01 machine assignment from the current folder (Development) to the Production folder within the same tenant.
+
+### Example 2
+```powershell
+PS C:\> Copy-OrchFolderMachine -Path Orch1:\Development SharedBot Orch2:\Production
+```
+
+Copies the SharedBot machine assignment from Orch1:\Development to Orch2:\Production, demonstrating inter-tenant machine assignment copying.
+
+### Example 3
+```powershell
+PS Orch1:\Development> Copy-OrchFolderMachine Robot*, Bot* Orch1:\Production -WhatIf
+```
+
+Shows what would happen when copying multiple machine assignments with names starting with Robot or Bot from the current folder to the Production folder.
+
+### Example 4
+```powershell
+PS C:\> Copy-OrchFolderMachine -Path Orch1:\Development *Template* Orch2:\Production
+```
+
+Copies all machine assignments containing Template in their name from Orch1:\Development to Orch2:\Production using wildcards.
+
+### Example 5
+```powershell
+PS Orch1:\> Copy-OrchFolderMachine -Recurse *Production* Orch2:\Finance -WhatIf
+```
+
+Shows what would happen when copying all machine assignments containing Production from all subfolders recursively to Orch2:\Finance.
+
+### Example 6
+```powershell
+PS Orch1:\Development> Get-OrchFolderMachine *Shared* | Copy-OrchFolderMachine -Destination Orch2:\Production
+```
+
+Gets all machine assignments containing Shared in their names and copies them to Orch2:\Production using pipeline input.
 
 ## PARAMETERS
 
 ### -Destination
-Specifies the destination folders.
+Specifies the destination folder where machine assignments should be copied.
 
 ```yaml
 Type: String
@@ -53,7 +94,7 @@ Accept wildcard characters: True
 ```
 
 ### -Name
-Specifies the Name of the folder machines to be copied.
+Specifies the Name of the machines whose assignments should be copied.
 
 ```yaml
 Type: String[]
@@ -68,7 +109,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-Specifies the source folders. If not specified, the current folder will be used as the source.
+Specifies the source folder. If not specified, the current folder will be used as the source.
 
 ```yaml
 Type: String
@@ -129,7 +170,7 @@ Accept wildcard characters: False
 ```
 
 ### -Depth
-{{ Fill Depth Description }}
+Specifies the maximum number of subfolder levels to include when using -Recurse parameter.
 
 ```yaml
 Type: UInt32
@@ -144,7 +185,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-{{ Fill Recurse Description }}
+Specifies that machine assignments should be copied from all subfolders recursively, maintaining the folder structure in the destination.
 
 ```yaml
 Type: SwitchParameter
@@ -163,10 +204,26 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+Machine names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.FolderMachine
+Folder machine objects from Get-OrchFolderMachine can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
-### System.Object
+### None
+This cmdlet does not generate any output.
+
 ## NOTES
+This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.
+
+This cmdlet copies machine assignments, not the machines themselves. The machines must already exist in the target tenant when copying across tenants.
 
 ## RELATED LINKS
+
+[Get-OrchFolderMachine](Get-OrchFolderMachine.md)
+
+[Add-OrchFolderMachine](Add-OrchFolderMachine.md)
+
+[Remove-OrchFolderMachine](Remove-OrchFolderMachine.md)

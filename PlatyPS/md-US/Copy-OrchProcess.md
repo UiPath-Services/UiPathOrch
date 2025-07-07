@@ -8,7 +8,7 @@ schema: 2.0.0
 # Copy-OrchProcess
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+Copies processes to destination folders.
 
 ## SYNTAX
 
@@ -18,27 +18,68 @@ Copy-OrchProcess [-Name] <String[]> [-Destination] <String> [-Path <String>] [-R
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Copy-OrchProcess cmdlet copies processes from source folders to destination folders within UiPath Orchestrator tenants or across different tenants. This cmdlet creates complete copies of processes, including their configurations, parameters, and metadata.
 
-Primary Endpoint:
+The cmdlet supports both intra-tenant copying (within the same tenant) and inter-tenant copying (between different tenants). Processes contain automation workflows and their execution configurations, making this cmdlet essential for deploying processes across different environments.
 
-OAuth required scopes:
+Use the -Name parameter to specify which processes to copy and the -Destination parameter to specify the target folder. The cmdlet supports wildcard patterns for copying multiple processes efficiently.
 
-Required permissions:
+This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters. The -Recurse parameter enables copying processes from all subfolders, maintaining the folder structure in the destination.
+
+Primary Endpoint: [PLACEHOLDER - 具体的なAPIエンドポイント]
+
+OAuth required scopes: [PLACEHOLDER]
+
+Required permissions: [PLACEHOLDER]
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Development> Copy-OrchProcess InvoiceProcessing Orch1:\Production
 ```
 
-{{ Add example description here }}
+Copies the InvoiceProcessing process from the current folder (Development) to the Production folder within the same tenant using positional parameters.
+
+### Example 2
+```powershell
+PS C:\> Copy-OrchProcess -Path Orch1:\Development EmailAutomation Orch2:\Production
+```
+
+Copies the EmailAutomation process from Orch1:\Development to Orch2:\Production, demonstrating inter-tenant process copying.
+
+### Example 3
+```powershell
+PS Orch1:\Development> Copy-OrchProcess *Report*, *Invoice* Orch1:\Production -WhatIf
+```
+
+Shows what would happen when copying multiple processes with names containing Report or Invoice from the current folder to the Production folder using -WhatIf for safety.
+
+### Example 4
+```powershell
+PS C:\> Copy-OrchProcess -Path Orch1:\Development *Automation* Orch2:\Production
+```
+
+Copies all processes containing Automation in their name from Orch1:\Development to Orch2:\Production using wildcards for inter-tenant copying.
+
+### Example 5
+```powershell
+PS Orch1:\> Copy-OrchProcess -Recurse *Daily* Orch2:\Finance -WhatIf
+```
+
+Shows what would happen when copying all processes containing Daily from all subfolders recursively to Orch2:\Finance.
+
+### Example 6
+```powershell
+PS Orch1:\Development> Get-OrchProcess *Scheduled* | Copy-OrchProcess -Destination Orch2:\Production
+```
+
+Gets all processes containing Scheduled in their names and copies them to Orch2:\Production using pipeline input.
 
 ## PARAMETERS
 
 ### -Destination
-Specifies the destination folders.
+Specifies the destination folder where processes should be copied.
 
 ```yaml
 Type: String
@@ -68,7 +109,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the source folders. If not specified, the current folder will be used as the source.
+Specifies the source folder. If not specified, the current folder will be used as the source.
 
 ```yaml
 Type: String
@@ -129,7 +170,7 @@ Accept wildcard characters: False
 ```
 
 ### -Depth
-{{ Fill Depth Description }}
+Specifies the maximum number of subfolder levels to include when using -Recurse parameter.
 
 ```yaml
 Type: UInt32
@@ -144,7 +185,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-{{ Fill Recurse Description }}
+Specifies that processes should be copied from all subfolders recursively, maintaining the folder structure in the destination.
 
 ```yaml
 Type: SwitchParameter
@@ -163,10 +204,28 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+Process names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.Process
+Process objects from Get-OrchProcess can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.Release
+### None
+This cmdlet does not generate any output.
+
 ## NOTES
+This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.
+
+Processes contain automation workflows and execution configurations. Use wildcards for efficient bulk operations and -WhatIf for testing before actual execution.
 
 ## RELATED LINKS
+
+[Get-OrchProcess](Get-OrchProcess.md)
+
+[Remove-OrchProcess](Remove-OrchProcess.md)
+
+[Start-OrchProcess](Start-OrchProcess.md)
+
+[Set-OrchProcess](Set-OrchProcess.md)

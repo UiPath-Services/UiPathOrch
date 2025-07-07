@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,7 +18,13 @@ Add-OrchAssetLink [-Name] <String[]> [-Link] <String[]> [-Path <String[]>] [-Pro
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Add-OrchAssetLink cmdlet creates links for assets, allowing them to be shared across multiple folders within UiPath Orchestrator tenants. This cmdlet enables asset sharing by linking existing assets from one folder to other specified folders.
+
+This is a folder entity cmdlet. If you receive the error "Use Set-Location cmdlet (cd command) to navigate to the target folder first", navigate to the folder containing the source assets or use the -Path parameter to specify the target folder.
+
+Use the -Name parameter to specify which assets to link and the -Link parameter to specify the target folders where the asset links should be created. Asset links provide access to the same asset data across multiple folder contexts without duplicating the asset content.
+
+The cmdlet supports wildcard patterns for both asset names and folder links, enabling bulk operations for multiple assets and folders simultaneously.
 
 Primary Endpoint: POST /odata/Assets/UiPath.Server.Configuration.OData.ShareToFolders
 
@@ -30,10 +36,38 @@ Required permissions:
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Add-OrchAssetLink SampleBooleanAsset "Orch1:\root"
 ```
 
-{{ Add example description here }}
+Links the SampleBooleanAsset from the current folder (Shared) to the root folder using positional parameters.
+
+### Example 2
+```powershell
+PS C:\> Add-OrchAssetLink -Path Orch1:\Shared DatabaseConfig Orch1:\Dept#2, Orch1:\root
+```
+
+Links the DatabaseConfig asset from Shared folder to both Dept#2 and root folders using explicit path specification.
+
+### Example 3
+```powershell
+PS Orch1:\Shared> Add-OrchAssetLink *Config* Orch1:\Dept#2
+```
+
+Links all assets containing Config in their name from the current folder to Dept#2 folder using wildcards.
+
+### Example 4
+```powershell
+PS Orch1:\Shared> Add-OrchAssetLink SampleBooleanAsset, APIKey Orch1:\Dept#2 -WhatIf
+```
+
+Shows what would happen when linking multiple assets to Dept#2 folder using -WhatIf for safety.
+
+### Example 5
+```powershell
+PS C:\> Add-OrchAssetLink -Path Orch1:\Shared *Sample* Orch1:\root, Orch1:\Dept#2
+```
+
+Links all assets containing "Sample" from Shared folder to multiple target folders simultaneously.
 
 ## PARAMETERS
 
@@ -134,10 +168,28 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+Asset names and folder links can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.Asset
+Asset objects from Get-OrchAsset can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
-### System.Object
+### None
+This cmdlet does not generate any output.
+
 ## NOTES
+This is a folder entity cmdlet. You must navigate to a folder using Set-Location or specify the source folder using the -Path parameter.
+
+Asset links allow the same asset to be accessed from multiple folders without duplicating the actual asset content. Use Get-OrchAssetLink to verify successful link creation.
 
 ## RELATED LINKS
+
+[Get-OrchAsset](Get-OrchAsset.md)
+
+[Get-OrchAssetLink](Get-OrchAssetLink.md)
+
+[Remove-OrchAssetLink](Remove-OrchAssetLink.md)
+
+

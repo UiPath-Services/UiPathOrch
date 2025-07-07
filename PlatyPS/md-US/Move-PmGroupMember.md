@@ -8,7 +8,7 @@ schema: 2.0.0
 # Move-PmGroupMember
 
 ## SYNOPSIS
-Moves users between two groups within an organization.
+Moves group members between Platform Management groups.
 
 ## SYNTAX
 
@@ -19,22 +19,68 @@ Move-PmGroupMember [-GroupName] <String> [-UserName] <String[]> [-Destination] <
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Move-PmGroupMember cmdlet moves members from one Platform Management group to another. This cmdlet operates at the organization level and manages group memberships across the organization.
 
-Primary Endpoint: PUT /api/Group/{groupId}
+This is an organization entity cmdlet that calls the Platform Management API. It operates at the organization level, where multiple tenants can belong to the same organization. Group memberships are managed centrally and affect access across all tenants within the organization.
 
-OAuth required scopes: PM.Group
+By default, moving a member removes them from the source group and adds them to the destination group. Use -KeepSource to maintain membership in the original group while adding to the destination group.
 
-Required permissions:
+Primary Endpoint: POST /api/groups/{groupId}/members/move
+
+OAuth required scopes: OR.Administration
+
+Required permissions: Administration.Edit
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+Move-PmGroupMember "Administrators" "MyRobot4" "Everyone" -WhatIf
 ```
 
-{{ Add example description here }}
+Shows what would happen when moving MyRobot4 from the Administrators group to the Everyone group.
+
+### Example 2
+```powershell
+Move-PmGroupMember "Administrators" "MyRobot4" "Everyone"
+```
+
+Moves MyRobot4 from the Administrators group to the Everyone group.
+
+### Example 3
+```powershell
+Move-PmGroupMember "Developers" "john.doe", "jane.smith" "TeamLead"
+```
+
+Moves multiple users (john.doe and jane.smith) from the Developers group to the TeamLead group.
+
+### Example 4
+```powershell
+Move-PmGroupMember -GroupName "TestGroup" -UserName "*Robot*" -Destination "AutomationUsers"
+```
+
+Moves all members whose names contain "Robot" from TestGroup to AutomationUsers group.
+
+### Example 5
+```powershell
+Move-PmGroupMember "Administrators" "service.account" "AutomationUsers" -KeepSource true
+```
+
+Moves service.account to AutomationUsers while keeping membership in the Administrators group.
+
+### Example 6
+```powershell
+Move-PmGroupMember -Path Orch1:, Orch2: "OldGroup" "migration.user" "NewGroup" -Confirm
+```
+
+Moves migration.user from OldGroup to NewGroup across multiple tenants with confirmation.
+
+### Example 7
+```powershell
+Get-PmGroupMember | Where-Object {$_.PathGroupName -like "*Temporary*"} | Move-PmGroupMember -Destination "PermanentGroup"
+```
+
+Moves all members from groups containing "Temporary" to the PermanentGroup. Group membership information is passed via pipeline using ByPropertyName binding.
 
 ## PARAMETERS
 
@@ -54,7 +100,7 @@ Accept wildcard characters: False
 ```
 
 ### -Destination
-{{ Fill Destination Description }}
+Specifies the name of the destination groups where members will be moved.
 
 ```yaml
 Type: String[]
@@ -69,7 +115,7 @@ Accept wildcard characters: True
 ```
 
 ### -GroupName
-{{ Fill GroupName Description }}
+Specifies the name of the source group from which members will be moved.
 
 ```yaml
 Type: String
@@ -84,7 +130,7 @@ Accept wildcard characters: True
 ```
 
 ### -KeepSource
-{{ Fill KeepSource Description }}
+Specifies whether to keep the member in the source group after moving to the destination. Set to "true" to maintain dual membership.
 
 ```yaml
 Type: String
@@ -99,7 +145,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-Specifies the name of the target drives. If not specified, the current drive will be targeted.
+Specifies the name of the target tenant drives. The group membership changes are organization-wide regardless of which tenant drive is used.
 
 ```yaml
 Type: String[]
@@ -114,7 +160,7 @@ Accept wildcard characters: False
 ```
 
 ### -UserName
-{{ Fill UserName Description }}
+Specifies the names of the users or robot accounts to be moved between groups.
 
 ```yaml
 Type: String[]
@@ -165,10 +211,15 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String
-### System.String[]
+Group names and user names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.PmGroupMember
+Group member objects can be piped to this cmdlet. The GroupName and UserName properties will be automatically mapped to the respective parameters via ByPropertyName binding.
+
 ## OUTPUTS
 
 ### System.Object
+
 ## NOTES
 
 ## RELATED LINKS

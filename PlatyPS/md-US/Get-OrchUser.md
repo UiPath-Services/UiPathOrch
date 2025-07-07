@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -80,7 +80,7 @@ Gets directory users whose full name starts with "John".
 PS Orch1:\> Get-OrchUser -ExportCsv C:\Reports\Users.csv
 ```
 
-Exports all users to CSV with UTF-8 BOM encoding.
+Exports all users to CSV with UTF-8 BOM encoding. The exported CSV can be imported using Import-Csv | Add-OrchUser.
 
 ## PARAMETERS
 
@@ -231,4 +231,5 @@ User types include DirectoryUser (individual users), DirectoryGroup (user groups
 [Remove-OrchUser](Remove-OrchUser.md)
 
 [Get-OrchCurrentUser](Get-OrchCurrentUser.md)
+
 

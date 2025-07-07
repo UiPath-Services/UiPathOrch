@@ -18,20 +18,63 @@ Add-PmGroupMember [-GroupName] <String[]> [[-Type] <String[]>] [-UserName] <Stri
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Add-PmGroupMember cmdlet adds users to groups within UiPath Platform Management. This cmdlet manages group membership at the organization level, allowing you to assign users to groups that control access to various platform features and resources.
+
+Groups in Platform Management define access permissions and roles that can be inherited by members. Adding users to groups grants them the permissions and capabilities associated with those groups across the organization.
+
+Use the -GroupName parameter to specify which groups to add members to, and the -UserName parameter to specify which users to add. The -Type parameter allows filtering by user types. The -Path parameter enables working with multiple platform instances.
+
+This is a tenant entity cmdlet. The -Path parameter specifies drive names (e.g., Orch1:, Orch2:) for targeting specific platform instances when working with multiple environments.
 
 Primary Endpoint: PUT /api/Group/{groupId}
 
 OAuth required scopes: PM.Group
 
+Required permissions: Group management permissions at the organization level
+
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Add-PmGroupMember Administrators john.doe
 ```
 
-{{ Add example description here }}
+Adds user john.doe to the Administrators group in the current platform instance.
+
+### Example 2
+```powershell
+PS C:\> Add-PmGroupMember -Path Orch1:, Orch2: "Power Users" jane.smith
+```
+
+Adds user jane.smith to the "Power Users" group in both Orch1 and Orch2 platform instances.
+
+### Example 3
+```powershell
+PS Orch1:\> Add-PmGroupMember Developers admin.user, lead.user -WhatIf
+```
+
+Shows what would happen when adding admin.user and lead.user to the Developers group.
+
+### Example 4
+```powershell
+PS C:\> Add-PmGroupMember -GroupName "Business Users" -UserName *analyst* -Type User
+```
+
+Adds all users with usernames containing "analyst" to the "Business Users" group, filtering by User type.
+
+### Example 5
+```powershell
+PS Orch1:\> Get-PmUser | Where-Object {$_.Email -like "*@contoso.com"} | Add-PmGroupMember -GroupName Employees
+```
+
+Gets all users with contoso.com email domain and adds them to the Employees group using pipeline input.
+
+### Example 6
+```powershell
+PS C:\> Add-PmGroupMember -Path Orch1: Support, "Help Desk" support.user -Confirm
+```
+
+Adds support.user to both Support and "Help Desk" groups with confirmation prompts.
 
 ## PARAMETERS
 
@@ -51,7 +94,7 @@ Accept wildcard characters: False
 ```
 
 ### -GroupName
-Specifies the name of the groups to which the users will be added.
+Specifies the name of the groups to add members to.
 
 ```yaml
 Type: String[]
@@ -66,7 +109,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the name of the target drives. If not specified, the current drive will be targeted.
+Specifies the platform instances to target.
 
 ```yaml
 Type: String[]
@@ -81,7 +124,7 @@ Accept wildcard characters: False
 ```
 
 ### -Type
-Specifies the type of users to be added to the groups.
+Specifies the user types to filter by when adding members.
 
 ```yaml
 Type: String[]
@@ -96,7 +139,7 @@ Accept wildcard characters: True
 ```
 
 ### -UserName
-Specifies the UserName of users to be added to the groups.
+Specifies the usernames of the users to add to the groups.
 
 ```yaml
 Type: String[]
@@ -147,9 +190,27 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
+Group names and user names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.User
+User objects from Get-PmUser can be piped to this cmdlet. The UserName property will be automatically mapped to the -UserName parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
-### System.Object
+### None
+This cmdlet does not generate any output.
+
 ## NOTES
+This is a tenant entity cmdlet. The -Path parameter specifies drive names (e.g., Orch1:, Orch2:) for targeting specific platform instances.
+
+This cmdlet operates at the organization level through Platform Management. Groups define permissions and access rights that are inherited by members. Use wildcards for efficient bulk operations and -WhatIf for testing before actual execution.
 
 ## RELATED LINKS
+
+[Get-PmGroup](Get-PmGroup.md)
+
+[Remove-PmGroupMember](Remove-PmGroupMember.md)
+
+[Get-PmUser](Get-PmUser.md)
+
+[Get-PmGroupMember](Get-PmGroupMember.md)

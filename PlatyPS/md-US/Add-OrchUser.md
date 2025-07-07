@@ -25,7 +25,13 @@ Add-OrchUser [[-Type] <String[]>] [-UserName] <String[]> [[-Roles] <String[]>] [
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Add-OrchUser cmdlet assigns existing users from the organization to UiPath Orchestrator tenants. This cmdlet does not create new users; instead, it assigns users that already exist in the organization or in Active Directory that is federated with the organization or tenant.
+
+Use Get-PmUser to retrieve organization users that can be assigned to tenants. Use Search-OrchDirectory to find users from federated Active Directory domains.
+
+You can specify various tenant-specific settings for the assigned users, including roles, session permissions, execution settings (ES_*), and unattended robot credentials (UR_*). The cmdlet allows you to configure licensing, workspace restrictions, and update policies for the assigned users.
+
+Use the -Path parameter to target specific Orchestrator drives when working with multiple instances. The -UserName parameter accepts usernames of existing organization or directory users.
 
 Primary Endpoint: GET /odata/Users?$expand=OrganizationUnits,UserRoles, GET /odata/Roles?$expand=Permissions, GET /api/DirectoryService/SearchForUsersAndGroups?domain=autogen&prefix={prefix}&searchContext=All, POST /odata/Users
 
@@ -36,11 +42,49 @@ Required permissions: (Users.View or Units.Edit or SubFolders.Edit), (Roles.View
 ## EXAMPLES
 
 ### Example 1
-```powershell
-PS C:\> {{ Add example code here }}
-```
+`powershell
+PS C:\> Add-OrchUser john.doe
+`
 
-{{ Add example description here }}
+Adds the user john.doe from the organization to the current tenant.
+
+### Example 2
+`powershell
+PS C:\> Add-OrchUser -Path Orch1:, Orch2: jane.smith Developer
+`
+
+Adds the user jane.smith to both Orch1 and Orch2 tenants with the Developer role.
+
+### Example 3
+`powershell
+PS C:\> Add-OrchUser -UserName alex.johnson -Roles Administrator, Developer -MayHaveUserSession Yes
+`
+
+Adds alex.johnson with Administrator and Developer roles, and enables user session permissions.
+
+### Example 4
+`powershell
+PS C:\> Add-OrchUser robot.user -Type Unattended -UR_UserName DOMAIN\RobotUser -UR_Password "SecurePass123"
+`
+
+Adds robot.user as an Unattended user type with specified robot credentials.
+
+### Example 5
+`powershell
+PS C:\> Import-Csv users.csv | Add-OrchUser -Path Orch1: -WhatIf
+`
+
+Shows what would happen when adding users from a CSV file to Orch1 tenant. CSV format:
+UserName,Roles
+john.doe,Developer
+jane.smith,Administrator
+
+### Example 6
+`powershell
+PS C:\> Get-PmUser | Where-Object {$_.Email -like "*@contoso.com"} | Add-OrchUser -Roles Developer
+`
+
+Gets all organization users with contoso.com email domain and adds them to the current tenant with Developer role.
 
 ## PARAMETERS
 

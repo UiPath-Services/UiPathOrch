@@ -365,3 +365,13 @@ FodyWeavers.xsd
 /PlatyPS/new
 
 PlatyPS/Build-Xml.ps1
+/PlatyPS/TestExport.csv
+/PlatyPS/md-completion-progress.txt
+/PlatyPS/quality-check-progress.md
+/PlatyPS/Update-ProgressDashboard.ps1
+/PlatyPS/ヘルプファイル記載ガイド.txt
+/PlatyPS/品質チェック_進捗ダッシュボード.txt
+/PlatyPS/品質チェック作業手順書.txt
+/PlatyPS/品質チェック進捗管理.txt
+/PlatyPS/md-US/UiPathOrch Manual.txt
+/PlatyPS/md-US/ヘルプファイル記載ガイド-API編.txt

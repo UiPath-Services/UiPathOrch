@@ -18,7 +18,11 @@ Get-OrchTestSetSchedule [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-Dep
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Get-OrchTestSetSchedule cmdlet retrieves test set schedules from UiPath Orchestrator. Test set schedules define automated execution plans for test sets, including timing, frequency, and execution parameters.
+
+This is a folder entity cmdlet. To use this cmdlet, you must first navigate to the target folder using Set-Location (cd), or specify the target folders using -Path, -Recurse, or -Depth parameters.
+
+Test set schedules enable automated testing scenarios by executing test sets at predetermined times or intervals, supporting continuous integration and quality assurance workflows.
 
 Primary Endpoint: Get /odata/TestSetSchedules
 
@@ -30,10 +34,52 @@ Required permissions: TestSetExecutions.View
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+Get-OrchTestSetSchedule
 ```
 
-{{ Add example description here }}
+Gets all test set schedules in the current folder.
+
+### Example 2
+```powershell
+Get-OrchTestSetSchedule NightlyRegression
+```
+
+Gets the test set schedule named "NightlyRegression" from the current folder.
+
+### Example 3
+```powershell
+Get-OrchTestSetSchedule *Daily*
+```
+
+Gets all test set schedules whose names contain "Daily".
+
+### Example 4
+```powershell
+Get-OrchTestSetSchedule -Recurse
+```
+
+Gets all test set schedules from the current folder and all its subfolders.
+
+### Example 5
+```powershell
+Get-OrchTestSetSchedule -Path Orch1:\Development, Orch1:\Testing
+```
+
+Gets test set schedules from both Development and Testing folders.
+
+### Example 6
+```powershell
+Get-OrchTestSetSchedule | Where-Object {$_.Enabled -eq $true}
+```
+
+Gets all enabled test set schedules.
+
+### Example 7
+```powershell
+Get-OrchTestSetSchedule | Select-Object Name, TestSetName, CronExpression, Enabled, NextExecution
+```
+
+Gets all test set schedules and displays their key scheduling information including cron expression and next execution time.
 
 ## PARAMETERS
 
@@ -118,6 +164,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
+Test schedule names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.TestSetSchedule
+Test set schedule objects can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
 
 ## OUTPUTS
 

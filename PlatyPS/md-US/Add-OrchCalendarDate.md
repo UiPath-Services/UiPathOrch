@@ -18,7 +18,13 @@ Add-OrchCalendarDate [-Name] <String[]> [[-ExcludedDate] <DateTime[]>] [-Include
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Add-OrchCalendarDate cmdlet adds specified dates to Non-Working Days calendars in UiPath Orchestrator. This cmdlet allows you to define non-working days such as holidays, maintenance periods, or other business-specific dates when automated processes should not run.
+
+Use the -Name parameter to specify which calendars to update and the -ExcludedDate parameter to provide the dates to add as non-working days. The cmdlet supports adding multiple dates to multiple calendars simultaneously.
+
+By default, the cmdlet prevents adding past dates to maintain calendar accuracy. Use the -IncludePastDate parameter to allow adding historical dates when needed for calendar setup or data migration scenarios.
+
+This cmdlet operates on tenant-level calendar entities and supports wildcard patterns for calendar names, enabling bulk operations across multiple calendars.
 
 Primary Endpoint: GET /odata/Calendars, GET /odata/Calendars({calendarId}), POST /odata/Calendar, PUT /odata/Calendars({calendarId})
 
@@ -30,10 +36,39 @@ Required permissions: Settings.Create Settings.Edit
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Add-OrchCalendarDate ほえほえ (Get-Date).AddDays(7)
 ```
 
-{{ Add example description here }}
+Adds a date 7 days from today to the "ほえほえ" calendar as a non-working day using positional parameters.
+
+### Example 2
+```powershell
+PS Orch1:\> Add-OrchCalendarDate ほえほえ "2025-12-25", "2025-12-26"
+```
+
+Adds Christmas Day and Boxing Day to the "ほえほえ" calendar as non-working days.
+
+### Example 3
+```powershell
+PS Orch1:\> Add-OrchCalendarDate ほえほえ*, ふがふが* (Get-Date).AddDays(14)
+```
+
+Adds a date 14 days from today to all calendars matching "ほえほえ*" and "ふがふが*" patterns using wildcards.
+
+### Example 4
+```powershell
+PS Orch1:\> Add-OrchCalendarDate ほえほえカレンダー "2025-01-01" -IncludePastDate -WhatIf
+```
+
+Shows what would happen when adding a past date to the calendar with the -IncludePastDate parameter using -WhatIf for safety.
+
+### Example 5
+```powershell
+PS Orch1:\> $holidays = "2025-12-25", "2025-12-31", "2026-01-01"
+PS Orch1:\> Add-OrchCalendarDate ほえほえ $holidays
+```
+
+Adds multiple holiday dates stored in a variable to the calendar.
 
 ## PARAMETERS
 
@@ -149,10 +184,28 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
+Calendar names can be piped to this cmdlet.
+
 ### System.DateTime[]
+DateTime objects can be piped to this cmdlet for the -ExcludedDate parameter.
+
+### UiPath.PowerShell.Entities.Calendar
+Calendar objects from Get-OrchCalendar can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
-### System.Object
+### None
+This cmdlet does not generate any output.
+
 ## NOTES
+This cmdlet operates on tenant-level calendar entities. By default, past dates cannot be added to maintain calendar accuracy. Use the -IncludePastDate parameter when adding historical dates is necessary.
+
+Use Get-OrchCalendar to list available calendars and verify successful date additions.
 
 ## RELATED LINKS
+
+[Get-OrchCalendar](Get-OrchCalendar.md)
+
+[Remove-OrchCalendarDate](Remove-OrchCalendarDate.md)
+
+[Copy-OrchCalendar](Copy-OrchCalendar.md)

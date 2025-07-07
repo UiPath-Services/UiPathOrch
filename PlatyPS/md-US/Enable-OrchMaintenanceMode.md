@@ -19,22 +19,63 @@ Enable-OrchMaintenanceMode [[-MachineName] <String[]>] [[-HostMachineName] <Stri
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Enable-OrchMaintenanceMode cmdlet enables maintenance mode for unattended robot sessions within UiPath Orchestrator. This cmdlet prevents robot sessions from accepting new jobs while allowing currently running jobs to complete gracefully, making it ideal for maintenance activities or system updates.
+
+Maintenance mode is essential for performing maintenance tasks on robot machines without interrupting running automation processes. When enabled, the robot sessions will finish their current jobs but will not accept new jobs from the queue until maintenance mode is disabled.
+
+Use the various filtering parameters to target specific robot sessions for maintenance mode activation. You can filter by MachineName, HostMachineName, ServiceUserName, or specific SessionId values. The -Path parameter allows targeting specific folders.
+
+The -Force parameter can be used to bypass confirmation prompts when enabling maintenance mode for multiple sessions simultaneously.
 
 Primary Endpoint: GET /odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimes
 
-OAuth required scopes: OR.Robots or OR.Robots.Read
+OAuth required scopes: OR.Robots or OR.Robots.Write
 
-Required permissions: Machines.View
+Required permissions: Machines.Edit
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Development> Enable-OrchMaintenanceMode -MachineName Robot01
 ```
 
-{{ Add example description here }}
+Enables maintenance mode for all sessions on machine Robot01 in the current folder.
+
+### Example 2
+```powershell
+PS C:\> Enable-OrchMaintenanceMode -Path Orch1:\Production -HostMachineName Server01
+```
+
+Enables maintenance mode for all sessions on host machine Server01 in the Production folder.
+
+### Example 3
+```powershell
+PS Orch1:\Development> Enable-OrchMaintenanceMode -ServiceUserName ServiceAccount01, ServiceAccount02 -WhatIf
+```
+
+Shows what would happen when enabling maintenance mode for sessions using ServiceAccount01 and ServiceAccount02.
+
+### Example 4
+```powershell
+PS C:\> Enable-OrchMaintenanceMode -Path Orch1:\Development -SessionId 12345, 67890 -Force
+```
+
+Enables maintenance mode for specific sessions with IDs 12345 and 67890 in the Development folder without confirmation prompts.
+
+### Example 5
+```powershell
+PS Orch1:\Production> Enable-OrchMaintenanceMode -MachineName *Robot* -Confirm
+```
+
+Enables maintenance mode for all sessions on machines with names containing Robot with confirmation prompts.
+
+### Example 6
+```powershell
+PS C:\> Get-OrchUnattendedSession -MaintenanceMode $false | Enable-OrchMaintenanceMode -WhatIf
+```
+
+Gets all sessions not currently in maintenance mode and shows what would happen when enabling maintenance mode for them using pipeline input.
 
 ## PARAMETERS
 
@@ -54,7 +95,7 @@ Accept wildcard characters: False
 ```
 
 ### -Force
-Specifies to kill all running jobs immediately.
+Forces the operation without confirmation prompts.
 
 ```yaml
 Type: SwitchParameter
@@ -69,7 +110,7 @@ Accept wildcard characters: False
 ```
 
 ### -HostMachineName
-Specifies the HostMachineName of the unattended sessions to enable their maintenance mode.
+Specifies the host machine names to target for maintenance mode activation.
 
 ```yaml
 Type: String[]
@@ -84,7 +125,7 @@ Accept wildcard characters: False
 ```
 
 ### -MachineName
-Specifies the MachineName of the unattended sessions to enable their maintenance mode.
+Specifies the machine names to target for maintenance mode activation.
 
 ```yaml
 Type: String[]
@@ -99,7 +140,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-Specifies the name of the target drives. If not specified, the current drive will be targeted.
+Specifies the target folders. If not specified, the current folder will be targeted.
 
 ```yaml
 Type: String[]
@@ -114,7 +155,7 @@ Accept wildcard characters: False
 ```
 
 ### -ServiceUserName
-Specifies the ServiceUserName of the unattended sessions to enable their maintenance mode.
+Specifies the service user names to target for maintenance mode activation.
 
 ```yaml
 Type: String[]
@@ -129,7 +170,7 @@ Accept wildcard characters: False
 ```
 
 ### -SessionId
-Specifies the SessionId of the unattended sessions to enable their maintenance mode.
+Specifies the session IDs to target for maintenance mode activation.
 
 ```yaml
 Type: Int64[]
@@ -179,10 +220,29 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+Machine names, host machine names, and service user names can be piped to this cmdlet.
+
+### System.Int64[]
+Session IDs can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.UnattendedSession
+UnattendedSession objects from Get-OrchUnattendedSession can be piped to this cmdlet. Properties will be automatically mapped to corresponding parameters via ByPropertyName binding.
+
 ## OUTPUTS
 
-### System.Object
+### None
+This cmdlet does not generate any output.
+
 ## NOTES
+Maintenance mode prevents robot sessions from accepting new jobs while allowing current jobs to complete. This is essential for performing maintenance without interrupting running processes. Use filtering parameters to target specific sessions. The -Force parameter bypasses confirmation prompts for bulk operations.
 
 ## RELATED LINKS
+
+[Disable-OrchMaintenanceMode](Disable-OrchMaintenanceMode.md)
+
+[Get-OrchUnattendedSession](Get-OrchUnattendedSession.md)
+
+[Get-OrchMachine](Get-OrchMachine.md)
+
+[Get-OrchRobot](Get-OrchRobot.md)

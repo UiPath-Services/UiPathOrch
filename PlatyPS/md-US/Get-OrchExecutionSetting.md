@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-OrchExecutionSetting
 
 ## SYNOPSIS
-Gets the execution settings configuration.
+Retrieves execution settings configured in UiPath Orchestrator.
 
 ## SYNTAX
 
@@ -18,22 +18,61 @@ Get-OrchExecutionSetting [[-Scope] <String[]>] [[-DisplayName] <String[]>] [-Pat
 ```
 
 ## DESCRIPTION
-Gets the execution settings configuration (display name, value type, etc.). If scope is Global, the default values will be the initial ones. If scope is Robot, then the default values will be the actual values set globally. e.g., Resolution width Assume it was set globally to 720. Then within the config returned by this function, the default value for this setting will be 0 if the scope is Global and 720 if the scope is Robot.
+The Get-OrchExecutionSetting cmdlet retrieves execution settings configured within UiPath Orchestrator. Execution settings control various aspects of automation execution behavior, including logging levels, console access, resolution settings, and development features.
 
-Primary Endpoint: GET /odata/Settings/UiPath.Server.Configuration.OData.GetExecutionSettingsConfiguration(scope={scope})
+Settings are organized by scope (Global and Robot) and contain properties such as DisplayName, ValueType (Boolean, Integer, MultipleChoice), DefaultValue, and PossibleValues for enumeration types. These settings directly affect how automation processes execute and behave in the Orchestrator environment.
+
+This cmdlet operates as a tenant-level entity operation, retrieving settings from the specified Orchestrator environment. The output is grouped by scope, showing all available execution configuration options with their current values and constraints.
+
+Primary Endpoint: GET /odata/Settings
 
 OAuth required scopes: OR.Settings or OR.Settings.Read
 
-Required permissions: Settings.Edit or Robots.Create or Robots.Edit
+Required permissions: Settings.View
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Get-OrchExecutionSetting
 ```
 
-{{ Add example description here }}
+Retrieves all execution settings grouped by scope (Global and Robot), displaying DisplayName, ValueType, DefaultValue, and PossibleValues.
+
+### Example 2
+```powershell
+PS Orch1:\Shared> Get-OrchExecutionSetting | ConvertTo-Json -Depth 3
+```
+
+Displays detailed execution setting properties in JSON format, including Key, Scope, PathScope, and all configuration details.
+
+### Example 3
+```powershell
+PS C:\> Get-OrchExecutionSetting -Path Orch1: -Key "*Logging*"
+```
+
+Gets all execution settings with keys containing "Logging" in the Orch1 tenant.
+
+### Example 4
+```powershell
+PS Orch1:\> Get-OrchExecutionSetting | Where-Object {$_.ValueType -eq "Boolean"}
+```
+
+Retrieves all boolean-type execution settings.
+
+### Example 5
+```powershell
+PS Orch1:\> Get-OrchExecutionSetting | Where-Object {$_.PossibleValues.Count -gt 0} | Select-Object DisplayName, PossibleValues
+```
+
+Displays settings with enumerated values (MultipleChoice type) and their possible options.
+
+### Example 6
+```powershell
+PS Orch1:\> Get-OrchExecutionSetting | Group-Object Scope
+```
+
+Groups execution settings by their scope (Global vs Robot).
 
 ## PARAMETERS
 
@@ -53,7 +92,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-{{ Fill Path Description }}
+Specifies the target tenant drives. If not specified, the current tenant will be targeted. For tenant-level operations.
 
 ```yaml
 Type: String[]
@@ -103,11 +142,33 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
+Setting keys can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.ExecutionSetting
+ExecutionSetting objects can be piped to this cmdlet. The Key property will be automatically mapped to the -Key parameter via ByPropertyName binding.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.ExecutionSettingDefinition
+### UiPath.PowerShell.Entities.ExecutionSetting
+Returns ExecutionSetting objects containing information about execution configuration settings. Key properties include:
+- Path: Current tenant context path
+- Scope: Setting scope ("Global" or "Robot")
+- PathScope: Full path including scope (e.g., "Orch1:\\Global")
+- Key: Unique setting identifier
+- DisplayName: Human-readable setting name
+- ValueType: Data type ("Boolean", "Integer", "MultipleChoice")
+- DefaultValue: Current default value
+- PossibleValues: Array of valid values for enumeration types
 
 ## NOTES
+This cmdlet is a tenant-level entity operation for accessing execution setting configurations. Settings control automation execution behavior including logging, console access, and resolution settings. Output is grouped by scope showing Global and Robot-level settings. Use filtering to find specific settings by key or value type. This operation requires Settings.View permissions.
 
 ## RELATED LINKS
+
+[Set-OrchExecutionSetting](Set-OrchExecutionSetting.md)
+
+[Reset-OrchExecutionSetting](Reset-OrchExecutionSetting.md)
+
+[Get-OrchSetting](Get-OrchSetting.md)
+
+[Export-OrchExecutionSetting](Export-OrchExecutionSetting.md)
