@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-OrchBucketItem
 
 ## SYNOPSIS
-Gets the items in storage buckets.
+Retrieves items (files and directories) stored within storage buckets.
 
 ## SYNTAX
 
@@ -18,7 +18,11 @@ Get-OrchBucketItem [[-Name] <String[]>] [[-FullPath] <String[]>] [-Path <String[
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Get-OrchBucketItem cmdlet retrieves items (files and directories) stored within storage buckets in UiPath Orchestrator. Storage buckets serve as external storage providers for automation processes, and this cmdlet provides visibility into the files and directory structure within these buckets.
+
+Each bucket item contains properties such as FullPath (the file/directory path within the bucket), ContentType (MIME type for files), Size (in bytes for files), and IsDirectory (boolean indicating if the item is a directory).
+
+This cmdlet operates as a folder entity operation, requiring navigation to the appropriate folder context or specification of target folders using the -Path parameter. The cmdlet automatically identifies available buckets in the current context and retrieves their contents.
 
 Primary Endpoint: GET /odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.GetFiles
 
@@ -30,15 +34,50 @@ Required permissions: Buckets.View and BlobFiles.View
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Get-OrchBucketItem
 ```
 
-{{ Add example description here }}
+Retrieves all items from storage buckets in the current Shared folder, displaying FullPath, ContentType, Size, and IsDirectory properties.
+
+### Example 2
+```powershell
+PS Orch1:\Shared> Get-OrchBucketItem | ConvertTo-Json -Depth 2
+```
+
+Displays detailed bucket item properties in JSON format including Path, Bucket name, and PathBucket.
+
+### Example 3
+```powershell
+PS C:\> Get-OrchBucketItem -Path Orch1:\Shared -FullPath "*Manual*"
+```
+
+Gets bucket items with FullPath containing "Manual" in the Shared folder.
+
+### Example 4
+```powershell
+PS Orch1:\Shared> Get-OrchBucketItem | Where-Object {$_.IsDirectory -eq $false} | Measure-Object Size -Sum
+```
+
+Calculates the total size of all files (non-directories) in storage buckets.
+
+### Example 5
+```powershell
+PS Orch1:\Shared> Get-OrchBucketItem | Select-Object Bucket, FullPath, ContentType, Size
+```
+
+Displays selected properties of bucket items for overview.
+
+### Example 6
+```powershell
+PS Orch1:\> Get-OrchBucketItem -Recurse | Group-Object ContentType
+```
+
+Groups all bucket items across folders by their content type.
 
 ## PARAMETERS
 
 ### -Depth
-Specifies the depth for recursion into the target folders. A depth of 0 indicates the current location only, with no subfolders included.
+Specifies the depth for recursion into target folders. A depth of 0 indicates the current location only. Higher values include more subfolder levels.
 
 ```yaml
 Type: UInt32
@@ -53,7 +92,7 @@ Accept wildcard characters: False
 ```
 
 ### -FullPath
-Specifies the FullPath of the files to retrieve from the storage buckets.
+Specifies the full paths of bucket items to be retrieved. Supports wildcard patterns for flexible item selection.
 
 ```yaml
 Type: String[]
@@ -68,7 +107,7 @@ Accept wildcard characters: True
 ```
 
 ### -Name
-Specifies the Name of storage buckets. If not specified, all storage buckets in the target folder will be targeted.
+Specifies the names of storage buckets whose items should be retrieved. Supports wildcard patterns for flexible bucket selection.
 
 ```yaml
 Type: String[]
@@ -83,7 +122,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the target folder. If not specified, the current folder will be targeted.
+Specifies the target folders to search. If not specified, the current folder context will be used. For folder entity operations requiring path specification.
 
 ```yaml
 Type: String[]
@@ -98,7 +137,7 @@ Accept wildcard characters: True
 ```
 
 ### -Recurse
-Specifies that the operation should include the target folder and all its subfolders.
+Includes the target folder and all its subfolders in the search operation. Essential for comprehensive bucket item discovery.
 
 ```yaml
 Type: SwitchParameter
@@ -132,10 +171,26 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+Bucket names and full paths can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.Bucket
+Bucket objects from Get-OrchBucket can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.BlobFile
+### UiPath.PowerShell.Entities.BucketItem
+Returns BucketItem objects containing information about files and directories stored in buckets. Key properties include Path, Bucket, PathBucket, FullPath, ContentType, Size, and IsDirectory.
+
 ## NOTES
+This cmdlet is a folder entity operation requiring navigation to a folder context or path specification using -Path parameter. The cmdlet retrieves items from all accessible storage buckets in the specified folder context. Output is grouped by bucket showing individual items. This operation requires both Buckets.View and BlobFiles.View permissions in the target folders.
 
 ## RELATED LINKS
+
+[Get-OrchBucket](Get-OrchBucket.md)
+
+[Add-OrchBucketItem](Add-OrchBucketItem.md)
+
+[Set-OrchBucketItem](Set-OrchBucketItem.md)
+
+[Remove-OrchBucketItem](Remove-OrchBucketItem.md)

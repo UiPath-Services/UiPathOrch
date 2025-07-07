@@ -28,7 +28,7 @@ Primary Endpoint: GET /odata/TestCaseDefinitions
 
 OAuth required scopes: OR.TestSets or OR.TestSets.Read
 
-Required permissions: [PLACEHOLDER - Required permissions to be documented]
+Required permissions: TestSets.View
 
 ## EXAMPLES
 

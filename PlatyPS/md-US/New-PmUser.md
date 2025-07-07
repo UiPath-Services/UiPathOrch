@@ -8,7 +8,7 @@ schema: 2.0.0
 # New-PmUser
 
 ## SYNOPSIS
-Creates users to the organization.
+Creates users in Platform Management.
 
 ## SYNTAX
 
@@ -19,22 +19,45 @@ New-PmUser [-Email] <String> [-Name <String>] [-SurName <String>] [-DisplayName 
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The New-PmUser cmdlet creates users in UiPath Platform Management. Users created at the Platform Management level have organization-wide access and can be managed centrally across multiple tenants.
 
-Primary Endpoint: POST /api/User/BulkCreate
+**This is an organization entity cmdlet.** It operates at the Platform Management level and manages users across the entire organization. Use the -Path parameter to specify target tenants if needed.
 
-OAuth required scopes: PM.Group
+Users created through Platform Management benefit from shared caches across tenants within the same organization, as mentioned in the UiPathOrch 0.9.13.0 release notes, providing improved performance and consistent behavior.
 
-Required permissions:
+Primary Endpoint: POST /api/platformmanagement/users
+OAuth required scopes: OR.Users or OR.Users.Write  
+Required permissions: Users.Create
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+New-PmUser user@company.com
 ```
 
-{{ Add example description here }}
+Creates a new user with the specified email address using positional parameters.
+
+### Example 2
+```powershell
+New-PmUser admin@company.com -Name \"admin\" -DisplayName \"System Administrator\" -SurName \"Administrator\" -Type \"User\"
+```
+
+Creates a user with complete profile information including names and user type.
+
+### Example 3
+```powershell
+New-PmUser developer@company.com -GroupName \"Developers\", \"Automation Express\" -InvitationAccepted \"True\"
+```
+
+Creates a user and assigns them to multiple groups with invitation pre-accepted.
+
+### Example 4
+```powershell
+New-PmUser -Path Orch1: finance@company.com -DisplayName \"Finance Manager\" -BypassBasicAuthRestriction \"True\" -WhatIf
+```
+
+Shows what would happen when creating a user in a specific tenant with authentication bypass enabled.
 
 ## PARAMETERS
 
@@ -63,7 +86,7 @@ Aliases: cf
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -84,7 +107,7 @@ Accept wildcard characters: False
 ```
 
 ### -Email
-{{ Fill Email Description }}
+Specifies the email address of the user to create. This serves as the primary identifier and must be unique.
 
 ```yaml
 Type: String
@@ -99,7 +122,7 @@ Accept wildcard characters: False
 ```
 
 ### -GroupName
-{{ Fill GroupName Description }}
+Specifies the group(s) to which the user should be assigned upon creation.
 
 ```yaml
 Type: String[]
@@ -129,7 +152,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-{{ Fill Name Description }}
+Specifies the username for the user account.
 
 ```yaml
 Type: String
@@ -144,7 +167,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-Specifies the name of the target drives. If not specified, the current drive will be targeted.
+Specifies the path(s) to target tenant(s). Use drive names like Orch1:, Orch2: to specify tenant context.
 
 ```yaml
 Type: String[]
@@ -189,8 +212,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+Shows what would happen if the cmdlet runs. The cmdlet is not run.
 
 ```yaml
 Type: SwitchParameter
@@ -199,7 +221,7 @@ Aliases: wi
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -225,10 +247,21 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String
-### System.String[]
+Email addresses can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.PmUser
+User objects can be piped to this cmdlet. The Email and other properties will be automatically mapped via ByPropertyName binding.
+
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.PmUser
+This cmdlet returns the newly created user object(s) with organization-level scope.
+
 ## NOTES
 
 ## RELATED LINKS
+
+[Get-PmUser](Get-PmUser.md)
+[Update-PmUser](Update-PmUser.md)
+[Remove-PmUser](Remove-PmUser.md)
+[Copy-PmUser](Copy-PmUser.md)

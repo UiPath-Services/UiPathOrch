@@ -8,7 +8,7 @@ schema: 2.0.0
 # Export-OrchLibrary
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+Exports libraries from tenants to local files.
 
 ## SYNTAX
 
@@ -18,27 +18,68 @@ Export-OrchLibrary [[-Id] <String[]>] [[-Version] <String[]>] [[-Destination] <S
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Export-OrchLibrary cmdlet exports reusable component libraries from UiPath Orchestrator tenants to local .nupkg files. This cmdlet enables backup, archival, or migration of activity libraries between different Orchestrator environments or for offline storage.
 
-Primary Endpoint:
+Libraries contain reusable activities, custom activities, and workflow components that can be shared across multiple automation projects. Exporting libraries creates .nupkg files that can be stored locally, transferred to other environments, or used for backup purposes. This is essential for component management, version control, and environment migration scenarios.
 
-OAuth required scopes:
+Use the -Id parameter to specify which libraries to export by their library ID. The -Version parameter allows targeting specific library versions, and -Destination specifies where the exported .nupkg files should be saved. The cmdlet supports wildcard patterns for exporting multiple libraries efficiently.
 
-Required permissions:
+This is a tenant entity cmdlet. The -Path parameter specifies the source tenant drives (e.g., Orch1:, Orch2:) from which libraries should be exported.
+
+Primary Endpoint: [PLACEHOLDER - 具体的なAPIエンドポイント]
+
+OAuth required scopes: OR.Assets or OR.Assets.Read
+
+Required permissions: Assets.View
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Export-OrchLibrary CustomActivities
 ```
 
-{{ Add example description here }}
+Exports the latest version of the CustomActivities library from the current tenant to the default destination.
+
+### Example 2
+```powershell
+PS C:\> Export-OrchLibrary -Path Orch1: SharedComponents 2.1.0 "C:\Exports"
+```
+
+Exports version 2.1.0 of the SharedComponents library from Orch1 tenant to C:\Exports directory.
+
+### Example 3
+```powershell
+PS Orch1:\> Export-OrchLibrary *Utilities*, *Helpers* -Destination "C:\Backup" -WhatIf
+```
+
+Shows what would happen when exporting multiple libraries with names containing Utilities or Helpers to C:\Backup directory.
+
+### Example 4
+```powershell
+PS C:\> Export-OrchLibrary -Path Orch1: CommonLibrary 1.* "C:\Versions"
+```
+
+Exports all versions starting with 1. of the CommonLibrary from Orch1 tenant to C:\Versions directory.
+
+### Example 5
+```powershell
+PS Orch1:\> Export-OrchLibrary *Critical* "C:\CriticalBackup" -Confirm
+```
+
+Exports all libraries containing Critical in their names from the current tenant to C:\CriticalBackup with confirmation prompts.
+
+### Example 6
+```powershell
+PS Orch1:\> Get-OrchLibrary *Enterprise* | Export-OrchLibrary -Destination "C:\EnterpriseLibs"
+```
+
+Gets all libraries containing Enterprise in their names and exports them to C:\EnterpriseLibs using pipeline input.
 
 ## PARAMETERS
 
 ### -Destination
-Specifies the destination folder for the export. Please specify a folder on the FileSystem drive.
+Specifies the destination directory where exported .nupkg files will be saved. If not specified, files will be saved to the current directory.
 
 ```yaml
 Type: String
@@ -53,7 +94,7 @@ Accept wildcard characters: False
 ```
 
 ### -Id
-{{ Fill Id Description }}
+Specifies the library IDs to be exported. If not specified, all libraries will be exported.
 
 ```yaml
 Type: String[]
@@ -68,7 +109,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the name of the target drives. If not specified, the current drive will be targeted.
+Specifies the source tenant drives. If not specified, the current tenant will be used as the source.
 
 ```yaml
 Type: String[]
@@ -98,7 +139,7 @@ Accept wildcard characters: False
 ```
 
 ### -Version
-{{ Fill Version Description }}
+Specifies the library versions to be exported. If not specified, the latest version will be exported.
 
 ```yaml
 Type: String[]
@@ -148,10 +189,28 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+Library IDs and versions can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.Library
+Library objects from Get-OrchLibrary can be piped to this cmdlet. The Id and Version properties will be automatically mapped to corresponding parameters via ByPropertyName binding.
+
 ## OUTPUTS
 
-### System.Object
+### System.IO.FileInfo
+Returns information about the exported .nupkg files.
+
 ## NOTES
+This is a tenant entity cmdlet. The -Path parameter specifies tenant drive names (e.g., Orch1:, Orch2:) for source tenants.
+
+Exported libraries are saved as .nupkg files that can be imported into other Orchestrator environments using Import-OrchLibrary. Libraries contain reusable activities and components. Ensure sufficient disk space for large libraries. Use version wildcards for exporting multiple versions. Use wildcards for efficient bulk operations and -WhatIf for testing before actual execution.
 
 ## RELATED LINKS
+
+[Import-OrchLibrary](Import-OrchLibrary.md)
+
+[Get-OrchLibrary](Get-OrchLibrary.md)
+
+[Remove-OrchLibrary](Remove-OrchLibrary.md)
+
+[Update-OrchLibrary](Update-OrchLibrary.md)

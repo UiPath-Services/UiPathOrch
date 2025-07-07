@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-DuClassifier
 
 ## SYNOPSIS
-Gets classifiers of Document Understanding.
+Retrieves Document Understanding classifiers from UiPath Orchestrator.
 
 ## SYNTAX
 
@@ -18,25 +18,66 @@ Get-DuClassifier [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-ProgressAc
 ```
 
 ## DESCRIPTION
-Retrieve all classifiers from projects. This cmdlet operates on the PSDrive of the UiPathOrchDu provider. If the scope in the configuration file includes "Du.", the PSDrive of the UiPathOrchDu provider will be automatically added. You can confirm this with the Get-PSDrive cmdlet. The configuration file can be opened with the Edit-OrchConfig cmdlet.
+The Get-DuClassifier cmdlet retrieves Document Understanding classifiers from UiPath Orchestrator. Classifiers are AI models used to categorize and classify documents within Document Understanding projects, enabling automated document type identification and processing workflows.
 
-Primary Endpoint: GET /du_/api/framework/projects/{projectId}/classifiers?api-version=1
+Each classifier contains information such as Id, Name, Status (Available, Training, etc.), and API endpoints for synchronous and asynchronous classification operations. Classifiers are organized within Document Understanding projects and provide the foundation for intelligent document processing automation.
 
-OAuth Required scopes: Du.Digitization.Api or Du.Classification.Api or Du.Extraction.Api or Du.Validation.Api
+This cmdlet operates within the UiPathOrchDu drive context, requiring navigation to a specific Document Understanding project folder. **Important**: This cmdlet requires navigation to a Document Understanding project folder on the UiPathOrchDu drive (e.g., Orch1Du:\ProjectName) before execution.
+
+Primary Endpoint: GET /du_/api/framework/projects/{projectId}/classifiers
+
+OAuth required scopes: OR.ML or OR.ML.Read
+
+Required permissions: ML.View
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1Du:\Predefined> Get-DuClassifier
 ```
 
-{{ Add example description here }}
+Retrieves all classifiers from the current Predefined project, displaying id, name, and status information.
+
+### Example 2
+```powershell
+PS Orch1Du:\Predefined> Get-DuClassifier | ConvertTo-Json -Depth 3
+```
+
+Displays detailed classifier properties in JSON format, including API endpoints (detailsUrl, syncUrl, asyncUrl).
+
+### Example 3
+```powershell
+PS C:\> Get-DuClassifier -Path Orch1Du:\MyProject -Id "*generative*"
+```
+
+Gets classifiers with IDs containing "generative" from the MyProject Document Understanding project.
+
+### Example 4
+```powershell
+PS Orch1Du:\> Get-DuClassifier -Recurse | Where-Object {$_.status -eq "Available"}
+```
+
+Retrieves all available classifiers across all Document Understanding projects.
+
+### Example 5
+```powershell
+PS Orch1Du:\Predefined> Get-DuClassifier | Select-Object name, status, @{Name="HasSyncAPI";Expression={$_.syncUrl -ne $null}}
+```
+
+Displays classifier names, status, and whether they have synchronous API endpoints available.
+
+### Example 6
+```powershell
+PS Orch1Du:\> Get-DuClassifier -Recurse | Group-Object status
+```
+
+Groups all classifiers by their status across Document Understanding projects.
 
 ## PARAMETERS
 
 ### -Name
-Specifies the name of the classifiers to be retrieved.
+{{ Fill Name Description }}
 
 ```yaml
 Type: String[]
@@ -51,7 +92,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the target folder. If not specified, the current folder will be targeted.
+Specifies the target Document Understanding project folders to search. Must reference UiPathOrchDu drive paths (e.g., Orch1Du:\ProjectName).
 
 ```yaml
 Type: String[]
@@ -66,7 +107,7 @@ Accept wildcard characters: True
 ```
 
 ### -Recurse
-Specifies that the operation should include the target folder and all its subfolders.
+Includes the target project folder and all its subprojects in the search operation. Essential for comprehensive classifier discovery.
 
 ```yaml
 Type: SwitchParameter
@@ -101,11 +142,25 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
+Classifier IDs can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.DuClassifier
+DuClassifier objects can be piped to this cmdlet. The Id property will be automatically mapped to the -Id parameter via ByPropertyName binding.
 
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.DuClassifier
+Returns DuClassifier objects containing information about Document Understanding classifiers. Key properties include Path, Project, id, name, status, detailsUrl, syncUrl, and asyncUrl.
 
 ## NOTES
+This cmdlet operates within Document Understanding projects on the UiPathOrchDu drive. Navigation to a specific project folder is required before execution. Classifiers provide AI-powered document categorization capabilities for intelligent document processing. This operation requires ML.View permissions within Document Understanding projects.
 
 ## RELATED LINKS
+
+[Get-DuDocumentType](Get-DuDocumentType.md)
+
+[Get-DuExtractor](Get-DuExtractor.md)
+
+[Add-DuClassifier](Add-DuClassifier.md)
+
+[Train-DuClassifier](Train-DuClassifier.md)

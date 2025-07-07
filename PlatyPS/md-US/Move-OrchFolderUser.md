@@ -8,7 +8,7 @@ schema: 2.0.0
 # Move-OrchFolderUser
 
 ## SYNOPSIS
-Removes users assigned to a folder and assigns them to another folders.
+Moves folder users between folders.
 
 ## SYNTAX
 
@@ -18,22 +18,68 @@ Move-OrchFolderUser [-UserName] <String[]> [[-Destination] <String[]>] [-KeepSou
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Move-OrchFolderUser cmdlet moves users from one folder to another, transferring their access rights and role assignments between folder contexts.
 
-Primary Endpoint: GET /odata/Folders/UiPath.Server.Configuration.OData.GetUsersForFolder(key={folderId}), POST /odata/Folders/UiPath.Server.Configuration.OData.AssignUsers, POST /odata/Folders({folderId})/UiPath.Server.Configuration.OData.RemoveUserFromFolder
+This is a folder entity cmdlet. To use this cmdlet, you must first navigate to the target folder using Set-Location (cd), or specify the target folders using -Path, -Recurse, or -Depth parameters.
 
-OAuth required scopes: OR.Folders
+By default, moving a user removes their access from the source folder and grants access to the destination folder. Use -KeepSource to maintain access to the original folder while adding access to the destination folder.
 
-Required permissions: Units.Edit or SubFolders.Edit
+Primary Endpoint: POST /odata/FolderUsers/Move
+
+OAuth required scopes: OR.Folders or OR.Folders.Write
+
+Required permissions: Folders.Edit
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+Move-OrchFolderUser "automation developers" -WhatIf
 ```
 
-{{ Add example description here }}
+Shows what would happen when moving the "automation developers" user from the current folder.
+
+### Example 2
+```powershell
+Move-OrchFolderUser "john.doe" -Destination "Orch1:\Development"
+```
+
+Moves john.doe from the current folder to the Development folder.
+
+### Example 3
+```powershell
+Move-OrchFolderUser "jane.smith", "bob.jones" -Destination "Orch1:\Production"
+```
+
+Moves multiple users (jane.smith and bob.jones) to the Production folder.
+
+### Example 4
+```powershell
+Move-OrchFolderUser "*developer*" -Destination "Orch1:\Development"
+```
+
+Moves all users whose names contain "developer" to the Development folder.
+
+### Example 5
+```powershell
+Move-OrchFolderUser "service.account" -Destination "Orch1:\Testing" -KeepSource true
+```
+
+Moves service.account to the Testing folder while keeping access to the current folder.
+
+### Example 6
+```powershell
+Move-OrchFolderUser -Path "Orch1:\Legacy" "migration.user" -Destination "Orch1:\Modern" -Confirm
+```
+
+Moves migration.user from the Legacy folder to the Modern folder with confirmation.
+
+### Example 7
+```powershell
+Get-OrchFolderUser | Where-Object {$_.UserEntity.Type -eq "DirectoryGroup"} | Move-OrchFolderUser -Destination "Orch1:\GroupManagement"
+```
+
+Moves all directory group users to the GroupManagement folder. User information is passed via pipeline using ByPropertyName binding.
 
 ## PARAMETERS
 
@@ -53,7 +99,7 @@ Accept wildcard characters: False
 ```
 
 ### -Destination
-{{ Fill Destination Description }}
+Specifies the destination folder path where users will be moved.
 
 ```yaml
 Type: String[]
@@ -68,7 +114,7 @@ Accept wildcard characters: True
 ```
 
 ### -KeepSource
-{{ Fill KeepSource Description }}
+Specifies whether to keep the user in the source folder after moving to the destination. Set to "true" to maintain dual folder access.
 
 ```yaml
 Type: String
@@ -98,7 +144,7 @@ Accept wildcard characters: True
 ```
 
 ### -UserName
-{{ Fill UserName Description }}
+Specifies the names of the users to be moved between folders.
 
 ```yaml
 Type: String[]
@@ -149,10 +195,15 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-### System.String
+User names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.UserRoles
+Folder user objects can be piped to this cmdlet. The UserName property will be automatically mapped to the -UserName parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
 ### System.Object
+
 ## NOTES
 
 ## RELATED LINKS

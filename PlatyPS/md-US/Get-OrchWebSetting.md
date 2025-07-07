@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-OrchWebSetting
 
 ## SYNOPSIS
-Gets the web settings.
+Gets web configuration settings.
 
 ## SYNTAX
 
@@ -18,34 +18,68 @@ Get-OrchWebSetting [[-Key] <String[]>] [-Path <String[]>] [-ProgressAction <Acti
 ```
 
 ## DESCRIPTION
-The `Get-OrchWebSetting` cmdlet retrieves web application configuration settings from UiPath Orchestrator. These settings control various aspects of the Orchestrator web interface, integrations, features, and operational behavior.
+The Get-OrchWebSetting cmdlet retrieves web configuration settings from UiPath Orchestrator. Web settings control various aspects of the web interface, user experience, security policies, and system behavior.
 
-The cmdlet returns a comprehensive collection of web settings organized into multiple categories including AI Fabric integration, telemetry configuration, logging settings, deployment parameters, monitoring settings, feature toggles, licensing information, and user interface customization options.
+This is a tenant entity cmdlet. The -Path parameter specifies target tenants using drive names (e.g., Orch1:, Orch2:). If not specified, the current tenant will be targeted.
 
-These settings are essential for understanding how the Orchestrator instance is configured, troubleshooting integration issues, verifying feature availability, and managing operational parameters. The settings cover a wide range of functionality from basic application settings to advanced integration configurations.
+Web settings include authentication configurations, user interface preferences, security policies, feature toggles, and integration settings. These settings affect how users interact with Orchestrator and control system-wide behaviors.
 
-Major setting categories include AiFabric (AI Center integration), Telemetry (monitoring and analytics), Deployment (package and library management), Features (feature toggles), General (basic application settings), Authentication, Monitoring, and many others.
-
-Primary Endpoint: GET /odata/Settings/UiPath.Server.Configuration.OData.GetWebSettings
-
-OAuth required scopes: [PLACEHOLDER - Web settings scopes]
-
-Required permissions: [PLACEHOLDER - Web settings view permissions]
-
-Primary Endpoint: GET /odata/Settings/UiPath.Server.Configuration.OData.GetWebSettings
+Primary Endpoint: GET /odata/WebSettings
 
 OAuth required scopes: OR.Settings or OR.Settings.Read
 
-Required permissions:
+Required permissions: Settings.View
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+Get-OrchWebSetting
 ```
 
-{{ Add example description here }}
+Gets all web settings in the current tenant.
+
+### Example 2
+```powershell
+Get-OrchWebSetting Authentication
+```
+
+Gets the web setting named "Authentication".
+
+### Example 3
+```powershell
+Get-OrchWebSetting *Auth*
+```
+
+Gets all web settings whose names contain "Auth".
+
+### Example 4
+```powershell
+Get-OrchWebSetting -Path Orch1:, Orch2: SessionTimeout
+```
+
+Gets the "SessionTimeout" web setting across multiple tenants.
+
+### Example 5
+```powershell
+Get-OrchWebSetting | Where-Object {$_.Category -eq "Security"}
+```
+
+Gets all web settings in the Security category.
+
+### Example 6
+```powershell
+Get-OrchWebSetting | Select-Object Name, Value, Category, Description | Format-Table
+```
+
+Gets all web settings and displays them in a formatted table with key properties.
+
+### Example 7
+```powershell
+Get-OrchWebSetting | Where-Object {$_.IsModified -eq $true} | ConvertTo-Json
+```
+
+Gets all web settings that have been modified from their default values and exports them to JSON format.
 
 ## PARAMETERS
 
@@ -65,7 +99,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the name of the target drives. If not specified, the current drive will be targeted.
+Specifies the name of the target tenants using drive names. If not specified, the current tenant will be targeted.
 
 ```yaml
 Type: String[]
@@ -99,10 +133,16 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+Web setting names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.WebSetting
+Web setting objects can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.ResponseDictionaryItem
+### UiPath.PowerShell.Entities.WebSetting
+
 ## NOTES
 
 ## RELATED LINKS

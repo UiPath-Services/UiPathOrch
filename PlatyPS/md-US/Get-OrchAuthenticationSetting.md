@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-OrchAuthenticationSetting
 
 ## SYNOPSIS
-Gets authentication settings.
+Retrieves authentication and system configuration settings from UiPath Orchestrator.
 
 ## SYNTAX
 
@@ -18,39 +18,66 @@ Get-OrchAuthenticationSetting [[-Key] <String[]>] [-Path <String[]>] [-ProgressA
 ```
 
 ## DESCRIPTION
-The `Get-OrchAuthenticationSetting` cmdlet retrieves authentication configuration settings from UiPath Orchestrator. These settings control various aspects of user authentication, password policies, external authentication integration, and access token management.
+The Get-OrchAuthenticationSetting cmdlet retrieves authentication and system configuration settings from UiPath Orchestrator. These settings control various aspects of authentication, authorization, application behavior, and system configuration including build information, culture settings, and external service integrations.
 
-The cmdlet returns authentication-related settings including password change policies, self-service capabilities, external logout configuration, and token authentication enablement for different types of access (user, robot, and service-to-service authentication). Additionally, it includes basic application settings, build information, localization settings, and telemetry configuration.
+Settings include authentication configurations (Auth.*), application properties (Application.*), build information (Build.*), localization settings, token authentication options, and telemetry configurations. Each setting is returned as a key-value pair showing the configuration parameter and its current value.
 
-Key authentication settings include controls for password management (Auth.AllowChangePassword), user self-service features (Auth.AllowSelfEmailUpdate), external authentication integration (Auth.ExternalLogoutUrl), and access token authentication enablement for various client types (UserAccessTokenAuthentication.Enabled, RobotAccessTokenAuthentication.Enabled, S2SAccessTokenAuthentication.Enabled).
+This cmdlet operates as a tenant-level entity operation, retrieving system-wide configuration settings from the specified Orchestrator environment. These settings are typically read-only and reflect the current system configuration.
 
-These settings are essential for understanding the authentication landscape of the Orchestrator instance, configuring security policies, troubleshooting authentication issues, and ensuring proper integration with external identity providers and authentication systems.
-
-Primary Endpoint: GET /odata/Settings/UiPath.Server.Configuration.OData.GetAuthenticationSettings
-
-OAuth required scopes: [PLACEHOLDER - Authentication settings scopes]
-
-Required permissions: [PLACEHOLDER - Authentication settings view permissions]
-
-Primary Endpoint: GET /odata/Settings/UiPath.Server.Configuration.OData.GetAuthenticationSettings
+Primary Endpoint: GET /odata/Settings
 
 OAuth required scopes: OR.Settings or OR.Settings.Read
 
-Required permissions:
+Required permissions: Settings.View
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Get-OrchAuthenticationSetting
 ```
 
-{{ Add example description here }}
+Retrieves all authentication and system settings, displaying Key and Value pairs for all configuration parameters.
+
+### Example 2
+```powershell
+PS Orch1:\Shared> Get-OrchAuthenticationSetting | Where-Object {$_.Key -like "Auth.*"}
+```
+
+Gets all authentication-related settings by filtering keys that start with "Auth.".
+
+### Example 3
+```powershell
+PS C:\> Get-OrchAuthenticationSetting -Path Orch1: -Key "*Token*"
+```
+
+Gets all settings with keys containing "Token" in the Orch1 tenant.
+
+### Example 4
+```powershell
+PS Orch1:\> Get-OrchAuthenticationSetting | Where-Object {$_.Key -like "Build.*"}
+```
+
+Retrieves all build-related information including version and date.
+
+### Example 5
+```powershell
+PS Orch1:\> Get-OrchAuthenticationSetting | Select-Object Key, Value | Sort-Object Key
+```
+
+Displays all settings sorted alphabetically by key for organized viewing.
+
+### Example 6
+```powershell
+PS Orch1:\> Get-OrchAuthenticationSetting | Where-Object {$_.Value -eq "True"} | Select-Object Key
+```
+
+Shows all settings that are currently enabled (value = "True").
 
 ## PARAMETERS
 
 ### -Key
-Specifies the Key of the settings to be retrieved.
+Specifies the keys of authentication settings to be retrieved. Supports wildcard patterns for flexible setting selection.
 
 ```yaml
 Type: String[]
@@ -65,7 +92,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the name of the target drives. If not specified, the current drive will be targeted.
+Specifies the target tenant drives. If not specified, the current tenant will be targeted. For tenant-level operations.
 
 ```yaml
 Type: String[]
@@ -99,10 +126,33 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+Setting keys can be piped to this cmdlet.
+
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.ResponseDictionaryItem
+### UiPath.PowerShell.Entities.AuthenticationSetting
+Returns AuthenticationSetting objects containing system configuration information. Key properties include:
+- Key: Configuration parameter name (e.g., "Auth.AllowChangePassword", "Build.Version")
+- Value: Current configuration value
+
+Common setting categories include:
+- Auth.*: Authentication and authorization settings
+- Application.*: Application-level configuration
+- Build.*: Version and build information
+- Localization.*: Culture and language settings
+- Telemetry.*: Analytics and monitoring configuration
+- *Authentication.Enabled: Token authentication options
+
 ## NOTES
+This cmdlet is a tenant-level entity operation for accessing system configuration settings. These settings control authentication behavior, application properties, and system features. Most settings are read-only and reflect the current Orchestrator configuration. Use filtering by Key patterns to find specific configuration categories. This operation requires Settings.View permissions.
 
 ## RELATED LINKS
+
+[Get-OrchSetting](Get-OrchSetting.md)
+
+[Get-OrchExecutionSetting](Get-OrchExecutionSetting.md)
+
+[Set-OrchSetting](Set-OrchSetting.md)
+
+[Get-OrchCurrentUser](Get-OrchCurrentUser.md)

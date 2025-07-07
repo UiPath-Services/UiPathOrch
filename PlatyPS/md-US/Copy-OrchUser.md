@@ -8,7 +8,7 @@ schema: 2.0.0
 # Copy-OrchUser
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+Copies users between tenants.
 
 ## SYNTAX
 
@@ -18,27 +18,68 @@ Copy-OrchUser [-UserName] <String[]> [-FullName <String[]>] [-Type <String[]>] [
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Copy-OrchUser cmdlet copies users from source tenants to destination tenants within UiPath Orchestrator. This cmdlet creates copies of user accounts, including their configurations and metadata, enabling user management across multiple tenant environments.
 
-Primary Endpoint:
+The cmdlet supports copying users to multiple destination tenants simultaneously. Users can be identified by either UserName or FullName parameters, and filtered by Type for targeted user management operations.
 
-OAuth required scopes:
+Use the -UserName parameter to specify which users to copy and the -Destination parameter to specify the target tenants. The -Type parameter allows filtering by user types, and the -Path parameter enables working with multiple source tenants.
 
-Required permissions:
+This is a tenant entity cmdlet. The -Path parameter specifies the source drive name (e.g., Orch1:, Orch2:), and -Destination specifies the target tenant drives where users should be copied.
+
+Primary Endpoint: [PLACEHOLDER]
+
+OAuth required scopes: [PLACEHOLDER]
+
+Required permissions: [PLACEHOLDER]
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Copy-OrchUser john.doe Orch2:
 ```
 
-{{ Add example description here }}
+Copies user john.doe from the current tenant (Orch1) to Orch2 tenant.
+
+### Example 2
+```powershell
+PS C:\> Copy-OrchUser -Path Orch1: jane.smith Orch2:, Orch3:
+```
+
+Copies user jane.smith from Orch1 to both Orch2 and Orch3 tenants.
+
+### Example 3
+```powershell
+PS Orch1:\> Copy-OrchUser admin.user, developer.user Orch2: -WhatIf
+```
+
+Shows what would happen when copying admin.user and developer.user from the current tenant to Orch2.
+
+### Example 4
+```powershell
+PS C:\> Copy-OrchUser -Path Orch1: *admin* Orch2: -Type User
+```
+
+Copies all users with usernames containing admin from Orch1 to Orch2, filtering by User type.
+
+### Example 5
+```powershell
+PS Orch1:\> Get-OrchUser *developer* | Copy-OrchUser -Destination Orch2:, Orch3:
+```
+
+Gets all users with usernames containing developer and copies them to both Orch2 and Orch3 tenants using pipeline input.
+
+### Example 6
+```powershell
+PS C:\> Copy-OrchUser -Path Orch1: -FullName "John Smith" Orch2: -Confirm
+```
+
+Copies the user with full name "John Smith" from Orch1 to Orch2 with confirmation prompts.
 
 ## PARAMETERS
 
 ### -Destination
-Specifies the destination drive names.
+Specifies the destination tenant drives where users should be copied.
 
 ```yaml
 Type: String[]
@@ -53,7 +94,7 @@ Accept wildcard characters: False
 ```
 
 ### -FullName
-{{ Fill FullName Description }}
+Specifies the FullName of the users to be copied. Alternative to UserName parameter.
 
 ```yaml
 Type: String[]
@@ -68,7 +109,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the source drive name. If not specified, the current drive will be used as the source.
+Specifies the source tenant drive. If not specified, the current tenant will be used as the source.
 
 ```yaml
 Type: String
@@ -98,7 +139,7 @@ Accept wildcard characters: False
 ```
 
 ### -UserName
-{{ Fill UserName Description }}
+Specifies the UserName of the users to be copied.
 
 ```yaml
 Type: String[]
@@ -144,7 +185,7 @@ Accept wildcard characters: False
 ```
 
 ### -Type
-{{ Fill Type Description }}
+Specifies the user types to filter by when copying users.
 
 ```yaml
 Type: String[]
@@ -163,10 +204,28 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
-## OUTPUTS
+### System.String[]
+User names can be piped to this cmdlet.
 
 ### UiPath.PowerShell.Entities.User
+User objects from Get-OrchUser can be piped to this cmdlet. The UserName property will be automatically mapped to the -UserName parameter via ByPropertyName binding.
+
+## OUTPUTS
+
+### None
+This cmdlet does not generate any output.
+
 ## NOTES
+This is a tenant entity cmdlet. The -Path parameter specifies drive names (e.g., Orch1:, Orch2:) for source and destination tenants.
+
+Users can be identified by either UserName or FullName. Use -Type parameter to filter by specific user types. Use wildcards for efficient bulk operations and -WhatIf for testing before actual execution.
 
 ## RELATED LINKS
+
+[Get-OrchUser](Get-OrchUser.md)
+
+[Add-OrchUser](Add-OrchUser.md)
+
+[Remove-OrchUser](Remove-OrchUser.md)
+
+[Set-OrchUser](Set-OrchUser.md)

@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-OrchClassicRobot
 
 ## SYNOPSIS
-Gets robots from classic folders.
+Gets robots from classic environments.
 
 ## SYNTAX
 
@@ -18,9 +18,13 @@ Get-OrchClassicRobot [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-Depth 
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Get-OrchClassicRobot cmdlet retrieves classic robot configurations from UiPath Orchestrator. Classic robots are the legacy robot entities used before the modern folder-based approach, associated with classic environments rather than modern folder structures.
 
-Primary Endpoint: GET /odata/Sessions?$expand=Robot($expand=License)
+This is a folder entity cmdlet. To use this cmdlet, you must first navigate to the target folder using Set-Location (cd), or specify the target folders using -Path, -Recurse, or -Depth parameters.
+
+Classic robots provide backward compatibility for existing robot deployments and are primarily used for migrating from older Orchestrator versions to the modern folder structure. These robots maintain their environment associations and process assignments from the legacy system.
+
+Primary Endpoint: GET /odata/Robots?$expand=Machine,Environment
 
 OAuth required scopes: OR.Robots or OR.Robots.Read
 
@@ -30,10 +34,52 @@ Required permissions: Robots.View
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+Get-OrchClassicRobot
 ```
 
-{{ Add example description here }}
+Gets all classic robots in the current folder.
+
+### Example 2
+```powershell
+Get-OrchClassicRobot Robot01
+```
+
+Gets the classic robot named "Robot01" from the current folder.
+
+### Example 3
+```powershell
+Get-OrchClassicRobot *Prod*
+```
+
+Gets all classic robots whose names contain "Prod".
+
+### Example 4
+```powershell
+Get-OrchClassicRobot -Recurse
+```
+
+Gets all classic robots from the current folder and all its subfolders.
+
+### Example 5
+```powershell
+Get-OrchClassicRobot -Path Orch1:\Legacy, Orch1:\Migration
+```
+
+Gets classic robots from the Legacy and Migration folders.
+
+### Example 6
+```powershell
+Get-OrchClassicRobot | Where-Object {$_.Type -eq "Unattended"}
+```
+
+Gets all classic robots of type "Unattended".
+
+### Example 7
+```powershell
+Get-OrchClassicRobot | Select-Object Name, MachineName, Environment, Type, Status
+```
+
+Gets all classic robots and displays their key properties including machine name, environment, type, and status.
 
 ## PARAMETERS
 
@@ -147,10 +193,16 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+Robot names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.Robot
+Robot objects can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.Session
+### UiPath.PowerShell.Entities.Robot
+
 ## NOTES
 
 ## RELATED LINKS

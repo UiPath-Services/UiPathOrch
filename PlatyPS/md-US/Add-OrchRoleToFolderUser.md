@@ -8,7 +8,7 @@ schema: 2.0.0
 # Add-OrchRoleToFolderUser
 
 ## SYNOPSIS
-Assigns the roles to folder users.
+Assigns roles to folder users.
 
 ## SYNTAX
 
@@ -19,7 +19,13 @@ Add-OrchRoleToFolderUser [[-UserName] <String[]>] [-FullName <String[]>] [-Roles
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Add-OrchRoleToFolderUser cmdlet assigns roles to users within specific folders in UiPath Orchestrator tenants. This cmdlet manages folder-level permissions by granting users specific roles that determine their access rights and capabilities within those folders.
+
+The cmdlet supports assigning roles to users using either UserName or FullName for identification. You can assign multiple roles to multiple users simultaneously and target specific folders or apply changes recursively to folder hierarchies.
+
+Use the -Roles parameter to specify which roles to assign and either -UserName or -FullName to identify the target users. The -Path parameter specifies target folders, and the -Recurse parameter applies role assignments to all subfolders.
+
+This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters. The -Recurse parameter enables assigning roles to users across all subfolders, maintaining consistent permissions throughout the folder structure.
 
 Primary Endpoint: POST /odata/Folders/UiPath.Server.Configuration.OData.AssignUsers
 
@@ -31,15 +37,57 @@ Required permissions: (Units.Edit or SubFolders.Edit - Assigns users to any fold
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Development> Add-OrchRoleToFolderUser -UserName john.doe -Roles Developer
 ```
 
-{{ Add example description here }}
+Assigns the Developer role to user john.doe in the current folder (Development).
+
+### Example 2
+```powershell
+PS C:\> Add-OrchRoleToFolderUser -Path Orch1:\Finance -UserName jane.smith -Roles "Business Analyst", Viewer
+```
+
+Assigns Business Analyst and Viewer roles to user jane.smith in the Finance folder.
+
+### Example 3
+```powershell
+PS Orch1:\Production> Add-OrchRoleToFolderUser -FullName "Alex Johnson" -Roles Administrator -WhatIf
+```
+
+Shows what would happen when assigning the Administrator role to user Alex Johnson in the Production folder.
+
+### Example 4
+```powershell
+PS C:\> Add-OrchRoleToFolderUser -Path Orch1:\Development, Orch1:\Testing -UserName team.lead -Roles "Team Lead"
+```
+
+Assigns the Team Lead role to user team.lead in both Development and Testing folders.
+
+### Example 5
+```powershell
+PS Orch1:\> Add-OrchRoleToFolderUser -Recurse -UserName support.user -Roles Viewer
+```
+
+Assigns the Viewer role to support.user in all folders recursively from the current location.
+
+### Example 6
+```powershell
+PS Orch1:\Finance> Get-OrchUser *analyst* | Add-OrchRoleToFolderUser -Roles "Business Analyst"
+```
+
+Gets all users with names containing analyst and assigns them the Business Analyst role in the current Finance folder.
+
+### Example 7
+```powershell
+PS C:\> Add-OrchRoleToFolderUser -Path Orch1:\Development -Type DirectoryUser contractor.* -Roles Developer
+```
+
+Assigns the Developer role to all users matching contractor.* pattern in the Development folder, filtering by User type.
 
 ## PARAMETERS
 
 ### -Depth
-Specifies the depth for recursion into the target folders. A depth of 0 indicates the current location only, with no subfolders included.
+Specifies the maximum number of subfolder levels to include when using -Recurse parameter.
 
 ```yaml
 Type: UInt32
@@ -54,7 +102,7 @@ Accept wildcard characters: False
 ```
 
 ### -FullName
-Specifies the FullName of the users to whom the roles will be assigned.
+Specifies the full names of the users to assign roles to. Alternative to UserName parameter.
 
 ```yaml
 Type: String[]
@@ -69,7 +117,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the target folder. If not specified, the current folder will be targeted.
+Specifies the target folders where role assignments should be made.
 
 ```yaml
 Type: String[]
@@ -99,7 +147,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-Specifies that the operation should include the target folder and all its subfolders.
+Specifies that role assignments should be applied to all subfolders recursively from the specified path.
 
 ```yaml
 Type: SwitchParameter
@@ -114,7 +162,7 @@ Accept wildcard characters: False
 ```
 
 ### -Roles
-Specifies the roles to be assigned to the users.
+Specifies the roles to assign to the users.
 
 ```yaml
 Type: String[]
@@ -129,7 +177,7 @@ Accept wildcard characters: False
 ```
 
 ### -UserName
-Specifies the UserName of the users to whom the roles will be assigned.
+Specifies the usernames of the users to assign roles to.
 
 ```yaml
 Type: String[]
@@ -175,7 +223,7 @@ Accept wildcard characters: False
 ```
 
 ### -Type
-{{ Fill Type Description }}
+Specifies the user types to filter by when assigning roles.
 
 ```yaml
 Type: String[]
@@ -194,10 +242,28 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+User names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.User
+User objects from Get-OrchUser can be piped to this cmdlet. The UserName property will be automatically mapped to the -UserName parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
-### System.Object
+### None
+This cmdlet does not generate any output.
+
 ## NOTES
+This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.
+
+Use either -UserName or -FullName to identify users. Multiple roles can be assigned simultaneously. Use -WhatIf to preview changes before executing role assignments.
 
 ## RELATED LINKS
+
+[Get-OrchUser](Get-OrchUser.md)
+
+[Get-OrchRole](Get-OrchRole.md)
+
+[Remove-OrchRoleFromFolderUser](Remove-OrchRoleFromFolderUser.md)
+
+[Get-OrchFolderUser](Get-OrchFolderUser.md)

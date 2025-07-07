@@ -8,39 +8,80 @@ schema: 2.0.0
 # New-OrchProcess
 
 ## SYNOPSIS
-Creates processes.
+Creates automation processes from published packages.
 
 ## SYNTAX
 
 ```
 New-OrchProcess [-Id] <String[]> [[-Version] <String>] [-Name <String>] [-Description <String>]
- [-EntryPoint <String>] [-InputArguments <String>] [-Priority <String>] [-HiddenForAttendedUser <String>]
- [-RemoteControlAccess <String>] [-RetentionAction <String>] [-RetentionPeriod <Int32>]
- [-RetentionBucket <String>] [-StaleRetentionAction <String>] [-StaleRetentionPeriod <Int32>]
- [-StaleRetentionBucket <String>] [-ErrorRecordingEnabled <String>] [-Quality <Int32>] [-Frequency <Int32>]
- [-Duration <Int32>] [-AutoStartProcess <String>] [-AlwaysRunning <String>] [-A4R_Enabled <String>]
- [-A4R_HealingEnabled <String>] [-VideoRecordingType <String>] [-QueueItemVideoRecordingType <String>]
- [-MaxDurationSeconds <Int32>] [-Tags <String[]>] [-Path <String[]>] [-Recurse] [-Depth <UInt32>]
- [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+ [-EntryPoint <String>] [-InputArguments <String>] [-SpecificPriorityValue <Int32>] [-Priority <String>]
+ [-HiddenForAttendedUser <String>] [-RemoteControlAccess <String>] [-RetentionAction <String>]
+ [-RetentionPeriod <Int32>] [-RetentionBucket <String>] [-StaleRetentionAction <String>]
+ [-StaleRetentionPeriod <Int32>] [-StaleRetentionBucket <String>] [-ErrorRecordingEnabled <String>]
+ [-Quality <Int32>] [-Frequency <Int32>] [-Duration <Int32>] [-AutoStartProcess <String>]
+ [-AlwaysRunning <String>] [-A4R_Enabled <String>] [-A4R_HealingEnabled <String>]
+ [-VideoRecordingType <String>] [-QueueItemVideoRecordingType <String>] [-MaxDurationSeconds <Int32>]
+ [-Tags <String[]>] [-Path <String[]>] [-Recurse] [-Depth <UInt32>] [-ProgressAction <ActionPreference>]
+ [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-Supports import from CSV. The format of the importable CSV can be obtained using Get-OrchProcess -Recurse -ExportCsv c:.
+The New-OrchProcess cmdlet creates automation processes from published packages in UiPath Orchestrator. A process is a deployable automation workflow that can be executed by robots. This cmdlet allows you to configure process settings including entry points, input arguments, priority levels, recording options, and retention policies.
+
+**This is a folder entity cmdlet.** To use this cmdlet, you must first navigate to the target folder using Set-Location (cd), or specify the target folders using the -Path, -Recurse, or -Depth parameters. If you attempt to run this cmdlet without being in a folder context, you will receive the error: \"Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.\"
+
+The process is created from an existing package identified by its Id. You can specify a particular version or use the latest version by default. Process configuration includes execution settings, monitoring options, and lifecycle management policies such as retention rules for job artifacts.
+
+The cmdlet supports CSV import functionality. Use Get-OrchProcess -Recurse -ExportCsv to obtain the format for bulk process creation.
 
 Primary Endpoint: POST /odata/Releases/UiPath.Server.Configuration.OData.CreateRelease
-
-OAuth required scopes: 
-
-Required permissions: 
+OAuth required scopes: OR.Execution or OR.Execution.Write  
+Required permissions: Execution.Create
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+New-OrchProcess InvoiceProcessing
 ```
 
-{{ Add example description here }}
+Creates a new process from the \"InvoiceProcessing\" package using positional parameters and default settings.
+
+### Example 2
+```powershell
+New-OrchProcess DataMigration -Version \"2.1.0\" -Name \"Production Data Migration\" -Description \"Monthly data migration process\"
+```
+
+Creates a process from a specific version of the DataMigration package with custom name and description.
+
+### Example 3
+```powershell
+New-OrchProcess ReportGenerator -Priority \"High\" -MaxDurationSeconds 3600 -VideoRecordingType \"Always\" -Tags Critical, Financial
+```
+
+Creates a high-priority process with 1-hour timeout, video recording enabled, and organizational tags.
+
+### Example 4
+```powershell
+New-OrchProcess EmailProcessor -InputArguments '{\"FromDate\":\"2024-01-01\",\"ToDate\":\"2024-12-31\"}' -EntryPoint \"ProcessEmails.xaml\" -HiddenForAttendedUser \"True\"
+```
+
+Creates a process with JSON input arguments, specific entry point, and hidden from attended users.
+
+### Example 5
+```powershell
+New-OrchProcess -Path Orch1:\Production OrderProcessing -RetentionAction \"Delete\" -RetentionPeriod 30 -A4R_Enabled \"True\"
+```
+
+Creates a process in the Production folder with 30-day retention policy and Analytics for Robots enabled.
+
+### Example 6
+```powershell
+\"PackageA\", \"PackageB\", \"PackageC\" | ForEach-Object { New-OrchProcess $_ -WhatIf -Recurse }
+```
+
+Shows what would happen when creating processes from multiple packages recursively using pipeline processing.
+
 
 ## PARAMETERS
 
@@ -84,7 +125,7 @@ Aliases: cf
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -324,7 +365,7 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -435,8 +476,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+Shows what would happen if the cmdlet runs. The cmdlet is not run.
 
 ```yaml
 Type: SwitchParameter
@@ -445,7 +485,7 @@ Aliases: wi
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -540,17 +580,28 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
+### -SpecificPriorityValue
+{{ Fill SpecificPriorityValue Description }}
+
+```yaml
+Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
-### System.String[]
-### System.String
-### System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.Release
 ## NOTES
 
 ## RELATED LINKS

@@ -8,7 +8,7 @@ schema: 2.0.0
 # Copy-OrchCredentialStore
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+Copies credential stores between tenants.
 
 ## SYNTAX
 
@@ -18,27 +18,68 @@ Copy-OrchCredentialStore [-Name] <String[]> [-Destination] <String[]> [-Path <St
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Copy-OrchCredentialStore cmdlet copies credential stores from source tenants to destination tenants within UiPath Orchestrator. This cmdlet creates complete copies of credential stores, including their configurations and metadata.
 
-Primary Endpoint:
+The cmdlet supports copying credential stores to multiple destination tenants simultaneously. Credential stores contain security configurations for external credential management systems and authentication providers.
 
-OAuth required scopes:
+Use the -Name parameter to specify which credential stores to copy and the -Destination parameter to specify the target tenants. The -Path parameter allows you to specify the source tenant when working with multiple Orchestrator instances.
 
-Required permissions:
+This is a tenant entity cmdlet. The -Path parameter specifies the source drive name (e.g., Orch1:, Orch2:), and -Destination specifies the target tenant drives where credential stores should be copied.
+
+Primary Endpoint: [PLACEHOLDER - 具体的なAPIエンドポイント]
+
+OAuth required scopes: [PLACEHOLDER]
+
+Required permissions: [PLACEHOLDER]
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Copy-OrchCredentialStore AzureKeyVault Orch2:
 ```
 
-{{ Add example description here }}
+Copies the AzureKeyVault credential store from the current tenant (Orch1) to Orch2 tenant.
+
+### Example 2
+```powershell
+PS C:\> Copy-OrchCredentialStore -Path Orch1: CyberArkVault Orch2:, Orch3:
+```
+
+Copies the CyberArkVault credential store from Orch1 to both Orch2 and Orch3 tenants.
+
+### Example 3
+```powershell
+PS Orch1:\> Copy-OrchCredentialStore AzureKeyVault, HashiCorpVault Orch2: -WhatIf
+```
+
+Shows what would happen when copying AzureKeyVault and HashiCorpVault credential stores from the current tenant to Orch2.
+
+### Example 4
+```powershell
+PS C:\> Copy-OrchCredentialStore -Path Orch1: *Vault* Orch2:
+```
+
+Copies all credential stores containing Vault in their name from Orch1 to Orch2 using wildcards.
+
+### Example 5
+```powershell
+PS Orch1:\> Get-OrchCredentialStore *Azure* | Copy-OrchCredentialStore -Destination Orch2:, Orch3:
+```
+
+Gets all credential stores containing Azure in their names and copies them to both Orch2 and Orch3 tenants.
+
+### Example 6
+```powershell
+PS C:\> Copy-OrchCredentialStore -Path Orch1: ExternalVault Orch2: -Confirm
+```
+
+Copies the ExternalVault credential store from Orch1 to Orch2 with confirmation prompts.
 
 ## PARAMETERS
 
 ### -Destination
-Specifies the destination drive names.
+Specifies the destination tenant drives where credential stores should be copied.
 
 ```yaml
 Type: String[]
@@ -68,7 +109,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the source drive name. If not specified, the current drive will be used as the source.
+Specifies the source tenant drive. If not specified, the current tenant will be used as the source.
 
 ```yaml
 Type: String
@@ -133,10 +174,26 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
-## OUTPUTS
+### System.String[]
+Credential store names can be piped to this cmdlet.
 
 ### UiPath.PowerShell.Entities.CredentialStore
+Credential store objects from Get-OrchCredentialStore can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
+
+## OUTPUTS
+
+### None
+This cmdlet does not generate any output.
+
 ## NOTES
+This is a tenant entity cmdlet. The -Path parameter specifies drive names (e.g., Orch1:, Orch2:) for source and destination tenants.
+
+Use wildcards for efficient bulk operations and -WhatIf for testing before actual execution. Credential stores contain security configurations for external credential management systems.
 
 ## RELATED LINKS
+
+[Get-OrchCredentialStore](Get-OrchCredentialStore.md)
+
+[Set-OrchCredentialStore](Set-OrchCredentialStore.md)
+
+[Remove-OrchCredentialStore](Remove-OrchCredentialStore.md)

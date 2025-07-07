@@ -8,40 +8,77 @@ schema: 2.0.0
 # New-OrchTrigger
 
 ## SYNOPSIS
-Creates triggers.
+Creates automation triggers for process execution.
 
 ## SYNTAX
 
 ```
-New-OrchTrigger [-Name] <String[]> [-ReleaseName] <String> [-Enabled <String>] [-Priority <String>]
- [-StartStrategy <Int32>] [-StopStrategy <String>] [-StopProcessExpression <String>]
+New-OrchTrigger [-Name] <String[]> [-ReleaseName] <String> [-Enabled <String>] [-SpecificPriorityValue <Int32>]
+ [-Priority <String>] [-StartStrategy <Int32>] [-StopStrategy <String>] [-StopProcessExpression <String>]
  [-KillProcessExpression <String>] [-AlertPendingExpression <String>] [-AlertRunningExpression <String>]
  [-ConsecutiveJobFailuresThreshold <Int32>] [-JobFailuresGracePeriodInHours <Int32>] [-RuntimeType <String>]
  [-InputArguments <String>] [-ResumeOnSameContext <String>] [-RunAsMe <String>] [-IsConnected <String>]
  [-CalendarName <String>] [-ActivateOnJobComplete <String>] [-ItemsActivationThreshold <Int32>]
  [-ItemsPerJobActivationTarget <Int32>] [-MaxJobsForActivation <Int32>] [-StartProcessCronDetails <String>]
- [-StartProcessCron <String>] [-QueueDefinitionName <String>] [-TimeZone <String>]
+ [-StartProcessCron <String>] [-QueueDefinitionName <String>] [-TimeZone <String>] [-TimeZoneId <String>]
  [-StopProcessDate <DateTime>] [-ExecutorRobots <String[]>] [-MachineRobots <String[]>] [-Path <String[]>]
  [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The New-OrchTrigger cmdlet creates automation triggers that automatically start process executions based on various conditions. Triggers can be time-based (scheduled), queue-based (activated by queue items), or event-based (triggered by specific conditions).
+
+**This is a folder entity cmdlet.** To use this cmdlet, you must first navigate to the target folder using Set-Location (cd), or specify the target folders using the -Path parameter. If you attempt to run this cmdlet without being in a folder context, you will receive the error: \"Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.\"
+
+Triggers support various execution strategies including time-based scheduling using Cron expressions, queue-based activation when items are added to queues, and advanced configurations such as calendar integration, robot assignment, and failure handling policies.
 
 Primary Endpoint: POST /odata/ProcessSchedules
-
-OAuth required scopes: OR.Jobs
-
-Required permissions: Schedules.Create
+OAuth required scopes: OR.Execution or OR.Execution.Write  
+Required permissions: Execution.Create
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+New-OrchTrigger DailyTrigger InvoiceProcessing
 ```
 
-{{ Add example description here }}
+Creates a basic trigger named \"DailyTrigger\" for the \"InvoiceProcessing\" process using positional parameters.
+
+### Example 2
+```powershell
+New-OrchTrigger BusinessHoursTrigger DataProcessor -StartProcessCron \"0 9 * * 1-5\" -TimeZone \"UTC\" -Enabled \"True\"
+```
+
+Creates a trigger that runs the DataProcessor process at 9 AM on weekdays using Cron scheduling.
+
+### Example 3
+```powershell
+New-OrchTrigger QueueTrigger EmailHandler -QueueDefinitionName \"EmailQueue\" -ItemsActivationThreshold 5 -MaxJobsForActivation 3
+```
+
+Creates a queue-based trigger that starts the EmailHandler process when 5 or more items are in the EmailQueue, with a maximum of 3 concurrent jobs.
+
+### Example 4
+```powershell
+New-OrchTrigger CriticalTrigger EmergencyResponse -Priority \"High\" -RuntimeType \"Unattended\" -RunAsMe \"True\" -MachineRobots \"Robot1\", \"Robot2\"
+```
+
+Creates a high-priority trigger with specific robot assignments and RunAsMe execution context.
+
+### Example 5
+```powershell
+New-OrchTrigger -Path Orch1:\Production MonthlyReport ReportGenerator -CalendarName \"BusinessCalendar\" -StopProcessDate (Get-Date).AddMonths(1)
+```
+
+Creates a trigger in the Production folder with calendar integration and automatic stop date.
+
+### Example 6
+```powershell
+New-OrchTrigger FailsafeTrigger BackupProcess -ConsecutiveJobFailuresThreshold 3 -JobFailuresGracePeriodInHours 2 -AlertPendingExpression \"duration > 30\" -WhatIf
+```
+
+Shows what would happen when creating a trigger with failure handling and alerting configurations.
 
 ## PARAMETERS
 
@@ -136,7 +173,7 @@ Accept wildcard characters: False
 ```
 
 ### -Enabled
-{{ Fill Enabled Description }}
+Specifies whether the trigger is enabled (\"True\") or disabled (\"False\") upon creation.
 
 ```yaml
 Type: String
@@ -181,7 +218,7 @@ Accept wildcard characters: False
 ```
 
 ### -ItemsActivationThreshold
-{{ Fill ItemsActivationThreshold Description }}
+Specifies the minimum number of queue items required to activate the trigger.
 
 ```yaml
 Type: Int32
@@ -256,7 +293,7 @@ Accept wildcard characters: False
 ```
 
 ### -MaxJobsForActivation
-{{ Fill MaxJobsForActivation Description }}
+Specifies the maximum number of concurrent jobs that can be started by this trigger.
 
 ```yaml
 Type: Int32
@@ -271,7 +308,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-{{ Fill Name Description }}
+Specifies the name(s) of the trigger(s) to create. Trigger names must be unique within the folder.
 
 ```yaml
 Type: String[]
@@ -286,7 +323,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-Specifies the target folder. If not specified, the current folder will be targeted.
+Specifies the path(s) to the target folder(s) where the trigger(s) will be created. Use this parameter to create triggers in specific folders without changing your current location.
 
 ```yaml
 Type: String[]
@@ -301,7 +338,7 @@ Accept wildcard characters: True
 ```
 
 ### -Priority
-{{ Fill Priority Description }}
+Specifies the job priority for triggered executions. Valid values include Low, Normal, High, and Critical.
 
 ```yaml
 Type: String
@@ -316,7 +353,7 @@ Accept wildcard characters: False
 ```
 
 ### -QueueDefinitionName
-{{ Fill QueueDefinitionName Description }}
+Specifies the queue name for queue-based triggers. The trigger will activate when items are added to this queue.
 
 ```yaml
 Type: String
@@ -331,7 +368,7 @@ Accept wildcard characters: True
 ```
 
 ### -ReleaseName
-{{ Fill ReleaseName Description }}
+Specifies the name of the process (release) that this trigger will execute. The process must exist in the same folder.
 
 ```yaml
 Type: String
@@ -376,7 +413,7 @@ Accept wildcard characters: False
 ```
 
 ### -RuntimeType
-{{ Fill RuntimeType Description }}
+Specifies the robot runtime type. Valid values include Unattended, NonProduction, and TestAutomation.
 
 ```yaml
 Type: String
@@ -391,7 +428,7 @@ Accept wildcard characters: False
 ```
 
 ### -StartProcessCron
-{{ Fill StartProcessCron Description }}
+Specifies the Cron expression for time-based scheduling. Use standard Cron format (e.g., \"0 9 * * 1-5\" for 9 AM on weekdays).
 
 ```yaml
 Type: String
@@ -496,8 +533,7 @@ Accept wildcard characters: True
 ```
 
 ### -WhatIf
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+Shows what would happen if the cmdlet runs. The cmdlet is not run.
 
 ```yaml
 Type: SwitchParameter
@@ -541,18 +577,65 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
+### -SpecificPriorityValue
+{{ Fill SpecificPriorityValue Description }}
+
+```yaml
+Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -TimeZoneId
+{{ Fill TimeZoneId Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
+```
+
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
 ### System.String[]
-### System.String
-### System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]
-### System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]
+Trigger names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.ProcessSchedule
+Trigger objects can be piped to this cmdlet. The Name and other properties will be automatically mapped to the corresponding parameters via ByPropertyName binding.
+
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.ProcessSchedule
+This cmdlet returns the newly created trigger object(s), which include properties such as Id, Name, ReleaseName, StartProcessCron, and configuration settings.
+
 ## NOTES
+- Trigger names must be unique within the folder
+- Cron expressions use standard format: second minute hour day month dayofweek year
+- Queue-based triggers require existing queues
+- Consider using -WhatIf to preview the operation before actual creation
+- Time zones should be specified as valid TimeZone identifiers
+- Robot assignments must reference existing robots
+- Calendar integration requires existing calendar objects
 
 ## RELATED LINKS
+
+[Get-OrchTrigger](Get-OrchTrigger.md)
+[Update-OrchTrigger](Update-OrchTrigger.md)
+[Remove-OrchTrigger](Remove-OrchTrigger.md)
+[Enable-OrchTrigger](Enable-OrchTrigger.md)
+[Disable-OrchTrigger](Disable-OrchTrigger.md)

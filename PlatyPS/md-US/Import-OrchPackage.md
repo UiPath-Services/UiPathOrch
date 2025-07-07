@@ -8,7 +8,7 @@ schema: 2.0.0
 # Import-OrchPackage
 
 ## SYNOPSIS
-Uploads packages.
+Imports packages from local files to specified folders.
 
 ## SYNTAX
 
@@ -18,48 +18,68 @@ Import-OrchPackage [-Source] <String[]> [[-Path] <String[]>] [-Recurse] [-Progre
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Import-OrchPackage cmdlet imports automation packages from local .nupkg files into UiPath Orchestrator folders. This cmdlet enables deployment of automation packages from backup files, migration between environments, or installation of packages created offline.
 
-Primary Endpoint:
+Packages contain compiled automation workflows and their dependencies. Importing packages uploads .nupkg files to Orchestrator, making them available for process deployment and execution. This is essential for environment setup, disaster recovery, and automation deployment scenarios.
 
-OAuth required scopes:
+Use the -Source parameter to specify the local .nupkg files or directories containing packages to import. The -Path parameter specifies the target Orchestrator folders where packages should be uploaded. The cmdlet supports wildcard patterns for importing multiple packages efficiently.
 
-Required permissions:
+This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters. The -Recurse parameter enables processing all subdirectories when importing from local directories.
+
+Primary Endpoint: [PLACEHOLDER - 具体的なAPIエンドポイント]
+
+OAuth required scopes: OR.Assets or OR.Assets.Write
+
+Required permissions: Assets.Create
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS Orch1:\> Import-OrchPackage c:\pkg\*.nupkg
+PS Orch1:\Development> Import-OrchPackage "C:\Packages\ProcessAutomation.1.0.0.nupkg"
 ```
 
-Uploads the specified package file to the process feed of the current folder. If the current folder does not have a process feed, it uploads to the tenant's package feed.
+Imports the ProcessAutomation package from the specified .nupkg file to the current folder (Development).
 
 ### Example 2
 ```powershell
-PS Orch1:\> Import-OrchPackage c:\pkg
+PS C:\> Import-OrchPackage -Source "C:\Exports\*.nupkg" -Path Orch1:\Development
 ```
 
-When a folder is specified for the -Source parameter, it uploads all *.nupkg files contained in this folder. Note that the -Source parameter can simultaneously specify multiple folder names and file names, separated by commas.
+Imports all .nupkg files from C:\Exports directory to the Orch1:\Development folder.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Import-OrchPackage c:\pkg\*.nupkg -Path Orch1:\,Orch2:\myfolder
+PS Orch1:\Development> Import-OrchPackage "C:\Backup\DataProcessor.*.nupkg" -WhatIf
 ```
 
-Uploads the specified package files to both the tenant process feed of Orch1: and the process feed of myfolder in Orch2:. If the Orch2:\myfolder folder does not have a process feed, it uploads to the tenant process feed of Orch2:.
+Shows what would happen when importing all versions of DataProcessor package from C:\Backup directory to the current folder.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Import-OrchPackage c:\pkg -Recurse
+PS C:\> Import-OrchPackage -Source "C:\Packages" -Path Orch1:\Production -Recurse
 ```
 
-Running with the -Recurse parameter in the root folder will upload in bulk to the tenant feed and all folders with a feed. Note that only folders directly under the root folder can have a feed, so specifying the -Recurse option only makes sense when the root folder is targeted. In other words, when this cmdlet is run at the root folder of the UiPathOrch drive or when the -Path parameter specifies the root folder of the UiPathOrch drive. It is useful for migrating packages downloaded with Export-OrchPackage -Recurse to another tenant in bulk.
+Imports all .nupkg files from C:\Packages directory and its subdirectories to the Orch1:\Production folder.
+
+### Example 5
+```powershell
+PS Orch1:\Development> Import-OrchPackage "C:\Critical\*.nupkg", "C:\Backup\*.nupkg" -Confirm
+```
+
+Imports all .nupkg files from both C:\Critical and C:\Backup directories to the current folder with confirmation prompts.
+
+### Example 6
+```powershell
+PS C:\> Get-ChildItem "C:\Exports\*.nupkg" | Import-OrchPackage -Path Orch1:\Development
+```
+
+Gets all .nupkg files from C:\Exports directory and imports them to Orch1:\Development using pipeline input.
 
 ## PARAMETERS
 
 ### -Path
-Specifies the target folder. If not specified, the current folder will be targeted.
+Specifies the target folders where packages should be imported. If not specified, the current folder will be used as the target.
 
 ```yaml
 Type: String[]
@@ -89,7 +109,7 @@ Accept wildcard characters: False
 ```
 
 ### -Source
-{{ Fill Source Description }}
+Specifies the source .nupkg files or directories containing packages to be imported.
 
 ```yaml
 Type: String[]
@@ -135,7 +155,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-{{ Fill Recurse Description }}
+Specifies that all subdirectories should be processed when importing from local directories.
 
 ```yaml
 Type: SwitchParameter
@@ -154,10 +174,28 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+Package file paths can be piped to this cmdlet.
+
+### System.IO.FileInfo
+FileInfo objects from Get-ChildItem can be piped to this cmdlet. The FullName property will be automatically mapped to the -Source parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.BulkItemDtoOfString
+### UiPath.PowerShell.Entities.Package
+Returns information about the imported packages.
+
 ## NOTES
+This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.
+
+Imported packages must be valid .nupkg files created by UiPath Studio or exported using Export-OrchPackage. Ensure package dependencies are available in the target environment. Package names and versions must be unique within folders. Use wildcards for efficient bulk operations and -WhatIf for testing before actual execution.
 
 ## RELATED LINKS
+
+[Export-OrchPackage](Export-OrchPackage.md)
+
+[Get-OrchPackage](Get-OrchPackage.md)
+
+[Remove-OrchPackage](Remove-OrchPackage.md)
+
+[Update-OrchPackage](Update-OrchPackage.md)

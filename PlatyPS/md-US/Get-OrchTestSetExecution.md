@@ -20,7 +20,11 @@ Get-OrchTestSetExecution [[-Name] <String[]>] [-Status <String[]>] [-Last <Strin
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Get-OrchTestSetExecution cmdlet retrieves test set execution records from UiPath Orchestrator. Test set executions represent the historical records of test set runs, including their status, execution time, and results.
+
+This is a folder entity cmdlet. To use this cmdlet, you must first navigate to the target folder using Set-Location (cd), or specify the target folders using -Path, -Recurse, or -Depth parameters.
+
+You can filter executions by status, time range, trigger type, and other criteria. The cmdlet supports pagination through -Skip and -First parameters for large result sets.
 
 Primary Endpoint: GET /odata/TestSetExecutions?$expand=TestSet
 
@@ -32,10 +36,52 @@ Required permissions: TestSetExecutions.View
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+Get-OrchTestSetExecution
 ```
 
-{{ Add example description here }}
+Gets all test set executions in the current folder.
+
+### Example 2
+```powershell
+Get-OrchTestSetExecution RegressionTests
+```
+
+Gets all executions for the test set named "RegressionTests".
+
+### Example 3
+```powershell
+Get-OrchTestSetExecution -Status Failed, Stopped
+```
+
+Gets all test set executions with Failed or Stopped status.
+
+### Example 4
+```powershell
+Get-OrchTestSetExecution -Last "7d"
+```
+
+Gets test set executions from the last 7 days.
+
+### Example 5
+```powershell
+Get-OrchTestSetExecution -StartTimeAfter (Get-Date).AddDays(-1) -Status Successful
+```
+
+Gets successful test set executions that started within the last day.
+
+### Example 6
+```powershell
+Get-OrchTestSetExecution -Recurse -TriggerType Schedule -First 50
+```
+
+Gets the first 50 scheduled test set executions from the current folder and all subfolders.
+
+### Example 7
+```powershell
+Get-OrchTestSetExecution -Path Orch1:\Production *Smoke* | Where-Object {$_.Duration.TotalMinutes -gt 30}
+```
+
+Gets all smoke test executions from the Production folder that took more than 30 minutes to complete.
 
 ## PARAMETERS
 
@@ -71,7 +117,7 @@ Accept wildcard characters: False
 ```
 
 ### -Last
-Specifies the most recent period for retrieving test set executions.
+Specifies the most recent period for retrieving test set executions. Valid values include time spans like "1h", "24h", "7d", "30d", etc.
 
 ```yaml
 Type: String
@@ -177,7 +223,7 @@ Accept wildcard characters: False
 ```
 
 ### -Status
-Specifies the Status of the test set executions to be retrieved.
+Specifies the Status of the test set executions to be retrieved. Common values include: Running, Successful, Failed, Stopped, Pending.
 
 ```yaml
 Type: String[]
@@ -192,7 +238,7 @@ Accept wildcard characters: True
 ```
 
 ### -TriggerType
-Specifies the TriggerType of the test set executions to be retrieved.
+Specifies the TriggerType of the test set executions to be retrieved. Common values include: Manual, Schedule, API.
 
 ```yaml
 Type: String[]
@@ -226,10 +272,16 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+Test set names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.TestSet
+Test set objects can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.TestSetExecution
+
 ## NOTES
 
 ## RELATED LINKS

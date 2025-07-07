@@ -26,9 +26,9 @@ The cmdlet generates a new client secret for the specified machine(s) and return
 
 Primary Endpoint: POST /api/clientsecrets/{licenseKey}
 
-OAuth required scopes: [PLACEHOLDER - OAuth scopes to be documented]
+OAuth required scopes: OR.Machines or OR.Machines.Write
 
-Required permissions: [PLACEHOLDER - Required permissions to be documented]
+Required permissions: Machines.Edit
 
 ## EXAMPLES
 

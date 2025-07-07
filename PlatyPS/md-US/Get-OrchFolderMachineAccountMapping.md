@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-OrchFolderMachineAccountMapping
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+Gets machine account mappings for folder-scoped machines.
 
 ## SYNTAX
 
@@ -18,7 +18,11 @@ Get-OrchFolderMachineAccountMapping [[-Name] <String[]>] [-Path <String[]>] [-Re
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Get-OrchFolderMachineAccountMapping cmdlet retrieves the account mappings between machines and user accounts within specific folders. These mappings define which users can connect to which machines in the folder context.
+
+This is a folder entity cmdlet. To use this cmdlet, you must first navigate to the target folder using Set-Location (cd), or specify the target folders using -Path, -Recurse, or -Depth parameters.
+
+The cmdlet returns information about machine-user relationships, including robot accounts and their associated machines within the folder scope.
 
 Primary Endpoint:
   GET /odata/Folders/UiPath.Server.Configuration.OData.GetMachineRobots(folderId={folderId},machineId={machineId})
@@ -32,15 +36,57 @@ Required permissions: (SubFolders.View or Units.View or Jobs.Create)
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+Get-OrchFolderMachineAccountMapping
 ```
 
-{{ Add example description here }}
+Gets all machine account mappings in the current folder.
+
+### Example 2
+```powershell
+Get-OrchFolderMachineAccountMapping Machine01
+```
+
+Gets account mappings for the machine named "Machine01" in the current folder.
+
+### Example 3
+```powershell
+Get-OrchFolderMachineAccountMapping *Prod*
+```
+
+Gets account mappings for all machines whose names contain "Prod".
+
+### Example 4
+```powershell
+Get-OrchFolderMachineAccountMapping -Recurse
+```
+
+Gets all machine account mappings from the current folder and all its subfolders.
+
+### Example 5
+```powershell
+Get-OrchFolderMachineAccountMapping -Path Orch1:\Development, Orch1:\Testing
+```
+
+Gets machine account mappings from both Development and Testing folders.
+
+### Example 6
+```powershell
+Get-OrchFolderMachineAccountMapping | Where-Object {$_.RobotUserName -like "*service*"}
+```
+
+Gets all machine account mappings where the robot user name contains "service".
+
+### Example 7
+```powershell
+Get-OrchMachine *Robot* | Get-OrchFolderMachineAccountMapping
+```
+
+Gets account mappings for all machines containing "Robot". Machine names are passed via pipeline using ByPropertyName binding.
 
 ## PARAMETERS
 
 ### -Depth
-{{ Fill Depth Description }}
+Specifies the depth for recursion into the target folders. A depth of 0 indicates the current location only, with no subfolders included.
 
 ```yaml
 Type: UInt32
@@ -55,7 +101,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-{{ Fill Name Description }}
+Specifies the name of the machines for which account mappings should be retrieved.
 
 ```yaml
 Type: String[]
@@ -119,10 +165,16 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+Machine names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.Machine
+Machine objects can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.ExtendedRobot
+
 ## NOTES
 
 ## RELATED LINKS

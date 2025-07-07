@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-OrchCalendar
 
 ## SYNOPSIS
-Gets the non-working days calendars.
+Retrieves business calendars configured in UiPath Orchestrator.
 
 ## SYNTAX
 
@@ -18,27 +18,66 @@ Get-OrchCalendar [[-Name] <String[]>] [-ExpandExcludedDate] [-IncludePastDate] [
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Get-OrchCalendar cmdlet retrieves business calendars configured within UiPath Orchestrator. Business calendars define working days, holidays, and excluded dates for automation scheduling, enabling precise control over when automation processes should execute.
 
-Primary Endpoint: GET /odata/Calendars, GET /odata/Calendars({calendarId})
+Calendars contain properties such as Name, TimeZoneId, ExcludedDates array, and a unique Key (GUID identifier). These calendars are used by triggers and schedules to determine execution timing based on business rules and holiday schedules.
 
-OAuth required scopes: OR.Settings or OR.Settings.Read
+This cmdlet operates as a tenant-level entity operation, retrieving calendars from the specified Orchestrator environment. The -ExpandExcludedDate parameter provides detailed information about excluded dates, while -IncludePastDate controls whether historical date information is included.
 
-Required permissions:
+Primary Endpoint: GET /odata/Calendars
+
+OAuth required scopes: OR.Jobs or OR.Jobs.Read
+
+Required permissions: Schedules.View
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Get-OrchCalendar
 ```
 
-{{ Add example description here }}
+Retrieves all business calendars, displaying Id, Name, TimeZoneId, and Key properties.
+
+### Example 2
+```powershell
+PS Orch1:\Shared> Get-OrchCalendar | ConvertTo-Json -Depth 3
+```
+
+Displays detailed calendar properties in JSON format, including ExcludedDates array and all configuration details.
+
+### Example 3
+```powershell
+PS C:\> Get-OrchCalendar -Path Orch1: -Name *カレンダー*
+```
+
+Gets all calendars with names containing "カレンダー" in the Orch1 tenant.
+
+### Example 4
+```powershell
+PS Orch1:\> Get-OrchCalendar -ExpandExcludedDate -IncludePastDate
+```
+
+Retrieves calendars with expanded excluded date information including historical dates.
+
+### Example 5
+```powershell
+PS Orch1:\> Get-OrchCalendar | Select-Object Name, Key, @{Name="ExcludedCount";Expression={$_.ExcludedDates.Count}}
+```
+
+Displays calendar names, keys, and count of excluded dates for overview.
+
+### Example 6
+```powershell
+PS C:\> Get-OrchCalendar -Path Orch1: -ExportCsv "C:\Reports\BusinessCalendars.csv"
+```
+
+Exports all business calendar configurations to CSV file for documentation purposes.
 
 ## PARAMETERS
 
 ### -ExpandExcludedDate
-{{ Fill ExpandExcludedDate Description }}
+Expands the ExcludedDates property to show detailed information about excluded dates in the calendar.
 
 ```yaml
 Type: SwitchParameter
@@ -53,7 +92,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-Specifies the Name of the calendars to be retrieved.
+Specifies the names of calendars to be retrieved. Supports wildcard patterns for flexible calendar selection.
 
 ```yaml
 Type: String[]
@@ -68,7 +107,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the name of the target drives. If not specified, the current drive will be targeted.
+Specifies the target tenant drives. If not specified, the current tenant will be targeted. For tenant-level operations.
 
 ```yaml
 Type: String[]
@@ -98,7 +137,7 @@ Accept wildcard characters: False
 ```
 
 ### -CsvEncoding
-{{ Fill CsvEncoding Description }}
+Specifies the character encoding for CSV export. Supports various encoding formats for international compatibility.
 
 ```yaml
 Type: Encoding
@@ -107,13 +146,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: UTF8 with BOM
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -ExportCsv
-{{ Fill ExportCsv Description }}
+Specifies the file path for exporting calendar information to CSV format. Includes configuration details for documentation and analysis.
 
 ```yaml
 Type: String
@@ -128,7 +167,7 @@ Accept wildcard characters: False
 ```
 
 ### -IncludePastDate
-{{ Fill IncludePastDate Description }}
+Includes past dates in the excluded dates information when used with -ExpandExcludedDate.
 
 ```yaml
 Type: SwitchParameter
@@ -147,11 +186,32 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+Calendar names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.Calendar
+Calendar objects can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.ExtendedCalendar
-### UiPath.PowerShell.Entities.ExcludedDateNamed
+### UiPath.PowerShell.Entities.Calendar
+Returns Calendar objects containing information about business calendars. Key properties include:
+- Path: Current tenant context path
+- Id: Unique numeric calendar identifier
+- Name: Display name of the calendar
+- TimeZoneId: Time zone identifier (nullable)
+- ExcludedDates: Array of excluded dates/holidays
+- Key: GUID identifier for the calendar
+
 ## NOTES
+This cmdlet is a tenant-level entity operation for accessing business calendar configurations. Calendars define working days and holidays for automation scheduling. Use -ExpandExcludedDate to get detailed excluded date information and -IncludePastDate to include historical dates. The -ExportCsv parameter facilitates documentation and configuration backup. This operation requires Schedules.View permissions.
 
 ## RELATED LINKS
+
+[Add-OrchCalendar](Add-OrchCalendar.md)
+
+[Set-OrchCalendar](Set-OrchCalendar.md)
+
+[Remove-OrchCalendar](Remove-OrchCalendar.md)
+
+[Get-OrchTrigger](Get-OrchTrigger.md)

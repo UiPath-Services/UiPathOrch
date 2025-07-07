@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -17,14 +17,14 @@ Get-OrchHelp [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-Get-OrchHelp displays comprehensive documentation and quick start guide for the UiPathOrch module. This cmdlet provides the following information:
 
-- Module installation path
-- Available documentation (LLM text files and PDF manuals)
-- Essential commands list
-- LLM (Large Language Model) usage tips and guidelines
+The Get-OrchHelp cmdlet displays documentation and quick start guide for the UiPathOrch module. This command provides immediate access to module information, available resources, and guidance for getting started with UiPath Orchestrator automation.
 
-Execute this cmdlet when starting with the module for the first time or when you need to review the module's capabilities to efficiently begin UiPath Orchestrator operations.
+The cmdlet serves as a centralized help system that directs users to appropriate documentation, reference materials, and essential commands needed to work effectively with the UiPathOrch module.
+
+This cmdlet is particularly valuable for new users who need orientation with the module's capabilities, developers integrating with UiPath Orchestrator, and automated systems that require structured guidance about module usage patterns.
+
+The command returns formatted text that provides an overview of available resources and recommended next steps for working with the UiPathOrch module.
 
 ## EXAMPLES
 
@@ -33,8 +33,29 @@ Execute this cmdlet when starting with the module for the first time or when you
 PS C:\> Get-OrchHelp
 ```
 
-Displays complete help information for the UiPathOrch module. Shows module path, available documentation, essential commands, and quick start guide.
+Displays the UiPathOrch module help and documentation guide. This provides an overview of available resources and getting-started information.
 
+### Example 2
+```powershell
+PS C:\> Get-OrchHelp | Out-Host
+```
+
+Displays the help information using Out-Host to ensure proper formatting in the console, useful in scripts where output formatting is important.
+
+### Example 3
+```powershell
+PS C:\>  = Get-OrchHelp
+PS C:\> 
+```
+
+Captures the help content in a variable for further processing or analysis. This approach allows you to work with the help text programmatically.
+
+### Example 4
+```powershell
+PS C:\> Get-OrchHelp | Out-File -FilePath "OrchModuleHelp.txt"
+```
+
+Saves the help content to a text file for offline reference or documentation purposes.
 ## PARAMETERS
 
 ### -ProgressAction
@@ -64,10 +85,16 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### System.String
 
 ## NOTES
-- This cmdlet is particularly useful for LLM (AI) agents working with UiPath Orchestrator
-- Always run Get-OrchPSDrive first to verify available PSDrives
-- Review the 01-Essentials.txt file for mandatory execution rules
-- PDF manuals are available in both English and Japanese
+
+This cmdlet is particularly useful for users who are new to the UiPathOrch module and need guidance on available resources and recommended practices.
+
+The cmdlet provides a centralized help system that serves as a starting point for module exploration and learning.
+
+For programmatic access or integration scenarios, the output can be captured and processed as needed.
+
+This cmdlet does not require any parameters and can be executed immediately after module import to provide orientation and guidance.
+
+The help content is designed to be self-contained and provides direction to additional resources without requiring external dependencies.
 
 ## RELATED LINKS
 

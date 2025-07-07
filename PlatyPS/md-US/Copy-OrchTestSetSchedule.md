@@ -8,7 +8,7 @@ schema: 2.0.0
 # Copy-OrchTestSetSchedule
 
 ## SYNOPSIS
-Copy the test schedules.
+Copies test set schedules to destination folders.
 
 ## SYNTAX
 
@@ -18,22 +18,63 @@ Copy-OrchTestSetSchedule [-Name] <String[]> [-Destination] <String> [-Path <Stri
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Copy-OrchTestSetSchedule cmdlet copies test set schedules from source folders to destination folders within UiPath Orchestrator tenants or across different tenants. This cmdlet creates complete copies of test set schedules, including their timing configurations, execution parameters, and metadata.
 
-Primary Endpoint:
+The cmdlet supports both intra-tenant copying (within the same tenant) and inter-tenant copying (between different tenants). Test set schedules define automated execution timing for test sets, making this cmdlet essential for deploying test automation schedules across different environments.
 
-OAuth required scopes:
+Use the -Name parameter to specify which test set schedules to copy and the -Destination parameter to specify the target folder. The cmdlet supports wildcard patterns for copying multiple schedules efficiently. Note that copied schedules may need adjustment if the associated test sets have different names in the destination folder.
 
-Required permissions:
+This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters. The -Recurse parameter enables copying test set schedules from all subfolders, maintaining the folder structure in the destination.
+
+Primary Endpoint: [PLACEHOLDER - 具体的なAPIエンドポイント]
+
+OAuth required scopes: [PLACEHOLDER]
+
+Required permissions: [PLACEHOLDER]
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Development> Copy-OrchTestSetSchedule NightlyRegressionSchedule Orch1:\Production
 ```
 
-{{ Add example description here }}
+Copies the NightlyRegressionSchedule from the current folder (Development) to the Production folder within the same tenant using positional parameters.
+
+### Example 2
+```powershell
+PS C:\> Copy-OrchTestSetSchedule -Path Orch1:\Development WeeklyTestSchedule Orch2:\Production
+```
+
+Copies the WeeklyTestSchedule from Orch1:\Development to Orch2:\Production, demonstrating inter-tenant test set schedule copying.
+
+### Example 3
+```powershell
+PS Orch1:\Development> Copy-OrchTestSetSchedule *Daily*, *Weekly* Orch1:\Production -WhatIf
+```
+
+Shows what would happen when copying multiple test set schedules with names containing Daily or Weekly from the current folder to the Production folder using -WhatIf for safety.
+
+### Example 4
+```powershell
+PS C:\> Copy-OrchTestSetSchedule -Path Orch1:\Development *Automated* Orch2:\Production
+```
+
+Copies all test set schedules containing Automated in their name from Orch1:\Development to Orch2:\Production using wildcards for inter-tenant copying.
+
+### Example 5
+```powershell
+PS Orch1:\> Copy-OrchTestSetSchedule -Recurse *Nightly* Orch2:\Finance -WhatIf
+```
+
+Shows what would happen when copying all test set schedules containing Nightly from all subfolders recursively to Orch2:\Finance.
+
+### Example 6
+```powershell
+PS Orch1:\Development> Get-OrchTestSetSchedule *Regression* | Copy-OrchTestSetSchedule -Destination Orch2:\Production
+```
+
+Gets all test set schedules containing Regression in their names and copies them to Orch2:\Production using pipeline input.
 
 ## PARAMETERS
 
@@ -53,7 +94,7 @@ Accept wildcard characters: False
 ```
 
 ### -Destination
-Specifies the destination folders.
+Specifies the destination folder where test set schedules should be copied.
 
 ```yaml
 Type: String
@@ -68,7 +109,7 @@ Accept wildcard characters: True
 ```
 
 ### -Name
-{{ Fill Name Description }}
+Specifies the Name of the test set schedules to be copied.
 
 ```yaml
 Type: String[]
@@ -83,7 +124,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the source folders. If not specified, the current folder will be used as the source.
+Specifies the source folder. If not specified, the current folder will be used as the source.
 
 ```yaml
 Type: String
@@ -129,7 +170,7 @@ Accept wildcard characters: False
 ```
 
 ### -Depth
-{{ Fill Depth Description }}
+Specifies the maximum number of subfolder levels to include when using -Recurse parameter.
 
 ```yaml
 Type: UInt32
@@ -144,7 +185,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-{{ Fill Recurse Description }}
+Specifies that test set schedules should be copied from all subfolders recursively, maintaining the folder structure in the destination.
 
 ```yaml
 Type: SwitchParameter
@@ -163,10 +204,28 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
-## OUTPUTS
+### System.String[]
+Test set schedule names can be piped to this cmdlet.
 
 ### UiPath.PowerShell.Entities.TestSetSchedule
+Test set schedule objects from Get-OrchTestSetSchedule can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
+
+## OUTPUTS
+
+### None
+This cmdlet does not generate any output.
+
 ## NOTES
+This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.
+
+Test set schedules define automated execution timing for test sets. When copying across environments, verify that associated test sets exist in the destination folder and adjust schedule configurations if necessary. Use wildcards for efficient bulk operations and -WhatIf for testing before actual execution.
 
 ## RELATED LINKS
+
+[Get-OrchTestSetSchedule](Get-OrchTestSetSchedule.md)
+
+[Remove-OrchTestSetSchedule](Remove-OrchTestSetSchedule.md)
+
+[Set-OrchTestSetSchedule](Set-OrchTestSetSchedule.md)
+
+[Copy-OrchTestSet](Copy-OrchTestSet.md)

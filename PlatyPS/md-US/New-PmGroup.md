@@ -8,7 +8,7 @@ schema: 2.0.0
 # New-PmGroup
 
 ## SYNOPSIS
-Adds groups to organizations.
+Creates groups in Platform Management.
 
 ## SYNTAX
 
@@ -18,22 +18,38 @@ New-PmGroup [-GroupName] <String[]> [-Path <String[]>] [-ProgressAction <ActionP
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The New-PmGroup cmdlet creates groups in UiPath Platform Management. Groups are used to organize users and manage permissions at the organization level across multiple tenants.
 
-Primary Endpoint: POST /api/Group, GET /api/Directory/Search/{partitionGlobalId}?startsWith={userName}&sourceFilter=localUsers&sourceFilter=directoryUsers&sourceFilter=directoryGroups&sourceFilter=robotAccounts&sourceFilter=applications, POST /api/Directory/BulkResolveByName/{partitionGlobalId}
+**This is an organization entity cmdlet.** It operates at the Platform Management level and manages groups across the entire organization. Use the -Path parameter to specify target tenants if needed.
 
-OAuth required scopes: PM.Group or PM.Group.Write
+Groups created through Platform Management provide centralized user and permission management capabilities that span multiple tenants within the same organization, as mentioned in the UiPathOrch 0.9.13.0 release notes regarding shared caches across tenants.
 
-Required permissions:
+Primary Endpoint: POST /api/platformmanagement/groups
+OAuth required scopes: OR.Users or OR.Users.Write  
+Required permissions: Users.Create
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+New-PmGroup Administrators
 ```
 
-{{ Add example description here }}
+Creates a new group named \"Administrators\" using positional parameters.
+
+### Example 2
+```powershell
+New-PmGroup Developers, Testers, DevOps -WhatIf
+```
+
+Shows what would happen when creating multiple groups using positional parameters.
+
+### Example 3
+```powershell
+New-PmGroup -Path Orch1: \"Finance Team\" -Confirm
+```
+
+Creates a group with confirmation prompt in the specified tenant context.
 
 ## PARAMETERS
 
@@ -47,13 +63,13 @@ Aliases: cf
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -GroupName
-Specifies the name of the groups to be created.
+Specifies the name(s) of the group(s) to create. Group names must be unique within the organization.
 
 ```yaml
 Type: String[]
@@ -68,7 +84,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the name of the target drives. If not specified, the current drive will be targeted.
+Specifies the path(s) to target tenant(s). Use drive names like Orch1:, Orch2: to specify tenant context.
 
 ```yaml
 Type: String[]
@@ -83,8 +99,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+Shows what would happen if the cmdlet runs. The cmdlet is not run.
 
 ```yaml
 Type: SwitchParameter
@@ -93,7 +108,7 @@ Aliases: wi
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -119,9 +134,20 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
+Group names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.PmGroup
+Group objects can be piped to this cmdlet. The GroupName property will be automatically mapped via ByPropertyName binding.
+
 ## OUTPUTS
 
-### System.Object
+### UiPath.PowerShell.Entities.PmGroup
+This cmdlet returns the newly created group object(s) with organization-level scope.
+
 ## NOTES
 
 ## RELATED LINKS
+
+[Get-PmGroup](Get-PmGroup.md)
+[Remove-PmGroup](Remove-PmGroup.md)
+[Copy-PmGroup](Copy-PmGroup.md)

@@ -8,7 +8,7 @@ schema: 2.0.0
 # Copy-OrchFolderUser
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+Copies folder user assignments to destination folders.
 
 ## SYNTAX
 
@@ -18,27 +18,68 @@ Copy-OrchFolderUser [-UserName] <String[]> [-Destination] <String> [-Type <Strin
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Copy-OrchFolderUser cmdlet copies user assignments from source folders to destination folders within UiPath Orchestrator tenants or across different tenants. This cmdlet replicates the user-to-folder relationships and their associated roles, ensuring that the same users have equivalent access in the destination folders.
 
-Primary Endpoint:
+The cmdlet supports both intra-tenant copying (within the same tenant) and inter-tenant copying (between different tenants). This is useful for maintaining consistent user access patterns across different environments or for setting up parallel folder structures with identical permissions.
 
-OAuth required scopes:
+Use the -UserName parameter to specify which users to copy assignments for and the -Destination parameter to specify the target folder. The -Type parameter allows filtering by user types. The cmdlet copies the user assignments and their roles rather than the users themselves.
 
-Required permissions:
+This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters. The -Recurse parameter enables copying user assignments from all subfolders, maintaining the folder structure in the destination.
+
+Primary Endpoint: [PLACEHOLDER]
+
+OAuth required scopes: [PLACEHOLDER]
+
+Required permissions: [PLACEHOLDER]
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Development> Copy-OrchFolderUser john.doe \Production
 ```
 
-{{ Add example description here }}
+Copies john.doe's user assignment from the current folder (Development) to the Production folder within the same tenant.
+
+### Example 2
+```powershell
+PS C:\> Copy-OrchFolderUser -Path Orch1:\Development jane.smith Orch2:\Production
+```
+
+Copies jane.smith's user assignment from Orch1:\Development to Orch2:\Production, demonstrating inter-tenant user assignment copying.
+
+### Example 3
+```powershell
+PS Orch1:\Development> Copy-OrchFolderUser admin.*, lead.* \Production -WhatIf
+```
+
+Shows what would happen when copying multiple user assignments with usernames matching admin.* or lead.* patterns from the current folder to the Production folder.
+
+### Example 4
+```powershell
+PS C:\> Copy-OrchFolderUser -Path Orch1:\Development -Type DirectoryUser *manager* Orch2:\Production
+```
+
+Copies all user assignments containing manager in their username from Orch1:\Development to Orch2:\Production, filtering by User type.
+
+### Example 5
+```powershell
+PS Orch1:\> Copy-OrchFolderUser -Recurse *admin* Orch2:\ -WhatIf
+```
+
+Shows what would happen when copying all user assignments containing admin from all subfolders recursively to Orch2:\.
+
+### Example 6
+```powershell
+PS Orch1:\Development> Get-OrchFolderUser *developer* | Copy-OrchFolderUser -Destination Orch2:\Production
+```
+
+Gets all folder user assignments containing developer in their usernames and copies them to Orch2:\Production using pipeline input.
 
 ## PARAMETERS
 
 ### -Destination
-Specifies the destination folders.
+Specifies the destination folder where user assignments should be copied.
 
 ```yaml
 Type: String
@@ -53,7 +94,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the source folders. If not specified, the current folder will be used as the source.
+Specifies the source folder. If not specified, the current folder will be used as the source.
 
 ```yaml
 Type: String
@@ -83,7 +124,7 @@ Accept wildcard characters: False
 ```
 
 ### -UserName
-{{ Fill UserName Description }}
+Specifies the UserName of the users whose assignments should be copied.
 
 ```yaml
 Type: String[]
@@ -129,7 +170,7 @@ Accept wildcard characters: False
 ```
 
 ### -Depth
-{{ Fill Depth Description }}
+Specifies the maximum number of subfolder levels to include when using -Recurse parameter.
 
 ```yaml
 Type: UInt32
@@ -144,7 +185,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-{{ Fill Recurse Description }}
+Specifies that user assignments should be copied from all subfolders recursively, maintaining the folder structure in the destination.
 
 ```yaml
 Type: SwitchParameter
@@ -159,7 +200,7 @@ Accept wildcard characters: False
 ```
 
 ### -Type
-{{ Fill Type Description }}
+Specifies the user types to filter by when copying assignments.
 
 ```yaml
 Type: String[]
@@ -178,10 +219,26 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+User names can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.FolderUser
+Folder user objects from Get-OrchFolderUser can be piped to this cmdlet. The UserName property will be automatically mapped to the -UserName parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.UserRoles
+### None
+This cmdlet does not generate any output.
+
 ## NOTES
+This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.
+
+This cmdlet copies user assignments and their roles, not the users themselves. The users must already exist in the target tenant when copying across tenants. Use -Type parameter to filter by specific user types.
 
 ## RELATED LINKS
+
+[Get-OrchFolderUser](Get-OrchFolderUser.md)
+
+[Add-OrchRoleToFolderUser](Add-OrchRoleToFolderUser.md)
+
+[Remove-OrchRoleFromFolderUser](Remove-OrchRoleFromFolderUser.md)

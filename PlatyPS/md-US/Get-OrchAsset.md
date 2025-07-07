@@ -82,14 +82,15 @@ Gets per-robot scoped assets from all folders.
 PS Orch1:\> Get-OrchAsset -Recurse -ExportCsv C:\Reports\Assets.csv
 ```
 
-Exports all assets to CSV with UTF-8 BOM encoding.
+Exports all assets to CSV with UTF-8 BOM encoding. The exported CSV can be imported using Import-Csv | Set-OrchAsset.
 
 ### Example 8
 ```powershell
 PS Orch1:\> Get-OrchAsset -Recurse -ExportCredentialCsv C:\Reports\Credentials.csv
 ```
 
-Exports credential assets to separate CSV file.
+Exports credential assets to separate CSV file. The exported CSV can be imported using Import-Csv | Set-OrchCredentialAsset.
+
 
 ## PARAMETERS
 
@@ -268,4 +269,9 @@ The -ExportCsv and -ExportCredentialCsv parameters create import-ready CSV files
 [Add-OrchAssetLink](Add-OrchAssetLink.md)
 
 [Remove-OrchAsset](Remove-OrchAsset.md)
+
+
+
+
+
 

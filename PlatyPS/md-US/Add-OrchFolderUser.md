@@ -18,7 +18,13 @@ Add-OrchFolderUser -Type <String> [-UserName] <String[]> [[-Roles] <String[]>] [
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+The Add-OrchFolderUser cmdlet assigns existing users to specific folders within UiPath Orchestrator tenants. This cmdlet operates on folder entities and requires proper folder navigation or explicit folder specification using the -Path, -Recurse, or -Depth parameters.
+
+Users must already exist in the tenant before they can be assigned to folders. Use Get-OrchUser to verify user existence. The cmdlet supports assigning multiple users to multiple folders with specific roles and permissions at the folder level.
+
+Folder user assignments control which users have access to specific folders and define their permissions within those folders. Use the -Type parameter to specify the type of directory entity (DirectoryUser, DirectoryRobot, DirectoryGroup, or DirectoryExternalApplication), and the -Roles parameter to define their folder-level roles.
+
+This is a folder entity cmdlet. If you receive the error "Use Set-Location cmdlet (cd command) to navigate to the target folder first", navigate to the target folder or use the -Path, -Recurse, or -Depth parameters to specify target folders.
 
 Primary Endpoint: POST /odata/Folders/UiPath.Server.Configuration.OData.AssignDomainUser
 
@@ -30,10 +36,45 @@ Required permissions: (Units.Edit or SubFolders.Edit - Assigns domain user to an
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Development> Add-OrchFolderUser DirectoryUser john.doe@company.com "Folder Administrator"
 ```
 
-{{ Add example description here }}
+Assigns a directory user to the current folder with Folder Administrator role.
+
+### Example 2
+```powershell
+PS Orch1:\> Add-OrchFolderUser -Path .\Development DirectoryUser jane.smith@company.com "Automation Developer"
+```
+
+Assigns a directory user to the Development folder with Automation Developer role using explicit path.
+
+### Example 3
+```powershell
+PS Orch1:\> Add-OrchFolderUser -Recurse DirectoryUser admin.user@company.com *Administrator*
+```
+
+Assigns an admin user to all folders recursively with all Administrator roles using wildcard.
+
+### Example 4
+```powershell
+PS Orch1:\Production> Add-OrchFolderUser DirectoryUser developer1@company.com, developer2@company.com "Automation Developer", "Automation User"
+```
+
+Assigns multiple directory users to the current folder with multiple roles.
+
+### Example 5
+```powershell
+PS Orch1:\> Get-OrchUser *developer* | Add-OrchFolderUser -Path .\Development DirectoryUser "Automation Developer"
+```
+
+Pipes users containing "developer" and assigns them to the Development folder with developer role.
+
+### Example 6
+```powershell
+PS Orch1:\> Add-OrchFolderUser -Path .\QA, .\Staging -Depth 1 DirectoryGroup "QA Team" "Automation User" -WhatIf
+```
+
+Shows what would happen when assigning a directory group to QA and Staging folders with depth limit using -WhatIf for safety.
 
 ## PARAMETERS
 
@@ -159,7 +200,11 @@ Accept wildcard characters: False
 ```
 
 ### -Type
-{{ Fill Type Description }}
+Specifies the type of user to assign. Valid values are:
+- DirectoryUser: Individual users from Active Directory
+- DirectoryRobot: Robot accounts from Active Directory  
+- DirectoryGroup: Groups from Active Directory
+- DirectoryExternalApplication: External applications from Active Directory
 
 ```yaml
 Type: String
@@ -178,10 +223,28 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### None
+### System.String[]
+Usernames can be piped to this cmdlet.
+
+### UiPath.PowerShell.Entities.User
+User objects from Get-OrchUser can be piped to this cmdlet. The UserName property will be automatically mapped to the -UserName parameter via ByPropertyName binding.
+
 ## OUTPUTS
 
-### System.Object
+### None
+This cmdlet does not generate any output.
+
 ## NOTES
+This is a folder entity cmdlet. You must navigate to a folder using Set-Location or specify target folders using -Path, -Recurse, or -Depth parameters.
+
+Users must already exist in the tenant before they can be assigned to folders. Use Get-OrchUser to verify user existence and Get-OrchFolderUser to verify successful assignment.
 
 ## RELATED LINKS
+
+[Get-OrchFolderUser](Get-OrchFolderUser.md)
+
+[Remove-OrchFolderUser](Remove-OrchFolderUser.md)
+
+[Get-OrchUser](Get-OrchUser.md)
+
+[Get-OrchRole](Get-OrchRole.md)
