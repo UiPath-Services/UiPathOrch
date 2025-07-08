@@ -55,7 +55,7 @@ Retrieves runtime license information for both Unattended and NonProduction robo
 
 ### Example 4: Get runtime licenses with wildcard filtering
 ```powershell
-PS C:\> Get-OrchLicenseRuntime -RobotType "*Production"
+PS C:\> Get-OrchLicenseRuntime -RobotType *Production
 ```
 
 Retrieves runtime license information for all robot types ending with "Production".
@@ -73,20 +73,6 @@ PS C:\> Get-OrchLicenseRuntime -Path Orch1:, Orch2:
 ```
 
 Retrieves runtime license information from multiple specified Orchestrator drives.
-
-### Example 7: Filter licensed robots and show details
-```powershell
-PS C:\> Get-OrchLicenseRuntime -RobotType Unattended | Where-Object {$_.IsLicensed -eq $true} | Select-Object Key, MachineName, Runtimes, ExecutingCount
-```
-
-Gets Unattended runtime licenses, filters for only licensed robots, and displays key information including runtime capacity and current execution count.
-
-### Example 8: Check online status and license consumption
-```powershell
-PS C:\> Get-OrchLicenseRuntime | Where-Object {$_.IsOnline -eq $true} | Group-Object RobotType | Select-Object Name, Count
-```
-
-Gets all runtime licenses, filters for online robots, and groups by robot type to show license consumption by type.
 
 ## PARAMETERS
 
@@ -152,6 +138,12 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 - MachineScope indicates whether the machine is in Default tenant scope or PersonalWorkspace
 - This cmdlet operates at the tenant level and does not require navigation to specific folders
 - Use filtering and grouping operations to analyze license consumption patterns across different robot types
+
+
+
+Primary Endpoint: GET /odata/LicensesRuntime/UiPath.Server.Configuration.OData.GetLicensesRuntime
+OAuth required scopes: OR.Licenses or OR.Licenses.Read
+Required permissions: Licenses.View
 
 ## RELATED LINKS
 

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -38,42 +38,42 @@ Required permissions: Queues.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Shared> Get-OrchQueueItem -Name "*" -First 5
+PS Orch1:\Shared> Get-OrchQueueItem -Status New -First 5
 ```
 
-Retrieves the first 5 queue items from all queues in the current folder.
+Retrieves the first 5 queue items with New status from the current folder.
 
 ### Example 2
 ```powershell
-PS Orch1:\Shared> Get-OrchQueueItem -Name "ProcessingQueue" -Status Failed -First 10
+PS Orch1:\Shared> Get-OrchQueueItem ProcessingQueue -Status Failed -First 10
 ```
 
 Gets the first 10 failed queue items from the ProcessingQueue.
 
 ### Example 3
 ```powershell
-PS C:\> Get-OrchQueueItem -Path Orch1:\Production -Status New, InProgress -Priority High
+PS C:\> Get-OrchQueueItem -Path Orch1:\Production -Recurse -Status New, InProgress -Priority High
 ```
 
 Retrieves high-priority queue items with New or InProgress status from the Production folder.
 
 ### Example 4
 ```powershell
-PS Orch1:\Shared> Get-OrchQueueItem -Name "*" -StartProcessingAfter (Get-Date).AddHours(-2) | ConvertTo-Json -Depth 3
+PS Orch1:\Shared> Get-OrchQueueItem -StartProcessingAfter (Get-Date).AddHours(-2) | ConvertTo-Json -Depth 3
 ```
 
 Gets queue items that started processing in the last 2 hours and displays detailed JSON information including SpecificContent and ProcessingException.
 
 ### Example 5
 ```powershell
-PS Orch1:\> Get-OrchQueueItem -Robot "Robot01" -Status Successful -OrderBy EndProcessing -OrderAscending $false
+PS C:\> Get-OrchQueueItem -Path Orch1:\Production -Robot Robot01 -Status Successful -OrderBy EndProcessing -OrderAscending
 ```
 
-Retrieves successful queue items processed by Robot01, ordered by end processing time (newest first).
+Retrieves successful queue items processed by Robot01 from the Production folder, ordered by end processing time in ascending order (oldest first).
 
 ### Example 6
 ```powershell
-PS Orch1:\Shared> Get-OrchQueueItem -Name "ReviewQueue" -Reviewer "john.doe" -Skip 20 -First 10
+PS Orch1:\Shared> Get-OrchQueueItem ReviewQueue -Reviewer john.doe -Skip 20 -First 10
 ```
 
 Gets queue items from ReviewQueue assigned to reviewer john.doe, skipping the first 20 and taking the next 10.
@@ -452,6 +452,12 @@ Returns QueueItem objects containing comprehensive queue item information. Key p
 ## NOTES
 This cmdlet is a folder entity operation requiring at least one filter parameter to prevent excessive data retrieval. The cmdlet will output cached contents with a warning if no filter parameters are specified. Common filter patterns include queue names (Name), status values (Status), time ranges (StartProcessingAfter/Before), and robot assignments (Robot). Use pagination parameters (Skip, First) to manage large result sets. This operation requires Queues.View permissions in the target folders.
 
+
+
+Primary Endpoint: GET /odata/QueueItems
+OAuth required scopes: OR.Queues or OR.Queues.Read
+Required permissions: Transactions.View
+
 ## RELATED LINKS
 
 [Add-OrchQueueItem](Add-OrchQueueItem.md)
@@ -461,3 +467,5 @@ This cmdlet is a folder entity operation requiring at least one filter parameter
 [Remove-OrchQueueItem](Remove-OrchQueueItem.md)
 
 [Get-OrchQueue](Get-OrchQueue.md)
+
+

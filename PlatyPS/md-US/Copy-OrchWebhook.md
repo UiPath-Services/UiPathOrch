@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,11 +26,11 @@ Use the -Name parameter to specify which webhooks to copy and the -Destination p
 
 This is a tenant entity cmdlet. The -Path parameter specifies the source drive name (e.g., Orch1:, Orch2:), and -Destination specifies the target tenant drives where webhooks should be copied.
 
-Primary Endpoint: [PLACEHOLDER - 具体的なAPIエンドポイント]
+Primary Endpoint: GET /odata/Webhooks, POST /odata/Webhooks
 
-OAuth required scopes: [PLACEHOLDER]
+OAuth required scopes: OR.Webhooks
 
-Required permissions: [PLACEHOLDER]
+Required permissions: Webhooks.View, Webhooks.Create
 
 ## EXAMPLES
 

@@ -34,66 +34,38 @@ Required permissions: [PLACEHOLDER - Required permissions to be documented]
 
 ### Example 1
 ```powershell
-PS C:\> Get-OrchActionCatalog
+PS Orch1:\MyWorkspace> Get-OrchActionCatalog
 ```
 
 Retrieves all action catalogs from the current folder.
 
 ### Example 2
 ```powershell
-PS C:\> Get-OrchActionCatalog MyActionCatalog
+PS Orch1:\> Get-OrchActionCatalog -Recurse
 ```
 
-Retrieves the action catalog named "MyActionCatalog" from the current folder.
+Retrieves all action catalogs from all folders recursively.
 
 ### Example 3
 ```powershell
-PS C:\> Get-OrchActionCatalog Process*
+PS Orch1:\> Get-OrchActionCatalog -Path Orch1:\Production Process*
 ```
 
-Retrieves all action catalogs whose names start with "Process" using wildcard matching.
+Retrieves action catalogs whose names start with "Process" from the Production folder.
 
 ### Example 4
 ```powershell
-PS C:\> Get-OrchActionCatalog -Recurse
+PS Orch1:\> Get-OrchActionCatalog -Recurse | Select-Object Path, Name, FoldersCount, RetentionAction
 ```
 
-Retrieves all action catalogs from the current folder and all subfolders recursively.
+Gets all action catalogs recursively and displays key properties with Path shown first.
 
 ### Example 5
 ```powershell
-PS C:\> Get-OrchActionCatalog -Path Orch1:\MyWorkspace -Recurse
+PS C:\> Get-OrchActionCatalog -Path Orch1:\Production,Orch1:\Development -Recurse -Depth 2
 ```
 
-Retrieves all action catalogs from the specified workspace and its subfolders.
-
-### Example 6
-```powershell
-PS C:\> Get-OrchActionCatalog -Recurse -Depth 2
-```
-
-Retrieves action catalogs recursively but limits the search to 2 levels deep.
-
-### Example 7
-```powershell
-PS C:\> Get-OrchActionCatalog -Recurse | Where-Object {$_.Encrypted -eq $true}
-```
-
-Finds all encrypted action catalogs across all accessible folders.
-
-### Example 8
-```powershell
-PS C:\> Get-OrchActionCatalog -Recurse | ConvertTo-Json -Depth 3
-```
-
-Retrieves all action catalogs and displays their complete structure in JSON format for detailed analysis.
-
-### Example 9
-```powershell
-PS C:\> Get-OrchActionCatalog -Recurse | Select-Object Path, Name, FoldersCount, RetentionAction, RetentionPeriod | Format-Table
-```
-
-Displays action catalogs with their key properties in a formatted table.
+Gets action catalogs from Production and Development folders with maximum depth of 2 levels.
 
 ## PARAMETERS
 
@@ -196,6 +168,12 @@ Action catalogs support important features including:
 Parameter placement is important for folder entity cmdlets. Place -Path, -Recurse, -Depth parameters immediately after the cmdlet name for proper auto-completion functionality.
 
 Use ConvertTo-Json to explore the complete structure of action catalog objects, as they contain detailed metadata including retention settings and organizational information.
+
+
+
+Primary Endpoint: GET /odata/TaskCatalogs
+OAuth required scopes: OR.Tasks or OR.Tasks.Read
+Required permissions: TaskCatalogs.View
 
 ## RELATED LINKS
 

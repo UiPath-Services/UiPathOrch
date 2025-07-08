@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,11 +26,11 @@ Use the -UserName parameter to specify which users to copy and the -Destination 
 
 This is a tenant entity cmdlet. The -Path parameter specifies the source drive name (e.g., Orch1:, Orch2:), and -Destination specifies the target tenant drives where users should be copied.
 
-Primary Endpoint: [PLACEHOLDER]
+Primary Endpoint: GET /odata/Users, GET /api/DirectoryService/SearchForUsersAndGroups, POST /odata/Users
 
-OAuth required scopes: [PLACEHOLDER]
+OAuth required scopes: OR.Users
 
-Required permissions: [PLACEHOLDER]
+Required permissions: Users.View, Users.Create
 
 ## EXAMPLES
 

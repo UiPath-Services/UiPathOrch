@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -41,33 +41,26 @@ Retrieves all test data queues from the current folder.
 
 ### Example 2
 ```powershell
-PS C:\> Get-OrchTestDataQueue -Path Orch1:\TestFolder -Name "*UserData*"
+PS C:\> Get-OrchTestDataQueue -Path Orch1:\Production *UserData*
 ```
 
-Gets test data queues with names containing "UserData" from the TestFolder.
+Gets test data queues with names containing "UserData" from the Production folder.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchTestDataQueue -Recurse | Where-Object {$_.ItemCount -gt 0}
+PS Orch1:\Shared> Get-OrchTestDataQueue -Recurse
 ```
 
-Retrieves all test data queues across folders that contain test data items.
+Retrieves all test data queues from the current folder and all subfolders recursively.
 
 ### Example 4
 ```powershell
-PS Orch1:\TestFolder> Get-OrchTestDataQueue | ConvertTo-Json -Depth 3
+PS Orch1:\Shared> Get-OrchTestDataQueue | ConvertTo-Json -Depth 2
 ```
 
 Displays detailed test data queue properties in JSON format.
 
 ### Example 5
-```powershell
-PS Orch1:\> Get-OrchTestDataQueue -Recurse | Select-Object Name, Description, ItemCount, CreatedTime
-```
-
-Displays summary information for all test data queues including item counts and creation timestamps.
-
-### Example 6
 ```powershell
 PS Orch1:\Shared> Get-OrchTestDataQueue TestUserQueue, LoginTestData
 ```
@@ -170,6 +163,12 @@ Returns TestDataQueue objects containing information about test data queues. Key
 ## NOTES
 This cmdlet is a folder entity operation for accessing test data queue configurations. Test data queues support data-driven testing by providing structured datasets for automation validation. Queues organize test data separately from test logic, enabling maintainable test automation practices. Use in conjunction with Get-OrchTestDataQueueItem to access individual test data entries. This operation requires TestDataQueues.View permissions in the target folders.
 
+
+
+Primary Endpoint: GET /odata/TestDataQueueDefinitions
+OAuth required scopes: OR.TestDataQueues or OR.TestDataQueues.Read
+Required permissions: TestDataQueues.View
+
 ## RELATED LINKS
 
 [Get-OrchTestDataQueueItem](Get-OrchTestDataQueueItem.md)
@@ -179,3 +178,4 @@ This cmdlet is a folder entity operation for accessing test data queue configura
 [Set-OrchTestDataQueue](Set-OrchTestDataQueue.md)
 
 [Remove-OrchTestDataQueue](Remove-OrchTestDataQueue.md)
+

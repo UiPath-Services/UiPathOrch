@@ -26,11 +26,11 @@ Use the -Name parameter to specify which API triggers to copy and the -Destinati
 
 This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters. The -Recurse parameter enables copying API triggers from all subfolders, maintaining the folder structure in the destination.
 
-Primary Endpoint: [PLACEHOLDER - 具体的なAPIエンドポイント]
+Primary Endpoint: GET /odata/HttpTriggers, POST /odata/HttpTriggers
 
-OAuth required scopes: [PLACEHOLDER]
+OAuth required scopes: OR.Jobs or OR.Jobs.Read or OR.Jobs.Write
 
-Required permissions: [PLACEHOLDER]
+Required permissions: Jobs.View, Jobs.Edit
 
 ## EXAMPLES
 

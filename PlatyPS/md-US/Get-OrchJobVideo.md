@@ -20,27 +20,35 @@ Get-OrchJobVideo [[-Path] <String[]>] [-Recurse] [[-Skip] <UInt64>] [[-First] <U
 ## DESCRIPTION
 The Get-OrchJobVideo cmdlet retrieves jobs that have video recordings attached from the Orchestrator environment. This cmdlet is useful for monitoring and auditing job executions where screen recording was enabled, providing visual evidence of automation processes for debugging, compliance, or training purposes.
 
+This cmdlet is implemented as a function that calls the Get-OrchJob cmdlet and searches for jobs from the past week that have a video attached.
+
 Video recordings are captured during job execution when the appropriate recording settings are configured in Orchestrator. These recordings provide valuable insights into robot behavior, UI interactions, and process execution flow.
 
 The cmdlet operates on folder entities, which means you must either navigate to a target folder using Set-Location (cd) or specify target folders using the -Path, -Recurse, or -Depth parameters. This allows you to search for jobs with video recordings across different organizational folders.
 
 The cmdlet supports pagination through -Skip and -First parameters to manage large result sets efficiently. Use -Recurse to search through subfolder hierarchies for a comprehensive view of video-enabled job executions.
 
+Primary Endpoint: GET /odata/Jobs
+
+OAuth required scopes: OR.Jobs or OR.Jobs.Read
+
+Required permissions: Jobs.View
+
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS Orch1:\Production> Get-OrchJobVideo
+PS Orch1:\Shared> Get-OrchJobVideo
 ```
 
 Retrieves all jobs with video recordings from the current folder. Requires navigation to a specific folder before execution.
 
 ### Example 2
 ```powershell
-PS C:\> Get-OrchJobVideo -Path Orch1:\Production
+PS Orch1:\Shared> Get-OrchJobVideo | ConvertTo-Json -Depth 2
 ```
 
-Retrieves jobs with video recordings from the specified Production folder without changing the current location.
+Displays detailed job video properties in JSON format, showing complete job information and video metadata structure.
 
 ### Example 3
 ```powershell
@@ -51,7 +59,7 @@ Recursively searches for jobs with video recordings across all folders in the Or
 
 ### Example 4
 ```powershell
-PS C:\> Get-OrchJobVideo -Path Orch1:\Production -First 10
+PS C:\> Get-OrchJobVideo -Path Orch1:\Shared -First 10
 ```
 
 Retrieves the first 10 jobs with video recordings from the Production folder. Useful for managing large result sets.
@@ -62,6 +70,7 @@ PS C:\> Get-OrchJobVideo -Path Orch1:\Production, Orch1:\Development
 ```
 
 Retrieves jobs with video recordings from multiple specified folders simultaneously.
+
 ## PARAMETERS
 
 ### -First
@@ -165,5 +174,11 @@ The cmdlet is particularly useful for:
 Use -Recurse to search through nested folder structures, and -First/-Skip for pagination when dealing with large numbers of recorded jobs.
 
 Video files are typically stored in Orchestrator's media storage and can be accessed through the returned job objects for download or viewing.
+
+
+
+Primary Endpoint: [PLACEHOLDER]
+OAuth required scopes: [PLACEHOLDER]
+Required permissions: [PLACEHOLDER]
 
 ## RELATED LINKS

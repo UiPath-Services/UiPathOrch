@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -20,11 +20,11 @@ Remove-OrchJobMedia [-JobId] <Int64[]> [-Path <String[]>] [-Recurse] [-Depth <UI
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-Primary Endpoint:
+Primary Endpoint: POST /odata/ExecutionMedia/UiPath.Server.Configuration.OData.DeleteMediaByJobId
 
-OAuth required scopes:
+OAuth required scopes: OR.Monitoring or OR.Monitoring.Write
 
-Required permissions:
+Required permissions: ExecutionMedia.Delete
 
 ## EXAMPLES
 

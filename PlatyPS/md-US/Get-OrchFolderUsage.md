@@ -13,8 +13,8 @@ Gets folder usage statistics showing entity counts in UiPath Orchestrator folder
 ## SYNTAX
 
 ```
-Get-OrchFolderUsage [[-Path] <String[]>] [-Recurse] [-Depth <UInt32>] [-ProgressAction <ActionPreference>]
- [<CommonParameters>]
+Get-OrchFolderUsage [[-Path] <String[]>] [-Recurse] [-Depth <UInt32>] [-Id <Int64>] [-Name <String>]
+ [-DisplayName <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -24,11 +24,11 @@ This cmdlet provides valuable insights for resource management, capacity plannin
 
 The cmdlet operates on folder entities and supports recursive traversal to analyze entire folder hierarchies. It returns detailed statistics including entity types, counts, and folder paths, making it useful for auditing and reporting purposes.
 
-Primary Endpoint: [PLACEHOLDER - API endpoint to be documented]
+Primary Endpoint: GET /odata/Folders/UiPath.Server.Configuration.OData.GetEntityUsage(folderId={folderId})
 
-OAuth required scopes: [PLACEHOLDER - OAuth scopes to be documented]
+OAuth required scopes: OR.Folders or OR.Folders.Read
 
-Required permissions: [PLACEHOLDER - Required permissions to be documented]
+Required permissions: Folders.View
 
 ## EXAMPLES
 
@@ -80,6 +80,13 @@ PS C:\> Get-OrchFolderUsage -Recurse | Where-Object {$_.Type -eq "QueueItem" -an
 ```
 
 Finds folders with high queue item counts (over 1000) for capacity planning and queue management.
+
+### Example 8
+```powershell
+PS C:\> Get-OrchFolderUsage -Recurse | Group-Object Category | Select-Object Name, Count, @{Name="TotalItems";Expression={(.Group | Measure-Object Count -Sum).Sum}}
+```
+
+Groups usage statistics by category and shows total item counts for each category across all folders. This is useful for getting an overview of resource distribution by type.
 
 ## PARAMETERS
 
@@ -143,6 +150,51 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -DisplayName
+Specifies the display name filter for folder entities. This parameter can be used to filter results based on the display name of entities within folders.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -Id
+Specifies the ID filter for folder entities. This parameter can be used to filter results based on the ID of entities within folders.
+
+```yaml
+Type: Int64
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -Name
+Specifies the name filter for folder entities. This parameter can be used to filter results based on the name of entities within folders.
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
@@ -167,6 +219,12 @@ The usage statistics help identify resource distribution patterns and can be val
 - Organizational analysis and reporting
 
 For performance analysis and reporting, consider exporting results to CSV format or using Select-Object to focus on specific metrics.
+
+
+
+Primary Endpoint: GET /odata/Folders/UiPath.Server.Configuration.OData.GetEntitiesSummary
+OAuth required scopes: OR.Folders or OR.Folders.Read
+Required permissions: Units.View
 
 ## RELATED LINKS
 

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -31,6 +31,8 @@ The Get-OrchAuditLog cmdlet retrieves audit logs from UiPath Orchestrator, provi
 
 Audit logs capture comprehensive information including user actions, component modifications, timestamps, and contextual details about operations performed within Orchestrator. This cmdlet enables filtering by various criteria such as user names, components, actions, and time ranges to focus on specific audit events.
 
+Audit logs are tenant entities that operate across the entire tenant scope. Use the -Path parameter to specify target tenants by drive name (e.g., Orch1:, Orch2:).
+
 This cmdlet operates at the tenant level, providing access to audit events across the organization. Use filtering parameters to narrow down results and improve query performance. The -ExpandEntity and -ExpandDetails parameters provide additional contextual information about logged events.
 
 The cmdlet supports both filter-based queries for broad searches and ID-based queries for retrieving specific audit log entries. Use pagination parameters (-Skip, -First) to manage large result sets efficiently.
@@ -45,52 +47,31 @@ Required permissions: Audit.View
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-OrchAuditLog -Last 24h
+PS Orch1:\> Get-OrchAuditLog -Last Day
 ```
 
 Retrieves all audit logs from the last 24 hours in the current tenant.
 
 ### Example 2
 ```powershell
-PS C:\> Get-OrchAuditLog -Path Orch1: -UserName john.doe -First 50
+PS Orch1:\> Get-OrchAuditLog -Component Queues,Jobs -Action Create,Delete
 ```
 
-Gets the first 50 audit log entries for user john.doe in the Orch1 tenant.
+Gets audit logs for create and delete actions on Queues and Jobs components.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchAuditLog -Component Users, Roles -Action Create, Delete
+PS C:\> Get-OrchAuditLog -Path Orch1:, Orch2: -UserName admin*
 ```
 
-Retrieves audit logs for create and delete actions on Users and Roles components.
+Retrieves audit logs for users with names starting with "admin" from multiple tenants.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchAuditLog -ExecutionTimeAfter (Get-Date).AddDays(-7) -ExpandDetails
+PS Orch1:\> Get-OrchAuditLog -Last Day | Select-Object -First 1 | ConvertTo-Json -Depth 3
 ```
 
-Gets audit logs from the last 7 days with expanded details for thorough analysis.
-
-### Example 5
-```powershell
-PS Orch1:\> Get-OrchAuditLog -Action Login, Logout | Where-Object {$_.UserName -like "*admin*"}
-```
-
-Retrieves login and logout actions for users with "admin" in their username.
-
-### Example 6
-```powershell
-PS Orch1:\> Get-OrchAuditLog -Component Jobs -ExecutionTimeAfter (Get-Date).AddHours(-1) -ExpandEntity | ConvertTo-Json
-```
-
-Gets job-related audit logs from the last hour with entity expansion and converts to JSON format.
-
-### Example 7
-```powershell
-PS C:\> Get-OrchAuditLog -Path Orch1: -Action Delete -ExecutionTimeAfter (Get-Date).AddDays(-30) | Group-Object Component
-```
-
-Groups all delete actions from the last 30 days by component type for analysis.
+Gets recent audit logs and displays the complete structure including nested Entities and CustomDataExpanded.
 
 ## PARAMETERS
 
@@ -185,7 +166,7 @@ Accept wildcard characters: True
 ```
 
 ### -Last
-Specifies a time period for retrieving recent audit logs. Examples: "1h" (1 hour), "24h" (24 hours), "7d" (7 days).
+Specifies a time period for recent logs. Valid values: Hour, Day, Week, Month, 3Months, 6Months, Year, 3Years.
 
 ```yaml
 Type: String
@@ -310,6 +291,12 @@ Returns AuditLog objects containing information about user activities, system ch
 
 ## NOTES
 This cmdlet is a tenant-level entity operation for accessing audit logs across the organization. Audit logs are essential for security monitoring, compliance reporting, and troubleshooting. Use filtering parameters to improve query performance and focus on relevant events. The -ExpandEntity and -ExpandDetails parameters provide additional context but may impact performance. Consider using pagination for large result sets to manage memory usage and response times.
+
+
+
+Primary Endpoint: GET /odata/AuditLogs
+OAuth required scopes: OR.Audit or OR.Audit.Read
+Required permissions: Audit.View
 
 ## RELATED LINKS
 

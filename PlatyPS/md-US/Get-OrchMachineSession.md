@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -39,38 +39,24 @@ Gets all machine sessions in the current folder.
 
 ### Example 2
 ```powershell
-PS Orch1:\> Get-OrchMachineSession -Recurse
+PS Orch1:\> Get-OrchMachineSession -Recurse -Status Available
 ```
 
-Gets machine sessions from all folders in the current drive.
+Gets available machine sessions from all folders in the current drive using -Recurse and -Status filter.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchMachineSession -Recurse -Status Connected
+PS C:\> Get-OrchMachineSession -Path Orch1:\Shared -Status Disconnected
 ```
 
-Gets only connected machine sessions from all folders.
+Gets disconnected machine sessions from the Shared folder, demonstrating -Path and -Status usage.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchMachineSession -Path Orch1:\Shared -Status Disconnected
+PS Orch1:\> Get-OrchMachineSession -Recurse | Select-Object Path, MachineName, Status, Runtimes | ConvertTo-Json
 ```
 
-Gets disconnected machine sessions from the Shared folder.
-
-### Example 5
-```powershell
-PS Orch1:\> Get-OrchMachineSession -Recurse | Where-Object {$_.Runtimes -gt 0} | Select-Object Path, MachineName, Runtimes, UsedRuntimes
-```
-
-Gets all machine sessions with available runtimes and displays capacity information. Note that Path is selected first to identify which folder each entity belongs to.
-
-### Example 6
-```powershell
-PS Orch1:\> Get-OrchMachineSession -Recurse | ConvertTo-Json -Depth 3
-```
-
-Gets machine sessions and displays the complete object structure including detailed session information.
+Gets all machine sessions and displays key information in JSON format, combining output customization techniques.
 
 ## PARAMETERS
 
@@ -189,6 +175,12 @@ This cmdlet operates on folder entities and requires either:
 When using Select-Object with folder entities, always include Path as the first property to identify which folder each entity belongs to. This is essential for managing entities across multiple folders.
 
 Use ConvertTo-Json to explore the complete machine session object structure including detailed connection information and runtime statistics.
+
+
+
+Primary Endpoint: GET /odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimesByFolderId
+OAuth required scopes: OR.Robots or OR.Robots.Read
+Required permissions: Robots.View
 
 ## RELATED LINKS
 

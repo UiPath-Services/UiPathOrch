@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -35,54 +35,55 @@ Use the -Path parameter to target specific Orchestrator drives when working with
 
 Primary Endpoint: GET /odata/Users?$expand=OrganizationUnits,UserRoles, GET /odata/Roles?$expand=Permissions, GET /api/DirectoryService/SearchForUsersAndGroups?domain=autogen&prefix={prefix}&searchContext=All, POST /odata/Users
 
-OAuth required scopes: OR.Users
+OAuth required scopes: OR.Users or OR.Users.Read or OR.Users.Write
 
 Required permissions: (Users.View or Units.Edit or SubFolders.Edit), (Roles.View or Units.Edit or SubFolders.Edit)
 
 ## EXAMPLES
 
 ### Example 1
-`powershell
-PS C:\> Add-OrchUser john.doe
-`
+```powershell
+PS Orch1:\> Add-OrchUser DirectoryUser testuser1 -WhatIf
+```
 
-Adds the user john.doe from the organization to the current tenant.
+Adds the user testuser1 from the organization to the current tenant.
 
 ### Example 2
-`powershell
-PS C:\> Add-OrchUser -Path Orch1:, Orch2: jane.smith Developer
-`
+```powershell
+PS C:\> Add-OrchUser -Path Orch1:, Orch2: DirectoryUser testuser2 Developer -WhatIf
+```
 
-Adds the user jane.smith to both Orch1 and Orch2 tenants with the Developer role.
+Adds the user testuser2 to both Orch1 and Orch2 tenants with the Developer role.
 
 ### Example 3
-`powershell
-PS C:\> Add-OrchUser -UserName alex.johnson -Roles Administrator, Developer -MayHaveUserSession Yes
-`
+```powershell
+PS Orch1:\> Add-OrchUser DirectoryUser testuser3 Administrator, Developer -MayHaveUserSession True -WhatIf
+```
 
-Adds alex.johnson with Administrator and Developer roles, and enables user session permissions.
+Adds testuser3 with Administrator and Developer roles, and enables Orchestrator web access to the user.
 
 ### Example 4
-`powershell
-PS C:\> Add-OrchUser robot.user -Type Unattended -UR_UserName DOMAIN\RobotUser -UR_Password "SecurePass123"
-`
+```powershell
+PS Orch1:\> Add-OrchUser DirectoryRobot RobotAccount1 -WhatIf
+```
 
-Adds robot.user as an Unattended user type with specified robot credentials.
+Adds RobotAccount1 as a DirectoryRobot user type.
 
 ### Example 5
-`powershell
-PS C:\> Import-Csv users.csv | Add-OrchUser -Path Orch1: -WhatIf
-`
+```powershell
+PS C:\> Import-Csv users.csv | Add-OrchUser -WhatIf
+```
 
-Shows what would happen when adding users from a CSV file to Orch1 tenant. CSV format:
-UserName,Roles
-john.doe,Developer
-jane.smith,Administrator
+Shows what would happen when adding users from a CSV file to Orch1 tenant. This CSV file can be generated with Get-OrchUser -ExportCsv.
+Minimal CSV format:
+Path,Type,UserName,Roles
+Orch1:,DirectoryUser,john.doe,Developer
+Orch1:,DirectoryUser,jane.smith,Administrator
 
 ### Example 6
-`powershell
-PS C:\> Get-PmUser | Where-Object {$_.Email -like "*@contoso.com"} | Add-OrchUser -Roles Developer
-`
+```powershell
+PS Orch1:\> Get-PmUser *@contoso.com | Add-OrchUser -Roles Developer -WhatIf
+```
 
 Gets all organization users with contoso.com email domain and adds them to the current tenant with Developer role.
 
@@ -134,7 +135,7 @@ Accept wildcard characters: False
 ```
 
 ### -Type
-Specifies the Type of the users to be added.
+Specifies the Type of the users to be added. Valid Values: DirectoryUser, DirectoryRobot, DirectoryGroup, DirectoryExternalApplication
 
 ```yaml
 Type: String[]

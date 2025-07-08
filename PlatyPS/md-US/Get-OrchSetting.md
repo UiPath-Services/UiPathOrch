@@ -34,7 +34,6 @@ Required permissions: [PLACEHOLDER - Settings view permissions]
 
 ### Example 1
 ```powershell
-PS C:\> Set-Location Orch1:\
 PS Orch1:\> Get-OrchSetting
 ```
 
@@ -42,45 +41,31 @@ Gets all configuration settings from the current Orchestrator instance.
 
 ### Example 2
 ```powershell
-PS Orch1:\> Get-OrchSetting Abp.Localization.DefaultLanguageName
-```
-
-Gets the default language setting.
-
-### Example 3
-```powershell
 PS Orch1:\> Get-OrchSetting *Language*,*TimeZone*
 ```
 
-Gets all settings related to language and timezone using wildcard patterns.
+Gets settings related to language and timezone using wildcard patterns.
+
+### Example 3
+```powershell
+PS Orch1:\> Get-OrchSetting -Path Orch1:, Orch2: *Auth*
+```
+
+Gets authentication-related settings from multiple tenants.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchSetting *Email* | Format-List
+PS Orch1:\> Get-OrchSetting *Email* | Select-Object Path, Name, Value
 ```
 
-Gets all email-related settings and displays them in detailed list format.
+Gets email-related settings and displays key properties with Path shown first.
 
 ### Example 5
 ```powershell
-PS Orch1:\> Get-OrchSetting *Auth*
+PS Orch1:\> Get-OrchSetting *Trigger* | ConvertTo-Json
 ```
 
-Filters to show only authentication-related settings.
-
-### Example 6
-```powershell
-PS Orch1:\> Get-OrchSetting | Select-Object Name, Value | Export-Csv "C:\settings.csv" -NoTypeInformation
-```
-
-Exports all settings to a CSV file for documentation or backup purposes.
-
-### Example 7
-```powershell
-PS Orch1:\> Get-OrchSetting *Trigger* | Sort-Object Name
-```
-
-Gets all trigger-related settings sorted alphabetically by name.
+Gets trigger-related settings and outputs detailed structure in JSON format.
 
 ## PARAMETERS
 
@@ -144,6 +129,12 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 - Some setting values may be masked for security (shown as ••••••••••••)
 - The Scope property indicates the scope level of the setting
 - Settings control fundamental Orchestrator behavior and should be modified carefully
+
+
+
+Primary Endpoint: GET /odata/Settings
+OAuth required scopes: OR.Settings or OR.Settings.Read
+Required permissions: Settings.View
 
 ## RELATED LINKS
 

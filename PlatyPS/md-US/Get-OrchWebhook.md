@@ -36,7 +36,6 @@ Required permissions: Webhooks.View
 
 ### Example 1
 ```powershell
-PS C:\> Set-Location Orch1:\
 PS Orch1:\> Get-OrchWebhook
 ```
 
@@ -44,70 +43,24 @@ Gets all webhooks configured in the current Orchestrator instance.
 
 ### Example 2
 ```powershell
-PS Orch1:\> Get-OrchWebhook -Name "my*"
+PS Orch1:\> Get-OrchWebhook my*
 ```
 
 Gets webhooks whose names start with "my" using wildcard pattern matching.
 
 ### Example 3
 ```powershell
-PS Orch1:\> $webhook = Get-OrchWebhook -Name "mywebhook"
-PS Orch1:\> $webhook | Format-List
+PS C:\> Get-OrchWebhook -Path Orch1:, Orch2: integration*
 ```
 
-Gets a specific webhook and displays all its properties in detailed list format.
+Gets webhooks with names starting with "integration" from multiple tenants.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchWebhook | Where-Object Enabled -eq $true
+PS Orch1:\> Get-OrchWebhook mywebhook | ConvertTo-Json
 ```
 
-Gets only enabled webhooks that are currently active.
-
-### Example 5
-```powershell
-PS Orch1:\> $webhook = Get-OrchWebhook -Name "mywebhook"
-PS Orch1:\> $webhook.Events | Select-Object EventType
-```
-
-Gets a webhook and displays the event types it subscribes to.
-
-### Example 6
-```powershell
-PS Orch1:\> Get-OrchWebhook | Where-Object SubscribeToAllEvents -eq $true
-```
-
-Gets webhooks that are configured to subscribe to all available events.
-
-### Example 7
-```powershell
-PS Orch1:\> Get-OrchWebhook | Select-Object Name, Url, Enabled, SubscribeToAllEvents | Format-Table
-```
-
-Gets all webhooks and displays key properties in a formatted table.
-
-### Example 8
-```powershell
-PS Orch1:\> Get-OrchWebhook | Where-Object AllowInsecureSsl -eq $true
-```
-
-Gets webhooks that allow insecure SSL connections (useful for identifying potential security concerns).
-
-### Example 9
-```powershell
-PS Orch1:\> $webhooks = Get-OrchWebhook
-PS Orch1:\> Write-Host "Total webhooks: $($webhooks.Count)"
-PS Orch1:\> Write-Host "Enabled webhooks: $(($webhooks | Where-Object Enabled).Count)"
-```
-
-Gets webhook statistics showing total and enabled webhook counts.
-
-### Example 10
-```powershell
-PS Orch1:\> Get-OrchWebhook -Name "integration*","notification*"
-```
-
-Gets webhooks with names starting with "integration" or "notification".
+Gets a specific webhook and displays the complete structure including nested properties like Events array.
 
 ## PARAMETERS
 
@@ -174,6 +127,12 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 - The Secret property (if configured) is used for webhook signature verification but is not displayed for security
 - The Key property contains a unique identifier for the webhook
 - Disabled webhooks (Enabled = false) do not send notifications even if events occur
+
+
+
+Primary Endpoint: GET /odata/Webhooks
+OAuth required scopes: OR.Webhooks or OR.Webhooks.Read
+Required permissions: Webhooks.View
 
 ## RELATED LINKS
 

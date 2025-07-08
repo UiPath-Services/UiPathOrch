@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -160,6 +160,12 @@ Use -HostFeed to browse libraries available for import from external sources bef
 Libraries from host feeds show available packages that can be imported, while local libraries show packages already available in the Orchestrator.
 
 The Published property shows when the library was last published, useful for identifying recent updates.
+
+
+
+Primary Endpoint: GET /odata/Libraries
+OAuth required scopes: OR.Execution or OR.Execution.Read
+Required permissions: Libraries.View
 
 ## RELATED LINKS
 

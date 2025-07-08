@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,11 +26,11 @@ Use the -Name parameter to specify which assets to copy and the -Destination par
 
 This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters. The -Recurse parameter enables copying assets from all subfolders, maintaining the folder structure in the destination.
 
-Primary Endpoint:
+Primary Endpoint: GET /odata/Assets, GET /odata/Assets/UiPath.Server.Configuration.OData.GetFoldersForAsset(id={id}), POST /odata/Assets
 
-OAuth required scopes:
+OAuth required scopes: OR.Assets
 
-Required permissions:
+Required permissions: Assets.View, Assets.Create
 
 ## EXAMPLES
 

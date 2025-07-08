@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -20,9 +20,9 @@ Remove-OrchActionCatalog [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Dept
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-Primary Endpoint: DELETE /odata/TaskCatalogs({catalogId})
+Primary Endpoint: DELETE /odata/TaskCatalogs({key})
 
-OAuth required scopes: OR.Tasks or OR.Tasks
+OAuth required scopes: OR.Tasks or OR.Tasks.Write
 
 Required permissions: TaskCatalogs.Delete
 

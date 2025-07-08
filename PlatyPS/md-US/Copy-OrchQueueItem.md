@@ -28,11 +28,11 @@ Use the -Name parameter to specify which queues' items to copy and the -Destinat
 
 This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters. The -Recurse parameter enables copying queue items from all subfolders, maintaining the folder structure in the destination.
 
-Primary Endpoint: [PLACEHOLDER]
+Primary Endpoint: GET /odata/QueueDefinitions, GET /odata/QueueItems, POST /odata/Queues/UiPathODataSvc.AddQueueItem
 
-OAuth required scopes: [PLACEHOLDER]
+OAuth required scopes: OR.Queues
 
-Required permissions: [PLACEHOLDER]
+Required permissions: Queues.View, Transactions.View, Transactions.Create
 
 ## EXAMPLES
 

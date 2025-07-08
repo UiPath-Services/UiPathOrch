@@ -29,7 +29,7 @@ Primary Endpoint: /odata/Users/UiPath.Server.Configuration.OData.GetCurrentUser
 
 OAuth required scopes: OR.Users or OR.Users.Read
 
-Required permissions: [PLACEHOLDER - Current user view permissions]
+Required permissions: Users.View
 
 ## EXAMPLES
 
@@ -118,6 +118,12 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 - The current user may be different for each configured drive
 - The RolesList property contains all roles assigned to the current user
 - The Type property indicates the user account type (e.g., DirectoryUser)
+
+
+
+Primary Endpoint: GET /odata/Users/UiPath.Server.Configuration.OData.GetCurrentUserExtended
+OAuth required scopes: [PLACEHOLDER]
+Required permissions: [PLACEHOLDER]
 
 ## RELATED LINKS
 

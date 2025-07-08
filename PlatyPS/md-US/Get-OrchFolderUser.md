@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -56,24 +56,24 @@ Gets all folder users with usernames containing "admin" in the Shared folder.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchFolderUser -Recurse | Where-Object {$_.UserEntity.Type -eq "DirectoryUser"}
+PS Orch1:\> Get-OrchFolderUser -Recurse -Type DirectoryUser
 ```
 
-Retrieves all individual users (not groups) assigned across all folders.
+Retrieves all individual users (not groups) assigned across all folders using the -Type parameter for efficient filtering.
 
 ### Example 5
 ```powershell
-PS Orch1:\Shared> Get-OrchFolderUser | Select-Object @{Name="UserName";Expression={$_.UserEntity.UserName}}, @{Name="UserType";Expression={$_.UserEntity.Type}}, @{Name="RoleNames";Expression={($_.Roles.Name -join ", ")}}
+PS Orch1:\Shared> Get-OrchFolderUser | ConvertTo-Json -Depth 3
 ```
 
-Displays a summary view with UserName, UserType, and concatenated role names.
+Displays detailed folder user properties in JSON format, including complete UserEntity details and Role information with Origin and InheritedFromFolder properties.
 
 ### Example 6
 ```powershell
-PS Orch1:\> Get-OrchFolderUser -Recurse | Group-Object {$_.UserEntity.Type}
+PS Orch1:\> Get-OrchFolderUser -Recurse | Group-Object {$_.UserEntity.Type} | Select-Object Name, Count, @{Name="UserNames";Expression={($_.Group.UserEntity.UserName | Sort-Object -Unique) -join ", "}}
 ```
 
-Groups folder users by entity type (DirectoryUser vs DirectoryGroup) across all folders.
+Groups folder users by entity type and displays user counts with actual usernames for each type, providing a clear overview of user distribution.
 
 ## PARAMETERS
 
@@ -250,6 +250,12 @@ Returns FolderUser objects containing information about users and groups assigne
 
 ## NOTES
 This cmdlet is a folder entity operation requiring navigation to a folder context or path specification using -Path parameter. The cmdlet reveals folder-level access control showing both individual users (DirectoryUser) and groups (DirectoryGroup) with their role assignments. UserEntity.Type distinguishes between users and groups. Roles include Origin information showing whether permissions are directly "Assigned" or inherited. This operation requires Users.View permissions in the target folders.
+
+
+
+Primary Endpoint: GET /odata/Folders/UiPath.Server.Configuration.OData.GetUsersForFolder
+OAuth required scopes: OR.Users or OR.Users.Read
+Required permissions: Users.View
 
 ## RELATED LINKS
 

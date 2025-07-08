@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -22,6 +22,8 @@ The Get-OrchAssetLink cmdlet retrieves folder associations and links for specifi
 
 Asset links define where assets are accessible within the folder structure, enabling proper access control and organization. Understanding asset-folder relationships is crucial for asset management, security policies, and access control configuration.
 
+Asset links are folder entities that require navigation to the appropriate folder context first. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.
+
 This cmdlet operates as a folder entity operation, requiring navigation to the appropriate folder context or specification of target folders using the -Path parameter. Use the -Recurse parameter to include subfolders in the search, and -Depth to control recursion levels.
 
 The cmdlet helps administrators understand asset distribution across folders, troubleshoot access issues, and manage asset organization within complex folder hierarchies.
@@ -43,38 +45,31 @@ Retrieves folder links for the DatabaseConfig asset in the current folder.
 
 ### Example 2
 ```powershell
-PS C:\> Get-OrchAssetLink -Path Orch1:\Production -Name *API* -Recurse
+PS Orch1:\> Get-OrchAssetLink -Recurse *API*
 ```
 
-Gets folder links for all assets with names containing "API" in the Production folder and its subfolders.
+Gets folder links for all assets with names containing "API" from all folders recursively.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchAssetLink -Recurse | Group-Object AssetName
+PS C:\> Get-OrchAssetLink -Path Orch1:\Production,Orch1:\Development -Name ConnectionString
 ```
 
-Groups all asset links by asset name across all folders to show asset distribution.
+Retrieves folder links for the ConnectionString asset from Production and Development folders.
 
 ### Example 4
 ```powershell
-PS Orch1:\Development> Get-OrchAssetLink -Name ConnectionString, APIKey
+PS Orch1:\> Get-OrchAssetLink -Recurse | Select-Object Path, DisplayName, FullyQualifiedName
 ```
 
-Retrieves folder links for specific assets (ConnectionString and APIKey) in the current Development folder.
+Gets all asset links recursively and displays key properties with Path shown first.
 
 ### Example 5
 ```powershell
-PS C:\> Get-OrchAssetLink -Path Orch1:\Production -Depth 2
+PS Orch1:\> Get-OrchAssetLink -Recurse -Depth 2
 ```
 
-Gets asset links in the Production folder and up to 2 levels of subfolders.
-
-### Example 6
-```powershell
-PS Orch1:\> Get-OrchAsset | Get-OrchAssetLink | Select-Object AssetName, FolderPath
-```
-
-Gets all assets and their folder associations, displaying asset names and folder paths.
+Gets asset links in current folder and up to 2 levels of subfolders.
 
 ## PARAMETERS
 
@@ -171,6 +166,12 @@ Returns SimpleFolder objects representing the folders where the specified assets
 
 ## NOTES
 This cmdlet is a folder entity operation that requires appropriate folder context or path specification. Asset links define folder-level access to assets within the Orchestrator hierarchy. Use -Recurse and -Depth parameters to control the scope of folder searching. Understanding asset-folder relationships is essential for proper access control and asset management. This operation requires Assets.View permissions in the target folders.
+
+
+
+Primary Endpoint: GET /odata/Assets
+OAuth required scopes: OR.Assets or OR.Assets.Read
+Required permissions: Assets.View
 
 ## RELATED LINKS
 

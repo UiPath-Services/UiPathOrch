@@ -25,17 +25,11 @@ The cmdlet returns a UiPath.PowerShell.Entities.ODataValueOfString object that w
 
 This is typically used for diagnostic purposes and system administration tasks. The connection string information can help in troubleshooting connectivity issues or verifying that Orchestrator is configured to use the correct database.
 
-Primary Endpoint: GET /odata/Settings/UiPath.Server.Configuration.OData.GetConnectionString
+Primary Endpoint: [PLACEHOLDER]
 
-OAuth required scopes: OR.Settings or OR.Settings.Read
+OAuth required scopes: [PLACEHOLDER]
 
 Required permissions: Settings.View
-
-Primary Endpoint: GET /odata/Settings/UiPath.Server.Configuration.OData.GetConnectionString
-
-OAuth required scopes: OR.Settings or OR.Settings.Read
-
-Required permissions:
 
 ## EXAMPLES
 
@@ -62,11 +56,12 @@ Gets the connection string and displays only the actual connection string value,
 
 ### Example 4
 ```powershell
-PS C:\>  = Get-OrchConnectionString
-PS C:\> .Value
+PS C:\> $result = Get-OrchConnectionString
+PS C:\> $result.Value
 ```
 
 Stores the connection string object in a variable and then accesses the actual connection string value. This approach is useful when you need to further process or analyze the connection string.
+
 ## PARAMETERS
 
 ### -Path
@@ -121,5 +116,11 @@ Connection strings typically contain sensitive information such as database serv
 This cmdlet is primarily intended for system administrators and troubleshooting purposes. Regular users typically do not need access to connection string information.
 
 The cmdlet operates on tenant-level settings and requires appropriate Settings.View permissions to access configuration data.
+
+
+
+Primary Endpoint: GET /odata/Settings/UiPath.Server.Configuration.OData.GetConnectionString
+OAuth required scopes: OR.Settings or OR.Settings.Read
+Required permissions: Settings.View
 
 ## RELATED LINKS

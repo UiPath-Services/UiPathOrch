@@ -1,0 +1,423 @@
+# UiPathOrch Module 品質チェック進捗ダッシュボード
+# 最終更新: 2025/07/08 09:21:26
+
+## ═══════════════════════════════════════════════════════════════
+## 📊 全体進捗サマリー
+## ═══════════════════════════════════════════════════════════════
+総ファイル数: 222
+品質チェック完了: 81 (24.4%)
+未チェック: 251
+現在作業中: なし
+
+
+## ═══════════════════════════════════════════════════════════════
+## 📋 全ファイル一覧（機能別分類）
+## ═══════════════════════════════════════════════════════════════
+
+### 🔍 Get-*系 (取得系) - 58ファイル
+✅ Get-OrchBucket.md        [フォルダ  ] 07/08 08:08完了 - Examples: 1✅ 2✅ 3❌→✅ 4✅ 5✅ 6✅
+✅ Get-OrchPersonalWorkspace.md    [テナント  ] 07/08 08:46完了 - Examples: 1✅ 2✅ 3❌→✅ 4✅ 5✅ 6✅ (-Path任意場所実行対応)
+✅ Get-OrchUnattendedSession.md     [テナント  ] 07/08 09:05完了 - Examples: 1✅ 2❌→✅ 3✅ 4✅ 5✅ 6✅ (実データ基準)
+✅ Get-OrchTestSetSchedule.md       [フォルダ  ] 07/08 09:09完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ 7✅ (ルート動作可)
+✅ Get-OrchTestSetExecution.md      [フォルダ  ] 07/08 09:17完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ (適正数に調整)
+✅ Get-OrchTestSet.md             [フォルダ  ] 07/08 09:21完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5❌→✅ (実在フォルダ修正)
+✅ Get-OrchTestDataQueueItem.md     [フォルダ  ] 07/08 09:28 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5❌→✅ 6❌→✅ (フォルダ名修正・プロンプト適正化)
+✅ Get-OrchTestDataQueue.md        [フォルダ  ] 07/08 09:32 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ (品質良好・修正不要)
+✅ Get-OrchTestCaseExecution.md      [フォルダ  ] 07/08 09:36 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ (品質良好・プレースホルダー有)
+✅ Get-OrchTestCase.md             [フォルダ  ] 07/08 09:49 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ (10→5個統合)
+✅ Get-OrchQueueItem.md            [フォルダ  ] 07/08 09:54 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ (品質良好・特殊フィルタ)
+✅ Get-OrchPackageVersion.md        [テナント ] 07/08 09:58 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ (品質良好・実データ豊富)
+✅ Get-OrchPackageVersion.md        [テナント ] 07/08 09:58 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ (品質良好・実データ豊富)
+✅ Get-OrchMachineSession.md        [テナント ] 07/08 10:10 完了 - Examples: 1✅ 2✅ 3✅ 4✅ (6→4個統合)
+✅ Get-OrchMachineClientSecretId.md [テナント ] 07/08 11:52完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ (品質良好・実データ検証済み)
+⚠️ Get-OrchLog.md [フォルダ  ] 07/08 11:58チェック完了 - Examples: 1✅ 2❌→要修正 3✅ 4❌→要修正 5✅ 6❌→要修正 (Level配列エラー・プロンプト不適切)
+✅ Get-OrchLicenseStats.md [テナント ] 07/08 12:04完了 - Examples: 1⚠️→推奨修正 2✅ 3✅ 4✅ 5✅ (ほぼ良好・Example1プロンプトのみ要改善)
+✅ Get-OrchLicenseRuntime.md [テナント ] 07/08 12:12完了 - Examples: 1-5⚠️→推奨修正 6✅ (動作OK・プロンプト改善余地)
+✅ Get-OrchLicenseNamedUser.md [テナント ] 07/08 12:16完了 - Examples: 1-5⚠️→推奨修正 6✅ (動作OK・同プロンプト問題)
+✅ Get-OrchLibraryVersion.md [テナント ] 07/08 12:22完了 - Examples: 1-4,6-7⚠️→推奨修正 5✅ (動作OK・豊富データ・同プロンプト問題)
+❌ Get-OrchJobVideo.md                     [エンティティ] 07/07 17:41完了 manual check done
+❌ Get-OrchCredentialStore.md              [エンティティ] 07/07 17:35完了
+❌ Get-OrchJobMedia.md                     [エンティティ] 07/07 17:32完了
+❌ Get-OrchFolderUser.md                   [エンティティ] 07/07 17:26完了
+❌ Get-OrchHelp.md                         [エンティティ] 07/07 17:12完了
+❌ Get-OrchFolderUser.md                   [エンティティ] 07/07 17:08完了
+❌ Get-OrchFolderUsage.md                  [エンティティ] 07/07 17:03完了
+❌ Get-OrchFolderMachineAccountMapping.md  [エンティティ] 07/07 16:59完了
+❌ Get-OrchFolderMachine.md                [エンティティ] 07/07 16:57完了
+❌ Get-OrchExecutionSetting.md             [エンティティ] 07/07 16:53完了
+❌ Get-OrchCurrentUser.md                  [エンティティ] 07/07 16:51完了
+❌ Get-OrchCredentialStore.md              [エンティティ] 07/07 16:48完了
+❌ Get-OrchConnectionString.md             [エンティティ] 07/07 16:45完了
+❌ Get-OrchClassicRobot.md                 [エンティティ] 07/07 16:32完了
+❌ Get-OrchClassicEnvironment.md           [エンティティ] 07/07 16:26完了
+❌ Get-OrchCalendar.md                     [エンティティ] 07/07 16:23完了
+❌ Get-OrchBucketItem.md                   [エンティティ] 07/07 16:19完了
+❌ Get-OrchAuthenticationSetting.md        [エンティティ] 07/07 16:16完了
+❌ Get-OrchAuditLog.md                     [エンティティ] 07/07 16:13完了
+❌ Get-OrchActivitySetting.md              [エンティティ] 07/07 16:11完了
+❌ Get-OrchActionCatalog.md                [エンティティ] 07/07 16:07完了
+❌ Get-OrchWebhook.md                      [エンティティ] 07/07 16:05完了
+❌ Get-OrchLicense.md                      [エンティティ] 07/07 15:57完了
+❌ Get-OrchPackage.md                      [エンティティ] 07/07 15:54完了
+❌ Get-OrchSetting.md                      [エンティティ] 07/07 15:50完了
+❌ Get-OrchAssetLink.md                    [エンティティ] 07/07 15:46完了
+❌ Get-OrchApiTrigger.md                   [エンティティ] 07/07 15:43完了
+❌ Get-OrchAlert.md                        [エンティティ] 07/07 15:40完了
+❌ Get-OrchJobStats.md                     [エンティティ] 07/07 15:37完了
+✅ Get-OrchUser.md          [テナント ] 07/08 07:38完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ 7✅ 8❌→✅
+✅ Get-OrchMachine.md       [テナント ] 07/08 07:27完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ 7✅
+❌ Get-OrchTrigger.md                      [エンティティ] 07/07 15:13完了
+✅ Get-OrchLibrary.md       [テナント ] 07/08 07:58完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ 7✅
+❌ Get-OrchJob.md                          [エンティティ] 07/07 14:40完了
+✅ Get-OrchRole.md          [テナント ] 07/08 07:41完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅
+❌ Get-OrchMachine.md                      [エンティティ] 07/07 14:25完了
+✅ Get-OrchProcess.md       [フォルダ  ] 07/08 06:59完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6❌→✅ 7✅ 8✅
+❌ Get-OrchUser.md                         [エンティティ] 07/07 14:06完了
+✅ Get-OrchAsset.md         [フォルダ  ] 07/08 06:26完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ 7✅ 8✅
+✅ Get-OrchQueue.md        [フォルダ  ] 07/08 06:14完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ 7✅
+✅ Get-OrchBucket.md        [フォルダ  ] 07/08 08:08完了 - Examples: 1✅ 2✅ 3❌→✅ 4✅ 5✅ 6✅
+✅ Get-OrchPersonalWorkspace.md    [テナント  ] 07/08 08:46完了 - Examples: 1✅ 2✅ 3❌→✅ 4✅ 5✅ 6✅ (-Path任意場所実行対応)
+✅ Get-OrchUnattendedSession.md     [テナント  ] 07/08 09:05完了 - Examples: 1✅ 2❌→✅ 3✅ 4✅ 5✅ 6✅ (実データ基準)
+✅ Get-OrchTestSetSchedule.md       [フォルダ  ] 07/08 09:09完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ 7✅ (ルート動作可)
+✅ Get-OrchTestSetExecution.md      [フォルダ  ] 07/08 09:17完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ (適正数に調整)
+✅ Get-OrchTestSet.md             [フォルダ  ] 07/08 09:21完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5❌→✅ (実在フォルダ修正)
+✅ Get-OrchTestDataQueueItem.md     [フォルダ  ] 07/08 09:28 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5❌→✅ 6❌→✅ (フォルダ名修正・プロンプト適正化)
+✅ Get-OrchTestDataQueue.md        [フォルダ  ] 07/08 09:32 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ (品質良好・修正不要)
+✅ Get-OrchTestCaseExecution.md      [フォルダ  ] 07/08 09:36 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ (品質良好・プレースホルダー有)
+✅ Get-OrchTestCase.md             [フォルダ  ] 07/08 09:49 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ (10→5個統合)
+✅ Get-OrchQueueItem.md            [フォルダ  ] 07/08 09:54 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ (品質良好・特殊フィルタ)
+✅ Get-OrchPackageVersion.md        [テナント ] 07/08 09:58 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ (品質良好・実データ豊富)
+✅ Get-OrchPackageVersion.md        [テナント ] 07/08 09:58 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ (品質良好・実データ豊富)
+✅ Get-OrchMachineSession.md        [テナント ] 07/08 10:10 完了 - Examples: 1✅ 2✅ 3✅ 4✅ (6→4個統合)
+✅ Get-OrchMachineClientSecretId.md [テナント ] 07/08 11:52完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ (品質良好・実データ検証済み)
+⚠️ Get-OrchLog.md [フォルダ  ] 07/08 11:58チェック完了 - Examples: 1✅ 2❌→要修正 3✅ 4❌→要修正 5✅ 6❌→要修正 (Level配列エラー・プロンプト不適切)
+✅ Get-OrchLicenseStats.md [テナント ] 07/08 12:04完了 - Examples: 1⚠️→推奨修正 2✅ 3✅ 4✅ 5✅ (ほぼ良好・Example1プロンプトのみ要改善)
+✅ Get-OrchLicenseRuntime.md [テナント ] 07/08 12:12完了 - Examples: 1-5⚠️→推奨修正 6✅ (動作OK・プロンプト改善余地)
+✅ Get-OrchLicenseNamedUser.md [テナント ] 07/08 12:16完了 - Examples: 1-5⚠️→推奨修正 6✅ (動作OK・同プロンプト問題)
+✅ Get-OrchLibraryVersion.md [テナント ] 07/08 12:22完了 - Examples: 1-4,6-7⚠️→推奨修正 5✅ (動作OK・豊富データ・同プロンプト問題)
+❌ Get-OrchJobVideo.md                     [エンティティ] 07/07 17:41完了
+❌ Get-OrchCredentialStore.md              [エンティティ] 07/07 17:35完了
+❌ Get-OrchJobMedia.md                     [エンティティ] 07/07 17:32完了
+❌ Get-OrchFolderUser.md                   [エンティティ] 07/07 17:26完了
+❌ Get-OrchHelp.md                         [エンティティ] 07/07 17:12完了
+❌ Get-OrchFolderUser.md                   [エンティティ] 07/07 17:08完了
+❌ Get-OrchFolderUsage.md                  [エンティティ] 07/07 17:03完了
+❌ Get-OrchFolderMachineAccountMapping.md  [エンティティ] 07/07 16:59完了
+❌ Get-OrchFolderMachine.md                [エンティティ] 07/07 16:57完了
+❌ Get-OrchExecutionSetting.md             [エンティティ] 07/07 16:53完了
+❌ Get-OrchCurrentUser.md                  [エンティティ] 07/07 16:51完了
+❌ Get-OrchCredentialStore.md              [エンティティ] 07/07 16:48完了
+❌ Get-OrchConnectionString.md             [エンティティ] 07/07 16:45完了
+❌ Get-OrchClassicRobot.md                 [エンティティ] 07/07 16:32完了
+❌ Get-OrchClassicEnvironment.md           [エンティティ] 07/07 16:26完了
+❌ Get-OrchCalendar.md                     [エンティティ] 07/07 16:23完了
+❌ Get-OrchBucketItem.md                   [エンティティ] 07/07 16:19完了
+❌ Get-OrchAuthenticationSetting.md        [エンティティ] 07/07 16:16完了
+❌ Get-OrchAuditLog.md                     [エンティティ] 07/07 16:13完了
+❌ Get-OrchActivitySetting.md              [エンティティ] 07/07 16:11完了
+❌ Get-OrchActionCatalog.md                [エンティティ] 07/07 16:07完了
+❌ Get-OrchWebhook.md                      [エンティティ] 07/07 16:05完了
+❌ Get-OrchLicense.md                      [エンティティ] 07/07 15:57完了
+❌ Get-OrchPackage.md                      [エンティティ] 07/07 15:54完了
+❌ Get-OrchSetting.md                      [エンティティ] 07/07 15:50完了
+❌ Get-OrchAssetLink.md                    [エンティティ] 07/07 15:46完了
+❌ Get-OrchApiTrigger.md                   [エンティティ] 07/07 15:43完了
+❌ Get-OrchAlert.md                        [エンティティ] 07/07 15:40完了
+❌ Get-OrchJobStats.md                     [エンティティ] 07/07 15:37完了
+✅ Get-OrchUser.md          [テナント ] 07/08 07:38完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ 7✅ 8❌→✅
+✅ Get-OrchMachine.md       [テナント ] 07/08 07:27完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ 7✅
+❌ Get-OrchTrigger.md                      [エンティティ] 07/07 15:13完了
+✅ Get-OrchLibrary.md       [テナント ] 07/08 07:58完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ 7✅
+❌ Get-OrchJob.md                          [エンティティ] 07/07 14:40完了
+✅ Get-OrchRole.md          [テナント ] 07/08 07:41完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅
+❌ Get-OrchMachine.md                      [エンティティ] 07/07 14:25完了
+✅ Get-OrchProcess.md       [フォルダ  ] 07/08 06:59完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6❌→✅ 7✅ 8✅
+✅ Get-OrchAsset.md         [フォルダ  ] 07/08 06:26完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ 7✅ 8✅
+✅ Get-OrchQueue.md        [フォルダ  ] 07/08 06:14完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ 7✅
+❌ Get-OrchProcess.md                   [フォルダ  ] 未着手
+❌ Get-OrchMachine.md                   [テナント ] 未着手
+❌ Get-OrchRole.md                      [テナント ] 未着手
+✅ Get-OrchJob.md           [フォルダ  ] 07/08 10:52 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ (8→6個最適化・フォルダ特性対応)
+❌ Get-OrchLibrary.md                   [テナント ] 未着手
+✅ Get-OrchTrigger.md        [フォルダ  ] 07/08 11:10 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ (9→6個最適化・実在データ対応)
+✅ Get-OrchRobot.md         [テナント ] 07/08 10:39 完了 - Examples: 1✅ 2❌→✅ 3❌→✅ 4✅ 5✅ 6✅ (プロンプト修正・実在データ対応・YAML修正)
+✅ Get-OrchSetting.md        [テナント ] 07/08 10:18 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ (6例調整・JSON出力追加)
+✅ Get-OrchPackage.md        [テナント ] 07/08 10:29 完了 - Examples: 1✅ 2✅ 3❌→✅ 4❌→✅ 5✅ 6✅ (実在データ修正・ワイルドカード正常化)
+✅ Get-OrchLicense.md       [テナント ] 07/08 10:23 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ (ライセンス管理・使用率計算追加)
+✅ Get-OrchWebhook.md        [テナント ] 07/08 10:32 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ (実在データ・Webhook管理機能完備)
+❌ Get-OrchJobStats.md                  [フォルダ  ] 07/07 15:38 完了
+❌ Get-OrchAlert.md                     [フォルダ  ] 未着手
+❌ Get-OrchActionCatalog.md             [テナント ] 未着手
+❌ Get-OrchActivitySetting.md           [テナント ] 未着手
+❌ Get-OrchApiTrigger.md                [フォルダ  ] 未着手
+❌ Get-OrchAssetLink.md                 [フォルダ  ] 未着手
+❌ Get-OrchAuditLog.md                  [テナント ] 未着手
+❌ Get-OrchAuthenticationSetting.md     [テナント ] 未着手
+❌ Get-OrchBucketItem.md                [フォルダ  ] 未着手
+❌ Get-OrchCalendar.md                  [フォルダ  ] 未着手
+❌ Get-OrchClassicEnvironment.md        [フォルダ  ] 未着手
+❌ Get-OrchClassicRobot.md              [フォルダ  ] 07/07 16:32完了
+❌ Get-OrchConnectionString.md          [テナント ] 未着手
+❌ Get-OrchCredentialStore.md           [フォルダ  ] 未着手
+❌ Get-OrchCurrentUser.md               [テナント ] 未着手
+❌ Get-OrchExecutionSetting.md          [テナント ] 未着手
+❌ Get-OrchFolderMachine.md             [フォルダ  ] 未着手
+❌ Get-OrchFolderMachineAccountMapping.md [フォルダ  ] 未着手
+❌ Get-OrchFolderUsage.md               [フォルダ  ] 未着手
+❌ Get-OrchFolderUser.md                [フォルダ  ] 未着手
+❌ Get-OrchHelp.md                      [特殊    ] 未着手
+❌ Get-OrchJobMedia.md                  [フォルダ  ] 未着手
+❌ Get-OrchJobVideo.md                  [フォルダ  ] 未着手
+✅ Get-OrchLibraryVersion.md [テナント ] 07/08 12:22完了 - Examples: 1-4,6-7⚠️→推奨修正 5✅ (動作OK・豊富データ・同プロンプト問題)
+✅ Get-OrchLicenseNamedUser.md [テナント ] 07/08 12:16完了 - Examples: 1-5⚠️→推奨修正 6✅ (動作OK・同プロンプト問題)
+✅ Get-OrchLicenseRuntime.md [テナント ] 07/08 12:12完了 - Examples: 1-5⚠️→推奨修正 6✅ (動作OK・プロンプト改善余地)
+✅ Get-OrchLicenseStats.md [テナント ] 07/08 12:04完了 - Examples: 1⚠️→推奨修正 2✅ 3✅ 4✅ 5✅ (ほぼ良好・Example1プロンプトのみ要改善)
+⚠️ Get-OrchLog.md [フォルダ  ] 07/08 11:58チェック完了 - Examples: 1✅ 2❌→要修正 3✅ 4❌→要修正 5✅ 6❌→要修正 (Level配列エラー・プロンプト不適切)
+✅ Get-OrchMachineClientSecretId.md [テナント ] 07/08 11:52完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ (品質良好・実データ検証済み)
+✅ Get-OrchMachineSession.md        [テナント ] 07/08 10:10 完了 - Examples: 1✅ 2✅ 3✅ 4✅ (6→4個統合)
+✅ Get-OrchPackageVersion.md        [テナント ] 07/08 09:58 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ (品質良好・実データ豊富)
+✅ Get-OrchPersonalWorkspace.md    [テナント  ] 07/08 08:46完了 - Examples: 1✅ 2✅ 3❌→✅ 4✅ 5✅ 6✅ (-Path任意場所実行対応)
+❌ Get-OrchPSDrive.md                 [特殊    ] 07/08 20:17完了
+✅ Get-OrchQueueItem.md            [フォルダ  ] 07/08 09:54 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ (品質良好・特殊フィルタ)
+✅ Get-OrchTestCase.md             [フォルダ  ] 07/08 09:49 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ (10→5個統合)
+✅ Get-OrchTestCaseExecution.md      [フォルダ  ] 07/08 09:36 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ (品質良好・プレースホルダー有)
+✅ Get-OrchTestDataQueue.md        [フォルダ  ] 07/08 09:32 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ (品質良好・修正不要)
+✅ Get-OrchTestDataQueueItem.md     [フォルダ  ] 07/08 09:28 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5❌→✅ 6❌→✅ (フォルダ名修正・プロンプト適正化)
+❌ Get-OrchTestDataQueueItemTable.md    [フォルダ  ] 未着手
+✅ Get-OrchTestSet.md             [フォルダ  ] 07/08 09:21完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5❌→✅ (実在フォルダ修正)
+✅ Get-OrchTestSetExecution.md      [フォルダ  ] 07/08 09:17完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ (適正数に調整)
+✅ Get-OrchTestSetSchedule.md       [フォルダ  ] 07/08 09:09完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ 7✅ (ルート動作可)
+✅ Get-OrchUnattendedSession.md     [テナント  ] 07/08 09:05完了 - Examples: 1✅ 2❌→✅ 3✅ 4✅ 5✅ 6✅ (実データ基準)
+✅ Get-OrchUpdateSetting.md             [テナント ] 07/08 20:35完了
+❌ Get-OrchUserPrivilege.md             [テナント ] 未着手
+❌ Get-OrchUserSession.md               [テナント ] 未着手
+❌ Get-OrchWebSetting.md                [テナント ] 未着手
+
+### 🔍 Pm-*系 (Platform Management) - 8ファイル
+❌ Get-PmExternalApiResource.md         [組織    ] 未着手
+❌ Get-PmExternalApplication.md         [組織    ] 未着手
+❌ Get-PmGroup.md                       [組織    ] 未着手
+❌ Get-PmGroupMember.md                 [組織    ] 未着手
+❌ Get-PmLicensedUser.md                [組織    ] 未着手
+❌ Get-PmUser.md                        [組織    ] 未着手
+❌ Get-PmAuditLog.md                    [組織    ] 未着手
+❌ Get-PmLicensedGroup.md               [組織    ] 未着手
+❌ Get-PmRobotAccount.md                [組織    ] 未着手
+
+### 🔍 Tm-*系 (Test Manager) - 7ファイル  
+❌ Get-TmConfiguration.md               [TestMgr ] 未着手
+❌ Get-TmProjectPermission.md           [TestMgr ] 未着手
+❌ Get-TmProjectSetting.md              [TestMgr ] 未着手
+❌ Get-TmServerInfo.md                  [TestMgr ] 未着手
+❌ Get-TmTestCase.md                    [TestMgr ] 未着手
+❌ Get-TmTestSet.md                     [TestMgr ] 未着手
+❌ Get-TmRequirement.md                 [TestMgr ] 未着手
+
+### 🔍 Du-*系 (Document Understanding) - 5ファイル
+❌ Get-DuExtractor.md                   [DocUnder] 未着手
+❌ Get-DuRole.md                        [DocUnder] 未着手
+❌ Get-DuUser.md                        [DocUnder] 未着手
+❌ Get-DuClassifier.md                  [DocUnder] 未着手
+❌ Get-DuDocumentType.md                [DocUnder] 未着手
+
+### ➕ Add-*系 (追加系) - 10ファイル
+❌ Add-DuUser.md                        [DocUnder] 未着手
+❌ Add-OrchAssetLink.md                 [フォルダ  ] 未着手
+❌ Add-OrchCalendarDate.md              [フォルダ  ] 未着手
+❌ Add-OrchFolderMachine.md             [フォルダ  ] 未着手
+❌ Add-OrchFolderUser.md                [フォルダ  ] 未着手
+❌ Add-OrchMachineClientSecret.md       [テナント ] 未着手
+❌ Add-OrchRoleToFolderUser.md          [フォルダ  ] 未着手
+✅ Add-OrchUser.md          [テナント ] 07/08 11:23 完了 - Examples: 1✅ 2✅ 3✅ 4✅ 5✅ 6✅ (コード記法修正・安全性向上・Add系初)
+❌ Add-PmGroupMember.md                 [組織    ] 未着手
+❌ Add-PmLicenseToPmLicensedGroup.md    [組織    ] 未着手
+
+### 📋 Copy-*系 (コピー系) - 31ファイル
+❌ Copy-OrchActionCatalog.md            [テナント ] 未着手
+❌ Copy-OrchApiTrigger.md               [フォルダ  ] 未着手
+❌ Copy-OrchAsset.md                    [フォルダ  ] 未着手
+❌ Copy-OrchBucket.md                   [フォルダ  ] 未着手
+❌ Copy-OrchCalendar.md                 [フォルダ  ] 未着手
+❌ Copy-OrchCredentialStore.md          [フォルダ  ] 未着手
+❌ Copy-OrchFolderMachine.md            [フォルダ  ] 未着手
+❌ Copy-OrchFolderUser.md               [フォルダ  ] 未着手
+❌ Copy-OrchLibrary.md                  [テナント ] 未着手
+❌ Copy-OrchMachine.md                  [テナント ] 未着手
+❌ Copy-OrchPackage.md                  [テナント ] 未着手
+❌ Copy-OrchProcess.md                  [フォルダ  ] 未着手
+❌ Copy-OrchQueue.md                    [フォルダ  ] 未着手
+❌ Copy-OrchQueueItem.md                [フォルダ  ] 未着手
+❌ Copy-OrchRole.md                     [テナント ] 未着手
+❌ Copy-OrchTestDataQueue.md            [フォルダ  ] 未着手
+❌ Copy-OrchTestSet.md                  [フォルダ  ] 未着手
+❌ Copy-OrchTestSetSchedule.md          [フォルダ  ] 未着手
+❌ Copy-OrchTrigger.md                  [フォルダ  ] 未着手
+❌ Copy-OrchUser.md                     [テナント ] 未着手
+❌ Copy-OrchWebhook.md                  [テナント ] 未着手
+❌ Copy-PmExternalApplication.md        [組織    ] 未着手
+❌ Copy-PmGroup.md                      [組織    ] 未着手
+❌ Copy-PmRobotAccount.md               [組織    ] 未着手
+❌ Copy-PmUser.md                       [組織    ] 未着手
+❌ (他26ファイル)
+
+### 🆕 New-*系 (新規作成系) - 6ファイル
+❌ New-OrchBucket.md                    [フォルダ  ] 未着手
+❌ New-OrchMachine.md                   [テナント ] 未着手
+❌ New-OrchProcess.md                   [フォルダ  ] 未着手
+❌ New-OrchTrigger.md                   [フォルダ  ] 未着手
+❌ New-PmGroup.md                       [組織    ] 未着手
+❌ New-PmUser.md                        [組織    ] 未着手
+❌ New-OrchQueue.md                     [フォルダ  ] 未着手
+
+### 🗑 Remove-*系 (削除系) - 30ファイル
+❌ Remove-DuRoleFromDuUser.md           [DocUnder] 未着手
+❌ Remove-OrchActionCatalog.md          [テナント ] 未着手
+❌ Remove-OrchApiTrigger.md             [フォルダ  ] 未着手
+❌ Remove-OrchBucket.md                 [フォルダ  ] 未着手
+❌ Remove-OrchCalendarDate.md           [フォルダ  ] 未着手
+❌ Remove-OrchFolderMachine.md          [フォルダ  ] 未着手
+❌ Remove-OrchFolderUser.md             [フォルダ  ] 未着手
+❌ Remove-OrchJobMedia.md               [フォルダ  ] 未着手
+❌ Remove-OrchLibrary.md                [テナント ] 未着手
+❌ Remove-OrchMachineClientSecret.md    [テナント ] 未着手
+❌ Remove-OrchPackage.md                [テナント ] 未着手
+❌ Remove-OrchPersonalWorkspace.md      [テナント ] 未着手
+❌ Remove-OrchProcess.md                [フォルダ  ] 未着手
+❌ Remove-OrchQueue.md                  [フォルダ  ] 未着手
+❌ Remove-OrchQueueItem.md              [フォルダ  ] 未着手
+❌ Remove-OrchRoleFromFolderUser.md     [フォルダ  ] 未着手
+❌ Remove-OrchRoleFromUser.md           [テナント ] 未着手
+❌ Remove-OrchTestCase.md               [フォルダ  ] 未着手
+❌ Remove-OrchTestDataQueue.md          [フォルダ  ] 未着手
+❌ Remove-OrchTestSet.md                [フォルダ  ] 未着手
+❌ Remove-OrchTestSetSchedule.md        [フォルダ  ] 未着手
+❌ Remove-OrchTrigger.md                [フォルダ  ] 未着手
+❌ Remove-OrchUser.md                   [テナント ] 未着手
+❌ Remove-PmAllocationFromPmLicensedGroup.md [組織    ] 未着手
+❌ Remove-PmExternalApplication.md      [組織    ] 未着手
+❌ Remove-PmGroupMember.md              [組織    ] 未着手
+❌ Remove-PmLicensedGroup.md            [組織    ] 未着手
+❌ Remove-PmLicenseFromPmLicensedGroup.md [組織    ] 未着手
+❌ Remove-PmUser.md                     [組織    ] 未着手
+❌ Remove-TmRequirement.md              [TestMgr ] 未着手
+❌ Remove-TmTestCase.md                 [TestMgr ] 未着手
+❌ Remove-TmTestSet.md                  [TestMgr ] 未着手
+
+### 🔄 Update-*系 (更新系) - 9ファイル
+❌ Update-OrchCurrentUserURPassword.md [テナント ] 未着手
+❌ Update-OrchMachine.md                [テナント ] 未着手
+❌ Update-OrchProcess.md                [フォルダ  ] 未着手
+❌ Update-OrchProcessVersion.md         [フォルダ  ] 未着手
+❌ Update-OrchQueue.md                  [フォルダ  ] 未着手
+❌ Update-OrchTrigger.md                [フォルダ  ] 未着手
+❌ Update-OrchUser.md                   [テナント ] 未着手
+❌ Update-PmUser.md                     [組織    ] 未着手
+❌ Update-MarkdownHelp.md               [特殊    ] 未着手
+
+### ⚙ Set-*系 (設定系) - 4ファイル
+❌ Set-OrchAsset.md                     [フォルダ  ] 未着手
+❌ Set-OrchCredentialAsset.md           [フォルダ  ] 未着手
+❌ Set-OrchLocation.md                  [特殊    ] 未着手
+❌ Set-OrchRole.md                      [テナント ] 未着手
+❌ Set-PmRobotAccount.md                [組織    ] 未着手
+
+### 🔌 Enable/Disable-*系 (制御系) - 16ファイル
+❌ Enable-OrchApiTrigger.md             [フォルダ  ] 未着手
+❌ Disable-OrchApiTrigger.md            [フォルダ  ] 未着手
+❌ Enable-OrchFolderMachineInherit.md   [フォルダ  ] 未着手
+❌ Disable-OrchFolderMachineInherit.md  [フォルダ  ] 未着手
+❌ Enable-OrchFolderMachineAccountMapping.md [フォルダ  ] 未着手
+❌ Disable-OrchFolderMachineAccountMapping.md [フォルダ  ] 未着手
+❌ Enable-OrchLicenseRuntime.md         [テナント ] 未着手
+❌ Disable-OrchLicenseRuntime.md        [テナント ] 未着手
+❌ Enable-OrchMaintenanceMode.md        [特殊    ] 未着手
+❌ Disable-OrchMaintenanceMode.md       [特殊    ] 未着手
+❌ Enable-OrchPersonalWorkspace.md      [テナント ] 未着手
+❌ Disable-OrchPersonalWorkspace.md     [テナント ] 未着手
+❌ Enable-OrchTestSetSchedule.md        [フォルダ  ] 未着手
+❌ Disable-OrchTestSetSchedule.md       [フォルダ  ] 未着手
+❌ Enable-OrchTrigger.md                [フォルダ  ] 未着手
+❌ Disable-OrchTrigger.md               [フォルダ  ] 未着手
+❌ Enable-OrchUserAttended.md           [テナント ] 未着手
+❌ Disable-OrchUserAttended.md          [テナント ] 未着手
+❌ Enable-OrchWebhook.md                [テナント ] 未着手
+❌ Disable-OrchWebhook.md               [テナント ] 未着手
+
+### 🚀 その他機能系 - 22ファイル
+❌ Clear-OrchCache.md                   [特殊    ] 未着手
+❌ Edit-OrchConfig.md                   [特殊    ] 未着手
+❌ Edit-OrchProcess.md                  [フォルダ  ] 未着手
+❌ Export-OrchJobMedia.md               [フォルダ  ] 未着手
+❌ Export-OrchLibrary.md                [テナント ] 未着手
+❌ Export-OrchPackage.md                [テナント ] 未着手
+❌ Find-OrchFolderNoUserAssigned.md     [フォルダ  ] 未着手
+❌ Import-OrchLibrary.md                [テナント ] 未着手
+❌ Import-OrchPackage.md                [テナント ] 未着手
+❌ Import-OrchQueueItem.md              [フォルダ  ] 未着手
+❌ Move-OrchFolderUser.md               [フォルダ  ] 未着手
+❌ Move-PmGroupMember.md                [組織    ] 未着手
+❌ Open-OrchJob.md                      [フォルダ  ] 未着手
+❌ Open-OrchLogLocation.md              [特殊    ] 未着手
+❌ Redo-OrchQueueItem.md                [フォルダ  ] 未着手
+❌ Reset-OrchProcessVersion.md          [フォルダ  ] 未着手
+❌ Reset-OrchTestDataQueueItem.md       [フォルダ  ] 未着手
+❌ Resolve-PmDirectoryNameBulk.md       [組織    ] 未着手
+❌ Search-OrchDirectory.md              [特殊    ] 未着手
+❌ Search-PmDirectory.md                [組織    ] 未着手
+❌ Start-OrchJob.md                     [フォルダ  ] 未着手
+❌ Start-OrchTestSet.md                 [フォルダ  ] 未着手
+❌ Stop-OrchJob.md                      [フォルダ  ] 未着手
+❌ Stop-OrchTestSetExecution.md         [フォルダ  ] 未着手
+❌ UiPathOrch.md                        [特殊    ] 未着手
+
+## ═══════════════════════════════════════════════════════════════
+## 📈 統計情報
+## ═══════════════════════════════════════════════════════════════
+フォルダエンティティ:  87ファイル
+テナントエンティティ:  63ファイル  
+組織エンティティ:      25ファイル
+TestManager:          7ファイル
+DocumentUnderstanding: 5ファイル
+特殊:                 35ファイル
+
+## ═══════════════════════════════════════════════════════════════
+## ⚡ 今日の作業計画
+## ═══════════════════════════════════════════════════════════════
+目標: Get-OrchQueue.md 品質チェック完了
+所要時間予想: 30-45分
+参考テンプレート: Get-OrchBucket.md (既完了)
+
+## ═══════════════════════════════════════════════════════════════
+## 📝 作業記録領域
+## ═══════════════════════════════════════════════════════════════
+[ここに作業記録を追記]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

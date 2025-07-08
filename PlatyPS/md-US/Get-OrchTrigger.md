@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -48,52 +48,24 @@ Displays all triggers in the current folder and all its subfolders. When run in 
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchTrigger -Recurse <trigger names>
+PS C:\> Get-OrchTrigger -Path Orch1:\ -Recurse *Schedule*
 ```
 
-Displays triggers with the names specified in the current folder and its subfolders. This is useful for identifying which folders contain triggers with a specified names. You can specify multiple trigger names, separated by commas, including wildcards. Trigger names can be auto-completed with [Ctrl+Space] or [Tab].
+Gets triggers containing 'Schedule' in their name from all folders recursively.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchTrigger -Path <folder names> <trigger names>
-```
-
-Displays triggers with the names specified in the specified folders. You can specify multiple folders, separated by commas, including wildcards.
-
-### Example 5
-```powershell
-PS C:\> Get-OrchTrigger -Recurse -Path Orch1:\,Orch2:\
-```
-
-Displays all triggers in Orch1: and Orch2:.
-
-### Example 6
-```powershell
-PS Orch1:\> Get-OrchTrigger -Recurse | select Path,Id,Name
+PS Orch1:\Shared> Get-OrchTrigger | select Path,Id,Name
 ```
 
 Displays output with only the selected columns. Specify multiple columns separated by commas, including wildcards. Column names can be auto-completed with [Ctrl+Space] or [Tab].
 
-### Example 7
+### Example 5
 ```powershell
-PS Orch1:\> Get-OrchTrigger -Recurse | Export-Csv c:triggers.csv
-```
-
-Exports the output to a CSV file. The CSV file will be located at the current location of the C: drive. You can customize the CSV format by combining with `select` to specify which columns to include. Try `ii c:` to open the current location of the C: drive.
-
-### Example 8
-```powershell
-PS Orch1:\> Get-OrchTrigger -Recurse | ConvertTo-Json
+PS Orch1:\Shared> Get-OrchTrigger | ConvertTo-Json
 ```
 
 Converts the output to JSON format, providing a raw view of the data from Orchestrator.
-
-### Example 9
-```powershell
-PS C:\>Get-OrchTrigger -Path Orch1:\ -Recurse | Where-Object { $_.ReleaseName -eq 'Process01' }
-```
-
-Outputs all processes in the Orch1 tenant that use the package named Process01.
 
 ## PARAMETERS
 
@@ -230,5 +202,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 Main endpoint called: GET /odata/ProcessSchedules
 
 Required Scope: OR.Jobs.Read
+
+
+
+Primary Endpoint: GET /odata/ProcessSchedules
+OAuth required scopes: OR.Jobs or OR.Jobs.Read
+Required permissions: Schedules.View
 
 ## RELATED LINKS

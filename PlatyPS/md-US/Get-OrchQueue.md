@@ -206,6 +206,12 @@ Queues support various configurations including retry policies, encryption, SLA 
 
 The -ExportCsv parameter creates import-ready CSV files with human-readable names instead of internal IDs.
 
+
+
+Primary Endpoint: GET /odata/QueueDefinitions
+OAuth required scopes: OR.Queues or OR.Queues.Read
+Required permissions: Queues.View
+
 ## RELATED LINKS
 
 [New-OrchQueue](New-OrchQueue.md)

@@ -26,11 +26,11 @@ Use the -Id parameter to specify which libraries to copy by their unique identif
 
 This is a tenant entity cmdlet. The -Path parameter specifies the source drive name (e.g., Orch1:, Orch2:), and -Destination specifies the target tenant drives where libraries should be copied.
 
-Primary Endpoint: [PLACEHOLDER]
+Primary Endpoint: GET /odata/Libraries/UiPath.Server.Configuration.OData.GetVersions(packageId='{packageId}'), GET /odata/Libraries/UiPath.Server.Configuration.OData.DownloadPackage(key='{key}'), POST /odata/Libraries/UiPath.Server.Configuration.OData.UploadPackage
 
-OAuth required scopes: [PLACEHOLDER]
+OAuth required scopes: OR.Execution
 
-Required permissions: [PLACEHOLDER]
+Required permissions: Libraries.View, Libraries.Create
 
 ## EXAMPLES
 

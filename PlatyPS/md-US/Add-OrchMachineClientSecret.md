@@ -24,11 +24,11 @@ Client secrets provide a secure authentication mechanism for unattended automati
 
 The cmdlet generates a new client secret for the specified machine(s) and returns the secret information that needs to be configured on the robot machines. This operation is essential for setting up secure unattended robot authentication.
 
-Primary Endpoint: POST /api/clientsecrets/{licenseKey}
+Primary Endpoint: GET /odata/Machines, POST /api/clientsecrets/{machineId}
 
-OAuth required scopes: OR.Machines or OR.Machines.Write
+OAuth required scopes: [PLACEHOLDER]
 
-Required permissions: Machines.Edit
+Required permissions: [PLACEHOLDER]
 
 ## EXAMPLES
 

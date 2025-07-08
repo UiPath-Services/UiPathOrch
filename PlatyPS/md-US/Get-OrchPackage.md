@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,6 +18,10 @@ Get-OrchPackage [[-Id] <String[]>] [-Path <String[]>] [-Recurse] [-ProgressActio
 ```
 
 ## DESCRIPTION
+Process packages exist in both tenant feeds (tenant-wide scope) and folder feeds (folder-specific scope). This cmdlet operates as both a tenant entity and folder entity, depending on the context.
+
+Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify target folders using -Path, -Recurse parameters. For tenant-wide package access, specify the tenant drive (e.g., Orch1:) in the -Path parameter.
+
 The Get-OrchPackage cmdlet retrieves process packages from UiPath Orchestrator. This cmdlet allows you to list packages from tenant feeds or folder feeds, with options to filter by ID, specify target folders, and include subfolders recursively.
 
 Primary Endpoint: GET /odata/Processes&feedId={feedId}
@@ -37,24 +41,32 @@ Gets all process packages in the current folder context.
 
 ### Example 2
 ```powershell
-PS Orch1:\> Get-OrchPackage -Path Shared
+PS Orch1:\> Get-OrchPackage -Recurse
 ```
 
-Gets all process packages from the "Shared" folder.
+Gets all process packages from all folders recursively.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchPackage ProcessA*
+PS Orch1:\> Get-OrchPackage -Path Orch1:\Production *Process*
 ```
 
-Gets process packages with IDs that start with "ProcessA" using wildcard matching.
+Gets process packages with IDs starting with "ProcessA" from the Production folder.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchPackage -Path Orch1:\Production, Orch1:\Development
+PS C:\> Get-OrchPackage -Path Orch1: *Blank*
 ```
 
-Gets all process packages from both "Production" and "Development" folders.
+Gets TestProcess package from the tenant feed (entire tenant scope).
+
+### Example 5
+```powershell
+PS Orch1:\> Get-OrchPackage -Recurse | Select-Object Path, Id, Version, IsActive
+```
+
+Gets all packages recursively and displays key properties with Path shown first.
+
 
 ## PARAMETERS
 
@@ -129,6 +141,12 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### UiPath.PowerShell.Entities.Package
 ## NOTES
 - If no active connection exists, the cmdlet will automatically establish a connection to UiPath Orchestrator. For non-confidential applications, PKCE authentication (browser login) will be initiated on the first cmdlet execution.
+
+
+
+Primary Endpoint: GET /odata/Libraries
+OAuth required scopes: OR.Execution or OR.Execution.Read
+Required permissions: Libraries.View
 
 ## RELATED LINKS
 

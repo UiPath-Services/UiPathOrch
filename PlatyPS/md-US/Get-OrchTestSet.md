@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,50 +34,43 @@ Required permissions: TestSets.View
 
 ### Example 1
 ```powershell
-Get-OrchTestSet
+PS Orch1:\Shared> Get-OrchTestSet
 ```
 
 Gets all test sets in the current folder.
 
 ### Example 2
 ```powershell
-Get-OrchTestSet RegressionTests
+PS Orch1:\Shared> Get-OrchTestSet RegressionTests
 ```
 
-Gets the test set named "RegressionTests" from the current folder.
+Gets the test set named "RegressionTests" from the current folder using positional parameter.
 
 ### Example 3
 ```powershell
-Get-OrchTestSet *Smoke*
+PS Orch1:\Shared> Get-OrchTestSet *Smoke*
 ```
 
-Gets all test sets whose names contain "Smoke".
+Gets all test sets whose names contain "Smoke" using wildcard pattern matching.
 
 ### Example 4
 ```powershell
-Get-OrchTestSet -Recurse
+PS Orch1:\> Get-OrchTestSet -Recurse
 ```
 
-Gets all test sets from the current folder and all its subfolders.
+Gets all test sets from the current folder and all its subfolders recursively.
 
 ### Example 5
 ```powershell
-Get-OrchTestSet -Path Orch1:\Development, Orch1:\Testing UITests
+PS C:\> Get-OrchTestSet -Path Orch1:\Production, Orch1:\Shared UITests
 ```
 
-Gets the "UITests" test set from both Development and Testing folders.
-
-### Example 6
-```powershell
-Get-OrchTestSet | Where-Object {$_.TestCases.Count -gt 5}
-```
-
-Gets all test sets that contain more than 5 test cases.
+Gets the "UITests" test set from both Production and Shared folders, demonstrating execution from any location.
 
 ## PARAMETERS
 
 ### -Depth
-Specifies the depth for recursion into the target folders. A depth of 0 indicates the current location only, with no subfolders included.
+{{ Fill Depth Description }}
 
 ```yaml
 Type: UInt32
@@ -92,7 +85,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-Specifies the Name of the test sets to be retrieved.
+{{ Fill Name Description }}
 
 ```yaml
 Type: String[]
@@ -107,7 +100,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the target folder. If not specified, the current folder will be targeted.
+{{ Fill Path Description }}
 
 ```yaml
 Type: String[]
@@ -122,7 +115,7 @@ Accept wildcard characters: True
 ```
 
 ### -Recurse
-Specifies that the operation should include the target folder and all its subfolders.
+{{ Fill Recurse Description }}
 
 ```yaml
 Type: SwitchParameter
@@ -156,16 +149,14 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Test set names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.TestSet
-Test set objects can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
-
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.TestSet
-
 ## NOTES
+
+
+
+Primary Endpoint: GET /odata/TestSets
+OAuth required scopes: OR.TestSets or OR.TestSets.Read
+Required permissions: TestSets.View
 
 ## RELATED LINKS

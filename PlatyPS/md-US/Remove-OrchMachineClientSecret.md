@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: uiPathOrch
 online version:
@@ -24,7 +24,7 @@ Primary Endpoint: DELETE /api/clientsecrets/{secretId}
 
 OAuth required scopes: OR.Machines
 
-Required permissions:
+Required permissions: [PLACEHOLDER]
 
 ## EXAMPLES
 

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,45 +34,45 @@ Required permissions: TestDataQueueItems.View
 
 ### Example 1
 ```powershell
-Get-OrchTestDataQueueItem
+PS Orch1:\Shared> Get-OrchTestDataQueueItem
 ```
 
 Gets all test data queue items in the current folder.
 
 ### Example 2
 ```powershell
-Get-OrchTestDataQueueItem CustomerData
+PS Orch1:\Shared> Get-OrchTestDataQueueItem CustomerData
 ```
 
 Gets all items from the test data queue named "CustomerData" in the current folder.
 
 ### Example 3
 ```powershell
-Get-OrchTestDataQueueItem *Data*
+PS Orch1:\Shared> Get-OrchTestDataQueueItem *Data*
 ```
 
 Gets all items from test data queues whose names contain "Data".
 
 ### Example 4
 ```powershell
-Get-OrchTestDataQueueItem -Recurse
+PS Orch1:\> Get-OrchTestDataQueueItem -Recurse
 ```
 
 Gets all test data queue items from the current folder and all its subfolders.
 
 ### Example 5
 ```powershell
-Get-OrchTestDataQueueItem -Path Orch1:\Development, Orch1:\Testing UserTestData
+PS C:\> Get-OrchTestDataQueueItem -Path Orch1:\Development, Orch1:\Production UserTestData
 ```
 
-Gets all items from the "UserTestData" queue in both Development and Testing folders.
+Gets all items from the "UserTestData" queue in both Development and Production folders.
 
 ### Example 6
 ```powershell
-Get-OrchTestDataQueue TestData* | Get-OrchTestDataQueueItem
+PS Orch1:\Shared> Get-OrchTestDataQueueItem | ConvertTo-Json -Depth 2
 ```
 
-Gets all test data queue items from queues whose names start with "TestData". The queue names are passed via pipeline using ByPropertyName binding.
+Displays test data queue items in JSON format for detailed analysis of data structure and content.
 
 ## PARAMETERS
 
@@ -166,5 +166,11 @@ Test data queue objects can be piped to this cmdlet. The Name property will be a
 
 ### UiPath.PowerShell.Entities.TestDataQueueItem
 ## NOTES
+
+
+
+Primary Endpoint: GET /odata/TestDataQueues
+OAuth required scopes: OR.TestDataQueues or OR.TestDataQueues.Read
+Required permissions: TestDataQueues.View
 
 ## RELATED LINKS

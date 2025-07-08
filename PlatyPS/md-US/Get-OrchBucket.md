@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,42 +34,42 @@ Required permissions: Buckets.View
 
 ### Example 1
 ```powershell
-Get-OrchBucket
+PS Orch1:\Production> Get-OrchBucket
 ```
 
-Retrieves all storage buckets configured in the current folder using positional parameters.
+Retrieves all storage buckets configured in the Production folder, demonstrating basic folder entity usage.
 
 ### Example 2
 ```powershell
-Get-OrchBucket -Path Orch1:\Production *Data*
+PS C:\> Get-OrchBucket -Path Orch1:\Production *Bucket*
 ```
 
-Gets all storage buckets with names containing "Data" in the Production folder, demonstrating -Path parameter priority and positional parameter usage.
+Gets all storage buckets with names containing "Bucket" in the Production folder, demonstrating -Path parameter priority and wildcard filtering.
 
 ### Example 3
 ```powershell
-Get-OrchBucket -Recurse ProjectBucket
+PS Orch1:\> Get-OrchBucket -Recurse TestBucket2
 ```
 
-Gets the "ProjectBucket" storage bucket across all folders recursively, showing -Recurse parameter priority.
+Gets the "TestBucket2" storage bucket across all folders recursively, showing -Path and -Recurse parameter priority.
 
 ### Example 4
 ```powershell
-Get-OrchBucket | Where-Object {$_.FoldersCount -gt 0}
+PS Orch1:\> Get-OrchBucket -Recurse | Where-Object {$_.FoldersCount -gt 0}
 ```
 
 Gets all storage buckets that contain items (FoldersCount > 0) using pipeline processing.
 
 ### Example 5
 ```powershell
-Get-OrchBucket | ConvertTo-Json -Depth 2
+PS Orch1:\Production> Get-OrchBucket | ConvertTo-Json -Depth 2
 ```
 
 Displays detailed bucket properties in JSON format, including Path, Id, Name, Identifier GUID, StorageProvider, StorageContainer, Options, FoldersCount, and Tags array.
 
 ### Example 6
 ```powershell
-Get-OrchBucket -Path Orch1:\Development -ExportCsv StorageBuckets.csv
+PS Orch1:\Development> Get-OrchBucket -ExportCsv StorageBuckets.csv
 ```
 
 Exports storage bucket configurations to CSV file for documentation and backup purposes.
@@ -199,6 +199,12 @@ Returns Bucket objects containing information about configured storage buckets. 
 
 ## NOTES
 This cmdlet is a folder entity operation requiring navigation to a folder context or path specification using -Path parameter. Storage buckets provide external storage integration for automation processes. Use -Recurse and -Depth parameters to control the scope of bucket discovery across folder hierarchies. This operation requires Buckets.View permissions in the target folders.
+
+
+
+Primary Endpoint: GET /odata/Buckets
+OAuth required scopes: OR.Administration or OR.Administration.Read
+Required permissions: Buckets.View
 
 ## RELATED LINKS
 

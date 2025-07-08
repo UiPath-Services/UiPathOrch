@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -22,11 +22,11 @@ The `Copy-OrchMachine` cmdlet copies machine templates from the current UiPath O
 
 The cmdlet operates on tenant entities, copying machine templates including their configuration settings such as slots allocation, scope, automation type, and other properties. Note that sensitive information like license keys and client secrets are regenerated for the destination tenant.
 
-Primary Endpoint: POST /odata/Machines
+Primary Endpoint: GET /odata/Machines, POST /odata/Machines
 
-OAuth required scopes: OR.Machines or OR.Machines.Write
+OAuth required scopes: OR.Machines
 
-Required permissions: Machines.Create
+Required permissions: Machines.View, Machines.Create
 
 ## EXAMPLES
 

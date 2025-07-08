@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -24,11 +24,11 @@ Only custom (non-static) roles can be copied. Static roles are built-in and cann
 
 The cmdlet preserves role permissions, descriptions, and other configuration details during the copy operation.
 
-Primary Endpoint: POST /odata/Roles
+Primary Endpoint: GET /odata/Roles, POST /odata/Roles
 
-OAuth required scopes: OR.Users.Write
+OAuth required scopes: OR.Users
 
-Required permissions: Roles.Create (destination), Roles.View (source)
+Required permissions: Roles.View, Roles.Create
 
 ## EXAMPLES
 
