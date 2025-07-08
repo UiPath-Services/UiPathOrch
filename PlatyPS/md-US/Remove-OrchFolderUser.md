@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -22,7 +22,7 @@ Remove-OrchFolderUser [[-UserName] <String[]>] [[-FullName] <String[]>] [-NoMatc
 
 Primary Endpoint: POST /odata/Folders({folderId})/UiPath.Server.Configuration.OData.RemoveUserFromFolder
 
-OAuth required scopes: OR.Folders
+OAuth required scopes: OR.Folders or OR.Folders.Write
 
 Required permissions: (Units.Edit or SubFolders.Edit - Remove user from any folder or only if caller has SubFolders.Edit permission on provided folder)
 

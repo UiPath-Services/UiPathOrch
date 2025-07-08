@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -41,10 +41,10 @@ Retrieves all available versions of the "UiPath.Excel.Activities" library.
 
 ### Example 2
 ```powershell
-PS C:\> Get-OrchLibraryVersion UiPath.Excel.Activities 2.11.4
+PS C:\> Get-OrchLibraryVersion UiPath.Excel.Activities | ConvertTo-Json -Depth 2
 ```
 
-Retrieves the specific version "2.11.4" of the "UiPath.Excel.Activities" library.
+Displays all versions of "UiPath.Excel.Activities" library with detailed properties in JSON format for structure analysis.
 
 ### Example 3
 ```powershell
@@ -76,10 +76,10 @@ Gets all versions of "MyLibrary" and displays the 5 most recent versions.
 
 ### Example 7
 ```powershell
-PS C:\> Get-OrchLibraryVersion MyLibrary | Where-Object {$_.IsPrerelease -eq $false} | ConvertTo-Json -Depth 3
+PS C:\> Get-OrchLibraryVersion MyLibrary | Where-Object {$_.IsPrerelease -eq $false} | Select-Object Id, Version, Published
 ```
 
-Retrieves only stable (non-prerelease) versions of "MyLibrary" and displays the detailed structure in JSON format.
+Retrieves only stable (non-prerelease) versions of "MyLibrary" and displays key version information.
 
 ## PARAMETERS
 
@@ -182,6 +182,12 @@ This cmdlet is particularly useful for version management and dependency analysi
 The returned objects include IsPrerelease property to distinguish between stable and prerelease versions.
 
 Use ConvertTo-Json with appropriate depth settings to explore the complete structure of library version objects, as they contain detailed metadata that may not be visible in the default display format.
+
+
+
+Primary Endpoint: GET /odata/Libraries/UiPath.Server.Configuration.OData.GetVersions
+OAuth required scopes: OR.Execution or OR.Execution.Read
+Required permissions: Libraries.View
 
 ## RELATED LINKS
 

@@ -20,6 +20,8 @@ Get-OrchClassicEnvironment [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-
 ## DESCRIPTION
 The Get-OrchClassicEnvironment cmdlet retrieves classic environment configurations from UiPath Orchestrator. Classic environments are the legacy robot grouping mechanism used before the modern folder-based approach, containing robot collections and their associated processes.
 
+Classic environments are folder entities that exist within specific folders. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.
+
 This is a folder entity cmdlet. To use this cmdlet, you must first navigate to the target folder using Set-Location (cd), or specify the target folders using -Path, -Recurse, or -Depth parameters.
 
 Classic environments provide backward compatibility for existing robot deployments and are primarily used for migrating from older Orchestrator versions to the modern folder structure.
@@ -34,52 +36,38 @@ Required permissions: Environments.View
 
 ### Example 1
 ```powershell
-Get-OrchClassicEnvironment
+PS Orch1:\Legacy> Get-OrchClassicEnvironment
 ```
 
 Gets all classic environments in the current folder.
 
 ### Example 2
 ```powershell
-Get-OrchClassicEnvironment Production
+PS Orch1:\> Get-OrchClassicEnvironment -Recurse
 ```
 
-Gets the classic environment named "Production" from the current folder.
+Gets all classic environments from all folders recursively.
 
 ### Example 3
 ```powershell
-Get-OrchClassicEnvironment *Test*
+PS Orch1:\> Get-OrchClassicEnvironment -Path Orch1:\Legacy *Test*
 ```
 
-Gets all classic environments whose names contain "Test".
+Gets classic environments whose names contain "Test" from the Legacy folder.
 
 ### Example 4
 ```powershell
-Get-OrchClassicEnvironment -Recurse
+PS Orch1:\> Get-OrchClassicEnvironment -Recurse | ConvertTo-Json -Depth 2
 ```
 
-Gets all classic environments from the current folder and all its subfolders.
+Gets all classic environments and displays the complete structure including nested Robots array.
 
 ### Example 5
 ```powershell
-Get-OrchClassicEnvironment -Path Orch1:\Legacy, Orch1:\Migration
+PS C:\> Get-OrchClassicEnvironment -Path Orch1:\Legacy,Orch1:\Migration -Recurse -Depth 2
 ```
 
-Gets classic environments from the Legacy and Migration folders.
-
-### Example 6
-```powershell
-Get-OrchClassicEnvironment | Where-Object {$_.Robots.Count -gt 0}
-```
-
-Gets all classic environments that contain at least one robot.
-
-### Example 7
-```powershell
-Get-OrchClassicEnvironment -Depth 1 | Select-Object Name, Description, @{Name="RobotCount"; Expression={$_.Robots.Count}}
-```
-
-Gets classic environments from the current folder only (no subfolders) and displays their names, descriptions, and robot counts.
+Gets classic environments from Legacy and Migration folders with maximum depth of 2 levels.
 
 ## PARAMETERS
 

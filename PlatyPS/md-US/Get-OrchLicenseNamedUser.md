@@ -55,7 +55,7 @@ Retrieves named user license information for both Attended and StudioPro robot t
 
 ### Example 4: Get named user licenses with wildcard filtering
 ```powershell
-PS C:\> Get-OrchLicenseNamedUser -RobotType "*Production"
+PS C:\> Get-OrchLicenseNamedUser -RobotType *Production
 ```
 
 Retrieves named user license information for all robot types ending with "Production".
@@ -73,20 +73,6 @@ PS C:\> Get-OrchLicenseNamedUser -Path Orch1:, Orch2:
 ```
 
 Retrieves named user license information from multiple specified Orchestrator drives.
-
-### Example 7: Filter licensed users and show details
-```powershell
-PS C:\> Get-OrchLicenseNamedUser -RobotType StudioPro | Where-Object {$_.IsLicensed -eq $true} | Select-Object UserName, MachinesCount, LastLoginDate
-```
-
-Gets StudioPro named user licenses, filters for only licensed users, and displays key information including machine count and last login date.
-
-### Example 8: Check users with machine assignments
-```powershell
-PS C:\> Get-OrchLicenseNamedUser | Where-Object {$_.MachinesCount -gt 0} | Select-Object RobotType, UserName, MachinesCount, MachineNames
-```
-
-Gets all named user licenses, filters for users with assigned machines, and displays robot type, user name, machine count, and machine names.
 
 ## PARAMETERS
 
@@ -153,6 +139,12 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 - IsExternalLicensed indicates if the license is managed externally
 - This cmdlet operates at the tenant level and does not require navigation to specific folders
 - Use filtering operations to analyze license usage patterns and identify inactive or over-allocated users
+
+
+
+Primary Endpoint: GET /odata/LicensesNamedUser/UiPath.Server.Configuration.OData.GetLicensesNamedUser
+OAuth required scopes: OR.Licenses or OR.Licenses.Read
+Required permissions: Licenses.View
 
 ## RELATED LINKS
 

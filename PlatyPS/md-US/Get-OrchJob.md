@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -54,45 +54,38 @@ Gets the first 5 jobs from the current folder.
 
 ### Example 2
 ```powershell
-PS Orch1:\> Get-OrchJob -Recurse -State Faulted -First 10
+PS C:\> Get-OrchJob -Path Orch1:\Shared -State Faulted -First 10
 ```
 
 Gets the first 10 failed jobs from all folders.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchJob -Last Day -State Successful
+PS C:\> Get-OrchJob -Recurse -Path Orch1:\Shared,Orch1:\Production -State Successful -First 10
 ```
 
 Gets all successful jobs from the last day.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchJob -ReleaseName BlankProcess19 -First 5
+PS Orch1:\Shared> Get-OrchJob -ReleaseName BlankProcess1 -First 5
 ```
 
 Gets the first 5 jobs for a specific process.
 
 ### Example 5
 ```powershell
-PS Orch1:\> Get-OrchJob -Recurse -Priority High -State Running
-```
-
-Gets running high-priority jobs from all folders.
-
-### Example 6
-```powershell
-PS Orch1:\> Get-OrchJob -CreationTimeAfter (Get-Date).AddHours(-1) -First 10
+PS Orch1:\Shared> Get-OrchJob -CreationTimeAfter (Get-Date).AddHours(-1) -First 10
 ```
 
 Gets jobs created in the last hour.
 
-### Example 7
+### Example 6
 ```powershell
-PS Orch1:\> Get-OrchJob -Robot Robot1 -State Successful -OrderBy CreationTime
+PS C:\> Get-OrchJob -Path Orch1:\Shared,Orch1:\Production -Recurse -State Successful -First 5
 ```
 
-Gets successful jobs for a specific robot ordered by creation time.
+Gets successful jobs from specific folders with -Path parameter prioritized.
 
 ## PARAMETERS
 
@@ -472,6 +465,12 @@ Use the Filter parameter set for complex queries with time ranges, status filter
 
 Jobs represent the execution history of automation processes and provide detailed information about robot performance and process outcomes.
 
+
+
+Primary Endpoint: GET /odata/Jobs
+OAuth required scopes: OR.Jobs or OR.Jobs.Read
+Required permissions: Jobs.View
+
 ## RELATED LINKS
 
 [Start-OrchJob](Start-OrchJob.md)
@@ -481,3 +480,4 @@ Jobs represent the execution history of automation processes and provide detaile
 [Get-OrchJobMedia](Get-OrchJobMedia.md)
 
 [Open-OrchJob](Open-OrchJob.md)
+

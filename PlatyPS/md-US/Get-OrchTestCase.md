@@ -34,73 +34,31 @@ Required permissions: TestSets.View
 
 ### Example 1
 ```powershell
-PS C:\> Get-OrchTestCase
+PS Orch1:\Shared> Get-OrchTestCase
 ```
 
 Retrieves all test case definitions from the current folder.
 
 ### Example 2
 ```powershell
-PS C:\> Get-OrchTestCase LoginTest.xaml
-```
-
-Retrieves the test case definition named "LoginTest.xaml" from the current folder.
-
-### Example 3
-```powershell
-PS C:\> Get-OrchTestCase *Test*.xaml
+PS Orch1:\Shared> Get-OrchTestCase *Test*.xaml
 ```
 
 Retrieves all test case definitions whose names contain "Test" using wildcard matching.
 
-### Example 4
+### Example 3
 ```powershell
-PS C:\> Get-OrchTestCase -Recurse
+PS Orch1:\> Get-OrchTestCase -Recurse
 ```
 
 Retrieves all test case definitions from the current folder and all subfolders recursively.
 
-### Example 5
+### Example 4
 ```powershell
-PS C:\> Get-OrchTestCase -Path Orch1:\MyWorkspace -Recurse
+PS C:\> Get-OrchTestCase -Path Orch1:\Production -Recurse | ConvertTo-Json -Depth 2
 ```
 
-Retrieves all test case definitions from the specified workspace and its subfolders.
-
-### Example 6
-```powershell
-PS C:\> Get-OrchTestCase -Recurse -Depth 2
-```
-
-Retrieves test case definitions recursively but limits the search to 2 levels deep.
-
-### Example 7
-```powershell
-PS C:\> Get-OrchTestCase -Recurse | Where-Object {$_.PackageIdentifier -eq "MyAutomationPackage"}
-```
-
-Finds all test cases associated with a specific automation package.
-
-### Example 8
-```powershell
-PS C:\> Get-OrchTestCase -Recurse | ConvertTo-Json -Depth 3
-```
-
-Retrieves all test case definitions and displays their complete structure in JSON format for detailed analysis.
-
-### Example 9
-```powershell
-PS C:\> Get-OrchTestCase -Recurse | Select-Object Path, Name, PackageIdentifier, AppVersion, CreationTime | Format-Table
-```
-
-Displays test case definitions with key properties in a formatted table.
-
-### Example 10
-```powershell
-PS C:\> Get-OrchTestCase -Recurse | Group-Object PackageIdentifier | Select-Object Name, Count
-```
-
-Groups test cases by package identifier and shows the count for each package.
+Retrieves test case definitions from the Production folder and displays detailed structure in JSON format.
 
 ## PARAMETERS
 
@@ -206,6 +164,12 @@ Parameter placement is important for folder entity cmdlets. Place -Path, -Recurs
 Use ConvertTo-Json to explore the complete structure of test case definition objects, as they contain detailed metadata including version tracking and package associations.
 
 Test case definitions serve as the foundation for automated testing workflows and can be organized into test sets for comprehensive quality assurance processes.
+
+
+
+Primary Endpoint: GET /odata/TestCaseDefinitions
+OAuth required scopes: OR.TestSets or OR.TestSets.Read
+Required permissions: TestSets.View
 
 ## RELATED LINKS
 

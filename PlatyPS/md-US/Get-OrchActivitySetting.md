@@ -33,7 +33,6 @@ Required permissions: [PLACEHOLDER - Activity settings view permissions]
 
 ### Example 1
 ```powershell
-PS C:\> Set-Location Orch1:
 PS Orch1:\> Get-OrchActivitySetting
 ```
 
@@ -41,25 +40,24 @@ Gets the activity settings for the current Orchestrator instance.
 
 ### Example 2
 ```powershell
-PS Orch1:\> $activitySetting = Get-OrchActivitySetting
-PS Orch1:\> Write-Host "API Version: $($activitySetting.ApiVersion)"
+PS Orch1:\> $setting = Get-OrchActivitySetting; $setting.SignalR
 ```
 
-Retrieves the activity settings and displays the API version.
+Retrieves the activity settings and displays the SignalR configuration details.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchActivitySetting | Select-Object ApiVersion, 'SignalR.Url', 'SignalR.SkipNegotiation'
+PS C:\> Get-OrchActivitySetting -Path Orch1:, Orch2:
 ```
 
-Gets the activity settings and displays all the key configuration properties.
+Gets activity settings from multiple tenants.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchActivitySetting | Format-List
+PS Orch1:\> Get-OrchActivitySetting | ConvertTo-Json -Depth 2
 ```
 
-Gets the activity settings and displays them in a detailed list format.
+Gets activity settings and displays the complete structure including nested SignalR properties.
 
 ## PARAMETERS
 
@@ -107,6 +105,12 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 - The SignalR.Url property contains the URL for real-time SignalR communication
 - The SignalR.SkipNegotiation property controls whether SignalR negotiation is bypassed
 - These settings are essential for proper activity execution and real-time monitoring
+
+
+
+Primary Endpoint: GET /odata/Settings/UiPath.Server.Configuration.OData.GetActivitySettings
+OAuth required scopes: OR.Settings or OR.Settings.Read
+Required permissions: Settings.View
 
 ## RELATED LINKS
 

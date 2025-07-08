@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -20,11 +20,11 @@ Remove-OrchApiTrigger [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Depth <
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-Primary Endpoint: DELETE /odata/HttpTriggers({triggerId})
+Primary Endpoint: GET /odata/HttpTriggers, DELETE /odata/HttpTriggers({triggerId})
 
-OAuth required scopes: undocumented
+OAuth required scopes: [PLACEHOLDER]
 
-Required permissions: 
+Required permissions: [PLACEHOLDER]
 
 ## EXAMPLES
 

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,17 +34,17 @@ Required permissions: Jobs.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Shared> Get-OrchJobMedia -JobKey "12345678-1234-1234-1234-123456789012"
+PS Orch1:\Shared> Get-OrchJobMedia
 ```
 
-Retrieves all media files for a specific job identified by its JobKey.
+Retrieves all job media files from the current Shared folder, displaying basic properties like MediaType, FileName, and CreatedTime.
 
 ### Example 2
 ```powershell
-PS Orch1:\Shared> Get-OrchJobMedia | Where-Object {$_.MediaType -eq "Screenshot"}
+PS Orch1:\Shared> Get-OrchJobMedia | ConvertTo-Json -Depth 2
 ```
 
-Gets all screenshot media files from jobs in the current folder.
+Displays detailed job media properties in JSON format, including complete file information and metadata structure.
 
 ### Example 3
 ```powershell
@@ -55,17 +55,17 @@ Retrieves job media from the Production folder and subfolders created in the las
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchJobMedia -JobKey "*" | Group-Object MediaType
+PS Orch1:\> Get-OrchJobMedia -Recurse -First 10
 ```
 
-Groups all job media files by their media type (Screenshot, Video, etc.).
+Retrieves the first 10 job media files across all folders using the -First parameter for performance optimization.
 
 ### Example 5
 ```powershell
-PS Orch1:\Shared> Get-OrchJobMedia | Select-Object JobKey, MediaType, FileName, FileSize, CreatedTime
+PS Orch1:\Shared> Get-OrchJobMedia | Where-Object {$_.MediaType -eq "Screenshot"} | Select-Object FileName, FileSize, CreatedTime
 ```
 
-Displays a summary view of job media with key properties.
+Filters for screenshot media files and displays key properties. Uses Where-Object since no dedicated MediaType parameter exists.
 
 ### Example 6
 ```powershell
@@ -191,6 +191,12 @@ Returns JobMedia objects containing information about job media files. Key prope
 
 ## NOTES
 This cmdlet is a folder entity operation for accessing job media files including screenshots, videos, and recordings. Job media provides visual documentation of automation execution for debugging, auditing, and process verification. Media files are associated with specific job executions and may have retention policies affecting availability. Use JobKey parameter to target specific jobs or filter by time ranges for recent executions. This operation requires Jobs.View permissions in the target folders.
+
+
+
+Primary Endpoint: [PLACEHOLDER]
+OAuth required scopes: [PLACEHOLDER]
+Required permissions: [PLACEHOLDER]
 
 ## RELATED LINKS
 

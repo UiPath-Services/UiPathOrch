@@ -36,94 +36,44 @@ Required permissions: License.View
 
 ### Example 1
 ```powershell
-PS C:\> Set-Location Orch1:\
-PS Orch1:\> Get-OrchLicenseStats
+PS C:\> Get-OrchLicenseStats
 ```
 
 Gets the default licensing usage statistics for the current Orchestrator instance.
 
 ### Example 2
 ```powershell
-PS Orch1:\> Get-OrchLicenseStats -Last "Week"
+PS Orch1:\> Get-OrchLicenseStats -Last Week
 ```
 
-Gets licensing usage statistics for the last week.
+Gets licensing usage statistics for the last 7 days.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchLicenseStats -Last "Month" | Group-Object robotType | Select-Object Name, Count
+PS Orch1:\> Get-OrchLicenseStats -Last Month | Group-Object robotType | Select-Object Name, Count
 ```
 
-Gets monthly license statistics grouped by robot type to see usage distribution.
+Gets licensing usage statistics for the last 30 days grouped by robot type to see usage distribution.
 
 ### Example 4
 ```powershell
-PS Orch1:\> $stats = Get-OrchLicenseStats -Last "Month"
+PS Orch1:\> $stats = Get-OrchLicenseStats -Last Month
 PS Orch1:\> $stats | Where-Object robotType -eq "Unattended" | Measure-Object count -Sum
 ```
 
-Gets monthly statistics and calculates total Unattended license usage.
+Gets statistics for the last 30 days and calculates total Unattended license usage.
 
 ### Example 5
 ```powershell
-PS Orch1:\> Get-OrchLicenseStats -Last "Week" | ConvertTo-Json -Depth 5
+PS Orch1:\> Get-OrchLicenseStats -Last Day | ConvertTo-Json -Depth 5
 ```
 
-Gets weekly license statistics and converts to JSON format to see the complete object structure, including numeric robot type values.
-
-### Example 6
-```powershell
-PS Orch1:\> $stats = Get-OrchLicenseStats -Last "3Months"
-PS Orch1:\> $stats | Sort-Object timestamp | Select-Object -Last 10
-```
-
-Gets 3-month statistics and displays the 10 most recent entries.
-
-### Example 7
-```powershell
-PS Orch1:\> Get-OrchLicenseStats -Last "Month" | 
->> Group-Object robotType | 
->> ForEach-Object { 
->>     [PSCustomObject]@{
->>         RobotType = $_.Name
->>         TotalUsage = ($_.Group | Measure-Object count -Sum).Sum
->>         AverageDaily = [Math]::Round(($_.Group | Measure-Object count -Average).Average, 2)
->>     }
->> }
-```
-
-Creates a summary report showing total and average daily usage by robot type.
-
-### Example 8
-```powershell
-PS Orch1:\> Get-OrchLicenseStats -Last "Year" | 
->> Where-Object count -gt 1 | 
->> Sort-Object timestamp
-```
-
-Gets yearly statistics and filters for days with more than 1 license usage, sorted by date.
-
-### Example 9
-```powershell
-PS Orch1:\> $weeklyStats = Get-OrchLicenseStats -Last "Week"
-PS Orch1:\> $monthlyStats = Get-OrchLicenseStats -Last "Month"
-PS Orch1:\> Write-Host "Weekly entries: $($weeklyStats.Count), Monthly entries: $($monthlyStats.Count)"
-```
-
-Compares the volume of data across different time periods.
-
-### Example 10
-```powershell
-PS Orch1:\> Get-OrchLicenseStats -Last "6Months" | 
->> Export-Csv "C:\Reports\LicenseUsage.csv" -NoTypeInformation
-```
-
-Exports 6-month license statistics to a CSV file for further analysis.
+Gets licensing usage statistics for the last 24 hours and converts to JSON format to see the complete object structure, including numeric robot type values.
 
 ## PARAMETERS
 
 ### -Last
-Specifies the most recent period for retrieving licensing statistics. Valid values are: 'Day', 'Week', 'Month', '3Months', '6Months', 'Year', '3Years'. If not specified, a default period is used.
+Specifies a time period for recent stats. Valid values: Hour, Day, Week, Month, 3Months, 6Months, Year, 3Years.
 
 ```yaml
 Type: String
@@ -132,7 +82,7 @@ Aliases:
 
 Required: False
 Position: 0
-Default value: Default period (approximately last week)
+Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
@@ -185,6 +135,12 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 - Use ConvertTo-Json to see the complete object structure including numeric robot type values
 - Valid -Last parameter values are case-sensitive: 'Day', 'Week', 'Month', '3Months', '6Months', 'Year', '3Years'
 - The timestamp is provided in UTC format
+
+
+
+Primary Endpoint: GET /api/Stats/GetLicenseStats
+OAuth required scopes: OR.Monitoring or OR.Monitoring.Read
+Required permissions: License.View
 
 ## RELATED LINKS
 

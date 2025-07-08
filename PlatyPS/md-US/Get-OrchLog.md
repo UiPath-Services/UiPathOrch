@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -52,28 +52,28 @@ Gets all error and fatal logs from the last 2 hours.
 
 ### Example 3
 ```powershell
-PS C:\> Get-OrchLog -Path Orch1:\Production -ProcessName "InvoiceProcess" -First 20
+PS C:\> Get-OrchLog -Path Orch1:\Production -ProcessName InvoiceProcess -First 20
 ```
 
 Retrieves the first 20 logs for the InvoiceProcess in the Production folder.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchLog -Last Week -Machine "Robot01" -Level Warn, Error
+PS Orch1:\> Get-OrchLog -Recurse -Last Week -Machine Robot01 -Level Warn, Error
 ```
 
-Gets warning and error logs from Robot01 for the last week.
+Gets warning and error logs from Robot01 for the last week across all folders in that tenant.
 
 ### Example 5
 ```powershell
-PS Orch1:\Shared> Get-OrchLog -JobKey "12345678-1234-1234-1234-123456789012" -OrderBy TimeStamp -OrderAscending $true
+PS Orch1:\Shared> Get-OrchLog -JobKey 12345678-1234-1234-1234-123456789012 -OrderBy TimeStamp -OrderAscending
 ```
 
 Retrieves logs for a specific job key ordered by timestamp in ascending order.
 
 ### Example 6
 ```powershell
-PS Orch1:\> Get-OrchLog -Last Month -WindowsIdentity "DOMAIN\robotuser" -Skip 100 -First 50
+PS C:\> Get-OrchLog -Path Orch1:\Shared -Last Month -WindowsIdentity DOMAIN\robotuser -Skip 100 -First 50
 ```
 
 Gets logs for a specific Windows identity from the last month, skipping the first 100 results and taking the next 50.
@@ -216,7 +216,7 @@ Accept wildcard characters: False
 ```
 
 ### -Last
-Specifies a time period for retrieving recent logs. Valid values: 'Hour', 'Day', 'Week', 'Month', '3Months', '6Months', 'Year', '3Years'.
+Specifies a time period for recent logs. Valid values: Hour, Day, Week, Month, 3Months, 6Months, Year, 3Years.
 
 ```yaml
 Type: String
@@ -338,6 +338,12 @@ Returns Log objects containing execution log information. Key properties typical
 
 ## NOTES
 This cmdlet is a folder entity operation requiring at least one filter parameter to prevent excessive data retrieval. The cmdlet will output cached contents with a warning if no filter parameters are specified. Use pagination parameters (Skip, First) to manage large result sets. Common filter patterns include time ranges (Last, TimeStampAfter), severity levels (Level), and specific execution contexts (Machine, ProcessName, JobKey). This operation requires Logs.View permissions in the target folders.
+
+
+
+Primary Endpoint: GET /odata/RobotLogs
+OAuth required scopes: OR.Monitoring or OR.Monitoring.Read
+Required permissions: Logs.View
 
 ## RELATED LINKS
 

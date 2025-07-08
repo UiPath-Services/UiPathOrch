@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,11 +26,11 @@ Use the -Name parameter to specify which processes to copy and the -Destination 
 
 This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters. The -Recurse parameter enables copying processes from all subfolders, maintaining the folder structure in the destination.
 
-Primary Endpoint: [PLACEHOLDER - 具体的なAPIエンドポイント]
+Primary Endpoint: GET /odata/Releases({key})/UiPath.Server.Configuration.OData.GetRelease, GET /odata/Processes/UiPath.Server.Configuration.OData.GetPackageEntryPoints(key='{key}'), POST /odata/Releases
 
-OAuth required scopes: [PLACEHOLDER]
+OAuth required scopes: OR.Execution
 
-Required permissions: [PLACEHOLDER]
+Required permissions: Processes.View, Processes.Create
 
 ## EXAMPLES
 

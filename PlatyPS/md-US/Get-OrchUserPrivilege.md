@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -146,5 +146,11 @@ User objects can be piped to this cmdlet. The UserName property will be automati
 ### UiPath.PowerShell.Entities.UserPrivilege
 
 ## NOTES
+
+
+
+Primary Endpoint: GET /api/Users/GetPrivileges
+OAuth required scopes: OR.Users or OR.Users.Read
+Required permissions: Users.View
 
 ## RELATED LINKS

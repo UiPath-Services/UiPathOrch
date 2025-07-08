@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -36,52 +36,38 @@ Required permissions: TestSetExecutions.View
 
 ### Example 1
 ```powershell
-Get-OrchTestSetExecution
+PS Orch1:\Shared> Get-OrchTestSetExecution
 ```
 
 Gets all test set executions in the current folder.
 
 ### Example 2
 ```powershell
-Get-OrchTestSetExecution RegressionTests
+PS Orch1:\Shared> Get-OrchTestSetExecution RegressionTests
 ```
 
-Gets all executions for the test set named "RegressionTests".
+Gets all executions for the test set named "RegressionTests" using positional parameter.
 
 ### Example 3
 ```powershell
-Get-OrchTestSetExecution -Status Failed, Stopped
+PS Orch1:\Shared> Get-OrchTestSetExecution -Status Failed, Stopped
 ```
 
-Gets all test set executions with Failed or Stopped status.
+Gets all test set executions with Failed or Stopped status for analysis and troubleshooting.
 
 ### Example 4
 ```powershell
-Get-OrchTestSetExecution -Last "7d"
+PS Orch1:\Shared> Get-OrchTestSetExecution -Last Week
 ```
 
-Gets test set executions from the last 7 days.
+Gets test set executions from the last 7 days using the convenient time filter.
 
 ### Example 5
 ```powershell
-Get-OrchTestSetExecution -StartTimeAfter (Get-Date).AddDays(-1) -Status Successful
+PS C:\> Get-OrchTestSetExecution -Path Orch1:\Production -Recurse
 ```
 
-Gets successful test set executions that started within the last day.
-
-### Example 6
-```powershell
-Get-OrchTestSetExecution -Recurse -TriggerType Schedule -First 50
-```
-
-Gets the first 50 scheduled test set executions from the current folder and all subfolders.
-
-### Example 7
-```powershell
-Get-OrchTestSetExecution -Path Orch1:\Production *Smoke* | Where-Object {$_.Duration.TotalMinutes -gt 30}
-```
-
-Gets all smoke test executions from the Production folder that took more than 30 minutes to complete.
+Gets test set executions from the Production folder and all subfolders, demonstrating execution from any location.
 
 ## PARAMETERS
 
@@ -117,7 +103,7 @@ Accept wildcard characters: False
 ```
 
 ### -Last
-Specifies the most recent period for retrieving test set executions. Valid values include time spans like "1h", "24h", "7d", "30d", etc.
+Specifies a time period for recent executions. Valid values: Hour, Day, Week, Month, 3Months, 6Months, Year, 3Years.
 
 ```yaml
 Type: String
@@ -283,5 +269,11 @@ Test set objects can be piped to this cmdlet. The Name property will be automati
 ### UiPath.PowerShell.Entities.TestSetExecution
 
 ## NOTES
+
+
+
+Primary Endpoint: GET /odata/TestSetExecutions
+OAuth required scopes: OR.TestSetExecutions or OR.TestSetExecutions.Read
+Required permissions: TestSetExecutions.View
 
 ## RELATED LINKS

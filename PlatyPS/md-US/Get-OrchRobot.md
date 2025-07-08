@@ -19,7 +19,6 @@ Get-OrchRobot [[-FullName] <String[]>] [[-Username] <String[]>] [-Path <String[]
 
 ## DESCRIPTION
 
-
 Primary Endpoint: GET /odata/Robots/UiPath.Server.Configuration.OData.GetConfiguredRobots?$expand=User
 
 OAuth required scopes: OR.Robots or OR.Robots.Read
@@ -30,21 +29,21 @@ Required permissions: Users.View and Robots.View
 
 ### Example 1
 ```powershell
-PS C:\> Get-OrchRobot
+PS Orch1:\> Get-OrchRobot
 ```
 
 Retrieves all autoprovisioned robots in the current Orchestrator environment. This shows robots that have been automatically created when users connected from UiPath Studio.
 
 ### Example 2
 ```powershell
-PS C:\> Get-OrchRobot -Username john.doe
+PS Orch1:\> Get-OrchRobot myrobot*
 ```
 
 Retrieves autoprovisioned robots associated with the specific username. Uses the Username parameter for efficient filtering.
 
 ### Example 3
 ```powershell
-PS C:\> Get-OrchRobot -FullName *Smith*
+PS Orch1:\> Get-OrchRobot | Where-Object Type -eq Unattended
 ```
 
 Retrieves autoprovisioned robots where the full name contains Smith. Uses wildcard pattern filtering with the FullName parameter.
@@ -58,10 +57,11 @@ Retrieves autoprovisioned robots from multiple Orchestrator instances. Demonstra
 
 ### Example 5
 ```powershell
-PS C:\> Get-OrchRobot | ConvertTo-Json -Depth 2
+PS Orch1:\> Get-OrchRobot | ConvertTo-Json
 ```
 
 Gets all autoprovisioned robots and converts the output to JSON format for detailed analysis or integration with other systems.
+
 ## PARAMETERS
 
 ### -FullName
@@ -107,17 +107,7 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
-
-This cmdlet specifically retrieves autoprovisioned robots, which are different from manually created robots in Orchestrator. Autoprovisioned robots are automatically created when users connect to Orchestrator from UiPath Studio.
-
-The autoprovisioning feature must be enabled in Orchestrator for robots to appear in the results of this cmdlet. If no results are returned, it may indicate that autoprovisioning is disabled or no users have connected from Studio yet.
-
-Autoprovisioned robots are typically used in attended automation scenarios where users work alongside robots in UiPath Studio. These robots are bound to specific user accounts and inherit certain user-based configurations.
-
-The cmdlet supports the standard Path parameter for targeting specific Orchestrator instances when multiple connections are available.
-
-Use Get-OrchMachine to view the machines associated with these robots, and other robot management cmdlets for comprehensive robot administration.
-
+```
 
 ### -Username
 Specifies the UserName of the robots to be retrieved.
@@ -144,5 +134,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.Robot
 ## NOTES
+
+
+
+Primary Endpoint: GET /odata/Robots
+OAuth required scopes: OR.Robots or OR.Robots.Read
+Required permissions: Robots.View
 
 ## RELATED LINKS

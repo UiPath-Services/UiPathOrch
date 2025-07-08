@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,11 +26,11 @@ By default, the cmdlet prevents adding past dates to maintain calendar accuracy.
 
 This cmdlet operates on tenant-level calendar entities and supports wildcard patterns for calendar names, enabling bulk operations across multiple calendars.
 
-Primary Endpoint: GET /odata/Calendars, GET /odata/Calendars({calendarId}), POST /odata/Calendar, PUT /odata/Calendars({calendarId})
+Primary Endpoint: GET /odata/Calendars, GET /odata/Calendars({calendarId}), PUT /odata/Calendars({calendarId})
 
-OAuth required scopes: OR.Settings
+OAuth required scopes: OR.Settings or OR.Settings.Read or OR.Settings.Write
 
-Required permissions: Settings.Create Settings.Edit
+Required permissions: Settings.Edit
 
 ## EXAMPLES
 

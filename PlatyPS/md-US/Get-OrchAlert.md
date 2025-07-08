@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -57,6 +57,13 @@ PS Orch1:\> Get-OrchAlert -Skip 3 -First 5
 
 This command retrieves the first 5 alerts after skipping the initial 3 alerts. It is useful for paging through results when you have a large number of alerts and only need to see a specific subset.
 
+### Example 5
+```powershell
+PS Orch1:\> Get-OrchAlert -Severity Fatal | Select-Object Path, CreationTime, Severity, Component
+```
+
+Gets fatal severity alerts and displays key properties with Path shown first.
+
 ## PARAMETERS
 
 ### -Component
@@ -105,7 +112,7 @@ Accept wildcard characters: False
 ```
 
 ### -Last
-Specifies the timeframe for filtering alerts based on their creation date. Acceptable values include Hour, Day, Week, and more.
+Specifies a time period for recent alerts. Valid values: Hour, Day, Week, Month, 3Months, 6Months, Year, 3Years.
 
 ```yaml
 Type: String
@@ -207,5 +214,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### UiPath.PowerShell.Entities.Alert
 ## NOTES
 Required Scope: OR.Monitoring.Read
+
+
+
+Primary Endpoint: GET /odata/Alerts
+OAuth required scopes: OR.Monitoring or OR.Monitoring.Read
+Required permissions: Alerts.View
 
 ## RELATED LINKS

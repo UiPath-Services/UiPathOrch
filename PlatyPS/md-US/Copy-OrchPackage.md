@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,11 +26,11 @@ Use the -Id parameter to specify which packages to copy by their unique identifi
 
 This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters. The -Recurse parameter enables copying packages from all subfolders, maintaining the folder structure in the destination.
 
-Primary Endpoint: [PLACEHOLDER]
+Primary Endpoint: GET /odata/Processes/UiPath.Server.Configuration.OData.GetProcessVersions(processId='{processId}'), GET /odata/Processes/UiPath.Server.Configuration.OData.DownloadPackage(key='{key}'), POST /odata/Processes/UiPath.Server.Configuration.OData.UploadPackage
 
-OAuth required scopes: [PLACEHOLDER]
+OAuth required scopes: OR.Execution
 
-Required permissions: [PLACEHOLDER]
+Required permissions: Packages.View, Packages.Create, FolderPackages.View, FolderPackages.Create
 
 ## EXAMPLES
 

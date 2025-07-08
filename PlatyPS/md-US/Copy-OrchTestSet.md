@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,11 +26,11 @@ Use the -Name parameter to specify which test sets to copy and the -Destination 
 
 This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters. The -Recurse parameter enables copying test sets from all subfolders, maintaining the folder structure in the destination.
 
-Primary Endpoint: [PLACEHOLDER - 具体的なAPIエンドポイント]
+Primary Endpoint: GET /odata/TestSets, POST /odata/TestSets
 
-OAuth required scopes: [PLACEHOLDER]
+OAuth required scopes: OR.TestSets
 
-Required permissions: [PLACEHOLDER]
+Required permissions: TestSets.View, TestSets.Create
 
 ## EXAMPLES
 

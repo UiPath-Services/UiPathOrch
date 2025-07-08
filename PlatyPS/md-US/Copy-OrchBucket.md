@@ -26,11 +26,11 @@ Use the -Name parameter to specify which storage buckets to copy and the -Destin
 
 This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters. The -Recurse parameter enables copying storage buckets from all subfolders, maintaining the folder structure in the destination.
 
-Primary Endpoint: [PLACEHOLDER]
+Primary Endpoint: GET /odata/Buckets, POST /odata/Buckets
 
-OAuth required scopes: [PLACEHOLDER]
+OAuth required scopes: OR.Administration or OR.Administration.Read or OR.Administration.Write
 
-Required permissions: [PLACEHOLDER]
+Required permissions: Buckets.View, Buckets.Create
 
 ## EXAMPLES
 

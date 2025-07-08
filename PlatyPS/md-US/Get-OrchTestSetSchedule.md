@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,52 +34,52 @@ Required permissions: TestSetExecutions.View
 
 ### Example 1
 ```powershell
-Get-OrchTestSetSchedule
+PS Orch1:\Shared> Get-OrchTestSetSchedule
 ```
 
 Gets all test set schedules in the current folder.
 
 ### Example 2
 ```powershell
-Get-OrchTestSetSchedule NightlyRegression
+PS Orch1:\Shared> Get-OrchTestSetSchedule NightlyRegression
 ```
 
-Gets the test set schedule named "NightlyRegression" from the current folder.
+Gets the test set schedule named "NightlyRegression" from the current folder using positional parameter.
 
 ### Example 3
 ```powershell
-Get-OrchTestSetSchedule *Daily*
+PS Orch1:\Shared> Get-OrchTestSetSchedule *Daily*
 ```
 
-Gets all test set schedules whose names contain "Daily".
+Gets all test set schedules whose names contain "Daily" using wildcard pattern matching.
 
 ### Example 4
 ```powershell
-Get-OrchTestSetSchedule -Recurse
+PS Orch1:\> Get-OrchTestSetSchedule -Recurse
 ```
 
-Gets all test set schedules from the current folder and all its subfolders.
+Gets all test set schedules from the current folder and all its subfolders recursively.
 
 ### Example 5
 ```powershell
-Get-OrchTestSetSchedule -Path Orch1:\Development, Orch1:\Testing
+PS C:\> Get-OrchTestSetSchedule -Path Orch1:\Production
 ```
 
-Gets test set schedules from both Development and Testing folders.
+Gets test set schedules from the Production folder, demonstrating execution from any location.
 
 ### Example 6
 ```powershell
-Get-OrchTestSetSchedule | Where-Object {$_.Enabled -eq $true}
+PS Orch1:\> Get-OrchTestSetSchedule -Path \Production, \Shared -Recurse
 ```
 
-Gets all enabled test set schedules.
+Gets test set schedules from multiple specific folders recursively, demonstrating -Path parameter priority with -Recurse.
 
 ### Example 7
 ```powershell
-Get-OrchTestSetSchedule | Select-Object Name, TestSetName, CronExpression, Enabled, NextExecution
+PS Orch1:\Shared> Get-OrchTestSetSchedule | ConvertTo-Json -Depth 2
 ```
 
-Gets all test set schedules and displays their key scheduling information including cron expression and next execution time.
+Gets all test set schedules and displays their structure in JSON format for detailed analysis of schedule properties.
 
 ## PARAMETERS
 
@@ -174,5 +174,11 @@ Test set schedule objects can be piped to this cmdlet. The Name property will be
 ### UiPath.PowerShell.Entities.TestSetSchedule
 
 ## NOTES
+
+
+
+Primary Endpoint: GET /odata/TestSetSchedules
+OAuth required scopes: OR.TestSetSchedules or OR.TestSetSchedules.Read
+Required permissions: TestSetSchedules.View
 
 ## RELATED LINKS

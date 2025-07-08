@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -19,6 +19,8 @@ Get-OrchProcess [[-Name] <String[]>] [-ExpandDetails] [-Path <String[]>] [-Recur
 
 ## DESCRIPTION
 Gets process information from Orchestrator folders. This cmdlet retrieves basic process metadata by default, with option to expand detailed information including process settings, arguments, and runtime configurations.
+
+Processes are folder entities that operate within specific folder scopes. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.
 
 Multiple values for the -Path parameter can be specified using comma-separated text that includes wildcards. Additionally, you can use autocomplete for these values by pressing [Ctrl+Space] or [Tab].
 
@@ -69,7 +71,7 @@ Gets specific processes by name pattern from all folders.
 
 ### Example 6
 ```powershell
-PS Orch1:\> Get-OrchProcess -ExpandDetails | Where-Object {$_.ProcessSettings.AutopilotForRobots.Enabled}
+PS Orch1:\> Get-OrchProcess -Recurse -ExpandDetails | Where-Object {$_.ProcessSettings.AutopilotForRobots.Enabled}
 ```
 
 Gets processes with Autopilot for Robots enabled using expanded details.
@@ -83,10 +85,10 @@ Gets high-priority processes from all folders.
 
 ### Example 8
 ```powershell
-PS Orch1:\> Get-OrchProcess -Recurse -ExportCsv "C:\Reports\Processes.csv"
+PS Orch1:\> Get-OrchProcess -Recurse -ExportCsv C:\Reports\Processes.csv
 ```
 
-Exports all processes to CSV with UTF-8 BOM encoding.
+Exports all processes to CSV with UTF-8 BOM encoding. The exported CSV can be imported using Import-Csv | New-OrchProcess or Import-Csv | Update-OrchProcess.
 
 ## PARAMETERS
 
@@ -226,6 +228,12 @@ Use -ExpandDetails when you need access to ProcessSettings properties such as Au
 
 The -ExportCsv parameter creates import-ready CSV files with human-readable names instead of internal IDs.
 
+
+
+Primary Endpoint: GET /odata/Releases
+OAuth required scopes: OR.Execution or OR.Execution.Read
+Required permissions: Processes.View
+
 ## RELATED LINKS
 
 [New-OrchProcess](New-OrchProcess.md)
@@ -235,4 +243,6 @@ The -ExportCsv parameter creates import-ready CSV files with human-readable name
 [Remove-OrchProcess](Remove-OrchProcess.md)
 
 [Copy-OrchProcess](Copy-OrchProcess.md)
+
+
 

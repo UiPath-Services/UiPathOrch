@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -22,6 +22,8 @@ The Get-OrchBucketItem cmdlet retrieves items (files and directories) stored wit
 
 Each bucket item contains properties such as FullPath (the file/directory path within the bucket), ContentType (MIME type for files), Size (in bytes for files), and IsDirectory (boolean indicating if the item is a directory).
 
+Bucket items are folder entities that exist within specific folders. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.
+
 This cmdlet operates as a folder entity operation, requiring navigation to the appropriate folder context or specification of target folders using the -Path parameter. The cmdlet automatically identifies available buckets in the current context and retrieves their contents.
 
 Primary Endpoint: GET /odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.GetFiles
@@ -34,45 +36,38 @@ Required permissions: Buckets.View and BlobFiles.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Shared> Get-OrchBucketItem
+PS Orch1:\MyWorkspace> Get-OrchBucketItem
 ```
 
-Retrieves all items from storage buckets in the current Shared folder, displaying FullPath, ContentType, Size, and IsDirectory properties.
+Retrieves all items from storage buckets in the current folder.
 
 ### Example 2
 ```powershell
-PS Orch1:\Shared> Get-OrchBucketItem | ConvertTo-Json -Depth 2
+PS Orch1:\> Get-OrchBucketItem -Recurse
 ```
 
-Displays detailed bucket item properties in JSON format including Path, Bucket name, and PathBucket.
+Gets bucket items from all folders recursively.
 
 ### Example 3
 ```powershell
-PS C:\> Get-OrchBucketItem -Path Orch1:\Shared -FullPath "*Manual*"
+PS Orch1:\> Get-OrchBucketItem -Path Orch1:\Production -FullPath *Report*
 ```
 
-Gets bucket items with FullPath containing "Manual" in the Shared folder.
+Gets bucket items with FullPath containing "Report" from the Production folder.
 
 ### Example 4
 ```powershell
-PS Orch1:\Shared> Get-OrchBucketItem | Where-Object {$_.IsDirectory -eq $false} | Measure-Object Size -Sum
+PS Orch1:\> Get-OrchBucketItem -Recurse | Select-Object Path, Bucket, FullPath, Size
 ```
 
-Calculates the total size of all files (non-directories) in storage buckets.
+Gets all bucket items recursively and displays key properties with Path shown first.
 
 ### Example 5
 ```powershell
-PS Orch1:\Shared> Get-OrchBucketItem | Select-Object Bucket, FullPath, ContentType, Size
+PS C:\> Get-OrchBucketItem -Path Orch1:\Production,Orch1:\Development -Recurse -Depth 2
 ```
 
-Displays selected properties of bucket items for overview.
-
-### Example 6
-```powershell
-PS Orch1:\> Get-OrchBucketItem -Recurse | Group-Object ContentType
-```
-
-Groups all bucket items across folders by their content type.
+Gets bucket items from Production and Development folders with maximum depth of 2 levels.
 
 ## PARAMETERS
 
@@ -184,6 +179,12 @@ Returns BucketItem objects containing information about files and directories st
 
 ## NOTES
 This cmdlet is a folder entity operation requiring navigation to a folder context or path specification using -Path parameter. The cmdlet retrieves items from all accessible storage buckets in the specified folder context. Output is grouped by bucket showing individual items. This operation requires both Buckets.View and BlobFiles.View permissions in the target folders.
+
+
+
+Primary Endpoint: GET /odata/Buckets
+OAuth required scopes: OR.Administration or OR.Administration.Read
+Required permissions: Buckets.View
 
 ## RELATED LINKS
 

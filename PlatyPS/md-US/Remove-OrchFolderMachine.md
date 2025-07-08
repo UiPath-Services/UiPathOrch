@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -22,7 +22,7 @@ Remove-OrchFolderMachine [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Dept
 
 Primary Endpoint: POST /odata/Folders/UiPath.Server.Configuration.OData.UpdateMachinesToFolderAssociations
 
-OAuth required scopes: OR.Folders
+OAuth required scopes: OR.Folders or OR.Folders.Write
 
 Required permissions: (Units.Edit or SubFolders.Edit - Update machines to any folder associations or only if user has SubFolders.Edit permission on all folders provided)
 

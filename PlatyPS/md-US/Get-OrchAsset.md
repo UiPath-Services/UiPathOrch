@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -90,7 +90,6 @@ PS Orch1:\> Get-OrchAsset -Recurse -ExportCredentialCsv C:\Reports\Credentials.c
 ```
 
 Exports credential assets to separate CSV file. The exported CSV can be imported using Import-Csv | Set-OrchCredentialAsset.
-
 
 ## PARAMETERS
 
@@ -259,6 +258,12 @@ Asset entities are folder-scoped. You must navigate to a folder or use -Path, -R
 Assets can have ValueScope of Global (same value for all users) or PerRobot (different values per user/machine). Use -ExpandUserValues to see actual assigned values for PerRobot assets.
 
 The -ExportCsv and -ExportCredentialCsv parameters create import-ready CSV files with human-readable names instead of internal IDs.
+
+
+
+Primary Endpoint: GET /odata/Assets
+OAuth required scopes: OR.Assets or OR.Assets.Read
+Required permissions: Assets.View
 
 ## RELATED LINKS
 

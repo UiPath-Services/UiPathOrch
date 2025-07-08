@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -191,6 +191,12 @@ Machine types include Standard (physical machines) and Template (machine templat
 Use -ExpandRobotUser when you need detailed information about which users are assigned to run robots on specific machines.
 
 The -ExportCsv parameter creates import-ready CSV files with human-readable names instead of internal IDs.
+
+
+
+Primary Endpoint: GET /odata/Machines
+OAuth required scopes: OR.Machines or OR.Machines.Read
+Required permissions: Machines.View
 
 ## RELATED LINKS
 

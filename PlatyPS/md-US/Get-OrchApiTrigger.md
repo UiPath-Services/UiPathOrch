@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,6 +18,8 @@ Get-OrchApiTrigger [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-Depth <U
 ```
 
 ## DESCRIPTION
+API triggers are folder entities that exist within specific folders. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.
+
 Outputs information about API triggers with specified names in the target folders. The target folders can be specified using the -Path, -Recurse, and -Depth parameters. If these are not specified, the current location is used as the target folder. If no API trigger names are specified, it outputs all API triggers in the target folders.
 
 Multiple values for the -Path and -Name parameters can be specified using comma-separated text that includes wildcards. Additionally, you can use autocomplete for these values by pressing [Ctrl+Space] or [Tab].
@@ -48,31 +50,31 @@ Displays all API triggers in the current folder and all its subfolders. When run
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchApiTrigger -Recurse <API trigger names>
+PS Orch1:\> Get-OrchApiTrigger -Recurse *api*
 ```
 
-Displays API triggers with the names specified in the current folder and its subfolders. This is useful for identifying which folders contain API triggers with a specified names. You can specify multiple API trigger names, separated by commas, including wildcards. API trigger names can be auto-completed with [Ctrl+Space] or [Tab].
+Gets API triggers whose names contain 'api' from the current folder and all its subfolders.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchApiTrigger -Path <folder names> <API trigger names>
+PS Orch1:\> Get-OrchApiTrigger -Path Orch1:\Production TestTrigger
 ```
 
-Displays API triggers with the names specified in the specified folders. You can specify multiple folders, separated by commas, including wildcards.
+Gets the API trigger named 'TestTrigger' from the Production folder.
 
 ### Example 5
 ```powershell
-PS C:\> Get-OrchApiTrigger -Recurse -Path Orch1:\,Orch2:\
+PS C:\> Get-OrchApiTrigger -Path Orch1:\,Orch2:\ -Recurse
 ```
 
 Displays all API triggers in Orch1: and Orch2:.
 
 ### Example 6
 ```powershell
-PS C:\> Get-OrchApiTrigger -Recurse | select Path,Id,Name
+PS Orch1:\> Get-OrchApiTrigger -Recurse | ConvertTo-Json -Depth 2
 ```
 
-Displays output with only the selected columns. Specify multiple columns separated by commas, including wildcards. Column names can be auto-completed with [Ctrl+Space] or [Tab].
+Gets all API triggers and displays the complete structure including nested properties like Release and MachineRobots.
 
 ### Example 7
 ```powershell
@@ -87,6 +89,13 @@ PS C:\> Get-OrchApiTrigger -Recurse | ConvertTo-Json
 ```
 
 Converts the output to JSON format, providing a raw view of the data from Orchestrator.
+
+### Example 9
+```powershell
+PS Orch1:\> Get-OrchApiTrigger -Recurse -Name *test*,*prod*
+```
+
+Gets API triggers whose names contain 'test' or 'prod' from all folders recursively.
 
 ## PARAMETERS
 
@@ -178,5 +187,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 Main endpoint called: GET /odata/HttpTriggers
 
 Required Scope: OR.Folders.Read
+
+
+
+Primary Endpoint: GET /odata/HttpTriggers
+OAuth required scopes: [PLACEHOLDER]
+Required permissions: [PLACEHOLDER]
 
 ## RELATED LINKS

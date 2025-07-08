@@ -19,6 +19,8 @@ Get-OrchJobStats [-Path <String[]>] [-ProgressAction <ActionPreference>] [<Commo
 ## DESCRIPTION
 The `Get-OrchJobStats` cmdlet retrieves statistical information about jobs in UiPath Orchestrator. It returns a count of jobs grouped by their execution status (Successful, Faulted, Stopped, Running, Pending, Stopping, Terminating, Suspended, Resumed).
 
+Job statistics are tenant entities that operate across the entire tenant scope. Use the -Path parameter to specify target tenants by drive name (e.g., Orch1:, Orch2:).
+
 This cmdlet provides a quick overview of job execution status across the Orchestrator environment, which is useful for monitoring and reporting purposes.
 
 Multiple values for the -Path parameter can be specified using comma-separated text that includes wildcards. Additionally, you can use autocomplete for these values by pressing [Ctrl+Space] or [Tab].
@@ -49,7 +51,7 @@ Gets job statistics and filters to show only statuses that have jobs with non-ze
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchJobStats | Sort-Object count -Descending | Select-Object title, count
+PS Orch1:\> Get-OrchJobStats | Sort-Object count -Descending | Select-Object Path, title, count
 ```
 
 Gets job statistics and displays them sorted by count in descending order, showing only the title and count properties.
@@ -61,6 +63,13 @@ PS Orch1:\> Write-Host "Total jobs: $total"
 ```
 
 Calculates and displays the total number of jobs across all statuses.
+
+### Example 5
+```powershell
+PS Orch1:\> Get-OrchJobStats -Path Orch1:, Orch2:
+```
+
+Gets job statistics from multiple tenants.
 
 ## PARAMETERS
 
@@ -107,6 +116,12 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 - The statistics include all job statuses: Successful, Faulted, Stopped, Running, Pending, Stopping, Terminating, Suspended, and Resumed
 - The hasPermissions property indicates whether the current user has permission to view the job count for each status
 - This cmdlet provides a snapshot of current job statistics at the time of execution
+
+
+
+Primary Endpoint: GET /api/Stats/GetJobsStats
+OAuth required scopes: [PLACEHOLDER]
+Required permissions: [PLACEHOLDER]
 
 ## RELATED LINKS
 

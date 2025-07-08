@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -81,10 +81,30 @@ Get-OrchClassicRobot | Select-Object Name, MachineName, Environment, Type, Statu
 
 Gets all classic robots and displays their key properties including machine name, environment, type, and status.
 
+### Example 8
+```powershell
+Get-OrchClassicRobot -ExportCsv C:\Reports\ClassicRobots.csv
+```
+
+Exports all classic robots from the current folder to a CSV file for reporting or backup purposes.
+
 ## PARAMETERS
 
 ### -Depth
 Specifies the depth for recursion into the target folders. A depth of 0 indicates the current location only, with no subfolders included.
+
+
+
+``yaml
+Type: UInt32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
 
 ```yaml
 Type: UInt32
@@ -101,6 +121,19 @@ Accept wildcard characters: False
 ### -Name
 Specifies the Name of the robots to be retrieved.
 
+
+
+``yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 0
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
+
 ```yaml
 Type: String[]
 Parameter Sets: (All)
@@ -115,6 +148,19 @@ Accept wildcard characters: True
 
 ### -Path
 Specifies the target folder. If not specified, the current folder will be targeted.
+
+
+
+``yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
 
 ```yaml
 Type: String[]
@@ -131,6 +177,19 @@ Accept wildcard characters: True
 ### -Recurse
 Specifies that the operation should include the target folder and all its subfolders.
 
+
+
+``yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+
 ```yaml
 Type: SwitchParameter
 Parameter Sets: (All)
@@ -146,6 +205,19 @@ Accept wildcard characters: False
 ### -ProgressAction
 {{ Fill ProgressAction Description }}
 
+
+
+``yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+
 ```yaml
 Type: ActionPreference
 Parameter Sets: (All)
@@ -159,7 +231,20 @@ Accept wildcard characters: False
 ```
 
 ### -CsvEncoding
-{{ Fill CsvEncoding Description }}
+Specifies the encoding for the exported CSV file when using -ExportCsv. The default is UTF-8 with BOM for Excel compatibility.
+
+
+
+``yaml
+Type: Encoding
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
 
 ```yaml
 Type: Encoding
@@ -174,7 +259,20 @@ Accept wildcard characters: False
 ```
 
 ### -ExportCsv
-{{ Fill ExportCsv Description }}
+Exports the retrieved classic robots to a CSV file with the specified path. The CSV includes human-readable names instead of internal IDs and uses UTF-8 encoding with BOM for Excel compatibility.
+
+The exported CSV can be imported using Import-Csv for further processing or documentation purposes.
+
+``yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
 
 ```yaml
 Type: String

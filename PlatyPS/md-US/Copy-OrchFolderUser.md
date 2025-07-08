@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,11 +26,11 @@ Use the -UserName parameter to specify which users to copy assignments for and t
 
 This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters. The -Recurse parameter enables copying user assignments from all subfolders, maintaining the folder structure in the destination.
 
-Primary Endpoint: [PLACEHOLDER]
+Primary Endpoint: GET /odata/Folders/UiPath.Server.Configuration.OData.GetUsersForFolder(key={key},includeInherited={includeInherited}), GET /api/DirectoryService/SearchForUsersAndGroups, POST /odata/Folders/UiPath.Server.Configuration.OData.AssignDirectoryUser
 
-OAuth required scopes: [PLACEHOLDER]
+OAuth required scopes: OR.Folders
 
-Required permissions: [PLACEHOLDER]
+Required permissions: Units.View, SubFolders.View, Units.Edit, SubFolders.Edit, Assets.Create, Assets.Edit
 
 ## EXAMPLES
 

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -54,7 +54,7 @@ Shows the decision logic for handling different drive configuration scenarios.
 ## PARAMETERS
 
 ### -Force
-Forces retrieval of drive information, bypassing any cached data.
+Forces connection to enabled drives to retrieve complete information including API version and connection status. By default, Get-OrchPSDrive only displays configuration file information for unconnected drives to avoid authentication API calls and potential browser login prompts for non-confidential app configurations.
 
 ```yaml
 Type: SwitchParameter
@@ -109,6 +109,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### UiPath.PowerShell.Entities.OrchPSDrive
 ## NOTES
 This cmdlet should always be executed at the beginning of any UiPathOrch session to verify the environment and available connections.
+- By default, displays configuration information for all drives without connecting
+- Connected drives show additional details: ApiVersion, CurrentUser, TenantId, AccessToken
+- Unconnected drives only show configuration file information to avoid authentication overhead
+- Use -Force to connect all enabled drives and retrieve complete connection details
+- Non-confidential app drives may require browser login (PKCE) when using -Force
 
 ## RELATED LINKS
 

@@ -30,54 +30,47 @@ Required permissions: [PLACEHOLDER - Machines.View]
 
 ## EXAMPLES
 
-### Example 1: Get all unattended sessions
+### Example 1
 ```powershell
-PS C:\> Get-OrchUnattendedSession
+PS Orch1:\> Get-OrchUnattendedSession
 ```
 
 Retrieves all unattended robot sessions from the current Orchestrator tenant.
 
-### Example 2: Get sessions by status
+### Example 2
 ```powershell
-PS C:\> Get-OrchUnattendedSession -Status Connected
+PS Orch1:\> Get-OrchUnattendedSession Available, Disconnected
 ```
 
-Retrieves only the unattended sessions that are currently connected.
+Retrieves unattended sessions that are either disconnected or available, demonstrating multiple status filtering.
 
-### Example 3: Get disconnected sessions
-```powershell
-PS C:\> Get-OrchUnattendedSession -Status Disconnected
-```
-
-Retrieves all unattended sessions that are currently disconnected.
-
-### Example 4: Get sessions with multiple status values
-```powershell
-PS C:\> Get-OrchUnattendedSession -Status Connected, Busy
-```
-
-Retrieves unattended sessions that are either connected or busy.
-
-### Example 5: Get session details and examine structure
-```powershell
-PS C:\> Get-OrchUnattendedSession | Select-Object Path, -First 1 | ConvertTo-Json -Depth 5
-```
-
-Retrieves the first session and displays its complete object structure in JSON format for detailed analysis.
-
-### Example 6: Get sessions from specific drives
+### Example 3
 ```powershell
 PS C:\> Get-OrchUnattendedSession -Path Orch1:, Orch2:
 ```
 
-Retrieves unattended sessions from multiple specified Orchestrator drives.
+Retrieves unattended sessions from multiple specified Orchestrator tenants for cross-tenant analysis.
 
-### Example 7: Filter sessions by runtime type
+### Example 4
 ```powershell
-PS C:\> Get-OrchUnattendedSession | Where-Object {$_.RuntimeType -eq "Unattended"} | Select-Object MachineName, Status, Runtimes
+PS Orch1:\> Get-OrchUnattendedSession | ConvertTo-Json -Depth 2
 ```
 
-Filters sessions to show only those with RuntimeType "Unattended" and displays selected properties.
+Retrieves unattended sessions and displays their structure in JSON format for detailed analysis of robot session properties.
+
+### Example 5
+```powershell
+PS Orch1:\> Get-OrchUnattendedSession | Where-Object {$_.RuntimeType -eq 'Headless'}
+```
+
+Gets only headless runtime unattended sessions using pipeline filtering.
+
+### Example 6
+```powershell
+PS Orch1:\> Get-OrchUnattendedSession | Select-Object Path, MachineName, RuntimeType, Status, ReportingTime
+```
+
+Gets unattended sessions with selected properties, showing Path first for multi-tenant identification.
 
 ## PARAMETERS
 
@@ -97,7 +90,7 @@ Accept wildcard characters: False
 ```
 
 ### -Status
-Specifies the status of the unattended sessions to be retrieved. Supports wildcard characters (* and ?) for pattern matching. Common status values include "Connected", "Disconnected", "Busy", and others.
+Specifies the status of the unattended sessions to be retrieved. Supports wildcard characters (* and ?) for pattern matching. Common status values include "Connected", "Disconnected", "Busy", and "Unknown".
 
 ```yaml
 Type: String[]
@@ -149,10 +142,17 @@ Unattended sessions represent active automation sessions running on unattended r
 
 Use ConvertTo-Json to explore the complete structure of session objects, as they contain detailed runtime information that may not be visible in the default display format.
 
+
+
+Primary Endpoint: GET /odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimes
+OAuth required scopes: OR.Robots or OR.Robots.Read
+Required permissions: Robots.View
+
 ## RELATED LINKS
 
 [Get-OrchRobot](Get-OrchRobot.md)
 [Get-OrchMachine](Get-OrchMachine.md)
 [Get-OrchJob](Get-OrchJob.md)
 [Get-OrchLicenseRuntime](Get-OrchLicenseRuntime.md)
+
 

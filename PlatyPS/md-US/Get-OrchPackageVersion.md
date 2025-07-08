@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,11 +18,15 @@ Get-OrchPackageVersion [[-Id] <String[]>] [[-Version] <String[]>] [-Path <String
 ```
 
 ## DESCRIPTION
-The Get-OrchPackageVersion cmdlet retrieves package versions from UiPath Orchestrator. Packages represent automation processes, libraries, and other executable components with version control and deployment management. Each package version contains metadata about the automation project including version information, activity status, and execution requirements.
+The Get-OrchPackageVersion cmdlet retrieves package versions from UiPath Orchestrator. This cmdlet is unique as it operates on both tenant entities and folder entities, allowing access to packages from both folder feeds and tenant feeds. Packages represent automation processes, libraries, and other executable components with version control and deployment management.
 
-Package versions include comprehensive information such as Version number, Published date, IsActive status, Description, TargetFramework (Windows, Cross-platform), MainEntryPointPath, and project metadata. The cmdlet provides visibility into available automation packages and their deployment status.
+Packages can be deployed to two types of feeds:
+- Folder feeds: Packages deployed to specific folders with package feeds enabled
+- Tenant feeds: Packages available at the tenant level that can be deployed to any folder
 
-This cmdlet operates as a tenant-level entity operation, retrieving package versions from the specified Orchestrator environment. Package information includes project type (Process, Library), target framework, compilation status, and execution requirements.
+When executed from a folder with no feed, the cmdlet automatically retrieves packages from the tenant feed. When executed from a folder with a feed, it retrieves packages from that folder's feed. Use -Path to explicitly specify tenant feeds (Orch1:) or folder feeds (Orch1:\FolderName).
+
+Package versions include comprehensive information such as Version number, Published date, IsActive status, Description, TargetFramework (Windows, Cross-platform), MainEntryPointPath, and project metadata. The cmdlet provides visibility into available automation packages and their deployment status across both folder and tenant levels.
 
 Primary Endpoint: GET /odata/Packages
 
@@ -37,21 +41,21 @@ Required permissions: Packages.View
 PS Orch1:\Shared> Get-OrchPackageVersion
 ```
 
-Retrieves all package versions, displaying Id, Version, Published date, IsActive status, and Description.
+Retrieves all package versions from the current folder feed, displaying Id, Version, Published date, IsActive status, and Description.
 
 ### Example 2
 ```powershell
-PS Orch1:\Shared> Get-OrchPackageVersion | ConvertTo-Json -Depth 3
+PS C:\> Get-OrchPackageVersion -Path Orch1:\ -Recurse
 ```
 
-Displays detailed package version properties in JSON format, including TargetFramework, ProjectType, MainEntryPointPath, and all metadata.
+Retrieves all package versions from the tenant feed and all folder feeds using -Recurse. This demonstrates accessing the tenant feed (packages available tenant-wide) as opposed to folder feeds (packages specific to individual folders). The command can be executed from any location by explicitly specifying the tenant path.
 
 ### Example 3
 ```powershell
-PS C:\> Get-OrchPackageVersion -Path Orch1: -Id "*Process*"
+PS C:\> Get-OrchPackageVersion -Path Orch1:\ *Process*
 ```
 
-Gets all package versions with IDs containing "Process" in the Orch1 tenant.
+Gets all package versions with IDs containing "Process" in the Orch1 tenant feed.
 
 ### Example 4
 ```powershell
@@ -66,13 +70,6 @@ PS Orch1:\> Get-OrchPackageVersion | Where-Object {$_.ProjectType -eq "Library"}
 ```
 
 Displays library packages with their versions and descriptions.
-
-### Example 6
-```powershell
-PS Orch1:\> Get-OrchPackageVersion | Group-Object ProjectType | Select-Object Name, Count
-```
-
-Groups package versions by project type and shows counts for each type.
 
 ## PARAMETERS
 
@@ -184,6 +181,12 @@ Returns PackageVersion objects containing comprehensive package information. Key
 ## NOTES
 This cmdlet is a tenant-level entity operation for accessing package version information. Packages represent automation processes and libraries with version control and deployment management. Use IsActive property to identify currently deployed versions. ProjectType distinguishes between executable processes and reusable libraries. TargetFramework indicates platform compatibility. This operation requires Packages.View permissions.
 
+
+
+Primary Endpoint: GET /odata/Processes/UiPath.Server.Configuration.OData.GetProcessVersions
+OAuth required scopes: OR.Execution or OR.Execution.Read
+Required permissions: Packages.View
+
 ## RELATED LINKS
 
 [Get-OrchPackage](Get-OrchPackage.md)
@@ -193,3 +196,5 @@ This cmdlet is a tenant-level entity operation for accessing package version inf
 [Set-OrchPackage](Set-OrchPackage.md)
 
 [Remove-OrchPackageVersion](Remove-OrchPackageVersion.md)
+
+

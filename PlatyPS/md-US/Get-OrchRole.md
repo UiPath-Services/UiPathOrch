@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -70,7 +70,7 @@ Gets custom (non-static) roles that can be modified.
 PS Orch1:\> Get-OrchRole -ExportCsv C:\Reports\Roles.csv
 ```
 
-Exports all roles to CSV with UTF-8 BOM encoding.
+Exports all roles to CSV with UTF-8 BOM encoding. The exported CSV can be imported using Import-Csv | Set-OrchRole.
 
 ## PARAMETERS
 
@@ -183,6 +183,12 @@ Use -ExpandPermission when you need detailed permission analysis or want to filt
 
 The -ExportCsv parameter creates import-ready CSV files with human-readable names instead of internal IDs.
 
+
+
+Primary Endpoint: GET /odata/Roles
+OAuth required scopes: OR.Users or OR.Users.Read
+Required permissions: Roles.View
+
 ## RELATED LINKS
 
 [Set-OrchRole](Set-OrchRole.md)
@@ -192,3 +198,4 @@ The -ExportCsv parameter creates import-ready CSV files with human-readable name
 [Remove-OrchRole](Remove-OrchRole.md)
 
 [Add-OrchRoleToFolderUser](Add-OrchRoleToFolderUser.md)
+

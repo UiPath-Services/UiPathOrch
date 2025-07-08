@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-help.xml
 Module Name: UiPathOrch
 online version:
@@ -38,48 +38,45 @@ Required permissions: [PLACEHOLDER - Test data queue view permissions]
 
 ### Example 1
 ```powershell
-PS C:\> Set-Location Orch1:\root
-PS Orch1:\root> Get-OrchTestDataQueueItemTable
+PS Orch1:\Shared> Get-OrchTestDataQueueItemTable
 ```
 
 Gets test data queue items from the current folder and displays them in expanded table format.
 
 ### Example 2
 ```powershell
-PS C:\> Set-Location Orch1:\
-PS Orch1:\> Get-OrchTestDataQueueItemTable -Recurse
+PS Orch1:\Shared> Get-OrchTestDataQueueItemTable TestDataQueue
 ```
 
-Gets test data queue items from all folders recursively and displays them in expanded table format.
+Gets test data items from the specified queue named "TestDataQueue" in table format using positional parameter.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchTestDataQueueItemTable -Path Orch1:\root
+PS Orch1:\Shared> Get-OrchTestDataQueueItemTable *Test*
 ```
 
-Gets test data queue items from a specific folder without changing the current location.
+Gets test data items from queues whose names contain "Test" and displays them in table format using wildcard matching.
 
 ### Example 4
 ```powershell
-PS Orch1:\root> Get-OrchTestDataQueueItemTable | Where-Object IsConsumed -eq $false
+PS Orch1:\> Get-OrchTestDataQueueItemTable -Recurse
 ```
 
-Gets unconsumed test data queue items and displays them in table format.
+Gets test data queue items from the current folder and all subfolders recursively, displaying them in expanded table format.
 
 ### Example 5
 ```powershell
-PS Orch1:\root> Get-OrchTestDataQueueItemTable | Select-Object -First 10
+PS C:\> Get-OrchTestDataQueueItemTable -Path Orch1:\Production
 ```
 
-Gets the first 10 test data queue items in expanded table format.
+Gets test data items from the Production folder in table format, demonstrating execution from any location.
 
 ### Example 6
 ```powershell
-PS Orch1:\root> $testData = Get-OrchTestDataQueueItemTable
-PS Orch1:\root> $testData | ConvertTo-Json -Depth 3
+PS Orch1:\Shared> Get-OrchTestDataQueueItemTable | ConvertTo-Json -Depth 2
 ```
 
-Gets test data in table format and converts to JSON to explore the complete structure including table metadata.
+Gets test data in table format and displays the complete structure including table metadata in JSON format for detailed analysis.
 
 ## PARAMETERS
 
@@ -147,10 +144,17 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 - The IsConsumed property indicates whether test data items have been used in test execution
 - This cmdlet is essential for data-driven testing scenarios where readable test data presentation is needed
 
+
+
+Primary Endpoint: GET /odata/TestDataQueues
+OAuth required scopes: OR.TestDataQueues or OR.TestDataQueues.Read
+Required permissions: TestDataQueues.View
+
 ## RELATED LINKS
 
 [Get-OrchTestDataQueueItem](Get-OrchTestDataQueueItem.md)
 [Get-OrchTestDataQueue](Get-OrchTestDataQueue.md)
 [about_UiPathOrch](about_UiPathOrch.md)
+
 
 

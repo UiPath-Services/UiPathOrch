@@ -63,24 +63,31 @@ Gets inactive users using expanded details.
 
 ### Example 5
 ```powershell
-PS Orch1:\> Get-OrchUser -Path Orch1:, Orch2:
+PS C:\> Get-OrchUser -Path Orch1:, Orch2:
 ```
 
 Gets users from multiple tenants.
 
 ### Example 6
 ```powershell
-PS Orch1:\> Get-OrchUser -FullName "John*" -Type DirectoryUser
+PS Orch1:\> Get-OrchUser -Type DirectoryUser -FullName John*
 ```
 
 Gets directory users whose full name starts with "John".
 
 ### Example 7
 ```powershell
+PS Orch1:\> Get-OrchUser administrators | ConvertTo-Json -Depth 2
+```
+
+Gets detailed user information and displays the complete structure including nested properties like UserRoles.
+
+### Example 8
+```powershell
 PS Orch1:\> Get-OrchUser -ExportCsv C:\Reports\Users.csv
 ```
 
-Exports all users to CSV with UTF-8 BOM encoding. The exported CSV can be imported using Import-Csv | Add-OrchUser.
+Exports all users to CSV with UTF-8 BOM encoding. The exported CSV can be imported using Import-Csv | Add-OrchUser or Import-Csv | Update-OrchUser.
 
 ## PARAMETERS
 
@@ -221,6 +228,12 @@ Use -ExpandDetails when you need access to additional user information such as l
 The -ExportCsv parameter creates import-ready CSV files with human-readable names instead of internal IDs.
 
 User types include DirectoryUser (individual users), DirectoryGroup (user groups), User (local users), and Robot (robot accounts).
+
+
+
+Primary Endpoint: GET /odata/Users
+OAuth required scopes: OR.Users or OR.Users.Read
+Required permissions: Users.View
 
 ## RELATED LINKS
 

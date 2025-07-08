@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,11 +26,11 @@ Use the -Name parameter to specify which queues to copy and the -Destination par
 
 This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters. The -Recurse parameter enables copying queues from all subfolders, maintaining the folder structure in the destination.
 
-Primary Endpoint: [PLACEHOLDER - 具体的なAPIエンドポイント]
+Primary Endpoint: GET /odata/QueueDefinitions, GET /odata/QueueDefinitions/UiPath.Server.Configuration.OData.GetFoldersForQueue(id={id}), POST /odata/QueueDefinitions
 
-OAuth required scopes: [PLACEHOLDER]
+OAuth required scopes: OR.Queues
 
-Required permissions: [PLACEHOLDER]
+Required permissions: Queues.View, Queues.Create
 
 ## EXAMPLES
 

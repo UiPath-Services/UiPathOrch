@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -144,5 +144,11 @@ Web setting objects can be piped to this cmdlet. The Name property will be autom
 ### UiPath.PowerShell.Entities.WebSetting
 
 ## NOTES
+
+
+
+Primary Endpoint: GET /odata/Settings/UiPath.Server.Configuration.OData.GetWebSettings
+OAuth required scopes: OR.Settings or OR.Settings.Read
+Required permissions: Settings.View
 
 ## RELATED LINKS

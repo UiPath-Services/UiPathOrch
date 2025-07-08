@@ -44,8 +44,8 @@ Displays the help information using Out-Host to ensure proper formatting in the 
 
 ### Example 3
 ```powershell
-PS C:\>  = Get-OrchHelp
-PS C:\> 
+PS C:\> $helpText = Get-OrchHelp
+PS C:\>
 ```
 
 Captures the help content in a variable for further processing or analysis. This approach allows you to work with the help text programmatically.
@@ -56,6 +56,14 @@ PS C:\> Get-OrchHelp | Out-File -FilePath "OrchModuleHelp.txt"
 ```
 
 Saves the help content to a text file for offline reference or documentation purposes.
+
+### Example 5
+```powershell
+PS C:\> Get-OrchHelp | Select-String "Essential Commands" -A 5
+```
+
+Extracts specific sections from the help content, such as the essential commands section. This is useful for automated scripts that need to access specific guidance information.
+
 ## PARAMETERS
 
 ### -ProgressAction

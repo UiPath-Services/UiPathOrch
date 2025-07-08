@@ -33,7 +33,6 @@ Required permissions: [PLACEHOLDER - License view permissions]
 
 ### Example 1
 ```powershell
-PS C:\> Set-Location Orch1:
 PS Orch1:\> Get-OrchLicense
 ```
 
@@ -41,36 +40,43 @@ Gets the complete license information for the current Orchestrator instance.
 
 ### Example 2
 ```powershell
-PS Orch1:\> $license = Get-OrchLicense
-PS Orch1:\> $license.Allowed
+PS Orch1:\> $license = Get-OrchLicense; $license.Allowed
 ```
 
 Retrieves the license information and displays the allowed license counts by type.
 
 ### Example 3
 ```powershell
-PS Orch1:\> $license = Get-OrchLicense
-PS Orch1:\> Compare-Object $license.Allowed.GetEnumerator() $license.Used.GetEnumerator() -Property Key, Value
+PS C:\> Get-OrchLicense -Path Orch1:, Orch2:
 ```
 
-Compares allowed versus used licenses to identify available capacity.
+Gets license information from multiple tenants.
 
 ### Example 4
 ```powershell
-PS Orch1:\> $license = Get-OrchLicense
-PS Orch1:\> if ($license.IsExpired) { Write-Warning "License has expired!" }
-PS Orch1:\> $expiryDate = [DateTimeOffset]::FromUnixTimeSeconds($license.ExpireDate)
-PS Orch1:\> Write-Host "License expires on: $expiryDate"
+PS Orch1:\> Get-OrchLicense | ConvertTo-Json -Depth 2
 ```
 
-Checks license expiration status and displays the expiration date.
+Gets license information and displays the complete structure including nested properties like Allowed and Used license counts.
 
 ### Example 5
 ```powershell
-PS Orch1:\> Get-OrchLicense | Select-Object SubscriptionPlan, SubscriptionCode, IsProOrEnterprise, UserLicensingEnabled
+PS Orch1:\> $license = Get-OrchLicense
+PS Orch1:\> $usage = ($license.Used.Unattended / $license.Allowed.Unattended) * 100
+PS Orch1:\> Write-Host "Unattended license usage: $usage%"
 ```
 
-Gets license information and displays only the subscription and licensing model details.
+Calculates and displays the percentage of unattended licenses currently in use.
+
+### Example 6
+```powershell
+PS Orch1:\> $license = Get-OrchLicense
+PS Orch1:\> $expiryDate = [DateTimeOffset]::FromUnixTimeSeconds($license.ExpireDate)
+PS Orch1:\> $daysLeft = ($expiryDate - [DateTimeOffset]::Now).Days
+PS Orch1:\> Write-Host "License expires in $daysLeft days"
+```
+
+Calculates and displays the number of days remaining until license expiration.
 
 ## PARAMETERS
 
@@ -118,6 +124,12 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 - The Allowed and Used properties contain hashtables with license counts by type (Unattended, Attended, StudioPro, etc.)
 - License types include: ProcessOrchestration, AppTest, Headless, Development, StudioX, NonProduction, StudioPro, TestAutomation, Unattended, AgentService, Attended, and Hosting
 - The IsExpired property indicates current license validity status
+
+
+
+Primary Endpoint: GET /odata/Settings/UiPath.Server.Configuration.OData.GetLicense
+OAuth required scopes: OR.Settings or OR.Settings.Read
+Required permissions: Settings.View
 
 ## RELATED LINKS
 

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -22,6 +22,8 @@ The Get-OrchAuthenticationSetting cmdlet retrieves authentication and system con
 
 Settings include authentication configurations (Auth.*), application properties (Application.*), build information (Build.*), localization settings, token authentication options, and telemetry configurations. Each setting is returned as a key-value pair showing the configuration parameter and its current value.
 
+Authentication settings are tenant entities that operate across the entire tenant scope. Use the -Path parameter to specify target tenants by drive name (e.g., Orch1:, Orch2:).
+
 This cmdlet operates as a tenant-level entity operation, retrieving system-wide configuration settings from the specified Orchestrator environment. These settings are typically read-only and reflect the current system configuration.
 
 Primary Endpoint: GET /odata/Settings
@@ -34,45 +36,31 @@ Required permissions: Settings.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Shared> Get-OrchAuthenticationSetting
+PS Orch1:\> Get-OrchAuthenticationSetting
 ```
 
 Retrieves all authentication and system settings, displaying Key and Value pairs for all configuration parameters.
 
 ### Example 2
 ```powershell
-PS Orch1:\Shared> Get-OrchAuthenticationSetting | Where-Object {$_.Key -like "Auth.*"}
+PS Orch1:\> Get-OrchAuthenticationSetting Auth.*
 ```
 
-Gets all authentication-related settings by filtering keys that start with "Auth.".
+Gets authentication-related settings using wildcard key filtering.
 
 ### Example 3
 ```powershell
-PS C:\> Get-OrchAuthenticationSetting -Path Orch1: -Key "*Token*"
+PS C:\> Get-OrchAuthenticationSetting -Path Orch1:, Orch2: -Key *Token*
 ```
 
-Gets all settings with keys containing "Token" in the Orch1 tenant.
+Gets settings with keys containing "Token" from multiple tenants.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchAuthenticationSetting | Where-Object {$_.Key -like "Build.*"}
+PS Orch1:\> Get-OrchAuthenticationSetting | Select-Object Path, Key, Value | Sort-Object Key
 ```
 
-Retrieves all build-related information including version and date.
-
-### Example 5
-```powershell
-PS Orch1:\> Get-OrchAuthenticationSetting | Select-Object Key, Value | Sort-Object Key
-```
-
-Displays all settings sorted alphabetically by key for organized viewing.
-
-### Example 6
-```powershell
-PS Orch1:\> Get-OrchAuthenticationSetting | Where-Object {$_.Value -eq "True"} | Select-Object Key
-```
-
-Shows all settings that are currently enabled (value = "True").
+Displays all settings sorted alphabetically by key with Path shown first.
 
 ## PARAMETERS
 
@@ -146,6 +134,12 @@ Common setting categories include:
 
 ## NOTES
 This cmdlet is a tenant-level entity operation for accessing system configuration settings. These settings control authentication behavior, application properties, and system features. Most settings are read-only and reflect the current Orchestrator configuration. Use filtering by Key patterns to find specific configuration categories. This operation requires Settings.View permissions.
+
+
+
+Primary Endpoint: GET /odata/Settings/UiPath.Server.Configuration.OData.GetAuthenticationSettings
+OAuth required scopes: OR.Settings or OR.Settings.Read
+Required permissions: Settings.View
 
 ## RELATED LINKS
 

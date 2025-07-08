@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -39,56 +39,42 @@ Required permissions: Folders.View
 PS Orch1:\> Get-OrchPersonalWorkspace
 ```
 
-Gets all personal workspaces in the current tenant.
+Gets all personal workspaces in the Orch1 tenant.
 
 ### Example 2
 ```powershell
-PS Orch1:\> Get-OrchPersonalWorkspace "*workspace*"
+PS Orch1:\> Get-OrchPersonalWorkspace *workspace*
 ```
 
-Gets personal workspaces whose names contain "workspace" using wildcard pattern matching.
+Gets personal workspaces whose names contain "workspace" using wildcard pattern matching and positional parameter.
 
 ### Example 3
 ```powershell
 PS C:\> Get-OrchPersonalWorkspace -Path Orch1:, Orch2:
 ```
 
-Gets personal workspaces from both Orch1 and Orch2 tenants without changing the current location.
+Gets personal workspaces from both Orch1 and Orch2 tenants for cross-tenant analysis. Demonstrates that -Path parameter allows execution from any location.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchPersonalWorkspace | Where-Object {$_.IsActive -eq $true} | Select-Object Path, Name, OwnerName, LastLogin
+PS Orch1:\> Get-OrchPersonalWorkspace | ConvertTo-Json -Depth 2
 ```
 
-Gets only active personal workspaces and displays key information. Note that Path is selected first to identify which tenant each workspace belongs to.
+Gets all personal workspaces and displays their structure in JSON format for detailed analysis of workspace properties including ownership and activity status.
 
 ### Example 5
 ```powershell
-PS Orch1:\> Get-OrchPersonalWorkspace | Where-Object {$_.LastLogin -lt (Get-Date).AddDays(-30)} | Select-Object Path, Name, LastLogin
+PS Orch1:\> Get-OrchPersonalWorkspace | Where-Object {$_.IsActive -eq $true}
 ```
 
-Gets personal workspaces that haven't been accessed in the last 30 days, useful for identifying inactive workspaces.
+Gets only active personal workspaces using pipeline filtering.
 
 ### Example 6
 ```powershell
-PS Orch1:\> Get-OrchPersonalWorkspace | Group-Object IsActive | Select-Object Name, Count
+PS Orch1:\> Get-OrchPersonalWorkspace | Select-Object Path, Name, OwnerName, IsActive, LastLogin
 ```
 
-Groups personal workspaces by their active status and shows the count for each status.
-
-### Example 7
-```powershell
-PS Orch1:\> Get-OrchPersonalWorkspace | ConvertTo-Json -Depth 3
-```
-
-Gets all personal workspaces and displays the complete object structure including detailed workspace information.
-
-### Example 8
-```powershell
-PS Orch1:\> Get-OrchPersonalWorkspace | Where-Object {$_.ExploringUserIds.Count -gt 0} | Select-Object Path, Name, ExploringUserIds
-```
-
-Gets personal workspaces that have exploring users, indicating shared access or collaboration.
+Gets personal workspaces with selected properties, showing Path first for multi-tenant identification.
 
 ## PARAMETERS
 
@@ -183,6 +169,12 @@ When using Select-Object with the results, always include Path as the first prop
 
 Use ConvertTo-Json to explore the complete workspace object structure including detailed ownership and access information.
 
+
+
+Primary Endpoint: GET /odata/PersonalWorkspaces
+OAuth required scopes: OR.Folders or OR.Folders.Read
+Required permissions: Units.View
+
 ## RELATED LINKS
 
 [Remove-OrchPersonalWorkspace](Remove-OrchPersonalWorkspace.md)
@@ -190,3 +182,4 @@ Use ConvertTo-Json to explore the complete workspace object structure including 
 [Enable-OrchPersonalWorkspace](Enable-OrchPersonalWorkspace.md)
 
 [Disable-OrchPersonalWorkspace](Disable-OrchPersonalWorkspace.md)
+

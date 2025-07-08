@@ -30,62 +30,40 @@ Required permissions: [PLACEHOLDER - Test case execution view permissions]
 
 ## EXAMPLES
 
-### Example 1: Get test case executions from current folder
+### Example 1
 ```powershell
-PS C:\> cd Orch1:\root
-PS Orch1:\root> Get-OrchTestCaseExecution
+PS Orch1:\Shared> Get-OrchTestCaseExecution
 ```
 
-Navigates to the root folder and retrieves all test case executions from that folder.
+Retrieves all test case execution records from the current folder.
 
-### Example 2: Get test case executions recursively
+### Example 2
 ```powershell
-PS C:\> Get-OrchTestCaseExecution -Recurse
+PS Orch1:\> Get-OrchTestCaseExecution -Recurse
 ```
 
-Retrieves all test case executions from all folders recursively, starting from the root folder.
+Retrieves all test case execution records from the current folder and all subfolders recursively.
 
-### Example 3: Get test case executions by name pattern
+### Example 3
 ```powershell
-PS C:\> Get-OrchTestCaseExecution -Recurse -Name "*Main*"
+PS Orch1:\Shared> Get-OrchTestCaseExecution -Recurse TestCase*
 ```
 
-Retrieves test case executions whose entry point path contains "Main" from all folders recursively.
+Retrieves test case executions whose names start with "TestCase" from all folders recursively using positional parameter.
 
-### Example 4: Get test case executions from specific path
+### Example 4
 ```powershell
-PS C:\> Get-OrchTestCaseExecution -Path Orch1:\root\MyProject
+PS C:\> Get-OrchTestCaseExecution -Path Orch1:\Production
 ```
 
-Retrieves test case executions from the specified folder path.
+Retrieves test case execution records from the Production folder, demonstrating execution from any location.
 
-### Example 5: Get test case executions with depth limit
+### Example 5
 ```powershell
-PS C:\> Get-OrchTestCaseExecution -Recurse -Depth 2
+PS Orch1:\Shared> Get-OrchTestCaseExecution | Select-Object -First 1 | ConvertTo-Json -Depth 2
 ```
 
-Retrieves test case executions recursively but limits the search to 2 levels deep from the current folder.
-
-### Example 6: Get execution details and examine structure
-```powershell
-PS C:\> Get-OrchTestCaseExecution -Recurse | Select-Object Path, -First 1 | ConvertTo-Json -Depth 5
-```
-
-Retrieves the first test case execution and displays its complete object structure in JSON format for detailed analysis.
-
-### Example 7: Filter executions by status
-```powershell
-PS C:\> Get-OrchTestCaseExecution -Recurse | Where-Object {$_.Status -eq "Passed"} | Select-Object Path, Id, EntryPointPath, StartTime, EndTime
-```
-
-Gets all test case executions and filters for those with "Passed" status, displaying key execution information.
-
-### Example 8: Get recent test executions
-```powershell
-PS C:\> Get-OrchTestCaseExecution -Recurse | Where-Object {$_.StartTime -gt (Get-Date).AddDays(-7)} | Sort-Object StartTime -Descending
-```
-
-Gets test case executions from the last 7 days and sorts them by start time in descending order.
+Retrieves the first test case execution and displays its structure in JSON format for detailed analysis.
 
 ## PARAMETERS
 
@@ -182,6 +160,12 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 - The RuntimeType property indicates the type of robot that executed the test (e.g., "TestAutomation")
 - ExecutionOrder property shows the sequence of test case execution within a test set
 
+
+
+Primary Endpoint: GET /odata/TestCaseExecutions
+OAuth required scopes: OR.TestSetExecutions or OR.TestSetExecutions.Read
+Required permissions: TestSetExecutions.View
+
 ## RELATED LINKS
 
 [Get-OrchTestCase]()
@@ -191,5 +175,6 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 [Get-OrchTestSetExecution]()
 
 [Start-OrchTestSet]()
+
 
 

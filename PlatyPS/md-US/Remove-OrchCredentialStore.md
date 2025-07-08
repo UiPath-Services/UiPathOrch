@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,7 +26,7 @@ Before removing a credential store, ensure that no assets are currently configur
 
 Primary Endpoint: DELETE /odata/CredentialStores({credentialStoreId})
 
-OAuth required scopes: OR.Settings
+OAuth required scopes: OR.Settings or OR.Settings.Write
 
 Required permissions: Settings.Delete
 

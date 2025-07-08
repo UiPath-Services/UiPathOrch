@@ -28,9 +28,9 @@ The cmdlet supports wildcard patterns for both asset names and folder links, ena
 
 Primary Endpoint: POST /odata/Assets/UiPath.Server.Configuration.OData.ShareToFolders
 
-OAuth required scopes: OR.Assets
+OAuth required scopes: OR.Assets or OR.Assets.Write
 
-Required permissions:
+Required permissions: Assets.Edit
 
 ## EXAMPLES
 

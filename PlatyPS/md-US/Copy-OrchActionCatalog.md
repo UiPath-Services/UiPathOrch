@@ -26,11 +26,11 @@ Use the -Name parameter to specify which action catalogs to copy and the -Destin
 
 This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters. The -Recurse parameter enables copying action catalogs from all subfolders, maintaining the folder structure in the destination.
 
-Primary Endpoint: [PLACEHOLDER - 具体的なAPIエンドポイント]
+Primary Endpoint: GET /odata/TaskCatalogs, POST /odata/TaskCatalogs/UiPath.Server.Configuration.OData.CreateTaskCatalog
 
-OAuth required scopes: [PLACEHOLDER]
+OAuth required scopes: OR.Tasks
 
-Required permissions: [PLACEHOLDER]
+Required permissions: TaskCatalogs.View, TaskCatalogs.Create
 
 ## EXAMPLES
 
