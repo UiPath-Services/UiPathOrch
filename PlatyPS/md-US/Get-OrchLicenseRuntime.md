@@ -24,9 +24,9 @@ Each returned object contains comprehensive information about robot machines, in
 
 This is a tenant-level operation that retrieves license information across the entire Orchestrator instance.
 
-Primary Endpoint: [PLACEHOLDER - GET /odata/LicensesRuntime/UiPath.Server.Configuration.OData.GetLicensesRuntime(robotType='{robotType}')]
+Primary Endpoint: GET /odata/LicensesRuntime/UiPath.Server.Configuration.OData.GetLicensesRuntime(robotType='{robotType}')
 
-OAuth required scopes: [PLACEHOLDER - OR.License or OR.License.Read]
+OAuth required scopes: OR.License or OR.License.Read
 
 Required permissions: [PLACEHOLDER - License.View]
 
@@ -34,45 +34,31 @@ Required permissions: [PLACEHOLDER - License.View]
 
 ### Example 1: Get all runtime licenses
 ```powershell
-PS C:\> Get-OrchLicenseRuntime
+PS Orch1:\> Get-OrchLicenseRuntime
 ```
 
 Retrieves runtime license information for all robot types from the current Orchestrator tenant, grouped by robot type.
 
-### Example 2: Get runtime licenses for specific robot type
-```powershell
-PS C:\> Get-OrchLicenseRuntime -RobotType Unattended
-```
-
-Retrieves runtime license information only for Unattended robots.
-
-### Example 3: Get runtime licenses for multiple robot types
-```powershell
-PS C:\> Get-OrchLicenseRuntime -RobotType Unattended, NonProduction
-```
-
-Retrieves runtime license information for both Unattended and NonProduction robot types.
-
-### Example 4: Get runtime licenses with wildcard filtering
-```powershell
-PS C:\> Get-OrchLicenseRuntime -RobotType *Production
-```
-
-Retrieves runtime license information for all robot types ending with "Production".
-
-### Example 5: Get license details and examine structure
-```powershell
-PS C:\> Get-OrchLicenseRuntime | Select-Object -First 1 | ConvertTo-Json -Depth 5
-```
-
-Retrieves the first license record and displays its complete object structure in JSON format for detailed analysis.
-
-### Example 6: Get runtime licenses from specific drives
+### Example 2: Get runtime licenses from specific drives
 ```powershell
 PS C:\> Get-OrchLicenseRuntime -Path Orch1:, Orch2:
 ```
 
 Retrieves runtime license information from multiple specified Orchestrator drives.
+
+### Example 3: Get runtime licenses for multiple robot types
+```powershell
+PS Orch1:\> Get-OrchLicenseRuntime Unattended, NonProduction
+```
+
+Retrieves runtime license information for both Unattended and NonProduction robot types.
+
+### Example 4: Get license details and examine structure
+```powershell
+PS Orch1:\> Get-OrchLicenseRuntime | Select-Object -First 1 | ConvertTo-Json -Depth 5
+```
+
+Retrieves the first license record and displays its complete object structure in JSON format for detailed analysis.
 
 ## PARAMETERS
 

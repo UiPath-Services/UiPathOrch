@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPathOrch-help.xml
 Module Name: UiPathOrch
 online version:
@@ -28,11 +28,11 @@ The cmdlet is particularly useful for data-driven testing scenarios where test d
 
 When specifying the -Path and -Recurse parameters, place them immediately after the cmdlet name. This placement ensures that autocomplete for subsequent parameters functions correctly.
 
-Primary Endpoint: [PLACEHOLDER - Function implementation, uses Get-OrchTestDataQueueItem internally]
+Primary Endpoint: Function implementation (uses Get-OrchTestDataQueueItem internally which calls GET /odata/TestDataQueueItems)
 
-OAuth required scopes: [PLACEHOLDER - Test data queue scopes]
+OAuth required scopes: OR.TestData.Read
 
-Required permissions: [PLACEHOLDER - Test data queue view permissions]
+Required permissions: Folders.View, TestData.View (for test data queue item access)
 
 ## EXAMPLES
 

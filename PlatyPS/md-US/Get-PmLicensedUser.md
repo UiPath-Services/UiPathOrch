@@ -24,66 +24,52 @@ Each returned object contains user identification, license bundle information, l
 
 This cmdlet accesses Platform Management APIs and works across all UiPath Orchestrator drives (Orch1:, Orch1Tm:, Orch1Du:).
 
-Primary Endpoint: [PLACEHOLDER - GET /portal_/api/license/accountant/UserLicense/user/page]
+Primary Endpoint: GET /portal_/api/license/accountant/UserLicense/user/page
 
-OAuth required scopes: [PLACEHOLDER - PM.User.Read]
+OAuth required scopes: [PLACEHOLDER]
 
-Required permissions: [PLACEHOLDER - Platform Management user read permissions]
+Required permissions: [PLACEHOLDER]
 
 ## EXAMPLES
 
 ### Example 1: Get all licensed users
 ```powershell
-PS C:\> Get-PmLicensedUser
+PS Orch1:\> Get-PmLicensedUser
 ```
 
 Retrieves information about all licensed users in the Platform Management system.
 
 ### Example 2: Get licensed user by email
 ```powershell
-PS C:\> Get-PmLicensedUser -Email "user@example.com"
-```
-
-Retrieves license information for the user with the specified email address.
-
-### Example 3: Get licensed users by multiple emails
-```powershell
-PS C:\> Get-PmLicensedUser -Email "user1@example.com", "user2@example.com"
+PS Orch1:\> Get-PmLicensedUser user1@example.com, user2@example.com
 ```
 
 Retrieves license information for multiple users by their email addresses.
 
-### Example 4: Get licensed user by name
+### Example 3: Get license details and examine structure
 ```powershell
-PS C:\> Get-PmLicensedUser -Name "John Doe"
-```
-
-Retrieves license information for the user with the specified name.
-
-### Example 5: Get license details and examine structure
-```powershell
-PS C:\> Get-PmLicensedUser | Select-Object -First 1 | ConvertTo-Json -Depth 5
+PS Orch1:\> Get-PmLicensedUser | Select-Object -First 1 | ConvertTo-Json -Depth 5
 ```
 
 Retrieves the first licensed user record and displays its complete object structure in JSON format for detailed analysis.
 
-### Example 6: Get licensed users from specific drives
+### Example 4: Get licensed users from specific drives
 ```powershell
 PS C:\> Get-PmLicensedUser -Path Orch1:, Orch2:
 ```
 
 Retrieves licensed user information from multiple specified Orchestrator drives.
 
-### Example 7: Filter active licensed users
+### Example 5: Filter active licensed users
 ```powershell
-PS C:\> Get-PmLicensedUser | Where-Object {$_.orphan -eq $false} | Select-Object displayName, email, userBundleLicenseNames, lastInUse
+PS Orch1:\> Get-PmLicensedUser | Where-Object {$_.orphan -eq $false} | Select-Object displayName, email, userBundleLicenseNames, lastInUse
 ```
 
 Gets all licensed users, filters for non-orphaned (active) users, and displays key information including license types.
 
-### Example 8: Group users by license type
+### Example 6: Group users by license type
 ```powershell
-PS C:\> Get-PmLicensedUser | Where-Object {$_.orphan -eq $false} | ForEach-Object { $_.userBundleLicenseNames } | Group-Object | Sort-Object Count -Descending
+PS Orch1:\> Get-PmLicensedUser | Where-Object {$_.orphan -eq $false} | ForEach-Object { $_.userBundleLicenseNames } | Group-Object | Sort-Object Count -Descending
 ```
 
 Gets active licensed users and groups them by license type to show license distribution.
@@ -177,6 +163,9 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 [Remove-PmLicenseFromPmLicensedGroup]()
 
 [Get-PmUser]()
+
+
+
 
 
 

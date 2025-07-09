@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -28,9 +28,9 @@ When specifying the -Path, -Recurse, and -Depth parameters, place them immediate
 
 Primary Endpoint: GET /odata/HttpTriggers
 
-OAuth required scopes: (undocumented)
+OAuth required scopes: OR.Triggers.Read
 
-Required permissions:
+Required permissions: Folders.View (to access folder), Triggers.View (to retrieve API trigger information)
 
 ## EXAMPLES
 
@@ -191,7 +191,8 @@ Required Scope: OR.Folders.Read
 
 
 Primary Endpoint: GET /odata/HttpTriggers
-OAuth required scopes: [PLACEHOLDER]
-Required permissions: [PLACEHOLDER]
+OAuth required scopes: OR.Triggers.Read
+Required permissions: Folders.View, Triggers.View
 
 ## RELATED LINKS
+

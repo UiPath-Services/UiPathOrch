@@ -36,7 +36,7 @@ Required permissions: Assets.Edit
 
 ### Example 1
 ```powershell
-PS Orch1:\Shared> Add-OrchAssetLink SampleBooleanAsset "Orch1:\root"
+PS Orch1:\Shared> Add-OrchAssetLink SampleBooleanAsset Orch1:\root
 ```
 
 Links the SampleBooleanAsset from the current folder (Shared) to the root folder using positional parameters.

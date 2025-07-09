@@ -33,7 +33,6 @@ Required permissions: [PLACEHOLDER - Project.Read]
 
 ### Example 1: Get project settings from current folder
 ```powershell
-PS C:\> cd Orch1Tm:\TestProject
 PS Orch1Tm:\TestProject> Get-TmProjectSetting
 ```
 
@@ -41,36 +40,21 @@ Navigates to a specific Test Manager project folder and retrieves its settings.
 
 ### Example 2: Get project settings recursively
 ```powershell
-PS C:\> Set-Location Orch1Tm:\
 PS Orch1Tm:\> Get-TmProjectSetting -Recurse
 ```
 
 Retrieves settings for all Test Manager projects recursively from the root folder.
 
-### Example 3: Get project settings from specific path
+### Example 3: Get project settings from multiple paths
 ```powershell
-PS C:\> Get-TmProjectSetting -Path "Orch1Tm:\TestProject"
-```
-
-Retrieves settings for the specified Test Manager project without changing the current location.
-
-### Example 4: Get project settings from multiple paths
-```powershell
-PS C:\> Get-TmProjectSetting -Path "Orch1Tm:\TestProject", "Orch1Tm:\MyProject"
+PS C:\> Get-TmProjectSetting -Path Orch1Tm:\TestProject, Orch1Tm:\MyProject
 ```
 
 Retrieves settings from multiple Test Manager projects using specific paths.
 
-### Example 5: Get project settings and examine structure
+### Example 4: Filter projects by time zone
 ```powershell
-PS C:\> Get-TmProjectSetting -Recurse | Select-Object -First 1 | ConvertTo-Json -Depth 5
-```
-
-Retrieves the first project settings and displays the complete object structure in JSON format for detailed analysis.
-
-### Example 6: Filter projects by time zone
-```powershell
-PS C:\> Get-TmProjectSetting -Recurse | Where-Object {$_.projectTimeZone -eq "UTC"} | Select-Object projectPrefix, projectTimeZone, maxNumberOfTestSteps
+PS Orch1:\> Get-TmProjectSetting -Recurse | Where-Object {$_.projectTimeZone -eq "UTC"} | Select-Object Path, projectPrefix, projectTimeZone, maxNumberOfTestSteps
 ```
 
 Gets all project settings and filters for projects configured with UTC time zone, displaying key configuration information.

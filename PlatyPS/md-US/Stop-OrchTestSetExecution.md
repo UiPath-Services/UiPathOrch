@@ -30,57 +30,20 @@ Required permissions: [PLACEHOLDER - Test set execution stop permissions]
 
 ## EXAMPLES
 
-### Example 1: Stop a single test set execution
+### Example 1: Stop multiple test set executions
 ```powershell
-PS C:\> cd Orch1:\root
-PS Orch1:\root> Stop-OrchTestSetExecution -Id 274957
-```
-
-Navigates to the root folder and stops the test set execution with ID 274957.
-
-### Example 2: Stop test set execution using path
-```powershell
-PS C:\> Stop-OrchTestSetExecution -Id 274957 -Path Orch1:\root
-```
-
-Stops the test set execution with ID 274957 in the specified folder without changing the current location.
-
-### Example 3: Stop multiple test set executions
-```powershell
-PS C:\> Stop-OrchTestSetExecution -Id 274957, 274958, 274959 -Path Orch1:\root
-```
-
-Stops multiple test set executions by specifying their IDs.
-
-### Example 4: Preview stop operation
-```powershell
-PS C:\> Stop-OrchTestSetExecution -Id 274957 -Path Orch1:\root -WhatIf
+PS Orch1:\Shared> Stop-OrchTestSetExecution 274957, 274958, 274959 -WhatIf
 ```
 
 Shows what would happen if the stop operation were executed without actually stopping the test set execution.
 
-### Example 5: Stop with confirmation prompt
+### Example 2: Stop with confirmation prompt
 ```powershell
-PS C:\> Stop-OrchTestSetExecution -Id 274957 -Path Orch1:\root -Confirm
+PS C:\> Stop-OrchTestSetExecution -Path Orch1:\Shared 274957 -Confirm
 ```
 
 Stops the test set execution with an additional confirmation prompt before proceeding.
 
-### Example 6: Stop pending test executions
-### Example 6: Stop pending test executions
-```powershell
-PS C:\> $pendingTests = Get-OrchTestSetExecution -Recurse | Where-Object {$_.Status -eq "Pending"}
-PS C:\> $pendingTests | Stop-OrchTestSetExecution -WhatIf
-```
-
-Gets all pending test executions and shows what would happen if they were stopped, without actually stopping them.
-
-### Example 7: Stop running tests in specific project
-```powershell
-PS C:\> Get-OrchTestSetExecution -Path Orch1:\root\MyProject | Where-Object {$_.Status -eq "Running"} | Stop-OrchTestSetExecution -Confirm
-```
-
-Finds all running test executions in a specific project and stops them with confirmation prompts.
 
 ## PARAMETERS
 

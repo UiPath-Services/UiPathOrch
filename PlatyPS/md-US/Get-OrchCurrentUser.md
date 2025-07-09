@@ -29,7 +29,7 @@ Primary Endpoint: /odata/Users/UiPath.Server.Configuration.OData.GetCurrentUser
 
 OAuth required scopes: OR.Users or OR.Users.Read
 
-Required permissions: Users.View
+Required permissions: [PLACEHOLDER - requires verification]
 
 ## EXAMPLES
 
@@ -122,11 +122,12 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 
 Primary Endpoint: GET /odata/Users/UiPath.Server.Configuration.OData.GetCurrentUserExtended
-OAuth required scopes: [PLACEHOLDER]
-Required permissions: [PLACEHOLDER]
+OAuth required scopes: [PLACEHOLDER - requires verification]
+Required permissions: [PLACEHOLDER - requires verification]
 
 ## RELATED LINKS
 
 [Get-OrchUser](Get-OrchUser.md)
 [about_UiPathOrch](about_UiPathOrch.md)
+
 

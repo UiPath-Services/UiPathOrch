@@ -22,70 +22,41 @@ The Resolve-PmDirectoryNameBulk cmdlet resolves directory entity names (users, g
 
 This cmdlet accesses Platform Management APIs and works across all UiPath Orchestrator drives (Orch1:, Orch1Tm:, Orch1Du:).
 
-Primary Endpoint: [PLACEHOLDER - POST "/api/Directory/BulkResolveByName/{partitionGlobalId}]
+Primary Endpoint: POST /api/Directory/BulkResolveByName/{partitionGlobalId}
 
-OAuth required scopes: [PLACEHOLDER - Platform Management directory read scope]
+OAuth required scopes: [PLACEHOLDER]
 
-Required permissions: [PLACEHOLDER - Directory read permissions]
+Required permissions: [PLACEHOLDER]
 
 ## EXAMPLES
 
-### Example 1: Resolve a single user by name
+### Example 1: Resolve multiple users by name
 ```powershell
-PS C:\> Resolve-PmDirectoryNameBulk -EntityType User -Name user@example.com
-```
-
-Resolves the specified user name to retrieve detailed directory information.
-
-### Example 2: Resolve multiple users by name
-```powershell
-PS C:\> Resolve-PmDirectoryNameBulk -EntityType User -Name user1@example.com, "user2@example.com"
+PS Orch1:\> Resolve-PmDirectoryNameBulk User user1@example.com, user2@example.com
 ```
 
 Resolves multiple user names in a single operation to retrieve their directory information.
 
-### Example 3: Resolve a group by name
+### Example 2: Resolve multiple groups
 ```powershell
-PS C:\> Resolve-PmDirectoryNameBulk -EntityType Group -Name Everyone
-```
-
-Resolves the specified group name to retrieve detailed group information.
-
-### Example 4: Resolve multiple groups
-```powershell
-PS C:\> Resolve-PmDirectoryNameBulk -EntityType Group -Name Administrators, "Users", "Everyone"
+PS Orch1:\> Resolve-PmDirectoryNameBulk Group Administrators, Users, Everyone
 ```
 
 Resolves multiple group names to retrieve their directory information.
 
-### Example 5: Resolve and examine structure
+### Example 3: Resolve and examine structure
 ```powershell
-PS C:\> Resolve-PmDirectoryNameBulk -EntityType User -Name user@example.com | ConvertTo-Json -Depth 5
+PS Orch1:\> Resolve-PmDirectoryNameBulk User user@example.com | ConvertTo-Json -Depth 5
 ```
 
 Resolves a user name and displays the complete object structure in JSON format for detailed analysis.
 
-### Example 6: Resolve across multiple drives
+### Example 4: Resolve across multiple drives
 ```powershell
-PS C:\> Resolve-PmDirectoryNameBulk -EntityType User -Name user@example.com -Path Orch1:, Orch2:
+PS C:\> Resolve-PmDirectoryNameBulk -Path Orch1:, Orch2: User user@example.com
 ```
 
 Resolves user names across multiple specified Orchestrator drives.
-
-### Example 7: Filter resolved users by source
-```powershell
-PS C:\> Resolve-PmDirectoryNameBulk -EntityType User -Name user1@example.com, "user2@example.com" | Where-Object {$_.source -eq "aad"} | Select-Object displayName, email, source
-```
-
-Resolves multiple users and filters for those from Azure Active Directory (AAD) source.
-
-### Example 8: Extract user identifiers for further processing
-```powershell
-PS C:\> $users = Resolve-PmDirectoryNameBulk -EntityType User -Name user1@example.com, "user2@example.com"
-PS C:\> $users | Select-Object displayName, identifier, email
-```
-
-Resolves multiple users and extracts key identification information for further processing.
 
 ## PARAMETERS
 

@@ -26,9 +26,9 @@ This cmdlet operates as a folder entity operation, requiring navigation to the a
 
 Primary Endpoint: GET /odata/TestDataQueues
 
-OAuth required scopes: OR.TestDataQueues or OR.TestDataQueues.Read
+OAuth required scopes: [PLACEHOLDER]
 
-Required permissions: TestDataQueues.View
+Required permissions: [PLACEHOLDER]
 
 ## EXAMPLES
 

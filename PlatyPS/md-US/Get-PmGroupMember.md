@@ -24,76 +24,47 @@ The -Path parameter specifies target drives. If not specified, the current drive
 
 This cmdlet accesses Platform Management APIs and works across all UiPath Orchestrator drives (Orch1:, Orch1Tm:, Orch1Du:).
 
-Primary Endpoint: [PLACEHOLDER - Platform Management group membership API endpoint]
+Primary Endpoint: GET /api/Group/{tenantId}/{groupId}
 
 OAuth required scopes: PM.Group or PM.Group.Read
 
-Required permissions: [PLACEHOLDER - Platform Management group member read permissions]
+Required permissions: [PLACEHOLDER - Platform Management group read permissions]
 
 ## EXAMPLES
 
 ### Example 1: Get all group members
 ```powershell
-PS C:\> Get-PmGroupMember
+PS Orch1:\> Get-PmGroupMember
 ```
 
 Retrieves members from all groups in the current Platform Management instance.
 
 ### Example 2: Get members of specific group
 ```powershell
-PS C:\> Get-PmGroupMember -GroupName Administrators
+PS Orch1:\> Get-PmGroupMember Admin*, Everyone
 ```
+Retrieves members from groups whose names start with "Admin" or are exactly "Everyone".
 
-Retrieves all members of the "Administrators" group.
-
-### Example 3: Get members of multiple groups
+### Example 3: Get group member details and examine structure
 ```powershell
-PS C:\> Get-PmGroupMember -GroupName Administrators, Everyone
-```
-
-Retrieves members from both "Administrators" and "Everyone" groups.
-
-### Example 4: Get group members with wildcard filtering
-```powershell
-PS C:\> Get-PmGroupMember -GroupName *Admin*
-```
-
-Retrieves members from all groups whose names contain "Admin".
-
-### Example 5: Get group member details and examine structure
-```powershell
-PS C:\> Get-PmGroupMember -GroupName Administrators | Select-Object -First 1 | ConvertTo-Json -Depth 5
+PS Orch1:\> Get-PmGroupMember Administrators | Select-Object -First 1 | ConvertTo-Json -Depth 5
 ```
 
 Retrieves the first group member and displays its complete object structure in JSON format for detailed analysis.
 
-### Example 6: Export group members to CSV
+### Example 4: Export group members to CSV
 ```powershell
-PS C:\> Get-PmGroupMember -GroupName Administrators -ExportCsv C:\temp\admin_members.csv
+PS Orch1:\> Get-PmGroupMember Administrators -ExportCsv C:\temp\AdminMembers.csv
 ```
 
-Exports all members of the Administrators group to a CSV file for bulk operations or reporting.
+Exports all members of the Administrators group to a CSV file for bulk operations or reporting. The exported CSV can be imported using Import-Csv | Add-PmGroupMember.
 
-### Example 7: Get group members from specific drives
+### Example 5: Get group members from specific drives
 ```powershell
-PS C:\> Get-PmGroupMember -GroupName Administrators -Path Orch1:, Orch2:
+PS C:\> Get-PmGroupMember -Path Orch1:, Orch2: Administrators
 ```
 
 Retrieves group membership information from multiple specified Orchestrator drives.
-
-### Example 8: Filter members by type
-```powershell
-PS C:\> Get-PmGroupMember -GroupName Administrators | Where-Object {$_.objectType -eq "DirectoryUser"} | Select-Object displayName, email
-```
-
-Gets members of the Administrators group and filters for users only, displaying their names and emails.
-
-### Example 9: Find users in multiple groups
-```powershell
-PS C:\> Get-PmGroupMember -GroupName Administrators, Automation* | Group-Object name | Where-Object {$_.Count -gt 1}
-```
-
-Finds users who are members of multiple groups (Administrators and groups starting with "Automation").
 
 ## PARAMETERS
 
@@ -201,3 +172,5 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 [Get-PmGroup]()
 
 [Move-PmGroupMember]()
+
+

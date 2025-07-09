@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -24,55 +24,34 @@ The -Path parameter specifies target drives. If not specified, the current drive
 
 This cmdlet accesses Platform Management APIs and works across all UiPath Orchestrator drives (Orch1:, Orch1Tm:, Orch1Du:).
 
-Primary Endpoint: [PLACEHOLDER - Platform Management robot account deletion endpoint]
+Primary Endpoint: DELETE /api/RobotAccount/{tenantId}/{robotAccountId}
 
-OAuth required scopes: [PLACEHOLDER - PM.RobotAccount.Delete or similar]
+OAuth required scopes: PM.RobotAccount
 
 Required permissions: [PLACEHOLDER - Platform Management robot account delete permissions]
 
 ## EXAMPLES
 
-### Example 1: Remove a single robot account
+### Example 1: Remove multiple robot accounts
 ```powershell
-PS C:\> Remove-PmRobotAccount -Name RobotAccount1
-```
-
-Removes the robot account named "RobotAccount1" from Platform Management.
-
-### Example 2: Remove multiple robot accounts
-```powershell
-PS C:\> Remove-PmRobotAccount -Name RobotAccount1, RobotAccount2, RobotAccount3
+PS Orch1:\> Remove-PmRobotAccount RobotAccount1, RobotAccount2, RobotAccount3 -WhatIf
 ```
 
 Removes multiple robot accounts in a single operation.
 
-### Example 3: Preview removal operation
+### Example 2: Remove with confirmation prompt
 ```powershell
-PS C:\> Remove-PmRobotAccount -Name RobotAccount1 -WhatIf
-```
-
-Shows what would happen if the removal operation were executed without actually removing the robot account.
-
-### Example 4: Remove with confirmation prompt
-```powershell
-PS C:\> Remove-PmRobotAccount -Name RobotAccount1 -Confirm
+PS Orch1:\> Remove-PmRobotAccount Robot* -Confirm
 ```
 
 Removes the robot account with an additional confirmation prompt before proceeding.
 
-### Example 5: Remove robot accounts from specific drives
+### Example 3: Remove robot accounts from specific drives
 ```powershell
-PS C:\> Remove-PmRobotAccount -Name RobotAccount1 -Path Orch1:, Orch2:
+PS C:\> Remove-PmRobotAccount -Path Orch1:, Orch2: RobotAccount1
 ```
 
 Removes the robot account from multiple specified Orchestrator drives.
-
-### Example 6: Remove robot accounts using pipeline
-```powershell
-PS C:\> Get-PmRobotAccount | Where-Object {$_.lastLoginTime -eq $null} | Remove-PmRobotAccount -WhatIf
-```
-
-Gets all robot accounts that have never logged in and shows what would happen if they were removed.
 
 ## PARAMETERS
 
@@ -177,3 +156,5 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 [Set-PmRobotAccount]()
 
 [Copy-PmRobotAccount]()
+
+

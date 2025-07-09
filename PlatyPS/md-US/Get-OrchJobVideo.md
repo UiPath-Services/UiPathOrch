@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPathOrch-help.xml
 Module Name: UiPathOrch
 online version:
@@ -177,8 +177,8 @@ Video files are typically stored in Orchestrator's media storage and can be acce
 
 
 
-Primary Endpoint: [PLACEHOLDER]
-OAuth required scopes: [PLACEHOLDER]
-Required permissions: [PLACEHOLDER]
+Primary Endpoint: Function implementation (uses Get-OrchJob which calls GET /odata/Jobs)
+OAuth required scopes: [PLACEHOLDER - requires verification]
+Required permissions: [PLACEHOLDER - requires verification]
 
 ## RELATED LINKS
