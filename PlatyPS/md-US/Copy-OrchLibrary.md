@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -189,17 +189,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Library IDs can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.Library
-Library objects from Get-OrchLibrary can be piped to this cmdlet. The Id property will be automatically mapped to the -Id parameter via ByPropertyName binding.
-
+### None
 ## OUTPUTS
 
-### None
-This cmdlet does not generate any output.
-
+### UiPath.PowerShell.Entities.BulkItemDtoOfString
 ## NOTES
 This is a tenant entity cmdlet. The -Path parameter specifies drive names (e.g., Orch1:, Orch2:) for source and destination tenants.
 

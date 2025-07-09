@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -135,19 +135,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-User names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.User
-User objects can be piped to this cmdlet. The UserName property will be automatically mapped to the -UserName parameter via ByPropertyName binding.
-
+### None
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.UserPrivilege
-
 ## NOTES
-
-
 
 Primary Endpoint: GET /api/Users/GetPrivileges
 OAuth required scopes: OR.Users or OR.Users.Read

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -24,7 +24,7 @@ Only custom roles that are not currently assigned to users or groups can be remo
 
 The cmdlet supports safety features like -WhatIf to preview operations and -Confirm to request confirmation before deletion.
 
-Primary Endpoint: DELETE /odata/Roles({roleId})
+Primary Endpoint: GET /odata/Roles, DELETE /odata/Roles({roleId})
 
 OAuth required scopes: OR.Users
 

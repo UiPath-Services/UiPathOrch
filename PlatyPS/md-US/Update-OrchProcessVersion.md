@@ -44,7 +44,6 @@ Required permissions: Processes.Edit
 PS C:\> Update-OrchProcessVersion -Path Orch1:\ -Recurse * -WhatIf
 ```
 
-  
 Updates all outdated process versions in the Orch1 tenant to the latest version. Once you have confirmed that there are no issues, remove the `-WhatIf` parameter and run the command again.
 
 ### Example 2
@@ -52,23 +51,20 @@ Updates all outdated process versions in the Orch1 tenant to the latest version.
 PS C:\> Update-OrchProcessVersion -Path Orch1:\Shared MyProcess
 ```
 
-  
-Updates the package version of the `MyProcess` process in the `Orch1:\Shared` folder to the latest version.  
+Updates the package version of the `MyProcess` process in the `Orch1:\Shared` folder to the latest version.
 
 ### Example 3
 ```powershell
 PS C:\> Update-OrchProcessVersion -Path Orch1:\Shared MyProcess 1.0.3
 ```
 
-  
-Updates the package version of the `MyProcess` process in the `Orch1:\Shared` folder to version `1.0.3`.  
+Updates the package version of the `MyProcess` process in the `Orch1:\Shared` folder to version `1.0.3`.
 
 ### Example 4
 ```powershell
 PS Orch1:\Shared> Update-OrchProcessVersion -Path Orch1:\Shared MyProcess
 ```
 
-  
 Updates the package version of the `MyProcess` process in the current folder to the latest version.
 
 ## PARAMETERS

@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -150,15 +150,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-Test data queue names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.TestDataQueue
-TestDataQueue objects can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
 
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.TestDataQueue
-Returns TestDataQueue objects containing information about test data queues. Key properties typically include Name, Description, ItemCount, Schema definition, CreatedTime, and folder association information.
 
 ## NOTES
 This cmdlet is a folder entity operation for accessing test data queue configurations. Test data queues support data-driven testing by providing structured datasets for automation validation. Queues organize test data separately from test logic, enabling maintainable test automation practices. Use in conjunction with Get-OrchTestDataQueueItem to access individual test data entries. This operation requires TestDataQueues.View permissions in the target folders.

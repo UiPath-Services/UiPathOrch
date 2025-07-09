@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -51,15 +51,6 @@ PS C:\Program Files\PowerShell\7\Modules\UiPathOrch> Get-ChildItem Docs
 
 Navigates to the UiPathOrch module directory and then explores the Docs subdirectory to access documentation files.
 
-### Example 4
-```powershell
-PS C:\>  = (Get-Module UiPathOrch).ModuleBase
-PS C:\> Set-OrchLocation
-PS C:\Program Files\PowerShell\7\Modules\UiPathOrch> C:\MyProj\OrchProvider\PlatyPS.Path -eq 
-True
-```
-
-Demonstrates that Set-OrchLocation navigates to the same directory as the ModuleBase property of the UiPathOrch module.
 ## PARAMETERS
 
 ### -ModuleName
@@ -112,7 +103,7 @@ You can use Push-Location before calling this cmdlet to save your current locati
 
 The module directory typically contains:
 - Docs: Documentation files
-- Examples: Example scripts and usage samples  
+- Examples: Example scripts and usage sample
 - Functions: PowerShell function definitions
 - Localized help files (en-US, ja-JP, etc.)
 - Module manifest and script files

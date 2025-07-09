@@ -24,11 +24,11 @@ This cmdlet is useful for quickly navigating from PowerShell to the web interfac
 
 Multiple process names can be specified to open multiple process editing pages simultaneously. You can use autocomplete for process names by pressing [Ctrl+Space] or [Tab].
 
-Primary Endpoint: [PLACEHOLDER - Browser navigation, no direct API endpoint]
+Primary Endpoint: Browser navigation to process editing page (no direct API endpoint)
 
-OAuth required scopes: [PLACEHOLDER - Not applicable for browser navigation]
+OAuth required scopes: Not applicable (browser navigation)
 
-Required permissions: [PLACEHOLDER - Process edit permissions for browser access]
+Required permissions: Processes.Edit (for browser access to editing page)
 
 ## EXAMPLES
 

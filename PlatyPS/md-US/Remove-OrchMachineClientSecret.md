@@ -24,7 +24,7 @@ Primary Endpoint: DELETE /api/clientsecrets/{secretId}
 
 OAuth required scopes: OR.Machines
 
-Required permissions: [PLACEHOLDER]
+Required permissions: Machines.Edit
 
 ## EXAMPLES
 

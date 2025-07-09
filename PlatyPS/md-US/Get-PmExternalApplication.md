@@ -26,7 +26,7 @@ This is a Platform Management API cmdlet that works on any UiPathOrch drive (Orc
 
 Primary Endpoint: [PLACEHOLDER - Platform Management external applications endpoint]
 
-OAuth required scopes: [PLACEHOLDER - Platform Management scopes]
+OAuth required scopes: PM.ExternalApplication or PM.ExternalApplication.Read
 
 Required permissions: [PLACEHOLDER - External applications view permissions]
 

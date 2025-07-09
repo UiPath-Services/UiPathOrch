@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,7 +26,7 @@ Use the -GroupName parameter to specify which groups to add members to, and the 
 
 This is a tenant entity cmdlet. The -Path parameter specifies drive names (e.g., Orch1:, Orch2:) for targeting specific platform instances when working with multiple environments.
 
-Primary Endpoint: PUT /api/Group/{groupId}
+Primary Endpoint: POST /api/Directory/BulkResolveByName/{tenantId}, GET /api/Group/{tenantId}/{groupId}, PUT /api/Group/{groupId}
 
 OAuth required scopes: PM.Group
 
@@ -190,16 +190,9 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-Group names and user names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.User
-User objects from Get-PmUser can be piped to this cmdlet. The UserName property will be automatically mapped to the -UserName parameter via ByPropertyName binding.
-
 ## OUTPUTS
 
-### None
-This cmdlet does not generate any output.
-
+### System.Object
 ## NOTES
 This is a tenant entity cmdlet. The -Path parameter specifies drive names (e.g., Orch1:, Orch2:) for targeting specific platform instances.
 

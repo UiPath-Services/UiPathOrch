@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -232,22 +232,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Usernames can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.User
-User objects from Get-OrchUser can be piped to this cmdlet. The UserName property will be automatically mapped to the -UserName parameter via ByPropertyName binding.
-
+### None
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.FolderUser
-Returns FolderUser objects containing information about users and groups assigned to folders. Key properties include:
-- Path: Current folder context path
-- Id: Unique folder user assignment identifier
-- UserEntity: Complete user/group information including FullName, UserName, Type, AuthenticationSource, and robot capabilities
-- Roles: Array of assigned roles with Name, Id, Origin, RoleType, and InheritedFromFolder information
-- HasAlertsEnabled: Boolean indicating if alerts are enabled for the user
-
+### UiPath.PowerShell.Entities.UserRoles
 ## NOTES
 This cmdlet is a folder entity operation requiring navigation to a folder context or path specification using -Path parameter. The cmdlet reveals folder-level access control showing both individual users (DirectoryUser) and groups (DirectoryGroup) with their role assignments. UserEntity.Type distinguishes between users and groups. Roles include Origin information showing whether permissions are directly "Assigned" or inherited. This operation requires Users.View permissions in the target folders.
 

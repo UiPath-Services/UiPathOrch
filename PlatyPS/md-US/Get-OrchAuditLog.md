@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -275,20 +275,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Component names, user names, actions, and IDs can be piped to this cmdlet.
-
-### System.DateTime
-Execution time filters can be piped to this cmdlet for time-based filtering.
-
-### System.UInt64
-Pagination parameters can be piped to this cmdlet for result set management.
-
+### None
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.AuditLog
-Returns AuditLog objects containing information about user activities, system changes, and administrative actions within Orchestrator.
-
 ## NOTES
 This cmdlet is a tenant-level entity operation for accessing audit logs across the organization. Audit logs are essential for security monitoring, compliance reporting, and troubleshooting. Use filtering parameters to improve query performance and focus on relevant events. The -ExpandEntity and -ExpandDetails parameters provide additional context but may impact performance. Consider using pagination for large result sets to manage memory usage and response times.
 

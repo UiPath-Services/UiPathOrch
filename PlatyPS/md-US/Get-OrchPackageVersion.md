@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -153,31 +153,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Package IDs can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.Package
-Package objects can be piped to this cmdlet. The Id property will be automatically mapped to the -Id parameter via ByPropertyName binding.
-
+### None
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.PackageVersion
-Returns PackageVersion objects containing comprehensive package information. Key properties include:
-- Path: Current tenant context path
-- Id, Title: Package identification and display name
-- Version, Key: Version information and composite key
-- IsActive, IsLatestVersion: Activation and version status
-- Published: Publication timestamp
-- Description, ReleaseNotes: Documentation and release information
-- Authors: Package creator information
-- ProjectType: Type classification (Process, Library)
-- TargetFramework: Execution platform (Windows, Cross-platform)
-- MainEntryPointPath: Primary execution file
-- IsCompiled: Compilation status
-- SupportsMultipleEntryPoints: Multi-entry point capability
-- RequiresUserInteraction, IsAttended: Execution requirements
-- Tags: Associated metadata tags
-
+### UiPath.PowerShell.Entities.Package
 ## NOTES
 This cmdlet is a tenant-level entity operation for accessing package version information. Packages represent automation processes and libraries with version control and deployment management. Use IsActive property to identify currently deployed versions. ProjectType distinguishes between executable processes and reusable libraries. TargetFramework indicates platform compatibility. This operation requires Packages.View permissions.
 

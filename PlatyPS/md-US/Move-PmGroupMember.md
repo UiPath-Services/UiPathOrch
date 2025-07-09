@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -25,9 +25,9 @@ This is an organization entity cmdlet that calls the Platform Management API. It
 
 By default, moving a member removes them from the source group and adds them to the destination group. Use -KeepSource to maintain membership in the original group while adding to the destination group.
 
-Primary Endpoint: POST /api/groups/{groupId}/members/move
+Primary Endpoint: POST /api/Directory/BulkResolveByName/{tenantId}, GET /api/Group/{tenantId}/{groupId}, PUT /api/Group/{groupId}
 
-OAuth required scopes: OR.Administration
+OAuth required scopes: PM.Group
 
 Required permissions: Administration.Edit
 
@@ -211,15 +211,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String
-Group names and user names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.PmGroupMember
-Group member objects can be piped to this cmdlet. The GroupName and UserName properties will be automatically mapped to the respective parameters via ByPropertyName binding.
-
+### System.String[]
 ## OUTPUTS
 
 ### System.Object
-
 ## NOTES
 
 ## RELATED LINKS

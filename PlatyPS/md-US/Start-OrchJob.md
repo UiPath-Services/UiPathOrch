@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -29,7 +29,7 @@ When specifying the -Path, -Recurse, and -Depth parameters, place them immediate
 
 Primary Endpoint: POST /odata/Jobs/UiPath.Server.Configuration.OData.StartJobs
 
-OAuth required scopes: OR.Jobs.Write OR.Execution.Read
+OAuth required scopes: OR.Jobs
 
 Required permissions: Jobs.Create Processes.View
 

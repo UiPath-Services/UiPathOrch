@@ -162,7 +162,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## NOTES
 
 This cmdlet operates on folder entities within Document Understanding projects and requires either:
-- Navigation to the target project using Set-Location (cd), OR  
+- Navigation to the target project using Set-Location (cd), OR
 - Specification of target projects using the -Path or -Recurse parameters
 
 **Important:** For optimal PowerShell IntelliSense support, specify -Path or -Recurse before other parameters when using multiple parameters.

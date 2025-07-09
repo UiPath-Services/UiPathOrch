@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -20,7 +20,7 @@ Remove-OrchTrigger [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Depth <UIn
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-Primary Endpoint: DELETE /odata/ProcessSchedules({processScheduleId})
+Primary Endpoint: GET /odata/ProcessSchedules, DELETE /odata/ProcessSchedules({processScheduleId})
 
 OAuth required scopes: OR.Jobs
 

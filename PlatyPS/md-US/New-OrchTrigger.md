@@ -13,14 +13,14 @@ Creates automation triggers for process execution.
 ## SYNTAX
 
 ```
-New-OrchTrigger [-Name] <String[]> [-ReleaseName] <String> [-Enabled <String>] [-SpecificPriorityValue <Int32>]
- [-Priority <String>] [-StartStrategy <Int32>] [-StopStrategy <String>] [-StopProcessExpression <String>]
+New-OrchTrigger [-Name] <String[]> [-ReleaseName] <String> [-Enabled <String>] [-Priority <String>]
+ [-StartStrategy <Int32>] [-StopStrategy <String>] [-StopProcessExpression <String>]
  [-KillProcessExpression <String>] [-AlertPendingExpression <String>] [-AlertRunningExpression <String>]
  [-ConsecutiveJobFailuresThreshold <Int32>] [-JobFailuresGracePeriodInHours <Int32>] [-RuntimeType <String>]
  [-InputArguments <String>] [-ResumeOnSameContext <String>] [-RunAsMe <String>] [-IsConnected <String>]
  [-CalendarName <String>] [-ActivateOnJobComplete <String>] [-ItemsActivationThreshold <Int32>]
  [-ItemsPerJobActivationTarget <Int32>] [-MaxJobsForActivation <Int32>] [-StartProcessCronDetails <String>]
- [-StartProcessCron <String>] [-QueueDefinitionName <String>] [-TimeZone <String>] [-TimeZoneId <String>]
+ [-StartProcessCron <String>] [-QueueDefinitionName <String>] [-TimeZone <String>]
  [-StopProcessDate <DateTime>] [-ExecutorRobots <String[]>] [-MachineRobots <String[]>] [-Path <String[]>]
  [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
@@ -33,7 +33,7 @@ The New-OrchTrigger cmdlet creates automation triggers that automatically start 
 Triggers support various execution strategies including time-based scheduling using Cron expressions, queue-based activation when items are added to queues, and advanced configurations such as calendar integration, robot assignment, and failure handling policies.
 
 Primary Endpoint: POST /odata/ProcessSchedules
-OAuth required scopes: OR.Execution or OR.Execution.Write  
+OAuth required scopes: OR.Execution or OR.Execution.Write
 Required permissions: Execution.Create
 
 ## EXAMPLES
@@ -577,52 +577,18 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
-### -SpecificPriorityValue
-{{ Fill SpecificPriorityValue Description }}
-
-```yaml
-Type: Int32
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: False
-```
-
-### -TimeZoneId
-{{ Fill TimeZoneId Description }}
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
 ### System.String[]
-Trigger names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.ProcessSchedule
-Trigger objects can be piped to this cmdlet. The Name and other properties will be automatically mapped to the corresponding parameters via ByPropertyName binding.
-
+### System.String
+### System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]
+### System.Nullable`1[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.ProcessSchedule
-This cmdlet returns the newly created trigger object(s), which include properties such as Id, Name, ReleaseName, StartProcessCron, and configuration settings.
-
 ## NOTES
 - Trigger names must be unique within the folder
 - Cron expressions use standard format: second minute hour day month dayofweek year

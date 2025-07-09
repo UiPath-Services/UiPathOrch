@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -24,7 +24,7 @@ Primary Endpoint: POST /odata/TestCaseDefinitions/UiPath.Server.Configuration.OD
 
 OAuth required scopes: OR.TestSets
 
-Required permissions:
+Required permissions: TestSets.Delete
 
 ## EXAMPLES
 

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -20,7 +20,7 @@ Remove-OrchTestDataQueue [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Dept
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-Primary Endpoint: DELETE /odata/TestDataQueues({testDataQueueId})
+Primary Endpoint: GET /odata/TestDataQueues, DELETE /odata/TestDataQueues({testDataQueueId})
 
 OAuth required scopes: OR.TestDataQueues
 

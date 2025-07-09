@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -20,7 +20,7 @@ Remove-OrchQueue [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Depth <UInt3
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-Primary Endpoint: DELETE /odata/QueueDefinitions({queueId})
+Primary Endpoint: GET /odata/QueueDefinitions, DELETE /odata/QueueDefinitions({queueId})
 
 OAuth required scopes: OR.Queues
 

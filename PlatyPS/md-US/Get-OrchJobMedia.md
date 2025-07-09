@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -171,24 +171,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Job keys can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.Job
-Job objects from Get-OrchJob can be piped to this cmdlet. The Key property will be automatically mapped to the -JobKey parameter via ByPropertyName binding.
-
+### None
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.JobMedia
-Returns JobMedia objects containing information about job media files. Key properties typically include:
-- JobKey: Associated job identifier
-- MediaType: Type of media (Screenshot, Video, Recording)
-- FileName: Original file name
-- FileSize: File size in bytes
-- CreatedTime: Media creation timestamp
-- DownloadUrl: URL for downloading the media file
-- ContentType: MIME type of the media file
-
+### UiPath.PowerShell.Entities.ExecutionMedia
 ## NOTES
 This cmdlet is a folder entity operation for accessing job media files including screenshots, videos, and recordings. Job media provides visual documentation of automation execution for debugging, auditing, and process verification. Media files are associated with specific job executions and may have retention policies affecting availability. Use JobKey parameter to target specific jobs or filter by time ranges for recent executions. This operation requires Jobs.View permissions in the target folders.
 

@@ -175,16 +175,9 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-Workspace names and owner names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.PersonalWorkspace
-Personal workspace objects from Get-OrchPersonalWorkspace can be piped to this cmdlet. The Name and OwnerName properties will be automatically mapped via ByPropertyName binding.
-
 ## OUTPUTS
 
-### None
-This cmdlet does not generate any output.
-
+### UiPath.PowerShell.Entities.PersonalWorkspace
 ## NOTES
 This cmdlet performs a folder-level entity operation that permanently removes personal workspace folders and all contained content. The operation is irreversible and requires appropriate folder deletion permissions. Personal workspaces provide dedicated development environments for users. Always use -WhatIf to preview the operation before execution, especially when using wildcard patterns. The operation requires Units.Delete or SubFolders.Delete permissions depending on the folder hierarchy.
 

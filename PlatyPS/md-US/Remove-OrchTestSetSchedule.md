@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -20,7 +20,7 @@ Remove-OrchTestSetSchedule [-Name] <String[]> [-Path <String[]>] [-Recurse] [-De
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-Primary Endpoint: DELETE /odata/TestSetSchedules({testSetScheduleId})
+Primary Endpoint: GET /odata/TestSetSchedules, DELETE /odata/TestSetSchedules({testSetScheduleId})
 
 OAuth required scopes: OR.TestSetSchedules
 

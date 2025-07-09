@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -166,17 +166,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Bucket names and full paths can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.Bucket
-Bucket objects from Get-OrchBucket can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
-
+### None
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.BucketItem
-Returns BucketItem objects containing information about files and directories stored in buckets. Key properties include Path, Bucket, PathBucket, FullPath, ContentType, Size, and IsDirectory.
-
+### UiPath.PowerShell.Entities.BlobFile
 ## NOTES
 This cmdlet is a folder entity operation requiring navigation to a folder context or path specification using -Path parameter. The cmdlet retrieves items from all accessible storage buckets in the specified folder context. Output is grouped by bucket showing individual items. This operation requires both Buckets.View and BlobFiles.View permissions in the target folders.
 

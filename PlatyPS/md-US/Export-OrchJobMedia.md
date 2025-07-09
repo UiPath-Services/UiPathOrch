@@ -204,17 +204,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.Int64[]
-Job IDs can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.Job
-Job objects from Get-OrchJob can be piped to this cmdlet. The Id property will be automatically mapped to the -JobId parameter via ByPropertyName binding.
-
+### None
 ## OUTPUTS
 
-### System.IO.FileInfo
-Returns information about the exported media files.
-
+### System.Object
 ## NOTES
 This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.
 

@@ -204,17 +204,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Package IDs and versions can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.Package
-Package objects from Get-OrchPackage can be piped to this cmdlet. The Id and Version properties will be automatically mapped to corresponding parameters via ByPropertyName binding.
-
+### None
 ## OUTPUTS
 
-### System.IO.FileInfo
-Returns information about the exported .nupkg files.
-
+### System.Object
 ## NOTES
 This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.
 

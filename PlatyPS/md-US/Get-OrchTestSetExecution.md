@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -258,19 +258,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Test set names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.TestSet
-Test set objects can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
-
+### None
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.TestSetExecution
-
 ## NOTES
-
-
 
 Primary Endpoint: GET /odata/TestSetExecutions
 OAuth required scopes: OR.TestSetExecutions or OR.TestSetExecutions.Read

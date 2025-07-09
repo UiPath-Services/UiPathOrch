@@ -188,17 +188,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Trigger names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.ProcessSchedule
-Trigger objects from Get-OrchTrigger can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
-
+### None
 ## OUTPUTS
 
-### None
-This cmdlet does not generate any output.
-
+### System.Object
 ## NOTES
 This cmdlet is a folder entity operation that activates automation triggers for scheduled execution. Enabling triggers directly affects automation schedules and process execution. Use -WhatIf to preview operations and -Confirm for safety when enabling multiple triggers. The operation requires Schedules.Edit permissions in the target folders. Once enabled, triggers will execute according to their configured schedules and conditions.
 

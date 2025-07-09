@@ -205,17 +205,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Queue names and CSV file paths can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.Queue
-Queue objects from Get-OrchQueue can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
-
+### None
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.QueueItem
-Returns information about the imported queue items.
-
+### UiPath.PowerShell.Entities.FailedQueueItem
 ## NOTES
 CSV files must contain properly formatted queue item data with appropriate column headers. The columns should match the queue item properties and specific data expected by the target queue. Ensure CSV files are properly encoded to avoid data corruption during import.
 

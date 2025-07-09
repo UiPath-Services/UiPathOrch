@@ -23,11 +23,11 @@ This cmdlet is useful for quickly navigating from PowerShell to the web interfac
 
 Multiple job IDs can be specified to open multiple job pages simultaneously. You can use autocomplete for job IDs by pressing [Ctrl+Space] or [Tab].
 
-Primary Endpoint: [PLACEHOLDER - Browser navigation, no direct API endpoint]
+Primary Endpoint: Browser navigation to job details page (no direct API endpoint)
 
-OAuth required scopes: [PLACEHOLDER - Not applicable for browser navigation]
+OAuth required scopes: Not applicable (browser navigation)
 
-Required permissions: [PLACEHOLDER - Jobs view permissions for browser access]
+Required permissions: Jobs.View (for browser access to job details)
 
 ## EXAMPLES
 

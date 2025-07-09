@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -163,16 +163,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Machine names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.Machine
-Machine objects can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
-
+### None
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.ExtendedRobot
-
 ## NOTES
 
 This cmdlet retrieves machine account mappings that define which users can connect to specific machines within folder contexts. The mapping information includes robot accounts and their associated machines, which is essential for security and access control.

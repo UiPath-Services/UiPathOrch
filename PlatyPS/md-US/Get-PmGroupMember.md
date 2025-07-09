@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,7 +26,7 @@ This cmdlet accesses Platform Management APIs and works across all UiPath Orches
 
 Primary Endpoint: [PLACEHOLDER - Platform Management group membership API endpoint]
 
-OAuth required scopes: [PLACEHOLDER - PM.Group.Read or similar]
+OAuth required scopes: PM.Group or PM.Group.Read
 
 Required permissions: [PLACEHOLDER - Platform Management group member read permissions]
 

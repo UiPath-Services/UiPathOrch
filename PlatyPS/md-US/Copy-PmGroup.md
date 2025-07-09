@@ -177,16 +177,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-Group names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.Group
-Group objects from Get-PmGroup can be piped to this cmdlet. The GroupName property will be automatically mapped to the -GroupName parameter via ByPropertyName binding.
-
+### System.String
 ## OUTPUTS
 
 ### System.Object
-Returns information about the copied groups.
-
 ## NOTES
 This is a tenant entity cmdlet. The -Path parameter specifies drive names (e.g., Orch1:, Orch2:) for source and destination organizations.
 

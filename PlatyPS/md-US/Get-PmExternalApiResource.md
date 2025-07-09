@@ -30,7 +30,7 @@ Multiple values for the -Name and -Path parameters can be specified using comma-
 
 Primary Endpoint: [PLACEHOLDER - Platform Management external API resources endpoint]
 
-OAuth required scopes: [PLACEHOLDER - Platform Management scopes]
+OAuth required scopes: PM.ExternalApiResource or PM.ExternalApiResource.Read
 
 Required permissions: [PLACEHOLDER - External API resources view permissions]
 

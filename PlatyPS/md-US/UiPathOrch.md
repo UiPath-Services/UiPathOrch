@@ -21,7 +21,7 @@ Adds links to the specified assets.
 Adds dates to the Non-Working Days calendars.
 
 ### [Add-OrchFolderMachine](Add-OrchFolderMachine.md)
-Assigns the machines to folders.
+Assigns machines to folders.
 
 ### [Add-OrchFolderUser](Add-OrchFolderUser.md)
 Assigns the users to folders.
@@ -30,7 +30,7 @@ Assigns the users to folders.
 Adds client secrets to machines in the Orchestrator.
 
 ### [Add-OrchRoleToFolderUser](Add-OrchRoleToFolderUser.md)
-Assigns the roles to folder users.
+Assigns roles to folder users.
 
 ### [Add-OrchUser](Add-OrchUser.md)
 Adds users to tenants.
@@ -39,49 +39,49 @@ Adds users to tenants.
 Adds members to groups.
 
 ### [Add-PmLicenseToPmLicensedGroup](Add-PmLicenseToPmLicensedGroup.md)
-{{ Fill in the Synopsis }}
+Adds licenses to licensed groups.
 
 ### [Clear-OrchCache](Clear-OrchCache.md)
 Clear the in-memory cache in UiPathOrch drives.
 
 ### [Copy-OrchActionCatalog](Copy-OrchActionCatalog.md)
-Copies action catalogs.
+Copies action catalogs to destination folders.
 
 ### [Copy-OrchApiTrigger](Copy-OrchApiTrigger.md)
-{{ Fill in the Synopsis }}
+Copies API triggers to destination folders.
 
 ### [Copy-OrchAsset](Copy-OrchAsset.md)
-{{ Fill in the Synopsis }}
+Copies assets to destination folders.
 
 ### [Copy-OrchBucket](Copy-OrchBucket.md)
-Copies storage buckets.
+Copies storage buckets to destination folders.
 
 ### [Copy-OrchCalendar](Copy-OrchCalendar.md)
-{{ Fill in the Synopsis }}
+Copies calendars between tenants.
 
 ### [Copy-OrchCredentialStore](Copy-OrchCredentialStore.md)
-{{ Fill in the Synopsis }}
+Copies credential stores between tenants.
 
 ### [Copy-OrchFolderMachine](Copy-OrchFolderMachine.md)
-{{ Fill in the Synopsis }}
+Copies folder machine assignments to destination folders.
 
 ### [Copy-OrchFolderUser](Copy-OrchFolderUser.md)
-{{ Fill in the Synopsis }}
+Copies folder user assignments to destination folders.
 
 ### [Copy-OrchLibrary](Copy-OrchLibrary.md)
-{{ Fill in the Synopsis }}
+Copies libraries between tenants.
 
 ### [Copy-OrchMachine](Copy-OrchMachine.md)
 Copies machine templates between UiPath Orchestrator tenants.
 
 ### [Copy-OrchPackage](Copy-OrchPackage.md)
-{{ Fill in the Synopsis }}
+Copies packages to destination folders.
 
 ### [Copy-OrchProcess](Copy-OrchProcess.md)
-{{ Fill in the Synopsis }}
+Copies processes to destination folders.
 
 ### [Copy-OrchQueue](Copy-OrchQueue.md)
-{{ Fill in the Synopsis }}
+Copies queues to destination folders.
 
 ### [Copy-OrchQueueItem](Copy-OrchQueueItem.md)
 Copies queue items with a status of New to a queue with the same name located elsewhere.
@@ -90,22 +90,22 @@ Copies queue items with a status of New to a queue with the same name located el
 Copies roles between tenants.
 
 ### [Copy-OrchTestDataQueue](Copy-OrchTestDataQueue.md)
-{{ Fill in the Synopsis }}
+Copies test data queues to destination folders.
 
 ### [Copy-OrchTestSet](Copy-OrchTestSet.md)
-{{ Fill in the Synopsis }}
+Copies test sets to destination folders.
 
 ### [Copy-OrchTestSetSchedule](Copy-OrchTestSetSchedule.md)
-Copy the test schedules.
+Copies test set schedules to destination folders.
 
 ### [Copy-OrchTrigger](Copy-OrchTrigger.md)
-{{ Fill in the Synopsis }}
+Copies triggers to destination folders.
 
 ### [Copy-OrchUser](Copy-OrchUser.md)
-{{ Fill in the Synopsis }}
+Copies users between tenants.
 
 ### [Copy-OrchWebhook](Copy-OrchWebhook.md)
-{{ Fill in the Synopsis }}
+Copies webhooks between tenants.
 
 ### [Copy-PmExternalApplication](Copy-PmExternalApplication.md)
 Copies external applications between organizations.
@@ -120,10 +120,10 @@ Copies robot accounts between organizations.
 Copies organizational users between organizations.
 
 ### [Disable-OrchApiTrigger](Disable-OrchApiTrigger.md)
-Disables the API triggers.
+Disables API triggers in specified folders.
 
 ### [Disable-OrchFolderMachineAccountMapping](Disable-OrchFolderMachineAccountMapping.md)
-{{ Fill in the Synopsis }}
+Disables machine account mapping for folder-scoped machines.
 
 ### [Disable-OrchFolderMachineInherit](Disable-OrchFolderMachineInherit.md)
 Disables inheritance for a FolderMachine, preventing it from propagating to subfolders.
@@ -135,16 +135,16 @@ Disables the runtime licenses.
 Disables maintenance mode of unattended sessions.
 
 ### [Disable-OrchPersonalWorkspace](Disable-OrchPersonalWorkspace.md)
-Disables maintenance mode of unattended sessions.
+Disables personal workspace access for specified users.
 
 ### [Disable-OrchTestSetSchedule](Disable-OrchTestSetSchedule.md)
-Disables the test schedules.
+Disables test set schedules in specified folders.
 
 ### [Disable-OrchTrigger](Disable-OrchTrigger.md)
-Disables the triggers.
+Disables specified automation triggers to prevent scheduled execution.
 
 ### [Disable-OrchUserAttended](Disable-OrchUserAttended.md)
-Disables the triggers.
+Disables attended robot session capabilities for specified users.
 
 ### [Disable-OrchWebhook](Disable-OrchWebhook.md)
 Disables webhooks in the Orchestrator.
@@ -156,10 +156,10 @@ Opens the UiPath Orchestrator configuration file for editing.
 Opens process details for editing in the default web browser.
 
 ### [Enable-OrchApiTrigger](Enable-OrchApiTrigger.md)
-Enables the API triggers.
+Enables API triggers in specified folders.
 
 ### [Enable-OrchFolderMachineAccountMapping](Enable-OrchFolderMachineAccountMapping.md)
-{{ Fill in the Synopsis }}
+Enables machine account mapping for folder-scoped machines.
 
 ### [Enable-OrchFolderMachineInherit](Enable-OrchFolderMachineInherit.md)
 Enables inheritance for a FolderMachine, allowing it to propagate to subfolders.
@@ -171,37 +171,37 @@ Enables the runtime licenses.
 Enables maintenance mode of unattended sessions.
 
 ### [Enable-OrchPersonalWorkspace](Enable-OrchPersonalWorkspace.md)
-Enables maintenance mode of unattended sessions.
+Enables personal workspace and robot session access for specified users.
 
 ### [Enable-OrchTestSetSchedule](Enable-OrchTestSetSchedule.md)
-Enables the test schedules.
+Enables test set schedules in specified folders.
 
 ### [Enable-OrchTrigger](Enable-OrchTrigger.md)
-Enables the triggers.
+Enables specified automation triggers to resume scheduled execution.
 
 ### [Enable-OrchUserAttended](Enable-OrchUserAttended.md)
-Enables the triggers.
+Enables attended automation for specified users.
 
 ### [Enable-OrchWebhook](Enable-OrchWebhook.md)
 Enables the webhooks.
 
 ### [Export-OrchJobMedia](Export-OrchJobMedia.md)
-{{ Fill in the Synopsis }}
+Exports job media files from specified folders to local files.
 
 ### [Export-OrchLibrary](Export-OrchLibrary.md)
-{{ Fill in the Synopsis }}
+Exports libraries from tenants to local files.
 
 ### [Export-OrchPackage](Export-OrchPackage.md)
-{{ Fill in the Synopsis }}
+Exports packages from specified folders to local files.
 
 ### [Find-OrchFolderNoUserAssigned](Find-OrchFolderNoUserAssigned.md)
 Finds folders that have no direct user assignments in UiPath Orchestrator.
 
 ### [Get-DuClassifier](Get-DuClassifier.md)
-Gets classifiers of Document Understanding.
+Retrieves Document Understanding classifiers from UiPath Orchestrator.
 
 ### [Get-DuDocumentType](Get-DuDocumentType.md)
-Gets document types of Document Understanding.
+Retrieves Document Understanding document types from UiPath Orchestrator.
 
 ### [Get-DuExtractor](Get-DuExtractor.md)
 Gets extractors of Document Understanding from UiPath Orchestrator.
@@ -228,52 +228,52 @@ Gets the API triggers.
 Gets the assets from UiPath Orchestrator.
 
 ### [Get-OrchAssetLink](Get-OrchAssetLink.md)
-Gets the links of the assets.
+Retrieves folder associations and links for specified assets.
 
 ### [Get-OrchAuditLog](Get-OrchAuditLog.md)
-Gets the audit logs.
+Retrieves audit logs from UiPath Orchestrator for monitoring and compliance purposes.
 
 ### [Get-OrchAuthenticationSetting](Get-OrchAuthenticationSetting.md)
-Gets authentication settings.
+Retrieves authentication and system configuration settings from UiPath Orchestrator.
 
 ### [Get-OrchBucket](Get-OrchBucket.md)
-Gets storage buckets.
+Retrieves storage buckets configured in UiPath Orchestrator folders.
 
 ### [Get-OrchBucketItem](Get-OrchBucketItem.md)
-Gets the items in storage buckets.
+Retrieves items (files and directories) stored within storage buckets.
 
 ### [Get-OrchCalendar](Get-OrchCalendar.md)
-Gets the non-working days calendars.
+Retrieves business calendars configured in UiPath Orchestrator.
 
 ### [Get-OrchClassicEnvironment](Get-OrchClassicEnvironment.md)
 Gets environments from classic folders.
 
 ### [Get-OrchClassicRobot](Get-OrchClassicRobot.md)
-Gets robots from classic folders.
+Gets robots from classic environments.
 
 ### [Get-OrchConnectionString](Get-OrchConnectionString.md)
 Gets connection string.
 
 ### [Get-OrchCredentialStore](Get-OrchCredentialStore.md)
-Gets the credential stores.
+Retrieves credential stores configured in UiPath Orchestrator.
 
 ### [Get-OrchCurrentUser](Get-OrchCurrentUser.md)
 Gets the user connected to the tenant of the target drive.
 
 ### [Get-OrchExecutionSetting](Get-OrchExecutionSetting.md)
-Gets the execution settings configuration.
+Retrieves execution settings configured in UiPath Orchestrator.
 
 ### [Get-OrchFolderMachine](Get-OrchFolderMachine.md)
 Get the machines assigned to folders.
 
 ### [Get-OrchFolderMachineAccountMapping](Get-OrchFolderMachineAccountMapping.md)
-{{ Fill in the Synopsis }}
+Gets machine account mappings for folder-scoped machines.
 
 ### [Get-OrchFolderUsage](Get-OrchFolderUsage.md)
 Gets folder usage statistics showing entity counts in UiPath Orchestrator folders.
 
 ### [Get-OrchFolderUser](Get-OrchFolderUser.md)
-Get the users assigned to folders.
+Retrieves users and groups assigned to folders in UiPath Orchestrator.
 
 ### [Get-OrchHelp](Get-OrchHelp.md)
 Displays documentation and quick start guide for the UiPathOrch module.
@@ -282,7 +282,7 @@ Displays documentation and quick start guide for the UiPathOrch module.
 Gets jobs.
 
 ### [Get-OrchJobMedia](Get-OrchJobMedia.md)
-{{ Fill in the Synopsis }}
+Retrieves job media files (screenshots, videos, and recordings) from UiPath Orchestrator.
 
 ### [Get-OrchJobStats](Get-OrchJobStats.md)
 Gets job statistics from UiPath Orchestrator.
@@ -309,7 +309,7 @@ Gets runtime license information for robots from UiPath Orchestrator.
 Gets the licensing usage statistics from UiPath Orchestrator.
 
 ### [Get-OrchLog](Get-OrchLog.md)
-Gets the execution logs of the robots.
+Retrieves execution logs from UiPath Orchestrator with filtering capabilities.
 
 ### [Get-OrchMachine](Get-OrchMachine.md)
 Gets machines from UiPath Orchestrator.
@@ -324,7 +324,7 @@ Gets machine runtime sessions from UiPath Orchestrator.
 Gets the process packages from UiPath Orchestrator.
 
 ### [Get-OrchPackageVersion](Get-OrchPackageVersion.md)
-Gets the versions of process packages.
+Retrieves package versions from UiPath Orchestrator.
 
 ### [Get-OrchPersonalWorkspace](Get-OrchPersonalWorkspace.md)
 Gets personal workspaces from UiPath Orchestrator.
@@ -339,7 +339,7 @@ Lists all configured UiPath Orchestrator drives and their connection status.
 Gets the queues.
 
 ### [Get-OrchQueueItem](Get-OrchQueueItem.md)
-Gets the queue items.
+Retrieves queue items from UiPath Orchestrator queues with comprehensive filtering capabilities.
 
 ### [Get-OrchRobot](Get-OrchRobot.md)
 Gets robots autoprovisioned from users.
@@ -357,7 +357,7 @@ Gets test case definitions from the Orchestrator.
 Gets test case execution records from UiPath Orchestrator.
 
 ### [Get-OrchTestDataQueue](Get-OrchTestDataQueue.md)
-Gets the test data queues.
+Retrieves test data queues from UiPath Orchestrator.
 
 ### [Get-OrchTestDataQueueItem](Get-OrchTestDataQueueItem.md)
 Gets the items in the test data queues.
@@ -390,16 +390,16 @@ Gets users from UiPath Orchestrator.
 Retrieves user privileges based on the union of privileges model.
 
 ### [Get-OrchUserSession](Get-OrchUserSession.md)
-Gets the user sessions.
+Gets user session information.
 
 ### [Get-OrchWebhook](Get-OrchWebhook.md)
 Gets webhooks from UiPath Orchestrator.
 
 ### [Get-OrchWebSetting](Get-OrchWebSetting.md)
-Gets the web settings.
+Gets web configuration settings.
 
 ### [Get-PmAuditLog](Get-PmAuditLog.md)
-{{ Fill in the Synopsis }}
+Gets audit log entries from Platform Management.
 
 ### [Get-PmExternalApiResource](Get-PmExternalApiResource.md)
 Gets external API resources from Platform Management.
@@ -414,13 +414,13 @@ Gets groups from UiPath Platform Management.
 Gets group members from UiPath Platform Management.
 
 ### [Get-PmLicensedGroup](Get-PmLicensedGroup.md)
-Gets the group assigned with the User named license.
+Gets licensed groups from Platform Management.
 
 ### [Get-PmLicensedUser](Get-PmLicensedUser.md)
 Gets licensed users from UiPath Platform Management.
 
 ### [Get-PmRobotAccount](Get-PmRobotAccount.md)
-{{ Fill in the Synopsis }}
+Gets robot accounts from Platform Management.
 
 ### [Get-PmUser](Get-PmUser.md)
 Gets users from Platform Management.
@@ -450,37 +450,37 @@ Gets test sets from projects in Test Manager.
 Imports library packages into UiPath Orchestrator.
 
 ### [Import-OrchPackage](Import-OrchPackage.md)
-Uploads packages.
+Imports packages from local files to specified folders.
 
 ### [Import-OrchQueueItem](Import-OrchQueueItem.md)
-{{ Fill in the Synopsis }}
+Imports queue items from CSV files to specified queues.
 
 ### [Move-OrchFolderUser](Move-OrchFolderUser.md)
-Removes users assigned to a folder and assigns them to another folders.
+Moves folder users between folders.
 
 ### [Move-PmGroupMember](Move-PmGroupMember.md)
-Moves users between two groups within an organization.
+Moves group members between Platform Management groups.
 
 ### [New-OrchBucket](New-OrchBucket.md)
-Creates storage buckets.
+Creates new storage buckets.
 
 ### [New-OrchMachine](New-OrchMachine.md)
 Creates machines.
 
 ### [New-OrchProcess](New-OrchProcess.md)
-Creates processes.
+Creates automation processes from published packages.
 
 ### [New-OrchQueue](New-OrchQueue.md)
 Creates queues.
 
 ### [New-OrchTrigger](New-OrchTrigger.md)
-Creates triggers.
+Creates automation triggers for process execution.
 
 ### [New-PmGroup](New-PmGroup.md)
-Adds groups to organizations.
+Creates groups in Platform Management.
 
 ### [New-PmUser](New-PmUser.md)
-Creates users to the organization.
+Creates users in Platform Management.
 
 ### [Open-OrchJob](Open-OrchJob.md)
 Opens job details in the default web browser.
@@ -504,7 +504,7 @@ Removes the API triggers.
 Removes assets from UiPath Orchestrator.
 
 ### [Remove-OrchBucket](Remove-OrchBucket.md)
-Removes the storage buckets.
+Removes storage buckets.
 
 ### [Remove-OrchCalendar](Remove-OrchCalendar.md)
 Removes calendars from the Orchestrator.
@@ -537,7 +537,7 @@ Removes the machine's client secrets.
 Removes the process packages.
 
 ### [Remove-OrchPersonalWorkspace](Remove-OrchPersonalWorkspace.md)
-Removes the personal workspace folders.
+Removes personal workspace folders from UiPath Orchestrator.
 
 ### [Remove-OrchProcess](Remove-OrchProcess.md)
 Remove the processes.

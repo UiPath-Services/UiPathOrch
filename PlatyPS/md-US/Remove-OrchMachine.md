@@ -24,9 +24,9 @@ When a machine is removed, all robots associated with that machine are also remo
 
 The cmdlet supports safety features like -WhatIf to preview the operation and -Confirm to request confirmation before deletion. It is strongly recommended to use these parameters when removing machines to avoid accidental deletion of critical automation infrastructure.
 
-Primary Endpoint: DELETE /odata/Machines({machineId})
+Primary Endpoint: GET /odata/Machines, DELETE /odata/Machines({machineId})
 
-OAuth required scopes: OR.Machines
+OAuth required scopes: OR.Machines or OR.Machines.Write
 
 Required permissions: Machines.Delete
 

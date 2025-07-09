@@ -160,16 +160,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-Usernames can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.User
-User objects from Get-OrchUser can be piped to this cmdlet. The UserName property will be automatically mapped to the -UserName parameter via ByPropertyName binding.
 
 ## OUTPUTS
 
-### None
-This cmdlet does not generate any output.
-
+### System.Object
 ## NOTES
 This cmdlet is a tenant-level entity operation that sets the MayHavePersonalWorkspace property to False for specified users. Unlike Enable-OrchPersonalWorkspace, this cmdlet only affects workspace access and does not modify robot session permissions. Personal workspaces provide dedicated development environments separate from shared organizational folders. Disabling workspace access restricts users to shared organizational folders while preserving existing workspace data. The operation automatically clears the Orchestrator cache to ensure immediate restriction of workspace access.
 

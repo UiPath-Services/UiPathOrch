@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -23,11 +23,11 @@ By default, the cmdlet opens the system's default log location. You can optional
 
 The log files contain detailed information about HTTP requests and responses exchanged between the UiPathOrch PowerShell module and the UiPath Orchestrator web API endpoints.
 
-Primary Endpoint: [PLACEHOLDER - No direct API endpoint as this is a local utility function]
+Primary Endpoint: Local utility function (no API endpoint)
 
-OAuth required scopes: [PLACEHOLDER - Not applicable for local utility function]
+OAuth required scopes: Not applicable (local utility function)
 
-Required permissions: [PLACEHOLDER - Not applicable for local utility function]
+Required permissions: Not applicable (local utility function)
 
 ## EXAMPLES
 

@@ -175,16 +175,9 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-Group names and license types can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.LicensedGroup
-Licensed group objects from Get-PmLicensedGroup can be piped to this cmdlet. The GroupName property will be automatically mapped to the -GroupName parameter via ByPropertyName binding.
-
 ## OUTPUTS
 
-### None
-This cmdlet does not generate any output.
-
+### UiPath.PowerShell.Entities.UpdateLicensedGroupResponse
 ## NOTES
 This is a tenant entity cmdlet. The -Path parameter specifies drive names (e.g., Orch1:, Orch2:) for targeting specific platform instances.
 
