@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -121,7 +121,7 @@ Accept wildcard characters: False
 ```
 
 ### -ConsecutiveJobFailuresThreshold
-{{ Fill ConsecutiveJobFailuresThreshold Description }}
+{{ Fill  Description }}
 
 ```yaml
 Type: Int32
@@ -151,7 +151,7 @@ Accept wildcard characters: False
 ```
 
 ### -Enabled
-{{ Fill Enabled Description }}
+{{ Fill  Description }}
 
 ```yaml
 Type: String
@@ -166,7 +166,7 @@ Accept wildcard characters: False
 ```
 
 ### -InputArguments
-{{ Fill InputArguments Description }}
+{{ Fill  Description }}
 
 ```yaml
 Type: String
@@ -181,7 +181,7 @@ Accept wildcard characters: False
 ```
 
 ### -IsConnected
-{{ Fill IsConnected Description }}
+{{ Fill  Description }}
 
 ```yaml
 Type: String
@@ -196,7 +196,7 @@ Accept wildcard characters: False
 ```
 
 ### -ItemsActivationThreshold
-{{ Fill ItemsActivationThreshold Description }}
+{{ Fill  Description }}
 
 ```yaml
 Type: Int32
@@ -211,7 +211,7 @@ Accept wildcard characters: False
 ```
 
 ### -ItemsPerJobActivationTarget
-{{ Fill ItemsPerJobActivationTarget Description }}
+{{ Fill  Description }}
 
 ```yaml
 Type: Int32
@@ -226,7 +226,7 @@ Accept wildcard characters: False
 ```
 
 ### -JobFailuresGracePeriodInHours
-{{ Fill JobFailuresGracePeriodInHours Description }}
+{{ Fill  Description }}
 
 ```yaml
 Type: Int32
@@ -241,7 +241,7 @@ Accept wildcard characters: False
 ```
 
 ### -KillProcessExpression
-{{ Fill KillProcessExpression Description }}
+{{ Fill  Description }}
 
 ```yaml
 Type: String
@@ -601,3 +601,4 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## NOTES
 
 ## RELATED LINKS
+

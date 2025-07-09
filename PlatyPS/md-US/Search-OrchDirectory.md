@@ -28,9 +28,9 @@ This cmdlet is useful for user discovery, administrative tasks, and integration 
 
 Primary Endpoint: GET /api/DirectoryService/SearchForUsersAndGroups?domain=autogen&prefix={prefix}&searchContext=All
 
-OAuth required scopes: [PLACEHOLDER - Directory search scopes]
+OAuth required scopes: OR.Users or OR.Users.Read
 
-Required permissions: [PLACEHOLDER - Directory search permissions]
+Required permissions: Users.View or Units.Edit or SubFolders.Edit
 
 
 OAuth required scopes: OR.Users.Read
@@ -105,3 +105,4 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## NOTES
 
 ## RELATED LINKS
+

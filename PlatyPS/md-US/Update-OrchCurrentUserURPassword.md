@@ -34,26 +34,19 @@ Required permissions: [PLACEHOLDER - User profile edit permissions]
 
 ### Example 1: Update current user password interactively
 ```powershell
-PS C:\> Update-OrchCurrentUserURPassword
+PS Orch1:\> Update-OrchCurrentUserURPassword
 ```
 
 Prompts the user to enter a new password and confirmation, then updates the current user's password in Orchestrator.
 
 ### Example 2: Preview password update operation
 ```powershell
-PS C:\> Update-OrchCurrentUserURPassword -WhatIf
+PS Orch1:\> Update-OrchCurrentUserURPassword -WhatIf
 ```
 
 Shows what would happen if the password update operation were to run, without actually executing the update.
 
-### Example 3: Update password with confirmation prompt
-```powershell
-PS C:\> Update-OrchCurrentUserURPassword -Confirm
-```
-
-Prompts for both the new password and an additional confirmation before proceeding with the password update.
-
-### Example 4: Update password across multiple drives
+### Example 3: Update password across multiple drives
 ```powershell
 PS C:\> Update-OrchCurrentUserURPassword -Path Orch1:, Orch2:
 ```

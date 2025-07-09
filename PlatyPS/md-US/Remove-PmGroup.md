@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -24,62 +24,41 @@ The -Path parameter specifies target drives. If not specified, the current drive
 
 This cmdlet accesses Platform Management APIs and works across all UiPath Orchestrator drives (Orch1:, Orch1Tm:, Orch1Du:).
 
-Primary Endpoint: [PLACEHOLDER - Platform Management group deletion endpoint]
+Primary Endpoint: DELETE /api/Group/{tenantId}/{groupId}
 
-OAuth required scopes: [PLACEHOLDER - PM.Group.Delete or similar]
+OAuth required scopes: PM.Group
 
 Required permissions: [PLACEHOLDER - Platform Management group delete permissions]
 
 ## EXAMPLES
 
-### Example 1: Remove a single group
+### Example 1: Remove multiple groups
 ```powershell
-PS C:\> Remove-PmGroup -GroupName TestGroup
-```
-
-Removes the group named "TestGroup" from Platform Management.
-
-### Example 2: Remove multiple groups
-```powershell
-PS C:\> Remove-PmGroup -GroupName TestGroup1, TestGroup2, CustomGroup
+PS Orch1:\> Remove-PmGroup TestGroup1, TestGroup2, CustomGroup
 ```
 
 Removes multiple groups in a single operation.
 
-### Example 3: Remove groups using wildcards
+### Example 2: Remove groups using wildcards
 ```powershell
-PS C:\> Remove-PmGroup -GroupName Test* -WhatIf
+PS Orch1:\> Remove-PmGroup Test* -WhatIf
 ```
 
 Shows what would happen if all groups starting with "Test" were removed.
 
-### Example 4: Preview removal operation
+### Example 3: Remove with confirmation prompt
 ```powershell
-PS C:\> Remove-PmGroup -GroupName CustomGroup -WhatIf
-```
-
-Shows what would happen if the removal operation were executed without actually removing the group.
-
-### Example 5: Remove with confirmation prompt
-```powershell
-PS C:\> Remove-PmGroup -GroupName CustomGroup -Confirm
+PS Orch1:\> Remove-PmGroup -GroupName CustomGroup -Confirm
 ```
 
 Removes the group with an additional confirmation prompt before proceeding.
 
-### Example 6: Remove groups from specific drives
+### Example 4: Remove groups from specific drives
 ```powershell
-PS C:\> Remove-PmGroup -GroupName TestGroup -Path Orch1:, Orch2:
+PS C:\> Remove-PmGroup -Path Orch1:, Orch2: TestGroup
 ```
 
 Removes the group from multiple specified Orchestrator drives.
-
-### Example 7: Remove empty groups
-```powershell
-PS C:\> Get-PmGroup | Where-Object {$_.members.Count -eq 0} | Remove-PmGroup -WhatIf
-```
-
-Gets all groups with no members and shows what would happen if they were removed.
 
 ## PARAMETERS
 
@@ -187,3 +166,5 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 [Add-PmGroupMember]()
 
 [Remove-PmGroupMember]()
+
+

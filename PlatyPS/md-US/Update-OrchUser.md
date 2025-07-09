@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,7 +26,7 @@ Update-OrchUser [-UserName] <String[]> [-Name <String>] [-Surname <String>] [-Ro
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+[PLACEHOLDER - requires verification of description]
 
 Primary Endpoint: GET /odata/Users, GET /odata/Users({userId}), PUT /odata/Users({userId})
 
@@ -61,7 +61,7 @@ Accept wildcard characters: False
 ```
 
 ### -MayHavePersonalWorkspace
-{{ Fill MayHavePersonalWorkspace Description }}
+[PLACEHOLDER - requires verification of MayHavePersonalWorkspace parameter]
 
 ```yaml
 Type: String
@@ -76,7 +76,7 @@ Accept wildcard characters: False
 ```
 
 ### -MayHaveRobotSession
-{{ Fill MayHaveRobotSession Description }}
+[PLACEHOLDER - requires verification of MayHaveRobotSession parameter]
 
 ```yaml
 Type: String

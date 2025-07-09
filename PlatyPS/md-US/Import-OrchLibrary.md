@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,83 +26,42 @@ The -Path parameter specifies target drives. If not specified, the current drive
 
 This is a tenant-level operation that imports libraries to the Orchestrator instance.
 
-Primary Endpoint: [PLACEHOLDER - Library import API endpoint]
+Primary Endpoint: POST /odata/Libraries/UiPath.Server.Configuration.OData.UploadPackage
 
-OAuth required scopes: [PLACEHOLDER - Library management scope]
+OAuth required scopes: OR.Execution
 
-Required permissions: [PLACEHOLDER - Library import permissions]
+Required permissions: Libraries.Create
 
 ## EXAMPLES
 
-### Example 1: Import a single library
+### Example 1:
 ```powershell
-PS C:\> Import-OrchLibrary -Source C:\Libraries\MyCustomLibrary.1.0.0.nupkg
+PS Orch1:\> Import-OrchLibrary c:
 ```
 
-Imports the specified library package into the current Orchestrator tenant.
+Imports all library *.nupkg files in the current location of C: drive into the current Orchestrator tenant.
 
-### Example 2: Import multiple libraries
+### Example 2:
 ```powershell
-PS C:\> Import-OrchLibrary -Source C:\Libraries\LibraryA.nupkg, C:\Libraries\LibraryB.nupkg
+PS Orch1:\> Import-OrchLibrary C:\Libraries
+```
+
+Imports all library *.nupkg files in the specified folder into the current Orchestrator tenant.
+
+### Example 3:
+```powershell
+PS C:\Libraries> Import-OrchLibrary . Orch1:, Orch2: -WhatIf
+```
+
+Gets all library *.nupkg files from the current directory (.) and imports them to both Orch1: and Orch2:.
+
+
+### Example 4:
+```powershell
+PS Orch1:\> Import-OrchLibrary C:\Libraries\*mylib*.nupkg, C:\Libraries\*test*.nupkg -Confirm
 ```
 
 Imports multiple library packages in a single operation.
-
-### Example 3: Import libraries using Get-ChildItem
-```powershell
-PS C:\> $libraries = Get-ChildItem C:\Libraries\*.nupkg
-PS C:\> Import-OrchLibrary -Source $libraries.FullName
-```
-
-Gets all .nupkg files from a directory and imports them.
-
-### Example 4: Preview import operation
-```powershell
-PS C:\> Import-OrchLibrary -Source C:\Libraries\MyLibrary.nupkg -WhatIf
-```
-
-Shows what would happen if the import operation were executed without actually importing the library.
-
-### Example 5: Import with confirmation
-```powershell
-PS C:\> Import-OrchLibrary -Source C:\Libraries\MyLibrary.nupkg -Confirm
-```
-
-Imports the library with an additional confirmation prompt before proceeding.
-
-### Example 6: Import to specific drives
-```powershell
-PS C:\> Import-OrchLibrary -Source C:\Libraries\MyLibrary.nupkg -Path Orch1:, Orch2:
-```
-
-Imports the library to multiple specified Orchestrator drives.
-
-### Example 7: Import and examine results
-```powershell
-PS C:\> $result = Import-OrchLibrary -Source C:\Libraries\UiPath.Telemetry.Client.1.6.24.nupkg
-PS C:\> $result | ConvertTo-Json -Depth 5
-```
-
-Imports a library and displays the detailed result structure in JSON format for analysis.
-
-### Example 8: Bulk import with error handling
-```powershell
-PS C:\> $libraries = Get-ChildItem C:\Libraries\*.nupkg
-PS C:\> foreach ($lib in $libraries) {
-    try {
-        $result = Import-OrchLibrary -Source $lib.FullName
-        if ($result.Status -eq "OK") {
-            Write-Host "Successfully imported: $($lib.Name)"
-        } else {
-            Write-Warning "Import failed for $($lib.Name): $($result.Status)"
-        }
-    } catch {
-        Write-Warning "Error importing $($lib.Name): $($_.Exception.Message)"
-    }
-}
-```
-
-Imports multiple libraries with comprehensive error handling and status checking.
 
 ## PARAMETERS
 
@@ -208,3 +167,4 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 [Remove-OrchLibrary]()
 
 [Get-OrchLibraryVersion]()
+

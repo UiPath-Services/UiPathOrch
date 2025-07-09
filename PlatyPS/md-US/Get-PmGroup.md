@@ -24,7 +24,7 @@ The -Path parameter specifies target drives. If not specified, the current drive
 
 This cmdlet accesses Platform Management APIs and works across all UiPath Orchestrator drives (Orch1:, Orch1Tm:, Orch1Du:).
 
-Primary Endpoint: [PLACEHOLDER - Platform Management groups API endpoint]
+Primary Endpoint: GET /api/Group/{tenantId}
 
 OAuth required scopes: PM.Group or PM.Group.Read
 
@@ -34,66 +34,54 @@ Required permissions: [PLACEHOLDER - Platform Management group read permissions]
 
 ### Example 1: Get all groups
 ```powershell
-PS C:\> Get-PmGroup
+PS Orch1:\> Get-PmGroup
 ```
 
 Retrieves all groups from the current Platform Management instance.
 
-### Example 2: Get specific group by name
-```powershell
-PS C:\> Get-PmGroup -GroupName "Everyone"
-```
-
-Retrieves information for the "Everyone" group.
-
-### Example 3: Get multiple groups by name
-```powershell
-PS C:\> Get-PmGroup -GroupName "Administrators", "Automation Users"
-```
-
-Retrieves information for multiple specified groups.
-
-### Example 4: Get groups with wildcard filtering
-```powershell
-PS C:\> Get-PmGroup -GroupName "*Developers*"
-```
-
-Retrieves all groups whose names contain "Developers" using wildcard pattern matching.
-
-### Example 5: Get group details and examine structure
-```powershell
-PS C:\> Get-PmGroup | Select-Object -First 1 | ConvertTo-Json -Depth 5
-```
-
-Retrieves the first group and displays its complete object structure in JSON format for detailed analysis.
-
-### Example 6: Get groups from specific drives
+### Example 2: Get groups from specific drives
 ```powershell
 PS C:\> Get-PmGroup -Path Orch1:, Orch2:
 ```
 
 Retrieves group information from multiple specified Orchestrator drives.
 
-### Example 7: Export groups to CSV for import
+### Example 3: Get multiple groups by name
 ```powershell
-PS C:\> Get-PmGroup -ExportCsv "C:\temp\groups.csv"
+PS Orch1:\> Get-PmGroup Administrators, "Automation Users", *Developers*
+```
+
+Retrieves information for multiple specified groups.
+
+### Example 4: Get group details and examine structure
+```powershell
+PS Orch1:\> Get-PmGroup | Select-Object -First 1 | ConvertTo-Json -Depth 5
+```
+
+Retrieves the first group and displays its complete object structure in JSON format for detailed analysis.
+
+
+### Example 5: Export groups to CSV for import
+```powershell
+PS Orch1:\> Get-PmGroup -ExportCsv C:\temp\groups.csv
 ```
 
 Exports all groups to a CSV file that can be used with Import-Csv and New-PmGroup for bulk group creation.
 
-### Example 8: Filter groups by creation date
+### Example 6: Import groups from CSV
 ```powershell
-PS C:\> Get-PmGroup | Where-Object {$_.creationTime -gt (Get-Date).AddDays(-30)} | Select-Object displayName, creationTime
+PS C:\> Import-Csv C:\temp\groups.csv | New-PmGroup -WhatIf
+```
+
+Imports group definitions from a CSV file exported by Get-PmGroup -ExportCsv and creates new groups.
+
+### Example 7: Filter groups by creation date
+```powershell
+PS Orch1:\> Get-PmGroup | Where-Object {$_.creationTime -gt (Get-Date).AddDays(-30)} | Select-Object displayName, creationTime
 ```
 
 Gets all groups and filters for those created in the last 30 days, displaying name and creation time.
 
-### Example 9: Import groups from CSV
-```powershell
-PS C:\> Import-Csv "C:\temp\groups.csv" | New-PmGroup
-```
-
-Imports group definitions from a CSV file exported by Get-PmGroup -ExportCsv and creates new groups.
 
 ## PARAMETERS
 
@@ -201,6 +189,8 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 [Add-PmGroupMember]()
 
 [Remove-PmGroupMember]()
+
+
 
 
 

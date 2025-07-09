@@ -26,7 +26,7 @@ Platform Management licensed groups provide centralized license management, enab
 
 Primary Endpoint: GET /api/licensedgroups
 
-OAuth required scopes: OR.Administration or OR.Administration.Read
+OAuth required scopes: [PLACEHOLDER]
 
 Required permissions: Administration.View
 

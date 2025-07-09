@@ -37,29 +37,7 @@ PS C:\> Edit-OrchConfig
 
 Opens the UiPathOrchConfig.json file in the default text editor (typically Notepad on Windows).
 
-### Example 2: Initial setup workflow
-```powershell
-PS C:\> # Check if drives are already configured
-PS C:\> Get-OrchPSDrive
-PS C:\> # If no drives found, edit configuration
-PS C:\> if ((Get-OrchPSDrive).Count -eq 0) {
-    Write-Host "No drives configured. Opening configuration editor..."
-    Edit-OrchConfig
-    Write-Host "After saving changes, restart PowerShell and import modules:"
-    Write-Host "Import-Module UiPathOrch, PSReadLine"
-}
-```
-
-Shows the typical initial setup workflow when no drives are configured.
-
-### Example 3: Open with specific editor
-```powershell
-PS C:\> Edit-OrchConfig Notepad
-```
-
-Opens the configuration file using Windows Notepad.
-
-### Example 4: Open with default JSON editor
+### Example 2: Open with default JSON editor
 ```powershell
 PS C:\> Edit-OrchConfig Default
 ```

@@ -34,22 +34,21 @@ PS C:\> Get-OrchPSDrive
 
 Lists all configured UiPath Orchestrator drives with their connection details.
 
-### Example 2: Environment verification decision flow
+### Example 2: Show shorten Scope
 ```powershell
-PS C:\> $drives = Get-OrchPSDrive
-PS C:\> if ($drives.Count -eq 0) {
-    Write-Host "No UiPath drives configured. Please run Edit-OrchConfig first"
-} elseif ($drives.Count -eq 1) {
-    Write-Host "Using drive: $($drives[0].Name)"
-    cd "$($drives[0].Name):\"
-} else {
-    Write-Host "Multiple drives found:"
-    $drives | Format-Table Name, Root, CurrentUser
-    Write-Host "Which drive should I use for this operation?"
-}
+PS C:\> Get-OrchPSDrive Orch1: | Select-Object -ExpandProperty Scope
 ```
 
-Shows the decision logic for handling different drive configuration scenarios.
+UiPathOrch internally converts long scopes into their equivalent shorter forms. These shortened scopes are not automatically written back to the configuration file, but you can check them using the command above.
+
+### Example 3: Display all information related to the drives
+
+```powershell
+PS C:\> Get-OrchPSDrive | Select-Object *
+```
+
+You can check tenant-related information such as `PartitionGlobalId`, `TenantId`, `TenantKey`, and `AccessToken`. Note that this information is displayed only for tenants with an established connection. To force a connection, use the `-Force` switch parameter.
+
 
 ## PARAMETERS
 

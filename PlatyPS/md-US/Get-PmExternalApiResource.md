@@ -28,9 +28,9 @@ This is a Platform Management API cmdlet that works on any UiPathOrch drive (Orc
 
 Multiple values for the -Name and -Path parameters can be specified using comma-separated text that includes wildcards. Additionally, you can use autocomplete for these values by pressing [Ctrl+Space] or [Tab].
 
-Primary Endpoint: [PLACEHOLDER - Platform Management external API resources endpoint]
+Primary Endpoint: GET /api/ExternalApiResource
 
-OAuth required scopes: PM.ExternalApiResource or PM.ExternalApiResource.Read
+OAuth required scopes: [PLACEHOLDER]
 
 Required permissions: [PLACEHOLDER - External API resources view permissions]
 

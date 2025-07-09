@@ -33,7 +33,7 @@ Platform Management robot accounts provide centralized identity management for a
 
 Primary Endpoint: GET /api/robotaccounts
 
-OAuth required scopes: OR.Administration or OR.Administration.Read
+OAuth required scopes: [PLACEHOLDER]
 
 Required permissions: Administration.View
 

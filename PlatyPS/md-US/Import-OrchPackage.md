@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,11 +26,11 @@ Use the -Source parameter to specify the local .nupkg files or directories conta
 
 This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters. The -Recurse parameter enables processing all subdirectories when importing from local directories.
 
-Primary Endpoint: [PLACEHOLDER - 具体的なAPIエンドポイント]
+Primary Endpoint: POST /odata/Processes/UiPath.Server.Configuration.OData.UploadPackage
 
-OAuth required scopes: OR.Assets or OR.Assets.Write
+OAuth required scopes: OR.Execution
 
-Required permissions: Assets.Create
+Required permissions: Packages.Create and FolderPackages.Create
 
 ## EXAMPLES
 
@@ -192,3 +192,4 @@ Imported packages must be valid .nupkg files created by UiPath Studio or exporte
 [Remove-OrchPackage](Remove-OrchPackage.md)
 
 [Update-OrchPackage](Update-OrchPackage.md)
+

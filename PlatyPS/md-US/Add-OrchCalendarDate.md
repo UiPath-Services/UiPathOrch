@@ -36,36 +36,36 @@ Required permissions: Settings.Edit
 
 ### Example 1
 ```powershell
-PS Orch1:\> Add-OrchCalendarDate ほえほえ (Get-Date).AddDays(7)
+PS Orch1:\> Add-OrchCalendarDate MyCalendar1 (Get-Date).AddDays(7)
 ```
 
-Adds a date 7 days from today to the "ほえほえ" calendar as a non-working day using positional parameters.
+Adds a date 7 days from today to the "MyCalendar1" calendar as a non-working day using positional parameters.
 
 ### Example 2
 ```powershell
-PS Orch1:\> Add-OrchCalendarDate ほえほえ "2025-12-25", "2025-12-26"
+PS Orch1:\> Add-OrchCalendarDate MyCalendar1 2025-12-25, 2025-12-26
 ```
 
-Adds Christmas Day and Boxing Day to the "ほえほえ" calendar as non-working days.
+Adds Christmas Day and Boxing Day to the "MyCalendar1" calendar as non-working days.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Add-OrchCalendarDate ほえほえ*, ふがふが* (Get-Date).AddDays(14)
+PS Orch1:\> Add-OrchCalendarDate My*, Your* (Get-Date).AddDays(14)
 ```
 
-Adds a date 14 days from today to all calendars matching "ほえほえ*" and "ふがふが*" patterns using wildcards.
+Adds a date 14 days from today to all calendars matching "My*" and "Your*" patterns using wildcards.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Add-OrchCalendarDate ほえほえカレンダー "2025-01-01" -IncludePastDate -WhatIf
+PS Orch1:\> Add-OrchCalendarDate MyCalendar1 2025-01-01 -IncludePastDate -WhatIf
 ```
 
 Shows what would happen when adding a past date to the calendar with the -IncludePastDate parameter using -WhatIf for safety.
 
 ### Example 5
 ```powershell
-PS Orch1:\> $holidays = "2025-12-25", "2025-12-31", "2026-01-01"
-PS Orch1:\> Add-OrchCalendarDate ほえほえ $holidays
+PS Orch1:\> $holidays = 2025-12-25, 2025-12-31, 2026-01-01
+PS Orch1:\> Add-OrchCalendarDate MyCalendar $holidays
 ```
 
 Adds multiple holiday dates stored in a variable to the calendar.

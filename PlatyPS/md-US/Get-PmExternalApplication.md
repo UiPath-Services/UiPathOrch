@@ -24,7 +24,7 @@ This cmdlet returns details about registered applications including their names,
 
 This is a Platform Management API cmdlet that works on any UiPathOrch drive (Orch1:, Orch1Tm:, Orch1Du:).
 
-Primary Endpoint: [PLACEHOLDER - Platform Management external applications endpoint]
+Primary Endpoint: GET /api/ExternalClient/{partitionGlobalId}
 
 OAuth required scopes: PM.ExternalApplication or PM.ExternalApplication.Read
 

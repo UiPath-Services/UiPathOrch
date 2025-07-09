@@ -196,7 +196,7 @@ Accept wildcard characters: False
 ```
 
 ### -ES_AutoDownloadProcess
-{{ Fill ES_AutoDownloadProcess Description }}
+[PLACEHOLDER - requires verification of ES_AutoDownloadProcess parameter description]
 
 ```yaml
 Type: String

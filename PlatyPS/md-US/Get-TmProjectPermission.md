@@ -33,7 +33,6 @@ Required permissions: [PLACEHOLDER - ProjectSettings.Update]
 
 ### Example 1: Get project permissions from current folder
 ```powershell
-PS C:\> cd Orch1Tm:\TestProject
 PS Orch1Tm:\TestProject> Get-TmProjectPermission
 ```
 
@@ -41,50 +40,28 @@ Navigates to a specific Test Manager project folder and retrieves user permissio
 
 ### Example 2: Get project permissions recursively
 ```powershell
-PS C:\> Set-Location Orch1Tm:\
 PS Orch1Tm:\> Get-TmProjectPermission -Recurse
 ```
 
 Retrieves user permissions for all Test Manager projects recursively from the root folder.
 
-### Example 3: Get project permissions from specific path
+### Example 3: Get project permissions from multiple paths
 ```powershell
-PS C:\> Get-TmProjectPermission -Path "Orch1Tm:\TestProject"
-```
-
-Retrieves user permissions for the specified Test Manager project without changing the current location.
-
-### Example 4: Get project permissions from multiple paths
-```powershell
-PS C:\> Get-TmProjectPermission -Path "Orch1Tm:\TestProject", "Orch1Tm:\MyProject"
+PS C:\> Get-TmProjectPermission -Path Orch1Tm:\TestProject, Orch1Tm:\MyProject
 ```
 
 Retrieves user permissions from multiple Test Manager projects using specific paths.
 
-### Example 5: Get permission details and examine structure
+### Example 4: Get permission details and examine structure
 ```powershell
-PS C:\> Get-TmProjectPermission -Recurse | Select-Object -First 1 | ConvertTo-Json -Depth 5
+PS Orch1Tm:\> Get-TmProjectPermission -Recurse | Select-Object -First 1 | ConvertTo-Json -Depth 5
 ```
 
 Retrieves the first permission record and displays the complete object structure in JSON format for detailed analysis.
 
-### Example 6: Filter project owners
+### Example 5: Check recent permission changes
 ```powershell
-PS C:\> Get-TmProjectPermission -Recurse | Where-Object {$_.isOwner -eq $true} | Select-Object Project, user, roles
-```
-
-Gets all project permissions and filters for project owners, displaying project name, user information, and assigned roles.
-
-### Example 7: Group permissions by role
-```powershell
-PS C:\> Get-TmProjectPermission -Recurse | ForEach-Object { $_.roles } | Group-Object | Sort-Object Count -Descending
-```
-
-Gets all project permissions and analyzes the distribution of roles across all projects.
-
-### Example 8: Check recent permission changes
-```powershell
-PS C:\> Get-TmProjectPermission -Recurse | Where-Object {$_.lastUpdated -gt (Get-Date).AddDays(-30)} | Select-Object Project, user, lastUpdated, roles
+PS Orch1Tm:\> Get-TmProjectPermission -Recurse | Where-Object {$_.lastUpdated -gt (Get-Date).AddDays(-30)}
 ```
 
 Gets project permissions that were updated in the last 30 days to track recent permission changes.
