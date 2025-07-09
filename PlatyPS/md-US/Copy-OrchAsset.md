@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -208,20 +208,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Asset names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.Asset
-Asset objects from Get-OrchAsset can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
-
-### System.Management.Automation.PSCustomObject
-CSV data with Path, Name and Destination columns can be piped to this cmdlet via Import-Csv for bulk copy operations.
-
+### None
 ## OUTPUTS
 
-### None
-This cmdlet does not generate any output.
-
+### UiPath.PowerShell.Entities.Asset
 ## NOTES
 This is a folder entity cmdlet. Use the -Path parameter to specify the source folder or navigate to the source folder using Set-Location.
 

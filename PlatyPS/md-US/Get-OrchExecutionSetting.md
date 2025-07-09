@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -142,23 +142,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-Setting display names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.ExecutionSetting
-ExecutionSetting objects can be piped to this cmdlet. The DisplayName property will be automatically mapped to the -DisplayName parameter via ByPropertyName binding.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.ExecutionSetting
-Returns ExecutionSetting objects containing information about execution configuration settings. Key properties include:
-- Path: Current tenant context path
-- Scope: Setting scope ("Global" or "Robot")
-- PathScope: Full path including scope (e.g., "Orch1:\\Global")
-- Key: Unique setting identifier
-- DisplayName: Human-readable setting name
-- ValueType: Data type ("Boolean", "Integer", "MultipleChoice")
-- DefaultValue: Current default value
-- PossibleValues: Array of valid values for enumeration types
+### UiPath.PowerShell.Entities.ExecutionSettingDefinition
 
 ## NOTES
 This cmdlet is a tenant-level entity operation for accessing execution setting configurations. Settings control automation execution behavior including logging, console access, and resolution settings. Output is grouped by scope showing Global and Robot-level settings. Use filtering to find specific settings by key or value type. This operation requires Settings.View permissions.

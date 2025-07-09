@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -154,15 +154,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-Asset names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.Asset
-Asset objects from Get-OrchAsset can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
 
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.SimpleFolder
-Returns SimpleFolder objects representing the folders where the specified assets are linked or accessible.
 
 ## NOTES
 This cmdlet is a folder entity operation that requires appropriate folder context or path specification. Asset links define folder-level access to assets within the Orchestrator hierarchy. Use -Recurse and -Depth parameters to control the scope of folder searching. Understanding asset-folder relationships is essential for proper access control and asset management. This operation requires Assets.View permissions in the target folders.

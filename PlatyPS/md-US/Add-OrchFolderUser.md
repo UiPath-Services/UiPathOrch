@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -202,7 +202,7 @@ Accept wildcard characters: False
 ### -Type
 Specifies the type of user to assign. Valid values are:
 - DirectoryUser: Individual users from Active Directory
-- DirectoryRobot: Robot accounts from Active Directory  
+- DirectoryRobot: Robot accounts from Active Directory
 - DirectoryGroup: Groups from Active Directory
 - DirectoryExternalApplication: External applications from Active Directory
 
@@ -223,17 +223,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Usernames can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.User
-User objects from Get-OrchUser can be piped to this cmdlet. The UserName property will be automatically mapped to the -UserName parameter via ByPropertyName binding.
-
+### None
 ## OUTPUTS
 
-### None
-This cmdlet does not generate any output.
-
+### System.Object
 ## NOTES
 This is a folder entity cmdlet. You must navigate to a folder using Set-Location or specify target folders using -Path, -Recurse, or -Depth parameters.
 

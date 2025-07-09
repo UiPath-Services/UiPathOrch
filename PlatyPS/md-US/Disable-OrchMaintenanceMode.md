@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -27,11 +27,11 @@ Use the various filtering parameters to target specific robot sessions for maint
 
 The -Force parameter can be used to bypass confirmation prompts when disabling maintenance mode for multiple sessions simultaneously.
 
-Primary Endpoint: GET /odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimes
+Primary Endpoint: GET /odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimes, POST /odata/Sessions/UiPath.Server.Configuration.OData.SetMaintenanceMode
 
 OAuth required scopes: OR.Robots or OR.Robots.Write
 
-Required permissions: Machines.Edit
+Required permissions: Robots.Edit
 
 ## EXAMPLES
 
@@ -220,20 +220,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Machine names, host machine names, and service user names can be piped to this cmdlet.
-
-### System.Int64[]
-Session IDs can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.UnattendedSession
-UnattendedSession objects from Get-OrchUnattendedSession can be piped to this cmdlet. Properties will be automatically mapped to corresponding parameters via ByPropertyName binding.
-
+### None
 ## OUTPUTS
 
-### None
-This cmdlet does not generate any output.
-
+### System.Object
 ## NOTES
 Maintenance mode prevents robot sessions from accepting new jobs while allowing current jobs to complete. Disabling maintenance mode restores normal robot operation. Use filtering parameters to target specific sessions. The -Force parameter bypasses confirmation prompts for bulk operations.
 

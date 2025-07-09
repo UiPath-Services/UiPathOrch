@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -24,7 +24,7 @@ When a webhook is removed, all its configuration including URL, event types, and
 
 The cmdlet supports safety features like -WhatIf to preview the operation and -Confirm to request confirmation before deletion. It is strongly recommended to use these parameters when removing webhooks to avoid accidental deletion of important integration configurations.
 
-Primary Endpoint: DELETE /odata/Webhooks({webhookId})
+Primary Endpoint: GET /odata/Webhooks, DELETE /odata/Webhooks({webhookId})
 
 OAuth required scopes: OR.Webhooks
 

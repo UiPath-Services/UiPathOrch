@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -114,24 +114,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Setting keys can be piped to this cmdlet.
-
+### None
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.AuthenticationSetting
-Returns AuthenticationSetting objects containing system configuration information. Key properties include:
-- Key: Configuration parameter name (e.g., "Auth.AllowChangePassword", "Build.Version")
-- Value: Current configuration value
-
-Common setting categories include:
-- Auth.*: Authentication and authorization settings
-- Application.*: Application-level configuration
-- Build.*: Version and build information
-- Localization.*: Culture and language settings
-- Telemetry.*: Analytics and monitoring configuration
-- *Authentication.Enabled: Token authentication options
-
+### UiPath.PowerShell.Entities.ResponseDictionaryItem
 ## NOTES
 This cmdlet is a tenant-level entity operation for accessing system configuration settings. These settings control authentication behavior, application properties, and system features. Most settings are read-only and reflect the current Orchestrator configuration. Use filtering by Key patterns to find specific configuration categories. This operation requires Settings.View permissions.
 

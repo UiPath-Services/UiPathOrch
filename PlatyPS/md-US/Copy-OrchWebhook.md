@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -175,15 +175,12 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-Webhook names can be piped to this cmdlet.
 
-### UiPath.PowerShell.Entities.Webhook
-Webhook objects from Get-OrchWebhook can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
+### System.String
 
 ## OUTPUTS
 
-### None
-This cmdlet does not generate any output.
+### UiPath.PowerShell.Entities.Webhook
 
 ## NOTES
 This is a tenant entity cmdlet. The -Path parameter specifies drive names (e.g., Orch1:, Orch2:) for source and destination tenants.

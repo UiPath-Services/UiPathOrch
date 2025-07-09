@@ -220,20 +220,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Machine names, host machine names, and service user names can be piped to this cmdlet.
-
-### System.Int64[]
-Session IDs can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.UnattendedSession
-UnattendedSession objects from Get-OrchUnattendedSession can be piped to this cmdlet. Properties will be automatically mapped to corresponding parameters via ByPropertyName binding.
-
+### None
 ## OUTPUTS
 
-### None
-This cmdlet does not generate any output.
-
+### System.Object
 ## NOTES
 Maintenance mode prevents robot sessions from accepting new jobs while allowing current jobs to complete. This is essential for performing maintenance without interrupting running processes. Use filtering parameters to target specific sessions. The -Force parameter bypasses confirmation prompts for bulk operations.
 

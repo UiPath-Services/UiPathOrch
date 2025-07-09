@@ -52,40 +52,49 @@ PS Orch1:\Shared> Get-OrchJob -First 5
 
 Gets the first 5 jobs from the current folder.
 
+
 ### Example 2
+```powershell
+PS Orch1:\Shared> Get-OrchJob
+```
+
+Gets cached jobs in the current folder without making any API calls.
+
+### Example 3
 ```powershell
 PS C:\> Get-OrchJob -Path Orch1:\Shared -State Faulted -First 10
 ```
 
 Gets the first 10 failed jobs from all folders.
 
-### Example 3
+### Example 4
 ```powershell
-PS C:\> Get-OrchJob -Recurse -Path Orch1:\Shared,Orch1:\Production -State Successful -First 10
+PS C:\> Get-OrchJob -Path Orch1:\Shared, Orch1:\Production -Recurse -State Successful -First 10
 ```
 
-Gets all successful jobs from the last day.
+Gets all successful jobs in the specified folders and their subfolders.
 
-### Example 4
+### Example 5
 ```powershell
 PS Orch1:\Shared> Get-OrchJob -ReleaseName BlankProcess1 -First 5
 ```
 
 Gets the first 5 jobs for a specific process.
 
-### Example 5
+### Example 6
 ```powershell
-PS Orch1:\Shared> Get-OrchJob -CreationTimeAfter (Get-Date).AddHours(-1) -First 10
+PS Orch1:\Shared> Get-OrchJob -Last Hour
 ```
 
-Gets jobs created in the last hour.
+Gets jobs created in the last hour in the current folder.
 
-### Example 6
+### Example 7
 ```powershell
 PS C:\> Get-OrchJob -Path Orch1:\Shared,Orch1:\Production -Recurse -State Successful -First 5
 ```
 
 Gets successful jobs from specific folders with -Path parameter prioritized.
+
 
 ## PARAMETERS
 
@@ -315,7 +324,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProcessType
-{{ Fill ProcessType Description }}
+[PLACEHOLDER - requires verification of ProcessType parameter description]
 
 ```yaml
 Type: String[]
@@ -330,7 +339,7 @@ Accept wildcard characters: True
 ```
 
 ### -EndTimeAfter
-{{ Fill EndTimeAfter Description }}
+[PLACEHOLDER - requires verification of EndTimeAfter parameter description]
 
 ```yaml
 Type: DateTime
@@ -345,7 +354,7 @@ Accept wildcard characters: False
 ```
 
 ### -EndTimeBefore
-{{ Fill EndTimeBefore Description }}
+[PLACEHOLDER - requires verification of EndTimeBefore parameter description]
 
 ```yaml
 Type: DateTime
@@ -360,7 +369,7 @@ Accept wildcard characters: False
 ```
 
 ### -ResumeTimeAfter
-{{ Fill ResumeTimeAfter Description }}
+[PLACEHOLDER - requires verification of ResumeTimeAfter parameter description]
 
 ```yaml
 Type: DateTime
@@ -375,7 +384,7 @@ Accept wildcard characters: False
 ```
 
 ### -ResumeTimeBefore
-{{ Fill ResumeTimeBefore Description }}
+[PLACEHOLDER - requires verification of ResumeTimeBefore parameter description]
 
 ```yaml
 Type: DateTime
@@ -390,7 +399,7 @@ Accept wildcard characters: False
 ```
 
 ### -StartTimeAfter
-{{ Fill StartTimeAfter Description }}
+[PLACEHOLDER - requires verification of StartTimeAfter parameter description]
 
 ```yaml
 Type: DateTime
@@ -405,7 +414,7 @@ Accept wildcard characters: False
 ```
 
 ### -StartTimeBefore
-{{ Fill StartTimeBefore Description }}
+[PLACEHOLDER - requires verification of StartTimeBefore parameter description]
 
 ```yaml
 Type: DateTime

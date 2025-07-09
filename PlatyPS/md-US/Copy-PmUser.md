@@ -177,16 +177,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-Email addresses can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.PmUser
-PmUser objects from Get-PmUser can be piped to this cmdlet. The Email property will be automatically mapped to the -Email parameter via ByPropertyName binding.
-
+### System.String
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.PmUser
-Returns information about the copied users.
-
 ## NOTES
 This is a tenant entity cmdlet. The -Path parameter specifies drive names (e.g., Orch1:, Orch2:) for source and destination organizations.
 

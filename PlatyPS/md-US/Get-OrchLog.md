@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -325,17 +325,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Machine names, process names, job keys, and other filter values can be piped to this cmdlet.
-
-### System.DateTime
-Timestamp values can be piped to this cmdlet for time-based filtering.
-
+### None
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.Log
-Returns Log objects containing execution log information. Key properties typically include Level, TimeStamp, Machine, WindowsIdentity, ProcessName, JobKey, and message content.
-
 ## NOTES
 This cmdlet is a folder entity operation requiring at least one filter parameter to prevent excessive data retrieval. The cmdlet will output cached contents with a warning if no filter parameters are specified. Use pagination parameters (Skip, First) to manage large result sets. Common filter patterns include time ranges (Last, TimeStampAfter), severity levels (Level), and specific execution contexts (Machine, ProcessName, JobKey). This operation requires Logs.View permissions in the target folders.
 

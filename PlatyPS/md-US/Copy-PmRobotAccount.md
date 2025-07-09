@@ -177,16 +177,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-Robot account names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.RobotAccount
-RobotAccount objects from Get-PmRobotAccount can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
-
+### System.String
 ## OUTPUTS
 
 ### System.Object
-Returns information about the copied robot accounts.
-
 ## NOTES
 This is a tenant entity cmdlet. The -Path parameter specifies drive names (e.g., Orch1:, Orch2:) for source and destination organizations.
 

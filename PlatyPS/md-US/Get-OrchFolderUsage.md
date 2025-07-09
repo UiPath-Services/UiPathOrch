@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -13,8 +13,8 @@ Gets folder usage statistics showing entity counts in UiPath Orchestrator folder
 ## SYNTAX
 
 ```
-Get-OrchFolderUsage [[-Path] <String[]>] [-Recurse] [-Depth <UInt32>] [-Id <Int64>] [-Name <String>]
- [-DisplayName <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-OrchFolderUsage [[-Path] <String[]>] [-Recurse] [-Depth <UInt32>] [-ProgressAction <ActionPreference>]
+ [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -147,51 +147,6 @@ Required: False
 Position: Named
 Default value: None
 Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -DisplayName
-Specifies the display name filter for folder entities. This parameter can be used to filter results based on the display name of entities within folders.
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: False
-```
-
-### -Id
-Specifies the ID filter for folder entities. This parameter can be used to filter results based on the ID of entities within folders.
-
-```yaml
-Type: Int64
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: False
-```
-
-### -Name
-Specifies the name filter for folder entities. This parameter can be used to filter results based on the name of entities within folders.
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 

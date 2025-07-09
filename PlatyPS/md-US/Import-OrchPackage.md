@@ -174,17 +174,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Package file paths can be piped to this cmdlet.
-
-### System.IO.FileInfo
-FileInfo objects from Get-ChildItem can be piped to this cmdlet. The FullName property will be automatically mapped to the -Source parameter via ByPropertyName binding.
-
+### None
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.Package
-Returns information about the imported packages.
-
+### UiPath.PowerShell.Entities.BulkItemDtoOfString
 ## NOTES
 This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.
 

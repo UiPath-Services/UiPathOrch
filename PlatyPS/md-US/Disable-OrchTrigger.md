@@ -188,17 +188,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Trigger names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.ProcessSchedule
-Trigger objects from Get-OrchTrigger can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
-
+### None
 ## OUTPUTS
 
-### None
-This cmdlet does not generate any output.
-
+### System.Object
 ## NOTES
 This cmdlet is a folder entity operation that suspends automation trigger execution without deleting trigger configuration. Disabling triggers directly affects automation schedules and may impact business processes. Use -WhatIf to preview operations and -Confirm for safety when disabling multiple triggers. The operation requires Schedules.Edit permissions in the target folders. Disabled triggers can be re-enabled using Enable-OrchTrigger while preserving all configuration settings.
 

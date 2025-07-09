@@ -291,6 +291,34 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
+
+
+
+
+yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+
+
+
+
+yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
 ```
 
 ```yaml
@@ -317,7 +345,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## NOTES
 
 This cmdlet operates on folder entities and requires either:
-- Navigation to the target folder using Set-Location (cd), OR  
+- Navigation to the target folder using Set-Location (cd), OR
 - Specification of target folders using the -Path parameter
 
 **Important:** For optimal PowerShell IntelliSense support, specify -Path before the Name parameter when using both parameters.

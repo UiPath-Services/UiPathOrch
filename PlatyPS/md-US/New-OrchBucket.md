@@ -27,7 +27,7 @@ The New-OrchBucket cmdlet creates new storage buckets in UiPath Orchestrator. Bu
 Buckets can be configured with various storage providers including FileSystem, Azure Blob Storage, Amazon S3, and others. You can specify custom storage containers, credential stores for secure authentication, and organize buckets using tags. Options allow you to control bucket behavior such as read-only access or encryption settings.
 
 Primary Endpoint: POST /odata/Buckets
-OAuth required scopes: OR.Buckets or OR.Buckets.Write  
+OAuth required scopes: OR.Buckets or OR.Buckets.Write
 Required permissions: Buckets.Create
 
 ## EXAMPLES
@@ -292,16 +292,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-Bucket names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.Bucket
-Bucket objects can be piped to this cmdlet. The Name and other properties will be automatically mapped to the corresponding parameters via ByPropertyName binding.
-
+### System.String
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.Bucket
-This cmdlet returns the newly created bucket object(s), which include properties such as Id, Name, Description, StorageProvider, and other configuration details.
-
 ## NOTES
 - Bucket names must be unique within the folder
 - Some storage providers may require additional configuration or credentials

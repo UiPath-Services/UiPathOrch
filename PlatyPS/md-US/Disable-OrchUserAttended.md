@@ -160,16 +160,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-Usernames can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.User
-User objects from Get-OrchUser can be piped to this cmdlet. The UserName property will be automatically mapped to the -UserName parameter via ByPropertyName binding.
 
 ## OUTPUTS
 
-### None
-This cmdlet does not generate any output.
-
+### System.Object
 ## NOTES
 This cmdlet is a tenant-level entity operation that sets the MayHaveRobotSession property to False for specified users. Attended robot capabilities allow users to run automation processes on their desktop machines with user interaction. Disabling these capabilities prevents robot session establishment and attended automation execution while preserving other user permissions. This cmdlet operates independently of personal workspace permissions and does not automatically clear the Orchestrator cache.
 

@@ -29,7 +29,7 @@ Machines can be configured with different slot types for various automation scen
 The cmdlet supports CSV import functionality. Use Get-OrchMachine -ExportCsv to obtain the format for bulk machine creation.
 
 Primary Endpoint: POST /odata/Machines
-OAuth required scopes: OR.Machines or OR.Machines.Write  
+OAuth required scopes: OR.Machines or OR.Machines.Write
 Required permissions: Machines.Create
 
 ## EXAMPLES
@@ -309,16 +309,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-Machine names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.Machine
-Machine objects can be piped to this cmdlet. The Name and other properties will be automatically mapped to the corresponding parameters via ByPropertyName binding.
-
+### System.String
+### System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.Machine
-This cmdlet returns the newly created machine object(s), which include properties such as Id, Name, Type, LicenseKey, and slot configurations.
-
+### UiPath.PowerShell.Entities.CreatedMachine
 ## NOTES
 - Machine names must be unique within the tenant
 - Consider using -WhatIf to preview the operation before actual creation

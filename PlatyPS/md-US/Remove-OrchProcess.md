@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -20,7 +20,7 @@ Remove-OrchProcess [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Depth <UIn
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-Primary Endpoint: DELETE /odata/Releases({processId})
+Primary Endpoint: GET /odata/Releases, DELETE /odata/Processes('{processId}:{version}')
 
 OAuth required scopes: OR.Execution
 

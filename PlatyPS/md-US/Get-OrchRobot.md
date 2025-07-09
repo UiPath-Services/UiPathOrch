@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -134,8 +134,6 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.Robot
 ## NOTES
-
-
 
 Primary Endpoint: GET /odata/Robots
 OAuth required scopes: OR.Robots or OR.Robots.Read

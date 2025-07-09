@@ -160,16 +160,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-Usernames can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.User
-User objects from Get-OrchUser can be piped to this cmdlet. The UserName property will be automatically mapped to the -UserName parameter via ByPropertyName binding.
 
 ## OUTPUTS
 
-### None
-This cmdlet does not generate any output.
-
+### System.Object
 ## NOTES
 This cmdlet is a tenant-level entity operation that sets both MayHavePersonalWorkspace and MayHaveRobotSession properties to True for specified users. Personal workspaces provide dedicated development environments separate from shared organizational folders. The robot session capability allows users to execute attended automation processes within their workspace environment. The operation automatically clears the Orchestrator cache to ensure immediate availability of new permissions.
 

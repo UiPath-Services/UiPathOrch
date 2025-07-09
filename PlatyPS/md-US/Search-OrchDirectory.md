@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -32,7 +32,6 @@ OAuth required scopes: [PLACEHOLDER - Directory search scopes]
 
 Required permissions: [PLACEHOLDER - Directory search permissions]
 
-Primary Endpoint: GET /api/DirectoryService/SearchForUsersAndGroups?domain=autogen&prefix={prefix}&searchContext=All
 
 OAuth required scopes: OR.Users.Read
 

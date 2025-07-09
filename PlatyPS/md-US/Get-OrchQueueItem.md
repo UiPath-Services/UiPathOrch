@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -430,25 +430,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Queue names, robot names, reviewer names, and other filter values can be piped to this cmdlet.
-
-### System.DateTime
-Date and time values can be piped to this cmdlet for time-based filtering.
-
+### None
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.QueueItem
-Returns QueueItem objects containing comprehensive queue item information. Key properties include:
-- Path, Name, PathName: Queue location and name information
-- Id, Key, UniqueKey: Various identifier fields
-- Status, Priority, ReviewStatus: Processing and review status
-- StartProcessing, EndProcessing: Processing timestamps
-- Robot: Complete robot information object
-- SpecificContent, SpecificData: Item-specific data and content
-- ProcessingException: Error details for failed items
-- DueDate, DeferDate: Scheduling information
-
 ## NOTES
 This cmdlet is a folder entity operation requiring at least one filter parameter to prevent excessive data retrieval. The cmdlet will output cached contents with a warning if no filter parameters are specified. Common filter patterns include queue names (Name), status values (Status), time ranges (StartProcessingAfter/Before), and robot assignments (Robot). Use pagination parameters (Skip, First) to manage large result sets. This operation requires Queues.View permissions in the target folders.
 

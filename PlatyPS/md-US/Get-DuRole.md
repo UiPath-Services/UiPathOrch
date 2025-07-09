@@ -128,7 +128,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.DuRole
 ## NOTES
-- This cmdlet operates on Document Understanding drives (Orch1Du:) 
+- This cmdlet operates on Document Understanding drives (Orch1Du:)
 - Common built-in roles include: DU Data Annotator, DU Developer, DU Model Trainer, DU Project Administrator, and DU Viewer
 - The actionDetails property contains granular permissions for specific Document Understanding operations
 - Role types include BUILTIN (predefined system roles) and custom roles created by administrators

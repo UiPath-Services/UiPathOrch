@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -24,7 +24,7 @@ Primary Endpoint: POST /api/TestDataQueueActions/SetAllItemsConsumed
 
 OAuth required scopes: OR.TestDataQueues
 
-Required permissions:
+Required permissions: TestDataQueues.Edit
 
 ## EXAMPLES
 

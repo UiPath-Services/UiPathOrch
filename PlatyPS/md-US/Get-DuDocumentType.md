@@ -144,22 +144,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-Document type IDs can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.DuDocumentType
-DuDocumentType objects can be piped to this cmdlet. The Id property will be automatically mapped to the -Id parameter via ByPropertyName binding.
 
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.DuDocumentType
-Returns DuDocumentType objects containing information about Document Understanding document types. Key properties include:
-- Path: Current Document Understanding project context path
-- Project: Document Understanding project name
-- id: Unique document type identifier
-- name: Display name of the document type
-- detailsUrl: API endpoint for complete document type definition
-
-Common document types include: Invoices (various regions), Receipts, Tax Forms (1040, W2, W9), ID Cards, Passports, Bank Statements, Purchase Orders, ACORD forms, Medical forms (CMS1500, UB04), and many others.
 
 ## NOTES
 This cmdlet operates within Document Understanding projects on the UiPathOrchDu drive. Navigation to a specific project folder is required before execution. Document types define the structure, field extraction rules, and processing logic for specific document categories. The Predefined project contains numerous pre-built document types for common business scenarios. Custom document types can be created for specialized processing requirements. This operation requires ML.View permissions within Document Understanding projects.

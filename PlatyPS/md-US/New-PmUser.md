@@ -26,7 +26,7 @@ The New-PmUser cmdlet creates users in UiPath Platform Management. Users created
 Users created through Platform Management benefit from shared caches across tenants within the same organization, as mentioned in the UiPathOrch 0.9.13.0 release notes, providing improved performance and consistent behavior.
 
 Primary Endpoint: POST /api/platformmanagement/users
-OAuth required scopes: OR.Users or OR.Users.Write  
+OAuth required scopes: OR.Users or OR.Users.Write
 Required permissions: Users.Create
 
 ## EXAMPLES
@@ -247,16 +247,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String
-Email addresses can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.PmUser
-User objects can be piped to this cmdlet. The Email and other properties will be automatically mapped via ByPropertyName binding.
-
+### System.String[]
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.PmUser
-This cmdlet returns the newly created user object(s) with organization-level scope.
-
 ## NOTES
 
 ## RELATED LINKS

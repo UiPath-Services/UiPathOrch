@@ -26,7 +26,7 @@ This cmdlet accesses Platform Management APIs and works across all UiPath Orches
 
 Primary Endpoint: [PLACEHOLDER - Platform Management groups API endpoint]
 
-OAuth required scopes: [PLACEHOLDER - PM.Group.Read or similar]
+OAuth required scopes: PM.Group or PM.Group.Read
 
 Required permissions: [PLACEHOLDER - Platform Management group read permissions]
 

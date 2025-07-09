@@ -26,9 +26,9 @@ The cmdlet generates a new client secret for the specified machine(s) and return
 
 Primary Endpoint: GET /odata/Machines, POST /api/clientsecrets/{machineId}
 
-OAuth required scopes: [PLACEHOLDER]
+OAuth required scopes: OR.Machines
 
-Required permissions: [PLACEHOLDER]
+Required permissions: [PLACEHOLDER - requires verification of machine client secret management permissions]
 
 ## EXAMPLES
 

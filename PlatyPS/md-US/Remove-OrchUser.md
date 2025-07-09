@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -20,7 +20,7 @@ Remove-OrchUser [[-UserName] <String[]>] [[-FullName] <String[]>] [-Type <String
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-Primary Endpoint: DELETE /odata/Users({userId})
+Primary Endpoint: GET /odata/Users, DELETE /odata/Users({userId})
 
 OAuth required scopes: OR.Users
 

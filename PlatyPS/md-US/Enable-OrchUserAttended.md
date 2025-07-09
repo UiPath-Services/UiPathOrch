@@ -26,11 +26,11 @@ The cmdlet requires the UserName parameter to specify which users should have at
 
 This setting is essential for organizations implementing attended automation scenarios where users and robots collaborate to complete business processes efficiently.
 
-Primary Endpoint: POST /odata/ProcessSchedules/UiPath.Server.Configuration.OData.SetEnabled
+Primary Endpoint: GET /odata/Users, GET /odata/Users({userId}), PUT /odata/Users({userId})
 
-OAuth required scopes: OR.Jobs
+OAuth required scopes: OR.Users
 
-Required permissions: Schedules.Edit
+Required permissions: Users.Edit
 
 ## EXAMPLES
 
@@ -68,6 +68,7 @@ PS C:\> Get-OrchUser -UserName *automation* | Enable-OrchUserAttended -Confirm
 ```
 
 Finds all users with "automation" in their username and enables attended automation for them with confirmation prompts for each user.
+
 ## PARAMETERS
 
 ### -Confirm

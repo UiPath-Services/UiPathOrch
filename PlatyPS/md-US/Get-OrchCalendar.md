@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -181,23 +181,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Calendar names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.Calendar
-Calendar objects can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
-
+### None
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.Calendar
-Returns Calendar objects containing information about business calendars. Key properties include:
-- Path: Current tenant context path
-- Id: Unique numeric calendar identifier
-- Name: Display name of the calendar
-- TimeZoneId: Time zone identifier (nullable)
-- ExcludedDates: Array of excluded dates/holidays
-- Key: GUID identifier for the calendar
-
+### UiPath.PowerShell.Entities.ExtendedCalendar
+### UiPath.PowerShell.Entities.ExcludedDateNamed
 ## NOTES
 This cmdlet is a tenant-level entity operation for accessing business calendar configurations. Calendars define working days and holidays for automation scheduling. Use -ExpandExcludedDate to get detailed excluded date information and -IncludePastDate to include historical dates. The -ExportCsv parameter facilitates documentation and configuration backup. This operation requires Schedules.View permissions.
 

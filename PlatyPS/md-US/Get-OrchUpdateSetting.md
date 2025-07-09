@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -95,11 +95,9 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### None
-
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.UpdateSettings
-
 ## NOTES
 - UpdateServerSource indicates the type of update source (typically "Orchestrator")
 - UpdateServerUrl contains the full URL of the update server

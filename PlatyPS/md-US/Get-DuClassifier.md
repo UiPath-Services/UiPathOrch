@@ -142,15 +142,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-Classifier IDs can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.DuClassifier
-DuClassifier objects can be piped to this cmdlet. The Id property will be automatically mapped to the -Id parameter via ByPropertyName binding.
 
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.DuClassifier
-Returns DuClassifier objects containing information about Document Understanding classifiers. Key properties include Path, Project, id, name, status, detailsUrl, syncUrl, and asyncUrl.
 
 ## NOTES
 This cmdlet operates within Document Understanding projects on the UiPathOrchDu drive. Navigation to a specific project folder is required before execution. Classifiers provide AI-powered document categorization capabilities for intelligent document processing. This operation requires ML.View permissions within Document Understanding projects.

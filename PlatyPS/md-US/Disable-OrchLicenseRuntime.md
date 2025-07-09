@@ -172,16 +172,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Robot types and machine keys can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.LicenseRuntime
-License runtime objects can be piped to this cmdlet. The RobotType and Key properties will be automatically mapped to the respective parameters via ByPropertyName binding.
-
+### None
 ## OUTPUTS
 
 ### System.Object
-
 ## NOTES
 
 ## RELATED LINKS

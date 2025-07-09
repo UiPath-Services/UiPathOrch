@@ -189,17 +189,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Library IDs and versions can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.Library
-Library objects from Get-OrchLibrary can be piped to this cmdlet. The Id and Version properties will be automatically mapped to corresponding parameters via ByPropertyName binding.
-
+### None
 ## OUTPUTS
 
-### System.IO.FileInfo
-Returns information about the exported .nupkg files.
-
+### System.Object
 ## NOTES
 This is a tenant entity cmdlet. The -Path parameter specifies tenant drive names (e.g., Orch1:, Orch2:) for source tenants.
 

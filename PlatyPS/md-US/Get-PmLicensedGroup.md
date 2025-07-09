@@ -194,15 +194,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-Licensed group names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.PmLicensedGroup
-Licensed group objects can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
-
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.PmLicensedGroup
-
+### UiPath.PowerShell.Entities.NuLicensedGroup
+### UiPath.PowerShell.Entities.NuLicensedGroupMember
 ## NOTES
 
 ## RELATED LINKS

@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -66,7 +66,6 @@ PS Orch1:\> Get-OrchPackage -Recurse | Select-Object Path, Id, Version, IsActive
 ```
 
 Gets all packages recursively and displays key properties with Path shown first.
-
 
 ## PARAMETERS
 

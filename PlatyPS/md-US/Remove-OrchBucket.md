@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -25,7 +25,7 @@ The Remove-OrchBucket cmdlet removes storage buckets from UiPath Orchestrator. T
 **Warning**: This operation is destructive and cannot be undone. All data stored in the bucket will be permanently deleted. Consider using -WhatIf to preview the operation before execution, and -Confirm for additional safety.
 
 Primary Endpoint: DELETE /odata/Buckets({id})
-OAuth required scopes: OR.Administration or OR.Administration.Write  
+OAuth required scopes: OR.Administration or OR.Administration.Write
 Required permissions: Buckets.Delete
 
 ## EXAMPLES
@@ -184,17 +184,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-Bucket names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.Bucket
-Bucket objects can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
-
+### None
 ## OUTPUTS
 
-### None
-This cmdlet does not generate any output when buckets are successfully removed.
-
+### System.Object
 ## NOTES
 - **DESTRUCTIVE OPERATION**: This command permanently deletes buckets and all their contents
 - Always use -WhatIf first to preview the operation

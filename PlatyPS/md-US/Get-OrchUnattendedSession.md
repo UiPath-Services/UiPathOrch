@@ -22,11 +22,11 @@ The Get-OrchUnattendedSession cmdlet retrieves information about unattended robo
 
 This is a tenant-level operation that retrieves session information across the entire Orchestrator instance.
 
-Primary Endpoint: [PLACEHOLDER - GET /odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimes]
+Primary Endpoint: GET /odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimes
 
-OAuth required scopes: [PLACEHOLDER - OR.Robots or OR.Robots.Read]
+OAuth required scopes: OR.Robots or OR.Robots.Read
 
-Required permissions: [PLACEHOLDER - Machines.View]
+Required permissions: Robots.View
 
 ## EXAMPLES
 

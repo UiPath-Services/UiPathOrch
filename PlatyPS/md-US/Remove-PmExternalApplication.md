@@ -20,6 +20,12 @@ Remove-PmExternalApplication [-Name] <String[]> [-Force] [-Path <String[]>]
 ## DESCRIPTION
 External applications currently in use for the UiPathOrch connection cannot be deleted unless the -Force switch is specified.
 
+Primary Endpoint: GET /api/ExternalClient/{partitionGlobalId}/{clientId}, DELETE /api/ExternalClient/{partitionGlobalId}/{clientId}
+
+OAuth required scopes: [PLACEHOLDER]
+
+Required permissions: [PLACEHOLDER]
+
 ## EXAMPLES
 
 ### Example 1

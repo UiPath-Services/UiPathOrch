@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -24,8 +24,8 @@ The New-PmGroup cmdlet creates groups in UiPath Platform Management. Groups are 
 
 Groups created through Platform Management provide centralized user and permission management capabilities that span multiple tenants within the same organization, as mentioned in the UiPathOrch 0.9.13.0 release notes regarding shared caches across tenants.
 
-Primary Endpoint: POST /api/platformmanagement/groups
-OAuth required scopes: OR.Users or OR.Users.Write  
+Primary Endpoint: POST /api/Group
+OAuth required scopes: OR.Users or OR.Users.Write
 Required permissions: Users.Create
 
 ## EXAMPLES
@@ -134,16 +134,9 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-Group names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.PmGroup
-Group objects can be piped to this cmdlet. The GroupName property will be automatically mapped via ByPropertyName binding.
-
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.PmGroup
-This cmdlet returns the newly created group object(s) with organization-level scope.
-
+### System.Object
 ## NOTES
 
 ## RELATED LINKS

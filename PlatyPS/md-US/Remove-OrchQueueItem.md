@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,11 +26,11 @@ The cmdlet outputs any items that failed to be removed. These failed items can b
 
 You can easily remove items that were successfully copied by piping the output of Copy-OrchQueueItem into Remove-OrchQueueItem. This creates a complete move operation that prevents duplicate transaction processing.
 
-Primary Endpoint: [PLACEHOLDER - 具体的なAPIエンドポイント]
+Primary Endpoint: GET /odata/QueueItems({queueItemId}), POST /odata/QueueItems/UiPathODataSvc.DeleteBulk
 
-OAuth required scopes: [PLACEHOLDER]
+OAuth required scopes: OR.Queues
 
-Required permissions: [PLACEHOLDER]
+Required permissions: Queues.View and Transactions.Delete
 
 ## EXAMPLES
 
@@ -190,19 +190,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String
-Queue names can be piped to this cmdlet.
-
 ### System.Int64[]
-Queue item IDs can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.QueueItem
-Queue item objects from Copy-OrchQueueItem can be piped to this cmdlet. The Name and Id properties will be automatically mapped to the corresponding parameters via ByPropertyName binding.
-
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.QueueItem
-Returns any queue items that failed to be removed. These objects can be exported to CSV for retry later using Export-Csv.
-
+### System.Object
 ## NOTES
 This cmdlet can be used independently by specifying queue name and item IDs, or as part of a pipeline with Copy-OrchQueueItem for move operations.
 
@@ -210,7 +201,7 @@ This cmdlet can be used independently by specifying queue name and item IDs, or 
 
 **Error Handling**: Failed removals are returned as output and can be exported to CSV for retry later. Use Import-Csv to reload failed items and pipe them back to Remove-OrchQueueItem.
 
-**Move Operation Pattern**: 
+**Move Operation Pattern**:
 1. `Copy-OrchQueueItem SourceQueue Destination | Remove-OrchQueueItem | Export-Csv failedRemovals.csv`
 2. `Import-Csv failedRemovals.csv | Remove-OrchQueueItem` (retry failures)
 

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,7 +26,7 @@ Use the -Force parameter to forcefully terminate unresponsive jobs, though this 
 
 Primary Endpoint: POST /odata/Jobs/UiPath.Server.Configuration.OData.StopJobs
 
-OAuth required scopes: OR.Jobs.Write
+OAuth required scopes: OR.Jobs
 
 Required permissions: Jobs.Edit
 

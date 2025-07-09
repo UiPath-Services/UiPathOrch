@@ -24,11 +24,11 @@ Settings control various aspects of Orchestrator behavior including mail server 
 
 Multiple values for the -Name and -Path parameters can be specified using comma-separated text that includes wildcards. Additionally, you can use autocomplete for these values by pressing [Ctrl+Space] or [Tab].
 
-Primary Endpoint: [PLACEHOLDER - Settings OData endpoint]
+Primary Endpoint: GET /odata/Settings
 
-OAuth required scopes: [PLACEHOLDER - Settings read scopes]
+OAuth required scopes: OR.Settings or OR.Settings.Read
 
-Required permissions: [PLACEHOLDER - Settings view permissions]
+Required permissions: Settings.View
 
 ## EXAMPLES
 

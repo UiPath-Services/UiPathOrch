@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -200,16 +200,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### System.String[]
-Queue names can be piped to this cmdlet.
-
-### UiPath.PowerShell.Entities.Queue
-Queue objects from Get-OrchQueue can be piped to this cmdlet. The Name property will be automatically mapped to the -Name parameter via ByPropertyName binding.
-
+### System.String
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.QueueItem
-Returns the queue items that were successfully copied. These objects can be piped to Remove-OrchQueueItem to complete the move operation.
-
 ## NOTES
 This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.
 
