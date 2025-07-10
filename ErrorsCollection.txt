@@ -44,3 +44,6 @@ Add-PmGroupMember:
 
 Get-PmLicensedUser:
 {"StatusCode":404,"StatusDescription":"NotFound","Message":"Cannot resolve users=[530534bf-86f2-47df-bfff-007e4c2554ad, f6054d59-9bc3-402b-b602-7855fd56d11c, f7911d4a-bd8e-4e74-b9da-f772ce730b9e, f79df09f-6917-45aa-ad52-8b501120d334] in CIS","Description":""}
+
+Get-PmRobotAccount:
+{"errorMessage":"OAuth authorization failed. 'IdentityServerApi' scope not found."}

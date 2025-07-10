@@ -2338,7 +2338,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         // インデックスなしのフォルダエンティティ
         // 下記は 11.1 ではエラーになることを確認済み。TODO: feedId はどうやって取得するのか？ 12 以降ではどうか？
-        FolderFeedId = new (this, OrchAPISession.GetFolderFeedId, null, 12);
+        FolderFeedId                   = new(this, OrchAPISession.GetFolderFeedId, null, 12);
         ActionCatalogs                 = new(this, OrchAPISession.GetTaskCatalogs,       (e, folderPath) => e.Path = folderPath, 16); // 16 でエラーが返らないことを確認済み
         ApiTriggers                    = new(this, OrchAPISession.GetHttpTriggers,       (e, folderPath) => e.Path = folderPath, 18); // 17 で web interface にないことを確認済み (17 で実行してもエラーは返らないようだが、)
         Buckets                        = new(this, OrchAPISession.GetBuckets,            (e, folderPath) => e.Path = folderPath);
@@ -2350,11 +2350,11 @@ public partial class OrchDriveInfo : PSDriveInfo
         Reviewers                      = new(this, OrchAPISession.GetReviewers);
         RobotsFromFolder               = new(this, OrchAPISession.GetRobotsFromFolder,   (e, folderPath) => e.Path = folderPath);
         Sessions                       = new(this, OrchAPISession.GetSessions,           (e, folderPath) => e.Path = folderPath);
-        TestCases                      = new(this, OrchAPISession.GetTestCases,          (e, folderPath) => e.Path = folderPath, 18); // 17 で web interface にないことを確認済み
-        TestCaseExecutions             = new(this, OrchAPISession.GetTestCaseExecutions, (e, folderPath) => e.Path = folderPath, 18); // 17 で web interface にないことを確認済み
-        TestDataQueues                 = new(this, OrchAPISession.GetTestDataQueues,     (e, folderPath) => e.Path = folderPath, 18); // 17 で web interface にないことを確認済み
-        TestSets                       = new(this, OrchAPISession.GetTestSets,           (e, folderPath) => e.Path = folderPath, 18); // 17 で web interface にないことを確認済み
-        TestSetSchedules               = new(this, OrchAPISession.GetTestSetSchedules,   (e, folderPath) => e.Path = folderPath, 18); // 17 で web interface にないことを確認済み
+        TestCases                      = new(this, OrchAPISession.GetTestCases,          (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済み
+        TestCaseExecutions             = new(this, OrchAPISession.GetTestCaseExecutions, (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済み
+        TestDataQueues                 = new(this, OrchAPISession.GetTestDataQueues,     (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済み
+        TestSets                       = new(this, OrchAPISession.GetTestSets,           (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済み
+        TestSetSchedules               = new(this, OrchAPISession.GetTestSetSchedules,   (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済み
         UserRobots                     = new(this, OrchAPISession.GetUserRobots);
 
         Assets = new(this, OrchAPISession.GetAssets, (e, folderPath) =>
