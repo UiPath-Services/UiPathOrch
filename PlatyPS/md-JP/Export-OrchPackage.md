@@ -26,11 +26,11 @@ Export-OrchPackage コマンドレットは、UiPath Orchestratorフォルダー
 
 これはフォルダーエンティティコマンドレットです。最初にSet-Locationコマンドレット（cdコマンド）を使用してターゲットフォルダーに移動するか、-Path、-Recurse、または-Depthパラメーターを使用してターゲットフォルダーを指定します。-Recurseパラメーターは、すべてのサブフォルダーからパッケージをエクスポートします。
 
-主要エンドポイント: [PLACEHOLDER - 具体的なAPIエンドポイント]
+主要エンドポイント: GET /odata/Processes, GET /odata/Processes/UiPath.Server.Configuration.OData.GetVersions, GET /odata/Processes/UiPath.Server.Configuration.OData.DownloadPackage
 
-必要なOAuthスコープ: OR.Assets または OR.Assets.Read
+必要なOAuthスコープ: OR.Processes または OR.Processes.Read
 
-必要な権限: Assets.View
+必要な権限: Packages.View
 
 ## EXAMPLES
 
