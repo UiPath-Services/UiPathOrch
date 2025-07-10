@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -27,7 +27,7 @@ Use the -Name parameter to specify which queues should receive the imported item
 
 This cmdlet operates on folders. Use -Path parameter to specify target folders where the queues are located. The CSV files must contain properly formatted queue item data with appropriate column headers.
 
-Primary Endpoint: [PLACEHOLDER - 具体的なAPIエンドポイント]
+Primary Endpoint: [PLACEHOLDER - API endpoint]
 
 OAuth required scopes: OR.Queues or OR.Queues.Write
 
