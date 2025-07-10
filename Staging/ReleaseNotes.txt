@@ -1,3 +1,18 @@
+Version: 0.9.14.5
+- Previously, when connecting to a tenant whose Orchestrator API version was below 18, cmdlets for managing test entities would perform no actions (i.e., no API calls were made). This behavior was incorrect. These cmdlets now function normally regardless of the API version. The affected entities include:
+  - OrchTestCase
+  - OrchTestSet
+  - OrchTestCaseExecution
+  - OrchTestSetExecution
+  - OrchTestSetSchedule
+  - OrchTestDataQueue
+  - OrchTestDataQueueItem
+
+  If test entities are not enabled for the tenant, running these cmdlets results in errors. These errors are harmless and can be safely ignored. In the future, if a reliable way to detect whether test entities are enabled becomes available, we plan to restore the behavior that disables these cmdlets accordingly.
+
+- The -Name parameter was not set as mandatory for the Enable-OrchFolderMachineInherit and Disable-OrchFolderMachineInherit cmdlets. This has been corrected.
+
+
 Version: 0.9.14.4
 - The list of personal workspace folders is no longer retrieved when connecting to a tenant configured with a confidential application. This improves connection speed.
 

@@ -13,7 +13,6 @@ public class GetLicenseRuntimeCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<LicenseRobotTypeItems>))]
-    [SupportsWildcards]
     public string[]? RobotType { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
