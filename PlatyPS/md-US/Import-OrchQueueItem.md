@@ -27,7 +27,7 @@ Use the -Name parameter to specify which queues should receive the imported item
 
 This cmdlet operates on folders. Use -Path parameter to specify target folders where the queues are located. The CSV files must contain properly formatted queue item data with appropriate column headers.
 
-Primary Endpoint: POST /odata/Queues/UiPathODataSvc.BulkAddQueueItems
+Primary Endpoint: GET /odata/QueueDefinitions, POST /odata/Queues/UiPathODataSvc.BulkAddQueueItems
 
 OAuth required scopes: OR.Queues or OR.Queues.Write
 
