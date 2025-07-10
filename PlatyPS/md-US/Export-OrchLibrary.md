@@ -26,7 +26,7 @@ Use the -Id parameter to specify which libraries to export by their library ID. 
 
 This is a tenant entity cmdlet. The -Path parameter specifies the source tenant drives (e.g., Orch1:, Orch2:) from which libraries should be exported.
 
-Primary Endpoint: GET /odata/Libraries/UiPath.Server.Configuration.OData.GetVersions
+Primary Endpoint: GET /odata/Libraries, GET /odata/Libraries/UiPath.Server.Configuration.OData.GetVersions, GET /odata/Libraries/UiPath.Server.Configuration.OData.DownloadPackage
 
 OAuth required scopes: OR.Assets or OR.Assets.Read
 
