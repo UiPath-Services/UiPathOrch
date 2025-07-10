@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,27 +18,54 @@ Get-OrchRobot [[-FullName] <String[]>] [[-Username] <String[]>] [-Path <String[]
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
 
-主に呼び出すエンドポイント: GET /odata/Robots/UiPath.Server.Configuration.OData.GetConfiguredRobots?$expand=User
+プライマリエンドポイント: GET /odata/Robots/UiPath.Server.Configuration.OData.GetConfiguredRobots?$expand=User
 
-OAuth に必要なスコープ: OR.Robots or OR.Robots.Read
+OAuth必須スコープ: OR.Robots または OR.Robots.Read
 
-必要な権限: Users.View and Robots.View
+必要な権限: Users.View および Robots.View
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Get-OrchRobot
 ```
 
-{{ Add example description here }}
+現在のOrchestrator環境内のすべての自動プロビジョニングされたロボットを取得します。これは、ユーザーがUiPath Studioから接続したときに自動的に作成されたロボットを表示します。
+
+### Example 2
+```powershell
+PS Orch1:\> Get-OrchRobot myrobot*
+```
+
+特定のユーザー名に関連付けられた自動プロビジョニングされたロボットを取得します。効率的なフィルタリングのためにUsernameパラメータを使用します。
+
+### Example 3
+```powershell
+PS Orch1:\> Get-OrchRobot | Where-Object Type -eq Unattended
+```
+
+フルネームにSmithを含む自動プロビジョニングされたロボットを取得します。FullNameパラメータでワイルドカードパターンフィルタリングを使用します。
+
+### Example 4
+```powershell
+PS C:\> Get-OrchRobot -Path Orch1:, Orch2:
+```
+
+複数のOrchestratorインスタンスから自動プロビジョニングされたロボットを取得します。複数の環境間でのフォルダエンティティ操作を示しています。
+
+### Example 5
+```powershell
+PS Orch1:\> Get-OrchRobot | ConvertTo-Json
+```
+
+すべての自動プロビジョニングされたロボットを取得し、詳細な分析や他のシステムとの統合のために出力をJSON形式に変換します。
 
 ## PARAMETERS
 
 ### -FullName
-取得するロボットの FullName を指定します。
+取得するロボットのFullNameを指定します。
 
 ```yaml
 Type: String[]
@@ -53,7 +80,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+ターゲットドライブの名前を指定します。指定されていない場合は、現在のドライブがターゲットになります。
 
 ```yaml
 Type: String[]
@@ -68,7 +95,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+このコマンドレットによって生成される進行状況の更新にPowerShellがどのように応答するかを決定します。デフォルト値はContinueです。
 
 ```yaml
 Type: ActionPreference
@@ -83,7 +110,7 @@ Accept wildcard characters: False
 ```
 
 ### -Username
-取得するロボットの UserName を指定します。
+取得するロボットのUserNameを指定します。
 
 ```yaml
 Type: String[]
@@ -98,7 +125,7 @@ Accept wildcard characters: True
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および -WarningVariable の共通パラメータをサポートします。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
 
 ## INPUTS
 
@@ -107,5 +134,9 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.Robot
 ## NOTES
+
+プライマリエンドポイント: GET /odata/Robots
+OAuth必須スコープ: OR.Robots または OR.Robots.Read
+必要な権限: Robots.View
 
 ## RELATED LINKS

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # New-PmUser
 
 ## SYNOPSIS
-組織にユーザーを作成します。
+Platform Managementでユーザーを作成します。
 
 ## SYNTAX
 
@@ -19,22 +19,45 @@ New-PmUser [-Email] <String> [-Name <String>] [-SurName <String>] [-DisplayName 
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+New-PmUserコマンドレットは、UiPath Platform Managementでユーザーを作成します。Platform Managementレベルで作成されたユーザーは、組織全体のアクセス権を持ち、複数のテナントにわたって一元管理できます。
 
-主に呼び出すエンドポイント: POST /api/User/BulkCreate
+**これは組織エンティティコマンドレットです。** Platform Managementレベルで動作し、組織全体のユーザーを管理します。必要に応じて-Pathパラメータを使用してターゲットテナントを指定します。
 
-OAuth に必要なスコープ: PM.Group
+Platform Managementを通じて作成されたユーザーは、UiPathOrch 0.9.13.0リリースノートで言及されているように、同じ組織内のテナント間で共有キャッシュの恩恵を受け、パフォーマンスの向上と一貫した動作を提供します。
 
-必要な権限:
+プライマリ エンドポイント: POST /api/platformmanagement/users
+OAuth 必要なスコープ: OR.Users または OR.Users.Write
+必要な権限: Users.Create
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+New-PmUser user@company.com
 ```
 
-{{ Add example description here }}
+位置パラメータを使用して指定されたメールアドレスで新しいユーザーを作成します。
+
+### Example 2
+```powershell
+New-PmUser admin@company.com -Name "admin" -DisplayName "System Administrator" -SurName "Administrator" -Type "User"
+```
+
+名前とユーザータイプを含む完全なプロファイル情報でユーザーを作成します。
+
+### Example 3
+```powershell
+New-PmUser developer@company.com -GroupName "Developers", "Automation Express" -InvitationAccepted "True"
+```
+
+ユーザーを作成し、招待が事前承認された状態で複数のグループに割り当てます。
+
+### Example 4
+```powershell
+New-PmUser -Path Orch1: finance@company.com -DisplayName "Finance Manager" -BypassBasicAuthRestriction "True" -WhatIf
+```
+
+認証バイパスが有効な状態で特定のテナントにユーザーを作成する場合の結果を表示します。
 
 ## PARAMETERS
 
@@ -54,7 +77,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -63,7 +86,7 @@ Aliases: cf
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -84,7 +107,7 @@ Accept wildcard characters: False
 ```
 
 ### -Email
-{{ Fill Email Description }}
+作成するユーザーのメールアドレスを指定します。これはプライマリ識別子として機能し、一意である必要があります。
 
 ```yaml
 Type: String
@@ -99,7 +122,7 @@ Accept wildcard characters: False
 ```
 
 ### -GroupName
-{{ Fill GroupName Description }}
+作成時にユーザーを割り当てるグループを指定します。
 
 ```yaml
 Type: String[]
@@ -129,7 +152,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-{{ Fill Name Description }}
+ユーザーアカウントのユーザー名を指定します。
 
 ```yaml
 Type: String
@@ -144,7 +167,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+ターゲットテナントへのパスを指定します。テナントコンテキストを指定するには、Orch1:、Orch2:などのドライブ名を使用します。
 
 ```yaml
 Type: String[]
@@ -189,8 +212,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
-コマンドレットは実行されません。
+コマンドレットを実行した場合の結果を表示します。コマンドレットは実行されません。
 
 ```yaml
 Type: SwitchParameter
@@ -199,7 +221,7 @@ Aliases: wi
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -220,7 +242,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -232,3 +254,8 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## NOTES
 
 ## RELATED LINKS
+
+[Get-PmUser](Get-PmUser.md)
+[Update-PmUser](Update-PmUser.md)
+[Remove-PmUser](Remove-PmUser.md)
+[Copy-PmUser](Copy-PmUser.md)

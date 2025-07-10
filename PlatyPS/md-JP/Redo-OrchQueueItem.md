@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: uiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Redo-OrchQueueItem
 
 ## SYNOPSIS
-指定したキューに含まれる、失敗したトランザクションアイテムをリトライします。
+指定されたキューの失敗したトランザクションアイテムを再試行します。
 
 ## SYNTAX
 
@@ -18,13 +18,13 @@ Redo-OrchQueueItem [-Name] <String[]> [-Id] <Int64[]> [-Path <String[]>] [-Progr
 ```
 
 ## DESCRIPTION
-このコマンドレットは、キュー名とアイテム ID を指定してトランザクションアイテムをリトライします。リトライの対象となるのは、Status が Failed であり、かつ Revision が None または InReview のアイテムのみです。
+このコマンドレットは、キュー名とアイテムIDを指定してトランザクションアイテムを再試行します。再試行可能なアイテムのみを再試行します。再試行可能なアイテムとは、ステータスがFailedで、リビジョンがNoneまたはInReviewのものとして定義されます。
 
-主に呼び出すエンドポイント: POST /odata/QueueItems/UiPathODataSvc.SetItemReviewStatus
+プライマリ エンドポイント: POST /odata/QueueItems/UiPathODataSvc.SetItemReviewStatus
 
-OAuth に必要なスコープ: OR.Queues
+OAuth 必要なスコープ: OR.Queues
 
-必要な権限: Queues.View and Transactions.Edit
+必要な権限: Queues.View および Transactions.Edit
 
 ## EXAMPLES
 
@@ -33,30 +33,30 @@ OAuth に必要なスコープ: OR.Queues
 PS Orch1:\Shared> Redo-OrchQueueItem YourQueueName <item IDs>
 ```
 
-指定されたキュー YourQueueName 内の指定されたアイテムをリトライします。<item IDs> を指定する -Id パラメータは自動補完できます。
+キュー内の指定されたアイテムを再試行します。<item IDs>を指定する-Idパラメータは、オートコンプリートをサポートしています。
 
 ### Example 2
 ```powershell
 PS Orch1:\Shared> Get-OrchQueueItem YourQueueName -Status Failed -Revision None,InReview | Redo-OrchQueueItem -Verbose
 ```
 
-指定されたキュー YourQueueName 内のすべての失敗したアイテムをリトライします。
--Verbose パラメータを指定すると、リトライしたアイテムの ID を表示します。
+指定されたキューYourQueueName内のすべての失敗したアイテムを再試行します。
+-Verboseパラメータは、再試行されたアイテムのIDを表示します。
 
-Get-OrchQueueItem cmdlet が一度に取得できるアイテムの数は、最大で 1000 個であることに注意してください。
-キュー内にリトライ可能なアイテムが 1,000 個以上ある場合、これらのアイテムをすべてリトライするには、このコマンドを -Verbose パラメータが何も出力しなくなるまで繰り返し実行してください。
+Get-OrchQueueItemコマンドレットは一度に最大1000個のアイテムを取得できることに注意してください。
+キューに1,000個を超える再試行可能なアイテムがある場合は、-Verboseパラメータが出力を生成しなくなるまでこのコマンドを繰り返して、これらのアイテムをすべて再試行してください。
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchQueueItem -Recurse * -Status Failed -Revision None,InReview | Redo-OrchQueueItem
+PS Orch1:\> Get-OrchQueueItem -Recurse * -Status Failed | Redo-OrchQueueItem
 ```
 
-テナント内のすべてのキューにおいて、リトライ可能なキューアイテムをすべてリトライします。
+テナント内のすべてのキューにわたって、すべての再試行可能なキューアイテムを再試行します。
 
 ## PARAMETERS
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -71,7 +71,7 @@ Accept wildcard characters: False
 ```
 
 ### -Id
-リトライするキューアイテムの Id を指定します。
+再試行するキューアイテムのIDを指定します。
 
 ```yaml
 Type: Int64[]
@@ -86,7 +86,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-リトライするキューアイテムを含むキューの Name を指定します。
+再試行するキューアイテムを含むキューの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -101,7 +101,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+ターゲットフォルダを指定します。指定されていない場合は、現在のフォルダがターゲットになります。
 
 ```yaml
 Type: String[]
@@ -116,7 +116,7 @@ Accept wildcard characters: True
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットを実行した場合の結果を表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -147,7 +147,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

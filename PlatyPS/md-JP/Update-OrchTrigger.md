@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -13,16 +13,17 @@ schema: 2.0.0
 ## SYNTAX
 
 ```
-Update-OrchTrigger [-Name] <String[]> [-NewName <String>] [-Enabled <String>] [-Priority <String>]
- [-StartStrategy <Int32>] [-StopStrategy <String>] [-StopProcessExpression <String>]
+Update-OrchTrigger [-Name] <String[]> [-NewName <String>] [-Enabled <String>] [-SpecificPriorityValue <Int32>]
+ [-Priority <String>] [-StartStrategy <Int32>] [-StopStrategy <String>] [-StopProcessExpression <String>]
  [-KillProcessExpression <String>] [-AlertPendingExpression <String>] [-AlertRunningExpression <String>]
  [-ConsecutiveJobFailuresThreshold <Int32>] [-JobFailuresGracePeriodInHours <Int32>] [-RuntimeType <String>]
  [-InputArguments <String>] [-ResumeOnSameContext <String>] [-RunAsMe <String>] [-IsConnected <String>]
  [-CalendarName <String>] [-ActivateOnJobComplete <String>] [-ItemsActivationThreshold <Int32>]
  [-ItemsPerJobActivationTarget <Int32>] [-MaxJobsForActivation <Int32>] [-StartProcessCronDetails <String>]
  [-StartProcessCron <String>] [-ReleaseName <String>] [-QueueDefinitionName <String>] [-TimeZone <String>]
- [-StopProcessDate <DateTime>] [-ExecutorRobots <String[]>] [-MachineRobots <String[]>] [-Path <String[]>]
- [-Recurse] [-Depth <UInt32>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+ [-TimeZoneId <String>] [-StopProcessDate <DateTime>] [-ExecutorRobots <String[]>] [-MachineRobots <String[]>]
+ [-Path <String[]>] [-Recurse] [-Depth <UInt32>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm]
+ [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -584,6 +585,36 @@ Position: Named
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
+```
+
+### -SpecificPriorityValue
+{{ Fill SpecificPriorityValue Description }}
+
+```yaml
+Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -TimeZoneId
+{{ Fill TimeZoneId Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
 ```
 
 ### CommonParameters

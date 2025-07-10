@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-TmRequirement
 
 ## SYNOPSIS
-Test Manager のプロジェクトから、要件を取得します。
+Test Managerのプロジェクトから要件を取得します。
 
 ## SYNTAX
 
@@ -18,13 +18,13 @@ Get-TmRequirement [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-ProgressA
 ```
 
 ## DESCRIPTION
-プロジェクトからすべての要件を取得します。このコマンドレットは、UiPathOrchTm プロバイダの PSDrive 上で動作します。設定ファイルに、"TM." を含むスコープを記載すると、UiPathOrchTm プロバイダの PSDrive が自動で追加されます。Get-PSDrive コマンドレットで確認してください。設定ファイルは、Edit-OrchConfig コマンドレットで開けます。
+プロジェクトからすべての要件を取得します。このコマンドレットは、UiPathOrchTmプロバイダーのPSDriveで動作します。構成ファイルのスコープに「TM.」が含まれている場合、UiPathOrchTmプロバイダーのPSDriveが自動的に追加されます。これはGet-PSDriveコマンドレットで確認できます。構成ファイルは、Edit-OrchConfigコマンドレットで開くことができます。
 
-主に呼び出すエンドポイント: GET /testmanager_/api/v2/{projectId}/requirements
+プライマリ エンドポイント: GET /testmanager_/api/v2/{projectId}/requirements
 
-OAuth に必要なスコープ: TM.Requirements or TM.Requirements.Read
+OAuth 必要スコープ: TM.Requirements または TM.Requirements.Read
 
-必要な権限: Requirement.Read
+権限: Requirement.Read
 
 ## EXAMPLES
 
@@ -38,7 +38,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -Name
-取得する要件の name を指定します。
+取得する要件の名前を指定します。
 
 ```yaml
 Type: String[]
@@ -53,7 +53,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+対象フォルダーを指定します。指定されていない場合、現在のフォルダーが対象となります。
 
 ```yaml
 Type: String[]
@@ -68,7 +68,7 @@ Accept wildcard characters: True
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+操作が対象フォルダーとそのすべてのサブフォルダーを含むべきことを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -98,7 +98,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariableの共通パラメータをサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

@@ -1,6 +1,6 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
-Module Name: uiPathOrch
+Module Name: UiPathOrch
 online version:
 schema: 2.0.0
 ---
@@ -18,20 +18,68 @@ Add-OrchFolderMachine [-Name] <String[]> [-PropagateToSubFolders <String>] [-Pat
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Add-OrchFolderMachine コマンドレットは、UiPath Orchestrator テナント内の特定のフォルダーにマシンを割り当てます。このコマンドレットを使用すると、フォルダー構造内でマシンを整理し、プロセス実行のために特定のマシンにアクセスできるフォルダーを制御できます。
 
-主に呼び出すエンドポイント: POST /odata/Folders/UiPath.Server.Configuration.OData.UpdateMachinesToFolderAssociations
+このコマンドレットは、複数のフォルダーに同時にマシンを割り当てることをサポートし、指定された場合はマシンの割り当てをサブフォルダーに伝播できます。このコマンドレットを使用して、フォルダー階層で整理された異なるチーム、プロジェクト、または環境間でのマシン割り当てを管理します。
 
-OAuth に必要なスコープ: OR.Folders
+-Name パラメーターを使用して割り当てるマシンを指定し、-Path パラメーターを使用して対象フォルダーを指定します。-PropagateToSubFolders パラメーターは、マシンの割り当てをすべてのサブフォルダーが継承するかどうかを制御します。
 
-必要な権限: (Units.Edit or SubFolders.Edit - Update machines to any folder associations or only if user has SubFolders.Edit permission on all folders provided)
+これはフォルダーエンティティコマンドレットです。最初に Set-Location コマンドレット（cd コマンド）を使用して対象フォルダーに移動するか、-Path、-Recurse、または -Depth パラメーターを使用して対象フォルダーを指定してください。-Recurse パラメーターは、すべてのサブフォルダーにマシンを割り当てることを可能にし、フォルダー構造全体で一貫したマシンの可用性を維持します。
+
+プライマリエンドポイント: POST /odata/Folders/UiPath.Server.Configuration.OData.UpdateMachinesToFolderAssociations
+
+OAuth 必要スコープ: OR.Folders
+
+必要なアクセス許可: (Units.Edit または SubFolders.Edit - 任意のフォルダーの関連付けにマシンを更新する、またはユーザーが提供されたすべてのフォルダーで SubFolders.Edit 権限を持っている場合のみ)
 
 ## EXAMPLES
+
+### Example 1
+```powershell
+PS Orch1:\Production> Add-OrchFolderMachine Robot01
+```
+
+Robot01 マシンを現在のフォルダー（Production）に割り当てます。
+
+### Example 2
+```powershell
+PS C:\> Add-OrchFolderMachine -Path Orch1:\Development Robot01, Robot02
+```
+
+Robot01 および Robot02 マシンを Development フォルダーに割り当てます。
+
+### Example 3
+```powershell
+PS Orch1:\Finance> Add-OrchFolderMachine Bot* -PropagateToSubFolders True
+```
+
+Bot で始まる名前のすべてのマシンを Finance フォルダーに割り当て、その割り当てをすべてのサブフォルダーに伝播します。
+
+### Example 4
+```powershell
+PS C:\> Add-OrchFolderMachine -Path Orch1:\Development, Orch1:\Testing SharedBot -WhatIf
+```
+
+SharedBot マシンを Development と Testing の両方のフォルダーに割り当てる際の動作を表示します。
+
+### Example 5
+```powershell
+PS Orch1:\> Add-OrchFolderMachine -Recurse ProductionBot01 -PropagateToSubFolders True
+```
+
+現在の場所からすべてのフォルダーに再帰的に ProductionBot01 を割り当て、それらのサブフォルダーに伝播します。
+
+### Example 6
+```powershell
+PS Orch1:\Development> Get-OrchMachine Template* | Add-OrchFolderMachine -PropagateToSubFolders False
+```
+
+Template で始まる名前のすべてのマシンを取得し、サブフォルダーに伝播せずに現在のフォルダーに割り当てます。
 
 ## PARAMETERS
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+-Recurse パラメーター使用時に含めるサブフォルダーレベルの最大数を指定します。
 
 ```yaml
 Type: UInt32
@@ -46,7 +94,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-追加するフォルダーマシンの Name を指定します。
+フォルダーに割り当てるマシンの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -61,7 +109,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+マシンを割り当てる対象フォルダーを指定します。
 
 ```yaml
 Type: String[]
@@ -91,7 +139,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+指定されたパスからすべてのサブフォルダーに再帰的にマシンを割り当てることを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -106,7 +154,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットの実行前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -121,7 +169,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットを実行した場合の動作を表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -137,7 +185,7 @@ Accept wildcard characters: False
 ```
 
 ### -PropagateToSubFolders
-{{ Fill PropagateToSubFolders Description }}
+マシンの割り当てをすべてのサブフォルダーに伝播するかどうかを指定します。有効な値は True と False です。
 
 ```yaml
 Type: String
@@ -161,5 +209,14 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Object
 ## NOTES
+これはフォルダーエンティティコマンドレットです。最初に Set-Location コマンドレット（cd コマンド）を使用して対象フォルダーに移動するか、-Path、-Recurse、または -Depth パラメーターを使用して対象フォルダーを指定してください。
+
+-PropagateToSubFolders パラメーターは継承動作を制御します。マシンの割り当てを実行する前に、-WhatIf を使用して変更を事前に確認してください。
 
 ## RELATED LINKS
+
+[Get-OrchMachine](Get-OrchMachine.md)
+
+[Remove-OrchFolderMachine](Remove-OrchFolderMachine.md)
+
+[Get-OrchFolderMachine](Get-OrchFolderMachine.md)

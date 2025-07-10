@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Set-OrchRole
 
 ## SYNOPSIS
-ロールを追加もしくは更新します。
+ロールを追加または更新します。
 
 ## SYNTAX
 
@@ -19,12 +19,13 @@ Set-OrchRole [-Name] <String[]> [-Type <String>] -PermissionName <String> [-Scop
 ```
 
 ## DESCRIPTION
-Get-OrchRole -ExportCsv でエキスポートした CSV ファイルをインポートできます。エキスポートしたテナントとは別のテナントにインポートするときは、CSV ファイルの中の Path 列を適切に修正してください。あるいは、Set-OrchRole でインポートするときに、-Path パラメータでインポート先のドライブ名を指定することにより、CSV ファイルの Path の値を上書きすることもできます。
+Get-OrchRole -ExportCsv でエクスポートされた CSV ファイルをインポートできます。ファイルがエクスポートされたテナントとは異なるテナントにインポートする場合は、CSV ファイルの Path 列を適切に変更してください。または、Set-OrchRole でインポートする際に -Path パラメーターで宛先ドライブ名を指定して、CSV ファイル内の Path 値を上書きできます。
 
-主に呼び出すエンドポイント: GET /odata/Roles&$expand=Permissions, POST /odata/Roles, PUT /odata/Roles({role.Id}
-OAuth に必要なスコープ: OR.Users
+プライマリ エンドポイント: GET /odata/Roles&$expand=Permissions, POST /odata/Roles, PUT /odata/Roles({role.Id}
 
-必要な権限: Roles.View, Roles.Create, Roles.Edit or Units.Edit or SubFolders.Edit
+OAuth 必要なスコープ: OR.Users
+
+必要な権限: Roles.View, Roles.Create, Roles.Edit または Units.Edit または SubFolders.Edit
 
 ## EXAMPLES
 
@@ -38,7 +39,7 @@ PS C:\> Import-Csv <filepath> | Set-OrchRole
 ## PARAMETERS
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -128,7 +129,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+対象ドライブの名前を指定します。指定されていない場合は、現在のドライブが対象になります。
 
 ```yaml
 Type: String[]
@@ -203,7 +204,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットが実行された場合の動作を表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -234,7 +235,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメーター（-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable）をサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

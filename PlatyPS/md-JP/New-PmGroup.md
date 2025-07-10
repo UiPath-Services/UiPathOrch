@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # New-PmGroup
 
 ## SYNOPSIS
-組織にローカルグループを作成します。
+Platform Managementでグループを作成します。
 
 ## SYNTAX
 
@@ -18,27 +18,43 @@ New-PmGroup [-GroupName] <String[]> [-Path <String[]>] [-ProgressAction <ActionP
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+New-PmGroupコマンドレットは、UiPath Platform Managementでグループを作成します。グループは、ユーザーを整理し、複数のテナントにわたって組織レベルで権限を管理するために使用されます。
 
-主に呼び出すエンドポイント: POST /api/Group, GET /api/Directory/Search/{partitionGlobalId}?startsWith={userName}&sourceFilter=localUsers&sourceFilter=directoryUsers&sourceFilter=directoryGroups&sourceFilter=robotAccounts&sourceFilter=applications, POST /api/Directory/BulkResolveByName/{partitionGlobalId}
+**これは組織エンティティコマンドレットです。** Platform Managementレベルで動作し、組織全体のグループを管理します。必要に応じて-Pathパラメータを使用してターゲットテナントを指定します。
 
-OAuth に必要なスコープ: PM.Group or PM.Group.Write
+Platform Managementを通じて作成されたグループは、テナント間で共有キャッシュに関するUiPathOrch 0.9.13.0リリースノートで言及されているように、同じ組織内の複数のテナントにまたがる一元化されたユーザーおよび権限管理機能を提供します。
 
-必要な権限: 
+プライマリ エンドポイント: POST /api/Group
+OAuth 必要なスコープ: OR.Users または OR.Users.Write
+必要な権限: Users.Create
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+New-PmGroup Administrators
 ```
 
-{{ Add example description here }}
+位置パラメータを使用して"Administrators"という名前の新しいグループを作成します。
+
+### Example 2
+```powershell
+New-PmGroup Developers, Testers, DevOps -WhatIf
+```
+
+位置パラメータを使用して複数のグループを作成する場合の結果を表示します。
+
+### Example 3
+```powershell
+New-PmGroup -Path Orch1: "Finance Team" -Confirm
+```
+
+指定されたテナントコンテキストで確認プロンプト付きでグループを作成します。
 
 ## PARAMETERS
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -47,13 +63,13 @@ Aliases: cf
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -GroupName
-作成するグループの名前を指定します。
+作成するグループの名前を指定します。グループ名は組織内で一意である必要があります。
 
 ```yaml
 Type: String[]
@@ -68,7 +84,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+ターゲットテナントへのパスを指定します。テナントコンテキストを指定するには、Orch1:、Orch2:などのドライブ名を使用します。
 
 ```yaml
 Type: String[]
@@ -83,8 +99,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
-コマンドレットは実行されません。
+コマンドレットを実行した場合の結果を表示します。コマンドレットは実行されません。
 
 ```yaml
 Type: SwitchParameter
@@ -93,7 +108,7 @@ Aliases: wi
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -114,7 +129,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -125,3 +140,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## NOTES
 
 ## RELATED LINKS
+
+[Get-PmGroup](Get-PmGroup.md)
+[Remove-PmGroup](Remove-PmGroup.md)
+[Copy-PmGroup](Copy-PmGroup.md)

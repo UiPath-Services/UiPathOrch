@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Enable-OrchTestSetSchedule
 
 ## SYNOPSIS
-テストスケジュールを有効にします。
+指定したフォルダー内のテストセットスケジュールを有効にします。
 
 ## SYNTAX
 
@@ -18,11 +18,17 @@ Enable-OrchTestSetSchedule [-Name] <String[]> [-Path <String[]>] [-Recurse] [-De
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Enable-OrchTestSetSchedule コマンドレットは、UiPath Orchestrator内の指定したフォルダーで以前に無効化されたテストセットスケジュールを有効にします。このコマンドレットは、スケジュールされたテスト実行を再アクティブ化し、設定されたスケジュールに従って自動化されたテストセットを実行できるようにします。
 
-主に呼び出すエンドポイント: POST /odata/TestSetSchedules/UiPath.Server.Configuration.OData.SetEnabled
+テストセットスケジュールは、指定した間隔や時間でテストセットの実行を自動化します。スケジュールを有効にすると、メンテナンスやトラブルシューティングのために無効化された後に、スケジュールされたテスト実行機能が復元されます。
 
-OAuth に必要なスコープ: OR.TestSetSchedules
+-Nameパラメーターを使用して、有効にするテストセットスケジュールを指定します。このコマンドレットは、複数のスケジュールを効率的に有効にするためのワイルドカードパターンをサポートしています。-Pathパラメーターでは特定のフォルダーをターゲットにでき、-Recurseはすべてのサブフォルダーの処理を有効にします。
+
+これはフォルダーエンティティコマンドレットです。最初にSet-Locationコマンドレット（cdコマンド）を使用してターゲットフォルダーに移動するか、-Path、-Recurse、または-Depthパラメーターを使用してターゲットフォルダーを指定します。-Recurseパラメーターは、すべてのサブフォルダーからテストセットスケジュールを有効にします。
+
+主要エンドポイント: POST /odata/TestSetSchedules/UiPath.Server.Configuration.OData.SetEnabled
+
+必要なOAuthスコープ: OR.TestSetSchedules または OR.TestSetSchedules.Write
 
 必要な権限: TestSetSchedules.Edit
 
@@ -30,15 +36,50 @@ OAuth に必要なスコープ: OR.TestSetSchedules
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Development> Enable-OrchTestSetSchedule RegressionTestSchedule
 ```
 
-{{ Add example description here }}
+現在のフォルダー（Development）でRegressionTestScheduleを位置パラメーターを使用して有効にします。
+
+### Example 2
+```powershell
+PS C:\> Enable-OrchTestSetSchedule -Path Orch1:\Development SmokeTestSchedule
+```
+
+Orch1:\DevelopmentフォルダーでSmokeTestScheduleを有効にします。
+
+### Example 3
+```powershell
+PS Orch1:\Development> Enable-OrchTestSetSchedule *Daily*, *Weekly* -WhatIf
+```
+
+現在のフォルダーでDailyやWeeklyを含む名前の複数のテストセットスケジュールを有効にした場合の動作を、安全のために-WhatIfを使用して表示します。
+
+### Example 4
+```powershell
+PS C:\> Enable-OrchTestSetSchedule -Path Orch1:\Development *Automated* -Confirm
+```
+
+Developmentフォルダーで名前にAutomatedを含むすべてのテストセットスケジュールを確認プロンプトとともに有効にします。
+
+### Example 5
+```powershell
+PS Orch1:\> Enable-OrchTestSetSchedule -Recurse *Nightly*
+```
+
+すべてのサブフォルダーから名前にNightlyを含むすべてのテストセットスケジュールを再帰的に有効にします。
+
+### Example 6
+```powershell
+PS Orch1:\Development> Get-OrchTestSetSchedule -Enabled $false | Enable-OrchTestSetSchedule -WhatIf
+```
+
+すべての無効化されたテストセットスケジュールを取得し、パイプライン入力を使用してそれらを有効にした場合の動作を表示します。
 
 ## PARAMETERS
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットの実行前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -53,7 +94,7 @@ Accept wildcard characters: False
 ```
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+-Recurseパラメーターを使用するときに含めるサブフォルダーレベルの最大数を指定します。
 
 ```yaml
 Type: UInt32
@@ -68,7 +109,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-有効にするテストスケジュールの Name を指定します。
+有効にするテストセットスケジュールの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -83,7 +124,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+対象のフォルダーを指定します。指定しない場合、現在のフォルダーが対象になります。
 
 ```yaml
 Type: String[]
@@ -98,7 +139,7 @@ Accept wildcard characters: True
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+すべてのサブフォルダーからテストセットスケジュールを再帰的に有効にすることを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -113,7 +154,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットが実行された場合の動作を表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -144,7 +185,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメーターをサポートしています: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, -WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -153,5 +194,16 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Object
 ## NOTES
+これはフォルダーエンティティコマンドレットです。最初にSet-Locationコマンドレット（cdコマンド）を使用してターゲットフォルダーに移動するか、-Path、-Recurse、または-Depthパラメーターを使用してターゲットフォルダーを指定します。
+
+テストセットスケジュールは、指定した間隔でテスト実行を自動化します。スケジュールを有効にすると、無効化された後にスケジュールされたテスト実行機能が復元されます。スケジュール操作を一時的に停止するには、Disable-OrchTestSetScheduleを使用します。効率的な一括操作にはワイルドカードを使用し、実際の実行前のテストには-WhatIfを使用します。
 
 ## RELATED LINKS
+
+[Disable-OrchTestSetSchedule](Disable-OrchTestSetSchedule.md)
+
+[Get-OrchTestSetSchedule](Get-OrchTestSetSchedule.md)
+
+[Remove-OrchTestSetSchedule](Remove-OrchTestSetSchedule.md)
+
+[Set-OrchTestSetSchedule](Set-OrchTestSetSchedule.md)

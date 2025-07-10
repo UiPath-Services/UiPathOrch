@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,7 +18,13 @@ Remove-PmExternalApplication [-Name] <String[]> [-Force] [-Path <String[]>]
 ```
 
 ## DESCRIPTION
-現在 UiPathOrch で接続に使用している外部アプリケーションは削除できません。削除するには、-Force スイッチパラメータを指定します。
+UiPathOrch接続で現在使用されている外部アプリケーションは、-Forceスイッチが指定されない限り削除できません。
+
+プライマリ エンドポイント: GET /api/ExternalClient/{partitionGlobalId}/{clientId}, DELETE /api/ExternalClient/{partitionGlobalId}/{clientId}
+
+OAuth 必要なスコープ: [PLACEHOLDER]
+
+必要な権限: [PLACEHOLDER]
 
 ## EXAMPLES
 
@@ -32,7 +38,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -Confirm
-Prompts you for confirmation before running the cmdlet.
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -92,8 +98,8 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+コマンドレットを実行した場合に何が起こるかを表示します。
+コマンドレットは実行されません。
 
 ```yaml
 Type: SwitchParameter
@@ -123,7 +129,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
 
 ## INPUTS
 

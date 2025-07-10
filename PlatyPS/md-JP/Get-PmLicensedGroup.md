@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-PmLicensedGroup
 
 ## SYNOPSIS
-User named license が割り当てられたグループを取得します。
+Platform Managementからライセンスグループを取得します。
 
 ## SYNTAX
 
@@ -18,22 +18,68 @@ Get-PmLicensedGroup [[-GroupName] <String[]>] [[-UserName] <String[]>] [-ExpandA
 ```
 
 ## DESCRIPTION
-このコマンドレットは非公開の API を呼び出すことで実現されています。そのため、将来は動作しなくなる可能性があることに留意してください。
+Get-PmLicensedGroupコマンドレットは、UiPath Platform Managementからライセンスグループ情報を取得します。このコマンドレットは組織レベルで動作し、組織全体のユーザーグループのライセンス割り当てを管理します。
 
-主に呼び出すエンドポイント: GET /api/license/accountant/UserLicense/group/page, GET /api/license/accountant/UserLicense/group/{groupId}/allocations
+これは、Platform Management APIを呼び出す組織エンティティコマンドレットです。複数のテナントが同じ組織に属することができる組織レベルで動作します。ライセンスグループは、組織内のさまざまなユーザーグループにライセンスがどのように配布および割り当てられるかを定義します。
 
-OAuth に必要なスコープ: PM.Group.Read
+Platform Managementライセンスグループは、集中ライセンス管理を提供し、管理者が組織内のすべてのテナントでライセンスを割り当て、追跡、管理できるようにします。これにより、効率的なライセンス利用と適切なコンプライアンス管理が確保されます。
 
-必要な権限:
+プライマリ エンドポイント: GET /api/licensedgroups
+
+OAuth 必要スコープ: [PLACEHOLDER]
+
+必要な権限: Administration.View
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+Get-PmLicensedGroup
 ```
 
-{{ Add example description here }}
+現在の組織からすべてのライセンスグループを取得します。
+
+### Example 2
+```powershell
+Get-PmLicensedGroup DeveloperGroup
+```
+
+「DeveloperGroup」という名前のライセンスグループを取得します。
+
+### Example 3
+```powershell
+Get-PmLicensedGroup *Admin*
+```
+
+名前に「Admin」を含むすべてのライセンスグループを取得します。
+
+### Example 4
+```powershell
+Get-PmLicensedGroup -Path Orch1:, Orch2:
+```
+
+複数のテナントドライブ経由でアクセスして、組織からライセンスグループを取得します。
+
+### Example 5
+```powershell
+Get-PmLicensedGroup | Where-Object {$_.LicenseCount -gt 10}
+```
+
+10個以上のライセンスが割り当てられているすべてのライセンスグループを取得します。
+
+### Example 6
+```powershell
+Get-PmLicensedGroup | Select-Object Name, LicenseType, LicenseCount, UsedLicenses | Format-Table
+```
+
+すべてのライセンスグループを取得し、ライセンス割り当て情報をテーブル形式で表示します。
+
+### Example 7
+```powershell
+Get-PmLicensedGroup | Export-Csv "LicensedGroups.csv" -NoTypeInformation
+```
+
+すべてのライセンスグループを取得し、分析用に情報をCSVファイルにエクスポートします。
 
 ## PARAMETERS
 
@@ -53,7 +99,7 @@ Accept wildcard characters: False
 ```
 
 ### -ExpandAllocation
-グループの中でライセンスが割り当てられているユーザーを表示します。
+ライセンスが割り当てられたグループ内のユーザーを表示します。
 
 ```yaml
 Type: SwitchParameter
@@ -62,7 +108,7 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -83,7 +129,7 @@ Accept wildcard characters: False
 ```
 
 ### -GroupName
-取得するグループの名前を指定します。
+取得するグループ名を指定します。
 
 ```yaml
 Type: String[]
@@ -98,7 +144,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+対象テナントドライブの名前を指定します。ライセンスグループデータは、使用するテナントドライブに関係なく組織全体のものです。
 
 ```yaml
 Type: String[]
@@ -113,7 +159,7 @@ Accept wildcard characters: False
 ```
 
 ### -UserName
-取得するユーザーの名前を指定します。これは -ExpandAllocation を指定したときのみ有効です。
+取得するユーザー名を指定します。これは、-ExpandAllocationが指定されている場合にのみ有効です。
 
 ```yaml
 Type: String[]
@@ -143,7 +189,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariableの共通パラメータをサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

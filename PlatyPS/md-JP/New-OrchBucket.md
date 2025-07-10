@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # New-OrchBucket
 
 ## SYNOPSIS
-ストレージバケットを作成します。
+新しいストレージバケットを作成します。
 
 ## SYNTAX
 
@@ -20,27 +20,64 @@ New-OrchBucket [[-Name] <String[]>] [-Description <String>] [-StorageProvider <S
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+New-OrchBucketコマンドレットは、UiPath Orchestratorに新しいストレージバケットを作成します。バケットは、オートメーションプロセスにファイルストレージ機能を提供し、実行中にファイルの保存、取得、管理を可能にします。
 
-主に呼び出すエンドポイント: POST /odata/Buckets, GET /odata/CredentialStores
+**これはフォルダエンティティコマンドレットです。** このコマンドレットを使用するには、まずSet-Location（cd）を使用してターゲットフォルダに移動するか、-Pathパラメータを使用してターゲットフォルダを指定する必要があります。フォルダコンテキストにいない状態でこのコマンドレットを実行しようとすると、次のエラーが表示されます："Set-Locationコマンドレット（cdコマンド）を使用してまずターゲットフォルダに移動するか、-Path、-Recurse、または-Depthパラメータを使用してターゲットフォルダを指定してください。"
 
-OAuth に必要なスコープ: OR.Administration or OR.Administration, OR.Settings.Read
+バケットは、FileSystem、Azure Blob Storage、Amazon S3など、さまざまなストレージプロバイダーで設定できます。カスタムストレージコンテナ、セキュアな認証用の資格情報ストア、タグを使用したバケットの整理を指定できます。オプションを使用して、読み取り専用アクセスや暗号化設定などのバケットの動作を制御できます。
 
-必要な権限: Buckets.Create, Settings.View or Assets.Create or Assets.Edit or Assets.View or Robots.Create or Robots.Edit or Robots.View or Buckets.Create or Buckets.Edit
+プライマリ エンドポイント: POST /odata/Buckets
+OAuth 必要なスコープ: OR.Buckets または OR.Buckets.Write
+必要な権限: Buckets.Create
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+New-OrchBucket ProjectFiles
 ```
 
-{{ Add example description here }}
+位置パラメータを使用して、現在のフォルダに"ProjectFiles"という名前の新しいバケットを作成します。
+
+### Example 2
+```powershell
+New-OrchBucket -Path Orch1:\Production ProcessData -Description "Production process data storage"
+```
+
+Productionフォルダに説明付きで"ProcessData"という名前のバケットを作成します。
+
+### Example 3
+```powershell
+New-OrchBucket BackupBucket -StorageProvider "Azure" -StorageContainer "prod-backups" -CredentialStore "AzureCredentials"
+```
+
+Azure Blob Storageをストレージプロバイダーとして設定したバケットを作成します。
+
+### Example 4
+```powershell
+New-OrchBucket ArchiveData -Options ReadOnly -Tags Archive, Historical, Q4-2024
+```
+
+アーカイブ目的で組織タグ付きの読み取り専用バケットを作成します。
+
+### Example 5
+```powershell
+"TempFiles", "LogFiles", "ReportFiles" | ForEach-Object { New-OrchBucket $_ -WhatIf }
+```
+
+パイプライン処理を使用して複数のバケットを作成する場合の結果を表示します。
+
+### Example 6
+```powershell
+New-OrchBucket CustomerData -Path Orch1:\Finance -StorageProvider "FileSystem" -StorageContainer "\\fileserver\customerdata" -ExternalName "CustomerDataBucket" -Tags Production, Finance
+```
+
+ファイルサーバーをストレージバックエンドとして使用し、外部名と本番タグを持つFinanceフォルダにバケットを作成します。
 
 ## PARAMETERS
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -55,7 +92,7 @@ Accept wildcard characters: False
 ```
 
 ### -CredentialStore
-{{ Fill CredentialStore Description }}
+ストレージプロバイダーでの認証に使用する資格情報ストアの名前を指定します。
 
 ```yaml
 Type: String
@@ -70,7 +107,7 @@ Accept wildcard characters: True
 ```
 
 ### -Description
-{{ Fill Description Description }}
+バケットの目的や内容を説明する説明を指定します。
 
 ```yaml
 Type: String
@@ -85,7 +122,7 @@ Accept wildcard characters: False
 ```
 
 ### -ExternalName
-{{ Fill ExternalName Description }}
+バケットが外部システムで異なって参照される必要がある場合に便利な、バケットの外部名を指定します。
 
 ```yaml
 Type: String
@@ -100,7 +137,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-{{ Fill Name Description }}
+作成するバケットの名前を指定します。名前はフォルダ内で一意である必要があります。
 
 ```yaml
 Type: String[]
@@ -115,7 +152,7 @@ Accept wildcard characters: True
 ```
 
 ### -Options
-{{ Fill Options Description }}
+ReadOnly、Encrypted、またはその他のプロバイダー固有のオプションなど、バケットオプションを指定します。
 
 ```yaml
 Type: String[]
@@ -130,7 +167,7 @@ Accept wildcard characters: False
 ```
 
 ### -Password
-{{ Fill Password Description }}
+ストレージプロバイダーでの認証用のパスワードを指定します。
 
 ```yaml
 Type: String
@@ -145,7 +182,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+バケットが作成されるターゲットフォルダへのパスを指定します。このパラメータを使用すると、現在の場所を変更せずに特定のフォルダにバケットを作成できます。
 
 ```yaml
 Type: String[]
@@ -160,7 +197,7 @@ Accept wildcard characters: True
 ```
 
 ### -StorageContainer
-{{ Fill StorageContainer Description }}
+バケットデータが保存されるストレージコンテナまたはパスを指定します。形式はストレージプロバイダーによって異なります。
 
 ```yaml
 Type: String
@@ -175,7 +212,7 @@ Accept wildcard characters: False
 ```
 
 ### -StorageParameters
-{{ Fill StorageParameters Description }}
+JSON文字列またはパラメータ文字列として追加のストレージ固有パラメータを指定します。
 
 ```yaml
 Type: String
@@ -190,7 +227,7 @@ Accept wildcard characters: False
 ```
 
 ### -StorageProvider
-{{ Fill StorageProvider Description }}
+バケットに使用するストレージプロバイダーを指定します。一般的なプロバイダーには、FileSystem、Azure、AmazonS3などがあります。
 
 ```yaml
 Type: String
@@ -205,7 +242,7 @@ Accept wildcard characters: False
 ```
 
 ### -Tags
-{{ Fill Tags Description }}
+組織化、分類、管理目的でバケットに関連付けるタグを指定します。
 
 ```yaml
 Type: String[]
@@ -220,8 +257,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
-コマンドレットは実行されません。
+コマンドレットを実行した場合の結果を表示します。コマンドレットは実行されません。
 
 ```yaml
 Type: SwitchParameter
@@ -251,7 +287,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -261,5 +297,14 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.Bucket
 ## NOTES
+- バケット名はフォルダ内で一意である必要があります
+- 一部のストレージプロバイダーでは、追加の設定または資格情報が必要な場合があります
+- 実際の作成前に操作をプレビューするには、-WhatIfの使用を検討してください
+- タグは、バケットの整理とガバナンスポリシーの実装に役立ちます
+- バケットの作成は、ストレージプロバイダーと設定によって時間がかかる場合があります
 
 ## RELATED LINKS
+
+[Get-OrchBucket](Get-OrchBucket.md)
+[Remove-OrchBucket](Remove-OrchBucket.md)
+[Copy-OrchBucket](Copy-OrchBucket.md)

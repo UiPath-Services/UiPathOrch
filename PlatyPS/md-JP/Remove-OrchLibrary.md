@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,11 +18,11 @@ Remove-OrchLibrary [-Id] <String[]> [[-Version] <String[]>] [-Path <String[]>]
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Remove-OrchLibraryコマンドレットは、UiPath Orchestratorからライブラリパッケージを削除します。指定されたIDとバージョンに基づいて、ライブラリの管理とクリーンアップに使用されます。
 
-主に呼び出すエンドポイント: DELETE /odata/Libraries('{libraryId}:{libraryVersion}')
+プライマリ エンドポイント: DELETE /odata/Libraries('{libraryId}:{libraryVersion}')
 
-OAuth に必要なスコープ: OR.Execution
+OAuth 必要なスコープ: OR.Execution
 
 必要な権限: Libraries.Delete
 
@@ -30,15 +30,15 @@ OAuth に必要なスコープ: OR.Execution
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS C:\> Remove-OrchLibrary -Id "MyLibrary" -Version "1.0.0"
 ```
 
-{{ Add example description here }}
+指定されたIDとバージョンのライブラリパッケージを削除します。
 
 ## PARAMETERS
 
 ### -Id
-削除するライブラリパッケージの Id を指定します。
+削除するライブラリパッケージのIDを指定します。
 
 ```yaml
 Type: String[]
@@ -53,7 +53,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+対象ドライブの名前を指定します。指定しない場合は、現在のドライブが対象となります。
 
 ```yaml
 Type: String[]
@@ -83,7 +83,7 @@ Accept wildcard characters: False
 ```
 
 ### -Version
-削除するライブラリパッケージの Version を指定します。
+削除するライブラリパッケージのバージョンを指定します。
 
 ```yaml
 Type: String[]
@@ -98,7 +98,7 @@ Accept wildcard characters: True
 ```
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -113,7 +113,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットを実行した場合に何が起こるかを表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -129,7 +129,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
 
 ## INPUTS
 

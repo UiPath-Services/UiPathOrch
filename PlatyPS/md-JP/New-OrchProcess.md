@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -14,14 +14,15 @@ schema: 2.0.0
 
 ```
 New-OrchProcess [-Id] <String[]> [[-Version] <String>] [-Name <String>] [-Description <String>]
- [-EntryPoint <String>] [-InputArguments <String>] [-Priority <String>] [-HiddenForAttendedUser <String>]
- [-RemoteControlAccess <String>] [-RetentionAction <String>] [-RetentionPeriod <Int32>]
- [-RetentionBucket <String>] [-StaleRetentionAction <String>] [-StaleRetentionPeriod <Int32>]
- [-StaleRetentionBucket <String>] [-ErrorRecordingEnabled <String>] [-Quality <Int32>] [-Frequency <Int32>]
- [-Duration <Int32>] [-AutoStartProcess <String>] [-AlwaysRunning <String>] [-A4R_Enabled <String>]
- [-A4R_HealingEnabled <String>] [-VideoRecordingType <String>] [-QueueItemVideoRecordingType <String>]
- [-MaxDurationSeconds <Int32>] [-Tags <String[]>] [-Path <String[]>] [-Recurse] [-Depth <UInt32>]
- [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+ [-EntryPoint <String>] [-InputArguments <String>] [-SpecificPriorityValue <Int32>] [-Priority <String>]
+ [-HiddenForAttendedUser <String>] [-RemoteControlAccess <String>] [-RetentionAction <String>]
+ [-RetentionPeriod <Int32>] [-RetentionBucket <String>] [-StaleRetentionAction <String>]
+ [-StaleRetentionPeriod <Int32>] [-StaleRetentionBucket <String>] [-ErrorRecordingEnabled <String>]
+ [-Quality <Int32>] [-Frequency <Int32>] [-Duration <Int32>] [-AutoStartProcess <String>]
+ [-AlwaysRunning <String>] [-A4R_Enabled <String>] [-A4R_HealingEnabled <String>]
+ [-VideoRecordingType <String>] [-QueueItemVideoRecordingType <String>] [-MaxDurationSeconds <Int32>]
+ [-Tags <String[]>] [-Path <String[]>] [-Recurse] [-Depth <UInt32>] [-ProgressAction <ActionPreference>]
+ [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -530,6 +531,21 @@ Accept wildcard characters: False
 
 ```yaml
 Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -SpecificPriorityValue
+{{ Fill SpecificPriorityValue Description }}
+
+```yaml
+Type: Int32
 Parameter Sets: (All)
 Aliases:
 

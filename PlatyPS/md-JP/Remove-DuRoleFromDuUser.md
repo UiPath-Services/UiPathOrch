@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Remove-DuRoleFromDuUser
 
 ## SYNOPSIS
-Document Understanding プロジェクトのユーザーから、ロールを削除します。
+Document Understandingプロジェクトのユーザーからロールを削除します。
 
 ## SYNTAX
 
@@ -20,9 +20,9 @@ Remove-DuRoleFromDuUser [-Name] <String[]> [-Roles <String[]>] [-Path <String[]>
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-主に呼び出すエンドポイント: PATCH /{partitionGlobalId}/pap_/api/userroleassignments
+プライマリ エンドポイント: PATCH /{partitionGlobalId}/pap_/api/userroleassignments
 
-OAuth に必要なスコープ:
+OAuth 必要なスコープ:
 
 必要な権限:
 
@@ -38,7 +38,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -Confirm
-Prompts you for confirmation before running the cmdlet.
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -98,8 +98,8 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+コマンドレットを実行した場合の結果を表示します。
+コマンドレットは実行されません。
 
 ```yaml
 Type: SwitchParameter
@@ -144,7 +144,7 @@ Accept wildcard characters: True
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

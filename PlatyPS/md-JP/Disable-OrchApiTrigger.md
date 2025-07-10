@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Disable-OrchApiTrigger
 
 ## SYNOPSIS
-API トリガーを無効にします。
+指定されたフォルダ内のAPIトリガーを無効にします。
 
 ## SYNTAX
 
@@ -18,27 +18,68 @@ Disable-OrchApiTrigger [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Depth 
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Disable-OrchApiTrigger コマンドレットは、UiPath Orchestrator 内の指定されたフォルダ内のAPIトリガーを無効にします。このコマンドレットを使用すると、トリガー構成を削除することなく、一時的にAPIトリガーの動作を停止できるため、メンテナンスシナリオや自動化ワークフローのトラブルシューティング時に役立ちます。
 
-主に呼び出すエンドポイント: POST /odata/HttpTriggers/UiPath.Server.Configuration.OData.SetEnabled
+APIトリガーは、外部システムがHTTP API呼び出しを通じてUiPathプロセスを開始することを可能にします。これらを無効にすると、これらのトリガーを通じて新しいプロセスインスタンスが開始されることを防ぎますが、将来の再有効化のためにトリガー構成は保持されます。
 
-OAuth に必要なスコープ: undocumented
+-Name パラメーターを使用して、無効にするAPIトリガーを指定します。コマンドレットは、複数のトリガーを効率的に無効にするためのワイルドカードパターンをサポートしています。-Path パラメーターを使用すると特定のフォルダを対象にでき、-Recurse を使用するとすべてのサブフォルダを処理できます。
 
-必要な権限: 
+これはフォルダエンティティコマンドレットです。最初に Set-Location コマンドレット（cd コマンド）を使用してターゲットフォルダに移動するか、-Path、-Recurse、または -Depth パラメーターを使用してターゲットフォルダを指定してください。-Recurse パラメーターを使用すると、すべてのサブフォルダからAPIトリガーを無効にできます。
+
+プライマリエンドポイント: POST /odata/HttpTriggers/UiPath.Server.Configuration.OData.SetEnabled
+
+OAuth 必要なスコープ: OR.Execution or OR.Execution.Write
+
+必要な権限: Triggers.Edit
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Development> Disable-OrchApiTrigger ProcessTrigger
 ```
 
-{{ Add example description here }}
+位置パラメーターを使用して、現在のフォルダ（Development）内のProcessTrigger APIトリガーを無効にします。
+
+### Example 2
+```powershell
+PS C:\> Disable-OrchApiTrigger -Path Orch1:\Development DataProcessingTrigger
+```
+
+Orch1:\DevelopmentフォルダのDataProcessingTrigger APIトリガーを無効にします。
+
+### Example 3
+```powershell
+PS Orch1:\Development> Disable-OrchApiTrigger *Daily*, *Weekly* -WhatIf
+```
+
+安全のため-WhatIfを使用して、現在のフォルダでDailyまたはWeeklyを含む名前の複数のAPIトリガーを無効にした場合に何が起こるかを表示します。
+
+### Example 4
+```powershell
+PS C:\> Disable-OrchApiTrigger -Path Orch1:\Development *API* -Confirm
+```
+
+確認プロンプトを表示して、DevelopmentフォルダでAPIを含む名前のすべてのAPIトリガーを無効にします。
+
+### Example 5
+```powershell
+PS Orch1:\> Disable-OrchApiTrigger -Recurse *Integration*
+```
+
+すべてのサブフォルダから再帰的にIntegrationを含む名前のすべてのAPIトリガーを無効にします。
+
+### Example 6
+```powershell
+PS Orch1:\Development> Get-OrchApiTrigger *External* | Disable-OrchApiTrigger -WhatIf
+```
+
+Externalを含む名前のすべてのAPIトリガーを取得し、パイプライン入力を使用してそれらを無効にした場合に何が起こるかを表示します。
 
 ## PARAMETERS
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+-Recurse パラメーターを使用する際に含めるサブフォルダレベルの最大数を指定します。
 
 ```yaml
 Type: UInt32
@@ -53,7 +94,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-無効にする API トリガーの Name を指定します。
+無効にするAPIトリガーの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -68,7 +109,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+ターゲットフォルダを指定します。指定しない場合、現在のフォルダがターゲットになります。
 
 ```yaml
 Type: String[]
@@ -98,7 +139,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+すべてのサブフォルダからAPIトリガーを再帰的に無効にすることを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -113,7 +154,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -128,7 +169,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットを実行した場合の動作を示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -144,7 +185,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメーターをサポートしています: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, -WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
 
 ## INPUTS
 
@@ -153,5 +194,16 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Object
 ## NOTES
+これはフォルダエンティティコマンドレットです。最初に Set-Location コマンドレット（cd コマンド）を使用してターゲットフォルダに移動するか、-Path、-Recurse、または -Depth パラメーターを使用してターゲットフォルダを指定してください。
+
+APIトリガーは、外部システムがHTTP API呼び出しを通じてプロセスを開始することを可能にします。これらを無効にすると、構成を保持したままトリガー動作が一時的に停止されます。無効にしたトリガーを再度有効にするには、Enable-OrchApiTrigger を使用してください。効率的な一括操作にはワイルドカードを使用し、実際の実行前のテストには -WhatIf を使用してください。
 
 ## RELATED LINKS
+
+[Enable-OrchApiTrigger](Enable-OrchApiTrigger.md)
+
+[Get-OrchApiTrigger](Get-OrchApiTrigger.md)
+
+[Remove-OrchApiTrigger](Remove-OrchApiTrigger.md)
+
+[Set-OrchApiTrigger](Set-OrchApiTrigger.md)

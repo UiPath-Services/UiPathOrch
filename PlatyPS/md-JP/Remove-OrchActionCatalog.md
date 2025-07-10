@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -20,9 +20,9 @@ Remove-OrchActionCatalog [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Dept
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-主に呼び出すエンドポイント: DELETE /odata/TaskCatalogs({catalogId})
+プライマリ エンドポイント: DELETE /odata/TaskCatalogs({key})
 
-OAuth に必要なスコープ: OR.Tasks
+OAuth 必要なスコープ: OR.Tasks または OR.Tasks.Write
 
 必要な権限: TaskCatalogs.Delete
 
@@ -38,7 +38,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -53,7 +53,7 @@ Accept wildcard characters: False
 ```
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+ターゲットフォルダへの再帰の深度を指定します。深度0は現在の場所のみを示し、サブフォルダは含まれません。
 
 ```yaml
 Type: UInt32
@@ -68,7 +68,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-削除するアクションカタログの Name を指定します。
+削除するアクションカタログの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -83,7 +83,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+ターゲットフォルダを指定します。指定されていない場合は、現在のフォルダがターゲットになります。
 
 ```yaml
 Type: String[]
@@ -98,7 +98,7 @@ Accept wildcard characters: True
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+操作にターゲットフォルダとそのすべてのサブフォルダを含めることを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -113,7 +113,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットを実行した場合の結果を表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -144,7 +144,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-OrchTestSetExecution
 
 ## SYNOPSIS
-テスト実行を取得します。
+テストセット実行を取得します。
 
 ## SYNTAX
 
@@ -20,27 +20,59 @@ Get-OrchTestSetExecution [[-Name] <String[]>] [-Status <String[]>] [-Last <Strin
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Get-OrchTestSetExecution コマンドレットは、UiPath Orchestratorからテストセット実行記録を取得します。テストセット実行は、ステータス、実行時間、結果を含むテストセット実行の履歴記録を表します。
 
-主に呼び出すエンドポイント: GET /odata/TestSetExecutions?$expand=TestSet
+これはフォルダエンティティコマンドレットです。このコマンドレットを使用するには、最初にSet-Location（cd）を使用してターゲットフォルダに移動するか、-Path、-Recurse、または-Depthパラメータを使用してターゲットフォルダを指定する必要があります。
 
-OAuth に必要なスコープ: OR.TestSetExecutions or OR.TestSetExecutions.Read
+ステータス、時間範囲、トリガータイプ、その他の条件で実行をフィルタリングできます。このコマンドレットは、大きな結果セット用に-Skipと-Firstパラメータを通じてページネーションをサポートします。
 
-Required permissions: TestSetExecutions.View
+プライマリエンドポイント: GET /odata/TestSetExecutions?$expand=TestSet
+
+OAuth必須スコープ: OR.TestSetExecutions または OR.TestSetExecutions.Read
+
+必要な権限: TestSetExecutions.View
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Get-OrchTestSetExecution
 ```
 
-{{ Add example description here }}
+現在のフォルダ内のすべてのテストセット実行を取得します。
+
+### Example 2
+```powershell
+PS Orch1:\Shared> Get-OrchTestSetExecution RegressionTests
+```
+
+位置パラメータを使用して、「RegressionTests」という名前のテストセットのすべての実行を取得します。
+
+### Example 3
+```powershell
+PS Orch1:\Shared> Get-OrchTestSetExecution -Status Failed, Stopped
+```
+
+分析とトラブルシューティングのために、FailedまたはStoppedステータスのすべてのテストセット実行を取得します。
+
+### Example 4
+```powershell
+PS Orch1:\Shared> Get-OrchTestSetExecution -Last Week
+```
+
+便利な時間フィルターを使用して、過去7日間のテストセット実行を取得します。
+
+### Example 5
+```powershell
+PS C:\> Get-OrchTestSetExecution -Path Orch1:\Production -Recurse
+```
+
+任意の場所からの実行を示して、Productionフォルダとすべてのサブフォルダからテストセット実行を取得します。
 
 ## PARAMETERS
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+ターゲットフォルダへの再帰の深度を指定します。深度0は現在の場所のみを示し、サブフォルダは含まれません。
 
 ```yaml
 Type: UInt32
@@ -55,8 +87,8 @@ Accept wildcard characters: False
 ```
 
 ### -First
-指定された数のエンティティのみを取得します。
-取得するエンティティの数を指定してください。
+指定された数のオブジェクトのみを取得します。
+取得するオブジェクトの数を入力してください。
 
 ```yaml
 Type: UInt64
@@ -71,7 +103,7 @@ Accept wildcard characters: False
 ```
 
 ### -Last
-テストセット実行を取得する直近の期間を指定します。
+最近の実行の時間期間を指定します。有効な値：Hour、Day、Week、Month、3Months、6Months、Year、3Years。
 
 ```yaml
 Type: String
@@ -86,7 +118,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-取得するテストセット実行の Name を指定します。
+取得するテストセット実行の名前を指定します。
 
 ```yaml
 Type: String[]
@@ -101,7 +133,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+ターゲットフォルダを指定します。指定されていない場合は、現在のフォルダがターゲットになります。
 
 ```yaml
 Type: String[]
@@ -116,7 +148,7 @@ Accept wildcard characters: True
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+操作にターゲットフォルダとそのすべてのサブフォルダを含めることを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -131,8 +163,8 @@ Accept wildcard characters: False
 ```
 
 ### -Skip
-指定された数のエンティティを無視して、残りのエンティティを取得します。
-スキップするエンティティの数を指定してください。
+指定された数のオブジェクトを無視してから、残りのオブジェクトを取得します。
+スキップするオブジェクトの数を入力してください。
 
 ```yaml
 Type: UInt64
@@ -147,7 +179,7 @@ Accept wildcard characters: False
 ```
 
 ### -StartTimeAfter
-テストセット実行を取得する StartTime の開始日時を指定します。
+取得するテストセット実行のStartTimeの開始日時を指定します。
 
 ```yaml
 Type: DateTime
@@ -162,7 +194,7 @@ Accept wildcard characters: False
 ```
 
 ### -StartTimeBefore
-テストセット実行を取得する StartTime の終了日時を指定します。
+取得するテストセット実行のStartTimeの終了日時を指定します。
 
 ```yaml
 Type: DateTime
@@ -177,7 +209,7 @@ Accept wildcard characters: False
 ```
 
 ### -Status
-取得するテストセット実行の Status を指定します。
+取得するテストセット実行のステータスを指定します。一般的な値には、Running、Successful、Failed、Stopped、Pendingがあります。
 
 ```yaml
 Type: String[]
@@ -192,7 +224,7 @@ Accept wildcard characters: True
 ```
 
 ### -TriggerType
-取得するテストセット実行の TriggerType を指定します。
+取得するテストセット実行のTriggerTypeを指定します。一般的な値には、Manual、Schedule、APIがあります。
 
 ```yaml
 Type: String[]
@@ -222,7 +254,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および -WarningVariable の共通パラメータをサポートします。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
 
 ## INPUTS
 
@@ -231,5 +263,9 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.TestSetExecution
 ## NOTES
+
+プライマリエンドポイント: GET /odata/TestSetExecutions
+OAuth必須スコープ: OR.TestSetExecutions または OR.TestSetExecutions.Read
+必要な権限: TestSetExecutions.View
 
 ## RELATED LINKS

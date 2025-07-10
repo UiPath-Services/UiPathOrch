@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-DuClassifier
 
 ## SYNOPSIS
-Document Understanding の分類器を取得します。
+UiPath OrchestratorからDocument Understanding分類器を取得します。
 
 ## SYNTAX
 
@@ -18,25 +18,66 @@ Get-DuClassifier [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-ProgressAc
 ```
 
 ## DESCRIPTION
-プロジェクトからすべての分類器を取得します。このコマンドレットは、UiPathOrchDu プロバイダの PSDrive 上で動作します。設定ファイルに、"Du." を含むスコープを記載すると、UiPathOrchDu プロバイダの PSDrive が自動で追加されます。Get-PSDrive コマンドレットで確認してください。設定ファイルは、Edit-OrchConfig コマンドレットで開けます。
+Get-DuClassifierコマンドレットは、UiPath OrchestratorからDocument Understanding分類器を取得します。分類器は、Document Understandingプロジェクト内でドキュメントを分類・カテゴライズするために使用されるAIモデルで、自動化されたドキュメントタイプ識別と処理ワークフローを可能にします。
 
-主に呼び出すエンドポイント: GET /du_/api/framework/projects/{projectId}/classifiers?api-version=1
+各分類器には、Id、Name、Status（Available、Training等）、および同期・非同期分類操作用のAPIエンドポイントなどの情報が含まれています。分類器はDocument Understandingプロジェクト内で組織化され、インテリジェントなドキュメント処理自動化の基盤を提供します。
 
-OAuth に必要なスコープ: Du.Digitization.Api or Du.Classification.Api or Du.Extraction.Api or Du.Validation.Api
+このコマンドレットはUiPathOrchDuドライブコンテキスト内で動作し、特定のDocument Understandingプロジェクトフォルダーへの移動が必要です。**重要**: このコマンドレットは実行前にUiPathOrchDuドライブ上のDocument Understandingプロジェクトフォルダー（例：Orch1Du:\ProjectName）への移動が必要です。
+
+プライマリエンドポイント: GET /du_/api/framework/projects/{projectId}/classifiers
+
+OAuth必須スコープ: OR.ML または OR.ML.Read
+
+必要な権限: ML.View
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1Du:\Predefined> Get-DuClassifier
 ```
 
-{{ Add example description here }}
+現在のPredefinedプロジェクトからすべての分類器を取得し、id、name、statusの情報を表示します。
+
+### Example 2
+```powershell
+PS Orch1Du:\Predefined> Get-DuClassifier | ConvertTo-Json -Depth 3
+```
+
+APIエンドポイント（detailsUrl、syncUrl、asyncUrl）を含む詳細な分類器プロパティをJSON形式で表示します。
+
+### Example 3
+```powershell
+PS C:\> Get-DuClassifier -Path Orch1Du:\MyProject -Id "*generative*"
+```
+
+MyProject Document UnderstandingプロジェクトからIDに"generative"を含む分類器を取得します。
+
+### Example 4
+```powershell
+PS Orch1Du:\> Get-DuClassifier -Recurse | Where-Object {$_.status -eq "Available"}
+```
+
+すべてのDocument Understandingプロジェクトにわたって、利用可能なすべての分類器を取得します。
+
+### Example 5
+```powershell
+PS Orch1Du:\Predefined> Get-DuClassifier | Select-Object name, status, @{Name="HasSyncAPI";Expression={$_.syncUrl -ne $null}}
+```
+
+分類器の名前、ステータス、および同期APIエンドポイントが利用可能かどうかを表示します。
+
+### Example 6
+```powershell
+PS Orch1Du:\> Get-DuClassifier -Recurse | Group-Object status
+```
+
+Document Understandingプロジェクト全体ですべての分類器をステータス別にグループ化します。
 
 ## PARAMETERS
 
 ### -Name
-取得する分類器の name を指定します。
+{{ Fill Name Description }}
 
 ```yaml
 Type: String[]
@@ -51,7 +92,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+検索するターゲットDocument Understandingプロジェクトフォルダーを指定します。UiPathOrchDuドライブパス（例：Orch1Du:\ProjectName）を参照する必要があります。
 
 ```yaml
 Type: String[]
@@ -66,7 +107,7 @@ Accept wildcard characters: True
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+検索操作にターゲットプロジェクトフォルダーとそのすべてのサブプロジェクトを含めます。包括的な分類器の発見に不可欠です。
 
 ```yaml
 Type: SwitchParameter
@@ -96,7 +137,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメーターをサポートします: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -107,5 +148,14 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### UiPath.PowerShell.Entities.DuClassifier
 
 ## NOTES
+このコマンドレットはUiPathOrchDuドライブ上のDocument Understandingプロジェクト内で動作します。実行前に特定のプロジェクトフォルダーへの移動が必要です。分類器は、インテリジェントなドキュメント処理のためのAIを活用したドキュメント分類機能を提供します。この操作には、Document Understandingプロジェクト内でのML.View権限が必要です。
 
 ## RELATED LINKS
+
+[Get-DuDocumentType](Get-DuDocumentType.md)
+
+[Get-DuExtractor](Get-DuExtractor.md)
+
+[Add-DuClassifier](Add-DuClassifier.md)
+
+[Train-DuClassifier](Train-DuClassifier.md)

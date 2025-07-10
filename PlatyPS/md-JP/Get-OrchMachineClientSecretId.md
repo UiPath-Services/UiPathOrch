@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-OrchMachineClientSecretId
 
 ## SYNOPSIS
-マシンのクライアントシークレットの作成日時を取得します。
+複数のマシンからクライアントシークレットの作成日時を取得します。
 
 ## SYNTAX
 
@@ -18,13 +18,17 @@ Get-OrchMachineClientSecretId [[-Name] <String[]>] [[-SecretId] <String[]>] [-Pa
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Get-OrchMachineClientSecretId コマンドレットは、作成日と識別子を含むマシンのクライアントシークレット情報を取得します。クライアントシークレットは、Orchestratorに対するマシン認証に使用され、セキュリティ管理のための有効期限ポリシーを持ちます。
 
-主に呼び出すエンドポイント: GET /api/clientsecrets/{licenseKey}
+これはテナントエンティティコマンドレットです。-Path パラメータは、ドライブ名（例：Orch1:、Orch2:）を使用してターゲットテナントを指定します。指定されていない場合は、現在のテナントがターゲットになります。
 
-OAuth に必要なスコープ: OR.Machines
+このコマンドレットは、セキュリティ監査、シークレットローテーション管理、および作成日に基づいて更新が必要なシークレットの特定に便利です。
 
-必要な権限:
+プライマリエンドポイント: GET /api/clientsecrets/{licenseKey}
+
+OAuth必須スコープ: OR.Machines
+
+必要な権限: Machines.View
 
 ## EXAMPLES
 
@@ -33,26 +37,40 @@ OAuth に必要なスコープ: OR.Machines
 PS Orch1:\> Get-OrchMachineClientSecretId
 ```
 
-このテナントにあるマシンすべてについて、クライアントシークレットが払い出された日時を出力します。
+現在のテナント内のすべてのマシンのクライアントシークレットの発行日時を出力します。
 
 ### Example 2
 ```powershell
-PS Orch1:\> Get-OrchMachineClientSecretId <machine names>
+PS Orch1:\> Get-OrchMachineClientSecretId Machine01, Machine02
 ```
 
-指定したマシンについて、クライアントシークレットが払い出された日時を出力します。
+指定されたマシンのクライアントシークレットの発行日時を出力します。
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchMachineClientSecretId | ? CreationTime -LT '2024/10/01' | Remove-OrchMachineClientSecret
+PS Orch1:\> Get-OrchMachineClientSecretId *Prod*
 ```
 
-このテナントにあるマシンすべてについて、2024/10/01 より前に払い出されたクライアントシークレットをすべて削除します。
+名前に「Prod」を含むすべてのマシンのクライアントシークレット情報を取得します。
+
+### Example 4
+```powershell
+PS C:\> Get-OrchMachineClientSecretId -Path Orch1:, Orch2: Machine01
+```
+
+複数のテナント間でMachine01のクライアントシークレット情報を取得します。
+
+### Example 5
+```powershell
+PS Orch1:\> Get-OrchMachineClientSecretId -SecretId *123456*
+```
+
+IDに「123456」を含むシークレットのクライアントシークレット情報を取得します。
 
 ## PARAMETERS
 
 ### -Name
-対象のマシンの Name を指定します。
+クライアントシークレット情報を取得するマシンの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -67,7 +85,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+ドライブ名を使用してターゲットテナントの名前を指定します。指定されていない場合は、現在のテナントがターゲットになります。
 
 ```yaml
 Type: String[]
@@ -82,7 +100,7 @@ Accept wildcard characters: False
 ```
 
 ### -SecretId
-対象の SecretId を指定します。
+取得するクライアントシークレットIDを指定します。これは、識別子によって特定のシークレットをクエリするために使用できます。
 
 ```yaml
 Type: String[]
@@ -112,7 +130,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および -WarningVariable の共通パラメータをサポートします。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
 
 ## INPUTS
 
@@ -123,5 +141,9 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### UiPath.PowerShell.Entities.MachineSecretKey
 
 ## NOTES
+
+プライマリエンドポイント: GET /api/clientsecrets
+OAuth必須スコープ: [PLACEHOLDER]
+必要な権限: [PLACEHOLDER]
 
 ## RELATED LINKS

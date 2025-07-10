@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,27 +18,68 @@ Add-OrchFolderUser -Type <String> [-UserName] <String[]> [[-Roles] <String[]>] [
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Add-OrchFolderUser コマンドレットは、UiPath Orchestrator テナント内の特定のフォルダーに既存のユーザーを割り当てます。このコマンドレットはフォルダーエンティティで動作し、適切なフォルダーナビゲーションまたは -Path、-Recurse、または -Depth パラメーターを使用した明示的なフォルダー指定が必要です。
 
-主に呼び出すエンドポイント: POST /odata/Folders/UiPath.Server.Configuration.OData.AssignDomainUser
+ユーザーをフォルダーに割り当てる前に、テナント内にユーザーが既に存在している必要があります。ユーザーの存在を確認するには Get-OrchUser を使用してください。このコマンドレットは、フォルダーレベルで特定のロールと権限を持つ複数のユーザーを複数のフォルダーに割り当てることをサポートしています。
 
-OAuth に必要なスコープ: OR.Folders
+フォルダーユーザーの割り当ては、どのユーザーが特定のフォルダーにアクセスできるかを制御し、それらのフォルダー内での権限を定義します。-Type パラメーターを使用してディレクトリエンティティのタイプ（DirectoryUser、DirectoryRobot、DirectoryGroup、または DirectoryExternalApplication）を指定し、-Roles パラメーターを使用してフォルダーレベルのロールを定義します。
 
-必要な権限: (Units.Edit or SubFolders.Edit - Assigns domain user to any folder or only if user has SubFolders.Edit permission on all folders provided)
+これはフォルダーエンティティコマンドレットです。「Use Set-Location cmdlet (cd command) to navigate to the target folder first」というエラーが表示された場合は、対象フォルダーに移動するか、-Path、-Recurse、または -Depth パラメーターを使用して対象フォルダーを指定してください。
+
+プライマリエンドポイント: POST /odata/Folders/UiPath.Server.Configuration.OData.AssignDomainUser
+
+OAuth 必要スコープ: OR.Folders または OR.Folders.Write
+
+必要なアクセス許可: (Units.Edit または SubFolders.Edit - 任意のフォルダーにドメインユーザーを割り当てる、またはユーザーが提供されたすべてのフォルダーで SubFolders.Edit 権限を持っている場合のみ)
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Development> Add-OrchFolderUser DirectoryUser john.doe@company.com "Folder Administrator"
 ```
 
-{{ Add example description here }}
+ディレクトリユーザーを現在のフォルダーに Folder Administrator ロールで割り当てます。
+
+### Example 2
+```powershell
+PS Orch1:\> Add-OrchFolderUser -Path .\Development DirectoryUser jane.smith@company.com "Automation Developer"
+```
+
+明示的なパスを使用して、ディレクトリユーザーを Development フォルダーに Automation Developer ロールで割り当てます。
+
+### Example 3
+```powershell
+PS Orch1:\> Add-OrchFolderUser -Recurse DirectoryUser admin.user@company.com *Administrator*
+```
+
+ワイルドカードを使用して、すべての Administrator ロールで管理者ユーザーをすべてのフォルダーに再帰的に割り当てます。
+
+### Example 4
+```powershell
+PS Orch1:\Production> Add-OrchFolderUser DirectoryUser developer1@company.com, developer2@company.com "Automation Developer", "Automation User"
+```
+
+複数のディレクトリユーザーを現在のフォルダーに複数のロールで割り当てます。
+
+### Example 5
+```powershell
+PS Orch1:\> Get-OrchUser *developer* | Add-OrchFolderUser -Path .\Development DirectoryUser "Automation Developer"
+```
+
+"developer" を含むユーザーをパイプし、Development フォルダーに developer ロールで割り当てます。
+
+### Example 6
+```powershell
+PS Orch1:\> Add-OrchFolderUser -Path .\QA, .\Staging -Depth 1 DirectoryGroup "QA Team" "Automation User" -WhatIf
+```
+
+安全のため -WhatIf を使用して、深度制限付きで QA と Staging フォルダーにディレクトリグループを割り当てる際の動作を表示します。
 
 ## PARAMETERS
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+対象フォルダーを指定します。指定されていない場合は、現在のフォルダーが対象になります。
 
 ```yaml
 Type: String[]
@@ -68,7 +109,7 @@ Accept wildcard characters: False
 ```
 
 ### -Roles
-追加するユーザーに付与するロールを指定します。
+ユーザーに追加するロールを指定します。
 
 ```yaml
 Type: String[]
@@ -83,7 +124,7 @@ Accept wildcard characters: True
 ```
 
 ### -UserName
-追加するユーザーの UserName を指定します。
+割り当てるユーザーのユーザー名を指定します。
 
 ```yaml
 Type: String[]
@@ -98,7 +139,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットの実行前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -113,7 +154,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットを実行した場合の動作を表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -129,7 +170,7 @@ Accept wildcard characters: False
 ```
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+対象フォルダーへの再帰の深度を指定します。深度 0 は現在の場所のみを示し、サブフォルダーは含まれません。
 
 ```yaml
 Type: UInt32
@@ -144,7 +185,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+操作が対象フォルダーとそのすべてのサブフォルダーを含むことを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -159,7 +200,11 @@ Accept wildcard characters: False
 ```
 
 ### -Type
-{{ Fill Type Description }}
+割り当てるユーザーのタイプを指定します。有効な値は次のとおりです:
+- DirectoryUser: Active Directory の個別ユーザー
+- DirectoryRobot: Active Directory のロボットアカウント
+- DirectoryGroup: Active Directory のグループ
+- DirectoryExternalApplication: Active Directory の外部アプリケーション
 
 ```yaml
 Type: String
@@ -183,5 +228,16 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Object
 ## NOTES
+これはフォルダーエンティティコマンドレットです。Set-Location を使用してフォルダーに移動するか、-Path、-Recurse、または -Depth パラメーターを使用して対象フォルダーを指定する必要があります。
+
+ユーザーをフォルダーに割り当てる前に、テナント内にユーザーが既に存在している必要があります。ユーザーの存在を確認するには Get-OrchUser を使用し、割り当てが正常に行われたことを確認するには Get-OrchFolderUser を使用してください。
 
 ## RELATED LINKS
+
+[Get-OrchFolderUser](Get-OrchFolderUser.md)
+
+[Remove-OrchFolderUser](Remove-OrchFolderUser.md)
+
+[Get-OrchUser](Get-OrchUser.md)
+
+[Get-OrchRole](Get-OrchRole.md)

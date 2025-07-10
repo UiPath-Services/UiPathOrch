@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -15,8 +15,8 @@ schema: 2.0.0
 ### DefaultParameterSet (Default)
 ```
 Set-OrchCredentialAsset [-Name] <String[]> [[-UserName] <String[]>] [[-MachineName] <String[]>]
- [-Description <String>] [-CredentialStore <String>] [-Path <String[]>] [-ProgressAction <ActionPreference>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+ -Credential <PSCredential> [-Description <String>] [-CredentialStore <String>] [-Path <String[]>]
+ [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ### SpecifyPlainPasswordParameterSet
@@ -285,6 +285,21 @@ Required: False
 Position: Named
 Default value: None
 Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -Credential
+{{ Fill Credential Description }}
+
+```yaml
+Type: PSCredential
+Parameter Sets: DefaultParameterSet
+Aliases:
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: False
 Accept wildcard characters: False
 ```
 

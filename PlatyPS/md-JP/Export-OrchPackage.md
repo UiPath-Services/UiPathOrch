@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Export-OrchPackage
 
 ## SYNOPSIS
-プロセスパッケージをエキスポートします。
+指定したフォルダーからパッケージをローカルファイルにエクスポートします。
 
 ## SYNTAX
 
@@ -18,27 +18,68 @@ Export-OrchPackage [-Id] <String[]> [[-Version] <String[]>] [[-Destination] <Str
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Export-OrchPackage コマンドレットは、UiPath Orchestratorフォルダーから自動化パッケージをローカルの.nupkgファイルにエクスポートします。このコマンドレットは、異なるOrchestrator環境間での自動化パッケージのバックアップ、アーカイブ、または移行、またはオフラインストレージを可能にします。
 
-主に呼び出すエンドポイント: 
+パッケージには、コンパイルされた自動化ワークフローとその依存関係が含まれています。パッケージをエクスポートすると、ローカルに保存したり、他の環境に転送したり、バックアップ目的で使用したりできる.nupkgファイルが作成されます。これは、バージョン管理、災害復旧、および環境移行シナリオで不可欠です。
 
-OAuth に必要なスコープ: 
+-IdパラメーターでパッケージIDを指定してエクスポートするパッケージを指定します。-Versionパラメーターでは特定のパッケージバージョンをターゲットにでき、-Destinationではエクスポートされた.nupkgファイルの保存先を指定します。このコマンドレットは、複数のパッケージを効率的にエクスポートするためのワイルドカードパターンをサポートしています。
 
-必要な権限:
+これはフォルダーエンティティコマンドレットです。最初にSet-Locationコマンドレット（cdコマンド）を使用してターゲットフォルダーに移動するか、-Path、-Recurse、または-Depthパラメーターを使用してターゲットフォルダーを指定します。-Recurseパラメーターは、すべてのサブフォルダーからパッケージをエクスポートします。
+
+主要エンドポイント: [PLACEHOLDER - 具体的なAPIエンドポイント]
+
+必要なOAuthスコープ: OR.Assets または OR.Assets.Read
+
+必要な権限: Assets.View
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Development> Export-OrchPackage ProcessAutomation
 ```
 
-{{ Add example description here }}
+現在のフォルダーからProcessAutomationパッケージの最新バージョンをデフォルトの宛先にエクスポートします。
+
+### Example 2
+```powershell
+PS C:\> Export-OrchPackage -Path Orch1:\Development DataProcessor 1.0.5 "C:\Exports"
+```
+
+DevelopmentフォルダーからDataProcessorパッケージのバージョン1.0.5をC:\Exportsディレクトリにエクスポートします。
+
+### Example 3
+```powershell
+PS Orch1:\Development> Export-OrchPackage *Automation*, *Workflow* -Destination "C:\Backup" -WhatIf
+```
+
+AutomationやWorkflowを含む名前の複数のパッケージをC:\Backupディレクトリにエクスポートした場合の動作を表示します。
+
+### Example 4
+```powershell
+PS C:\> Export-OrchPackage -Path Orch1:\Development CustomerProcess 1.0.* "C:\Versions"
+```
+
+DevelopmentフォルダーからCustomerProcessパッケージの1.0で始まるすべてのバージョンをC:\Versionsディレクトリにエクスポートします。
+
+### Example 5
+```powershell
+PS Orch1:\> Export-OrchPackage -Recurse *Critical* "C:\CriticalBackup" -Confirm
+```
+
+すべてのサブフォルダーから名前にCriticalを含むすべてのパッケージを確認プロンプトとともにC:\CriticalBackupに再帰的にエクスポートします。
+
+### Example 6
+```powershell
+PS Orch1:\Development> Get-OrchPackage *Production* | Export-OrchPackage -Destination "C:\ProductionBackup"
+```
+
+名前にProductionを含むすべてのパッケージを取得し、パイプライン入力を使用してC:\ProductionBackupにエクスポートします。
 
 ## PARAMETERS
 
 ### -Destination
-エキスポート先のフォルダーを指定します。FileSystem ドライブのフォルダーを指定してください。
+エクスポートされた.nupkgファイルが保存される宛先ディレクトリを指定します。指定しない場合、ファイルは現在のディレクトリに保存されます。
 
 ```yaml
 Type: String
@@ -53,7 +94,7 @@ Accept wildcard characters: False
 ```
 
 ### -Id
-{{ Fill Id Description }}
+エクスポートするパッケージIDを指定します。
 
 ```yaml
 Type: String[]
@@ -68,7 +109,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+ソースフォルダーを指定します。指定しない場合、現在のフォルダーがソースとして使用されます。
 
 ```yaml
 Type: String[]
@@ -98,7 +139,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+すべてのサブフォルダーからパッケージを再帰的にエクスポートすることを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -113,7 +154,7 @@ Accept wildcard characters: False
 ```
 
 ### -Version
-{{ Fill Version Description }}
+エクスポートするパッケージのバージョンを指定します。指定しない場合、最新バージョンがエクスポートされます。
 
 ```yaml
 Type: String[]
@@ -128,7 +169,7 @@ Accept wildcard characters: True
 ```
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットの実行前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -143,7 +184,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットが実行された場合の動作を表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -159,7 +200,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメーターをサポートしています: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, -WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -168,5 +209,16 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Object
 ## NOTES
+これはフォルダーエンティティコマンドレットです。最初にSet-Locationコマンドレット（cdコマンド）を使用してターゲットフォルダーに移動するか、-Path、-Recurse、または-Depthパラメーターを使用してターゲットフォルダーを指定します。
+
+エクスポートされたパッケージは、Import-OrchPackageを使用して他のOrchestrator環境にインポートできる.nupkgファイルとして保存されます。大きなパッケージ用の十分なディスク容量を確保してください。複数のバージョンをエクスポートする場合はバージョンワイルドカードを使用してください。効率的な一括操作にはワイルドカードを使用し、実際の実行前のテストには-WhatIfを使用してください。
 
 ## RELATED LINKS
+
+[Import-OrchPackage](Import-OrchPackage.md)
+
+[Get-OrchPackage](Get-OrchPackage.md)
+
+[Remove-OrchPackage](Remove-OrchPackage.md)
+
+[Update-OrchPackage](Update-OrchPackage.md)

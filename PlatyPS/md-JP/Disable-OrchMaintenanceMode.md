@@ -1,6 +1,6 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
-Module Name: uiPathOrch
+Module Name: UiPathOrch
 online version:
 schema: 2.0.0
 ---
@@ -19,32 +19,73 @@ Disable-OrchMaintenanceMode [[-MachineName] <String[]>] [[-HostMachineName] <Str
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Disable-OrchMaintenanceModeコマンドレットは、UiPath Orchestrator内の無人ロボットセッションのメンテナンスモードを無効にします。このコマンドレットにより、ロボットセッションはメンテナンス作業後に通常の動作を再開し、新しいジョブを受け入れて実行できるようになります。
 
-主に呼び出すエンドポイント: GET /odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimes
+メンテナンスモードは、現在実行中のジョブが完了するまで待機しつつ、ロボットセッションが新しいジョブを受け入れることを一時的に防ぐために使用されます。メンテナンスモードを無効にすると、通常のロボット動作が復元され、セッションはジョブキューを処理し、新しい自動化タスクを受け入れることができるようになります。
 
-OAuth に必要なスコープ: OR.Robots or OR.Robots.Read
+特定のロボットセッションをメンテナンスモード無効化の対象とするには、さまざまなフィルタリングパラメータを使用します。MachineName、HostMachineName、ServiceUserName、または特定のSessionId値でフィルタリングできます。-Pathパラメータを使用すると、特定のフォルダを対象にできます。
 
-必要な権限: Machines.View
+-Forceパラメータを使用すると、複数のセッションのメンテナンスモードを同時に無効にする際の確認プロンプトをバイパスできます。
+
+プライマリエンドポイント: GET /odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimes, POST /odata/Sessions/UiPath.Server.Configuration.OData.SetMaintenanceMode
+
+OAuth必要スコープ: OR.Robots または OR.Robots.Write
+
+必要な権限: Robots.Edit
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Development> Disable-OrchMaintenanceMode -MachineName Robot01
 ```
 
-{{ Add example description here }}
+現在のフォルダのマシンRobot01上のすべてのセッションのメンテナンスモードを無効にします。
+
+### Example 2
+```powershell
+PS C:\> Disable-OrchMaintenanceMode -Path Orch1:\Production -HostMachineName Server01
+```
+
+ProductionフォルダのホストマシンServer01上のすべてのセッションのメンテナンスモードを無効にします。
+
+### Example 3
+```powershell
+PS Orch1:\Development> Disable-OrchMaintenanceMode -ServiceUserName ServiceAccount01, ServiceAccount02 -WhatIf
+```
+
+ServiceAccount01とServiceAccount02を使用しているセッションのメンテナンスモードを無効にする際の動作を表示します。
+
+### Example 4
+```powershell
+PS C:\> Disable-OrchMaintenanceMode -Path Orch1:\Development -SessionId 12345, 67890 -Force
+```
+
+確認プロンプトなしで、DevelopmentフォルダのID 12345と67890の特定のセッションのメンテナンスモードを無効にします。
+
+### Example 5
+```powershell
+PS Orch1:\Production> Disable-OrchMaintenanceMode -MachineName *Robot* -Confirm
+```
+
+名前にRobotが含まれるマシン上のすべてのセッションのメンテナンスモードを確認プロンプト付きで無効にします。
+
+### Example 6
+```powershell
+PS C:\> Get-OrchUnattendedSession -MaintenanceMode $true | Disable-OrchMaintenanceMode -WhatIf
+```
+
+現在メンテナンスモードになっているすべてのセッションを取得し、パイプライン入力を使用してメンテナンスモードを無効にする際の動作を表示します。
 
 ## PARAMETERS
 
-### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+### -Force
+確認プロンプトなしで操作を強制実行します。
 
 ```yaml
 Type: SwitchParameter
 Parameter Sets: (All)
-Aliases: cf
+Aliases:
 
 Required: False
 Position: Named
@@ -54,7 +95,7 @@ Accept wildcard characters: False
 ```
 
 ### -HostMachineName
-メンテナンスモードを無効にする無人セッションの HostMachineName を指定します。
+メンテナンスモード無効化の対象となるホストマシン名を指定します。
 
 ```yaml
 Type: String[]
@@ -69,7 +110,7 @@ Accept wildcard characters: False
 ```
 
 ### -MachineName
-メンテナンスモードを無効にする無人セッションの MachineName を指定します。
+メンテナンスモード無効化の対象となるマシン名を指定します。
 
 ```yaml
 Type: String[]
@@ -84,7 +125,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+対象フォルダを指定します。指定されない場合、現在のフォルダが対象になります。
 
 ```yaml
 Type: String[]
@@ -95,52 +136,6 @@ Required: False
 Position: Named
 Default value: None
 Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: False
-```
-
-### -ServiceUserName
-メンテナンスモードを無効にする無人セッションの ServiceUserName を指定します。
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 2
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: False
-```
-
-### -SessionId
-メンテナンスモードを無効にする無人セッションの SessionId を指定します。
-
-```yaml
-Type: Int64[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 3
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: False
-```
-
-### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
-コマンドレットは実行されません。
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases: wi
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
@@ -159,13 +154,59 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -Force
-{{ Fill Force Description }}
+### -ServiceUserName
+メンテナンスモード無効化の対象となるサービスユーザー名を指定します。
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 2
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -SessionId
+メンテナンスモード無効化の対象となるセッションIDを指定します。
+
+```yaml
+Type: Int64[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 3
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
+### -Confirm
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
 Parameter Sets: (All)
-Aliases:
+Aliases: cf
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -WhatIf
+コマンドレットが実行された場合の動作を表示します。
+コマンドレットは実行されません。
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: wi
 
 Required: False
 Position: Named
@@ -180,9 +221,20 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### None
+
 ## OUTPUTS
 
 ### System.Object
+
 ## NOTES
+メンテナンスモードは、現在のジョブが完了するまで待機しつつ、ロボットセッションが新しいジョブを受け入れることを防ぎます。メンテナンスモードを無効にすると、通常のロボット動作が復元されます。特定のセッションを対象とするためにフィルタリングパラメータを使用してください。-Forceパラメータは、一括操作での確認プロンプトをバイパスします。
 
 ## RELATED LINKS
+
+[Enable-OrchMaintenanceMode](Enable-OrchMaintenanceMode.md)
+
+[Get-OrchUnattendedSession](Get-OrchUnattendedSession.md)
+
+[Get-OrchMachine](Get-OrchMachine.md)
+
+[Get-OrchRobot](Get-OrchRobot.md)

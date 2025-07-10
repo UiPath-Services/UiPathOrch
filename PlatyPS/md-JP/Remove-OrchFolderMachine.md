@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Remove-OrchFolderMachine
 
 ## SYNOPSIS
-フォルダーに割り当てられたマシンを、フォルダーから外します。
+フォルダからマシンの割り当てを解除します。
 
 ## SYNTAX
 
@@ -20,11 +20,11 @@ Remove-OrchFolderMachine [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Dept
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-主に呼び出すエンドポイント: POST /odata/Folders/UiPath.Server.Configuration.OData.UpdateMachinesToFolderAssociations
+プライマリ エンドポイント: POST /odata/Folders/UiPath.Server.Configuration.OData.UpdateMachinesToFolderAssociations
 
-OAuth に必要なスコープ: OR.Folders
+OAuth 必要なスコープ: OR.Folders または OR.Folders.Write
 
-必要な権限: (Units.Edit or SubFolders.Edit - Update machines to any folder associations or only if user has SubFolders.Edit permission on all folders provided)
+必要な権限: (Units.Edit または SubFolders.Edit - 任意のフォルダ関連付けにマシンを更新する場合、または提供されたすべてのフォルダでユーザーがSubFolders.Edit権限を持つ場合のみ)
 
 ## EXAMPLES
 
@@ -37,23 +37,8 @@ PS C:\> {{ Add example code here }}
 
 ## PARAMETERS
 
-### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
-
-```yaml
-Type: UInt32
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -Name
-削除するフォルダーマシンの Name を指定します。
+削除するフォルダマシンの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -67,84 +52,8 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
-### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
-### -ProgressAction
-{{ Fill ProgressAction Description }}
-
-```yaml
-Type: ActionPreference
-Parameter Sets: (All)
-Aliases: proga
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases: cf
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
-コマンドレットは実行されません。
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases: wi
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています。
 
 ## INPUTS
 

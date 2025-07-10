@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Resolve-PmDirectoryNameBulk
 
 ## SYNOPSIS
-ディレクトリエントリの名前を解決します。
+UiPath Platform Management でディレクトリエンティティ名を詳細情報に解決します。
 
 ## SYNTAX
 
@@ -18,27 +18,50 @@ Resolve-PmDirectoryNameBulk [-EntityType] <String> [-Name] <String[]> [-Path <St
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Resolve-PmDirectoryNameBulk コマンドレットは、UiPath Platform Management でディレクトリエンティティ名（ユーザー、グループ、またはアプリケーション）を詳細なディレクトリ情報に解決します。このコマンドレットは、複数のエンティティ名を一括解決して、識別子、表示名、組織情報、ソース詳細などの包括的なディレクトリの詳細を取得するのに役立ちます。
 
-主に呼び出すエンドポイント: POST "/api/Directory/BulkResolveByName/{partitionGlobalId}
+このコマンドレットは Platform Management API にアクセスし、すべての UiPath Orchestrator ドライブ（Orch1:、Orch1Tm:、Orch1Du:）で動作します。
 
-OAuth に必要なスコープ:
+プライマリ エンドポイント: POST /api/Directory/BulkResolveByName/{partitionGlobalId}
 
-必要な権限:
+OAuth 必要なスコープ: [PLACEHOLDER]
+
+必要な権限: [PLACEHOLDER]
 
 ## EXAMPLES
 
-### Example 1
+### Example 1: 複数のユーザーを名前で解決
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Resolve-PmDirectoryNameBulk User user1@example.com, user2@example.com
 ```
 
-{{ Add example description here }}
+複数のユーザー名を単一の操作で解決して、ディレクトリ情報を取得します。
+
+### Example 2: 複数のグループを解決
+```powershell
+PS Orch1:\> Resolve-PmDirectoryNameBulk Group Administrators, Users, Everyone
+```
+
+複数のグループ名を解決して、ディレクトリ情報を取得します。
+
+### Example 3: 解決して構造を検査
+```powershell
+PS Orch1:\> Resolve-PmDirectoryNameBulk User user@example.com | ConvertTo-Json -Depth 5
+```
+
+ユーザー名を解決し、詳細な分析のために完全なオブジェクト構造を JSON 形式で表示します。
+
+### Example 4: 複数のドライブにわたって解決
+```powershell
+PS C:\> Resolve-PmDirectoryNameBulk -Path Orch1:, Orch2: User user@example.com
+```
+
+指定された複数の Orchestrator ドライブにわたってユーザー名を解決します。
 
 ## PARAMETERS
 
 ### -EntityType
-{{ Fill EntityType Description }}
+解決するディレクトリエンティティのタイプを指定します。有効な値には「User」、「Group」、「Application」が含まれます。このパラメーターは、返されるディレクトリオブジェクトのタイプを決定します。
 
 ```yaml
 Type: String
@@ -53,7 +76,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-{{ Fill Name Description }}
+解決するディレクトリエンティティの名前を指定します。このパラメーターは、一括解決操作のために名前の配列を受け入れます。名前はディレクトリエンティティ名と正確に一致する必要があります。
 
 ```yaml
 Type: String[]
@@ -68,7 +91,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+対象ドライブの名前を指定します。指定されていない場合は、現在のドライブが対象になります。Platform Management API はすべての Orchestrator ドライブで動作します。
 
 ```yaml
 Type: String[]
@@ -83,7 +106,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+スクリプト、コマンドレット、またはプロバイダーによって生成される進行状況の更新に PowerShell がどのように応答するかを指定します。
 
 ```yaml
 Type: ActionPreference
@@ -98,7 +121,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメーター（-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable）をサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -110,5 +133,17 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### UiPath.PowerShell.Entities.DirectoryGroup
 ### UiPath.PowerShell.Entities.DirectoryApplication
 ## NOTES
+- このコマンドレットは、複数のエンティティを解決する際のパフォーマンスを向上させるために一括解決操作用に設計されています
+- source プロパティはディレクトリソース（例：「local」、Azure Active Directory の場合は「aad」）を示します
+- エンティティタイプは「User」、「Group」、または「Application」として正確に指定する必要があります
+- 解決を成功させるには、名前がディレクトリエンティティ名と正確に一致する必要があります
+- Platform Management コマンドレット（「Pm」で始まる）は、組織間のディレクトリ情報を提供します
+- エンティティ名を識別子を含む完全なディレクトリ表現に変換する必要がある場合は、このコマンドレットを使用してください
 
 ## RELATED LINKS
+
+[Search-PmDirectory]()
+
+[Get-PmUser]()
+
+[Get-PmGroup]()

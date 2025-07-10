@@ -1,6 +1,6 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
-Module Name: uiPathOrch
+Module Name: UiPathOrch
 online version:
 schema: 2.0.0
 ---
@@ -25,15 +25,15 @@ Update-OrchProcessVersion [-Id <Int64[]>] [[-Version] <String>] [-Path <String[]
 ```
 
 ## DESCRIPTION
-指定したプロセスが参照するプロセスパッケージを、指定のバージョンに更新します。バージョンを指定しない場合には、最新バージョンに更新します。
+指定されたプロセスによって参照されるプロセスパッケージを指定されたバージョンに更新します。バージョンが指定されていない場合、最新バージョンに更新されます。
 
--Path と -Id パラメータには、ワイルドカードを含むテキストをカンマ区切りで複数指定できます。また、これらの値は [Ctrl+Space] もしくは [Tab] を押下することで自動補完入力できます。
+-Path および -Id パラメーターには、ワイルドカードを含むカンマ区切りのテキストを使用して複数の値を指定できます。さらに、[Ctrl+Space] または [Tab] を押すことで、これらの値のオートコンプリートを使用できます。
 
--Path、-Recurse、-Depth パラメータを指定するときは、これらをコマンドレット名の直後に指定してください。これにより、後続のパラメータの自動補完が適切に動作するようになります。
+-Path、-Recurse、-Depth パラメーターを指定する場合は、コマンドレット名の直後に配置してください。この配置により、後続のパラメーターのオートコンプリートが正しく機能します。
 
-主に呼び出すエンドポイント: POST /odata/Releases({processId})/UiPath.Server.Configuration.OData.UpdateToLatestPackageVersion?mergePackageTags=false
+プライマリ エンドポイント: POST /odata/Releases({processId})/UiPath.Server.Configuration.OData.UpdateToLatestPackageVersion?mergePackageTags=false
 
-OAuth に必要なスコープ: OR.Execution
+OAuth 必要なスコープ: OR.Execution
 
 必要な権限: Processes.Edit
 
@@ -44,33 +44,33 @@ OAuth に必要なスコープ: OR.Execution
 PS C:\> Update-OrchProcessVersion -Path Orch1:\ -Recurse * -WhatIf
 ```
 
-Orch1: テナントにある、最新になっていないプロセスのバージョンをすべて最新にします。問題ないことを確認したら、-WhatIf を外して再実行してください。
+Orch1 テナント内のすべての古いプロセスバージョンを最新バージョンに更新します。問題がないことを確認したら、`-WhatIf` パラメーターを削除してコマンドを再実行してください。
 
 ### Example 2
 ```powershell
 PS C:\> Update-OrchProcessVersion -Path Orch1:\Shared MyProcess
 ```
 
-Orch1:\Shared フォルダにある MyProcess プロセスのパッケージバージョンを最新にします。
+`Orch1:\Shared` フォルダー内の `MyProcess` プロセスのパッケージバージョンを最新バージョンに更新します。
 
 ### Example 3
 ```powershell
 PS C:\> Update-OrchProcessVersion -Path Orch1:\Shared MyProcess 1.0.3
 ```
 
-Orch1:\Shared フォルダにある MyProcess プロセスのパッケージバージョンを 1.0.3 にします。
+`Orch1:\Shared` フォルダー内の `MyProcess` プロセスのパッケージバージョンをバージョン `1.0.3` に更新します。
 
 ### Example 4
 ```powershell
 PS Orch1:\Shared> Update-OrchProcessVersion -Path Orch1:\Shared MyProcess
 ```
 
-カレントフォルダの MyProcess プロセスのパッケージバージョンを最新にします。
+現在のフォルダー内の `MyProcess` プロセスのパッケージバージョンを最新バージョンに更新します。
 
 ## PARAMETERS
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+対象フォルダーへの再帰の深度を指定します。深度0は現在の場所のみを示し、サブフォルダーは含まれません。
 
 ```yaml
 Type: UInt32
@@ -85,7 +85,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-バージョンを更新するプロセスの Name を指定します。
+バージョンを更新するプロセスの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -100,7 +100,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+対象フォルダーを指定します。指定されていない場合は、現在のフォルダーが対象になります。
 
 ```yaml
 Type: String[]
@@ -130,7 +130,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+操作に対象フォルダーとそのすべてのサブフォルダーを含めることを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -145,7 +145,7 @@ Accept wildcard characters: False
 ```
 
 ### -Version
-プロセスをどのバージョンに更新するかを指定します。省略すると、最新バージョンに更新されます。
+プロセスを更新するバージョンを指定します。省略した場合、プロセスは最新バージョンに更新されます。
 
 ```yaml
 Type: String
@@ -160,7 +160,7 @@ Accept wildcard characters: True
 ```
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -175,7 +175,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットが実行された場合の動作を表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -206,7 +206,7 @@ Accept wildcard characters: True
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメーター（-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable）をサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

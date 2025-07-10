@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Update-PmUser
 
 ## SYNOPSIS
-組織のユーザーを更新します。
+ユーザーを更新します。
 
 ## SYNTAX
 
@@ -21,9 +21,9 @@ Update-PmUser [[-Email] <String[]>] [-Name <String>] [-Surname <String>] [-Passw
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-主に呼び出すエンドポイント: PUT /api/User/{userId}
+プライマリ エンドポイント: PUT /api/User/{userId}
 
-OAuth に必要なスコープ: PM.User
+OAuth 必要なスコープ: PM.User
 
 必要な権限:
 
@@ -39,7 +39,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -BypassBasicAuthRestriction
-このユーザーに、基本認証を常に許可するかを指定します。
+このユーザーに対して常に基本認証を許可するかどうかを指定します。
 
 ```yaml
 Type: String
@@ -54,7 +54,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -84,7 +84,7 @@ Accept wildcard characters: True
 ```
 
 ### -Name
-ユーザーの新しい name を指定します。
+ユーザーの新しい名前を指定します。
 
 ```yaml
 Type: String
@@ -99,7 +99,7 @@ Accept wildcard characters: False
 ```
 
 ### -Password
-ユーザーの新しい password を指定します。
+ユーザーの新しいパスワードを指定します。
 
 ```yaml
 Type: String
@@ -114,7 +114,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+{{ Fill Path Description }}
 
 ```yaml
 Type: String[]
@@ -129,7 +129,7 @@ Accept wildcard characters: False
 ```
 
 ### -Surname
-ユーザーの新しい surname を指定します。
+ユーザーの新しい姓を指定します。
 
 ```yaml
 Type: String
@@ -144,7 +144,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットが実行された場合の動作を表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -175,7 +175,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメーター（-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable）をサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

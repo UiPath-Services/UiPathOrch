@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Set-OrchAsset
 
 ## SYNOPSIS
-アセットを新規作成/更新/削除します。
+アセットを作成、更新、削除します。
 
 ## SYNTAX
 
@@ -19,11 +19,11 @@ Set-OrchAsset [[-ValueType] <String>] [-Name] <String[]> [[-Value] <String>] [[-
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+[PLACEHOLDER - requires verification of main description]
 
-主に呼び出すエンドポイント:  POST /odata/Assets, PUT /odata/Assets({asset.Id}), DELETE /odata/Assets({assetId})
+プライマリ エンドポイント: POST /odata/Assets, PUT /odata/Assets({asset.Id}), DELETE /odata/Assets({assetId})
 
-OAuth に必要なスコープ: OR.Assets
+OAuth 必要なスコープ: OR.Assets
 
 必要な権限: Assets.Create, Assets.Edit, Assets.Delete
 
@@ -39,7 +39,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -Description
-アセットの Description を指定します。
+[PLACEHOLDER - requires verification of Description parameter]
 
 ```yaml
 Type: String
@@ -54,7 +54,7 @@ Accept wildcard characters: False
 ```
 
 ### -MachineName
-更新するアセットの MachineName を指定します。
+[PLACEHOLDER - requires verification of MachineName parameter]
 
 ```yaml
 Type: String[]
@@ -69,8 +69,7 @@ Accept wildcard characters: True
 ```
 
 ### -Name
-更新するアセットの Name を指定します。存在しないアセット名を指定した場合は、その名前で新規にアセットを作成します。
-
+更新するアセットの名前を指定します。存在しないアセットの名前が指定された場合、その名前で新しいアセットが作成されます。
 
 ```yaml
 Type: String[]
@@ -85,7 +84,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+対象フォルダーを指定します。指定されていない場合は、現在のフォルダーが対象になります。
 
 ```yaml
 Type: String[]
@@ -100,7 +99,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+このコマンドレットによって生成される進行状況の更新に PowerShell がどのように応答するかを決定します。既定値は Continue です。
 
 ```yaml
 Type: ActionPreference
@@ -115,7 +114,7 @@ Accept wildcard characters: False
 ```
 
 ### -UserName
-更新するアセットの UserName を指定します。
+[PLACEHOLDER - requires verification of UserName parameter]
 
 ```yaml
 Type: String[]
@@ -130,7 +129,7 @@ Accept wildcard characters: True
 ```
 
 ### -Value
-更新するアセットの Value を指定します。'' を指定した場合には、このアセットは削除されます。
+{{ Fill Value Description }}
 
 ```yaml
 Type: String
@@ -145,7 +144,7 @@ Accept wildcard characters: False
 ```
 
 ### -ValueType
-更新するアセットの ValueType を指定します。指定できる値は Text、Integer、Bool のいずれかです。
+{{ Fill ValueType Description }}
 
 ```yaml
 Type: String
@@ -160,7 +159,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -175,7 +174,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットが実行された場合の動作を表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -191,7 +190,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメーター（-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable）をサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

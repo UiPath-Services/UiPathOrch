@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -20,9 +20,9 @@ Remove-OrchTrigger [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Depth <UIn
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-主に呼び出すエンドポイント: DELETE /odata/ProcessSchedules({processScheduleId})
+プライマリ エンドポイント: GET /odata/ProcessSchedules, DELETE /odata/ProcessSchedules({processScheduleId})
 
-OAuth に必要なスコープ: OR.Jobs
+OAuth 必要なスコープ: OR.Jobs
 
 必要な権限: Schedules.Delete
 
@@ -38,7 +38,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+対象フォルダへの再帰処理の深度を指定します。深度0は現在の場所のみを示し、サブフォルダは含まれません。
 
 ```yaml
 Type: UInt32
@@ -53,7 +53,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-削除するトリガーの Name を指定します。
+削除するトリガーの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -68,7 +68,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+対象フォルダを指定します。指定しない場合は、現在のフォルダが対象となります。
 
 ```yaml
 Type: String[]
@@ -98,7 +98,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+操作に対象フォルダとそのすべてのサブフォルダを含める必要があることを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -113,7 +113,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -128,7 +128,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットを実行した場合に何が起こるかを表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -144,7 +144,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
 
 ## INPUTS
 

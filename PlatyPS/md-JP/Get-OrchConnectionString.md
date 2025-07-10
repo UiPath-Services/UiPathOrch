@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -17,27 +17,52 @@ Get-OrchConnectionString [[-Path] <String[]>] [-ProgressAction <ActionPreference
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Get-OrchConnectionString コマンドレットは、Orchestrator サービスがデータベースへの接続に使用する接続文字列を取得します。この情報は、データベース接続設定の確認、トラブルシューティングの実行、または現在の Orchestrator 構成の理解が必要なシステム管理者にとって有用です。
 
-主に呼び出すエンドポイント: GET /odata/Settings/UiPath.Server.Configuration.OData.GetConnectionString
+この接続文字列には、データベースサーバー名、データベース名、認証情報、およびその他の接続パラメーターが含まれます。セキュリティ上の理由から、パスワードなどの機密情報はマスクされるか、部分的に隠されている場合があります。
 
-OAuth に必要なスコープ: OR.Settings または OR.Settings.Read
+このコマンドレットはテナントレベルで動作し、指定されたテナントまたは現在のテナントの接続文字列情報を取得します。-Path パラメーターを使用して複数のテナントから接続文字列を取得できます。
 
-必要な権限:
+プライマリエンドポイント: GET /odata/Settings/UiPath.Server.Configuration.OData.GetConnectionString
+
+OAuth 必須スコープ: OR.Settings または OR.Settings.Read
+
+必要なアクセス許可: Settings.View
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Get-OrchConnectionString
 ```
 
-{{ Add example description here }}
+現在のテナントのデータベース接続文字列を取得します。
+
+### Example 2
+```powershell
+PS C:\> Get-OrchConnectionString -Path Orch1:, Orch2:
+```
+
+複数のテナント（Orch1 と Orch2）からデータベース接続文字列を取得します。
+
+### Example 3
+```powershell
+PS Orch1:\> Get-OrchConnectionString | Select-Object Path, Value
+```
+
+接続文字列を取得し、Path と Value プロパティのみを表示します。
+
+### Example 4
+```powershell
+PS Orch1:\> Get-OrchConnectionString | ConvertTo-Json
+```
+
+接続文字列情報を JSON 形式で表示します。
 
 ## PARAMETERS
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+接続文字列を取得するターゲットテナントドライブを指定します。指定されていない場合、現在のテナントがターゲットになります。
 
 ```yaml
 Type: String[]
@@ -52,7 +77,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+このコマンドの処理中にスクリプト、コマンドレット、またはプロバイダーによって生成される進行状況の更新に PowerShell がどのように応答するかを指定します。
 
 ```yaml
 Type: ActionPreference
@@ -71,12 +96,26 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-
+### None
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.ODataValueOfString
-
+### UiPath.PowerShell.Entities.ResponseDictionaryItem
 ## NOTES
 
+このコマンドレットはテナントレベルエンティティ操作として動作し、システム管理者がデータベース接続設定を確認できるようにします。接続文字列には機密情報が含まれる可能性があるため、セキュリティ上の理由から一部の情報がマスクされる場合があります。
+
+接続文字列情報は、データベース接続の問題をトラブルシューティングしたり、Orchestrator の構成を理解したりする際に特に有用です。この操作には Settings.View アクセス許可が必要です。
+
+プライマリエンドポイント: GET /odata/Settings/UiPath.Server.Configuration.OData.GetConnectionString
+OAuth 必須スコープ: OR.Settings または OR.Settings.Read
+必要なアクセス許可: Settings.View
+
 ## RELATED LINKS
+
+[Get-OrchSetting](Get-OrchSetting.md)
+
+[Get-OrchAuthenticationSetting](Get-OrchAuthenticationSetting.md)
+
+[Get-OrchExecutionSetting](Get-OrchExecutionSetting.md)
+
+[Get-OrchCurrentUser](Get-OrchCurrentUser.md)

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Add-OrchUser
 
 ## SYNOPSIS
-テナントにユーザーを追加します。
+ユーザーをテナントに追加します。
 
 ## SYNTAX
 
@@ -25,27 +25,72 @@ Add-OrchUser [[-Type] <String[]>] [-UserName] <String[]> [[-Roles] <String[]>] [
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Add-OrchUser コマンドレットは、組織の既存のユーザーを UiPath Orchestrator テナントに割り当てます。このコマンドレットは新しいユーザーを作成しません。代わりに、組織内に既に存在するユーザー、または組織やテナントと連携している Active Directory 内に存在するユーザーを割り当てます。
 
-主に呼び出すエンドポイント: GET /odata/Users?$expand=OrganizationUnits,UserRoles, GET /odata/Roles?$expand=Permissions, GET /api/DirectoryService/SearchForUsersAndGroups?domain=autogen&prefix={prefix}&searchContext=All, POST /odata/Users
+テナントに割り当てることができる組織ユーザーを取得するには Get-PmUser を使用します。連携している Active Directory ドメインからユーザーを検索するには Search-OrchDirectory を使用します。
 
-OAuth に必要なスコープ: OR.Users
+割り当てるユーザーに対して、ロール、セッション権限、実行設定（ES_*）、無人ロボット資格情報（UR_*）など、さまざまなテナント固有の設定を指定できます。このコマンドレットでは、割り当てるユーザーのライセンス、ワークスペース制限、および更新ポリシーを設定できます。
 
-必要な権限: (Users.View or Units.Edit or SubFolders.Edit), (Roles.View or Units.Edit or SubFolders.Edit)
+複数のインスタンスで作業する場合は、-Path パラメーターを使用して特定の Orchestrator ドライブをターゲットにします。-UserName パラメーターは、既存の組織またはディレクトリユーザーのユーザー名を受け入れます。
+
+プライマリエンドポイント: GET /odata/Users?$expand=OrganizationUnits,UserRoles, GET /odata/Roles?$expand=Permissions, GET /api/DirectoryService/SearchForUsersAndGroups?domain=autogen&prefix={prefix}&searchContext=All, POST /odata/Users
+
+OAuth 必要スコープ: OR.Users または OR.Users.Read または OR.Users.Write
+
+必要なアクセス許可: (Users.View または Units.Edit または SubFolders.Edit), (Roles.View または Units.Edit または SubFolders.Edit)
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Add-OrchUser DirectoryUser testuser1 -WhatIf
 ```
 
-{{ Add example description here }}
+組織のユーザー testuser1 を現在のテナントに追加します。
+
+### Example 2
+```powershell
+PS C:\> Add-OrchUser -Path Orch1:, Orch2: DirectoryUser testuser2 Developer -WhatIf
+```
+
+ユーザー testuser2 を Orch1 と Orch2 の両方のテナントに Developer ロールで追加します。
+
+### Example 3
+```powershell
+PS Orch1:\> Add-OrchUser DirectoryUser testuser3 Administrator, Developer -MayHaveUserSession True -WhatIf
+```
+
+testuser3 を Administrator および Developer ロールで追加し、ユーザーに Orchestrator Web アクセスを有効にします。
+
+### Example 4
+```powershell
+PS Orch1:\> Add-OrchUser DirectoryRobot RobotAccount1 -WhatIf
+```
+
+RobotAccount1 を DirectoryRobot ユーザータイプとして追加します。
+
+### Example 5
+```powershell
+PS C:\> Import-Csv users.csv | Add-OrchUser -WhatIf
+```
+
+CSV ファイルから Orch1 テナントにユーザーを追加する際に何が起こるかを表示します。この CSV ファイルは Get-OrchUser -ExportCsv で生成できます。
+最小限の CSV 形式:
+Path,Type,UserName,Roles
+Orch1:,DirectoryUser,john.doe,Developer
+Orch1:,DirectoryUser,jane.smith,Administrator
+
+### Example 6
+```powershell
+PS Orch1:\> Get-PmUser *@contoso.com | Add-OrchUser -Roles Developer -WhatIf
+```
+
+contoso.com メールドメインを持つすべての組織ユーザーを取得し、現在のテナントに Developer ロールで追加します。
 
 ## PARAMETERS
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットの実行前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -60,7 +105,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+対象ドライブの名前を指定します。指定されていない場合は、現在のドライブが対象になります。
 
 ```yaml
 Type: String[]
@@ -75,7 +120,7 @@ Accept wildcard characters: False
 ```
 
 ### -Roles
-追加するユーザーに割り当てる Roles を指定します。
+ユーザーに追加するロールを指定します。
 
 ```yaml
 Type: String[]
@@ -90,7 +135,7 @@ Accept wildcard characters: False
 ```
 
 ### -Type
-追加するユーザーの Type を指定します。
+追加するユーザーのタイプを指定します。有効な値: DirectoryUser、DirectoryRobot、DirectoryGroup、DirectoryExternalApplication
 
 ```yaml
 Type: String[]
@@ -105,7 +150,7 @@ Accept wildcard characters: True
 ```
 
 ### -UserName
-追加するユーザーの UserName を指定します。
+追加するユーザーのユーザー名を指定します。
 
 ```yaml
 Type: String[]
@@ -120,7 +165,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットを実行した場合の動作を表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -136,7 +181,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+このコマンドの処理中にスクリプト、コマンドレット、またはプロバイダーによって生成される進行状況の更新に PowerShell がどのように応答するかを指定します。
 
 ```yaml
 Type: ActionPreference
@@ -151,7 +196,7 @@ Accept wildcard characters: False
 ```
 
 ### -ES_AutoDownloadProcess
-{{ Fill ES_AutoDownloadProcess Description }}
+プロセスの自動ダウンロード設定を指定します。
 
 ```yaml
 Type: String
@@ -166,7 +211,7 @@ Accept wildcard characters: False
 ```
 
 ### -ES_FontSmoothing
-{{ Fill ES_FontSmoothing Description }}
+フォントスムージング設定を指定します。
 
 ```yaml
 Type: String
@@ -181,7 +226,7 @@ Accept wildcard characters: False
 ```
 
 ### -ES_LoginToConsole
-{{ Fill ES_LoginToConsole Description }}
+コンソールへのログイン設定を指定します。
 
 ```yaml
 Type: String
@@ -196,7 +241,7 @@ Accept wildcard characters: False
 ```
 
 ### -ES_ResolutionDepth
-{{ Fill ES_ResolutionDepth Description }}
+画面解像度の色深度を指定します。
 
 ```yaml
 Type: Int32
@@ -211,7 +256,7 @@ Accept wildcard characters: False
 ```
 
 ### -ES_ResolutionHeight
-{{ Fill ES_ResolutionHeight Description }}
+画面解像度の高さを指定します。
 
 ```yaml
 Type: Int32
@@ -226,7 +271,7 @@ Accept wildcard characters: False
 ```
 
 ### -ES_ResolutionWidth
-{{ Fill ES_ResolutionWidth Description }}
+画面解像度の幅を指定します。
 
 ```yaml
 Type: Int32
@@ -241,7 +286,7 @@ Accept wildcard characters: False
 ```
 
 ### -ES_StudioNotifyServer
-{{ Fill ES_StudioNotifyServer Description }}
+Studio サーバー通知設定を指定します。
 
 ```yaml
 Type: String
@@ -256,7 +301,7 @@ Accept wildcard characters: False
 ```
 
 ### -ES_TracingLevel
-{{ Fill ES_TracingLevel Description }}
+トレースレベルを指定します。
 
 ```yaml
 Type: String
@@ -271,7 +316,7 @@ Accept wildcard characters: False
 ```
 
 ### -MayHavePersonalWorkspace
-{{ Fill MayHavePersonalWorkspace Description }}
+ユーザーが個人ワークスペースを持つことができるかどうかを指定します。
 
 ```yaml
 Type: String
@@ -286,7 +331,7 @@ Accept wildcard characters: False
 ```
 
 ### -MayHaveRobotSession
-{{ Fill MayHaveRobotSession Description }}
+ユーザーがロボットセッションを持つことができるかどうかを指定します。
 
 ```yaml
 Type: String
@@ -301,7 +346,7 @@ Accept wildcard characters: False
 ```
 
 ### -MayHaveUnattendedSession
-{{ Fill MayHaveUnattendedSession Description }}
+ユーザーが無人セッションを持つことができるかどうかを指定します。
 
 ```yaml
 Type: String
@@ -316,7 +361,7 @@ Accept wildcard characters: False
 ```
 
 ### -MayHaveUserSession
-{{ Fill MayHaveUserSession Description }}
+ユーザーがユーザーセッションを持つことができるかどうかを指定します。
 
 ```yaml
 Type: String
@@ -331,7 +376,7 @@ Accept wildcard characters: False
 ```
 
 ### -RestrictToPersonalWorkspace
-{{ Fill RestrictToPersonalWorkspace Description }}
+ユーザーを個人ワークスペースに制限するかどうかを指定します。
 
 ```yaml
 Type: String
@@ -346,7 +391,7 @@ Accept wildcard characters: False
 ```
 
 ### -UpdatePolicyType
-{{ Fill UpdatePolicyType Description }}
+更新ポリシーのタイプを指定します。
 
 ```yaml
 Type: String
@@ -361,7 +406,7 @@ Accept wildcard characters: False
 ```
 
 ### -UpdatePolicyVersion
-{{ Fill UpdatePolicyVersion Description }}
+更新ポリシーのバージョンを指定します。
 
 ```yaml
 Type: String
@@ -376,7 +421,7 @@ Accept wildcard characters: False
 ```
 
 ### -UR_CredentialStore
-{{ Fill UR_CredentialStore Description }}
+無人ロボット用の資格情報ストアを指定します。
 
 ```yaml
 Type: String
@@ -391,7 +436,7 @@ Accept wildcard characters: False
 ```
 
 ### -UR_CredentialType
-{{ Fill UR_CredentialType Description }}
+無人ロボット用の資格情報タイプを指定します。
 
 ```yaml
 Type: String
@@ -406,7 +451,7 @@ Accept wildcard characters: False
 ```
 
 ### -UR_LimitConcurrentExecution
-{{ Fill UR_LimitConcurrentExecution Description }}
+無人ロボットの同時実行制限を指定します。
 
 ```yaml
 Type: String
@@ -421,7 +466,7 @@ Accept wildcard characters: False
 ```
 
 ### -UR_Password
-{{ Fill UR_Password Description }}
+無人ロボット用のパスワードを指定します。
 
 ```yaml
 Type: String
@@ -436,7 +481,7 @@ Accept wildcard characters: False
 ```
 
 ### -UR_UserName
-{{ Fill UR_UserName Description }}
+無人ロボット用のユーザー名を指定します。
 
 ```yaml
 Type: String
@@ -451,7 +496,7 @@ Accept wildcard characters: False
 ```
 
 ### -UR_CredentialExternalName
-{{ Fill UR_CredentialExternalName Description }}
+無人ロボット用の外部資格情報名を指定します。
 
 ```yaml
 Type: String
@@ -466,7 +511,7 @@ Accept wildcard characters: False
 ```
 
 ### -IsExternalLicensed
-{{ Fill IsExternalLicensed Description }}
+ユーザーが外部ライセンスを持っているかどうかを指定します。
 
 ```yaml
 Type: String

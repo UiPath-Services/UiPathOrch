@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Remove-PmRobotAccount
 
 ## SYNOPSIS
-組織に登録されたロボットアカウントを削除します。
+UiPath Platform Managementからロボットアカウントを削除します。
 
 ## SYNTAX
 
@@ -18,27 +18,45 @@ Remove-PmRobotAccount [-Name] <String[]> [-Path <String[]>] [-ProgressAction <Ac
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Remove-PmRobotAccountコマンドレットは、UiPath Platform Managementからロボットアカウントを削除します。ロボットアカウントは、無人自動化シナリオに使用されるサービスアカウントです。このコマンドレットは、指定されたロボットアカウントとその関連する構成を完全に削除します。
 
-主に呼び出すエンドポイント:
+-Pathパラメータは対象ドライブを指定します。指定しない場合は、現在のドライブが対象となります。
 
-OAuth に必要なスコープ:
+このコマンドレットはPlatform Management APIにアクセスし、すべてのUiPath Orchestratorドライブ（Orch1:、Orch1Tm:、Orch1Du:）で動作します。
 
-必要な権限:
+プライマリ エンドポイント: DELETE /api/RobotAccount/{tenantId}/{robotAccountId}
+
+OAuth 必要なスコープ: PM.RobotAccount
+
+必要な権限: [PLACEHOLDER - Platform Managementロボットアカウント削除権限]
 
 ## EXAMPLES
 
-### Example 1
+### Example 1: 複数のロボットアカウントを削除
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Remove-PmRobotAccount RobotAccount1, RobotAccount2, RobotAccount3 -WhatIf
 ```
 
-{{ Add example description here }}
+単一の操作で複数のロボットアカウントを削除します。
+
+### Example 2: 確認プロンプトで削除
+```powershell
+PS Orch1:\> Remove-PmRobotAccount Robot* -Confirm
+```
+
+実行前に追加の確認プロンプトでロボットアカウントを削除します。
+
+### Example 3: 特定のドライブからロボットアカウントを削除
+```powershell
+PS C:\> Remove-PmRobotAccount -Path Orch1:, Orch2: RobotAccount1
+```
+
+複数の指定されたOrchestratorドライブからロボットアカウントを削除します。
 
 ## PARAMETERS
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。これにより、ロボットアカウントを削除する前の追加の安全チェックが提供されます。
 
 ```yaml
 Type: SwitchParameter
@@ -53,7 +71,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-{{ Fill Name Description }}
+削除するロボットアカウントの名前を指定します。複数の名前を配列として指定できます。このパラメータは必須で、Platform Managementに表示される通りのロボットアカウント名を受け入れます。
 
 ```yaml
 Type: String[]
@@ -68,7 +86,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+対象ドライブの名前を指定します。指定しない場合は、現在のドライブが対象となります。Platform Management APIはすべてのOrchestratorドライブで動作します。
 
 ```yaml
 Type: String[]
@@ -83,8 +101,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
-コマンドレットは実行されません。
+実際に削除操作を実行せずに、コマンドレットを実行した場合に何が起こるかを表示します。これは、変更を行う前にどのロボットアカウントが影響を受けるかを確認するのに便利です。
 
 ```yaml
 Type: SwitchParameter
@@ -99,7 +116,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+スクリプト、コマンドレット、またはプロバイダーによって生成される進行状況の更新にPowerShellがどのように応答するかを指定します。
 
 ```yaml
 Type: ActionPreference
@@ -114,7 +131,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
 
 ## INPUTS
 
@@ -123,5 +140,19 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Object
 ## NOTES
+- このコマンドレットはロボットアカウントを完全に削除し、元に戻すことはできません
+- 実行前に削除操作をプレビューするために-WhatIfパラメータを使用してください
+- ロボットアカウントは無人自動化シナリオに使用されます
+- ロボットアカウントを削除すると、それに依存する自動化プロセスに影響します
+- Platform Managementコマンドレット（"Pm"で始まる）は組織横断的なロボットアカウント管理を提供します
+- 自動化ワークフローの中断を避けるため、削除前に常にロボットアカウントの依存関係を確認してください
 
 ## RELATED LINKS
+
+[Get-PmRobotAccount]()
+
+[New-PmRobotAccount]()
+
+[Set-PmRobotAccount]()
+
+[Copy-PmRobotAccount]()

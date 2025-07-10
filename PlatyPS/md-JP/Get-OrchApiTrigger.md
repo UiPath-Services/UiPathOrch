@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,17 +18,19 @@ Get-OrchApiTrigger [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-Depth <U
 ```
 
 ## DESCRIPTION
-指定した名前の API トリガーを、ターゲットフォルダーから取得します。ターゲットフォルダーは、-Path、-Recurse、-Depth パラメーターで指定します。これらを指定しない場合は、現在のフォルダーをターゲットとします。API トリガーの名前を指定しない場合は、ターゲットフォルダーに含まれる API トリガーをすべて出力します。
+API トリガーは、特定のフォルダー内に存在するフォルダーエンティティです。最初に Set-Location コマンドレット（cd コマンド）を使用してターゲットフォルダーに移動するか、-Path、-Recurse、または -Depth パラメーターを使用してターゲットフォルダーを指定してください。
 
--Path と -Name パラメータには、ワイルドカードを含むテキストをカンマ区切りで複数指定できます。また、これらの値は [Ctrl+Space] もしくは [Tab] を押下することで自動補完入力できます。
+ターゲットフォルダー内の指定された名前の API トリガーに関する情報を出力します。ターゲットフォルダーは、-Path、-Recurse、-Depth パラメーターを使用して指定できます。これらが指定されていない場合、現在の場所がターゲットフォルダーとして使用されます。API トリガー名が指定されていない場合、ターゲットフォルダー内のすべての API トリガーを出力します。
 
--Path、-Recurse、-Depth パラメータを指定するときは、これらをコマンドレット名の直後に指定してください。これにより、後続のパラメータの自動補完が適切に動作するようになります。
+-Path および -Name パラメーターの複数の値は、ワイルドカードを含むコンマ区切りのテキストを使用して指定できます。さらに、[Ctrl+Space] または [Tab] を押すことで、これらの値のオートコンプリートを使用できます。
 
-主に呼び出すエンドポイント: GET /odata/HttpTriggers
+-Path、-Recurse、-Depth パラメーターを指定する場合は、コマンドレット名の直後に配置してください。この配置により、後続のパラメーターのオートコンプリートが正しく機能することが保証されます。
 
-必要なスコープ: (undocumented)
+プライマリエンドポイント: GET /odata/HttpTriggers
 
-必要な権限:
+OAuth 必須スコープ: OR.Triggers.Read
+
+必要なアクセス許可: Folders.View（フォルダーにアクセスするため）、Triggers.View（API トリガー情報を取得するため）
 
 ## EXAMPLES
 
@@ -37,61 +39,68 @@ Get-OrchApiTrigger [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-Depth <U
 PS Orch1:\Shared> Get-OrchApiTrigger
 ```
 
-現在のフォルダーである 'Shared' フォルダーに含まれる API トリガーをすべて表示します。
+現在の場所である 'Shared' フォルダー内のすべての API トリガーを表示します。
 
 ### Example 2
 ```powershell
 PS Orch1:\> Get-OrchApiTrigger -Recurse
 ```
 
-現在のフォルダーと、そのすべてのサブフォルダーに含まれる API トリガーをすべて表示します。ルートフォルダーで実行すると、そのテナントのすべてのフォルダーに含まれる API トリガーをすべて表示します。
+現在のフォルダーとそのすべてのサブフォルダー内のすべての API トリガーを表示します。ルートフォルダーで実行すると、そのテナント内のすべてのフォルダーにわたるすべての API トリガーが表示されます。
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchApiTrigger -Recurse <API trigger names>
+PS Orch1:\> Get-OrchApiTrigger -Recurse *api*
 ```
 
-現在のフォルダーと、そのすべてのサブフォルダーに含まれる API トリガーのうち、指定の名前をもつものを表示します。API トリガー名には、ワイルドカードを含むテキストをカンマ区切りで複数指定できます。API トリガー名は、[Ctrl+Space] もしくは [Ctrol+Tab] を押下して自動補完できます。
+現在のフォルダーとそのすべてのサブフォルダーから、名前に 'api' を含む API トリガーを取得します。
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchApiTrigger -Path <folder names> <API trigger names>
+PS Orch1:\> Get-OrchApiTrigger -Path Orch1:\Production TestTrigger
 ```
 
-指定のフォルダーに含まれる API トリガーのうち、指定の名前をもつものを表示します。フォルダー名には、ワイルドカードを含むテキストをカンマ区切りで複数指定できます。フォルダー名は、[Ctrl+Space] もしくは [Ctrol+Tab] を押下して自動補完できます。
+Production フォルダーから 'TestTrigger' という名前の API トリガーを取得します。
 
 ### Example 5
 ```powershell
-PS C:\> Get-OrchApiTrigger -Recurse -Path Orch1:\,Orch2:\
+PS C:\> Get-OrchApiTrigger -Path Orch1:\,Orch2:\ -Recurse
 ```
 
-Orch1: と Orch2: に含まれる API トリガーをすべて表示します。
+Orch1: および Orch2: 内のすべての API トリガーを表示します。
 
 ### Example 6
 ```powershell
-PS C:\> Get-OrchApiTrigger -Recurse | select Path,Id,Name
+PS Orch1:\> Get-OrchApiTrigger -Recurse | ConvertTo-Json -Depth 2
 ```
 
-指定された列のみを出力します。列名には、ワイルドカードを含むテキストをカンマ区切りで複数指定できます。列名は、[Ctrl+Space] もしくは [Ctrol+Tab] を押下して自動補完できます。
+すべての API トリガーを取得し、Release や MachineRobots などのネストされたプロパティを含む完全な構造を表示します。
 
 ### Example 7
 ```powershell
 PS C:\> Get-OrchApiTrigger -Recurse | Export-Csv c:apiTriggers.csv
 ```
 
-出力を CSV ファイルにエキスポートします。CSV ファイルは、C: ドライブの現在のフォルダーに出力されます。`select` と組み合わせると、CSV の書式を自由にカスタマイズできます。C: ドライブの現在のフォルダーを開くには、`ii c:' と入力します。
+出力を CSV ファイルにエクスポートします。CSV ファイルは C: ドライブの現在の場所に配置されます。含める列を指定するために `select` と組み合わせて CSV 形式をカスタマイズできます。`ii c:` を試して C: ドライブの現在の場所を開いてください。
 
 ### Example 8
 ```powershell
 PS C:\> Get-OrchApiTrigger -Recurse | ConvertTo-Json
 ```
 
-出力を JSON 形式に変換します。Orchestrator が出力した生の結果を確認できます。
+出力を JSON 形式に変換し、Orchestrator からのデータの生のビューを提供します。
+
+### Example 9
+```powershell
+PS Orch1:\> Get-OrchApiTrigger -Recurse -Name *test*,*prod*
+```
+
+すべてのフォルダーから再帰的に、名前に 'test' または 'prod' を含む API トリガーを取得します。
 
 ## PARAMETERS
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+ターゲットフォルダーへの再帰の深度を指定します。深度 0 は現在の場所のみを示し、サブフォルダーは含まれません。
 
 ```yaml
 Type: UInt32
@@ -121,7 +130,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+ターゲットフォルダーを指定します。指定されていない場合、現在のフォルダーがターゲットになります。
 
 ```yaml
 Type: String[]
@@ -136,7 +145,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+{{ ProgressAction の説明を入力 }}
 
 ```yaml
 Type: ActionPreference
@@ -151,7 +160,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+操作にターゲットフォルダーとそのすべてのサブフォルダーを含める必要があることを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -175,5 +184,12 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.HttpTrigger
 ## NOTES
+呼び出されるメインエンドポイント: GET /odata/HttpTriggers
+
+必要なスコープ: OR.Folders.Read
+
+プライマリエンドポイント: GET /odata/HttpTriggers
+OAuth 必須スコープ: OR.Triggers.Read
+必要なアクセス許可: Folders.View、Triggers.View
 
 ## RELATED LINKS
