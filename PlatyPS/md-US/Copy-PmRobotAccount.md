@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,7 +18,7 @@ Copy-PmRobotAccount [-Name] <String[]> [-Destination] <String[]> [-Path <String>
 ```
 
 ## DESCRIPTION
-The Copy-PmRobotAccount cmdlet copies robot accounts from source organizations to destination organizations within UiPath Process Mining. This cmdlet creates copies of robot account configurations, including their authentication settings, permissions, and group associations, enabling robot account management across multiple organization environments.
+The Copy-PmRobotAccount cmdlet copies Platform Management robot accounts from source organizations to destination organizations. This cmdlet creates copies of robot account configurations, including their authentication settings, permissions, and group associations, enabling robot account management across multiple UiPath organizations.
 
 The cmdlet supports copying robot accounts to multiple destination organizations simultaneously. Robot accounts can be identified by their Name parameter, and the cmdlet supports wildcard patterns for copying multiple robot accounts efficiently.
 
@@ -28,11 +28,11 @@ Use the -Name parameter to specify which robot accounts to copy and the -Destina
 
 This is a tenant entity cmdlet. The -Path parameter specifies the source drive name (e.g., Orch1:, Orch2:), and -Destination specifies the target organization drives where robot accounts should be copied.
 
-Primary Endpoint: [PLACEHOLDER - 具体的なAPIエンドポイント]
+Primary Endpoint: POST /api/RobotAccount
 
-OAuth required scopes: [PLACEHOLDER]
+OAuth required scopes: PM.RobotAccount
 
-Required permissions: [PLACEHOLDER]
+Required permissions:
 
 ## EXAMPLES
 

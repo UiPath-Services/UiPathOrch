@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,21 +18,21 @@ Copy-PmUser [-Email] <String[]> [-Destination] <String[]> [-Path <String>] [-Pro
 ```
 
 ## DESCRIPTION
-The Copy-PmUser cmdlet copies organizational users from source organizations to destination organizations within UiPath Process Mining. This cmdlet creates copies of user configurations, including their permissions, settings, and group associations, enabling user management across multiple organization environments.
+The Copy-PmUser cmdlet copies Platform Management users from source organizations to destination organizations. This cmdlet creates copies of user configurations, including their permissions, settings, and group associations, enabling user management across multiple UiPath organizations.
 
 The cmdlet supports copying users to multiple destination organizations simultaneously. Users can be identified by their Email parameter (which has an alias of UserName), and the cmdlet supports wildcard patterns for copying multiple users efficiently.
 
 If the groups to which the users belong do not exist in the destination organization, they are automatically created during the copy operation, ensuring complete user configuration transfer.
 
-Use the -Email parameter to specify which users to copy and the -Destination parameter to specify the target organizations. The -Path parameter enables working with multiple source organizations when not operating from within a specific organization context.
+Use the -Email parameter to specify which users to copy and the -Destination parameter to specify the target environments. The -Path parameter enables working with multiple source organizations when not operating from within a specific organization context.
 
 This is a tenant entity cmdlet. The -Path parameter specifies the source drive name (e.g., Orch1:, Orch2:), and -Destination specifies the target organization drives where users should be copied.
 
-Primary Endpoint: [PLACEHOLDER - 具体的なAPIエンドポイント]
+Primary Endpoint: POST /api/User/BulkCreate
 
-OAuth required scopes: [PLACEHOLDER]
+OAuth required scopes: PM.User
 
-Required permissions: [PLACEHOLDER]
+Required permissions:
 
 ## EXAMPLES
 

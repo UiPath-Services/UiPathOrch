@@ -132,7 +132,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### UiPath.PowerShell.Entities.ExternalResource
 ## NOTES
 - This cmdlet uses Platform Management API and works on any UiPathOrch drive
-- API resources include major UiPath services: Orchestrator, Test Manager, Document Understanding, AI Center, Process Mining, Data Service, and others
+- API resources include major UiPath services: Orchestrator, Test Manager, Document Understanding, AI Center, Data Service, and others
 - The scopes property contains detailed OAuth scope information essential for API integration
 - Common Orchestrator scopes follow the pattern OR.{Area} and OR.{Area}.Read/Write (e.g., OR.Assets, OR.Assets.Read, OR.Assets.Write)
 - Use ConvertTo-Json to explore the complete scope structure and understand available permissions
