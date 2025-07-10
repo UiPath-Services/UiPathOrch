@@ -27,11 +27,11 @@ Import-OrchQueueItemコマンドレットは、CSVファイルから指定され
 
 このコマンドレットはフォルダ上で動作します。-Pathパラメータを使用して、キューが配置されているターゲットフォルダを指定します。CSVファイルには、適切な列ヘッダーを持つ適切にフォーマットされたキューアイテムデータが含まれている必要があります。
 
-プライマリ エンドポイント: [PLACEHOLDER - 具体的なAPIエンドポイント]
+プライマリ エンドポイント: GET /odata/QueueDefinitions, POST /odata/Queues/UiPathODataSvc.BulkAddQueueItems
 
 OAuth 必要なスコープ: OR.Queues または OR.Queues.Write
 
-必要な権限: Queues.Edit
+必要な権限: Transactions.Create
 
 ## EXAMPLES
 
