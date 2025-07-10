@@ -26,7 +26,7 @@ Use the -JobId parameter to specify which jobs' media files to export. The -Dest
 
 This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters. The -Recurse parameter enables exporting job media from all subfolders.
 
-Primary Endpoint: [PLACEHOLDER - API endpoint]
+Primary Endpoint: GET /odata/ExecutionMedia
 
 OAuth required scopes: OR.Jobs or OR.Jobs.Read
 
