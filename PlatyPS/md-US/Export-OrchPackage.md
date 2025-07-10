@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,7 +26,7 @@ Use the -Id parameter to specify which packages to export by their package ID. T
 
 This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters. The -Recurse parameter enables exporting packages from all subfolders.
 
-Primary Endpoint: [PLACEHOLDER - 具体的なAPIエンドポイント]
+Primary Endpoint: [PLACEHOLDER - API endpoint]
 
 OAuth required scopes: OR.Assets or OR.Assets.Read
 
