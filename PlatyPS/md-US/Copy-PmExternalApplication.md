@@ -18,7 +18,7 @@ Copy-PmExternalApplication [[-Name] <String[]>] [-Destination] <String[]> [-Path
 ```
 
 ## DESCRIPTION
-The Copy-PmExternalApplication cmdlet copies external applications from source organizations to destination organizations within UiPath Process Mining. This cmdlet creates copies of external application configurations, including their authentication settings, permissions, and group associations, enabling external application management across multiple organization environments.
+The Copy-PmExternalApplication cmdlet copies Platform Management external applications from source organizations to destination organizations. This cmdlet creates copies of external application configurations, including their authentication settings, permissions, and group associations, enabling external application management across multiple UiPath organizations.
 
 The cmdlet supports copying external applications to multiple destination organizations simultaneously. External applications can be identified by their Name parameter, and the cmdlet supports wildcard patterns for copying multiple applications efficiently.
 
@@ -28,11 +28,11 @@ Use the -Name parameter to specify which external applications to copy and the -
 
 This is a tenant entity cmdlet. The -Path parameter specifies the source drive name (e.g., Orch1:, Orch2:), and -Destination specifies the target organization drives where external applications should be copied.
 
-Primary Endpoint: [PLACEHOLDER - requires verification of Platform Management External Application copy endpoint]
+Primary Endpoint: POST /api/ExternalClient
 
-OAuth required scopes: [PLACEHOLDER - requires verification of Platform Management External Application scopes]
+OAuth required scopes: PM.ExternalApplication
 
-Required permissions: [PLACEHOLDER - requires verification of Platform Management External Application permissions]
+Required permissions:
 
 ## EXAMPLES
 

@@ -134,7 +134,7 @@ Accept wildcard characters: False
 
 ## NOTES
 - このコマンドレットは Platform Management API を使用し、任意の UiPathOrch ドライブで動作します
-- API リソースには、主要な UiPath サービスが含まれます: Orchestrator、Test Manager、Document Understanding、AI Center、Process Mining、Data Service、その他
+- API リソースには、主要な UiPath サービスが含まれます: Orchestrator、Test Manager、Document Understanding、AI Center、Data Service、その他
 - scopes プロパティには、API 統合に不可欠な詳細な OAuth スコープ情報が含まれています
 - 一般的な Orchestrator スコープは OR.{Area} および OR.{Area}.Read/Write のパターンに従います（例: OR.Assets、OR.Assets.Read、OR.Assets.Write）
 - 完全なスコープ構造を調べ、利用可能な権限を理解するには、ConvertTo-Json を使用してください

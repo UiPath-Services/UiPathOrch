@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,7 +18,7 @@ Copy-PmGroup [[-GroupName] <String[]>] [-Destination] <String[]> [-Path <String>
 ```
 
 ## DESCRIPTION
-The Copy-PmGroup cmdlet copies groups from source organizations to destination organizations within UiPath Process Mining. This cmdlet creates copies of group configurations, including their member associations and permissions, enabling group management across multiple organization environments.
+The Copy-PmGroup cmdlet copies Platform Management groups from source organizations to destination organizations. This cmdlet creates copies of group configurations, including their member associations and permissions, enabling group management across multiple UiPath organizations.
 
 The cmdlet supports copying groups to multiple destination organizations simultaneously. Groups can be identified by their GroupName parameter, and the cmdlet supports wildcard patterns for copying multiple groups efficiently.
 
@@ -28,11 +28,11 @@ Use the -GroupName parameter to specify which groups to copy and the -Destinatio
 
 This is a tenant entity cmdlet. The -Path parameter specifies the source drive name (e.g., Orch1:, Orch2:), and -Destination specifies the target organization drives where groups should be copied.
 
-Primary Endpoint: [PLACEHOLDER - 具体的なAPIエンドポイント]
+Primary Endpoint: POST /api/Group
 
-OAuth required scopes: [PLACEHOLDER]
+OAuth required scopes: PM.Group
 
-Required permissions: [PLACEHOLDER]
+Required permissions: 
 
 ## EXAMPLES
 

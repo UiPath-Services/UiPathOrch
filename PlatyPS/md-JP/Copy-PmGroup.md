@@ -18,7 +18,7 @@ Copy-PmGroup [[-GroupName] <String[]>] [-Destination] <String[]> [-Path <String>
 ```
 
 ## DESCRIPTION
-Copy-PmGroup コマンドレットは、UiPath Process Mining のソース組織から宛先組織にグループをコピーします。このコマンドレットは、メンバー関連付けと権限を含むグループ構成のコピーを作成し、複数の組織環境間でのグループ管理を可能にします。
+Copy-PmGroup コマンドレットは、UiPath Platform Management を使用してソース組織から宛先組織にPlatform Managementグループをコピーします。このコマンドレットは、メンバー関連付けと権限を含むグループ構成のコピーを作成し、複数のUiPath組織間でのグループ管理を可能にします。
 
 このコマンドレットは、複数の宛先組織への同時グループコピーをサポートします。グループは GroupName パラメーターで識別でき、複数のグループを効率的にコピーするためのワイルドカードパターンをサポートします。
 
@@ -28,11 +28,11 @@ Copy-PmGroup コマンドレットは、UiPath Process Mining のソース組織
 
 これはテナントエンティティコマンドレットです。-Path パラメーターはソースドライブ名（例：Orch1:, Orch2:）を指定し、-Destination はグループをコピーするターゲット組織ドライブを指定します。
 
-プライマリエンドポイント: [PLACEHOLDER - 具体的なAPIエンドポイント]
+プライマリエンドポイント: POST /api/Group
 
-OAuth 必要なスコープ: [PLACEHOLDER]
+OAuth 必要なスコープ: PM.Group
 
-必要な権限: [PLACEHOLDER]
+必要な権限: 
 
 ## EXAMPLES
 
