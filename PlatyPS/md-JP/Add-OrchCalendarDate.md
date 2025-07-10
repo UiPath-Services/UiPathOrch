@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Add-OrchCalendarDate
 
 ## SYNOPSIS
-非稼働日カレンダーに、日付を追加します。
+非稼働日カレンダーに日付を追加します。
 
 ## SYNTAX
 
@@ -18,27 +18,62 @@ Add-OrchCalendarDate [-Name] <String[]> [[-ExcludedDate] <DateTime[]>] [-Include
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Add-OrchCalendarDate コマンドレットは、UiPath Orchestrator の非稼働日カレンダーに指定された日付を追加します。このコマンドレットを使用すると、自動化プロセスを実行しない休日、メンテナンス期間、その他のビジネス固有の日付を非稼働日として定義できます。
 
-主に呼び出すエンドポイント: GET /odata/Calendars, GET /odata/Calendars({calendarId}), POST /odata/Calendar, PUT /odata/Calendars({calendarId})
+-Name パラメーターを使用して更新するカレンダーを指定し、-ExcludedDate パラメーターを使用して非稼働日として追加する日付を指定します。このコマンドレットは、複数のカレンダーに複数の日付を同時に追加することをサポートしています。
 
-OAuth に必要なスコープ: OR.Settings
+デフォルトでは、カレンダーの精度を維持するために過去の日付の追加を防ぎます。カレンダーのセットアップやデータ移行シナリオで履歴日付の追加が必要な場合は、-IncludePastDate パラメーターを使用してください。
 
-必要な権限: Settings.Create Settings.Edit
+このコマンドレットは、テナントレベルのカレンダーエンティティで動作し、カレンダー名のワイルドカードパターンをサポートしているため、複数のカレンダーにわたる一括操作が可能です。
+
+プライマリエンドポイント: GET /odata/Calendars, GET /odata/Calendars({calendarId}), PUT /odata/Calendars({calendarId})
+
+OAuth 必要スコープ: OR.Settings または OR.Settings.Read または OR.Settings.Write
+
+必要なアクセス許可: Settings.Edit
 
 ## EXAMPLES
 
-### Example 1
+### EXAMPLES 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Add-OrchCalendarDate MyCalendar1 (Get-Date).AddDays(7)
 ```
 
-{{ Add example description here }}
+今日から7日後の日付を "MyCalendar1" カレンダーに非稼働日として位置パラメーターを使用して追加します。
+
+### EXAMPLES 2
+```powershell
+PS Orch1:\> Add-OrchCalendarDate MyCalendar1 2025-12-25, 2025-12-26
+```
+
+クリスマスとボクシングデーを "MyCalendar1" カレンダーに非稼働日として追加します。
+
+### EXAMPLES 3
+```powershell
+PS Orch1:\> Add-OrchCalendarDate My*, Your* (Get-Date).AddDays(14)
+```
+
+ワイルドカードを使用して "My*" と "Your*" のパターンに一致するすべてのカレンダーに今日から14日後の日付を追加します。
+
+### EXAMPLES 4
+```powershell
+PS Orch1:\> Add-OrchCalendarDate MyCalendar1 2025-01-01 -IncludePastDate -WhatIf
+```
+
+-IncludePastDate パラメーターを使用して過去の日付をカレンダーに追加する際の動作を -WhatIf を使用して安全に確認します。
+
+### EXAMPLES 5
+```powershell
+PS Orch1:\> $holidays = 2025-12-25, 2025-12-31, 2026-01-01
+PS Orch1:\> Add-OrchCalendarDate MyCalendar $holidays
+```
+
+変数に格納された複数の休日をカレンダーに追加します。
 
 ## PARAMETERS
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットの実行前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -68,7 +103,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-非稼働日を追加するカレンダーの Name を指定します。
+非稼働日を追加するカレンダーの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -83,7 +118,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+対象ドライブの名前を指定します。指定されていない場合は、現在のドライブが対象になります。
 
 ```yaml
 Type: String[]
@@ -98,7 +133,7 @@ Accept wildcard characters: True
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットを実行した場合の動作を表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -129,7 +164,7 @@ Accept wildcard characters: False
 ```
 
 ### -IncludePastDate
-昨日より以前の日付を追加することを許容します。
+昨日以前の日付の追加を許可します。
 
 ```yaml
 Type: SwitchParameter
@@ -154,5 +189,14 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Object
 ## NOTES
+このコマンドレットは、テナントレベルのカレンダーエンティティで動作します。デフォルトでは、カレンダーの精度を維持するために過去の日付を追加することはできません。履歴日付の追加が必要な場合は、-IncludePastDate パラメーターを使用してください。
+
+Get-OrchCalendar を使用して利用可能なカレンダーを一覧表示し、日付の追加が成功したことを確認してください。
 
 ## RELATED LINKS
+
+[Get-OrchCalendar](Get-OrchCalendar.md)
+
+[Remove-OrchCalendarDate](Remove-OrchCalendarDate.md)
+
+[Copy-OrchCalendar](Copy-OrchCalendar.md)

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Remove-OrchCalendar
 
 ## SYNOPSIS
-カレンダーを削除します。
+Orchestratorからカレンダーを削除します。
 
 ## SYNTAX
 
@@ -18,27 +18,29 @@ Remove-OrchCalendar [-Name] <String[]> [-Path <String[]>] [-ProgressAction <Acti
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Remove-OrchCalendarコマンドレットは、Orchestrator環境からカレンダーを永続的に削除します。カレンダーは、オートメーションプロセスのビジネススケジュールとタイムゾーンを定義し、営業日、祝日、特定の時間帯を含むことができます。
 
-主に呼び出すエンドポイント: DELETE /odata/Calendars({key})
+カレンダーが削除されると、関連するすべてのスケジュール定義、営業日、祝日、およびタイムゾーン設定が永続的に削除されます。この操作は元に戻すことができないため、特にトリガーやスケジュールされたプロセスで積極的に使用されているカレンダーを削除する前に、慎重に検討する必要があります。
 
-OAuth に必要なスコープ: OR.Settings
+プライマリ エンドポイント: DELETE /odata/Calendars({calendarId})
 
-必要な権限: (Settings.Delete)
+OAuth 必要なスコープ: OR.Settings
+
+必要な権限: Settings.Delete
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS C:\> Remove-OrchCalendar TestCalendar
 ```
 
-{{ Add example description here }}
+現在のOrchestrator環境から"TestCalendar"という名前のカレンダーを削除します。
 
 ## PARAMETERS
 
 ### -Name
-削除するカレンダーの Name を指定します。
+削除するカレンダーの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -52,69 +54,8 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
 ```
 
-### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
-### -ProgressAction
-{{ Fill ProgressAction Description }}
-
-```yaml
-Type: ActionPreference
-Parameter Sets: (All)
-Aliases: proga
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases: cf
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
-コマンドレットは実行されません。
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases: wi
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています。
 
 ## INPUTS
 
@@ -125,3 +66,9 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## NOTES
 
 ## RELATED LINKS
+
+[Get-OrchCalendar](Get-OrchCalendar.md)
+[Copy-OrchCalendar](Copy-OrchCalendar.md)
+[Add-OrchCalendarDate](Add-OrchCalendarDate.md)
+[Remove-OrchCalendarDate](Remove-OrchCalendarDate.md)
+[Get-OrchTrigger](Get-OrchTrigger.md)

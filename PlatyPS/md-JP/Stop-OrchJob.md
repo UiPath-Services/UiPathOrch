@@ -8,7 +8,7 @@ schema: 2.0.0
 # Stop-OrchJob
 
 ## SYNOPSIS
-ジョブを停止します。
+実行中または待機中のUiPathロボットジョブを停止します。
 
 ## SYNTAX
 
@@ -18,27 +18,66 @@ Stop-OrchJob [-Id] <Int64[]> [-Force] [-Path <String[]>] [-Recurse] [-Depth <UIn
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Orchestratorフォルダで実行中または待機中のUiPathロボットジョブを停止します。このコマンドレットは、ジョブを正常に停止するか、応答しないジョブを強制終了することができます。
 
-主に呼び出すエンドポイント:
+実行中状態のジョブは正常に停止され、現在のアクティビティを完了してクリーンアップを実行できます。待機中状態のジョブは、実行が開始される前にキャンセルされます。
 
-OAuth に必要なスコープ:
+応答しないジョブを強制的に終了するには-Forceパラメータを使用しますが、これにより不完全なクリーンアップやデータの不整合が発生する可能性があります。
 
-必要な権限:
+プライマリエンドポイント: POST /odata/Jobs/UiPath.Server.Configuration.OData.StopJobs
+
+OAuth必須スコープ: OR.Jobs
+
+必要な権限: Jobs.Edit
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Stop-OrchJob 123456 -WhatIf
 ```
 
-{{ Add example description here }}
+実際にジョブを停止せずに、ジョブを停止した場合に何が起こるかを表示します。
+
+### Example 2
+```powershell
+PS Orch1:\Shared> Stop-OrchJob 123456
+```
+
+指定されたジョブを正常に停止します。
+
+### Example 3
+```powershell
+PS Orch1:\> Stop-OrchJob 123456, 789012 -Confirm
+```
+
+確認プロンプトを表示して複数のジョブを停止します。
+
+### Example 4
+```powershell
+PS Orch1:\> Stop-OrchJob 123456 -Force
+```
+
+応答しないジョブを強制的に終了します。
+
+### Example 5
+```powershell
+PS Orch1:\> Get-OrchJob -State Running | Stop-OrchJob -WhatIf
+```
+
+パイプライン入力を使用して、どの実行中ジョブが停止されるかを表示します。
+
+### Example 6
+```powershell
+PS Orch1:\> Get-OrchJob -State Pending -ReleaseName TestProcess | Stop-OrchJob -Confirm
+```
+
+特定のプロセスの待機中ジョブを確認付きでキャンセルします。
 
 ## PARAMETERS
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+フォルダ再帰の深度を指定します。深度0は現在のフォルダのみをターゲットにします。
 
 ```yaml
 Type: UInt32
@@ -53,7 +92,7 @@ Accept wildcard characters: False
 ```
 
 ### -Force
-{{ Fill Force Description }}
+正常なシャットダウンなしでジョブを強制終了します。不完全なクリーンアップの原因となる可能性があるため、注意して使用してください。
 
 ```yaml
 Type: SwitchParameter
@@ -62,13 +101,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -Id
-{{ Fill Id Description }}
+停止するジョブのIDを指定します。複数の値をサポートします。
 
 ```yaml
 Type: Int64[]
@@ -83,7 +122,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+ターゲットフォルダを指定します。複数のフォルダにはカンマ区切りの値を使用します。ワイルドカードをサポートします。指定されていない場合は、現在のフォルダをターゲットにします。
 
 ```yaml
 Type: String[]
@@ -98,7 +137,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+コマンドレット実行中の進行状況情報の表示方法を制御します。
 
 ```yaml
 Type: ActionPreference
@@ -113,7 +152,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+ターゲットフォルダとそのすべてのサブフォルダを操作に含めます。
 
 ```yaml
 Type: SwitchParameter
@@ -122,13 +161,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+ジョブを停止する前に確認を求めます。複数のジョブを停止する場合に推奨されます。
 
 ```yaml
 Type: SwitchParameter
@@ -137,14 +176,13 @@ Aliases: cf
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
-コマンドレットは実行されません。
+実際にジョブを停止せずに、コマンドレットを実行した場合に何が起こるかを表示します。安全性確認のために推奨されます。
 
 ```yaml
 Type: SwitchParameter
@@ -153,13 +191,13 @@ Aliases: wi
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および -WarningVariable の共通パラメータをサポートします。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
 
 ## INPUTS
 
@@ -170,5 +208,20 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Object
 ## NOTES
+ジョブエンティティはフォルダスコープです。フォルダに移動するか、-Path、-Recurse、または-Depthパラメータを使用してターゲットフォルダを指定する必要があります。
+
+実行中状態のジョブは、-Forceが指定されていない限り正常に停止されます。待機中状態のジョブは即座にキャンセルされます。
+
+特にGet-OrchJobからのパイプライン入力を使用する場合は、実際の実行前に-WhatIfを使用してジョブ終了をプレビューしてください。
+
+ジョブが応答せず正常に停止できない場合にのみ-Forceを使用してください。強制終了により不完全なクリーンアップやデータの不整合が発生する可能性があります。
+
+複数のジョブを停止する場合は、各ジョブの終了を個別に確認するために-Confirmを使用してください。
 
 ## RELATED LINKS
+
+[Start-OrchJob](Start-OrchJob.md)
+
+[Get-OrchJob](Get-OrchJob.md)
+
+[Open-OrchJob](Open-OrchJob.md)

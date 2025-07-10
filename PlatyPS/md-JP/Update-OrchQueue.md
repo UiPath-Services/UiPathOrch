@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -23,11 +23,11 @@ Update-OrchQueue [-Name] <String[]> [-NewName <String>] [-Description <String>]
 ```
 
 ## DESCRIPTION
-CSV からのインポートをサポートします。インポート可能な CSV の書式は、Get-OrchQueue -Recurse -ExportCsv c: で取得できます。
+CSV からのインポートをサポートします。インポート可能な CSV の形式は、Get-OrchQueue -Recurse -ExportCsv c: を使用して取得できます。
 
-主に呼び出すエンドポイント: POST /odata/QueueDefinitions/UiPath.Server.Configuration.OData.EditQueue, GET /odata/QueueRetention({queueId}), GET /odata/Releases, GET /odata/Buckets
+プライマリ エンドポイント: POST /odata/QueueDefinitions/UiPath.Server.Configuration.OData.EditQueue, GET /odata/QueueRetention({queueId}), GET /odata/Releases, GET /odata/Buckets
 
-OAuth に必要なスコープ: OR.Queues OR.Execution.Read OR.Administration.Read
+OAuth 必要なスコープ: OR.Queues
 
 必要な権限: Queues.Edit Queues.View Processes.View Buckets.View
 
@@ -73,7 +73,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -88,7 +88,7 @@ Accept wildcard characters: False
 ```
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+対象フォルダーへの再帰の深度を指定します。深度0は現在の場所のみを示し、サブフォルダーは含まれません。
 
 ```yaml
 Type: UInt32
@@ -103,7 +103,7 @@ Accept wildcard characters: False
 ```
 
 ### -Description
-更新するキューの Description を指定します。
+更新するキューの説明を指定します。
 
 ```yaml
 Type: String
@@ -118,7 +118,7 @@ Accept wildcard characters: False
 ```
 
 ### -MaxNumberOfRetries
-更新するキューの MaxNumberOfRetries を指定します。
+更新するキューの最大再試行回数を指定します。
 
 ```yaml
 Type: Int32
@@ -133,7 +133,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-更新するキューの Name を指定します。
+更新するキューの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -163,7 +163,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+対象フォルダーを指定します。指定されていない場合は、現在のフォルダーが対象になります。
 
 ```yaml
 Type: String[]
@@ -178,7 +178,7 @@ Accept wildcard characters: True
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+操作に対象フォルダーとそのすべてのサブフォルダーを含めることを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -193,7 +193,7 @@ Accept wildcard characters: False
 ```
 
 ### -Release
-更新するキューの Release を指定します。
+更新するキューのリリースを指定します。
 
 ```yaml
 Type: String
@@ -208,7 +208,7 @@ Accept wildcard characters: True
 ```
 
 ### -RetentionAction
-更新するキューの RetentionAction を指定します。
+更新するキューの保持アクションを指定します。
 
 ```yaml
 Type: String
@@ -223,7 +223,7 @@ Accept wildcard characters: False
 ```
 
 ### -RetentionBucket
-更新するキューの RetentionBucket を指定します。
+更新するキューの保持バケットを指定します。
 
 ```yaml
 Type: String
@@ -238,7 +238,7 @@ Accept wildcard characters: True
 ```
 
 ### -RetentionPeriod
-更新するキューの RetentionPeriod を指定します。
+更新するキューの保持期間を指定します。
 
 ```yaml
 Type: Int32
@@ -253,7 +253,7 @@ Accept wildcard characters: False
 ```
 
 ### -RetryAbandonedItems
-更新するキューの RetryAbandonedItems を指定します。
+更新するキューの破棄されたアイテムの再試行を指定します。
 
 ```yaml
 Type: String
@@ -268,7 +268,7 @@ Accept wildcard characters: False
 ```
 
 ### -RiskSlaInMinutes
-更新するキューの RiskSlaInMinutes を指定します。
+更新するキューのリスク SLA（分）を指定します。
 
 ```yaml
 Type: Int32
@@ -283,7 +283,7 @@ Accept wildcard characters: False
 ```
 
 ### -SlaInMinutes
-更新するキューの SlaInMinutes を指定します。
+更新するキューの SLA（分）を指定します。
 
 ```yaml
 Type: Int32
@@ -313,7 +313,7 @@ Accept wildcard characters: False
 ```
 
 ### -Tags
-更新するキューの Tags を指定します。
+更新するキューのタグを指定します。
 
 ```yaml
 Type: String[]
@@ -328,7 +328,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットが実行された場合の動作を表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -344,7 +344,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+このコマンドレットによって生成される進行状況の更新に PowerShell がどのように応答するかを決定します。既定値は Continue です。
 
 ```yaml
 Type: ActionPreference
@@ -359,7 +359,7 @@ Accept wildcard characters: False
 ```
 
 ### -NewName
-{{ Fill NewName Description }}
+[PLACEHOLDER - requires verification of NewName parameter description]
 
 ```yaml
 Type: String
@@ -374,7 +374,7 @@ Accept wildcard characters: False
 ```
 
 ### -StaleRetentionAction
-{{ Fill StaleRetentionAction Description }}
+[PLACEHOLDER - requires verification of StaleRetentionAction parameter description]
 
 ```yaml
 Type: String
@@ -389,7 +389,7 @@ Accept wildcard characters: False
 ```
 
 ### -StaleRetentionBucket
-{{ Fill StaleRetentionBucket Description }}
+[PLACEHOLDER - requires verification of StaleRetentionBucket parameter description]
 
 ```yaml
 Type: String
@@ -404,7 +404,7 @@ Accept wildcard characters: True
 ```
 
 ### -StaleRetentionPeriod
-{{ Fill StaleRetentionPeriod Description }}
+[PLACEHOLDER - requires verification of StaleRetentionPeriod parameter description]
 
 ```yaml
 Type: Int32
@@ -419,7 +419,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメーター（-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable）をサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,11 +18,15 @@ Get-OrchTestSet [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-Depth <UInt
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Get-OrchTestSet コマンドレットは、UiPath Orchestratorからテストセットを取得します。テストセットは、自動化プロセスを検証するために一緒に実行できるテストケースのコレクションです。
 
-主に呼び出すエンドポイント: GET /odata/TestSets?$filter=(SourceType eq 'User')&$expand=Environment
+これはフォルダエンティティコマンドレットです。このコマンドレットを使用するには、最初にSet-Location（cd）を使用してターゲットフォルダに移動するか、-Path、-Recurse、または-Depthパラメータを使用してターゲットフォルダを指定する必要があります。
 
-OAuth に必要なスコープ: OR.TestSets or OR.TestSets.Read
+パラメータが指定されていない場合、現在のフォルダ内のすべてのテストセットが返されます。
+
+プライマリエンドポイント: GET /odata/TestSets?$filter=(SourceType eq 'User')&$expand=Environment
+
+OAuth必須スコープ: OR.TestSets または OR.TestSets.Read
 
 必要な権限: TestSets.View
 
@@ -30,15 +34,43 @@ OAuth に必要なスコープ: OR.TestSets or OR.TestSets.Read
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Get-OrchTestSet
 ```
 
-{{ Add example description here }}
+現在のフォルダ内のすべてのテストセットを取得します。
+
+### Example 2
+```powershell
+PS Orch1:\Shared> Get-OrchTestSet RegressionTests
+```
+
+位置パラメータを使用して、現在のフォルダから「RegressionTests」という名前のテストセットを取得します。
+
+### Example 3
+```powershell
+PS Orch1:\Shared> Get-OrchTestSet *Smoke*
+```
+
+ワイルドカードパターンマッチングを使用して、名前に「Smoke」を含むすべてのテストセットを取得します。
+
+### Example 4
+```powershell
+PS Orch1:\> Get-OrchTestSet -Recurse
+```
+
+現在のフォルダとそのすべてのサブフォルダから再帰的にすべてのテストセットを取得します。
+
+### Example 5
+```powershell
+PS C:\> Get-OrchTestSet -Path Orch1:\Production, Orch1:\Shared UITests
+```
+
+任意の場所からの実行を示して、ProductionフォルダとSharedフォルダの両方から「UITests」テストセットを取得します。
 
 ## PARAMETERS
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+再帰操作の最大深度レベルを指定します。深度0は現在の場所のみを示します。高い値はより多くのサブフォルダレベルを含みます。
 
 ```yaml
 Type: UInt32
@@ -53,7 +85,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-取得するテストセットの Name を指定します。
+取得するテストセットの名前を指定します。ワイルドカード文字（*および?）をサポートし、パターンマッチングに使用できます。
 
 ```yaml
 Type: String[]
@@ -68,7 +100,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+テストセットを検索するターゲットフォルダを指定します。指定されていない場合は、現在のフォルダがターゲットになります。ワイルドカードをサポートします。
 
 ```yaml
 Type: String[]
@@ -83,7 +115,7 @@ Accept wildcard characters: True
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+ターゲットフォルダとそのすべてのサブフォルダを操作に含めることを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -98,7 +130,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+このコマンドレットによって生成される進行状況の更新にPowerShellがどのように応答するかを決定します。デフォルト値はContinueです。
 
 ```yaml
 Type: ActionPreference
@@ -113,7 +145,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および -WarningVariable の共通パラメータをサポートします。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
 
 ## INPUTS
 
@@ -124,5 +156,9 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### UiPath.PowerShell.Entities.TestSet
 
 ## NOTES
+
+プライマリエンドポイント: GET /odata/TestSets
+OAuth必須スコープ: OR.TestSets または OR.TestSets.Read
+必要な権限: TestSets.View
 
 ## RELATED LINKS

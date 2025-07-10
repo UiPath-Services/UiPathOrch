@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Disable-OrchTrigger
 
 ## SYNOPSIS
-トリガーを無効にします。
+指定された自動化トリガーを無効にして、スケジュールされた実行を防止します。
 
 ## SYNTAX
 
@@ -18,11 +18,17 @@ Disable-OrchTrigger [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Depth <UI
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Disable-OrchTriggerコマンドレットは、UiPath Orchestrator内の指定された自動化トリガーを無効にし、設定されたスケジュールや条件に従って実行されないようにします。トリガーは自動化プロセスがいつ、どのように実行されるべきかを定義し、無効にすることで自動化実行が一時的に停止されます。
 
-主に呼び出すエンドポイント: POST /odata/ProcessSchedules/UiPath.Server.Configuration.OData.SetEnabled
+トリガーを無効にすることは、メンテナンス期間、トラブルシューティング、テストシナリオ、または特定の自動化プロセスを一時的に停止する必要がある場合に便利です。トリガー設定は保持され、Enable-OrchTriggerを使用して簡単に再有効化できます。
 
-OAuth に必要なスコープ: OR.Jobs
+このコマンドレットはフォルダエンティティ操作として動作し、適切なフォルダコンテキストに移動するか、-Pathパラメータを使用してターゲットフォルダを指定する必要があります。サブフォルダ内のトリガーを含めるには-Recurseパラメータを使用し、再帰レベルを制御するには-Depthを使用します。
+
+トリガーの無効化は自動化実行スケジュールに直接影響します。操作をプレビューするには-WhatIfを使用し、ビジネスプロセスに影響を与える可能性のある複数のトリガーを無効にする場合は-Confirmを使用して確認プロンプトを表示します。
+
+プライマリエンドポイント: POST /odata/ProcessSchedules/UiPath.Server.Configuration.OData.SetEnabled
+
+OAuth必要スコープ: OR.Jobs
 
 必要な権限: Schedules.Edit
 
@@ -30,15 +36,50 @@ OAuth に必要なスコープ: OR.Jobs
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Production> Disable-OrchTrigger DailyReportTrigger -WhatIf
 ```
 
-{{ Add example description here }}
+現在のProductionフォルダでDailyReportTriggerを無効にする場合の動作を表示します。
+
+### Example 2
+```powershell
+PS C:\> Disable-OrchTrigger -Path Orch1:\Production -Name *Maintenance* -Confirm
+```
+
+確認プロンプトを表示して、Productionフォルダで「Maintenance」が含まれる名前のすべてのトリガーを無効にします。
+
+### Example 3
+```powershell
+PS Orch1:\> Disable-OrchTrigger -Recurse TestTrigger1, TestTrigger2
+```
+
+すべてのフォルダでTestTrigger1とTestTrigger2を無効にします。
+
+### Example 4
+```powershell
+PS Orch1:\Development> Disable-OrchTrigger *Debug* -WhatIf
+```
+
+Developmentフォルダで「Debug」が含まれる名前のすべてのトリガーを無効にする場合の動作を表示します。
+
+### Example 5
+```powershell
+PS C:\> Disable-OrchTrigger -Path Orch1:\Production -Recurse -Depth 1 -Name WeekendTrigger
+```
+
+Productionフォルダとその直下のサブフォルダでWeekendTriggerを無効にします。
+
+### Example 6
+```powershell
+PS Orch1:\> Get-OrchTrigger | Where-Object {$_.NextExecution -lt (Get-Date).AddDays(1)} | Disable-OrchTrigger -Confirm
+```
+
+翌日以内に実行予定のすべてのトリガーを確認プロンプトで無効にします。
 
 ## PARAMETERS
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+ターゲットフォルダへの再帰の深さを指定します。深さが0の場合は現在の場所のみを示します。より高い値はより多くのサブフォルダレベルを含みます。
 
 ```yaml
 Type: UInt32
@@ -53,7 +94,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-無効にするトリガーの Name を指定します。
+無効にするトリガーの名前を指定します。柔軟なトリガー選択のためのワイルドカードパターンをサポートします。
 
 ```yaml
 Type: String[]
@@ -68,7 +109,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+検索するターゲットフォルダを指定します。指定されない場合、現在のフォルダコンテキストが使用されます。パス指定が必要なフォルダエンティティ操作用です。
 
 ```yaml
 Type: String[]
@@ -98,7 +139,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+ターゲットフォルダとそのすべてのサブフォルダを操作に含めます。フォルダ階層全体での包括的なトリガー管理に不可欠です。
 
 ```yaml
 Type: SwitchParameter
@@ -113,7 +154,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。ビジネスプロセスに影響するトリガーを無効にする場合に強く推奨されます。
 
 ```yaml
 Type: SwitchParameter
@@ -128,8 +169,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
-コマンドレットは実行されません。
+実際にトリガーを無効にせずに、コマンドレットが実行された場合の動作を表示します。操作範囲をプレビューするために強く推奨されます。
 
 ```yaml
 Type: SwitchParameter
@@ -144,14 +184,25 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメータをサポートします: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
 ### None
+
 ## OUTPUTS
 
 ### System.Object
+
 ## NOTES
+このコマンドレットは、トリガー設定を削除せずに自動化トリガーの実行を停止するフォルダエンティティ操作です。トリガーを無効にすることは自動化スケジュールに直接影響し、ビジネスプロセスに影響を与える可能性があります。操作をプレビューするには-WhatIfを使用し、複数のトリガーを無効にする場合は安全のため-Confirmを使用してください。この操作にはターゲットフォルダでのSchedules.Edit権限が必要です。無効化されたトリガーは、すべての設定を保持したままEnable-OrchTriggerを使用して再有効化できます。
 
 ## RELATED LINKS
+
+[Enable-OrchTrigger](Enable-OrchTrigger.md)
+
+[Get-OrchTrigger](Get-OrchTrigger.md)
+
+[Set-OrchTrigger](Set-OrchTrigger.md)
+
+[Remove-OrchTrigger](Remove-OrchTrigger.md)

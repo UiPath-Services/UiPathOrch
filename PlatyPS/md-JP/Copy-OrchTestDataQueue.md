@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Copy-OrchTestDataQueue
 
 ## SYNOPSIS
-テストデータキューをコピーします。
+テストデータキューを宛先フォルダにコピーします。
 
 ## SYNTAX
 
@@ -18,27 +18,68 @@ Copy-OrchTestDataQueue [-Name] <String[]> [-Destination] <String> [-Path <String
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Copy-OrchTestDataQueue コマンドレットは、UiPath Orchestrator テナント内または異なるテナント間で、ソースフォルダから宛先フォルダにテストデータキューをコピーします。このコマンドレットは、構成、スキーマ定義、構造メタデータを含むテストデータキューの完全なコピーを作成します。
 
-主に呼び出すエンドポイント: 
+このコマンドレットは、テナント内コピー（同じテナント内）とテナント間コピー（異なるテナント間）の両方をサポートします。テストデータキューには、自動テストシナリオで使用される構造化されたテストデータが含まれており、このコマンドレットは、テスト環境のデプロイと異なる開発段階での一貫したテストデータの維持に不可欠です。
 
-OAuth に必要なスコープ: 
+-Name パラメーターを使用してコピーするテストデータキューを指定し、-Destination パラメーターを使用してターゲットフォルダを指定します。このコマンドレットは、複数のテストデータキューを効率的にコピーするためのワイルドカードパターンをサポートしています。テストデータアイテムはキュー構造とともにコピーされず、キュー定義とスキーマのみがコピーされることに注意してください。
 
-必要な権限:
+これはフォルダエンティティコマンドレットです。最初に Set-Location コマンドレット（cd コマンド）を使用してターゲットフォルダに移動するか、-Path、-Recurse、または -Depth パラメーターを使用してターゲットフォルダを指定してください。-Recurse パラメーターを使用すると、すべてのサブフォルダからテストデータキューをコピーし、宛先でフォルダ構造を維持できます。
+
+プライマリエンドポイント: GET /odata/TestDataQueues, POST /odata/TestDataQueues
+
+OAuth 必要なスコープ: OR.TestDataQueues
+
+必要な権限: TestDataQueues.View, TestDataQueues.Create
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Development> Copy-OrchTestDataQueue CustomerTestData Orch1:\Production
 ```
 
-{{ Add example description here }}
+位置パラメーターを使用して、現在のフォルダ（Development）から同じテナント内のProductionフォルダにCustomerTestDataキューをコピーします。
+
+### Example 2
+```powershell
+PS C:\> Copy-OrchTestDataQueue -Path Orch1:\Development UserAccountData Orch2:\Production
+```
+
+Orch1:\DevelopmentからOrch2:\ProductionにUserAccountDataテストデータキューをコピーし、テナント間テストデータキューコピーを示しています。
+
+### Example 3
+```powershell
+PS Orch1:\Development> Copy-OrchTestDataQueue *Test*, *Sample* Orch1:\Production -WhatIf
+```
+
+安全のため-WhatIfを使用して、現在のフォルダからProductionフォルダにTestまたはSampleが含まれる名前の複数のテストデータキューをコピーする場合に何が起こるかを示します。
+
+### Example 4
+```powershell
+PS C:\> Copy-OrchTestDataQueue -Path Orch1:\Development *Data* Orch2:\Production
+```
+
+ワイルドカードを使用して、Orch1:\DevelopmentからOrch2:\ProductionにDataが含まれるすべてのテストデータキューをテナント間コピーします。
+
+### Example 5
+```powershell
+PS Orch1:\> Copy-OrchTestDataQueue -Recurse *TestData* Orch2:\Finance -WhatIf
+```
+
+すべてのサブフォルダからTestDataが含まれるテストデータキューを再帰的にOrch2:\Financeにコピーする場合に何が起こるかを示します。
+
+### Example 6
+```powershell
+PS Orch1:\Development> Get-OrchTestDataQueue *QA* | Copy-OrchTestDataQueue -Destination Orch2:\Production
+```
+
+QAが含まれる名前のすべてのテストデータキューを取得し、パイプライン入力を使用してOrch2:\Productionにコピーします。
 
 ## PARAMETERS
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -53,7 +94,7 @@ Accept wildcard characters: False
 ```
 
 ### -Destination
-コピー先のフォルダーを指定します。
+テストデータキューをコピーする宛先フォルダを指定します。
 
 ```yaml
 Type: String
@@ -68,7 +109,7 @@ Accept wildcard characters: True
 ```
 
 ### -Name
-コピーするテストデータキューの Name を指定します。
+コピーするテストデータキューの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -83,7 +124,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-コピー元のフォルダーを指定します。指定しない場合は、現在のフォルダーをコピー元とします。
+ソースフォルダを指定します。指定しない場合、現在のフォルダがソースとして使用されます。
 
 ```yaml
 Type: String
@@ -98,7 +139,7 @@ Accept wildcard characters: True
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットを実行した場合の動作を示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -129,7 +170,7 @@ Accept wildcard characters: False
 ```
 
 ### -Depth
-{{ Fill Depth Description }}
+-Recurse パラメーターを使用する際に含めるサブフォルダレベルの最大数を指定します。
 
 ```yaml
 Type: UInt32
@@ -144,7 +185,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-{{ Fill Recurse Description }}
+すべてのサブフォルダからテストデータキューを再帰的にコピーし、宛先でフォルダ構造を維持することを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -159,7 +200,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメーターをサポートしています: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, -WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
 
 ## INPUTS
 
@@ -168,5 +209,16 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.TestDataQueue
 ## NOTES
+これはフォルダエンティティコマンドレットです。最初に Set-Location コマンドレット（cd コマンド）を使用してターゲットフォルダに移動するか、-Path、-Recurse、または -Depth パラメーターを使用してターゲットフォルダを指定してください。
+
+テストデータキューには、構造化されたテストデータ定義とスキーマが含まれています。環境間でコピーする場合、キューの構造とスキーマはコピーされますが、テストデータアイテム自体はコピーされません。効率的な一括操作にはワイルドカードを使用し、実際の実行前のテストには -WhatIf を使用してください。
 
 ## RELATED LINKS
+
+[Get-OrchTestDataQueue](Get-OrchTestDataQueue.md)
+
+[Remove-OrchTestDataQueue](Remove-OrchTestDataQueue.md)
+
+[Set-OrchTestDataQueue](Set-OrchTestDataQueue.md)
+
+[New-OrchTestDataQueue](New-OrchTestDataQueue.md)

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-OrchActionCatalog
 
 ## SYNOPSIS
-アクションカタログを取得します。
+Orchestrator からアクションカタログを取得します。
 
 ## SYNTAX
 
@@ -18,27 +18,59 @@ Get-OrchActionCatalog [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-Depth
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Get-OrchActionCatalog コマンドレットは、Orchestrator 環境からアクションカタログを取得します。アクションカタログは、プロセスマイニングとタスクマイニングのシナリオ用の自動化アクション、ワークフロー、タスク定義を格納および整理するリポジトリです。
 
-主に呼び出すエンドポイント: GET /odata/TaskCatalogs
+アクションカタログは、再利用可能な自動化コンポーネントの構造化されたストレージを提供し、アクションライブラリの一元管理を可能にします。暗号化、保持ポリシー、フォルダーによる階層組織などの機能をサポートします。
 
-OAuth に必要なスコープ: OR.Tasks or OR.Tasks.Read
+このコマンドレットはフォルダーエンティティで動作し、再帰的な横断をサポートして、異なるフォルダー階層全体でアクションカタログを検索します。各アクションカタログには、保持ポリシー、暗号化ステータス、フォルダー組織などのメタデータが含まれます。
 
-必要な権限: TaskCatalogs.View
+プライマリエンドポイント: GET /odata/TaskCatalogs
+
+OAuth 必須スコープ: OR.Tasks または OR.Tasks.Read
+
+必要なアクセス許可: [PLACEHOLDER - 必要なアクセス許可を文書化予定]
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\MyWorkspace> Get-OrchActionCatalog
 ```
 
-{{ Add example description here }}
+現在のフォルダーからすべてのアクションカタログを取得します。
+
+### Example 2
+```powershell
+PS Orch1:\> Get-OrchActionCatalog -Recurse
+```
+
+すべてのフォルダーから再帰的にすべてのアクションカタログを取得します。
+
+### Example 3
+```powershell
+PS Orch1:\> Get-OrchActionCatalog -Path Orch1:\Production Process*
+```
+
+Production フォルダーから名前が "Process" で始まるアクションカタログを取得します。
+
+### Example 4
+```powershell
+PS Orch1:\> Get-OrchActionCatalog -Recurse | Select-Object Path, Name, FoldersCount, RetentionAction
+```
+
+すべてのアクションカタログを再帰的に取得し、Path を最初に表示して主要なプロパティを表示します。
+
+### Example 5
+```powershell
+PS C:\> Get-OrchActionCatalog -Path Orch1:\Production,Orch1:\Development -Recurse -Depth 2
+```
+
+Production および Development フォルダーから最大深度 2 レベルでアクションカタログを取得します。
 
 ## PARAMETERS
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+再帰操作の最大深度レベルを指定します。-Recurse が指定されている場合に、再帰検索の深度を制限するためにこのパラメーターを使用します。
 
 ```yaml
 Type: UInt32
@@ -53,7 +85,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-取得するアクションカタログの Name を指定します。
+取得するアクションカタログの名前を指定します。パターンマッチング用のワイルドカード文字（* および ?）をサポートします。複数の名前が指定された場合、一致するすべてのアクションカタログが返されます。
 
 ```yaml
 Type: String[]
@@ -68,7 +100,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+アクションカタログを検索するフォルダーパスを指定します。パターンマッチング用のワイルドカード文字（* および ?）をサポートします。現在の場所を変更せずに特定のフォルダーをターゲットにする場合にこのパラメーターを使用します。
 
 ```yaml
 Type: String[]
@@ -83,7 +115,7 @@ Accept wildcard characters: True
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+サブフォルダーからアクションカタログを再帰的に取得します。指定すると、コマンドレットは指定されたパスまたは現在の場所から開始してフォルダー階層全体を横断します。
 
 ```yaml
 Type: SwitchParameter
@@ -98,7 +130,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+このコマンドの処理中にスクリプト、コマンドレット、またはプロバイダーによって生成される進行状況の更新に PowerShell がどのように応答するかを指定します。
 
 ```yaml
 Type: ActionPreference
@@ -123,4 +155,26 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### UiPath.PowerShell.Entities.Bucket
 ## NOTES
 
+このコマンドレットはフォルダーエンティティで動作します。つまり、特定のフォルダーに移動するか、-Path パラメーターを使用して目的の場所をターゲットにする必要がある場合があります。
+
+大きなフォルダー階層で -Recurse パラメーターを使用する場合、操作の完了にかなりの時間がかかる場合があります。必要に応じて -Depth を使用して横断範囲を制限することを検討してください。
+
+アクションカタログは以下の重要な機能をサポートします:
+- 機密性の高い自動化コンポーネントの暗号化
+- 設定可能なアクション（削除、アーカイブ）による保持ポリシー
+- フォルダー構造による階層組織
+- 再利用可能な自動化アクションの一元管理
+
+フォルダーエンティティコマンドレットでは、パラメーターの配置が重要です。適切な自動補完機能のために、コマンドレット名の直後に -Path、-Recurse、-Depth パラメーターを配置してください。
+
+アクションカタログオブジェクトには保持設定や組織情報などの詳細なメタデータが含まれているため、ConvertTo-Json を使用してアクションカタログオブジェクトの完全な構造を調べてください。
+
+プライマリエンドポイント: GET /odata/TaskCatalogs
+OAuth 必須スコープ: OR.Tasks または OR.Tasks.Read
+必要なアクセス許可: TaskCatalogs.View
+
 ## RELATED LINKS
+
+[Remove-OrchActionCatalog](Remove-OrchActionCatalog.md)
+[Copy-OrchActionCatalog](Copy-OrchActionCatalog.md)
+[Get-OrchFolder](Get-OrchFolder.md)

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -20,9 +20,9 @@ Remove-OrchUser [[-UserName] <String[]>] [[-FullName] <String[]>] [-Type <String
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-主に呼び出すエンドポイント: DELETE /odata/Users({userId})
+プライマリ エンドポイント: GET /odata/Users, DELETE /odata/Users({userId})
 
-OAuth に必要なスコープ: OR.Users
+OAuth 必要なスコープ: OR.Users
 
 必要な権限: Users.Delete
 
@@ -38,7 +38,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -FullName
-削除するユーザーの FullName を指定します。
+削除するユーザーのFullNameを指定します。
 
 ```yaml
 Type: String[]
@@ -53,7 +53,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+対象ドライブの名前を指定します。指定しない場合は、現在のドライブが対象となります。
 
 ```yaml
 Type: String[]
@@ -83,7 +83,7 @@ Accept wildcard characters: False
 ```
 
 ### -UserName
-削除するユーザーの UserName を指定します。
+削除するユーザーのUserNameを指定します。
 
 ```yaml
 Type: String[]
@@ -98,7 +98,7 @@ Accept wildcard characters: True
 ```
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -113,7 +113,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットを実行した場合に何が起こるかを表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -159,7 +159,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
 
 ## INPUTS
 

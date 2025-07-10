@@ -1,4 +1,4 @@
-﻿---
+---
 Module Name: UiPathOrch
 Module Guid: 7098583d-d092-4fe9-bf36-a652e7a51efb
 Download Help Link: {{ Update Download Link }}
@@ -12,13 +12,13 @@ Locale: en-US
 
 ## UiPathOrch Cmdlets
 ### [Add-DuUser](Add-DuUser.md)
-Document Understanding プロジェクトに、ユーザーを追加します。
+Document Understanding プロジェクトにユーザーを追加します。
 
 ### [Add-OrchAssetLink](Add-OrchAssetLink.md)
-リンクをアセットに追加します。
+指定されたアセットにリンクを追加します。
 
 ### [Add-OrchCalendarDate](Add-OrchCalendarDate.md)
-非稼働日カレンダーに、日付を追加します。
+非稼働日カレンダーに日付を追加します。
 
 ### [Add-OrchFolderMachine](Add-OrchFolderMachine.md)
 マシンをフォルダーに割り当てます。
@@ -27,55 +27,55 @@ Document Understanding プロジェクトに、ユーザーを追加します。
 ユーザーをフォルダーに割り当てます。
 
 ### [Add-OrchMachineClientSecret](Add-OrchMachineClientSecret.md)
-マシンのクライアントシークレットを追加します。
+Orchestrator のマシンにクライアントシークレットを追加します。
 
 ### [Add-OrchRoleToFolderUser](Add-OrchRoleToFolderUser.md)
-ロールをフォルダーユーザーに付与します。
+フォルダーユーザーにロールを割り当てます。
 
 ### [Add-OrchUser](Add-OrchUser.md)
-テナントにユーザーを追加します。
+ユーザーをテナントに追加します。
 
 ### [Add-PmGroupMember](Add-PmGroupMember.md)
 グループにメンバーを追加します。
 
 ### [Add-PmLicenseToPmLicensedGroup](Add-PmLicenseToPmLicensedGroup.md)
-{{ Fill in the Synopsis }}
+ライセンスグループにライセンスを追加します。
 
 ### [Clear-OrchCache](Clear-OrchCache.md)
-UiPathOrch ドライブ内のメモリキャッシュをクリアします。
+UiPathOrch ドライブのインメモリキャッシュをクリアします。
 
 ### [Copy-OrchActionCatalog](Copy-OrchActionCatalog.md)
-アクションカタログをコピーします。
+アクションカタログを宛先フォルダーにコピーします。
 
 ### [Copy-OrchApiTrigger](Copy-OrchApiTrigger.md)
-API トリガーをコピーします。
+API トリガーを宛先フォルダーにコピーします。
 
 ### [Copy-OrchAsset](Copy-OrchAsset.md)
-アセットをコピーします。
+アセットを宛先フォルダにコピーします。
 
 ### [Copy-OrchBucket](Copy-OrchBucket.md)
-ストレージバケットをコピーします。
+ストレージバケットを宛先フォルダにコピーします。
 
 ### [Copy-OrchCalendar](Copy-OrchCalendar.md)
-カレンダーをコピーします。
+テナント間でカレンダーをコピーします。
 
 ### [Copy-OrchCredentialStore](Copy-OrchCredentialStore.md)
-資格情報ストアをコピーします。
+テナント間で認証情報ストアをコピーします。
 
 ### [Copy-OrchFolderMachine](Copy-OrchFolderMachine.md)
-フォルダーマシンをコピーします。
+フォルダマシン割り当てを宛先フォルダにコピーします。
 
 ### [Copy-OrchFolderUser](Copy-OrchFolderUser.md)
-フォルダーユーザーをコピーします。
+フォルダユーザー割り当てを宛先フォルダにコピーします。
 
 ### [Copy-OrchLibrary](Copy-OrchLibrary.md)
-ライブラリパッケージをコピーします。
+テナント間でライブラリをコピーします。
 
 ### [Copy-OrchMachine](Copy-OrchMachine.md)
-マシンをコピーします。
+UiPath Orchestrator テナント間でマシンテンプレートをコピーします。
 
 ### [Copy-OrchPackage](Copy-OrchPackage.md)
-{{ Fill in the Synopsis }}
+パッケージを宛先フォルダにコピーします。
 
 ### [Copy-OrchProcess](Copy-OrchProcess.md)
 プロセスをコピーします。
@@ -213,10 +213,10 @@ Document Understanding の抽出器を取得します。
 {{ Fill in the Synopsis }}
 
 ### [Get-OrchActionCatalog](Get-OrchActionCatalog.md)
-アクションカタログを取得します。
+Orchestrator からアクションカタログを取得します。
 
 ### [Get-OrchActivitySetting](Get-OrchActivitySetting.md)
-アクティビティ設定を取得します。
+UiPath Orchestrator からアクティビティ設定を取得します。
 
 ### [Get-OrchAlert](Get-OrchAlert.md)
 アラートを取得します。
@@ -225,76 +225,76 @@ Document Understanding の抽出器を取得します。
 API トリガーを取得します。
 
 ### [Get-OrchAsset](Get-OrchAsset.md)
-アセットを取得します。
+UiPath Orchestrator からアセットを取得します。
 
 ### [Get-OrchAssetLink](Get-OrchAssetLink.md)
-アセットのリンク情報を取得します。
+指定されたアセットのフォルダー関連付けとリンクを取得します。
 
 ### [Get-OrchAuditLog](Get-OrchAuditLog.md)
-監査ログを取得します。
+監視とコンプライアンス目的で UiPath Orchestrator から監査ログを取得します。
 
 ### [Get-OrchAuthenticationSetting](Get-OrchAuthenticationSetting.md)
-認証設定を取得します。
+UiPath Orchestrator から認証とシステム構成設定を取得します。
 
 ### [Get-OrchBucket](Get-OrchBucket.md)
-ストレージバケットを取得します。
+UiPath Orchestrator フォルダーで構成されたストレージバケットを取得します。
 
 ### [Get-OrchBucketItem](Get-OrchBucketItem.md)
-ストレージバケット内のアイテムを取得します。
+ストレージバケット内に保存されたアイテム（ファイルとディレクトリ）を取得します。
 
 ### [Get-OrchCalendar](Get-OrchCalendar.md)
-非稼働日カレンダーを取得します。
+UiPath Orchestrator で構成されたビジネスカレンダーを取得します。
 
 ### [Get-OrchClassicEnvironment](Get-OrchClassicEnvironment.md)
-クラシックフォルダーから、ロボットグループを取得します。
+クラシックフォルダーから環境を取得します。
 
 ### [Get-OrchClassicRobot](Get-OrchClassicRobot.md)
-クラシックフォルダーから、ロボットを取得します。
+クラシック環境からロボットを取得します。
 
 ### [Get-OrchConnectionString](Get-OrchConnectionString.md)
 接続文字列を取得します。
 
 ### [Get-OrchCredentialStore](Get-OrchCredentialStore.md)
-資格情報ストアを取得します。
+UiPath Orchestrator で構成された資格情報ストアを取得します。
 
 ### [Get-OrchCurrentUser](Get-OrchCurrentUser.md)
 ターゲットドライブのテナントに接続中のユーザーを取得します。
 
 ### [Get-OrchExecutionSetting](Get-OrchExecutionSetting.md)
-実行設定を取得します。
+UiPath Orchestratorで設定された実行設定を取得します。
 
 ### [Get-OrchFolderMachine](Get-OrchFolderMachine.md)
 フォルダーに割り当てられたマシンを取得します。
 
 ### [Get-OrchFolderMachineAccountMapping](Get-OrchFolderMachineAccountMapping.md)
-{{ Fill in the Synopsis }}
+フォルダースコープのマシンのマシンアカウントマッピングを取得します。
 
 ### [Get-OrchFolderUsage](Get-OrchFolderUsage.md)
-フォルダーの概要情報を取得します。
+UiPath Orchestratorフォルダー内のエンティティ数を示すフォルダー使用統計を取得します。
 
 ### [Get-OrchFolderUser](Get-OrchFolderUser.md)
-フォルダーに割り当てられたユーザーを取得します。
+UiPath Orchestratorでフォルダーに割り当てられたユーザーとグループを取得します。
 
 ### [Get-OrchHelp](Get-OrchHelp.md)
-UiPathOrch モジュールのドキュメントとクイックスタートガイドを表示します。
+UiPathOrchモジュールのドキュメントとクイックスタートガイドを表示します。
 
 ### [Get-OrchJob](Get-OrchJob.md)
 ジョブを取得します。
 
 ### [Get-OrchJobMedia](Get-OrchJobMedia.md)
-ジョブの実行時に自動で撮影された画面写真を取得します。
+UiPath Orchestratorからジョブメディアファイル（スクリーンショット、ビデオ、録画）を取得します。
 
 ### [Get-OrchJobStats](Get-OrchJobStats.md)
-ジョブの統計情報を取得します。
+UiPath Orchestratorからジョブ統計を取得します。
 
 ### [Get-OrchJobVideo](Get-OrchJobVideo.md)
 ビデオ録画が添付されたジョブを取得します。
 
 ### [Get-OrchLibrary](Get-OrchLibrary.md)
-ライブラリパッケージを取得します。
+Orchestratorまたは外部ホストフィードからライブラリパッケージを取得します。
 
 ### [Get-OrchLibraryVersion](Get-OrchLibraryVersion.md)
-ライブラリパッケージのバージョンを取得します。
+Orchestratorまたは外部ホストフィードからライブラリパッケージの特定のバージョンを取得します。
 
 ### [Get-OrchLicense](Get-OrchLicense.md)
 ライセンス情報を取得します。

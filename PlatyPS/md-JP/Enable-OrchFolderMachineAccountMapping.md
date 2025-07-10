@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Enable-OrchFolderMachineAccountMapping
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+フォルダスコープのマシンに対してマシンアカウントマッピングを有効にします。
 
 ## SYNTAX
 
@@ -18,29 +18,68 @@ Enable-OrchFolderMachineAccountMapping [-Name] <String[]> [[-UserName] <String[]
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Enable-OrchFolderMachineAccountMappingコマンドレットは、特定のフォルダ内でマシンとユーザーアカウント間のマッピングを有効にします。これは、特定のユーザーがフォルダのコンテキストでマシンに接続できるようにする関連付けを作成します。
 
-主に呼び出すエンドポイント: GET /odata/Folders/UiPath.Server.Configuration.OData.GetMachineRobots(folderId={folderId},machineId={machineId}), POST /odata/Folders/UiPath.Server.Configuration.OData.SetMachineRobots
+これはフォルダエンティティコマンドレットです。このコマンドレットを使用するには、まずSet-Location（cd）を使用してターゲットフォルダに移動するか、-Path、-Recurse、または-Depthパラメーターを使用してターゲットフォルダを指定する必要があります。
 
-OAuth に必要なスコープ: OR.Robots
+アカウントマッピングが有効になると、指定されたユーザーは、フォルダコンテキストを通じて指定されたマシンに専用接続を確立でき、自動化リソースへの制御されたアクセスを提供します。
 
-必要な権限:
+Primary Endpoint: GET /odata/Folders/UiPath.Server.Configuration.OData.GetMachineRobots(folderId={folderId},machineId={machineId}), POST /odata/Folders/UiPath.Server.Configuration.OData.SetMachineRobots
+
+OAuth required scopes: OR.Robots
+
+Required permissions: Robots.Edit
 
 ## EXAMPLES
 
 ### Example 1
-```powershell
-PS C:\> {{ Add example code here }}
-```
+`powershell
+Enable-OrchFolderMachineAccountMapping Machine01 john.doe -WhatIf
+`
 
-{{ Add example description here }}
+現在のフォルダでMachine01とユーザーjohn.doeの間のアカウントマッピングを有効にする場合の動作を表示します。
+
+### Example 2
+`powershell
+Enable-OrchFolderMachineAccountMapping Machine01 john.doe
+`
+
+現在のフォルダでMachine01とユーザーjohn.doeの間のアカウントマッピングを有効にします。
+
+### Example 3
+`powershell
+Enable-OrchFolderMachineAccountMapping *Prod* automation.user
+`
+
+"Prod"を含むすべてのマシンとautomation.userアカウントのアカウントマッピングを有効にします。
+
+### Example 4
+`powershell
+Enable-OrchFolderMachineAccountMapping -Path Orch1:\Development Machine01, Machine02 developer1, developer2
+`
+
+DevelopmentフォルダでMachine01、Machine02のマシンとdeveloper1、developer2のユーザーの間のアカウントマッピングを有効にします。
+
+### Example 5
+`powershell
+Enable-OrchFolderMachineAccountMapping -Recurse *Robot* service.account -Confirm
+`
+
+"Robot"を含むすべてのマシンとservice.accountの間のアカウントマッピングを現在のフォルダとすべてのサブフォルダで確認付きで有効にします。
+
+### Example 6
+`powershell
+Get-OrchMachine -Status Available | Enable-OrchFolderMachineAccountMapping -UserName qa.tester
+`
+
+すべての利用可能なマシンとqa.testerアカウントの間のアカウントマッピングを有効にします。マシン名はByPropertyNameバインディングを使用してパイプライン経由で渡されます。
 
 ## PARAMETERS
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットの実行前に確認メッセージを表示します。
 
-```yaml
+`yaml
 Type: SwitchParameter
 Parameter Sets: (All)
 Aliases: cf
@@ -50,12 +89,12 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
-```
+`
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+ターゲットフォルダへの再帰の深度を指定します。深度0は現在の場所のみを示し、サブフォルダは含まれません。
 
-```yaml
+`yaml
 Type: UInt32
 Parameter Sets: (All)
 Aliases:
@@ -65,12 +104,12 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
-```
+`
 
 ### -Name
-{{ Fill Name Description }}
+アカウントマッピングを有効にするマシンの名前を指定します。
 
-```yaml
+`yaml
 Type: String[]
 Parameter Sets: (All)
 Aliases:
@@ -80,12 +119,12 @@ Position: 0
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
-```
+`
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+ターゲットフォルダを指定します。指定されていない場合、現在のフォルダが対象になります。
 
-```yaml
+`yaml
 Type: String[]
 Parameter Sets: (All)
 Aliases:
@@ -95,12 +134,12 @@ Position: Named
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
-```
+`
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+操作がターゲットフォルダとそのすべてのサブフォルダを含むことを指定します。
 
-```yaml
+`yaml
 Type: SwitchParameter
 Parameter Sets: (All)
 Aliases:
@@ -110,12 +149,12 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
-```
+`
 
 ### -UserName
-{{ Fill UserName Description }}
+アカウントマッピングを有効にするユーザー名を指定します。複数のユーザーを指定して、複数のマシンとのマッピングを作成できます。
 
-```yaml
+`yaml
 Type: String[]
 Parameter Sets: (All)
 Aliases:
@@ -125,13 +164,13 @@ Position: 1
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
-```
+`
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットが実行された場合に何が起こるかを表示します。
 コマンドレットは実行されません。
 
-```yaml
+`yaml
 Type: SwitchParameter
 Parameter Sets: (All)
 Aliases: wi
@@ -141,12 +180,12 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
-```
+`
 
 ### -ProgressAction
 {{ Fill ProgressAction Description }}
 
-```yaml
+`yaml
 Type: ActionPreference
 Parameter Sets: (All)
 Aliases: proga
@@ -156,10 +195,10 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
-```
+`
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメーターをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

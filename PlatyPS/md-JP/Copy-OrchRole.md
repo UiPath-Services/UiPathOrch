@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Copy-OrchRole
 
 ## SYNOPSIS
-ロールをコピーします。
+テナント間でロールをコピーします。
 
 ## SYNTAX
 
@@ -18,27 +18,59 @@ Copy-OrchRole [-Name] <String[]> [-Destination] <String[]> [-Path <String>]
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+現在のテナントから1つ以上の宛先テナントにロールをコピーします。このコマンドレットは、複数のUiPath Orchestrator環境間でロール構成のレプリケーションを可能にします。
 
-主に呼び出すエンドポイント: 
+カスタム（非静的）ロールのみをコピーできます。静的ロールは組み込みであり、すべてのテナントにすでに存在するため、複製できません。
 
-OAuth に必要なスコープ: 
+このコマンドレットは、コピー操作中にロール権限、説明、その他の構成詳細を保持します。
 
-必要な権限:
+プライマリエンドポイント: GET /odata/Roles, POST /odata/Roles
+
+OAuth 必要なスコープ: OR.Users
+
+必要な権限: Roles.View, Roles.Create
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Copy-OrchRole CustomRole1 Orch2: -WhatIf
 ```
 
-{{ Add example description here }}
+実際にコピーせずに、ロールをコピーする場合に何が起こるかを示します。
+
+### Example 2
+```powershell
+PS Orch1:\> Copy-OrchRole CustomRole1 Orch2:
+```
+
+現在のテナントからOrch2にCustomRole1をコピーします。
+
+### Example 3
+```powershell
+PS Orch1:\> Copy-OrchRole TestRole Orch2:, Orch3: -Confirm
+```
+
+確認プロンプトを使用して、TestRoleを複数のテナントにコピーします。
+
+### Example 4
+```powershell
+PS Orch1:\> Copy-OrchRole Custom* Orch2:
+```
+
+「Custom」で始まるすべてのロールをOrch2にコピーします。
+
+### Example 5
+```powershell
+PS Orch1:\> Get-OrchRole | Where-Object {$_.IsStatic -eq $false} | Copy-OrchRole -Destination Orch2: -WhatIf
+```
+
+パイプライン入力を使用して、コピーされるカスタム（非静的）ロールを示します。
 
 ## PARAMETERS
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+ロールをコピーする前に確認を求めます。複数のロールをコピーする場合に推奨されます。
 
 ```yaml
 Type: SwitchParameter
@@ -47,13 +79,13 @@ Aliases: cf
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -Destination
-コピー先のドライブの名前を指定します。
+ドライブ名で宛先テナントを指定します。複数の宛先にはカンマ区切りの値を使用します。
 
 ```yaml
 Type: String[]
@@ -68,7 +100,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-{{ Fill Name Description }}
+コピーするロールの名前を指定します。ワイルドカードと複数の値をサポートします。
 
 ```yaml
 Type: String[]
@@ -83,7 +115,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-コピー元のドライブの名前を指定します。指定しない場合は、現在のドライブをコピー元とします。
+ドライブ名でソーステナントを指定します。指定しない場合、現在のテナントを使用します。
 
 ```yaml
 Type: String
@@ -98,8 +130,7 @@ Accept wildcard characters: True
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
-コマンドレットは実行されません。
+実際にロールをコピーせずに、コマンドレットを実行した場合の動作を示します。安全性検証に推奨されます。
 
 ```yaml
 Type: SwitchParameter
@@ -108,13 +139,13 @@ Aliases: wi
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+コマンドレット実行中の進行状況情報の表示方法を制御します。
 
 ```yaml
 Type: ActionPreference
@@ -129,7 +160,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメーターをサポートしています: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, -WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
 
 ## INPUTS
 
@@ -142,5 +173,22 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### UiPath.PowerShell.Entities.Role
 
 ## NOTES
+ロールエンティティはテナントスコープであり、このコマンドレットはテナント間レプリケーションを可能にします。
+
+カスタムロール（IsStatic = $false）のみをコピーできます。静的ロールは組み込みであり、すべてのテナントにすでに存在します。
+
+コピー操作は、権限、説明、メタデータを含むすべてのロール構成を保持します。
+
+複数のロールにマッチする可能性のあるワイルドカードを使用する場合は、実行前に -WhatIf を使用してコピー操作をプレビューしてください。
+
+ソースと宛先の両方のテナントで適切な権限を持っていることを確認してください。
 
 ## RELATED LINKS
+
+[Get-OrchRole](Get-OrchRole.md)
+
+[Set-OrchRole](Set-OrchRole.md)
+
+[Remove-OrchRole](Remove-OrchRole.md)
+
+[New-OrchRole](New-OrchRole.md)

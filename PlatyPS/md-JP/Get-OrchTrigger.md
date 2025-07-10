@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,15 +18,15 @@ Get-OrchTrigger [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-Depth <UInt
 ```
 
 ## DESCRIPTION
-ターゲットフォルダーに含まれる、指定した名前のトリガーを取得します。ターゲットフォルダーは、-Path、-Recurse、-Depth パラメーターで指定します。これらを指定しない場合は、現在のフォルダーをターゲットとします。トリガーの名前を指定しない場合は、ターゲットフォルダーに含まれるトリガーをすべて出力します。
+対象フォルダ内の指定された名前を持つトリガーについての情報を出力します。対象フォルダは-Path、-Recurse、-Depthパラメータを使用して指定できます。これらが指定されていない場合、現在の場所が対象フォルダとして使用されます。トリガー名が指定されていない場合、対象フォルダ内のすべてのトリガーを出力します。
 
--Path と -Name パラメータには、ワイルドカードを含むテキストをカンマ区切りで複数指定できます。また、これらの値は [Ctrl+Space] もしくは [Tab] を押下することで自動補完入力できます。
+-Pathと-Nameパラメータに対しては、ワイルドカードを含むカンマ区切りのテキストを使用して複数の値を指定できます。さらに、[Ctrl+Space]または[Tab]を押すことで、これらの値の自動補完を使用できます。
 
--Path、-Recurse、-Depth パラメータを指定するときは、これらをコマンドレット名の直後に指定してください。これにより、後続のパラメータの自動補完が適切に動作するようになります。
+-Path、-Recurse、-Depthパラメータを指定する際は、コマンドレット名の直後に配置してください。この配置により、後続のパラメータの自動補完が正しく機能します。
 
-主に呼び出すエンドポイント: GET /odata/ProcessSchedules, GET /odata/ProcessSchedules({processScheduleId})
+プライマリ エンドポイント: GET /odata/ProcessSchedules, GET /odata/ProcessSchedules({processScheduleId})
 
-OAuth に必要なスコープ: OR.Jobs or OR.Jobs.Read
+OAuth 必要スコープ: OR.Jobs または OR.Jobs.Read
 
 必要な権限: Schedules.View
 
@@ -37,68 +37,40 @@ OAuth に必要なスコープ: OR.Jobs or OR.Jobs.Read
 PS Orch1:\Shared> Get-OrchTrigger
 ```
 
-現在のフォルダーである 'Shared' フォルダーに含まれるトリガーをすべて表示します。
+現在の場所である「Shared」フォルダ内のすべてのトリガーを表示します。
 
 ### Example 2
 ```powershell
 PS Orch1:\> Get-OrchTrigger -Recurse
 ```
 
-現在のフォルダーと、そのすべてのサブフォルダーに含まれるトリガーをすべて表示します。ルートフォルダーで実行すると、そのテナントのすべてのフォルダーに含まれるトリガーをすべて表示します。
+現在のフォルダとそのすべてのサブフォルダ内のすべてのトリガーを表示します。ルートフォルダで実行すると、そのテナント内のすべてのフォルダのトリガーが表示されます。
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchTrigger -Recurse <trigger names>
+PS C:\> Get-OrchTrigger -Path Orch1:\ -Recurse *Schedule*
 ```
 
-現在のフォルダーと、そのすべてのサブフォルダーに含まれるトリガーのうち、指定の名前をもつものを表示します。トリガー名には、ワイルドカードを含むテキストをカンマ区切りで複数指定できます。トリガー名は、[Ctrl+Space] もしくは [Ctrol+Tab] を押下して自動補完できます。
+すべてのフォルダから再帰的に、名前に「Schedule」を含むトリガーを取得します。
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchTrigger -Path <folder names> <trigger names>
+PS Orch1:\Shared> Get-OrchTrigger | select Path,Id,Name
 ```
 
-指定のフォルダーに含まれるトリガーのうち、指定の名前をもつものを表示します。フォルダー名には、ワイルドカードを含むテキストをカンマ区切りで複数指定できます。フォルダー名は、[Ctrl+Space] もしくは [Ctrol+Tab] を押下して自動補完できます。
+選択された列のみで出力を表示します。ワイルドカードを含め、複数の列をカンマで区切って指定します。列名は[Ctrl+Space]または[Tab]で自動補完できます。
 
 ### Example 5
 ```powershell
-PS C:\> Get-OrchTrigger -Recurse -Path Orch1:\,Orch2:\
+PS Orch1:\Shared> Get-OrchTrigger | ConvertTo-Json
 ```
 
-Orch1: と Orch2: に含まれるトリガーをすべて表示します。
-
-### Example 6
-```powershell
-PS Orch1:\> Get-OrchTrigger -Recurse | select Path,Id,Name
-```
-
-指定された列のみを出力します。列名には、ワイルドカードを含むテキストをカンマ区切りで複数指定できます。列名は、[Ctrl+Space] もしくは [Ctrol+Tab] を押下して自動補完できます。
-
-### Example 7
-```powershell
-PS Orch1:\> Get-OrchTrigger -Recurse | Export-Csv c:triggers.csv
-```
-
-出力を CSV ファイルにエキスポートします。CSV ファイルは、C: ドライブの現在のフォルダーに出力されます。`select` と組み合わせると、CSV の書式を自由にカスタマイズできます。C: ドライブの現在のフォルダーを開くには、`ii c:' と入力します。
-
-### Example 8
-```powershell
-PS Orch1:\> Get-OrchTrigger -Recurse | ConvertTo-Json
-```
-
-出力を JSON 形式に変換します。Orchestrator が出力した生の結果を確認できます。
-
-### Example 9
-```powershell
-PS C:\>Get-OrchTrigger -Path Orch1:\ -Recurse | Where-Object { $_.ReleaseName -eq 'Process01' }
-```
-
-Orch1: テナントにおいて、Process01 という名前のパッケージを使っているプロセスをすべて出力します。
+出力をJSON形式に変換し、Orchestratorからのデータの生のビューを提供します。
 
 ## PARAMETERS
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+対象フォルダへの再帰の深度を指定します。深度0は現在の場所のみを示し、サブフォルダは含まれません。
 
 ```yaml
 Type: UInt32
@@ -113,7 +85,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-取得するトリガーの Name を指定します。
+取得するトリガーの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -128,7 +100,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+対象フォルダを指定します。指定されていない場合、現在のフォルダが対象となります。
 
 ```yaml
 Type: String[]
@@ -158,7 +130,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+操作が対象フォルダとそのすべてのサブフォルダを含むべきことを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -203,7 +175,7 @@ Accept wildcard characters: False
 ```
 
 ### -ExpandDetails
-このコマンドレットに、GET /odata/ProcessSchedules({processScheduleId}) を呼び出すことを指示します。
+コマンドレットにGET /odata/ProcessSchedules({processScheduleId})を呼び出すよう指示します。
 
 ```yaml
 Type: SwitchParameter
@@ -218,7 +190,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariableの共通パラメータをサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -227,5 +199,14 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.ProcessSchedule
 ## NOTES
+呼び出されるメインエンドポイント: GET /odata/ProcessSchedules
+
+必要スコープ: OR.Jobs.Read
+
+
+
+プライマリ エンドポイント: GET /odata/ProcessSchedules
+OAuth 必要スコープ: OR.Jobs または OR.Jobs.Read
+必要な権限: Schedules.View
 
 ## RELATED LINKS

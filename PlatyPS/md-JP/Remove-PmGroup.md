@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Remove-PmGroup
 
 ## SYNOPSIS
-組織のローカルグループを削除します。
+UiPath Platform Managementからグループを削除します。
 
 ## SYNTAX
 
@@ -18,27 +18,52 @@ Remove-PmGroup [-GroupName] <String[]> [-Path <String[]>] [-ProgressAction <Acti
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Remove-PmGroupコマンドレットは、UiPath Platform Managementからグループを削除します。グループは、ロールと権限を集合的に割り当てることができるユーザーのコレクションです。このコマンドレットは、指定されたグループとその関連する構成を完全に削除します。
 
-主に呼び出すエンドポイント:
+-Pathパラメータは対象ドライブを指定します。指定しない場合は、現在のドライブが対象となります。
 
-OAuth に必要なスコープ:
+このコマンドレットはPlatform Management APIにアクセスし、すべてのUiPath Orchestratorドライブ（Orch1:、Orch1Tm:、Orch1Du:）で動作します。
 
-必要な権限:
+プライマリ エンドポイント: DELETE /api/Group/{tenantId}/{groupId}
+
+OAuth 必要なスコープ: PM.Group
+
+必要な権限: [PLACEHOLDER - Platform Managementグループ削除権限]
 
 ## EXAMPLES
 
-### Example 1
+### Example 1: 複数のグループを削除
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Remove-PmGroup TestGroup1, TestGroup2, CustomGroup
 ```
 
-{{ Add example description here }}
+単一の操作で複数のグループを削除します。
+
+### Example 2: ワイルドカードを使用してグループを削除
+```powershell
+PS Orch1:\> Remove-PmGroup Test* -WhatIf
+```
+
+"Test"で始まるすべてのグループが削除された場合に何が起こるかを表示します。
+
+### Example 3: 確認プロンプトで削除
+```powershell
+PS Orch1:\> Remove-PmGroup -GroupName CustomGroup -Confirm
+```
+
+実行前に追加の確認プロンプトでグループを削除します。
+
+### Example 4: 特定のドライブからグループを削除
+```powershell
+PS C:\> Remove-PmGroup -Path Orch1:, Orch2: TestGroup
+```
+
+複数の指定されたOrchestratorドライブからグループを削除します。
 
 ## PARAMETERS
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。これにより、グループを削除する前の追加の安全チェックが提供されます。
 
 ```yaml
 Type: SwitchParameter
@@ -53,7 +78,7 @@ Accept wildcard characters: False
 ```
 
 ### -GroupName
-{{ Fill GroupName Description }}
+削除するグループの名前を指定します。パターンマッチング用のワイルドカード文字（*および?）をサポートします。複数のグループ名を配列として指定できます。
 
 ```yaml
 Type: String[]
@@ -68,7 +93,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+対象ドライブの名前を指定します。指定しない場合は、現在のドライブが対象となります。Platform Management APIはすべてのOrchestratorドライブで動作します。
 
 ```yaml
 Type: String[]
@@ -83,8 +108,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
-コマンドレットは実行されません。
+実際に削除操作を実行せずに、コマンドレットを実行した場合に何が起こるかを表示します。これは、変更を行う前にどのグループが影響を受けるかを確認するのに便利です。
 
 ```yaml
 Type: SwitchParameter
@@ -99,7 +123,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+スクリプト、コマンドレット、またはプロバイダーによって生成される進行状況の更新にPowerShellがどのように応答するかを指定します。
 
 ```yaml
 Type: ActionPreference
@@ -114,7 +138,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
 
 ## INPUTS
 
@@ -123,5 +147,22 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Object
 ## NOTES
+- このコマンドレットはグループを完全に削除し、元に戻すことはできません
+- 実行前に削除操作をプレビューするために-WhatIfパラメータを使用してください
+- グループを削除すると、それに関連するユーザー、ロール、権限に影響します
+- -GroupNameパラメータは一括操作用のワイルドカード文字をサポートします
+- Platform Managementコマンドレット（"Pm"で始まる）は組織横断的なグループ管理を提供します
+- 削除前に常にグループの依存関係とメンバー割り当てを確認してください
+- 組み込みシステムグループ（"Everyone"など）は削除から保護されている場合があります
 
 ## RELATED LINKS
+
+[Get-PmGroup]()
+
+[New-PmGroup]()
+
+[Copy-PmGroup]()
+
+[Add-PmGroupMember]()
+
+[Remove-PmGroupMember]()

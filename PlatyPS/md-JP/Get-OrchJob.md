@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -29,17 +29,17 @@ Get-OrchJob [-Last <String>] [-CreationTimeAfter <DateTime>] [-CreationTimeBefor
 ```
 
 ## DESCRIPTION
-Filter パラメーターセットでは、さまざまなパラメーターで取得するジョブの条件を指定できます。
+UiPath Orchestratorフォルダーからジョブ情報を取得します。ジョブはプロセス実行を表し、ステータス、タイミング、ロボット割り当て、実行結果など、自動化実行に関する詳細情報を含みます。
 
-JobId パラメーターセットの -Id パラメーターには、取得するジョブの Id を直接指定できます。この -Id パラメーターの補完リストに表示されるのは、いちど取得して UiPathOrch のメモリ内にキャッシュされたジョブの Id のみです。最初のパラメーターセットで複数のジョブを取得した後、詳細に確認したいジョブがあれば、その Id を -Id パラメーターに指定してください。キャッシュ内に当該の Id をもつジョブエンティティが存在する場合でも、Get-OrchJob はそのジョブの最新の状態を確認して表示します。
+このコマンドレットは、時間範囲、ステータス、プロセス名、ロボット、優先度などのさまざまな条件でジョブをクエリする強力なフィルタリング機能を提供します。フォルダーエンティティで動作し、フォルダー階層全体での再帰的取得をサポートします。
 
--Path パラメータには、ワイルドカードを含むテキストをカンマ区切りで複数指定できます。また、この値は [Ctrl+Space] もしくは [Tab] を押下することで自動補完入力できます。
+パラメーターには、ワイルドカードを含むカンマ区切りのテキストを使用して複数の値を指定できます。さらに、[Ctrl+Space]または[Tab]を押すことで、これらの値のオートコンプリートを使用できます。
 
--Path、-Recurse、-Depth パラメータを指定するときは、これらをコマンドレット名の直後に指定してください。これにより、後続のパラメータの自動補完が適切に動作するようになります。
+-Path、-Recurse、-Depthパラメーターを指定する場合は、コマンドレット名の直後に配置してください。この配置により、後続のパラメーターのオートコンプリートが正しく機能します。
 
-主に呼び出すエンドポイント: /odata/Jobs?{filter}&$expand=Robot,Machine,Release&$orderby=CreationTime%20desc, GET /odata/Jobs({jobId})?$expand=Robot,Machine,Release
+主要エンドポイント: GET /odata/Jobs
 
-OAuth に必要なスコープ: OR.Jobs or OR.Jobs.Read
+OAuth必要スコープ: OR.Jobs または OR.Jobs.Read
 
 必要な権限: Jobs.View
 
@@ -47,162 +47,57 @@ OAuth に必要なスコープ: OR.Jobs or OR.Jobs.Read
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-OrchJob -Recurse -First 10
+PS Orch1:\Shared> Get-OrchJob -First 5
 ```
 
-すべてのフォルダーにおいて、直近の10個のジョブを出力します。
+現在のフォルダーから最初の5つのジョブを取得します。
 
 ### Example 2
 ```powershell
-PS Orch1:\> Get-OrchJob -Recurse
+PS Orch1:\Shared> Get-OrchJob
 ```
 
-すべてのフォルダーにおいて、キャッシュ済みのジョブを出力します。Orchestrator Web API を呼び出すことなく、一度取得したジョブを高速に再出力できます。最新の情報を取得するには、任意のパラメータを指定してください。
+API呼び出しを行わずに、現在のフォルダー内のキャッシュされたジョブを取得します。
 
 ### Example 3
 ```powershell
-PS Orch1:\Shared> Get-OrchJob -Last Day
+PS C:\> Get-OrchJob -Path Orch1:\Shared -State Faulted -First 10
 ```
 
-現在のフォルダーの過去1日間のジョブを表示します。-Lastパラメーターの値には、Hour、Day、Week、Monthなどを補完で指定できます。
+すべてのフォルダーから最初の10個の失敗したジョブを取得します。
 
 ### Example 4
 ```powershell
-PS Orch1:\Shared> Get-OrchJob -State Pending,Suspended
+PS C:\> Get-OrchJob -Path Orch1:\Shared, Orch1:\Production -Recurse -State Successful -First 10
 ```
 
-現在のフォルダーで、ステートが保留中もしくは中断となっているジョブを表示します。失敗したジョブだけを表示するには、-Stateパラメータに Faulted を指定します。
+指定されたフォルダーとそのサブフォルダー内のすべての成功したジョブを取得します。
 
 ### Example 5
 ```powershell
-PS Orch1:\Shared> Get-OrchJob -SourceType Queue
+PS Orch1:\Shared> Get-OrchJob -ReleaseName BlankProcess1 -First 5
 ```
 
-現在のフォルダーで、キュートリガーにより開始されたジョブを表示します。
+特定のプロセスの最初の5つのジョブを取得します。
 
 ### Example 6
 ```powershell
-PS Orch1:\Shared> Get-OrchJob -CreationTimeAfter '2025/01/15 14:00:00' -CreationTimeBefore '2025/01/30 15:00:00'
+PS Orch1:\Shared> Get-OrchJob -Last Hour
 ```
 
--CreationTimeAfter と -CreationTimeBefore パラメータで、ジョブの作成日時でフィルターできます。このほか、-StartTimeAfter、-StartTimeBefore、-EndTimeAfter、-EndTimeBefore などのパラメータを利用できます。
+現在のフォルダー内で過去1時間に作成されたジョブを取得します。
 
 ### Example 7
 ```powershell
-PS Orch1:\Shared> Get-OrchJob | ? StopStrategy -eq Kill
+PS C:\> Get-OrchJob -Path Orch1:\Shared,Orch1:\Production -Recurse -State Successful -First 5
 ```
 
-キャッシュ済みのジョブのうち、強制終了されたジョブのみを表示します。
-
-### Example 8
-```powershell
-PS Orch1:\Shared> Get-OrchJob | group ReleaseName -NoElement
-```
-
-キャッシュ済みのジョブを、プロセス名でグループ化します。項目名は補完入力できます。group は Group-Object の別名です。
-
-### Example 9
-```powershell
-PS Orch1:\Shared> Get-OrchJob | group HostMachineName -NoElement
-```
-
-キャッシュ済みのジョブを、マシン名でグループ化します。
-
-### Example 10
-```powershell
-PS Orch1:\Shared> Get-OrchJob | group HostMachineName,State -NoElement
-```
-
-キャッシュ済みのジョブを、マシン名とステータスでグループ化します。
-
-### Example 11
-```powershell
-PS Orch1:\Shared> Get-OrchJob | group LocalSystemAccount,State -NoElement | Format-Table -AutoSize
-```
-
-キャッシュ済みのジョブを、実行したアカウント名でグループ化します。Format-Table -AutoSize は、出力が見切れないようにするために指定しています。
-
-### Example 12
-```powershell
-PS Orch1:\Shared> Get-OrchJob | group { $_.CreationTime.Date } -NoElement
-```
-
-キャッシュ済みのジョブを、作成日でグループ化します。
-
-### Example 13
-```powershell
-PS Orch1:\Shared> Get-OrchJob | group { $_.CreationTime.ToString('yyyy/MM') } -NoElement
-```
-
-キャッシュ済みのジョブを、作成月でグループ化します。
-
-### Example 14
-```powershell
-PS Orch1:\Shared> Get-OrchJob | group { $_.CreationTime.DayOfWeek } -NoElement
-```
-
-キャッシュ済みのジョブを、作成曜日でグループ化します。
-
-### Example 15
-```powershell
-PS Orch1:\Shared> Get-OrchJob | group { $_.CreationTime.DayOfWeek },State -NoElement
-```
-
-キャッシュ済みのジョブを、作成曜日とステータスでグループ化します。
-
-### Example 16
-```powershell
-PS Orch1:\Shared> Get-OrchJob | ? { $_.CreationTime.DayOfWeek -eq 'Sunday' }
-```
-
-キャッシュ済みのジョブのうち、日曜日に作成したジョブだけを出力します。
-
-### Example 17
-```powershell
-PS Orch1:\Shared> Get-OrchJob | ? StartTime -ne $null | group { $_.StartTime.Hour },State -NoElement
-```
-
-キャッシュ済みのジョブを、開始した時間帯とステータスでグループ化します。ジョブがどの時間帯で実行されていたか、ステートごとに傾向を簡単に分析できます。
-
-### Example 18
-```powershell
-PS Orch1:\Shared> Get-OrchJob | group ReleaseName -NoElement | sort Count -Descending
-```
-
-キャッシュ済みのジョブをグループ化した内容を、数が大きい順に表示します。sort は Sort-Object の別名です。
-
-### Example 19
-```powershell
-PS Orch1:\Shared> Get-OrchJob -State Faulted | group ReleaseName | sort Count -Descending
-```
-
-失敗したジョブだけをプロセス名でグループ化し、数が大きい順に表示します。より頻繁に失敗しているプロセスはどれか、簡単に分析できます。-State パラメータを指定すると、Orchestrator に問い合わせることに注意してください。キャッシュしたジョブを使って高速に処理するには、-State パラメータを指定する代わりに | ? State -eq Faulted にリダイレクトします。
-
-### Example 20
-```powershell
-PS Orch1:\Shared> Get-OrchJob | sort { ($_.EndTime - $_.StartTime).TotalSeconds } -Descending
-```
-
-キャッシュ済みのジョブを、実行時間が長い順に並べます。
-
-### Example 21
-```powershell
-PS Orch1:\Shared> Get-OrchJob | select Id, ReleaseName, @{ Name='TotalSeconds'; Expression={ ($_.EndTime - $_.StartTime).TotalSeconds }} | sort TotalSeconds -Descending
-```
-
-キャッシュ済みのジョブを、実行時間が長い順に並べます。その実行時間も出力します。
-
-### Example 22
-```powershell
-PS Orch1:\Shared> Get-OrchJob | % { ($_.EndTime - $_.StartTime).TotalMinutes } | Measure-Object -Average -Sum -Maximum -Minimum
-```
-
-キャッシュ済みのジョブの実行時間の平均、最長、最短を出力します。% は ForEach-Object の別名です。
+-Pathパラメーターを優先して、特定のフォルダーから成功したジョブを取得します。
 
 ## PARAMETERS
 
 ### -CreationTimeAfter
-{{ Fill CreationTimeAfter Description }}
+取得するジョブの最も早い作成時刻を指定します。
 
 ```yaml
 Type: DateTime
@@ -217,7 +112,7 @@ Accept wildcard characters: False
 ```
 
 ### -CreationTimeBefore
-{{ Fill CreationTimeBefore Description }}
+取得するジョブの最も遅い作成時刻を指定します。
 
 ```yaml
 Type: DateTime
@@ -232,7 +127,7 @@ Accept wildcard characters: False
 ```
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+フォルダー再帰の深度を指定します。深度0は現在のフォルダーのみをターゲットにします。
 
 ```yaml
 Type: UInt32
@@ -247,7 +142,7 @@ Accept wildcard characters: False
 ```
 
 ### -Last
-{{ Fill Last Description }}
+最近のジョブの期間を指定します。有効な値：Hour、Day、Week、Month、3Months、6Months、Year、3Years。
 
 ```yaml
 Type: String
@@ -262,7 +157,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+ターゲットフォルダーを指定します。複数のフォルダーにはカンマ区切りの値を使用します。ワイルドカードをサポートします。指定しない場合は、現在のフォルダーをターゲットにします。
 
 ```yaml
 Type: String[]
@@ -277,7 +172,7 @@ Accept wildcard characters: True
 ```
 
 ### -Priority
-{{ Fill Priority Description }}
+フィルタリングするジョブの優先度を指定します。有効な値：Low、Normal、High。
 
 ```yaml
 Type: String
@@ -292,7 +187,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+コマンドレット実行中に進行状況情報がどのように表示されるかを制御します。
 
 ```yaml
 Type: ActionPreference
@@ -307,7 +202,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+操作にターゲットフォルダーとそのすべてのサブフォルダーを含めます。
 
 ```yaml
 Type: SwitchParameter
@@ -316,13 +211,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -SourceType
-{{ Fill SourceType Description }}
+フィルタリングするジョブのソースタイプを指定します。有効な値には、Manual、Schedule、Agent、Robotが含まれます。
 
 ```yaml
 Type: String[]
@@ -337,7 +232,7 @@ Accept wildcard characters: True
 ```
 
 ### -State
-{{ Fill State Description }}
+フィルタリングするジョブの状態を指定します。有効な値には、Pending、Running、Successful、Faulted、Stopped、Suspendedが含まれます。
 
 ```yaml
 Type: String[]
@@ -352,8 +247,7 @@ Accept wildcard characters: False
 ```
 
 ### -Skip
-指定された数のエンティティを無視して、残りのエンティティを取得します。
-スキップするエンティティの数を指定してください。
+指定された数のオブジェクトを無視してから、残りのオブジェクトを取得します。スキップするオブジェクトの数を入力します。
 
 ```yaml
 Type: UInt64
@@ -368,8 +262,7 @@ Accept wildcard characters: False
 ```
 
 ### -First
-指定された数のエンティティのみを取得します。
-取得するエンティティの数を指定してください。
+返すジョブの最大数を指定します。
 
 ```yaml
 Type: UInt64
@@ -384,7 +277,7 @@ Accept wildcard characters: False
 ```
 
 ### -ReleaseName
-{{ Fill ReleaseName Description }}
+フィルタリングするプロセス名を指定します。ワイルドカードと複数の値をサポートします。
 
 ```yaml
 Type: String[]
@@ -399,7 +292,7 @@ Accept wildcard characters: True
 ```
 
 ### -OrderAscending
-{{ Fill OrderAscending Description }}
+結果を昇順でソートします。デフォルトは降順です。
 
 ```yaml
 Type: SwitchParameter
@@ -408,13 +301,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -OrderBy
-{{ Fill OrderBy Description }}
+ソートするプロパティを指定します。有効な値には、Id、CreationTime、StartTime、EndTime、Stateが含まれます。
 
 ```yaml
 Type: String
@@ -429,7 +322,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProcessType
-{{ Fill ProcessType Description }}
+フィルタリングするプロセスタイプを指定します。
 
 ```yaml
 Type: String[]
@@ -444,7 +337,7 @@ Accept wildcard characters: True
 ```
 
 ### -EndTimeAfter
-{{ Fill EndTimeAfter Description }}
+取得するジョブの最も早い終了時刻を指定します。
 
 ```yaml
 Type: DateTime
@@ -459,7 +352,7 @@ Accept wildcard characters: False
 ```
 
 ### -EndTimeBefore
-{{ Fill EndTimeBefore Description }}
+取得するジョブの最も遅い終了時刻を指定します。
 
 ```yaml
 Type: DateTime
@@ -474,7 +367,7 @@ Accept wildcard characters: False
 ```
 
 ### -ResumeTimeAfter
-{{ Fill ResumeTimeAfter Description }}
+取得するジョブの最も早い再開時刻を指定します。
 
 ```yaml
 Type: DateTime
@@ -489,7 +382,7 @@ Accept wildcard characters: False
 ```
 
 ### -ResumeTimeBefore
-{{ Fill ResumeTimeBefore Description }}
+取得するジョブの最も遅い再開時刻を指定します。
 
 ```yaml
 Type: DateTime
@@ -504,7 +397,7 @@ Accept wildcard characters: False
 ```
 
 ### -StartTimeAfter
-{{ Fill StartTimeAfter Description }}
+取得するジョブの最も早い開始時刻を指定します。
 
 ```yaml
 Type: DateTime
@@ -519,7 +412,7 @@ Accept wildcard characters: False
 ```
 
 ### -StartTimeBefore
-{{ Fill StartTimeBefore Description }}
+取得するジョブの最も遅い開始時刻を指定します。
 
 ```yaml
 Type: DateTime
@@ -534,7 +427,7 @@ Accept wildcard characters: False
 ```
 
 ### -Id
-{{ Fill Id Description }}
+取得するジョブIDを指定します。複数の値をサポートします。
 
 ```yaml
 Type: Int64[]
@@ -549,7 +442,7 @@ Accept wildcard characters: False
 ```
 
 ### -Robot
-{{ Fill Robot Description }}
+フィルタリングするロボット名を指定します。ワイルドカードと複数の値をサポートします。
 
 ```yaml
 Type: String[]
@@ -573,5 +466,22 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.Job
 ## NOTES
+ジョブエンティティはフォルダースコープです。フォルダーに移動するか、-Path、-Recurse、または-Depthパラメーターを使用してターゲットフォルダーを指定する必要があります。
+
+時間範囲、ステータスフィルター、ソートオプションを使用した複雑なクエリには、Filterパラメーターセットを使用します。JobIdパラメーターセットは、IDによる特定のジョブの取得に最適化されています。
+
+ジョブは自動化プロセスの実行履歴を表し、ロボットのパフォーマンスとプロセス結果に関する詳細情報を提供します。
+
+主要エンドポイント: GET /odata/Jobs
+OAuth必要スコープ: OR.Jobs または OR.Jobs.Read
+必要な権限: Jobs.View
 
 ## RELATED LINKS
+
+[Start-OrchJob](Start-OrchJob.md)
+
+[Stop-OrchJob](Stop-OrchJob.md)
+
+[Get-OrchJobMedia](Get-OrchJobMedia.md)
+
+[Open-OrchJob](Open-OrchJob.md)

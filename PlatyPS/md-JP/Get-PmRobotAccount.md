@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-PmRobotAccount
 
 ## SYNOPSIS
-組織に登録されたロボットアカウントを取得します。
+Platform Managementからロボットアカウントを取得します。
 
 ## SYNTAX
 
@@ -25,22 +25,68 @@ Get-PmRobotAccount [-Path <String[]>] [-ExportCsv <String>] [[-CsvEncoding] <Enc
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Get-PmRobotAccountコマンドレットは、UiPath Platform Managementからロボットアカウント情報を取得します。このコマンドレットは組織レベルで動作し、組織全体のロボットサービスアカウントを管理します。
 
-主に呼び出すエンドポイント:
+これは、Platform Management APIを呼び出す組織エンティティコマンドレットです。複数のテナントが同じ組織に属することができる組織レベルで動作します。ロボットアカウントは、組織内のすべてのテナントにわたって自動化プロセスとロボット認証に使用されるサービスアカウントです。
 
-OAuth に必要なスコープ:
+Platform Managementロボットアカウントは、自動化シナリオ向けの集中ID管理を提供し、組織全体で安全で一貫したロボット認証を可能にします。これらのアカウントは、パフォーマンスの向上とメモリ使用量の削減のため、同じ組織内のテナント間で共有されます。
 
-必要な権限:
+プライマリ エンドポイント: GET /api/robotaccounts
+
+OAuth 必要スコープ: [PLACEHOLDER]
+
+必要な権限: Administration.View
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+Get-PmRobotAccount
 ```
 
-{{ Add example description here }}
+現在の組織からすべてのロボットアカウントを取得します。
+
+### Example 2
+```powershell
+Get-PmRobotAccount ServiceAccount01
+```
+
+「ServiceAccount01」という名前のロボットアカウントを取得します。
+
+### Example 3
+```powershell
+Get-PmRobotAccount *Automation*
+```
+
+名前に「Automation」を含むすべてのロボットアカウントを取得します。
+
+### Example 4
+```powershell
+Get-PmRobotAccount -Path Orch1:, Orch2:
+```
+
+複数のテナントドライブ経由でアクセスして、組織からロボットアカウントを取得します。
+
+### Example 5
+```powershell
+Get-PmRobotAccount | Where-Object {$_.IsActive -eq $true}
+```
+
+すべてのアクティブなロボットアカウントを取得します。
+
+### Example 6
+```powershell
+Get-PmRobotAccount | Select-Object Name, EmailAddress, IsActive, CreationTime | Format-Table
+```
+
+すべてのロボットアカウントを取得し、主要なプロパティをテーブル形式で表示します。
+
+### Example 7
+```powershell
+Get-PmRobotAccount | Where-Object {$_.LastLoginDate -lt (Get-Date).AddDays(-30)} | Select-Object Name, LastLoginDate
+```
+
+過去30日以内にログインしていないロボットアカウントを取得します。未使用のアカウントを特定するのに役立ちます。
 
 ## PARAMETERS
 
@@ -69,7 +115,7 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -90,7 +136,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-{{ Fill Name Description }}
+取得するロボットアカウントの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -105,7 +151,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+対象テナントドライブの名前を指定します。ロボットアカウントデータは、使用するテナントドライブに関係なく組織全体のものです。
 
 ```yaml
 Type: String[]
@@ -135,7 +181,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariableの共通パラメータをサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

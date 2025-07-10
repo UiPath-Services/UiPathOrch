@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Disable-OrchFolderMachineAccountMapping
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+フォルダスコープマシンのマシンアカウントマッピングを無効にします。
 
 ## SYNTAX
 
@@ -18,27 +18,66 @@ Disable-OrchFolderMachineAccountMapping [-Name] <String[]> [[-UserName] <String[
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Disable-OrchFolderMachineAccountMapping コマンドレットは、特定のフォルダ内でマシンとユーザーアカウント間のマッピングを無効にします。これにより、特定のユーザーがフォルダコンテキストでマシンに接続できるようにする関連付けが削除されます。
 
-主に呼び出すエンドポイント: GET /odata/Folders/UiPath.Server.Configuration.OData.GetMachineRobots(folderId={folderId},machineId={machineId}), POST /odata/Folders/UiPath.Server.Configuration.OData.SetMachineRobots
+これはフォルダエンティティコマンドレットです。このコマンドレットを使用するには、最初に Set-Location (cd) を使用してターゲットフォルダに移動するか、-Path、-Recurse、または -Depth パラメーターを使用してターゲットフォルダを指定する必要があります。
 
-OAuth に必要なスコープ: OR.Robots
+アカウントマッピングが無効になると、ユーザーはフォルダコンテキストを通じて指定されたマシンへの専用接続を確立できなくなります。
 
-必要な権限:
+プライマリエンドポイント: GET /odata/Folders/UiPath.Server.Configuration.OData.GetMachineRobots(folderId={folderId},machineId={machineId}), POST /odata/Folders/UiPath.Server.Configuration.OData.SetMachineRobots
+
+OAuth 必要なスコープ: OR.Robots
+
+必要な権限: Robots.Edit
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+Disable-OrchFolderMachineAccountMapping Machine01 -WhatIf
 ```
 
-{{ Add example description here }}
+現在のフォルダでMachine01のすべてのアカウントマッピングを無効にした場合に何が起こるかを表示します。
+
+### Example 2
+```powershell
+Disable-OrchFolderMachineAccountMapping Machine01 john.doe
+```
+
+現在のフォルダでMachine01とユーザーjohn.doe間のアカウントマッピングを無効にします。
+
+### Example 3
+```powershell
+Disable-OrchFolderMachineAccountMapping *Dev* *test*
+```
+
+「Dev」を含むすべてのマシンと「test」を含むすべてのユーザーのアカウントマッピングを無効にします。
+
+### Example 4
+```powershell
+Disable-OrchFolderMachineAccountMapping -Path Orch1:\Development Machine01, Machine02 -Confirm
+```
+
+確認を求めながら、DevelopmentフォルダでMachine01とMachine02のすべてのアカウントマッピングを無効にします。
+
+### Example 5
+```powershell
+Disable-OrchFolderMachineAccountMapping -Recurse *Template*
+```
+
+現在のフォルダおよびすべてのサブフォルダで「Template」を含むすべてのマシンのアカウントマッピングを無効にします。
+
+### Example 6
+```powershell
+Get-OrchMachine *Robot* | Disable-OrchFolderMachineAccountMapping -UserName admin.user
+```
+
+「Robot」を含むすべてのマシンとadmin.userアカウント間のアカウントマッピングを無効にします。マシン名はByPropertyNameバインディングを使用してパイプライン経由で渡されます。
 
 ## PARAMETERS
 
 ### -Confirm
-Prompts you for confirmation before running the cmdlet.
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -53,7 +92,7 @@ Accept wildcard characters: False
 ```
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+ターゲットフォルダへの再帰の深さを指定します。深さが0の場合は、現在のフォルダのみが対象となり、サブフォルダは含まれません。
 
 ```yaml
 Type: UInt32
@@ -68,7 +107,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-{{ Fill Name Description }}
+アカウントマッピングを無効にするマシンの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -83,7 +122,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+ターゲットフォルダを指定します。指定しない場合、現在のフォルダがターゲットになります。
 
 ```yaml
 Type: String[]
@@ -98,7 +137,7 @@ Accept wildcard characters: True
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+操作にターゲットフォルダとそのすべてのサブフォルダを含めることを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -113,7 +152,7 @@ Accept wildcard characters: False
 ```
 
 ### -UserName
-{{ Fill UserName Description }}
+アカウントマッピングを無効にするユーザー名を指定します。指定しない場合、指定されたマシンのすべてのアカウントマッピングが無効になります。
 
 ```yaml
 Type: String[]
@@ -128,7 +167,7 @@ Accept wildcard characters: True
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットを実行した場合の動作を示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -159,7 +198,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメーターをサポートしています: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, -WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
 
 ## INPUTS
 
@@ -168,5 +207,12 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Object
 ## NOTES
+これはフォルダエンティティコマンドレットです。このコマンドレットを使用するには、最初に Set-Location (cd) を使用してターゲットフォルダに移動するか、-Path、-Recurse、または -Depth パラメーターを使用してターゲットフォルダを指定する必要があります。
+
+マシンアカウントマッピングは、特定のユーザーがフォルダコンテキストを通じてマシンに接続できるようにします。マッピングを無効にすると、この関連付けが削除されます。効率的な一括操作にはワイルドカードを使用し、実際の実行前のテストには -WhatIf を使用してください。
 
 ## RELATED LINKS
+
+[Enable-OrchFolderMachineAccountMapping](Enable-OrchFolderMachineAccountMapping.md)
+
+[Get-OrchFolderMachineAccountMapping](Get-OrchFolderMachineAccountMapping.md)

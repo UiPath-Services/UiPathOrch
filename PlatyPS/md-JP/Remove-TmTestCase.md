@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Remove-TmTestCase
 
 ## SYNOPSIS
-Test Manager のプロジェクトから、テストケースを削除します。
+Test Manager のプロジェクトからテストケースを削除します。
 
 ## SYNTAX
 
@@ -18,13 +18,13 @@ Remove-TmTestCase [-Name] <String[]> [-Path <String[]>] [-Recurse] [-ProgressAct
 ```
 
 ## DESCRIPTION
-プロジェクトから、指定されたテストケースを削除します。このコマンドレットは、UiPathOrchTm プロバイダの PSDrive 上で動作します。設定ファイルに、"TM." を含むスコープを記載すると、UiPathOrchTm プロバイダの PSDrive が自動で追加されます。Get-PSDrive コマンドレットで確認してください。設定ファイルは、Edit-OrchConfig コマンドレットで開けます。
+プロジェクトからテストケースを削除します。このコマンドレットは UiPathOrchTm プロバイダーの PSDrive 上で動作します。構成ファイル内のスコープに "TM." が含まれている場合、UiPathOrchTm プロバイダーの PSDrive が自動的に追加されます。これは Get-PSDrive コマンドレットで確認できます。構成ファイルは Edit-OrchConfig コマンドレットで開くことができます。
 
-主に呼び出すエンドポイント: DELETE /testmanager_/api/v2/{projectId}/testcases/{testCaseId}
+プライマリ エンドポイント: DELETE /testmanager_/api/v2/{projectId}/testcases/{testCaseId}
 
-OAuth に必要なスコープ: TM.TestCases
+OAuth 必要なスコープ: TM.TestCases
 
-必要な権限: TestCase.Delete
+権限: TestCase.Delete
 
 ## EXAMPLES
 
@@ -38,7 +38,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -53,7 +53,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-削除するテストケースの Name を指定します。
+削除するテストケースの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -68,7 +68,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+対象フォルダーを指定します。指定されていない場合は、現在のフォルダーが対象になります。
 
 ```yaml
 Type: String[]
@@ -83,7 +83,7 @@ Accept wildcard characters: True
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+操作に対象フォルダーとそのすべてのサブフォルダーを含めることを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -98,7 +98,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットが実行された場合の動作を表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -129,7 +129,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメーター（-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable）をサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

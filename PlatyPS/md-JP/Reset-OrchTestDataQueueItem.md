@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -20,11 +20,11 @@ Reset-OrchTestDataQueueItem [[-Name] <String[]>] [-IsConsumed] [-Path <String[]>
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-主に呼び出すエンドポイント: POST /api/TestDataQueueActions/SetAllItemsConsumed
+プライマリ エンドポイント: POST /api/TestDataQueueActions/SetAllItemsConsumed
 
-OAuth に必要なスコープ: OR.TestDataQueues
+OAuth 必要なスコープ: OR.TestDataQueues
 
-必要な権限:
+必要な権限: TestDataQueues.Edit
 
 ## EXAMPLES
 
@@ -38,7 +38,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -53,7 +53,7 @@ Accept wildcard characters: False
 ```
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+対象フォルダーへの再帰の深度を指定します。深度0は現在の場所のみを示し、サブフォルダーは含まれません。
 
 ```yaml
 Type: UInt32
@@ -68,7 +68,7 @@ Accept wildcard characters: False
 ```
 
 ### -IsConsumed
-アイテムの消費状態をどのようにリセットするのか指定します。指定しないときは、未消費にリセットされます。
+アイテムの消費状態をどのようにリセットするかを指定します。指定されていない場合は、未消費にリセットされます。
 
 ```yaml
 Type: SwitchParameter
@@ -83,7 +83,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-消費状態を更新するアイテムを含むテストデータキューの Name を指定します。
+消費ステータスを更新するアイテムを含むテストキューの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -98,7 +98,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+対象フォルダーを指定します。指定されていない場合は、現在のフォルダーが対象になります。
 
 ```yaml
 Type: String[]
@@ -113,7 +113,7 @@ Accept wildcard characters: True
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+操作に対象フォルダーとそのすべてのサブフォルダーを含めることを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -128,7 +128,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットが実行された場合の動作を表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -159,7 +159,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメーター（-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable）をサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

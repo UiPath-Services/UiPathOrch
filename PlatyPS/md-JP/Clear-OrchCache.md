@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Clear-OrchCache
 
 ## SYNOPSIS
-UiPathOrch ドライブ内のメモリキャッシュをクリアします。
+UiPathOrch ドライブのインメモリキャッシュをクリアします。
 
 ## SYNTAX
 
@@ -18,17 +18,17 @@ Clear-OrchCache [[-Path] <String[]>] [-AllDrives] [-ProgressAction <ActionPrefer
 ```
 
 ## DESCRIPTION
-Orchestrator から取得したエンティティは、UiPathOrch モジュールが各ドライブにキャッシュし、応答時間の短縮と Orchestrator への負荷低減に利用します。特に、このキャッシュはパラメーター値を補完入力するときに使われます。
+UiPathOrch モジュールは、応答時間を最適化し、Orchestrator サーバーへの負荷を軽減するために、各ドライブで Orchestrator から取得したエンティティをキャッシュします。特に、このキャッシュはパラメーター値の自動補完に適切な候補を表示するために使用されます。
 
-Orchestrator Web 画面やほかの外部アプリケーションで行ったエンティティの更新（フォルダーの作成や削除など）を PowerShell コンソールに反映するには、このコマンドレットでメモリ上のキャッシュをクリアしてください。
+Orchestrator Web または他の外部アプリケーション経由で行われたエンティティの更新（フォルダーの作成や削除など）を PowerShell コンソールに反映させたい場合は、このコマンドレットでインメモリキャッシュをクリアしてください。
 
--Path パラメータには、キャッシュをクリアしたいドライブの名前を指定します。-Path パラメータを指定しない場合は、現在のドライブのキャッシュがクリアされます。現在のドライブが UiPathOrch ドライブではない場合には、すべての UiPathOrch ドライブのキャッシュがクリアされます。
+-Path パラメーターには、キャッシュをクリアするドライブを指定します。-Path パラメーターが指定されていない場合は、現在のドライブのキャッシュがクリアされます。現在のドライブが UiPathOrch ドライブでない場合は、すべての UiPathOrch ドライブのキャッシュがクリアされます。
 
-主に呼び出すエンドポイント: (なし)
+プライマリエンドポイント: (なし)
 
-OAuth に必要なスコープ: (なし)
+OAuth 必要スコープ: (なし)
 
-必要な権限: (なし)
+必要なアクセス許可: (なし)
 
 ## EXAMPLES
 
@@ -37,33 +37,33 @@ OAuth に必要なスコープ: (なし)
 PS Orch1:\> Clear-OrchCache
 ```
 
-Clears the in-memory cache on the Orch1: as the current drive.
+現在のドライブが Orch1: のため、Orch1: のインメモリキャッシュをクリアします。
 
 ### Example 2
 ```powershell
 PS C:\> Clear-OrchCache
 ```
 
-Clears the in-memory cache on all drives managed by UiPathOrch, because the current drive (C:) is not an UiPathOrch drive.
+現在のドライブ（C:）が UiPathOrch ドライブでないため、UiPathOrch で管理されているすべてのドライブのインメモリキャッシュをクリアします。
 
 ### Example 3
 ```powershell
 PS C:\> Clear-OrchCache Orch1:,Orch2:
 ```
 
-Clears the in-memory cache on the Orch1: and Orch2: drives.
+Orch1: と Orch2: ドライブのインメモリキャッシュをクリアします。
 
 ### Example 4
 ```powershell
 PS Orch1:\> Clear-OrchCache .,Orch2:
 ```
 
-The current drive can be specified using a period (.), which represents the current location. In this command, the cache is cleared on both the current drive (Orch1:) and Orch2:.
+現在のドライブはピリオド（.）を使用して指定でき、これは現在の場所を表します。このコマンドでは、現在のドライブ（Orch1:）と Orch2: の両方でキャッシュがクリアされます。
 
 ## PARAMETERS
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+対象ドライブの名前を指定します。指定されていない場合は、現在のドライブが対象になります。
 
 ```yaml
 Type: String[]
@@ -78,7 +78,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+コマンドレットによって生成される進行状況の更新に PowerShell がどのように応答するかを指定します。
 
 ```yaml
 Type: ActionPreference
@@ -93,7 +93,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットの実行前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -108,8 +108,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
-コマンドレットは実行されません。
+コマンドレットを実行した場合の動作を表示します。コマンドレットは実行されません。
 
 ```yaml
 Type: SwitchParameter
@@ -124,7 +123,7 @@ Accept wildcard characters: False
 ```
 
 ### -AllDrives
-{{ Fill AllDrives Description }}
+現在の場所に関係なく、すべての UiPathOrch ドライブのキャッシュをクリアします。このパラメーターは -Path パラメーターと同時に使用できません。
 
 ```yaml
 Type: SwitchParameter

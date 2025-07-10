@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Disable-OrchTestSetSchedule
 
 ## SYNOPSIS
-テストスケジュールを無効にします。
+指定されたフォルダのテストセットスケジュールを無効にします。
 
 ## SYNTAX
 
@@ -18,11 +18,17 @@ Disable-OrchTestSetSchedule [-Name] <String[]> [-Path <String[]>] [-Recurse] [-D
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Disable-OrchTestSetScheduleコマンドレットは、UiPath Orchestrator内の指定されたフォルダのテストセットスケジュールを無効にします。このコマンドレットを使用すると、スケジュール設定を削除せずにスケジュールされたテスト実行を一時的に停止できるため、メンテナンスシナリオやテスト自動化ワークフローのトラブルシューティング時に役立ちます。
 
-主に呼び出すエンドポイント: POST /odata/TestSetSchedules/UiPath.Server.Configuration.OData.SetEnabled
+テストセットスケジュールは、指定された間隔や時間でテストセットの実行を自動化します。これを無効にすると、スケジュールされたテスト実行が開始されなくなりますが、将来の再有効化のためにスケジュール設定は保持されます。
 
-OAuth に必要なスコープ: OR.TestSetSchedules
+-Nameパラメータを使用して、無効にするテストセットスケジュールを指定します。このコマンドレットは、複数のスケジュールを効率的に無効にするためのワイルドカードパターンをサポートします。-Pathパラメータを使用すると特定のフォルダを対象にでき、-Recurseを使用するとすべてのサブフォルダが処理されます。
+
+これはフォルダエンティティコマンドレットです。最初にSet-Locationコマンドレット（cdコマンド）を使用してターゲットフォルダに移動するか、-Path、-Recurse、または-Depthパラメータを使用してターゲットフォルダを指定します。-Recurseパラメータを使用すると、すべてのサブフォルダからテストセットスケジュールを無効にできます。
+
+プライマリエンドポイント: POST /odata/TestSetSchedules/UiPath.Server.Configuration.OData.SetEnabled
+
+OAuth必要スコープ: OR.TestSetSchedules または OR.TestSetSchedules.Write
 
 必要な権限: TestSetSchedules.Edit
 
@@ -30,15 +36,50 @@ OAuth に必要なスコープ: OR.TestSetSchedules
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Development> Disable-OrchTestSetSchedule RegressionTestSchedule
 ```
 
-{{ Add example description here }}
+位置パラメータを使用して、現在のフォルダ（Development）のRegressionTestScheduleを無効にします。
+
+### Example 2
+```powershell
+PS C:\> Disable-OrchTestSetSchedule -Path Orch1:\Development SmokeTestSchedule
+```
+
+Orch1:\DevelopmentフォルダのSmokeTestScheduleを無効にします。
+
+### Example 3
+```powershell
+PS Orch1:\Development> Disable-OrchTestSetSchedule *Daily*, *Weekly* -WhatIf
+```
+
+安全のために-WhatIfを使用して、現在のフォルダでDailyまたはWeeklyが含まれる名前の複数のテストセットスケジュールを無効にする際の動作を表示します。
+
+### Example 4
+```powershell
+PS C:\> Disable-OrchTestSetSchedule -Path Orch1:\Development *Automated* -Confirm
+```
+
+確認プロンプトを表示して、DevelopmentフォルダでAutomatedが含まれるすべてのテストセットスケジュールを無効にします。
+
+### Example 5
+```powershell
+PS Orch1:\> Disable-OrchTestSetSchedule -Recurse *Nightly*
+```
+
+すべてのサブフォルダから再帰的に、Nightlyが含まれるすべてのテストセットスケジュールを無効にします。
+
+### Example 6
+```powershell
+PS Orch1:\Development> Get-OrchTestSetSchedule *Integration* | Disable-OrchTestSetSchedule -WhatIf
+```
+
+Integrationが含まれるすべてのテストセットスケジュールを取得し、パイプライン入力を使用してそれらを無効にする際の動作を表示します。
 
 ## PARAMETERS
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -53,7 +94,7 @@ Accept wildcard characters: False
 ```
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+-Recurseパラメータを使用する際に含めるサブフォルダレベルの最大数を指定します。
 
 ```yaml
 Type: UInt32
@@ -68,7 +109,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-無効にするテストスケジュールの Name を指定します。
+無効にするテストセットスケジュールの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -83,7 +124,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+対象フォルダを指定します。指定されない場合、現在のフォルダが対象になります。
 
 ```yaml
 Type: String[]
@@ -98,7 +139,7 @@ Accept wildcard characters: True
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+すべてのサブフォルダから再帰的にテストセットスケジュールを無効にすることを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -113,7 +154,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットが実行された場合の動作を表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -144,14 +185,27 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメータをサポートします: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
 ### None
+
 ## OUTPUTS
 
 ### System.Object
+
 ## NOTES
+これはフォルダエンティティコマンドレットです。最初にSet-Locationコマンドレット（cdコマンド）を使用してターゲットフォルダに移動するか、-Path、-Recurse、または-Depthパラメータを使用してターゲットフォルダを指定します。
+
+テストセットスケジュールは、指定された間隔でテスト実行を自動化します。これを無効にすると、設定を保持しながらスケジュールされたテスト実行が一時的に停止されます。無効にされたスケジュールを再有効化するには、Enable-OrchTestSetScheduleを使用します。効率的な一括操作にはワイルドカードを使用し、実際の実行前にテストするには-WhatIfを使用してください。
 
 ## RELATED LINKS
+
+[Enable-OrchTestSetSchedule](Enable-OrchTestSetSchedule.md)
+
+[Get-OrchTestSetSchedule](Get-OrchTestSetSchedule.md)
+
+[Remove-OrchTestSetSchedule](Remove-OrchTestSetSchedule.md)
+
+[Set-OrchTestSetSchedule](Set-OrchTestSetSchedule.md)

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Remove-OrchPersonalWorkspace
 
 ## SYNOPSIS
-個人用ワークスペースフォルダーを削除します。
+UiPath Orchestratorからパーソナルワークスペースフォルダを削除します。
 
 ## SYNTAX
 
@@ -18,27 +18,68 @@ Remove-OrchPersonalWorkspace [[-Name] <String[]>] [[-OwnerName] <String[]>] [-Pa
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Remove-OrchPersonalWorkspaceコマンドレットは、UiPath Orchestratorからパーソナルワークスペースフォルダを完全に削除します。パーソナルワークスペースは、ユーザーが自動化プロジェクトの開発、テスト、および管理を行うための個別環境を提供する専用フォルダです。
 
-主に呼び出すエンドポイント: GET /odata/PersonalWorkspaces, DELETE /odata/Folders({folderId})
+このコマンドレットは、実際のフォルダ構造と、パーソナルワークスペース内に保存されているプロセス、アセット、その他の自動化成果物を含むすべての含有コンテンツを削除します。この操作は元に戻すことができず、ワークスペースデータを完全に削除します。
 
-OAuth に必要なスコープ: OR.Folders
+このコマンドレットはOrchestrator内のフォルダレベルで動作し、名前または所有者によって特定のパーソナルワークスペースフォルダをターゲットにします。-Nameパラメータを使用してワークスペースフォルダ名を直接指定するか、-OwnerNameパラメータを使用して所有ユーザーでワークスペースをターゲットにします。両方のパラメータは一括操作用のワイルドカードパターンをサポートします。
 
-必要な権限: Units.View, (Units.Delete or SubFolders.Delete - Deletes any folder or only if user has SubFolders.Delete permission on the provided folder)
+これは、適切なフォルダパスへのナビゲーションまたは-Pathパラメータを使用したターゲットパスの指定を必要とするフォルダレベルエンティティ操作です。この操作には、Orchestrator環境内でフォルダを削除するための適切な権限が必要です。
+
+プライマリ エンドポイント: GET /odata/PersonalWorkspaces, DELETE /odata/Folders({folderId})
+
+OAuth 必要なスコープ: OR.Folders
+
+必要な権限: Units.View、(Units.Delete または SubFolders.Delete)
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Remove-OrchPersonalWorkspace -OwnerName john.doe -WhatIf
 ```
 
-{{ Add example description here }}
+john.doeが所有するパーソナルワークスペースを削除する際に何が起こるかを表示します。
+
+### Example 2
+```powershell
+PS Orch1:\> Remove-OrchPersonalWorkspace -Name "john.doe Personal Workspace" -Confirm
+```
+
+確認プロンプトで特定のパーソナルワークスペースフォルダを削除します。
+
+### Example 3
+```powershell
+PS C:\> Remove-OrchPersonalWorkspace -Path Orch1: -OwnerName temp.user1, temp.user2 -WhatIf
+```
+
+Orch1テナント内の複数の一時ユーザーのパーソナルワークスペースを削除する際に何が起こるかを表示します。
+
+### Example 4
+```powershell
+PS Orch1:\> Remove-OrchPersonalWorkspace -OwnerName *contractor* -Confirm
+```
+
+ユーザー名に"contractor"を含むすべてのユーザーのパーソナルワークスペースを確認プロンプトで削除します。
+
+### Example 5
+```powershell
+PS Orch1:\> Get-OrchPersonalWorkspace | Where-Object {$_.LastModified -lt (Get-Date).AddDays(-90)} | Remove-OrchPersonalWorkspace -WhatIf
+```
+
+過去90日間変更されていないパーソナルワークスペースを削除する際に何が起こるかを表示します。
+
+### Example 6
+```powershell
+PS C:\> Remove-OrchPersonalWorkspace -Path Orch1:, Orch2: -OwnerName inactive.user1 -Confirm
+```
+
+複数のテナントにわたってinactive.user1のパーソナルワークスペースを確認付きで削除します。
 
 ## PARAMETERS
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -53,7 +94,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-削除する個人用ワークスペースフォルダーの Name を指定します。
+削除するパーソナルワークスペースフォルダの名前を指定します。一括操作用のワイルドカードパターンをサポートします。
 
 ```yaml
 Type: String[]
@@ -68,7 +109,7 @@ Accept wildcard characters: True
 ```
 
 ### -OwnerName
-削除する個人用ワークスペースフォルダーの OwnerName を指定します。
+削除するパーソナルワークスペースフォルダの所有者名（ユーザー名）を指定します。一括操作用のワイルドカードパターンをサポートします。
 
 ```yaml
 Type: String[]
@@ -83,7 +124,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+対象テナントドライブを指定します。指定しない場合は、現在のドライブが対象となります。パス指定を必要とするフォルダレベル操作用です。
 
 ```yaml
 Type: String[]
@@ -98,7 +139,7 @@ Accept wildcard characters: True
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットを実行した場合に何が起こるかを表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -129,7 +170,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
 
 ## INPUTS
 
@@ -138,5 +179,14 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.PersonalWorkspace
 ## NOTES
+このコマンドレットは、パーソナルワークスペースフォルダとすべての含有コンテンツを完全に削除するフォルダレベルエンティティ操作を実行します。この操作は元に戻すことができず、適切なフォルダ削除権限が必要です。パーソナルワークスペースは、ユーザーに専用の開発環境を提供します。特にワイルドカードパターンを使用する場合は、実行前に操作をプレビューするために常に-WhatIfを使用してください。この操作には、フォルダ階層に応じてUnits.DeleteまたはSubFolders.Delete権限が必要です。
 
 ## RELATED LINKS
+
+[Get-OrchPersonalWorkspace](Get-OrchPersonalWorkspace.md)
+
+[Enable-OrchPersonalWorkspace](Enable-OrchPersonalWorkspace.md)
+
+[Disable-OrchPersonalWorkspace](Disable-OrchPersonalWorkspace.md)
+
+[Get-OrchFolder](Get-OrchFolder.md)

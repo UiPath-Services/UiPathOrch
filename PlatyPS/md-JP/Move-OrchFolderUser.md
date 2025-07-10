@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Move-OrchFolderUser
 
 ## SYNOPSIS
-フォルダーにアサインされたユーザーを削除し、別のフォルダーにアサインします。
+フォルダユーザーをフォルダ間で移動します。
 
 ## SYNTAX
 
@@ -18,27 +18,73 @@ Move-OrchFolderUser [-UserName] <String[]> [[-Destination] <String[]>] [-KeepSou
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Move-OrchFolderUserコマンドレットは、ユーザーをあるフォルダから別のフォルダに移動し、アクセス権とロール割り当てをフォルダコンテキスト間で転送します。
 
-主に呼び出すエンドポイント: GET /odata/Folders/UiPath.Server.Configuration.OData.GetUsersForFolder(key={folderId}), POST /odata/Folders/UiPath.Server.Configuration.OData.AssignUsers, POST /odata/Folders({folderId})/UiPath.Server.Configuration.OData.RemoveUserFromFolder
+これはフォルダエンティティコマンドレットです。このコマンドレットを使用するには、まずSet-Location（cd）を使用してターゲットフォルダに移動するか、-Path、-Recurse、または-Depthパラメータを使用してターゲットフォルダを指定する必要があります。
 
-OAuth に必要なスコープ: OR.Folders
+デフォルトでは、ユーザーを移動すると、ソースフォルダからアクセスが削除され、ターゲットフォルダへのアクセスが付与されます。-KeepSourceを使用して、ターゲットフォルダへのアクセスを追加しながら、元のフォルダへのアクセスを維持します。
 
-必要な権限: Units.Edit or SubFolders.Edit
+プライマリ エンドポイント: POST /odata/FolderUsers/Move
+
+OAuth 必要なスコープ: OR.Folders または OR.Folders.Write
+
+必要な権限: Folders.Edit
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+Move-OrchFolderUser "automation developers" -WhatIf
 ```
 
-{{ Add example description here }}
+"automation developers"ユーザーを現在のフォルダから移動する場合の結果を表示します。
+
+### Example 2
+```powershell
+Move-OrchFolderUser "john.doe" -Destination "Orch1:\Development"
+```
+
+john.doeを現在のフォルダからDevelopmentフォルダに移動します。
+
+### Example 3
+```powershell
+Move-OrchFolderUser "jane.smith", "bob.jones" -Destination "Orch1:\Production"
+```
+
+複数のユーザー（jane.smithとbob.jones）をProductionフォルダに移動します。
+
+### Example 4
+```powershell
+Move-OrchFolderUser "*developer*" -Destination "Orch1:\Development"
+```
+
+名前に"developer"を含むすべてのユーザーをDevelopmentフォルダに移動します。
+
+### Example 5
+```powershell
+Move-OrchFolderUser "service.account" -Destination "Orch1:\Testing" -KeepSource true
+```
+
+service.accountをTestingフォルダに移動し、現在のフォルダへのアクセスを維持します。
+
+### Example 6
+```powershell
+Move-OrchFolderUser -Path "Orch1:\Legacy" "migration.user" -Destination "Orch1:\Modern" -Confirm
+```
+
+migration.userをLegacyフォルダからModernフォルダに確認付きで移動します。
+
+### Example 7
+```powershell
+Get-OrchFolderUser | Where-Object {$_.UserEntity.Type -eq "DirectoryGroup"} | Move-OrchFolderUser -Destination "Orch1:\GroupManagement"
+```
+
+すべてのディレクトリグループユーザーをGroupManagementフォルダに移動します。ユーザー情報は、ByPropertyNameバインディングを使用してパイプライン経由で渡されます。
 
 ## PARAMETERS
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -53,7 +99,7 @@ Accept wildcard characters: False
 ```
 
 ### -Destination
-コピー先のフォルダーを指定します。
+ユーザーが移動される宛先フォルダパスを指定します。
 
 ```yaml
 Type: String[]
@@ -68,7 +114,7 @@ Accept wildcard characters: True
 ```
 
 ### -KeepSource
-{{ Fill KeepSource Description }}
+宛先に移動した後、ソースフォルダにユーザーを残すかどうかを指定します。二重フォルダアクセスを維持するには"true"に設定します。
 
 ```yaml
 Type: String
@@ -83,7 +129,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-移動元のフォルダーを指定します。指定しない場合は、現在のフォルダーをコピー元とします。
+ターゲットフォルダを指定します。指定されていない場合は、現在のフォルダがターゲットになります。
 
 ```yaml
 Type: String[]
@@ -98,7 +144,7 @@ Accept wildcard characters: True
 ```
 
 ### -UserName
-{{ Fill UserName Description }}
+フォルダ間で移動するユーザーの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -113,7 +159,7 @@ Accept wildcard characters: True
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットを実行した場合の結果を表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -144,7 +190,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -19,29 +19,70 @@ Enable-OrchMaintenanceMode [[-MachineName] <String[]>] [[-HostMachineName] <Stri
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Enable-OrchMaintenanceModeコマンドレットは、UiPath Orchestrator内の無人ロボットセッションのメンテナンスモードを有効にします。このコマンドレットは、現在実行中のジョブを正常に完了させながら、ロボットセッションが新しいジョブを受け入れることを防ぎ、メンテナンス活動やシステム更新に最適です。
 
-主に呼び出すエンドポイント: GET /odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimes
+メンテナンスモードは、実行中の自動化プロセスを中断することなく、ロボットマシンでメンテナンス作業を実行するために不可欠です。有効にすると、ロボットセッションは現在のジョブを完了しますが、メンテナンスモードが無効になるまでキューから新しいジョブを受け入れません。
 
-OAuth に必要なスコープ: OR.Robots or OR.Robots.Read
+さまざまなフィルタリングパラメーターを使用して、メンテナンスモードの有効化対象となる特定のロボットセッションを指定できます。MachineName、HostMachineName、ServiceUserName、または特定のSessionId値でフィルタリングできます。-Pathパラメーターを使用して特定のフォルダを対象とすることができます。
 
-必要な権限: Machines.View
+-Forceパラメーターを使用して、複数のセッションに対してメンテナンスモードを同時に有効にする際の確認プロンプトをバイパスできます。
+
+Primary Endpoint: GET /odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimes
+
+OAuth required scopes: OR.Robots or OR.Robots.Write
+
+Required permissions: Machines.Edit
 
 ## EXAMPLES
 
 ### Example 1
-```powershell
-PS C:\> {{ Add example code here }}
-```
+`powershell
+PS Orch1:\Development> Enable-OrchMaintenanceMode -MachineName Robot01
+`
 
-{{ Add example description here }}
+現在のフォルダでマシンRobot01上のすべてのセッションのメンテナンスモードを有効にします。
+
+### Example 2
+`powershell
+PS C:\> Enable-OrchMaintenanceMode -Path Orch1:\Production -HostMachineName Server01
+`
+
+ProductionフォルダでホストマシンServer01上のすべてのセッションのメンテナンスモードを有効にします。
+
+### Example 3
+`powershell
+PS Orch1:\Development> Enable-OrchMaintenanceMode -ServiceUserName ServiceAccount01, ServiceAccount02 -WhatIf
+`
+
+ServiceAccount01とServiceAccount02を使用するセッションのメンテナンスモードを有効にする場合の動作を表示します。
+
+### Example 4
+`powershell
+PS C:\> Enable-OrchMaintenanceMode -Path Orch1:\Development -SessionId 12345, 67890 -Force
+`
+
+DevelopmentフォルダでID 12345と67890の特定のセッションのメンテナンスモードを確認プロンプトなしで有効にします。
+
+### Example 5
+`powershell
+PS Orch1:\Production> Enable-OrchMaintenanceMode -MachineName *Robot* -Confirm
+`
+
+名前にRobotを含むすべてのマシン上のセッションのメンテナンスモードを確認プロンプト付きで有効にします。
+
+### Example 6
+`powershell
+PS C:\> Get-OrchUnattendedSession -MaintenanceMode $false | Enable-OrchMaintenanceMode -WhatIf
+`
+
+現在メンテナンスモードにないすべてのセッションを取得し、パイプライン入力を使用してメンテナンスモードを有効にする場合の動作を表示します。
 
 ## PARAMETERS
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットの実行前に確認メッセージを表示します。
 
-```yaml
+`yaml
 Type: SwitchParameter
 Parameter Sets: (All)
 Aliases: cf
@@ -51,12 +92,12 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
-```
+`
 
 ### -Force
-実行中のすべてのジョブをすぐに強制終了することを指定します。
+確認プロンプトなしで操作を強制実行します。
 
-```yaml
+`yaml
 Type: SwitchParameter
 Parameter Sets: (All)
 Aliases:
@@ -66,12 +107,12 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
-```
+`
 
 ### -HostMachineName
-メンテナンスモードを有効にする無人セッションの HostMachineName を指定します。
+メンテナンスモードの有効化対象となるホストマシン名を指定します。
 
-```yaml
+`yaml
 Type: String[]
 Parameter Sets: (All)
 Aliases:
@@ -81,12 +122,12 @@ Position: 1
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
-```
+`
 
 ### -MachineName
-メンテナンスモードを有効にする無人セッションの MachineName を指定します。
+メンテナンスモードの有効化対象となるマシン名を指定します。
 
-```yaml
+`yaml
 Type: String[]
 Parameter Sets: (All)
 Aliases:
@@ -96,12 +137,12 @@ Position: 0
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
-```
+`
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+ターゲットフォルダを指定します。指定されていない場合、現在のフォルダが対象になります。
 
-```yaml
+`yaml
 Type: String[]
 Parameter Sets: (All)
 Aliases:
@@ -111,12 +152,12 @@ Position: Named
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
-```
+`
 
 ### -ServiceUserName
-メンテナンスモードを有効にする無人セッションの ServiceUserName を指定します。
+メンテナンスモードの有効化対象となるサービスユーザー名を指定します。
 
-```yaml
+`yaml
 Type: String[]
 Parameter Sets: (All)
 Aliases:
@@ -126,12 +167,12 @@ Position: 2
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
-```
+`
 
 ### -SessionId
-メンテナンスモードを有効にする無人セッションの SessionId を指定します。
+メンテナンスモードの有効化対象となるセッションIDを指定します。
 
-```yaml
+`yaml
 Type: Int64[]
 Parameter Sets: (All)
 Aliases:
@@ -141,13 +182,13 @@ Position: 3
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
-```
+`
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットが実行された場合に何が起こるかを表示します。
 コマンドレットは実行されません。
 
-```yaml
+`yaml
 Type: SwitchParameter
 Parameter Sets: (All)
 Aliases: wi
@@ -157,12 +198,12 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
-```
+`
 
 ### -ProgressAction
 {{ Fill ProgressAction Description }}
 
-```yaml
+`yaml
 Type: ActionPreference
 Parameter Sets: (All)
 Aliases: proga
@@ -172,10 +213,10 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
-```
+`
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメーターをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -184,5 +225,14 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Object
 ## NOTES
+メンテナンスモードは、現在のジョブを完了させながら、ロボットセッションが新しいジョブを受け入れることを防ぎます。これは、実行中のプロセスを中断することなくメンテナンスを実行するために不可欠です。特定のセッションを対象とするためにフィルタリングパラメーターを使用してください。-Forceパラメーターは、一括操作の確認プロンプトをバイパスします。
 
 ## RELATED LINKS
+
+[Disable-OrchMaintenanceMode](Disable-OrchMaintenanceMode.md)
+
+[Get-OrchUnattendedSession](Get-OrchUnattendedSession.md)
+
+[Get-OrchMachine](Get-OrchMachine.md)
+
+[Get-OrchRobot](Get-OrchRobot.md)

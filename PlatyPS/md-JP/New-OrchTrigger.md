@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # New-OrchTrigger
 
 ## SYNOPSIS
-トリガーを作成します。
+プロセス実行用の自動化トリガーを作成します。
 
 ## SYNTAX
 
@@ -26,22 +26,59 @@ New-OrchTrigger [-Name] <String[]> [-ReleaseName] <String> [-Enabled <String>] [
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+New-OrchTrigger コマンドレットは、さまざまな条件に基づいてプロセス実行を自動的に開始する自動化トリガーを作成します。トリガーは、時間ベース（スケジュール済み）、キューベース（キューアイテムによってアクティブ化）、またはイベントベース（特定の条件によってトリガー）にできます。
 
-主に呼び出すエンドポイント: POST /odata/ProcessSchedules
+**これはフォルダエンティティコマンドレットです。** このコマンドレットを使用するには、最初にSet-Location（cd）を使用してターゲットフォルダに移動するか、-Pathパラメータを使用してターゲットフォルダを指定する必要があります。フォルダコンテキストなしでこのコマンドレットを実行しようとすると、「最初にSet-Locationコマンドレット（cdコマンド）を使用してターゲットフォルダに移動するか、-Path、-Recurse、または-Depthパラメータを使用してターゲットフォルダを指定してください。」というエラーが表示されます。
 
-OAuth に必要なスコープ: OR.Jobs
+トリガーは、Cron式を使用した時間ベースのスケジューリング、アイテムがキューに追加されたときのキューベースのアクティベーション、カレンダー統合、ロボット割り当て、障害処理ポリシーなどの高度な構成を含む、さまざまな実行戦略をサポートします。
 
-必要な権限: Schedules.Create
+プライマリエンドポイント: POST /odata/ProcessSchedules
+OAuth必須スコープ: OR.Execution または OR.Execution.Write
+必要な権限: Execution.Create
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+New-OrchTrigger DailyTrigger InvoiceProcessing
 ```
 
-{{ Add example description here }}
+位置パラメータを使用して「InvoiceProcessing」プロセス用の「DailyTrigger」という名前の基本トリガーを作成します。
+
+### Example 2
+```powershell
+New-OrchTrigger BusinessHoursTrigger DataProcessor -StartProcessCron "0 9 * * 1-5" -TimeZone "UTC" -Enabled "True"
+```
+
+Cronスケジューリングを使用して平日の午前9時にDataProcessorプロセスを実行するトリガーを作成します。
+
+### Example 3
+```powershell
+New-OrchTrigger QueueTrigger EmailHandler -QueueDefinitionName "EmailQueue" -ItemsActivationThreshold 5 -MaxJobsForActivation 3
+```
+
+EmailQueueに5個以上のアイテムがある場合にEmailHandlerプロセスを開始し、最大3つの並行ジョブを許可するキューベースのトリガーを作成します。
+
+### Example 4
+```powershell
+New-OrchTrigger CriticalTrigger EmergencyResponse -Priority "High" -RuntimeType "Unattended" -RunAsMe "True" -MachineRobots "Robot1", "Robot2"
+```
+
+特定のロボット割り当てとRunAsMe実行コンテキストを持つ高優先度トリガーを作成します。
+
+### Example 5
+```powershell
+New-OrchTrigger -Path Orch1:\Production MonthlyReport ReportGenerator -CalendarName "BusinessCalendar" -StopProcessDate (Get-Date).AddMonths(1)
+```
+
+カレンダー統合と自動停止日を持つProductionフォルダでトリガーを作成します。
+
+### Example 6
+```powershell
+New-OrchTrigger FailsafeTrigger BackupProcess -ConsecutiveJobFailuresThreshold 3 -JobFailuresGracePeriodInHours 2 -AlertPendingExpression "duration > 30" -WhatIf
+```
+
+障害処理とアラート構成を持つトリガーを作成する際に何が起こるかを表示します。
 
 ## PARAMETERS
 
@@ -106,7 +143,7 @@ Accept wildcard characters: True
 ```
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -136,7 +173,7 @@ Accept wildcard characters: False
 ```
 
 ### -Enabled
-{{ Fill Enabled Description }}
+作成時にトリガーが有効（"True"）か無効（"False"）かを指定します。
 
 ```yaml
 Type: String
@@ -181,7 +218,7 @@ Accept wildcard characters: False
 ```
 
 ### -ItemsActivationThreshold
-{{ Fill ItemsActivationThreshold Description }}
+トリガーをアクティブ化するために必要なキューアイテムの最小数を指定します。
 
 ```yaml
 Type: Int32
@@ -256,7 +293,7 @@ Accept wildcard characters: False
 ```
 
 ### -MaxJobsForActivation
-{{ Fill MaxJobsForActivation Description }}
+このトリガーによって開始できる並行ジョブの最大数を指定します。
 
 ```yaml
 Type: Int32
@@ -271,7 +308,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-{{ Fill Name Description }}
+作成するトリガーの名前を指定します。トリガー名はフォルダ内で一意である必要があります。
 
 ```yaml
 Type: String[]
@@ -286,7 +323,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+トリガーが作成されるターゲットフォルダのパスを指定します。現在の場所を変更せずに特定のフォルダでトリガーを作成するには、このパラメータを使用します。
 
 ```yaml
 Type: String[]
@@ -301,7 +338,7 @@ Accept wildcard characters: True
 ```
 
 ### -Priority
-{{ Fill Priority Description }}
+トリガーされた実行のジョブ優先度を指定します。有効な値には、Low、Normal、High、Criticalがあります。
 
 ```yaml
 Type: String
@@ -316,7 +353,7 @@ Accept wildcard characters: False
 ```
 
 ### -QueueDefinitionName
-{{ Fill QueueDefinitionName Description }}
+キューベースのトリガー用のキュー名を指定します。このキューにアイテムが追加されるとトリガーがアクティブになります。
 
 ```yaml
 Type: String
@@ -331,7 +368,7 @@ Accept wildcard characters: True
 ```
 
 ### -ReleaseName
-{{ Fill ReleaseName Description }}
+このトリガーが実行するプロセス（リリース）の名前を指定します。プロセスは同じフォルダに存在する必要があります。
 
 ```yaml
 Type: String
@@ -376,7 +413,7 @@ Accept wildcard characters: False
 ```
 
 ### -RuntimeType
-{{ Fill RuntimeType Description }}
+ロボットランタイムタイプを指定します。有効な値には、Unattended、NonProduction、TestAutomationがあります。
 
 ```yaml
 Type: String
@@ -391,7 +428,7 @@ Accept wildcard characters: False
 ```
 
 ### -StartProcessCron
-{{ Fill StartProcessCron Description }}
+時間ベースのスケジューリング用のCron式を指定します。標準のCron形式を使用します（例：平日の午前9時の場合は"0 9 * * 1-5"）。
 
 ```yaml
 Type: String
@@ -496,8 +533,7 @@ Accept wildcard characters: True
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
-コマンドレットは実行されません。
+コマンドレットを実行した場合に何が起こるかを表示します。コマンドレットは実行されません。
 
 ```yaml
 Type: SwitchParameter
@@ -542,7 +578,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および -WarningVariable の共通パラメータをサポートします。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
 
 ## INPUTS
 
@@ -554,5 +590,18 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.ProcessSchedule
 ## NOTES
+- トリガー名はフォルダ内で一意である必要があります
+- Cron式は標準形式を使用します：秒 分 時 日 月 曜日 年
+- キューベースのトリガーには既存のキューが必要です
+- 実際の作成前に-WhatIfを使用して操作をプレビューすることを検討してください
+- タイムゾーンは有効なTimeZone識別子として指定する必要があります
+- ロボット割り当ては既存のロボットを参照する必要があります
+- カレンダー統合には既存のカレンダーオブジェクトが必要です
 
 ## RELATED LINKS
+
+[Get-OrchTrigger](Get-OrchTrigger.md)
+[Update-OrchTrigger](Update-OrchTrigger.md)
+[Remove-OrchTrigger](Remove-OrchTrigger.md)
+[Enable-OrchTrigger](Enable-OrchTrigger.md)
+[Disable-OrchTrigger](Disable-OrchTrigger.md)

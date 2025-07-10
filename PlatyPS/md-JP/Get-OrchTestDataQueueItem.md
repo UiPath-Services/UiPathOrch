@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-OrchTestDataQueueItem
 
 ## SYNOPSIS
-テストデータキューのアイテムを取得します。
+テストデータキュー内のアイテムを取得します。
 
 ## SYNTAX
 
@@ -18,29 +18,66 @@ Get-OrchTestDataQueueItem [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-D
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Get-OrchTestDataQueueItem コマンドレットは、テストデータキューからアイテムを取得します。テストデータキューアイテムには、テスト自動化シナリオで使用される構造化データが含まれます。
 
-主に呼び出すエンドポイント: GET /odata/TestDataQueueItems?$filter=(TestDataQueueId eq {testDataQueueId})
+これはフォルダエンティティコマンドレットです。このコマンドレットを使用するには、最初にSet-Location（cd）を使用してターゲットフォルダに移動するか、-Path、-Recurse、または-Depthパラメータを使用してターゲットフォルダを指定する必要があります。
 
-OAuth に必要なスコープ: OR.TestDataQueues or OR.TestDataQueues.Read
+パラメータが指定されていない場合、現在のフォルダ内のすべてのテストデータキューアイテムが返されます。
 
-Required permissions: TestDataQueueItems.View
+プライマリエンドポイント: GET /odata/TestDataQueueItems?$filter=(TestDataQueueId eq {testDataQueueId})
 
-必要な権限:
+OAuth必須スコープ: OR.TestDataQueues または OR.TestDataQueues.Read
+
+必要な権限: TestDataQueueItems.View
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Get-OrchTestDataQueueItem
 ```
 
-{{ Add example description here }}
+現在のフォルダ内のすべてのテストデータキューアイテムを取得します。
+
+### Example 2
+```powershell
+PS Orch1:\Shared> Get-OrchTestDataQueueItem CustomerData
+```
+
+現在のフォルダ内の「CustomerData」という名前のテストデータキューからすべてのアイテムを取得します。
+
+### Example 3
+```powershell
+PS Orch1:\Shared> Get-OrchTestDataQueueItem *Data*
+```
+
+名前に「Data」を含むテストデータキューからすべてのアイテムを取得します。
+
+### Example 4
+```powershell
+PS Orch1:\> Get-OrchTestDataQueueItem -Recurse
+```
+
+現在のフォルダとそのすべてのサブフォルダからすべてのテストデータキューアイテムを取得します。
+
+### Example 5
+```powershell
+PS C:\> Get-OrchTestDataQueueItem -Path Orch1:\Development, Orch1:\Production UserTestData
+```
+
+DevelopmentフォルダとProductionフォルダの両方から「UserTestData」キューのすべてのアイテムを取得します。
+
+### Example 6
+```powershell
+PS Orch1:\Shared> Get-OrchTestDataQueueItem | ConvertTo-Json -Depth 2
+```
+
+データ構造と内容の詳細分析のために、テストデータキューアイテムをJSON形式で表示します。
 
 ## PARAMETERS
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+ターゲットフォルダへの再帰の深度を指定します。深度0は現在の場所のみを示し、サブフォルダは含まれません。
 
 ```yaml
 Type: UInt32
@@ -55,7 +92,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-取得するアイテムを含むテストデータキューの Name を指定します。
+取得するアイテムを含むテストデータキューの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -70,7 +107,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+ターゲットフォルダを指定します。指定されていない場合は、現在のフォルダがターゲットになります。
 
 ```yaml
 Type: String[]
@@ -85,7 +122,7 @@ Accept wildcard characters: True
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+操作にターゲットフォルダとそのすべてのサブフォルダを含めることを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -115,7 +152,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および -WarningVariable の共通パラメータをサポートします。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
 
 ## INPUTS
 
@@ -124,5 +161,9 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.TestDataQueue
 ## NOTES
+
+プライマリエンドポイント: GET /odata/TestDataQueues
+OAuth必須スコープ: OR.TestDataQueues または OR.TestDataQueues.Read
+必要な権限: TestDataQueues.View
 
 ## RELATED LINKS

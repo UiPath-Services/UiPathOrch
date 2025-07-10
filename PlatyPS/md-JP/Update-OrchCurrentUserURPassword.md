@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Update-OrchCurrentUserURPassword
 
 ## SYNOPSIS
-現在のユーザーの Unattended Robot の Windows パスワードを更新します。
+UiPath Orchestratorで現在のユーザーのパスワードを更新します。
 
 ## SYNTAX
 
@@ -18,27 +18,45 @@ Update-OrchCurrentUserURPassword [-Path <String[]>] [-ProgressAction <ActionPref
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Update-OrchCurrentUserURPassword コマンドレットは、UiPath Orchestratorで現在のユーザーのパスワードを更新します。パラメータなしで実行すると、コマンドレットは新しいパスワードと確認を対話的に入力するようユーザーに求めます。このコマンドレットは、Orchestrator認証パスワードを変更する必要があるユーザーに便利です。
 
-主に呼び出すエンドポイント:
+このコマンドレットには、新しいパスワードが正しく入力されることを確認するための確認プロンプトが組み込まれています。
 
-OAuth に必要なスコープ:
+これは、現在認証されているユーザーの資格情報のみに影響するユーザー固有の操作です。
 
-必要な権限:
+プライマリエンドポイント: [PLACEHOLDER - User password update endpoint]
+
+OAuth必須スコープ: [PLACEHOLDER - User profile modification scope]
+
+必要な権限: [PLACEHOLDER - User profile edit permissions]
 
 ## EXAMPLES
 
-### Example 1
+### Example 1: 現在のユーザーのパスワードを対話的に更新
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Update-OrchCurrentUserURPassword
 ```
 
-{{ Add example description here }}
+新しいパスワードと確認の入力をユーザーに求め、Orchestratorで現在のユーザーのパスワードを更新します。
+
+### Example 2: パスワード更新操作をプレビュー
+```powershell
+PS Orch1:\> Update-OrchCurrentUserURPassword -WhatIf
+```
+
+実際に更新を実行せずに、パスワード更新操作を実行した場合に何が起こるかを表示します。
+
+### Example 3: 複数のドライブでパスワードを更新
+```powershell
+PS C:\> Update-OrchCurrentUserURPassword -Path Orch1:, Orch2:
+```
+
+指定された複数のOrchestratorドライブで現在のユーザーのパスワードを更新します。
 
 ## PARAMETERS
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+ターゲットドライブの名前を指定します。指定されていない場合は、現在のドライブがターゲットになります。このパラメータにより、複数のOrchestratorインスタンス間でパスワードを更新できます。
 
 ```yaml
 Type: String[]
@@ -53,7 +71,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+スクリプト、コマンドレット、またはプロバイダーによって生成される進行状況の更新にPowerShellがどのように応答するかを指定します。
 
 ```yaml
 Type: ActionPreference
@@ -68,7 +86,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。これにより、パスワード入力プロンプトを超えた追加の確認ステップが追加されます。
 
 ```yaml
 Type: SwitchParameter
@@ -83,8 +101,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
-コマンドレットは実行されません。
+実際にパスワード更新操作を実行せずに、コマンドレットを実行した場合に何が起こるかを表示します。
 
 ```yaml
 Type: SwitchParameter
@@ -99,7 +116,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および -WarningVariable の共通パラメータをサポートします。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
 
 ## INPUTS
 
@@ -108,5 +125,20 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.User
 ## NOTES
+- このコマンドレットは、パラメータなしで実行されるとパスワード入力を対話的に要求します
+- パスワードプロンプトには以下が含まれます：
+  - Password: （新しいパスワード用）
+  - Confirmation: （新しいパスワードの確認用）
+- セキュリティのため、両方のパスワード入力はアスタリスク（*）でマスクされます
+- このコマンドレットは、実行時に必須のパスワードと確認パラメータが必要です
+- 変更を加えずに操作をプレビューするには-WhatIfを使用してください
+- この操作は、現在認証されているユーザーのパスワードのみに影響します
+- パスワードを変更する際は、Orchestratorインスタンスへの適切なネットワーク接続があることを確認してください
 
 ## RELATED LINKS
+
+[Get-OrchCurrentUser]()
+
+[Update-OrchUser]()
+
+[Add-OrchUser]()

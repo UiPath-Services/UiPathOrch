@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Export-OrchJobMedia
 
 ## SYNOPSIS
-ジョブ実行時に自動で撮影された画面写真をエキスポートします。
+指定したフォルダーからジョブメディアファイルをローカルファイルにエクスポートします。
 
 ## SYNTAX
 
@@ -18,27 +18,68 @@ Export-OrchJobMedia [[-JobId] <Int64[]>] [[-Destination] <String>] [-Path <Strin
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Export-OrchJobMedia コマンドレットは、UiPath Orchestratorフォルダーからジョブ実行に関連するメディアファイル（スクリーンショット、録画、ログ）をローカルストレージにエクスポートします。このコマンドレットは、トラブルシューティング、コンプライアンス、または監査目的でジョブ実行アーティファクトのバックアップ、アーカイブ、または詳細分析を可能にします。
 
-主に呼び出すエンドポイント: 
+ジョブメディアには、実行スクリーンショット、動画録画、実行ログ、および自動化ジョブ実行中に生成されるその他の診断ファイルが含まれます。これらのファイルをエクスポートすることで、オフライン分析、長期アーカイブ、またはトラブルシューティング目的でサポートチームと共有できます。
 
-OAuth に必要なスコープ: 
+-JobIdパラメーターを使用して、エクスポートするジョブのメディアファイルを指定します。-Destinationパラメーターは、エクスポートされたメディアファイルの保存先を指定します。このコマンドレットは、複数のジョブからのメディアエクスポートをサポートし、宛先ディレクトリでジョブIDごとにファイルを整理します。
 
-必要な権限:
+これはフォルダーエンティティコマンドレットです。最初にSet-Locationコマンドレット（cdコマンド）を使用してターゲットフォルダーに移動するか、-Path、-Recurse、または-Depthパラメーターを使用してターゲットフォルダーを指定します。-Recurseパラメーターは、すべてのサブフォルダーからジョブメディアをエクスポートします。
+
+主要エンドポイント: [PLACEHOLDER - 具体的なAPIエンドポイント]
+
+必要なOAuthスコープ: OR.Jobs または OR.Jobs.Read
+
+必要な権限: Jobs.View
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Development> Export-OrchJobMedia 12345
 ```
 
-{{ Add example description here }}
+現在のフォルダーからジョブID 12345のすべてのメディアファイルをデフォルトの宛先にエクスポートします。
+
+### Example 2
+```powershell
+PS C:\> Export-OrchJobMedia -Path Orch1:\Production -JobId 67890 -Destination "C:\JobMedia"
+```
+
+ProductionフォルダーからジョブID 67890のすべてのメディアファイルをC:\JobMediaディレクトリにエクスポートします。
+
+### Example 3
+```powershell
+PS Orch1:\Development> Export-OrchJobMedia 11111, 22222, 33333 -Destination "C:\Exports" -WhatIf
+```
+
+現在のフォルダーから複数のジョブIDのメディアファイルをC:\Exportsディレクトリにエクスポートした場合の動作を表示します。
+
+### Example 4
+```powershell
+PS C:\> Export-OrchJobMedia -Path Orch1:\Development -Recurse -Destination "C:\AllJobMedia"
+```
+
+DevelopmentフォルダーとすべてのサブフォルダーからすべてのジョブメディアファイルをC:\AllJobMediaディレクトリにエクスポートします。
+
+### Example 5
+```powershell
+PS Orch1:\Production> Export-OrchJobMedia -Depth 2 -Destination "C:\BackupMedia" -Confirm
+```
+
+現在のフォルダーと最大2レベルのサブフォルダーからすべてのジョブメディアファイルを確認プロンプトとともにC:\BackupMediaにエクスポートします。
+
+### Example 6
+```powershell
+PS Orch1:\Development> Get-OrchJob -State Faulted | Export-OrchJobMedia -Destination "C:\FailedJobs"
+```
+
+すべての失敗したジョブを取得し、トラブルシューティング目的でパイプライン入力を使用してそれらのメディアファイルをC:\FailedJobsにエクスポートします。
 
 ## PARAMETERS
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+-Recurseパラメーターを使用するときに含めるサブフォルダーレベルの最大数を指定します。
 
 ```yaml
 Type: UInt32
@@ -53,7 +94,7 @@ Accept wildcard characters: False
 ```
 
 ### -Destination
-エキスポート先のフォルダーを指定します。FileSystem ドライブのフォルダーを指定してください。
+エクスポートされたメディアファイルが保存される宛先ディレクトリを指定します。指定しない場合、ファイルは現在のディレクトリに保存されます。
 
 ```yaml
 Type: String
@@ -68,7 +109,7 @@ Accept wildcard characters: True
 ```
 
 ### -JobId
-{{ Fill JobId Description }}
+メディアファイルをエクスポートするジョブIDを指定します。指定しない場合、すべてのジョブのメディアファイルがエクスポートされます。
 
 ```yaml
 Type: Int64[]
@@ -83,7 +124,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+ソースフォルダーを指定します。指定しない場合、現在のフォルダーがソースとして使用されます。
 
 ```yaml
 Type: String[]
@@ -113,7 +154,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+すべてのサブフォルダーからジョブメディアファイルを再帰的にエクスポートすることを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -128,7 +169,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットの実行前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -143,7 +184,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットが実行された場合の動作を表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -159,7 +200,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメーターをサポートしています: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, -WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -168,5 +209,16 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Object
 ## NOTES
+これはフォルダーエンティティコマンドレットです。最初にSet-Locationコマンドレット（cdコマンド）を使用してターゲットフォルダーに移動するか、-Path、-Recurse、または-Depthパラメーターを使用してターゲットフォルダーを指定します。
+
+ジョブメディアファイルには、スクリーンショット、動画録画、実行ログが含まれます。大きなメディアファイルや複数のジョブでは、エクスポート操作に時間がかかる場合があります。メディアエクスポート用の十分なディスク容量を確保してください。メディアファイルは宛先ディレクトリでジョブIDごとに整理されます。実際の実行前のテストには-WhatIfを使用してください。
 
 ## RELATED LINKS
+
+[Get-OrchJob](Get-OrchJob.md)
+
+[Get-OrchJobMedia](Get-OrchJobMedia.md)
+
+[Remove-OrchJobMedia](Remove-OrchJobMedia.md)
+
+[Start-OrchJob](Start-OrchJob.md)

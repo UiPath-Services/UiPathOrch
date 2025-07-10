@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Remove-PmGroupMember
 
 ## SYNOPSIS
-組織のグループからメンバーを削除します。
+グループからメンバーを削除します。
 
 ## SYNTAX
 
@@ -20,9 +20,9 @@ Remove-PmGroupMember [-GroupName] <String[]> [-Type] <String[]> [-UserName] <Str
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-主に呼び出すエンドポイント: PUT /api/Group/{groupId}
+プライマリ エンドポイント: PUT /api/Group/{groupId}
 
-OAuth に必要なスコープ: PM.Group
+OAuth 必要なスコープ: PM.Group
 
 必要な権限:
 
@@ -38,7 +38,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -83,7 +83,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+対象ドライブの名前を指定します。指定しない場合は、現在のドライブが対象となります。
 
 ```yaml
 Type: String[]
@@ -98,7 +98,7 @@ Accept wildcard characters: False
 ```
 
 ### -Type
-削除するユーザーの種別を指定します。
+グループから削除するユーザーのタイプを指定します。
 
 ```yaml
 Type: String[]
@@ -113,7 +113,7 @@ Accept wildcard characters: True
 ```
 
 ### -UserName
-削除するユーザーの UserName を指定します。
+グループから削除するユーザーのUserNameを指定します。
 
 ```yaml
 Type: String[]
@@ -128,7 +128,7 @@ Accept wildcard characters: True
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットを実行した場合に何が起こるかを表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -159,7 +159,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
 
 ## INPUTS
 

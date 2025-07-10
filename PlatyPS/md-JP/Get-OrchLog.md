@@ -1,6 +1,6 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
-Module Name: uiPathOrch
+Module Name: UiPathOrch
 online version:
 schema: 2.0.0
 ---
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Get-OrchLog
 
 ## SYNOPSIS
-ロボットの実行ログを取得します。
+フィルタリング機能を使用してUiPath Orchestratorから実行ログを取得します。
 
 ## SYNTAX
 
@@ -20,27 +20,68 @@ Get-OrchLog [-Last <String>] [-TimeStampAfter <DateTime>] [-TimeStampBefore <Dat
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Get-OrchLogコマンドレットは、包括的なフィルタリング機能を使用してUiPath Orchestratorから実行ログを取得します。ログは、オートメーション実行、エラー、およびシステムアクティビティに関する詳細な情報を提供します。このコマンドレットは、過度なデータ取得を防ぐために少なくとも1つのフィルターパラメーターが必要です。
 
-主に呼び出すエンドポイント: GET /odata/RobotLogs
+ログには、Level（重要度）、TimeStamp、Machine、WindowsIdentity、ProcessName、JobKey、および詳細なメッセージ内容などの情報が含まれています。このコマンドレットは、時間範囲、ログレベル、マシン、プロセス、およびジョブキーを含むさまざまなフィルタリングオプションをサポートしています。
 
-OAuth に必要なスコープ: OR.Monitoring or OR.Monitoring.Read
+このコマンドレットはフォルダーエンティティ操作として動作し、適切なフォルダーコンテキストへの移動または-Pathパラメーターを使用したターゲットフォルダーの指定が必要です。大きな結果セットを効率的に管理するには、ページネーションパラメーター（Skip、First）を使用してください。
+
+**重要**: このコマンドレットは実行するために少なくとも1つのフィルターパラメーター（TimeStampAfter、Last、Level、Machine、ProcessName、またはJobKeyなど）が必要です。フィルターなしでは、警告とともにキャッシュされた内容を出力します。
+
+プライマリエンドポイント: GET /odata/Logs
+
+OAuth必須スコープ: OR.Monitoring または OR.Monitoring.Read
 
 必要な権限: Logs.View
 
 ## EXAMPLES
 
 ### Example 1
-```
-PS C:\> {{ Add example code here }}
+```powershell
+PS Orch1:\Shared> Get-OrchLog -Last Day -First 10
 ```
 
-{{ Add example description here }}
+過去1日から最初の10件のログを取得します。
+
+### Example 2
+```powershell
+PS Orch1:\Shared> Get-OrchLog -TimeStampAfter (Get-Date).AddHours(-2) -Level Error, Fatal
+```
+
+過去2時間からすべてのエラーと致命的ログを取得します。
+
+### Example 3
+```powershell
+PS C:\> Get-OrchLog -Path Orch1:\Production -ProcessName InvoiceProcess -First 20
+```
+
+ProductionフォルダーのInvoiceProcessの最初の20件のログを取得します。
+
+### Example 4
+```powershell
+PS Orch1:\> Get-OrchLog -Recurse -Last Week -Machine Robot01 -Level Warn, Error
+```
+
+そのテナント内のすべてのフォルダーにわたって、Robot01からの過去1週間の警告とエラーログを取得します。
+
+### Example 5
+```powershell
+PS Orch1:\Shared> Get-OrchLog -JobKey 12345678-1234-1234-1234-123456789012 -OrderBy TimeStamp -OrderAscending
+```
+
+特定のジョブキーのログを取得し、タイムスタンプの昇順で並べ替えます。
+
+### Example 6
+```powershell
+PS C:\> Get-OrchLog -Path Orch1:\Shared -Last Month -WindowsIdentity DOMAIN\robotuser -Skip 100 -First 50
+```
+
+過去1か月間の特定のWindows IDのログを取得し、最初の100件の結果をスキップして次の50件を取得します。
 
 ## PARAMETERS
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+ターゲットフォルダーへの再帰の深さを指定します。深さ0は現在の場所のみを示します。より高い値はより多くのサブフォルダーレベルを含みます。
 
 ```yaml
 Type: UInt32
@@ -55,7 +96,7 @@ Accept wildcard characters: False
 ```
 
 ### -Level
-{{ Fill Level Description }}
+フィルターするログレベルを指定します。一般的な値には、Trace、Debug、Info、Warn、Error、Fatalがあります。
 
 ```yaml
 Type: String
@@ -70,7 +111,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+検索するターゲットフォルダーを指定します。指定されていない場合、現在のフォルダーコンテキストが使用されます。パス指定が必要なフォルダーエンティティ操作用。
 
 ```yaml
 Type: String[]
@@ -100,7 +141,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+検索操作にターゲットフォルダーとそのすべてのサブフォルダーを含めます。包括的なログ発見に不可欠です。
 
 ```yaml
 Type: SwitchParameter
@@ -115,7 +156,7 @@ Accept wildcard characters: False
 ```
 
 ### -TimeStampAfter
-{{ Fill TimeStampAfter Description }}
+ログをフィルタリングするための最も早いタイムスタンプを指定します。この時刻以降のログのみが返されます。
 
 ```yaml
 Type: DateTime
@@ -130,7 +171,7 @@ Accept wildcard characters: False
 ```
 
 ### -TimeStampBefore
-{{ Fill TimeStampBefore Description }}
+ログをフィルタリングするための最も遅いタイムスタンプを指定します。この時刻以前のログのみが返されます。
 
 ```yaml
 Type: DateTime
@@ -145,8 +186,7 @@ Accept wildcard characters: False
 ```
 
 ### -Skip
-指定された数のエンティティを無視して、残りのエンティティを取得します。
-スキップするエンティティの数を指定してください。
+結果セットの開始からスキップするログエントリの数を指定します。ページネーションに役立ちます。
 
 ```yaml
 Type: UInt64
@@ -161,8 +201,7 @@ Accept wildcard characters: False
 ```
 
 ### -First
-指定された数のエンティティのみを取得します。
-取得するエンティティの数を指定してください。
+結果セットの開始から返すログエントリの最大数を指定します。
 
 ```yaml
 Type: UInt64
@@ -177,7 +216,7 @@ Accept wildcard characters: False
 ```
 
 ### -Last
-{{ Fill Last Description }}
+最近のログの期間を指定します。有効な値：Hour、Day、Week、Month、3Months、6Months、Year、3Years。
 
 ```yaml
 Type: String
@@ -192,7 +231,7 @@ Accept wildcard characters: False
 ```
 
 ### -Machine
-{{ Fill Machine Description }}
+ログをフィルタリングするマシン名を指定します。特定のロボットまたはマシンからログを取得するために使用します。
 
 ```yaml
 Type: String
@@ -207,7 +246,7 @@ Accept wildcard characters: False
 ```
 
 ### -WindowsIdentity
-{{ Fill WindowsIdentity Description }}
+ログをフィルタリングするWindows IDを指定します。特定のユーザーアカウントのログを取得するために使用します。
 
 ```yaml
 Type: String[]
@@ -222,7 +261,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProcessName
-{{ Fill ProcessName Description }}
+ログをフィルタリングするプロセス名を指定します。特定のオートメーションプロセスのログを取得するために使用します。
 
 ```yaml
 Type: String
@@ -237,7 +276,7 @@ Accept wildcard characters: False
 ```
 
 ### -OrderAscending
-{{ Fill OrderAscending Description }}
+結果を昇順（true）または降順（false）で並べ替えるかどうかを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -252,7 +291,7 @@ Accept wildcard characters: False
 ```
 
 ### -OrderBy
-{{ Fill OrderBy Description }}
+結果を並べ替えるフィールドを指定します（例：TimeStamp、Level、Machine）。
 
 ```yaml
 Type: String
@@ -267,7 +306,7 @@ Accept wildcard characters: False
 ```
 
 ### -JobKey
-{{ Fill JobKey Description }}
+ログをフィルタリングするジョブキーを指定します。特定のオートメーション実行のログを取得するために使用します。
 
 ```yaml
 Type: String
@@ -282,7 +321,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメーターをサポートします: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -291,5 +330,18 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.Log
 ## NOTES
+このコマンドレットは、過度なデータ取得を防ぐために少なくとも1つのフィルターパラメーターが必要なフォルダーエンティティ操作です。フィルターパラメーターが指定されていない場合、コマンドレットは警告とともにキャッシュされた内容を出力します。大きな結果セットを管理するには、ページネーションパラメーター（Skip、First）を使用してください。一般的なフィルターパターンには、時間範囲（Last、TimeStampAfter）、重要度レベル（Level）、および特定の実行コンテキスト（Machine、ProcessName、JobKey）があります。この操作には、ターゲットフォルダーでのLogs.View権限が必要です。
+
+プライマリエンドポイント: GET /odata/RobotLogs
+OAuth必須スコープ: OR.Monitoring または OR.Monitoring.Read
+必要な権限: Logs.View
 
 ## RELATED LINKS
+
+[Get-OrchJob](Get-OrchJob.md)
+
+[Get-OrchAuditLog](Get-OrchAuditLog.md)
+
+[Clear-OrchLog](Clear-OrchLog.md)
+
+[Export-OrchLog](Export-OrchLog.md)

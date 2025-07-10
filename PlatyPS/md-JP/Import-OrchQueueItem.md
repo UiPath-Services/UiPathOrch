@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Import-OrchQueueItem
 
 ## SYNOPSIS
-CSV ファイルをアップロードして、キューにアイテムをインポートします。
+CSVファイルからキューアイテムを指定されたキューにインポートします。
 
 ## SYNTAX
 
@@ -19,27 +19,68 @@ Import-OrchQueueItem [-Name] <String[]> -ImportCsv <String[]> [[-CsvEncoding] <E
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Import-OrchQueueItemコマンドレットは、CSVファイルから指定されたフォルダ内のUiPath Orchestratorキューにキューアイテムをインポートします。このコマンドレットを使用すると、外部データソースからワークアイテムを一括読み込みでき、データの移行、テスト環境のセットアップ、外部システムからのワークアイテムの読み込みに不可欠です。
 
-主に呼び出すエンドポイント:
+キューアイテムは、ロボットが順次処理する作業単位を表します。CSVファイルからキューアイテムをインポートすることで、効率的な一括データ読み込み、他のシステムからの移行、またはオートメーションシナリオ用のテストデータの準備が可能になります。
 
-OAuth に必要なスコープ:
+-Nameパラメータを使用して、インポートされたアイテムを受信するキューを指定します。-ImportCsvパラメータは、キューアイテムデータを含むCSVファイルを指定します。このコマンドレットは、さまざまなインポートシナリオに対応するため、さまざまなCSVエンコーディングとコミット戦略をサポートしています。
 
-必要な権限:
+このコマンドレットはフォルダ上で動作します。-Pathパラメータを使用して、キューが配置されているターゲットフォルダを指定します。CSVファイルには、適切な列ヘッダーを持つ適切にフォーマットされたキューアイテムデータが含まれている必要があります。
+
+プライマリ エンドポイント: [PLACEHOLDER - 具体的なAPIエンドポイント]
+
+OAuth 必要なスコープ: OR.Queues または OR.Queues.Write
+
+必要な権限: Queues.Edit
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Development> Import-OrchQueueItem WorkQueue -ImportCsv "C:\Data\workitems.csv"
 ```
 
-{{ Add example description here }}
+workitems.csvファイルから現在のフォルダ（Development）のWorkQueueにキューアイテムをインポートします。
+
+### Example 2
+```powershell
+PS C:\> Import-OrchQueueItem -Path Orch1:\Production -Name ProcessingQueue -ImportCsv "C:\Exports\items.csv" -CsvEncoding UTF8
+```
+
+UTF8エンコーディングでitems.csvからProductionフォルダのProcessingQueueにキューアイテムをインポートします。
+
+### Example 3
+```powershell
+PS Orch1:\Development> Import-OrchQueueItem DataQueue, BulkQueue -ImportCsv "C:\Data\bulk_items.csv" -WhatIf
+```
+
+bulk_items.csvから現在のフォルダのDataQueueとBulkQueueにキューアイテムをインポートする場合の結果を表示します。
+
+### Example 4
+```powershell
+PS C:\> Import-OrchQueueItem -Path Orch1:\Development -Name ImportQueue -ImportCsv "C:\Migration\*.csv" -CommitType Immediate
+```
+
+C:\Migrationディレクトリ内のすべてのCSVファイルから、即座コミット戦略を使用してImportQueueにキューアイテムをインポートします。
+
+### Example 5
+```powershell
+PS Orch1:\Production> Import-OrchQueueItem TestQueue -ImportCsv "C:\TestData\scenario1.csv", "C:\TestData\scenario2.csv" -Confirm
+```
+
+複数のCSVファイルから確認プロンプト付きでTestQueueにキューアイテムをインポートします。
+
+### Example 6
+```powershell
+PS C:\> Import-OrchQueueItem -Path Orch1:\Development -Name *ProcessQueue -ImportCsv "C:\Data\items.csv" -CsvEncoding Unicode
+```
+
+Unicodeエンコーディングでitems.csvから、名前がProcessQueueで終わるすべてのキューにキューアイテムをインポートします。
 
 ## PARAMETERS
 
 ### -CommitType
-{{ Fill CommitType Description }}
+インポート操作のコミット戦略を指定します。有効な値には、Immediate、Batch、またはTransactionが含まれます。
 
 ```yaml
 Type: String
@@ -54,7 +95,7 @@ Accept wildcard characters: False
 ```
 
 ### -CsvEncoding
-{{ Fill CsvEncoding Description }}
+CSVファイルのエンコーディングを指定します。指定されていない場合は、UTF8エンコーディングが使用されます。
 
 ```yaml
 Type: Encoding
@@ -69,7 +110,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-アイテムをインポートするキューの Name を指定します。
+アイテムをインポートするキューの名前を指定します。
 
 ```yaml
 Type: String[]
@@ -84,7 +125,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+キューを含むターゲットフォルダを指定します。指定されていない場合は、現在のフォルダがターゲットになります。
 
 ```yaml
 Type: String[]
@@ -114,7 +155,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -129,7 +170,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットを実行した場合の結果を表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -145,7 +186,7 @@ Accept wildcard characters: False
 ```
 
 ### -ImportCsv
-{{ Fill ImportCsv Description }}
+インポートするキューアイテムデータを含むCSVファイルを指定します。
 
 ```yaml
 Type: String[]
@@ -160,7 +201,7 @@ Accept wildcard characters: True
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -169,5 +210,16 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.FailedQueueItem
 ## NOTES
+CSVファイルには、適切な列ヘッダーを持つ適切にフォーマットされたキューアイテムデータが含まれている必要があります。列は、キューアイテムのプロパティと、ターゲットキューが期待する特定のデータと一致する必要があります。インポート中のデータ破損を避けるため、CSVファイルが適切にエンコードされていることを確認してください。
+
+大きなCSVファイルの場合、インポート操作は時間がかかる場合があります。データ量とトランザクション要件に基づいて適切なコミット戦略を使用してください。大きなデータインポートを実行する前に、-WhatIfでテストインポートを行ってください。
 
 ## RELATED LINKS
+
+[Get-OrchQueue](Get-OrchQueue.md)
+
+[Get-OrchQueueItem](Get-OrchQueueItem.md)
+
+[Add-OrchQueueItem](Add-OrchQueueItem.md)
+
+[Remove-OrchQueueItem](Remove-OrchQueueItem.md)

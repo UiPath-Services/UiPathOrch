@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Remove-OrchRoleFromFolderUser
 
 ## SYNOPSIS
-フォルダーに割り当てられたユーザーから、ロールを外します。
+フォルダユーザーからロールの割り当てを解除します。
 
 ## SYNTAX
 
@@ -21,11 +21,11 @@ Remove-OrchRoleFromFolderUser [[-UserName] <String[]>] [-FullName <String[]>] [-
 ## DESCRIPTION
 {{ Fill in the Description }}
 
-主に呼び出すエンドポイント: POST /odata/Folders/UiPath.Server.Configuration.OData.AssignUsers
+プライマリ エンドポイント: POST /odata/Folders/UiPath.Server.Configuration.OData.AssignUsers
 
-OAuth に必要なスコープ: OR.Folders
+OAuth 必要なスコープ: OR.Folders
 
-必要な権限: (Units.Edit or SubFolders.Edit - Assigns users to any folder or if the user has SubFolders.Edit permission on all folders provided)
+必要な権限: (Units.Edit または SubFolders.Edit - 任意のフォルダにユーザーを割り当てる、またはユーザーが提供されたすべてのフォルダでSubFolders.Edit権限を持つ場合)
 
 ## EXAMPLES
 
@@ -39,7 +39,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -Depth
-ターゲットフォルダーへの再帰の深さを指定します。深さが0の場合は、現在のフォルダーのみが対象となり、サブフォルダーは含まれません。
+対象フォルダへの再帰処理の深度を指定します。深度0は現在の場所のみを示し、サブフォルダは含まれません。
 
 ```yaml
 Type: UInt32
@@ -54,7 +54,7 @@ Accept wildcard characters: False
 ```
 
 ### -FullName
-フォルダーユーザーの FullName を指定します。
+フォルダユーザーのFullNameを指定します。
 
 ```yaml
 Type: String[]
@@ -69,7 +69,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-ターゲットとするフォルダーを指定します。指定しない場合は、現在のフォルダーをターゲットとします。
+対象フォルダを指定します。指定しない場合は、現在のフォルダが対象となります。
 
 ```yaml
 Type: String[]
@@ -99,7 +99,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-ターゲットフォルダーのサブフォルダーも、ターゲットとして含めることを指定します。
+操作に対象フォルダとそのすべてのサブフォルダを含める必要があることを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -114,7 +114,7 @@ Accept wildcard characters: False
 ```
 
 ### -Roles
-フォルダーユーザーから外すロールを指定します。
+フォルダユーザーから割り当てを解除するロールを指定します。
 
 ```yaml
 Type: String[]
@@ -129,7 +129,7 @@ Accept wildcard characters: False
 ```
 
 ### -UserName
-フォルダーユーザーの UserName を指定します。
+フォルダユーザーのUserNameを指定します。
 
 ```yaml
 Type: String[]
@@ -144,7 +144,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットを実行する前に確認を求めます。
 
 ```yaml
 Type: SwitchParameter
@@ -159,7 +159,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットを実行した場合に何が起こるかを表示します。
 コマンドレットは実行されません。
 
 ```yaml
@@ -190,7 +190,7 @@ Accept wildcard characters: True
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
 
 ## INPUTS
 

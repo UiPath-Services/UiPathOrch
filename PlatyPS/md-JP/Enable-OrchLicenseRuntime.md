@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,29 +18,68 @@ Enable-OrchLicenseRuntime [-RobotType] <String[]> [-Key] <String[]> [-Path <Stri
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Enable-OrchLicenseRuntimeコマンドレットは、特定のロボットタイプとマシンキーのランタイムライセンスを有効にします。ランタイムライセンスは、ロボットが自動化プロセスを実行する機能を制御します。
 
-主に呼び出すエンドポイント: POST /odata/LicensesRuntime('{machineName}')/UiPath.Server.Configuration.OData.ToggleEnabled
+これはテナントエンティティコマンドレットです。-Pathパラメーターでドライブ名（例：Orch1:、Orch2:）を使用してターゲットテナントを指定します。指定されていない場合、現在のテナントが対象になります。
 
-OAuth に必要なスコープ: OR.License
+ランタイムライセンスを有効にすると、ロボットが自動化ジョブを実行できるようになります。これは、ライセンス割り当てやメンテナンス期間後に自動化機能を有効化するために不可欠です。
 
-必要な権限: Machines.Edit
+Primary Endpoint: POST /odata/LicensesRuntime('{machineName}')/UiPath.Server.Configuration.OData.ToggleEnabled
+
+OAuth required scopes: OR.License
+
+Required permissions: Machines.Edit
 
 ## EXAMPLES
 
 ### Example 1
-```powershell
-PS C:\> {{ Add example code here }}
-```
+`powershell
+Enable-OrchLicenseRuntime Unattended Machine01 -WhatIf
+`
 
-{{ Add example description here }}
+Machine01のUnattendedランタイムライセンスを有効にする場合の動作を表示します。
+
+### Example 2
+`powershell
+Enable-OrchLicenseRuntime Unattended Machine01
+`
+
+現在のテナントでMachine01のUnattendedランタイムライセンスを有効にします。
+
+### Example 3
+`powershell
+Enable-OrchLicenseRuntime Studio, StudioX *DevMachine*
+`
+
+キーに「DevMachine」を含むすべてのマシンのStudioおよびStudioXランタイムライセンスを有効にします。
+
+### Example 4
+`powershell
+Enable-OrchLicenseRuntime -Path Orch1:, Orch2: Unattended ProdMachine01, ProdMachine02 -Confirm
+`
+
+複数のテナントにわたってProdMachine01とProdMachine02のUnattendedランタイムライセンスを確認付きで有効にします。
+
+### Example 5
+`powershell
+Enable-OrchLicenseRuntime NonProduction *Test*
+`
+
+キーに「Test」を含むすべてのマシンのNonProductionランタイムライセンスを有効にします。
+
+### Example 6
+`powershell
+Get-OrchLicenseRuntime -RobotType Unattended | Where-Object {$_.IsEnabled -eq $false} | Enable-OrchLicenseRuntime
+`
+
+現在無効になっているすべてのUnattendedランタイムライセンスを有効にします。ライセンス情報は、ByPropertyNameバインディングを使用してパイプライン経由で渡されます。
 
 ## PARAMETERS
 
 ### -Key
-有効にするランタイムライセンスの Key を指定します。
+有効にするランタイムライセンスのキーを指定します。これは通常、マシン名または識別子に対応します。
 
-```yaml
+`yaml
 Type: String[]
 Parameter Sets: (All)
 Aliases:
@@ -50,12 +89,12 @@ Position: 1
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
-```
+`
 
 ### -Path
-ターゲットとするドライブの名前を指定します。指定しない場合は、現在のドライブをターゲットとします。
+ドライブ名を使用してターゲットテナントの名前を指定します。指定されていない場合、現在のテナントが対象になります。
 
-```yaml
+`yaml
 Type: String[]
 Parameter Sets: (All)
 Aliases:
@@ -65,12 +104,12 @@ Position: Named
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
-```
+`
 
 ### -ProgressAction
 {{ Fill ProgressAction Description }}
 
-```yaml
+`yaml
 Type: ActionPreference
 Parameter Sets: (All)
 Aliases: proga
@@ -80,12 +119,12 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
-```
+`
 
 ### -RobotType
-有効にするランタイムライセンスの RobotType を指定します。
+有効にするランタイムライセンスのRobotTypeを指定します。一般的な値には、Unattended、Attended、Studio、StudioX、NonProductionが含まれます。
 
-```yaml
+`yaml
 Type: String[]
 Parameter Sets: (All)
 Aliases:
@@ -95,12 +134,12 @@ Position: 0
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
-```
+`
 
 ### -Confirm
-コマンドレットを実行する前に、あなたの確認を求めます。
+コマンドレットの実行前に確認メッセージを表示します。
 
-```yaml
+`yaml
 Type: SwitchParameter
 Parameter Sets: (All)
 Aliases: cf
@@ -110,13 +149,13 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
-```
+`
 
 ### -WhatIf
-コマンドレットを実行すると、何が起こるかを表示します。
+コマンドレットが実行された場合に何が起こるかを表示します。
 コマンドレットは実行されません。
 
-```yaml
+`yaml
 Type: SwitchParameter
 Parameter Sets: (All)
 Aliases: wi
@@ -126,10 +165,10 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
-```
+`
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは共通パラメーターをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
