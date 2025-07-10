@@ -1426,11 +1426,12 @@ public partial class OrchDriveInfo : PSDriveInfo
     public ReadOnlyCollection<TestSetExecution> GetTestSetExecutions(Folder folder, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
     {
         // TODO: 16 未満の数字は正しいか？ 15.0 では、取得がエラーになることは確認済みだが、
-        if (OrchAPISession.ApiVersion < 16)
-        {
-            _dicTestSetExecutionsEmpty ??= new List<TestSetExecution>().AsReadOnly();
-            return _dicTestSetExecutionsEmpty;
-        }
+        // いや、そのエラーは ApiVersion に非依存のようだ。。
+        //if (OrchAPISession.ApiVersion < 16)
+        //{
+        //    _dicTestSetExecutionsEmpty ??= new List<TestSetExecution>().AsReadOnly();
+        //    return _dicTestSetExecutionsEmpty;
+        //}
 
         _dicTestSetExecutions_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
 
@@ -2350,11 +2351,11 @@ public partial class OrchDriveInfo : PSDriveInfo
         Reviewers                      = new(this, OrchAPISession.GetReviewers);
         RobotsFromFolder               = new(this, OrchAPISession.GetRobotsFromFolder,   (e, folderPath) => e.Path = folderPath);
         Sessions                       = new(this, OrchAPISession.GetSessions,           (e, folderPath) => e.Path = folderPath);
-        TestCases                      = new(this, OrchAPISession.GetTestCases,          (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済み
-        TestCaseExecutions             = new(this, OrchAPISession.GetTestCaseExecutions, (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済み
-        TestDataQueues                 = new(this, OrchAPISession.GetTestDataQueues,     (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済み
-        TestSets                       = new(this, OrchAPISession.GetTestSets,           (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済み
-        TestSetSchedules               = new(this, OrchAPISession.GetTestSetSchedules,   (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済み
+        TestCases                      = new(this, OrchAPISession.GetTestCases,          (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済みだが、実際には API ver に依存しないらしい
+        TestCaseExecutions             = new(this, OrchAPISession.GetTestCaseExecutions, (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済みだが、実際には API ver に依存しないらしい
+        TestDataQueues                 = new(this, OrchAPISession.GetTestDataQueues,     (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済みだが、実際には API ver に依存しないらしい
+        TestSets                       = new(this, OrchAPISession.GetTestSets,           (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済みだが、実際には API ver に依存しないらしい
+        TestSetSchedules               = new(this, OrchAPISession.GetTestSetSchedules,   (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済みだが、実際には API ver に依存しないらしい
         UserRobots                     = new(this, OrchAPISession.GetUserRobots);
 
         Assets = new(this, OrchAPISession.GetAssets, (e, folderPath) =>

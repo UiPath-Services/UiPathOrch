@@ -1,3 +1,7 @@
+Version: 0.9.14.6
+- Some API version checks were inadvertently left in the test entity copy cmdlets in version 0.9.14.5. These checks have now been removed.
+
+
 Version: 0.9.14.5
 - Previously, when connecting to a tenant whose Orchestrator API version was below 18, cmdlets for managing test entities would perform no actions (i.e., no API calls were made). This behavior was incorrect. These cmdlets now function normally regardless of the API version. The affected entities include:
   - OrchTestCase
