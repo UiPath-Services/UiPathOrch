@@ -2349,8 +2349,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
         // TODO: この数字は正しいか？
         // 16 ではテストエンティティがないことは確認済み
-        if (srcDrive.OrchAPISession.ApiVersion < 17) return;
-        if (dstDrive.OrchAPISession.ApiVersion < 17) return;
+        //if (srcDrive.OrchAPISession.ApiVersion < 17) return;
+        //if (dstDrive.OrchAPISession.ApiVersion < 17) return;
 
         // スクリプトで連続して cmdlet を実行することを考えると、
         // いちいちキャッシュをクリアするべきじゃなかった。。
@@ -2442,8 +2442,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         if (newFolder.FolderType == "Personal") return;
 
         // 17 ではテストエンティティがないことは確認済み
-        if (srcDrive.OrchAPISession.ApiVersion < 18) return;
-        if (dstDrive.OrchAPISession.ApiVersion < 18) return;
+        //if (srcDrive.OrchAPISession.ApiVersion < 18) return;
+        //if (dstDrive.OrchAPISession.ApiVersion < 18) return;
 
         ICollection<TestDataQueueItem> items;
         try
@@ -2507,8 +2507,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         if (newFolder.FolderType == "Personal") return;
 
         // 17 ではテストエンティティがないことは確認済み
-        if (srcDrive.OrchAPISession.ApiVersion < 18) return;
-        if (dstDrive.OrchAPISession.ApiVersion < 18) return;
+        //if (srcDrive.OrchAPISession.ApiVersion < 18) return;
+        //if (dstDrive.OrchAPISession.ApiVersion < 18) return;
 
         // スクリプトで連続して cmdlet を実行することを考えると、
         // いちいちキャッシュをクリアするべきじゃなかった。。
@@ -2574,8 +2574,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         if (newFolder.FolderType == "Personal") return;
 
         // 17 ではテストエンティティがないことは確認済み
-        if (srcDrive.OrchAPISession.ApiVersion < 18) return;
-        if (srcDrive.OrchAPISession.ApiVersion < 18) return;
+        //if (srcDrive.OrchAPISession.ApiVersion < 18) return;
+        //if (srcDrive.OrchAPISession.ApiVersion < 18) return;
 
         // スクリプトで連続して cmdlet を実行することを考えると、
         // いちいちキャッシュをクリアするべきじゃなかった。。
