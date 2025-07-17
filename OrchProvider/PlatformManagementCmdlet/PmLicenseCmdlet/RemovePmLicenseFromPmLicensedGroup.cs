@@ -20,6 +20,7 @@ public class RemoveLicenseFromLicenseGroup: OrchestratorPSCmdlet
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter<TPositional>))]
     [SupportsWildcards]
+    [Alias("Name")]
     public string[]? GroupName { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]

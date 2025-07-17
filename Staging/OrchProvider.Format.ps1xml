@@ -3894,7 +3894,7 @@
       <TableControl>
         <TableHeaders>
           <TableColumnHeader>
-            <Label>displayName</Label>
+            <Label>name</Label>
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>creationTime</Label>
@@ -3916,7 +3916,7 @@
           <TableRowEntry>
             <TableColumnItems>
               <TableColumnItem>
-                <PropertyName>displayName</PropertyName>
+                <PropertyName>name</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <ScriptBlock>

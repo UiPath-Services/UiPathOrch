@@ -12,6 +12,7 @@ public class RemoveUserLicenseGroup: OrchestratorPSCmdlet
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter<TPositional>))]
     [SupportsWildcards]
+    [Alias("Name")]
     public string[]? GroupName { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]

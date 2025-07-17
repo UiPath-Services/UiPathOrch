@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.14.6'
+ModuleVersion = '0.9.14.7'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -388,7 +388,22 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Some API version checks were inadvertently left in the test entity copy cmdlets in version 0.9.14.5. These checks have now been removed.
+        ReleaseNotes = '- The GroupName column was missing from the CSV file output by Get-PmGroupMember -ExportCsv.
+
+- Added -Name as an alias for the -GroupName parameter in cmdlets that handle PmGroup entities. Since the group name is included in the "name" property of the entity returned from the API, this change makes it easier to work with these cmdlets in pipelines. Affected cmdlets:
+  - Get-PmGroup
+  - Get-PmGroupMember
+  - New-PmGroup 
+  - Add-PmGroupMember
+  - Remove-PmGroup
+  - Remove-PmGroupMember
+  - Copy-PmGroup
+  - Move-PmGroupMember
+  - Get-PmLicensedGroup
+  - Add-PmLicenseToPmLicensedGroup
+  - Remove-PmLicensedGroup
+  - Remove-PmLicenseFromPmLicensedGroup
+  - Remove-PmAllocationFromPmLicensedGroup
 '
 
         # Prerelease string of this module

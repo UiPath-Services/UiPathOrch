@@ -1422,7 +1422,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     // Key: <folderId, <TestSetExecutionId, TestSetExecution>>
     internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, TestSetExecution>>? _dicTestSetExecutions = null;
     internal ExceptionsCachePer<Int64> _dicTestSetExecutions_Exceptions = new();
-    private ReadOnlyCollection<TestSetExecution>? _dicTestSetExecutionsEmpty = null;
+    //private ReadOnlyCollection<TestSetExecution>? _dicTestSetExecutionsEmpty = null;
     public ReadOnlyCollection<TestSetExecution> GetTestSetExecutions(Folder folder, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
     {
         // TODO: 16 未満の数字は正しいか？ 15.0 では、取得がエラーになることは確認済みだが、
@@ -2187,6 +2187,7 @@ public partial class OrchDriveInfo : PSDriveInfo
                 foreach (var m in e.members ?? [])
                 {
                     m.Path = NameColonSeparator;
+                    m.groupName = e.name;
                     m.PathGroupName = NameColonSeparator + e.name;
                 }
             },

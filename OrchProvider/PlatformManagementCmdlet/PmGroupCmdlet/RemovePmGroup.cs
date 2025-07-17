@@ -11,6 +11,7 @@ public class RemovePmGroupCommand : OrchestratorPSCmdlet
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmGroupNameCompleter<TPositional>))]
     [SupportsWildcards]
+    [Alias("Name")]
     public string[]? GroupName { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
