@@ -17,6 +17,7 @@ public class AddPmGroupCommand : OrchestratorPSCmdlet
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NewPmGroupNameCompleter))]
     [SupportsWildcards]
+    [Alias("Name")]
     public string[]? GroupName { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
