@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -43,7 +43,8 @@ PS Orch1:\> Get-PmGroupMember
 ```powershell
 PS Orch1:\> Get-PmGroupMember Admin*, Everyone
 ```
-名前が「Admin」で始まるグループまたは「Everyone」と正確に一致するグループからメンバーを取得します。
+
+名前が"Admin"で始まるグループまたは"Everyone"と正確に一致するグループからメンバーを取得します。
 
 ### Example 3: グループメンバーの詳細を取得して構造を調べる
 ```powershell
@@ -104,7 +105,7 @@ Accept wildcard characters: False
 ```yaml
 Type: String[]
 Parameter Sets: (All)
-Aliases:
+Aliases: Name
 
 Required: False
 Position: 0
@@ -144,7 +145,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariableの共通パラメータをサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -160,8 +161,8 @@ Accept wildcard characters: False
 - -ExportCsvパラメータは、一括グループメンバーシップ操作用のインポート準備ができたCSVファイルを作成します
 - メンバータイプは、objectTypeプロパティ（DirectoryUser、DirectoryRobotUser、DirectoryGroup、DirectoryApplication）によって示されます
 - フィルタリング操作を使用して、グループメンバーシップパターンを分析し、セキュリティコンプライアンス問題を特定します
-- Platform Managementコマンドレット（「Pm」で始まる）は、組織横断的なグループメンバーシップ情報を提供します
-- sourceプロパティは、ディレクトリソース（例：「local」、Azure Active Directoryの場合は「aad」）を示します
+- Platform Managementコマンドレット（"Pm"で始まる）は、組織横断的なグループメンバーシップ情報を提供します
+- sourceプロパティは、ディレクトリソース（例："local"、Azure Active Directoryの場合は"aad"）を示します
 
 ## RELATED LINKS
 

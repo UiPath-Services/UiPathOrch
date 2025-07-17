@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -28,7 +28,7 @@ Get-OrchAssetLink コマンドレットは、UiPath Orchestrator 内の指定さ
 
 このコマンドレットは、管理者がフォルダー間でのアセット配布を理解し、アクセスの問題をトラブルシューティングし、複雑なフォルダー階層内でのアセット組織を管理するのに役立ちます。
 
-プライマリエンドポイント: GET /odata/Assets/UiPath.Server.Configuration.OData.GetFoldersForAsset(id={assetId})
+主要エンドポイント: GET /odata/Assets/UiPath.Server.Configuration.OData.GetFoldersForAsset(id={assetId})
 
 OAuth 必須スコープ: OR.Assets または OR.Assets.Read
 
@@ -118,21 +118,6 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
 ```
 
-### -Recurse
-検索操作にターゲットフォルダーとそのすべてのサブフォルダーを含めます。包括的なアセットリンク検出に不可欠です。
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -ProgressAction
 {{ ProgressAction の説明を入力 }}
 
@@ -148,21 +133,34 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -Recurse
+検索操作にターゲットフォルダーとそのすべてのサブフォルダーを含めます。包括的なアセットリンク検出に不可欠です。
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
-### System.String[]
-
+### None
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.SimpleFolder
-
 ## NOTES
 このコマンドレットは、適切なフォルダーコンテキストまたはパス指定が必要なフォルダーエンティティ操作です。アセットリンクは、Orchestrator 階層内でのアセットへのフォルダーレベルアクセスを定義します。フォルダー検索の範囲を制御するには、-Recurse および -Depth パラメーターを使用してください。アセット-フォルダー関係の理解は、適切なアクセス制御とアセット管理に不可欠です。この操作には、ターゲットフォルダーでの Assets.View アクセス許可が必要です。
 
-プライマリエンドポイント: GET /odata/Assets
+主要エンドポイント: GET /odata/Assets
 OAuth 必須スコープ: OR.Assets または OR.Assets.Read
 必要なアクセス許可: Assets.View
 

@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -28,7 +28,7 @@ Copy-PmExternalApplication コマンドレットは、UiPath Platform Management
 
 これはテナントエンティティコマンドレットです。-Path パラメーターはソースドライブ名（例：Orch1:, Orch2:）を指定し、-Destination は外部アプリケーションをコピーするターゲット組織ドライブを指定します。
 
-プライマリエンドポイント: POST /api/ExternalClient
+主要エンドポイント: POST /api/ExternalClient
 
 OAuth 必要なスコープ:
 
@@ -172,7 +172,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは共通パラメーターをサポートしています: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, -WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

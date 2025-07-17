@@ -26,7 +26,7 @@ Get-OrchCredentialStore コマンドレットは、UiPath Orchestrator で構成
 
 このコマンドレットはテナントレベル操作として動作し、指定された Orchestrator 環境から構成された資格情報ストアを取得します。これらのストアは自動化プロセスで安全な資格情報管理を提供するために使用されます。
 
-プライマリエンドポイント: GET /odata/CredentialStores
+主要エンドポイント: GET /odata/CredentialStores
 
 OAuth 必須スコープ: OR.Administration または OR.Administration.Read
 
@@ -124,7 +124,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -140,7 +140,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 資格情報ストアの構成と管理には、適切なセキュリティアクセス許可と外部システムとの統合設定が必要です。
 
-プライマリエンドポイント: GET /odata/CredentialStores
+主要エンドポイント: GET /odata/CredentialStores
 OAuth 必須スコープ: OR.Administration または OR.Administration.Read
 必要なアクセス許可: CredentialStores.View
 

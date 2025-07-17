@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -22,7 +22,7 @@ Copy-OrchMachine [-Name] <String[]> [-Destination] <String[]> [-Path <String>]
 
 このコマンドレットはテナントエンティティで動作し、スロット割り当て、スコープ、自動化タイプ、その他のプロパティなどの構成設定を含むマシンテンプレートをコピーします。ライセンスキーやクライアントシークレットなどの機密情報は、宛先テナント用に再生成されることに注意してください。
 
-プライマリエンドポイント: GET /odata/Machines, POST /odata/Machines
+主要エンドポイント: GET /odata/Machines, POST /odata/Machines
 
 OAuth 必要スコープ: OR.Machines
 
@@ -158,16 +158,14 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
 ### None
-
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.ExtendedMachine
-
 ## NOTES
 
 **重要なセキュリティ上の考慮事項:**

@@ -44,7 +44,7 @@ PS Orch1:\> Get-OrchLibrary
 PS Orch1:\> Get-OrchLibrary *Excel*
 ```
 
-IDに「Excel」を含むライブラリを取得します。
+IDに"Excel"を含むライブラリを取得します。
 
 ### Example 3
 ```powershell
@@ -58,7 +58,7 @@ PS Orch1:\> Get-OrchLibrary -HostFeed
 PS Orch1:\> Get-OrchLibrary *Activities* -HostFeed
 ```
 
-ホストフィードからIDに「Activities」を含むライブラリを取得します。
+ホストフィードからIDに"Activities"を含むライブラリを取得します。
 
 ### Example 5
 ```powershell
@@ -144,7 +144,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

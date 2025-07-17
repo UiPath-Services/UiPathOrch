@@ -36,45 +36,31 @@ Required permissions: Packages.Create and FolderPackages.Create
 
 ### Example 1
 ```powershell
-PS Orch1:\Development> Import-OrchPackage "C:\Packages\ProcessAutomation.1.0.0.nupkg"
+PS Orch1:\> Import-OrchPackage C:\LocalFeed\MyProcess.1.0.1.nupkg
 ```
 
-Imports the ProcessAutomation package from the specified .nupkg file to the current folder (Development).
+Imports a package from the local file system to the Orchestrator tenant feed.
 
 ### Example 2
 ```powershell
-PS C:\> Import-OrchPackage -Source "C:\Exports\*.nupkg" -Path Orch1:\Development
+PS Orch1:\Development> Import-OrchPackage C:\LocalFeed\MyProcess.1.0.1.nupkg
 ```
 
-Imports all .nupkg files from C:\Exports directory to the Orch1:\Development folder.
+Imports a package from the local file system to the Orchestrator folder feed. If there is no feed in the Orch1:\Development folder, it will be imported to the tenant feed.
 
 ### Example 3
 ```powershell
-PS Orch1:\Development> Import-OrchPackage "C:\Backup\DataProcessor.*.nupkg" -WhatIf
+PS C:\LocalFeed> Import-OrchPackage MyProcess.1.0.1.nupkg -Path Orch1:, Orch2:
 ```
 
-Shows what would happen when importing all versions of DataProcessor package from C:\Backup directory to the current folder.
+Imports the same package to the tenant feeds of multiple Orchestrator instances.
 
 ### Example 4
 ```powershell
-PS C:\> Import-OrchPackage -Source "C:\Packages" -Path Orch1:\Production -Recurse
+PS LocalFeed:\> Import-OrchPackage . -Path Orch1: -Confirm
 ```
 
-Imports all .nupkg files from C:\Packages directory and its subdirectories to the Orch1:\Production folder.
-
-### Example 5
-```powershell
-PS Orch1:\Development> Import-OrchPackage "C:\Critical\*.nupkg", "C:\Backup\*.nupkg" -Confirm
-```
-
-Imports all .nupkg files from both C:\Critical and C:\Backup directories to the current folder with confirmation prompts.
-
-### Example 6
-```powershell
-PS C:\> Get-ChildItem "C:\Exports\*.nupkg" | Import-OrchPackage -Path Orch1:\Development
-```
-
-Gets all .nupkg files from C:\Exports directory and imports them to Orch1:\Development using pipeline input.
+Bulk imports all package files in the folder. The import destination will be the current folder of the Orch1: drive. If you want to always import to the tenant feed regardless of the current folder location, specify Orch1:\ in the -Path parameter.
 
 ## PARAMETERS
 

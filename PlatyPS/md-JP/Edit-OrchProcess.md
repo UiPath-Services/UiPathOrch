@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -24,7 +24,7 @@ Edit-OrchProcess [[-Name] <String[]>] [-Path <String[]>] [-ProgressAction <Actio
 
 複数のプロセス名を指定して、複数のプロセス編集ページを同時に開くことができます。[Ctrl+Space]または[Tab]を押してプロセス名のオートコンプリートを使用できます。
 
-プライマリエンドポイント: プロセス編集ページへのブラウザナビゲーション（直接のAPIエンドポイントなし）
+主要エンドポイント: プロセス編集ページへのブラウザナビゲーション（直接のAPIエンドポイントなし）
 
 OAuth必要スコープ: 適用外（ブラウザナビゲーション）
 
@@ -38,7 +38,7 @@ PS C:\> Set-Location Orch1:\MyWorkspace
 PS Orch1:\MyWorkspace> Edit-OrchProcess MsgBox
 ```
 
-デフォルトのWebブラウザで「MsgBox」プロセスのプロセス編集ページを開きます。
+デフォルトのWebブラウザで"MsgBox"プロセスのプロセス編集ページを開きます。
 
 ### Example 2
 ```powershell
@@ -52,21 +52,21 @@ PS Orch1:\MyWorkspace> Edit-OrchProcess BackgroundProcess, BackgroundProcess
 PS Orch1:\> Get-OrchProcess -Name *Agent* | Edit-OrchProcess
 ```
 
-名前に「Agent」が含まれるすべてのプロセスを取得し、それらの編集ページを開きます。
+名前に"Agent"が含まれるすべてのプロセスを取得し、それらの編集ページを開きます。
 
 ### Example 4
 ```powershell
 PS Orch1:\MyWorkspace> Edit-OrchProcess My*
 ```
 
-ワイルドカードパターンマッチングを使用して、名前が「My」で始まるすべてのプロセスの編集ページを開きます。
+ワイルドカードパターンマッチングを使用して、名前が"My"で始まるすべてのプロセスの編集ページを開きます。
 
 ### Example 5
 ```powershell
 PS Orch1:\> Edit-OrchProcess -Path Orch1:\Shared, Orch1:\root MsgBox
 ```
 
-複数の指定されたフォルダから「MsgBox」プロセスの編集ページを開きます。
+複数の指定されたフォルダから"MsgBox"プロセスの編集ページを開きます。
 
 ## PARAMETERS
 
@@ -116,16 +116,14 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは共通パラメータをサポートします: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
 ### None
-
 ## OUTPUTS
 
 ### System.Object
-
 ## NOTES
 - これは、PowerShellからOrchestrator Webインターフェースにナビゲートするためのユーティリティコマンドレットです
 - このコマンドレットには、アクティブなWebブラウザとOrchestratorインスタンスへのインターネット接続が必要です

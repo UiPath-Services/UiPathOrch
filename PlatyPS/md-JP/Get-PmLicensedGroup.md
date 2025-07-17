@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -44,14 +44,14 @@ Get-PmLicensedGroup
 Get-PmLicensedGroup DeveloperGroup
 ```
 
-「DeveloperGroup」という名前のライセンスグループを取得します。
+"DeveloperGroup"という名前のライセンスグループを取得します。
 
 ### Example 3
 ```powershell
 Get-PmLicensedGroup *Admin*
 ```
 
-名前に「Admin」を含むすべてのライセンスグループを取得します。
+名前に"Admin"を含むすべてのライセンスグループを取得します。
 
 ### Example 4
 ```powershell
@@ -134,7 +134,7 @@ Accept wildcard characters: False
 ```yaml
 Type: String[]
 Parameter Sets: (All)
-Aliases:
+Aliases: Name
 
 Required: False
 Position: 0
@@ -189,7 +189,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariableの共通パラメータをサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

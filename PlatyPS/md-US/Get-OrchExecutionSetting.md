@@ -141,12 +141,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-
+### None
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.ExecutionSettingDefinition
-
 ## NOTES
 This cmdlet is a tenant-level entity operation for accessing execution setting configurations. Settings control automation execution behavior including logging, console access, and resolution settings. Output is grouped by scope showing Global and Robot-level settings. Use filtering to find specific settings by key or value type. This operation requires Settings.View permissions.
 

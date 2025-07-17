@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -119,7 +119,7 @@ Accept wildcard characters: False
 ```yaml
 Type: String[]
 Parameter Sets: (All)
-Aliases:
+Aliases: Name
 
 Required: False
 Position: 0
@@ -159,7 +159,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariableの共通パラメータをサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -173,7 +173,7 @@ Accept wildcard characters: False
 - 一括操作の場合、-ExportCsvに続けてImport-Csv | New-PmGroupを使用することは、Select-Object + Export-Csvよりも信頼性があります
 - フォルダやテナント間でのグループのコピーには、より良い結果を得るためにCSVエクスポート/インポートではなくCopy-PmGroupの使用を検討してください
 - members配列には、グループメンバーシップに関する詳細情報が含まれています
-- Platform Managementコマンドレット（「Pm」で始まる）は、組織横断的なグループ情報を提供します
+- Platform Managementコマンドレット（"Pm"で始まる）は、組織横断的なグループ情報を提供します
 - グループタイプとmappingRoleプロパティは、グループの目的とロール割り当てに関する情報を提供します
 
 ## RELATED LINKS

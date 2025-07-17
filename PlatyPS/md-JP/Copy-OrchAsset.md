@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,7 +26,7 @@ Copy-OrchAsset コマンドレットは、UiPath Orchestrator テナント内ま
 
 これはフォルダエンティティコマンドレットです。まず Set-Location コマンドレット（cd コマンド）を使用してターゲットフォルダに移動するか、-Path、-Recurse、または -Depth パラメーターを使用してターゲットフォルダを指定してください。-Recurse パラメーターを使用すると、すべてのサブフォルダからアセットをコピーし、宛先でフォルダ構造を維持します。
 
-プライマリエンドポイント: GET /odata/Assets, GET /odata/Assets/UiPath.Server.Configuration.OData.GetFoldersForAsset(id={id}), POST /odata/Assets
+主要エンドポイント: GET /odata/Assets, GET /odata/Assets/UiPath.Server.Configuration.OData.GetFoldersForAsset(id={id}), POST /odata/Assets
 
 OAuth 必要スコープ: OR.Assets
 
@@ -204,16 +204,14 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
 ### None
-
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.Asset
-
 ## NOTES
 これはフォルダエンティティコマンドレットです。-Path パラメーターを使用してソースフォルダを指定するか、Set-Location を使用してソースフォルダに移動してください。
 

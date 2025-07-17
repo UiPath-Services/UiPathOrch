@@ -48,7 +48,7 @@ Gets settings related to language and timezone using wildcard patterns.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchSetting -Path Orch1:, Orch2: *Auth*
+PS C:\> Get-OrchSetting -Path Orch1:, Orch2: *Auth*
 ```
 
 Gets authentication-related settings from multiple tenants.

@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,137 +8,109 @@ schema: 2.0.0
 # Get-TmTestSet
 
 ## SYNOPSIS
-Test Managerのプロジェクトからテストセットを取得します。
+Test Managerからテストセットを取得します。
 
 ## SYNTAX
 
-`
+```
 Get-TmTestSet [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-ProgressAction <ActionPreference>]
  [<CommonParameters>]
-`
+```
 
 ## DESCRIPTION
-Get-TmTestSetコマンドレットは、Test Managerプロジェクトからテストセットを取得します。テストセットは、グループとして一緒に実行できるテストケースのコレクションで、組織化されたテスト実行とレポート機能を提供します。
+Get-TmTestSet コマンドレットは、UiPath Test Managerからテストセット情報を取得します。テストセットは、関連するテストケースの論理的なグループであり、特定のテストシナリオや機能領域の包括的なテストカバレッジを提供します。
 
-このコマンドレットはフォルダーエンティティに対して動作し、特定のTest Managerプロジェクトへのナビゲーションまたは-Path、-Recurse、-Depthパラメーターの使用が必要です。設定にTest Managerスコープが含まれている場合に自動的に利用可能になるUiPathOrchTmプロバイダーと連携します。
+このコマンドレットは、テストセットの詳細、含まれるテストケース、実行ステータス、スケジューリング情報などの包括的な情報を提供し、テスト管理とレポート活動をサポートします。
 
-テストセットは、Orchestratorプロセス、外部テスト管理システム、または手動テスト作成など、さまざまなソースに由来できます。このコマンドレットは、テストセット構成、実行順序の強制、カバレッジ設定、および関連するテストケースに関する情報を提供します。
+-Nameと-Pathパラメーターの複数の値は、ワイルドカードを含むカンマ区切りテキストを使用して指定できます。さらに、[Ctrl+Space]または[Tab]を押すことで、これらの値の自動補完を使用できます。
 
-プライマリ エンドポイント: GET /testmanager_/api/v2/{projectId}/testsets
+主要エンドポイント：GET /api/testsets
 
-OAuth 必要なスコープ: TM.TestSets or TM.TestSets.Read
+OAuth必須スコープ：[PLACEHOLDER - Test Manager test set scopes]
 
-必要な権限: TestSet.Read
+必須権限：[PLACEHOLDER - Test Manager test set permissions]
 
 ## EXAMPLES
 
 ### Example 1
-`powershell
-PS Orch1Tm:\> Get-TmTestSet
-`
+```powershell
+PS Orch1Tm:\> Get-TmTestSet -Recurse
+```
 
-現在のTest Managerプロジェクトからすべてのテストセットを取得します。
+現在のTest Managerインスタンスからすべてのテストセットを取得します。
 
 ### Example 2
-`powershell
-PS Orch1Tm:\> Get-TmTestSet RegressionTests
-`
+```powershell
+PS Orch1Tm:\> Get-TmTestSet -Path MyProject *regression*
+```
 
-現在のプロジェクトから"RegressionTests"という名前のテストセットを取得します。
+ワイルドカードパターンマッチングを使用して、名前に"regression"を含むテストセットを取得します。
 
 ### Example 3
-`powershell
-PS Orch1Tm:\> Get-TmTestSet Smoke*
-`
+```powershell
+PS C:\> Get-TmTestSet -Path Orch1Tm:, Orch2Tm: -Recurse
+```
 
-ワイルドカードマッチングを使用して、名前が"Smoke"で始まるすべてのテストセットを取得します。
+複数のTest Managerインスタンスからテストセットを取得します。
 
 ### Example 4
-`powershell
-PS Orch1Tm:\> Get-TmTestSet -Recurse
-`
+```powershell
+PS Orch1Tm:\> Get-TmTestSet -Recurse | ConvertTo-Json -Depth 2
+```
 
-すべてのTest Managerプロジェクトからテストセットを再帰的に取得します。
-
-### Example 5
-`powershell
-PS Orch1Tm:\> Get-TmTestSet -Path Orch1Tm:\MyProject
-`
-
-現在の場所を変更せずに、指定されたTest Managerプロジェクトからすべてのテストセットを取得します。
-
-### Example 6
-`powershell
-PS Orch1Tm:\> Get-TmTestSet -Recurse | Where-Object {$_.source -eq "Orchestrator"}
-`
-
-すべてのプロジェクトからOrchestratorプロセスに由来するすべてのテストセットを取得します。
-
-### Example 7
-`powershell
-PS Orch1Tm:\> Get-TmTestSet -Recurse | ConvertTo-Json -Depth 3
-`
-
-すべてのテストセットを取得し、詳細な分析のためにJSON形式で完全な構造を表示します。
-
-### Example 8
-`powershell
-PS Orch1Tm:\> Get-TmTestSet | Where-Object {$_.enforceExecutionOrder -eq $true} | Select-Object name, numberOfTestCases
-`
-
-実行順序を強制するテストセットを見つけ、その名前とテストケース数を表示します。
+すべてのテストセットを取得し、詳細な分析のために完全な構造をJSON形式で表示します。
 
 ## PARAMETERS
 
 ### -Name
-取得するテストセットの名前を指定します。パターンマッチング用のワイルドカード文字（*と?）をサポートします。複数の名前が指定された場合、一致するすべてのテストセットが返されます。
+取得するテストセットの名前を指定します。ワイルドカードと複数の値をサポートします。[Ctrl+Space]または[Tab]を押すことで自動補完を使用できます。指定しない場合、すべてのテストセットが返されます。
 
-`yaml
+```yaml
 Type: String[]
 Parameter Sets: (All)
 Aliases:
 
 Required: False
 Position: 0
-Default value: None
+Default value: All test sets
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
-`
+```
 
 ### -Path
-テストセットを検索するフォルダーパスを指定します。パターンマッチング用のワイルドカード文字（*と?）をサポートします。現在の場所を変更せずに特定のTest Managerプロジェクトをターゲットにしたい場合に、このパラメーターを使用します。
+対象のTest Managerドライブの名前を指定します。指定しない場合、現在のドライブが対象になります。このパラメーターは、複数のTest Managerインスタンスを指定するためのパイプライン入力を受け入れます。
 
-`yaml
+```yaml
 Type: String[]
 Parameter Sets: (All)
 Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: Current location
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
-`
+```
 
 ### -Recurse
-サブフォルダーからテストセットを再帰的に取得します。指定すると、コマンドレットは指定されたパスまたは現在の場所から始まってTest Managerプロジェクト階層全体を走査します。
+Specifies that the operation should include the target folder and all its subfolders.
 
-`yaml
+```yaml
 Type: SwitchParameter
 Parameter Sets: (All)
 Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
-`
+```
 
 ### -ProgressAction
-このコマンドの処理中にスクリプト、コマンドレット、またはプロバイダーによって生成される進行状況の更新に対するPowerShellの応答方法を指定します。
+スクリプト、コマンドレット、またはプロバイダーによって生成される進行状況の更新にPowerShellがどのように応答するかを指定します。有効な値は：SilentlyContinue、Stop、Continue、Inquire、Ignore、Suspend。
 
-`yaml
+```yaml
 Type: ActionPreference
 Parameter Sets: (All)
 Aliases: proga
@@ -148,10 +120,10 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
-`
+```
 
 ### CommonParameters
-このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariableの共通パラメーターをサポートします。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -160,26 +132,17 @@ Accept wildcard characters: False
 
 ### UiPath.PowerShell.Entities.TmTestSet
 ## NOTES
+- このコマンドレットは、Test Managerドライブ（Orch1Tm:など）で動作します
+- テストセットは、関連するテストケースの論理的なグループです
+- 特定のテストシナリオや機能領域の包括的なテストカバレッジを提供します
+- テスト管理とレポート活動をサポートします
 
-このコマンドレットはフォルダーエンティティに対して動作します。つまり、特定のTest Managerプロジェクトにナビゲートするか、-Pathパラメーターを使用して目的の場所をターゲットにする必要がある場合があります。
-
-Test Manager操作では、適切なTest Managerドライブ（Orch1Tm:、Orch2Tm:など）に接続しているか、-Pathパラメーターを使用して正しいドライブを指定してください。
-
-大規模なTest Manager環境で-Recurseパラメーターを使用すると、操作の完了に相当な時間がかかる場合があります。必要に応じて-Pathを使用してスコープを制限することを検討してください。
-
-テストセットには以下のような重要な実行構成が含まれます：
-- enforceExecutionOrder: テストケースを特定の順序で実行する必要があるかどうか
-- enableCoverage: コードカバレッジ分析が有効かどうか
-- source: テストセットの起源（Orchestrator、外部システムなど）
-
-テストセットオブジェクトには、デフォルトの表示形式では表示されない詳細なメタデータが含まれているため、ConvertTo-Jsonを使用してテストセットオブジェクトの完全な構造を探索してください。
-
-フォルダーエンティティコマンドレットでは、パラメーターの配置が重要です。適切な自動補完機能のために、-Path、-Recurseパラメーターをコマンドレット名の直後に配置してください。
+主要エンドポイント：GET /api/testsets
+OAuth必須スコープ：[PLACEHOLDER - Test Manager test set scopes]
+必須権限：[PLACEHOLDER - Test Manager test set permissions]
 
 ## RELATED LINKS
 
 [Get-TmTestCase](Get-TmTestCase.md)
-[Start-OrchTestSet](Start-OrchTestSet.md)
-[Get-OrchTestSetExecution](Get-OrchTestSetExecution.md)
-[Stop-OrchTestSetExecution](Stop-OrchTestSetExecution.md)
-[Remove-TmTestSet](Remove-TmTestSet.md)
+[Get-TmServerInfo](Get-TmServerInfo.md)
+[about_UiPathOrch](about_UiPathOrch.md)

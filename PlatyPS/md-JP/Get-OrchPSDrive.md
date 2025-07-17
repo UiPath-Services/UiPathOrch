@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -19,7 +19,7 @@ Get-OrchPSDrive [-Path <String[]>] [-Force] [-ProgressAction <ActionPreference>]
 ## DESCRIPTION
 Get-OrchPSDrive コマンドレットは、構成されたすべてのUiPath Orchestrator PowerShellドライブに関する情報を取得します。このコマンドレットは環境検証に不可欠であり、利用可能な接続とそのステータスを確認するために、任意のUiPathOrchセッションで最初に実行すべきコマンドです。
 
-プライマリエンドポイント: N/A (ローカル構成)
+主要エンドポイント: N/A (ローカル構成)
 
 OAuth必須スコープ: N/A
 
@@ -97,7 +97,7 @@ Accept wildcard characters: True
 ```
 
 ### CommonParameters
-このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および -WarningVariable の共通パラメータをサポートします。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

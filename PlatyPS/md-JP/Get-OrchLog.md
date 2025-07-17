@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -28,7 +28,7 @@ Get-OrchLogコマンドレットは、包括的なフィルタリング機能を
 
 **重要**: このコマンドレットは実行するために少なくとも1つのフィルターパラメーター（TimeStampAfter、Last、Level、Machine、ProcessName、またはJobKeyなど）が必要です。フィルターなしでは、警告とともにキャッシュされた内容を出力します。
 
-プライマリエンドポイント: GET /odata/Logs
+主要エンドポイント: GET /odata/Logs
 
 OAuth必須スコープ: OR.Monitoring または OR.Monitoring.Read
 
@@ -321,7 +321,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは共通パラメーターをサポートします: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -332,7 +332,7 @@ Accept wildcard characters: False
 ## NOTES
 このコマンドレットは、過度なデータ取得を防ぐために少なくとも1つのフィルターパラメーターが必要なフォルダーエンティティ操作です。フィルターパラメーターが指定されていない場合、コマンドレットは警告とともにキャッシュされた内容を出力します。大きな結果セットを管理するには、ページネーションパラメーター（Skip、First）を使用してください。一般的なフィルターパターンには、時間範囲（Last、TimeStampAfter）、重要度レベル（Level）、および特定の実行コンテキスト（Machine、ProcessName、JobKey）があります。この操作には、ターゲットフォルダーでのLogs.View権限が必要です。
 
-プライマリエンドポイント: GET /odata/RobotLogs
+主要エンドポイント: GET /odata/RobotLogs
 OAuth必須スコープ: OR.Monitoring または OR.Monitoring.Read
 必要な権限: Logs.View
 

@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -90,7 +90,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariableの共通パラメータをサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -99,7 +99,7 @@ Accept wildcard characters: False
 
 ### UiPath.PowerShell.Entities.UpdateSettings
 ## NOTES
-- UpdateServerSourceはアップデートソースのタイプを示します（通常は「Orchestrator」）
+- UpdateServerSourceはアップデートソースのタイプを示します（通常は"Orchestrator"）
 - UpdateServerUrlにはアップデートサーバーの完全なURLが含まれます
 - PollingIntervalはアップデートを確認する頻度（分単位）を指定します
 - これらの設定は自動アップデート確認動作を制御します

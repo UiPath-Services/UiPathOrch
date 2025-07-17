@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -19,7 +19,7 @@ Get-OrchRobot [[-FullName] <String[]>] [[-Username] <String[]>] [-Path <String[]
 
 ## DESCRIPTION
 
-プライマリエンドポイント: GET /odata/Robots/UiPath.Server.Configuration.OData.GetConfiguredRobots?$expand=User
+主要エンドポイント: GET /odata/Robots/UiPath.Server.Configuration.OData.GetConfiguredRobots?$expand=User
 
 OAuth必須スコープ: OR.Robots または OR.Robots.Read
 
@@ -125,7 +125,7 @@ Accept wildcard characters: True
 ```
 
 ### CommonParameters
-このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および -WarningVariable の共通パラメータをサポートします。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -135,7 +135,7 @@ Accept wildcard characters: True
 ### UiPath.PowerShell.Entities.Robot
 ## NOTES
 
-プライマリエンドポイント: GET /odata/Robots
+主要エンドポイント: GET /odata/Robots
 OAuth必須スコープ: OR.Robots または OR.Robots.Read
 必要な権限: Robots.View
 

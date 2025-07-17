@@ -37,49 +37,49 @@ OAuth必要スコープ: OR.Execution または OR.Execution.Read
 PS C:\> Get-OrchLibraryVersion UiPath.Excel.Activities
 ```
 
-「UiPath.Excel.Activities」ライブラリのすべての利用可能なバージョンを取得します。
+"UiPath.Excel.Activities"ライブラリのすべての利用可能なバージョンを取得します。
 
 ### Example 2
 ```powershell
 PS C:\> Get-OrchLibraryVersion UiPath.Excel.Activities | ConvertTo-Json -Depth 2
 ```
 
-構造分析のために、「UiPath.Excel.Activities」ライブラリのすべてのバージョンを詳細なプロパティとともにJSON形式で表示します。
+構造分析のために、"UiPath.Excel.Activities"ライブラリのすべてのバージョンを詳細なプロパティとともにJSON形式で表示します。
 
 ### Example 3
 ```powershell
 PS C:\> Get-OrchLibraryVersion MyLibrary 1.0.*
 ```
 
-「MyLibrary」のパターン「1.0.*」（すべての1.0.xバージョン）に一致するすべてのバージョンを取得します。
+"MyLibrary"のパターン"1.0.*"（すべての1.0.xバージョン）に一致するすべてのバージョンを取得します。
 
 ### Example 4
 ```powershell
 PS C:\> Get-OrchLibraryVersion -HostFeed UiPath.System.Activities
 ```
 
-外部ホストフィードから「UiPath.System.Activities」のすべての利用可能なバージョンを取得します。
+外部ホストフィードから"UiPath.System.Activities"のすべての利用可能なバージョンを取得します。
 
 ### Example 5
 ```powershell
 PS C:\> Get-OrchLibraryVersion -Path Orch1:, Orch2: MyCustomLibrary
 ```
 
-複数のOrchestrator環境から「MyCustomLibrary」のすべてのバージョンを取得します。
+複数のOrchestrator環境から"MyCustomLibrary"のすべてのバージョンを取得します。
 
 ### Example 6
 ```powershell
 PS C:\> Get-OrchLibraryVersion MyLibrary | Sort-Object Version -Descending | Select-Object -First 5
 ```
 
-「MyLibrary」のすべてのバージョンを取得し、最新の5つのバージョンを表示します。
+"MyLibrary"のすべてのバージョンを取得し、最新の5つのバージョンを表示します。
 
 ### Example 7
 ```powershell
 PS C:\> Get-OrchLibraryVersion MyLibrary | Where-Object {$_.IsPrerelease -eq $false} | Select-Object Id, Version, Published
 ```
 
-「MyLibrary」の安定版（プレリリースではない）バージョンのみを取得し、主要なバージョン情報を表示します。
+"MyLibrary"の安定版（プレリリースではない）バージョンのみを取得し、主要なバージョン情報を表示します。
 
 ## PARAMETERS
 
@@ -159,7 +159,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

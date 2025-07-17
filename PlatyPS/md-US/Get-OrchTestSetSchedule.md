@@ -163,12 +163,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-
+### None
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.TestSetSchedule
-
 ## NOTES
 
 Primary Endpoint: GET /odata/TestSetSchedules

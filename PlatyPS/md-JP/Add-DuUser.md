@@ -26,7 +26,7 @@ Document Understanding プロジェクトでは、ドキュメント注釈、モ
 
 これはフォルダーエンティティコマンドレットです。最初に Set-Location コマンドレット（cd コマンド）を使用してターゲットフォルダーに移動するか、-Path、-Recurse、または -Depth パラメーターを使用してターゲットフォルダーを指定してください。-Recurse パラメーターは、すべてのサブフォルダーの Document Understanding プロジェクトにユーザーを追加できるようにします。
 
-プライマリエンドポイント: PATCH /{partitionGlobalId}/pap_/api/userroleassignments
+主要エンドポイント: PATCH /{partitionGlobalId}/pap_/api/userroleassignments
 
 OAuth 必須スコープ: [PLACEHOLDER - Document Understanding ユーザー管理スコープの確認が必要]
 
@@ -200,7 +200,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

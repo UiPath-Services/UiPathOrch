@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -53,7 +53,6 @@ PS Orch1:\> Get-OrchLicenseNamedUser Attended, StudioPro
 
 Retrieves named user license information for both Attended and StudioPro robot types.
 
-
 ### Example 4: Get license details and examine structure
 ```powershell
 PS Orch1:\> Get-OrchLicenseNamedUser | Select-Object -First 1 | ConvertTo-Json -Depth 5
@@ -105,7 +104,7 @@ Required: False
 Position: 0
 Default value: None
 Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
+Accept wildcard characters: False
 ```
 
 ### CommonParameters

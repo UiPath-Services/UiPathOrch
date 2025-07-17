@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -13,8 +13,8 @@ schema: 2.0.0
 ## SYNTAX
 
 ```
-Copy-OrchRole [-Name] <String[]> [-Destination] <String[]> [-Path <String>]
- [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Copy-OrchRole -Name <String[]> [-Destination] <String[]> [-Path <String>] [-ProgressAction <ActionPreference>]
+ [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -24,7 +24,7 @@ Copy-OrchRole [-Name] <String[]> [-Destination] <String[]> [-Path <String>]
 
 このコマンドレットは、コピー操作中にロール権限、説明、その他の構成詳細を保持します。
 
-プライマリエンドポイント: GET /odata/Roles, POST /odata/Roles
+主要エンドポイント: GET /odata/Roles, POST /odata/Roles
 
 OAuth 必要なスコープ: OR.Users
 
@@ -58,7 +58,7 @@ PS Orch1:\> Copy-OrchRole TestRole Orch2:, Orch3: -Confirm
 PS Orch1:\> Copy-OrchRole Custom* Orch2:
 ```
 
-「Custom」で始まるすべてのロールをOrch2にコピーします。
+"Custom"で始まるすべてのロールをOrch2にコピーします。
 
 ### Example 5
 ```powershell
@@ -68,21 +68,6 @@ PS Orch1:\> Get-OrchRole | Where-Object {$_.IsStatic -eq $false} | Copy-OrchRole
 パイプライン入力を使用して、コピーされるカスタム（非静的）ロールを示します。
 
 ## PARAMETERS
-
-### -Confirm
-ロールをコピーする前に確認を求めます。複数のロールをコピーする場合に推奨されます。
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases: cf
-
-Required: False
-Position: Named
-Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
-```
 
 ### -Destination
 ドライブ名で宛先テナントを指定します。複数の宛先にはカンマ区切りの値を使用します。
@@ -97,21 +82,6 @@ Position: 1
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
-```
-
-### -Name
-コピーするロールの名前を指定します。ワイルドカードと複数の値をサポートします。
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: True
-Position: 0
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
 ```
 
 ### -Path
@@ -129,21 +99,6 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
 ```
 
-### -WhatIf
-実際にロールをコピーせずに、コマンドレットを実行した場合の動作を示します。安全性検証に推奨されます。
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases: wi
-
-Required: False
-Position: Named
-Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -ProgressAction
 コマンドレット実行中の進行状況情報の表示方法を制御します。
 
@@ -159,19 +114,60 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -Confirm
+ロールをコピーする前に確認を求めます。複数のロールをコピーする場合に推奨されます。
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: cf
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -WhatIf
+実際にロールをコピーせずに、コマンドレットを実行した場合の動作を示します。安全性検証に推奨されます。
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: wi
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Name
+コピーするロールの名前を指定します。ワイルドカードと複数の値をサポートします。
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
+```
+
 ### CommonParameters
-このコマンドレットは共通パラメーターをサポートしています: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, -WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
-### System.String[]
-
-### System.String
-
+### None
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.Role
-
 ## NOTES
 ロールエンティティはテナントスコープであり、このコマンドレットはテナント間レプリケーションを可能にします。
 

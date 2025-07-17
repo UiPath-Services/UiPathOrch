@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -24,7 +24,7 @@ Get-OrchTestDataQueue コマンドレットは、UiPath Orchestratorからテス
 
 このコマンドレットはフォルダエンティティ操作として動作し、適切なフォルダコンテキストへの移動または-Pathパラメータを使用したターゲットフォルダの指定が必要です。サブフォルダからテストデータキューを含めるには-Recurseパラメータを使用し、再帰レベルを制御するには-Depthを使用します。
 
-プライマリエンドポイント: GET /odata/TestDataQueues
+主要エンドポイント: GET /odata/TestDataQueues
 
 OAuth必須スコープ: [PLACEHOLDER]
 
@@ -44,7 +44,7 @@ PS Orch1:\Shared> Get-OrchTestDataQueue
 PS C:\> Get-OrchTestDataQueue -Path Orch1:\Production *UserData*
 ```
 
-Productionフォルダから「UserData」を含む名前のテストデータキューを取得します。
+Productionフォルダから"UserData"を含む名前のテストデータキューを取得します。
 
 ### Example 3
 ```powershell
@@ -145,20 +145,18 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および -WarningVariable の共通パラメータをサポートします。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
-### System.String[]
-
+### None
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.TestDataQueue
-
 ## NOTES
 このコマンドレットは、テストデータキュー構成にアクセスするためのフォルダエンティティ操作です。テストデータキューは、自動化検証用の構造化データセットを提供することで、データ駆動テストをサポートします。キューは、テストデータをテストロジックから分離して組織化し、保守可能なテスト自動化プラクティスを可能にします。個別のテストデータエントリにアクセスするにはGet-OrchTestDataQueueItemと組み合わせて使用してください。この操作にはターゲットフォルダでのTestDataQueues.View権限が必要です。
 
-プライマリエンドポイント: GET /odata/TestDataQueueDefinitions
+主要エンドポイント: GET /odata/TestDataQueueDefinitions
 OAuth必須スコープ: OR.TestDataQueues または OR.TestDataQueues.Read
 必要な権限: TestDataQueues.View
 

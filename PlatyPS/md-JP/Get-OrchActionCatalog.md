@@ -24,7 +24,7 @@ Get-OrchActionCatalog コマンドレットは、Orchestrator 環境からアク
 
 このコマンドレットはフォルダーエンティティで動作し、再帰的な横断をサポートして、異なるフォルダー階層全体でアクションカタログを検索します。各アクションカタログには、保持ポリシー、暗号化ステータス、フォルダー組織などのメタデータが含まれます。
 
-プライマリエンドポイント: GET /odata/TaskCatalogs
+主要エンドポイント: GET /odata/TaskCatalogs
 
 OAuth 必須スコープ: OR.Tasks または OR.Tasks.Read
 
@@ -145,7 +145,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -169,7 +169,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 アクションカタログオブジェクトには保持設定や組織情報などの詳細なメタデータが含まれているため、ConvertTo-Json を使用してアクションカタログオブジェクトの完全な構造を調べてください。
 
-プライマリエンドポイント: GET /odata/TaskCatalogs
+主要エンドポイント: GET /odata/TaskCatalogs
 OAuth 必須スコープ: OR.Tasks または OR.Tasks.Read
 必要なアクセス許可: TaskCatalogs.View
 

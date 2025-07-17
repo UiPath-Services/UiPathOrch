@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,66 +8,66 @@ schema: 2.0.0
 # Get-OrchWebhook
 
 ## SYNOPSIS
-UiPath Orchestrator から Webhook を取得します。
+UiPath Orchestratorからウェブフックを取得します。
 
 ## SYNTAX
 
-`
+```
 Get-OrchWebhook [[-Name] <String[]>] [-Path <String[]>] [-ProgressAction <ActionPreference>]
  [<CommonParameters>]
-`
+```
 
 ## DESCRIPTION
-Get-OrchWebhook コマンドレットは、UiPath Orchestrator から Webhook 情報を取得します。Webhook は HTTP コールバックで、ジョブ完了、プロセスデプロイメント、キューアイテム更新などの特定のイベントが発生したときに、Orchestrator が外部システムにリアルタイム通知を送信できるようにします。
+Get-OrchWebhook コマンドレットは、UiPath Orchestratorからウェブフック情報を取得します。ウェブフックは、ジョブの完了、プロセスのデプロイメント、キューアイテムの更新などの特定のイベントが発生したときに、Orchestratorが外部システムにリアルタイム通知を送信できるHTTPコールバックです。
 
-このコマンドレットは、構成された Webhook に関する詳細情報を、URL、イベントサブスクリプション、セキュリティ設定、および運用ステータスを含めて返します。ワイルドカードを使用した Webhook 名でのフィルタリングをサポートします。
+このコマンドレットは、URL、イベント購読、セキュリティ設定、運用ステータスなど、設定されたウェブフックの詳細情報を返します。ワイルドカードを使用したウェブフック名によるフィルタリングをサポートします。
 
-Webhook は、Orchestrator からのリアルタイムイベント通知を提供することで、外部監視システム、通知プラットフォーム、およびカスタムアプリケーションとの統合を可能にします。
+ウェブフックは、Orchestratorからのリアルタイムイベント通知を提供することで、外部監視システム、通知プラットフォーム、カスタムアプリケーションとの統合を可能にします。
 
--Name と -Path パラメーターには、ワイルドカードを含むカンマ区切りのテキストを使用して複数の値を指定できます。さらに、[Ctrl+Space] または [Tab] を押すことで、これらの値の自動補完を使用できます。
+-Nameと-Pathパラメーターの複数の値は、ワイルドカードを含むカンマ区切りテキストを使用して指定できます。さらに、[Ctrl+Space]または[Tab]を押すことで、これらの値の自動補完を使用できます。
 
-主要エンドポイント: GET /odata/Webhooks
+主要エンドポイント：GET /odata/Webhooks
 
-OAuth 必須スコープ: OR.Webhooks または OR.Webhooks.Read
+OAuth必須スコープ：OR.Webhooks または OR.Webhooks.Read
 
-必要な権限: Webhooks.View
+必須権限：Webhooks.View
 
 ## EXAMPLES
 
 ### Example 1
-`powershell
+```powershell
 PS Orch1:\> Get-OrchWebhook
-`
+```
 
-現在の Orchestrator インスタンスで構成されているすべての Webhook を取得します。
+現在のOrchestratorインスタンスで設定されたすべてのウェブフックを取得します。
 
 ### Example 2
-`powershell
+```powershell
 PS Orch1:\> Get-OrchWebhook my*
-`
+```
 
-ワイルドカードパターンマッチングを使用して、名前が "my" で始まる Webhook を取得します。
+ワイルドカードパターンマッチングを使用して、名前が"my"で始まるウェブフックを取得します。
 
 ### Example 3
-`powershell
+```powershell
 PS C:\> Get-OrchWebhook -Path Orch1:, Orch2: integration*
-`
+```
 
-複数のテナントから名前が "integration" で始まる Webhook を取得します。
+複数のテナントから名前が"integration"で始まるウェブフックを取得します。
 
 ### Example 4
-`powershell
+```powershell
 PS Orch1:\> Get-OrchWebhook mywebhook | ConvertTo-Json
-`
+```
 
-特定の Webhook を取得し、Events 配列などのネストされたプロパティを含む完全な構造を表示します。
+特定のウェブフックを取得し、Eventsの配列などのネストされたプロパティを含む完全な構造を表示します。
 
 ## PARAMETERS
 
 ### -Name
-取得する Webhook の名前を指定します。ワイルドカードと複数の値をサポートします。[Ctrl+Space] または [Tab] を押すことで自動補完を使用できます。指定しない場合、すべての Webhook が返されます。
+取得するウェブフックの名前を指定します。ワイルドカードと複数の値をサポートします。[Ctrl+Space]または[Tab]を押すことで自動補完を使用できます。指定しない場合、すべてのウェブフックが返されます。
 
-`yaml
+```yaml
 Type: String[]
 Parameter Sets: (All)
 Aliases:
@@ -77,12 +77,12 @@ Position: 0
 Default value: All webhooks
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
-`
+```
 
 ### -Path
-ターゲットドライブの名前を指定します。指定しない場合は、現在のドライブがターゲットになります。このパラメーターは、複数の Orchestrator インスタンスを指定するためのパイプライン入力を受け取ります。
+対象ドライブの名前を指定します。指定しない場合、現在のドライブが対象になります。このパラメーターは、複数のOrchestratorインスタンスを指定するためのパイプライン入力を受け入れます。
 
-`yaml
+```yaml
 Type: String[]
 Parameter Sets: (All)
 Aliases:
@@ -92,12 +92,12 @@ Position: Named
 Default value: Current location
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
-`
+```
 
 ### -ProgressAction
-スクリプト、コマンドレット、またはプロバイダーによって生成される進行状況の更新 (Write-Progress コマンドレットによって生成される進行状況バーなど) に対して PowerShell が応答する方法を指定します。有効な値は次のとおりです: SilentlyContinue、Stop、Continue、Inquire、Ignore、Suspend。
+スクリプト、コマンドレット、またはプロバイダーによって生成される進行状況の更新（Write-Progressコマンドレットによって生成される進行状況バーなど）にPowerShellがどのように応答するかを指定します。有効な値は：SilentlyContinue、Stop、Continue、Inquire、Ignore、Suspend。
 
-`yaml
+```yaml
 Type: ActionPreference
 Parameter Sets: (All)
 Aliases: proga
@@ -107,32 +107,30 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
-`
+```
 
 ### CommonParameters
-このコマンドレットは共通パラメーターをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
 ### None
-
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.Webhook
-
 ## NOTES
-- Webhook は、Orchestrator から外部システムへのリアルタイムイベント通知を提供します
-- Events プロパティには、Webhook をトリガーするイベントを指定する WebhookEvent オブジェクトの配列が含まれています
-- 一般的なイベントタイプには次があります: job.created、job.faulted、job.completed、process.deleted、queue.created、queue.deleted、およびその他多数
-- SubscribeToAllEvents プロパティは、Webhook が利用可能なすべてのイベントタイプを受信するかどうかを示します
-- AllowInsecureSsl プロパティは、Webhook が無効または自己署名 SSL 証明書を受け入れるかどうかを制御します
-- Secret プロパティ（構成されている場合）は Webhook 署名検証に使用されますが、セキュリティのため表示されません
-- Key プロパティには、Webhook の一意識別子が含まれています
-- 無効な Webhook（Enabled = false）は、イベントが発生しても通知を送信しません
+- ウェブフックは、Orchestratorから外部システムへのリアルタイムイベント通知を提供します
+- Eventsプロパティには、ウェブフックをトリガーするイベントを指定するWebhookEventオブジェクトの配列が含まれます
+- 一般的なイベントタイプには次のものがあります：job.created、job.faulted、job.completed、process.deleted、queue.created、queue.deleted、その他多数
+- SubscribeToAllEventsプロパティは、ウェブフックがすべての利用可能なイベントタイプを受信するかどうかを示します
+- AllowInsecureSslプロパティは、ウェブフックが無効または自己署名SSL証明書を受け入れるかどうかを制御します
+- Secretプロパティ（設定されている場合）は、ウェブフック署名検証に使用されますが、セキュリティのため表示されません
+- Keyプロパティには、ウェブフックの一意識別子が含まれます
+- 無効化されたウェブフック（Enabled = false）は、イベントが発生しても通知を送信しません
 
-主要エンドポイント: GET /odata/Webhooks
-OAuth 必須スコープ: OR.Webhooks または OR.Webhooks.Read
-必要な権限: Webhooks.View
+主要エンドポイント：GET /odata/Webhooks
+OAuth必須スコープ：OR.Webhooks または OR.Webhooks.Read
+必須権限：Webhooks.View
 
 ## RELATED LINKS
 

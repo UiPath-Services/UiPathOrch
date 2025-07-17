@@ -36,29 +36,28 @@ Required permissions: [PLACEHOLDER - Directory search permissions]
 
 ### Example 1
 ```powershell
-PS C:\> Set-Location Orch1:\
-PS Orch1:\> Search-PmDirectory -Name "y"
+PS Orch1:\> Search-PmDirectory y
 ```
 
 Searches for all directory objects (users, groups, robot users) whose names start with "y".
 
 ### Example 2
 ```powershell
-PS Orch1:\> Search-PmDirectory -Name "user@example.com"
+PS Orch1:\> Search-PmDirectory user@example.com
 ```
 
 Searches for directory objects with the exact name or starting with "user@example.com".
 
 ### Example 3
 ```powershell
-PS Orch1:\> Search-PmDirectory -Name "admin" | Where-Object objectType -eq "DirectoryGroup"
+PS Orch1:\> Search-PmDirectory admin | Where-Object objectType -eq "DirectoryGroup"
 ```
 
 Searches for directory objects starting with "admin" and filters to show only groups.
 
 ### Example 4
 ```powershell
-PS Orch1:\> $result = Search-PmDirectory -Name "user@example.com"
+PS Orch1:\> $result = Search-PmDirectory user@example.com
 PS Orch1:\> $result | ConvertTo-Json -Depth 3
 ```
 
@@ -66,17 +65,10 @@ Searches for directory objects and displays the complete structure in JSON forma
 
 ### Example 5
 ```powershell
-PS Orch1:\> Search-PmDirectory -Name "y" | Select-Object identityName, displayName, objectType | Format-Table
+PS Orch1:\> Search-PmDirectory y | Select-Object identityName, displayName, objectType
 ```
 
-Searches for directory objects starting with "y" and displays key properties in a formatted table.
-
-### Example 6
-```powershell
-PS Orch1:\> Search-PmDirectory -Name "y" | Group-Object objectType | Select-Object Name, Count
-```
-
-Searches for directory objects starting with "y" and groups them by object type to see the distribution.
+Searches for directory objects starting with "y" and displays key properties.
 
 ## PARAMETERS
 

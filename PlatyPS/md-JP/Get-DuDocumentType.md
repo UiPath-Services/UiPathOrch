@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,7 +26,7 @@ Get-DuDocumentTypeコマンドレットは、UiPath OrchestratorからDocument U
 
 **重要**: このコマンドレットは実行前にUiPathOrchDuドライブ上のDocument Understandingプロジェクトフォルダー（例：Orch1Du:\ProjectName）への移動が必要です。
 
-プライマリエンドポイント: GET /du_/api/framework/projects/{projectId}/document-types
+主要エンドポイント: GET /du_/api/framework/projects/{projectId}/document-types
 
 OAuth必須スコープ: OR.ML または OR.ML.Read
 
@@ -139,16 +139,14 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは共通パラメーターをサポートします: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
-### System.String[]
-
+### None
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.DuDocumentType
-
 ## NOTES
 このコマンドレットはUiPathOrchDuドライブ上のDocument Understandingプロジェクト内で動作します。実行前に特定のプロジェクトフォルダーへの移動が必要です。ドキュメントタイプは、特定のドキュメントカテゴリの構造、フィールド抽出ルール、および処理ロジックを定義します。Predefinedプロジェクトには、一般的なビジネスシナリオ用の多数の事前構築されたドキュメントタイプが含まれています。専門的な処理要件にはカスタムドキュメントタイプを作成できます。この操作には、Document Understandingプロジェクト内でのML.View権限が必要です。
 

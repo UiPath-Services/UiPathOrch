@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -17,9 +17,8 @@ Update-OrchMachine [-Name] <String[]> [-Description <String>] [-UnattendedSlots 
  [-NonProductionSlots <Int32>] [-TestAutomationSlots <Int32>] [-AutomationType <String>]
  [-TargetFramework <String>] [-RobotUsers <String[]>] [-UpdatePolicyType <String>]
  [-UpdatePolicyVersion <String>] [-MaintenanceCron <String>] [-MaintenanceDuration <Int32>]
- [-MaintenanceEnabled <String>] [-MaintenanceTimeZone <String>] [-MaintenanceTimeZoneId <String>]
- [-Tags <String[]>] [-Path <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+ [-MaintenanceEnabled <String>] [-MaintenanceTimeZone <String>] [-Tags <String[]>] [-Path <String[]>]
+ [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -328,23 +327,8 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
-### -MaintenanceTimeZoneId
-{{ Fill MaintenanceTimeZoneId Description }}
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

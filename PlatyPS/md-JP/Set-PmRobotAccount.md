@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -20,11 +20,8 @@ Set-PmRobotAccount [-UserName] <String[]> [[-GroupName] <String[]>] [-Path <Stri
 
 ### CsvInput
 ```
-Set-PmRobotAccount [-UserName] <String[]> [[-GroupName] <String[]>] [-GroupName0 <String>]
- [-GroupName1 <String>] [-GroupName2 <String>] [-GroupName3 <String>] [-GroupName4 <String>]
- [-GroupName5 <String>] [-GroupName6 <String>] [-GroupName7 <String>] [-GroupName8 <String>]
- [-GroupName9 <String>] [-Path <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Set-PmRobotAccount [-UserName] <String[]> [[-GroupName] <String[]>] [-Path <String[]>]
+ [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -182,158 +179,8 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -GroupName0
-{{ Fill GroupName0 Description }}
-
-```yaml
-Type: String
-Parameter Sets: CsvInput
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
-### -GroupName1
-{{ Fill GroupName1 Description }}
-
-```yaml
-Type: String
-Parameter Sets: CsvInput
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
-### -GroupName2
-{{ Fill GroupName2 Description }}
-
-```yaml
-Type: String
-Parameter Sets: CsvInput
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
-### -GroupName3
-{{ Fill GroupName3 Description }}
-
-```yaml
-Type: String
-Parameter Sets: CsvInput
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
-### -GroupName4
-{{ Fill GroupName4 Description }}
-
-```yaml
-Type: String
-Parameter Sets: CsvInput
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
-### -GroupName5
-{{ Fill GroupName5 Description }}
-
-```yaml
-Type: String
-Parameter Sets: CsvInput
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
-### -GroupName6
-{{ Fill GroupName6 Description }}
-
-```yaml
-Type: String
-Parameter Sets: CsvInput
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
-### -GroupName7
-{{ Fill GroupName7 Description }}
-
-```yaml
-Type: String
-Parameter Sets: CsvInput
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
-### -GroupName8
-{{ Fill GroupName8 Description }}
-
-```yaml
-Type: String
-Parameter Sets: CsvInput
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
-### -GroupName9
-{{ Fill GroupName9 Description }}
-
-```yaml
-Type: String
-Parameter Sets: CsvInput
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-```
-
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

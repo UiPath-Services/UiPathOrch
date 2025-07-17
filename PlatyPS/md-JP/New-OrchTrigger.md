@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -28,11 +28,11 @@ New-OrchTrigger [-Name] <String[]> [-ReleaseName] <String> [-Enabled <String>] [
 ## DESCRIPTION
 New-OrchTrigger コマンドレットは、さまざまな条件に基づいてプロセス実行を自動的に開始する自動化トリガーを作成します。トリガーは、時間ベース（スケジュール済み）、キューベース（キューアイテムによってアクティブ化）、またはイベントベース（特定の条件によってトリガー）にできます。
 
-**これはフォルダエンティティコマンドレットです。** このコマンドレットを使用するには、最初にSet-Location（cd）を使用してターゲットフォルダに移動するか、-Pathパラメータを使用してターゲットフォルダを指定する必要があります。フォルダコンテキストなしでこのコマンドレットを実行しようとすると、「最初にSet-Locationコマンドレット（cdコマンド）を使用してターゲットフォルダに移動するか、-Path、-Recurse、または-Depthパラメータを使用してターゲットフォルダを指定してください。」というエラーが表示されます。
+**これはフォルダエンティティコマンドレットです。** このコマンドレットを使用するには、最初にSet-Location（cd）を使用してターゲットフォルダに移動するか、-Pathパラメータを使用してターゲットフォルダを指定する必要があります。フォルダコンテキストなしでこのコマンドレットを実行しようとすると、"最初にSet-Locationコマンドレット（cdコマンド）を使用してターゲットフォルダに移動するか、-Path、-Recurse、または-Depthパラメータを使用してターゲットフォルダを指定してください。"というエラーが表示されます。
 
 トリガーは、Cron式を使用した時間ベースのスケジューリング、アイテムがキューに追加されたときのキューベースのアクティベーション、カレンダー統合、ロボット割り当て、障害処理ポリシーなどの高度な構成を含む、さまざまな実行戦略をサポートします。
 
-プライマリエンドポイント: POST /odata/ProcessSchedules
+主要エンドポイント: POST /odata/ProcessSchedules
 OAuth必須スコープ: OR.Execution または OR.Execution.Write
 必要な権限: Execution.Create
 
@@ -43,7 +43,7 @@ OAuth必須スコープ: OR.Execution または OR.Execution.Write
 New-OrchTrigger DailyTrigger InvoiceProcessing
 ```
 
-位置パラメータを使用して「InvoiceProcessing」プロセス用の「DailyTrigger」という名前の基本トリガーを作成します。
+位置パラメータを使用して"InvoiceProcessing"プロセス用の"DailyTrigger"という名前の基本トリガーを作成します。
 
 ### Example 2
 ```powershell
@@ -578,7 +578,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および -WarningVariable の共通パラメータをサポートします。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -13,8 +13,8 @@ Copies roles between tenants.
 ## SYNTAX
 
 ```
-Copy-OrchRole [-Name] <String[]> [-Destination] <String[]> [-Path <String>]
- [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Copy-OrchRole -Name <String[]> [-Destination] <String[]> [-Path <String>] [-ProgressAction <ActionPreference>]
+ [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -69,21 +69,6 @@ Shows which custom (non-static) roles would be copied using pipeline input.
 
 ## PARAMETERS
 
-### -Confirm
-Prompts for confirmation before copying roles. Recommended when copying multiple roles.
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases: cf
-
-Required: False
-Position: Named
-Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -Destination
 Specifies the destination tenants by drive name. Use comma-separated values for multiple destinations.
 
@@ -97,21 +82,6 @@ Position: 1
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
-```
-
-### -Name
-Specifies the names of roles to copy. Supports wildcards and multiple values.
-
-```yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases:
-
-Required: True
-Position: 0
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
 ```
 
 ### -Path
@@ -129,21 +99,6 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
 ```
 
-### -WhatIf
-Shows what would happen if the cmdlet runs without actually copying roles. Recommended for safety verification.
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases: wi
-
-Required: False
-Position: Named
-Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -ProgressAction
 Controls how progress information is displayed during cmdlet execution.
 
@@ -159,19 +114,60 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -Confirm
+Prompts for confirmation before copying roles. Recommended when copying multiple roles.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: cf
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -WhatIf
+Shows what would happen if the cmdlet runs without actually copying roles. Recommended for safety verification.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: wi
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Name
+Specifies the names of roles to copy. Supports wildcards and multiple values.
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
+```
+
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
-### System.String[]
-
-### System.String
-
+### None
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.Role
-
 ## NOTES
 Role entities are tenant-scoped and this cmdlet enables cross-tenant replication.
 

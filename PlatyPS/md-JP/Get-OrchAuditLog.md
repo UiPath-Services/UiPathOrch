@@ -37,7 +37,7 @@ Get-OrchAuditLog コマンドレットは UiPath Orchestrator から監査ログ
 
 このコマンドレットは、広範囲な検索のためのフィルターベースのクエリと、特定の監査ログエントリを取得するための ID ベースのクエリの両方をサポートします。大きな結果セットを効率的に管理するには、ページネーションパラメーター（-Skip、-First）を使用します。
 
-プライマリエンドポイント: GET /odata/AuditLogs
+主要エンドポイント: GET /odata/AuditLogs
 
 OAuth 必須スコープ: OR.Audit または OR.Audit.Read
 
@@ -271,7 +271,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -282,7 +282,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## NOTES
 このコマンドレットは、組織全体の監査ログにアクセスするためのテナントレベルエンティティ操作です。監査ログは、セキュリティ監視、コンプライアンスレポート、トラブルシューティングに不可欠です。フィルタリングパラメーターを使用してクエリのパフォーマンスを向上させ、関連するイベントに焦点を当てます。-ExpandEntity および -ExpandDetails パラメーターは追加のコンテキストを提供しますが、パフォーマンスに影響を与える可能性があります。メモリ使用量と応答時間を管理するために、大きな結果セットにはページネーションの使用を検討してください。
 
-プライマリエンドポイント: GET /odata/AuditLogs
+主要エンドポイント: GET /odata/AuditLogs
 OAuth 必須スコープ: OR.Audit または OR.Audit.Read
 必要なアクセス許可: Audit.View
 

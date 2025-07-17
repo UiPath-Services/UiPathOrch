@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -54,7 +54,6 @@ PS C:\Libraries> Import-OrchLibrary . Orch1:, Orch2: -WhatIf
 ```
 
 Gets all library *.nupkg files from the current directory (.) and imports them to both Orch1: and Orch2:.
-
 
 ### Example 4:
 ```powershell

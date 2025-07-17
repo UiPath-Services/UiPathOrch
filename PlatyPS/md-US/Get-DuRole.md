@@ -43,14 +43,14 @@ Gets all Document Understanding roles available in the current instance.
 
 ### Example 2
 ```powershell
-PS Orch1Du:\> Get-DuRole -Name "*Developer*"
+PS Orch1Du:\> Get-DuRole *developer*
 ```
 
-Gets Document Understanding roles whose names contain "Developer".
+Gets Document Understanding roles whose names contain "developer".
 
 ### Example 3
 ```powershell
-PS Orch1Du:\> $role = Get-DuRole -Name "DU Data Annotator"
+PS Orch1Du:\> $role = Get-DuRole "DU Data Annotator"
 PS Orch1Du:\> $role.actionDetails | Select-Object name, description | Format-Table
 ```
 

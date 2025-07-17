@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -46,21 +46,21 @@ Get-OrchUserPrivilege
 Get-OrchUserPrivilege john.doe
 ```
 
-現在のテナント内のユーザー「john.doe」の権限情報を取得します。
+現在のテナント内のユーザー"john.doe"の権限情報を取得します。
 
 ### Example 3
 ```powershell
 Get-OrchUserPrivilege *admin*
 ```
 
-名前に「admin」を含むすべてのユーザーの権限情報を取得します。
+名前に"admin"を含むすべてのユーザーの権限情報を取得します。
 
 ### Example 4
 ```powershell
 Get-OrchUserPrivilege -Path Orch1:, Orch2: administrator
 ```
 
-複数のテナントにわたって「administrator」ユーザーの権限情報を取得します。
+複数のテナントにわたって"administrator"ユーザーの権限情報を取得します。
 
 ### Example 5
 ```powershell
@@ -131,7 +131,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariableの共通パラメータをサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

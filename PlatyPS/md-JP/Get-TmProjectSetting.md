@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -21,7 +21,7 @@ Get-TmProjectSettingコマンドレットは、Test Managerプロジェクトの
 
 このコマンドレットは、UiPathOrchTmプロバイダーで動作し、フォルダーエンティティ操作です。Set-Location（cd）を使用して特定のTest Managerプロジェクトフォルダーに移動するか、-Pathまたは-Recurseパラメータを使用して対象フォルダーを指定する必要があります。
 
-このコマンドレットは、UiPathOrchTmプロバイダーのPSDriveで動作します。構成ファイルのスコープに「TM.」が含まれている場合、UiPathOrchTmプロバイダーのPSDriveが自動的に追加されます。これはGet-PSDriveコマンドレットで確認できます。構成ファイルは、Edit-OrchConfigコマンドレットで開くことができます。
+このコマンドレットは、UiPathOrchTmプロバイダーのPSDriveで動作します。構成ファイルのスコープに"TM."が含まれている場合、UiPathOrchTmプロバイダーのPSDriveが自動的に追加されます。これはGet-PSDriveコマンドレットで確認できます。構成ファイルは、Edit-OrchConfigコマンドレットで開くことができます。
 
 プライマリ エンドポイント: [PLACEHOLDER - GET /testmanager_/api/v2/{projectId}/projectsettings]
 
@@ -107,7 +107,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariableの共通パラメータをサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

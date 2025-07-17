@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -24,7 +24,7 @@ Get-OrchPackage [[-Id] <String[]>] [-Path <String[]>] [-Recurse] [-ProgressActio
 
 Get-OrchPackage コマンドレットは、UiPath Orchestratorからプロセスパッケージを取得します。このコマンドレットを使用すると、テナントフィードまたはフォルダフィードからパッケージをリストし、IDでフィルタリング、ターゲットフォルダの指定、サブフォルダの再帰的包含などのオプションを使用できます。
 
-プライマリエンドポイント: GET /odata/Processes&feedId={feedId}
+主要エンドポイント: GET /odata/Processes&feedId={feedId}
 
 OAuth必須スコープ: OR.Execution または OR.Execution.Read
 
@@ -51,7 +51,7 @@ PS Orch1:\> Get-OrchPackage -Recurse
 PS Orch1:\> Get-OrchPackage -Path Orch1:\Production *Process*
 ```
 
-Productionフォルダから「ProcessA」で始まるIDを持つプロセスパッケージを取得します。
+Productionフォルダから"ProcessA"で始まるIDを持つプロセスパッケージを取得します。
 
 ### Example 4
 ```powershell
@@ -130,7 +130,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および -WarningVariable の共通パラメータをサポートします。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -141,7 +141,7 @@ Accept wildcard characters: False
 ## NOTES
 - アクティブな接続が存在しない場合、コマンドレットは自動的にUiPath Orchestratorへの接続を確立します。非機密アプリケーションの場合、最初のコマンドレット実行時にPKCE認証（ブラウザログイン）が開始されます。
 
-プライマリエンドポイント: GET /odata/Libraries
+主要エンドポイント: GET /odata/Libraries
 OAuth必須スコープ: OR.Execution または OR.Execution.Read
 必要な権限: Libraries.View
 

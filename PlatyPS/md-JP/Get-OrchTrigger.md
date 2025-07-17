@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -37,7 +37,7 @@ OAuth 必要スコープ: OR.Jobs または OR.Jobs.Read
 PS Orch1:\Shared> Get-OrchTrigger
 ```
 
-現在の場所である「Shared」フォルダ内のすべてのトリガーを表示します。
+現在の場所である"Shared"フォルダ内のすべてのトリガーを表示します。
 
 ### Example 2
 ```powershell
@@ -51,7 +51,7 @@ PS Orch1:\> Get-OrchTrigger -Recurse
 PS C:\> Get-OrchTrigger -Path Orch1:\ -Recurse *Schedule*
 ```
 
-すべてのフォルダから再帰的に、名前に「Schedule」を含むトリガーを取得します。
+すべてのフォルダから再帰的に、名前に"Schedule"を含むトリガーを取得します。
 
 ### Example 4
 ```powershell
@@ -190,7 +190,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariableの共通パラメータをサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

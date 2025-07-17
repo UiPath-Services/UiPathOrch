@@ -13,7 +13,7 @@ Gets connection string.
 ## SYNTAX
 
 ```
-Get-OrchConnectionString [[-Path] <String[]>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-OrchConnectionString [-Path <String[]>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -73,7 +73,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: 0
+Position: Named
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
@@ -99,12 +99,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-
+### None
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.ODataValueOfString
-
 ## NOTES
 
 This cmdlet provides read-only access to the Orchestrator database connection string. The connection string information is sensitive and should be handled securely according to your organization's security policies.

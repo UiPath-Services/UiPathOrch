@@ -26,7 +26,7 @@ Get-OrchAuthenticationSetting コマンドレットは、UiPath Orchestrator か
 
 このコマンドレットはテナントレベルエンティティ操作として動作し、指定された Orchestrator 環境からシステム全体の構成設定を取得します。これらの設定は通常読み取り専用で、現在のシステム構成を反映します。
 
-プライマリエンドポイント: GET /odata/Settings
+主要エンドポイント: GET /odata/Settings
 
 OAuth 必須スコープ: OR.Settings または OR.Settings.Read
 
@@ -110,7 +110,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -121,7 +121,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## NOTES
 このコマンドレットは、システム構成設定にアクセスするためのテナントレベルエンティティ操作です。これらの設定は、認証動作、アプリケーションプロパティ、システム機能を制御します。ほとんどの設定は読み取り専用で、現在の Orchestrator 構成を反映します。特定の構成カテゴリを見つけるには、キーパターンによるフィルタリングを使用してください。この操作には Settings.View アクセス許可が必要です。
 
-プライマリエンドポイント: GET /odata/Settings/UiPath.Server.Configuration.OData.GetAuthenticationSettings
+主要エンドポイント: GET /odata/Settings/UiPath.Server.Configuration.OData.GetAuthenticationSettings
 OAuth 必須スコープ: OR.Settings または OR.Settings.Read
 必要なアクセス許可: Settings.View
 
