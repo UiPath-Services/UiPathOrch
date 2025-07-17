@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -60,7 +60,6 @@ PS Orch1:\> Get-PmGroup | Select-Object -First 1 | ConvertTo-Json -Depth 5
 
 Retrieves the first group and displays its complete object structure in JSON format for detailed analysis.
 
-
 ### Example 5: Export groups to CSV for import
 ```powershell
 PS Orch1:\> Get-PmGroup -ExportCsv C:\temp\groups.csv
@@ -81,7 +80,6 @@ PS Orch1:\> Get-PmGroup | Where-Object {$_.creationTime -gt (Get-Date).AddDays(-
 ```
 
 Gets all groups and filters for those created in the last 30 days, displaying name and creation time.
-
 
 ## PARAMETERS
 
@@ -121,7 +119,7 @@ Specifies the names of groups to retrieve. Supports wildcard characters (* and ?
 ```yaml
 Type: String[]
 Parameter Sets: (All)
-Aliases:
+Aliases: Name
 
 Required: False
 Position: 0

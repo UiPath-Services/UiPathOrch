@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,7 +26,7 @@ Copy-OrchQueue コマンドレットは、UiPath Orchestrator テナント内ま
 
 これはフォルダエンティティコマンドレットです。最初に Set-Location コマンドレット（cd コマンド）を使用してターゲットフォルダに移動するか、-Path、-Recurse、または -Depth パラメーターを使用してターゲットフォルダを指定してください。-Recurse パラメーターを使用すると、すべてのサブフォルダからキューをコピーし、宛先でフォルダ構造を維持できます。
 
-プライマリエンドポイント: GET /odata/QueueDefinitions, GET /odata/QueueDefinitions/UiPath.Server.Configuration.OData.GetFoldersForQueue(id={id}), POST /odata/QueueDefinitions
+主要エンドポイント: GET /odata/QueueDefinitions, GET /odata/QueueDefinitions/UiPath.Server.Configuration.OData.GetFoldersForQueue(id={id}), POST /odata/QueueDefinitions
 
 OAuth 必要なスコープ: OR.Queues
 
@@ -200,7 +200,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは共通パラメーターをサポートしています: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, -WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -74,7 +74,7 @@ Specifies the name(s) of the group(s) to create. Group names must be unique with
 ```yaml
 Type: String[]
 Parameter Sets: (All)
-Aliases:
+Aliases: Name
 
 Required: True
 Position: 0

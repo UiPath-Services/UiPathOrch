@@ -26,7 +26,7 @@ Get-OrchClassicEnvironment コマンドレットは、UiPath Orchestrator から
 
 クラシック環境は、既存のロボット展開に対する下位互換性を提供し、主に古い Orchestrator バージョンから最新のフォルダー構造への移行に使用されます。
 
-プライマリエンドポイント: GET /odata/Environments?$expand=Robots
+主要エンドポイント: GET /odata/Environments?$expand=Robots
 
 OAuth 必須スコープ: OR.Robots または OR.Robots.Read
 
@@ -154,7 +154,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -170,7 +170,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 大きなフォルダー階層で -Recurse パラメーターを使用する場合、操作の完了にかなりの時間がかかる場合があります。必要に応じて -Depth を使用して横断範囲を制限することを検討してください。
 
-プライマリエンドポイント: GET /odata/Environments?$expand=Robots
+主要エンドポイント: GET /odata/Environments?$expand=Robots
 OAuth 必須スコープ: OR.Robots または OR.Robots.Read
 必要なアクセス許可: Environments.View
 

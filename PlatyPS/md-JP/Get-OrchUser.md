@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -45,7 +45,7 @@ PS Orch1:\> Get-OrchUser
 PS Orch1:\> Get-OrchUser *admin*
 ```
 
-ユーザー名に「admin」を含むユーザーを取得します。
+ユーザー名に"admin"を含むユーザーを取得します。
 
 ### Example 3
 ```powershell
@@ -73,7 +73,7 @@ PS C:\> Get-OrchUser -Path Orch1:, Orch2:
 PS Orch1:\> Get-OrchUser -Type DirectoryUser -FullName John*
 ```
 
-フルネームが「John」で始まるディレクトリユーザーを取得します。
+フルネームが"John"で始まるディレクトリユーザーを取得します。
 
 ### Example 7
 ```powershell
@@ -212,7 +212,7 @@ Accept wildcard characters: True
 ```
 
 ### CommonParameters
-このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariableの共通パラメータをサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

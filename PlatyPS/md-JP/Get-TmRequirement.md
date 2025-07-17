@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,7 +18,7 @@ Get-TmRequirement [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-ProgressA
 ```
 
 ## DESCRIPTION
-プロジェクトからすべての要件を取得します。このコマンドレットは、UiPathOrchTmプロバイダーのPSDriveで動作します。構成ファイルのスコープに「TM.」が含まれている場合、UiPathOrchTmプロバイダーのPSDriveが自動的に追加されます。これはGet-PSDriveコマンドレットで確認できます。構成ファイルは、Edit-OrchConfigコマンドレットで開くことができます。
+プロジェクトからすべての要件を取得します。このコマンドレットは、UiPathOrchTmプロバイダーのPSDriveで動作します。構成ファイルのスコープに"TM."が含まれている場合、UiPathOrchTmプロバイダーのPSDriveが自動的に追加されます。これはGet-PSDriveコマンドレットで確認できます。構成ファイルは、Edit-OrchConfigコマンドレットで開くことができます。
 
 プライマリ エンドポイント: GET /testmanager_/api/v2/{projectId}/requirements
 
@@ -98,16 +98,14 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariableの共通パラメータをサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
-### System.String[]
-
+### None
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.TmRequirement
-
+### UiPath.PowerShell.Entities.TMRequirement
 ## NOTES
 
 ## RELATED LINKS

@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -24,7 +24,7 @@ Get-OrchTestSet コマンドレットは、UiPath Orchestratorからテストセ
 
 パラメータが指定されていない場合、現在のフォルダ内のすべてのテストセットが返されます。
 
-プライマリエンドポイント: GET /odata/TestSets?$filter=(SourceType eq 'User')&$expand=Environment
+主要エンドポイント: GET /odata/TestSets?$filter=(SourceType eq 'User')&$expand=Environment
 
 OAuth必須スコープ: OR.TestSets または OR.TestSets.Read
 
@@ -44,14 +44,14 @@ PS Orch1:\Shared> Get-OrchTestSet
 PS Orch1:\Shared> Get-OrchTestSet RegressionTests
 ```
 
-位置パラメータを使用して、現在のフォルダから「RegressionTests」という名前のテストセットを取得します。
+位置パラメータを使用して、現在のフォルダから"RegressionTests"という名前のテストセットを取得します。
 
 ### Example 3
 ```powershell
 PS Orch1:\Shared> Get-OrchTestSet *Smoke*
 ```
 
-ワイルドカードパターンマッチングを使用して、名前に「Smoke」を含むすべてのテストセットを取得します。
+ワイルドカードパターンマッチングを使用して、名前に"Smoke"を含むすべてのテストセットを取得します。
 
 ### Example 4
 ```powershell
@@ -65,7 +65,7 @@ PS Orch1:\> Get-OrchTestSet -Recurse
 PS C:\> Get-OrchTestSet -Path Orch1:\Production, Orch1:\Shared UITests
 ```
 
-任意の場所からの実行を示して、ProductionフォルダとSharedフォルダの両方から「UITests」テストセットを取得します。
+任意の場所からの実行を示して、ProductionフォルダとSharedフォルダの両方から"UITests"テストセットを取得します。
 
 ## PARAMETERS
 
@@ -114,21 +114,6 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
 ```
 
-### -Recurse
-ターゲットフォルダとそのすべてのサブフォルダを操作に含めることを指定します。
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -ProgressAction
 このコマンドレットによって生成される進行状況の更新にPowerShellがどのように応答するかを決定します。デフォルト値はContinueです。
 
@@ -144,20 +129,33 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -Recurse
+ターゲットフォルダとそのすべてのサブフォルダを操作に含めることを指定します。
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### CommonParameters
-このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および -WarningVariable の共通パラメータをサポートします。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
-### System.String[]
-
+### None
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.TestSet
-
 ## NOTES
 
-プライマリエンドポイント: GET /odata/TestSets
+主要エンドポイント: GET /odata/TestSets
 OAuth必須スコープ: OR.TestSets または OR.TestSets.Read
 必要な権限: TestSets.View
 

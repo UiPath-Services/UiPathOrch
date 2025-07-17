@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -24,7 +24,7 @@ Get-OrchTestCase コマンドレットは、Orchestrator環境からテストケ
 
 テストケース定義には、関連付けられたパッケージ、バージョン情報、作成と変更の詳細、フィード関連付けに関するメタデータが含まれます。これらのテストケースはテストセットに編成され、自動化ワークフローを検証するために実行できます。
 
-プライマリエンドポイント: GET /odata/TestCaseDefinitions
+主要エンドポイント: GET /odata/TestCaseDefinitions
 
 OAuth必須スコープ: OR.TestSets または OR.TestSets.Read
 
@@ -44,7 +44,7 @@ PS Orch1:\Shared> Get-OrchTestCase
 PS Orch1:\Shared> Get-OrchTestCase *Test*.xaml
 ```
 
-ワイルドカードマッチングを使用して、名前に「Test」を含むすべてのテストケース定義を取得します。
+ワイルドカードマッチングを使用して、名前に"Test"を含むすべてのテストケース定義を取得します。
 
 ### Example 3
 ```powershell
@@ -138,7 +138,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および -WarningVariable の共通パラメータをサポートします。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -165,7 +165,7 @@ Accept wildcard characters: False
 
 テストケース定義は自動テストワークフローの基盤として機能し、包括的な品質保証プロセスのためにテストセットに編成できます。
 
-プライマリエンドポイント: GET /odata/TestCaseDefinitions
+主要エンドポイント: GET /odata/TestCaseDefinitions
 OAuth必須スコープ: OR.TestSets または OR.TestSets.Read
 必要な権限: TestSets.View
 

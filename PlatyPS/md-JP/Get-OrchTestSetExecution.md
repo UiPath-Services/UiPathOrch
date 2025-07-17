@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,7 +26,7 @@ Get-OrchTestSetExecution コマンドレットは、UiPath Orchestratorからテ
 
 ステータス、時間範囲、トリガータイプ、その他の条件で実行をフィルタリングできます。このコマンドレットは、大きな結果セット用に-Skipと-Firstパラメータを通じてページネーションをサポートします。
 
-プライマリエンドポイント: GET /odata/TestSetExecutions?$expand=TestSet
+主要エンドポイント: GET /odata/TestSetExecutions?$expand=TestSet
 
 OAuth必須スコープ: OR.TestSetExecutions または OR.TestSetExecutions.Read
 
@@ -46,7 +46,7 @@ PS Orch1:\Shared> Get-OrchTestSetExecution
 PS Orch1:\Shared> Get-OrchTestSetExecution RegressionTests
 ```
 
-位置パラメータを使用して、「RegressionTests」という名前のテストセットのすべての実行を取得します。
+位置パラメータを使用して、"RegressionTests"という名前のテストセットのすべての実行を取得します。
 
 ### Example 3
 ```powershell
@@ -254,7 +254,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および -WarningVariable の共通パラメータをサポートします。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -264,7 +264,7 @@ Accept wildcard characters: False
 ### UiPath.PowerShell.Entities.TestSetExecution
 ## NOTES
 
-プライマリエンドポイント: GET /odata/TestSetExecutions
+主要エンドポイント: GET /odata/TestSetExecutions
 OAuth必須スコープ: OR.TestSetExecutions または OR.TestSetExecutions.Read
 必要な権限: TestSetExecutions.View
 

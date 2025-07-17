@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,7 +26,7 @@ Add-PmLicenseToPmLicensedGroup コマンドレットは、UiPath Platform Manage
 
 これはテナントエンティティコマンドレットです。-Path パラメーターは、複数の環境で作業する際に特定のプラットフォームインスタンスをターゲットにするためのドライブ名（例：Orch1:、Orch2:）を指定します。
 
-プライマリエンドポイント: PUT /api/license/accountant/UserLicense/group
+主要エンドポイント: PUT /api/license/accountant/UserLicense/group
 
 OAuth 必要スコープ: [PLACEHOLDER]
 
@@ -99,7 +99,7 @@ Accept wildcard characters: False
 ```yaml
 Type: String[]
 Parameter Sets: (All)
-Aliases:
+Aliases: Name
 
 Required: True
 Position: 0
@@ -170,7 +170,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

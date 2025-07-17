@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -54,7 +54,6 @@ PS C:\Libraries> Import-OrchLibrary . Orch1:, Orch2: -WhatIf
 ```
 
 現在のディレクトリ（.）からすべてのライブラリ*.nupkgファイルを取得し、Orch1:とOrch2:の両方にインポートします。
-
 
 ### Example 4:
 ```powershell

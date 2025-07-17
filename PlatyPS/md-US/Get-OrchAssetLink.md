@@ -118,21 +118,6 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
 ```
 
-### -Recurse
-Includes the target folder and all its subfolders in the search operation. Essential for comprehensive asset link discovery.
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -ProgressAction
 {{ Fill ProgressAction Description }}
 
@@ -148,17 +133,30 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -Recurse
+Includes the target folder and all its subfolders in the search operation. Essential for comprehensive asset link discovery.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### CommonParameters
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
-### System.String[]
-
+### None
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.SimpleFolder
-
 ## NOTES
 This cmdlet is a folder entity operation that requires appropriate folder context or path specification. Asset links define folder-level access to assets within the Orchestrator hierarchy. Use -Recurse and -Depth parameters to control the scope of folder searching. Understanding asset-folder relationships is essential for proper access control and asset management. This operation requires Assets.View permissions in the target folders.
 

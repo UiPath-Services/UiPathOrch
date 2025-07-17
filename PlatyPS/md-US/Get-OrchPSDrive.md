@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -48,7 +48,6 @@ PS C:\> Get-OrchPSDrive | Select-Object *
 ```
 
 You can check tenant-related information such as `PartitionGlobalId`, `TenantId`, `TenantKey`, and `AccessToken`. Note that this information is displayed only for tenants with an established connection. To force a connection, use the `-Force` switch parameter.
-
 
 ## PARAMETERS
 

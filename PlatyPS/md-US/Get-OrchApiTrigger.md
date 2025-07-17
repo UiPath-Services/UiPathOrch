@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -195,4 +195,3 @@ OAuth required scopes: OR.Triggers.Read
 Required permissions: Folders.View, Triggers.View
 
 ## RELATED LINKS
-

@@ -174,14 +174,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-
-### System.String
-
+### None
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.Webhook
-
 ## NOTES
 This is a tenant entity cmdlet. The -Path parameter specifies drive names (e.g., Orch1:, Orch2:) for source and destination tenants.
 

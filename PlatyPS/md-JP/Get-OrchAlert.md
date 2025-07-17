@@ -21,7 +21,7 @@ Get-OrchAlert [[-Last] <String>] [[-Severity] <String>] [[-Component] <String[]>
 ## DESCRIPTION
 アラートはテナントエンティティです。したがって、このコマンドレットでは、ドライブ名をターゲットとして指定します。このコマンドレットは、最新の状態について常に Orchestrator にクエリを実行します。そのため、このコマンドレットの出力はキャッシュされないことに注意してください。
 
-プライマリエンドポイント: GET /odata/Alerts
+主要エンドポイント: GET /odata/Alerts
 
 OAuth 必須スコープ: OR.Monitoring または OR.Monitoring.Read
 
@@ -204,7 +204,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -215,7 +215,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## NOTES
 必要なスコープ: OR.Monitoring.Read
 
-プライマリエンドポイント: GET /odata/Alerts
+主要エンドポイント: GET /odata/Alerts
 OAuth 必須スコープ: OR.Monitoring または OR.Monitoring.Read
 必要なアクセス許可: Alerts.View
 

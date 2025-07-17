@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -61,7 +61,7 @@ PS C:\> Resolve-PmDirectoryNameBulk -Path Orch1:, Orch2: User user@example.com
 ## PARAMETERS
 
 ### -EntityType
-解決するディレクトリエンティティのタイプを指定します。有効な値には「User」、「Group」、「Application」が含まれます。このパラメーターは、返されるディレクトリオブジェクトのタイプを決定します。
+解決するディレクトリエンティティのタイプを指定します。有効な値には"User"、"Group"、"Application"が含まれます。このパラメーターは、返されるディレクトリオブジェクトのタイプを決定します。
 
 ```yaml
 Type: String
@@ -121,7 +121,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは共通パラメーター（-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable）をサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -134,10 +134,10 @@ Accept wildcard characters: False
 ### UiPath.PowerShell.Entities.DirectoryApplication
 ## NOTES
 - このコマンドレットは、複数のエンティティを解決する際のパフォーマンスを向上させるために一括解決操作用に設計されています
-- source プロパティはディレクトリソース（例：「local」、Azure Active Directory の場合は「aad」）を示します
-- エンティティタイプは「User」、「Group」、または「Application」として正確に指定する必要があります
+- source プロパティはディレクトリソース（例："local"、Azure Active Directory の場合は"aad"）を示します
+- エンティティタイプは"User"、"Group"、または"Application"として正確に指定する必要があります
 - 解決を成功させるには、名前がディレクトリエンティティ名と正確に一致する必要があります
-- Platform Management コマンドレット（「Pm」で始まる）は、組織間のディレクトリ情報を提供します
+- Platform Management コマンドレット（"Pm"で始まる）は、組織間のディレクトリ情報を提供します
 - エンティティ名を識別子を含む完全なディレクトリ表現に変換する必要がある場合は、このコマンドレットを使用してください
 
 ## RELATED LINKS

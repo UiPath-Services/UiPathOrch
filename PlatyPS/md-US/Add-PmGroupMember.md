@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -99,7 +99,7 @@ Specifies the name of the groups to add members to.
 ```yaml
 Type: String[]
 Parameter Sets: (All)
-Aliases:
+Aliases: Name
 
 Required: True
 Position: 0

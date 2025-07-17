@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -51,7 +51,7 @@ Key、Scope、PathScope、およびすべての設定詳細を含む、詳細な
 PS C:\> Get-OrchExecutionSetting -Path Orch1: -DisplayName "*Logging*"
 ```
 
-Orch1テナントで、キーに「Logging」が含まれるすべての実行設定を取得します。
+Orch1テナントで、キーに"Logging"が含まれるすべての実行設定を取得します。
 
 ### Example 4
 ```powershell
@@ -107,7 +107,7 @@ Accept wildcard characters: True
 ```
 
 ### -Scope
-取得する実行設定のスコープを指定します。有効な値は「Global」と「Robot」です。指定しない場合は、すべてのスコープの設定が返されます。
+取得する実行設定のスコープを指定します。有効な値は"Global"と"Robot"です。指定しない場合は、すべてのスコープの設定が返されます。
 
 ```yaml
 Type: String[]
@@ -137,16 +137,14 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
-### System.String[]
-
+### None
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.ExecutionSettingDefinition
-
 ## NOTES
 このコマンドレットは、実行設定構成にアクセスするためのテナントレベルのエンティティ操作です。設定は、ログ、コンソールアクセス、解像度設定を含む自動化実行動作を制御します。出力はスコープ別にグループ化され、GlobalおよびRobotレベルの設定が表示されます。特定の設定をキーまたは値の型でフィルタリングするには、フィルタリングを使用してください。この操作にはSettings.View権限が必要です。
 

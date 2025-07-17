@@ -26,7 +26,7 @@ Add-OrchCalendarDate コマンドレットは、UiPath Orchestrator の非稼働
 
 このコマンドレットは、テナントレベルのカレンダーエンティティで動作し、カレンダー名のワイルドカードパターンをサポートしているため、複数のカレンダーにわたる一括操作が可能です。
 
-プライマリエンドポイント: GET /odata/Calendars, GET /odata/Calendars({calendarId}), PUT /odata/Calendars({calendarId})
+主要エンドポイント: GET /odata/Calendars, GET /odata/Calendars({calendarId}), PUT /odata/Calendars({calendarId})
 
 OAuth 必要スコープ: OR.Settings または OR.Settings.Read または OR.Settings.Write
 
@@ -179,7 +179,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

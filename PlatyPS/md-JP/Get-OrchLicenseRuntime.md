@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -24,7 +24,7 @@ Get-OrchLicenseRuntimeコマンドレットは、UiPath Orchestratorからロボ
 
 これは、Orchestratorインスタンス全体のライセンス情報を取得するテナントレベルの操作です。
 
-プライマリエンドポイント: GET /odata/LicensesRuntime/UiPath.Server.Configuration.OData.GetLicensesRuntime(robotType='{robotType}')
+主要エンドポイント: GET /odata/LicensesRuntime/UiPath.Server.Configuration.OData.GetLicensesRuntime(robotType='{robotType}')
 
 OAuth必須スコープ: OR.License または OR.License.Read
 
@@ -104,11 +104,11 @@ Required: False
 Position: 0
 Default value: None
 Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
+Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは共通パラメーターをサポートします: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -125,7 +125,7 @@ Accept wildcard characters: True
 - このコマンドレットはテナントレベルで動作し、特定のフォルダーへの移動は必要ありません
 - さまざまなロボットタイプ間でのライセンス消費パターンを分析するには、フィルタリングとグループ化操作を使用してください
 
-プライマリエンドポイント: GET /odata/LicensesRuntime/UiPath.Server.Configuration.OData.GetLicensesRuntime
+主要エンドポイント: GET /odata/LicensesRuntime/UiPath.Server.Configuration.OData.GetLicensesRuntime
 OAuth必須スコープ: OR.Licenses または OR.Licenses.Read
 必要な権限: Licenses.View
 

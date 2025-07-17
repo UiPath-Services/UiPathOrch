@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,93 +8,79 @@ schema: 2.0.0
 # Get-PmExternalApiResource
 
 ## SYNOPSIS
-Platform Management から外部 API リソースを取得します。
+Platform Managementから外部APIリソースを取得します。
 
 ## SYNTAX
 
-`
+```
 Get-PmExternalApiResource [[-Name] <String[]>] [-Path <String[]>] [-ProgressAction <ActionPreference>]
  [<CommonParameters>]
-`
+```
 
 ## DESCRIPTION
-Get-PmExternalApiResource コマンドレットは、UiPath Platform Management から外部 API リソース情報を取得します。外部 API リソースは、UiPath サービスとの統合のために外部アプリケーションがアクセスできる利用可能な API と関連する OAuth スコープを定義します。
+Get-PmExternalApiResource コマンドレットは、UiPath Platform Managementから外部APIリソース情報を取得します。外部APIリソースは、UiPathプラットフォーム内から外部システムやサービスへの接続を管理するために使用されます。
 
-このコマンドレットは、API リソースの名前、表示名、説明、および詳細なスコープ定義を含む包括的な情報を返します。各 API リソースには、さまざまな機能領域への読み取りおよび書き込みアクセスの特定の権限を定義する複数のスコープが含まれています。
+このコマンドレットは、設定されたAPIリソースの詳細情報を返し、外部システムとの統合を管理および監視するために役立ちます。
 
-スコープ情報は、特定の API エンドポイントと機能にアクセスするために必要な正確な権限を定義するため、UiPath サービスと統合する必要がある OAuth アプリケーションを構成する際に不可欠です。
+-Nameと-Pathパラメーターの複数の値は、ワイルドカードを含むカンマ区切りテキストを使用して指定できます。さらに、[Ctrl+Space]または[Tab]を押すことで、これらの値の自動補完を使用できます。
 
-これは、任意の UiPathOrch ドライブ（Orch1:、Orch1Tm:、Orch1Du:）で動作する Platform Management API コマンドレットです。
+主要エンドポイント：GET /api/externalApiResources
 
--Name と -Path パラメーターには、ワイルドカードを含むカンマ区切りのテキストを使用して複数の値を指定できます。さらに、[Ctrl+Space] または [Tab] を押すことで、これらの値の自動補完を使用できます。
+OAuth必須スコープ：[PLACEHOLDER - Platform Management API resource scopes]
 
-主要エンドポイント: GET /api/ExternalApiResource
-
-OAuth 必須スコープ: [PLACEHOLDER]
-
-必要な権限: [PLACEHOLDER - 外部 API リソース表示権限]
+必須権限：[PLACEHOLDER - Platform Management API resource permissions]
 
 ## EXAMPLES
 
 ### Example 1
-`powershell
-PS C:\> Set-Location Orch1:\
+```powershell
 PS Orch1:\> Get-PmExternalApiResource
-`
+```
 
-Platform Management で利用可能なすべての外部 API リソースを取得します。
+現在のインスタンスからすべての外部APIリソースを取得します。
 
 ### Example 2
-`powershell
-PS Orch1:\> Get-PmExternalApiResource *Orchestrator*
-`
+```powershell
+PS Orch1:\> Get-PmExternalApiResource *api*
+```
 
-名前に "Orchestrator" を含む API リソースを取得します。
+ワイルドカードパターンマッチングを使用して、名前に"api"を含む外部APIリソースを取得します。
 
 ### Example 3
-`powershell
-PS Orch1:\>  = Get-PmExternalApiResource UiPath.Orchestrator
-PS Orch1:\> .scopes | Select-Object name, description | Format-Table
-`
+```powershell
+PS C:\> Get-PmExternalApiResource -Path Orch1:, Orch2:
+```
 
-Orchestrator API リソースを取得し、利用可能なすべての OAuth スコープをフォーマットされたテーブルで表示します。
+複数のインスタンスから外部APIリソースを取得します。
 
 ### Example 4
-`powershell
-PS Orch1:\> Get-PmExternalApiResource | Where-Object { .scopes.Count -gt 10 }
-`
+```powershell
+PS Orch1:\> Get-PmExternalApiResource | ConvertTo-Json -Depth 2
+```
 
-10 個を超えるスコープが利用可能な API リソースを取得します。
-
-### Example 5
-`powershell
-PS Orch1:\>  = Get-PmExternalApiResource UiPath.Orchestrator
-PS Orch1:\>  | ConvertTo-Json -Depth 3
-`
-
-Orchestrator API リソースを取得し、すべてのスコープとプロパティを調べるために、その完全な構造を JSON 形式で表示します。
+すべての外部APIリソースを取得し、詳細な分析のために完全な構造をJSON形式で表示します。
 
 ## PARAMETERS
 
 ### -Name
-取得する外部 API リソースの名前を指定します。ワイルドカードと複数の値をサポートします。[Ctrl+Space] または [Tab] を押すことで自動補完を使用できます。指定しない場合、すべての API リソースが返されます。
+取得する外部APIリソースの名前を指定します。ワイルドカードと複数の値をサポートします。[Ctrl+Space]または[Tab]を押すことで自動補完を使用できます。指定しない場合、すべてのリソースが返されます。
 
-`yaml
+```yaml
 Type: String[]
 Parameter Sets: (All)
 Aliases:
 
 Required: False
 Position: 0
-Default value: All API resources
+Default value: All resources
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
-`
+```
 
 ### -Path
-ターゲットドライブパスを指定します。このパラメーターはパイプライン入力を受け取り、ワイルドカードをサポートします。これは Platform Management API コマンドレットであるため、任意の UiPathOrch ドライブで動作します。
+対象のパスを指定します。指定しない場合、現在の場所が使用されます。このパラメーターは、複数のインスタンスを指定するためのパイプライン入力を受け入れます。
 
-`yaml
+```yaml
 Type: String[]
 Parameter Sets: (All)
 Aliases:
@@ -104,12 +90,12 @@ Position: Named
 Default value: Current location
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
-`
+```
 
 ### -ProgressAction
-スクリプト、コマンドレット、またはプロバイダーによって生成される進行状況の更新 (Write-Progress コマンドレットによって生成される進行状況バーなど) に対して PowerShell が応答する方法を指定します。有効な値は次のとおりです: SilentlyContinue、Stop、Continue、Inquire、Ignore、Suspend。
+スクリプト、コマンドレット、またはプロバイダーによって生成される進行状況の更新にPowerShellがどのように応答するかを指定します。有効な値は：SilentlyContinue、Stop、Continue、Inquire、Ignore、Suspend。
 
-`yaml
+```yaml
 Type: ActionPreference
 Parameter Sets: (All)
 Aliases: proga
@@ -119,28 +105,27 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
-`
+```
 
 ### CommonParameters
-このコマンドレットは共通パラメーターをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
 ### System.String[]
-
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.ExternalResource
-
 ## NOTES
-- このコマンドレットは Platform Management API を使用し、任意の UiPathOrch ドライブで動作します
-- API リソースには、主要な UiPath サービスが含まれます: Orchestrator、Test Manager、Document Understanding、AI Center、Data Service、その他
-- scopes プロパティには、API 統合に不可欠な詳細な OAuth スコープ情報が含まれています
-- 一般的な Orchestrator スコープは OR.{Area} および OR.{Area}.Read/Write のパターンに従います（例: OR.Assets、OR.Assets.Read、OR.Assets.Write）
-- 完全なスコープ構造を調べ、利用可能な権限を理解するには、ConvertTo-Json を使用してください
-- この情報は、OAuth を介して UiPath サービスと統合する外部アプリケーションを構成する際に重要です
+- このコマンドレットは、Platform Management環境で動作します
+- 外部APIリソースは、UiPathプラットフォームと外部システム間の接続を管理します
+- リソース情報には、接続詳細、認証設定、可用性ステータスが含まれます
+- 外部APIリソースの管理には適切な権限が必要です
+
+主要エンドポイント：GET /api/externalApiResources
+OAuth必須スコープ：[PLACEHOLDER - Platform Management API resource scopes]
+必須権限：[PLACEHOLDER - Platform Management API resource permissions]
 
 ## RELATED LINKS
 
-[Get-PmExternalApplication](Get-PmExternalApplication.md)
 [about_UiPathOrch](about_UiPathOrch.md)

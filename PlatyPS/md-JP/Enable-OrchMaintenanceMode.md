@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -94,6 +94,18 @@ Accept pipeline input: False
 Accept wildcard characters: False
 `
 
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: cf
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -Force
 確認プロンプトなしで操作を強制実行します。
 
@@ -108,6 +120,18 @@ Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 `
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
 
 ### -HostMachineName
 メンテナンスモードの有効化対象となるホストマシン名を指定します。
@@ -124,6 +148,18 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 `
 
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 1
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
 ### -MachineName
 メンテナンスモードの有効化対象となるマシン名を指定します。
 
@@ -138,6 +174,18 @@ Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 `
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 0
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
 
 ### -Path
 ターゲットフォルダを指定します。指定されていない場合、現在のフォルダが対象になります。
@@ -154,6 +202,18 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 `
 
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
 ### -ServiceUserName
 メンテナンスモードの有効化対象となるサービスユーザー名を指定します。
 
@@ -169,6 +229,18 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 `
 
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 2
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
+
 ### -SessionId
 メンテナンスモードの有効化対象となるセッションIDを指定します。
 
@@ -183,6 +255,18 @@ Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 `
+
+```yaml
+Type: Int64[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 3
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
 
 ### -WhatIf
 コマンドレットが実行された場合に何が起こるかを表示します。
@@ -200,6 +284,18 @@ Accept pipeline input: False
 Accept wildcard characters: False
 `
 
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: wi
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -ProgressAction
 {{ Fill ProgressAction Description }}
 
@@ -215,8 +311,20 @@ Accept pipeline input: False
 Accept wildcard characters: False
 `
 
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### CommonParameters
-このコマンドレットは共通パラメーターをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

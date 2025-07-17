@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -24,7 +24,7 @@ Get-OrchClassicRobot コマンドレットは、UiPath Orchestrator からクラ
 
 クラシックロボットは、既存のロボット展開に対する下位互換性を提供し、主に古い Orchestrator バージョンから最新のフォルダー構造への移行に使用されます。これらのロボットは、レガシーシステムからの環境関連付けとプロセス割り当てを維持します。
 
-プライマリエンドポイント: GET /odata/Robots?$expand=Machine,Environment
+主要エンドポイント: GET /odata/Robots?$expand=Machine,Environment
 
 OAuth 必須スコープ: OR.Robots または OR.Robots.Read
 
@@ -196,14 +196,14 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
 ### None
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.Robot
+### UiPath.PowerShell.Entities.Session
 ## NOTES
 
 このコマンドレットはフォルダーエンティティで動作します。つまり、特定のフォルダーに移動するか、-Path パラメーターを使用して目的の場所をターゲットにする必要がある場合があります。
@@ -214,7 +214,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 クラシックロボットは、Type（Attended、Unattended、StudioX、StudioPro）、MachineName、EnvironmentName などのプロパティを持ち、従来のロボット管理システムからの完全な情報を提供します。
 
-プライマリエンドポイント: GET /odata/Robots?$expand=Machine,Environment
+主要エンドポイント: GET /odata/Robots?$expand=Machine,Environment
 OAuth 必須スコープ: OR.Robots または OR.Robots.Read
 必要なアクセス許可: Robots.View
 

@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -51,7 +51,7 @@ Enable-OrchLicenseRuntime Unattended Machine01
 Enable-OrchLicenseRuntime Studio, StudioX *DevMachine*
 `
 
-キーに「DevMachine」を含むすべてのマシンのStudioおよびStudioXランタイムライセンスを有効にします。
+キーに"DevMachine"を含むすべてのマシンのStudioおよびStudioXランタイムライセンスを有効にします。
 
 ### Example 4
 `powershell
@@ -65,7 +65,7 @@ Enable-OrchLicenseRuntime -Path Orch1:, Orch2: Unattended ProdMachine01, ProdMac
 Enable-OrchLicenseRuntime NonProduction *Test*
 `
 
-キーに「Test」を含むすべてのマシンのNonProductionランタイムライセンスを有効にします。
+キーに"Test"を含むすべてのマシンのNonProductionランタイムライセンスを有効にします。
 
 ### Example 6
 `powershell
@@ -91,6 +91,18 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
 `
 
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: 1
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
+```
+
 ### -Path
 ドライブ名を使用してターゲットテナントの名前を指定します。指定されていない場合、現在のテナントが対象になります。
 
@@ -105,6 +117,18 @@ Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 `
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: False
+```
 
 ### -ProgressAction
 {{ Fill ProgressAction Description }}
@@ -121,6 +145,18 @@ Accept pipeline input: False
 Accept wildcard characters: False
 `
 
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -RobotType
 有効にするランタイムライセンスのRobotTypeを指定します。一般的な値には、Unattended、Attended、Studio、StudioX、NonProductionが含まれます。
 
@@ -136,6 +172,18 @@ Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
 `
 
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: True
+Position: 0
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
+```
+
 ### -Confirm
 コマンドレットの実行前に確認メッセージを表示します。
 
@@ -150,6 +198,18 @@ Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 `
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: cf
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
 
 ### -WhatIf
 コマンドレットが実行された場合に何が起こるかを表示します。
@@ -167,8 +227,20 @@ Accept pipeline input: False
 Accept wildcard characters: False
 `
 
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: wi
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### CommonParameters
-このコマンドレットは共通パラメーターをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

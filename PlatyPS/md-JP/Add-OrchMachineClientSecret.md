@@ -24,7 +24,7 @@ Add-OrchMachineClientSecret コマンドレットは、Orchestrator 環境内の
 
 このコマンドレットは、指定されたマシンに新しいクライアントシークレットを生成し、ロボットマシンで設定する必要があるシークレット情報を返します。この操作は、安全な無人ロボット認証を設定するために不可欠です。
 
-プライマリエンドポイント: GET /odata/Machines, POST /api/clientsecrets/{machineId}
+主要エンドポイント: GET /odata/Machines, POST /api/clientsecrets/{machineId}
 
 OAuth 必要スコープ: OR.Machines
 
@@ -153,7 +153,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -52,7 +52,6 @@ PS Orch1:\Shared> Get-OrchJob -First 5
 
 Gets the first 5 jobs from the current folder.
 
-
 ### Example 2
 ```powershell
 PS Orch1:\Shared> Get-OrchJob
@@ -94,7 +93,6 @@ PS C:\> Get-OrchJob -Path Orch1:\Shared,Orch1:\Production -Recurse -State Succes
 ```
 
 Gets successful jobs from specific folders with -Path parameter prioritized.
-
 
 ## PARAMETERS
 

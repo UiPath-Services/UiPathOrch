@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -13,7 +13,7 @@ schema: 2.0.0
 ## SYNTAX
 
 ```
-Get-OrchConnectionString [[-Path] <String[]>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Get-OrchConnectionString [-Path <String[]>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -23,7 +23,7 @@ Get-OrchConnectionString コマンドレットは、Orchestrator サービスが
 
 このコマンドレットはテナントレベルで動作し、指定されたテナントまたは現在のテナントの接続文字列情報を取得します。-Path パラメーターを使用して複数のテナントから接続文字列を取得できます。
 
-プライマリエンドポイント: GET /odata/Settings/UiPath.Server.Configuration.OData.GetConnectionString
+主要エンドポイント: GET /odata/Settings/UiPath.Server.Configuration.OData.GetConnectionString
 
 OAuth 必須スコープ: OR.Settings または OR.Settings.Read
 
@@ -70,7 +70,7 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: 0
+Position: Named
 Default value: None
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
@@ -92,21 +92,21 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
 ### None
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.ResponseDictionaryItem
+### UiPath.PowerShell.Entities.ODataValueOfString
 ## NOTES
 
 このコマンドレットはテナントレベルエンティティ操作として動作し、システム管理者がデータベース接続設定を確認できるようにします。接続文字列には機密情報が含まれる可能性があるため、セキュリティ上の理由から一部の情報がマスクされる場合があります。
 
 接続文字列情報は、データベース接続の問題をトラブルシューティングしたり、Orchestrator の構成を理解したりする際に特に有用です。この操作には Settings.View アクセス許可が必要です。
 
-プライマリエンドポイント: GET /odata/Settings/UiPath.Server.Configuration.OData.GetConnectionString
+主要エンドポイント: GET /odata/Settings/UiPath.Server.Configuration.OData.GetConnectionString
 OAuth 必須スコープ: OR.Settings または OR.Settings.Read
 必要なアクセス許可: Settings.View
 

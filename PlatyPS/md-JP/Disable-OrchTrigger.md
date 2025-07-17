@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -26,7 +26,7 @@ Disable-OrchTriggerコマンドレットは、UiPath Orchestrator内の指定さ
 
 トリガーの無効化は自動化実行スケジュールに直接影響します。操作をプレビューするには-WhatIfを使用し、ビジネスプロセスに影響を与える可能性のある複数のトリガーを無効にする場合は-Confirmを使用して確認プロンプトを表示します。
 
-プライマリエンドポイント: POST /odata/ProcessSchedules/UiPath.Server.Configuration.OData.SetEnabled
+主要エンドポイント: POST /odata/ProcessSchedules/UiPath.Server.Configuration.OData.SetEnabled
 
 OAuth必要スコープ: OR.Jobs
 
@@ -46,7 +46,7 @@ PS Orch1:\Production> Disable-OrchTrigger DailyReportTrigger -WhatIf
 PS C:\> Disable-OrchTrigger -Path Orch1:\Production -Name *Maintenance* -Confirm
 ```
 
-確認プロンプトを表示して、Productionフォルダで「Maintenance」が含まれる名前のすべてのトリガーを無効にします。
+確認プロンプトを表示して、Productionフォルダで"Maintenance"が含まれる名前のすべてのトリガーを無効にします。
 
 ### Example 3
 ```powershell
@@ -60,7 +60,7 @@ PS Orch1:\> Disable-OrchTrigger -Recurse TestTrigger1, TestTrigger2
 PS Orch1:\Development> Disable-OrchTrigger *Debug* -WhatIf
 ```
 
-Developmentフォルダで「Debug」が含まれる名前のすべてのトリガーを無効にする場合の動作を表示します。
+Developmentフォルダで"Debug"が含まれる名前のすべてのトリガーを無効にする場合の動作を表示します。
 
 ### Example 5
 ```powershell
@@ -184,16 +184,14 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは共通パラメータをサポートします: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
 ### None
-
 ## OUTPUTS
 
 ### System.Object
-
 ## NOTES
 このコマンドレットは、トリガー設定を削除せずに自動化トリガーの実行を停止するフォルダエンティティ操作です。トリガーを無効にすることは自動化スケジュールに直接影響し、ビジネスプロセスに影響を与える可能性があります。操作をプレビューするには-WhatIfを使用し、複数のトリガーを無効にする場合は安全のため-Confirmを使用してください。この操作にはターゲットフォルダでのSchedules.Edit権限が必要です。無効化されたトリガーは、すべての設定を保持したままEnable-OrchTriggerを使用して再有効化できます。
 

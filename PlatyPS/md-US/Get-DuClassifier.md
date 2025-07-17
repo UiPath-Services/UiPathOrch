@@ -141,12 +141,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-
+### None
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.DuClassifier
-
 ## NOTES
 This cmdlet operates within Document Understanding projects on the UiPathOrchDu drive. Navigation to a specific project folder is required before execution. Classifiers provide AI-powered document categorization capabilities for intelligent document processing. This operation requires ML.View permissions within Document Understanding projects.
 

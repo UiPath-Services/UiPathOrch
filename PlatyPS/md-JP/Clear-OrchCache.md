@@ -24,7 +24,7 @@ Orchestrator Web または他の外部アプリケーション経由で行われ
 
 -Path パラメーターには、キャッシュをクリアするドライブを指定します。-Path パラメーターが指定されていない場合は、現在のドライブのキャッシュがクリアされます。現在のドライブが UiPathOrch ドライブでない場合は、すべての UiPathOrch ドライブのキャッシュがクリアされます。
 
-プライマリエンドポイント: (なし)
+主要エンドポイント: (なし)
 
 OAuth 必要スコープ: (なし)
 
@@ -138,7 +138,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

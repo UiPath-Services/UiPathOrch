@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -44,21 +44,21 @@ Get-OrchWebSetting
 Get-OrchWebSetting Authentication
 ```
 
-「Authentication」という名前のWeb設定を取得します。
+"Authentication"という名前のWeb設定を取得します。
 
 ### Example 3
 ```powershell
 Get-OrchWebSetting *Auth*
 ```
 
-名前に「Auth」を含むすべてのWeb設定を取得します。
+名前に"Auth"を含むすべてのWeb設定を取得します。
 
 ### Example 4
 ```powershell
 Get-OrchWebSetting -Path Orch1:, Orch2: SessionTimeout
 ```
 
-複数のテナントにわたって「SessionTimeout」Web設定を取得します。
+複数のテナントにわたって"SessionTimeout"Web設定を取得します。
 
 ### Example 5
 ```powershell
@@ -129,7 +129,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariableの共通パラメータをサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

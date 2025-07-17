@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -24,7 +24,7 @@ Get-DuExtractor [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-ProgressAct
 
 -Nameおよび-Pathパラメーターには、ワイルドカードを含むコンマ区切りのテキストを使用して複数の値を指定できます。さらに、[Ctrl+Space]または[Tab]を押すことで、これらの値のオートコンプリートを使用できます。
 
-プライマリエンドポイント: GET /odata/ML/Extractors
+主要エンドポイント: GET /odata/ML/Extractors
 
 OAuth必須スコープ: OR.ML または OR.ML.Read
 
@@ -151,7 +151,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは共通パラメーターをサポートします: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

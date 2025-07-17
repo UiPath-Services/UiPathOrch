@@ -23,7 +23,7 @@ Get-OrchActivitySetting [-Path <String[]>] [-ProgressAction <ActionPreference>] 
 
 -Path パラメーターの複数の値は、ワイルドカードを含むコンマ区切りのテキストを使用して指定できます。さらに、[Ctrl+Space] または [Tab] を押すことで、これらの値のオートコンプリートを使用できます。
 
-プライマリエンドポイント: GET /odata/Settings/UiPath.Server.Configuration.OData.GetActivitySettings
+主要エンドポイント: GET /odata/Settings/UiPath.Server.Configuration.OData.GetActivitySettings
 
 OAuth 必須スコープ: OR.Settings または OR.Settings.Read
 
@@ -92,7 +92,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -106,7 +106,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 - SignalR.SkipNegotiation プロパティは、SignalR ネゴシエーションがバイパスされるかどうかを制御します
 - これらの設定は、適切なアクティビティ実行とリアルタイム監視に不可欠です
 
-プライマリエンドポイント: GET /odata/Settings/UiPath.Server.Configuration.OData.GetActivitySettings
+主要エンドポイント: GET /odata/Settings/UiPath.Server.Configuration.OData.GetActivitySettings
 OAuth 必須スコープ: OR.Settings または OR.Settings.Read
 必要なアクセス許可: Settings.View
 

@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -24,7 +24,7 @@ Get-DuClassifierコマンドレットは、UiPath OrchestratorからDocument Und
 
 このコマンドレットはUiPathOrchDuドライブコンテキスト内で動作し、特定のDocument Understandingプロジェクトフォルダーへの移動が必要です。**重要**: このコマンドレットは実行前にUiPathOrchDuドライブ上のDocument Understandingプロジェクトフォルダー（例：Orch1Du:\ProjectName）への移動が必要です。
 
-プライマリエンドポイント: GET /du_/api/framework/projects/{projectId}/classifiers
+主要エンドポイント: GET /du_/api/framework/projects/{projectId}/classifiers
 
 OAuth必須スコープ: OR.ML または OR.ML.Read
 
@@ -137,16 +137,14 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは共通パラメーターをサポートします: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
-### System.String[]
-
+### None
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.DuClassifier
-
 ## NOTES
 このコマンドレットはUiPathOrchDuドライブ上のDocument Understandingプロジェクト内で動作します。実行前に特定のプロジェクトフォルダーへの移動が必要です。分類器は、インテリジェントなドキュメント処理のためのAIを活用したドキュメント分類機能を提供します。この操作には、Document Understandingプロジェクト内でのML.View権限が必要です。
 

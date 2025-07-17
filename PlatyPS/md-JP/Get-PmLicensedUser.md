@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -137,7 +137,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariableの共通パラメータをサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -148,11 +148,11 @@ Accept wildcard characters: False
 ## NOTES
 - このコマンドレットは、Platform Management APIにアクセスし、すべてのUiPathドライブタイプで動作します
 - orphanプロパティは、ユーザーアカウントがシステムにまだ存在するかどうかを示します（false = アクティブ、true = 孤立）
-- userBundleLicensesには、ライセンスコード（例：「ATTUNU」、「RPADEVNU」）が含まれます
-- userBundleLicenseNamesには、人間が読めるライセンス名（例：「Attended - Named User」）が含まれます
+- userBundleLicensesには、ライセンスコード（例："ATTUNU"、"RPADEVNU"）が含まれます
+- userBundleLicenseNamesには、人間が読めるライセンス名（例："Attended - Named User"）が含まれます
 - アクティブなユーザーアカウントと孤立したユーザーアカウントを区別するためにフィルタリングを使用します
 - lastInUseタイムスタンプは、ユーザーが最後にUiPathサービスにアクセスした時刻を示します
-- Platform Managementコマンドレット（「Pm」で始まる）は、組織横断的なライセンス情報を提供します
+- Platform Managementコマンドレット（"Pm"で始まる）は、組織横断的なライセンス情報を提供します
 
 ## RELATED LINKS
 

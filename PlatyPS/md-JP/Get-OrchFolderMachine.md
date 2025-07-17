@@ -37,7 +37,7 @@ OAuth必要スコープ: OR.Folders または OR.Folders.Read
 PS Orch1:\Shared> Get-OrchFolderMachine
 ```
 
-現在の場所である「Shared」フォルダーに割り当てられたすべてのマシンを表示します。
+現在の場所である"Shared"フォルダーに割り当てられたすべてのマシンを表示します。
 
 ### Example 2
 ```powershell
@@ -51,14 +51,14 @@ PS Orch1:\> Get-OrchFolderMachine -Recurse
 PS Orch1:\> Get-OrchFolderMachine -Recurse Machine*
 ```
 
-現在のフォルダーとそのサブフォルダーに割り当てられた、名前が「Machine」で始まるマシンを表示します。これは、特定の名前パターンを持つマシンがどのフォルダーに含まれているかを特定するのに便利です。
+現在のフォルダーとそのサブフォルダーに割り当てられた、名前が"Machine"で始まるマシンを表示します。これは、特定の名前パターンを持つマシンがどのフォルダーに含まれているかを特定するのに便利です。
 
 ### Example 4
 ```powershell
 PS Orch1:\> Get-OrchFolderMachine -Path Orch1:\\Production, Orch1:\\Development Template*
 ```
 
-ProductionとDevelopmentフォルダーに割り当てられた、名前が「Template」で始まるマシンを表示します。
+ProductionとDevelopmentフォルダーに割り当てられた、名前が"Template"で始まるマシンを表示します。
 
 ### Example 5
 ```powershell
@@ -203,7 +203,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

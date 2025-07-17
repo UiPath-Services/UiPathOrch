@@ -34,59 +34,31 @@ Required permissions: TestSet.Read
 
 ### Example 1
 ```powershell
-PS Orch1Tm:\> Get-TmTestSet
+PS Orch1Tm:\> Get-TmTestSet -Recurse
 ```
 
 Retrieves all test sets from the current Test Manager project.
 
 ### Example 2
 ```powershell
-PS Orch1Tm:\> Get-TmTestSet RegressionTests
+PS Orch1Tm:\> Get-TmTestSet -Path MyProject *regression*
 ```
 
-Retrieves the test set named "RegressionTests" from the current project.
+Gets test cases whose names contain "regression" using wildcard pattern matching.
 
 ### Example 3
 ```powershell
-PS Orch1Tm:\> Get-TmTestSet Smoke*
+PS C:\> Get-TmTestSet -Path Orch1Tm:, Orch2Tm: -Recurse
 ```
 
-Retrieves all test sets whose names start with "Smoke" using wildcard matching.
+Gets test sets from multiple Test Manager instances.
 
 ### Example 4
 ```powershell
-PS Orch1Tm:\> Get-TmTestSet -Recurse
+PS Orch1Tm:\> Get-TmTestSet -Recurse | ConvertTo-Json -Depth 2
 ```
 
-Retrieves all test sets from all Test Manager projects recursively.
-
-### Example 5
-```powershell
-PS Orch1Tm:\> Get-TmTestSet -Path Orch1Tm:\MyProject
-```
-
-Retrieves all test sets from the specified Test Manager project without changing the current location.
-
-### Example 6
-```powershell
-PS Orch1Tm:\> Get-TmTestSet -Recurse | Where-Object {$_.source -eq "Orchestrator"}
-```
-
-Retrieves all test sets that originate from Orchestrator processes across all projects.
-
-### Example 7
-```powershell
-PS Orch1Tm:\> Get-TmTestSet -Recurse | ConvertTo-Json -Depth 3
-```
-
-Retrieves all test sets and displays their complete structure in JSON format for detailed analysis.
-
-### Example 8
-```powershell
-PS Orch1Tm:\> Get-TmTestSet | Where-Object {$_.enforceExecutionOrder -eq $true} | Select-Object name, numberOfTestCases
-```
-
-Finds test sets that enforce execution order and displays their names and test case counts.
+Gets all test sets and displays the complete structure in JSON format for detailed analysis.
 
 ## PARAMETERS
 

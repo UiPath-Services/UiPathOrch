@@ -52,7 +52,7 @@ PS Orch1:\Shared> Get-OrchFolderUser | ConvertTo-Json -Depth 3
 PS C:\> Get-OrchFolderUser -Path Orch1:\Shared -UserName *admin*
 ```
 
-Sharedフォルダー内で、ユーザー名に「admin」を含むすべてのフォルダーユーザーを取得します。
+Sharedフォルダー内で、ユーザー名に"admin"を含むすべてのフォルダーユーザーを取得します。
 
 ### Example 4
 ```powershell
@@ -228,7 +228,7 @@ Accept wildcard characters: True
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -237,7 +237,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.UserRoles
 ## NOTES
-このコマンドレットは、フォルダーコンテキストへの移動または-Pathパラメーターを使用したパス指定が必要なフォルダーエンティティ操作です。このコマンドレットは、個人ユーザー（DirectoryUser）とグループ（DirectoryGroup）の両方をロール割り当てとともに表示するフォルダーレベルのアクセス制御を明らかにします。UserEntity.Typeはユーザーとグループを区別します。Rolesには、権限が直接「Assigned」されているか継承されているかを示すOrigin情報が含まれます。この操作には、ターゲットフォルダーでのUsers.View権限が必要です。
+このコマンドレットは、フォルダーコンテキストへの移動または-Pathパラメーターを使用したパス指定が必要なフォルダーエンティティ操作です。このコマンドレットは、個人ユーザー（DirectoryUser）とグループ（DirectoryGroup）の両方をロール割り当てとともに表示するフォルダーレベルのアクセス制御を明らかにします。UserEntity.Typeはユーザーとグループを区別します。Rolesには、権限が直接"Assigned"されているか継承されているかを示すOrigin情報が含まれます。この操作には、ターゲットフォルダーでのUsers.View権限が必要です。
 
 主要エンドポイント: GET /odata/Folders/UiPath.Server.Configuration.OData.GetUsersForFolder
 OAuth必要スコープ: OR.Users または OR.Users.Read

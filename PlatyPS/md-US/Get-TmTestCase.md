@@ -34,66 +34,31 @@ Required permissions: TestCase.Read
 
 ### Example 1
 ```powershell
-PS Orch1Tm:\> Get-TmTestCase
-```
-
-Retrieves all test cases from the current Test Manager project.
-
-### Example 2
-```powershell
-PS Orch1Tm:\> Get-TmTestCase LoginTest
-```
-
-Retrieves the test case named "LoginTest" from the current project.
-
-### Example 3
-```powershell
-PS Orch1Tm:\> Get-TmTestCase *API*
-```
-
-Retrieves all test cases whose names contain "API" using wildcard matching.
-
-### Example 4
-```powershell
 PS Orch1Tm:\> Get-TmTestCase -Recurse
 ```
 
 Retrieves all test cases from all Test Manager projects recursively.
 
-### Example 5
+### Example 2
 ```powershell
-PS Orch1Tm:\> Get-TmTestCase -Path Orch1Tm:\MyProject
+PS Orch1Tm:\> Get-TmTestCase -Path MyProject -Recurse *login*
 ```
 
-Retrieves all test cases from the specified Test Manager project without changing the current location.
+Gets test cases whose names contain "login" using wildcard pattern matching.
 
-### Example 6
+### Example 3
 ```powershell
-PS Orch1Tm:\> Get-TmTestCase -Recurse | Where-Object {$_.automationTestCaseName -ne $null}
+PS C:\> Get-TmTestCase -Path Orch1Tm:, Orch2Tm: -Recurse
 ```
 
-Retrieves all automated test cases (those with associated automation) across all projects.
+Gets test cases from multiple Test Manager instances.
 
-### Example 7
+### Example 4
 ```powershell
-PS Orch1Tm:\> Get-TmTestCase -Recurse | ConvertTo-Json -Depth 3
+PS Orch1Tm:\> Get-TmTestCase -Recurse | ConvertTo-Json -Depth 2
 ```
 
-Retrieves all test cases and displays their complete structure in JSON format for detailed analysis.
-
-### Example 8
-```powershell
-PS Orch1Tm:\> Get-TmTestCase -Recurse | Select-Object name, version, automationProjectName, updated | Format-Table
-```
-
-Displays test cases with key information in a formatted table showing name, version, associated automation project, and last update time.
-
-### Example 9
-```powershell
-PS Orch1Tm:\> Get-TmTestCase -Recurse | Group-Object automationProjectName | Select-Object Name, Count
-```
-
-Groups test cases by their associated automation project and shows the count for each project.
+Gets all test cases and displays the complete structure in JSON format for detailed analysis.
 
 ## PARAMETERS
 

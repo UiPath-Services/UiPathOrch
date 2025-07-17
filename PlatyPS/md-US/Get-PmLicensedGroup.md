@@ -134,7 +134,7 @@ Specifies the group names to be retrieved.
 ```yaml
 Type: String[]
 Parameter Sets: (All)
-Aliases:
+Aliases: Name
 
 Required: False
 Position: 0

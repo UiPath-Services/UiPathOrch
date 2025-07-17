@@ -24,7 +24,7 @@ Get-OrchBucket コマンドレットは、UiPath Orchestrator フォルダー内
 
 このコマンドレットはフォルダーエンティティ操作として動作し、適切なフォルダーコンテキストへの移動または -Path パラメーターを使用したターゲットフォルダーの指定が必要です。サブフォルダー内のバケットを含めるには -Recurse パラメーターを使用し、再帰レベルを制御するには -Depth を使用します。
 
-プライマリエンドポイント: GET /odata/Buckets
+主要エンドポイント: GET /odata/Buckets
 
 OAuth 必須スコープ: OR.Administration または OR.Administration.Read
 
@@ -182,7 +182,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -198,7 +198,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ストレージバケットは外部ストレージ統合の重要な構成要素であり、自動化プロセスでのファイル管理とデータ交換を可能にします。各バケットは特定のストレージプロバイダー（Azure Blob Storage、Amazon S3、ファイルシステムなど）に関連付けられています。
 
-プライマリエンドポイント: GET /odata/Buckets
+主要エンドポイント: GET /odata/Buckets
 OAuth 必須スコープ: OR.Administration または OR.Administration.Read
 必要なアクセス許可: Buckets.View
 

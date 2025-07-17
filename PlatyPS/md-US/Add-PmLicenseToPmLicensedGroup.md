@@ -99,7 +99,7 @@ Specifies the name of the licensed groups to assign licenses to.
 ```yaml
 Type: String[]
 Parameter Sets: (All)
-Aliases:
+Aliases: Name
 
 Required: True
 Position: 0

@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -24,7 +24,7 @@ Disable-OrchLicenseRuntimeコマンドレットは、特定のロボットタイ
 
 ランタイムライセンスを無効にすると、ロボットは新しいジョブを実行できなくなりますが、実行中のジョブは完了まで継続されます。これは、メンテナンスシナリオやライセンス管理に役立ちます。
 
-プライマリエンドポイント: POST /odata/LicensesRuntime('{machineName}')/UiPath.Server.Configuration.OData.ToggleEnabled
+主要エンドポイント: POST /odata/LicensesRuntime('{machineName}')/UiPath.Server.Configuration.OData.ToggleEnabled
 
 OAuth必要スコープ: OR.License
 
@@ -51,7 +51,7 @@ Disable-OrchLicenseRuntime Unattended Machine01
 Disable-OrchLicenseRuntime Studio, StudioX *DevMachine*
 ```
 
-キーに「DevMachine」が含まれるすべてのマシンのStudioおよびStudioXランタイムライセンスを無効にします。
+キーに"DevMachine"が含まれるすべてのマシンのStudioおよびStudioXランタイムライセンスを無効にします。
 
 ### Example 4
 ```powershell
@@ -65,7 +65,7 @@ Disable-OrchLicenseRuntime -Path Orch1:, Orch2: Unattended TestMachine01, TestMa
 Disable-OrchLicenseRuntime NonProduction *Test*
 ```
 
-キーに「Test」が含まれるすべてのマシンのNonProductionランタイムライセンスを無効にします。
+キーに"Test"が含まれるすべてのマシンのNonProductionランタイムライセンスを無効にします。
 
 ### Example 6
 ```powershell
@@ -168,16 +168,14 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
 ### None
-
 ## OUTPUTS
 
 ### System.Object
-
 ## NOTES
 
 ## RELATED LINKS

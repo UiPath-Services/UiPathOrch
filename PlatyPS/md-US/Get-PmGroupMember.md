@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -43,6 +43,7 @@ Retrieves members from all groups in the current Platform Management instance.
 ```powershell
 PS Orch1:\> Get-PmGroupMember Admin*, Everyone
 ```
+
 Retrieves members from groups whose names start with "Admin" or are exactly "Everyone".
 
 ### Example 3: Get group member details and examine structure
@@ -104,7 +105,7 @@ Specifies the names of groups for which to retrieve members. Supports wildcard c
 ```yaml
 Type: String[]
 Parameter Sets: (All)
-Aliases:
+Aliases: Name
 
 Required: False
 Position: 0

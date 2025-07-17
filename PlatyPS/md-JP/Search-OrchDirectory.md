@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -22,7 +22,7 @@ Search-OrchDirectory [-Name] <String> [-Path <String[]>] [-ProgressAction <Actio
 
 検索結果には、ユーザーやロボットアカウントなどのディレクトリオブジェクトと、それらの識別子、表示名、ドメイン、タイプ情報が含まれます。このコマンドレットは、Platform Management ディレクトリ検索と比較して異なる結果を含む可能性がある Orchestrator のディレクトリサービススコープ内で特に検索を行います。
 
-検索は「で始まる」パターンを使用して実行され、ドメインコンテキスト（通常、ローカルユーザーの場合は「autogen」）を含むため、Orchestrator の認証およびユーザー管理コンテキスト内でディレクトリオブジェクトを見つけるのに適しています。
+検索は"で始まる"パターンを使用して実行され、ドメインコンテキスト（通常、ローカルユーザーの場合は"autogen"）を含むため、Orchestrator の認証およびユーザー管理コンテキスト内でディレクトリオブジェクトを見つけるのに適しています。
 
 このコマンドレットは、ユーザー発見、管理タスク、および Orchestrator 環境内でディレクトリオブジェクトを見つけて識別する必要がある統合シナリオに役立ちます。
 
@@ -93,7 +93,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは共通パラメーター（-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariable）をサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

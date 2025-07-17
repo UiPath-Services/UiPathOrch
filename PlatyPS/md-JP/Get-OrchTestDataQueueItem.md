@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -24,7 +24,7 @@ Get-OrchTestDataQueueItem コマンドレットは、テストデータキュー
 
 パラメータが指定されていない場合、現在のフォルダ内のすべてのテストデータキューアイテムが返されます。
 
-プライマリエンドポイント: GET /odata/TestDataQueueItems?$filter=(TestDataQueueId eq {testDataQueueId})
+主要エンドポイント: GET /odata/TestDataQueueItems?$filter=(TestDataQueueId eq {testDataQueueId})
 
 OAuth必須スコープ: OR.TestDataQueues または OR.TestDataQueues.Read
 
@@ -44,14 +44,14 @@ PS Orch1:\Shared> Get-OrchTestDataQueueItem
 PS Orch1:\Shared> Get-OrchTestDataQueueItem CustomerData
 ```
 
-現在のフォルダ内の「CustomerData」という名前のテストデータキューからすべてのアイテムを取得します。
+現在のフォルダ内の"CustomerData"という名前のテストデータキューからすべてのアイテムを取得します。
 
 ### Example 3
 ```powershell
 PS Orch1:\Shared> Get-OrchTestDataQueueItem *Data*
 ```
 
-名前に「Data」を含むテストデータキューからすべてのアイテムを取得します。
+名前に"Data"を含むテストデータキューからすべてのアイテムを取得します。
 
 ### Example 4
 ```powershell
@@ -65,7 +65,7 @@ PS Orch1:\> Get-OrchTestDataQueueItem -Recurse
 PS C:\> Get-OrchTestDataQueueItem -Path Orch1:\Development, Orch1:\Production UserTestData
 ```
 
-DevelopmentフォルダとProductionフォルダの両方から「UserTestData」キューのすべてのアイテムを取得します。
+DevelopmentフォルダとProductionフォルダの両方から"UserTestData"キューのすべてのアイテムを取得します。
 
 ### Example 6
 ```powershell
@@ -152,7 +152,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および -WarningVariable の共通パラメータをサポートします。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216) を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -162,7 +162,7 @@ Accept wildcard characters: False
 ### UiPath.PowerShell.Entities.TestDataQueue
 ## NOTES
 
-プライマリエンドポイント: GET /odata/TestDataQueues
+主要エンドポイント: GET /odata/TestDataQueues
 OAuth必須スコープ: OR.TestDataQueues または OR.TestDataQueues.Read
 必要な権限: TestDataQueues.View
 

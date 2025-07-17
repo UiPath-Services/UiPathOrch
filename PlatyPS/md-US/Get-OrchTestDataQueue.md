@@ -149,12 +149,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
-
+### None
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.TestDataQueue
-
 ## NOTES
 This cmdlet is a folder entity operation for accessing test data queue configurations. Test data queues support data-driven testing by providing structured datasets for automation validation. Queues organize test data separately from test logic, enabling maintainable test automation practices. Use in conjunction with Get-OrchTestDataQueueItem to access individual test data entries. This operation requires TestDataQueues.View permissions in the target folders.
 

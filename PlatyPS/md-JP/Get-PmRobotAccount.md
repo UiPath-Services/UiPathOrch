@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -51,14 +51,14 @@ Get-PmRobotAccount
 Get-PmRobotAccount ServiceAccount01
 ```
 
-「ServiceAccount01」という名前のロボットアカウントを取得します。
+"ServiceAccount01"という名前のロボットアカウントを取得します。
 
 ### Example 3
 ```powershell
 Get-PmRobotAccount *Automation*
 ```
 
-名前に「Automation」を含むすべてのロボットアカウントを取得します。
+名前に"Automation"を含むすべてのロボットアカウントを取得します。
 
 ### Example 4
 ```powershell
@@ -181,7 +181,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-このコマンドレットは、-Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、-WarningVariableの共通パラメータをサポートしています。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 

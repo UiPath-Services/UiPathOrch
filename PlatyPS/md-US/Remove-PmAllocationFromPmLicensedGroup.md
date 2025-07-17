@@ -58,7 +58,7 @@ Specifies the name of the groups from which to remove the license allocations.
 ```yaml
 Type: String[]
 Parameter Sets: (All)
-Aliases:
+Aliases: Name
 
 Required: True
 Position: 0

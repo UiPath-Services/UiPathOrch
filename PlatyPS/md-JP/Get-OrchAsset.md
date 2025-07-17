@@ -27,7 +27,7 @@ UiPath Orchestrator フォルダーからアセット情報を取得します。
 
 -Path、-Recurse、-Depth パラメーターを指定する場合は、コマンドレット名の直後に配置してください。この配置により、後続のパラメーターのオートコンプリートが正しく機能することが保証されます。
 
-プライマリエンドポイント: GET /odata/Assets
+主要エンドポイント: GET /odata/Assets
 
 OAuth 必須スコープ: OR.Assets または OR.Assets.Read
 
@@ -244,7 +244,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+このコマンドレットは、共通パラメータをサポートしています: -Debug、-ErrorAction、-ErrorVariable、-InformationAction、-InformationVariable、-OutVariable、-OutBuffer、-PipelineVariable、-Verbose、-WarningAction、および-WarningVariable。詳細については、[about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216)を参照してください。
 
 ## INPUTS
 
@@ -259,7 +259,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 -ExportCsv および -ExportCredentialCsv パラメーターは、内部 ID の代わりに人間が読める名前を持つインポート準備済み CSV ファイルを作成します。
 
-プライマリエンドポイント: GET /odata/Assets
+主要エンドポイント: GET /odata/Assets
 OAuth 必須スコープ: OR.Assets または OR.Assets.Read
 必要なアクセス許可: Assets.View
 
