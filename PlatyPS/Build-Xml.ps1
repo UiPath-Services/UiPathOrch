@@ -251,6 +251,15 @@ function Build-HelpXml {
             try {
                 Copy-Item "$OutputPath\*" $destination -Force
                 Write-Host "    ✅ Copy completed" -ForegroundColor Green
+                
+                # Remove any .backup files created during the process
+                $backupFiles = Get-ChildItem -Path $destination -Filter "*.backup" -ErrorAction SilentlyContinue
+                if ($backupFiles) {
+                    foreach ($backupFile in $backupFiles) {
+                        Remove-Item -Path $backupFile.FullName -Force -ErrorAction SilentlyContinue
+                        Write-Host "    🗑  Removed backup file: $($backupFile.Name)" -ForegroundColor DarkGray
+                    }
+                }
             } catch {
                 Write-Warning "Failed to copy to $destination : $($_.Exception.Message)"
             }
@@ -269,6 +278,9 @@ function Build-HelpXml {
 Write-Host "===========================================" -ForegroundColor Magenta
 Write-Host "     PowerShell Help XML Builder v2.1      " -ForegroundColor Magenta  
 Write-Host "===========================================" -ForegroundColor Magenta
+Write-Host "Prerequisites:" -ForegroundColor Yellow
+Write-Host "  ⚠  Please run ./Update-Md.ps1 before executing this script" -ForegroundColor Red
+Write-Host ""
 Write-Host "Features:" -ForegroundColor White
 Write-Host "  • PlatyPS XML generation" -ForegroundColor Cyan
 Write-Host "  • Parameter order optimization" -ForegroundColor Cyan
@@ -357,3 +369,4 @@ if ($Verbose) {
 }
 
 Write-Host ""
+
