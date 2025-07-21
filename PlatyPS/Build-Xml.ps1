@@ -120,22 +120,27 @@ function Reorder-SyntaxParameters {
         return $false
     }
     
+    # Convert NodeList to Array to avoid live collection issues
+    $parameterArray = @()
+    foreach ($param in $parameterNodes) {
+        $parameterArray += $param
+    }
+    
     # Sort parameters by priority
-    $sortedParameters = $parameterNodes | Sort-Object { Get-ParameterPriority $_ $NsManager }
+    $sortedParameters = $parameterArray | Sort-Object { Get-ParameterPriority $_ $NsManager }
     
     # Get parent node of the original parameter nodes
-    $parentNode = $parameterNodes[0].ParentNode
+    $parentNode = $parameterArray[0].ParentNode
     
-    # Remove all existing parameter nodes
-    foreach ($param in $parameterNodes) {
-        $parentNode.RemoveChild($param) | Out-Null
+    # Remove all existing parameter nodes (reverse order to avoid index issues)
+    for ($j = $parameterArray.Count - 1; $j -ge 0; $j--) {
+        $parentNode.RemoveChild($parameterArray[$j]) | Out-Null
     }
     
     # Add parameter nodes in sorted order
     foreach ($param in $sortedParameters) {
         $parentNode.AppendChild($param) | Out-Null
     }
-    
     return $true
 }
 
