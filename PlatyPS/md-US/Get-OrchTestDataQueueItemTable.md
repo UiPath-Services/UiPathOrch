@@ -1,5 +1,5 @@
----
-external help file: UiPathOrch-help.xml
+﻿---
+external help file: UiPath.PowerShell.OrchProvider.dll-help.xml
 Module Name: UiPathOrch
 online version:
 schema: 2.0.0
