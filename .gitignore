@@ -372,3 +372,4 @@ FodyWeavers.xsd
 /PlatyPS/log.txt
 /PlatyPS/logJ.txt
 /PlatyPS/ヘルプファイル記載ガイド-API編.txt
+*.backup
