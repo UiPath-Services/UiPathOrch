@@ -403,6 +403,20 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
+
+
+
+
+yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
 ```
 
 ```yaml
