@@ -28,6 +28,7 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
 
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<DirectoryTypes>))]
+    [ValidatePositionalParameter<DirectoryTypes>]
     public string[]? Type { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
@@ -160,7 +161,7 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
         Name = Name.Split1stValueByUnescapedCommas()?.ToArray();
         Roles = Roles.Split1stValueByUnescapedCommas()?.ToArray();
 
-        var projects = SessionState.EnumDuFolders(Path);
+        var projects = SessionState.EnumDuFolders(Path, Recurse);
         var wpEntityType = Type.ConvertToWildcardPatternList();
         var specifiedTypes = DirectoryTypes.Parameters.SelectByWildcards(t => t, wpEntityType);
 

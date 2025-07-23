@@ -51,3 +51,5 @@ Get-PmRobotAccount:
 Get-PmUser:
 {"errorMessage":"範囲「Du.Classification.Api,Du.Digitization.Api,Du.Extraction.Api,OR.Administration,OR.Analytics,OR.Assets,OR.Audit,OR.BackgroundTasks,OR.Execution,OR.Folders,OR.Hypervisor,OR.Jobs,OR.License,OR.Machines,OR.ML,OR.Monitoring,OR.Queues,OR.Robots,OR.Settings,OR.Tasks,OR.TestDataQueues,OR.TestSetExecutions,OR.TestSets,OR.TestSetSchedules,OR.Users,OR.Webhooks,PM.Group,offline_access」は無効です。「PM.User」または「PM.User.Read」を設定する必要があります。 "}
 
+Add-DuUser:
+{"StatusCode":400,"StatusDescription":"BadRequest","Message":"Duplicate usernames found in database for specified input. (Parameter 'userNamesOrEmails')"}

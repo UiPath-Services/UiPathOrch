@@ -29,6 +29,7 @@ public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<DirectoryTypeItems, int>))]
+    [ValidateDictionaryKey(typeof(DirectoryTypeItems), AllowWildcard = true)]
     public string[]? Type { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]

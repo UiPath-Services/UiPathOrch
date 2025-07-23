@@ -15,6 +15,7 @@ public class AddFolderUserCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<DirectoryTypeItems, int>))]
+    [ValidateDictionaryKey(typeof(DirectoryTypeItems))]
     public string? Type { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
@@ -137,10 +138,11 @@ public class AddFolderUserCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        if (!DirectoryTypeItems.Items.TryGetValue(Type ?? "", out var objectType))
-        {
-            throw new Exception("Invalid Type.");
-        }
+        DirectoryTypeItems.Items.TryGetValue(Type ?? "", out var objectType);
+        //if (!DirectoryTypeItems.Items.TryGetValue(Type ?? "", out var objectType))
+        //{
+        //    throw new Exception($"Invalid Type: {Type}. Allowed values are: {string.Join(", ", DirectoryTypeItems.Items.Select(item => item.Key)}");
+        //}
 
         var drives = SessionState.EnumOrchDrives(Path);
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);

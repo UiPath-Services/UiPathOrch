@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Management.Automation;
 using System.Reflection;
+using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -28,7 +29,7 @@ public class ValidateEnumAttribute : ValidateArgumentsAttribute
                 !_validValues.Any(x => x.Equals(s, StringComparison.OrdinalIgnoreCase)))
             {
                 throw new ValidationMetadataException(
-                    $"Invalid value '{v}'. Allowed values: {string.Join(", ", _validValues)}");
+                    $"Invalid value '{v}'. Allowed values are: {string.Join(", ", _validValues)}.");
             }
         }
     }
@@ -39,25 +40,16 @@ public class ValidateDictionaryKeyAttribute : ValidateArgumentsAttribute
 {
     private readonly HashSet<string> _validKeys;
 
+    public bool AllowWildcard { get; set; }
+
     public ValidateDictionaryKeyAttribute(Type providerType)
     {
-        // Ensure providerType has a public static 'Items' property
-        var prop = providerType.GetProperty(
-            "Items",
-            BindingFlags.Public | BindingFlags.Static
-        ) ?? throw new ArgumentException(
-            $"Type {providerType.FullName} must have a public static Items property.",
-            nameof(providerType)
-        );
+        var prop = providerType.GetProperty("Items", BindingFlags.Public | BindingFlags.Static)
+            ?? throw new ArgumentException($"Type {providerType.FullName} must have a public static Items property.", nameof(providerType));
 
-        // Ensure Items is IDictionary
         if (prop.GetValue(null) is not IDictionary dict)
-            throw new ArgumentException(
-                $"The 'Items' property of {providerType.FullName} must be IDictionary.",
-                nameof(providerType)
-            );
+            throw new ArgumentException($"The 'Items' property of {providerType.FullName} must be IDictionary.", nameof(providerType));
 
-        // Extract keys
         _validKeys = new HashSet<string>(
             dict.Keys.Cast<object>().Select(k => k.ToString()!),
             StringComparer.OrdinalIgnoreCase
@@ -66,15 +58,34 @@ public class ValidateDictionaryKeyAttribute : ValidateArgumentsAttribute
 
     protected override void Validate(object arguments, EngineIntrinsics engineIntrinsics)
     {
-        var values = arguments as object[] ?? Array.Empty<object>();
+        IEnumerable<object> values = arguments switch
+        {
+            null => [],
+            string s => [s],
+            IEnumerable<object> objEnum => objEnum,
+            IEnumerable nonGenericEnum => nonGenericEnum.Cast<object>(),
+            _ => [arguments]
+        };
+
         foreach (var v in values)
         {
-            if (v is not string s || !_validKeys.Contains(s))
+            if (v is not string s)
+                throw new ValidationMetadataException($"Invalid value '{v}'. Expected a string.");
+
+            if (_validKeys.Contains(s))
+                continue;
+
+            if (AllowWildcard)
             {
-                throw new ValidationMetadataException(
-                    $"Invalid value '{v}'. Allowed values: {string.Join(", ", _validKeys)}"
-                );
+                var pattern = new WildcardPattern(s, WildcardOptions.IgnoreCase);
+                if (_validKeys.Any(k => pattern.IsMatch(k)))
+                    continue;
             }
+
+            throw new ValidationMetadataException(
+                $"Invalid value '{s}'. Allowed values are: {string.Join(", ", _validKeys)}"
+                + (AllowWildcard ? " or a wildcard pattern matching them." : ".")
+            );
         }
     }
 }
@@ -122,7 +133,39 @@ public class ValidateDictionaryValueAttribute : ValidateArgumentsAttribute
             if (!_validValues.Contains(s))
             {
                 throw new ValidationMetadataException(
-                    $"Invalid value '{s}'. Allowed values: {string.Join(", ", _validValues)}"
+                    $"Invalid value '{s}'. Allowed values are: {string.Join(", ", _validValues)}."
+                );
+            }
+        }
+    }
+}
+
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Parameter)]
+public class ValidatePositionalParameterAttribute<T> : ValidateArgumentsAttribute
+    where T : IPositionalParameters
+{
+    private static readonly HashSet<string> _validValues = new(
+        T.Parameters,
+        StringComparer.OrdinalIgnoreCase
+    );
+
+    protected override void Validate(object arguments, EngineIntrinsics engineIntrinsics)
+    {
+        IEnumerable<object> values = arguments switch
+        {
+            null => [],
+            string s => [s],
+            IEnumerable<object> objEnum => objEnum,
+            IEnumerable nonGenericEnum => nonGenericEnum.Cast<object>(),
+            _ => [arguments]
+        };
+
+        foreach (var v in values)
+        {
+            if (v is not string s || !_validValues.Contains(s))
+            {
+                throw new ValidationMetadataException(
+                    $"Invalid value '{v}'. Allowed values are: {string.Join(", ", _validValues)}."
                 );
             }
         }

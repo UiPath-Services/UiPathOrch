@@ -1718,6 +1718,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         List<T> needQueryUsers = users
             .Where(user => !string.IsNullOrEmpty(getSearchKeyFunc(user)))
             .Where(user => !_dicPmBulkResolveByName.ContainsKey((kind, getSearchKeyFunc(user))))
+            .DistinctBy(user => getSearchKeyFunc(user))
             .ToList();
 
         if (needQueryUsers.Count != 0)

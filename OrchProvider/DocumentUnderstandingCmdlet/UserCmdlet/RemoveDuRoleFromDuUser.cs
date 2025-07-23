@@ -90,7 +90,7 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesProjects = SessionState.EnumDuFolders(Path, Recurse.IsPresent);
+        var drivesProjects = SessionState.EnumDuFolders(Path, Recurse);
         var wpName = Name.ConvertToWildcardPatternList();
         //var wpUserName = UserName.ConvertToWildcardPatternList();
         var wpRole = Roles.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
