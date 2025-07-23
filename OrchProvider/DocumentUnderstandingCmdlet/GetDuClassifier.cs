@@ -61,7 +61,7 @@ public class GetDuClassifierCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesProjects = SessionState.EnumDuFolders(Path, Recurse.IsPresent);
+        var drivesProjects = SessionState.EnumDuFolders(Path, Recurse);
         var wpClassifierName = Name.ConvertToWildcardPatternList();
 
         // 同期バージョン

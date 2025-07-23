@@ -25,6 +25,7 @@ public class RemoveRoleFromUserCommand : OrchestratorPSCmdlet
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<DirectoryTypeItems, int>))]
+    [ValidateDictionaryKey(typeof(DirectoryTypeItems), AllowWildcard = true)]
     public string[]? Type { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]

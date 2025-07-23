@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.14.7'
+ModuleVersion = '0.9.14.8'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -388,22 +388,17 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- The GroupName column was missing from the CSV file output by Get-PmGroupMember -ExportCsv.
+        ReleaseNotes = '- Fixed an issue where the -Recurse parameter of the Add-DuUser cmdlet was not functioning. You can now add users to all Document Understanding projects at once, as shown below:
 
-- Added -Name as an alias for the -GroupName parameter in cmdlets that handle PmGroup entities. Since the group name is included in the "name" property of the entity returned from the API, this change makes it easier to work with these cmdlets in pipelines. Affected cmdlets:
-  - Get-PmGroup
-  - Get-PmGroupMember
-  - New-PmGroup 
-  - Add-PmGroupMember
-  - Remove-PmGroup
-  - Remove-PmGroupMember
-  - Copy-PmGroup
-  - Move-PmGroupMember
-  - Get-PmLicensedGroup
-  - Add-PmLicenseToPmLicensedGroup
-  - Remove-PmLicensedGroup
-  - Remove-PmLicenseFromPmLicensedGroup
-  - Remove-PmAllocationFromPmLicensedGroup
+  Orch1Du:\> Add-DuUser -Recurse DirectoryUser user1@uipath.com, user2@uipath.com ''DU Data Annotator''
+
+- Note: The following usage, which has always worked as intended, achieves the same result:
+
+  Orch1Du:\> Add-DuUser -Path * DirectoryUser user1@uipath.com, user2@uipath.com ''DU Data Annotator''
+
+- Added validators to the following parameters to ensure that errors are raised for invalid values. This is especially helpful when using UiPathOrch via PowerShell.MCP, where LLMs cannot use completers:
+  - The -Type parameter of cmdlets such as Get-OrchUser and Add-OrchUser
+  - The -Last parameter of cmdlets such as Get-OrchJob and Get-OrchAuditLog
 '
 
         # Prerelease string of this module

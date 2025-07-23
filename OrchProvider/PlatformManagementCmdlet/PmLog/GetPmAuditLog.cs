@@ -13,6 +13,7 @@ public class GetPmAuditLogCommand : OrchestratorPSCmdlet
     // 試してみたけど、この API はフィルターを指定しても機能しないようだ。。
     //[Parameter(ValueFromPipelineByPropertyName = true)]
     //[ArgumentCompleter(typeof(StaticTextsCompleter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>))]
+    //[ValidatePositionalParameter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>]
     //public string? Last { get; set; }
 
     //[Parameter(ValueFromPipelineByPropertyName = true)]

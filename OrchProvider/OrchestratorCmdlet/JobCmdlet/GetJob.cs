@@ -19,6 +19,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
 
     [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>))]
+    [ValidatePositionalParameter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>]
     public string? Last { get; set; }
 
     [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]

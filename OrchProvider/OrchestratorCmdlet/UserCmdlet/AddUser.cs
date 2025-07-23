@@ -227,6 +227,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     [ArgumentCompleter(typeof(TypeCompleter))]
+    [ValidateDictionaryKey(typeof(TypeCompleter), AllowWildcard = true)]
     public string[]? Type { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
