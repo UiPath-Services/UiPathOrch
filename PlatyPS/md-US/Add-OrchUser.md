@@ -82,7 +82,7 @@ Orch1:,DirectoryUser,jane.smith,Administrator
 
 ### Example 6
 ```powershell
-PS Orch1:\> Get-PmUser *@contoso.com | Add-OrchUser -Roles Developer -WhatIf
+PS Orch1:\> Get-PmUser *@uipath.com | Add-OrchUser -Roles Developer -WhatIf
 ```
 
 Gets all organization users with contoso.com email domain and adds them to the current tenant with Developer role.

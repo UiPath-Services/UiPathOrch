@@ -38,7 +38,6 @@ Required permissions: [PLACEHOLDER - External API resources view permissions]
 
 ### Example 1
 ```powershell
-PS C:\> Set-Location Orch1:\
 PS Orch1:\> Get-PmExternalApiResource
 ```
 

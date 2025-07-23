@@ -146,9 +146,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### UiPath.PowerShell.Entities.MachineSessionRuntime
 ## NOTES
 
-このコマンドレットは、フォルダエンティティで動作し、次のいずれかが必要です：
-- Set-Location（cd）を使用した対象フォルダへのナビゲーション、または
-- -Path、-Recurse、-Depthパラメーターを使用した対象フォルダの指定
+プロセスは特定のフォルダスコープ内で動作するフォルダエンティティです。最初にSet-Locationコマンドレット（cdコマンド）を使用してターゲットフォルダに移動するか、-Path、-Recurse、または-Depthパラメータを使用してターゲットフォルダを指定してください。
 
 **重要：**最適なPowerShell IntelliSenseサポートのため、複数のパラメーターを使用する場合は、-Path、-Recurse、または-Depthを他のパラメーターより先に指定してください。
 

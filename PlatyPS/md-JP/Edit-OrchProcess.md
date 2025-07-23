@@ -34,7 +34,7 @@ OAuth必要スコープ: 適用外（ブラウザナビゲーション）
 
 ### Example 1
 ```powershell
-PS C:\> Set-Location Orch1:\MyWorkspace
+PS C:\> cd Orch1:\MyWorkspace
 PS Orch1:\MyWorkspace> Edit-OrchProcess MsgBox
 ```
 

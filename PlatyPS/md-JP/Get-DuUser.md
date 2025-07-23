@@ -38,7 +38,7 @@ OAuth必須スコープ：[PLACEHOLDER - Document Understanding user scopes]
 
 ### Example 1
 ```powershell
-PS C:\> Set-Location "Orch1Du:\MyProject"
+PS C:\> cd Orch1Du:\MyProject
 PS Orch1Du:\MyProject> Get-DuUser
 ```
 
@@ -46,7 +46,7 @@ PS Orch1Du:\MyProject> Get-DuUser
 
 ### Example 2
 ```powershell
-PS C:\> Set-Location Orch1Du:\
+PS C:\> cd Orch1Du:\
 PS Orch1Du:\> Get-DuUser -Recurse
 ```
 
@@ -54,7 +54,7 @@ PS Orch1Du:\> Get-DuUser -Recurse
 
 ### Example 3
 ```powershell
-PS Orch1Du:\> Get-DuUser -Path "Orch1Du:\MyProject"
+PS C:\> Get-DuUser -Path Orch1Du:\MyProject
 ```
 
 現在の場所を変更せずに、特定のDocument Understandingプロジェクトからユーザーを取得します。
@@ -184,8 +184,6 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### UiPath.PowerShell.Entities.DuUser
 ## NOTES
 - これは、Document Understandingプロジェクトへのナビゲーションまたは-Path/-Recurse/-Depthパラメーターの使用が必要なフォルダエンティティ操作コマンドレットです
-- "Use Set-Location cmdlet to navigate to the target folder first..."エラーが表示される場合は、プロジェクトフォルダに移動するか、フォルダ操作パラメーターを使用する必要があります
-- ユーザータイプには、DirectoryUser（個々のユーザー）とDirectoryGroup（グループ）が含まれます
 - roleAssignmentDtosプロパティには、継承ステータスとスコープを含む詳細なロール割り当て情報が含まれます
 - ロール割り当ては、組織単位から継承されるか、プロジェクトに直接割り当てられます
 - 完全なroleAssignmentDtos構造を探索し、ロールの詳細を理解するには、ConvertTo-Jsonを使用してください

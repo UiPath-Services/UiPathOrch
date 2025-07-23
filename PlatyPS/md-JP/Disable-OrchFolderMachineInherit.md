@@ -146,9 +146,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### System.Object
 ## NOTES
 
-このコマンドレットはフォルダーエンティティを操作するため、以下のいずれかが必要です：
-- Set-Location (cd)を使用した対象フォルダーへの移動、または
-- -Pathパラメータを使用した対象フォルダーの指定
+これはフォルダエンティティコマンドレットです。このコマンドレットを使用するには、最初に Set-Location（cd コマンド）を使用してターゲットフォルダに移動するか、-Path、-Recurse、または -Depth パラメーターを使用してターゲットフォルダを指定する必要があります。
 
 **重要:** PowerShell IntelliSenseサポートを最適化するために、両方のパラメータを使用する場合は-PathをNameパラメータの前に指定してください。
 

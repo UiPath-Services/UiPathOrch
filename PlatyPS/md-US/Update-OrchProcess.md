@@ -37,7 +37,7 @@ Required permissions:
 
 ### Example 1
 ```powershell
-PS Orch1:\> Import-Csv "C:\tmp\Get-OrchProcess.csv" | Update-OrchProcess
+PS Orch1:\> Import-Csv C:\tmp\ExportedProcesses.csv | Update-OrchProcess
 ```
 
 Update process information using import from CSV.

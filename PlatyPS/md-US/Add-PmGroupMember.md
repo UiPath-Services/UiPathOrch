@@ -64,7 +64,7 @@ Adds all users with usernames containing "analyst" to the "Business Users" group
 
 ### Example 5
 ```powershell
-PS Orch1:\> Get-PmUser | Where-Object {$_.Email -like "*@contoso.com"} | Add-PmGroupMember -GroupName Employees
+PS Orch1:\> Get-PmUser | Where-Object {$_.Email -like "*@uipath.com"} | Add-PmGroupMember -GroupName Employees
 ```
 
 Gets all users with contoso.com email domain and adds them to the Employees group using pipeline input.

@@ -33,7 +33,7 @@ Required permissions: [PLACEHOLDER - Test Manager configuration permissions]
 
 ### Example 1
 ```powershell
-PS C:\> Set-Location Orch1Tm:
+PS C:\> cd Orch1Tm:
 PS Orch1Tm:\> Get-TmConfiguration
 ```
 

@@ -33,37 +33,37 @@ Required permissions: Jobs.View (for browser access to job details)
 
 ### Example 1
 ```powershell
-PS C:\> Set-Location Orch1:\MyWorkspace
-PS Orch1:\MyWorkspace> Open-OrchJob -Id 108984122
+PS C:\> cd Orch1:\MyWorkspace
+PS Orch1:\MyWorkspace> Open-OrchJob 123456789
 ```
 
-Opens the job details page for job ID 108984122 in the default web browser.
+Opens the job details page for job ID 123456789 in the default web browser.
 
 ### Example 2
 ```powershell
 PS Orch1:\MyWorkspace> $job = Get-OrchJob -First 1
-PS Orch1:\MyWorkspace> Open-OrchJob -Id $job.Id
+PS Orch1:\MyWorkspace> Open-OrchJob $job.Id
 ```
 
 Gets the first job and opens its details page in the browser.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Open-OrchJob -Id 108984122,108983813
+PS Orch1:\> Open-OrchJob 108984122,108983813
 ```
 
 Opens job details pages for multiple jobs in separate browser tabs or windows.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchJob -State "Faulted" -First 5 | Open-OrchJob
+PS Orch1:\> Get-OrchJob -State Faulted -First 5 | Open-OrchJob
 ```
 
 Gets the first 5 faulted jobs and opens their details pages for investigation.
 
 ### Example 5
 ```powershell
-PS Orch1:\MyWorkspace> Get-OrchJob -Last "1h" | Where-Object State -eq "Faulted" | Open-OrchJob
+PS Orch1:\MyWorkspace> Get-OrchJob -Last Hour | Where-Object State -eq "Faulted" | Open-OrchJob
 ```
 
 Opens job details pages for all jobs that failed in the last hour.

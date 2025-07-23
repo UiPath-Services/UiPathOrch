@@ -20,7 +20,7 @@ Get-OrchTestCaseExecution [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-D
 ## DESCRIPTION
 Get-OrchTestCaseExecution コマンドレットは、UiPath Orchestratorからテストケース実行記録を取得します。テストケース実行は、実行ステータス、タイミング情報、入出力引数、および関連メタデータを含む、自動化テストケースの個別の実行を表します。
 
-これはフォルダエンティティ操作です。Set-Location（cd）を使用して特定のフォルダに移動するか、-Path、-Recurse、または-Depthパラメータを使用してターゲットフォルダを指定する必要があります。
+これはフォルダエンティティ操作です。Set-Location（cd コマンド）を使用して特定のフォルダに移動するか、-Path、-Recurse、または-Depthパラメータを使用してターゲットフォルダを指定する必要があります。
 
 主要エンドポイント: [PLACEHOLDER - Test case execution API endpoint]
 

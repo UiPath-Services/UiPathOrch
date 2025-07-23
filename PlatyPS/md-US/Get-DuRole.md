@@ -35,7 +35,7 @@ Required permissions: [PLACEHOLDER - Document Understanding role permissions]
 
 ### Example 1
 ```powershell
-PS C:\> Set-Location Orch1Du:\
+PS C:\> cd Orch1Du:\
 PS Orch1Du:\> Get-DuRole
 ```
 

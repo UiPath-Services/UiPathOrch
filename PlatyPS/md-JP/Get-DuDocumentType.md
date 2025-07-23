@@ -50,7 +50,7 @@ PS Orch1Du:\Predefined> Get-DuDocumentType | Where-Object {$_.name -like "*Invoi
 
 ### Example 3
 ```powershell
-PS C:\> Get-DuDocumentType -Path Orch1Du:\MyProject -Id "*tax*"
+PS C:\> Get-DuDocumentType -Path Orch1Du:\MyProject *tax*
 ```
 
 MyProject Document UnderstandingプロジェクトからIDに"tax"を含むドキュメントタイプを取得します。

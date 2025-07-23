@@ -38,7 +38,7 @@ Required permissions: [PLACEHOLDER - Document Understanding user permissions]
 
 ### Example 1
 ```powershell
-PS C:\> Set-Location "Orch1Du:\MyProject"
+PS C:\> cd Orch1Du:\MyProject
 PS Orch1Du:\MyProject> Get-DuUser
 ```
 
@@ -46,7 +46,7 @@ Gets all users assigned to the current Document Understanding project.
 
 ### Example 2
 ```powershell
-PS C:\> Set-Location Orch1Du:\
+PS C:\> cd Orch1Du:\
 PS Orch1Du:\> Get-DuUser -Recurse
 ```
 
@@ -54,7 +54,7 @@ Gets all users from all Document Understanding projects recursively.
 
 ### Example 3
 ```powershell
-PS Orch1Du:\> Get-DuUser -Path "Orch1Du:\MyProject"
+PS C:\> Get-DuUser -Path Orch1Du:\MyProject
 ```
 
 Gets users from a specific Document Understanding project without changing the current location.
@@ -184,8 +184,6 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### UiPath.PowerShell.Entities.DuUser
 ## NOTES
 - This is a folder entity operation cmdlet that requires navigation to a Document Understanding project or use of -Path/-Recurse/-Depth parameters
-- If you see the error "Use Set-Location cmdlet to navigate to the target folder first...", you need to either navigate to a project folder or use the folder operation parameters
-- User types include DirectoryUser (individual users) and DirectoryGroup (groups)
 - The roleAssignmentDtos property contains detailed role assignment information including inheritance status and scope
 - Role assignments can be inherited from organizational units or directly assigned to the project
 - Use ConvertTo-Json to explore the complete roleAssignmentDtos structure and understand role details

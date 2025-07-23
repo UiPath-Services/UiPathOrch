@@ -33,7 +33,6 @@ Required permissions: [PLACEHOLDER - Test Manager server info permissions]
 
 ### Example 1
 ```powershell
-PS C:\> Set-Location Orch1Tm:\
 PS Orch1Tm:\> Get-TmServerInfo
 ```
 
@@ -41,38 +40,17 @@ Gets the server information for the current Test Manager instance.
 
 ### Example 2
 ```powershell
-PS Orch1Tm:\> $serverInfo = Get-TmServerInfo
-PS Orch1Tm:\> Write-Host "Test Manager Version: $($serverInfo.version)"
-PS Orch1Tm:\> Write-Host "Server Status: $($serverInfo.status)"
-```
-
-Retrieves server information and displays the version and status.
-
-### Example 3
-```powershell
-PS Orch1Tm:\> Get-TmServerInfo | Format-List
-```
-
-Gets the server information and displays it in detailed list format.
-
-### Example 4
-```powershell
 PS C:\> Get-TmServerInfo -Path Orch1Tm:,Orch2Tm:
 ```
 
 Gets server information from multiple Test Manager instances for comparison.
 
-### Example 5
+### Example 3
 ```powershell
-PS Orch1Tm:\> $info = Get-TmServerInfo
-PS Orch1Tm:\> if ($info.status -eq "OK") {
->>     Write-Host "Test Manager server is healthy"
->> } else {
->>     Write-Warning "Test Manager server status: $($info.status)"
->> }
+PS Orch1Tm:\> Get-TmServerInfo | ConvertTo-Json
 ```
 
-Checks the server status and displays appropriate health information.
+Gets server information and converts the output to JSON format for detailed analysis.
 
 ## PARAMETERS
 

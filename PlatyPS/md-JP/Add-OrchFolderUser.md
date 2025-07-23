@@ -228,7 +228,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Object
 ## NOTES
-これはフォルダーエンティティコマンドレットです。Set-Location を使用してフォルダーに移動するか、-Path、-Recurse、または -Depth パラメーターを使用して対象フォルダーを指定する必要があります。
+これはフォルダーエンティティコマンドレットです。Set-Location（cd コマンド）を使用してフォルダーに移動するか、-Path、-Recurse、または -Depth パラメーターを使用して対象フォルダーを指定する必要があります。
 
 ユーザーをフォルダーに割り当てる前に、テナント内にユーザーが既に存在している必要があります。ユーザーの存在を確認するには Get-OrchUser を使用し、割り当てが正常に行われたことを確認するには Get-OrchFolderUser を使用してください。
 

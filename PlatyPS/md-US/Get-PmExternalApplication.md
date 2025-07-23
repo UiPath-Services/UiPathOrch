@@ -34,7 +34,7 @@ Required permissions: [PLACEHOLDER - External applications view permissions]
 
 ### Example 1
 ```powershell
-PS C:\> Set-Location Orch1:\
+PS C:\> cd Orch1:\
 PS Orch1:\> Get-PmExternalApplication
 ```
 
@@ -42,7 +42,7 @@ Gets all external applications registered in Platform Management.
 
 ### Example 2
 ```powershell
-PS Orch1:\> Get-PmExternalApplication -Name "*hoge*"
+PS Orch1:\> Get-PmExternalApplication -Name *hoge*
 ```
 
 Gets external applications whose names contain "hoge" using wildcard pattern matching.
@@ -63,7 +63,7 @@ Gets all external applications and displays them in a formatted table.
 
 ### Example 5
 ```powershell
-PS Orch1:\> Get-PmExternalApplication -Name "uipathorch","MyBackgroundProcess"
+PS Orch1:\> Get-PmExternalApplication MyApp1, MyApp2
 ```
 
 Gets specific external applications by name.

@@ -50,7 +50,7 @@ Gets all document types related to invoices from the predefined collection.
 
 ### Example 3
 ```powershell
-PS C:\> Get-DuDocumentType -Path Orch1Du:\MyProject -Id "*tax*"
+PS C:\> Get-DuDocumentType -Path Orch1Du:\MyProject *tax*
 ```
 
 Gets document types with IDs containing "tax" from the MyProject Document Understanding project.

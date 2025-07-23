@@ -24,7 +24,7 @@ Users must already exist in the tenant before they can be assigned to folders. U
 
 Folder user assignments control which users have access to specific folders and define their permissions within those folders. Use the -Type parameter to specify the type of directory entity (DirectoryUser, DirectoryRobot, DirectoryGroup, or DirectoryExternalApplication), and the -Roles parameter to define their folder-level roles.
 
-This is a folder entity cmdlet. If you receive the error "Use Set-Location cmdlet (cd command) to navigate to the target folder first", navigate to the target folder or use the -Path, -Recurse, or -Depth parameters to specify target folders.
+This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.
 
 Primary Endpoint: POST /odata/Folders/UiPath.Server.Configuration.OData.AssignDomainUser
 
@@ -228,7 +228,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Object
 ## NOTES
-This is a folder entity cmdlet. You must navigate to a folder using Set-Location or specify target folders using -Path, -Recurse, or -Depth parameters.
+This is a folder entity cmdlet. You must navigate to a folder using Set-Location cmdlet (cd command) or specify target folders using -Path, -Recurse, or -Depth parameters.
 
 Users must already exist in the tenant before they can be assigned to folders. Use Get-OrchUser to verify user existence and Get-OrchFolderUser to verify successful assignment.
 
