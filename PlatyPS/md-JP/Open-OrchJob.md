@@ -33,37 +33,37 @@ OAuth 必要なスコープ: 該当なし（ブラウザナビゲーション）
 
 ### Example 1
 ```powershell
-PS C:\> Set-Location Orch1:\MyWorkspace
-PS Orch1:\MyWorkspace> Open-OrchJob -Id 108984122
+PS C:\> cd Orch1:\MyWorkspace
+PS Orch1:\MyWorkspace> Open-OrchJob 123456789
 ```
 
-ジョブID 108984122のジョブ詳細ページをデフォルトのWebブラウザで開きます。
+ジョブID 123456789のジョブ詳細ページをデフォルトのWebブラウザで開きます。
 
 ### Example 2
 ```powershell
 PS Orch1:\MyWorkspace> $job = Get-OrchJob -First 1
-PS Orch1:\MyWorkspace> Open-OrchJob -Id $job.Id
+PS Orch1:\MyWorkspace> Open-OrchJob $job.Id
 ```
 
 最初のジョブを取得し、その詳細ページをブラウザで開きます。
 
 ### Example 3
 ```powershell
-PS Orch1:\> Open-OrchJob -Id 108984122,108983813
+PS Orch1:\> Open-OrchJob 108984122,108983813
 ```
 
 複数のジョブのジョブ詳細ページを別々のブラウザタブまたはウィンドウで開きます。
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchJob -State "Faulted" -First 5 | Open-OrchJob
+PS Orch1:\> Get-OrchJob -State Faulted -First 5 | Open-OrchJob
 ```
 
 最初の5つの失敗したジョブを取得し、調査のためにそれらの詳細ページを開きます。
 
 ### Example 5
 ```powershell
-PS Orch1:\MyWorkspace> Get-OrchJob -Last "1h" | Where-Object State -eq "Faulted" | Open-OrchJob
+PS Orch1:\MyWorkspace> Get-OrchJob -Last Hour | Where-Object State -eq "Faulted" | Open-OrchJob
 ```
 
 過去1時間で失敗したすべてのジョブのジョブ詳細ページを開きます。

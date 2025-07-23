@@ -19,7 +19,7 @@ Get-TmProjectPermission [-Path <String[]>] [-Recurse] [-ProgressAction <ActionPr
 ## DESCRIPTION
 Get-TmProjectPermissionコマンドレットは、Test Managerプロジェクトのユーザー権限情報を取得します。これには、どのユーザーが特定のプロジェクトにアクセスできるか、割り当てられたロール、所有者ステータス、および権限変更履歴に関する詳細が含まれます。
 
-このコマンドレットは、UiPathOrchTmプロバイダーで動作し、フォルダーエンティティ操作です。Set-Location（cd）を使用して特定のTest Managerプロジェクトフォルダーに移動するか、-Pathまたは-Recurseパラメータを使用して対象フォルダーを指定する必要があります。
+このコマンドレットは、UiPathOrchTmプロバイダーで動作し、フォルダーエンティティ操作です。Set-Location（cdコマンド）を使用して特定のTest Managerプロジェクトフォルダーに移動するか、-Pathまたは-Recurseパラメータを使用して対象フォルダーを指定する必要があります。
 
 このコマンドレットは、UiPathOrchTmプロバイダーのPSDriveで動作します。構成ファイルのスコープに"TM."が含まれている場合、UiPathOrchTmプロバイダーのPSDriveが自動的に追加されます。これはGet-PSDriveコマンドレットで確認できます。構成ファイルは、Edit-OrchConfigコマンドレットで開くことができます。
 

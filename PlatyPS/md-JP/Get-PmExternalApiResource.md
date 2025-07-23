@@ -41,10 +41,10 @@ PS Orch1:\> Get-PmExternalApiResource
 
 ### Example 2
 ```powershell
-PS Orch1:\> Get-PmExternalApiResource *api*
+PS Orch1:\> Get-PmExternalApiResource *Orchestrator*
 ```
 
-ワイルドカードパターンマッチングを使用して、名前に"api"を含む外部APIリソースを取得します。
+ワイルドカードパターンマッチングを使用して、名前に"Orchestrator"を含む外部APIリソースを取得します。
 
 ### Example 3
 ```powershell

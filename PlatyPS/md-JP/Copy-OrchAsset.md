@@ -213,7 +213,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.Asset
 ## NOTES
-これはフォルダエンティティコマンドレットです。-Path パラメーターを使用してソースフォルダを指定するか、Set-Location を使用してソースフォルダに移動してください。
+これはフォルダエンティティコマンドレットです。-Path パラメーターを使用してソースフォルダを指定するか、Set-Location（cd コマンド）を使用してソースフォルダに移動してください。
 
 このコマンドレットは、テナント内とテナント間の両方のコピーをサポートしています。テナント間で認証情報アセットをコピーする場合、コピー後に Set-OrchCredentialAsset を使用してパスワードを更新してください。
 

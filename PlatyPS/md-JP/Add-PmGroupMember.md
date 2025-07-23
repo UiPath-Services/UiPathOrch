@@ -64,7 +64,7 @@ PS C:\> Add-PmGroupMember -GroupName "Business Users" -UserName *analyst* -Type 
 
 ### Example 5
 ```powershell
-PS Orch1:\> Get-PmUser | Where-Object {$_.Email -like "*@contoso.com"} | Add-PmGroupMember -GroupName Employees
+PS Orch1:\> Get-PmUser | Where-Object {$_.Email -like "*@uipath.com"} | Add-PmGroupMember -GroupName Employees
 ```
 
 contoso.com メールドメインを持つすべてのユーザーを取得し、パイプライン入力を使用して Employees グループに追加します。

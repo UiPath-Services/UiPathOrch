@@ -48,7 +48,7 @@ Gets all extractors from all Document Understanding projects recursively.
 
 ### Example 3
 ```powershell
-PS Orch1Du:\MyProject> Get-DuExtractor "Invoice*"
+PS Orch1Du:\MyProject> Get-DuExtractor Invoice*
 ```
 
 Gets extractors whose names start with "Invoice" using wildcard pattern matching.
@@ -69,7 +69,7 @@ Gets only published extractors from the current project.
 
 ### Example 6
 ```powershell
-PS Orch1Du:\> Get-DuExtractor -Path "Orch1Du:\InvoiceProject", "Orch1Du:\ContractProject"
+PS Orch1Du:\> Get-DuExtractor -Path InvoiceProject, ContractProject
 ```
 
 Gets extractors from specific Document Understanding projects without changing the current location.

@@ -33,7 +33,7 @@ OAuth 必要スコープ: [PLACEHOLDER - Test Manager configuration scopes]
 
 ### Example 1
 ```powershell
-PS C:\> Set-Location Orch1Tm:
+PS C:\> cd Orch1Tm:
 PS Orch1Tm:\> Get-TmConfiguration
 ```
 

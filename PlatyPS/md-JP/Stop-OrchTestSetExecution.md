@@ -20,7 +20,7 @@ Stop-OrchTestSetExecution [-Id] <Int64[]> [-Path <String[]>] [-ProgressAction <A
 ## DESCRIPTION
 Stop-OrchTestSetExecution コマンドレットは、UiPath Orchestrator で実行中または保留中のテストセット実行を停止します。このコマンドレットを使用すると、現在実行中または実行待ちのテストセット実行をキャンセルできます。これは、テスト自動化リソースを管理し、不要になったテストを停止するのに役立ちます。
 
-これはフォルダーエンティティ操作です。Set-Location（cd）を使用して特定のフォルダーに移動するか、-Path パラメーターを使用して対象フォルダーを指定する必要があります。-Path パラメーターは対象フォルダーパスを指定します。指定されていない場合は、現在のフォルダーが対象になります。
+これはフォルダーエンティティ操作です。Set-Location（cdコマンド）を使用して特定のフォルダーに移動するか、-Path パラメーターを使用して対象フォルダーを指定する必要があります。-Path パラメーターは対象フォルダーパスを指定します。指定されていない場合は、現在のフォルダーが対象になります。
 
 プライマリ エンドポイント: [PLACEHOLDER - Test set execution stop API endpoint]
 

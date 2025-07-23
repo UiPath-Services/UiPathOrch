@@ -48,7 +48,7 @@ Displays detailed classifier properties in JSON format, including API endpoints 
 
 ### Example 3
 ```powershell
-PS C:\> Get-DuClassifier -Path Orch1Du:\MyProject -Id "*generative*"
+PS C:\> Get-DuClassifier -Path Orch1Du:\MyProject *generative*
 ```
 
 Gets classifiers with IDs containing "generative" from the MyProject Document Understanding project.

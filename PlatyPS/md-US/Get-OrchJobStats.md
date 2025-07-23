@@ -35,7 +35,7 @@ Required permissions: Jobs.View
 
 ### Example 1
 ```powershell
-PS C:\> Set-Location Orch1:
+PS C:\> cd Orch1:
 PS Orch1:\> Get-OrchJobStats
 ```
 

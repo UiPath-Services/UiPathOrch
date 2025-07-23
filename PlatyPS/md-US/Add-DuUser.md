@@ -36,45 +36,45 @@ Required permissions: Document Understanding project management permissions
 
 ### Example 1
 ```powershell
-PS Orch1:\DocumentProcessing> Add-DuUser User john.doe Validator
+PS Orch1Du:\DocumentProcessing> Add-DuUser User john.doe@uipath.com Validator
 ```
 
-Adds user john.doe with the Validator role to Document Understanding projects in the current folder (DocumentProcessing).
+Adds user john.doe@uipath.com with the Validator role to Document Understanding projects in the current folder (DocumentProcessing).
 
 ### Example 2
 ```powershell
-PS C:\> Add-DuUser -Path Orch1:\InvoiceProcessing User jane.smith "Data Entry", Reviewer
+PS C:\> Add-DuUser -Path Orch1Du:\DocumentProcessing, Orch1Du:\MyProject -Recurse User reviewer@uipath.com "Data Entry" -WhatIf
 ```
 
-Adds user jane.smith with "Data Entry" and Reviewer roles to Document Understanding projects in the InvoiceProcessing folder.
+Adds user jane.smith@uipath.com with "Data Entry" and Reviewer roles to Document Understanding projects in the InvoiceProcessing folder.
 
 ### Example 3
 ```powershell
-PS Orch1:\DocumentProcessing> Add-DuUser User admin.user, lead.user Administrator -WhatIf
+PS Orch1Du:\DocumentProcessing> Add-DuUser User admin@uipath.com, lead@uipath.com Administrator -WhatIf
 ```
 
-Shows what would happen when adding admin.user and lead.user with Administrator roles to Document Understanding projects in the current folder.
+Shows what would happen when adding admin@uipath.com and lead@uipath.com with Administrator roles to Document Understanding projects in the current folder.
 
 ### Example 4
 ```powershell
-PS C:\> Add-DuUser -Path Orch1:\Reports User *analyst* Validator -Recurse
+PS C:\> Add-DuUser -Path Orch1Du:\Reports User *analyst* Validator -Recurse
 ```
 
 Adds all users with usernames containing "analyst" with Validator role to Document Understanding projects in the Reports folder and all its subfolders.
 
 ### Example 5
 ```powershell
-PS Orch1:\> Add-DuUser -Recurse User document.reviewer "Data Entry" -WhatIf
+PS Orch1Du:\> Add-DuUser -Recurse User reviewer@uipath.com "Data Entry" -WhatIf
 ```
 
-Shows what would happen when adding document.reviewer with "Data Entry" role to Document Understanding projects across all folders recursively.
+Shows what would happen when adding reviewer@uipath.com with "Data Entry" role to Document Understanding projects across all folders recursively.
 
 ### Example 6
 ```powershell
-PS Orch1:\DocumentProcessing> Get-OrchUser | Where-Object {$_.Email -like "*@contoso.com"} | Add-DuUser -Type User -Roles Validator
+PS Orch1Du:\DocumentProcessing> Get-OrchUser | Where-Object {$_.Email -like "*@uipath.com"} | Add-DuUser -Type User -Roles Validator
 ```
 
-Gets all users with contoso.com email domain and adds them with Validator role to Document Understanding projects using pipeline input.
+Gets all users with uipath.com email domain and adds them with Validator role to Document Understanding projects using pipeline input.
 
 ## PARAMETERS
 

@@ -20,7 +20,7 @@ Add-OrchAssetLink [-Name] <String[]> [-Link] <String[]> [-Path <String[]>] [-Pro
 ## DESCRIPTION
 The Add-OrchAssetLink cmdlet creates links for assets, allowing them to be shared across multiple folders within UiPath Orchestrator tenants. This cmdlet enables asset sharing by linking existing assets from one folder to other specified folders.
 
-This is a folder entity cmdlet. If you receive the error "Use Set-Location cmdlet (cd command) to navigate to the target folder first", navigate to the folder containing the source assets or use the -Path parameter to specify the target folder.
+This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.
 
 Use the -Name parameter to specify which assets to link and the -Link parameter to specify the target folders where the asset links should be created. Asset links provide access to the same asset data across multiple folder contexts without duplicating the asset content.
 

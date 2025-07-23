@@ -172,7 +172,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Object
 ## NOTES
-これはフォルダーエンティティコマンドレットです。Set-Location を使用してフォルダーに移動するか、-Path パラメーターを使用してソースフォルダーを指定する必要があります。
+これはフォルダーエンティティコマンドレットです。Set-Location（cd コマンド）を使用してフォルダーに移動するか、-Path パラメーターを使用してソースフォルダーを指定する必要があります。
 
 アセットリンクにより、実際のアセットコンテンツを複製することなく、複数のフォルダーから同じアセットにアクセスできます。リンク作成の成功を確認するには Get-OrchAssetLink を使用してください。
 

@@ -48,7 +48,7 @@ PS Orch1Du:\> Get-DuExtractor -Recurse
 
 ### Example 3
 ```powershell
-PS Orch1Du:\MyProject> Get-DuExtractor "Invoice*"
+PS Orch1Du:\MyProject> Get-DuExtractor Invoice*
 ```
 
 ワイルドカードパターンマッチングを使用して、名前が"Invoice"で始まる抽出器を取得します。
@@ -69,7 +69,7 @@ PS Orch1Du:\MyProject> Get-DuExtractor | Where-Object {$_.Status -eq "Published"
 
 ### Example 6
 ```powershell
-PS Orch1Du:\> Get-DuExtractor -Path "Orch1Du:\InvoiceProject", "Orch1Du:\ContractProject"
+PS Orch1Du:\> Get-DuExtractor -Path InvoiceProject, ContractProject
 ```
 
 現在の場所を変更せずに、特定のDocument Understandingプロジェクトから抽出器を取得します。
@@ -161,9 +161,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### UiPath.PowerShell.Entities.DuExtractor
 ## NOTES
 
-このコマンドレットはDocument Understandingプロジェクト内のフォルダーエンティティで動作し、以下のいずれかが必要です：
-- Set-Location（cd）を使用したターゲットプロジェクトへの移動、または
-- -Pathまたは-Recurseパラメーターを使用したターゲットプロジェクトの指定
+これはフォルダエンティティコマンドレットです。このコマンドレットを使用するには、まずSet-Location（cd コマンド）を使用してターゲットフォルダに移動するか、-Path、-Recurse、または-Depthパラメーターを使用してターゲットフォルダを指定する必要があります。
 
 **重要:** 最適なPowerShell IntelliSenseサポートのために、複数のパラメーターを使用する場合は、他のパラメーターの前に-Pathまたは-Recurseを指定してください。
 

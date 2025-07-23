@@ -19,7 +19,7 @@ Get-TmProjectSetting [-Path <String[]>] [-Recurse] [-ProgressAction <ActionPrefe
 ## DESCRIPTION
 Get-TmProjectSettingコマンドレットは、Test Managerプロジェクトの構成設定を取得します。これらの設定には、プロジェクトプレフィックス、テストステップの最大数、タイムゾーン構成、およびプロジェクト識別子が含まれます。
 
-このコマンドレットは、UiPathOrchTmプロバイダーで動作し、フォルダーエンティティ操作です。Set-Location（cd）を使用して特定のTest Managerプロジェクトフォルダーに移動するか、-Pathまたは-Recurseパラメータを使用して対象フォルダーを指定する必要があります。
+このコマンドレットは、UiPathOrchTmプロバイダーで動作し、フォルダーエンティティ操作です。Set-Location（cdコマンド）を使用して特定のTest Managerプロジェクトフォルダーに移動するか、-Pathまたは-Recurseパラメータを使用して対象フォルダーを指定する必要があります。
 
 このコマンドレットは、UiPathOrchTmプロバイダーのPSDriveで動作します。構成ファイルのスコープに"TM."が含まれている場合、UiPathOrchTmプロバイダーのPSDriveが自動的に追加されます。これはGet-PSDriveコマンドレットで確認できます。構成ファイルは、Edit-OrchConfigコマンドレットで開くことができます。
 

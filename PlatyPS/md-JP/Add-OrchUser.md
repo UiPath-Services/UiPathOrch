@@ -82,7 +82,7 @@ Orch1:,DirectoryUser,jane.smith,Administrator
 
 ### Example 6
 ```powershell
-PS Orch1:\> Get-PmUser *@contoso.com | Add-OrchUser -Roles Developer -WhatIf
+PS Orch1:\> Get-PmUser *@uipath.com | Add-OrchUser -Roles Developer -WhatIf
 ```
 
 contoso.com メールドメインを持つすべての組織ユーザーを取得し、現在のテナントに Developer ロールで追加します。
