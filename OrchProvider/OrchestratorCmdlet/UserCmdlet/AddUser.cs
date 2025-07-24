@@ -226,8 +226,8 @@ public class AddUserCommand : OrchestratorPSCmdlet
 
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
-    [ArgumentCompleter(typeof(TypeCompleter))]
-    [ValidateDictionaryKey(typeof(TypeCompleter), AllowWildcard = true)]
+    [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<DirectoryTypeItems, int>))]
+    [ValidateDictionaryKey<DirectoryTypeItems, int>(AllowWildcard = true)]
     public string[]? Type { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
@@ -326,28 +326,6 @@ public class AddUserCommand : OrchestratorPSCmdlet
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
-
-    private class TypeCompleter : OrchArgumentCompleter
-    {
-        public override IEnumerable<CompletionResult> CompleteArgument(
-            string commandName,
-            string parameterName,
-            string wordToComplete,
-            CommandAst commandAst,
-            IDictionary fakeBoundParameters)
-        {
-            var wpType = CreateWPListFromParameter(commandAst, "Type", TPositional.Parameters, wordToComplete);
-
-            var wp = CreateWPFromWordToComplete(wordToComplete);
-
-            foreach (var t in Types.Values
-                .Where(t => wp.IsMatch(t))
-                .ExcludeByWildcards(t => t, wpType))
-            {
-                yield return new CompletionResult(t);
-            }
-        }
-    }
 
     private class UserNameCompleter : OrchArgumentCompleter
     {

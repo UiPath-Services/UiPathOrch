@@ -70,7 +70,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
 
     [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<JobStateItems, int>))]
-    [ValidateDictionaryKey(typeof(JobStateItems))]
+    [ValidateDictionaryKey<JobStateItems, int>]
     public string[]? State { get; set; }
 
     [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
