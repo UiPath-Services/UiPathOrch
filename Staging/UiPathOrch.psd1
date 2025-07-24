@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.14.8'
+ModuleVersion = '0.9.14.9'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -388,17 +388,9 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Fixed an issue where the -Recurse parameter of the Add-DuUser cmdlet was not functioning. You can now add users to all Document Understanding projects at once, as shown below:
+        ReleaseNotes = '- In the previous release, the validator for the -Type parameter of the Add-OrchUser cmdlet was not functioning as expected.
 
-  Orch1Du:\> Add-DuUser -Recurse DirectoryUser user1@uipath.com, user2@uipath.com ''DU Data Annotator''
-
-- Note: The following usage, which has always worked as intended, achieves the same result:
-
-  Orch1Du:\> Add-DuUser -Path * DirectoryUser user1@uipath.com, user2@uipath.com ''DU Data Annotator''
-
-- Added validators to the following parameters to ensure that errors are raised for invalid values. This is especially helpful when using UiPathOrch via PowerShell.MCP, where LLMs cannot use completers:
-  - The -Type parameter of cmdlets such as Get-OrchUser and Add-OrchUser
-  - The -Last parameter of cmdlets such as Get-OrchJob and Get-OrchAuditLog
+- Improved the implementation of certain validators by replacing the use of runtime type information with generic type parameters.
 '
 
         # Prerelease string of this module

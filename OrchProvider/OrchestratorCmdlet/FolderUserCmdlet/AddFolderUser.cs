@@ -15,7 +15,7 @@ public class AddFolderUserCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<DirectoryTypeItems, int>))]
-    [ValidateDictionaryKey(typeof(DirectoryTypeItems))]
+    [ValidateDictionaryKey<DirectoryTypeItems, int>]
     public string? Type { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
@@ -49,7 +49,7 @@ public class AddFolderUserCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            if (string.IsNullOrEmpty(wordToComplete))
+if (string.IsNullOrEmpty(wordToComplete))
             {
                 yield return new CompletionResult(PathTools.EscapePSText("Please enter at least one character to search."));
                 yield break;

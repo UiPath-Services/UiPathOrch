@@ -1,3 +1,9 @@
+Version: 0.9.14.9
+- In the previous release, the validator for the -Type parameter of the Add-OrchUser cmdlet was not functioning as expected.
+
+- Improved the implementation of certain validators by replacing the use of runtime type information with generic type parameters.
+
+
 Version: 0.9.14.8
 - Fixed an issue where the -Recurse parameter of the Add-DuUser cmdlet was not functioning. You can now add users to all Document Understanding projects at once, as shown below:
 
