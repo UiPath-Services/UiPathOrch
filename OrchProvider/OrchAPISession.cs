@@ -565,10 +565,10 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerableWithoutPagingImpl<T[]>(_base_url_identity, endPoint, folderId, query);
     }
 
-    private T[]? GetEnumerableWithoutPagingPortal<T>(string endPoint, Int64? folderId = null, string? query = null)
-    {
-        return GetEnumerableWithoutPagingImpl<T[]>(_base_url_portal, endPoint, folderId, query);
-    }
+    //private T[]? GetEnumerableWithoutPagingPortal<T>(string endPoint, Int64? folderId = null, string? query = null)
+    //{
+    //    return GetEnumerableWithoutPagingImpl<T[]>(_base_url_portal, endPoint, folderId, query);
+    //}
 
     public string HttpRequestImpl(HttpMethod method, string baseUrl, string endPoint, Int64? folderId, string? payload)
     {
@@ -1188,30 +1188,33 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<UserRobots>("/odata/Sessions/UiPath.Server.Configuration.OData.GetUserRobots", folderId, "&$filter=startswith(Robot/Username,'autogen\\') eq false and Robot/Username ne ''");
     }
 
-    // TODO: きれいに書き直す。StartJob() とか参考に。
     public void AddMachinesToFolder(Int64 folderId, IEnumerable<Int64> machineIds)
     {
-        var payload = new Dictionary<string, object?>();
-        payload["associations"] = new Dictionary<string, object?>()
+        UpdateMachinesToFolderAssociationsRequest payload = new()
         {
-            { "FolderId", folderId },
-            { "AddedMachineIds", machineIds },
-            { "RemovedMachineIds", Array.Empty<int>() }
+            associations = new()
+            {
+                FolderId = folderId,
+                AddedMachineIds = machineIds.ToArray(),
+                RemovedMachineIds = []
+            }
         };
 
         // 何も返らない
         HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.UpdateMachinesToFolderAssociations", folderId, payload);
     }
 
-    // TODO: きれいに書き直す。StartJob() とか参考に。
+    // TODO: この API は deprecated かもしれない。Automation Cloud は違う API を call している。
     public void UnassignMachinesFromFolder(Int64 folderId, IEnumerable<Int64> machineIds)
     {
-        var payload = new Dictionary<string, object?>();
-        payload["associations"] = new Dictionary<string, object?>()
+        UpdateMachinesToFolderAssociationsRequest payload = new()
         {
-            { "FolderId", folderId },
-            { "AddedMachineIds", Array.Empty<int>() },
-            { "RemovedMachineIds", machineIds }
+            associations = new()
+            {
+                FolderId = folderId,
+                AddedMachineIds = [],
+                RemovedMachineIds = machineIds.ToArray()
+            }
         };
 
         HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.UpdateMachinesToFolderAssociations", folderId, payload);

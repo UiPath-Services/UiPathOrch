@@ -64,7 +64,7 @@ Adds all users with usernames containing "analyst" with Validator role to Docume
 
 ### Example 5
 ```powershell
-PS Orch1Du:\> Add-DuUser -Recurse User reviewer@uipath.com "Data Entry" -WhatIf
+PS Orch1Du:\> Add-DuUser -Recurse DirectoryUser reviewer@uipath.com "Data Entry" -WhatIf
 ```
 
 Shows what would happen when adding reviewer@uipath.com with "Data Entry" role to Document Understanding projects across all folders recursively.
@@ -185,7 +185,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

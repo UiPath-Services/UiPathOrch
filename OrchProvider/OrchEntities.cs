@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities.JsonConverter;
@@ -1415,6 +1416,20 @@ public class MachineFolder
     public bool? PropagateToSubFolders { get; set; }
     public string? InheritedFromFolderName { get; set; }
     public UpdateInfo? UpdateInfo { get; set; }
+}
+
+// MachinesFolderAssociationsDto
+public class MachinesFolderAssociations
+{
+    public Int64? FolderId { get; set; }
+    public Int64[]? AddedMachineIds { get; set; }
+    public Int64[]? RemovedMachineIds { get; set; }
+}
+
+// UpdateMachinesToFolderAssociationsRequest
+public class UpdateMachinesToFolderAssociationsRequest
+{
+    public MachinesFolderAssociations? associations { get; set; }
 }
 
 // SimpleFolderDto

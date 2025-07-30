@@ -1248,7 +1248,7 @@ internal static class SessionStateExtentios
 
         if (ret is null || ret.Count == 0)
         {
-            throw new Exception("Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters on UiPathOrchDu drive.");
+            throw new Exception("Use Set-Location cmdlet (alias: cd) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters on UiPathOrchDu drive.");
         }
         return ret;
     }
@@ -1329,7 +1329,7 @@ internal static class SessionStateExtentios
 
         if (ret is null || ret.Count == 0)
         {
-            throw new Exception("Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters on UiPathOrchTm drive.");
+            throw new Exception("Use Set-Location cmdlet (alias: cd) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters on UiPathOrchTm drive.");
         }
         return ret;
     }
