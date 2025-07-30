@@ -2,8 +2,10 @@
 using System.Data;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using System.Reflection.PortableExecutable;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
 using TPositional = UiPath.PowerShell.Positional.Name_PropagateToSubFolders;
 
 namespace UiPath.PowerShell.Commands;
@@ -11,6 +13,8 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsCommon.Add, "OrchFolderMachine", SupportsShouldProcess = true)]
 public class AddFolderMachineCommand : OrchestratorPSCmdlet
 {
+    private Dictionary<(OrchDriveInfo Drive, Folder Folder), Dictionary<MachineFolder, bool?>>? _csvLines = null;
+
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NameCompleter))]
     public string[]? Name { get; set; }
@@ -63,21 +67,7 @@ public class AddFolderMachineCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        // この修正をしておくことが必要だ。そうでないと、CSV インポート時に解決できない Path があると
-        // CSV の後続の行の処理が全部キャンセルされてしまう。。
-        // 全ての cmdlet をまとめて修正したい。
-        // OrchDriveInfo.EnumFolders() の引数に IWritableHost を渡して、エラー処理を呼び出し先で行う方が安全に漏れなく修正できそうだ。
-        //List<(OrchDriveInfo drive, Folder folder)> drivesFolders;
-        //try
-        //{
-        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
-        //}
-        //catch (Exception ex)
-        //{
-        //    WriteError(new ErrorRecord(new OrchException(string.Join(',', Path!), ex), "GetFolderMachineError", ErrorCategory.InvalidOperation, this));
-        //    return;
-        //}
-
+        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth).Where(df => df.folder.FolderType != "Personal").ToList();
         var wpName = Name.ConvertToWildcardPatternList();
 
         using var results = OrchThreadPool.RunForEach(drivesFolders,
@@ -96,61 +86,80 @@ public class AddFolderMachineCommand : OrchestratorPSCmdlet
                 if (machines is null) continue;
                 var (drive, folder) = result.Source;
 
-                if (folder.FolderType == "Personal") continue;
-
-                var addingMachines = machines!.FilterByWildcards(m => m?.Name, wpName).ToList();
-                // TODO: これ入れないと。このままだといまいちな感じ。Name を複数指定したとき、ひとつでも合致すれば警告が出ない。
-                // Name をひとつずつ確認していかないといけない。
-                //if (addingMachines.Count == 0)
-                //{
-                //    WriteWarning($"'{folder.GetPSPath()}': No matching machine found with '{string.Join(',', Name!)}' in {drive.NameColonSeparator}.");
-                //    continue;
-                //}
+                var addingMachines = machines!
+                    .FilterByWildcards(m => m?.Name, wpName)
+                    .OrderBy(m => m.Name)
+                    .ToList();
 
                 string targetFolder = folder.GetPSPath();
-                try
+                foreach (var targetMachine in addingMachines)
                 {
-                    var machineIds = addingMachines.Select(m => m.Id ?? 0);
-                    string targetMachines = string.Join(", ", addingMachines.Select(m => m.Name!));
+                    if (string.IsNullOrEmpty(targetMachine.Name)) continue;
 
-                    string target = $"Item: {targetMachines} Destination: {folder.GetPSPath()}";
-                    if (ShouldProcess(target, "Add Folder Machines"))
+                    string target = $"Item: {targetMachine.Name} Destination: {folder.GetPSPath()}";
+                    if (ShouldProcess(target, "Add Folder Machine"))
                     {
-                        drive.OrchAPISession.AddMachinesToFolder(folder.Id ?? 0, machineIds);
-                        drive.FolderMachinesAssigned.ClearCache(folder);
-                        drive.FolderMachinesAssignable.ClearCache(folder);
-                        drive.MachinesRobots.ClearCache(folder);
-
-                        // 非 null の場合に処理する
-                        // machine を add するだけなら true の場合のみ処理すればいいのだけど
-                        // 実際には、machine を update する場合もあるから、false も処理しないといけない。
-                        // 既存のと同じマシンを add しただけでは、既存のマシンの PropagateToSubFolders は変化しない。
-                        // これ、Update-OrchFolderMachine も作るべきなのか？
-                        bool? bPropagateToSubFolders = PropagateToSubFolders.ToNullableBool();
-                        if (bPropagateToSubFolders is not null)
+                        _csvLines ??= [];
+                        if (!_csvLines.TryGetValue((drive, folder), out var entry))
                         {
-                            foreach (var machineId in machineIds)
-                            {
-                                try
-                                {
-                                    drive.OrchAPISession.SetFolderMachineInherit(folder.Id!.Value, machineId, bPropagateToSubFolders.Value);
-                                }
-                                catch (Exception ex)
-                                {
-                                    WriteError(new ErrorRecord(new OrchException(targetFolder, ex), "SetFolderMachineInheritError", ErrorCategory.InvalidOperation, folder));
-                                }
-                            }
+                            entry = [];
+                            _csvLines[(drive, folder)] = entry;
                         }
+                        entry[targetMachine] = PropagateToSubFolders.ToNullableBool();
                     }
-                }
-                catch (Exception ex)
-                {
-                    WriteError(new ErrorRecord(new OrchException(targetFolder, ex), "AddFolderMachineError", ErrorCategory.InvalidOperation, folder));
                 }
             }
             catch (OrchException ex)
             {
                 WriteError(new ErrorRecord(ex, "GetFolderMachineError", ErrorCategory.InvalidOperation, ex.Target));
+            }
+        }
+    }
+
+    protected override void EndProcessing()
+    {
+        if (_csvLines == null) return;
+
+        var sortedParameters = _csvLines
+            .OrderBy(kv => kv.Key.Drive.Name)
+            .ThenBy(kv => kv.Key.Folder.FullyQualifiedNameOrderable);
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var param in sortedParameters)
+        {
+            cancelHandler.Token.ThrowIfCancellationRequested();
+
+            var (drive, folder) = param.Key;
+            var machinesPropagatesPairs = param.Value;
+            var machineIds = machinesPropagatesPairs.Keys.Where(m => m.Id is not null).Select(m => m.Id!.Value).ToList();
+            if (machineIds.Count == 0) continue;
+            try
+            {
+                drive.OrchAPISession.AddMachinesToFolder(folder.Id ?? 0, machineIds);
+                drive.FolderMachinesAssigned.ClearCache(folder);
+                drive.FolderMachinesAssignable.ClearCache(folder);
+                drive.MachinesRobots.ClearCache(folder);
+            }
+            catch (Exception ex)
+            {
+                WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "AddFolderMachineError", ErrorCategory.InvalidOperation, folder));
+            }
+
+            foreach (var (machine, propagateToSubFolders) in machinesPropagatesPairs)
+            {
+                cancelHandler.Token.ThrowIfCancellationRequested();
+
+                if (propagateToSubFolders.GetValueOrDefault())
+                {
+                    try
+                    {
+                        drive.OrchAPISession.SetFolderMachineInherit(folder.Id!.Value, machine.Id!.Value, propagateToSubFolders.Value);
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteError(new ErrorRecord(new OrchException(machine.GetPSPath(), ex), "SetFolderMachineInheritError", ErrorCategory.InvalidOperation, folder));
+                    }
+                }
             }
         }
     }

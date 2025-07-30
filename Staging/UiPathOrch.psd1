@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.14.9'
+ModuleVersion = '0.9.14.10'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -388,9 +388,9 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- In the previous release, the validator for the -Type parameter of the Add-OrchUser cmdlet was not functioning as expected.
+        ReleaseNotes = '- Improved the behavior of Risk Management parameters (-WhatIf, -Confirm, -Verbose) in the Add-OrchFolderMachine cmdlet. Previously, when multiple machines were specified for the -Name parameter, these parameters applied collectively. They now apply individually to each machine.
 
-- Improved the implementation of certain validators by replacing the use of runtime type information with generic type parameters.
+- Added the PropagateToSubFolders column to the default view of the Get-OrchFolderMachine cmdlet.
 '
 
         # Prerelease string of this module

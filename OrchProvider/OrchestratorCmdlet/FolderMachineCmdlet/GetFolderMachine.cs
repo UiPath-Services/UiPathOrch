@@ -18,6 +18,10 @@ public class GetFolderMachineCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(FolderMachineNameCompleter<TPositional>))]
     public string[]? Name { get; set; }
 
+    // これ足すの大変だな。。
+    //[Parameter]
+    //public SwitchParameter IncludeInherited { get; set; }
+
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }

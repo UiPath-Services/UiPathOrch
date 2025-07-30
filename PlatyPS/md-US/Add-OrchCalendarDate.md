@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,57 +18,79 @@ Add-OrchCalendarDate [-Name] <String[]> [[-ExcludedDate] <DateTime[]>] [-Include
 ```
 
 ## DESCRIPTION
-The Add-OrchCalendarDate cmdlet adds specified dates to Non-Working Days calendars in UiPath Orchestrator. This cmdlet allows you to define non-working days such as holidays, maintenance periods, or other business-specific dates when automated processes should not run.
+The Add-OrchCalendarDate cmdlet adds specified dates to Non-Working Days calendars in UiPath Orchestrator. This cmdlet allows you to define non-working days such as holidays, maintenance periods, or other business-specific dates when automated processes should not run or should follow alternative scheduling patterns.
 
-Use the -Name parameter to specify which calendars to update and the -ExcludedDate parameter to provide the dates to add as non-working days. The cmdlet supports adding multiple dates to multiple calendars simultaneously.
+Use the -Name parameter to specify which calendars to update and the -ExcludedDate parameter to provide the dates to add as non-working days. The cmdlet supports adding multiple dates to multiple calendars simultaneously, enabling efficient bulk operations for holiday planning and maintenance scheduling.
 
-By default, the cmdlet prevents adding past dates to maintain calendar accuracy. Use the -IncludePastDate parameter to allow adding historical dates when needed for calendar setup or data migration scenarios.
+By default, the cmdlet prevents adding past dates to maintain calendar accuracy and prevent scheduling conflicts. Use the -IncludePastDate parameter to allow adding historical dates when needed for calendar setup, data migration scenarios, or retroactive holiday additions.
 
-This cmdlet operates on tenant-level calendar entities and supports wildcard patterns for calendar names, enabling bulk operations across multiple calendars.
+This cmdlet operates on tenant-level calendar entities and supports wildcard patterns for calendar names, enabling bulk operations across multiple calendars. The -Path parameter allows updating calendars across different Orchestrator tenants.
+
+Non-working days added to calendars will affect process scheduling, trigger execution, and SLA calculations within UiPath Orchestrator, ensuring automation processes respect business calendar requirements.
 
 Primary Endpoint: GET /odata/Calendars, GET /odata/Calendars({calendarId}), PUT /odata/Calendars({calendarId})
 
-OAuth required scopes: OR.Settings or OR.Settings.Read or OR.Settings.Write
+OAuth required scopes: OR.Settings or OR.Settings.Write
 
-Required permissions: Settings.Edit
+Required permissions: Settings.View, Settings.Edit
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS Orch1:\> Add-OrchCalendarDate MyCalendar1 (Get-Date).AddDays(7)
+PS Orch1:\> Add-OrchCalendarDate MyCalendar1 '2025/07/31' -WhatIf
 ```
 
-Adds a date 7 days from today to the "MyCalendar1" calendar as a non-working day using positional parameters.
+Tests adding a single date to the calendar using -WhatIf to preview the operation.
 
 ### Example 2
 ```powershell
-PS Orch1:\> Add-OrchCalendarDate MyCalendar1 2025-12-25, 2025-12-26
+PS Orch1:\> Add-OrchCalendarDate MyCalendar1 '2025/07/31','2025/08/07'
 ```
 
-Adds Christmas Day and Boxing Day to the "MyCalendar1" calendar as non-working days.
+Adds multiple dates to the calendar in a single operation.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Add-OrchCalendarDate My*, Your* (Get-Date).AddDays(14)
+PS Orch1:\> Add-OrchCalendarDate HolidayCalendar '2024/12/25'
 ```
 
-Adds a date 14 days from today to all calendars matching "My*" and "Your*" patterns using wildcards.
+Adds Christmas Day as a non-working day to the HolidayCalendar.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Add-OrchCalendarDate MyCalendar1 2025-01-01 -IncludePastDate -WhatIf
+PS Orch1:\> Add-OrchCalendarDate CompanyCalendar '2023/12/15' -IncludePastDate
 ```
 
-Shows what would happen when adding a past date to the calendar with the -IncludePastDate parameter using -WhatIf for safety.
+Adds a past date using the -IncludePastDate parameter for historical calendar setup.
 
 ### Example 5
 ```powershell
-PS Orch1:\> $holidays = 2025-12-25, 2025-12-31, 2026-01-01
-PS Orch1:\> Add-OrchCalendarDate MyCalendar $holidays
+PS C:\> Add-OrchCalendarDate -Path Orch1:, Orch2: GlobalHolidays '2024/12/25'
 ```
 
-Adds multiple holiday dates stored in a variable to the calendar.
+Adds the same non-working day to calendars across multiple tenants.
+
+### Example 6
+```powershell
+PS Orch1:\> Add-OrchCalendarDate *Holiday* '2024/11/28'
+```
+
+Adds a date to all calendars with Holiday in their name using wildcard pattern.
+
+### Example 7
+```powershell
+PS Orch1:\> Add-OrchCalendarDate MaintenanceCalendar '2025/01/01','2025/01/02','2025/01/03'
+```
+
+Adds multiple consecutive dates for a maintenance period.
+
+### Example 8
+```powershell
+PS Orch1:\> Add-OrchCalendarDate WorkCalendar '2025/12/24','2025/12/25','2025/12/26' -WhatIf
+```
+
+Tests adding multiple holiday dates to preview which dates would be added.
 
 ## PARAMETERS
 
@@ -149,7 +171,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Specifies how PowerShell responds to progress updates generated by a script, cmdlet, or provider.
 
 ```yaml
 Type: ActionPreference
@@ -185,13 +207,23 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String[]
 ### System.DateTime[]
+### System.String[]
+Calendar names can be piped to this cmdlet.
+
+### System.DateTime[]
+DateTime objects can be piped to this cmdlet for the -ExcludedDate parameter.
+
 ## OUTPUTS
 
 ### System.Object
-## NOTES
-This cmdlet operates on tenant-level calendar entities. By default, past dates cannot be added to maintain calendar accuracy. Use the -IncludePastDate parameter when adding historical dates is necessary.
+### UiPath.PowerShell.Entities.Calendar
+This cmdlet returns Calendar objects representing the updated calendars.
 
-Use Get-OrchCalendar to list available calendars and verify successful date additions.
+## NOTES
+- By default, past dates cannot be added to calendars. Use -IncludePastDate to override this restriction.
+- The cmdlet supports wildcard patterns in calendar names for bulk operations.
+- Non-working days affect process scheduling, trigger execution, and SLA calculations.
+- Calendar changes take effect immediately for new scheduling operations.
 
 ## RELATED LINKS
 
@@ -199,4 +231,6 @@ Use Get-OrchCalendar to list available calendars and verify successful date addi
 
 [Remove-OrchCalendarDate](Remove-OrchCalendarDate.md)
 
-[Copy-OrchCalendar](Copy-OrchCalendar.md)
+[Copy-OrchCalendar](Copy-OrchCalendar.md)[Get-OrchCalendar](Get-OrchCalendar.md)
+[Remove-OrchCalendarDate](Remove-OrchCalendarDate.md)
+[New-OrchCalendar](New-OrchCalendar.md)
