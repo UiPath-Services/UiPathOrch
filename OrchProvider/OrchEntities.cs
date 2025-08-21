@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities.JsonConverter;
@@ -3468,6 +3467,14 @@ public class BucketFoldersShare
     public List<Int64>? ToRemoveFolderIds { get; set; }
 }
 
+// BlobFileAccessDto
+public class BlobFileAccess
+{
+    public string? Uri { get; set; }
+    public string? Verb { get; set; }
+    public bool? RequiresAuth { get; set; }
+    public ResponseDictionary? Headers { get; set; }
+}
 #endregion
 
 #region Calendar

@@ -34,33 +34,26 @@ Required permissions: [PLACEHOLDER - requires verification of machine client sec
 
 ### Example 1
 ```powershell
-PS C:\> Add-OrchMachineClientSecret ProductionMachine
-```
-
-Adds a new client secret to the machine named "ProductionMachine".
-
-### Example 2
-```powershell
-PS C:\> Add-OrchMachineClientSecret Machine1, Machine2
+PS Orch1:\> Add-OrchMachineClientSecret -Path Orch1:\Shared Machine01, Machine02
 ```
 
 Adds new client secrets to multiple machines specified in a comma-separated list.
 
+### Example 2
+```powershell
+PS C:\> Add-OrchMachineClientSecret -Path Orch1: Prod* -WhatIf
+```
+
+Shows what would happen if client secrets were added to all machines whose names start with Prod, without actually performing the operation.
+
 ### Example 3
 ```powershell
-PS C:\> Add-OrchMachineClientSecret Prod* -WhatIf
+PS C:\> Add-OrchMachineClientSecret Machine01 -Path Orch1:, Orch2:
 ```
 
-Shows what would happen if client secrets were added to all machines whose names start with "Prod", without actually performing the operation.
+Adds a client secret to the machine named Machine01 in multiple Orchestrator environments.
 
 ### Example 4
-```powershell
-PS C:\> Add-OrchMachineClientSecret TestMachine -Path Orch1:, Orch2:
-```
-
-Adds a client secret to the machine named "TestMachine" in multiple Orchestrator environments.
-
-### Example 5
 ```powershell
 PS C:\> $secret = Add-OrchMachineClientSecret AutomationServer -Confirm
 PS C:\> $secret | Select-Object MachineKey, ClientSecret
@@ -68,9 +61,9 @@ PS C:\> $secret | Select-Object MachineKey, ClientSecret
 
 Adds a client secret with confirmation prompt and captures the returned secret information for configuration.
 
-### Example 6
+### Example 5
 ```powershell
-PS C:\> Get-OrchMachine | Where-Object {$_.Type -eq "Standard"} | Add-OrchMachineClientSecret -WhatIf
+PS C:\> Get-OrchMachine | Where-Object {$_.Type Standard} | Add-OrchMachineClientSecret -WhatIf
 ```
 
 Identifies standard machines and shows what client secrets would be added without actually performing the operation.

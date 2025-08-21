@@ -2,7 +2,6 @@
 using System.Data;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using System.Reflection.PortableExecutable;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
@@ -153,7 +152,7 @@ public class AddFolderMachineCommand : OrchestratorPSCmdlet
                 {
                     try
                     {
-                        drive.OrchAPISession.SetFolderMachineInherit(folder.Id!.Value, machine.Id!.Value, propagateToSubFolders.Value);
+                        drive.OrchAPISession.SetFolderMachineInherit(folder.Id!.Value, machine.Id!.Value, propagateToSubFolders.GetValueOrDefault());
                     }
                     catch (Exception ex)
                     {

@@ -30,8 +30,7 @@ public static class IWritableHostExtensions
         //if (strDstRootFolder != "") strDstRootFolder += '/';
 
         // srcFolder の、srcRootFolder からの相対パスを取得
-        string relativePath = srcFolder.FullyQualifiedName![srcRootFolder.FullyQualifiedName!.Length..];
-        relativePath = relativePath.TrimStart('/').TrimEnd('/');
+        string relativePath = srcFolder.GetRelativePath(srcRootFolder);
 
         string strDstFolder = null;
         if (strDstRootFolder == "")

@@ -19,7 +19,7 @@ public class GetBucketItemCommand : OrchestratorPSCmdlet
     public string[]? Name { get; set; }
 
     [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(FullPathCompleter))]
+    [ArgumentCompleter(typeof(BucketFullPathCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? FullPath { get; set; }
 
@@ -32,49 +32,6 @@ public class GetBucketItemCommand : OrchestratorPSCmdlet
 
     [Parameter]
     public uint Depth { get; set; }
-
-    private class FullPathCompleter : OrchArgumentCompleter
-    {
-        public override IEnumerable<CompletionResult> CompleteArgument(
-            string commandName,
-            string parameterName,
-            string wordToComplete,
-            CommandAst commandAst,
-            IDictionary fakeBoundParameters)
-        {
-            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-
-            // パラメータで選択された Name のみ対象とする
-            var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
-
-            // パラメータで選択済みの FullPath は、候補から除外する
-            var wpFullPath = CreateWPListFromParameter(commandAst, "FullPath", TPositional.Parameters, wordToComplete);
-
-            var wp = CreateWPFromWordToComplete(wordToComplete);
-
-            var results = ParallelResults3.GroupBy(drivesFolders, df =>
-            {
-                var buckets = df.drive.Buckets.Get(df.folder).FilterByWildcards(e => e?.Name, wpName);
-                return ParallelResults3.GroupBy(buckets, bucket =>
-                    df.drive.BucketFiles.Get(df.folder, bucket));
-            });
-
-            foreach (var result in results)
-            {
-                foreach (var bucket in result)
-                {
-                    foreach (var item in bucket
-                        .Where(e => wp.IsMatch(e.FullPath))
-                        .ExcludeByWildcards(e => e?.FullPath, wpFullPath)
-                        .OrderBy(e => e.FullPath))
-                    {
-                        string tiphelp = TipHelp(item);
-                        yield return new CompletionResult(PathTools.EscapePSText(item.FullPath), item.FullPath, CompletionResultType.ParameterValue, tiphelp);
-                    }
-                }
-            }
-        }
-    }
 
     protected override void ProcessRecord()
     {

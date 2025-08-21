@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.14.10'
+ModuleVersion = '0.9.14.11'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -274,6 +274,7 @@ CmdletsToExport = @(
 'Remove-OrchBucket',
 
 'Get-OrchBucketItem',
+'Export-OrchBucketItem',
 
 'Get-OrchWebhook',
 'Copy-OrchWebhook',
@@ -388,9 +389,19 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Improved the behavior of Risk Management parameters (-WhatIf, -Confirm, -Verbose) in the Add-OrchFolderMachine cmdlet. Previously, when multiple machines were specified for the -Name parameter, these parameters applied collectively. They now apply individually to each machine.
+        ReleaseNotes = '- Added the Export-OrchBucketItem cmdlet. This cmdlet exports files contained in storage buckets to a local folder.
 
-- Added the PropagateToSubFolders column to the default view of the Get-OrchFolderMachine cmdlet.
+  # Exports all files from all buckets in the current folder to the current directory on drive c:
+  Export-OrchBucketItem
+
+  # Exports all files from the specified bucket in the current folder
+  Export-OrchBucketItem MyBucket
+
+  # Exports the specified files from all buckets in the current folder
+  Export-OrchBucketItem * MyFile*, YourPic*
+
+  # Exports all files from all buckets across the tenant to the specified local folder
+  Export-OrchBucketItem -Path Orch1:\ -Recurse -Destination c:\tmp
 '
 
         # Prerelease string of this module
