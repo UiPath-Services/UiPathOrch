@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,9 +18,9 @@ Add-OrchAssetLink [-Name] <String[]> [-Link] <String[]> [-Path <String[]>] [-Pro
 ```
 
 ## DESCRIPTION
-The Add-OrchAssetLink cmdlet creates links for assets, allowing them to be shared across multiple folders within UiPath Orchestrator tenants. This cmdlet enables asset sharing by linking existing assets from one folder to other specified folders.
+The Add-OrchAssetLink cmdlet creates links for assets, allowing them to be shared across multiple folders. This cmdlet enables asset sharing by linking existing assets from one folder to other specified folders.
 
-This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.
+This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path parameter.
 
 Use the -Name parameter to specify which assets to link and the -Link parameter to specify the target folders where the asset links should be created. Asset links provide access to the same asset data across multiple folder contexts without duplicating the asset content.
 
@@ -36,7 +36,7 @@ Required permissions: Assets.Edit
 
 ### Example 1
 ```powershell
-PS Orch1:\Shared> Add-OrchAssetLink SampleBooleanAsset Orch1:\root
+PS Orch1:\Shared> Add-OrchAssetLink SampleBooleanAsset \root
 ```
 
 Links the SampleBooleanAsset from the current folder (Shared) to the root folder using positional parameters.
@@ -118,7 +118,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

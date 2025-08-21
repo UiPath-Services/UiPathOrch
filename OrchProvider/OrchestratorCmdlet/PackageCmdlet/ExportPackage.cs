@@ -329,7 +329,7 @@ public class ExportPackageCommand : OrchestratorPSCmdlet
                 var packages = drive.GetPackages(folder);
 
                 string feedFolder = folder.GetPackageFeedFolder();
-                string folderDisplayName = OrchDriveInfo.MakeValidFolderName(feedFolder);
+                string folderDisplayName = feedFolder.MakeValidFolderName();
 
                 string feedId = drive.FolderFeedId.Get(folder);
 

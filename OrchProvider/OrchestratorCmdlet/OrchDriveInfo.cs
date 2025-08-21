@@ -120,19 +120,6 @@ public partial class OrchDriveInfo : PSDriveInfo
         //            return WildcardPattern.Escape("\\" + path.Replace('/', '\\'));
     }
 
-    public static string MakeValidFolderName(string originalString)
-    {
-        string invalidChars = new string(Path.GetInvalidFileNameChars())
-                            + new string(Path.GetInvalidPathChars());
-
-        // 無効な文字を '_' に置換
-        string validString = new(originalString
-          .Select(ch => invalidChars.Contains(ch) ? '_' : ch)
-          .ToArray());
-
-        return validString;
-    }
-
     protected internal Folder? RootFolder;
 
     // TODO: created folder cache sorted by FullyQualifiedName for GetFolder()

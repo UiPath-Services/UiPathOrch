@@ -93,7 +93,7 @@ public partial class OrchAPISession : IDisposable
     private readonly RateLimiter limitter = new(15);
 
     private int http_call_num = 0;
-    private HttpResponseMessage HttpClient_Send(HttpRequestMessage message, CancellationToken cancellationToken = default)
+    private HttpResponseMessage HttpClient_Send(HttpRequestMessage message, HttpClient? httpClient = null)
     {
         //limitter.WaitAsync(cancellationToken).GetAwaiter().GetResult();
         limitter.Wait();
@@ -104,7 +104,8 @@ public partial class OrchAPISession : IDisposable
         try
         {
             reqTime = DateTime.Now;
-            ret = HttpClient!.Send(message, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            HttpClient hc = httpClient ?? HttpClient;
+            ret = hc.Send(message, HttpCompletionOption.ResponseHeadersRead);
             resTime = DateTime.Now;
             return ret;
         }
@@ -151,9 +152,9 @@ public partial class OrchAPISession : IDisposable
 
     #region Authentication
 
-    public OrchAPISession(OrchDriveInfo drive)
+    internal HttpClient InitializeHttpClient(OrchDriveInfo drive)
     {
-        _drive = drive;
+        HttpClient ret;
 
         if (drive._psDrive.Proxy?.Enabled ?? false)
         {
@@ -203,7 +204,7 @@ public partial class OrchAPISession : IDisposable
                 throw new ArgumentException($"Proxy: {ex.Message}", ex);
             }
 
-            _httpClient = new HttpClient(handler);
+            ret = new HttpClient(handler);
         }
         else
         {
@@ -214,17 +215,26 @@ public partial class OrchAPISession : IDisposable
                 {
                     ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => true,
                 };
-                _httpClient = new HttpClient(handler);
+                ret = new HttpClient(handler);
             }
             else
             {
-                _httpClient = new HttpClient();
+                ret = new HttpClient();
             }
         }
 
         var version = Assembly.GetExecutingAssembly().GetName().Version;
         string userAgent = $"UiPathOrch/{version}";
-        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
+        ret.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
+
+        return ret;
+    }
+
+    public OrchAPISession(OrchDriveInfo drive)
+    {
+        _drive = drive;
+
+        _httpClient = InitializeHttpClient(drive);
 
         _authManager = new OrchestratorAuthManager(drive, _httpClient);
         if (_authManager._isUserPassword)
@@ -1832,10 +1842,99 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<BlobFile>($"/odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.GetFiles", folderId, "&directory=%2F&recursive=true");
     }
 
-    public void GetBucketsAcrossFolders(Int64 folderId)
+    public BlobFileAccess? GetBucketReadUri(Int64 folderId, Int64 bucketId, string fullPath)
     {
-        string body = HttpRequest(HttpMethod.Get, "/odata/Buckets/UiPath.Server.Configuration.OData.GetBucketsAcrossFolders", folderId);
+        return HttpRequest<BlobFileAccess>(HttpMethod.Get, $"/odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.GetReadUri?path={fullPath}", folderId);
     }
+
+    private static bool ShouldSkipHeader(string headerName)
+    {
+        if (string.IsNullOrWhiteSpace(headerName)) return true;
+
+        // HttpRequestMessage.Headers で設定できない/危険な代表例を除外
+        return headerName.Equals("Content-Length", StringComparison.OrdinalIgnoreCase)
+            || headerName.Equals("Host", StringComparison.OrdinalIgnoreCase)
+            || headerName.Equals("Connection", StringComparison.OrdinalIgnoreCase)
+            || headerName.Equals("Expect", StringComparison.OrdinalIgnoreCase)
+            || headerName.Equals("Transfer-Encoding", StringComparison.OrdinalIgnoreCase)
+            || headerName.Equals("TE", StringComparison.OrdinalIgnoreCase)
+            || headerName.Equals("Trailer", StringComparison.OrdinalIgnoreCase)
+            || headerName.Equals("Upgrade", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static void TryDeleteFileQuiet(string path)
+    {
+        try { if (!string.IsNullOrEmpty(path) && File.Exists(path)) File.Delete(path); }
+        catch { /* ignore */ }
+    }
+
+    private HttpClient? _httpClientForBucketItem = null;
+    public void ReadBucketItem(BlobFileAccess? access, string destinationPath)
+    {
+        if (access == null || string.IsNullOrWhiteSpace(access.Verb) || string.IsNullOrWhiteSpace(access.Uri))
+            return;
+
+        HttpMethod method = access.Verb.Equals("POST", StringComparison.OrdinalIgnoreCase)
+            ? HttpMethod.Post
+            : HttpMethod.Get;
+
+        if (!Uri.TryCreate(access.Uri, UriKind.Absolute, out var _))
+            throw new ArgumentException($"Invalid Uri: {access.Uri}", nameof(access));
+
+        using var req = new HttpRequestMessage(method, access.Uri);
+
+        if (access.Headers?.Keys is { } keys && access.Headers?.Values is { } vals)
+        {
+            var n = Math.Min(keys.Length, vals.Length);
+            for (int i = 0; i < n; i++)
+            {
+                var k = keys[i];
+                var v = vals[i];
+                if (!string.IsNullOrWhiteSpace(k) && v != null && !ShouldSkipHeader(k))
+                {
+                    req.Headers.TryAddWithoutValidation(k, v);
+                }
+            }
+        }
+
+        // BucketItem の取得時には、Authorization ヘッダを除外しなければいけない。
+        // マルチスレッドで Bucket を取得しているため、_httpClient の default header から Authorization ヘッダを
+        // 一時的に除外することはできない。
+        // BucketItem 専用の HttpClient を準備するのが安全だ。
+        _httpClientForBucketItem ??= InitializeHttpClient(_drive);
+
+        // access.RequiresAuth が true のときには、Authorization を残した状態でリクエストする必要があるのだろうか？
+        using var res = HttpClient_Send(req, _httpClientForBucketItem);
+
+        res.EnsureSuccessStatusCode();
+
+        using var httpStream = res.Content.ReadAsStream();
+        try
+        {
+            using var fileStream = new FileStream(
+                destinationPath,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.None,
+                bufferSize: 1024 * 128,
+                options: FileOptions.SequentialScan
+            );
+
+            httpStream.CopyTo(fileStream);
+            fileStream.Flush(true);
+        }
+        catch
+        {
+            TryDeleteFileQuiet(destinationPath);
+            throw;
+        }
+    }
+
+    // TODO
+    //public void GetBucketsAcrossFolders(Int64 folderId)
+    //{
+    //    string body = HttpRequest(HttpMethod.Get, "/odata/Buckets/UiPath.Server.Configuration.OData.GetBucketsAcrossFolders", folderId);
+    //}
 
     public AccessibleFoldersDto? GetFoldersForBucket(Int64 folderId, Int64 bucketId)
     {

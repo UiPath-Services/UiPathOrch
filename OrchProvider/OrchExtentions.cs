@@ -23,6 +23,18 @@ internal static class FolderExtensions
         return OrchDriveInfo.GetTopParentPath(folder.FullyQualifiedName!);
     }
 
+    /// <summary>
+    /// srcRootFolder からの相対パスを返す
+    /// </summary>
+    public static string GetRelativePath(this Folder srcFolder, Folder srcRootFolder)
+    {
+        if (srcFolder?.FullyQualifiedName == null || srcRootFolder?.FullyQualifiedName == null)
+            throw new ArgumentNullException("srcFolder or srcRootFolder has null FullyQualifiedName.");
+
+        string relativePath = srcFolder.FullyQualifiedName[srcRootFolder.FullyQualifiedName.Length..];
+        return relativePath.TrimStart('/').TrimEnd('/');
+    }
+
     public static string GetPSPath(this Folder entity) => Path.Combine(entity?.Path ?? "", entity?.DisplayName ?? "");
 
     public static string GetPSPath(this Entities.Environment entity)   => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
@@ -325,6 +337,49 @@ internal static class OrchCollectionExtensions
 
 internal static class OrchStringExtensions
 {
+    internal static string MakeValidFolderName(this string originalString)
+    {
+        string invalidChars = new string(Path.GetInvalidFileNameChars())
+                            + new string(Path.GetInvalidPathChars());
+
+        // 無効な文字を '_' に置換
+        string validString = new(originalString
+          .Select(ch => invalidChars.Contains(ch) ? '_' : ch)
+          .ToArray());
+
+        return validString;
+    }
+
+    internal static string MakeValidFileName(this string originalString)
+    {
+        string invalidChars = new string(Path.GetInvalidFileNameChars())
+                            + new string(Path.GetInvalidPathChars());
+
+        string validString = new(originalString
+          .Select(ch => invalidChars.Contains(ch) ? '_' : ch)
+          .ToArray());
+
+        // 末尾の . やスペースは削除
+        validString = validString.TrimEnd('.', ' ');
+
+        // Windows の予約語チェック
+        string[] reservedNames = {
+            "CON","PRN","AUX","NUL",
+            "COM1","COM2","COM3","COM4","COM5","COM6","COM7","COM8","COM9",
+            "LPT1","LPT2","LPT3","LPT4","LPT5","LPT6","LPT7","LPT8","LPT9"
+        };
+        if (reservedNames.Contains(validString.ToUpperInvariant()))
+        {
+            validString = "_" + validString;
+        }
+
+        // 長さ制限 (255)
+        if (validString.Length > 255)
+            validString = validString.Substring(0, 255);
+
+        return validString;
+    }
+
     public delegate bool TryParseHandler<T>(string str, out T result);
 
     public static T? ToNullable<T>(this string? str, TryParseHandler<T> tryParse) where T : struct
