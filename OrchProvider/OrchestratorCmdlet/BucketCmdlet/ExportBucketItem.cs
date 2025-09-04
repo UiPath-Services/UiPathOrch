@@ -1,15 +1,13 @@
 ﻿using System.Management.Automation;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.Name;
+using TPositional = UiPath.PowerShell.Positional.Name_FullPath_Destination;
 
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsData.Export, "OrchBucketItem", SupportsShouldProcess = true)]
-[OutputType(typeof(Bucket))]
-public class ExportBucketCmdlet : OrchestratorPSCmdlet
+public class ExportBucketItemCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BucketNameCompleter<TPositional, False>))]

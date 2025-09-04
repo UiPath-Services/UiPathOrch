@@ -1492,7 +1492,6 @@ public partial class OrchAPISession : IDisposable
         return objBody.value?[0];
     }
 
-
     public BulkItemDtoOfString? UploadLibrary(string libraryFilePath)
     {
         var fileName = System.IO.Path.GetFileName(libraryFilePath);
@@ -1847,6 +1846,11 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<BlobFileAccess>(HttpMethod.Get, $"/odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.GetReadUri?path={fullPath}", folderId);
     }
 
+    public BlobFileAccess? GetBucketWriteUri(Int64 folderId, Int64 bucketId, string fullPath)
+    {
+        return HttpRequest<BlobFileAccess>(HttpMethod.Get, $"/odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.GetWriteUri?path={fullPath}", folderId);
+    }
+
     private static bool ShouldSkipHeader(string headerName)
     {
         if (string.IsNullOrWhiteSpace(headerName)) return true;
@@ -1869,20 +1873,9 @@ public partial class OrchAPISession : IDisposable
     }
 
     private HttpClient? _httpClientForBucketItem = null;
-    public void ReadBucketItem(BlobFileAccess? access, string destinationPath)
+
+    private static void AddHeaders(HttpRequestMessage req, BlobFileAccess access)
     {
-        if (access == null || string.IsNullOrWhiteSpace(access.Verb) || string.IsNullOrWhiteSpace(access.Uri))
-            return;
-
-        HttpMethod method = access.Verb.Equals("POST", StringComparison.OrdinalIgnoreCase)
-            ? HttpMethod.Post
-            : HttpMethod.Get;
-
-        if (!Uri.TryCreate(access.Uri, UriKind.Absolute, out var _))
-            throw new ArgumentException($"Invalid Uri: {access.Uri}", nameof(access));
-
-        using var req = new HttpRequestMessage(method, access.Uri);
-
         if (access.Headers?.Keys is { } keys && access.Headers?.Values is { } vals)
         {
             var n = Math.Min(keys.Length, vals.Length);
@@ -1896,6 +1889,22 @@ public partial class OrchAPISession : IDisposable
                 }
             }
         }
+    }
+
+    public void ReadBucketItem(BlobFileAccess? access, string destinationPath)
+    {
+        if (access == null || string.IsNullOrWhiteSpace(access.Verb) || string.IsNullOrWhiteSpace(access.Uri))
+            return;
+
+        HttpMethod method = access.Verb.Equals("POST", StringComparison.OrdinalIgnoreCase)
+            ? HttpMethod.Post
+            : HttpMethod.Get;
+
+        if (!Uri.TryCreate(access.Uri, UriKind.Absolute, out var _))
+            throw new ArgumentException($"Invalid Uri: {access.Uri}", nameof(access));
+
+        using var req = new HttpRequestMessage(method, access.Uri);
+        AddHeaders(req, access);
 
         // BucketItem の取得時には、Authorization ヘッダを除外しなければいけない。
         // マルチスレッドで Bucket を取得しているため、_httpClient の default header から Authorization ヘッダを
@@ -1929,6 +1938,36 @@ public partial class OrchAPISession : IDisposable
             throw;
         }
     }
+
+    public void WriteBucketItem(BlobFileAccess access, string filePath)
+    {
+        // いったん PUT のみサポート。必要なら、後日に POST のサポートも足さないといけない。
+        if (access.Verb!.ToUpper() != "PUT") throw new NotImplementedException();
+
+        if (!Uri.TryCreate(access.Uri, UriKind.Absolute, out var _))
+            throw new ArgumentException($"Invalid Uri: {access.Uri}", nameof(access));
+
+        using var fs = File.OpenRead(filePath);
+        using var content = new StreamContent(fs);
+        //content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+        using var req = new HttpRequestMessage(HttpMethod.Put, access.Uri)
+        {
+            Content = content
+        };
+        AddHeaders(req, access);
+
+        // BucketItem の取得時には、Authorization ヘッダを除外しなければいけない。
+        // マルチスレッドで Bucket を取得しているため、_httpClient の default header から Authorization ヘッダを
+        // 一時的に除外することはできない。
+        // BucketItem 専用の HttpClient を準備するのが安全だ。
+        _httpClientForBucketItem ??= InitializeHttpClient(_drive);
+
+        // access.RequiresAuth が true のときには、Authorization を残した状態でリクエストする必要があるのだろうか？
+        using var res = HttpClient_Send(req, _httpClientForBucketItem);
+
+        res.EnsureSuccessStatusCode();
+    }
+
 
     // TODO
     //public void GetBucketsAcrossFolders(Int64 folderId)

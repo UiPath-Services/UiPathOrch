@@ -493,6 +493,11 @@ internal class Name_Email : IPositionalParameters
     public static string[] Parameters { get; } = ["Name", "Email"];
 }
 
+internal class Name_FullPath_Destination : IPositionalParameters
+{
+    public static string[] Parameters { get; } = ["Name", "FullPath", "Destination"];
+}
+
 internal class Name_UserName_MachineName_CredentialUsername_CredentialPassword : IPositionalParameters
 {
     public static string[] Parameters { get; } = ["Name", "UserName", "MachineName", "CredentialUsername", "CredentialPassword"];
@@ -526,6 +531,11 @@ internal class Type_Name_Role : IPositionalParameters
 internal class Name : IPositionalParameters
 {
     public static string[] Parameters { get; } = ["Name"];
+}
+
+internal class Source_Name : IPositionalParameters
+{
+    public static string[] Parameters { get; } = ["Source", "Name"];
 }
 
 internal class Name_ExcludedDate : IPositionalParameters
