@@ -2593,9 +2593,9 @@ public partial class OrchDriveInfo : PSDriveInfo
         return _dicFolders.AsReadOnly();
     }
 
-    public Folder? GetFolder(string orchPath)
+    public Folder? GetFolder(string? orchPath)
     {
-        if (orchPath == "")
+        if (string.IsNullOrEmpty(orchPath))
         {
             return RootFolder;
         }

@@ -19,6 +19,9 @@ public class UpdatePmUserCommand : OrchestratorPSCmdlet
     public string? Name { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
+    public string? DisplayName { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     public string? Surname { get; set; }
 
     // 既存ユーザーの Email は、API で変更できないようだ。
@@ -37,9 +40,6 @@ public class UpdatePmUserCommand : OrchestratorPSCmdlet
     // ほかの cmdlet で可能な操作だから、一旦良いことにする。
 
     // 以下は payload に含める必要がない
-
-    //[Parameter(ValueFromPipelineByPropertyName = true)]
-    //public string? displayName { get; set; }
 
     //[Parameter(ValueFromPipelineByPropertyName = true)]
     //public bool? isActive { get; set; }
@@ -73,6 +73,7 @@ public class UpdatePmUserCommand : OrchestratorPSCmdlet
                     UiPath.PowerShell.Entities.UpdateUserCommand src = new()
                     {
                         name = user.name,
+                        displayName = user.displayName,
                         surname = user.surname,
                         email = user.email,
                         bypassBasicAuthRestriction = user.bypassBasicAuthRestriction
@@ -81,12 +82,14 @@ public class UpdatePmUserCommand : OrchestratorPSCmdlet
                     UiPath.PowerShell.Entities.UpdateUserCommand dst = new()
                     {
                         name = user.name,
+                        displayName = user.displayName,
                         surname = user.surname,
                         email = user.email,
                         bypassBasicAuthRestriction = user.bypassBasicAuthRestriction
                     };
 
                     dst.AssignStringIfNotNullOrEmpty(Name, (u, v) => u.name = v);
+                    dst.AssignStringIfNotNullOrEmpty(DisplayName, (u, v) => u.displayName = v);
                     dst.AssignStringIfNotNullOrEmpty(Surname, (u, v) => u.surname = v);
                     //dst.AssignStringIfNotNullOrEmpty(Email, (u, v) => u.email = v);
                     dst.AssignStringIfNotNullOrEmpty(Password, (u, v) => u.password = v);
@@ -94,6 +97,7 @@ public class UpdatePmUserCommand : OrchestratorPSCmdlet
 
                     // 更新があれば API を call する
                     if (src.name != dst.name ||
+                        src.displayName != dst.displayName ||
                         src.surname != dst.surname ||
                         //src.email != dst.email ||
                         src.bypassBasicAuthRestriction != dst.bypassBasicAuthRestriction ||

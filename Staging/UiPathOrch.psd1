@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.14.11'
+ModuleVersion = '0.9.14.12'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -389,19 +389,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Added the Export-OrchBucketItem cmdlet. This cmdlet exports files contained in storage buckets to a local folder.
-
-  # Exports all files from all buckets in the current folder to the current directory on drive c:
-  Export-OrchBucketItem
-
-  # Exports all files from the specified bucket in the current folder
-  Export-OrchBucketItem MyBucket
-
-  # Exports the specified files from all buckets in the current folder
-  Export-OrchBucketItem * MyFile*, YourPic*
-
-  # Exports all files from all buckets across the tenant to the specified local folder
-  Export-OrchBucketItem -Path Orch1:\ -Recurse -Destination c:\tmp
+        ReleaseNotes = '- Added the -DisplayName parameter to the Update-PmUser cmdlet, allowing the displayName property to be updated.
 '
 
         # Prerelease string of this module

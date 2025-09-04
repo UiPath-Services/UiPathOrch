@@ -196,7 +196,7 @@ internal static class OrchCollectionExtensions
     public static IEnumerable<T> FilterByWildcards<T>(
         this IEnumerable<T> source,
         Func<T?, string?> selector,
-        List<WildcardPattern>? patterns)
+        IReadOnlyList<WildcardPattern>? patterns)
     {
         if (patterns is null || patterns.Count == 0) return source;
         return source.Where(item => patterns.Any(pattern => pattern.IsMatch(selector(item))));
