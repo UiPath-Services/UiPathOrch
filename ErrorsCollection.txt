@@ -53,3 +53,6 @@ Get-PmUser:
 
 Add-DuUser:
 {"StatusCode":400,"StatusDescription":"BadRequest","Message":"Duplicate usernames found in database for specified input. (Parameter 'userNamesOrEmails')"}
+
+Add-OrchFolderUser:
+{"errors":{"entityType":["Error converting value \"DirectoryUser\" to type 'UiPath.IdentityServer.Directory.Abstractions.DataContracts.DirectoryEntityType'. Path 'entityType', line 1, position 126."]},"type":"https://tools.ietf.org/html/rfc9110#section-15.5.1","title":"One or more validation errors occurred.","status":400,"traceId":"00-232d600dcd7d19acb1c2d5c47691d804-40f368e1caa08ac6-01"}

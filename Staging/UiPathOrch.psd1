@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.14.12'
+ModuleVersion = '0.9.14.13'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -389,7 +389,11 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Added the -DisplayName parameter to the Update-PmUser cmdlet, allowing the displayName property to be updated.
+        ReleaseNotes = '- In the Add-OrchFolderUser cmdlet, the API called to search for the user specified with the -UserName parameter has been switched. This change enables usernames containing hyphens (-) to be resolved correctly and improves overall stability. As a result of this update, group names specified with -UserName are now case-sensitive.
+  - From: GET /api/DirectoryService/SearchForUsersAndGroups
+  - To: POST /api/Directory/BulkResolveByName/{partitionGlobalId}
+
+- Accordingly, in the Get-OrchFolderUser cmdlet, the CSV file output with the -ExportCsv parameter now records group UserName values with case sensitivity preserved.
 '
 
         # Prerelease string of this module

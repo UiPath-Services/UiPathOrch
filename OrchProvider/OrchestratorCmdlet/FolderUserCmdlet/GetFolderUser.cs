@@ -158,7 +158,14 @@ public class GetFolderUserCommand : OrchestratorPSCmdlet
             string[] line = [
                 EscapeCsvValue(p.Path, true),
                 EscapeCsvValue(p?.UserEntity?.Type),
-                EscapeCsvValue(p?.UserEntity?.UserName),
+
+                // DirectoryGroup については、UserName 列に FullName を出力する。。
+                // これは、PmBulkResolveByName() が case を区別するためだ。
+                // Add-OrchFolderUser でグループをインポートできるようにするには、こうしておく必要がある。。
+                p?.UserEntity?.Type == "DirectoryGroup" ?
+                    EscapeCsvValue(p?.UserEntity?.FullName) :
+                    EscapeCsvValue(p?.UserEntity?.UserName),
+
                 EscapeCsvValue(p?.UserEntity?.FullName),
                 EscapeCsvValue(string.Join(",", p?.Roles?.Select(r => WildcardPattern.Escape(r.Name))!))
             ];
