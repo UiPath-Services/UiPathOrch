@@ -788,6 +788,15 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
         ClearCache(folder.Id!.Value);
     }
 
+    public void ClearCache(Folder folder, Int64 id)
+    {
+        if (_cache?.TryGetValue(folder.Id.GetValueOrDefault(), out var cachePerFolder) ?? false)
+        {
+            cachePerFolder.Remove(id);
+            _exceptions.ClearCache(); // ちょっと横着な実装だけど、機能的にはこれで問題ないはず
+        }
+    }
+
     public void ClearCache()
     {
         _cache = null;
