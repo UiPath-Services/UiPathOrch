@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-using System.Management.Automation;
-using System.Xml.Linq;
+﻿using System.Management.Automation;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
@@ -11,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsData.Import, "OrchBucketItem", SupportsShouldProcess = true)]
 [OutputType(typeof(Bucket))]
-class ImportBucketItemCmdlet : OrchestratorPSCmdlet
+public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -243,7 +241,7 @@ class ImportBucketItemCmdlet : OrchestratorPSCmdlet
                     {
                         var access = drive.OrchAPISession.GetBucketWriteUri(targetFolder.Id!.Value, targetBucket.Id!.Value, System.IO.Path.GetFileName(filePath));
                         drive.OrchAPISession.WriteBucketItem(access!, filePath);
-                        //WriteObject(access);
+                        drive.BucketFiles.ClearCache(folder, targetBucket.Id.Value);
                     }
                 }
             }
