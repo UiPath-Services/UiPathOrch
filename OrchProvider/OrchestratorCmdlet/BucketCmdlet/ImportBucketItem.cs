@@ -8,7 +8,6 @@ using TPositional = UiPath.PowerShell.Positional.Source_Name;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsData.Import, "OrchBucketItem", SupportsShouldProcess = true)]
-[OutputType(typeof(Bucket))]
 public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
@@ -181,7 +180,16 @@ public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
                     continue;
                 }
 
-                var buckets = drive.Buckets.Get(targetFolder);
+                List<Bucket>? buckets = null;
+                try
+                {
+                    buckets = drive.Buckets.Get(targetFolder);
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "ImportBucketItemError", ErrorCategory.InvalidOperation, folder));
+                    continue;
+                }
 
                 IEnumerable<Bucket> targetBuckets = null;
 
@@ -236,12 +244,26 @@ public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
 
                 foreach (var targetBucket in targetBuckets ?? [])
                 {
+                    cancelHandler.Token.ThrowIfCancellationRequested();
+
                     // targetFolder にある bucket に、filePath をアップロードする
-                    if (ShouldProcess($"Item: '{filePath}' Folder: '{targetFolder.GetPSPath()}' Bucket: '{targetBucket.Name}'", "Import BucketItem"))
+                    string target = $"Item: '{filePath}' Folder: '{targetFolder.GetPSPath()}' Bucket: '{targetBucket.Name}'";
+                    if (ShouldProcess(target, "Import BucketItem"))
                     {
-                        var access = drive.OrchAPISession.GetBucketWriteUri(targetFolder.Id!.Value, targetBucket.Id!.Value, System.IO.Path.GetFileName(filePath));
-                        drive.OrchAPISession.WriteBucketItem(access!, filePath);
-                        drive.BucketFiles.ClearCache(folder, targetBucket.Id.Value);
+                        try
+                        {
+                            var access = drive.OrchAPISession.GetBucketWriteUri(targetFolder.Id!.Value, targetBucket.Id!.Value, System.IO.Path.GetFileName(filePath));
+                            drive.OrchAPISession.WriteBucketItem(access!, filePath, cancelHandler.Token);
+                            drive.BucketFiles.ClearCache(folder, targetBucket.Id.Value);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            throw;
+                        }
+                        catch (Exception ex)
+                        {
+                            WriteError(new ErrorRecord(new OrchException(target, ex), "ImportBucketItemError", ErrorCategory.InvalidOperation, targetBucket));
+                        }
                     }
                 }
             }

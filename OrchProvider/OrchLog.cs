@@ -16,7 +16,7 @@ public partial class OrchAPISession : IDisposable
         return JsonSerializer.Serialize(singleValueHeaders, JsonTools.jsoOneLine);
     }
 
-    private static string? BuildCombinedLogBlock(DateTime reqTime, HttpRequestMessage message, DateTime resTime, HttpResponseMessage? response, int callId, LoggingLevel? currentLevel)
+    private static string? BuildCombinedLogBlock(DateTime reqTime, HttpRequestMessage message, DateTime resTime, HttpResponseMessage? response, int callId, LoggingLevel? currentLevel, bool isErrorOrCancelled = false)
     {
         currentLevel ??= LoggingLevel.Info;
 
@@ -54,7 +54,6 @@ public partial class OrchAPISession : IDisposable
                     break;
             }
         }
-
 
         if (!outputSummary) return null;
 
@@ -134,11 +133,30 @@ public partial class OrchAPISession : IDisposable
 
         if (outputBody && message.Content != null)
         {
-            string reqBody = message.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-            if (!string.IsNullOrEmpty(reqBody))
+            try
             {
-                sb.Append("  REQ BODY ");
-                sb.AppendLineLf(reqBody);
+                string reqBody;
+                if (isErrorOrCancelled)
+                {
+                    // エラー/キャンセル時のみタイムアウト付き（1秒）
+                    using var cts = new CancellationTokenSource(1000);
+                    reqBody = message.Content.ReadAsStringAsync(cts.Token).GetAwaiter().GetResult();
+                }
+                else
+                {
+                    // 正常時は元の処理（タイムアウトなし）
+                    reqBody = message.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                }
+                
+                if (!string.IsNullOrEmpty(reqBody))
+                {
+                    sb.Append("  REQ BODY ");
+                    sb.AppendLineLf(reqBody);
+                }
+            }
+            catch
+            {
+                // エラー時はスキップ
             }
         }
 
@@ -180,23 +198,42 @@ public partial class OrchAPISession : IDisposable
 
             if (outputBody && response?.Content != null)
             {
-                // ContentType を取得。存在しない場合はテキストとみなす。
-                string? mediaType = response.Content.Headers.ContentType?.MediaType;
-                bool isTextual = string.IsNullOrEmpty(mediaType) ||
-                                 mediaType.StartsWith("text/", StringComparison.OrdinalIgnoreCase) ||
-                                 mediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase) ||
-                                 mediaType.Equals("application/xml", StringComparison.OrdinalIgnoreCase) ||
-                                 mediaType.Equals("application/javascript", StringComparison.OrdinalIgnoreCase) ||
-                                 mediaType.Equals("application/xhtml+xml", StringComparison.OrdinalIgnoreCase);
-
-                if (isTextual)
+                try
                 {
-                    string resBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-                    if (!string.IsNullOrEmpty(resBody))
+                    // ContentType を取得。存在しない場合はテキストとみなす。
+                    string? mediaType = response.Content.Headers.ContentType?.MediaType;
+                    bool isTextual = string.IsNullOrEmpty(mediaType) ||
+                                     mediaType.StartsWith("text/", StringComparison.OrdinalIgnoreCase) ||
+                                     mediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase) ||
+                                     mediaType.Equals("application/xml", StringComparison.OrdinalIgnoreCase) ||
+                                     mediaType.Equals("application/javascript", StringComparison.OrdinalIgnoreCase) ||
+                                     mediaType.Equals("application/xhtml+xml", StringComparison.OrdinalIgnoreCase);
+
+                    if (isTextual)
                     {
-                        sb.Append("  RES BODY ");
-                        sb.AppendLineLf(resBody);
+                        string resBody;
+                        if (isErrorOrCancelled)
+                        {
+                            // エラー/キャンセル時のみタイムアウト付き（1秒）
+                            using var cts = new CancellationTokenSource(1000);
+                            resBody = response.Content.ReadAsStringAsync(cts.Token).GetAwaiter().GetResult();
+                        }
+                        else
+                        {
+                            // 正常時は元の処理（タイムアウトなし）
+                            resBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                        }
+                        
+                        if (!string.IsNullOrEmpty(resBody))
+                        {
+                            sb.Append("  RES BODY ");
+                            sb.AppendLineLf(resBody);
+                        }
                     }
+                }
+                catch
+                {
+                    // エラー時はスキップ
                 }
             }
         }
@@ -305,3 +342,6 @@ public partial class OrchAPISession : IDisposable
         }
     }
 }
+
+
+

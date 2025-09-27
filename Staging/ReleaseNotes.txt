@@ -1,3 +1,19 @@
+Version: 0.9.14.15
+- Added Remove-OrchBucketItem cmdlet.
+
+- Fixed Import-OrchBucketItem not escaping file names, which caused incorrect names when special characters were used.
+
+- Improved Import-OrchBucketItem to set Content-Type based on file extension.
+
+- Enhanced Import-OrchBucketItem and Export-OrchBucketItem cmdlets to support cancellation with Ctrl+C.
+
+- Updated Get-OrchBucketItem default view to right-align the Size column for better readability.
+
+
+Version: 0.9.14.14
+- Added Import-OrchBucketItem cmdlet. Upload multiple files at once with wildcards or comma-separated values. You can also re-upload files downloaded with Export-OrchBucketItem while preserving the original folder structure and bucket names.
+
+
 Version: 0.9.14.13
 - In the Add-OrchFolderUser cmdlet, the API called to search for the user specified with the -UserName parameter has been switched. This change enables usernames containing hyphens (-) to be resolved correctly and improves overall stability. As a result of this update, group names specified with -UserName are now case-sensitive.
   - From: GET /api/DirectoryService/SearchForUsersAndGroups
