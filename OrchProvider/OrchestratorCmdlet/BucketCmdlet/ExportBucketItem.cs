@@ -75,6 +75,7 @@ public class ExportBucketItemCmdlet : OrchestratorPSCmdlet
                     // Path からの相対パスを取得
                     var eachDestination = System.IO.Path.Combine(Destination, folder.GetRelativePath(srcRootFolder), bucket.Name!.MakeValidFolderName());
 
+                    string target = null;
                     try
                     {
                         var files = drive.BucketFiles.Get(folder, bucket);
@@ -84,15 +85,18 @@ public class ExportBucketItemCmdlet : OrchestratorPSCmdlet
                             .FilterByWildcards(f => f!.FullPath, wpFullPath)
                             .OrderBy(f => f.FullPath))
                         {
+                            cancelHandler.Token.ThrowIfCancellationRequested();
+
                             var destinationFullPath = System.IO.Path.Combine(eachDestination, file.FullPath!.MakeValidFileName());
 
-                            if (ShouldProcess($"Item: {file.GetPSPath()} Destination: {destinationFullPath}", "Export Bucket Item"))
+                            target = $"Item: {file.GetPSPath()} Destination: {destinationFullPath}";
+                            if (ShouldProcess(target, "Export BucketItem"))
                             {
                                 try
                                 {
                                     Directory.CreateDirectory(eachDestination);
                                     var access = drive.OrchAPISession.GetBucketReadUri(folder.Id!.Value, bucket.Id!.Value, file.FullPath!);
-                                    drive.OrchAPISession.ReadBucketItem(access, System.IO.Path.Combine(eachDestination, destinationFullPath));
+                                    drive.OrchAPISession.ReadBucketItem(access, System.IO.Path.Combine(eachDestination, destinationFullPath), cancelHandler.Token);
                                 }
                                 catch (Exception ex)
                                 {
@@ -101,11 +105,19 @@ public class ExportBucketItemCmdlet : OrchestratorPSCmdlet
                             }
                         }
                     }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
+                    }
                     catch (Exception ex)
                     {
-                        WriteError(new ErrorRecord(new OrchException(bucket.GetPSPath(), ex), "GetBucketFileError", ErrorCategory.InvalidOperation, bucket));
+                        WriteError(new ErrorRecord(new OrchException(target, ex), "GetBucketFileError", ErrorCategory.InvalidOperation, bucket));
                     }
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (OrchException ex)
             {

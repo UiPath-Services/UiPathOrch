@@ -44,6 +44,26 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
     //    }
     //}
 
+    //public void WriteObject(OrchDriveInfo drive, object sendToPipeline, bool enumerateCollection)
+    //{
+    //    if (!drive._warningOutput)
+    //    {
+    //        base.WriteWarning("Hey!!!!");
+    //        drive._warningOutput = true;
+    //    }
+    //    base.WriteObject(sendToPipeline, enumerateCollection);
+    //}
+
+    //public void WriteObject(OrchDriveInfo drive, object sendToPipeline)
+    //{
+    //    if (!drive._warningOutput)
+    //    {
+    //        base.WriteWarning("Hey!!!!");
+    //        drive._warningOutput = true;
+    //    }
+    //    base.WriteObject(sendToPipeline);
+    //}
+
     internal static string ConvertToUnsecureString(SecureString securePassword)
     {
         IntPtr unmanagedString = IntPtr.Zero;

@@ -63,6 +63,8 @@ public partial class OrchDriveInfo : PSDriveInfo
         }
     }
 
+    //public bool _warningOutput = false;
+
     // OrchFolderProvider の Start で初期化する
     internal static SessionState? SessionState;
 

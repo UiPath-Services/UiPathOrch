@@ -492,4 +492,48 @@ internal class OrchestratorAuthManager
         byte[] data = sha256.ComputeHash(Encoding.UTF8.GetBytes(input));
         return Convert.ToBase64String(data).TrimEnd('=').Replace("+", "-").Replace("/", "_");
     }
+
+    /// Entra ID 警告メッセージを表示すべきかチェック
+    /// 警告を表示すべき場合は true
+    public bool ShouldShowEntraIdWarning()
+    {
+        try
+        {
+            var parts = _access_token?.Split('.') ?? [];
+            if (parts.Length != 3) return false;
+
+            // Base64URLデコード
+            var payload = parts[1];
+            payload = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
+            payload = payload.Replace('-', '+').Replace('_', '/');
+
+            var jsonBytes = Convert.FromBase64String(payload);
+            var json = Encoding.UTF8.GetString(jsonBytes);
+
+            using JsonDocument doc = JsonDocument.Parse(json);
+            if (doc.RootElement.TryGetProperty("ext_idp_disp_name", out JsonElement element))
+            {
+                return element.GetString() == "GlobalIdp";
+            }
+
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public string DebugJwtToken()
+    {
+        var parts = _access_token?.Split('.') ?? [];
+        var payload = parts[1];
+        payload = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
+        payload = payload.Replace('-', '+').Replace('_', '/');
+
+        var jsonBytes = Convert.FromBase64String(payload);
+        var json = Encoding.UTF8.GetString(jsonBytes);
+        return json;
+    }
+
 }

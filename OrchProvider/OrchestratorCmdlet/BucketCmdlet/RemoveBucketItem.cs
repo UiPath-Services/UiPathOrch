@@ -1,15 +1,13 @@
 ﻿using System.Management.Automation;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
 using TPositional = UiPath.PowerShell.Positional.Name_FullPath;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Get, "OrchBucketItem")]
-[OutputType(typeof(BlobFile))]
-public class GetBucketItemCommand : OrchestratorPSCmdlet
+[Cmdlet(VerbsCommon.Remove, "OrchBucketItem", SupportsShouldProcess = true)]
+public class RemoveBucketItemCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BucketNameCompleter<TPositional, False>))]
@@ -56,21 +54,51 @@ public class GetBucketItemCommand : OrchestratorPSCmdlet
                     .FilterByWildcards(e => e?.Name, wpName)
                     .OrderBy(e => e.Name))
                 {
+                    ICollection<Entities.BlobFile> files = null;
+
                     try
                     {
-                        var files = drive.BucketFiles.Get(folder, bucket);
-                        WriteObject(files
-                            .FilterByWildcards(file => file?.FullPath, wpFullPath)
-                            .OrderBy(file => file.FullPath),
-                            true);
+                        files = drive.BucketFiles.Get(folder, bucket);
                     }
                     catch (Exception ex)
                     {
-                        WriteError(new ErrorRecord(new OrchException(bucket.GetPSPath(), ex), "GetBucketFileError", ErrorCategory.InvalidOperation, bucket));
+                        WriteError(new ErrorRecord(new OrchException(bucket.GetPSPath(), ex), "GetBucketFilesError", ErrorCategory.InvalidOperation, bucket));
+                        continue;
+                    }
+
+                    foreach (var file in files
+                        .FilterByWildcards(file => file?.FullPath, wpFullPath)
+                        .OrderBy(file => file.FullPath))
+                    {
+                        cancelHandler.Token.ThrowIfCancellationRequested();
+
+                        string target = System.IO.Path.Combine(bucket.GetPSPath(), file.FullPath ?? "");
+                        bool bRemoved = false;
+                        if (ShouldProcess(target, "Remove BucketItem"))
+                        {
+                            try
+                            {
+                                drive.OrchAPISession.DeleteBucketItem(folder.Id!.Value, bucket.Id!.Value, file.FullPath!);
+                                bRemoved = true;
+                            }
+                            catch (Exception ex)
+                            {
+                                WriteError(new ErrorRecord(new OrchException(target, ex), "RemoveBucketItemError", ErrorCategory.InvalidOperation, bucket));
+                                continue;
+                            }
+                        }
+                        if (bRemoved)
+                        {
+                            drive.BucketFiles.ClearCache(folder, bucket.Id!.Value);
+                        }
                     }
                 }
             }
-            catch(OrchException ex)
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (OrchException ex)
             {
                 WriteError(new ErrorRecord(ex, "GetBucketError", ErrorCategory.InvalidOperation, ex.Target));
             }

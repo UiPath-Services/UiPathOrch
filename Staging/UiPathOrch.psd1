@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.14.13'
+ModuleVersion = '0.9.14.15'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -275,6 +275,8 @@ CmdletsToExport = @(
 
 'Get-OrchBucketItem',
 'Export-OrchBucketItem',
+'Import-OrchBucketItem',
+'Remove-OrchBucketItem',
 
 'Get-OrchWebhook',
 'Copy-OrchWebhook',
@@ -389,11 +391,15 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- In the Add-OrchFolderUser cmdlet, the API called to search for the user specified with the -UserName parameter has been switched. This change enables usernames containing hyphens (-) to be resolved correctly and improves overall stability. As a result of this update, group names specified with -UserName are now case-sensitive.
-  - From: GET /api/DirectoryService/SearchForUsersAndGroups
-  - To: POST /api/Directory/BulkResolveByName/{partitionGlobalId}
+        ReleaseNotes = '- Added Remove-OrchBucketItem cmdlet.
 
-- Accordingly, in the Get-OrchFolderUser cmdlet, the CSV file output with the -ExportCsv parameter now records group UserName values with case sensitivity preserved.
+- Fixed Import-OrchBucketItem not escaping file names, which caused incorrect names when special characters were used.
+
+- Improved Import-OrchBucketItem to set Content-Type based on file extension.
+
+- Enhanced Import-OrchBucketItem and Export-OrchBucketItem cmdlets to support cancellation with Ctrl+C.
+
+- Updated Get-OrchBucketItem default view to right-align the Size column for better readability.
 '
 
         # Prerelease string of this module

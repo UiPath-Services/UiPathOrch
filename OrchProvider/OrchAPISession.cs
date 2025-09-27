@@ -57,10 +57,10 @@ public class RateLimiter : IDisposable
         rateLimitSemaphore.Wait();
     }
 
-    //public async Task WaitAsync(CancellationToken cancellationToken = default)
-    //{
-    //    await rateLimitSemaphore.WaitAsync(cancellationToken);
-    //}
+    public async Task WaitAsync(CancellationToken cancellationToken = default)
+    {
+        await rateLimitSemaphore.WaitAsync(cancellationToken);
+    }
 
     public void Release()
     {
@@ -93,21 +93,31 @@ public partial class OrchAPISession : IDisposable
     private readonly RateLimiter limitter = new(15);
 
     private int http_call_num = 0;
-    private HttpResponseMessage HttpClient_Send(HttpRequestMessage message, HttpClient? httpClient = null)
+        private HttpResponseMessage HttpClient_Send(HttpRequestMessage message, HttpClient? httpClient = null, CancellationToken cancellationToken = default)
     {
-        //limitter.WaitAsync(cancellationToken).GetAwaiter().GetResult();
-        limitter.Wait();
+        cancellationToken.ThrowIfCancellationRequested();
+
+        limitter.WaitAsync(cancellationToken).GetAwaiter().GetResult();
+        //limitter.Wait();
         HttpResponseMessage ret = null;
         DateTime reqTime = DateTime.Now;
         DateTime resTime = reqTime;
         int callId = Interlocked.Increment(ref http_call_num);
+        bool hasException = false;
+        
         try
         {
             reqTime = DateTime.Now;
             HttpClient hc = httpClient ?? HttpClient;
-            ret = hc.Send(message, HttpCompletionOption.ResponseHeadersRead);
+            ret = hc.Send(message, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             resTime = DateTime.Now;
             return ret;
+        }
+        catch (Exception)
+        {
+            resTime = DateTime.Now;
+            hasException = true;
+            throw; // 例外は再スロー
         }
         finally
         {
@@ -117,12 +127,26 @@ public partial class OrchAPISession : IDisposable
             bool logEnabled = logging?.Enabled.GetValueOrDefault() ?? false;
             if (logEnabled)
             {
-                string? combinedLogBlock = BuildCombinedLogBlock(reqTime, message, resTime, ret, callId, logging?.InternalLogLevel);
-                // Fire-and-forget 非同期ログ書き込み（HTTP応答をブロックしない）
+                // 異常時は非同期で安全に処理し、BuildCombinedLogBlockも非同期実行
                 _ = Task.Run(async () => {
                     try
                     {
-                        await WriteLogBlockAsync(combinedLogBlock, CancellationToken.None);
+                        string? combinedLogBlock;
+                        if (hasException)
+                        {
+                            // キャンセル/エラー時は簡易ログのみ
+                            combinedLogBlock = $"{reqTime:HH:mm:ss.fff} #{callId:D4} {message.Method} {message.RequestUri}\n{resTime:HH:mm:ss.fff} RES Status: ERROR/CANCELLED\n\n";
+                        }
+                        else
+                        {
+                            // 正常時は通常のログ生成
+                            combinedLogBlock = BuildCombinedLogBlock(reqTime, message, resTime, ret, callId, logging?.InternalLogLevel);
+                        }
+                        
+                        if (!string.IsNullOrEmpty(combinedLogBlock))
+                        {
+                            await WriteLogBlockAsync(combinedLogBlock, CancellationToken.None);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -276,7 +300,13 @@ public partial class OrchAPISession : IDisposable
                 if (!_isAuthenticated)
                 {
                     // Set initial token
-                    SetToken(_authManager.RequestToken());
+                    string token = _authManager.RequestToken();
+                    SetToken(token);
+
+                    // TODO: 警告をどのタイミングで、どのように表示すれば良いか？
+                    //bool bMesasge = _authManager.ShouldShowEntraIdWarning();
+                    //string s = _authManager.DebugJwtToken();
+
                     _isAuthenticated = true;
                     _expiryTime = DateTime.Now.AddHours(1);
 
@@ -1831,6 +1861,12 @@ public partial class OrchAPISession : IDisposable
         string body = HttpRequest(HttpMethod.Delete, $"/odata/Buckets({bucketId})", folderId);
     }
 
+    // 何も返らない
+    public void DeleteBucketItem(Int64 folderId, Int64 bucketId, string fullPath)
+    {
+        HttpRequest(HttpMethod.Delete, $"/odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.DeleteFile?path={Uri.EscapeDataString(fullPath)}", folderId);
+    }
+
     public IEnumerable<BlobFile> GetBucketDirectories(Int64 folderId, Int64 bucketId)
     {
         return GetEnumerable<BlobFile>($"/odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.GetDirectories", folderId, "&directory=%2F&recursive=true");
@@ -1843,12 +1879,12 @@ public partial class OrchAPISession : IDisposable
 
     public BlobFileAccess? GetBucketReadUri(Int64 folderId, Int64 bucketId, string fullPath)
     {
-        return HttpRequest<BlobFileAccess>(HttpMethod.Get, $"/odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.GetReadUri?path={fullPath}", folderId);
+        return HttpRequest<BlobFileAccess>(HttpMethod.Get, $"/odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.GetReadUri?path={Uri.EscapeDataString(fullPath)}", folderId);
     }
 
     public BlobFileAccess? GetBucketWriteUri(Int64 folderId, Int64 bucketId, string fullPath)
     {
-        return HttpRequest<BlobFileAccess>(HttpMethod.Get, $"/odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.GetWriteUri?path={fullPath}", folderId);
+        return HttpRequest<BlobFileAccess>(HttpMethod.Get, $"/odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.GetWriteUri?path={Uri.EscapeDataString(fullPath)}", folderId);
     }
 
     private static bool ShouldSkipHeader(string headerName)
@@ -1891,8 +1927,11 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    public void ReadBucketItem(BlobFileAccess? access, string destinationPath)
+    public async Task ReadBucketItemAsync(BlobFileAccess? access, string destinationPath, CancellationToken cancellationToken = default)
     {
+        // CancellationTokenをチェック
+        cancellationToken.ThrowIfCancellationRequested();
+        
         if (access == null || string.IsNullOrWhiteSpace(access.Verb) || string.IsNullOrWhiteSpace(access.Uri))
             return;
 
@@ -1902,6 +1941,9 @@ public partial class OrchAPISession : IDisposable
 
         if (!Uri.TryCreate(access.Uri, UriKind.Absolute, out var _))
             throw new ArgumentException($"Invalid Uri: {access.Uri}", nameof(access));
+
+        // ファイル操作前にCancellationTokenをチェック
+        cancellationToken.ThrowIfCancellationRequested();
 
         using var req = new HttpRequestMessage(method, access.Uri);
         AddHeaders(req, access);
@@ -1913,7 +1955,7 @@ public partial class OrchAPISession : IDisposable
         _httpClientForBucketItem ??= InitializeHttpClient(_drive);
 
         // access.RequiresAuth が true のときには、Authorization を残した状態でリクエストする必要があるのだろうか？
-        using var res = HttpClient_Send(req, _httpClientForBucketItem);
+        using var res = HttpClient_Send(req, _httpClientForBucketItem, cancellationToken);
 
         res.EnsureSuccessStatusCode();
 
@@ -1929,8 +1971,9 @@ public partial class OrchAPISession : IDisposable
                 options: FileOptions.SequentialScan
             );
 
-            httpStream.CopyTo(fileStream);
-            fileStream.Flush(true);
+            // 非同期でCopyToを実行し、CancellationTokenを渡す
+            await httpStream.CopyToAsync(fileStream, cancellationToken);
+            await fileStream.FlushAsync(cancellationToken);
         }
         catch
         {
@@ -1939,17 +1982,29 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    public void WriteBucketItem(BlobFileAccess access, string filePath)
+    // 同期版
+    public void ReadBucketItem(BlobFileAccess? access, string destinationPath, CancellationToken cancellationToken = default)
     {
+        ReadBucketItemAsync(access, destinationPath, cancellationToken).GetAwaiter().GetResult();
+    }
+
+    public void WriteBucketItem(BlobFileAccess access, string filePath, CancellationToken cancelToken)
+    {
+        cancelToken.ThrowIfCancellationRequested();
+
         // いったん PUT のみサポート。必要なら、後日に POST のサポートも足さないといけない。
         if (access.Verb!.ToUpper() != "PUT") throw new NotImplementedException();
 
         if (!Uri.TryCreate(access.Uri, UriKind.Absolute, out var _))
             throw new ArgumentException($"Invalid Uri: {access.Uri}", nameof(access));
 
+        cancelToken.ThrowIfCancellationRequested();
         using var fs = File.OpenRead(filePath);
         using var content = new StreamContent(fs);
+        string s = MimeTypeHelper.GetMimeType(filePath);
+        content.Headers.ContentType = new MediaTypeHeaderValue(MimeTypeHelper.GetMimeType(filePath));
         //content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+
         using var req = new HttpRequestMessage(HttpMethod.Put, access.Uri)
         {
             Content = content
@@ -1963,7 +2018,7 @@ public partial class OrchAPISession : IDisposable
         _httpClientForBucketItem ??= InitializeHttpClient(_drive);
 
         // access.RequiresAuth が true のときには、Authorization を残した状態でリクエストする必要があるのだろうか？
-        using var res = HttpClient_Send(req, _httpClientForBucketItem);
+        using var res = HttpClient_Send(req, _httpClientForBucketItem, cancelToken);
 
         res.EnsureSuccessStatusCode();
     }
@@ -3573,3 +3628,8 @@ public partial class OrchAPISession : IDisposable
 }
 
 #pragma warning restore IDE1006 // 命名スタイル
+
+
+
+
+

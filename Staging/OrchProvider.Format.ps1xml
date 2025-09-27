@@ -3084,6 +3084,7 @@
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>Size</PropertyName>
+                <Alignment>right</Alignment>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>IsDirectory</PropertyName>
