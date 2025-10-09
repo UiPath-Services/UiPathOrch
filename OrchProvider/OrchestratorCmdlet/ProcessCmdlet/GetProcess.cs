@@ -69,7 +69,7 @@ public class GetProcessCommand : OrchestratorPSCmdlet
         "Tags"
     ];
 
-    private string? getBucketName(Entities.Release release, Int64? bucketId, string bucketIdKind)
+    private string? GetBucketName(Entities.Release release, Int64? bucketId, string bucketIdKind)
     {
         if (bucketId is null) return null;
 
@@ -103,8 +103,8 @@ public class GetProcessCommand : OrchestratorPSCmdlet
     private void WriteCsvContent(StreamWriter writer, Entities.Release release)
     {
         // 各プロセスに対してデータ行を書き込む
-        string? retentionBucket = getBucketName(release, release.RetentionBucketId, "RetentionBucketId");
-        string? staleRetentionBucket = getBucketName(release, release.StaleRetentionBucketId, "StaleRetentionBucketId");
+        string? retentionBucket = GetBucketName(release, release.RetentionBucketId, "RetentionBucketId");
+        string? staleRetentionBucket = GetBucketName(release, release.StaleRetentionBucketId, "StaleRetentionBucketId");
 
         string[] line = [
             EscapeCsvValue(release.Path, true),

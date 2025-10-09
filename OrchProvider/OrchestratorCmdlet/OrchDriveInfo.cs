@@ -2155,6 +2155,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly IndexedListCachePerFolder<MachineFolder, ExtendedRobot> FolderRobots;
     public readonly IndexedListCachePerFolder<MachineFolder, RobotUser> MachinesRobots;
     public readonly IndexedListCachePerFolder<Bucket, BlobFile> BucketFiles;
+    public readonly IndexedListCachePerFolder<Release, SubtypedPackageResource> ReleaseRequirements;
     public readonly IndexedListCachePerFolder<TestDataQueue, TestDataQueueItem> TestDataQueueItems;
 
     //public readonly CachePerFolder<Release> Processes; // これはインデックスがついてた。。
@@ -2423,9 +2424,19 @@ public partial class OrchDriveInfo : PSDriveInfo
             }
         );
 
+        ReleaseRequirements = new(this, OrchAPISession.GetReleaseRequirement,
+            release => release.Id!.Value,
+            release => release.Name!,
+            (releaseRequirement, folderPath, name, entityPath) =>
+            {
+                releaseRequirement.Path = folderPath;
+                releaseRequirement.Release = name;
+            }
+        );
+
         TestDataQueueItems = new(this, OrchAPISession.GetTestDataQueueItems,
             testDataQueue => testDataQueue.Id!.Value,
-            TestDataQueue => TestDataQueue.Name!,
+            testDataQueue => testDataQueue.Name!,
             (queueItem, folderPath, name, entityPath) =>
             {
                 queueItem.Path = folderPath;

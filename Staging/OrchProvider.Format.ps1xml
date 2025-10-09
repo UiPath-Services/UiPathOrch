@@ -626,6 +626,57 @@
     </View>
 
     <View>
+      <Name>SubtypedPackageResource</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.SubtypedPackageResource</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Process</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>ResourceType</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>ResourceName</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Comment</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>ValidationResult</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>Release</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>ResourceType</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>ResourceName</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Comment</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>ValidationResult</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
       <Name>Package</Name>
       <ViewSelectedBy>
         <TypeName>UiPath.PowerShell.Entities.Package</TypeName>

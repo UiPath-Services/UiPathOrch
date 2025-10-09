@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.14.15'
+ModuleVersion = '0.9.14.16'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -115,6 +115,7 @@ CmdletsToExport = @(
 'Edit-OrchProcess',
 'Update-OrchProcessVersion',
 'Reset-OrchProcessVersion',
+'Get-OrchProcessRequirement',
 
 'Get-OrchRobot',
 
@@ -391,15 +392,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Added Remove-OrchBucketItem cmdlet.
-
-- Fixed Import-OrchBucketItem not escaping file names, which caused incorrect names when special characters were used.
-
-- Improved Import-OrchBucketItem to set Content-Type based on file extension.
-
-- Enhanced Import-OrchBucketItem and Export-OrchBucketItem cmdlets to support cancellation with Ctrl+C.
-
-- Updated Get-OrchBucketItem default view to right-align the Size column for better readability.
+        ReleaseNotes = '- Added Get-OrchProcessRequirement cmdlet.
 '
 
         # Prerelease string of this module

@@ -696,7 +696,7 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
     private ConcurrentDictionary<Int64, Dictionary<Int64, List<TEntity>>>? _cache = null;
     // この例外キャッシュの機能がいまいちだな。。フォルダごとにキャッシュをクリアできるといいのに。
     private readonly ExceptionsCachePer<(Int64, Int64)> _exceptions = new();
-    private readonly Func<Int64, Int64, IEnumerable<TEntity>> _fetchFunc; // folderId と index を渡すと TEntity の列挙が返る
+    private readonly Func<Int64, TIndexEntity, IEnumerable<TEntity>> _fetchFunc; // folderId と index を渡すと TEntity の列挙が返る
     private readonly Func<TIndexEntity, Int64> _getIdFunc;
     private readonly Func<TIndexEntity, string> _getNameFunc;
     private readonly Action<TEntity, string, string, string>? _initializer; // フォルダパス, 名前, フォルダパス\名前
@@ -704,7 +704,7 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
 
     public IndexedListCachePerFolder(
         OrchDriveInfo drive,
-        Func<Int64, Int64, IEnumerable<TEntity>> fetchFunc,
+        Func<Int64, TIndexEntity, IEnumerable<TEntity>> fetchFunc,
         Func<TIndexEntity, Int64> getIdFunc,
         Func<TIndexEntity, string> getNameFunc,
         Action<TEntity, string, string, string>? initializer,
@@ -753,7 +753,7 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
         {
             try
             {
-                entities = _fetchFunc(folderId, index).ToList();
+                entities = _fetchFunc(folderId, indexEntity).ToList();
                 cachePerFolder[index] = entities;
 
                 if (_initializer is not null)
