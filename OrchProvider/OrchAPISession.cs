@@ -1205,16 +1205,16 @@ public partial class OrchAPISession : IDisposable
     }
 
     // TODO: ここでフィルター指定してるけど、まあいいか。。キャッシュ側で実装した方があとあと嬉しいかもしれないけど、
-    public IEnumerable<ExtendedRobot> GetFolderRobots(Int64 folderId, Int64 machineId)
+    public IEnumerable<ExtendedRobot> GetFolderRobots(Int64 folderId, MachineFolder machine)
     {
-        return GetEnumerable<ExtendedRobot>($"/odata/Robots/UiPath.Server.Configuration.OData.GetFolderRobots(folderId={folderId},machineId={machineId})",
+        return GetEnumerable<ExtendedRobot>($"/odata/Robots/UiPath.Server.Configuration.OData.GetFolderRobots(folderId={folderId},machineId={machine.Id})",
             null,
             "&$filter=Type eq '2' and ProvisionType eq 'Automatic'&$expand=User");
     }
 
-    public IEnumerable<RobotUser> GetMachineRobots(Int64 folderId, Int64 machineId)
+    public IEnumerable<RobotUser> GetMachineRobots(Int64 folderId, MachineFolder machine)
     {
-        return GetEnumerable<RobotUser>($"/odata/Folders/UiPath.Server.Configuration.OData.GetMachineRobots(folderId={folderId},machineId={machineId})");
+        return GetEnumerable<RobotUser>($"/odata/Folders/UiPath.Server.Configuration.OData.GetMachineRobots(folderId={folderId},machineId={machine.Id})");
     }
 
     public void SetMachineRobots(SetMachineRobotsCmd cmd)
@@ -1661,6 +1661,12 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
+    public IEnumerable<SubtypedPackageResource> GetReleaseRequirement(Int64 folderId, Release release)
+    {
+        var result = HttpRequest<HttpBodyValues<SubtypedPackageResource>>(HttpMethod.Get, $"/odata/Releases({release.Id})/UiPath.Server.Configuration.OData.GetResources(processKey='{HttpUtility.UrlEncode(release.ProcessKey)}:{release.ProcessVersion}')", folderId);
+        return result?.value ?? [];
+    }
+
     public Release? PostRelease(Int64 folderId, Release release)
     {
         if (release.RetentionPeriod      == 0) release.RetentionPeriod      = null;
@@ -1747,7 +1753,7 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Delete, $"/odata/Releases({processId})", folderId);
     }
 
-    public void UpdateReleaseToLatstVersionBulk(Int64 folderId, IEnumerable<Int64> processIds)
+    public void UpdateReleaseToLatestVersionBulk(Int64 folderId, IEnumerable<Int64> processIds)
     {
         var payload = new Dictionary<string, object>()
         {
@@ -1872,9 +1878,9 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<BlobFile>($"/odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.GetDirectories", folderId, "&directory=%2F&recursive=true");
     }
 
-    public IEnumerable<BlobFile> GetBucketFiles(Int64 folderId, Int64 bucketId)
+    public IEnumerable<BlobFile> GetBucketFiles(Int64 folderId, Bucket bucket)
     {
-        return GetEnumerable<BlobFile>($"/odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.GetFiles", folderId, "&directory=%2F&recursive=true");
+        return GetEnumerable<BlobFile>($"/odata/Buckets({bucket.Id})/UiPath.Server.Configuration.OData.GetFiles", folderId, "&directory=%2F&recursive=true");
     }
 
     public BlobFileAccess? GetBucketReadUri(Int64 folderId, Int64 bucketId, string fullPath)
@@ -2779,10 +2785,10 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Delete, $"/odata/TestDataQueues({testDataQueueId})", folderId);
     }
 
-    public IEnumerable<TestDataQueueItem> GetTestDataQueueItems(Int64 folderId, Int64 testDataQueueId)
+    public IEnumerable<TestDataQueueItem> GetTestDataQueueItems(Int64 folderId, TestDataQueue testDataQueue)
     {
         EnsureVersionSupport(14);
-        return GetEnumerable<TestDataQueueItem>("/odata/TestDataQueueItems", folderId, $"&$filter=(TestDataQueueId%20eq%20{testDataQueueId})");
+        return GetEnumerable<TestDataQueueItem>("/odata/TestDataQueueItems", folderId, $"&$filter=(TestDataQueueId%20eq%20{testDataQueue.Id})");
     }
 
     public void AddTestDataQueueItems(Int64 folderId, string testDataQueueName, string itemJsonArray)

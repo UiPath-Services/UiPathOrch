@@ -2434,6 +2434,47 @@ public class ReleaseRetentionSetting
     public string? Type { get; set; } // added in V19.0
 }
 
+// SubtypedPackageResourceDto
+public class PropertyItem
+{
+    public string? Name { get; set; }
+    public string? Value { get; set; }
+    public string? DefaultValue { get; set; }
+    public bool IsExpression { get; set; }
+}
+
+public class MetadataInfo
+{
+    public string? SubType { get; set; }
+    public string? ActivityName { get; set; }
+    public string? BindingsVersion { get; set; }
+    public string? SolutionsSupport { get; set; }
+}
+
+public class SubtypedPackageResource
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Release { get; set; } // added by UiPathOrch
+
+    public int Id { get; set; }
+    public string? ResourceId { get; set; }
+    public string? ResourceName { get; set; }
+    public string? ResourceType { get; set; }
+    public string? Comment { get; set; }
+    public string? ResourceKey { get; set; }
+    public string? FolderFullyQualifiedName { get; set; }
+    public int FolderId { get; set; }
+    public string? FolderType { get; set; }
+    public string? FolderProvisionType { get; set; }
+    public string? ValidationResult { get; set; }
+    public string? ValidationError { get; set; }
+    public bool IsOverwritable { get; set; }
+    public List<PropertyItem>? Properties { get; set; }
+    public MetadataInfo? Metadata { get; set; }
+}
+
 public class CustomKeyValuePair
 {
     public string? Key { get; set; }
