@@ -3361,7 +3361,9 @@ public partial class OrchAPISession : IDisposable
     //    string body = HttpRequestIdentity(HttpMethod.Get, $"/api/UserOrgs/userOrgs?email={email}");
     //}
 
-    public PmAuthenticationRoot? GetPmAuthenticationSettings(string partitionGlobalId)
+    // これで partitionGlobalId が取れそう。
+    // 機密アプリでは、partitionGlobalId を取得できない場合もあるようだ？
+    public PmAuthenticationRoot? GetPmAuthenticationSetting(string partitionGlobalId)
     {
         var body = HttpRequestIdentity<Dictionary<string, PmAuthenticationRoot>>(HttpMethod.Get, $"/api/AuthenticationSetting/getAll/{partitionGlobalId}");
         return body?.FirstOrDefault().Value;

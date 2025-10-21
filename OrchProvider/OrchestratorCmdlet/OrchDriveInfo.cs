@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Management.Automation;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Entities;
@@ -163,8 +164,6 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicCurrentUser = null;
         _dicCurrentUser_Exception?.ClearCache();
 
-        _dicEntitiesSummary = null;
-        _dicEntitiesSummary_Exceptions?.ClearCache();
 
         _dicJobs = null;
 
@@ -244,8 +243,6 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicPmUserLicenseGroupAllocations = null;
         _dicPmUserLicenseGroupAllocations_Exceptions.ClearCache();
 
-        _dicPmAuthenticationSetting = null;
-        _dicPmAuthenticationSetting_Exception.ClearCache();
 
         #endregion
     }
@@ -270,7 +267,6 @@ public partial class OrchDriveInfo : PSDriveInfo
         //_dicReleaseList?.TryRemove(folderId, out _);
         _dicTestSetExecutions?.TryRemove(folderId, out _);
 
-        _dicEntitiesSummary_Exceptions?.ClearCache();
         _dicPackages_Exceptions?.ClearCache();
         _dicTriggers_Exceptions?.ClearCache();
         //_dicReleaseList_Exceptions?.ClearCache();
@@ -764,38 +760,6 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     #region OrchEntitiesSummary cache
     // key: foldlerId
-    internal ConcurrentDictionary<Int64, EntitiesSummary?>? _dicEntitiesSummary = null;
-    internal ExceptionsCachePer<Int64> _dicEntitiesSummary_Exceptions = new();
-    public EntitiesSummary? GetEntitiesSummary(Int64 folderId, string path)
-    {
-        _dicEntitiesSummary_Exceptions.ThrowCachedExceptionIfAny(folderId);
-
-        if (_dicEntitiesSummary is null)
-        {
-            lock (_dicEntitiesSummary_Exceptions)
-            {
-                _dicEntitiesSummary ??= new ConcurrentDictionary<Int64, EntitiesSummary?>();
-            }
-        }
-        if (!_dicEntitiesSummary.TryGetValue(folderId, out EntitiesSummary summary))
-        {
-            try
-            {
-                summary = OrchAPISession.GetEntitiesSummary(folderId);
-                if (summary is not null)
-                {
-                    summary.Path = path;
-                }
-                _dicEntitiesSummary[folderId] = summary;
-            }
-            catch (HttpResponseException ex)
-            {
-                _dicEntitiesSummary_Exceptions.CacheException(folderId, ex);
-                throw;
-            }
-        }
-        return summary;
-    }
 
     #endregion
 
@@ -2037,40 +2001,6 @@ public partial class OrchDriveInfo : PSDriveInfo
     }
     #endregion
 
-    #region PmAuthenticationSetting cache
-    internal PmAuthenticationRoot? _dicPmAuthenticationSetting = null;
-    internal readonly ExceptionCachePerTenant _dicPmAuthenticationSetting_Exception = new();
-    public PmAuthenticationRoot? GetPmAuthenticationSettings()
-    {
-        _dicPmAuthenticationSetting_Exception.ThrowCachedExceptionIfAny();
-
-        if (_dicPmAuthenticationSetting is null)
-        {
-            lock (_dicPmAuthenticationSetting_Exception)
-            {
-                if (_dicPmAuthenticationSetting is null)
-                {
-                    var partitionGlobalId = GetPartitionGlobalId();
-
-                    try
-                    {
-                        _dicPmAuthenticationSetting = OrchAPISession.GetPmAuthenticationSettings(partitionGlobalId!);
-                        if (_dicPmAuthenticationSetting is not null)
-                        {
-                            _dicPmAuthenticationSetting.Path = NameColonSeparator;
-                        }
-                    }
-                    catch (HttpResponseException ex)
-                    {
-                        _dicPmAuthenticationSetting_Exception.CacheException(ex);
-                        throw;
-                    }
-                }
-            }
-        }
-        return _dicPmAuthenticationSetting;
-    }
-    #endregion
 
     private string? _libraryHostFeedId;
     internal string? LibraryHostFeedId
@@ -2093,6 +2023,10 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerOrganization<ExternalResource> PmExternalApiResources;
     public readonly ListCachePerOrganization<NuLicensedGroup> PmLicensedGroups;
     public readonly ListCachePerOrganization<NuLicensedUser> PmLicensedUsers;
+
+    // インデックスなしの組織エンティティ
+    // これらはマルチスレッドでの取得は避けるべきだ。Path の設定がおかしくなる。
+    public readonly SingleCachePerOrganization<PmAuthenticationRoot> PmAuthenticationSetting;
 
     // これらはドライブごとに保持する必要があるため、 Cache クラスの static メンバにはできない
     internal readonly List<ITenantCacheClearable> _allTenantCache = [];
@@ -2125,6 +2059,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerTenant<ResponseDictionaryItem> WebSettings;
 
     // インデックスなしのフォルダーエンティティ
+    public readonly SingleCachePerFolder<EntitiesSummary> EntitiesSummary;
     public readonly SingleCachePerFolder<string> FolderFeedId;
 
     public readonly ListCachePerFolder<TaskCatalog> ActionCatalogs;
@@ -2206,6 +2141,26 @@ public partial class OrchDriveInfo : PSDriveInfo
             }
         );
 
+        // インデックスなしの組織エンティティ
+        PmAuthenticationSetting = new(this,
+            OrchAPISession.GetPmAuthenticationSetting,
+            e =>
+            {
+                e.Path = NameColonSeparator;
+                if (e.settingsExpanded is null && !string.IsNullOrEmpty(e.externalIdentityProviderDto?.settings))
+                {
+                    try
+                    {
+                        e.settingsExpanded = JsonTools.JsonToDictionary(e.externalIdentityProviderDto.settings);
+                    }
+                    catch
+                    {
+                        e.settingsExpanded = [];
+                    }
+                }
+            }
+        );
+
         // インデックスなしのテナントエンティティ
         ActivitySettings       = new(this, OrchAPISession.GetActivitySettings,        e => e.Path = NameColonSeparator);
         ConnectionString       = new(this, OrchAPISession.GetConnectionString,        e => e.Path = NameColonSeparator);
@@ -2223,6 +2178,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         Settings               = new(this, OrchAPISession.GetSettings,                e => e.Path = NameColonSeparator);
         UpdateSettings         = new(this, OrchAPISession.GetUpdateSettings,          e => e.Path = NameColonSeparator);
         Webhooks               = new(this, OrchAPISession.GetWebhooks,                e => e.Path = NameColonSeparator);
+
         LibraryFeeds           = new(this, OrchAPISession.GetLibraryFeeds, null);
 
         Robots = new(this, () =>
@@ -2331,6 +2287,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         // インデックスなしのフォルダエンティティ
         // 下記は 11.1 ではエラーになることを確認済み。TODO: feedId はどうやって取得するのか？ 12 以降ではどうか？
+        EntitiesSummary                = new(this, fid => OrchAPISession.GetEntitiesSummary(fid!.Value), (e, folderPath) => e.Path = folderPath);
         FolderFeedId                   = new(this, OrchAPISession.GetFolderFeedId, null, 12);
         ActionCatalogs                 = new(this, OrchAPISession.GetTaskCatalogs,       (e, folderPath) => e.Path = folderPath, 16); // 16 でエラーが返らないことを確認済み
         ApiTriggers                    = new(this, OrchAPISession.GetHttpTriggers,       (e, folderPath) => e.Path = folderPath, 18); // 17 で web interface にないことを確認済み (17 で実行してもエラーは返らないようだが、)

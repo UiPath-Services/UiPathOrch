@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.14.16'
+ModuleVersion = '0.9.14.17'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -135,6 +135,7 @@ CmdletsToExport = @(
 'Disable-OrchLicenseRuntime',
 
 'Get-PmAuditLog',
+'Get-PmAuthenticationSetting',
 
 'Get-PmLicensedUser',
 
@@ -392,7 +393,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Added Get-OrchProcessRequirement cmdlet.
+        ReleaseNotes = '- Added Get-PmAuthenticationSetting cmdlet to retrieve organization authentication settings.
 '
 
         # Prerelease string of this module

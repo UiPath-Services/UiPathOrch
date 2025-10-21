@@ -4468,6 +4468,78 @@
     </View>
 
     <View>
+      <Name>PmAuthenticationSetting</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.PmAuthenticationRoot</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Path</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>id</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>displayName</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>authScheme</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>clientId</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>isActive</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>isExclusive</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>Path</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  $_.externalIdentityProviderDto.id
+                </ScriptBlock>
+                <Alignment>right</Alignment>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  $_.externalIdentityProviderDto.displayName
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  $_.externalIdentityProviderDto.authenticationScheme
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  $_.externalIdentityProviderDto.clientId
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  $_.externalIdentityProviderDto.isActive
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  $_.externalIdentityProviderDto.isExclusive
+                </ScriptBlock>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
       <Name>DuRole</Name>
       <ViewSelectedBy>
         <TypeName>UiPath.PowerShell.Entities.DuRole</TypeName>

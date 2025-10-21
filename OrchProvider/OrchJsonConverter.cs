@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Management.Automation;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -26,68 +28,37 @@ public class JsonTools
         AllowTrailingCommas = true
     };
 
-    private static List<object?>? ProcessArray(JsonArray? jsonArray)
+    public static Hashtable? JsonToDictionary(string? jsonText)
     {
-        if (jsonArray is null) return null;
-        var list = new List<object?>();
-
-        foreach (var item in jsonArray)
-        {
-            if (item is JsonObject nestedObject)
-            {
-                list.Add(ProcessNode(nestedObject));
-            }
-            else if (item is JsonArray nestedArray)
-            {
-                list.Add(ProcessArray(nestedArray));
-            }
-            else
-            {
-                list.Add(item?.ToString());
-            }
-        }
-
-        return list;
+        if (jsonText is null) return null;
+        try { return JsonNode.Parse(jsonText) is JsonObject obj ? ProcessNode(obj) : null; }
+        catch { return null; }
     }
 
-    private static Dictionary<string, object?>? ProcessNode(JsonObject? jsonObject)
+    private static Hashtable ProcessNode(JsonObject obj)
     {
-        if (jsonObject is null) return null;
-
-        var result = new Dictionary<string, object?>();
-
-        foreach (var kvp in jsonObject)
+        var result = new Hashtable();
+        foreach (var kvp in obj)
         {
-            if (kvp.Value is JsonObject nestedObject)
-            {
-                // ネストされたオブジェクトの場合
-                result[kvp.Key] = ProcessNode(nestedObject);
-            }
-            else if (kvp.Value is JsonArray jsonArray)
-            {
-                // 配列の場合
-                result[kvp.Key] = ProcessArray(jsonArray);
-            }
-            else
-            {
-                // 単純な値の場合
-                result[kvp.Key] = kvp.Value?.ToString();
-            }
+            result[kvp.Key] = ConvertValue(kvp.Value);
         }
-
         return result;
     }
 
-    public static Dictionary<string, object?>? JsonToDictionary(string? jsonText)
+    private static object? ConvertValue(JsonNode? node) => node switch
     {
-        if (jsonText is null) return null;
-        try
-        {
-            // JSON をパースして JsonNode に変換
-            JsonNode jsonNode = JsonNode.Parse(jsonText);
-            return ProcessNode(jsonNode as JsonObject);
-        }
-        catch { } // この例外は握りつぶして良い
+        JsonObject obj => ProcessNode(obj),
+        JsonArray arr => arr.Select(ConvertValue).ToArray(),
+        JsonValue val => GetTypedValue(val),
+        _ => null
+    };
+
+    private static object? GetTypedValue(JsonValue value)
+    {
+        if (value.TryGetValue<bool>(out var b)) return b;
+        if (value.TryGetValue<long>(out var l)) return l;
+        if (value.TryGetValue<double>(out var d)) return d;
+        if (value.TryGetValue<string>(out var s)) return s;
         return null;
     }
 }

@@ -436,6 +436,80 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
     //}
 }
 
+// partitionGlobalId をキーとする、組織の単一エンティティ
+// これは組織全体で共有される単一のエンティティのキャッシュを表す
+public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : class
+{
+    private readonly OrchDriveInfo _drive;
+    
+    // 組織ごとにキャッシュ（static = 全ドライブインスタンスで共有）
+    private static readonly ConcurrentDictionary<string, T> _cache = [];
+    private static readonly ExceptionsCachePer<string> _exception = new();
+    
+    // getter: partitionGlobalId を引数に取り、T を返す
+    private readonly Func<string, T?> _getter;
+    private readonly Action<T>? _initializer;
+
+    public SingleCachePerOrganization(
+        OrchDriveInfo drive,
+        Func<string, T?> getter,
+        Action<T>? initializer = null)
+    {
+        _drive = drive;
+        _drive._allTenantCache.Add(this);
+        _getter = getter;
+        _initializer = initializer;
+    }
+
+    public T? Get()
+    {
+        var partitionGlobalId = _drive.GetPartitionGlobalId();
+        if (string.IsNullOrEmpty(partitionGlobalId)) return null;
+
+        _exception.ThrowCachedExceptionIfAny(partitionGlobalId);
+
+        if (!_cache.TryGetValue(partitionGlobalId, out var entity))
+        {
+            lock (this)
+            {
+                if (!_cache.TryGetValue(partitionGlobalId, out entity))
+                {
+                    try
+                    {
+                        entity = _getter(partitionGlobalId);
+                        if (entity is not null)
+                        {
+                            _cache[partitionGlobalId] = entity;
+                            _initializer?.Invoke(entity);
+                        }
+                    }
+                    catch (HttpResponseException ex)
+                    {
+                        _exception.CacheException(partitionGlobalId, ex);
+                        throw;
+                    }
+                }
+            }
+        }
+        else if (entity is not null && _initializer is not null)
+        {
+            // キャッシュ済みの場合も initializer を実行（Pathの設定など）
+            _initializer(entity);
+        }
+        
+        return entity;
+    }
+
+    public void ClearCache()
+    {
+        var partitionGlobalId = _drive._dicPartitionGlobalId;
+        if (string.IsNullOrEmpty(partitionGlobalId)) return;
+
+        _cache.TryRemove(partitionGlobalId, out _);
+        _exception.ClearCache(partitionGlobalId);
+    }
+}
+
 // 今のところ、インデックスとしては Int64 のみをサポート。この型もパラメータ化した方がいいのかもしれない
 // TIndexEntity: インデックスを含むエンティティ
 // getIndex(TIndexEntity): TIndexEntity から Int64 のインデックス値を取得する Func
