@@ -1,3 +1,7 @@
+Version: 0.9.14.17
+- Added Get-PmAuthenticationSetting cmdlet to retrieve organization authentication settings.
+
+
 Version: 0.9.14.16
 - Added Get-OrchProcessRequirement cmdlet.
 

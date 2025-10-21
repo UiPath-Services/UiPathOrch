@@ -8,15 +8,14 @@ namespace UiPath.PowerShell.Commands;
 class InputParameter
 {
     public OrchDriveInfo? drive;
-    public Int64? folderId;
-    public string? path;
+    public Folder? folder;
 }
 
 [Cmdlet(VerbsCommon.Get, "OrchFolderUsage")]
 [OutputType(typeof(Entities.EntitySummary))]
 public class GetFolderUsageCommand : OrchestratorPSCmdlet
 {
-    List<InputParameter>? inputParameters;
+    private List<InputParameter>? _inputParameters;
 
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -27,15 +26,6 @@ public class GetFolderUsageCommand : OrchestratorPSCmdlet
 
     [Parameter]
     public uint Depth { get; set; }
-
-    [Parameter(DontShow = true, ValueFromPipelineByPropertyName = true)]
-    public Int64? Id { get; set; }
-
-    [Parameter(DontShow = true, ValueFromPipelineByPropertyName = true)]
-    public string? Name { get; set; }
-
-    [Parameter(DontShow = true, ValueFromPipelineByPropertyName = true)]
-    public string? DisplayName { get; set; }
 
     private void WriteResult(EntitiesSummary ret)
     {
@@ -61,51 +51,22 @@ public class GetFolderUsageCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        if (Id is not null)
+        _inputParameters ??= [];
+        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
+        foreach (var (drive, folder) in drivesFolders)
         {
-            var drives = SessionState.EnumOrchDrives(Path!);
-            if (drives is null || !drives.Any())
-            {
-                return;
-            }
-
-            OrchDriveInfo drive = drives.FirstOrDefault();
-            if (drive is null)
-            {
-                return;
-            }
-
-            string name = Name ?? DisplayName;
-
-            inputParameters ??= [];
             var param = new InputParameter()
             {
                 drive = drive,
-                folderId = Id,
-                path = System.IO.Path.Combine(Path?[0] ?? "", name ?? "")
+                folder = folder,
             };
-            inputParameters.Add(param);
-        }
-        else
-        {
-            var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
-            foreach (var (drive, folder) in drivesFolders)
-            {
-                inputParameters ??= [];
-                var param = new InputParameter()
-                {
-                    drive = drive,
-                    folderId = folder.Id ?? 0,
-                    path = folder.GetPSPath()
-                };
-                inputParameters.Add(param);
-            }
+            _inputParameters.Add(param);
         }
     }
 
     protected override void EndProcessing()
     {
-        if (inputParameters is null)
+        if (_inputParameters is null)
         {
             return;
         }
@@ -113,20 +74,20 @@ public class GetFolderUsageCommand : OrchestratorPSCmdlet
         // マルチスレッドで呼び出すと、サーバーからの結果が不安定になるような気がする。。
         // ここはシングルスレッドで問い合わせておく。
 
-        foreach (var p in inputParameters)
+        foreach (var p in _inputParameters)
         {
+            string ? target = p.folder?.GetPSPath();
             try
             {
-                var ret = p.drive!.GetEntitiesSummary(p.folderId ?? 0, p.path!);
+                var ret = p.drive!.EntitiesSummary.Get(p.folder!);
                 if (ret is not null)
                 {
-                    ret.Path = p.path;
+                    ret.Path = target;
                     WriteResult(ret);
                 }
             }
             catch (Exception ex)
             {
-                string target = p.path;
                 WriteError(new ErrorRecord(new OrchException(target!, ex), "GetFolderSummaryError", ErrorCategory.InvalidOperation, target));
             }
         }

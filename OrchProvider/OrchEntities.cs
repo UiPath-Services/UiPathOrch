@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Collections;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities.JsonConverter;
@@ -1836,7 +1837,7 @@ public class AuditLogEntity
     public string? CustomData { get; set; }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public Dictionary<string, object?>? CustomDataExpanded { get; set; } // added by UiPathOrch
+    public Hashtable? CustomDataExpanded { get; set; } // added by UiPathOrch
 
     public Int64? EntityId { get; set; }
     public string? EntityName { get; set; }
@@ -4039,6 +4040,10 @@ public class PmAuthenticationRoot
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
     public PmExternalIdentityProvider? externalIdentityProviderDto { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public Hashtable? settingsExpanded { get; set; }
+
     public PmAuthenticationSetting? directoryConnectionDto { get; set; }
     public string? authenticationSettingType { get; set; }
     public string? hostConnectionType { get; set; }
@@ -4055,7 +4060,7 @@ public class PmAuditLog : IEquatable<PmAuditLog> // added by UiPathOrch 適切�
     public string? category { get; set; }
     public string? action { get; set; }
     public string? auditLogDetails { get; set; }
-    public Dictionary<string, object?>? auditLogDetailsExpanded { get; set; } // added by UiPathOrch
+    public Hashtable? auditLogDetailsExpanded { get; set; } // added by UiPathOrch
     public string? userName { get; set; }
     public string? email { get; set; }
     public string? message { get; set; }
