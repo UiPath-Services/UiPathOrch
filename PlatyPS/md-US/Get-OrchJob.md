@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -63,10 +63,10 @@ Gets the first 5 successful jobs from the current folder.
 
 ### Example 3
 ```powershell
-PS C:\> Get-OrchJob -Path "Orch1:\Shared" -ReleaseName "BlankProcess19" -Last Week
+PS C:\> Get-OrchJob -Path Orch1:\Shared -ReleaseName InvoiceProcess -Last Week
 ```
 
-Gets all jobs for BlankProcess19 from the last week in the Shared folder.
+Gets all jobs for InvoiceProcess from the last week in the Shared folder.
 
 ### Example 4
 ```powershell
@@ -84,10 +84,10 @@ Gets jobs created in the last 6 hours, ordered by start time in ascending order.
 
 ### Example 6
 ```powershell
-PS Orch1:\> Get-OrchJob -Recurse -Robot "MyRobot" Month | Group-Object State
+PS Orch1:\> Get-OrchJob -Recurse -Robot robotaccount01-unattended -Last Month | Group-Object State
 ```
 
-Gets all jobs executed by MyRobot in the last month across all subfolders and groups them by state.
+Gets all jobs executed by robotaccount01-unattended in the last month across all subfolders and groups them by state.
 
 ### Example 7
 ```powershell
@@ -510,4 +510,5 @@ Required permissions: Jobs.View
 [Get-OrchJobMedia](Get-OrchJobMedia.md)
 
 [Open-OrchJob](Open-OrchJob.md)
+
 

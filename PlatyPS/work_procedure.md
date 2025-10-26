@@ -28,6 +28,30 @@
 - **段階的な学習**: 基本→応用の順で配置
 - **実用性重視**: 実際のシナリオで使える例
 
+### 命名規則（CRITICAL）
+**必ず英語の一般的な名前を使用**:
+
+#### フォルダ名
+- ✅ 良い例: Shared, Production, Development, Finance, HR
+- ❌ 悪い例: 営業部, MyFolder, Test123
+
+#### エンティティ名
+- **プロセス名**: InvoiceProcess, DataExtraction, EmailProcessor, ReportGeneration
+- **キュー名**: InvoiceQueue, OrderQueue, EmailQueue
+- **アセット名**: ConfigValue, DatabaseConnection, ApiKey
+- **ロボット名**: Robot01, ProductionRobot, AttendedRobot
+- **トリガー名**: DailySchedule, WeeklyReport, MonthlyBackup
+
+#### 命名のポイント
+- 固有名詞や組織特有の名前を避ける
+- 番号は使っても良いが、意味のある番号に（例: Robot01, Process01）
+- ランダムな数字は避ける（例: ❌ BlankProcess19）
+
+#### テスト方法
+1. 実際の環境では異なる名前でテスト可能
+2. ヘルプ記載時には一般的な名前に置き換える
+3. 必要であれば、一般的な名前のテストフォルダ/エンティティを作成可
+
 ### 良い例のパターン
 ```powershell
 # Example 1: 基本的な使い方（パラメータなし、または最小限）
@@ -85,6 +109,42 @@ UiPathOrchモジュールは2種類のエンティティを扱います：
 - processes, assets, queues, triggers, robots
 - これらのcmdletは -Path/-Recurse/-Depth パラメータを持つ
 - プロンプト: -Path の指定方法に応じて変わる
+
+## 📝 構文規則
+
+### ダブルクォートの使用
+**不要な場合は使わない**:
+- ✅ 正しい: `-Name InvoiceProcess`
+- ❌ 間違い: `-Name "InvoiceProcess"`
+- ✅ 必要な場合: `-Name "Invoice Process"` （空白を含む）
+- ✅ パスの場合: `-Path Orch1:\Shared` または `-Path "Orch1:\Shared"` （両方OK）
+
+### Positional Parameter（位置指定パラメータ）
+**パラメータ名を省略して簡潔に**:
+
+多くのcmdletで、主要パラメータは位置指定可能です：
+
+```powershell
+# ✅ 推奨（簡潔）
+Start-OrchJob InvoiceProcess
+Get-OrchProcess InvoiceProcess
+Remove-OrchAsset ConfigValue
+
+# 🟡 冗長（動作するが推奨しない）
+Start-OrchJob -Name InvoiceProcess
+Get-OrchProcess -Name InvoiceProcess
+Remove-OrchAsset -Name ConfigValue
+```
+
+**注意**: -Path, -Recurse, -Depth は常に明示的に指定する（位置指定でも必ずパラメータ名を書く）
+
+```powershell
+# ✅ 正しい
+Get-OrchJob -Path Orch1:\Shared -Recurse -State Successful
+
+# ❌ 間違い
+Get-OrchJob Orch1:\Shared -Recurse Successful
+```
 
 ## 📝 プロンプト表記ルール（重要）
 
@@ -276,6 +336,8 @@ Get-OrchProcess -Name "ProcessName" -ErrorAction SilentlyContinue
 
 **最終更新**: 2025-10-26
 **作成者**: Claude (with よしふみ)
+
+
 
 
 
