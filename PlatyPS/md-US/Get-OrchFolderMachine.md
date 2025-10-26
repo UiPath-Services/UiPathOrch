@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -55,7 +55,7 @@ Displays machines with names starting with 'Machine' assigned to the current fol
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchFolderMachine -Path Orch1:\\Production, Orch1:\\Development Template*
+PS C:\> Get-OrchFolderMachine -Path Orch1:\Production,Orch1:\Development Template*
 ```
 
 Displays machines with names starting with 'Template' assigned to the Production and Development folders.
@@ -69,28 +69,7 @@ Displays all the machines assigned to Orch1: and Orch2:.
 
 ### Example 6
 ```powershell
-PS C:\> Get-OrchFolderMachine -Recurse | select Path,Id,Name
-```
-
-Displays output with only the selected columns. Specify multiple columns separated by commas, including wildcards. Column names can be auto-completed with [Ctrl+Space] or [Tab].
-
-### Example 7
-```powershell
-PS C:\> Get-OrchFolderMachine -Recurse | Export-Csv c:folderMachines.csv
-```
-
-Exports the output to a CSV file. The CSV file will be located at the current location of the C: drive. You can customize the CSV format by combining with `select` to specify which columns to include. Try `ii c:' to open the current location of the C: drive.
-
-### Example 8
-```powershell
-PS C:\> Get-OrchFolderMachine -Recurse | ConvertTo-Json
-```
-
-Converts the output to JSON format, providing a raw view of the data from Orchestrator.
-
-### Example 9
-```powershell
-PS C:\> Get-OrchFolderMachine -Recurse -ExportCsv C:\Reports\FolderMachines.csv
+PS Orch1:\> Get-OrchFolderMachine -Recurse -ExportCsv C:\Reports\FolderMachines.csv
 ```
 
 Exports all folder machine assignments to a CSV file for reporting or backup purposes. The CSV includes human-readable names and folder assignments.

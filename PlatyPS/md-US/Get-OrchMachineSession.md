@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -50,13 +50,6 @@ PS C:\> Get-OrchMachineSession -Path Orch1:\Shared -Status Disconnected
 ```
 
 Gets disconnected machine sessions from the Shared folder, demonstrating -Path and -Status usage.
-
-### Example 4
-```powershell
-PS Orch1:\> Get-OrchMachineSession -Recurse | Select-Object Path, MachineName, Status, Runtimes | ConvertTo-Json
-```
-
-Gets all machine sessions and displays key information in JSON format, combining output customization techniques.
 
 ## PARAMETERS
 

@@ -61,19 +61,6 @@ PS Orch1:\> Get-OrchFolderUser -Recurse -Type DirectoryUser
 
 Retrieves all individual users (not groups) assigned across all folders using the -Type parameter for efficient filtering.
 
-### Example 5
-```powershell
-PS Orch1:\Shared> Get-OrchFolderUser | ConvertTo-Json -Depth 3
-```
-
-Displays detailed folder user properties in JSON format, including complete UserEntity details and Role information with Origin and InheritedFromFolder properties.
-
-### Example 6
-```powershell
-PS Orch1:\> Get-OrchFolderUser -Recurse | Group-Object {$_.UserEntity.Type} | Select-Object Name, Count, @{Name="UserNames";Expression={($_.Group.UserEntity.UserName | Sort-Object -Unique) -join ", "}}
-```
-
-Groups folder users by entity type and displays user counts with actual usernames for each type, providing a clear overview of user distribution.
 
 ## PARAMETERS
 

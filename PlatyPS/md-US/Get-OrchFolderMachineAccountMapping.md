@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -62,7 +62,7 @@ Gets all machine account mappings from the current folder and all its subfolders
 
 ### Example 5
 ```powershell
-PS Orch1:\> Get-OrchFolderMachineAccountMapping -Path Orch1:\Development, Orch1:\Testing
+PS C:\> Get-OrchFolderMachineAccountMapping -Path Orch1:\Development,Orch1:\Testing
 ```
 
 Gets machine account mappings from both Development and Testing folders.
@@ -73,13 +73,6 @@ PS Orch1:\> Get-OrchFolderMachineAccountMapping | Where-Object {$_.RobotUserName
 ```
 
 Gets all machine account mappings where the robot user name contains "service".
-
-### Example 7
-```powershell
-PS Orch1:\> Get-OrchMachine *Robot* | Get-OrchFolderMachineAccountMapping
-```
-
-Gets account mappings for all machines containing "Robot". Machine names are passed via pipeline using ByPropertyName binding.
 
 ## PARAMETERS
 

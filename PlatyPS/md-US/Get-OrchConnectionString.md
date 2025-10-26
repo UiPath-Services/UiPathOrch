@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -35,7 +35,7 @@ Required permissions: Settings.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Shared> Get-OrchConnectionString
+PS Orch1:\> Get-OrchConnectionString
 ```
 
 Gets the connection string for the current Orchestrator instance. Returns a UiPath.PowerShell.Entities.ODataValueOfString object containing the database connection information.
@@ -49,18 +49,10 @@ Retrieves connection strings from multiple Orchestrator instances. This is usefu
 
 ### Example 3
 ```powershell
-PS C:\> Get-OrchConnectionString | Select-Object -ExpandProperty Value
+PS Orch1:\> Get-OrchConnectionString | Select-Object -ExpandProperty Value
 ```
 
 Gets the connection string and displays only the actual connection string value, excluding the wrapper object properties. This provides direct access to the raw connection string text.
-
-### Example 4
-```powershell
-PS C:\> $result = Get-OrchConnectionString
-PS C:\> $result.Value
-```
-
-Stores the connection string object in a variable and then accesses the actual connection string value. This approach is useful when you need to further process or analyze the connection string.
 
 ## PARAMETERS
 

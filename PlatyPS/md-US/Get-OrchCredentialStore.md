@@ -34,7 +34,7 @@ Required permissions: Settings.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Shared> Get-OrchCredentialStore
+PS Orch1:\> Get-OrchCredentialStore
 ```
 
 Retrieves all credential stores, displaying Id, Name, Type, ProxyId, ProxyType, HostName, IsReadOnly, and masked AdditionalConfiguration.
@@ -48,7 +48,7 @@ Displays detailed credential store properties in JSON format, including all conf
 
 ### Example 3
 ```powershell
-PS C:\> Get-OrchCredentialStore -Path Orch1: AWS*
+PS C:\> Get-OrchCredentialStore -Path Orch1: -Name AWS*
 ```
 
 Gets all credential stores with names starting with "AWS" in the Orch1 tenant.
@@ -59,20 +59,6 @@ PS Orch1:\> Get-OrchCredentialStore | Where-Object {$_.Type -eq "AWS Secrets Man
 ```
 
 Retrieves all AWS Secrets Manager credential stores.
-
-### Example 5
-```powershell
-PS Orch1:\> Get-OrchCredentialStore | Where-Object {$_.Details.IsReadOnly -eq $false} | Select-Object Name, Type
-```
-
-Retrieves only editable credential stores (not read-only) and displays their names and types for management purposes.
-
-### Example 6
-```powershell
-PS Orch1:\> Get-OrchCredentialStore | Group-Object Type | Select-Object Name, Count
-```
-
-Groups credential stores by provider type and displays the count for each type, providing an overview of store distribution.
 
 ## PARAMETERS
 

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -51,45 +51,24 @@ Gets processes from the current folder and all subfolders.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchProcess *Invoice*
+PS Orch1:\> Get-OrchProcess -Recurse *Invoice*
 ```
 
-Gets processes containing Invoice in their name from all folders.
+Gets processes containing Invoice in their name from the current folder and all subfolders recursively.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchProcess -Path Orch1:\Shared, Orch1:\Finance -Recurse
+PS C:\> Get-OrchProcess -Path Orch1:\Shared,Orch1:\Finance -Recurse
 ```
 
 Gets processes from specific folders and their subfolders.
 
 ### Example 5
 ```powershell
-PS Orch1:\> Get-OrchProcess MainProcess, *Test*
+PS Orch1:\Shared> Get-OrchProcess MainProcess,*Test*
 ```
 
-Gets specific processes by name pattern from all folders.
-
-### Example 6
-```powershell
-PS Orch1:\> Get-OrchProcess -ExpandDetails | Where-Object {$_.ProcessSettings.AutopilotForRobots.Enabled}
-```
-
-Gets processes with Autopilot for Robots enabled using expanded details.
-
-### Example 7
-```powershell
-PS Orch1:\> Get-OrchProcess | Where-Object {$_.JobPriority -eq "High"}
-```
-
-Gets high-priority processes from all folders.
-
-### Example 8
-```powershell
-PS Orch1:\> Get-OrchProcess -ExportCsv C:\Reports\Processes.csv
-```
-
-Exports all processes to CSV with UTF-8 BOM encoding. The exported CSV can be imported using Import-Csv | New-OrchProcess or Import-Csv | Update-OrchProcess.
+Gets specific processes by name pattern from the current folder.
 
 ## PARAMETERS
 
