@@ -70,6 +70,22 @@ Get-OrchJob -Path "Orch1:\Shared" -Recurse -State Successful
 Get-OrchJob -State Successful -Path "Orch1:\Shared" -Recurse
 ```
 
+## 📋 エンティティタイプの理解
+
+UiPathOrchモジュールは2種類のエンティティを扱います：
+
+### Tenant entities（テナントエンティティ）
+テナント全体で動作するエンティティ：
+- webhooks, roles, machines, users, libraries
+- これらのcmdletは -Path パラメータを持たないことが多い
+- プロンプト: 通常 `PS Orch1:\>` または `PS C:\>` 
+
+### Folder entities（フォルダエンティティ）  
+特定のフォルダ内で動作するエンティティ：
+- processes, assets, queues, triggers, robots
+- これらのcmdletは -Path/-Recurse/-Depth パラメータを持つ
+- プロンプト: -Path の指定方法に応じて変わる
+
 ## 📝 プロンプト表記ルール（重要）
 
 EXAMPLESセクションでのプロンプト表記は、コマンドの実行場所を正確に示す必要があります：
@@ -260,6 +276,7 @@ Get-OrchProcess -Name "ProcessName" -ErrorAction SilentlyContinue
 
 **最終更新**: 2025-10-26
 **作成者**: Claude (with よしふみ)
+
 
 
 
