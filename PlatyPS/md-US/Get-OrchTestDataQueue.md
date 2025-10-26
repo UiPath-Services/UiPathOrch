@@ -41,7 +41,7 @@ Retrieves all test data queues from the current folder.
 
 ### Example 2
 ```powershell
-PS C:\> Get-OrchTestDataQueue -Path Orch1:\Production *UserData*
+PS C:\> Get-OrchTestDataQueue -Path Orch1:\Production -Name *UserData*
 ```
 
 Gets test data queues with names containing "UserData" from the Production folder.
@@ -54,13 +54,6 @@ PS Orch1:\Shared> Get-OrchTestDataQueue -Recurse
 Retrieves all test data queues from the current folder and all subfolders recursively.
 
 ### Example 4
-```powershell
-PS Orch1:\Shared> Get-OrchTestDataQueue | ConvertTo-Json -Depth 2
-```
-
-Displays detailed test data queue properties in JSON format.
-
-### Example 5
 ```powershell
 PS Orch1:\Shared> Get-OrchTestDataQueue TestUserQueue, LoginTestData
 ```
