@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -219,6 +219,4 @@ Triggers contain scheduling configurations and process associations. When copyin
 
 [Remove-OrchTrigger](Remove-OrchTrigger.md)
 
-[Set-OrchTrigger](Set-OrchTrigger.md)
 
-[Start-OrchTrigger](Start-OrchTrigger.md)

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -228,7 +228,5 @@ Processes contain automation workflows and execution configurations. Use wildcar
 
 [Remove-OrchProcess](Remove-OrchProcess.md)
 
-[Start-OrchProcess](Start-OrchProcess.md)
 
-[Set-OrchProcess](Set-OrchProcess.md)
 

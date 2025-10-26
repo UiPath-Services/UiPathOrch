@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -141,10 +141,7 @@ Required permissions: Settings.View
 
 ## RELATED LINKS
 
-[Add-OrchCredentialStore](Add-OrchCredentialStore.md)
 
-[Set-OrchCredentialStore](Set-OrchCredentialStore.md)
 
 [Remove-OrchCredentialStore](Remove-OrchCredentialStore.md)
 
-[Test-OrchCredentialStore](Test-OrchCredentialStore.md)

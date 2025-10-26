@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -189,6 +189,4 @@ This cmdlet operates at the organization level through Platform Management for l
 
 [Remove-PmLicenseFromPmLicensedGroup](Remove-PmLicenseFromPmLicensedGroup.md)
 
-[Get-PmLicense](Get-PmLicense.md)
 
-[Get-PmLicensedGroupMember](Get-PmLicensedGroupMember.md)

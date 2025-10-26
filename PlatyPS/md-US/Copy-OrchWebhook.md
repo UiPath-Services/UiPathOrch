@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -187,8 +187,6 @@ Webhooks contain endpoint URLs, authentication settings, and event trigger confi
 
 [Get-OrchWebhook](Get-OrchWebhook.md)
 
-[Add-OrchWebhook](Add-OrchWebhook.md)
 
 [Remove-OrchWebhook](Remove-OrchWebhook.md)
 
-[Set-OrchWebhook](Set-OrchWebhook.md)

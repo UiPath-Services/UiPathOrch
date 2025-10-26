@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -183,8 +183,6 @@ Required permissions: Buckets.View
 
 [Get-OrchBucket](Get-OrchBucket.md)
 
-[Add-OrchBucketItem](Add-OrchBucketItem.md)
 
-[Set-OrchBucketItem](Set-OrchBucketItem.md)
 
 [Remove-OrchBucketItem](Remove-OrchBucketItem.md)

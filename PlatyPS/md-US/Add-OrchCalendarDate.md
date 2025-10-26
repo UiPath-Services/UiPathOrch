@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -224,4 +224,3 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 [Copy-OrchCalendar](Copy-OrchCalendar.md)[Get-OrchCalendar](Get-OrchCalendar.md)
 [Remove-OrchCalendarDate](Remove-OrchCalendarDate.md)
-[New-OrchCalendar](New-OrchCalendar.md)

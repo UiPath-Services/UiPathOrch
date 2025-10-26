@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -197,9 +197,7 @@ Required permissions: Settings.View
 
 ## RELATED LINKS
 
-[Add-OrchCalendar](Add-OrchCalendar.md)
 
-[Set-OrchCalendar](Set-OrchCalendar.md)
 
 [Remove-OrchCalendar](Remove-OrchCalendar.md)
 

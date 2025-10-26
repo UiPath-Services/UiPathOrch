@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -201,6 +201,5 @@ This cmdlet is a folder entity operation that suspends automation trigger execut
 
 [Get-OrchTrigger](Get-OrchTrigger.md)
 
-[Set-OrchTrigger](Set-OrchTrigger.md)
 
 [Remove-OrchTrigger](Remove-OrchTrigger.md)

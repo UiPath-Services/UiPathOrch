@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -179,5 +179,4 @@ Required permissions: TaskCatalogs.View
 
 [Remove-OrchActionCatalog](Remove-OrchActionCatalog.md)
 [Copy-OrchActionCatalog](Copy-OrchActionCatalog.md)
-[Get-OrchFolder](Get-OrchFolder.md)
 

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -190,8 +190,6 @@ External applications contain authentication settings, permissions, and group as
 
 [Get-PmExternalApplication](Get-PmExternalApplication.md)
 
-[New-PmExternalApplication](New-PmExternalApplication.md)
 
 [Remove-PmExternalApplication](Remove-PmExternalApplication.md)
 
-[Set-PmExternalApplication](Set-PmExternalApplication.md)

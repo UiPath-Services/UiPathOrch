@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -170,10 +170,7 @@ Required permissions: Packages.View
 
 [Get-OrchPackage](Get-OrchPackage.md)
 
-[Add-OrchPackage](Add-OrchPackage.md)
 
-[Set-OrchPackage](Set-OrchPackage.md)
 
-[Remove-OrchPackageVersion](Remove-OrchPackageVersion.md)
 
 

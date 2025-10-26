@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -344,6 +344,4 @@ Required permissions: Logs.View
 
 [Get-OrchAuditLog](Get-OrchAuditLog.md)
 
-[Clear-OrchLog](Clear-OrchLog.md)
 
-[Export-OrchLog](Export-OrchLog.md)

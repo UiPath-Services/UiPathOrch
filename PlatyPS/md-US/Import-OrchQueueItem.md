@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -220,6 +220,5 @@ Import operations can be time-consuming for large CSV files. Use appropriate com
 
 [Get-OrchQueueItem](Get-OrchQueueItem.md)
 
-[Add-OrchQueueItem](Add-OrchQueueItem.md)
 
 [Remove-OrchQueueItem](Remove-OrchQueueItem.md)

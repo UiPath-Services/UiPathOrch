@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -206,4 +206,3 @@ Test set schedules automate test execution at specified intervals. Disabling the
 
 [Remove-OrchTestSetSchedule](Remove-OrchTestSetSchedule.md)
 
-[Set-OrchTestSetSchedule](Set-OrchTestSetSchedule.md)

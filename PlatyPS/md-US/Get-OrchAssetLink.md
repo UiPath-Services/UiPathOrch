@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -170,8 +170,6 @@ Required permissions: Assets.View
 
 [Get-OrchAsset](Get-OrchAsset.md)
 
-[Get-OrchFolder](Get-OrchFolder.md)
 
 [Set-OrchAsset](Set-OrchAsset.md)
 
-[Add-OrchAsset](Add-OrchAsset.md)

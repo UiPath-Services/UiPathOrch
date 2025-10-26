@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -201,6 +201,5 @@ Imported packages must be valid .nupkg files created by UiPath Studio or exporte
 
 [Remove-OrchPackage](Remove-OrchPackage.md)
 
-[Update-OrchPackage](Update-OrchPackage.md)
 
 

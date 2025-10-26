@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -217,6 +217,5 @@ This cmdlet manages Document Understanding project access. Common roles include 
 
 [Get-DuUser](Get-DuUser.md)
 
-[Remove-DuUser](Remove-DuUser.md)
 
 [Get-OrchUser](Get-OrchUser.md)
