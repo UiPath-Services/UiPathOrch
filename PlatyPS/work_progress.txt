@@ -3,13 +3,16 @@
 ## 📊 全体進捗
 
 対象ファイル数: 227
-完了: 0
+完了: 1
 進行中: 0
 保留: 0
 エラー: 0
-未着手: 227
+未着手: 226
 
-進捗率: 0%
+進捗率: 0.4%
+
+
+
 
 ## 📋 ステータス凡例
 
@@ -34,7 +37,7 @@ Add-OrchRoleToFolderUser.md | 🚀 | Normal | 1h |
 Add-OrchUser.md | 🚀 | Normal | 1h | 
 Add-PmGroupMember.md | 🚀 | Normal | 1h | 
 Add-PmLicenseToPmLicensedGroup.md | 🚀 | Normal | 1h | 
-Clear-OrchCache.md | 🚀 | Normal | 1h | 
+Clear-OrchCache.md | ✅ | Normal | 0h | 4 examples verified, all working correctly
 Copy-OrchActionCatalog.md | 🚀 | Normal | 1h | 
 Copy-OrchApiTrigger.md | 🚀 | Normal | 1h | 
 Copy-OrchAsset.md | 🚀 | Normal | 1h | 
@@ -113,8 +116,8 @@ Get-OrchFolderMachine.md | 🚀 | Normal | 1h |
 Get-OrchFolderMachineAccountMapping.md | 🚀 | Normal | 1h | 
 Get-OrchFolderUsage.md | 🚀 | Normal | 1h | 
 Get-OrchFolderUser.md | 🚀 | Normal | 1h | 
-Get-OrchHelp.md | 🚀 | Normal | 1h | 
-Get-OrchJob.md | 🚀 | Normal | 1h | 
+Get-OrchHelp.md | ✅ | Normal | 0h | 1 example verified, no changes needed
+Get-OrchJob.md | ✅ | Normal | 0h | 10 examples verified, 2 modified (names+quotes)
 Get-OrchJobMedia.md | 🚀 | Normal | 1h | 
 Get-OrchJobStats.md | 🚀 | Normal | 1h | 
 Get-OrchJobVideo.md | 🚀 | Normal | 1h | 
@@ -133,7 +136,7 @@ Get-OrchPackageVersion.md | 🚀 | Normal | 1h |
 Get-OrchPersonalWorkspace.md | 🚀 | Normal | 1h | 
 Get-OrchProcess.md | 🚀 | Normal | 1h | 
 Get-OrchProcessRequirement.md | 🚀 | Normal | 1h | 
-Get-OrchPSDrive.md | 🚀 | Normal | 1h | 
+Get-OrchPSDrive.md | ✅ | Normal | 0h | 3 examples verified, no changes needed
 Get-OrchQueue.md | 🚀 | Normal | 1h | 
 Get-OrchQueueItem.md | 🚀 | Normal | 1h | 
 Get-OrchRobot.md | 🚀 | Normal | 1h | 
@@ -251,4 +254,5 @@ Update-OrchQueue.md | 🚀 | Normal | 1h |
 Update-OrchTrigger.md | 🚀 | Normal | 1h | 
 Update-OrchUser.md | 🚀 | Normal | 1h | 
 Update-PmUser.md | 🚀 | Normal | 1h | 
+
 
