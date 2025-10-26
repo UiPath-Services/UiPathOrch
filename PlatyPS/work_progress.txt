@@ -1,0 +1,254 @@
+# EXAMPLES セクション検証・修正 進捗管理
+
+## 📊 全体進捗
+
+対象ファイル数: 227
+完了: 0
+進行中: 0
+保留: 0
+エラー: 0
+未着手: 227
+
+進捗率: 0%
+
+## 📋 ステータス凡例
+
+✅ 完了 - 検証・修正完了、動作確認済み
+🔄 修正中 - 問題を発見し修正作業中
+⏳ 進行中 - 検証作業中
+🟡 保留 - 一時保留（依存関係等）
+❌ エラー - 問題あり、要対応
+🚀 未着手 - まだ作業していない
+
+## 📁 ファイル一覧
+
+形式: filename | status | priority | effort_remaining | notes
+
+Add-DuUser.md | 🚀 | Normal | 1h | 
+Add-OrchAssetLink.md | 🚀 | Normal | 1h | 
+Add-OrchCalendarDate.md | 🚀 | Normal | 1h | 
+Add-OrchFolderMachine.md | 🚀 | Normal | 1h | 
+Add-OrchFolderUser.md | 🚀 | Normal | 1h | 
+Add-OrchMachineClientSecret.md | 🚀 | Normal | 1h | 
+Add-OrchRoleToFolderUser.md | 🚀 | Normal | 1h | 
+Add-OrchUser.md | 🚀 | Normal | 1h | 
+Add-PmGroupMember.md | 🚀 | Normal | 1h | 
+Add-PmLicenseToPmLicensedGroup.md | 🚀 | Normal | 1h | 
+Clear-OrchCache.md | 🚀 | Normal | 1h | 
+Copy-OrchActionCatalog.md | 🚀 | Normal | 1h | 
+Copy-OrchApiTrigger.md | 🚀 | Normal | 1h | 
+Copy-OrchAsset.md | 🚀 | Normal | 1h | 
+Copy-OrchBucket.md | 🚀 | Normal | 1h | 
+Copy-OrchCalendar.md | 🚀 | Normal | 1h | 
+Copy-OrchCredentialStore.md | 🚀 | Normal | 1h | 
+Copy-OrchFolderMachine.md | 🚀 | Normal | 1h | 
+Copy-OrchFolderUser.md | 🚀 | Normal | 1h | 
+Copy-OrchLibrary.md | 🚀 | Normal | 1h | 
+Copy-OrchMachine.md | 🚀 | Normal | 1h | 
+Copy-OrchPackage.md | 🚀 | Normal | 1h | 
+Copy-OrchProcess.md | 🚀 | Normal | 1h | 
+Copy-OrchQueue.md | 🚀 | Normal | 1h | 
+Copy-OrchQueueItem.md | 🚀 | Normal | 1h | 
+Copy-OrchRole.md | 🚀 | Normal | 1h | 
+Copy-OrchTestDataQueue.md | 🚀 | Normal | 1h | 
+Copy-OrchTestSet.md | 🚀 | Normal | 1h | 
+Copy-OrchTestSetSchedule.md | 🚀 | Normal | 1h | 
+Copy-OrchTrigger.md | 🚀 | Normal | 1h | 
+Copy-OrchUser.md | 🚀 | Normal | 1h | 
+Copy-OrchWebhook.md | 🚀 | Normal | 1h | 
+Copy-PmExternalApplication.md | 🚀 | Normal | 1h | 
+Copy-PmGroup.md | 🚀 | Normal | 1h | 
+Copy-PmRobotAccount.md | 🚀 | Normal | 1h | 
+Copy-PmUser.md | 🚀 | Normal | 1h | 
+Disable-OrchApiTrigger.md | 🚀 | Normal | 1h | 
+Disable-OrchFolderMachineAccountMapping.md | 🚀 | Normal | 1h | 
+Disable-OrchFolderMachineInherit.md | 🚀 | Normal | 1h | 
+Disable-OrchLicenseRuntime.md | 🚀 | Normal | 1h | 
+Disable-OrchMaintenanceMode.md | 🚀 | Normal | 1h | 
+Disable-OrchPersonalWorkspace.md | 🚀 | Normal | 1h | 
+Disable-OrchTestSetSchedule.md | 🚀 | Normal | 1h | 
+Disable-OrchTrigger.md | 🚀 | Normal | 1h | 
+Disable-OrchUserAttended.md | 🚀 | Normal | 1h | 
+Disable-OrchWebhook.md | 🚀 | Normal | 1h | 
+Edit-OrchConfig.md | 🚀 | Normal | 1h | 
+Edit-OrchProcess.md | 🚀 | Normal | 1h | 
+Enable-OrchApiTrigger.md | 🚀 | Normal | 1h | 
+Enable-OrchFolderMachineAccountMapping.md | 🚀 | Normal | 1h | 
+Enable-OrchFolderMachineInherit.md | 🚀 | Normal | 1h | 
+Enable-OrchLicenseRuntime.md | 🚀 | Normal | 1h | 
+Enable-OrchMaintenanceMode.md | 🚀 | Normal | 1h | 
+Enable-OrchPersonalWorkspace.md | 🚀 | Normal | 1h | 
+Enable-OrchTestSetSchedule.md | 🚀 | Normal | 1h | 
+Enable-OrchTrigger.md | 🚀 | Normal | 1h | 
+Enable-OrchUserAttended.md | 🚀 | Normal | 1h | 
+Enable-OrchWebhook.md | 🚀 | Normal | 1h | 
+Export-OrchBucketItem.md | 🚀 | Normal | 1h | 
+Export-OrchJobMedia.md | 🚀 | Normal | 1h | 
+Export-OrchLibrary.md | 🚀 | Normal | 1h | 
+Export-OrchPackage.md | 🚀 | Normal | 1h | 
+Find-OrchFolderNoUserAssigned.md | 🚀 | Normal | 1h | 
+Get-DuClassifier.md | 🚀 | Normal | 1h | 
+Get-DuDocumentType.md | 🚀 | Normal | 1h | 
+Get-DuExtractor.md | 🚀 | Normal | 1h | 
+Get-DuRole.md | 🚀 | Normal | 1h | 
+Get-DuUser.md | 🚀 | Normal | 1h | 
+Get-OrchActionCatalog.md | 🚀 | Normal | 1h | 
+Get-OrchActivitySetting.md | 🚀 | Normal | 1h | 
+Get-OrchAlert.md | 🚀 | Normal | 1h | 
+Get-OrchApiTrigger.md | 🚀 | Normal | 1h | 
+Get-OrchAsset.md | 🚀 | Normal | 1h | 
+Get-OrchAssetLink.md | 🚀 | Normal | 1h | 
+Get-OrchAuditLog.md | 🚀 | Normal | 1h | 
+Get-OrchAuthenticationSetting.md | 🚀 | Normal | 1h | 
+Get-OrchBucket.md | 🚀 | Normal | 1h | 
+Get-OrchBucketItem.md | 🚀 | Normal | 1h | 
+Get-OrchCalendar.md | 🚀 | Normal | 1h | 
+Get-OrchClassicEnvironment.md | 🚀 | Normal | 1h | 
+Get-OrchClassicRobot.md | 🚀 | Normal | 1h | 
+Get-OrchConnectionString.md | 🚀 | Normal | 1h | 
+Get-OrchCredentialStore.md | 🚀 | Normal | 1h | 
+Get-OrchCurrentUser.md | 🚀 | Normal | 1h | 
+Get-OrchExecutionSetting.md | 🚀 | Normal | 1h | 
+Get-OrchFolderMachine.md | 🚀 | Normal | 1h | 
+Get-OrchFolderMachineAccountMapping.md | 🚀 | Normal | 1h | 
+Get-OrchFolderUsage.md | 🚀 | Normal | 1h | 
+Get-OrchFolderUser.md | 🚀 | Normal | 1h | 
+Get-OrchHelp.md | 🚀 | Normal | 1h | 
+Get-OrchJob.md | 🚀 | Normal | 1h | 
+Get-OrchJobMedia.md | 🚀 | Normal | 1h | 
+Get-OrchJobStats.md | 🚀 | Normal | 1h | 
+Get-OrchJobVideo.md | 🚀 | Normal | 1h | 
+Get-OrchLibrary.md | 🚀 | Normal | 1h | 
+Get-OrchLibraryVersion.md | 🚀 | Normal | 1h | 
+Get-OrchLicense.md | 🚀 | Normal | 1h | 
+Get-OrchLicenseNamedUser.md | 🚀 | Normal | 1h | 
+Get-OrchLicenseRuntime.md | 🚀 | Normal | 1h | 
+Get-OrchLicenseStats.md | 🚀 | Normal | 1h | 
+Get-OrchLog.md | 🚀 | Normal | 1h | 
+Get-OrchMachine.md | 🚀 | Normal | 1h | 
+Get-OrchMachineClientSecretId.md | 🚀 | Normal | 1h | 
+Get-OrchMachineSession.md | 🚀 | Normal | 1h | 
+Get-OrchPackage.md | 🚀 | Normal | 1h | 
+Get-OrchPackageVersion.md | 🚀 | Normal | 1h | 
+Get-OrchPersonalWorkspace.md | 🚀 | Normal | 1h | 
+Get-OrchProcess.md | 🚀 | Normal | 1h | 
+Get-OrchProcessRequirement.md | 🚀 | Normal | 1h | 
+Get-OrchPSDrive.md | 🚀 | Normal | 1h | 
+Get-OrchQueue.md | 🚀 | Normal | 1h | 
+Get-OrchQueueItem.md | 🚀 | Normal | 1h | 
+Get-OrchRobot.md | 🚀 | Normal | 1h | 
+Get-OrchRole.md | 🚀 | Normal | 1h | 
+Get-OrchSetting.md | 🚀 | Normal | 1h | 
+Get-OrchTestCase.md | 🚀 | Normal | 1h | 
+Get-OrchTestCaseExecution.md | 🚀 | Normal | 1h | 
+Get-OrchTestDataQueue.md | 🚀 | Normal | 1h | 
+Get-OrchTestDataQueueItem.md | 🚀 | Normal | 1h | 
+Get-OrchTestDataQueueItemTable.md | 🚀 | Normal | 1h | 
+Get-OrchTestSet.md | 🚀 | Normal | 1h | 
+Get-OrchTestSetExecution.md | 🚀 | Normal | 1h | 
+Get-OrchTestSetSchedule.md | 🚀 | Normal | 1h | 
+Get-OrchTrigger.md | 🚀 | Normal | 1h | 
+Get-OrchUnattendedSession.md | 🚀 | Normal | 1h | 
+Get-OrchUpdateSetting.md | 🚀 | Normal | 1h | 
+Get-OrchUser.md | 🚀 | Normal | 1h | 
+Get-OrchUserPrivilege.md | 🚀 | Normal | 1h | 
+Get-OrchUserSession.md | 🚀 | Normal | 1h | 
+Get-OrchWebhook.md | 🚀 | Normal | 1h | 
+Get-OrchWebSetting.md | 🚀 | Normal | 1h | 
+Get-PmAuditLog.md | 🚀 | Normal | 1h | 
+Get-PmAuthenticationSetting.md | 🚀 | Normal | 1h | 
+Get-PmExternalApiResource.md | 🚀 | Normal | 1h | 
+Get-PmExternalApplication.md | 🚀 | Normal | 1h | 
+Get-PmGroup.md | 🚀 | Normal | 1h | 
+Get-PmGroupMember.md | 🚀 | Normal | 1h | 
+Get-PmLicensedGroup.md | 🚀 | Normal | 1h | 
+Get-PmLicensedUser.md | 🚀 | Normal | 1h | 
+Get-PmRobotAccount.md | 🚀 | Normal | 1h | 
+Get-PmUser.md | 🚀 | Normal | 1h | 
+Get-TmConfiguration.md | 🚀 | Normal | 1h | 
+Get-TmProjectPermission.md | 🚀 | Normal | 1h | 
+Get-TmProjectSetting.md | 🚀 | Normal | 1h | 
+Get-TmRequirement.md | 🚀 | Normal | 1h | 
+Get-TmServerInfo.md | 🚀 | Normal | 1h | 
+Get-TmTestCase.md | 🚀 | Normal | 1h | 
+Get-TmTestSet.md | 🚀 | Normal | 1h | 
+Import-OrchBucketItem.md | 🚀 | Normal | 1h | 
+Import-OrchLibrary.md | 🚀 | Normal | 1h | 
+Import-OrchPackage.md | 🚀 | Normal | 1h | 
+Import-OrchQueueItem.md | 🚀 | Normal | 1h | 
+Move-OrchFolderUser.md | 🚀 | Normal | 1h | 
+Move-PmGroupMember.md | 🚀 | Normal | 1h | 
+New-OrchBucket.md | 🚀 | Normal | 1h | 
+New-OrchMachine.md | 🚀 | Normal | 1h | 
+New-OrchProcess.md | 🚀 | Normal | 1h | 
+New-OrchQueue.md | 🚀 | Normal | 1h | 
+New-OrchTrigger.md | 🚀 | Normal | 1h | 
+New-PmGroup.md | 🚀 | Normal | 1h | 
+New-PmUser.md | 🚀 | Normal | 1h | 
+Open-OrchJob.md | 🚀 | Normal | 1h | 
+Open-OrchLogLocation.md | 🚀 | Normal | 1h | 
+Redo-OrchQueueItem.md | 🚀 | Normal | 1h | 
+Remove-DuRoleFromDuUser.md | 🚀 | Normal | 1h | 
+Remove-OrchActionCatalog.md | 🚀 | Normal | 1h | 
+Remove-OrchApiTrigger.md | 🚀 | Normal | 1h | 
+Remove-OrchAsset.md | 🚀 | Normal | 1h | 
+Remove-OrchBucket.md | 🚀 | Normal | 1h | 
+Remove-OrchBucketItem.md | 🚀 | Normal | 1h | 
+Remove-OrchCalendar.md | 🚀 | Normal | 1h | 
+Remove-OrchCalendarDate.md | 🚀 | Normal | 1h | 
+Remove-OrchCredentialStore.md | 🚀 | Normal | 1h | 
+Remove-OrchFolderMachine.md | 🚀 | Normal | 1h | 
+Remove-OrchFolderUser.md | 🚀 | Normal | 1h | 
+Remove-OrchJobMedia.md | 🚀 | Normal | 1h | 
+Remove-OrchLibrary.md | 🚀 | Normal | 1h | 
+Remove-OrchMachine.md | 🚀 | Normal | 1h | 
+Remove-OrchMachineClientSecret.md | 🚀 | Normal | 1h | 
+Remove-OrchPackage.md | 🚀 | Normal | 1h | 
+Remove-OrchPersonalWorkspace.md | 🚀 | Normal | 1h | 
+Remove-OrchProcess.md | 🚀 | Normal | 1h | 
+Remove-OrchQueue.md | 🚀 | Normal | 1h | 
+Remove-OrchQueueItem.md | 🚀 | Normal | 1h | 
+Remove-OrchRole.md | 🚀 | Normal | 1h | 
+Remove-OrchRoleFromFolderUser.md | 🚀 | Normal | 1h | 
+Remove-OrchRoleFromUser.md | 🚀 | Normal | 1h | 
+Remove-OrchTestCase.md | 🚀 | Normal | 1h | 
+Remove-OrchTestDataQueue.md | 🚀 | Normal | 1h | 
+Remove-OrchTestSet.md | 🚀 | Normal | 1h | 
+Remove-OrchTestSetSchedule.md | 🚀 | Normal | 1h | 
+Remove-OrchTrigger.md | 🚀 | Normal | 1h | 
+Remove-OrchUser.md | 🚀 | Normal | 1h | 
+Remove-OrchWebhook.md | 🚀 | Normal | 1h | 
+Remove-PmAllocationFromPmLicensedGroup.md | 🚀 | Normal | 1h | 
+Remove-PmExternalApplication.md | 🚀 | Normal | 1h | 
+Remove-PmGroup.md | 🚀 | Normal | 1h | 
+Remove-PmGroupMember.md | 🚀 | Normal | 1h | 
+Remove-PmLicensedGroup.md | 🚀 | Normal | 1h | 
+Remove-PmLicenseFromPmLicensedGroup.md | 🚀 | Normal | 1h | 
+Remove-PmRobotAccount.md | 🚀 | Normal | 1h | 
+Remove-PmUser.md | 🚀 | Normal | 1h | 
+Remove-TmRequirement.md | 🚀 | Normal | 1h | 
+Remove-TmTestCase.md | 🚀 | Normal | 1h | 
+Remove-TmTestSet.md | 🚀 | Normal | 1h | 
+Reset-OrchProcessVersion.md | 🚀 | Normal | 1h | 
+Reset-OrchTestDataQueueItem.md | 🚀 | Normal | 1h | 
+Resolve-PmDirectoryNameBulk.md | 🚀 | Normal | 1h | 
+Search-OrchDirectory.md | 🚀 | Normal | 1h | 
+Search-PmDirectory.md | 🚀 | Normal | 1h | 
+Set-OrchAsset.md | 🚀 | Normal | 1h | 
+Set-OrchCredentialAsset.md | 🚀 | Normal | 1h | 
+Set-OrchLocation.md | 🚀 | Normal | 1h | 
+Set-OrchRole.md | 🚀 | Normal | 1h | 
+Set-PmRobotAccount.md | 🚀 | Normal | 1h | 
+Start-OrchJob.md | 🚀 | Normal | 1h | 
+Start-OrchTestSet.md | 🚀 | Normal | 1h | 
+Stop-OrchJob.md | 🚀 | Normal | 1h | 
+Stop-OrchTestSetExecution.md | 🚀 | Normal | 1h | 
+Update-OrchCurrentUserURPassword.md | 🚀 | Normal | 1h | 
+Update-OrchMachine.md | 🚀 | Normal | 1h | 
+Update-OrchProcess.md | 🚀 | Normal | 1h | 
+Update-OrchProcessVersion.md | 🚀 | Normal | 1h | 
+Update-OrchQueue.md | 🚀 | Normal | 1h | 
+Update-OrchTrigger.md | 🚀 | Normal | 1h | 
+Update-OrchUser.md | 🚀 | Normal | 1h | 
+Update-PmUser.md | 🚀 | Normal | 1h | 
+
