@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,14 +34,14 @@ Required permissions: [PLACEHOLDER - License.View]
 
 ### Example 1: Get all runtime licenses
 ```powershell
-PS Orch1:\Shared> Get-OrchLicenseRuntime
+PS Orch1:\> Get-OrchLicenseRuntime
 ```
 
 Retrieves runtime license information for all robot types from the current Orchestrator tenant, grouped by robot type.
 
 ### Example 2: Get runtime licenses from specific drives
 ```powershell
-PS C:\> Get-OrchLicenseRuntime -Path Orch1:, Orch2:
+PS C:\> Get-OrchLicenseRuntime -Path Orch1:,Orch2:
 ```
 
 Retrieves runtime license information from multiple specified Orchestrator drives.
@@ -52,13 +52,6 @@ PS Orch1:\> Get-OrchLicenseRuntime Unattended, NonProduction
 ```
 
 Retrieves runtime license information for both Unattended and NonProduction robot types.
-
-### Example 4: Get license details and examine structure
-```powershell
-PS Orch1:\> Get-OrchLicenseRuntime | Select-Object -First 1 | ConvertTo-Json -Depth 5
-```
-
-Retrieves the first license record and displays its complete object structure in JSON format for detailed analysis.
 
 ## PARAMETERS
 

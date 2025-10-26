@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,7 +34,7 @@ Required permissions: Machines.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Shared> Get-OrchMachine
+PS Orch1:\> Get-OrchMachine
 ```
 
 Gets all machines from the current tenant.
@@ -48,38 +48,24 @@ Gets machines containing Template in their name.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchMachine -Path Orch1:, Orch2:
+PS C:\> Get-OrchMachine -Path Orch1:,Orch2:
 ```
 
 Gets machines from multiple tenants.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchMachine | Where-Object {$_.Type Standard}
+PS Orch1:\> Get-OrchMachine | Where-Object {$_.Type -eq "Standard"}
 ```
 
 Gets standard (non-template) machines.
 
 ### Example 5
 ```powershell
-PS Orch1:\> Get-OrchMachine | Where-Object {$_.UnattendedSlots -gt 0}
-```
-
-Gets machines with unattended robot slots allocated.
-
-### Example 6
-```powershell
 PS Orch1:\> Get-OrchMachine -ExpandRobotUser
 ```
 
 Gets machines with expanded robot user details.
-
-### Example 7
-```powershell
-PS Orch1:\> Get-OrchMachine -ExportCsv C:\Reports\Machines.csv
-```
-
-Exports all machines to CSV with UTF-8 BOM encoding.
 
 ## PARAMETERS
 

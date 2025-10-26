@@ -59,10 +59,10 @@ Retrieves the first 20 logs for the InvoiceProcess in the Production folder.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchLog -Last Week -Machine Robot01 -Level Warn, Error
+PS Orch1:\Shared> Get-OrchLog -Last Week -Machine Robot01 -Level Warn,Error
 ```
 
-Gets warning and error logs from Robot01 for the last week across all folders in that tenant.
+Gets warning and error logs from Robot01 for the last week from the current folder.
 
 ### Example 5
 ```powershell
@@ -70,13 +70,6 @@ PS Orch1:\Shared> Get-OrchLog -JobKey 12345678-1234-1234-1234-123456789012 -Orde
 ```
 
 Retrieves logs for a specific job key ordered by timestamp in ascending order.
-
-### Example 6
-```powershell
-PS C:\> Get-OrchLog -Path Orch1:\Shared -Last Month -WindowsIdentity DOMAIN\robotuser -Skip 100 -First 50
-```
-
-Gets logs for a specific Windows identity from the last month, skipping the first 100 results and taking the next 50.
 
 ## PARAMETERS
 
