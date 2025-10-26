@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPathOrch-help.xml
 Module Name: UiPathOrch
 online version:
@@ -62,11 +62,11 @@ Recursively searches for jobs with video recordings across all folders in the Or
 PS C:\> Get-OrchJobVideo -Path Orch1:\Shared -First 10
 ```
 
-Retrieves the first 10 jobs with video recordings from the Production folder. Useful for managing large result sets.
+Retrieves the first 10 jobs with video recordings from the Shared folder. Useful for managing large result sets.
 
 ### Example 5
 ```powershell
-PS C:\> Get-OrchJobVideo -Path Orch1:\Production, Orch1:\Development
+PS C:\> Get-OrchJobVideo -Path Orch1:\Production,Orch1:\Development
 ```
 
 Retrieves jobs with video recordings from multiple specified folders simultaneously.

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,7 +34,7 @@ Required permissions: Libraries.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Shared> Get-OrchLibrary
+PS Orch1:\> Get-OrchLibrary
 ```
 
 Gets all libraries from the current tenant.
@@ -62,7 +62,7 @@ Gets libraries containing Activities in their ID from host feeds.
 
 ### Example 5
 ```powershell
-PS Orch1:\> Get-OrchLibrary -Path Orch1:, Orch2:
+PS C:\> Get-OrchLibrary -Path Orch1:,Orch2:
 ```
 
 Gets libraries from multiple tenants.
@@ -73,13 +73,6 @@ PS Orch1:\> Get-OrchLibrary | Where-Object {$_.Published -gt (Get-Date).AddDays(
 ```
 
 Gets libraries published in the last 30 days.
-
-### Example 7
-```powershell
-PS Orch1:\> Get-OrchLibrary -HostFeed | Where-Object {$_.Id -like "*UiPath*"} | Select-Object Id, Version, Description
-```
-
-Gets UiPath libraries from host feeds with selected properties.
 
 ## PARAMETERS
 

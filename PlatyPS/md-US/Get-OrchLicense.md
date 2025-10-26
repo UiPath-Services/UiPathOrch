@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -33,7 +33,7 @@ Required permissions: [PLACEHOLDER - License view permissions]
 
 ### Example 1
 ```powershell
-PS Orch1:\Shared> Get-OrchLicense
+PS Orch1:\> Get-OrchLicense
 ```
 
 Gets the complete license information for the current Orchestrator instance.
@@ -47,7 +47,7 @@ Retrieves the license information and displays the allowed license counts by typ
 
 ### Example 3
 ```powershell
-PS C:\> Get-OrchLicense -Path Orch1:, Orch2:
+PS C:\> Get-OrchLicense -Path Orch1:,Orch2:
 ```
 
 Gets license information from multiple tenants.
@@ -58,25 +58,6 @@ PS Orch1:\> Get-OrchLicense | ConvertTo-Json -Depth 2
 ```
 
 Gets license information and displays the complete structure including nested properties like Allowed and Used license counts.
-
-### Example 5
-```powershell
-PS Orch1:\> $license = Get-OrchLicense
-PS Orch1:\> $usage = ($license.Used.Unattended / $license.Allowed.Unattended) * 100
-PS Orch1:\> Write-Host "Unattended license usage: $usage%"
-```
-
-Calculates and displays the percentage of unattended licenses currently in use.
-
-### Example 6
-```powershell
-PS Orch1:\> $license = Get-OrchLicense
-PS Orch1:\> $expiryDate = [DateTimeOffset]::FromUnixTimeSeconds($license.ExpireDate)
-PS Orch1:\> $daysLeft = ($expiryDate - [DateTimeOffset]::Now).Days
-PS Orch1:\> Write-Host "License expires in $daysLeft days"
-```
-
-Calculates and displays the number of days remaining until license expiration.
 
 ## PARAMETERS
 
