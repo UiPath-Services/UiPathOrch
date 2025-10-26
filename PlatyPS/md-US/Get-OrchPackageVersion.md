@@ -57,20 +57,6 @@ PS C:\> Get-OrchPackageVersion -Path Orch1:\ *Process*
 
 Gets all package versions with IDs containing "Process" in the Orch1 tenant feed.
 
-### Example 4
-```powershell
-PS Orch1:\> Get-OrchPackageVersion | Where-Object {$_.IsActive -eq $true}
-```
-
-Retrieves only active package versions.
-
-### Example 5
-```powershell
-PS Orch1:\> Get-OrchPackageVersion | Where-Object {$_.ProjectType Library} | Select-Object Id, Version, Description
-```
-
-Displays library packages with their versions and descriptions.
-
 ## PARAMETERS
 
 ### -Id

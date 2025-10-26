@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -46,27 +46,17 @@ PS Orch1:\> Get-OrchPackage -Recurse
 
 Gets all process packages from all folders recursively.
 
-### Example 3
 ```powershell
-PS Orch1:\> Get-OrchPackage -Path Orch1:\Production *Process*
+PS C:\> Get-OrchPackage -Path Orch1:\Production *Process*
 ```
 
-Gets process packages with IDs starting with ProcessA from the Production folder.
+Gets process packages whose IDs contain "Process" from the Production folder.
 
-### Example 4
 ```powershell
-PS C:\> Get-OrchPackage Orch1: *Blank*
+PS C:\> Get-OrchPackage -Path Orch1: *Invoice*
 ```
 
-Gets TestProcess package from the tenant feed (entire tenant scope).
-
-### Example 5
-```powershell
-PS Orch1:\> Get-OrchPackage | Select-Object Path, Id, Version, IsActive
-```
-
-Gets all packages recursively and displays key properties with Path shown first.
-
+Gets packages whose IDs contain "Invoice" from the tenant feed (entire tenant scope).
 ## PARAMETERS
 
 ### -Id
