@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -35,7 +35,6 @@ Required permissions: Jobs.View
 
 ### Example 1
 ```powershell
-cd Orch1:
 PS Orch1:\> Get-OrchJobStats
 ```
 
@@ -66,7 +65,7 @@ Calculates and displays the total number of jobs across all statuses.
 
 ### Example 5
 ```powershell
-PS Orch1:\> Get-OrchJobStats -Path Orch1:, Orch2:
+PS C:\> Get-OrchJobStats -Path Orch1:, Orch2:
 ```
 
 Gets job statistics from multiple tenants.

@@ -34,45 +34,25 @@ Required permissions: Settings.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Shared> Get-OrchExecutionSetting
+PS Orch1:\> Get-OrchExecutionSetting
 ```
+
 
 Retrieves all execution settings grouped by scope (Global and Robot), displaying DisplayName, ValueType, DefaultValue, and PossibleValues.
 
 ### Example 2
 ```powershell
-PS Orch1:\Shared> Get-OrchExecutionSetting | ConvertTo-Json -Depth 3
+PS Orch1:\> Get-OrchExecutionSetting -Scope Global
 ```
 
-Displays detailed execution setting properties in JSON format, including Key, Scope, PathScope, and all configuration details.
+Retrieves all execution settings in the Global scope.
 
 ### Example 3
 ```powershell
-PS C:\> Get-OrchExecutionSetting -Path Orch1: -DisplayName "*Logging*"
+PS C:\> Get-OrchExecutionSetting -Path Orch1: -DisplayName *Logging*
 ```
 
 Gets all execution settings with keys containing "Logging" in the Orch1 tenant.
-
-### Example 4
-```powershell
-PS Orch1:\> Get-OrchExecutionSetting | Where-Object {$_.ValueType Boolean}
-```
-
-Retrieves all boolean-type execution settings.
-
-### Example 5
-```powershell
-PS Orch1:\> Get-OrchExecutionSetting | Where-Object {$_.PossibleValues.Count -gt 0} | Select-Object DisplayName, PossibleValues
-```
-
-Displays settings with enumerated values (MultipleChoice type) and their possible options.
-
-### Example 6
-```powershell
-PS Orch1:\> Get-OrchExecutionSetting | Group-Object Scope
-```
-
-Groups execution settings by their scope (Global vs Robot).
 
 ## PARAMETERS
 

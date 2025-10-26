@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -41,7 +41,7 @@ Gets all classic robots in the current folder.
 
 ### Example 2
 ```powershell
-PS Orch1:\> Get-OrchClassicRobot *Prod*
+PS Orch1:\Shared> Get-OrchClassicRobot *Prod*
 ```
 
 Gets all classic robots whose names contain "Prod".
@@ -51,35 +51,29 @@ Gets all classic robots whose names contain "Prod".
 PS Orch1:\> Get-OrchClassicRobot -Recurse
 ```
 
-Gets all classic robots from the current folder and all its subfolders.
+Gets all classic robots from the root folder recursively.
 
-### Example 5
+### Example 4
 ```powershell
-PS Orch1:\> Get-OrchClassicRobot -Path Orch1:\Legacy, Orch1:\Migration
+PS C:\> Get-OrchClassicRobot -Path Orch1:\Legacy,Orch1:\Migration
 ```
 
 Gets classic robots from the Legacy and Migration folders.
 
-### Example 6
+### Example 5
 ```powershell
-PS Orch1:\> Get-OrchClassicRobot | Where-Object {$_.Type Unattended}
+PS Orch1:\Shared> Get-OrchClassicRobot | Where-Object {$_.Type -eq "Unattended"}
 ```
 
 Gets all classic robots of type "Unattended".
 
-### Example 7
+### Example 6
 ```powershell
-PS Orch1:\> Get-OrchClassicRobot | Select-Object Name, MachineName, Environment, Type, Status
-```
-
-Gets all classic robots and displays their key properties including machine name, environment, type, and status.
-
-### Example 8
-```powershell
-PS Orch1:\> Get-OrchClassicRobot -ExportCsv C:\Reports\ClassicRobots.csv
+PS Orch1:\Shared> Get-OrchClassicRobot -ExportCsv C:\Reports\ClassicRobots.csv
 ```
 
 Exports all classic robots from the current folder to a CSV file for reporting or backup purposes.
+
 
 ## PARAMETERS
 

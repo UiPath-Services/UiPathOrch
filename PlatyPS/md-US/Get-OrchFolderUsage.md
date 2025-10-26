@@ -41,7 +41,7 @@ Gets usage statistics for the current folder.
 
 ### Example 2
 ```powershell
-PS C:\> Get-OrchFolderUsage -Recurse
+PS Orch1:\> Get-OrchFolderUsage -Recurse
 ```
 
 Gets usage statistics for all folders recursively starting from the current location.
@@ -55,38 +55,10 @@ Gets usage statistics for all folders under the Production folder recursively.
 
 ### Example 4
 ```powershell
-PS C:\> Get-OrchFolderUsage -Recurse -Depth 2
+PS Orch1:\> Get-OrchFolderUsage -Recurse -Depth 2
 ```
 
 Gets usage statistics for folders up to 2 levels deep from the current location.
-
-### Example 5
-```powershell
-PS C:\> Get-OrchFolderUsage -Recurse | Select-Object Path, Type, Count | Sort-Object Count -Descending
-```
-
-Gets usage statistics and displays them sorted by count in descending order.
-
-### Example 6
-```powershell
-PS C:\> Get-OrchFolderUsage -Recurse | ConvertTo-Json -Depth 3
-```
-
-Retrieves usage statistics and displays the complete object structure in JSON format for detailed analysis.
-
-### Example 7
-```powershell
-PS C:\> Get-OrchFolderUsage -Recurse | Where-Object {$_.Type QueueItem -and $_.Count -gt 1000} | Select-Object Path, Count
-```
-
-Finds folders with high queue item counts (over 1000) for capacity planning and queue management.
-
-### Example 8
-```powershell
-PS C:\> Get-OrchFolderUsage -Recurse | Group-Object Category | Select-Object Name, Count, @{Name="TotalItems";Expression={(.Group | Measure-Object Count -Sum).Sum}}
-```
-
-Groups usage statistics by category and shows total item counts for each category across all folders. This is useful for getting an overview of resource distribution by type.
 
 ## PARAMETERS
 
