@@ -48,24 +48,24 @@ Retrieves all action catalogs from all folders recursively.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchActionCatalog -Path Orch1:\Production Process*
+PS C:\> Get-OrchActionCatalog -Path Orch1:\Shared
 ```
 
-Retrieves action catalogs whose names start with "Process" from the Production folder.
+Retrieves action catalogs from the Shared folder using an absolute path.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchActionCatalog -Recurse | Select-Object Path, Name, FoldersCount, RetentionAction
+PS Orch1:\> Get-OrchActionCatalog -Recurse -Name *catalog
 ```
 
-Gets all action catalogs recursively and displays key properties with Path shown first.
+Retrieves action catalogs whose names end with "catalog" from all folders.
 
 ### Example 5
 ```powershell
-PS C:\> Get-OrchActionCatalog -Path Orch1:\Production,Orch1:\Development -Recurse -Depth 2
+PS C:\> Get-OrchActionCatalog -Path Orch1:\Shared,Orch1:\Production -Recurse
 ```
 
-Gets action catalogs from Production and Development folders with maximum depth of 2 levels.
+Gets action catalogs from Shared and Production folders recursively.
 
 ## PARAMETERS
 

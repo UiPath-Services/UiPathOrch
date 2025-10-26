@@ -36,7 +36,7 @@ Required permissions: Settings.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Shared> Get-OrchAuthenticationSetting
+PS Orch1:\> Get-OrchAuthenticationSetting
 ```
 
 Retrieves all authentication and system settings, displaying Key and Value pairs for all configuration parameters.

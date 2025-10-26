@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -40,7 +40,7 @@ Gets the activity settings for the current Orchestrator instance.
 
 ### Example 2
 ```powershell
-PS Orch1:\> $setting = Get-OrchActivitySetting; $setting.SignalR
+PS Orch1:\> (Get-OrchActivitySetting).SignalR
 ```
 
 Retrieves the activity settings and displays the SignalR configuration details.

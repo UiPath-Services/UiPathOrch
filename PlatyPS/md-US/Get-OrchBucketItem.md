@@ -50,7 +50,7 @@ Gets bucket items from all folders recursively.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchBucketItem -Path Orch1:\Production -FullPath *Report*
+PS C:\> Get-OrchBucketItem -Path Orch1:\Production -FullPath *Report*
 ```
 
 Gets bucket items with FullPath containing "Report" from the Production folder.

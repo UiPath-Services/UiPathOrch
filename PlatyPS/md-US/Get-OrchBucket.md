@@ -37,42 +37,28 @@ Required permissions: Buckets.View
 PS Orch1:\Shared> Get-OrchBucket
 ```
 
-Retrieves all storage buckets configured in the Production folder, demonstrating basic folder entity usage.
+Retrieves all storage buckets in the current folder, demonstrating basic usage.
 
 ### Example 2
 ```powershell
-PS C:\> Get-OrchBucket -Path Orch1:\Production *Bucket*
+PS C:\> Get-OrchBucket -Path Orch1:\Shared *Backup*
 ```
 
-Gets all storage buckets with names containing "Bucket" in the Production folder, demonstrating -Path parameter priority and wildcard filtering.
+Gets storage buckets with names containing "Backup" in the Shared folder, demonstrating -Path parameter with wildcard filtering.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchBucket -Recurse TestBucket2
+PS Orch1:\> Get-OrchBucket -Recurse *Prod*
 ```
 
-Gets the "TestBucket2" storage bucket across all folders recursively, showing -Path and -Recurse parameter priority.
+Gets storage buckets with names containing "Prod" across all folders recursively.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchBucket -Recurse | Where-Object {$_.FoldersCount -gt 0}
+PS Orch1:\> Get-OrchBucket -Recurse | Where-Object FoldersCount -gt 0
 ```
 
-Gets all storage buckets that contain items (FoldersCount > 0) using pipeline processing.
-
-### Example 5
-```powershell
-PS Orch1:\Production> Get-OrchBucket | ConvertTo-Json -Depth 2
-```
-
-Displays detailed bucket properties in JSON format, including Path, Id, Name, Identifier GUID, StorageProvider, StorageContainer, Options, FoldersCount, and Tags array.
-
-### Example 6
-```powershell
-PS Orch1:\Development> Get-OrchBucket -ExportCsv StorageBuckets.csv
-```
-
-Exports storage bucket configurations to CSV file for documentation and backup purposes.
+Retrieves storage buckets that are used in at least one folder, using pipeline processing to filter results.
 
 ## PARAMETERS
 

@@ -50,10 +50,10 @@ Gets all classic environments from all folders recursively.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchClassicEnvironment -Path Orch1:\Legacy *Test*
+PS C:\> Get-OrchClassicEnvironment -Path Orch1:\Shared -Name *Test*
 ```
 
-Gets classic environments whose names contain "Test" from the Legacy folder.
+Gets classic environments whose names contain "Test" from the Shared folder.
 
 ### Example 4
 ```powershell
@@ -64,10 +64,10 @@ Gets all classic environments and displays the complete structure including nest
 
 ### Example 5
 ```powershell
-PS C:\> Get-OrchClassicEnvironment -Path Orch1:\Legacy,Orch1:\Migration -Recurse -Depth 2
+PS C:\> Get-OrchClassicEnvironment -Path Orch1:\Shared,Orch1:\Production -Recurse -Depth 2
 ```
 
-Gets classic environments from Legacy and Migration folders with maximum depth of 2 levels.
+Gets classic environments from Shared and Production folders with maximum depth of 2 levels.
 
 ## PARAMETERS
 
