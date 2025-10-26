@@ -52,9 +52,11 @@ Get-OrchJob -Last Week | Where-Object Duration -gt "00:30:00"
 ### 検証項目
 - [ ] コマンド構文が正しい
 - [ ] パラメータの順序が正しい（-Path/-Recurse が最初）
+- [ ] **プロンプト表記が正しい**（-Path指定方法とプロンプトが一致）
 - [ ] 実際に実行して動作確認
 - [ ] エラーが発生しない（または適切にエラーハンドリングされている）
 - [ ] 例の説明と実際の動作が一致
+- [ ] 少ない例で多様な使い方をカバーしている
 
 ## 📐 パラメータ順序ルール
 
@@ -67,6 +69,49 @@ Get-OrchJob -Path "Orch1:\Shared" -Recurse -State Successful
 # ❌ 間違い
 Get-OrchJob -State Successful -Path "Orch1:\Shared" -Recurse
 ```
+
+## 📝 プロンプト表記ルール（重要）
+
+EXAMPLESセクションでのプロンプト表記は、コマンドの実行場所を正確に示す必要があります：
+
+### ルール1: -Path に絶対パス（Orch1:\から始まる）を指定する場合
+→ プロンプト: `PS C:\>`（任意の場所から実行可能を示す）
+
+```powershell
+# ✅ 正しい
+PS C:\> Get-OrchJob -Path "Orch1:\Shared" -State Successful
+
+# ❌ 間違い
+PS Orch1:\Shared> Get-OrchJob -Path "Orch1:\Shared" -State Successful
+```
+
+### ルール2: -Path に相対パスを指定する場合
+→ プロンプト: `PS Orch1:\>` または `PS Orch1:\Shared>` など（Orch1:ドライブ内を示す）
+
+```powershell
+# ✅ 正しい
+PS Orch1:\> Get-OrchJob -Path "Shared" -State Successful
+
+# ❌ 間違い
+PS C:\> Get-OrchJob -Path "Shared" -State Successful
+```
+
+### ルール3: -Path を指定しない場合（カレントロケーション使用）
+→ プロンプト: **必ず** `PS Orch1:\>` や `PS Orch1:\Shared>` など（Orch1:ドライブ内を示す）
+
+```powershell
+# ✅ 正しい
+PS Orch1:\Shared> Get-OrchJob -State Successful
+
+# ❌ 間違い
+PS C:\> Get-OrchJob -State Successful
+```
+
+### プロンプト表記の検証チェックリスト
+- [ ] -Path に絶対パス → `PS C:\>`
+- [ ] -Path に相対パス → `PS Orch1:\...>`
+- [ ] -Path なし → `PS Orch1:\...>`
+- [ ] プロンプトとコマンドの整合性が取れている
 
 ## 🔄 作業フロー
 
@@ -215,4 +260,6 @@ Get-OrchProcess -Name "ProcessName" -ErrorAction SilentlyContinue
 
 **最終更新**: 2025-10-26
 **作成者**: Claude (with よしふみ)
+
+
 
