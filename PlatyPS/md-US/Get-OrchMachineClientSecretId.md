@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,7 +34,7 @@ Required permissions: Machines.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Shared> Get-OrchMachineClientSecretId
+PS Orch1:\> Get-OrchMachineClientSecretId
 ```
 
 Outputs the issuance date and time of client secrets for all machines in the current tenant.
@@ -55,7 +55,7 @@ Gets client secret information for all machines whose names contain "Prod".
 
 ### Example 4
 ```powershell
-PS C:\> Get-OrchMachineClientSecretId -Path Orch1:, Orch2: Machine01
+PS C:\> Get-OrchMachineClientSecretId -Path Orch1:,Orch2: Machine01
 ```
 
 Gets client secret information for Machine01 across multiple tenants.
