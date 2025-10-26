@@ -36,7 +36,7 @@ Required permissions: Schedules.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Shared> Get-OrchCalendar
+PS Orch1:\> Get-OrchCalendar
 ```
 
 Retrieves all business calendars, displaying Id, Name, TimeZoneId, and Key properties.
@@ -64,7 +64,7 @@ Displays detailed calendar properties in JSON format, including ExcludedDates ar
 
 ### Example 5
 ```powershell
-PS Orch1:\> Get-OrchCalendar -ExportCsv C:\\Reports\\Calendars.csv
+PS Orch1:\> Get-OrchCalendar -ExportCsv C:\Reports\Calendars.csv
 ```
 
 Exports all calendars to CSV with UTF-8 BOM encoding. The exported CSV can be imported using Import-Csv | New-OrchCalendar.

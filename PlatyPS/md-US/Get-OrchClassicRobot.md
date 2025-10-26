@@ -41,19 +41,12 @@ Gets all classic robots in the current folder.
 
 ### Example 2
 ```powershell
-PS Orch1:\> Get-OrchClassicRobot Robot01
-```
-
-Gets the classic robot named "Robot01" from the current folder.
-
-### Example 3
-```powershell
 PS Orch1:\> Get-OrchClassicRobot *Prod*
 ```
 
 Gets all classic robots whose names contain "Prod".
 
-### Example 4
+### Example 3
 ```powershell
 PS Orch1:\> Get-OrchClassicRobot -Recurse
 ```

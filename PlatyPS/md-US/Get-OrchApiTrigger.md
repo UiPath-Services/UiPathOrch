@@ -50,14 +50,14 @@ Displays all API triggers in the current folder and all its subfolders. When run
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchApiTrigger -Recurse *api*
+PS Orch1:\> Get-OrchApiTrigger -Recurse -Name *api*
 ```
 
 Gets API triggers whose names contain 'api' from the current folder and all its subfolders.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchApiTrigger -Path Orch1:\Production TestTrigger
+PS C:\> Get-OrchApiTrigger -Path Orch1:\Production -Name TestTrigger
 ```
 
 Gets the API trigger named 'TestTrigger' from the Production folder.
@@ -78,19 +78,12 @@ Gets all API triggers and displays the complete structure including nested prope
 
 ### Example 7
 ```powershell
-PS C:\> Get-OrchApiTrigger -Recurse | Export-Csv c:apiTriggers.csv
+PS Orch1:\> Get-OrchApiTrigger -Recurse | Export-Csv c:\apiTriggers.csv
 ```
 
-Exports the output to a CSV file. The CSV file will be located at the current location of the C: drive. You can customize the CSV format by combining with `select` to specify which columns to include. Try `ii c:' to open the current location of the C: drive.
+Exports the output to a CSV file. You can customize the CSV format by combining with `Select-Object` to specify which columns to include.
 
 ### Example 8
-```powershell
-PS C:\> Get-OrchApiTrigger -Recurse | ConvertTo-Json
-```
-
-Converts the output to JSON format, providing a raw view of the data from Orchestrator.
-
-### Example 9
 ```powershell
 PS Orch1:\> Get-OrchApiTrigger -Recurse -Name *test*,*prod*
 ```

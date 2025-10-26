@@ -51,7 +51,7 @@ Gets assets from all folders recursively.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchAsset *Config*
+PS Orch1:\> Get-OrchAsset -Recurse *Config*
 ```
 
 Gets assets containing Config in their name from all folders.
@@ -65,31 +65,24 @@ Gets credential assets from all folders.
 
 ### Example 5
 ```powershell
-PS Orch1:\> Get-OrchAsset -ExpandUserValues -Recurse
+PS Orch1:\> Get-OrchAsset -Recurse | Where-Object ValueScope -eq PerRobot
 ```
 
-Gets assets with expanded user-specific values for per-robot assets.
+Gets per-robot scoped assets from all folders using pipeline filtering.
 
 ### Example 6
 ```powershell
-PS Orch1:\> Get-OrchAsset | Where-Object {$_.ValueScope PerRobot}
+PS C:\> Get-OrchAsset -Path Orch1:\Production -Name DatabaseConnection
 ```
 
-Gets per-robot scoped assets from all folders.
+Gets the asset named 'DatabaseConnection' from the Production folder.
 
 ### Example 7
 ```powershell
-PS Orch1:\> Get-OrchAsset -ExportCsv C:\Reports\Assets.csv
+PS Orch1:\> Get-OrchAsset -Recurse -ExpandUserValues | Where-Object ValueScope -eq PerRobot
 ```
 
-Exports all assets to CSV with UTF-8 BOM encoding. The exported CSV can be imported using Import-Csv | Set-OrchAsset.
-
-### Example 8
-```powershell
-PS Orch1:\> Get-OrchAsset -ExportCredentialCsv C:\Reports\Credentials.csv
-```
-
-Exports credential assets to separate CSV file. The exported CSV can be imported using Import-Csv | Set-OrchCredentialAsset.
+Gets per-robot assets and expands their user-specific values, showing actual values assigned to each user/machine combination.
 
 ## PARAMETERS
 
