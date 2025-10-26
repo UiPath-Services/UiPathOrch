@@ -55,7 +55,7 @@ Gets all execution settings with keys containing "Logging" in the Orch1 tenant.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchExecutionSetting | Where-Object {$_.ValueType -eq "Boolean"}
+PS Orch1:\> Get-OrchExecutionSetting | Where-Object {$_.ValueType Boolean}
 ```
 
 Retrieves all boolean-type execution settings.

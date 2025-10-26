@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,21 +34,21 @@ Required permissions: Platform Management user read permissions
 
 ### Example 1
 ```powershell
-PS C:\> Get-PmUser
+PS Orch1:\> Get-PmUser
 ```
 
 Retrieves all users from the Platform Management service.
 
 ### Example 2
 ```powershell
-PS C:\> Get-PmUser john.doe@company.com
+PS C:\> Get-PmUser john.doe@uipath.com
 ```
 
-Retrieves the specific user with the email address "john.doe@company.com".
+Retrieves the specific user with the email address "john.doe@uipath.com".
 
 ### Example 3
 ```powershell
-PS C:\> Get-PmUser *@company.com
+PS C:\> Get-PmUser *@uipath.com
 ```
 
 Retrieves all users whose email addresses belong to the "company.com" domain using wildcard matching.

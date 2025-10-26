@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -61,20 +61,6 @@ PS C:\> Import-Csv c:\failedRemovals.csv | Remove-OrchQueueItem
 ```
 
 Re-imports previously failed removal items from CSV and retries their deletion.
-
-### Example 5
-```powershell
-PS Orch1:\Production> Remove-OrchQueueItem ProcessingQueue 98765 "ABC123-RowVersion" -WhatIf
-```
-
-Shows what would happen when removing a specific queue item with ID 98765 and RowVersion "ABC123-RowVersion" from ProcessingQueue.
-
-### Example 6
-```powershell
-PS C:\> Remove-OrchQueueItem -Path Orch1:\Development TestQueue 11111, 22222 -Confirm
-```
-
-Removes queue items with IDs 11111 and 22222 from TestQueue in the Development folder with confirmation prompts.
 
 ## PARAMETERS
 
@@ -170,7 +156,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

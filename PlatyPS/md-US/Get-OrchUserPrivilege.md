@@ -36,49 +36,49 @@ Required permissions: Users.View
 
 ### Example 1
 ```powershell
-Get-OrchUserPrivilege
+PS Orch1:\Shared> Get-OrchUserPrivilege
 ```
 
 Gets privilege information for all users in the current tenant.
 
 ### Example 2
 ```powershell
-Get-OrchUserPrivilege john.doe
+PS Orch1:\> Get-OrchUserPrivilege john.doe
 ```
 
 Gets privilege information for the user "john.doe" in the current tenant.
 
 ### Example 3
 ```powershell
-Get-OrchUserPrivilege *admin*
+PS Orch1:\> Get-OrchUserPrivilege *admin*
 ```
 
 Gets privilege information for all users whose names contain "admin".
 
 ### Example 4
 ```powershell
-Get-OrchUserPrivilege -Path Orch1:, Orch2: administrator
+PS Orch1:\> Get-OrchUserPrivilege -Path Orch1:, Orch2: administrator
 ```
 
 Gets privilege information for the "administrator" user across multiple tenants.
 
 ### Example 5
 ```powershell
-Get-OrchUserPrivilege | Where-Object {$_.ExplicitRoles.Count -gt 0}
+PS Orch1:\> Get-OrchUserPrivilege | Where-Object {$_.ExplicitRoles.Count -gt 0}
 ```
 
 Gets all users who have explicit role assignments (not just inherited from groups).
 
 ### Example 6
 ```powershell
-Get-OrchUserPrivilege | Select-Object UserName, AccessLevel, @{Name="TotalRoles"; Expression={$_.EffectiveRoles.Count}}
+PS Orch1:\> Get-OrchUserPrivilege | Select-Object UserName, AccessLevel, @{Name="TotalRoles"; Expression={$_.EffectiveRoles.Count}}
 ```
 
 Gets all user privileges and displays username, access level, and total effective role count.
 
 ### Example 7
 ```powershell
-Get-OrchUser admin* | Get-OrchUserPrivilege | ConvertTo-Json -Depth 5
+PS Orch1:\> Get-OrchUser admin* | Get-OrchUserPrivilege | ConvertTo-Json -Depth 5
 ```
 
 Gets privilege information for admin users via pipeline and exports detailed privilege structure to JSON.
@@ -116,7 +116,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

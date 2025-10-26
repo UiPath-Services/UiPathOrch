@@ -38,45 +38,49 @@ Required permissions: Queues.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Shared> Get-OrchQueueItem -Status New -First 5
+PS Orch1:\Shared> Get-OrchQueueItem -Status Deleted -First 5
 ```
 
-Retrieves the first 5 queue items with New status from the current folder.
+Retrieves the first 5 queue items with Deleted status from the current folder.
 
 ### Example 2
 ```powershell
-PS Orch1:\Shared> Get-OrchQueueItem ProcessingQueue -Status Failed -First 10
+PS Orch1:\Shared> Get-OrchQueueItem TestValue -Status Deleted -First 2
 ```
 
-Gets the first 10 failed queue items from the ProcessingQueue.
+Gets the first 2 deleted queue items from the specific queue named TestValue.
 
 ### Example 3
 ```powershell
-PS C:\> Get-OrchQueueItem -Path Orch1:\Production -Recurse -Status New, InProgress -Priority High
+PS C:\> Get-OrchQueueItem -Path Orch1:\Shared -Recurse -Status Deleted -Priority Normal
 ```
 
-Retrieves high-priority queue items with New or InProgress status from the Production folder.
+Retrieves normal-priority queue items with Deleted status from the Shared folder and its subfolders.
 
 ### Example 4
 ```powershell
-PS Orch1:\Shared> Get-OrchQueueItem -StartProcessingAfter (Get-Date).AddHours(-2) | ConvertTo-Json -Depth 3
+PS Orch1:\Shared> Get-OrchQueueItem -StartProcessingAfter (Get-Date).AddHours(-24) | ConvertTo-Json -Depth 3
 ```
 
-Gets queue items that started processing in the last 2 hours and displays detailed JSON information including SpecificContent and ProcessingException.
+Gets queue items that started processing in the last 24 hours and displays detailed JSON information including SpecificContent and ProcessingException. The output shows comprehensive queue item structure with robot details, processing times, and specific content data.
 
 ### Example 5
 ```powershell
-PS C:\> Get-OrchQueueItem -Path Orch1:\Production -Robot Robot01 -Status Successful -OrderBy EndProcessing -OrderAscending
+PS Orch1:\Shared> Get-OrchQueueItem -Status Deleted -OrderBy EndProcessing -OrderAscending
 ```
 
-Retrieves successful queue items processed by Robot01 from the Production folder, ordered by end processing time in ascending order (oldest first).
+Retrieves deleted queue items from the current folder, ordered by end processing time in ascending order (oldest first).
 
 ### Example 6
 ```powershell
-PS Orch1:\Shared> Get-OrchQueueItem ReviewQueue -Reviewer john.doe -Skip 20 -First 10
+PS Orch1:\Shared> Get-OrchQueueItem -First 10
 ```
 
-Gets queue items from ReviewQueue assigned to reviewer john.doe, skipping the first 20 and taking the next 10.
+```
+WARNING: Since no filter parameters were specified, the contents of the cache will be output. To query the Orchestrator, please specify at least one filter parameter.
+```
+
+Demonstrates the caching behavior when no filter parameters are specified. The cmdlet outputs cached contents with a warning, emphasizing the need for filter parameters to query fresh data from Orchestrator.
 
 ## PARAMETERS
 
@@ -111,7 +115,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference
@@ -452,5 +456,6 @@ Required permissions: Transactions.View
 [Remove-OrchQueueItem](Remove-OrchQueueItem.md)
 
 [Get-OrchQueue](Get-OrchQueue.md)
+
 
 

@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,7 +34,7 @@ Required permissions: [PLACEHOLDER - Required permissions to be documented]
 
 ### Example 1
 ```powershell
-PS Orch1:\MyWorkspace> Get-OrchActionCatalog
+PS Orch1:\Shared> Get-OrchActionCatalog
 ```
 
 Retrieves all action catalogs from the current folder.

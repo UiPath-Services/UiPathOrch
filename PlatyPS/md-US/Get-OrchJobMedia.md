@@ -62,7 +62,7 @@ Retrieves the first 10 job media files across all folders using the -First param
 
 ### Example 5
 ```powershell
-PS Orch1:\Shared> Get-OrchJobMedia | Where-Object {$_.MediaType -eq "Screenshot"} | Select-Object FileName, FileSize, CreatedTime
+PS Orch1:\Shared> Get-OrchJobMedia | Where-Object {$_.MediaType Screenshot} | Select-Object FileName, FileSize, CreatedTime
 ```
 
 Filters for screenshot media files and displays key properties. Uses Where-Object since no dedicated MediaType parameter exists.
@@ -107,7 +107,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

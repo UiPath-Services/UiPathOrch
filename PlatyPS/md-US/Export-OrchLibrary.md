@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -36,7 +36,7 @@ Required permissions: Assets.View
 
 ### Example 1
 ```powershell
-PS Orch1:\> Export-OrchLibrary CustomActivities
+PS Orch1:\Shared> Export-OrchLibrary CustomActivities
 ```
 
 Exports the latest version of the CustomActivities library from the current tenant to the default destination.
@@ -50,7 +50,7 @@ Exports version 2.1.0 of the SharedComponents library from Orch1 tenant to C:\Ex
 
 ### Example 3
 ```powershell
-PS Orch1:\> Export-OrchLibrary *Utilities*, *Helpers* -Destination "C:\Backup" -WhatIf
+PS Orch1:\> Export-OrchLibrary *Utilities*, *Helpers* "C:\Backup" -WhatIf
 ```
 
 Shows what would happen when exporting multiple libraries with names containing Utilities or Helpers to C:\Backup directory.
@@ -71,7 +71,7 @@ Exports all libraries containing Critical in their names from the current tenant
 
 ### Example 6
 ```powershell
-PS Orch1:\> Get-OrchLibrary *Enterprise* | Export-OrchLibrary -Destination "C:\EnterpriseLibs"
+PS Orch1:\> Get-OrchLibrary *Enterprise* | Export-OrchLibrary "C:\EnterpriseLibs"
 ```
 
 Gets all libraries containing Enterprise in their names and exports them to C:\EnterpriseLibs using pipeline input.
@@ -124,7 +124,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

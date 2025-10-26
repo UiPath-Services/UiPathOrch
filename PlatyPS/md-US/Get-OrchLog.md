@@ -59,7 +59,7 @@ Retrieves the first 20 logs for the InvoiceProcess in the Production folder.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchLog -Recurse -Last Week -Machine Robot01 -Level Warn, Error
+PS Orch1:\> Get-OrchLog -Last Week -Machine Robot01 -Level Warn, Error
 ```
 
 Gets warning and error logs from Robot01 for the last week across all folders in that tenant.
@@ -126,7 +126,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

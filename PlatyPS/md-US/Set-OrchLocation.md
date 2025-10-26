@@ -29,7 +29,7 @@ Required permissions: (none)
 
 ### Example 1
 ```powershell
-PS C:\> Set-OrchLocation
+PS Orch1:\Shared> Set-OrchLocation
 PS C:\Program Files\PowerShell\7\Modules\UiPathOrch>
 ```
 

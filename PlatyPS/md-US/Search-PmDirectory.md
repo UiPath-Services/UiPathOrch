@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -36,7 +36,7 @@ Required permissions: [PLACEHOLDER - Directory search permissions]
 
 ### Example 1
 ```powershell
-PS Orch1:\> Search-PmDirectory y
+PS Orch1:\Shared> Search-PmDirectory y
 ```
 
 Searches for all directory objects (users, groups, robot users) whose names start with "y".
@@ -50,7 +50,7 @@ Searches for directory objects with the exact name or starting with "user@exampl
 
 ### Example 3
 ```powershell
-PS Orch1:\> Search-PmDirectory admin | Where-Object objectType -eq "DirectoryGroup"
+PS Orch1:\> Search-PmDirectory admin | Where-Object objectType DirectoryGroup
 ```
 
 Searches for directory objects starting with "admin" and filters to show only groups.

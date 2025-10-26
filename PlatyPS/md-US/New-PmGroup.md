@@ -32,21 +32,21 @@ Required permissions: Users.Create
 
 ### Example 1
 ```powershell
-New-PmGroup Administrators
+PS Orch1:\> New-PmGroup Administrators
 ```
 
-Creates a new group named \"Administrators\" using positional parameters.
+Creates a new group named "Administrators" using positional parameters.
 
 ### Example 2
 ```powershell
-New-PmGroup Developers, Testers, DevOps -WhatIf
+PS Orch1:\> New-PmGroup Developers, Testers, DevOps -WhatIf
 ```
 
 Shows what would happen when creating multiple groups using positional parameters.
 
 ### Example 3
 ```powershell
-New-PmGroup -Path Orch1: \"Finance Team\" -Confirm
+PS Orch1:\> New-PmGroup -Path Orch1: "Finance Team" -Confirm
 ```
 
 Creates a group with confirmation prompt in the specified tenant context.
@@ -114,7 +114,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

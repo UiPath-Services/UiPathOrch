@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,7 +18,7 @@ Remove-OrchActionCatalog [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Dept
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Removes action catalogs from UiPath Orchestrator. Action catalogs contain pre-built activity packages that can be used in automation projects. Use this cmdlet to clean up unused or outdated action catalogs from your Orchestrator environment.
 
 Primary Endpoint: DELETE /odata/TaskCatalogs({key})
 
@@ -30,10 +30,10 @@ Required permissions: TaskCatalogs.Delete
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Remove-OrchActionCatalog TestCatalog -WhatIf
 ```
 
-{{ Add example description here }}
+Performs a test removal of the action catalog named 'TestCatalog'. The -WhatIf parameter shows what would be removed without actually performing the deletion.
 
 ## PARAMETERS
 
@@ -129,7 +129,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

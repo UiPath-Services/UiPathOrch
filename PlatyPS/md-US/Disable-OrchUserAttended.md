@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-help.xml
 Module Name: UiPathOrch
 online version:
@@ -36,7 +36,7 @@ Required permissions: Users.Edit
 
 ### Example 1
 ```powershell
-PS Orch1:\> Disable-OrchUserAttended john.doe
+PS Orch1:\Shared> Disable-OrchUserAttended john.doe
 ```
 
 Disables attended robot session capabilities for user john.doe in the current tenant.
@@ -140,7 +140,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

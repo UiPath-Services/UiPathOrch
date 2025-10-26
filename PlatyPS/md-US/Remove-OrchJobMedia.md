@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -8,7 +8,7 @@ schema: 2.0.0
 # Remove-OrchJobMedia
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+Manages UiPath entities and configurations.
 
 ## SYNTAX
 
@@ -18,7 +18,7 @@ Remove-OrchJobMedia [-JobId] <Int64[]> [-Path <String[]>] [-Recurse] [-Depth <UI
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Provides functionality for managing UiPath entities.
 
 Primary Endpoint: POST /odata/ExecutionMedia/UiPath.Server.Configuration.OData.DeleteMediaByJobId
 
@@ -30,7 +30,7 @@ Required permissions: ExecutionMedia.Delete
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+{{ Add example code here }}
 ```
 
 {{ Add example description here }}

@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -33,7 +33,7 @@ Required permissions: [PLACEHOLDER - Test Manager configuration permissions]
 
 ### Example 1
 ```powershell
-PS C:\> cd Orch1Tm:
+cd Orch1Tm:
 PS Orch1Tm:\> Get-TmConfiguration
 ```
 

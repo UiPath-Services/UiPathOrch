@@ -35,7 +35,7 @@ Required permissions: Settings.View
 
 ### Example 1
 ```powershell
-PS C:\> Get-OrchConnectionString
+PS Orch1:\Shared> Get-OrchConnectionString
 ```
 
 Gets the connection string for the current Orchestrator instance. Returns a UiPath.PowerShell.Entities.ODataValueOfString object containing the database connection information.

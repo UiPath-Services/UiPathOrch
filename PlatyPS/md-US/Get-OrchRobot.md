@@ -29,7 +29,7 @@ Required permissions: Users.View and Robots.View
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-OrchRobot
+PS Orch1:\Shared> Get-OrchRobot
 ```
 
 Retrieves all autoprovisioned robots in the current Orchestrator environment. This shows robots that have been automatically created when users connected from UiPath Studio.

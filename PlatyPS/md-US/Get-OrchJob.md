@@ -29,13 +29,15 @@ Get-OrchJob [-Last <String>] [-CreationTimeAfter <DateTime>] [-CreationTimeBefor
 ```
 
 ## DESCRIPTION
-Gets job information from UiPath Orchestrator folders. Jobs represent process executions and contain details about automation runs including status, timing, robot assignments, and execution results.
+The Get-OrchJob cmdlet retrieves job execution information from UiPath Orchestrator. Jobs represent individual process executions and contain detailed information about automation runs including status, timing, robot assignments, and execution results.
 
-This cmdlet provides powerful filtering capabilities to query jobs by various criteria such as time ranges, status, process names, robots, and priorities. It operates on folder entities and supports recursive retrieval across folder hierarchies.
+This cmdlet provides flexible filtering capabilities to retrieve jobs based on various criteria including time ranges, execution states, process names, robot assignments, and priority levels. Use the -Last parameter for quick time-based filtering or specific date parameters for precise time range queries.
 
-Multiple values for parameters can be specified using comma-separated text that includes wildcards. Additionally, you can use autocomplete for these values by pressing [Ctrl+Space] or [Tab].
+The cmdlet supports two parameter sets: JobId for retrieving specific jobs by ID, and Filter for advanced filtering and sorting operations. The Filter parameter set includes pagination support with -Skip and -First parameters for efficient handling of large result sets.
 
-When specifying the -Path, -Recurse, and -Depth parameters, place them immediately after the cmdlet name. This placement ensures that autocomplete for subsequent parameters functions correctly.
+Jobs can be filtered by execution state (Pending, Running, Successful, Faulted, Failed, Stopped), priority levels, source types, and process types. Use the -Recurse parameter to search across all subfolders and -Depth to limit the search depth.
+
+This is a folder entity cmdlet that operates within specific folder scopes. Use Set-Location to navigate to the target folder or specify folders using the -Path parameter. The cmdlet includes built-in caching to improve performance when no filter parameters are specified.
 
 Primary Endpoint: GET /odata/Jobs
 
@@ -47,52 +49,73 @@ Required permissions: Jobs.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Shared> Get-OrchJob -First 5
+PS Orch1:\Shared> Get-OrchJob -Last Day -First 10
 ```
 
-Gets the first 5 jobs from the current folder.
+Gets the first 10 jobs from the last day in the current folder.
 
 ### Example 2
 ```powershell
-PS Orch1:\Shared> Get-OrchJob
+PS Orch1:\Shared> Get-OrchJob -State Successful -First 5
 ```
 
-Gets cached jobs in the current folder without making any API calls.
+Gets the first 5 successful jobs from the current folder.
 
 ### Example 3
 ```powershell
-PS C:\> Get-OrchJob -Path Orch1:\Shared -State Faulted -First 10
+PS C:\> Get-OrchJob -Path "Orch1:\Shared" -ReleaseName "BlankProcess19" -Last Week
 ```
 
-Gets the first 10 failed jobs from all folders.
+Gets all jobs for BlankProcess19 from the last week in the Shared folder.
 
 ### Example 4
 ```powershell
-PS C:\> Get-OrchJob -Path Orch1:\Shared, Orch1:\Production -Recurse -State Successful -First 10
+PS Orch1:\Shared> Get-OrchJob -State Faulted,Failed -Priority High -First 10
 ```
 
-Gets all successful jobs in the specified folders and their subfolders.
+Gets the first 10 high-priority jobs that have failed or faulted.
 
 ### Example 5
 ```powershell
-PS Orch1:\Shared> Get-OrchJob -ReleaseName BlankProcess1 -First 5
+PS Orch1:\Shared> Get-OrchJob -CreationTimeAfter (Get-Date).AddHours(-6) -OrderBy StartTime -OrderAscending
 ```
 
-Gets the first 5 jobs for a specific process.
+Gets jobs created in the last 6 hours, ordered by start time in ascending order.
 
 ### Example 6
 ```powershell
-PS Orch1:\Shared> Get-OrchJob -Last Hour
+PS Orch1:\> Get-OrchJob -Recurse -Robot "MyRobot" Month | Group-Object State
 ```
 
-Gets jobs created in the last hour in the current folder.
+Gets all jobs executed by MyRobot in the last month across all subfolders and groups them by state.
 
 ### Example 7
 ```powershell
-PS C:\> Get-OrchJob -Path Orch1:\Shared,Orch1:\Production -Recurse -State Successful -First 5
+PS Orch1:\Shared> Get-OrchJob -Id 12345,12346,12347
 ```
 
-Gets successful jobs from specific folders with -Path parameter prioritized.
+Gets specific jobs by their IDs for detailed analysis.
+
+### Example 8
+```powershell
+PS Orch1:\Shared> Get-OrchJob -StartTimeAfter (Get-Date "2024-01-01") -StartTimeBefore (Get-Date "2024-01-31") -State Successful
+```
+
+Gets all successful jobs that started in January 2024.
+
+### Example 9
+```powershell
+PS Orch1:\Shared> Get-OrchJob -Last Week -Skip 50 -First 25 | Select-Object Id, ReleaseName, State, Duration
+```
+
+Gets jobs 51-75 from the last week and displays key information for pagination.
+
+### Example 10
+```powershell
+PS Orch1:\Shared> Get-OrchJob -ProcessType Unattended -Priority Normal -Last Month | Where-Object {$_.Duration -gt "00:30:00"}
+```
+
+Gets unattended jobs with normal priority from the last month that ran longer than 30 minutes.
 
 ## PARAMETERS
 

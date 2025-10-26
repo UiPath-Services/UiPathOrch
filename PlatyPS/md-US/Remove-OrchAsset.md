@@ -36,31 +36,105 @@ Required permissions: Assets.Delete
 
 ### Example 1
 ```powershell
-PS Orch1:\Development> Remove-OrchAsset "TestAsset" -WhatIf
+PS Orch1:\Shared> Remove-OrchAsset TestAsset2024 -WhatIf
 ```
 
-Shows what would happen when removing the "TestAsset" without actually performing the deletion.
+Tests removing the TestAsset2024 asset using -WhatIf to preview the operation before execution.
 
 ### Example 2
 ```powershell
-PS Orch1:\Development> Remove-OrchAsset "TempAsset" -Confirm
+PS Orch1:\Shared> Remove-OrchAsset TestAsset2024 -Confirm
 ```
 
-Removes the "TempAsset" with a confirmation prompt before deletion.
+Removes TestAsset2024 with explicit confirmation prompt for safety.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Remove-OrchAsset -Path "Orch1:\Development" "Config*"
+PS Orch1:\Shared> Remove-OrchAsset Test* -ValueType Text -WhatIf
 ```
 
-Removes all assets whose names start with "Config" from the Development folder without changing the current location.
+Tests removing all Text-type assets with names starting with Test using wildcard pattern matching.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Remove-OrchAsset -Recurse "Test*" -ValueType "Text"
+PS Orch1:\Shared> Remove-OrchAsset OldAsset1,OldAsset2,OldAsset3
 ```
 
-Removes all Text-type assets whose names start with "Test" from all folders recursively.
+Removes multiple specific assets in a single operation by providing a list of asset names.
+
+### Example 5
+```powershell
+PS Orch1:\> Remove-OrchAsset "Orch1:\Development","Orch1:\Testing" -Name "*Temp*" -Recurse -WhatIf
+```
+
+Tests removing all assets containing Temp in their names across Development and Testing folders and their subfolders.
+
+### Example 6
+```powershell
+PS Orch1:\Shared> Get-OrchAsset | Where-Object {$_.ValueType Bool -and $_.Value -eq $false} | Remove-OrchAsset -WhatIf
+```
+
+Tests removing all Boolean assets with false values using pipeline input from Get-OrchAsset with filtering.
+
+### Example 7
+```powershell
+PS C:\> Remove-OrchAsset "Orch1:\Archive" -Name LegacyAsset -Confirm:$false
+```
+
+Removes a specific asset from the Archive folder without confirmation prompts for automated cleanup scripts.
+
+### Example 8
+```powershell
+PS Orch1:\Shared> Remove-OrchAsset Backup* -Depth 2 -WhatIf
+```
+
+Tests removing all assets starting with Backup within 2 folder levels deep from the current location.
+
+### Example 9
+```powershell
+PS Orch1:\Shared> Remove-OrchAsset *Config* -ValueType Text,Credential -WhatIf
+```
+
+Tests removing all Text and Credential assets containing Config in their names for configuration cleanup.
+
+### Example 10
+```powershell
+PS Orch1:\Shared> Get-OrchAsset | Where-Object {$_.LastModificationTime -lt (Get-Date).AddMonths(-6)} | Remove-OrchAsset -WhatIf
+```
+
+Tests removing assets that haven't been modified in the last 6 months for maintenance purposes.
+
+OAuth required scopes: OR.Assets or OR.Assets.Write
+
+Required permissions: Assets.Delete
+
+### Example 1
+```powershell
+PS Orch1:\Development> Remove-OrchAsset TestAsset -WhatIf
+```
+
+Shows what would happen when removing the TestAsset without actually performing the deletion.
+
+### Example 2
+```powershell
+PS Orch1:\Development> Remove-OrchAsset TempAsset -Confirm
+```
+
+Removes the TempAsset with a confirmation prompt before deletion.
+
+### Example 3
+```powershell
+PS Orch1:\> Remove-OrchAsset "Orch1:\Development" "Config*"
+```
+
+Removes all assets whose names start with Config from the Development folder without changing the current location.
+
+### Example 4
+```powershell
+PS Orch1:\> Remove-OrchAsset -Recurse "Test*" -ValueType Text
+```
+
+Removes all Text-type assets whose names start with Test from all folders recursively.
 
 ### Example 5
 ```powershell
@@ -74,7 +148,7 @@ Shows what would happen when removing assets that haven't been modified in the l
 PS Orch1:\> Remove-OrchAsset -Recurse "Deprecated*" -Confirm
 ```
 
-Removes all assets whose names start with "Deprecated" from all folders with confirmation for each deletion.
+Removes all assets whose names start with Deprecated from all folders with confirmation for each deletion.
 
 ## PARAMETERS
 

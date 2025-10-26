@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -38,7 +38,7 @@ Required permissions: [PLACEHOLDER - Document Understanding user permissions]
 
 ### Example 1
 ```powershell
-PS C:\> cd Orch1Du:\MyProject
+cd Orch1Du:\MyProject
 PS Orch1Du:\MyProject> Get-DuUser
 ```
 
@@ -61,7 +61,7 @@ Gets users from a specific Document Understanding project without changing the c
 
 ### Example 4
 ```powershell
-PS Orch1Du:\MyProject> Get-DuUser | Where-Object type -eq "DirectoryUser"
+PS Orch1Du:\MyProject> Get-DuUser | Where-Object type DirectoryUser
 ```
 
 Gets only individual users (not groups) from the current Document Understanding project.
@@ -144,7 +144,7 @@ Accept wildcard characters: False
 ```
 
 ### -CsvEncoding
-{{ Fill CsvEncoding Description }}
+Specifies the character encoding for CSV export when using -ExportCsv. Common values include 'UTF8', 'ASCII', 'UTF32'. Default is UTF8.
 
 ```yaml
 Type: Encoding
@@ -159,7 +159,7 @@ Accept wildcard characters: False
 ```
 
 ### -ExportCsv
-{{ Fill ExportCsv Description }}
+Exports the Document Understanding user data to a CSV file at the specified path. Use this for reporting, backup, or data analysis purposes.
 
 ```yaml
 Type: String

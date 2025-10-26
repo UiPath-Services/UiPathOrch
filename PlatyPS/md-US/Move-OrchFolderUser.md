@@ -34,49 +34,49 @@ Required permissions: Folders.Edit
 
 ### Example 1
 ```powershell
-Move-OrchFolderUser "automation developers" -WhatIf
+PS Orch1:\Shared> Move-OrchFolderUser "automation developers" -WhatIf
 ```
 
 Shows what would happen when moving the "automation developers" user from the current folder.
 
 ### Example 2
 ```powershell
-Move-OrchFolderUser "john.doe" -Destination "Orch1:\Development"
+PS Orch1:\> Move-OrchFolderUser "john.doe" -Destination "Orch1:\Development"
 ```
 
 Moves john.doe from the current folder to the Development folder.
 
 ### Example 3
 ```powershell
-Move-OrchFolderUser "jane.smith", "bob.jones" -Destination "Orch1:\Production"
+PS Orch1:\> Move-OrchFolderUser "jane.smith", "bob.jones" -Destination "Orch1:\Production"
 ```
 
 Moves multiple users (jane.smith and bob.jones) to the Production folder.
 
 ### Example 4
 ```powershell
-Move-OrchFolderUser "*developer*" -Destination "Orch1:\Development"
+PS Orch1:\> Move-OrchFolderUser "*developer*" -Destination "Orch1:\Development"
 ```
 
 Moves all users whose names contain "developer" to the Development folder.
 
 ### Example 5
 ```powershell
-Move-OrchFolderUser "service.account" -Destination "Orch1:\Testing" -KeepSource true
+PS Orch1:\> Move-OrchFolderUser "service.account" -Destination "Orch1:\Testing" -KeepSource true
 ```
 
 Moves service.account to the Testing folder while keeping access to the current folder.
 
 ### Example 6
 ```powershell
-Move-OrchFolderUser -Path "Orch1:\Legacy" "migration.user" -Destination "Orch1:\Modern" -Confirm
+PS Orch1:\> Move-OrchFolderUser -Path "Orch1:\Legacy" "migration.user" -Destination "Orch1:\Modern" -Confirm
 ```
 
 Moves migration.user from the Legacy folder to the Modern folder with confirmation.
 
 ### Example 7
 ```powershell
-Get-OrchFolderUser | Where-Object {$_.UserEntity.Type -eq "DirectoryGroup"} | Move-OrchFolderUser -Destination "Orch1:\GroupManagement"
+PS Orch1:\> Get-OrchFolderUser | Where-Object {$_.UserEntity.Type DirectoryGroup} | Move-OrchFolderUser -Destination "Orch1:\GroupManagement"
 ```
 
 Moves all directory group users to the GroupManagement folder. User information is passed via pipeline using ByPropertyName binding.
@@ -175,7 +175,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

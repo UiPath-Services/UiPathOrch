@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -28,6 +28,7 @@ When specifying the -Path, -Recurse, and -Depth parameters, place them immediate
 
 Primary Endpoint: GET /odata/Releases/?$expand=Environment,CurrentVersion,ReleaseVersions,EntryPoint
 
+
 OAuth required scopes: OR.Execution or OR.Execution.Read
 
 Required permissions: Processes.View
@@ -50,10 +51,10 @@ Gets processes from the current folder and all subfolders.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchProcess -Recurse *Invoice*
+PS Orch1:\> Get-OrchProcess *Invoice*
 ```
 
-Gets processes containing "Invoice" in their name from all folders.
+Gets processes containing Invoice in their name from all folders.
 
 ### Example 4
 ```powershell
@@ -64,28 +65,28 @@ Gets processes from specific folders and their subfolders.
 
 ### Example 5
 ```powershell
-PS Orch1:\> Get-OrchProcess -Recurse MainProcess, *Test*
+PS Orch1:\> Get-OrchProcess MainProcess, *Test*
 ```
 
 Gets specific processes by name pattern from all folders.
 
 ### Example 6
 ```powershell
-PS Orch1:\> Get-OrchProcess -Recurse -ExpandDetails | Where-Object {$_.ProcessSettings.AutopilotForRobots.Enabled}
+PS Orch1:\> Get-OrchProcess -ExpandDetails | Where-Object {$_.ProcessSettings.AutopilotForRobots.Enabled}
 ```
 
 Gets processes with Autopilot for Robots enabled using expanded details.
 
 ### Example 7
 ```powershell
-PS Orch1:\> Get-OrchProcess -Recurse | Where-Object {$_.JobPriority -eq "High"}
+PS Orch1:\> Get-OrchProcess | Where-Object {$_.JobPriority -eq "High"}
 ```
 
 Gets high-priority processes from all folders.
 
 ### Example 8
 ```powershell
-PS Orch1:\> Get-OrchProcess -Recurse -ExportCsv C:\Reports\Processes.csv
+PS Orch1:\> Get-OrchProcess -ExportCsv C:\Reports\Processes.csv
 ```
 
 Exports all processes to CSV with UTF-8 BOM encoding. The exported CSV can be imported using Import-Csv | New-OrchProcess or Import-Csv | Update-OrchProcess.

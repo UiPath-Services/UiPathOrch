@@ -18,7 +18,7 @@ Reset-OrchProcessVersion [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Dept
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Resets process version settings to default values in UiPath Orchestrator. This cmdlet allows you to restore process version configurations to their original state, which can be useful for troubleshooting or standardization purposes.
 
 Primary Endpoint: POST /odata/Releases({processIds})/UiPath.Server.Configuration.OData.RollbackToPreviousReleaseVersion?mergePackageTags=false
 
@@ -30,10 +30,10 @@ Required permissions: Processes.Edit
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Reset-OrchProcessVersion ProcessName1 -WhatIf
 ```
 
-{{ Add example description here }}
+Performs a test reset of the process version settings for 'ProcessName1'. The -WhatIf parameter shows what would be reset without actually performing the operation.
 
 ## PARAMETERS
 
@@ -83,7 +83,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

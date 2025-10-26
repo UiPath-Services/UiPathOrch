@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -33,7 +33,7 @@ Required permissions: Jobs.View (for browser access to job details)
 
 ### Example 1
 ```powershell
-PS C:\> cd Orch1:\MyWorkspace
+cd Orch1:\MyWorkspace
 PS Orch1:\MyWorkspace> Open-OrchJob 123456789
 ```
 
@@ -63,7 +63,7 @@ Gets the first 5 faulted jobs and opens their details pages for investigation.
 
 ### Example 5
 ```powershell
-PS Orch1:\MyWorkspace> Get-OrchJob -Last Hour | Where-Object State -eq "Faulted" | Open-OrchJob
+PS Orch1:\MyWorkspace> Get-OrchJob -Last Hour | Where-Object State -eq Faulted | Open-OrchJob
 ```
 
 Opens job details pages for all jobs that failed in the last hour.

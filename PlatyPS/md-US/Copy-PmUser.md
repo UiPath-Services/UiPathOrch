@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -38,24 +38,24 @@ Required permissions:
 
 ### Example 1
 ```powershell
-PS Orch1:\> Copy-PmUser john.doe@company.com Orch2:
+PS Orch1:\Shared> Copy-PmUser john.doe@uipath.com Orch2:
 ```
 
-Copies the user john.doe@company.com from the current organization (Orch1) to Orch2 organization.
+Copies the user john.doe@uipath.com from the current organization (Orch1) to Orch2 organization.
 
 ### Example 2
 ```powershell
-PS C:\> Copy-PmUser -Path Orch1: admin@company.com Orch2:, Orch3:
+PS C:\> Copy-PmUser -Path Orch1: admin@uipath.com Orch2:, Orch3:
 ```
 
-Copies the user admin@company.com from Orch1 to both Orch2 and Orch3 organizations.
+Copies the user admin@uipath.com from Orch1 to both Orch2 and Orch3 organizations.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Copy-PmUser analyst@company.com, viewer@company.com Orch2: -WhatIf
+PS Orch1:\> Copy-PmUser analyst@uipath.com, viewer@uipath.com Orch2: -WhatIf
 ```
 
-Shows what would happen when copying analyst@company.com and viewer@company.com from the current organization to Orch2.
+Shows what would happen when copying analyst@uipath.com and viewer@uipath.com from the current organization to Orch2.
 
 ### Example 4
 ```powershell
@@ -73,10 +73,10 @@ Gets all users with email addresses containing manager and copies them to both O
 
 ### Example 6
 ```powershell
-PS C:\> Copy-PmUser -Path Orch1: developer@company.com Orch2: -Confirm
+PS C:\> Copy-PmUser -Path Orch1: developer@uipath.com Orch2: -Confirm
 ```
 
-Copies the user developer@company.com from Orch1 to Orch2 with confirmation prompts.
+Copies the user developer@uipath.com from Orch1 to Orch2 with confirmation prompts.
 
 ## PARAMETERS
 
@@ -157,7 +157,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

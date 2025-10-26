@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,7 +18,7 @@ Remove-OrchFolderMachine [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Dept
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Removes machines from folders in UiPath Orchestrator. This cmdlet allows you to unassign machines from specific folders, removing their access to folder-specific resources and processes.
 
 Primary Endpoint: POST /odata/Folders/UiPath.Server.Configuration.OData.UpdateMachinesToFolderAssociations
 
@@ -30,10 +30,10 @@ Required permissions: (Units.Edit or SubFolders.Edit - Update machines to any fo
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Remove-OrchFolderMachine Machine01 -WhatIf
 ```
 
-{{ Add example description here }}
+Performs a test removal of "Machine01" from the current folder. The -WhatIf parameter shows what would be removed without actually performing the deletion.
 
 ## PARAMETERS
 
@@ -83,7 +83,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

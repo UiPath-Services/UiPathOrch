@@ -34,49 +34,49 @@ Required permissions: Administration.View
 
 ### Example 1
 ```powershell
-Get-PmAuditLog
+PS Orch1:\Shared> Get-PmAuditLog
 ```
 
 Gets audit log entries from the current organization.
 
 ### Example 2
 ```powershell
-Get-PmAuditLog -First 100
+PS Orch1:\> Get-PmAuditLog -First 100
 ```
 
 Gets the first 100 audit log entries (most recent by default).
 
 ### Example 3
 ```powershell
-Get-PmAuditLog -OrderAscending -First 50
+PS Orch1:\> Get-PmAuditLog -OrderAscending -First 50
 ```
 
 Gets the first 50 audit log entries in ascending order (oldest first).
 
 ### Example 4
 ```powershell
-Get-PmAuditLog -Path Orch1:, Orch2: -First 200
+PS Orch1:\> Get-PmAuditLog -Path Orch1:, Orch2: -First 200
 ```
 
 Gets audit log entries from the organization, accessed through multiple tenant drives.
 
 ### Example 5
 ```powershell
-Get-PmAuditLog -Skip 100 -First 50
+PS Orch1:\> Get-PmAuditLog -Skip 100 -First 50
 ```
 
 Skips the first 100 entries and gets the next 50 audit log entries (pagination).
 
 ### Example 6
 ```powershell
-Get-PmAuditLog | Where-Object {$_.EventType -eq "UserCreated"}
+PS Orch1:\> Get-PmAuditLog | Where-Object {$_.EventType UserCreated}
 ```
 
 Gets all audit log entries for user creation events.
 
 ### Example 7
 ```powershell
-Get-PmAuditLog -First 1000 | Select-Object Timestamp, UserName, EventType, Details | Export-Csv "AuditLog.csv"
+PS Orch1:\> Get-PmAuditLog -First 1000 | Select-Object Timestamp, UserName, EventType, Details | Export-Csv "AuditLog.csv"
 ```
 
 Gets the first 1000 audit log entries and exports key information to a CSV file for analysis.
@@ -146,7 +146,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

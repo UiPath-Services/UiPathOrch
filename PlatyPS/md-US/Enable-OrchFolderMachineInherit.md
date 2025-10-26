@@ -47,7 +47,7 @@ Enables inheritance for the machine named "ProductionMachine" in the Production 
 
 ### Example 3
 `powershell
-PS C:\> Enable-OrchFolderMachineInherit -Path Orch1:\Development Machine1, Machine2 -WhatIf
+PS C:\> Enable-OrchFolderMachineInherit -Path Orch1:\Development Machine01, Machine02 -WhatIf
 
 
 ```
@@ -167,7 +167,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

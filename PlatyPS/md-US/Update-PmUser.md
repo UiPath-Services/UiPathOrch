@@ -13,13 +13,13 @@ Updates users.
 ## SYNTAX
 
 ```
-Update-PmUser [[-Email] <String[]>] [-Name <String>] [-Surname <String>] [-Password <String>]
- [-BypassBasicAuthRestriction <String>] [-Path <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Update-PmUser [[-Email] <String[]>] [-Name <String>] [-DisplayName <String>] [-Surname <String>]
+ [-Password <String>] [-BypassBasicAuthRestriction <String>] [-Path <String[]>]
+ [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Updates Platform Management user properties in UiPath Orchestrator. This cmdlet allows you to modify user account settings, including email addresses and organizational paths for users managed through the Platform Management system.
 
 Primary Endpoint: PUT /api/User/{userId}
 
@@ -31,10 +31,10 @@ Required permissions:
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Update-PmUser TestUser -Email newemail@domain.com -WhatIf
 ```
 
-{{ Add example description here }}
+Performs a test update of the Platform Management user 'TestUser' with a new email address. The -WhatIf parameter shows what would be updated without actually performing the changes.
 
 ## PARAMETERS
 
@@ -69,7 +69,7 @@ Accept wildcard characters: False
 ```
 
 ### -Email
-{{ Fill Email Description }}
+Specifies the new email address for the user account. This will update the user's primary email address in the Platform Management system.
 
 ```yaml
 Type: String[]
@@ -114,7 +114,7 @@ Accept wildcard characters: False
 ```
 
 ### -Path
-{{ Fill Path Description }}
+Specifies the organizational path or drive location for the Platform Management operation. Use this to target specific Platform Management instances.
 
 ```yaml
 Type: String[]
@@ -160,7 +160,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference
@@ -171,6 +171,21 @@ Required: False
 Position: Named
 Default value: None
 Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -DisplayName
+{{ Fill DisplayName Description }}
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 

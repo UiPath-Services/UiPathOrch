@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -41,49 +41,49 @@ Required permissions: Administration.View
 
 ### Example 1
 ```powershell
-Get-PmRobotAccount
+PS Orch1:\> Get-PmRobotAccount
 ```
 
 Gets all robot accounts from the current organization.
 
 ### Example 2
 ```powershell
-Get-PmRobotAccount ServiceAccount01
+PS Orch1:\> Get-PmRobotAccount ServiceAccount01
 ```
 
 Gets the robot account named "ServiceAccount01".
 
 ### Example 3
 ```powershell
-Get-PmRobotAccount *Automation*
+PS Orch1:\> Get-PmRobotAccount *Automation*
 ```
 
 Gets all robot accounts whose names contain "Automation".
 
 ### Example 4
 ```powershell
-Get-PmRobotAccount -Path Orch1:, Orch2:
+PS Orch1:\> Get-PmRobotAccount -Path Orch1:, Orch2:
 ```
 
 Gets robot accounts from the organization, accessed through multiple tenant drives.
 
 ### Example 5
 ```powershell
-Get-PmRobotAccount | Where-Object {$_.IsActive -eq $true}
+PS Orch1:\> Get-PmRobotAccount | Where-Object {$_.IsActive -eq $true}
 ```
 
 Gets all active robot accounts.
 
 ### Example 6
 ```powershell
-Get-PmRobotAccount | Select-Object Name, EmailAddress, IsActive, CreationTime | Format-Table
+PS Orch1:\> Get-PmRobotAccount | Select-Object Name, EmailAddress, IsActive, CreationTime | Format-Table
 ```
 
 Gets all robot accounts and displays their key properties in a table.
 
 ### Example 7
 ```powershell
-Get-PmRobotAccount | Where-Object {$_.LastLoginDate -lt (Get-Date).AddDays(-30)} | Select-Object Name, LastLoginDate
+PS Orch1:\> Get-PmRobotAccount | Where-Object {$_.LastLoginDate -lt (Get-Date).AddDays(-30)} | Select-Object Name, LastLoginDate
 ```
 
 Gets robot accounts that have not logged in within the last 30 days, useful for identifying unused accounts.
@@ -91,7 +91,7 @@ Gets robot accounts that have not logged in within the last 30 days, useful for 
 ## PARAMETERS
 
 ### -CsvEncoding
-{{ Fill CsvEncoding Description }}
+Specifies the encoding for CSV export operations.
 
 ```yaml
 Type: Encoding
@@ -106,7 +106,7 @@ Accept wildcard characters: False
 ```
 
 ### -ExpandGroup
-{{ Fill ExpandGroup Description }}
+Specifies whether to expand group information in the results.
 
 ```yaml
 Type: SwitchParameter
@@ -121,7 +121,7 @@ Accept wildcard characters: False
 ```
 
 ### -ExportCsv
-{{ Fill ExportCsv Description }}
+Specifies whether to export results to CSV format.
 
 ```yaml
 Type: String
@@ -166,7 +166,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,7 +18,7 @@ Remove-OrchCalendarDate [-Name] <String[]> [-ExcludedDate] <DateTime[]> [-Path <
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Removes non-working dates from business calendars in UiPath Orchestrator. Calendar dates define when automated processes should not run, such as holidays or maintenance periods. Use this cmdlet to remove outdated or incorrect calendar entries.
 
 Primary Endpoint: GET /odata/Calendars, GET /odata/Calendars({calendarId}), PUT /odata/Calendars({calendarId})
 
@@ -30,10 +30,10 @@ Required permissions: Settings.Edit
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Remove-OrchCalendarDate MyCalendar1 2025-12-25 -WhatIf
 ```
 
-{{ Add example description here }}
+Performs a test removal of December 25, 2025 from the 'MyCalendar1' business calendar. The -WhatIf parameter shows what would be removed without actually performing the deletion.
 
 ## PARAMETERS
 
@@ -114,7 +114,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,7 +18,7 @@ Remove-OrchTestSet [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Depth <UIn
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Removes test sets from UiPath Orchestrator. Test sets group related test cases together for organized test execution. Use this cmdlet to clean up unused or outdated test sets from your testing environment.
 
 Primary Endpoint: GET /odata/TestSets, DELETE /odata/TestSets({testSetId})
 
@@ -30,10 +30,10 @@ Required permissions: TestSets.Delete
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Remove-OrchTestSet TestSet001 -WhatIf
 ```
 
-{{ Add example description here }}
+Performs a test removal of the test set 'TestSet001'. The -WhatIf parameter shows what would be removed without actually performing the deletion.
 
 ## PARAMETERS
 
@@ -129,7 +129,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

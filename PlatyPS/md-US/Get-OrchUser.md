@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -35,6 +35,92 @@ Required permissions: Users.View
 
 ### Example 1
 ```powershell
+PS Orch1:\Shared> Get-OrchUser
+```
+
+Gets all users in the current tenant.
+
+### Example 2
+```powershell
+PS Orch1:\> Get-OrchUser "ytsuda@gmail.com"
+```
+
+Gets the specific user with username "ytsuda@gmail.com".
+
+### Example 3
+```powershell
+PS Orch1:\> Get-OrchUser *@gmail.com | Select-Object UserName, FullName, Type
+```
+
+Gets all users with Gmail addresses and displays their basic information.
+
+### Example 4
+```powershell
+PS Orch1:\> Get-OrchUser "ytsuda@gmail.com" -ExpandDetails
+```
+
+Gets detailed information about a specific user including roles, permissions, and robot settings.
+
+### Example 5
+```powershell
+PS C:\> Get-OrchUser -Path Orch1:, Orch2: -Type DirectoryUser | Where-Object {$_.IsActive -eq $true}
+```
+
+Gets all active DirectoryUser type users from multiple tenants.
+
+### Example 6
+```powershell
+PS Orch1:\> Get-OrchUser DirectoryGroup | Select-Object UserName, FullName
+```
+
+Gets all directory groups in the tenant for security group management.
+
+### Example 7
+```powershell
+PS Orch1:\> Get-OrchUser -ExpandDetails | Where-Object {$_.MayHaveUserSession -eq $true} | Select-Object UserName, RolesList
+```
+
+Gets users who can access the Orchestrator web interface and displays their assigned roles.
+
+### Example 8
+```powershell
+PS Orch1:\> Get-OrchUser -ExportCsv users.csv -CsvEncoding UTF8
+```
+
+Exports all users to a CSV file with UTF8 encoding for backup or migration purposes.
+
+### Example 9
+```powershell
+PS Orch1:\> Get-OrchUser -FullName "*Administrator*" DirectoryUser
+```
+
+Gets DirectoryUser type users with Administrator in their full name.
+
+### Example 10
+```powershell
+PS Orch1:\> Get-OrchUser -ExpandDetails | Where-Object {$_.MayHaveUnattendedSession -eq $true} | Select-Object UserName, UnattendedRobot
+```
+
+Gets users configured for unattended automation and displays their robot configuration details.
+
+### Example 11
+```powershell
+PS Orch1:\> Get-OrchUser | ConvertTo-Json -Depth 2 | Out-File users.json
+```
+
+Converts user information to JSON format and saves to a file for integration with other systems.
+
+### Example 12
+```powershell
+PS Orch1:\> Get-OrchUser DirectoryUser | Group-Object AuthenticationSource | Select-Object Name, Count
+```
+
+Groups users by authentication source to analyze identity provider distribution.
+
+Required permissions: Users.View
+
+### Example 1
+```powershell
 PS Orch1:\> Get-OrchUser
 ```
 
@@ -45,11 +131,11 @@ Gets all users from the current tenant.
 PS Orch1:\> Get-OrchUser *admin*
 ```
 
-Gets users containing "admin" in their username.
+Gets users containing admin in their username.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchUser -Type DirectoryUser
+PS Orch1:\> Get-OrchUser DirectoryUser
 ```
 
 Gets only directory users (excluding groups and robot accounts).
@@ -70,10 +156,10 @@ Gets users from multiple tenants.
 
 ### Example 6
 ```powershell
-PS Orch1:\> Get-OrchUser -Type DirectoryUser -FullName John*
+PS Orch1:\> Get-OrchUser DirectoryUser -FullName John*
 ```
 
-Gets directory users whose full name starts with "John".
+Gets directory users whose full name starts with John.
 
 ### Example 7
 ```powershell

@@ -34,7 +34,7 @@ Required permissions: (none)
 
 ### Example 1
 ```powershell
-PS Orch1:\> Clear-OrchCache
+PS Orch1:\Shared> Clear-OrchCache
 ```
 
 Clears the in-memory cache on the Orch1: as the current drive.
@@ -48,7 +48,7 @@ Clears the in-memory cache on all drives managed by UiPathOrch, because the curr
 
 ### Example 3
 ```powershell
-PS C:\> Clear-OrchCache Orch1:,Orch2:
+PS C:\> Clear-OrchCache -Path Orch1:,Orch2:
 ```
 
 Clears the in-memory cache on the Orch1: and Orch2: drives.

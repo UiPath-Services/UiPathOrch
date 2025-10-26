@@ -34,7 +34,7 @@ Required permissions: Roles.View, Roles.Create
 
 ### Example 1
 ```powershell
-PS Orch1:\> Copy-OrchRole CustomRole1 Orch2: -WhatIf
+PS Orch1:\Shared> Copy-OrchRole CustomRole1 Orch2: -WhatIf
 ```
 
 Shows what would happen when copying a role without actually copying it.

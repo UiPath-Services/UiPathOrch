@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -32,7 +32,7 @@ Required permissions: Roles.View or Units.Edit or SubFolders.Edit
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-OrchRole
+PS Orch1:\Shared> Get-OrchRole
 ```
 
 Gets all roles from the current tenant.
@@ -42,7 +42,7 @@ Gets all roles from the current tenant.
 PS Orch1:\> Get-OrchRole *Admin*
 ```
 
-Gets roles containing "Admin" in their name.
+Gets roles containing Admin in their name.
 
 ### Example 3
 ```powershell
@@ -53,7 +53,7 @@ Gets roles from multiple tenants.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchRole -ExpandPermission | Where-Object {$_.PermissionName -eq "Assets"}
+PS Orch1:\> Get-OrchRole -ExpandPermission | Where-Object {$_.PermissionName Assets}
 ```
 
 Gets roles with Assets permission using expanded details.

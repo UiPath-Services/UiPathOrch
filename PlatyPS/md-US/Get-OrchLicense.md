@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -33,7 +33,7 @@ Required permissions: [PLACEHOLDER - License view permissions]
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-OrchLicense
+PS Orch1:\Shared> Get-OrchLicense
 ```
 
 Gets the complete license information for the current Orchestrator instance.

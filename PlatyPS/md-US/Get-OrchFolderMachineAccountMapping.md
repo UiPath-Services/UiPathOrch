@@ -34,49 +34,49 @@ Required permissions: (SubFolders.View or Units.View or Jobs.Create)
 
 ### Example 1
 ```powershell
-Get-OrchFolderMachineAccountMapping
+PS Orch1:\Shared> Get-OrchFolderMachineAccountMapping
 ```
 
 Gets all machine account mappings in the current folder.
 
 ### Example 2
 ```powershell
-Get-OrchFolderMachineAccountMapping Machine01
+PS Orch1:\> Get-OrchFolderMachineAccountMapping Machine01
 ```
 
 Gets account mappings for the machine named "Machine01" in the current folder.
 
 ### Example 3
 ```powershell
-Get-OrchFolderMachineAccountMapping *Prod*
+PS Orch1:\> Get-OrchFolderMachineAccountMapping *Prod*
 ```
 
 Gets account mappings for all machines whose names contain "Prod".
 
 ### Example 4
 ```powershell
-Get-OrchFolderMachineAccountMapping -Recurse
+PS Orch1:\> Get-OrchFolderMachineAccountMapping -Recurse
 ```
 
 Gets all machine account mappings from the current folder and all its subfolders.
 
 ### Example 5
 ```powershell
-Get-OrchFolderMachineAccountMapping -Path Orch1:\Development, Orch1:\Testing
+PS Orch1:\> Get-OrchFolderMachineAccountMapping -Path Orch1:\Development, Orch1:\Testing
 ```
 
 Gets machine account mappings from both Development and Testing folders.
 
 ### Example 6
 ```powershell
-Get-OrchFolderMachineAccountMapping | Where-Object {$_.RobotUserName -like "*service*"}
+PS Orch1:\> Get-OrchFolderMachineAccountMapping | Where-Object {$_.RobotUserName -like "*service*"}
 ```
 
 Gets all machine account mappings where the robot user name contains "service".
 
 ### Example 7
 ```powershell
-Get-OrchMachine *Robot* | Get-OrchFolderMachineAccountMapping
+PS Orch1:\> Get-OrchMachine *Robot* | Get-OrchFolderMachineAccountMapping
 ```
 
 Gets account mappings for all machines containing "Robot". Machine names are passed via pipeline using ByPropertyName binding.

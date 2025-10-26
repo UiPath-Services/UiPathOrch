@@ -36,7 +36,7 @@ Required permissions: ML.View
 
 ### Example 1
 ```powershell
-PS Orch1Du:\Predefined> Get-DuDocumentType
+PS Orch1Du:\> Get-DuDocumentType
 ```
 
 Retrieves all document types from the current Predefined project, displaying extensive list of available document types including Invoices, Receipts, Tax Forms, etc.
@@ -79,7 +79,7 @@ Groups all document types by their containing Document Understanding project.
 ## PARAMETERS
 
 ### -Name
-{{ Fill Name Description }}
+Specifies the name(s) of the document type(s) to retrieve. Supports wildcard patterns for flexible matching. Use '*' to retrieve all document types.
 
 ```yaml
 Type: String[]
@@ -124,7 +124,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

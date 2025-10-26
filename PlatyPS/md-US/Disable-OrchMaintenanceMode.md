@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -37,7 +37,7 @@ Required permissions: Robots.Edit
 
 ### Example 1
 ```powershell
-PS Orch1:\Development> Disable-OrchMaintenanceMode -MachineName Robot01
+PS Orch1:\Shared> Disable-OrchMaintenanceMode -MachineName Robot01
 ```
 
 Disables maintenance mode for all sessions on machine Robot01 in the current folder.
@@ -186,7 +186,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

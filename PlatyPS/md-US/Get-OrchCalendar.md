@@ -36,7 +36,7 @@ Required permissions: Schedules.View
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-OrchCalendar
+PS Orch1:\Shared> Get-OrchCalendar
 ```
 
 Retrieves all business calendars, displaying Id, Name, TimeZoneId, and Key properties.
@@ -117,7 +117,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

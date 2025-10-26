@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,28 +34,28 @@ Required permissions: Settings.Delete
 
 ### Example 1
 ```powershell
-PS C:\> Remove-OrchCalendar TestCalendar
+PS Orch1:\> Remove-OrchCalendar TestCalendar
 ```
 
 Removes the calendar named "TestCalendar" from the current Orchestrator environment.
 
 ### Example 2
 ```powershell
-PS C:\> Remove-OrchCalendar Calendar1, Calendar2 -WhatIf
+PS C:\> Remove-OrchCalendar -Path Orch1: Calendar1, Calendar2 -WhatIf
 ```
 
 Shows what would happen if the specified calendars were removed, without actually performing the removal.
 
 ### Example 3
 ```powershell
-PS C:\> Remove-OrchCalendar Temp* -Confirm
+PS C:\> Remove-OrchCalendar -Path Orch1: Temp* -Confirm
 ```
 
 Removes all calendars whose names start with "Temp", prompting for confirmation before each removal.
 
 ### Example 4
 ```powershell
-PS C:\> Remove-OrchCalendar OldCalendar -Path Orch1:, Orch2:
+PS C:\> Remove-OrchCalendar -Path Orch1:, Orch2: OldCalendar
 ```
 
 Removes the calendar named "OldCalendar" from multiple Orchestrator environments.
@@ -69,7 +69,7 @@ Identifies calendars containing "test" in their name and shows what would be rem
 
 ### Example 6
 ```powershell
-PS C:\> Remove-OrchCalendar UnusedCalendar -Confirm | Out-Null
+PS C:\> Remove-OrchCalendar -Path Orch1: UnusedCalendar -Confirm | Out-Null
 ```
 
 Removes a calendar with confirmation prompt and suppresses the output.

@@ -36,7 +36,7 @@ Required permissions: Triggers.Edit
 
 ### Example 1
 ```powershell
-PS Orch1:\Development> Enable-OrchApiTrigger ProcessTrigger
+PS Orch1:\Shared> Enable-OrchApiTrigger ProcessTrigger
 ```
 
 Enables the ProcessTrigger API trigger in the current folder (Development) using positional parameters.
@@ -124,7 +124,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

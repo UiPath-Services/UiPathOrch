@@ -36,7 +36,7 @@ Required permissions: Schedules.Edit
 
 ### Example 1
 ```powershell
-PS Orch1:\Production> Enable-OrchTrigger DailyReportTrigger
+PS Orch1:\Shared> Enable-OrchTrigger DailyReportTrigger
 ```
 
 Enables the DailyReportTrigger in the current Production folder.
@@ -124,7 +124,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

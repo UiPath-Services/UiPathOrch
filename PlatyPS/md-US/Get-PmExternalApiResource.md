@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -38,7 +38,7 @@ Required permissions: [PLACEHOLDER - External API resources view permissions]
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-PmExternalApiResource
+PS Orch1:\Shared> Get-PmExternalApiResource
 ```
 
 Gets all external API resources available in Platform Management.

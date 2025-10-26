@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-help.xml
 Module Name: UiPathOrch
 online version:
@@ -33,7 +33,7 @@ Required permissions: Folders.View
 
 ### Example 1
 ```powershell
-PS Orch1:\> Find-OrchFolderNoUserAssigned
+PS Orch1:\Shared> Find-OrchFolderNoUserAssigned
 ```
 
 Finds all folders in the current tenant that have no direct user assignments.
@@ -54,7 +54,7 @@ Finds folders with no user assignments in the Orch1 tenant, specifying the path 
 
 ### Example 4
 ```powershell
-PS Orch1:\> Find-OrchFolderNoUserAssigned | Where-Object {$_.FolderType -eq "Standard"} | Select-Object Path, DisplayName, FolderType, ProvisionType
+PS Orch1:\> Find-OrchFolderNoUserAssigned | Where-Object {$_.FolderType Standard} | Select-Object Path, DisplayName, FolderType, ProvisionType
 ```
 
 Finds unassigned folders, filters for Standard folders only, and displays key properties. Note that Path is selected first to identify the location of each folder.
@@ -68,7 +68,7 @@ Groups unassigned folders by type and shows the count for each type.
 
 ### Example 6
 ```powershell
-PS Orch1:\> Find-OrchFolderNoUserAssigned | Where-Object {$_.ProvisionType -eq "Manual"} | Format-Table DisplayName, FolderType, Description
+PS Orch1:\> Find-OrchFolderNoUserAssigned | Where-Object {$_.ProvisionType Manual} | Format-Table DisplayName, FolderType, Description
 ```
 
 Finds manually provisioned folders with no user assignments and displays them in a formatted table.
@@ -83,7 +83,7 @@ Gets all unassigned folders and displays the complete object structure for detai
 
 ### Example 8
 ```powershell
-PS Orch1:\> Find-OrchFolderNoUserAssigned | Where-Object {$_.FeedType -eq "Processes"} | Select-Object Path, DisplayName, Description, Id
+PS Orch1:\> Find-OrchFolderNoUserAssigned | Where-Object {$_.FeedType Processes} | Select-Object Path, DisplayName, Description, Id
 ```
 
 Finds process-type folders with no user assignments and displays their key identification information.

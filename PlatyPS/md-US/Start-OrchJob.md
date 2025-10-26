@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -29,11 +29,85 @@ When specifying the -Path, -Recurse, and -Depth parameters, place them immediate
 
 Primary Endpoint: POST /odata/Jobs/UiPath.Server.Configuration.OData.StartJobs
 
+OAuth required scopes: OR.Jobs or OR.Jobs.Write
+
+Required permissions: Jobs.Create
+
+## EXAMPLES
+
+### Example 1
+```powershell
+PS Orch1:\Shared> Start-OrchJob BlankProcess19 -WhatIf
+```
+
+Tests starting a job for BlankProcess19 using -WhatIf to preview the operation before execution.
+
+### Example 2
+```powershell
+PS Orch1:\Shared> Start-OrchJob BlankProcess19
+```
+
+Starts a single job for BlankProcess19 in the current folder.
+
+### Example 3
+```powershell
+PS Orch1:\Shared> Start-OrchJob BlankProcess19 -JobsCount 3 -RuntimeType Unattended
+```
+
+Starts 3 unattended jobs for BlankProcess19 to process work in parallel.
+
+### Example 4
+```powershell
+PS Orch1:\Shared> Start-OrchJob BlankProcess19 -InputArguments '{Environment:Production,Debug:False}'
+```
+
+Starts a job with specific input arguments in JSON format for process configuration.
+
+### Example 5
+```powershell
+PS C:\> Start-OrchJob -Path "Orch1:\Development" TestProcess -RuntimeType Attended
+```
+
+Starts an attended job for TestProcess in the Development folder.
+
+### Example 6
+```powershell
+PS Orch1:\Shared> Start-OrchJob Msg*,Blank* -JobsCount 2 -WhatIf
+```
+
+Tests starting 2 jobs each for all processes matching "Msg*" and "Blank*" patterns.
+
+### Example 7
+```powershell
+PS Orch1:\> Start-OrchJob -Recurse MainProcess -JobsCount 1 -Depth 2
+```
+
+Starts jobs for MainProcess across all folders within 2 levels deep from the current location.
+
+### Example 8
+```powershell
+PS Orch1:\Shared> Get-OrchProcess | Where-Object {$_.Name -like "*Report*"} | Start-OrchJob -JobsCount 1
+```
+
+Starts jobs for all processes containing Report in their name using pipeline input.
+
+### Example 9
+```powershell
+PS Orch1:\Shared> Start-OrchJob BlankProcess19 -RuntimeType Unattended -InputArguments '{QueueName:ProcessingQueue,MaxItems:100}'
+```
+
+Starts an unattended job with queue processing parameters for high-volume automation.
+
+### Example 10
+```powershell
+PS C:\> Start-OrchJob -Path "Orch1:\Shared","Orch2:\Shared" SyncProcess -JobsCount 1
+```
+
+Starts synchronization jobs across multiple tenants for data consistency operations.
+
 OAuth required scopes: OR.Jobs
 
 Required permissions: Jobs.Create Processes.View
-
-## EXAMPLES
 
 ### Example 1
 ```powershell
@@ -58,7 +132,7 @@ Starts 3 jobs for InvoiceProcess found recursively in all folders.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Start-OrchJob MyProcess -InputArguments '{"FilePath": "C:\\Data\\input.xlsx", "ProcessCount": 100}'
+PS Orch1:\> Start-OrchJob MyProcess -InputArguments '{FilePath: "C:\\Data\\input.xlsx", ProcessCount: 100}'
 ```
 
 Starts a job with input arguments passed as JSON string.

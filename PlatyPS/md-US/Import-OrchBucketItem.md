@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -13,7 +13,8 @@ Imports files and folders into UiPath Orchestrator storage buckets.
 ## SYNTAX
 
 ```
-Import-OrchBucketItem [-Source] <string[]> [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Import-OrchBucketItem [-Source] <String[]> [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-Depth <UInt32>]
+ [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -87,7 +88,7 @@ Specifies the source files or directories to import. Supports file paths, direct
 ```yaml
 Type: String[]
 Parameter Sets: (All)
-Aliases: None
+Aliases:
 
 Required: True
 Position: 0
@@ -102,7 +103,7 @@ Specifies the target storage bucket name(s). Supports wildcard patterns for mult
 ```yaml
 Type: String[]
 Parameter Sets: (All)
-Aliases: None
+Aliases:
 
 Required: False
 Position: 1
@@ -117,7 +118,7 @@ Specifies the target folder path within Orchestrator. If not specified, the curr
 ```yaml
 Type: String[]
 Parameter Sets: (All)
-Aliases: None
+Aliases:
 
 Required: False
 Position: Named
@@ -132,7 +133,7 @@ Imports files from subdirectories recursively. Cannot be used with -Name paramet
 ```yaml
 Type: SwitchParameter
 Parameter Sets: (All)
-Aliases: None
+Aliases:
 
 Required: False
 Position: Named
@@ -147,7 +148,7 @@ Specifies the maximum depth for recursive operations. Only effective when -Recur
 ```yaml
 Type: UInt32
 Parameter Sets: (All)
-Aliases: None
+Aliases:
 
 Required: False
 Position: Named
@@ -182,6 +183,21 @@ Aliases: cf
 Required: False
 Position: Named
 Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
+
+Required: False
+Position: Named
+Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

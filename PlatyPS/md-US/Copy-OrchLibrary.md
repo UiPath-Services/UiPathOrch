@@ -36,14 +36,14 @@ Required permissions: Libraries.View, Libraries.Create
 
 ### Example 1
 ```powershell
-PS Orch1:\> Copy-OrchLibrary UiPath.Excel.Activities * Orch2:
+PS Orch1:\Shared> Copy-OrchLibrary UiPath.Excel.Activities * Orch2:
 ```
 
 Copies the UiPath.Excel.Activities library from the current tenant (Orch1) to Orch2 tenant.
 
 ### Example 2
 ```powershell
-PS C:\> Copy-OrchLibrary -Path Orch1: UiPath.Mail.Activities * Orch2:, Orch3:
+PS C:\> Copy-OrchLibrary -Path Orch1: -Path -Destination Orch1: UiPath.Mail.Activities * Orch2:, Orch3:
 ```
 
 Copies the UiPath.Mail.Activities library from Orch1 to both Orch2 and Orch3 tenants.
@@ -57,7 +57,7 @@ Shows what would happen when copying a specific version (2.20.1) of UiPath.Excel
 
 ### Example 4
 ```powershell
-PS C:\> Copy-OrchLibrary -Path Orch1: *Custom* * Orch2:
+PS C:\> Copy-OrchLibrary -Path Orch1: -Path -Destination Orch1: *Custom* * Orch2:
 ```
 
 Copies all libraries containing Custom in their ID from Orch1 to Orch2 using wildcards.
@@ -71,7 +71,7 @@ Gets all host feed libraries containing Excel in their IDs and copies them to bo
 
 ### Example 6
 ```powershell
-PS C:\> Copy-OrchLibrary -Path Orch1: UiPath.WebAPI.Activities 1.18.0, 1.19.0 Orch2:
+PS C:\> Copy-OrchLibrary -Path Orch1: -Path -Destination Orch1: UiPath.WebAPI.Activities 1.18.0, 1.19.0 Orch2:
 ```
 
 Copies specific versions (1.18.0 and 1.19.0) of UiPath.WebAPI.Activities library from Orch1 to Orch2.
@@ -124,7 +124,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

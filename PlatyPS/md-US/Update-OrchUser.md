@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -38,7 +38,7 @@ Required permissions: Users.View, Users.Edit or Robots.Create or Robots.Edit or 
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+{{ Add example code here }}
 ```
 
 {{ Add example description here }}
@@ -91,7 +91,7 @@ Accept wildcard characters: False
 ```
 
 ### -MayHaveUnattendedSession
-{{ Fill MayHaveUnattendedSession Description }}
+MayHaveUnattendedSessionを指定します。
 
 ```yaml
 Type: String
@@ -106,7 +106,7 @@ Accept wildcard characters: False
 ```
 
 ### -MayHaveUserSession
-{{ Fill MayHaveUserSession Description }}
+MayHaveUserSessionを指定します。
 
 ```yaml
 Type: String
@@ -136,7 +136,7 @@ Accept wildcard characters: False
 ```
 
 ### -RestrictToPersonalWorkspace
-{{ Fill RestrictToPersonalWorkspace Description }}
+RestrictToPersonalWorkspaceを指定します。
 
 ```yaml
 Type: String
@@ -151,7 +151,7 @@ Accept wildcard characters: False
 ```
 
 ### -Roles
-{{ Fill Roles Description }}
+Rolesを指定します。
 
 ```yaml
 Type: String[]
@@ -166,7 +166,7 @@ Accept wildcard characters: False
 ```
 
 ### -UR_CredentialStore
-{{ Fill UR_CredentialStore Description }}
+UR_CredentialStoreを指定します。
 
 ```yaml
 Type: String
@@ -181,7 +181,7 @@ Accept wildcard characters: False
 ```
 
 ### -UR_CredentialType
-{{ Fill UR_CredentialType Description }}
+UR_CredentialTypeを指定します。
 
 ```yaml
 Type: String
@@ -196,7 +196,7 @@ Accept wildcard characters: False
 ```
 
 ### -UR_LimitConcurrentExecution
-{{ Fill UR_LimitConcurrentExecution Description }}
+UR_LimitConcurrentExecutionを指定します。
 
 ```yaml
 Type: String
@@ -211,7 +211,7 @@ Accept wildcard characters: False
 ```
 
 ### -UR_Password
-{{ Fill UR_Password Description }}
+UR_Passwordを指定します。
 
 ```yaml
 Type: String
@@ -226,7 +226,7 @@ Accept wildcard characters: False
 ```
 
 ### -UR_UserName
-{{ Fill UR_UserName Description }}
+UR_UserNameを指定します。
 
 ```yaml
 Type: String
@@ -241,7 +241,7 @@ Accept wildcard characters: False
 ```
 
 ### -UpdatePolicyType
-{{ Fill UpdatePolicyType Description }}
+UpdatePolicyTypeを指定します。
 
 ```yaml
 Type: String
@@ -256,7 +256,7 @@ Accept wildcard characters: False
 ```
 
 ### -UpdatePolicyVersion
-{{ Fill UpdatePolicyVersion Description }}
+UpdatePolicyVersionを指定します。
 
 ```yaml
 Type: String
@@ -302,7 +302,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+ProgressActionを指定します。
 
 ```yaml
 Type: ActionPreference
@@ -317,7 +317,7 @@ Accept wildcard characters: False
 ```
 
 ### -ES_AutoDownloadProcess
-{{ Fill ES_AutoDownloadProcess Description }}
+ES_AutoDownloadProcessを指定します。
 
 ```yaml
 Type: String
@@ -332,7 +332,7 @@ Accept wildcard characters: False
 ```
 
 ### -ES_FontSmoothing
-{{ Fill ES_FontSmoothing Description }}
+ES_FontSmoothingを指定します。
 
 ```yaml
 Type: String
@@ -347,7 +347,7 @@ Accept wildcard characters: False
 ```
 
 ### -ES_LoginToConsole
-{{ Fill ES_LoginToConsole Description }}
+ES_LoginToConsoleを指定します。
 
 ```yaml
 Type: String
@@ -362,7 +362,7 @@ Accept wildcard characters: False
 ```
 
 ### -ES_ResolutionDepth
-{{ Fill ES_ResolutionDepth Description }}
+ES_ResolutionDepthを指定します。
 
 ```yaml
 Type: String
@@ -377,7 +377,7 @@ Accept wildcard characters: False
 ```
 
 ### -ES_ResolutionHeight
-{{ Fill ES_ResolutionHeight Description }}
+ES_ResolutionHeightを指定します。
 
 ```yaml
 Type: String
@@ -392,7 +392,7 @@ Accept wildcard characters: False
 ```
 
 ### -ES_ResolutionWidth
-{{ Fill ES_ResolutionWidth Description }}
+ES_ResolutionWidthを指定します。
 
 ```yaml
 Type: String
@@ -407,7 +407,7 @@ Accept wildcard characters: False
 ```
 
 ### -ES_StudioNotifyServer
-{{ Fill ES_StudioNotifyServer Description }}
+ES_StudioNotifyServerを指定します。
 
 ```yaml
 Type: String
@@ -422,7 +422,7 @@ Accept wildcard characters: False
 ```
 
 ### -ES_TracingLevel
-{{ Fill ES_TracingLevel Description }}
+ES_TracingLevelを指定します。
 
 ```yaml
 Type: String
@@ -437,7 +437,7 @@ Accept wildcard characters: False
 ```
 
 ### -UR_CredentialExternalName
-{{ Fill UR_CredentialExternalName Description }}
+UR_CredentialExternalNameを指定します。
 
 ```yaml
 Type: String
@@ -452,7 +452,7 @@ Accept wildcard characters: False
 ```
 
 ### -IsExternalLicensed
-{{ Fill IsExternalLicensed Description }}
+IsExternalLicensedを指定します。
 
 ```yaml
 Type: String

@@ -36,7 +36,7 @@ Required permissions: License management permissions at the organization level
 
 ### Example 1
 ```powershell
-PS Orch1:\> Add-PmLicenseToPmLicensedGroup Developers StudioPro
+PS Orch1:\Shared> Add-PmLicenseToPmLicensedGroup Developers StudioPro
 ```
 
 Adds StudioPro licenses to the Developers licensed group in the current platform instance.
@@ -74,7 +74,7 @@ Adds StudioX licenses to both "Business Users" and "Power Users" licensed groups
 PS C:\> Get-PmLicensedGroup | Where-Object {$_.Name -like "*Dev*"} | Add-PmLicenseToPmLicensedGroup -License StudioPro
 ```
 
-Gets all licensed groups with names containing "Dev" and adds StudioPro licenses to them using pipeline input.
+Gets all licensed groups with names containing Dev and adds StudioPro licenses to them using pipeline input.
 
 ## PARAMETERS
 
@@ -155,7 +155,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

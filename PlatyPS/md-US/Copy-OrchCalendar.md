@@ -36,45 +36,17 @@ Required permissions: Settings.View, Settings.Create
 
 ### Example 1
 ```powershell
-PS Orch1:\> Copy-OrchCalendar BusinessHours Orch2:
-```
-
-Copies the BusinessHours calendar from the current tenant (Orch1) to Orch2 tenant.
-
-### Example 2
-```powershell
-PS C:\> Copy-OrchCalendar -Path Orch1: HolidaySchedule Orch2:, Orch3:
-```
-
-Copies the HolidaySchedule calendar from Orch1 to both Orch2 and Orch3 tenants.
-
-### Example 3
-```powershell
-PS Orch1:\> Copy-OrchCalendar BusinessHours, HolidaySchedule Orch2: -WhatIf
-```
-
-Shows what would happen when copying BusinessHours and HolidaySchedule calendars from the current tenant to Orch2.
-
-### Example 4
-```powershell
-PS C:\> Copy-OrchCalendar -Path Orch1: *Schedule* Orch2:
+PS C:\> Copy-OrchCalendar -Path Orch1: *Schedule* -Destination Orch2:
 ```
 
 Copies all calendars containing Schedule in their name from Orch1 to Orch2 using wildcards.
 
-### Example 5
+### Example 2
 ```powershell
-PS Orch1:\> Get-OrchCalendar *Business* | Copy-OrchCalendar -Destination Orch2:, Orch3:
+PS Orch1:\> Copy-OrchCalendar BusinessHours, HolidaySchedule -Destination Orch2:, Orch3: -WhatIf
 ```
 
-Gets all calendars containing Business in their names and copies them to both Orch2 and Orch3 tenants.
-
-### Example 6
-```powershell
-PS C:\> Copy-OrchCalendar -Path Orch1: WorkingDays Orch2: -Confirm
-```
-
-Copies the WorkingDays calendar from Orch1 to Orch2 with confirmation prompts.
+Shows what would happen when copying BusinessHours and HolidaySchedule calendars from the current tenant to both Orch2 and Orch3.
 
 ## PARAMETERS
 
@@ -124,7 +96,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

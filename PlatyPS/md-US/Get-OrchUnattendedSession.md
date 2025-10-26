@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -32,7 +32,7 @@ Required permissions: Robots.View
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-OrchUnattendedSession
+PS Orch1:\Shared> Get-OrchUnattendedSession
 ```
 
 Retrieves all unattended robot sessions from the current Orchestrator tenant.

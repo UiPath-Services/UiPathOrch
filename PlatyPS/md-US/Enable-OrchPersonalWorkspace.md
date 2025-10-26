@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-help.xml
 Module Name: UiPathOrch
 online version:
@@ -36,7 +36,7 @@ Required permissions: Users.Edit
 
 ### Example 1
 ```powershell
-PS Orch1:\> Enable-OrchPersonalWorkspace john.doe
+PS Orch1:\Shared> Enable-OrchPersonalWorkspace john.doe
 ```
 
 Enables personal workspace and robot session access for user john.doe in the current tenant.
@@ -64,7 +64,7 @@ Enables personal workspaces for all users with usernames containing "citizen" wi
 
 ### Example 5
 ```powershell
-PS Orch1:\> Get-OrchUser -Type Internal | Where-Object {$_.Department -eq "RPA"} | Enable-OrchPersonalWorkspace
+PS Orch1:\> Get-OrchUser -Type Internal | Where-Object {$_.Department RPA} | Enable-OrchPersonalWorkspace
 ```
 
 Gets all internal users from RPA department and enables their personal workspaces using pipeline input.
@@ -140,7 +140,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

@@ -34,42 +34,42 @@ Required permissions: Robots.Edit
 
 ### Example 1
 ```powershell
-Enable-OrchFolderMachineAccountMapping Machine01 john.doe -WhatIf
+PS Orch1:\Shared> Enable-OrchFolderMachineAccountMapping Machine01 john.doe -WhatIf
 ```
 
 Shows what would happen when enabling account mapping between Machine01 and user john.doe in the current folder.
 
 ### Example 2
 ```powershell
-Enable-OrchFolderMachineAccountMapping Machine01 john.doe
+PS Orch1:\> Enable-OrchFolderMachineAccountMapping Machine01 john.doe
 ```
 
 Enables the account mapping between Machine01 and user john.doe in the current folder.
 
 ### Example 3
 ```powershell
-Enable-OrchFolderMachineAccountMapping *Prod* automation.user
+PS Orch1:\> Enable-OrchFolderMachineAccountMapping *Prod* automation.user
 ```
 
 Enables account mappings for all machines containing "Prod" and the automation.user account.
 
 ### Example 4
 ```powershell
-Enable-OrchFolderMachineAccountMapping -Path Orch1:\Development Machine01, Machine02 developer1, developer2
+PS Orch1:\> Enable-OrchFolderMachineAccountMapping -Path Orch1:\Development Machine01, Machine02 developer1, developer2
 ```
 
 Enables account mappings between multiple machines and users in the Development folder.
 
 ### Example 5
 ```powershell
-Enable-OrchFolderMachineAccountMapping -Recurse *Robot* service.account -Confirm
+PS Orch1:\> Enable-OrchFolderMachineAccountMapping -Recurse *Robot* service.account -Confirm
 ```
 
 Enables account mappings for all machines containing "Robot" and the service.account in the current folder and all subfolders with confirmation.
 
 ### Example 6
 ```powershell
-Get-OrchMachine -Status Available | Enable-OrchFolderMachineAccountMapping -UserName qa.tester
+PS Orch1:\> Get-OrchMachine -Status Available | Enable-OrchFolderMachineAccountMapping -UserName qa.tester
 ```
 
 Enables account mappings between all available machines and the qa.tester account. Machine names are passed via pipeline using ByPropertyName binding.
@@ -183,7 +183,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

@@ -34,56 +34,56 @@ Required permissions: Robots.View
 
 ### Example 1
 ```powershell
-Get-OrchClassicRobot
+PS Orch1:\Shared> Get-OrchClassicRobot
 ```
 
 Gets all classic robots in the current folder.
 
 ### Example 2
 ```powershell
-Get-OrchClassicRobot Robot01
+PS Orch1:\> Get-OrchClassicRobot Robot01
 ```
 
 Gets the classic robot named "Robot01" from the current folder.
 
 ### Example 3
 ```powershell
-Get-OrchClassicRobot *Prod*
+PS Orch1:\> Get-OrchClassicRobot *Prod*
 ```
 
 Gets all classic robots whose names contain "Prod".
 
 ### Example 4
 ```powershell
-Get-OrchClassicRobot -Recurse
+PS Orch1:\> Get-OrchClassicRobot -Recurse
 ```
 
 Gets all classic robots from the current folder and all its subfolders.
 
 ### Example 5
 ```powershell
-Get-OrchClassicRobot -Path Orch1:\Legacy, Orch1:\Migration
+PS Orch1:\> Get-OrchClassicRobot -Path Orch1:\Legacy, Orch1:\Migration
 ```
 
 Gets classic robots from the Legacy and Migration folders.
 
 ### Example 6
 ```powershell
-Get-OrchClassicRobot | Where-Object {$_.Type -eq "Unattended"}
+PS Orch1:\> Get-OrchClassicRobot | Where-Object {$_.Type Unattended}
 ```
 
 Gets all classic robots of type "Unattended".
 
 ### Example 7
 ```powershell
-Get-OrchClassicRobot | Select-Object Name, MachineName, Environment, Type, Status
+PS Orch1:\> Get-OrchClassicRobot | Select-Object Name, MachineName, Environment, Type, Status
 ```
 
 Gets all classic robots and displays their key properties including machine name, environment, type, and status.
 
 ### Example 8
 ```powershell
-Get-OrchClassicRobot -ExportCsv C:\Reports\ClassicRobots.csv
+PS Orch1:\> Get-OrchClassicRobot -ExportCsv C:\Reports\ClassicRobots.csv
 ```
 
 Exports all classic robots from the current folder to a CSV file for reporting or backup purposes.
@@ -203,7 +203,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 
 

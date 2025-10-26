@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,7 +34,7 @@ Required permissions: Processes.Edit (for browser access to editing page)
 
 ### Example 1
 ```powershell
-PS C:\> cd Orch1:\MyWorkspace
+cd Orch1:\MyWorkspace
 PS Orch1:\MyWorkspace> Edit-OrchProcess MsgBox
 ```
 

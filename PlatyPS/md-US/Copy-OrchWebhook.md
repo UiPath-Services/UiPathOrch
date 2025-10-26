@@ -36,14 +36,14 @@ Required permissions: Webhooks.View, Webhooks.Create
 
 ### Example 1
 ```powershell
-PS Orch1:\> Copy-OrchWebhook ProcessCompletionHook Orch2:
+PS Orch1:\Shared> Copy-OrchWebhook ProcessCompletionHook Orch2:
 ```
 
 Copies the ProcessCompletionHook webhook from the current tenant (Orch1) to Orch2 tenant.
 
 ### Example 2
 ```powershell
-PS C:\> Copy-OrchWebhook -Path Orch1: AlertWebhook Orch2:, Orch3:
+PS C:\> Copy-OrchWebhook -Path Orch1: -Path -Destination Orch1: AlertWebhook Orch2:, Orch3:
 ```
 
 Copies the AlertWebhook from Orch1 to both Orch2 and Orch3 tenants.
@@ -57,7 +57,7 @@ Shows what would happen when copying NotificationHook and StatusHook from the cu
 
 ### Example 4
 ```powershell
-PS C:\> Copy-OrchWebhook -Path Orch1: *Alert* Orch2:
+PS C:\> Copy-OrchWebhook -Path Orch1: -Path -Destination Orch1: *Alert* Orch2:
 ```
 
 Copies all webhooks with names containing Alert from Orch1 to Orch2 using wildcard patterns.
@@ -71,7 +71,7 @@ Gets all webhooks with names containing Notification and copies them to both Orc
 
 ### Example 6
 ```powershell
-PS C:\> Copy-OrchWebhook -Path Orch1: SlackIntegration Orch2: -Confirm
+PS C:\> Copy-OrchWebhook -Path Orch1: -Path -Destination Orch1: SlackIntegration Orch2: -Confirm
 ```
 
 Copies the SlackIntegration webhook from Orch1 to Orch2 with confirmation prompts.
@@ -155,7 +155,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

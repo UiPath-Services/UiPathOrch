@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -37,7 +37,7 @@ Required permissions: Queues.Edit
 
 ### Example 1
 ```powershell
-PS Orch1:\Development> Import-OrchQueueItem WorkQueue -ImportCsv "C:\Data\workitems.csv"
+PS Orch1:\Shared> Import-OrchQueueItem WorkQueue -ImportCsv C:\Data\workitems.csv
 ```
 
 Imports queue items from workitems.csv file into the WorkQueue in the current folder (Development).
@@ -51,7 +51,7 @@ Imports queue items from items.csv with UTF8 encoding into ProcessingQueue in th
 
 ### Example 3
 ```powershell
-PS Orch1:\Development> Import-OrchQueueItem DataQueue, BulkQueue -ImportCsv "C:\Data\bulk_items.csv" -WhatIf
+PS Orch1:\Development> Import-OrchQueueItem DataQueue, BulkQueue -ImportCsv C:\Data\bulk_items.csv -WhatIf
 ```
 
 Shows what would happen when importing queue items from bulk_items.csv into DataQueue and BulkQueue in the current folder.
@@ -65,7 +65,7 @@ Imports queue items from all CSV files in C:\Migration directory into ImportQueu
 
 ### Example 5
 ```powershell
-PS Orch1:\Production> Import-OrchQueueItem TestQueue -ImportCsv "C:\TestData\scenario1.csv", "C:\TestData\scenario2.csv" -Confirm
+PS Orch1:\Production> Import-OrchQueueItem TestQueue -ImportCsv C:\TestData\scenario1.csv, C:\TestData\scenario2.csv -Confirm
 ```
 
 Imports queue items from multiple CSV files into TestQueue with confirmation prompts.
@@ -140,7 +140,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

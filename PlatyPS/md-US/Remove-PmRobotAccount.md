@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,7 +34,7 @@ Required permissions: [PLACEHOLDER - Platform Management robot account delete pe
 
 ### Example 1: Remove multiple robot accounts
 ```powershell
-PS Orch1:\> Remove-PmRobotAccount RobotAccount1, RobotAccount2, RobotAccount3 -WhatIf
+PS Orch1:\Shared> Remove-PmRobotAccount RobotAccount1, RobotAccount2, RobotAccount3 -WhatIf
 ```
 
 Removes multiple robot accounts in a single operation.

@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -35,7 +35,7 @@ Required permissions: [PLACEHOLDER - Document Understanding role permissions]
 
 ### Example 1
 ```powershell
-PS C:\> cd Orch1Du:\
+cd Orch1Du:\
 PS Orch1Du:\> Get-DuRole
 ```
 
@@ -58,7 +58,7 @@ Gets the DU Data Annotator role and displays its specific action permissions in 
 
 ### Example 4
 ```powershell
-PS Orch1Du:\> Get-DuRole | Where-Object type -eq "BUILTIN"
+PS Orch1Du:\> Get-DuRole | Where-Object type BUILTIN
 ```
 
 Gets only built-in Document Understanding roles (as opposed to custom roles).

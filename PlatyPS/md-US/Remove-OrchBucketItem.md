@@ -1,5 +1,5 @@
----
-external help file: UiPath.PowerShell.OrchProvider.dll-help.xml
+﻿---
+external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
 schema: 2.0.0
@@ -13,7 +13,8 @@ Removes files and items from UiPath Orchestrator storage buckets.
 ## SYNTAX
 
 ```
-Remove-OrchBucketItem [-Path <String[]>] [-Recurse] [-Depth <UInt32>] [[-Name] <String[]>] [[-FullPath] <String[]>] [-Confirm] [-WhatIf] [-ProgressAction <ActionPreference>] [<CommonParameters>]
+Remove-OrchBucketItem [-Name <String[]>] [-FullPath <String[]>] [-Path <String[]>] [-Recurse] [-Depth <UInt32>]
+ [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -55,115 +56,85 @@ Recursively removes all items from storage buckets named "ProjectBucket" in the 
 
 ## PARAMETERS
 
-### -Path <String[]>
-Specifies the path(s) to the target folder(s) containing the buckets from which items will be removed. Use this parameter to remove bucket items from specific folders without changing your current location.
+### -Confirm
+Prompts you for confirmation before running the cmdlet.
 
-`yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases: 
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-`
-
-### -Recurse [<SwitchParameter>]
-Removes items from subdirectories recursively. Use this parameter when you need to clean up bucket contents with deep hierarchical structures.
-
-`yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases: 
-
-Required: False
-Position: Named
-Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
-`
-
-### -Depth <UInt32>
-Specifies the maximum depth for recursive removal operations. Only effective when -Recurse is used. This parameter helps prevent unintended deletion of deeply nested items.
-
-`yaml
-Type: UInt32
-Parameter Sets: (All)
-Aliases: 
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-`
-
-### -Name <String[]>
-Specifies the name(s) of the storage bucket(s) from which items will be removed. Supports wildcard patterns and can target multiple buckets simultaneously.
-
-`yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases: 
-
-Required: False
-Position: 0
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-`
-
-### -FullPath <String[]>
-Specifies the full path(s) of specific files within the bucket to be removed. Supports wildcard patterns for batch deletion of files matching specific criteria.
-
-`yaml
-Type: String[]
-Parameter Sets: (All)
-Aliases: 
-
-Required: False
-Position: 1
-Default value: None
-Accept pipeline input: True (ByPropertyName)
-Accept wildcard characters: True
-`
-
-### -Confirm [<SwitchParameter>]
-Prompts you for confirmation before running the cmdlet. Since deletion operations are irreversible, it is recommended to use this parameter when working with critical data.
-
-`yaml
+```yaml
 Type: SwitchParameter
 Parameter Sets: (All)
 Aliases: cf
 
 Required: False
 Position: Named
-Default value: False
+Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
-`
+```
 
-### -WhatIf [<SwitchParameter>]
-Shows what would happen if the cmdlet runs without performing the actual deletion. Use this parameter to preview the impact of removal operations before execution.
+### -Depth
+{{ Fill Depth Description }}
 
-`yaml
-Type: SwitchParameter
+```yaml
+Type: UInt32
 Parameter Sets: (All)
-Aliases: wi
+Aliases:
 
 Required: False
 Position: Named
-Default value: False
+Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
-`
+```
 
-### -ProgressAction <ActionPreference>
-Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display when removing large numbers of items.
+### -FullPath
+{{ Fill FullPath Description }}
 
-`yaml
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
+```
+
+### -Name
+{{ Fill Name Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
+```
+
+### -Path
+{{ Fill Path Description }}
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
 Type: ActionPreference
 Parameter Sets: (All)
 Aliases: proga
@@ -173,7 +144,40 @@ Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
-`
+```
+
+### -Recurse
+{{ Fill Recurse Description }}
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -WhatIf
+Shows what would happen if the cmdlet runs. The cmdlet is not run.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: wi
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### CommonParameters
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
@@ -188,6 +192,7 @@ You can pipe bucket item objects from Get-OrchBucketItem directly to this cmdlet
 ### None
 This cmdlet does not generate output. Use Get-OrchBucketItem to verify deletion results.
 
+## NOTES
 
 ## RELATED LINKS
 

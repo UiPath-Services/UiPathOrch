@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -36,7 +36,7 @@ Required permissions: Folders.View
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-OrchPersonalWorkspace
+PS Orch1:\Shared> Get-OrchPersonalWorkspace
 ```
 
 Gets all personal workspaces in the Orch1 tenant.

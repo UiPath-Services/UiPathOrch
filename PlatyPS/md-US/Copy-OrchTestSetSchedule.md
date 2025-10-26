@@ -36,7 +36,7 @@ Required permissions: TestSetSchedules.View, TestSetSchedules.Create
 
 ### Example 1
 ```powershell
-PS Orch1:\Development> Copy-OrchTestSetSchedule NightlyRegressionSchedule Orch1:\Production
+PS Orch1:\Shared> Copy-OrchTestSetSchedule NightlyRegressionSchedule Orch1:\Production
 ```
 
 Copies the NightlyRegressionSchedule from the current folder (Development) to the Production folder within the same tenant using positional parameters.
@@ -155,7 +155,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

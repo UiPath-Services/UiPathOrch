@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -23,22 +23,79 @@ Update-OrchQueue [-Name] <String[]> [-NewName <String>] [-Description <String>]
 ```
 
 ## DESCRIPTION
-Supports import from CSV. The format of the importable CSV can be obtained using Get-OrchQueue -Recurse -ExportCsv c:.
+The Update-OrchQueue cmdlet modifies the properties of existing queues in UiPath Orchestrator. You can update various queue configurations including descriptions, retry settings, SLA times, data schemas, retention policies, and process assignments.
+
+This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters. The -Recurse parameter enables updating queues from all subfolders.
+
+The cmdlet allows updating critical queue configurations such as automatic retry settings, maximum retry counts, SLA minutes for performance monitoring, and retention policies for queue item cleanup. You can also update JSON schemas for specific data, output data, and analytics data validation.
+
+Queue updates support CSV import functionality. Use Get-OrchQueue -Recurse -ExportCsv to obtain the proper format for bulk queue updates, enabling efficient management of multiple queues across different folders.
+
+Use the -NewName parameter to rename queues while maintaining their configuration and historical data. The -Tags parameter allows updating queue categorization for better organization and filtering.
 
 Primary Endpoint: POST /odata/QueueDefinitions/UiPath.Server.Configuration.OData.EditQueue, GET /odata/QueueRetention({queueId}), GET /odata/Releases, GET /odata/Buckets
 
-OAuth required scopes: OR.Queues
+OAuth required scopes: OR.Queues or OR.Queues.Write
 
-Required permissions: Queues.Edit Queues.View Processes.View Buckets.View
+Required permissions: Queues.Edit
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Update-OrchQueue TestQueue -Description "Updated queue description" -WhatIf
 ```
 
-{{ Add example description here }}
+Tests updating a queue's description using -WhatIf to preview the operation before execution.
+
+### Example 2
+```powershell
+PS Orch1:\Shared> Update-OrchQueue TestQueue -SlaInMinutes 60 -RiskSlaInMinutes 30
+```
+
+Updates the SLA settings for a queue with 60 minutes for normal SLA and 30 minutes for risk SLA.
+
+### Example 3
+```powershell
+PS Orch1:\Shared> Update-OrchQueue TestQueue -AcceptAutomaticallyRetry True -MaxNumberOfRetries 3 -RetryAbandonedItems False
+```
+
+Configures retry settings for a queue to automatically retry failed items up to 3 times, but not retry abandoned items.
+
+### Example 4
+```powershell
+PS Orch1:\Shared> Update-OrchQueue TestQueue -NewName ProductionQueue -Tags Production,Critical
+```
+
+Renames a queue and updates its tags for better organization and filtering.
+
+### Example 5
+```powershell
+PS Orch1:\> Update-OrchQueue -Path Orch1:\Shared,Orch1:\Development -Recurse *Test* -Description "Updated test queues"
+```
+
+Updates all queues with Test in their name across multiple folders recursively. The correct parameter order is -Path, -Recurse, -Depth, then the positional Name parameter.
+
+### Example 6
+```powershell
+PS Orch1:\Shared> Update-OrchQueue TestQueue -RetentionAction DeleteItems -RetentionPeriod 30 -StaleRetentionAction MoveToBucket -StaleRetentionPeriod 7 -StaleRetentionBucket ArchiveBucket
+```
+
+Configures comprehensive retention policies for queue items including automatic deletion after 30 days and archiving stale items.
+
+### Example 7
+```powershell
+PS C:\> Import-Csv queues.csv | Update-OrchQueue -WhatIf
+```
+
+Tests bulk queue updates from a CSV file. The CSV should contain columns like Name, Description, SlaInMinutes, MaxNumberOfRetries.
+
+### Example 8
+```powershell
+PS Orch1:\Shared> Update-OrchQueue TestQueue -SpecificDataJsonSchema '{"type":"object","properties":{"Priority":{"type":"string"}}}' -OutputDataJsonSchema '{"type":"object","properties":{"Result":{"type":"string"}}}'
+```
+
+Updates the JSON schemas for queue item specific data and output data validation.
 
 ## PARAMETERS
 
@@ -82,7 +139,7 @@ Aliases: cf
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -187,7 +244,7 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -328,8 +385,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+Shows what would happen if the cmdlet runs. The cmdlet is not run.
 
 ```yaml
 Type: SwitchParameter
@@ -338,13 +394,13 @@ Aliases: wi
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-Determines how PowerShell responds to progress updates generated by this cmdlet. The default value is Continue.
+Specifies the action preference for how PowerShell should handle progress information.
 
 ```yaml
 Type: ActionPreference
@@ -359,7 +415,7 @@ Accept wildcard characters: False
 ```
 
 ### -NewName
-[PLACEHOLDER - requires verification of NewName parameter description]
+Specifies the new name for the queue.
 
 ```yaml
 Type: String
@@ -374,7 +430,7 @@ Accept wildcard characters: False
 ```
 
 ### -StaleRetentionAction
-[PLACEHOLDER - requires verification of StaleRetentionAction parameter description]
+Specifies the action to take when queue items become stale.
 
 ```yaml
 Type: String
@@ -389,7 +445,7 @@ Accept wildcard characters: False
 ```
 
 ### -StaleRetentionBucket
-[PLACEHOLDER - requires verification of StaleRetentionBucket parameter description]
+Specifies the target bucket for stale queue items when using MoveToBucket action.
 
 ```yaml
 Type: String
@@ -404,7 +460,7 @@ Accept wildcard characters: True
 ```
 
 ### -StaleRetentionPeriod
-[PLACEHOLDER - requires verification of StaleRetentionPeriod parameter description]
+Specifies the number of days after which queue items are considered stale.
 
 ```yaml
 Type: Int32

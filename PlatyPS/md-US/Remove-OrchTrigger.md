@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,7 +18,7 @@ Remove-OrchTrigger [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Depth <UIn
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Removes time-based and queue-based triggers from UiPath Orchestrator. Triggers automatically start processes based on schedules or queue events. Use this cmdlet to clean up unused or outdated triggers.
 
 Primary Endpoint: GET /odata/ProcessSchedules, DELETE /odata/ProcessSchedules({processScheduleId})
 
@@ -30,10 +30,10 @@ Required permissions: Schedules.Delete
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Remove-OrchTrigger MyTrigger -WhatIf
 ```
 
-{{ Add example description here }}
+Performs a test removal of the trigger named 'MyTrigger'. The -WhatIf parameter shows what would be removed without actually performing the deletion.
 
 ## PARAMETERS
 
@@ -83,7 +83,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

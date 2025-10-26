@@ -35,49 +35,49 @@ Required permissions: Administration.Edit
 
 ### Example 1
 ```powershell
-Move-PmGroupMember "Administrators" "MyRobot4" "Everyone" -WhatIf
+PS Orch1:\Shared> Move-PmGroupMember "Administrators" "MyRobot4" "Everyone" -WhatIf
 ```
 
 Shows what would happen when moving MyRobot4 from the Administrators group to the Everyone group.
 
 ### Example 2
 ```powershell
-Move-PmGroupMember "Administrators" "MyRobot4" "Everyone"
+PS Orch1:\> Move-PmGroupMember "Administrators" "MyRobot4" "Everyone"
 ```
 
 Moves MyRobot4 from the Administrators group to the Everyone group.
 
 ### Example 3
 ```powershell
-Move-PmGroupMember "Developers" "john.doe", "jane.smith" "TeamLead"
+PS Orch1:\> Move-PmGroupMember "Developers" "john.doe", "jane.smith" "TeamLead"
 ```
 
 Moves multiple users (john.doe and jane.smith) from the Developers group to the TeamLead group.
 
 ### Example 4
 ```powershell
-Move-PmGroupMember -GroupName "TestGroup" -UserName "*Robot*" -Destination "AutomationUsers"
+PS Orch1:\> Move-PmGroupMember -GroupName "TestGroup" -UserName "*Robot*" -Destination "AutomationUsers"
 ```
 
 Moves all members whose names contain "Robot" from TestGroup to AutomationUsers group.
 
 ### Example 5
 ```powershell
-Move-PmGroupMember "Administrators" "service.account" "AutomationUsers" -KeepSource true
+PS Orch1:\> Move-PmGroupMember "Administrators" "service.account" "AutomationUsers" -KeepSource true
 ```
 
 Moves service.account to AutomationUsers while keeping membership in the Administrators group.
 
 ### Example 6
 ```powershell
-Move-PmGroupMember -Path Orch1:, Orch2: "OldGroup" "migration.user" "NewGroup" -Confirm
+PS Orch1:\> Move-PmGroupMember -Path Orch1:, Orch2: "OldGroup" "migration.user" "NewGroup" -Confirm
 ```
 
 Moves migration.user from OldGroup to NewGroup across multiple tenants with confirmation.
 
 ### Example 7
 ```powershell
-Get-PmGroupMember | Where-Object {$_.PathGroupName -like "*Temporary*"} | Move-PmGroupMember -Destination "PermanentGroup"
+PS Orch1:\> Get-PmGroupMember | Where-Object {$_.PathGroupName -like "*Temporary*"} | Move-PmGroupMember -Destination "PermanentGroup"
 ```
 
 Moves all members from groups containing "Temporary" to the PermanentGroup. Group membership information is passed via pipeline using ByPropertyName binding.
@@ -191,7 +191,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

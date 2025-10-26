@@ -8,7 +8,7 @@ schema: 2.0.0
 # Start-OrchTestSet
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+Manages UiPath entities and configurations.
 
 ## SYNTAX
 
@@ -18,7 +18,7 @@ Start-OrchTestSet [[-Name] <String[]>] [-Path <String[]>] [-Recurse] [-Depth <UI
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Provides functionality for managing UiPath entities.
 
 Primary Endpoint:
 
@@ -30,7 +30,7 @@ Required permissions:
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+{{ Add example code here }}
 ```
 
 {{ Add example description here }}

@@ -43,7 +43,7 @@ Required permissions:
 
 ### Example 1
 ```powershell
-PS Orch1:\> Set-PmRobotAccount RobotAccountName MyGroup,YourGroup
+PS Orch1:\Shared> Set-PmRobotAccount RobotAccountName MyGroup,YourGroup
 ```
 
 Updates the groups for the robot account `RobotAccountName` to `MyGroup` and `YourGroup`. If a robot account with the name `RobotAccountName` does not exist, a new robot account will be created with this name and added to `MyGroup` and `YourGroup`.
@@ -57,7 +57,7 @@ Imports a CSV file to create or update robot accounts in the organization. To ge
 
 ### Example 3
 ```powershell
-PS Orch1:\> Import-Csv c:ExportedPmRobotAccount.csv | Set-PmRobotAccount -Path .
+PS Orch1:\> Import-Csv c:ExportedPmRobotAccount.csv | Set-PmRobotAccount .
 ```
 
 Any column in the CSV file can be overridden by specifying the parameter on the command line in the PS console. For example, to add a robot account to the tenant in the current drive instead of the drive specified in the Path column of the CSV file, specify `-Path .`. Alternatively, you can simply import a CSV file with the Path column removed to add/update robot accounts in the tenant of the current drive.
@@ -124,7 +124,7 @@ Accept wildcard characters: False
 ```
 
 ### -UserName
-{{ Fill UserName Description }}
+Specifies the username for the Platform Management robot account. This is the account name that will be used for authentication and identification in the Platform Management system.
 
 ```yaml
 Type: String[]
@@ -167,7 +167,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

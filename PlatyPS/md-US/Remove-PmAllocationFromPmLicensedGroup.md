@@ -30,10 +30,10 @@ Required permissions:
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Remove-PmAllocationFromPmLicensedGroup GroupName1 -WhatIf
 ```
 
-{{ Add example description here }}
+Performs a test removal of license allocations from the Platform Management licensed group 'GroupName1'. The -WhatIf parameter shows what would be removed without actually performing the deletion.
 
 ## PARAMETERS
 
@@ -129,7 +129,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

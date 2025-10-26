@@ -36,7 +36,7 @@ Required permissions: Group management permissions at the organization level
 
 ### Example 1
 ```powershell
-PS Orch1:\> Add-PmGroupMember Administrators john.doe
+PS Orch1:\Shared> Add-PmGroupMember Administrators john.doe
 ```
 
 Adds user john.doe to the Administrators group in the current platform instance.
@@ -60,7 +60,7 @@ Shows what would happen when adding admin.user and lead.user to the Developers g
 PS C:\> Add-PmGroupMember -GroupName "Business Users" -UserName *analyst* -Type User
 ```
 
-Adds all users with usernames containing "analyst" to the "Business Users" group, filtering by User type.
+Adds all users with usernames containing analyst to the "Business Users" group, filtering by User type.
 
 ### Example 5
 ```powershell
@@ -170,7 +170,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

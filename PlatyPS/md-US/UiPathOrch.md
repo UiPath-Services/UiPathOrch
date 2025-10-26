@@ -185,6 +185,9 @@ Enables attended automation for specified users.
 ### [Enable-OrchWebhook](Enable-OrchWebhook.md)
 Enables the webhooks.
 
+### [Export-OrchBucketItem](Export-OrchBucketItem.md)
+Exports bucket items from UiPath Orchestrator storage buckets to the local file system.
+
 ### [Export-OrchJobMedia](Export-OrchJobMedia.md)
 Exports job media files from specified folders to local files.
 
@@ -332,6 +335,9 @@ Gets personal workspaces from UiPath Orchestrator.
 ### [Get-OrchProcess](Get-OrchProcess.md)
 Gets the processes.
 
+### [Get-OrchProcessRequirement](Get-OrchProcessRequirement.md)
+Gets the dependency resources (requirements) of processes.
+
 ### [Get-OrchPSDrive](Get-OrchPSDrive.md)
 Lists all configured UiPath Orchestrator drives and their connection status.
 
@@ -401,6 +407,9 @@ Gets web configuration settings.
 ### [Get-PmAuditLog](Get-PmAuditLog.md)
 Gets audit log entries from Platform Management.
 
+### [Get-PmAuthenticationSetting](Get-PmAuthenticationSetting.md)
+Gets the authentication settings for the organization.
+
 ### [Get-PmExternalApiResource](Get-PmExternalApiResource.md)
 Gets external API resources from Platform Management.
 
@@ -446,6 +455,9 @@ Gets test cases from projects in Test Manager.
 ### [Get-TmTestSet](Get-TmTestSet.md)
 Gets test sets from projects in Test Manager.
 
+### [Import-OrchBucketItem](Import-OrchBucketItem.md)
+Imports files and folders into UiPath Orchestrator storage buckets.
+
 ### [Import-OrchLibrary](Import-OrchLibrary.md)
 Imports library packages into UiPath Orchestrator.
 
@@ -480,7 +492,7 @@ Creates automation triggers for process execution.
 Creates groups in Platform Management.
 
 ### [New-PmUser](New-PmUser.md)
-Creates users in Platform Management.
+Creates users to the organization.
 
 ### [Open-OrchJob](Open-OrchJob.md)
 Opens job details in the default web browser.
@@ -503,8 +515,11 @@ Removes the API triggers.
 ### [Remove-OrchAsset](Remove-OrchAsset.md)
 Removes assets from UiPath Orchestrator.
 
-### [Remove-OrchBucket](Remove-OrchBucket.md)
-Removes storage buckets.
+### [Remove-OrchAsset](Remove-OrchAsset.md)
+Removes assets from UiPath Orchestrator.
+
+### [Remove-OrchBucketItem](Remove-OrchBucketItem.md)
+Removes files and items from UiPath Orchestrator storage buckets.
 
 ### [Remove-OrchCalendar](Remove-OrchCalendar.md)
 Removes calendars from the Orchestrator.
@@ -522,7 +537,7 @@ Unassigns machines from a folder.
 Unassigns users from folders.
 
 ### [Remove-OrchJobMedia](Remove-OrchJobMedia.md)
-{{ Fill in the Synopsis }}
+Manages UiPath entities and configurations.
 
 ### [Remove-OrchLibrary](Remove-OrchLibrary.md)
 Removes the library packages.
@@ -645,7 +660,7 @@ Creates or updates robot accounts in organizations.
 Starts UiPath robot jobs for specified processes.
 
 ### [Start-OrchTestSet](Start-OrchTestSet.md)
-{{ Fill in the Synopsis }}
+Manages UiPath entities and configurations.
 
 ### [Stop-OrchJob](Stop-OrchJob.md)
 Stops running or pending UiPath robot jobs.

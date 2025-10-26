@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,28 +34,28 @@ Required permissions: Webhooks.Delete
 
 ### Example 1
 ```powershell
-PS C:\> Remove-OrchWebhook TestWebhook
+PS Orch1:\Shared> Remove-OrchWebhook TestWebhook
 ```
 
 Removes the webhook named "TestWebhook" from the current Orchestrator environment.
 
 ### Example 2
 ```powershell
-PS C:\> Remove-OrchWebhook TestWebhook1, TestWebhook2 -WhatIf
+PS C:\> Remove-OrchWebhook -Path Orch1: TestWebhook1, TestWebhook2 -WhatIf
 ```
 
 Shows what would happen if the specified webhooks were removed, without actually performing the removal.
 
 ### Example 3
 ```powershell
-PS C:\> Remove-OrchWebhook Temp* -Confirm
+PS C:\> Remove-OrchWebhook -Path Orch1: Temp* -Confirm
 ```
 
 Removes all webhooks whose names start with "Temp", prompting for confirmation before each removal.
 
 ### Example 4
 ```powershell
-PS C:\> Remove-OrchWebhook OldIntegration -Path Orch1:, Orch2:
+PS C:\> Remove-OrchWebhook -Path Orch1:, Orch2: OldIntegration
 ```
 
 Removes the webhook named "OldIntegration" from multiple Orchestrator environments.
@@ -69,7 +69,7 @@ Identifies disabled webhooks containing "test" in their name and shows what woul
 
 ### Example 6
 ```powershell
-PS C:\> Remove-OrchWebhook UnusedWebhook -Confirm | Out-Null
+PS C:\> Remove-OrchWebhook -Path Orch1: UnusedWebhook -Confirm | Out-Null
 ```
 
 Removes a webhook with confirmation prompt and suppresses the output.

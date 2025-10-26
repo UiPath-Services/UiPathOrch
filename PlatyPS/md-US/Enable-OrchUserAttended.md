@@ -36,28 +36,28 @@ Required permissions: Users.Edit
 
 ### Example 1
 ```powershell
-PS C:\> Enable-OrchUserAttended john.doe
+PS Orch1:\> Enable-OrchUserAttended -Path Orch1: john.doe
 ```
 
 Enables attended automation for the user "john.doe". Uses positional parameter for the username.
 
 ### Example 2
 ```powershell
-PS C:\> Enable-OrchUserAttended -UserName alice.smith, bob.jones
+PS C:\> Enable-OrchUserAttended -Path Orch1: -UserName alice.smith, bob.jones
 ```
 
 Enables attended automation for multiple users simultaneously. This allows both alice.smith and bob.jones to run robots in attended mode.
 
 ### Example 3
 ```powershell
-PS C:\> Enable-OrchUserAttended -UserName marketing.team -Path Orch1:, Orch2:
+PS C:\> Enable-OrchUserAttended -Path Orch1:, Orch2: -UserName marketing.team
 ```
 
 Enables attended automation for the marketing.team user across multiple Orchestrator instances. Useful in multi-tenant environments.
 
 ### Example 4
 ```powershell
-PS C:\> Enable-OrchUserAttended -UserName admin.user -WhatIf
+PS C:\> Enable-OrchUserAttended -Path Orch1: -UserName admin.user -WhatIf
 ```
 
 Shows what would happen if attended automation was enabled for admin.user without actually making the change. Useful for verification before execution.

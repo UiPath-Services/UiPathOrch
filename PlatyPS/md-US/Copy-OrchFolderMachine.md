@@ -36,7 +36,7 @@ Required permissions: Units.View, SubFolders.View, Units.Edit, SubFolders.Edit
 
 ### Example 1
 ```powershell
-PS Orch1:\Development> Copy-OrchFolderMachine Robot01 Orch1:\Production
+PS Orch1:\Shared> Copy-OrchFolderMachine Robot01 \Production
 ```
 
 Copies the Robot01 machine assignment from the current folder (Development) to the Production folder within the same tenant.
@@ -50,31 +50,10 @@ Copies the SharedBot machine assignment from Orch1:\Development to Orch2:\Produc
 
 ### Example 3
 ```powershell
-PS Orch1:\Development> Copy-OrchFolderMachine Robot*, Bot* Orch1:\Production -WhatIf
+PS Orch1:\Development> Copy-OrchFolderMachine Robot*, Bot* \Production -WhatIf
 ```
 
 Shows what would happen when copying multiple machine assignments with names starting with Robot or Bot from the current folder to the Production folder.
-
-### Example 4
-```powershell
-PS C:\> Copy-OrchFolderMachine -Path Orch1:\Development *Template* Orch2:\Production
-```
-
-Copies all machine assignments containing Template in their name from Orch1:\Development to Orch2:\Production using wildcards.
-
-### Example 5
-```powershell
-PS Orch1:\> Copy-OrchFolderMachine -Recurse *Production* Orch2:\Finance -WhatIf
-```
-
-Shows what would happen when copying all machine assignments containing Production from all subfolders recursively to Orch2:\Finance.
-
-### Example 6
-```powershell
-PS Orch1:\Development> Get-OrchFolderMachine *Shared* | Copy-OrchFolderMachine -Destination Orch2:\Production
-```
-
-Gets all machine assignments containing Shared in their names and copies them to Orch2:\Production using pipeline input.
 
 ## PARAMETERS
 
@@ -124,7 +103,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

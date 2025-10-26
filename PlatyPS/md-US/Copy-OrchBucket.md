@@ -36,7 +36,7 @@ Required permissions: Buckets.View, Buckets.Create
 
 ### Example 1
 ```powershell
-PS Orch1:\Development> Copy-OrchBucket DocumentStorage Orch1:\Production
+PS Orch1:\Shared> Copy-OrchBucket DocumentStorage Orch1:\Production
 ```
 
 Copies the DocumentStorage bucket from the current folder (Development) to the Production folder within the same tenant using positional parameters.
@@ -124,7 +124,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

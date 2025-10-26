@@ -25,125 +25,100 @@ Update-OrchProcess [-Name] <String[]> [-NewName <String>] [-Description <String>
 ```
 
 ## DESCRIPTION
-Supports import from CSV. The format of the importable CSV can be obtained using Get-OrchProcess -Recurse -ExportCsv c:.
+The Update-OrchProcess cmdlet modifies the properties and configurations of existing automation processes in UiPath Orchestrator. This cmdlet allows you to update various process settings including descriptions, priorities, recording options, retention policies, and advanced features like Auto-Restart for Robots (A4R).
+
+You can update process metadata such as names and descriptions, execution settings like priority levels and duration limits, monitoring configurations including video recording and error recording, and lifecycle management policies such as retention rules for job artifacts.
+
+The cmdlet supports updating advanced automation features including always-running processes, auto-start configurations, and A4R (Auto-Restart for Robots) settings with self-healing capabilities. Video recording options can be configured for different scenarios including failure analysis and quality assurance.
+
+This is a folder entity cmdlet. Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters. The -Recurse parameter enables updating processes from all subfolders.
+
+The cmdlet supports CSV import functionality. Use Get-OrchProcess -Recurse -ExportCsv to obtain the format for bulk process updates, enabling efficient management of multiple processes across different folders.
+
+Use the -NewName parameter to rename processes while maintaining their configuration and historical data. The -Tags parameter allows updating process categorization for better organization and filtering.
 
 Primary Endpoint: POST /odata/Releases/UiPath.Server.Configuration.OData.EditRelease
 
-OAuth required scopes: 
+OAuth required scopes: OR.Execution or OR.Execution.Write
 
-Required permissions: 
+Required permissions: Execution.Edit
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-PS Orch1:\> Import-Csv C:\tmp\ExportedProcesses.csv | Update-OrchProcess
+PS Orch1:\Shared> Update-OrchProcess BlankProcess19 -Description "Updated process description" -WhatIf
 ```
 
-Update process information using import from CSV.
+Tests updating a process description using -WhatIf to preview the operation before execution.
 
 ### Example 2
 ```powershell
-PS Orch1:\Shared> Update-OrchProcess -Name "InvoiceProcess" -Description "Updated invoice processing workflow" -Priority "High"
+PS Orch1:\Shared> Update-OrchProcess BlankProcess19 -Priority High -MaxDurationSeconds 3600
 ```
 
-Update a specific process with new description and priority in the current folder.
+Updates a process with high priority and sets maximum execution duration to 1 hour.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Update-OrchProcess -Name "PaymentProcess" -Path "Shared\Finance" -Tags "Finance", "Production", "Critical"
+PS Orch1:\Shared> Update-OrchProcess BlankProcess19 -VideoRecordingType OnFailure -ErrorRecordingEnabled True -Quality 75
 ```
 
-Update a process in a specific folder with new tags.
+Configures process monitoring with video recording on failure, error recording enabled, and medium quality recording.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Update-OrchProcess -Name "*Invoice*" -Recurse -MaxDurationSeconds 3600 -WhatIf
+PS Orch1:\Shared> Update-OrchProcess BlankProcess19 -NewName ProductionProcess -Tags Production,Critical
 ```
 
-Preview what would happen when updating all processes containing "Invoice" in their name across all folders with a new maximum duration.
+Renames a process and updates its tags for better organization and filtering.
 
 ### Example 5
 ```powershell
-PS Orch1:\Shared> Update-OrchProcess -Name "DataEntry" -NewName "DataEntryV2" -Version "2.0.0" -Description "Updated data entry process"
+PS Orch1:\> Update-OrchProcess "Orch1:\Development","Orch1:\Testing" -Name TestProcess -Priority Normal -Recurse
 ```
 
-Rename a process and update its version and description.
+Updates TestProcess across Development and Testing folders and their subfolders with normal priority.
 
 ### Example 6
 ```powershell
-PS Orch1:\Shared> Update-OrchProcess -Name "ReportGenerator" -InputArguments '{"OutputPath": "C:\\Reports", "Format": "PDF"}' -VideoRecordingType "OnError"
+PS Orch1:\Shared> Update-OrchProcess BlankProcess19 -AlwaysRunning True -AutoStartProcess True -A4R_Enabled True -A4R_HealingEnabled True
 ```
 
-Update a process with new input arguments and video recording settings.
+Configures a process for continuous operation with always-running mode, auto-start, and A4R with self-healing enabled.
 
 ### Example 7
 ```powershell
-PS Orch1:\Shared> Get-OrchProcess -Name "LegacyProcess*" | Update-OrchProcess -RetentionPeriod 90 -RetentionAction "Delete"
+PS Orch1:\Shared> Update-OrchProcess BlankProcess19 -RetentionAction DeleteItems -RetentionPeriod 30 -StaleRetentionAction MoveToBucket -StaleRetentionBucket Archive
 ```
 
-Update retention settings for all processes starting with "LegacyProcess" using pipeline input.
+Sets up comprehensive retention policies for process job artifacts including automatic deletion and archiving.
 
 ### Example 8
 ```powershell
-PS Orch1:\Shared> Update-OrchProcess -Name "AttendedProcess" -HiddenForAttendedUser "False" -RemoteControlAccess "Enabled" -Confirm
+PS Orch1:\Shared> Update-OrchProcess ProductionProcess -InputArguments '{Environment:Production,Debug:False}' -HiddenForAttendedUser False
 ```
 
-Update attended process settings with confirmation prompt.
+Updates process with specific input arguments in JSON format and makes it visible to attended users.
 
 ### Example 9
 ```powershell
-PS Orch1:\> Import-Csv "C:\tmp\BulkProcessUpdate.csv" | Where-Object {$_.Priority -eq "Low"} | Update-OrchProcess -Priority "Normal"
+PS C:\> Import-Csv processes.csv | Update-OrchProcess -WhatIf
 ```
 
-Import processes from CSV, filter by current priority, and update to a new priority level.
+Tests bulk process updates from a CSV file. The CSV should contain columns like Name, Description, Priority, MaxDurationSeconds.
 
 ### Example 10
 ```powershell
-PS Orch1:\Shared> Update-OrchProcess -Name "CriticalProcess" -Path "Production" -A4R_Enabled "True" -A4R_HealingEnabled "True" -ErrorRecordingEnabled "True"
+PS Orch1:\Shared> Update-OrchProcess Msg* -RemoteControlAccess Enabled -Depth 2 -WhatIf
 ```
 
-Enable Action for Recovery (A4R) and error recording features for a critical production process.
-
-### Example 11
-```powershell
-PS Orch1:\Shared> Update-OrchProcess -Name "ScheduledProcess" -Recurse -Depth 2 -AutoStartProcess "True" -AlwaysRunning "False"
-```
-
-Update scheduled process settings across folders up to 2 levels deep.
-
-### Example 12
-```powershell
-$processUpdates = @{
-    Name = "22.4"
-    Description = "Complex business process with multiple steps"
-    Quality = 95
-    Duration = 1800
-    Frequency = 24
-}
-PS Orch1:\Shared> Update-OrchProcess @processUpdates
-```
-
-Update multiple process properties using parameter splatting for better readability.
-
-### Example 13
-```powershell
-PS Orch1:\Shared> Update-OrchProcess MyProcess -A4R_Enabled True
-```
-
-Enable Healing Agent of MyProcess process in Shared directry.
-
-### Example 14
-```powershell
-PS Orch1:\Shared> Update-OrchProcess MyProcess -A4R_Enabled True -A4R_HealingEnabled True
-```
-
-Enable both Healing Agent and Healing Agent self-healing for MyProcess in the Shared directory.
+Tests updating all processes starting with Msg within 2 folder levels deep to enable remote control access.
 
 ## PARAMETERS
 
 ### -AlwaysRunning
-Specifies the AlwaysRunning of the processes to be updated.
+Specifies whether the process should be always running. Valid values: True, False.
 
 ```yaml
 Type: String
@@ -158,7 +133,7 @@ Accept wildcard characters: False
 ```
 
 ### -AutoStartProcess
-Specifies the AutoStartProcess of the processes to be updated.
+Specifies whether the process should automatically start. Valid values: True, False.
 
 ```yaml
 Type: String
@@ -188,7 +163,7 @@ Accept wildcard characters: False
 ```
 
 ### -Depth
-Specifies the depth for recursion into the target folders. A depth of 0 indicates the current location only, with no subfolders included.
+Specifies the maximum number of subdirectory levels to include in the operation. Use with -Recurse to limit the depth of folder traversal.
 
 ```yaml
 Type: UInt32
@@ -203,7 +178,7 @@ Accept wildcard characters: False
 ```
 
 ### -Description
-Specifies the Description of the processes to be updated.
+Specifies the new description for the process.
 
 ```yaml
 Type: String
@@ -218,7 +193,7 @@ Accept wildcard characters: False
 ```
 
 ### -Duration
-Specifies the Duration of the processes to be updated.
+Specifies the duration for video recording in seconds.
 
 ```yaml
 Type: Int32
@@ -233,7 +208,7 @@ Accept wildcard characters: False
 ```
 
 ### -EntryPoint
-Specifies the EntryPoint of the processes to be updated.
+Specifies the entry point for the process execution.
 
 ```yaml
 Type: String
@@ -248,7 +223,7 @@ Accept wildcard characters: True
 ```
 
 ### -ErrorRecordingEnabled
-Specifies the ErrorRecordingEnabled of the processes to be updated.
+Specifies whether error recording is enabled for debugging purposes. Valid values: True, False.
 
 ```yaml
 Type: String
@@ -263,7 +238,7 @@ Accept wildcard characters: False
 ```
 
 ### -Frequency
-Specifies the Frequency of the processes to be updated.
+Specifies the frequency for video recording.
 
 ```yaml
 Type: Int32
@@ -278,7 +253,7 @@ Accept wildcard characters: False
 ```
 
 ### -HiddenForAttendedUser
-Specifies the HiddenForAttendedUser of the processes to be updated.
+Specifies whether the process should be hidden from attended users. Valid values: True, False.
 
 ```yaml
 Type: String
@@ -293,7 +268,7 @@ Accept wildcard characters: False
 ```
 
 ### -InputArguments
-Specifies the InputArguments of the processes to be updated.
+Specifies the input arguments for the process in JSON format.
 
 ```yaml
 Type: String
@@ -308,7 +283,7 @@ Accept wildcard characters: False
 ```
 
 ### -MaxDurationSeconds
-Specifies the MaxDurationSeconds of the processes to be updated.
+Specifies the maximum duration in seconds for process execution.
 
 ```yaml
 Type: Int32
@@ -323,7 +298,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-Specifies the Name of the processes to be updated.
+Specifies the names of the processes to update. Supports wildcard patterns for bulk operations.
 
 ```yaml
 Type: String[]
@@ -338,7 +313,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-{{ Fill Path Description }}
+Specifies the paths to the folders containing the processes to update. If not specified, the current location will be used.
 
 ```yaml
 Type: String[]
@@ -353,7 +328,7 @@ Accept wildcard characters: True
 ```
 
 ### -Priority
-Specifies the Priority of the processes to be updated.
+Specifies the priority level for the process. Valid values: Low, Normal, High.
 
 ```yaml
 Type: String
@@ -368,7 +343,7 @@ Accept wildcard characters: False
 ```
 
 ### -Quality
-Specifies the Quality of the processes to be updated.
+Specifies the quality level for video recording (0-100).
 
 ```yaml
 Type: Int32
@@ -383,7 +358,7 @@ Accept wildcard characters: False
 ```
 
 ### -QueueItemVideoRecordingType
-Specifies the QueueItemVideoRecordingType of the processes to be updated.
+Specifies the video recording type for queue item processing. Valid values: Never, Always, OnFailure.
 
 ```yaml
 Type: String
@@ -398,7 +373,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-Specifies that the operation should include the target folder and all its subfolders.
+Includes processes in all subfolders of the specified paths. Use with -Depth to limit the recursion depth.
 
 ```yaml
 Type: SwitchParameter
@@ -413,7 +388,7 @@ Accept wildcard characters: False
 ```
 
 ### -RemoteControlAccess
-Specifies the RemoteControlAccess of the processes to be updated.
+Specifies the remote control access level. Valid values: Enabled, Disabled.
 
 ```yaml
 Type: String
@@ -428,7 +403,7 @@ Accept wildcard characters: False
 ```
 
 ### -RetentionAction
-Specifies the RetentionAction of the processes to be updated.
+Specifies the retention action for job artifacts. Valid values: KeepItems, DeleteItems.
 
 ```yaml
 Type: String
@@ -443,7 +418,7 @@ Accept wildcard characters: False
 ```
 
 ### -RetentionBucket
-Specifies the RetentionBucket of the processes to be updated.
+Specifies the bucket for retention policies.
 
 ```yaml
 Type: String
@@ -458,7 +433,7 @@ Accept wildcard characters: True
 ```
 
 ### -RetentionPeriod
-Specifies the RetentionPeriod of the processes to be updated.
+Specifies the retention period in days for job artifacts.
 
 ```yaml
 Type: Int32
@@ -473,7 +448,7 @@ Accept wildcard characters: False
 ```
 
 ### -Tags
-Specifies the Tags of the processes to be updated.
+Specifies the tags for the process for organization and filtering.
 
 ```yaml
 Type: String[]
@@ -488,7 +463,7 @@ Accept wildcard characters: False
 ```
 
 ### -Version
-Specifies the Version of the processes to be updated.
+Specifies the version for the process.
 
 ```yaml
 Type: String
@@ -503,7 +478,7 @@ Accept wildcard characters: False
 ```
 
 ### -VideoRecordingType
-Specifies the VideoRecordingType of the processes to be updated.
+Specifies when video recording should occur. Valid values: Never, Always, OnFailure.
 
 ```yaml
 Type: String
@@ -518,8 +493,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
-Shows what would happen if the cmdlet runs.
-The cmdlet is not run.
+Shows what would happen if the cmdlet runs. The cmdlet is not run.
 
 ```yaml
 Type: SwitchParameter
@@ -534,7 +508,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Specifies how PowerShell responds to progress updates generated by a script, cmdlet, or provider.
 
 ```yaml
 Type: ActionPreference
@@ -549,7 +523,7 @@ Accept wildcard characters: False
 ```
 
 ### -NewName
-{{ Fill NewName Description }}
+Specifies the new name for the process.
 
 ```yaml
 Type: String
@@ -564,7 +538,7 @@ Accept wildcard characters: False
 ```
 
 ### -StaleRetentionAction
-{{ Fill StaleRetentionAction Description }}
+Specifies the retention action for stale items. Valid values: KeepItems, DeleteItems, MoveToBucket.
 
 ```yaml
 Type: String
@@ -579,7 +553,7 @@ Accept wildcard characters: False
 ```
 
 ### -StaleRetentionBucket
-{{ Fill StaleRetentionBucket Description }}
+Specifies the bucket for stale item retention.
 
 ```yaml
 Type: String
@@ -594,7 +568,7 @@ Accept wildcard characters: True
 ```
 
 ### -StaleRetentionPeriod
-{{ Fill StaleRetentionPeriod Description }}
+Specifies the retention period in days for stale items.
 
 ```yaml
 Type: Int32
@@ -609,7 +583,7 @@ Accept wildcard characters: False
 ```
 
 ### -A4R_Enabled
-{{ Fill A4R_Enabled Description }}
+Specifies whether Auto-Restart for Robots (A4R) is enabled for the process. Valid values: True, False.
 
 ```yaml
 Type: String
@@ -624,7 +598,7 @@ Accept wildcard characters: False
 ```
 
 ### -A4R_HealingEnabled
-{{ Fill A4R_HealingEnabled Description }}
+Specifies whether A4R self-healing is enabled to automatically recover from robot failures. Valid values: True, False.
 
 ```yaml
 Type: String
@@ -650,5 +624,15 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### UiPath.PowerShell.Entities.Release
 ## NOTES
+- Use -WhatIf to preview operations before execution, especially for bulk updates.
+- The cmdlet supports CSV import for bulk process updates.
+- Always-running and A4R configurations require careful planning for resource usage.
+- Video recording settings can significantly impact storage requirements.
+- Retention policies help manage storage and maintain system performance.
 
 ## RELATED LINKS
+
+[Get-OrchProcess](Get-OrchProcess.md)
+[New-OrchProcess](New-OrchProcess.md)
+[Remove-OrchProcess](Remove-OrchProcess.md)
+[Start-OrchJob](Start-OrchJob.md)

@@ -150,7 +150,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### UiPath.PowerShell.Entities.BulkItemDtoOfString
 ## NOTES
 - Library files must be valid .nupkg packages created by UiPath Studio or other UiPath tools
-- The Status property in the result indicates whether the import was successful ("OK") or failed
+- The Status property in the result indicates whether the import was successful (OK) or failed
 - Importing a library that already exists with the same version may result in different behavior depending on Orchestrator configuration
 - Use -WhatIf parameter to preview import operations before executing
 - The Body property contains JSON-formatted details about the imported library including Id and Version

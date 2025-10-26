@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -207,18 +207,9 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String[]
 ### System.DateTime[]
-### System.String[]
-Calendar names can be piped to this cmdlet.
-
-### System.DateTime[]
-DateTime objects can be piped to this cmdlet for the -ExcludedDate parameter.
-
 ## OUTPUTS
 
 ### System.Object
-### UiPath.PowerShell.Entities.Calendar
-This cmdlet returns Calendar objects representing the updated calendars.
-
 ## NOTES
 - By default, past dates cannot be added to calendars. Use -IncludePastDate to override this restriction.
 - The cmdlet supports wildcard patterns in calendar names for bulk operations.
