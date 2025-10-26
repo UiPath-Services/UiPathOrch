@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -156,6 +156,4 @@ This cmdlet operates within Document Understanding projects on the UiPathOrchDu 
 
 [Get-DuExtractor](Get-DuExtractor.md)
 
-[Add-DuDocumentType](Add-DuDocumentType.md)
 
-[Set-DuDocumentType](Set-DuDocumentType.md)

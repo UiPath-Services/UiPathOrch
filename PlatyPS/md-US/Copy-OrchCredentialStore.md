@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -159,6 +159,5 @@ Use wildcards for efficient bulk operations and -WhatIf for testing before actua
 
 [Get-OrchCredentialStore](Get-OrchCredentialStore.md)
 
-[Set-OrchCredentialStore](Set-OrchCredentialStore.md)
 
 [Remove-OrchCredentialStore](Remove-OrchCredentialStore.md)

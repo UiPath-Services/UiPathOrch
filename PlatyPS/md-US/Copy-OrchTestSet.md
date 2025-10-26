@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -219,6 +219,5 @@ Test sets contain collections of test cases for automated testing. When copying 
 
 [Remove-OrchTestSet](Remove-OrchTestSet.md)
 
-[Set-OrchTestSet](Set-OrchTestSet.md)
 
 [Start-OrchTestSet](Start-OrchTestSet.md)

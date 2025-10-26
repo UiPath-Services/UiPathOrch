@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -206,4 +206,3 @@ API triggers enable external systems to start processes through HTTP API calls. 
 
 [Remove-OrchApiTrigger](Remove-OrchApiTrigger.md)
 
-[Set-OrchApiTrigger](Set-OrchApiTrigger.md)

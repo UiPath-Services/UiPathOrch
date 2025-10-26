@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -194,4 +194,3 @@ Groups contain member associations and permissions. When copying groups, entitie
 
 [Remove-PmGroup](Remove-PmGroup.md)
 
-[Set-PmGroup](Set-PmGroup.md)

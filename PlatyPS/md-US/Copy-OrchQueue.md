@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -228,7 +228,6 @@ This cmdlet copies queue structure and configuration only. Queue items are not c
 
 [Remove-OrchQueue](Remove-OrchQueue.md)
 
-[Set-OrchQueue](Set-OrchQueue.md)
 
 [Copy-OrchQueueItem](Copy-OrchQueueItem.md)
 

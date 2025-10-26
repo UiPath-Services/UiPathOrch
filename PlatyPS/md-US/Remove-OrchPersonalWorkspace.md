@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -189,4 +189,3 @@ This cmdlet performs a folder-level entity operation that permanently removes pe
 
 [Disable-OrchPersonalWorkspace](Disable-OrchPersonalWorkspace.md)
 
-[Get-OrchFolder](Get-OrchFolder.md)

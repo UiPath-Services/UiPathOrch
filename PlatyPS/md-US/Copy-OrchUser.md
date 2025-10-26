@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -221,4 +221,3 @@ Users can be identified by either UserName or FullName. Use -Type parameter to f
 
 [Remove-OrchUser](Remove-OrchUser.md)
 
-[Set-OrchUser](Set-OrchUser.md)

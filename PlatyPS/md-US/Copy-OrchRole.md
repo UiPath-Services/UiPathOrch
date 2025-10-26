@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -187,4 +187,3 @@ Ensure you have appropriate permissions in both source and destination tenants.
 
 [Remove-OrchRole](Remove-OrchRole.md)
 
-[New-OrchRole](New-OrchRole.md)

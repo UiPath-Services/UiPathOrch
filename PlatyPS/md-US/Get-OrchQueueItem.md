@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -449,9 +449,7 @@ Required permissions: Transactions.View
 
 ## RELATED LINKS
 
-[Add-OrchQueueItem](Add-OrchQueueItem.md)
 
-[Set-OrchQueueItem](Set-OrchQueueItem.md)
 
 [Remove-OrchQueueItem](Remove-OrchQueueItem.md)
 

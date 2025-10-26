@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -133,6 +133,5 @@ Required permissions: Settings.View
 
 [Get-OrchExecutionSetting](Get-OrchExecutionSetting.md)
 
-[Set-OrchSetting](Set-OrchSetting.md)
 
 [Get-OrchCurrentUser](Get-OrchCurrentUser.md)

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -199,7 +199,6 @@ Use -WhatIf to preview deletions before executing, especially for bulk operation
 
 [Get-OrchQueueItem](Get-OrchQueueItem.md)
 
-[Add-OrchQueueItem](Add-OrchQueueItem.md)
 
 [Export-Csv](https://docs.microsoft.com/powershell/module/microsoft.powershell.utility/export-csv)
 

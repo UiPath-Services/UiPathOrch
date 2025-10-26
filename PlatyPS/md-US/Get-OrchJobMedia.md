@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -190,6 +190,5 @@ Required permissions: [PLACEHOLDER]
 
 [Get-OrchJobVideo](Get-OrchJobVideo.md)
 
-[Download-OrchJobMedia](Download-OrchJobMedia.md)
 
 [Remove-OrchJobMedia](Remove-OrchJobMedia.md)

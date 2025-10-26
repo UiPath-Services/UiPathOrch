@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -166,9 +166,7 @@ Required permissions: TestDataQueues.View
 
 [Get-OrchTestDataQueueItem](Get-OrchTestDataQueueItem.md)
 
-[Add-OrchTestDataQueue](Add-OrchTestDataQueue.md)
 
-[Set-OrchTestDataQueue](Set-OrchTestDataQueue.md)
 
 [Remove-OrchTestDataQueue](Remove-OrchTestDataQueue.md)
 

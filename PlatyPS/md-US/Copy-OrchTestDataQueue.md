@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -219,6 +219,4 @@ Test data queues contain structured test data definitions and schemas. When copy
 
 [Remove-OrchTestDataQueue](Remove-OrchTestDataQueue.md)
 
-[Set-OrchTestDataQueue](Set-OrchTestDataQueue.md)
 
-[New-OrchTestDataQueue](New-OrchTestDataQueue.md)

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -206,4 +206,3 @@ Exported libraries are saved as .nupkg files that can be imported into other Orc
 
 [Remove-OrchLibrary](Remove-OrchLibrary.md)
 
-[Update-OrchLibrary](Update-OrchLibrary.md)

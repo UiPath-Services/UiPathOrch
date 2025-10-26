@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -201,6 +201,4 @@ This cmdlet is a folder entity operation that activates automation triggers for 
 
 [Get-OrchTrigger](Get-OrchTrigger.md)
 
-[Set-OrchTrigger](Set-OrchTrigger.md)
 
-[Add-OrchTrigger](Add-OrchTrigger.md)

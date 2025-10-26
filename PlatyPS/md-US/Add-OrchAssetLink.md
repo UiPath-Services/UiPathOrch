@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -183,6 +183,5 @@ Asset links allow the same asset to be accessed from multiple folders without du
 
 [Get-OrchAssetLink](Get-OrchAssetLink.md)
 
-[Remove-OrchAssetLink](Remove-OrchAssetLink.md)
 
 

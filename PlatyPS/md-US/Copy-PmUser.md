@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -194,4 +194,3 @@ Users contain permissions, settings, and group associations. If associated group
 
 [Remove-PmUser](Remove-PmUser.md)
 
-[Set-PmUser](Set-PmUser.md)

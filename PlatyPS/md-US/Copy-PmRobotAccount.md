@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -190,7 +190,6 @@ Robot accounts contain authentication settings, permissions, and group associati
 
 [Get-PmRobotAccount](Get-PmRobotAccount.md)
 
-[New-PmRobotAccount](New-PmRobotAccount.md)
 
 [Remove-PmRobotAccount](Remove-PmRobotAccount.md)
 
