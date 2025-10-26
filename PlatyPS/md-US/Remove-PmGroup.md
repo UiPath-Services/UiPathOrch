@@ -34,7 +34,7 @@ Required permissions: [PLACEHOLDER - Platform Management group delete permission
 
 ### Example 1: Remove multiple groups
 ```powershell
-PS Orch1:\> Remove-PmGroup TestGroup1, TestGroup2, CustomGroup
+PS Orch1:\Shared> Remove-PmGroup TestGroup1, TestGroup2, CustomGroup
 ```
 
 Removes multiple groups in a single operation.

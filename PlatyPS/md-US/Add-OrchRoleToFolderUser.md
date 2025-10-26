@@ -37,14 +37,14 @@ Required permissions: (Units.Edit or SubFolders.Edit - Assigns users to any fold
 
 ### Example 1
 ```powershell
-PS Orch1:\Development> Add-OrchRoleToFolderUser -UserName john.doe -Roles Developer
+PS Orch1:\Shared> Add-OrchRoleToFolderUser -UserName john.doe -Roles Developer
 ```
 
 Assigns the Developer role to user john.doe in the current folder (Development).
 
 ### Example 2
 ```powershell
-PS C:\> Add-OrchRoleToFolderUser -Path Orch1:\Finance -UserName jane.smith -Roles "Business Analyst", Viewer
+PS C:\> Add-OrchRoleToFolderUser -Path Orch1:\Finance jane.smith "Business Analyst"
 ```
 
 Assigns Business Analyst and Viewer roles to user jane.smith in the Finance folder.
@@ -58,14 +58,14 @@ Shows what would happen when assigning the Administrator role to user Alex Johns
 
 ### Example 4
 ```powershell
-PS C:\> Add-OrchRoleToFolderUser -Path Orch1:\Development, Orch1:\Testing -UserName team.lead -Roles "Team Lead"
+PS C:\> Add-OrchRoleToFolderUser -Path Orch1:\Development team.lead "Team Lead"
 ```
 
 Assigns the Team Lead role to user team.lead in both Development and Testing folders.
 
 ### Example 5
 ```powershell
-PS Orch1:\> Add-OrchRoleToFolderUser -Recurse -UserName support.user -Roles Viewer
+PS Orch1:\> Add-OrchRoleToFolderUser -Recurse support.user -Roles Viewer
 ```
 
 Assigns the Viewer role to support.user in all folders recursively from the current location.
@@ -132,7 +132,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

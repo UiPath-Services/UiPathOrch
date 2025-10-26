@@ -34,7 +34,7 @@ Required permissions: (Packages.View - Lists packages in a Tenant Feed) and (Fol
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-OrchPackage
+PS Orch1:\Shared> Get-OrchPackage
 ```
 
 Gets all process packages in the current folder context.
@@ -51,18 +51,18 @@ Gets all process packages from all folders recursively.
 PS Orch1:\> Get-OrchPackage -Path Orch1:\Production *Process*
 ```
 
-Gets process packages with IDs starting with "ProcessA" from the Production folder.
+Gets process packages with IDs starting with ProcessA from the Production folder.
 
 ### Example 4
 ```powershell
-PS C:\> Get-OrchPackage -Path Orch1: *Blank*
+PS C:\> Get-OrchPackage Orch1: *Blank*
 ```
 
 Gets TestProcess package from the tenant feed (entire tenant scope).
 
 ### Example 5
 ```powershell
-PS Orch1:\> Get-OrchPackage -Recurse | Select-Object Path, Id, Version, IsActive
+PS Orch1:\> Get-OrchPackage | Select-Object Path, Id, Version, IsActive
 ```
 
 Gets all packages recursively and displays key properties with Path shown first.

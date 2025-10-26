@@ -31,7 +31,7 @@ Required permissions: Alerts.View
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-OrchAlert
+PS Orch1:\Shared> Get-OrchAlert
 ```
 
 Displays all alerts on Orch1: drive, which is the current location.
@@ -142,7 +142,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -33,7 +33,7 @@ Required permissions: [PLACEHOLDER - Activity settings view permissions]
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-OrchActivitySetting
+PS Orch1:\Shared> Get-OrchActivitySetting
 ```
 
 Gets the activity settings for the current Orchestrator instance.

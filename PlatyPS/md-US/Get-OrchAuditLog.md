@@ -47,7 +47,7 @@ Required permissions: Audit.View
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-OrchAuditLog -Last Day
+PS Orch1:\Shared> Get-OrchAuditLog -Last Day
 ```
 
 Retrieves all audit logs from the last 24 hours in the current tenant.
@@ -196,7 +196,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

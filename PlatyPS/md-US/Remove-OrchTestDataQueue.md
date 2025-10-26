@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,7 +18,7 @@ Remove-OrchTestDataQueue [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Dept
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Removes test data queues from UiPath Orchestrator. Test data queues provide structured test data for automation testing scenarios. Use this cmdlet to clean up unused or outdated test data queues.
 
 Primary Endpoint: GET /odata/TestDataQueues, DELETE /odata/TestDataQueues({testDataQueueId})
 
@@ -30,10 +30,10 @@ Required permissions: TestDataQueues.Delete
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Remove-OrchTestDataQueue TestDataQueue001 -WhatIf
 ```
 
-{{ Add example description here }}
+Performs a test removal of the test data queue 'TestDataQueue001'. The -WhatIf parameter shows what would be removed without actually performing the deletion.
 
 ## PARAMETERS
 
@@ -129,7 +129,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

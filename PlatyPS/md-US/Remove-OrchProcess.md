@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,7 +18,7 @@ Remove-OrchProcess [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Depth <UIn
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Removes process definitions from UiPath Orchestrator. Process definitions contain the workflow logic and configuration for automation projects. Use this cmdlet to clean up unused or outdated processes from your environment.
 
 Primary Endpoint: GET /odata/Releases, DELETE /odata/Processes('{processId}:{version}')
 
@@ -30,10 +30,10 @@ Required permissions: Processes.Delete
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\> Remove-OrchProcess -Path Orch1: MyProcess -WhatIf
 ```
 
-{{ Add example description here }}
+Performs a test removal of the process named 'MyProcess'. The -WhatIf parameter shows what would be removed without actually performing the deletion.
 
 ## PARAMETERS
 
@@ -83,7 +83,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

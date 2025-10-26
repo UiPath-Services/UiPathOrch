@@ -34,42 +34,42 @@ Required permissions: Robots.Edit
 
 ### Example 1
 ```powershell
-Disable-OrchFolderMachineAccountMapping Machine01 -WhatIf
+PS Orch1:\Shared> Disable-OrchFolderMachineAccountMapping Machine01 -WhatIf
 ```
 
 Shows what would happen when disabling all account mappings for Machine01 in the current folder.
 
 ### Example 2
 ```powershell
-Disable-OrchFolderMachineAccountMapping Machine01 john.doe
+PS Orch1:\> Disable-OrchFolderMachineAccountMapping Machine01 john.doe
 ```
 
 Disables the account mapping between Machine01 and user john.doe in the current folder.
 
 ### Example 3
 ```powershell
-Disable-OrchFolderMachineAccountMapping *Dev* *test*
+PS Orch1:\> Disable-OrchFolderMachineAccountMapping *Dev* *test*
 ```
 
 Disables account mappings for all machines containing "Dev" and all users containing "test".
 
 ### Example 4
 ```powershell
-Disable-OrchFolderMachineAccountMapping -Path Orch1:\Development Machine01, Machine02 -Confirm
+PS Orch1:\> Disable-OrchFolderMachineAccountMapping -Path Orch1:\Development Machine01, Machine02 -Confirm
 ```
 
 Disables all account mappings for Machine01 and Machine02 in the Development folder with confirmation.
 
 ### Example 5
 ```powershell
-Disable-OrchFolderMachineAccountMapping -Recurse *Template*
+PS Orch1:\> Disable-OrchFolderMachineAccountMapping -Recurse *Template*
 ```
 
 Disables account mappings for all machines containing "Template" in the current folder and all subfolders.
 
 ### Example 6
 ```powershell
-Get-OrchMachine *Robot* | Disable-OrchFolderMachineAccountMapping -UserName admin.user
+PS Orch1:\> Get-OrchMachine *Robot* | Disable-OrchFolderMachineAccountMapping -UserName admin.user
 ```
 
 Disables account mappings between all machines containing "Robot" and the admin.user account. Machine names are passed via pipeline using ByPropertyName binding.
@@ -183,7 +183,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

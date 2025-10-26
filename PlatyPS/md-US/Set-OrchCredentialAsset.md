@@ -40,7 +40,7 @@ Required permissions: Assets.View, Assets.Edit, Assets.Create, Assets.Delete
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+{{ Add example code here }}
 ```
 
 {{ Add example description here }}

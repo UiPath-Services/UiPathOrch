@@ -5,77 +5,155 @@ online version:
 schema: 2.0.0
 ---
 
-# Remove-OrchBucket
+# Remove-OrchAsset
 
 ## SYNOPSIS
-Removes storage buckets.
+Removes assets from UiPath Orchestrator.
 
 ## SYNTAX
 
 ```
-Remove-OrchBucket [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Depth <UInt32>]
+Remove-OrchAsset [-Name] <String[]> [[-ValueType] <String[]>] [-Path <String[]>] [-Recurse] [-Depth <UInt32>]
  [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-The Remove-OrchBucket cmdlet removes storage buckets from UiPath Orchestrator. This operation permanently deletes the bucket and any contained folders or files, so use with caution.
+The `Remove-OrchAsset` cmdlet removes one or more assets from UiPath Orchestrator. Assets are data stores that contain configuration settings, credentials, and other data used by automation processes.
 
-**This is a folder entity cmdlet.** To use this cmdlet, you must first navigate to the target folder using Set-Location (cd), or specify the target folders using the -Path, -Recurse, or -Depth parameters. If you attempt to run this cmdlet without being in a folder context, you will receive the error: \"Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.\"
+This cmdlet operates on folder entities and requires either navigation to the target folder or specification of target folders using -Path, -Recurse, or -Depth parameters. Use caution when removing assets as this action cannot be undone and may affect automation processes that depend on these assets.
 
-**Warning**: This operation is destructive and cannot be undone. All data stored in the bucket will be permanently deleted. Consider using -WhatIf to preview the operation before execution, and -Confirm for additional safety.
+Multiple values for the -Name and -Path parameters can be specified using comma-separated text that includes wildcards. Additionally, you can use autocomplete for these values by pressing [Ctrl+Space] or [Tab].
 
-Primary Endpoint: DELETE /odata/Buckets({id})
-OAuth required scopes: OR.Administration or OR.Administration.Write
-Required permissions: Buckets.Delete
+When specifying the -Path, -Recurse, and -Depth parameters, place them immediately after the cmdlet name. This placement ensures that autocomplete for subsequent parameters functions correctly.
+
+Primary Endpoint: DELETE /odata/Assets({id})
+
+OAuth required scopes: OR.Assets or OR.Assets.Write
+
+Required permissions: Assets.Delete
 
 ## EXAMPLES
 
 ### Example 1
 ```powershell
-Remove-OrchBucket TestBucket -WhatIf
+PS Orch1:\Shared> Remove-OrchAsset TestAsset2024 -WhatIf
 ```
 
-Shows what would happen when removing the \"TestBucket\" bucket without actually deleting it.
+Tests removing the TestAsset2024 asset using -WhatIf to preview the operation before execution.
 
 ### Example 2
 ```powershell
-Remove-OrchBucket OldBucket -Confirm
+PS Orch1:\Shared> Remove-OrchAsset TestAsset2024 -Confirm
 ```
 
-Removes the \"OldBucket\" bucket with confirmation prompt for safety.
+Removes TestAsset2024 with explicit confirmation prompt for safety.
 
 ### Example 3
 ```powershell
-Remove-OrchBucket Temp* -WhatIf
+PS Orch1:\Shared> Remove-OrchAsset Test* -ValueType Text -WhatIf
 ```
 
-Shows what would happen when removing all buckets starting with \"Temp\" using wildcard pattern.
+Tests removing all Text-type assets with names starting with Test using wildcard pattern matching.
 
 ### Example 4
 ```powershell
-Get-OrchBucket | Where-Object {$_.Description -like \"*obsolete*\"} | Remove-OrchBucket -WhatIf
+PS Orch1:\Shared> Remove-OrchAsset OldAsset1,OldAsset2,OldAsset3
 ```
 
-Shows what would happen when removing buckets that have \"obsolete\" in their description using pipeline processing.
+Removes multiple specific assets in a single operation by providing a list of asset names.
 
 ### Example 5
 ```powershell
-Remove-OrchBucket -Path Orch1:\Development Archive*, Backup* -Confirm
+PS Orch1:\> Remove-OrchAsset "Orch1:\Development","Orch1:\Testing" -Name "*Temp*" -Recurse -WhatIf
 ```
 
-Removes buckets matching \"Archive*\" and \"Backup*\" patterns in the Development folder with confirmation.
+Tests removing all assets containing Temp in their names across Development and Testing folders and their subfolders.
 
 ### Example 6
 ```powershell
-Remove-OrchBucket -Recurse TempData -WhatIf
+PS Orch1:\Shared> Get-OrchAsset | Where-Object {$_.ValueType Bool -and $_.Value -eq $false} | Remove-OrchAsset -WhatIf
 ```
 
-Shows what would happen when removing \"TempData\" buckets recursively across all subfolders.
+Tests removing all Boolean assets with false values using pipeline input from Get-OrchAsset with filtering.
+
+### Example 7
+```powershell
+PS C:\> Remove-OrchAsset "Orch1:\Archive" -Name LegacyAsset -Confirm:$false
+```
+
+Removes a specific asset from the Archive folder without confirmation prompts for automated cleanup scripts.
+
+### Example 8
+```powershell
+PS Orch1:\Shared> Remove-OrchAsset Backup* -Depth 2 -WhatIf
+```
+
+Tests removing all assets starting with Backup within 2 folder levels deep from the current location.
+
+### Example 9
+```powershell
+PS Orch1:\Shared> Remove-OrchAsset *Config* -ValueType Text,Credential -WhatIf
+```
+
+Tests removing all Text and Credential assets containing Config in their names for configuration cleanup.
+
+### Example 10
+```powershell
+PS Orch1:\Shared> Get-OrchAsset | Where-Object {$_.LastModificationTime -lt (Get-Date).AddMonths(-6)} | Remove-OrchAsset -WhatIf
+```
+
+Tests removing assets that haven't been modified in the last 6 months for maintenance purposes.
+
+OAuth required scopes: OR.Assets or OR.Assets.Write
+
+Required permissions: Assets.Delete
+
+### Example 1
+```powershell
+PS Orch1:\Development> Remove-OrchAsset TestAsset -WhatIf
+```
+
+Shows what would happen when removing the TestAsset without actually performing the deletion.
+
+### Example 2
+```powershell
+PS Orch1:\Development> Remove-OrchAsset TempAsset -Confirm
+```
+
+Removes the TempAsset with a confirmation prompt before deletion.
+
+### Example 3
+```powershell
+PS Orch1:\> Remove-OrchAsset "Orch1:\Development" "Config*"
+```
+
+Removes all assets whose names start with Config from the Development folder without changing the current location.
+
+### Example 4
+```powershell
+PS Orch1:\> Remove-OrchAsset -Recurse "Test*" -ValueType Text
+```
+
+Removes all Text-type assets whose names start with Test from all folders recursively.
+
+### Example 5
+```powershell
+PS Orch1:\Development> Get-OrchAsset | Where-Object {$_.LastModificationTime -lt (Get-Date).AddDays(-30)} | Remove-OrchAsset -WhatIf
+```
+
+Shows what would happen when removing assets that haven't been modified in the last 30 days.
+
+### Example 6
+```powershell
+PS Orch1:\> Remove-OrchAsset -Recurse "Deprecated*" -Confirm
+```
+
+Removes all assets whose names start with Deprecated from all folders with confirmation for each deletion.
 
 ## PARAMETERS
 
 ### -Depth
-Specifies the maximum depth of recursion when used with -Recurse parameter.
+Specifies the depth for recursion into the target folders. A depth of 0 indicates the current location only, with no subfolders included.
 
 ```yaml
 Type: UInt32
@@ -84,13 +162,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: Unlimited depth
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -Name
-Specifies the name(s) of the bucket(s) to remove. Supports wildcard patterns for bulk operations.
+Specifies the name(s) of the assets to remove. Supports wildcards (* and ?) for pattern matching. You can use autocomplete by pressing [Ctrl+Space] or [Tab].
 
 ```yaml
 Type: String[]
@@ -105,7 +183,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-Specifies the path(s) to the target folder(s) containing the buckets to remove. Use this parameter to remove buckets from specific folders without changing your current location.
+Specifies the folder path(s) from which to remove assets. Supports wildcards and multiple values. If not specified, the current location is used.
 
 ```yaml
 Type: String[]
@@ -114,13 +192,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: Current location
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Specifies how PowerShell responds to progress updates generated by the cmdlet.
 
 ```yaml
 Type: ActionPreference
@@ -135,7 +213,7 @@ Accept wildcard characters: False
 ```
 
 ### -Recurse
-Indicates that the cmdlet should process all subfolders recursively when used with -Path.
+Includes assets from subfolders when removing assets. This is a folder entity operation parameter.
 
 ```yaml
 Type: SwitchParameter
@@ -144,13 +222,28 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -ValueType
+Specifies the value type(s) of assets to remove. Valid values include: Text, Bool, Integer, Credential. Use this parameter to limit removal to specific asset types.
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 1
+Default value: All types
+Accept pipeline input: True (ByPropertyName)
+Accept wildcard characters: True
+```
+
 ### -Confirm
-Prompts you for confirmation before running the cmdlet. Recommended for production environments.
+Prompts you for confirmation before running the cmdlet.
 
 ```yaml
 Type: SwitchParameter
@@ -159,13 +252,13 @@ Aliases: cf
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -WhatIf
-Shows what would happen if the cmdlet runs. The cmdlet is not run. This is highly recommended for destructive operations.
+Shows what would happen if the cmdlet runs. The cmdlet is not run.
 
 ```yaml
 Type: SwitchParameter
@@ -174,7 +267,7 @@ Aliases: wi
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -189,15 +282,45 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.Object
 ## NOTES
-- **DESTRUCTIVE OPERATION**: This command permanently deletes buckets and all their contents
-- Always use -WhatIf first to preview the operation
-- Consider using -Confirm for additional safety in production environments
-- Wildcard patterns allow bulk deletion but require extra caution
-- Pipeline processing enables complex filtering scenarios
-- Ensure proper backup procedures before removing important buckets
+
+This cmdlet operates on folder entities and requires either:
+- Navigation to the target folder using Set-Location (cd), OR
+- Specification of target folders using the -Path, -Recurse, or -Depth parameters
+
+**Important:** For optimal PowerShell IntelliSense support, specify -Path, -Recurse, or -Depth before other parameters when using multiple parameters.
+
+**Security and Safety Considerations:**
+- Asset removal is permanent and cannot be undone
+- Removing assets may break automation processes that depend on them
+- Always use -WhatIf to preview deletions before execution
+- Use -Confirm for interactive confirmation of each deletion
+- Consider backing up critical assets before removal
+
+**Asset Types That Can Be Removed:**
+- Text: String values for configuration settings
+- Bool: Boolean values for feature flags
+- Integer: Numeric values for thresholds and counts
+- Credential: Encrypted username/password pairs
+
+**Best Practices:**
+- Test removal operations in development environments first
+- Use specific asset names rather than broad wildcards
+- Document removed assets for audit purposes
+- Coordinate with process owners before removing shared assets
+- Consider using Get-OrchAsset with Where-Object to preview targets
+
+**Common Use Cases:**
+- Cleanup of test assets after development cycles
+- Removal of deprecated configuration values
+- Cleanup of assets with specific naming patterns
+- Batch removal based on modification dates
+
+Use Get-OrchAsset to view available assets before removal and verify the scope of the deletion operation.
 
 ## RELATED LINKS
 
-[Get-OrchBucket](Get-OrchBucket.md)
-[New-OrchBucket](New-OrchBucket.md)
-[Copy-OrchBucket](Copy-OrchBucket.md)
+[Get-OrchAsset](Get-OrchAsset.md)
+
+[Set-OrchAsset](Set-OrchAsset.md)
+
+[Copy-OrchAsset](Copy-OrchAsset.md)

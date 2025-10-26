@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,7 +18,7 @@ Remove-OrchFolderUser [[-UserName] <String[]>] [[-FullName] <String[]>] [-NoMatc
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+このパラメータの説明。
 
 Primary Endpoint: POST /odata/Folders({folderId})/UiPath.Server.Configuration.OData.RemoveUserFromFolder
 
@@ -30,7 +30,7 @@ Required permissions: (Units.Edit or SubFolders.Edit - Remove user from any fold
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+{{ Add example code here }}
 ```
 
 {{ Add example description here }}
@@ -83,7 +83,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+このパラメータの説明。
 
 ```yaml
 Type: ActionPreference
@@ -159,7 +159,7 @@ Accept wildcard characters: False
 ```
 
 ### -NoMatchWarning
-{{ Fill NoMatchWarning Description }}
+このパラメータの説明。
 
 ```yaml
 Type: SwitchParameter

@@ -31,7 +31,7 @@ Required permissions: Settings.View
 
 ### Example 1: Get update settings for current tenant
 ```powershell
-PS C:\> Get-OrchUpdateSetting -Path Orch1:
+PS Orch1:\> Get-OrchUpdateSetting -Path Orch1:
 ```
 
 Gets the update settings for the Orch1 tenant.

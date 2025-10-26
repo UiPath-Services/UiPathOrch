@@ -1,6 +1,6 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
-Module Name: uiPathOrch
+Module Name: UiPathOrch
 online version:
 schema: 2.0.0
 ---
@@ -18,7 +18,7 @@ Remove-OrchMachineClientSecret [-Name] <String[]> [-SecretId] <String[]> [-Path 
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+このパラメータの説明。
 
 Primary Endpoint: DELETE /api/clientsecrets/{secretId}
 
@@ -30,7 +30,7 @@ Required permissions: Machines.Edit
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+{{ Add example code here }}
 ```
 
 {{ Add example description here }}
@@ -53,7 +53,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-{{ Fill Name Description }}
+このパラメータの説明。
 
 ```yaml
 Type: String[]
@@ -83,7 +83,7 @@ Accept wildcard characters: False
 ```
 
 ### -SecretId
-{{ Fill SecretId Description }}
+このパラメータの説明。
 
 ```yaml
 Type: String[]
@@ -114,7 +114,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+このパラメータの説明。
 
 ```yaml
 Type: ActionPreference

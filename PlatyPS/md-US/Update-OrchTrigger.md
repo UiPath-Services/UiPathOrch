@@ -26,7 +26,7 @@ Update-OrchTrigger [-Name] <String[]> [-NewName <String>] [-Enabled <String>] [-
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+intheを指定します。
 
 Primary Endpoint: PUT /odata/ProcessSchedules({schedule.Id})
 
@@ -38,7 +38,7 @@ Required permissions: Schedules.Edit
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+{{ Add example code here }}
 ```
 
 {{ Add example description here }}
@@ -46,7 +46,7 @@ PS C:\> {{ Add example code here }}
 ## PARAMETERS
 
 ### -ActivateOnJobComplete
-{{ Fill ActivateOnJobComplete Description }}
+ActivateOnJobCompleteを指定します。
 
 ```yaml
 Type: String
@@ -61,7 +61,7 @@ Accept wildcard characters: False
 ```
 
 ### -AlertPendingExpression
-{{ Fill AlertPendingExpression Description }}
+AlertPendingExpressionを指定します。
 
 ```yaml
 Type: String
@@ -76,7 +76,7 @@ Accept wildcard characters: False
 ```
 
 ### -AlertRunningExpression
-{{ Fill AlertRunningExpression Description }}
+AlertRunningExpressionを指定します。
 
 ```yaml
 Type: String
@@ -91,7 +91,7 @@ Accept wildcard characters: False
 ```
 
 ### -CalendarName
-{{ Fill CalendarName Description }}
+CalendarNameを指定します。
 
 ```yaml
 Type: String
@@ -256,7 +256,7 @@ Accept wildcard characters: False
 ```
 
 ### -MachineRobots
-{{ Fill MachineRobots Description }}
+MachineRobotsを指定します。
 
 ```yaml
 Type: String[]
@@ -271,7 +271,7 @@ Accept wildcard characters: False
 ```
 
 ### -MaxJobsForActivation
-{{ Fill MaxJobsForActivation Description }}
+MaxJobsForActivationを指定します。
 
 ```yaml
 Type: Int32
@@ -286,7 +286,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-{{ Fill Name Description }}
+Nameを指定します。
 
 ```yaml
 Type: String[]
@@ -301,7 +301,7 @@ Accept wildcard characters: True
 ```
 
 ### -NewName
-{{ Fill NewName Description }}
+NewNameを指定します。
 
 ```yaml
 Type: String
@@ -331,7 +331,7 @@ Accept wildcard characters: True
 ```
 
 ### -Priority
-{{ Fill Priority Description }}
+Priorityを指定します。
 
 ```yaml
 Type: String
@@ -346,7 +346,7 @@ Accept wildcard characters: False
 ```
 
 ### -QueueDefinitionName
-{{ Fill QueueDefinitionName Description }}
+QueueDefinitionNameを指定します。
 
 ```yaml
 Type: String
@@ -376,7 +376,7 @@ Accept wildcard characters: False
 ```
 
 ### -ReleaseName
-{{ Fill ReleaseName Description }}
+ReleaseNameを指定します。
 
 ```yaml
 Type: String
@@ -391,7 +391,7 @@ Accept wildcard characters: True
 ```
 
 ### -ResumeOnSameContext
-{{ Fill ResumeOnSameContext Description }}
+ResumeOnSameContextを指定します。
 
 ```yaml
 Type: String
@@ -406,7 +406,7 @@ Accept wildcard characters: False
 ```
 
 ### -RunAsMe
-{{ Fill RunAsMe Description }}
+RunAsMeを指定します。
 
 ```yaml
 Type: String
@@ -421,7 +421,7 @@ Accept wildcard characters: False
 ```
 
 ### -RuntimeType
-{{ Fill RuntimeType Description }}
+RuntimeTypeを指定します。
 
 ```yaml
 Type: String
@@ -436,7 +436,7 @@ Accept wildcard characters: False
 ```
 
 ### -StartProcessCron
-{{ Fill StartProcessCron Description }}
+StartProcessCronを指定します。
 
 ```yaml
 Type: String
@@ -451,7 +451,7 @@ Accept wildcard characters: False
 ```
 
 ### -StartProcessCronDetails
-{{ Fill StartProcessCronDetails Description }}
+StartProcessCronDetailsを指定します。
 
 ```yaml
 Type: String
@@ -466,7 +466,7 @@ Accept wildcard characters: False
 ```
 
 ### -StartStrategy
-{{ Fill StartStrategy Description }}
+StartStrategyを指定します。
 
 ```yaml
 Type: Int32
@@ -481,7 +481,7 @@ Accept wildcard characters: False
 ```
 
 ### -StopProcessDate
-{{ Fill StopProcessDate Description }}
+StopProcessDateを指定します。
 
 ```yaml
 Type: DateTime
@@ -496,7 +496,7 @@ Accept wildcard characters: False
 ```
 
 ### -StopProcessExpression
-{{ Fill StopProcessExpression Description }}
+StopProcessExpressionを指定します。
 
 ```yaml
 Type: String
@@ -511,7 +511,7 @@ Accept wildcard characters: False
 ```
 
 ### -StopStrategy
-{{ Fill StopStrategy Description }}
+StopStrategyを指定します。
 
 ```yaml
 Type: String
@@ -526,7 +526,7 @@ Accept wildcard characters: False
 ```
 
 ### -TimeZone
-{{ Fill TimeZone Description }}
+TimeZoneを指定します。
 
 ```yaml
 Type: String
@@ -557,7 +557,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+ProgressActionを指定します。
 
 ```yaml
 Type: ActionPreference
@@ -572,7 +572,7 @@ Accept wildcard characters: False
 ```
 
 ### -ExecutorRobots
-{{ Fill ExecutorRobots Description }}
+ExecutorRobotsを指定します。
 
 ```yaml
 Type: String[]

@@ -36,50 +36,64 @@ Required permissions: Machines.Create
 
 ### Example 1
 ```powershell
-New-OrchMachine ProdMachine01
+PS Orch1:\Shared> New-OrchMachine Machine01 -Description "Test machine for verification" -WhatIf
 ```
 
-Creates a new machine named "ProdMachine01" using positional parameters.
+Tests creating a new machine with basic settings using -WhatIf to preview the operation before execution.
 
 ### Example 2
 ```powershell
-New-OrchMachine DevMachine -Type "Standard" -Description "Development environment machine" -UnattendedSlots 2
+PS Orch1:\> New-OrchMachine ProductionMachine Standard -UnattendedSlots 3 -NonProductionSlots 1 -Description "Production environment machine"
 ```
 
-Creates a standard machine with 2 unattended slots for development work.
+Creates a Standard machine configured with 3 unattended slots and 1 non-production slot for mixed workloads.
 
 ### Example 3
 ```powershell
-New-OrchMachine TemplateMachine -Type "Template" -AutomationType "Background" -TargetFramework "Windows" -Tags Template, StandardConfig
+PS Orch1:\> New-OrchMachine TestAutomationMachine -TestAutomationSlots 2 -AutomationType Background -TargetFramework Windows -Description "Dedicated test automation machine"
 ```
 
-Creates a template machine configured for background automation on Windows with organizational tags.
+Creates a machine specifically for test automation with background execution and Windows target framework.
 
 ### Example 4
 ```powershell
-New-OrchMachine TestMachine -UnattendedSlots 1 -NonProductionSlots 2 -TestAutomationSlots 1 -RobotUsers "domain\user1", "domain\user2"
+PS C:\> New-OrchMachine -Path Orch1:, Orch2: TemplateMachine -Type Template -UnattendedSlots 2 -Description "This is a template machine"
 ```
 
-Creates a machine with various slot types and specifies robot users who can execute on this machine.
+Creates a template machine across multiple tenants using the -Path parameter for standardized configurations.
 
 ### Example 5
 ```powershell
-"Machine01", "Machine02", "Machine03" | ForEach-Object { New-OrchMachine $_ -WhatIf -Tags Production, Cluster-A }
+PS Orch1:\> New-OrchMachine DevelopmentMachine -Scope Folder -NonProductionSlots 2 -Tags Development,Testing -Description "Development environment machine"
 ```
 
-Shows what would happen when creating multiple machines with common tags using pipeline processing.
+Creates a folder-scoped machine for development with tags for organization and filtering.
 
 ### Example 6
 ```powershell
-New-OrchMachine -Path Orch2: BackupMachine -Type "Standard" -Scope "Global" -NonProductionSlots 1 -Description "Backup processing machine"
+PS C:\> Import-Csv machines.csv | New-OrchMachine -WhatIf
 ```
 
-Creates a machine in the Orch2 tenant with global scope for backup operations.
+Tests bulk machine creation from a CSV file. The CSV should contain columns: Name, Description, Type, UnattendedSlots, NonProductionSlots, TestAutomationSlots.
+
+### Example 7
+```powershell
+PS Orch1:\> New-OrchMachine RobotHost -RobotUsers "DOMAIN\robot1","DOMAIN\robot2" -UnattendedSlots 2 -Description "Machine with pre-configured robot users"
+```
+
+Creates a machine with specific robot users assigned for unattended automation execution.
+
+### Example 8
+```powershell
+PS Orch1:\> New-OrchMachine * "DynamicMachine" -Type Standard -AutomationType Any -TargetFramework Portable -Description "Portable machine for any automation type"
+```
+
+Creates a portable machine that can run any type of automation process across different platforms.
 
 ## PARAMETERS
 
 ### -AutomationType
-Specifies the automation type supported by the machine. Valid values are "Any" (supports both foreground and background), "Foreground" (requires user interaction), or "Background" (runs without user interaction).
+Specifies the automation type supported by the machine. Valid values are Any (supports both foreground and background), Foreground (requires user interaction), or Background (runs without user interaction).
 
 ```yaml
 Type: String
@@ -214,7 +228,7 @@ Accept wildcard characters: False
 ```
 
 ### -TargetFramework
-Specifies the target framework for the machine. Valid values include "Portable" (cross-platform) and "Windows" (Windows-specific framework).
+Specifies the target framework for the machine. Valid values include Portable (cross-platform) and Windows (Windows-specific framework).
 
 ```yaml
 Type: String
@@ -244,7 +258,7 @@ Accept wildcard characters: False
 ```
 
 ### -Type
-Specifies the type of machine to create. Valid values are "Standard" for regular machines and "Template" for template machines used to standardize configurations.
+Specifies the type of machine to create. Valid values are Standard for regular machines and Template for template machines used to standardize configurations.
 
 ```yaml
 Type: String
@@ -289,7 +303,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Specifies how PowerShell responds to progress updates generated by the cmdlet.
 
 ```yaml
 Type: ActionPreference
@@ -328,3 +342,4 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 [Update-OrchMachine](Update-OrchMachine.md)
 [Remove-OrchMachine](Remove-OrchMachine.md)
 [Copy-OrchMachine](Copy-OrchMachine.md)
+

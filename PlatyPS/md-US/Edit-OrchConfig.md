@@ -32,7 +32,7 @@ Required permissions: File system write access to user documents folder
 
 ### Example 1: Open configuration file in default editor
 ```powershell
-PS C:\> Edit-OrchConfig
+PS Orch1:\Shared> Edit-OrchConfig
 ```
 
 Opens the UiPathOrchConfig.json file in the default text editor (typically Notepad on Windows).

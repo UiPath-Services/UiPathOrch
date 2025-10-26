@@ -36,7 +36,7 @@ Required permissions: Units.View, SubFolders.View, Units.Edit, SubFolders.Edit, 
 
 ### Example 1
 ```powershell
-PS Orch1:\Development> Copy-OrchFolderUser john.doe \Production
+PS Orch1:\Shared> Copy-OrchFolderUser john.doe \Production
 ```
 
 Copies john.doe's user assignment from the current folder (Development) to the Production folder within the same tenant.
@@ -109,7 +109,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

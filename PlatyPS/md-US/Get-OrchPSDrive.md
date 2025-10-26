@@ -29,7 +29,7 @@ Required permissions: N/A
 
 ### Example 1: List all configured drives
 ```powershell
-PS C:\> Get-OrchPSDrive
+PS Orch1:\Shared> Get-OrchPSDrive
 ```
 
 Lists all configured UiPath Orchestrator drives with their connection details.

@@ -34,42 +34,42 @@ Required permissions: Buckets.Create
 
 ### Example 1
 ```powershell
-New-OrchBucket ProjectFiles
+PS Orch1:\Shared> New-OrchBucket ProjectFiles
 ```
 
 Creates a new bucket named "ProjectFiles" in the current folder using positional parameters.
 
 ### Example 2
 ```powershell
-New-OrchBucket -Path Orch1:\Production ProcessData -Description "Production process data storage"
+PS Orch1:\> New-OrchBucket -Path Orch1:\Production ProcessData -Description "Production process data storage"
 ```
 
 Creates a bucket named "ProcessData" in the Production folder with a description.
 
 ### Example 3
 ```powershell
-New-OrchBucket BackupBucket -StorageProvider "Azure" -StorageContainer "prod-backups" -CredentialStore "AzureCredentials"
+PS Orch1:\> New-OrchBucket BackupBucket -StorageProvider "Azure" -StorageContainer "prod-backups" -CredentialStore "AzureCredentials"
 ```
 
 Creates a bucket configured with Azure Blob Storage as the storage provider.
 
 ### Example 4
 ```powershell
-New-OrchBucket ArchiveData -Options ReadOnly -Tags Archive, Historical, Q4-2024
+PS Orch1:\> New-OrchBucket ArchiveData -Options ReadOnly -Tags Archive, Historical, Q4-2024
 ```
 
 Creates a read-only bucket with organizational tags for archival purposes.
 
 ### Example 5
 ```powershell
-"TempFiles", "LogFiles", "ReportFiles" | ForEach-Object { New-OrchBucket $_ -WhatIf }
+"TempFiles", "LogFiles", ReportFiles | ForEach-Object { New-OrchBucket $_ -WhatIf }
 ```
 
 Shows what would happen when creating multiple buckets using pipeline processing.
 
 ### Example 6
 ```powershell
-New-OrchBucket CustomerData -Path Orch1:\Finance -StorageProvider "FileSystem" -StorageContainer "\\fileserver\customerdata" -ExternalName "CustomerDataBucket" -Tags Production, Finance
+PS Orch1:\> New-OrchBucket CustomerData -Path Orch1:\Finance -StorageProvider "FileSystem" -StorageContainer "\\fileserver\customerdata" -ExternalName "CustomerDataBucket" -Tags Production, Finance
 ```
 
 Creates a bucket in the Finance folder using a file server as the storage backend with external naming and production tags.
@@ -272,7 +272,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

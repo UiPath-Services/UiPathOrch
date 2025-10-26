@@ -34,7 +34,7 @@ Required permissions: Buckets.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Production> Get-OrchBucket
+PS Orch1:\Shared> Get-OrchBucket
 ```
 
 Retrieves all storage buckets configured in the Production folder, demonstrating basic folder entity usage.
@@ -122,7 +122,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

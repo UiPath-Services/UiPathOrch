@@ -41,7 +41,7 @@ Required permissions: Processes.Edit
 
 ### Example 1
 ```powershell
-PS C:\> Update-OrchProcessVersion -Path Orch1:\ -Recurse * -WhatIf
+PS Orch1:\> Update-OrchProcessVersion -Path Orch1:\ -Recurse * -WhatIf
 ```
 
 Updates all outdated process versions in the Orch1 tenant to the latest version. Once you have confirmed that there are no issues, remove the `-WhatIf` parameter and run the command again.
@@ -115,7 +115,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference
@@ -191,7 +191,7 @@ Accept wildcard characters: False
 ```
 
 ### -Id
-{{ Fill Id Description }}
+Specifies the unique identifier of the process version to update. This is typically a GUID that identifies the specific version of the process definition.
 
 ```yaml
 Type: Int64[]

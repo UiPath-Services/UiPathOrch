@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -33,7 +33,7 @@ Required permissions: [PLACEHOLDER - Project.Read]
 
 ### Example 1: Get project settings from current folder
 ```powershell
-PS Orch1Tm:\TestProject> Get-TmProjectSetting
+PS Orch1Tm:\> Get-TmProjectSetting
 ```
 
 Navigates to a specific Test Manager project folder and retrieves its settings.
@@ -54,7 +54,7 @@ Retrieves settings from multiple Test Manager projects using specific paths.
 
 ### Example 4: Filter projects by time zone
 ```powershell
-PS Orch1:\> Get-TmProjectSetting -Recurse | Where-Object {$_.projectTimeZone -eq "UTC"} | Select-Object Path, projectPrefix, projectTimeZone, maxNumberOfTestSteps
+PS Orch1:\> Get-TmProjectSetting -Recurse | Where-Object {$_.projectTimeZone UTC} | Select-Object Path, projectPrefix, projectTimeZone, maxNumberOfTestSteps
 ```
 
 Gets all project settings and filters for projects configured with UTC time zone, displaying key configuration information.

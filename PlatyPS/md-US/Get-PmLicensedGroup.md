@@ -34,49 +34,49 @@ Required permissions: Administration.View
 
 ### Example 1
 ```powershell
-Get-PmLicensedGroup
+PS Orch1:\> Get-PmLicensedGroup
 ```
 
 Gets all licensed groups from the current organization.
 
 ### Example 2
 ```powershell
-Get-PmLicensedGroup DeveloperGroup
+PS Orch1:\> Get-PmLicensedGroup DeveloperGroup
 ```
 
 Gets the licensed group named "DeveloperGroup".
 
 ### Example 3
 ```powershell
-Get-PmLicensedGroup *Admin*
+PS Orch1:\> Get-PmLicensedGroup *Admin*
 ```
 
 Gets all licensed groups whose names contain "Admin".
 
 ### Example 4
 ```powershell
-Get-PmLicensedGroup -Path Orch1:, Orch2:
+PS Orch1:\> Get-PmLicensedGroup -Path Orch1:, Orch2:
 ```
 
 Gets licensed groups from the organization, accessed through multiple tenant drives.
 
 ### Example 5
 ```powershell
-Get-PmLicensedGroup | Where-Object {$_.LicenseCount -gt 10}
+PS Orch1:\> Get-PmLicensedGroup | Where-Object {$_.LicenseCount -gt 10}
 ```
 
 Gets all licensed groups that have more than 10 licenses allocated.
 
 ### Example 6
 ```powershell
-Get-PmLicensedGroup | Select-Object Name, LicenseType, LicenseCount, UsedLicenses | Format-Table
+PS Orch1:\> Get-PmLicensedGroup | Select-Object Name, LicenseType, LicenseCount, UsedLicenses | Format-Table
 ```
 
 Gets all licensed groups and displays their license allocation information in a table.
 
 ### Example 7
 ```powershell
-Get-PmLicensedGroup | Export-Csv "LicensedGroups.csv" -NoTypeInformation
+PS Orch1:\> Get-PmLicensedGroup | Export-Csv "LicensedGroups.csv" -NoTypeInformation
 ```
 
 Gets all licensed groups and exports the information to a CSV file for analysis.
@@ -84,7 +84,7 @@ Gets all licensed groups and exports the information to a CSV file for analysis.
 ## PARAMETERS
 
 ### -CsvEncoding
-{{ Fill CsvEncoding Description }}
+Specifies the character encoding for CSV export when using -ExportCsv. Common values include 'UTF8', 'ASCII', 'UTF32'. Default is UTF8.
 
 ```yaml
 Type: Encoding
@@ -114,7 +114,7 @@ Accept wildcard characters: False
 ```
 
 ### -ExportCsv
-{{ Fill ExportCsv Description }}
+Exports the Platform Management licensed group data to a CSV file at the specified path. Use this for license reporting, compliance, or data analysis.
 
 ```yaml
 Type: String
@@ -174,7 +174,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

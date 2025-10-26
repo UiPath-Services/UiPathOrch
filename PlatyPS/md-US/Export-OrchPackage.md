@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -36,7 +36,7 @@ Required permissions: Assets.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Development> Export-OrchPackage ProcessAutomation
+PS Orch1:\Shared> Export-OrchPackage ProcessAutomation
 ```
 
 Exports the latest version of the ProcessAutomation package from the current folder to the default destination.
@@ -124,7 +124,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

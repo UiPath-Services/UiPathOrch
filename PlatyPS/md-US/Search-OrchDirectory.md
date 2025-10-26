@@ -41,15 +41,15 @@ Required permissions: (Users.View or Units.Edit or SubFolders.Edit)
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Search-OrchDirectory -Name 'john*' -Type User
 ```
 
-{{ Add example description here }}
+Searches for directory entries (users, groups, etc.) with names starting with 'john'. The search supports wildcards and can filter by entry type for more precise results.
 
 ## PARAMETERS
 
 ### -Name
-{{ Fill Name Description }}
+Specifies the search pattern for directory entry names. Supports wildcard characters (* and ?) for flexible matching. Use this to find users, groups, or other directory objects by name pattern.
 
 ```yaml
 Type: String
@@ -79,7 +79,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -27,7 +27,7 @@ New-OrchProcess [-Id] <String[]> [[-Version] <String>] [-Name <String>] [-Descri
 ## DESCRIPTION
 The New-OrchProcess cmdlet creates automation processes from published packages in UiPath Orchestrator. A process is a deployable automation workflow that can be executed by robots. This cmdlet allows you to configure process settings including entry points, input arguments, priority levels, recording options, and retention policies.
 
-**This is a folder entity cmdlet.** To use this cmdlet, you must first navigate to the target folder using Set-Location (cd), or specify the target folders using the -Path, -Recurse, or -Depth parameters. If you attempt to run this cmdlet without being in a folder context, you will receive the error: \"Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters.\"
+**This is a folder entity cmdlet.** To use this cmdlet, you must first navigate to the target folder using Set-Location (cd), or specify the target folders using the -Path, -Recurse, or -Depth parameters. If you attempt to run this cmdlet without being in a folder context, you will receive the error: "Use Set-Location cmdlet (cd command) to navigate to the target folder first, or specify the target folders using -Path, -Recurse, or -Depth parameters."
 
 The process is created from an existing package identified by its Id. You can specify a particular version or use the latest version by default. Process configuration includes execution settings, monitoring options, and lifecycle management policies such as retention rules for job artifacts.
 
@@ -41,45 +41,73 @@ Required permissions: Execution.Create
 
 ### Example 1
 ```powershell
-New-OrchProcess InvoiceProcessing
+PS Orch1:\Shared> New-OrchProcess BlankProcess4 -WhatIf
 ```
 
-Creates a new process from the \"InvoiceProcessing\" package using positional parameters and default settings.
+Tests creating a new process from the BlankProcess4 package using the latest version and default settings.
 
 ### Example 2
 ```powershell
-New-OrchProcess DataMigration -Version \"2.1.0\" -Name \"Production Data Migration\" -Description \"Monthly data migration process\"
+PS Orch1:\Shared> New-OrchProcess BlankProcess4 -Name ProductionProcess -Description "Production automation process"
 ```
 
-Creates a process from a specific version of the DataMigration package with custom name and description.
+Creates a process from the BlankProcess4 package with a custom name and description.
 
 ### Example 3
 ```powershell
-New-OrchProcess ReportGenerator -Priority \"High\" -MaxDurationSeconds 3600 -VideoRecordingType \"Always\" -Tags Critical, Financial
+PS Orch1:\Shared> New-OrchProcess BlankProcess4 1.0.2 -Priority High -MaxDurationSeconds 3600
 ```
 
-Creates a high-priority process with 1-hour timeout, video recording enabled, and organizational tags.
+Creates a process from a specific package version with high priority and 1-hour maximum duration limit.
 
 ### Example 4
 ```powershell
-New-OrchProcess EmailProcessor -InputArguments '{\"FromDate\":\"2024-01-01\",\"ToDate\":\"2024-12-31\"}' -EntryPoint \"ProcessEmails.xaml\" -HiddenForAttendedUser \"True\"
+PS Orch1:\Shared> New-OrchProcess BackgroundProcess -VideoRecordingType OnFailure -ErrorRecordingEnabled True -Quality 75
 ```
 
-Creates a process with JSON input arguments, specific entry point, and hidden from attended users.
+Creates a process with video recording enabled on failure, error recording enabled, and medium quality recording.
 
 ### Example 5
 ```powershell
-New-OrchProcess -Path Orch1:\Production OrderProcessing -RetentionAction \"Delete\" -RetentionPeriod 30 -A4R_Enabled \"True\"
+PS Orch1:\> New-OrchProcess -Path Orch1:\Development,Orch1:\Testing -Recurse MultiEnvironment
 ```
 
-Creates a process in the Production folder with 30-day retention policy and Analytics for Robots enabled.
+Creates a process named MultiEnvironment across multiple folders using the -Path parameter.
 
 ### Example 6
 ```powershell
-\"PackageA\", \"PackageB\", \"PackageC\" | ForEach-Object { New-OrchProcess $_ -WhatIf -Recurse }
+PS Orch1:\Shared> New-OrchProcess BlankProcess4 -InputArguments '{arg1:value1,arg2:value2}' -EntryPoint Main.xaml
 ```
 
-Shows what would happen when creating processes from multiple packages recursively using pipeline processing.
+Creates a process with specific input arguments in JSON format and a custom entry point.
+
+### Example 7
+```powershell
+PS Orch1:\Shared> New-OrchProcess BackgroundProcess -AutoStartProcess True -AlwaysRunning True -A4R_Enabled True -A4R_HealingEnabled True
+```
+
+Creates an always-running process with Auto-Restart for Robots (A4R) enabled including self-healing capabilities.
+
+### Example 8
+```powershell
+PS Orch1:\Shared> New-OrchProcess BlankProcess4 -RetentionAction DeleteItems -RetentionPeriod 30 -StaleRetentionAction MoveToBucket -StaleRetentionBucket Archive
+```
+
+Creates a process with comprehensive retention policies for job artifacts and stale item management.
+
+### Example 9
+```powershell
+PS C:\> Import-Csv processes.csv | New-OrchProcess -WhatIf
+```
+
+Tests bulk process creation from a CSV file. The CSV should contain columns like Id, Name, Description, Priority, MaxDurationSeconds.
+
+### Example 10
+```powershell
+PS Orch1:\Shared> New-OrchProcess ReportGenerator -Tags Financial,Critical -HiddenForAttendedUser False -RemoteControlAccess Enabled
+```
+
+Creates a process with tags for organization, visible to attended users, and remote control access enabled.
 
 ## PARAMETERS
 
@@ -549,7 +577,7 @@ Accept wildcard characters: False
 ```
 
 ### -A4R_Enabled
-{{ Fill A4R_Enabled Description }}
+Specifies whether Auto-Restart for Robots (A4R) is enabled for the process. Valid values: True, False.
 
 ```yaml
 Type: String
@@ -564,7 +592,7 @@ Accept wildcard characters: False
 ```
 
 ### -A4R_HealingEnabled
-{{ Fill A4R_HealingEnabled Description }}
+Specifies whether A4R self-healing is enabled to automatically recover from robot failures. Valid values: True, False.
 
 ```yaml
 Type: String

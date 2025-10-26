@@ -66,7 +66,7 @@ Retrieves only active package versions.
 
 ### Example 5
 ```powershell
-PS Orch1:\> Get-OrchPackageVersion | Where-Object {$_.ProjectType -eq "Library"} | Select-Object Id, Version, Description
+PS Orch1:\> Get-OrchPackageVersion | Where-Object {$_.ProjectType Library} | Select-Object Id, Version, Description
 ```
 
 Displays library packages with their versions and descriptions.
@@ -104,7 +104,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

@@ -34,7 +34,7 @@ Required permissions: Folders.View
 
 ### Example 1
 ```powershell
-PS C:\> Get-OrchFolderUsage
+PS Orch1:\Shared> Get-OrchFolderUsage
 ```
 
 Gets usage statistics for the current folder.
@@ -76,7 +76,7 @@ Retrieves usage statistics and displays the complete object structure in JSON fo
 
 ### Example 7
 ```powershell
-PS C:\> Get-OrchFolderUsage -Recurse | Where-Object {$_.Type -eq "QueueItem" -and $_.Count -gt 1000} | Select-Object Path, Count
+PS C:\> Get-OrchFolderUsage -Recurse | Where-Object {$_.Type QueueItem -and $_.Count -gt 1000} | Select-Object Path, Count
 ```
 
 Finds folders with high queue item counts (over 1000) for capacity planning and queue management.

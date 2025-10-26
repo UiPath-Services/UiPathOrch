@@ -36,7 +36,7 @@ Required permissions: Buckets.View and BlobFiles.View
 
 ### Example 1
 ```powershell
-PS Orch1:\MyWorkspace> Get-OrchBucketItem
+PS Orch1:\Shared> Get-OrchBucketItem
 ```
 
 Retrieves all items from storage buckets in the current folder.
@@ -147,7 +147,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

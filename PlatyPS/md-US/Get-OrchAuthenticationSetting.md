@@ -36,7 +36,7 @@ Required permissions: Settings.View
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-OrchAuthenticationSetting
+PS Orch1:\Shared> Get-OrchAuthenticationSetting
 ```
 
 Retrieves all authentication and system settings, displaying Key and Value pairs for all configuration parameters.
@@ -95,7 +95,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

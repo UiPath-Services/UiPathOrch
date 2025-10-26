@@ -30,39 +30,10 @@ The command returns formatted text that provides an overview of available resour
 
 ### Example 1
 ```powershell
-PS C:\> Get-OrchHelp
+PS Orch1:\Shared> Get-OrchHelp
 ```
 
 Displays the UiPathOrch module help and documentation guide. This provides an overview of available resources and getting-started information.
-
-### Example 2
-```powershell
-PS C:\> Get-OrchHelp | Out-Host
-```
-
-Displays the help information using Out-Host to ensure proper formatting in the console, useful in scripts where output formatting is important.
-
-### Example 3
-```powershell
-PS C:\> $helpText = Get-OrchHelp
-PS C:\>
-```
-
-Captures the help content in a variable for further processing or analysis. This approach allows you to work with the help text programmatically.
-
-### Example 4
-```powershell
-PS C:\> Get-OrchHelp | Out-File -FilePath "OrchModuleHelp.txt"
-```
-
-Saves the help content to a text file for offline reference or documentation purposes.
-
-### Example 5
-```powershell
-PS C:\> Get-OrchHelp | Select-String "Essential Commands" -A 5
-```
-
-Extracts specific sections from the help content, such as the essential commands section. This is useful for automated scripts that need to access specific guidance information.
 
 ## PARAMETERS
 
@@ -91,6 +62,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String
 ## NOTES
+
+**API INFORMATION:**
+- Primary Endpoint: Built-in help system (no REST API endpoint)
+- OAuth required scopes: Not applicable
+- Required permissions: Not applicable
 
 This cmdlet is particularly useful for users who are new to the UiPathOrch module and need guidance on available resources and recommended practices.
 

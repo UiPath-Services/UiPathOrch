@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,7 +34,7 @@ Required permissions: Settings.View
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-OrchSetting
+PS Orch1:\Shared> Get-OrchSetting
 ```
 
 Gets all configuration settings from the current Orchestrator instance.

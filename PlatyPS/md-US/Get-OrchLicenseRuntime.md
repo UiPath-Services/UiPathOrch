@@ -34,7 +34,7 @@ Required permissions: [PLACEHOLDER - License.View]
 
 ### Example 1: Get all runtime licenses
 ```powershell
-PS Orch1:\> Get-OrchLicenseRuntime
+PS Orch1:\Shared> Get-OrchLicenseRuntime
 ```
 
 Retrieves runtime license information for all robot types from the current Orchestrator tenant, grouped by robot type.

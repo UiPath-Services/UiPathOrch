@@ -36,21 +36,21 @@ Required permissions: Units.View, (Units.Delete or SubFolders.Delete)
 
 ### Example 1
 ```powershell
-PS Orch1:\> Remove-OrchPersonalWorkspace -OwnerName john.doe -WhatIf
+PS Orch1:\Shared> Remove-OrchPersonalWorkspace -OwnerName john.doe -WhatIf
 ```
 
 Shows what would happen when removing the personal workspace owned by john.doe.
 
 ### Example 2
 ```powershell
-PS Orch1:\> Remove-OrchPersonalWorkspace -Name "john.doe Personal Workspace" -Confirm
+PS Orch1:\> Remove-OrchPersonalWorkspace "john.doe Personal Workspace" -Confirm
 ```
 
 Removes the specific personal workspace folder with confirmation prompt.
 
 ### Example 3
 ```powershell
-PS C:\> Remove-OrchPersonalWorkspace -Path Orch1: -OwnerName temp.user1, temp.user2 -WhatIf
+PS C:\> Remove-OrchPersonalWorkspace Orch1: -OwnerName temp.user1, temp.user2 -WhatIf
 ```
 
 Shows what would happen when removing personal workspaces for multiple temporary users in the Orch1 tenant.
@@ -60,7 +60,7 @@ Shows what would happen when removing personal workspaces for multiple temporary
 PS Orch1:\> Remove-OrchPersonalWorkspace -OwnerName *contractor* -Confirm
 ```
 
-Removes personal workspaces for all users with usernames containing "contractor" with confirmation prompts.
+Removes personal workspaces for all users with usernames containing contractor with confirmation prompts.
 
 ### Example 5
 ```powershell
@@ -155,7 +155,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

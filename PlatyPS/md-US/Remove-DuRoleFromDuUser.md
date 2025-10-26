@@ -18,7 +18,7 @@ Remove-DuRoleFromDuUser [-Name] <String[]> [-Roles <String[]>] [-Path <String[]>
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Provides functionality for managing UiPath entities.
 
 Primary Endpoint: PATCH /{partitionGlobalId}/pap_/api/userroleassignments
 
@@ -30,7 +30,7 @@ Required permissions:
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+{{ Add example code here }}
 ```
 
 {{ Add example description here }}
@@ -53,7 +53,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-{{ Fill Name Description }}
+Specifies the name of the entity.
 
 ```yaml
 Type: String[]
@@ -68,7 +68,7 @@ Accept wildcard characters: True
 ```
 
 ### -Path
-{{ Fill Path Description }}
+Pathを指定します。
 
 ```yaml
 Type: String[]
@@ -83,7 +83,7 @@ Accept wildcard characters: True
 ```
 
 ### -Recurse
-{{ Fill Recurse Description }}
+Recurseを指定します。
 
 ```yaml
 Type: SwitchParameter
@@ -114,7 +114,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+ProgressActionを指定します。
 
 ```yaml
 Type: ActionPreference
@@ -129,7 +129,7 @@ Accept wildcard characters: False
 ```
 
 ### -Roles
-{{ Fill Roles Description }}
+Rolesを指定します。
 
 ```yaml
 Type: String[]

@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,28 +34,28 @@ Required permissions: Settings.Delete
 
 ### Example 1
 ```powershell
-PS C:\> Remove-OrchCredentialStore TestStore
+PS Orch1:\Shared> Remove-OrchCredentialStore TestStore
 ```
 
 Removes the credential store named "TestStore" from the current Orchestrator environment.
 
 ### Example 2
 ```powershell
-PS C:\> Remove-OrchCredentialStore Store1, Store2 -WhatIf
+PS C:\> Remove-OrchCredentialStore -Path Orch1: Store1, Store2 -WhatIf
 ```
 
 Shows what would happen if the specified credential stores were removed, without actually performing the removal.
 
 ### Example 3
 ```powershell
-PS C:\> Remove-OrchCredentialStore Test* -Confirm
+PS C:\> Remove-OrchCredentialStore -Path Orch1: Test* -Confirm
 ```
 
 Removes all credential stores whose names start with "Test", prompting for confirmation before each removal.
 
 ### Example 4
 ```powershell
-PS C:\> Remove-OrchCredentialStore LegacyStore -Path Orch1:, Orch2:
+PS C:\> Remove-OrchCredentialStore -Path Orch1:, Orch2: LegacyStore
 ```
 
 Removes the credential store named "LegacyStore" from multiple Orchestrator environments.
@@ -69,7 +69,7 @@ Identifies non-read-only Azure Key Vault credential stores and shows what would 
 
 ### Example 6
 ```powershell
-PS C:\> Remove-OrchCredentialStore UnusedStore -Confirm | Out-Null
+PS C:\> Remove-OrchCredentialStore -Path Orch1: UnusedStore -Confirm | Out-Null
 ```
 
 Removes a credential store with confirmation prompt and suppresses the output.

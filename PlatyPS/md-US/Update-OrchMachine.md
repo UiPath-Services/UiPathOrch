@@ -22,7 +22,7 @@ Update-OrchMachine [-Name] <String[]> [-Description <String>] [-UnattendedSlots 
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+intheを指定します。
 
 Primary Endpoint: PATCH /odata/Machines({machineId})
 
@@ -34,7 +34,7 @@ Required permissions: Machines.Edit
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+{{ Add example code here }}
 ```
 
 {{ Add example description here }}
@@ -57,7 +57,7 @@ Accept wildcard characters: False
 ```
 
 ### -Description
-{{ Fill Description Description }}
+Descriptionを指定します。
 
 ```yaml
 Type: String
@@ -72,7 +72,7 @@ Accept wildcard characters: False
 ```
 
 ### -MaintenanceCron
-{{ Fill MaintenanceCron Description }}
+MaintenanceCronを指定します。
 
 ```yaml
 Type: String
@@ -87,7 +87,7 @@ Accept wildcard characters: False
 ```
 
 ### -MaintenanceDuration
-{{ Fill MaintenanceDuration Description }}
+MaintenanceDurationを指定します。
 
 ```yaml
 Type: Int32
@@ -102,7 +102,7 @@ Accept wildcard characters: False
 ```
 
 ### -MaintenanceEnabled
-{{ Fill MaintenanceEnabled Description }}
+MaintenanceEnabledを指定します。
 
 ```yaml
 Type: String
@@ -117,7 +117,7 @@ Accept wildcard characters: False
 ```
 
 ### -MaintenanceTimeZone
-{{ Fill MaintenanceTimeZone Description }}
+MaintenanceTimeZoneを指定します。
 
 ```yaml
 Type: String
@@ -132,7 +132,7 @@ Accept wildcard characters: True
 ```
 
 ### -Name
-{{ Fill Name Description }}
+Nameを指定します。
 
 ```yaml
 Type: String[]
@@ -147,7 +147,7 @@ Accept wildcard characters: False
 ```
 
 ### -NonProductionSlots
-{{ Fill NonProductionSlots Description }}
+NonProductionSlotsを指定します。
 
 ```yaml
 Type: Int32
@@ -177,7 +177,7 @@ Accept wildcard characters: False
 ```
 
 ### -TestAutomationSlots
-{{ Fill TestAutomationSlots Description }}
+TestAutomationSlotsを指定します。
 
 ```yaml
 Type: Int32
@@ -192,7 +192,7 @@ Accept wildcard characters: False
 ```
 
 ### -UnattendedSlots
-{{ Fill UnattendedSlots Description }}
+UnattendedSlotsを指定します。
 
 ```yaml
 Type: Int32
@@ -207,7 +207,7 @@ Accept wildcard characters: False
 ```
 
 ### -UpdatePolicyType
-{{ Fill UpdatePolicyType Description }}
+UpdatePolicyTypeを指定します。
 
 ```yaml
 Type: String
@@ -222,7 +222,7 @@ Accept wildcard characters: False
 ```
 
 ### -UpdatePolicyVersion
-{{ Fill UpdatePolicyVersion Description }}
+UpdatePolicyVersionを指定します。
 
 ```yaml
 Type: String
@@ -253,7 +253,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+ProgressActionを指定します。
 
 ```yaml
 Type: ActionPreference
@@ -268,7 +268,7 @@ Accept wildcard characters: False
 ```
 
 ### -Tags
-{{ Fill Tags Description }}
+Tagsを指定します。
 
 ```yaml
 Type: String[]
@@ -283,7 +283,7 @@ Accept wildcard characters: False
 ```
 
 ### -AutomationType
-{{ Fill AutomationType Description }}
+AutomationTypeを指定します。
 
 ```yaml
 Type: String
@@ -298,7 +298,7 @@ Accept wildcard characters: False
 ```
 
 ### -RobotUsers
-{{ Fill RobotUsers Description }}
+RobotUsersを指定します。
 
 ```yaml
 Type: String[]
@@ -313,7 +313,7 @@ Accept wildcard characters: True
 ```
 
 ### -TargetFramework
-{{ Fill TargetFramework Description }}
+TargetFrameworkを指定します。
 
 ```yaml
 Type: String

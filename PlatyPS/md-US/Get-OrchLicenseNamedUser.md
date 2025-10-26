@@ -34,7 +34,7 @@ Required permissions: [PLACEHOLDER - License.View]
 
 ### Example 1: Get all named user licenses
 ```powershell
-PS Orch1:\> Get-OrchLicenseNamedUser
+PS Orch1:\Shared> Get-OrchLicenseNamedUser
 ```
 
 Retrieves named user license information for all robot types from the current Orchestrator tenant, grouped by robot type.

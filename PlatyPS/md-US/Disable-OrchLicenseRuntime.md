@@ -34,42 +34,42 @@ Required permissions: Machines.Edit
 
 ### Example 1
 ```powershell
-Disable-OrchLicenseRuntime Unattended Machine01 -WhatIf
+PS Orch1:\Shared> Disable-OrchLicenseRuntime Unattended Machine01 -WhatIf
 ```
 
 Shows what would happen when disabling the Unattended runtime license for Machine01.
 
 ### Example 2
 ```powershell
-Disable-OrchLicenseRuntime Unattended Machine01
+PS Orch1:\> Disable-OrchLicenseRuntime Unattended Machine01
 ```
 
 Disables the Unattended runtime license for Machine01 in the current tenant.
 
 ### Example 3
 ```powershell
-Disable-OrchLicenseRuntime Studio, StudioX *DevMachine*
+PS Orch1:\> Disable-OrchLicenseRuntime Studio, StudioX *DevMachine*
 ```
 
 Disables Studio and StudioX runtime licenses for all machines whose keys contain "DevMachine".
 
 ### Example 4
 ```powershell
-Disable-OrchLicenseRuntime -Path Orch1:, Orch2: Unattended TestMachine01, TestMachine02 -Confirm
+PS Orch1:\> Disable-OrchLicenseRuntime -Path Orch1:, Orch2: Unattended Machine01, Machine02 -Confirm
 ```
 
-Disables Unattended runtime licenses for TestMachine01 and TestMachine02 across multiple tenants with confirmation.
+Disables Unattended runtime licenses for Machine01 and Machine02 across multiple tenants with confirmation.
 
 ### Example 5
 ```powershell
-Disable-OrchLicenseRuntime NonProduction *Test*
+PS Orch1:\> Disable-OrchLicenseRuntime NonProduction *Test*
 ```
 
 Disables NonProduction runtime licenses for all machines with keys containing "Test".
 
 ### Example 6
 ```powershell
-Get-OrchLicenseRuntime -RobotType Unattended | Where-Object {$_.IsEnabled -eq $true} | Disable-OrchLicenseRuntime
+PS Orch1:\> Get-OrchLicenseRuntime -RobotType Unattended | Where-Object {$_.IsEnabled -eq $true} | Disable-OrchLicenseRuntime
 ```
 
 Disables all currently enabled Unattended runtime licenses. License information is passed via pipeline using ByPropertyName binding.
@@ -107,7 +107,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

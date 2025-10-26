@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,7 +34,7 @@ Required permissions: Machines.View
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-OrchMachine
+PS Orch1:\Shared> Get-OrchMachine
 ```
 
 Gets all machines from the current tenant.
@@ -44,7 +44,7 @@ Gets all machines from the current tenant.
 PS Orch1:\> Get-OrchMachine *Template*
 ```
 
-Gets machines containing "Template" in their name.
+Gets machines containing Template in their name.
 
 ### Example 3
 ```powershell
@@ -55,7 +55,7 @@ Gets machines from multiple tenants.
 
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchMachine | Where-Object {$_.Type -eq "Standard"}
+PS Orch1:\> Get-OrchMachine | Where-Object {$_.Type Standard}
 ```
 
 Gets standard (non-template) machines.

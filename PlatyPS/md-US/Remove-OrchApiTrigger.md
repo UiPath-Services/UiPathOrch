@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,7 +18,7 @@ Remove-OrchApiTrigger [-Name] <String[]> [-Path <String[]>] [-Recurse] [-Depth <
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Removes HTTP API triggers from UiPath Orchestrator. API triggers allow external systems to start processes via HTTP requests. Use this cmdlet to clean up unused or outdated API triggers from your Orchestrator environment.
 
 Primary Endpoint: GET /odata/HttpTriggers, DELETE /odata/HttpTriggers({triggerId})
 
@@ -30,10 +30,10 @@ Required permissions: [PLACEHOLDER]
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Remove-OrchApiTrigger MyApiTrigger -WhatIf
 ```
 
-{{ Add example description here }}
+Performs a test removal of the API trigger named 'MyApiTrigger'. The -WhatIf parameter shows what would be removed without actually performing the deletion.
 
 ## PARAMETERS
 
@@ -83,7 +83,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

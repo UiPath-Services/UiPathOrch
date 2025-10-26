@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -36,7 +36,7 @@ Required permissions: License.View
 
 ### Example 1
 ```powershell
-PS C:\> Get-OrchLicenseStats
+PS Orch1:\Shared> Get-OrchLicenseStats
 ```
 
 Gets the default licensing usage statistics for the current Orchestrator instance.
@@ -58,7 +58,7 @@ Gets licensing usage statistics for the last 30 days grouped by robot type to se
 ### Example 4
 ```powershell
 PS Orch1:\> $stats = Get-OrchLicenseStats -Last Month
-PS Orch1:\> $stats | Where-Object robotType -eq "Unattended" | Measure-Object count -Sum
+PS Orch1:\> $stats | Where-Object robotType -eq Unattended | Measure-Object count -Sum
 ```
 
 Gets statistics for the last 30 days and calculates total Unattended license usage.

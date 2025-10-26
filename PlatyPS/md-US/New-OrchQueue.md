@@ -420,7 +420,7 @@ Accept wildcard characters: False
 ```
 
 ### -StaleRetentionBucket
-{{ Fill StaleRetentionBucket Description }}
+Specifies the storage bucket for stale queue items that exceed the retention period.
 
 ```yaml
 Type: String
@@ -478,5 +478,6 @@ Queue configuration includes retry policies, encryption settings, SLA configurat
 [Remove-OrchQueue](Remove-OrchQueue.md)
 
 [Copy-OrchQueue](Copy-OrchQueue.md)
+
 
 

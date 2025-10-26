@@ -36,7 +36,7 @@ Required permissions: Environments.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Legacy> Get-OrchClassicEnvironment
+PS Orch1:\Shared> Get-OrchClassicEnvironment
 ```
 
 Gets all classic environments in the current folder.
@@ -132,7 +132,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

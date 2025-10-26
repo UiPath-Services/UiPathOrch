@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,7 +34,7 @@ Required permissions: [PLACEHOLDER - User profile edit permissions]
 
 ### Example 1: Update current user password interactively
 ```powershell
-PS Orch1:\> Update-OrchCurrentUserURPassword
+PS Orch1:\Shared> Update-OrchCurrentUserURPassword
 ```
 
 Prompts the user to enter a new password and confirmation, then updates the current user's password in Orchestrator.

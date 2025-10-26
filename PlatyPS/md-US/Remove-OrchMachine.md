@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,42 +34,42 @@ Required permissions: Machines.Delete
 
 ### Example 1
 ```powershell
-PS C:\> Remove-OrchMachine TestMachine
+PS Orch1:\Shared> Remove-OrchMachine Machine01
 ```
 
-Removes the machine named "TestMachine" from the current Orchestrator environment.
+Removes the machine named "Machine01" from the current Orchestrator environment.
 
 ### Example 2
 ```powershell
-PS C:\> Remove-OrchMachine TestMachine1, TestMachine2 -WhatIf
+PS C:\> Remove-OrchMachine -Path Orch1: Machine01, Machine02 -WhatIf
 ```
 
 Shows what would happen if the specified machines were removed, without actually performing the removal.
 
 ### Example 3
 ```powershell
-PS C:\> Remove-OrchMachine Temp* -Confirm
+PS C:\> Remove-OrchMachine -Path Orch1: Temp* -Confirm
 ```
 
 Removes all machines whose names start with "Temp", prompting for confirmation before each removal.
 
 ### Example 4
 ```powershell
-PS C:\> Remove-OrchMachine OldMachine -Path Orch1:, Orch2:
+PS C:\> Remove-OrchMachine -Path Orch1:, Orch2: OldMachine
 ```
 
 Removes the machine named "OldMachine" from multiple Orchestrator environments.
 
 ### Example 5
 ```powershell
-PS C:\> Get-OrchMachine | Where-Object {$_.Type -eq "Template" -and $_.Name -like "*Test*"} | Remove-OrchMachine -WhatIf
+PS C:\> Get-OrchMachine | Where-Object {$_.Type Template -and $_.Name -like "*Test*"} | Remove-OrchMachine -WhatIf
 ```
 
 Identifies template machines containing "Test" in their name and shows what would be removed without actually performing the deletion.
 
 ### Example 6
 ```powershell
-PS C:\> Remove-OrchMachine UnusedMachine -Confirm | Out-Null
+PS C:\> Remove-OrchMachine -Path Orch1: UnusedMachine -Confirm | Out-Null
 ```
 
 Removes a machine with confirmation prompt and suppresses the output.

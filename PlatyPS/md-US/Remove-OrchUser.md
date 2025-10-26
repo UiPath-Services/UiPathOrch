@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,7 +18,7 @@ Remove-OrchUser [[-UserName] <String[]>] [[-FullName] <String[]>] [-Type <String
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Removes users from UiPath Orchestrator. This cmdlet allows you to remove user accounts that are no longer needed, helping maintain security and clean user management.
 
 Primary Endpoint: GET /odata/Users, DELETE /odata/Users({userId})
 
@@ -30,10 +30,10 @@ Required permissions: Users.Delete
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Remove-OrchUser TestUser -WhatIf
 ```
 
-{{ Add example description here }}
+Performs a test removal of the user named 'TestUser'. The -WhatIf parameter shows what would be removed without actually performing the deletion.
 
 ## PARAMETERS
 
@@ -68,7 +68,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference
@@ -129,7 +129,7 @@ Accept wildcard characters: False
 ```
 
 ### -Type
-{{ Fill Type Description }}
+Specifies the type of user to remove. Valid values include 'DirectoryUser' for Active Directory users, 'DirectoryGroup' for group accounts, and 'DirectoryRobot' for robot accounts.
 
 ```yaml
 Type: String[]
@@ -144,7 +144,7 @@ Accept wildcard characters: True
 ```
 
 ### -NoMatchWarning
-{{ Fill NoMatchWarning Description }}
+Displays warning messages when no users match the specified criteria. Use this parameter to get feedback about failed matches during bulk operations.
 
 ```yaml
 Type: SwitchParameter

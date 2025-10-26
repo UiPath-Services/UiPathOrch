@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,7 +34,7 @@ Required permissions: Roles.Delete
 
 ### Example 1
 ```powershell
-PS Orch1:\> Remove-OrchRole CustomRole1 -WhatIf
+PS Orch1:\Shared> Remove-OrchRole CustomRole1 -WhatIf
 ```
 
 Shows what would happen when removing the role without actually performing the deletion.
@@ -44,11 +44,11 @@ Shows what would happen when removing the role without actually performing the d
 PS Orch1:\> Remove-OrchRole Test* -Confirm
 ```
 
-Removes roles whose names start with "Test", prompting for confirmation before each removal.
+Removes roles whose names start with Test, prompting for confirmation before each removal.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Remove-OrchRole TemporaryRole -Path Orch1:, Orch2:
+PS Orch1:\> Remove-OrchRole TemporaryRole Orch1:, Orch2:
 ```
 
 Removes the role from multiple tenants.

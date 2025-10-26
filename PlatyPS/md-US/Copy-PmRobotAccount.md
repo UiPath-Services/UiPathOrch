@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -38,7 +38,7 @@ Required permissions:
 
 ### Example 1
 ```powershell
-PS Orch1:\> Copy-PmRobotAccount ProcessBot Orch2:
+PS Orch1:\Shared> Copy-PmRobotAccount ProcessBot Orch2:
 ```
 
 Copies the ProcessBot robot account from the current organization (Orch1) to Orch2 organization.
@@ -157,7 +157,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

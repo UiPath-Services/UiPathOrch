@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,7 +18,7 @@ Reset-OrchTestDataQueueItem [[-Name] <String[]>] [-IsConsumed] [-Path <String[]>
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Resets test data queue items to their initial state in UiPath Orchestrator. This cmdlet allows you to restore test data queue items to their original values, which is useful for test environment preparation and data consistency.
 
 Primary Endpoint: POST /api/TestDataQueueActions/SetAllItemsConsumed
 
@@ -30,10 +30,10 @@ Required permissions: TestDataQueues.Edit
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Reset-OrchTestDataQueueItem TestDataItem1 -WhatIf
 ```
 
-{{ Add example description here }}
+Performs a test reset of the test data queue item 'TestDataItem1'. The -WhatIf parameter shows what would be reset without actually performing the operation.
 
 ## PARAMETERS
 
@@ -144,7 +144,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

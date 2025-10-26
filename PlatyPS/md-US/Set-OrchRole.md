@@ -19,11 +19,19 @@ Set-OrchRole [-Name] <String[]> [-Type <String>] -PermissionName <String> [-Scop
 ```
 
 ## DESCRIPTION
-You can import a CSV file exported with Get-OrchRole -ExportCsv. When importing to a different tenant than the one from which the file was exported, please make sure to appropriately modify the Path column in the CSV file. Alternatively, you can specify the destination drive name with the -Path parameter when importing with Set-OrchRole to overwrite the Path values in the CSV file.
+The Set-OrchRole cmdlet creates new roles or updates existing roles in UiPath Orchestrator. Roles define permissions that control user access to various Orchestrator features and resources. This cmdlet allows you to configure role permissions for different areas such as Assets, Jobs, Processes, Queues, and more.
 
-Primary Endpoint: GET /odata/Roles&$expand=Permissions, POST /odata/Roles, PUT /odata/Roles({role.Id}
+Use the -Name parameter to specify the role name and -PermissionName to specify which permission area to configure. The permission areas include Assets, Jobs, Processes, Queues, Machines, Users, and many others. For each permission area, you can granularly control View, Edit, Create, and Delete access using the corresponding parameters.
 
-OAuth required scopes: OR.Users
+The cmdlet supports both Tenant and Folder scoped roles using the -Type parameter. Tenant roles apply across the entire tenant, while Folder roles apply to specific folders and their contents. Use the -Scope parameter to specify the folder scope when creating folder roles.
+
+You can import roles from CSV files exported with Get-OrchRole -ExportCsv. When importing to a different tenant than the source, modify the Path column in the CSV file or use the -Path parameter to override the destination tenant.
+
+The -ExpandPermission parameter provides detailed permission information when working with existing roles, helping you understand the current permission structure before making changes.
+
+Primary Endpoint: GET /odata/Roles&$expand=Permissions, POST /odata/Roles, PUT /odata/Roles({role.Id})
+
+OAuth required scopes: OR.Users or OR.Users.Write
 
 Required permissions: Roles.View, Roles.Create, Roles.Edit or Units.Edit or SubFolders.Edit
 
@@ -31,10 +39,80 @@ Required permissions: Roles.View, Roles.Create, Roles.Edit or Units.Edit or SubF
 
 ### Example 1
 ```powershell
+PS Orch1:\Shared> Set-OrchRole ReadOnlyAssets -PermissionName Assets -View True -Edit False -Create False -Delete False
+```
+
+Tests creating a new role that provides read-only access to Assets using -WhatIf to preview the operation.
+
+### Example 2
+```powershell
+PS Orch1:\> Set-OrchRole ProcessManager -PermissionName Processes -View True -Edit True -Create True -Delete False
+```
+
+Creates a role that can view, edit, and create processes but cannot delete them.
+
+### Example 3
+```powershell
+PS Orch1:\> Set-OrchRole QueueAdministrator -PermissionName Queues -View True -Edit True -Create True -Delete True
+```
+
+Creates a role with full administrative access to queue management operations.
+
+### Example 4
+```powershell
+PS Orch1:\> Set-OrchRole FolderOperator Folder -Scope Default -PermissionName Jobs -View True -Edit False -Create False -Delete False
+```
+
+Creates a folder-scoped role that provides read-only access to jobs within the specified folder scope.
+
+### Example 5
+```powershell
+PS C:\> Set-OrchRole -Path Orch1:, Orch2: -Name CrossTenantRole -PermissionName Machines -View True -Edit True -Create False -Delete False
+```
+
+Creates a role across multiple tenants with view and edit permissions for machines.
+
+### Example 6
+```powershell
+PS Orch1:\> Set-OrchRole JobManager -PermissionName Jobs -View True -Edit True -Create True -Delete True -ExpandPermission
+```
+
+Creates a role with full job management permissions and displays expanded permission details.
+
+### Example 7
+```powershell
+PS C:\> Import-Csv roles.csv | Set-OrchRole -WhatIf
+```
+
+Tests bulk role creation from a CSV file. The CSV should contain columns: Name, PermissionName, View, Edit, Create, Delete, Type, Scope.
+
+### Example 8
+```powershell
+PS Orch1:\> Set-OrchRole MonitoringRole -PermissionName Logs -View True -Edit False -Create False -Delete False
+```
+
+Creates a monitoring role that can view logs for troubleshooting purposes without modification rights.
+
+### Example 9
+```powershell
+PS Orch1:\> Set-OrchRole UserAdministrator -PermissionName Users -View True -Edit True -Create True -Delete False
+```
+
+Creates a user administration role that can manage users but cannot delete user accounts.
+
+### Example 10
+```powershell
+PS Orch1:\> Set-OrchRole TenantAdmin -PermissionName Settings -View True -Edit True -Create True -Delete True
+```
+
+Creates a tenant administrator role with full access to tenant settings and configuration.
+
+### Example 11
+```powershell
 PS C:\> Import-Csv <filepath> | Set-OrchRole
 ```
 
-{{ Add example description here }}
+Tests creating a new role that provides read-only access to Assets using -WhatIf to preview the operation.
 
 ## PARAMETERS
 
@@ -54,7 +132,7 @@ Accept wildcard characters: False
 ```
 
 ### -Create
-{{ Fill Create Description }}
+Specifies the Create permission level for the role. Valid values: True, False.
 
 ```yaml
 Type: String
@@ -69,7 +147,7 @@ Accept wildcard characters: False
 ```
 
 ### -Delete
-{{ Fill Delete Description }}
+Specifies the Delete permission level for the role. Valid values: True, False.
 
 ```yaml
 Type: String
@@ -84,7 +162,7 @@ Accept wildcard characters: False
 ```
 
 ### -Edit
-{{ Fill Edit Description }}
+Specifies the Edit permission level for the role. Valid values: True, False.
 
 ```yaml
 Type: String
@@ -99,7 +177,7 @@ Accept wildcard characters: False
 ```
 
 ### -ExpandPermission
-{{ Fill ExpandPermission Description }}
+Displays detailed permission information when working with existing roles.
 
 ```yaml
 Type: SwitchParameter
@@ -114,7 +192,7 @@ Accept wildcard characters: False
 ```
 
 ### -Name
-{{ Fill Name Description }}
+Specifies the name of the role to create or update.
 
 ```yaml
 Type: String[]
@@ -144,7 +222,7 @@ Accept wildcard characters: False
 ```
 
 ### -PermissionName
-{{ Fill PermissionName Description }}
+Specifies the permission area to configure (e.g., Assets, Jobs, Processes, Queues, Users).
 
 ```yaml
 Type: String
@@ -159,7 +237,7 @@ Accept wildcard characters: False
 ```
 
 ### -Scope
-{{ Fill Scope Description }}
+Specifies the scope for folder roles.
 
 ```yaml
 Type: String
@@ -174,7 +252,7 @@ Accept wildcard characters: False
 ```
 
 ### -Type
-{{ Fill Type Description }}
+Specifies the role type. Valid values: Tenant, Folder.
 
 ```yaml
 Type: String
@@ -189,7 +267,7 @@ Accept wildcard characters: False
 ```
 
 ### -View
-{{ Fill View Description }}
+Specifies the View permission level for the role. Valid values: True, False.
 
 ```yaml
 Type: String
@@ -220,7 +298,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Specifies how PowerShell responds to progress updates generated by a script, cmdlet, or provider.
 
 ```yaml
 Type: ActionPreference

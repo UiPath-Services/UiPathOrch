@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -36,7 +36,7 @@ Required permissions: Jobs.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Development> Export-OrchJobMedia 12345
+PS Orch1:\Shared> Export-OrchJobMedia 12345
 ```
 
 Exports all media files for job ID 12345 from the current folder to the default destination.
@@ -139,7 +139,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

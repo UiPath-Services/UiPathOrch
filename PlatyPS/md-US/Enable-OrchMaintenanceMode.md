@@ -37,7 +37,7 @@ Required permissions: Machines.Edit
 
 ### Example 1
 ```powershell
-PS Orch1:\Development> Enable-OrchMaintenanceMode -MachineName Robot01
+PS Orch1:\Shared> Enable-OrchMaintenanceMode -MachineName Robot01
 ```
 
 Enables maintenance mode for all sessions on machine Robot01 in the current folder.
@@ -201,7 +201,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

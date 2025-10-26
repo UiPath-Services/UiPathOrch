@@ -18,7 +18,7 @@ Remove-OrchRoleFromUser [[-UserName] <String[]>] [-FullName <String[]>] [-Type <
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+このパラメータの説明。
 
 Primary Endpoint: PUT /odata/Users({user.Id!.Value})
 
@@ -30,7 +30,7 @@ Required permissions: Users.Edit or Robots.Create or Robots.Edit or Robots.Delet
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+{{ Add example code here }}
 ```
 
 {{ Add example description here }}
@@ -129,7 +129,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+このパラメータの説明。
 
 ```yaml
 Type: ActionPreference
@@ -144,7 +144,7 @@ Accept wildcard characters: False
 ```
 
 ### -Type
-{{ Fill Type Description }}
+このパラメータの説明。
 
 ```yaml
 Type: String[]

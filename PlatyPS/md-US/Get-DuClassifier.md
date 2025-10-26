@@ -34,7 +34,7 @@ Required permissions: ML.View
 
 ### Example 1
 ```powershell
-PS Orch1Du:\Predefined> Get-DuClassifier
+PS Orch1Du:\> Get-DuClassifier
 ```
 
 Retrieves all classifiers from the current Predefined project, displaying id, name, and status information.
@@ -55,7 +55,7 @@ Gets classifiers with IDs containing "generative" from the MyProject Document Un
 
 ### Example 4
 ```powershell
-PS Orch1Du:\> Get-DuClassifier -Recurse | Where-Object {$_.status -eq "Available"}
+PS Orch1Du:\> Get-DuClassifier -Recurse | Where-Object {$_.status Available}
 ```
 
 Retrieves all available classifiers across all Document Understanding projects.
@@ -77,7 +77,7 @@ Groups all classifiers by their status across Document Understanding projects.
 ## PARAMETERS
 
 ### -Name
-{{ Fill Name Description }}
+Specifies the name(s) of the document classifier(s) to retrieve. Supports wildcard patterns for flexible matching. Use '*' to retrieve all classifiers.
 
 ```yaml
 Type: String[]
@@ -122,7 +122,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

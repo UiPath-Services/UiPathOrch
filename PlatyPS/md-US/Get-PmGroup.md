@@ -34,7 +34,7 @@ Required permissions: [PLACEHOLDER - Platform Management group read permissions]
 
 ### Example 1: Get all groups
 ```powershell
-PS Orch1:\> Get-PmGroup
+PS Orch1:\Shared> Get-PmGroup
 ```
 
 Retrieves all groups from the current Platform Management instance.

@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,7 +34,7 @@ Required permissions: [PLACEHOLDER - External applications view permissions]
 
 ### Example 1
 ```powershell
-PS C:\> cd Orch1:\
+cd Orch1:\
 PS Orch1:\> Get-PmExternalApplication
 ```
 

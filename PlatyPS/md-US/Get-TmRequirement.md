@@ -30,10 +30,10 @@ Permission(s): Requirement.Read
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1Tm:\> Get-TmRequirement -Path Orch1Tm:
 ```
 
-{{ Add example description here }}
+Retrieves all requirements from the Test Manager instance. Test Manager requirements define the business rules and acceptance criteria for automation testing.
 
 ## PARAMETERS
 
@@ -83,7 +83,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

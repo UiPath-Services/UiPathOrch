@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -33,7 +33,7 @@ Required permissions: Not applicable (local utility function)
 
 ### Example 1
 ```powershell
-PS C:\> Open-OrchLogLocation
+PS Orch1:\Shared> Open-OrchLogLocation
 ```
 
 Opens the default log folder location where UiPathOrch HTTP logs are stored.

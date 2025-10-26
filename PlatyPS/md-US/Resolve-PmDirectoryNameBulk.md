@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -32,7 +32,7 @@ Required permissions: [PLACEHOLDER]
 
 ### Example 1: Resolve multiple users by name
 ```powershell
-PS Orch1:\> Resolve-PmDirectoryNameBulk User user1@example.com, user2@example.com
+PS Orch1:\Shared> Resolve-PmDirectoryNameBulk User user1@example.com, user2@example.com
 ```
 
 Resolves multiple user names in a single operation to retrieve their directory information.

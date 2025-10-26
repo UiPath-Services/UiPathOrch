@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -18,7 +18,7 @@ Remove-OrchLibrary [-Id] <String[]> [[-Version] <String[]>] [-Path <String[]>]
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Removes library packages from UiPath Orchestrator. Libraries contain reusable components and activities that can be referenced by automation projects. Use this cmdlet to clean up unused or outdated libraries.
 
 Primary Endpoint: DELETE /odata/Libraries('{libraryId}:{libraryVersion}')
 
@@ -30,10 +30,10 @@ Required permissions: Libraries.Delete
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+PS Orch1:\Shared> Remove-OrchLibrary MyLibrary -WhatIf
 ```
 
-{{ Add example description here }}
+Performs a test removal of the library named 'MyLibrary'. The -WhatIf parameter shows what would be removed without actually performing the deletion.
 
 ## PARAMETERS
 
@@ -68,7 +68,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

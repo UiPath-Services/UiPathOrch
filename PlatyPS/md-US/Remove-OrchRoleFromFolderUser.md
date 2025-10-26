@@ -19,7 +19,7 @@ Remove-OrchRoleFromFolderUser [[-UserName] <String[]>] [-FullName <String[]>] [-
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+このパラメータの説明。
 
 Primary Endpoint: POST /odata/Folders/UiPath.Server.Configuration.OData.AssignUsers
 
@@ -31,7 +31,7 @@ Required permissions: (Units.Edit or SubFolders.Edit - Assigns users to any fold
 
 ### Example 1
 ```powershell
-PS C:\> {{ Add example code here }}
+{{ Add example code here }}
 ```
 
 {{ Add example description here }}
@@ -84,7 +84,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+このパラメータの説明。
 
 ```yaml
 Type: ActionPreference
@@ -175,7 +175,7 @@ Accept wildcard characters: False
 ```
 
 ### -Type
-{{ Fill Type Description }}
+このパラメータの説明。
 
 ```yaml
 Type: String[]

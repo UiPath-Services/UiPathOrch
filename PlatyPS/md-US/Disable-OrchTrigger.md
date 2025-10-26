@@ -36,7 +36,7 @@ Required permissions: Schedules.Edit
 
 ### Example 1
 ```powershell
-PS Orch1:\Production> Disable-OrchTrigger DailyReportTrigger -WhatIf
+PS Orch1:\Shared> Disable-OrchTrigger DailyReportTrigger -WhatIf
 ```
 
 Shows what would happen when disabling the DailyReportTrigger in the current Production folder.
@@ -71,7 +71,7 @@ Disables WeekendTrigger in the Production folder and its immediate subfolders.
 
 ### Example 6
 ```powershell
-PS Orch1:\> Get-OrchTrigger | Where-Object {$_.NextExecution -lt (Get-Date).AddDays(1)} | Disable-OrchTrigger -Confirm
+PS Orch1:\> Get-OrchTrigger -Recurse | Where-Object {$_.StartProcessNextOccurrence -lt (Get-Date).AddDays(1)} | Disable-OrchTrigger -Confirm
 ```
 
 Disables all triggers scheduled to execute within the next day with confirmation prompts.
@@ -124,7 +124,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

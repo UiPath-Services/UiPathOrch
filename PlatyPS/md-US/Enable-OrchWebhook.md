@@ -34,28 +34,28 @@ Required permissions: Webhooks.Edit
 
 ### Example 1
 ```powershell
-PS C:\> Enable-OrchWebhook JobCompletionHook
+PS Orch1:\> Enable-OrchWebhook -Path Orch1: JobCompletionHook
 ```
 
 Enables the webhook named "JobCompletionHook".
 
 ### Example 2
 ```powershell
-PS C:\> Enable-OrchWebhook IntegrationHook1, IntegrationHook2
+PS C:\> Enable-OrchWebhook -Path Orch1: IntegrationHook1, IntegrationHook2
 ```
 
 Enables multiple webhooks by specifying their names in a comma-separated list.
 
 ### Example 3
 ```powershell
-PS C:\> Enable-OrchWebhook Test* -WhatIf
+PS C:\> Enable-OrchWebhook -Path Orch1: Test* -WhatIf
 ```
 
 Shows what would happen if all webhooks whose names start with "Test" were enabled, without actually performing the operation.
 
 ### Example 4
 ```powershell
-PS C:\> Enable-OrchWebhook ProductionHook -Path Orch1:, Orch2:
+PS C:\> Enable-OrchWebhook -Path Orch1:, Orch2: ProductionHook
 ```
 
 Enables the webhook named "ProductionHook" in multiple Orchestrator environments.
@@ -69,7 +69,7 @@ Finds all disabled webhooks and enables them with confirmation prompts for each 
 
 ### Example 6
 ```powershell
-PS C:\> Enable-OrchWebhook CriticalEventsHook | Select-Object Name, Enabled, Url
+PS C:\> Enable-OrchWebhook -Path Orch1: CriticalEventsHook | Select-Object Name, Enabled, Url
 ```
 
 Enables a webhook and displays its updated status including name, enabled state, and URL.

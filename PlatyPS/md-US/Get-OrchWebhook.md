@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -36,7 +36,7 @@ Required permissions: Webhooks.View
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-OrchWebhook
+PS Orch1:\Shared> Get-OrchWebhook
 ```
 
 Gets all webhooks configured in the current Orchestrator instance.

@@ -115,7 +115,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference
@@ -145,7 +145,7 @@ Accept wildcard characters: False
 ```
 
 ### -CsvEncoding
-{{ Fill CsvEncoding Description }}
+Specifies the character encoding for CSV export. Common values include 'UTF8', 'ASCII', 'Unicode', and 'UTF32'. Default is UTF8.
 
 ```yaml
 Type: Encoding
@@ -160,7 +160,7 @@ Accept wildcard characters: False
 ```
 
 ### -ExportCsv
-{{ Fill ExportCsv Description }}
+Exports the trigger information to a CSV file. Specify the file path where the CSV should be saved. Use with -CsvEncoding to control file encoding.
 
 ```yaml
 Type: String

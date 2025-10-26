@@ -34,49 +34,49 @@ Required permissions: Settings.View
 
 ### Example 1
 ```powershell
-Get-OrchWebSetting
+PS Orch1:\Shared> Get-OrchWebSetting
 ```
 
 Gets all web settings in the current tenant.
 
 ### Example 2
 ```powershell
-Get-OrchWebSetting Authentication
+PS Orch1:\> Get-OrchWebSetting Authentication
 ```
 
 Gets the web setting named "Authentication".
 
 ### Example 3
 ```powershell
-Get-OrchWebSetting *Auth*
+PS Orch1:\> Get-OrchWebSetting *Auth*
 ```
 
 Gets all web settings whose names contain "Auth".
 
 ### Example 4
 ```powershell
-Get-OrchWebSetting -Path Orch1:, Orch2: SessionTimeout
+PS Orch1:\> Get-OrchWebSetting -Path Orch1:, Orch2: SessionTimeout
 ```
 
 Gets the "SessionTimeout" web setting across multiple tenants.
 
 ### Example 5
 ```powershell
-Get-OrchWebSetting | Where-Object {$_.Category -eq "Security"}
+PS Orch1:\> Get-OrchWebSetting | Where-Object {$_.Category Security}
 ```
 
 Gets all web settings in the Security category.
 
 ### Example 6
 ```powershell
-Get-OrchWebSetting | Select-Object Name, Value, Category, Description | Format-Table
+PS Orch1:\> Get-OrchWebSetting | Select-Object Name, Value, Category, Description | Format-Table
 ```
 
 Gets all web settings and displays them in a formatted table with key properties.
 
 ### Example 7
 ```powershell
-Get-OrchWebSetting | Where-Object {$_.IsModified -eq $true} | ConvertTo-Json
+PS Orch1:\> Get-OrchWebSetting | Where-Object {$_.IsModified -eq $true} | ConvertTo-Json
 ```
 
 Gets all web settings that have been modified from their default values and exports them to JSON format.
@@ -114,7 +114,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

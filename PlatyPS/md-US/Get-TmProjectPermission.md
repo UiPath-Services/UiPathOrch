@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -33,7 +33,7 @@ Required permissions: [PLACEHOLDER - ProjectSettings.Update]
 
 ### Example 1: Get project permissions from current folder
 ```powershell
-PS Orch1Tm:\TestProject> Get-TmProjectPermission
+PS Orch1Tm:\> Get-TmProjectPermission
 ```
 
 Navigates to a specific Test Manager project folder and retrieves user permissions for that project.

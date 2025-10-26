@@ -34,7 +34,7 @@ Required permissions: Settings.View
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-OrchCredentialStore
+PS Orch1:\Shared> Get-OrchCredentialStore
 ```
 
 Retrieves all credential stores, displaying Id, Name, Type, ProxyId, ProxyType, HostName, IsReadOnly, and masked AdditionalConfiguration.

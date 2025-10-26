@@ -34,7 +34,7 @@ Required permissions: ML.Extractor.View
 
 ### Example 1
 ```powershell
-PS Orch1Du:\MyProject> Get-DuExtractor
+PS Orch1Du:\> Get-DuExtractor
 ```
 
 Gets all extractors in the current Document Understanding project.
@@ -55,14 +55,14 @@ Gets extractors whose names start with "Invoice" using wildcard pattern matching
 
 ### Example 4
 ```powershell
-PS Orch1Du:\> Get-DuExtractor -Recurse | Where-Object {$_.ExtractorType -eq "MachineLearning"} | Select-Object Path, Name, ExtractorType, Status
+PS Orch1Du:\> Get-DuExtractor -Recurse | Where-Object {$_.ExtractorType MachineLearning} | Select-Object Path, Name, ExtractorType, Status
 ```
 
 Gets all machine learning extractors from all projects and displays key properties. Note that Path is selected first to identify which project each extractor belongs to.
 
 ### Example 5
 ```powershell
-PS Orch1Du:\MyProject> Get-DuExtractor | Where-Object {$_.Status -eq "Published"}
+PS Orch1Du:\MyProject> Get-DuExtractor | Where-Object {$_.Status Published}
 ```
 
 Gets only published extractors from the current project.

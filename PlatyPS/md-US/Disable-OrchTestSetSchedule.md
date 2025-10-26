@@ -36,7 +36,7 @@ Required permissions: TestSetSchedules.Edit
 
 ### Example 1
 ```powershell
-PS Orch1:\Development> Disable-OrchTestSetSchedule RegressionTestSchedule
+PS Orch1:\Shared> Disable-OrchTestSetSchedule RegressionTestSchedule
 ```
 
 Disables the RegressionTestSchedule in the current folder (Development) using positional parameters.
@@ -170,7 +170,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

@@ -36,45 +36,17 @@ Required permissions: Settings.View, Settings.Create
 
 ### Example 1
 ```powershell
-PS Orch1:\> Copy-OrchCredentialStore AzureKeyVault Orch2:
+PS C:\> Copy-OrchCredentialStore -Path Orch1: *Vault* -Destination Orch2:
 ```
 
-Copies the AzureKeyVault credential store from the current tenant (Orch1) to Orch2 tenant.
+Copies all credential stores containing Vault in their name from Orch1 to Orch2 using wildcards.
 
 ### Example 2
-```powershell
-PS C:\> Copy-OrchCredentialStore -Path Orch1: CyberArkVault Orch2:, Orch3:
-```
-
-Copies the CyberArkVault credential store from Orch1 to both Orch2 and Orch3 tenants.
-
-### Example 3
 ```powershell
 PS Orch1:\> Copy-OrchCredentialStore AzureKeyVault, HashiCorpVault Orch2: -WhatIf
 ```
 
 Shows what would happen when copying AzureKeyVault and HashiCorpVault credential stores from the current tenant to Orch2.
-
-### Example 4
-```powershell
-PS C:\> Copy-OrchCredentialStore -Path Orch1: *Vault* Orch2:
-```
-
-Copies all credential stores containing Vault in their name from Orch1 to Orch2 using wildcards.
-
-### Example 5
-```powershell
-PS Orch1:\> Get-OrchCredentialStore *Azure* | Copy-OrchCredentialStore -Destination Orch2:, Orch3:
-```
-
-Gets all credential stores containing Azure in their names and copies them to both Orch2 and Orch3 tenants.
-
-### Example 6
-```powershell
-PS C:\> Copy-OrchCredentialStore -Path Orch1: ExternalVault Orch2: -Confirm
-```
-
-Copies the ExternalVault credential store from Orch1 to Orch2 with confirmation prompts.
 
 ## PARAMETERS
 
@@ -124,7 +96,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

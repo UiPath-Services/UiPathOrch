@@ -38,7 +38,7 @@ Required permissions: Assets.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Production> Get-OrchAssetLink DatabaseConfig
+PS Orch1:\Shared> Get-OrchAssetLink DatabaseConfig
 ```
 
 Retrieves folder links for the DatabaseConfig asset in the current folder.
@@ -119,7 +119,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

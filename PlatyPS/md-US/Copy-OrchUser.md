@@ -36,14 +36,14 @@ Required permissions: Users.View, Users.Create
 
 ### Example 1
 ```powershell
-PS Orch1:\> Copy-OrchUser john.doe Orch2:
+PS Orch1:\Shared> Copy-OrchUser john.doe Orch2:
 ```
 
 Copies user john.doe from the current tenant (Orch1) to Orch2 tenant.
 
 ### Example 2
 ```powershell
-PS C:\> Copy-OrchUser -Path Orch1: jane.smith Orch2:, Orch3:
+PS C:\> Copy-OrchUser -Path Orch1: -Path -Destination Orch1: jane.smith Orch2:, Orch3:
 ```
 
 Copies user jane.smith from Orch1 to both Orch2 and Orch3 tenants.
@@ -57,7 +57,7 @@ Shows what would happen when copying admin.user and developer.user from the curr
 
 ### Example 4
 ```powershell
-PS C:\> Copy-OrchUser -Path Orch1: *admin* Orch2: -Type User
+PS C:\> Copy-OrchUser -Path Orch1: -Path -Destination Orch1: *admin* Orch2: -Type User
 ```
 
 Copies all users with usernames containing admin from Orch1 to Orch2, filtering by User type.
@@ -71,7 +71,7 @@ Gets all users with usernames containing developer and copies them to both Orch2
 
 ### Example 6
 ```powershell
-PS C:\> Copy-OrchUser -Path Orch1: -FullName "John Smith" Orch2: -Confirm
+PS C:\> Copy-OrchUser -Path Orch1: -Path -Destination Orch1: -FullName "John Smith" Orch2: -Confirm
 ```
 
 Copies the user with full name "John Smith" from Orch1 to Orch2 with confirmation prompts.
@@ -124,7 +124,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

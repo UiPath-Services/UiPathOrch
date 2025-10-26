@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -51,10 +51,10 @@ Gets assets from all folders recursively.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchAsset -Recurse *Config*
+PS Orch1:\> Get-OrchAsset *Config*
 ```
 
-Gets assets containing "Config" in their name from all folders.
+Gets assets containing Config in their name from all folders.
 
 ### Example 4
 ```powershell
@@ -72,21 +72,21 @@ Gets assets with expanded user-specific values for per-robot assets.
 
 ### Example 6
 ```powershell
-PS Orch1:\> Get-OrchAsset -Recurse | Where-Object {$_.ValueScope -eq "PerRobot"}
+PS Orch1:\> Get-OrchAsset | Where-Object {$_.ValueScope PerRobot}
 ```
 
 Gets per-robot scoped assets from all folders.
 
 ### Example 7
 ```powershell
-PS Orch1:\> Get-OrchAsset -Recurse -ExportCsv C:\Reports\Assets.csv
+PS Orch1:\> Get-OrchAsset -ExportCsv C:\Reports\Assets.csv
 ```
 
 Exports all assets to CSV with UTF-8 BOM encoding. The exported CSV can be imported using Import-Csv | Set-OrchAsset.
 
 ### Example 8
 ```powershell
-PS Orch1:\> Get-OrchAsset -Recurse -ExportCredentialCsv C:\Reports\Credentials.csv
+PS Orch1:\> Get-OrchAsset -ExportCredentialCsv C:\Reports\Credentials.csv
 ```
 
 Exports credential assets to separate CSV file. The exported CSV can be imported using Import-Csv | Set-OrchCredentialAsset.

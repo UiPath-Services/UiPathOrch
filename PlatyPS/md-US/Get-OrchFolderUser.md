@@ -168,7 +168,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference
@@ -183,7 +183,7 @@ Accept wildcard characters: False
 ```
 
 ### -CsvEncoding
-{{ Fill CsvEncoding Description }}
+Specifies the character encoding for CSV export when using -ExportCsv. Common values include 'UTF8', 'ASCII', 'UTF32'. Default is UTF8.
 
 ```yaml
 Type: Encoding
@@ -198,7 +198,7 @@ Accept wildcard characters: False
 ```
 
 ### -ExportCsv
-{{ Fill ExportCsv Description }}
+Exports the folder user data to a CSV file at the specified path. Use this for reporting, backup, or data analysis purposes.
 
 ```yaml
 Type: String
@@ -213,7 +213,7 @@ Accept wildcard characters: False
 ```
 
 ### -Type
-{{ Fill Type Description }}
+Filters users by type. Specify 'DirectoryUser' for Active Directory users, 'DirectoryGroup' for AD groups, or other user types as needed.
 
 ```yaml
 Type: String[]

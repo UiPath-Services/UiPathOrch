@@ -34,28 +34,28 @@ Required permissions: Webhooks.Edit
 
 ### Example 1
 ```powershell
-PS C:\> Disable-OrchWebhook IntegrationHook
+PS Orch1:\> Disable-OrchWebhook -Path Orch1: IntegrationHook
 ```
 
 Disables the webhook named "IntegrationHook".
 
 ### Example 2
 ```powershell
-PS C:\> Disable-OrchWebhook Hook1, Hook2
+PS C:\> Disable-OrchWebhook -Path Orch1: Hook1, Hook2
 ```
 
 Disables multiple webhooks by specifying their names in a comma-separated list.
 
 ### Example 3
 ```powershell
-PS C:\> Disable-OrchWebhook Test* -WhatIf
+PS C:\> Disable-OrchWebhook -Path Orch1: Test* -WhatIf
 ```
 
 Shows what would happen if all webhooks whose names start with "Test" were disabled, without actually performing the operation.
 
 ### Example 4
 ```powershell
-PS C:\> Disable-OrchWebhook MaintenanceHook -Path Orch1:, Orch2:
+PS C:\> Disable-OrchWebhook -Path Orch1:, Orch2: MaintenanceHook
 ```
 
 Disables the webhook named "MaintenanceHook" in multiple Orchestrator environments.
@@ -69,7 +69,7 @@ Finds all enabled webhooks and disables them with confirmation prompts for each 
 
 ### Example 6
 ```powershell
-PS C:\> Disable-OrchWebhook CriticalEventsHook | Select-Object Name, Enabled, Url
+PS C:\> Disable-OrchWebhook -Path Orch1: CriticalEventsHook | Select-Object Name, Enabled, Url
 ```
 
 Disables a webhook and displays its updated status including name, enabled state, and URL.

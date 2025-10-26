@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -32,7 +32,7 @@ Required permissions: Machines.View, Machines.Create
 
 ### Example 1
 ```powershell
-PS Orch1:\> Copy-OrchMachine "[Default] Agent Service" Orch2:
+PS Orch1:\Shared> Copy-OrchMachine "[Default] Agent Service" Orch2:
 ```
 
 Copies the "[Default] Agent Service" machine template to the Orch2 tenant.
@@ -46,7 +46,7 @@ Shows what would happen when copying all machine templates with "Template" in th
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchMachine | Where-Object {$_.Type -eq "Template"} | Copy-OrchMachine Orch2:
+PS Orch1:\> Get-OrchMachine | Where-Object {$_.Type Template} | Copy-OrchMachine Orch2:
 ```
 
 Gets all machine templates and copies them to Orch2 tenant using pipeline input.
@@ -60,7 +60,7 @@ Copies the "Production Template" machine to Orch2 with confirmation prompt befor
 
 ### Example 5
 ```powershell
-PS C:\> Copy-OrchMachine -Path Orch1: "Cloud Robot Template" Orch2:, Orch3:
+PS C:\> Copy-OrchMachine -Path Orch1: -Path -Destination Orch1: "Cloud Robot Template" Orch2:, Orch3:
 ```
 
 Copies the "Cloud Robot Template" from Orch1 tenant to both Orch2 and Orch3 tenants, specifying the source tenant explicitly.

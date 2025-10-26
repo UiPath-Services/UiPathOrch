@@ -34,7 +34,7 @@ Required permissions: Machines.View
 
 ### Example 1
 ```powershell
-PS Orch1:\> Get-OrchMachineClientSecretId
+PS Orch1:\Shared> Get-OrchMachineClientSecretId
 ```
 
 Outputs the issuance date and time of client secrets for all machines in the current tenant.
@@ -115,7 +115,7 @@ Accept wildcard characters: True
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

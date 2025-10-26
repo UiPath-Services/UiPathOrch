@@ -36,14 +36,14 @@ Required permissions: Packages.View, Packages.Create, FolderPackages.View, Folde
 
 ### Example 1
 ```powershell
-PS Orch1:\Development> Copy-OrchPackage InvoiceProcessor * \Production
+PS Orch1:\Shared> Copy-OrchPackage InvoiceProcessor * \Production
 ```
 
 Copies the InvoiceProcessor package from the current folder (Development) to the Production folder within the same tenant, using * for all versions. Orch1:\Production should have its own feed, otherwise it tries to copy to the tenant feed and it may fail.
 
 ### Example 2
 ```powershell
-PS C:\> Copy-OrchPackage -Path Orch1:\ EmailAutomation * Orch2:\
+PS C:\> Copy-OrchPackage -Path Orch1: -Path -Destination Orch1:\ EmailAutomation * Orch2:\
 ```
 
 Copies the EmailAutomation package from Orch1:\ to Orch2:\, demonstrating inter-tenant package copying.
@@ -57,7 +57,7 @@ Shows what would happen when copying a specific version (1.2.3) of ReportGenerat
 
 ### Example 4
 ```powershell
-PS C:\> Copy-OrchPackage -Path Orch1:\ *Automation* * Orch2:\
+PS C:\> Copy-OrchPackage -Path Orch1: -Path -Destination Orch1:\ *Automation* * Orch2:\
 ```
 
 Copies all packages containing Automation in their ID from Orch1:\ to Orch2:\ using wildcards.
@@ -170,7 +170,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

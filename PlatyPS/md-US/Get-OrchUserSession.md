@@ -34,49 +34,49 @@ Required permissions: Users.View
 
 ### Example 1
 ```powershell
-Get-OrchUserSession
+PS Orch1:\Shared> Get-OrchUserSession
 ```
 
 Gets session information for all users in the current tenant.
 
 ### Example 2
 ```powershell
-Get-OrchUserSession john.doe
+PS Orch1:\> Get-OrchUserSession john.doe
 ```
 
 Gets session information for the user "john.doe".
 
 ### Example 3
 ```powershell
-Get-OrchUserSession *admin*
+PS Orch1:\> Get-OrchUserSession *admin*
 ```
 
 Gets session information for all users whose names contain "admin".
 
 ### Example 4
 ```powershell
-Get-OrchUserSession -Path Orch1:, Orch2: developer
+PS Orch1:\> Get-OrchUserSession -Path Orch1:, Orch2: developer
 ```
 
 Gets session information for the "developer" user across multiple tenants.
 
 ### Example 5
 ```powershell
-Get-OrchUserSession | Where-Object {$_.IsActive -eq $true}
+PS Orch1:\> Get-OrchUserSession | Where-Object {$_.IsActive -eq $true}
 ```
 
 Gets all currently active user sessions.
 
 ### Example 6
 ```powershell
-Get-OrchUserSession | Select-Object UserName, LoginTime, LastActivity, IsActive, SessionDuration
+PS Orch1:\> Get-OrchUserSession | Select-Object UserName, LoginTime, LastActivity, IsActive, SessionDuration
 ```
 
 Gets all user sessions and displays key timing and status information.
 
 ### Example 7
 ```powershell
-Get-OrchUser | Get-OrchUserSession | Where-Object {$_.LastActivity -gt (Get-Date).AddHours(-1)}
+PS Orch1:\> Get-OrchUser | Get-OrchUserSession | Where-Object {$_.LastActivity -gt (Get-Date).AddHours(-1)}
 ```
 
 Gets session information for all users who have been active within the last hour. User information is passed via pipeline using ByPropertyName binding.
@@ -114,7 +114,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
-{{ Fill ProgressAction Description }}
+Controls how progress information is displayed during command execution. Use 'SilentlyContinue' to suppress progress display.
 
 ```yaml
 Type: ActionPreference

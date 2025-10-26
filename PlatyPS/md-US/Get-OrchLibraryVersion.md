@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,7 +34,7 @@ Required permissions: Libraries.View
 
 ### Example 1
 ```powershell
-PS C:\> Get-OrchLibraryVersion UiPath.Excel.Activities
+PS Orch1:\Shared> Get-OrchLibraryVersion UiPath.Excel.Activities
 ```
 
 Retrieves all available versions of the "UiPath.Excel.Activities" library.
