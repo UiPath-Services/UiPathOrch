@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -34,7 +34,7 @@ Required permissions: Libraries.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Shared> Get-OrchLibraryVersion UiPath.Excel.Activities
+PS Orch1:\> Get-OrchLibraryVersion UiPath.Excel.Activities
 ```
 
 Retrieves all available versions of the "UiPath.Excel.Activities" library.
@@ -62,24 +62,10 @@ Retrieves all available versions of "UiPath.System.Activities" from external hos
 
 ### Example 5
 ```powershell
-PS C:\> Get-OrchLibraryVersion -Path Orch1:, Orch2: MyCustomLibrary
+PS C:\> Get-OrchLibraryVersion -Path Orch1:,Orch2: MyCustomLibrary
 ```
 
 Retrieves all versions of "MyCustomLibrary" from multiple Orchestrator environments.
-
-### Example 6
-```powershell
-PS C:\> Get-OrchLibraryVersion MyLibrary | Sort-Object Version -Descending | Select-Object -First 5
-```
-
-Gets all versions of "MyLibrary" and displays the 5 most recent versions.
-
-### Example 7
-```powershell
-PS C:\> Get-OrchLibraryVersion MyLibrary | Where-Object {$_.IsPrerelease -eq $false} | Select-Object Id, Version, Published
-```
-
-Retrieves only stable (non-prerelease) versions of "MyLibrary" and displays key version information.
 
 ## PARAMETERS
 
