@@ -74,6 +74,14 @@ PS Orch1:\> Get-OrchTestSetSchedule -Path \Production, \Shared -Recurse
 
 Gets test set schedules from multiple specific folders recursively, demonstrating -Path parameter priority with -Recurse.
 
+
+
+### Example 7
+```powershell
+PS Orch1:\Shared> Get-OrchTestSetSchedule | ConvertTo-Json -Depth 2
+```
+
+Displays test set schedules including timing configuration and execution parameters in JSON format for detailed analysis.
 ### Example 7
 ```powershell
 PS Orch1:\Shared> Get-OrchTestSetSchedule | ConvertTo-Json -Depth 2
