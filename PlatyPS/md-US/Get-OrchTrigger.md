@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -48,24 +48,24 @@ Displays all triggers in the current folder and all its subfolders. When run in 
 
 ### Example 3
 ```powershell
-PS C:\> Get-OrchTrigger -Path Orch1:\ -Recurse *Schedule*
+PS C:\> Get-OrchTrigger -Path Orch1:\ -Recurse -Name *Schedule*
 ```
 
 Gets triggers containing 'Schedule' in their name from all folders recursively.
 
 ### Example 4
 ```powershell
-PS Orch1:\Shared> Get-OrchTrigger | select Path,Id,Name
+PS Orch1:\Shared> Get-OrchTrigger -ExportCsv triggers.csv
 ```
 
-Displays output with only the selected columns. Specify multiple columns separated by commas, including wildcards. Column names can be auto-completed with [Ctrl+Space] or [Tab].
+Exports all triggers to a CSV file. The exported CSV can be imported and modified using Import-Csv, then updated using Update-OrchTrigger or other related cmdlets.
 
 ### Example 5
 ```powershell
 PS Orch1:\Shared> Get-OrchTrigger | ConvertTo-Json
 ```
 
-Converts the output to JSON format, providing a raw view of the data from Orchestrator.
+Displays the complete trigger structure including schedule configuration and execution parameters in JSON format.
 
 ## PARAMETERS
 

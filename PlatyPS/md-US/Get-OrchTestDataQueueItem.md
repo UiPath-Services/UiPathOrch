@@ -67,6 +67,14 @@ PS C:\> Get-OrchTestDataQueueItem -Path Orch1:\Development, Orch1:\Production Us
 
 Gets all items from the "UserTestData" queue in both Development and Production folders.
 
+
+
+### Example 6
+```powershell
+PS Orch1:\Shared> Get-OrchTestDataQueueItem | ConvertTo-Json -Depth 2
+```
+
+Displays test data queue items including their structured data content in JSON format for detailed analysis.
 ### Example 6
 ```powershell
 PS Orch1:\Shared> Get-OrchTestDataQueueItem | ConvertTo-Json -Depth 2
