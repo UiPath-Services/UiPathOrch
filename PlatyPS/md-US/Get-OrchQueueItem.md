@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -45,10 +45,10 @@ Retrieves the first 5 queue items with Deleted status from the current folder.
 
 ### Example 2
 ```powershell
-PS Orch1:\Shared> Get-OrchQueueItem TestValue -Status Deleted -First 2
+PS Orch1:\Shared> Get-OrchQueueItem InvoiceQueue -Status Deleted -First 2
 ```
 
-Gets the first 2 deleted queue items from the specific queue named TestValue.
+Gets the first 2 deleted queue items from the specific queue named InvoiceQueue.
 
 ### Example 3
 ```powershell
@@ -62,7 +62,7 @@ Retrieves normal-priority queue items with Deleted status from the Shared folder
 PS Orch1:\Shared> Get-OrchQueueItem -StartProcessingAfter (Get-Date).AddHours(-24) | ConvertTo-Json -Depth 3
 ```
 
-Gets queue items that started processing in the last 24 hours and displays detailed JSON information including SpecificContent and ProcessingException. The output shows comprehensive queue item structure with robot details, processing times, and specific content data.
+Gets queue items that started processing in the last 24 hours and converts to JSON format for detailed inspection.
 
 ### Example 5
 ```powershell
@@ -448,8 +448,6 @@ OAuth required scopes: OR.Queues or OR.Queues.Read
 Required permissions: Transactions.View
 
 ## RELATED LINKS
-
-
 
 [Remove-OrchQueueItem](Remove-OrchQueueItem.md)
 

@@ -32,7 +32,7 @@ Required permissions: Roles.View or Units.Edit or SubFolders.Edit
 
 ### Example 1
 ```powershell
-PS Orch1:\Shared> Get-OrchRole
+PS Orch1:\> Get-OrchRole
 ```
 
 Gets all roles from the current tenant.
@@ -46,31 +46,17 @@ Gets roles containing Admin in their name.
 
 ### Example 3
 ```powershell
-PS Orch1:\> Get-OrchRole -Path Orch1:, Orch2:
-```
-
-Gets roles from multiple tenants.
-
-### Example 4
-```powershell
-PS Orch1:\> Get-OrchRole -ExpandPermission | Where-Object {$_.PermissionName Assets}
+PS Orch1:\> Get-OrchRole -ExpandPermission | Where-Object {$_.PermissionName -eq "Assets"}
 ```
 
 Gets roles with Assets permission using expanded details.
 
-### Example 5
+### Example 4
 ```powershell
 PS Orch1:\> Get-OrchRole | Where-Object {$_.IsStatic -eq $false}
 ```
 
 Gets custom (non-static) roles that can be modified.
-
-### Example 6
-```powershell
-PS Orch1:\> Get-OrchRole -ExportCsv C:\Reports\Roles.csv
-```
-
-Exports all roles to CSV with UTF-8 BOM encoding. The exported CSV can be imported using Import-Csv | Set-OrchRole.
 
 ## PARAMETERS
 

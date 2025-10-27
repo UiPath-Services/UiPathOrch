@@ -46,17 +46,22 @@ PS Orch1:\> Get-OrchPackage -Recurse
 
 Gets all process packages from all folders recursively.
 
+### Example 3
+
 ```powershell
-PS C:\> Get-OrchPackage -Path Orch1:\Production *Process*
+PS C:\> Get-OrchPackage -Path 'Orch1:\user''s workspace' -Id *Process*
 ```
 
-Gets process packages whose IDs contain "Process" from the Production folder.
+Gets process packages whose IDs contain "Process" from the user's workspace folder.
+
+### Example 4
 
 ```powershell
-PS C:\> Get-OrchPackage -Path Orch1: *Invoice*
+PS C:\> Get-OrchPackage -Path Orch1: -Id *Invoice*
 ```
 
 Gets packages whose IDs contain "Invoice" from the tenant feed (entire tenant scope).
+
 ## PARAMETERS
 
 ### -Id

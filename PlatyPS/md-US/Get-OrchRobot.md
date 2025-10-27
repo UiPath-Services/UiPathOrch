@@ -36,17 +36,17 @@ Retrieves all autoprovisioned robots in the current Orchestrator environment. Th
 
 ### Example 2
 ```powershell
-PS Orch1:\> Get-OrchRobot myrobot*
+PS Orch1:\> Get-OrchRobot Robot*
 ```
 
-Retrieves autoprovisioned robots associated with the specific username. Uses the Username parameter for efficient filtering.
+Retrieves autoprovisioned robots whose FullName matches the pattern Robot*. Uses wildcard pattern with the positional FullName parameter.
 
 ### Example 3
 ```powershell
 PS Orch1:\> Get-OrchRobot | Where-Object Type -eq Unattended
 ```
 
-Retrieves autoprovisioned robots where the full name contains Smith. Uses wildcard pattern filtering with the FullName parameter.
+Retrieves autoprovisioned robots and filters for only Unattended type robots. Demonstrates client-side filtering with Where-Object.
 
 ### Example 4
 ```powershell

@@ -58,13 +58,6 @@ PS C:\> Get-OrchTestCaseExecution -Path Orch1:\Production
 
 Retrieves test case execution records from the Production folder, demonstrating execution from any location.
 
-### Example 5
-```powershell
-PS Orch1:\Shared> Get-OrchTestCaseExecution | Select-Object -First 1 | ConvertTo-Json -Depth 2
-```
-
-Retrieves the first test case execution and displays its structure in JSON format for detailed analysis.
-
 ## PARAMETERS
 
 ### -Depth

@@ -36,7 +36,7 @@ Required permissions: Folders.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Shared> Get-OrchPersonalWorkspace
+PS Orch1:\> Get-OrchPersonalWorkspace
 ```
 
 Gets all personal workspaces in the Orch1 tenant.
@@ -61,20 +61,6 @@ PS Orch1:\> Get-OrchPersonalWorkspace | ConvertTo-Json -Depth 2
 ```
 
 Gets all personal workspaces and displays their structure in JSON format for detailed analysis of workspace properties including ownership and activity status.
-
-### Example 5
-```powershell
-PS Orch1:\> Get-OrchPersonalWorkspace | Where-Object {$_.IsActive -eq $true}
-```
-
-Gets only active personal workspaces using pipeline filtering.
-
-### Example 6
-```powershell
-PS Orch1:\> Get-OrchPersonalWorkspace | Select-Object Path, Name, OwnerName, IsActive, LastLogin
-```
-
-Gets personal workspaces with selected properties, showing Path first for multi-tenant identification.
 
 ## PARAMETERS
 

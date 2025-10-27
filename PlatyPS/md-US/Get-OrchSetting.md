@@ -34,14 +34,14 @@ Required permissions: Settings.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Shared> Get-OrchSetting
+PS Orch1:\> Get-OrchSetting
 ```
 
 Gets all configuration settings from the current Orchestrator instance.
 
 ### Example 2
 ```powershell
-PS Orch1:\> Get-OrchSetting *Language*,*TimeZone*
+PS Orch1:\> Get-OrchSetting *Language*, *TimeZone*
 ```
 
 Gets settings related to language and timezone using wildcard patterns.
@@ -52,20 +52,6 @@ PS C:\> Get-OrchSetting -Path Orch1:, Orch2: *Auth*
 ```
 
 Gets authentication-related settings from multiple tenants.
-
-### Example 4
-```powershell
-PS Orch1:\> Get-OrchSetting *Email* | Select-Object Path, Name, Value
-```
-
-Gets email-related settings and displays key properties with Path shown first.
-
-### Example 5
-```powershell
-PS Orch1:\> Get-OrchSetting *Trigger* | ConvertTo-Json
-```
-
-Gets trigger-related settings and outputs detailed structure in JSON format.
 
 ## PARAMETERS
 
