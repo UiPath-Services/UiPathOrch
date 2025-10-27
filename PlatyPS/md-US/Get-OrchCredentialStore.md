@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -126,8 +126,6 @@ OAuth required scopes: OR.Settings or OR.Settings.Read
 Required permissions: Settings.View
 
 ## RELATED LINKS
-
-
 
 [Remove-OrchCredentialStore](Remove-OrchCredentialStore.md)
 

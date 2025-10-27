@@ -43,119 +43,24 @@ Gets all queues in the current folder (Shared).
 
 ### Example 2
 ```powershell
-PS Orch1:\Shared> Get-OrchQueue TestQueue123
+PS Orch1:\Shared> Get-OrchQueue InvoiceQueue
 ```
 
-Gets the specific queue named TestQueue123 from the current folder.
+Gets the specific queue named InvoiceQueue from the current folder using the positional parameter.
 
 ### Example 3
 ```powershell
-PS Orch1:\Shared> Get-OrchQueue Test* | Select-Object Name, MaxNumberOfRetries, Encrypted
-```
-
-Gets all queues with names starting with Test and displays their retry settings and encryption status.
-
-### Example 4
-```powershell
-PS C:\> Get-OrchQueue "Orch1:\Shared","Orch1:\Development" -Name ProcessingQueue
+PS C:\> Get-OrchQueue -Path Orch1:\Shared,Orch1:\Development -Name ProcessingQueue
 ```
 
 Gets ProcessingQueue from both Shared and Development folders across specified paths.
 
-### Example 5
-```powershell
-PS Orch1:\> Get-OrchQueue | Where-Object {$_.Encrypted -eq $true}
-```
-
-Gets all encrypted queues from all subfolders recursively.
-
-### Example 6
-```powershell
-PS Orch1:\Shared> Get-OrchQueue -ExportCsv queues.csv -CsvEncoding UTF8
-```
-
-Exports all queues from the current folder to a CSV file with UTF8 encoding for backup or migration.
-
-### Example 7
-```powershell
-PS Orch1:\Shared> Get-OrchQueue | Where-Object {$_.MaxNumberOfRetries -gt 0} | Select-Object Name, MaxNumberOfRetries
-```
-
-Gets queues that have retry configurations and displays their retry settings.
-
-### Example 8
-```powershell
-PS Orch1:\> Get-OrchQueue "Orch1:\*" -Recurse -Depth 2 | Format-Table
-```
-
-Gets queues from all folders within 2 levels depth and groups them by unique reference enforcement setting.
-
-### Example 9
-```powershell
-PS Orch1:\Shared> Get-OrchQueue | ConvertTo-Json -Depth 2 | Out-File queues.json
-```
-
-Converts queue information to JSON format and saves to a file for integration or analysis.
-
-### Example 10
-```powershell
-PS Orch1:\Shared> Get-OrchQueue | Where-Object {$_.SlaInMinutes} | Select-Object Name, SlaInMinutes, RiskSlaInMinutes
-```
-
-Gets queues that have SLA configurations and displays their SLA settings for performance monitoring.
-
-OAuth required scopes: OR.Queues or OR.Queues.Read
-
-Required permissions: Queues.View
-
-### Example 1
-```powershell
-PS Orch1:\Shared> Get-OrchQueue
-```
-
-Gets queues from the current folder.
-
-### Example 2
-```powershell
-PS Orch1:\> Get-OrchQueue -Recurse
-```
-
-Gets queues from all folders recursively.
-
-### Example 3
-```powershell
-PS Orch1:\> Get-OrchQueue *Invoice*
-```
-
-Gets queues containing Invoice in their name from all folders.
-
 ### Example 4
 ```powershell
-PS Orch1:\> Get-OrchQueue -Path Orch1:\Shared, Orch1:\Finance -Recurse
+PS C:\> Get-OrchQueue -Path Orch1:\ -Recurse
 ```
 
-Gets queues from specific folders and their subfolders.
-
-### Example 5
-```powershell
-PS Orch1:\> Get-OrchQueue | Where-Object {$_.Encrypted -eq $true}
-```
-
-Gets encrypted queues from all folders.
-
-### Example 6
-```powershell
-PS Orch1:\> Get-OrchQueue | Where-Object {$_.MaxNumberOfRetries -gt 3}
-```
-
-Gets queues with more than 3 retry attempts configured.
-
-### Example 7
-```powershell
-PS Orch1:\> Get-OrchQueue -ExportCsv C:\Reports\Queues.csv
-```
-
-Exports all queues to CSV with UTF-8 BOM encoding. The exported CSV can be imported using New-OrchQueue and Update-OrchQueue cmdlets.
+Gets all queues from all folders in Orch1 tenant recursively.
 
 ## PARAMETERS
 

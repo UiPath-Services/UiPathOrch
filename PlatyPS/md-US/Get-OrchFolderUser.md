@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -60,7 +60,6 @@ PS Orch1:\> Get-OrchFolderUser -Recurse -Type DirectoryUser
 ```
 
 Retrieves all individual users (not groups) assigned across all folders using the -Type parameter for efficient filtering.
-
 
 ## PARAMETERS
 

@@ -1,4 +1,4 @@
-﻿---
+---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -43,13 +43,6 @@ PS Orch1:\> Get-OrchProcessRequirement -Path Shared *Queue*
 ```
 
 Retrieves dependency resources for processes in the 'Shared' folder matching the wildcard pattern '*Queue*'.
-
-### Example 3: Find missing dependencies
-```powershell
-PS Orch1:\> Get-OrchProcessRequirement -Recurse | Where-Object ValidationResult -eq 'NotFound'
-```
-
-Identifies all missing dependency resources across all processes, useful for troubleshooting deployment issues.
 
 ## PARAMETERS
 

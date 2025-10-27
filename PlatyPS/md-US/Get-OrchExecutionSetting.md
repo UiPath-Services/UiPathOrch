@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -36,7 +36,6 @@ Required permissions: Settings.View
 ```powershell
 PS Orch1:\> Get-OrchExecutionSetting
 ```
-
 
 Retrieves all execution settings grouped by scope (Global and Robot), displaying DisplayName, ValueType, DefaultValue, and PossibleValues.
 
@@ -135,8 +134,6 @@ OAuth required scopes: OR.Settings or OR.Settings.Read
 Required permissions: Settings.View
 
 ## RELATED LINKS
-
-
 
 [Get-OrchSetting](Get-OrchSetting.md)
 

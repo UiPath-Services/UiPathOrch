@@ -1,4 +1,4 @@
----
+﻿---
 external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
 Module Name: UiPathOrch
 online version:
@@ -73,7 +73,6 @@ PS Orch1:\Shared> Get-OrchClassicRobot -ExportCsv C:\Reports\ClassicRobots.csv
 ```
 
 Exports all classic robots from the current folder to a CSV file for reporting or backup purposes.
-
 
 ## PARAMETERS
 
