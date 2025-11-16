@@ -372,3 +372,4 @@ FodyWeavers.xsd
 /*.ps1
 /*.png
 /*.txt
+NuGet.Config
