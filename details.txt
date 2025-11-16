@@ -1,9 +1,0 @@
-This PowerShell module uses Orchestrator API to mount modern folders as local drives, making them accessible from the PowerShell console with file system-like operations.
-
-Key features:
-
-Bulk Processing: Execute bulk operations across multiple folders and tenants with a single command, eliminating the need for scripting or CSV preparation.
-Advanced Scripting: Perform advanced operations like downloading only active packages or detecting long-pending jobs to trigger email notifications.
-Tenant Migration: Facilitate tenant migrations by copying various entities between tenants efficiently.
-
-This module simplifies Orchestrator management, reducing manual errors and increasing efficiency.
