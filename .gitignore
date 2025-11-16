@@ -373,3 +373,8 @@ FodyWeavers.xsd
 /*.png
 /*.txt
 NuGet.Config
+
+# Analysis reports and backup files
+*.html
+*.bak
+*.xlsx
