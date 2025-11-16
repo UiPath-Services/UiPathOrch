@@ -117,7 +117,14 @@ Contributions are welcome! Please feel free to submit issues and pull requests.
 
 ## Support
 
-For support and questions, please visit the [UiPath Community Forum](https://forum.uipath.com/).
+**Important**: This is a community-driven tool and is not officially supported by UiPath Technical Support. For issues related to this module, please use the channels below instead of contacting UiPath Technical Support.
+
+For support and questions, you can reach out through any of these channels:
+
+- **UiPath Marketplace Q&A**: [Ask questions on the Marketplace listing](https://marketplace.uipath.com/listings/uipathorch/questions)
+- **GitHub Discussions**: [Start a discussion](https://github.com/UiPath-Services/UiPathOrch/discussions) for general questions and ideas
+- **GitHub Issues**: [Report bugs or request features](https://github.com/UiPath-Services/UiPathOrch/issues)
+- **UiPath Community Forum**: [Get help from the community](https://forum.uipath.com/)
 
 ## Publisher
 
