@@ -804,6 +804,37 @@ internal class ApiTriggerNameCompleter<TPositional> : OrchArgumentCompleter wher
     }
 }
 
+internal class EventTriggerNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+{
+    public override IEnumerable<CompletionResult> CompleteArgument(
+        string commandName,
+        string parameterName,
+        string wordToComplete,
+        CommandAst commandAst,
+        IDictionary fakeBoundParameters)
+    {
+        var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+        // パラメータで選択済みの Name は、候補から除外する
+        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+        var wp = CreateWPFromWordToComplete(wordToComplete);
+
+        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.EventTriggers.Get(df.folder));
+
+        foreach (var result in results)
+        {
+            foreach (var trigger in result
+                .Where(t => wp.IsMatch(t.Name))
+                .ExcludeByWildcards(t => t?.Name, wpName))
+            {
+                string tooltip = trigger.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(trigger.Name), trigger.Name, CompletionResultType.Text, tooltip);
+            }
+        }
+    }
+}
+
 internal class AssetNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
 {
     public override IEnumerable<CompletionResult> CompleteArgument(

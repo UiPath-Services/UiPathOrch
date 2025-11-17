@@ -2090,6 +2090,25 @@ public partial class OrchAPISession : IDisposable
 
     #endregion
 
+    #region EventTrigger
+    public IEnumerable<ApiTrigger> GetEventTriggers(Int64 folderId)
+    {
+        EnsureVersionSupport(14); // 正確な数字は未確認。。
+        return GetEnumerable<ApiTrigger>("/odata/ApiTriggers", folderId);
+    }
+
+    public bool? EnableEventTriggers(Int64 folderId, string triggerId, bool enabled = true)
+    {
+        var payload = new Dictionary<string, object?>
+        {
+            ["Enabled"] = enabled
+        };
+
+        var ret = HttpRequest<HttpBodyValue<bool>>(HttpMethod.Patch, $"/odata/ApiTriggers({triggerId})", folderId, payload);
+        return ret?.value;
+    }
+    #endregion
+
     #region Logs
 
     public IEnumerable<Log> GetRobotLogs(Int64 folderId, string? query, ulong skip, ulong first, string? orderBy, bool orderAscending)
@@ -2884,8 +2903,7 @@ public partial class OrchAPISession : IDisposable
     // 残念ながら、これは OAuth app からは動かないようだ。
     //public void GetConnections(Int64 folderId)
     //{
-    //    //var ret = HttpRequest(HttpMethod.Get, "/connections_/api/v1/Connections", folderId);
-    //    var ret = HttpRequest(HttpMethod.Get, "/api/v1/Connections", folderId);
+    //    var ret = HttpRequestImpl(HttpMethod.Get, _base_url, "/connections_/api/v1/Connections", folderId);
     //}
 
     #endregion

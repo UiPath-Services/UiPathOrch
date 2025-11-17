@@ -32,7 +32,7 @@ Required permissions: Robots.View
 
 ### Example 1
 ```powershell
-PS Orch1:\Shared> Get-OrchUnattendedSession
+PS Orch1:\> Get-OrchUnattendedSession
 ```
 
 Retrieves all unattended robot sessions from the current Orchestrator tenant.
@@ -51,26 +51,6 @@ PS C:\> Get-OrchUnattendedSession -Path Orch1:, Orch2:
 
 Retrieves unattended sessions from multiple specified Orchestrator tenants for cross-tenant analysis.
 
-### Example 4
-```powershell
-PS Orch1:\> Get-OrchUnattendedSession | ConvertTo-Json -Depth 2
-```
-
-Retrieves unattended sessions and displays their structure in JSON format for detailed analysis of robot session properties.
-
-### Example 5
-```powershell
-PS Orch1:\> Get-OrchUnattendedSession | Where-Object {$_.RuntimeType -eq 'Headless'}
-```
-
-Gets only headless runtime unattended sessions using pipeline filtering.
-
-### Example 6
-```powershell
-PS Orch1:\> Get-OrchUnattendedSession | Select-Object Path, MachineName, RuntimeType, Status, ReportingTime
-```
-
-Gets unattended sessions with selected properties, showing Path first for multi-tenant identification.
 
 ## PARAMETERS
 
@@ -130,9 +110,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### UiPath.PowerShell.Entities.MachineSessionRuntime
 ## NOTES
 
-This cmdlet operates on folder entities, which means you may need to navigate to specific folders or use the -Path parameter to target the desired location.
-
-When using the -Recurse parameter with large folder hierarchies, the operation may take considerable time to complete. Consider using -Depth to limit the traversal scope if needed.
+This is a tenant-level operation. The -Path parameter allows you to query sessions across multiple Orchestrator instances. When used without -Path, you must be in an Orch: drive location.
 
 Unattended sessions represent active automation sessions running on unattended robots. This information is valuable for:
 - Monitoring robot utilization and performance
@@ -140,7 +118,8 @@ Unattended sessions represent active automation sessions running on unattended r
 - Capacity planning and scaling decisions
 - Troubleshooting automation execution issues
 
-Use ConvertTo-Json to explore the complete structure of session objects, as they contain detailed runtime information that may not be visible in the default display format.
+The session objects contain detailed runtime information including SessionId, MachineName, RuntimeType, Status, and ReportingTime properties.
+
 
 
 

@@ -165,32 +165,6 @@ public class SetAssetCommand : OrchestratorPSCmdlet
 
     private class ValueCompleter : OrchArgumentCompleter
     {
-        private static IEnumerable<CompletionResult> GetCompletionResultsForValueType(string? valueType, bool exists)
-        {
-            if (string.IsNullOrEmpty(valueType))
-            {
-                valueType = "text";
-            }
-
-            switch (valueType.ToLower())
-            {
-                case "text":
-                    var newTextValue = "Text value here";
-                    yield return new CompletionResult(PathTools.EscapePSText(newTextValue), newTextValue, CompletionResultType.Text, newTextValue);
-                    if (exists) yield return new CompletionResult("''", "''", CompletionResultType.Text, "Specify '' to remove the existing value.");
-                    break;
-                case "bool":
-                    yield return new CompletionResult("False");
-                    yield return new CompletionResult("True");
-                    if (exists) yield return new CompletionResult("''", "''", CompletionResultType.Text, "Specify '' to remove the existing value.");
-                    break;
-                case "integer":
-                    yield return new CompletionResult("0");
-                    if (exists) yield return new CompletionResult("''", "''", CompletionResultType.Text, "Specify '' to remove the existing value.");
-                    break;
-            }
-        }
-
         public override IEnumerable<CompletionResult> CompleteArgument(
             string commandName,
             string parameterName,
@@ -551,7 +525,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                 {
                     if (asset.UserValues is null)
                     {
-                        asset.UserValues = new List<AssetUserValue>();
+                        asset.UserValues = [];
                     }
 
                     AssetUserValue userValue = asset.UserValues.FirstOrDefault(uv => uv.UserId == user.Id && uv.MachineId == machine?.Id);

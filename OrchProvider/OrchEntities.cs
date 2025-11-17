@@ -3066,13 +3066,13 @@ public class ProcessSchedule
 
 #region HttpTrigger
 
-public class HttpTriggerRelease
+public class TriggerRelease
 {
     public Int64? Id { get; set; }
     public string? Name { get; set; }
 }
 
-public class HttpTrigger
+public abstract class TriggerBase
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
@@ -3084,7 +3084,7 @@ public class HttpTrigger
     public string? Name { get; set; }
     public string? Description { get; set; }
     public int? JobCount { get; set; }
-    public string? JobPriority { get; set; }
+    public int? JobPriority { get; set; }
     public bool? RunAsMe { get; set; }
     public string? RuntimeType { get; set; }
     public string? TargetFramework { get; set; }
@@ -3102,6 +3102,15 @@ public class HttpTrigger
     public bool? Visible { get; set; }
     public Int64? AuditEntityId { get; set; }
     public string? Id { get; set; }
+    public TriggerRelease? Release { get; set; }
+    public MachineRobotSession[]? MachineRobots { get; set; }
+    public Tag[]? Tags { get; set; }
+}
+
+public class HttpTrigger : TriggerBase
+{
+    // TODO: Properties はどのように定義すべき？
+    // Dictionary<string, object> としてベースクラスに配置すべきか？
     public string? CallingMode { get; set; }
     public string? Method { get; set; }
     public string? Slug { get; set; }
@@ -3110,10 +3119,37 @@ public class HttpTrigger
     public string? Secret { get; set; }
     public string? CallbackMode { get; set; }
     public bool? AllowInsecureSsl { get; set; }
-    public HttpTriggerRelease? Release { get; set; }
-    //public ??? Properties { get; set; } //////////// TODO: unknown type
-    public MachineRobotSession[]? MachineRobots { get; set; } // TODO: swagger doc に記載がなかった
-    public Tag[]? Tags { get; set; }
+}
+
+public class ApiTrigger : TriggerBase
+{
+    public string? ExternalReference { get; set; }
+    public string? ApiTriggerType { get; set; }
+    public bool? IsConnected { get; set; }
+    public string? TriggerActionId { get; set; }
+    public string? EventId { get; set; }
+    public string? ConnectorKey { get; set; }
+    public string? ConnectionId { get; set; }
+    public Int64? ConnectionFolderId { get; set; }
+    public string? Operation { get; set; }
+    public string? ObjectName { get; set; }
+    public string? FilterContext { get; set; }
+    public string? FilterExpression { get; set; }
+    public bool? IsDeleted { get; set; }
+
+    public ApiTriggerProperties? Properties { get; set; }
+}
+
+public class ApiTriggerProperties
+{
+    public string? EventTriggerId { get; set; }
+    public string? EventTriggerEventId { get; set; }
+    public string? EventTriggerConnectorKey { get; set; }
+    public string? EventTriggerConnectionId { get; set; }
+    public long? EventTriggerConnectionFolderId { get; set; }
+    public string? EventTriggerOperation { get; set; }
+    public string? EventTriggerObjectName { get; set; }
+    public string? EventTriggerFilterExpression { get; set; }
 }
 
 public class EnableHttpTrigger

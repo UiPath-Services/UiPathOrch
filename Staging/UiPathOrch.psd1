@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.14.17'
+ModuleVersion = '0.9.14.18'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -230,6 +230,10 @@ CmdletsToExport = @(
 'Copy-OrchApiTrigger',
 'Enable-OrchApiTrigger',
 'Disable-OrchApiTrigger',
+
+'Get-OrchEventTrigger',
+'Enable-OrchEventTrigger',
+'Disable-OrchEventTrigger',
 
 'Get-OrchQueue',
 'New-OrchQueue',

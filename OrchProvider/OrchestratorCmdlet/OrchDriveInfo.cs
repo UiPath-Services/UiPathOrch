@@ -2064,6 +2064,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     public readonly ListCachePerFolder<TaskCatalog> ActionCatalogs;
     public readonly ListCachePerFolder<HttpTrigger> ApiTriggers;
+    public readonly ListCachePerFolder<ApiTrigger> EventTriggers;
     public readonly ListCachePerFolder<Asset> Assets;
     public readonly ListCachePerFolder<Bucket> Buckets;
     public readonly ListCachePerFolder<Entities.Environment> Environments;
@@ -2291,6 +2292,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         FolderFeedId                   = new(this, OrchAPISession.GetFolderFeedId, null, 12);
         ActionCatalogs                 = new(this, OrchAPISession.GetTaskCatalogs,       (e, folderPath) => e.Path = folderPath, 16); // 16 でエラーが返らないことを確認済み
         ApiTriggers                    = new(this, OrchAPISession.GetHttpTriggers,       (e, folderPath) => e.Path = folderPath, 18); // 17 で web interface にないことを確認済み (17 で実行してもエラーは返らないようだが、)
+        EventTriggers                  = new(this, OrchAPISession.GetEventTriggers,      (e, folderPath) => e.Path = folderPath, 18);
         Buckets                        = new(this, OrchAPISession.GetBuckets,            (e, folderPath) => e.Path = folderPath);
         Environments                   = new(this, OrchAPISession.GetEnvironments,       (e, folderPath) => e.Path = folderPath);
         FolderUsersWithNoInherited     = new(this, fid => OrchAPISession.GetUsersForFolder(fid, false), (e, folderPath) => e.Path = folderPath);
