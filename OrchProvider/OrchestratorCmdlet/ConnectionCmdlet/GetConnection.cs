@@ -1,4 +1,5 @@
 ﻿using System.Management.Automation;
+using UiPath.PowerShell.Core;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -24,7 +25,7 @@ class GetConnectionCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        //var drivesFolders = OrchDriveInfo.EnumFolders(Path, false, 0, true);
+        //var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
 
         //foreach (var (drive, folder) in drivesFolders)
         //{

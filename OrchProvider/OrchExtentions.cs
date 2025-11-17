@@ -59,6 +59,7 @@ internal static class FolderExtensions
     public static string GetPSPath(this PersonalWorkspace entity)      => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
     public static string GetPSPath(this ProcessSchedule entity)        => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
     public static string GetPSPath(this HttpTrigger entity)            => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this ApiTrigger entity)             => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
     public static string GetPSPath(this Session entity)                => Path.Combine(entity?.Path ?? "", entity?.Robot?.Name ?? "");
     public static string GetPSPath(this TestSet entity)                => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
     public static string GetPSPath(this TestCaseDefinition entity)     => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");

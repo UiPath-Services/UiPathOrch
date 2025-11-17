@@ -14,7 +14,6 @@ public class NewBucketCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NewBucketNameCompleter))]
-    [SupportsWildcards]
     public string[]? Name { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -87,6 +86,7 @@ public class NewBucketCommand : OrchestratorPSCmdlet
                 string target = System.IO.Path.Combine(folder.GetPSPath(), name);
                 if (ShouldProcess(target, "New Bucket"))
                 {
+                    cancelHandler.Token.ThrowIfCancellationRequested();
                     try
                     {
                         Bucket postingBucket = new()

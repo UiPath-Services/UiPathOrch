@@ -2205,6 +2205,59 @@
     </View>
 
     <View>
+      <Name>EventTrigger</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.ApiTrigger</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Id</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Name</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Release.Name</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>ConnectorKey</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Enabled</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>Id</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Name</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  $_.Release.Name
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>ConnectorKey</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Enabled</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
       <Name>Robot</Name>
       <ViewSelectedBy>
         <TypeName>UiPath.PowerShell.Entities.Robot</TypeName>
@@ -2757,7 +2810,7 @@
       </TableControl>
     </View>
 
-<!-- これはあえて定義しない。既定の ListView の方が漏れなく項目を出せるので良い気がする。
+<!-- ????????????????????????????????????????????? ListView ??????????????????????????????????????????????????????????????????
     <View>
       <Name>License</Name>
       <ViewSelectedBy>
