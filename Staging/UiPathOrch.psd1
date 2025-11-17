@@ -397,7 +397,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Added Get-PmAuthenticationSetting cmdlet to retrieve organization authentication settings.
+        ReleaseNotes = '- Added Get-OrchEventTrigger, Enable-OrchEventTrigger, and Disable-OrchEventTrigger cmdlets to manage event triggers.
 '
 
         # Prerelease string of this module
