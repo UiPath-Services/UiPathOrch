@@ -20,7 +20,7 @@ public class GetTmServerInfoCommand : OrchestratorPSCmdlet
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,
             drive => drive,
-            drive => drive.GetTmServerInfo());
+            drive => drive.TmServerInformation.Get());
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)

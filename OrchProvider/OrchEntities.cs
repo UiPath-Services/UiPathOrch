@@ -4467,6 +4467,43 @@ public class TmTestSet
     public string? updatedBy { get; set; }
 }
 
+// UiPath.TestManagementHub.TestManagement.Abstractions.DTOs.TestExecutionDto
+public class TmTestExecution
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+    public string? projectId { get; set; }
+    public string? testSetId { get; set; }
+    public string? testSetObjKey { get; set; }
+    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? executionStart { get; set; }
+    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? executionFinished { get; set; }
+    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? reportingDate { get; set; }
+    public string? source { get; set; }
+    public string? sourceDetails { get; set; }
+    public bool? enableCoverage { get; set; }
+    public string? status { get; set; }
+    public bool? hasTestsFromMultipleAutomationProjects { get; set; }
+    public string? executionType { get; set; }
+    public int? runId { get; set; }
+    public bool? enforceExecutionOrder { get; set; }
+    public int? duration { get; set; }
+    public string? testSetScheduleId { get; set; }
+    public string? remoteControlAccess { get; set; }
+    public string? autopilotForRobotsSettings { get; set; }
+    public string? id { get; set; }
+    public string? name { get; set; }
+    public string? description { get; set; }
+    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? created { get; set; }
+    public string? createdBy { get; set; }
+    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? updated { get; set; }
+    public string? updatedBy { get; set; }
+}
+
 // UiPath.TestManagementHub.TestManagement.Abstractions.DTOs.DefectDto
 public class TmDefect
 {
@@ -4599,7 +4636,6 @@ public class TmAISolutionsConfiguration
 {
     public string[]? aISolutionsSupportedDocumentTypes { get; set; }
 }
-
 
 // UiPath.TestManagementHub.Configuration.Abstractions.DTOs.ConfigDto
 public class TmConfig

@@ -25,7 +25,7 @@ public class GetTmConfigurationCommand : OrchestratorPSCmdlet
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,
             drive => drive,
-            drive => drive.GetTmConfiguration());
+            drive => drive.TmConfiguration.Get());
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)

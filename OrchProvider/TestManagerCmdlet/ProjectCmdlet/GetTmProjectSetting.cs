@@ -27,7 +27,7 @@ public class GetTmProjectSettingCommand : OrchestratorPSCmdlet
         using var results = OrchThreadPool.RunForEach(drivesProjects,
             dp => dp.project.GetPSPath(),
             dp => dp.project,
-            dp => dp.drive.GetTmProjectSettings(dp.project));
+            dp => dp.drive.TmProjectSetting.Get(dp.project));
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)

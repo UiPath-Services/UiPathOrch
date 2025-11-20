@@ -42,7 +42,7 @@ public class GetTmRequirementCommand : OrchestratorPSCmdlet
         using var results = OrchThreadPool.RunForEach(drivesProjects,
             dp => dp.project.GetPSPath(),
             dp => dp.project,
-            dp => dp.drive.GetTmRequirements(dp.project));
+            dp => dp.drive.TmRequirements.Get(dp.project));
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)

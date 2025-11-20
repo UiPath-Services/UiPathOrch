@@ -94,7 +94,7 @@ public class OrchTmProvider : NavigationCmdletProvider
             //var orchProvider = SessionState.Provider.GetOne("UiPathOrch");
             // 例外が出なければ、orchProvider is not null になっている
             var orchDrive = SessionState.Drive.Get(drive.Name.Substring(0, drive.Name.Length - 2)) as OrchDriveInfo;
-            tmDrive._parentDrive = orchDrive;
+            tmDrive.ParentDrive = orchDrive!;
         }
         catch { }
 
@@ -215,6 +215,7 @@ public class OrchTmProvider : NavigationCmdletProvider
                     postingProject.name = newName;
 
                     drive.OrchAPISession.PutTmProject(postingProject);
+                    //drive.TmProjects.ClearCache();
                     drive._dicTmProjects = null;
                     //drive.ClearFolderCache(folder);
                 }
@@ -222,6 +223,7 @@ public class OrchTmProvider : NavigationCmdletProvider
                 {
                     var errorRecord = new ErrorRecord(new OrchException(path, ex), "RenameTmProjectError", ErrorCategory.InvalidOperation, project);
                     WriteError(errorRecord);
+                    //drive.TmProjects.ClearCache();
                     drive._dicTmProjects = null;
                 }
             }
@@ -247,6 +249,7 @@ public class OrchTmProvider : NavigationCmdletProvider
                 {
                     drive.OrchAPISession.RemoveTmProject(project.id!);
                     drive._dicTmProjects = null;
+                    //drive.TmProjects.ClearCache();
                     //drive.ClearFolderCache(folder);
                 }
                 catch (Exception ex)
@@ -254,6 +257,7 @@ public class OrchTmProvider : NavigationCmdletProvider
                     var errorRecord = new ErrorRecord(new OrchException(path, ex), "RemoveTmProjectError", ErrorCategory.InvalidOperation, project);
                     WriteError(errorRecord);
                     drive._dicTmProjects = null;
+                    //drive.TmProjects.ClearCache();
                 }
             }
         }

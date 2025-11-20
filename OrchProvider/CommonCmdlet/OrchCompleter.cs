@@ -2183,7 +2183,7 @@ internal class TmRequirementNameCompleter<TPositional> : OrchArgumentCompleter w
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults3.GroupBy(drivesFolders, dp => dp.drive.GetTmRequirements(dp.project));
+        var results = ParallelResults3.GroupBy(drivesFolders, dp => dp.drive.TmRequirements.Get(dp.project));
 
         foreach (var result in results)
         {
@@ -2219,7 +2219,7 @@ internal class TmTestSetNameCompleter<TPositional> : OrchArgumentCompleter where
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults3.GroupBy(drivesFolders, dp => dp.drive.GetTmTestSets(dp.project));
+        var results = ParallelResults3.GroupBy(drivesFolders, dp => dp.drive.TmTestSets.Get(dp.project));
 
         foreach (var result in results)
         {
@@ -2255,7 +2255,7 @@ internal class TmTestCaseNameCompleter<TPositional> : OrchArgumentCompleter wher
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults3.GroupBy(drivesFolders, dp => dp.drive.GetTmTestCases(dp.project));
+        var results = ParallelResults3.GroupBy(drivesFolders, dp => dp.drive.TmTestCases.Get(dp.project));
 
         foreach (var result in results)
         {
@@ -2266,6 +2266,42 @@ internal class TmTestCaseNameCompleter<TPositional> : OrchArgumentCompleter wher
             {
                 string tooltip = testCase.GetPSPath();
                 yield return new CompletionResult(PathTools.EscapePSText(testCase.name), testCase.name, CompletionResultType.Text, tooltip);
+            }
+        }
+    }
+}
+
+internal class TmTestExecutionNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+{
+    public override IEnumerable<CompletionResult> CompleteArgument(
+        string commandName,
+        string parameterName,
+        string wordToComplete,
+        CommandAst commandAst,
+        IDictionary fakeBoundParameters)
+    {
+        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+
+        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+        var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+        var drivesFolders = SessionState.EnumTmFolders(paramPath, recurse);
+
+        // パラメータで選択済みの Name は、候補から除外する
+        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+        var wp = CreateWPFromWordToComplete(wordToComplete);
+
+        var results = ParallelResults3.GroupBy(drivesFolders, dp => dp.drive.TmTestExecutions.Get(dp.project));
+
+        foreach (var result in results)
+        {
+            foreach (var testExecution in result
+                .Where(e => wp.IsMatch(e.name))
+                .ExcludeByWildcards(e => e?.name, wpName)
+                .OrderBy(e => e.name))
+            {
+                string tooltip = testExecution.GetPSPath();
+                yield return new CompletionResult(PathTools.EscapePSText(testExecution.name), testExecution.name, CompletionResultType.Text, tooltip);
             }
         }
     }

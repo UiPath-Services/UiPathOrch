@@ -42,7 +42,7 @@ public class GetTmTestSetCommand : OrchestratorPSCmdlet
         using var results = OrchThreadPool.RunForEach(drivesProjects,
             dp => dp.project.GetPSPath(),
             dp => dp.project,
-            dp => dp.drive.GetTmTestSets(dp.project));
+            dp => dp.drive.TmTestSets.Get(dp.project));
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)

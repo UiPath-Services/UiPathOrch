@@ -93,10 +93,11 @@ internal static class FolderExtensions
     public static string GetPSPath(this DuDocumentType entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
     public static string GetPSPath(this DuClassifier entity)   => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
 
-    public static string GetPSPath(this TmProject entity)     => Path.Combine(entity?.Path ?? "", entity?.projectPrefix ?? "");
-    public static string GetPSPath(this TmRequirement entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-    public static string GetPSPath(this TmTestCase entity)    => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-    public static string GetPSPath(this TmTestSet entity)     => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    public static string GetPSPath(this TmProject entity)       => Path.Combine(entity?.Path ?? "", entity?.projectPrefix ?? "");
+    public static string GetPSPath(this TmRequirement entity)   => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    public static string GetPSPath(this TmTestCase entity)      => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    public static string GetPSPath(this TmTestSet entity)       => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    public static string GetPSPath(this TmTestExecution entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
 
     public static string TipHelp(this PmGroupMember? entity)         => $"{entity?.name}{(string.IsNullOrEmpty(entity?.displayName) ? "" : $" ({entity.displayName})")}";
     public static string TipHelp(this PmDirectoryEntityInfo? entity) => $"{entity?.GetPSPath()}{(string.IsNullOrEmpty(entity?.displayName) ? "" : $" ({entity.displayName})")}";
