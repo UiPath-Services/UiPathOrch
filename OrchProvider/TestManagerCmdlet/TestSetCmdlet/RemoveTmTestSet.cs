@@ -31,7 +31,7 @@ public class RemoveTmTestSetCommand : OrchestratorPSCmdlet
             var (drive, project) = driveProject;
             try
             {
-                var entity = drive.GetTmTestSets(project);
+                var entity = drive.TmTestSets.Get(project);
 
                 foreach (var testSet in entity
                     .FilterByWildcards(e => e?.name, wpName)
@@ -44,8 +44,7 @@ public class RemoveTmTestSetCommand : OrchestratorPSCmdlet
                         try
                         {
                             drive.OrchAPISession.RemoveTmTestSet(project.id!, testSet.id!);
-                            drive._dicTmTestSets?.TryRemove(project.id!, out var _);
-                            drive._dicTmTestSetsExceptions.ClearCache(project.id);
+                            drive.TmTestSets.ClearCache();
                         }
                         catch (Exception ex)
                         {

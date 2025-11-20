@@ -27,7 +27,7 @@ public class GetTmProjectPermissionCommand : OrchestratorPSCmdlet
         using var results = OrchThreadPool.RunForEach(drivesProjects,
             dp => dp.project.GetPSPath(),
             dp => dp.project,
-            dp => dp.drive.GetTmProjectPermission(dp.project));
+            dp => dp.drive.TmProjectPermissions.Get(dp.project));
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)

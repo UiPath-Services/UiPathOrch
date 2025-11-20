@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.14.18'
+ModuleVersion = '0.9.14.19'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -356,6 +356,8 @@ CmdletsToExport = @(
 'Get-TmTestSet',
 'Remove-TmTestSet',
 
+'Get-TmTestExecution',
+
 'Get-OrchHelp',
 'Clear-OrchCache',
 'Edit-OrchConfig',
@@ -397,7 +399,11 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Added Get-OrchEventTrigger, Enable-OrchEventTrigger, and Disable-OrchEventTrigger cmdlets to manage event triggers.
+        ReleaseNotes = '- Added Get-TmTestExecution cmdlet. Note that this cmdlet is only available on the UiPathOrchTm drive. The UiPathOrchTm drive becomes automatically available when you add the TM.* scope. You can verify this with the Get-PSDrive cmdlet.
+
+- Adjusted the default view for Get-TmRequirement to better align with the Automation Cloud display.
+
+- Changed the default view for Get-TmProjectPermission from list view to table view.
 '
 
         # Prerelease string of this module

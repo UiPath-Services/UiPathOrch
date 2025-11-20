@@ -33,7 +33,7 @@ public class RemoveTmRequirementCommand : OrchestratorPSCmdlet
 
             try
             {
-                var requirements = drive.GetTmRequirements(project);
+                var requirements = drive.TmRequirements.Get(project);
 
                 foreach (var requirement in requirements
                     .FilterByWildcards(e => e?.name, wpName)
@@ -47,8 +47,7 @@ public class RemoveTmRequirementCommand : OrchestratorPSCmdlet
                         try
                         {
                             drive.OrchAPISession.RemoveTmRequirements(project.id!, requirement.id!);
-                            drive._dicTmRequirements?.TryRemove(project.id!, out var _);
-                            drive._dicTmRequirementExceptions.ClearCache(project.id);
+                            drive.TmRequirements.ClearCache();
                         }
                         catch (Exception ex)
                         {

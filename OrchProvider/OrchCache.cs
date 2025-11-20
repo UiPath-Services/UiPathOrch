@@ -877,3 +877,298 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
         _exceptions.ClearCache();
     }
 }
+
+#region TestManager 用キャッシュクラス
+
+// fetchFunc: 引数なしで、Enumerable<T> を返す Func
+// 今のところ、TmProject のみで使用している
+// なんだかすごく遅くなってしまったので一旦ボツ。たぶんロックをもう少し広くかけないと、API を何度も呼び出してしまうのではないか。
+//public class TestListCachePerTenant0<T> : ITenantCacheClearable
+//{
+//    private readonly OrchTmDriveInfo _drive;
+//    private List<T>? _cache = null;
+//    private readonly ExceptionCachePerTenant _exception = new();
+//    private readonly Func<IEnumerable<T>?> _fetchFunc;
+//    private readonly Action<T>? _initializer;
+//    private readonly int? _supportedApiVersionFrom;
+
+//    public TestListCachePerTenant0(
+//        OrchTmDriveInfo drive,
+//        Func<IEnumerable<T>?> fetchFunc,
+//        Action<T>? initializer = null,
+//        int? supportedApiVersionFrom = null)
+//    {
+//        _drive = drive;
+//        _fetchFunc = fetchFunc;
+//        _drive._allTenantCache.Add(this);
+//        _initializer = initializer;
+//        _supportedApiVersionFrom = supportedApiVersionFrom;
+//    }
+
+//    public List<T> Get()
+//    {
+//        if (_drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom)
+//        {
+//            return [];
+//        }
+
+//        _exception.ThrowCachedExceptionIfAny();
+
+//        if (_cache is null)
+//        {
+//            lock (this)
+//            {
+//                _cache ??= [];
+//            }
+//        }
+
+//        if (_cache is not null)
+//        {
+//            try
+//            {
+//                _cache = _fetchFunc()?.ToList();
+
+//                if (_initializer is not null && _cache is not null)
+//                {
+//                    foreach (var entity in _cache)
+//                    {
+//                        _initializer(entity);
+//                    }
+//                }
+//            }
+//            catch (HttpResponseException ex)
+//            {
+//                _exception.CacheException(ex);
+//                throw;
+//            }
+//        }
+//        else
+//        {
+//            _cache = [];
+//        }
+
+//        return _cache!;
+//    }
+
+//    public void ClearCache()
+//    {
+//        _cache = null;
+//        _exception.ClearCache();
+//    }
+//}
+
+// fetchFunc: 引数に TmProject を取り、Enumerable<T> を返す Func
+public class TestListCachePerTenant1<T> : ITenantCacheClearable
+{
+    private readonly OrchTmDriveInfo _drive;
+    private ConcurrentDictionary<string, List<T>>? _cache = null;
+    private readonly ExceptionsCachePer<string> _exceptions = new();
+    private readonly Func<TmProject, IEnumerable<T>> _fetchFunc;
+    private readonly Action<T, TmProject>? _initializer;
+    private readonly int? _supportedApiVersionFrom;
+
+    public TestListCachePerTenant1(
+        OrchTmDriveInfo drive,
+        Func<TmProject, IEnumerable<T>> fetchFunc,
+        Action<T, TmProject>? initializer = null,
+        int? supportedApiVersionFrom = null)
+    {
+        _drive = drive;
+        _fetchFunc = fetchFunc;
+        _drive._allTenantCache.Add(this);
+        _initializer = initializer;
+        _supportedApiVersionFrom = supportedApiVersionFrom;
+    }
+
+    public List<T> Get(TmProject project)
+    {
+        if (_drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom)
+        {
+            return [];
+        }
+
+        _exceptions.ThrowCachedExceptionIfAny(project.id!);
+
+        if (_cache is null)
+        {
+            lock (this)
+            {
+                _cache ??= [];
+            }
+        }
+
+        if (!_cache.TryGetValue(project.id!, out var cachePerFolder))
+        {
+            try
+            {
+                cachePerFolder = _fetchFunc(project).ToList();
+                _cache[project.id!] = cachePerFolder;
+
+                if (_initializer is not null)
+                {
+                    string projectPath = project.GetPSPath();
+                    foreach (var entity in cachePerFolder)
+                    {
+                        _initializer(entity, project);
+                    }
+                }
+            }
+            catch (HttpResponseException ex)
+            {
+                _exceptions.CacheException(project.id ?? "", ex);
+                throw;
+            }
+        }
+        return cachePerFolder;
+    }
+
+    public void ClearCache(string? projectId)
+    {
+        if (projectId is null) return;
+        _cache?.TryRemove(projectId, out _);
+        _exceptions.ClearCache(projectId);
+    }
+
+    public void ClearCache()
+    {
+        _cache = null;
+        _exceptions.ClearCache();
+    }
+}
+
+// getFunc: 引数なしで、T を返す Func
+public class TestSingleCachePerTenant0<T> : ITenantCacheClearable
+{
+    private readonly OrchTmDriveInfo _drive;
+    private T? _cache = default;
+    private readonly ExceptionCachePerTenant _exception = new();
+    private readonly Func<T?> _getFunc;
+    private readonly Action<T>? _initializer;
+    private readonly int? _supportedApiVersionFrom;
+
+    public TestSingleCachePerTenant0(
+        OrchTmDriveInfo drive,
+        Func<T?> getFunc,
+        Action<T>? initializer = null,
+        int? supportedApiVersionFrom = null)
+    {
+        _drive = drive;
+        _getFunc = getFunc;
+        _drive._allTenantCache.Add(this);
+        _initializer = initializer;
+        _supportedApiVersionFrom = supportedApiVersionFrom;
+    }
+
+    public T? Get()
+    {
+        if (_drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom)
+        {
+            return default;
+        }
+
+        _exception.ThrowCachedExceptionIfAny();
+
+        if (_cache is null)
+        {
+            try
+            {
+                _cache = _getFunc();
+
+                if (_initializer is not null && _cache is not null)
+                {
+                    _initializer(_cache);
+                }
+            }
+            catch (HttpResponseException ex)
+            {
+                _exception.CacheException(ex);
+                throw;
+            }
+        }
+        return _cache;
+    }
+
+    public void ClearCache()
+    {
+        _cache = default;
+        _exception.ClearCache();
+    }
+}
+
+// getFunc: 引数に TmProject を取り、T を返す Func
+public class TestSingleCachePerTenant1<T> : ITenantCacheClearable
+{
+    private readonly OrchTmDriveInfo _drive;
+    private ConcurrentDictionary<string, T?>? _cache = null;
+    private readonly ExceptionsCachePer<string> _exceptions = new();
+    private readonly Func<TmProject, T?> _getFunc;
+    private readonly Action<T, TmProject>? _initializer;
+    private readonly int? _supportedApiVersionFrom;
+
+    public TestSingleCachePerTenant1(
+        OrchTmDriveInfo drive,
+        Func<TmProject, T?> getFunc,
+        Action<T, TmProject>? initializer = null,
+        int? supportedApiVersionFrom = null)
+    {
+        _drive = drive;
+        _getFunc = getFunc;
+        _drive._allTenantCache.Add(this);
+        _initializer = initializer;
+        _supportedApiVersionFrom = supportedApiVersionFrom;
+    }
+
+    public T? Get(TmProject project)
+    {
+        if (_drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom)
+        {
+            return default;
+        }
+
+        _exceptions.ThrowCachedExceptionIfAny(project.id!);
+
+        if (_cache is null)
+        {
+            lock (this)
+            {
+                _cache ??= [];
+            }
+        }
+
+        if (!_cache.TryGetValue(project.id!, out var cachePerProject))
+        {
+            try
+            {
+                cachePerProject = _getFunc(project);
+                _cache[project.id!] = cachePerProject;
+
+                if (_initializer is not null && cachePerProject is not null)
+                {
+                    string projectPath = project.GetPSPath();
+                    _initializer(cachePerProject, project);
+                }
+            }
+            catch (HttpResponseException ex)
+            {
+                _exceptions.CacheException(project.id ?? "", ex);
+                throw;
+            }
+        }
+        return cachePerProject;
+    }
+
+    public void ClearCache(string? projectId)
+    {
+        if (projectId is null) return;
+        _cache?.TryRemove(projectId, out _);
+        _exceptions.ClearCache(projectId);
+    }
+
+    public void ClearCache()
+    {
+        _cache = null;
+        _exceptions.ClearCache();
+    }
+}
+
+#endregion

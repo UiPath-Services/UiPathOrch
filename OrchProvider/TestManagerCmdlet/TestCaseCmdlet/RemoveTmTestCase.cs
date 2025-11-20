@@ -33,7 +33,7 @@ public class RemoveTmTestCaseCommand : OrchestratorPSCmdlet
 
             try
             {
-                var entities = drive.GetTmTestCases(project);
+                var entities = drive.TmTestCases.Get(project);
 
                 foreach (var testCase in entities
                     .FilterByWildcards(e => e?.name, wpName)
@@ -46,8 +46,7 @@ public class RemoveTmTestCaseCommand : OrchestratorPSCmdlet
                         try
                         {
                             drive.OrchAPISession.RemoveTmTestCase(project.id!, testCase.id!);
-                            drive._dicTmTestCases = null;
-                            drive._dicTmTestCasesExceptions.ClearCache(project.id);
+                            drive.TmTestCases.ClearCache();
                         }
                         catch (Exception ex)
                         {

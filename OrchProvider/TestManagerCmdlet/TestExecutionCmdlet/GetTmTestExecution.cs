@@ -5,12 +5,12 @@ using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Get, "TmTestCase")]
-[OutputType(typeof(Entities.TmTestCase))]
-public class GetTmTestCaseCommand : OrchestratorPSCmdlet
+[Cmdlet(VerbsCommon.Get, "TmTestExecution")]
+[OutputType(typeof(Entities.TmTestExecution))]
+public class GetTmTestExecutionCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(TmTestCaseNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TmTestExecutionNameCompleter<TPositional>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
@@ -26,12 +26,12 @@ public class GetTmTestCaseCommand : OrchestratorPSCmdlet
         var drivesProjects = SessionState.EnumTmFolders(Path, Recurse.IsPresent);
         var wpName = Name.ConvertToWildcardPatternList();
 
-        //foreach (var driveProject in drivesProjects)
+        //foreach (var (drive, project) in drivesProjects)
         //{
-        //    var (drive, project) = driveProject;
         //    try
         //    {
-        //        WriteObject(drive.GetTmTestCases(project), true);
+        //        var e = drive.TmTestExecutions.Get(project);
+        //        WriteObject(e, true);
         //    }
         //    catch (Exception ex)
         //    {
@@ -42,7 +42,7 @@ public class GetTmTestCaseCommand : OrchestratorPSCmdlet
         using var results = OrchThreadPool.RunForEach(drivesProjects,
             dp => dp.project.GetPSPath(),
             dp => dp.project,
-            dp => dp.drive.TmTestCases.Get(dp.project));
+            dp => dp.drive.TmTestExecutions.Get(dp.project));
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)
@@ -54,12 +54,12 @@ public class GetTmTestCaseCommand : OrchestratorPSCmdlet
 
                 WriteObject(entity
                     .FilterByWildcards(e => e?.name, wpName)
-                    .OrderBy(e => e.objKey!, ObjKeyComparer.Instance),
+                    .OrderBy(e => e.name!),
                     true);
             }
             catch (OrchException ex)
             {
-                WriteError(new ErrorRecord(ex, "GetTmTestCaseError", ErrorCategory.InvalidOperation, ex.Target));
+                WriteError(new ErrorRecord(ex, "GetTmTestExecutionError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }

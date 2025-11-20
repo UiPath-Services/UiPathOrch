@@ -2810,7 +2810,7 @@
       </TableControl>
     </View>
 
-<!-- ????????????????????????????????????????????? ListView ??????????????????????????????????????????????????????????????????
+<!--
     <View>
       <Name>License</Name>
       <ViewSelectedBy>
@@ -4923,10 +4923,10 @@
             <Label>name</Label>
           </TableColumnHeader>
           <TableColumnHeader>
-            <Label>updated</Label>
+            <Label>description</Label>
           </TableColumnHeader>
           <TableColumnHeader>
-            <Label>description</Label>
+            <Label>updated</Label>
           </TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
@@ -4940,11 +4940,19 @@
               </TableColumnItem>
               <TableColumnItem>
                 <ScriptBlock>
-                  $_.updated.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
+                  $t = ([string]$_.description) -replace "(`r`n)|`r|`n", " "
+                  if ($t.Length -gt 20) {
+                    $t.Substring(0, 20) + '…'
+                  }
+                  else {
+                    $t
+                  }
                 </ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>description</PropertyName>
+                <ScriptBlock>
+                  $_.updated.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
+                </ScriptBlock>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -5004,6 +5012,61 @@
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>description</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>TmTestExecution</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.TmTestExecution</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Project</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>name</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>executionType</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>executionStart</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>executionFinished</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>status</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>name</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>executionType</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  $_.executionStart.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  $_.executionFinished.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>status</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -5149,9 +5212,6 @@
           <ListEntry>
             <ListItems>
               <ListItem>
-                <PropertyName>projectPrefix</PropertyName>
-              </ListItem>
-              <ListItem>
                 <PropertyName>id</PropertyName>
               </ListItem>
               <ListItem>
@@ -5205,39 +5265,54 @@
         <Label>Project</Label>
         <PropertyName>PathProject</PropertyName>
       </GroupBy>
-      <ListControl>
-        <ListEntries>
-          <ListEntry>
-            <ListItems>
-              <ListItem>
-                <PropertyName>projectId</PropertyName>
-              </ListItem>
-              <ListItem>
-                <PropertyName>isOwner</PropertyName>
-              </ListItem>
-              <ListItem>
-                <PropertyName>id</PropertyName>
-              </ListItem>
-              <ListItem>
-                <PropertyName>user</PropertyName>
-              </ListItem>
-              <ListItem>
-                <Label>lastUpdated</Label>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>user.identityName</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>user.email</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>user.objectType</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>roles</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>lastUpdated</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <ScriptBlock>
+                  $_.user.identityName
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  $_.user.email
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  $_.user.objectType
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>roles</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
                 <ScriptBlock>
                   $_.lastUpdated.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
                 </ScriptBlock>
-              </ListItem>
-              <ListItem>
-                <PropertyName>lastUpdatedBy</PropertyName>
-              </ListItem>
-              <ListItem>
-                <PropertyName>roles</PropertyName>
-              </ListItem>
-            </ListItems>
-          </ListEntry>
-        </ListEntries>
-      </ListControl>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
     </View>
-
   </ViewDefinitions>
 </Configuration>

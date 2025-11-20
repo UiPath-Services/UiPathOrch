@@ -429,7 +429,7 @@ public partial class OrchProvider : NavigationCmdletProvider
                 // var tmProvider = SessionState.Provider.GetOne("UiPathOrchTm");
                 // 例外が出なければ、tmProvider is not null になっている
                 var tmDrive = SessionState.Drive.Get(drive.Name + "Tm") as OrchTmDriveInfo;
-                tmDrive!._parentDrive = (OrchDriveInfo)drive;
+                tmDrive!.ParentDrive = (OrchDriveInfo)drive;
             }
             catch { } // ここでうまくいかない場合には、OrchTmDriveInfo.NewDrive が処理するはず
             #endregion

@@ -3610,6 +3610,11 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Delete, $"/testmanager_/api/v2/{projectId}/testsets/{testSetId}");
     }
 
+    public IEnumerable<TmTestExecution> GetTmTestExecutions(string projectId)
+    {
+        return GetEnumerableTm<TmTestExecution>($"/testmanager_/api/v2/{projectId}/testexecutions");
+    }
+
     public IEnumerable<TmRole>? GetTmRoles()
     {
         return GetEnumerableTm3<TmRole>("/testmanager_/api/v2/roles");
@@ -3654,8 +3659,3 @@ public partial class OrchAPISession : IDisposable
 }
 
 #pragma warning restore IDE1006 // 命名スタイル
-
-
-
-
-
