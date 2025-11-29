@@ -42,33 +42,15 @@ public class OpenJobCommand : OrchestratorPSCmdlet
 
             foreach (var (drive, folder) in drivesFolders)
             {
-                if (drive._dicJobs is null)
-                {
-                    continue;
-                }
-
-                if (!drive._dicJobs.TryGetValue(folder.Id ?? 0, out var dicJobs))
-                {
-                    continue;
-                }
+                var dicJobs = drive.Jobs.GetCache(folder);
+                if (dicJobs is null) continue;
 
                 foreach (var job in dicJobs.Values.ExcludeByClassValues(j => (j?.Id ?? 0).ToString(), paramId))
                 {
                     if (!wp.IsMatch((job.Id ?? 0).ToString()))
                         continue;
 
-                    string tiphelp = $"{job.Id} C{job.CreationTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")}";
-                    if (job.StartTime is not null)
-                        tiphelp += $"  S{job.StartTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss").ToString()}";
-                    else
-                        tiphelp += $"                      ";
-                    if (job.EndTime is not null)
-                        tiphelp += $"  E{job.EndTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss").ToString()}";
-                    else
-                        tiphelp += $"                      ";
-                    tiphelp += $" {job.State,11} {job.ReleaseName}";
-
-                    yield return new CompletionResult(job.Id.ToString(), job.Id.ToString(), CompletionResultType.ParameterValue, tiphelp);
+                    yield return new CompletionResult(job.Id.ToString(), job.Id.ToString(), CompletionResultType.ParameterValue, job.FormatTooltip());
                 }
             }
         }
@@ -80,19 +62,12 @@ public class OpenJobCommand : OrchestratorPSCmdlet
 
         foreach (var (drive, folder) in drivesFolders)
         {
-            ConcurrentDictionary<Int64, Job> dicJobs = null;
-            if (drive._dicJobs is not null)
-            {
-                drive._dicJobs.TryGetValue(folder.Id ?? 0, out dicJobs);
-            }
+            var dicJobs = drive.Jobs.GetCache(folder);
 
             foreach (var id in Id!)
             {
-                Job job = null;
-                if (dicJobs is not null)
-                {
-                    dicJobs.TryGetValue(id, out job);
-                }
+                Job? job = null;
+                dicJobs?.TryGetValue(id, out job);
                 if (job is null || string.IsNullOrEmpty(job.Key))
                 {
                     try

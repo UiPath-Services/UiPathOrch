@@ -2,7 +2,6 @@
 using System.Collections.ObjectModel;
 using System.Management.Automation;
 using System.Runtime.InteropServices;
-using System.Text.Json;
 using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Entities;
@@ -164,9 +163,6 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicCurrentUser = null;
         _dicCurrentUser_Exception?.ClearCache();
 
-
-        _dicJobs = null;
-
         _dicJobsHavingExecutionMedia = null;
 
         _dicLibraryVersions = null; // 例外が発生するとしたら、_dicLibraries 取得時に発生しているはずだから、まあいいか。。
@@ -259,7 +255,6 @@ public partial class OrchDriveInfo : PSDriveInfo
         }
 
         //_dicAssetLinks = null; // TODO: もっとかしこく必要な部分だけクリアしたいが、、面倒くさい
-        _dicJobs?.TryRemove(folderId, out _);
         _dicJobsHavingExecutionMedia?.TryRemove(folderId, out _);
         _dicTriggers?.TryRemove(folderId, out _);
         _dicQueueLinks = null;
@@ -352,70 +347,28 @@ public partial class OrchDriveInfo : PSDriveInfo
         return true;
     }
 
-    // Job は、一度の OrchAPI.GetJobs() 呼び出しですべてを取得できないため
-    // 呼び出すたびに結果を追加する必要がある。そのため Dictionary<JobId, Job> を使う
-    // Key: <folderId, <JobId, Job>>
-    internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, Job>>? _dicJobs = null;
-    public ReadOnlyCollection<Job> GetJobs(Folder folder, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue, string? orderBy = null, bool orderAscending = false)
-    {
-        if (_dicJobs is null)
-        {
-            lock (this)
-            {
-                _dicJobs ??= new();
-            }
-        }
-        if (!_dicJobs.TryGetValue(folder.Id ?? 0, out var folderJobs))
-        {
-            folderJobs = [];
-            _dicJobs[folder.Id ?? 0] = folderJobs;
-        }
-
-        var jobs = OrchAPISession.GetJobs(folder.Id ?? 0, query, skip, first, orderBy, orderAscending).ToList();
-        string folderPath = folder.GetPSPath();
-        foreach (var job in jobs)
-        {
-            job.Path = folderPath;
-            if (job.Id.HasValue)
-            {
-                folderJobs![job.Id.Value] = job;
-            }
-        }
-        return jobs.AsReadOnly();
-    }
-
     public ReadOnlyCollection<Job> StartJobs(Folder folder, string processKey, string? runtimeType, int? jobsCount, string? inputArguments = null)
     {
-        _dicJobs ??= new();
-        if (!_dicJobs.TryGetValue(folder.Id ?? 0, out var folderJobs))
-        {
-            folderJobs = [];
-            _dicJobs[folder.Id ?? 0] = folderJobs;
-        }
-
         var jobs = OrchAPISession.StartJobs(folder.Id ?? 0, processKey, runtimeType, jobsCount, inputArguments).ToList();
         foreach (var job in jobs)
         {
             job.Path = folder.GetPSPath();
-            folderJobs![job.Id ?? 0] = job;
+            Jobs.AddToCache(folder, job);
         }
         return jobs.AsReadOnly();
     }
 
+    // このメソッドは IncrementalCachePerFolder クラスに統合しても良いのだけど、ちょっと複雑になるので、いったん保留。理由:
+    // 1. キャッシュクラスのコンストラクタがシンプルに保たれる
+    // 2. 単一取得の API は種類によって異なる可能性があるため、汎用化しにくい
+    // 3. AddToCache メソッドは汎用的で、他の用途にも使える
     public Job? GetJob(Folder folder, Int64 jobId)
     {
-        _dicJobs ??= new();
-
         var job = OrchAPISession.GetJob(folder.Id ?? 0, jobId);
         if (job is not null)
         {
             job.Path = folder.GetPSPath();
-            if (!_dicJobs.TryGetValue(folder.Id ?? 0, out var folderJobs))
-            {
-                folderJobs = [];
-                _dicJobs[folder.Id ?? 0] = folderJobs;
-            }
-            folderJobs[job.Id ?? 0] = job;
+            Jobs.AddToCache(folder, job);
         }
         return job;
     }
@@ -470,25 +423,19 @@ public partial class OrchDriveInfo : PSDriveInfo
         var result = OrchAPISession.GetExecutionMedia(folder.Id ?? 0, skip, first).ToList();
         _dicJobsHavingExecutionMedia[folder.Id ?? 0] = result;
 
-        #region  この JobId がキャッシュされていない場合に限り、_dicJobs に入れておく
-        _dicJobs ??= new();
-
-        if (!_dicJobs.TryGetValue(folder.Id ?? 0, out var jobs))
-        {
-            jobs = new();
-            _dicJobs[folder.Id ?? 0] = jobs;
-        }
-
+        #region  この JobId がキャッシュされていない場合に限り、Jobs キャッシュに入れておく
+        var jobs = Jobs.GetCache(folder);
         foreach (var media in result)
         {
-            if (media.JobId.HasValue && !jobs.ContainsKey(media.JobId.Value!))
+            if (media.JobId.HasValue && (jobs is null || !jobs.ContainsKey(media.JobId.Value!)))
             {
-                jobs[media.JobId.Value] = new Job
+                Jobs.AddToCache(folder, new Job
                 {
                     Id = media.JobId,
+                    Path = folder.GetPSPath(),
                     ReleaseName = media.ReleaseName,
                     HasMediaRecorded = true,
-                };
+                });
             }
         }
         #endregion
@@ -2096,6 +2043,9 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     //public readonly CachePerFolder<Release> Processes; // これはインデックスがついてた。。
 
+    // フォルダーエンティティのインクリメンタルキャッシュ
+    public readonly IncrementalCachePerFolder<Int64, Job> Jobs;
+
     // このコンストラクタを実行するタイミングでは、NameColonSeparator は利用できない
     public OrchDriveInfo(ProviderInfo provider, PSDrive drive) :
         base(drive.Name, provider, drive.Name + ':' + Path.DirectorySeparatorChar, drive.Description, null, drive.Root)
@@ -2401,6 +2351,15 @@ public partial class OrchDriveInfo : PSDriveInfo
                 queueItem.Path = folderPath;
                 queueItem.PathTestDataQueue = entityPath;
             }
+        );
+
+        // フォルダーエンティティのインクリメンタルキャッシュ
+        Jobs = new IncrementalCachePerFolder<Int64, Job>(
+            this,
+            //(folderId, query, skip, first, orderBy, orderAsc) => OrchAPISession.GetJobs(folderId, query, skip, first, orderBy, orderAsc),
+            OrchAPISession.GetJobs,
+            job => job.Id!.Value,
+            (job, folderPath) => job.Path = folderPath
         );
     }
 

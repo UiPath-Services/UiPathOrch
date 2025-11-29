@@ -193,7 +193,8 @@ public class GetLogCommand : OrchestratorPSCmdlet
 
             foreach (var (drive, folder) in drivesFolders)
             {
-                if (drive._dicJobs?.TryGetValue(folder.Id!.Value, out var jobs) ?? false)
+                var jobs = drive.Jobs.GetCache(folder);
+                if (jobs is not null)
                 {
                     foreach (var job in jobs.Values
                         .Where(l => wp.IsMatch(l.Key))

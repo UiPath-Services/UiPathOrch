@@ -125,17 +125,10 @@ public class GetJobCommand : OrchestratorPSCmdlet
 
             foreach (var (drive, folder) in drivesFolders)
             {
-                if (drive._dicJobs is null)
-                {
-                    continue;
-                }
+                var jobs = drive.Jobs.GetCache(folder);
+                if (jobs is null) continue;
 
-                if (!drive._dicJobs.TryGetValue(folder.Id ?? 0, out var dicJobs))
-                {
-                    continue;
-                }
-
-                foreach (var job in dicJobs.Values.ExcludeByClassValues(j => (j?.Id ?? 0).ToString(), paramId))
+                foreach (var job in jobs.Values.ExcludeByClassValues(j => (j?.Id ?? 0).ToString(), paramId))
                 {
                     if (!wp.IsMatch((job.Id ?? 0).ToString()))
                         continue;
@@ -416,13 +409,14 @@ public class GetJobCommand : OrchestratorPSCmdlet
 
             foreach (var (drive, folder) in drivesFolders)
             {
-                if (drive._dicJobs?.TryGetValue(folder?.Id ?? 0, out var jobs) ?? false)
+                var jobs = drive.Jobs.GetCache(folder);
+                if (jobs is not null)
                 {
                     switch (OrderBy)
                     {
                         case "CreationTime":
                             if (OrderAscending.IsPresent)
-                            WriteObject(jobs.Values.OrderBy(j => j.CreationTime), true);
+                                WriteObject(jobs.Values.OrderBy(j => j.CreationTime), true);
                             else
                                 WriteObject(jobs.Values.OrderByDescending(j => j.CreationTime), true);
                             break;
@@ -482,7 +476,8 @@ public class GetJobCommand : OrchestratorPSCmdlet
                 reporter.WriteProgress(++index, $"{folder.GetPSPath()}");
                 try
                 {
-                    var jobs = drive.GetJobs(folder, filter, skip, first, OrderBy, OrderAscending.IsPresent);
+                    //var jobs = drive.GetJobs(folder, filter, skip, first, OrderBy, OrderAscending.IsPresent);
+                    var jobs = drive.Jobs.Fetch(folder, filter, skip, first, OrderBy, OrderAscending.IsPresent);
                     WriteObject(jobs, true);
                 }
                 catch (Exception ex)
