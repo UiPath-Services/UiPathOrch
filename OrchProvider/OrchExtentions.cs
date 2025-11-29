@@ -72,6 +72,25 @@ internal static class FolderExtensions
     public static string GetPSPath(this BlobFile entity)               => Path.Combine(entity?.PathBucket ?? "", entity?.FullPath ?? "");
     public static string GetPSPath(this ResponseDictionaryItem entity) => Path.Combine(entity?.Path ?? "", entity?.Key ?? "");
     public static string GetPSPath(this AuditLog entity)               => Path.Combine(entity?.Path ?? "", entity?.Id.ToString() ?? "");
+    public static string GetPSPath(this Entities.Job entity)           => Path.Combine(entity?.Path ?? "", entity?.Id.ToString() ?? "");
+
+    /// <summary>
+    /// ジョブ情報をツールチップ用の文字列にフォーマットします。
+    /// </summary>
+    public static string FormatTooltip(this Entities.Job job)
+    {
+        string tiphelp = $"{job.Id} C{job.CreationTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")}";
+        if (job.StartTime is not null)
+            tiphelp += $"  S{job.StartTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")}";
+        else
+            tiphelp += "                      ";
+        if (job.EndTime is not null)
+            tiphelp += $"  E{job.EndTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")}";
+        else
+            tiphelp += "                      ";
+        tiphelp += $" {job.State,11} {job.ReleaseName}";
+        return tiphelp;
+    }
 
     public static string GetPSPath(this PmUser entity)                => Path.Combine(entity?.Path ?? "", entity?.userName ?? "");
     public static string GetPSPath(this PmRobotAccount entity)        => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
