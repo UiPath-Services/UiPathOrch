@@ -140,18 +140,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
                     if (!wp.IsMatch((job.Id ?? 0).ToString()))
                         continue;
 
-                    string tiphelp = $"{job.Id} C{job.CreationTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")}";
-                    if (job.StartTime is not null)
-                        tiphelp += $"  S{job.StartTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss").ToString()}";
-                    else
-                        tiphelp += $"                      ";
-                    if (job.EndTime is not null)
-                        tiphelp += $"  E{job.EndTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss").ToString()}";
-                    else
-                        tiphelp += $"                      ";
-                    tiphelp += $" {job.State,11} {job.ReleaseName}";
-
-                    yield return new CompletionResult(job.Id.ToString(), job.Id.ToString(), CompletionResultType.ParameterValue, tiphelp);
+                    yield return new CompletionResult(job.Id.ToString(), job.Id.ToString(), CompletionResultType.ParameterValue, job.FormatTooltip());
                 }
             }
         }
