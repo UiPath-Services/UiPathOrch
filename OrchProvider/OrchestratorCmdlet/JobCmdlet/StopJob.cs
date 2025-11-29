@@ -72,14 +72,14 @@ public class StopJobCommand : OrchestratorPSCmdlet
                 try
                 {
                     // キャッシュが残っていればそれを使う
-                    if (drive._dicJobs is not null &&
-                        drive._dicJobs.TryGetValue(folder.Id ?? 0, out var folderJobs))
+                    var folderJobs = drive.Jobs.GetCache(folder);
+                    if (folderJobs is not null)
                     {
-                        results.Add(folderJobs!.Values.ToList().AsReadOnly());
+                        results.Add(folderJobs.Values.ToList().AsReadOnly());
                     }
                     else // キャッシュがなければ取得する
                     {
-                        results.Add(drive.GetJobs(folder, "&$filter=((ProcessType%20eq%20%27Process%27)%20and%20((State%20eq%20%27Pending%27)%20or%20(State%20eq%20%27Running%27)%20or%20(State%20eq%20%27Stopping%27)%20or%20(State%20eq%20%27Suspended%27)%20or%20(State%20eq%20%27Resumed%27)))"));
+                        results.Add(drive.Jobs.Fetch(folder, "&$filter=((ProcessType%20eq%20%27Process%27)%20and%20((State%20eq%20%27Pending%27)%20or%20(State%20eq%20%27Running%27)%20or%20(State%20eq%20%27Stopping%27)%20or%20(State%20eq%20%27Suspended%27)%20or%20(State%20eq%20%27Resumed%27)))"));
                     }
                 }
                 catch { }
@@ -126,20 +126,18 @@ public class StopJobCommand : OrchestratorPSCmdlet
             foreach (var (drive, folder) in drivesFolders)
             {
                 // このフォルダーの Job キャッシュを取得
-                // パラメータごとに drive.GetJobs() を呼ばないように、キャッシュを直接読み取る
-                // (無駄に drive.GetJobs() を呼び出すと、処理が遅くなってしまう)
-                if (drive._dicJobs?.TryGetValue(folder.Id ?? 0, out var folderJobs) ?? false)
+                // パラメータごとに drive.Jobs.Fetch() を呼ばないように、キャッシュを直接読み取る
+                // (無駄に drive.Jobs.Fetch() を呼び出すと、処理が遅くなってしまう)
+                var folderJobs = drive.Jobs.GetCache(folder);
+                if (folderJobs is not null)
                 {
                     foreach (var jobId in Id!)
                     {
                         // キャッシュに停止済みとマークされているジョブは処理しない
-                        if (folderJobs is not null)
+                        if (folderJobs.TryGetValue(jobId, out var job))
                         {
-                            if (folderJobs.TryGetValue(jobId, out var job))
-                            {
-                                if (alreadyStoppedStates.Contains(job.State))
-                                    continue;
-                            }
+                            if (alreadyStoppedStates.Contains(job.State))
+                                continue;
                         }
                         var parameter = new StopJobCommandParameter()
                         {
@@ -182,7 +180,7 @@ public class StopJobCommand : OrchestratorPSCmdlet
                 {
                     drive!.OrchAPISession.StopJobs(group.Key!.Id ?? 0, jobsToStop, Force);
                     //WriteObject(jobsToStop.Select(id => new StopJobOutput(folder?.GetPSPath(), id)), true);
-                    drive._dicJobs?.TryRemove(folder!.Id ?? 0, out var _);
+                    drive.Jobs.ClearCache(folder!);
                 }
                 catch (OperationCanceledException)
                 {
