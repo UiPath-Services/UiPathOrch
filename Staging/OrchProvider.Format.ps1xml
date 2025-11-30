@@ -1468,22 +1468,10 @@
                 <PropertyName>PermissionName</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  if ($_.View) { 
-                    "True".PadRight(6) 
-                  } else { 
-                    "False".PadRight(6) 
-                  }
-                </ScriptBlock>
+                <PropertyName>View</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  if ($_.Edit) { 
-                    "True".PadRight(6) 
-                  } else { 
-                    "False".PadRight(6) 
-                  }
-                </ScriptBlock>
+                <PropertyName>Edit</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>Create</PropertyName>
