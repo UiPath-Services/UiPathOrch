@@ -239,6 +239,13 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
         _semaphore = semaphore;
     }
 
+    // 外部から OrchTask 配列を渡してインスタンスを作成するファクトリメソッド
+    public static OrchThreadPoolImpl<TSource, TResult> CreateInstance(
+        OrchTask<TSource, TResult>[] threads, SemaphoreSlim semaphore)
+    {
+        return new OrchThreadPoolImpl<TSource, TResult>(threads, semaphore);
+    }
+
     // await Task.Yield() ではなく、SynchronizationContext を使ってメインスレッドに制御を渡す実装
     // semaphore は、スレッドリソースが枯渇しないようにして、スレッドを起こせる状態を維持するために必要
     // semaphore がないと、メインスレッドの GetResult() とデッドロックする可能性がある
