@@ -1,3 +1,9 @@
+Version: 0.9.15.1
+- DateTime properties now return local time instead of UTC, even when not using the default view. Previously, local time was only displayed in the default view. This is a breaking change if you were relying on UTC timestamps.
+
+- Improved performance by removing ScriptBlock for timezone conversion from format views.
+
+
 Version: 0.9.14.19
 - Added Get-TmTestExecution cmdlet. Note that this cmdlet is only available on the UiPathOrchTm drive. The UiPathOrchTm drive becomes automatically available when you add the TM.* scope. You can verify this with the Get-PSDrive cmdlet.
 

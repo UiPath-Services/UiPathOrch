@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.14.19'
+ModuleVersion = '0.9.15.1'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -399,11 +399,9 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Added Get-TmTestExecution cmdlet. Note that this cmdlet is only available on the UiPathOrchTm drive. The UiPathOrchTm drive becomes automatically available when you add the TM.* scope. You can verify this with the Get-PSDrive cmdlet.
+        ReleaseNotes = '- DateTime properties now return local time instead of UTC, even when not using the default view. Previously, local time was only displayed in the default view. This is a breaking change if you were relying on UTC timestamps.
 
-- Adjusted the default view for Get-TmRequirement to better align with the Automation Cloud display.
-
-- Changed the default view for Get-TmProjectPermission from list view to table view.
+- Improved performance by removing ScriptBlock for timezone conversion from format views.
 '
 
         # Prerelease string of this module
