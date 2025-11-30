@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Entities;
@@ -1174,6 +1174,165 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
 #endregion
 
 
+
+/// <summary>
+/// プロジェクトごとに、フィルタリング結果を蓄積する Dictionary 型キャッシュ。
+/// TmTestExecutionResult のような大量データ向け。全件取得せず、API クエリ結果を追記していく。
+/// </summary>
+/// <typeparam name="TKey">エンティティのキー型（例: string）</typeparam>
+/// <typeparam name="TEntity">エンティティ型（例: TmTestExecutionResult）</typeparam>
+public class IncrementalCachePerProject<TKey, TEntity> : ITenantCacheClearable
+    where TKey : notnull
+{
+    private readonly OrchTmDriveInfo _drive;
+
+    // 1st key: projectId, 2nd key: entityKey
+    private ConcurrentDictionary<string, ConcurrentDictionary<TKey, TEntity>>? _cache = null;
+    private readonly ExceptionsCachePer<string> _exceptions = new();
+
+    // API 呼び出し関数
+    private readonly Func<string, string, IEnumerable<TEntity>> _fetchFunc;
+
+    // エンティティからキーを取得する関数
+    private readonly Func<TEntity, TKey?> _getKeyFunc;
+
+    // 初期化処理（Path 設定など）
+    private readonly Action<TEntity, TmProject>? _initializer;
+
+    // キャッシュ追加前の追加処理（既存キャッシュとのマージなど）
+    private readonly Action<TEntity, TEntity?>? _mergeFunc;
+
+    public IncrementalCachePerProject(
+        OrchTmDriveInfo drive,
+        Func<string, string, IEnumerable<TEntity>> fetchFunc,
+        Func<TEntity, TKey?> getKeyFunc,
+        Action<TEntity, TmProject>? initializer = null,
+        Action<TEntity, TEntity?>? mergeFunc = null)
+    {
+        _drive = drive;
+        _drive._allTenantCache.Add(this);
+        _fetchFunc = fetchFunc;
+        _getKeyFunc = getKeyFunc;
+        _initializer = initializer;
+        _mergeFunc = mergeFunc;
+    }
+
+    /// <summary>
+    /// プロジェクトのキャッシュ Dictionary を取得（読み取り専用アクセス用）
+    /// </summary>
+    public ConcurrentDictionary<TKey, TEntity>? GetCache(TmProject project)
+    {
+        if (_cache is null) return null;
+        _cache.TryGetValue(project.id ?? "", out var projectCache);
+        return projectCache;
+    }
+
+    /// <summary>
+    /// API を呼び出してエンティティを取得し、キャッシュに追加する
+    /// </summary>
+    /// <param name="project">対象プロジェクト</param>
+    /// <param name="subKey">サブキー（例: testExecutionId）</param>
+    public ReadOnlyCollection<TEntity> Fetch(TmProject project, string subKey)
+    {
+        string projectId = project.id ?? "";
+
+        _exceptions.ThrowCachedExceptionIfAny(projectId);
+
+        if (_cache is null)
+        {
+            lock (this)
+            {
+                _cache ??= new();
+            }
+        }
+
+        if (!_cache.TryGetValue(projectId, out var projectCache))
+        {
+            projectCache = new();
+            _cache[projectId] = projectCache;
+        }
+
+        List<TEntity> fetched;
+        try
+        {
+            fetched = _fetchFunc(projectId, subKey).ToList();
+        }
+        catch (HttpResponseException ex)
+        {
+            _exceptions.CacheException(projectId, ex);
+            throw;
+        }
+
+        foreach (var entity in fetched)
+        {
+            _initializer?.Invoke(entity, project);
+
+            var key = _getKeyFunc(entity);
+            if (key is not null)
+            {
+                // マージ処理（既存キャッシュの値を新エンティティに引き継ぐなど）
+                if (_mergeFunc is not null && projectCache.TryGetValue(key, out var cached))
+                {
+                    _mergeFunc(entity, cached);
+                }
+                projectCache[key] = entity;
+            }
+        }
+
+        return fetched.AsReadOnly();
+    }
+
+    public void ClearCache(string? projectId)
+    {
+        if (projectId is null) return;
+        _cache?.TryRemove(projectId, out _);
+        _exceptions.ClearCache(projectId);
+    }
+
+    public void ClearCache(TmProject project)
+    {
+        ClearCache(project.id);
+    }
+
+    /// <summary>
+    /// 単一エンティティをキャッシュに追加する（外部で API 取得後に呼び出す用）
+    /// </summary>
+    public void AddToCache(TmProject project, TEntity entity)
+    {
+        string projectId = project.id ?? "";
+
+        if (_cache is null)
+        {
+            lock (this)
+            {
+                _cache ??= new();
+            }
+        }
+
+        if (!_cache.TryGetValue(projectId, out var projectCache))
+        {
+            projectCache = new();
+            _cache[projectId] = projectCache;
+        }
+
+        var key = _getKeyFunc(entity);
+        if (key is not null)
+        {
+            if (_mergeFunc is not null && projectCache.TryGetValue(key, out var cached))
+            {
+                _mergeFunc(entity, cached);
+            }
+            projectCache[key] = entity;
+        }
+    }
+
+    public void ClearCache()
+    {
+        _cache = null;
+        _exceptions.ClearCache();
+    }
+}
+
 #region TestManager 用キャッシュクラス
 
 // fetchFunc: 引数なしで、Enumerable<T> を返す Func
@@ -1257,7 +1416,7 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
 public class TestListCachePerTenant1<T> : ITenantCacheClearable
 {
     private readonly OrchTmDriveInfo _drive;
-    private ConcurrentDictionary<string, List<T>>? _cache = null;
+    internal ConcurrentDictionary<string, List<T>>? _cache = null;
     private readonly ExceptionsCachePer<string> _exceptions = new();
     private readonly Func<TmProject, IEnumerable<T>> _fetchFunc;
     private readonly Action<T, TmProject>? _initializer;
@@ -1274,6 +1433,14 @@ public class TestListCachePerTenant1<T> : ITenantCacheClearable
         _drive._allTenantCache.Add(this);
         _initializer = initializer;
         _supportedApiVersionFrom = supportedApiVersionFrom;
+    }
+
+    /// <summary>
+    /// キャッシュが存在するかどうかを確認する
+    /// </summary>
+    public bool HasCache(TmProject project)
+    {
+        return _cache?.ContainsKey(project.id!) ?? false;
     }
 
     public List<T> Get(TmProject project)
@@ -1329,6 +1496,70 @@ public class TestListCachePerTenant1<T> : ITenantCacheClearable
     {
         _cache = null;
         _exceptions.ClearCache();
+    }
+
+    /// <summary>
+    /// 複数のプロジェクトに対して並列でキャッシュを取得する。
+    /// キャッシュがあるプロジェクトはスレッドを起動せずに即座に結果をセットする。
+    /// </summary>
+    public static OrchThreadPoolImpl<(OrchTmDriveInfo drive, TmProject project), List<T>> RunForEach(
+        IEnumerable<(OrchTmDriveInfo drive, TmProject project)> sources,
+        Func<OrchTmDriveInfo, TestListCachePerTenant1<T>> getCacheFunc,
+        int maxDegreeOfParallelism = 4)
+    {
+        var sourceList = sources.ToList();
+        var threads = new OrchTask<(OrchTmDriveInfo drive, TmProject project), List<T>>[sourceList.Count];
+        var semaphore = new SemaphoreSlim(maxDegreeOfParallelism);
+        var mainContext = SynchronizationContext.Current;
+
+        for (int i = 0; i < threads.Length; i++)
+        {
+            threads[i] = new OrchTask<(OrchTmDriveInfo drive, TmProject project), List<T>>();
+        }
+
+        foreach (var (source, index) in sourceList.Select((source, index) => (source, index)))
+        {
+            var cache = getCacheFunc(source.drive);
+
+            // キャッシュがあれば即座に結果をセット（スレッド起動なし）
+            if (cache._cache?.TryGetValue(source.project.id!, out var cached) ?? false)
+            {
+                threads[index].SetResult(source, cached);
+                continue;
+            }
+
+            // キャッシュがなければスレッドで取得
+            Task.Run(async () =>
+            {
+                await semaphore.WaitAsync();
+                try
+                {
+                    var result = await Task.Run(() => cache.Get(source.project));
+
+                    if (mainContext is not null)
+                    {
+                        mainContext.Post(_ =>
+                        {
+                            threads[index].SetResult(source, result);
+                        }, null);
+                    }
+                    else
+                    {
+                        threads[index].SetResult(source, result);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    threads[index].SetException(source, source.project.GetPSPath(), source.project, ex);
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            });
+        }
+
+        return OrchThreadPoolImpl<(OrchTmDriveInfo drive, TmProject project), List<T>>.CreateInstance(threads, semaphore);
     }
 }
 

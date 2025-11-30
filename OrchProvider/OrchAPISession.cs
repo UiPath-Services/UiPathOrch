@@ -3610,9 +3610,21 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Delete, $"/testmanager_/api/v2/{projectId}/testsets/{testSetId}");
     }
 
+    // このエンドポイントは、/testexecutions/filtered と同じ結果を返しているように見える。
+    // パラメータが使えないのかな？
     public IEnumerable<TmTestExecution> GetTmTestExecutions(string projectId)
     {
         return GetEnumerableTm<TmTestExecution>($"/testmanager_/api/v2/{projectId}/testexecutions");
+    }
+
+    public IEnumerable<TmTestExecution> GetTmTestExecutionsFiltered(string projectId)
+    {
+        return GetEnumerableTm<TmTestExecution>($"/testmanager_/api/v2/{projectId}/testexecutions/filtered");
+    }
+
+    public IEnumerable<TmTestExecutionResult> GetTmTestExecutionsResult(string projectId, string testExecutionId)
+    {
+        return GetEnumerableTm<TmTestExecutionResult>($"/testmanager_/api/v2/{projectId}/testcaselogs/testexecution/{testExecutionId}/paged");
     }
 
     public IEnumerable<TmRole>? GetTmRoles()

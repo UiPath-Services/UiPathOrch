@@ -374,19 +374,13 @@
                 <PropertyName>SourceType</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.CreationTime.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>CreationTime</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.StartTime.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>StartTime</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.EndTime.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>EndTime</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -428,9 +422,7 @@
           <TableRowEntry>
             <TableColumnItems>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.TimeStamp.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>TimeStamp</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>Level</PropertyName>
@@ -482,9 +474,7 @@
                 <Alignment>right</Alignment>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.ExecutionTime.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>ExecutionTime</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>OperationText</PropertyName>
@@ -713,9 +703,7 @@
                 <PropertyName>Version</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.Published.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>Published</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>IsActive</PropertyName>
@@ -763,9 +751,7 @@
                 <PropertyName>Version</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.Published.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>Published</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>Description</PropertyName>
@@ -810,9 +796,7 @@
                 <PropertyName>Version</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.Published.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>Published</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>Description</PropertyName>
@@ -1661,9 +1645,7 @@
                 <PropertyName>ClientSecret</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.CreationTime.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>CreationTime</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -1761,9 +1743,7 @@
                 <PropertyName>Encrypted</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.CreationTime.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>CreationTime</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -1830,24 +1810,16 @@
                 <PropertyName>Priority</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.DueDate.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>DueDate</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.DeferDate.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>DeferDate</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.StartProcessing.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>StartProcessing</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.EndProcessing.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>EndProcessing</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -2135,9 +2107,7 @@
                 <PropertyName>StartProcessCronSummary</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.StartProcessNextOccurrence.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>StartProcessNextOccurrence</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -2371,9 +2341,7 @@
                 <PropertyName>AppVersion</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.CreationTime.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>CreationTime</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -2436,14 +2404,10 @@
                 <PropertyName>EntryPointPath</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.StartTime.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>StartTime</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.EndTime.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>EndTime</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>Status</PropertyName>
@@ -2505,14 +2469,10 @@
                 <Alignment>right</Alignment>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                    $_.CreationTime.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>CreationTime</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                    $_.LastModificationTime.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>LastModificationTime</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -2561,14 +2521,10 @@
                 <PropertyName>Status</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                    $_.StartTime.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>StartTime</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                    $_.EndTime.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>EndTime</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -2644,9 +2600,7 @@
                 <PropertyName>NextOccurrence</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                    $_.DisableDate.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>DisableDate</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -2785,9 +2739,7 @@
           <TableRowEntry>
             <TableColumnItems>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.CreationTime.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>CreationTime</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>State</PropertyName>
@@ -2882,9 +2834,7 @@
                 <Alignment>right</Alignment>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.LastLoginDate.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>LastLoginDate</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -2979,9 +2929,7 @@
                 <PropertyName>robotType</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.timestamp.ToLocalTime().ToString("yyyy/MM/dd")
-                </ScriptBlock>
+                <PropertyName>timestamp</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>count</PropertyName>
@@ -3883,14 +3831,10 @@
                 <PropertyName>name</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.creationTime.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>creationTime</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.lastLoginTime.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>lastLoginTime</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>groupIds</PropertyName>
@@ -3980,9 +3924,7 @@
                 <PropertyName>isActive</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.lastLoginTime.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>lastLoginTime</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>invitationAccepted</PropertyName>
@@ -4030,14 +3972,10 @@
                 <PropertyName>name</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.creationTime.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>creationTime</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.lastModificationTime.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>lastModificationTime</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>mappingRole</PropertyName>
@@ -4238,9 +4176,7 @@
                 <PropertyName>email</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.lastInUse.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>lastInUse</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -4294,9 +4230,7 @@
                 <PropertyName>email</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.lastInUse.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>lastInUse</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>userBundleLicenseNames</PropertyName>
@@ -4620,9 +4554,7 @@
                 <PropertyName>name</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.createdOn.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>createdOn</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>description</PropertyName>
@@ -4661,9 +4593,7 @@
                 <PropertyName>name</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.createdOn.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>createdOn</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>description</PropertyName>
@@ -4887,14 +4817,10 @@
                 <PropertyName>isActive</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.created.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>created</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.updated.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>updated</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>description</PropertyName>
@@ -4950,9 +4876,7 @@
                 </ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.updated.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>updated</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -5006,9 +4930,7 @@
                 <PropertyName>automationTestCaseName</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.updated.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>updated</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>description</PropertyName>
@@ -5056,14 +4978,10 @@
                 <PropertyName>executionType</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.executionStart.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>executionStart</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.executionFinished.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>executionFinished</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>status</PropertyName>
@@ -5114,9 +5032,7 @@
                 <PropertyName>version</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.updated.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>updated</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>description</PropertyName>
@@ -5305,9 +5221,7 @@
                 <PropertyName>roles</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>
-                  $_.lastUpdated.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")
-                </ScriptBlock>
+                <PropertyName>lastUpdated</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>

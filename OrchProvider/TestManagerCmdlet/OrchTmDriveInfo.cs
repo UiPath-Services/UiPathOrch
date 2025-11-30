@@ -21,6 +21,9 @@ public class OrchTmDriveInfo : PSDriveInfo
     public TestListCachePerTenant1<TmTestExecution>     TmTestExecutions     = null!;
     public TestListCachePerTenant1<TmRequirement>       TmRequirements       = null!;
     public TestListCachePerTenant1<TmProjectPermission> TmProjectPermissions = null!;
+    // インクリメンタルキャッシュ
+    public IncrementalCachePerProject<string, TmTestExecutionResult> TmTestExecutionResults = null!;
+
 
     // これらはドライブごとに保持する必要があるため、 Cache クラスの static メンバにはできない
     internal readonly List<ITenantCacheClearable> _allTenantCache = [];
@@ -63,6 +66,12 @@ public class OrchTmDriveInfo : PSDriveInfo
                     e.Project = project.name;
                     e.PathProject = e.Path + '\\' + e.Project;
                 });
+
+            // インクリメンタルキャッシュ
+            TmTestExecutionResults = new(this,
+                OrchAPISession.GetTmTestExecutionsResult,
+                e => e.id,
+                (e, project) => e.Path = project.GetPSPath());
 
             #endregion
         }

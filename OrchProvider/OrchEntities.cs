@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using UiPath.PowerShell.Core;
@@ -210,7 +210,7 @@ public class License
     public string? SubscriptionCode { get; set; }
     public string? SubscriptionPlan { get; set; }
     public bool? IsExpired { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public string? Code { get; set; }
     public bool? UserLicensingEnabled { get; set; }
@@ -344,7 +344,7 @@ public class Alert
     public string? Data { get; set; }
     public string? Component { get; set; }
     public string? Severity { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public string? State { get; set; }
     public string? UserNotificationId { get; set; }
@@ -374,9 +374,9 @@ public class Library
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
     public string? Id { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))] 
+    [JsonConverter(typeof(LocalDateTimeConverter))] 
     public DateTime? Created { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastUpdated { get; set; }
     public string? Owners { get; set; }
     public string? IconUrl { get; set; }
@@ -387,7 +387,7 @@ public class Library
     public string? Version { get; set; }
     public string? Key { get; set; }
     public string? Description { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? Published { get; set; }
     public bool? IsLatestVersion { get; set; }
     public string? OldVersion { get; set; }
@@ -408,9 +408,9 @@ public class LibraryVersion
     public string? Path { get; set; } // added by UiPathOrch
     //public string? Name { get; set; } // added by UiPathOrch
     public string? Id { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? Created { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastUpdated { get; set; }
     public string? Owners { get; set; }
     public string? IconUrl { get; set; }
@@ -421,7 +421,7 @@ public class LibraryVersion
     public string? Version { get; set; }
     public string? Key { get; set; }
     public string? Description { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? Published { get; set; }
     public bool? IsLatestVersion { get; set; }
     public string? OldVersion { get; set; }
@@ -453,7 +453,7 @@ public class Package
     public string? Version { get; set; }
     public string? Key { get; set; }
     public string? Description { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? Published { get; set; }
     public bool? IsLatestVersion { get; set; }
     public string? OldVersion { get; set; }
@@ -663,6 +663,7 @@ public class MachineSecretKey // added by UiPathOrch
     public string? ClientId { get; set; } // Guid
     public Int64? SecretId { get; set; }
     public string? ClientSecret { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public string? Description { get; set; }
     public string? Type { get; set; }
@@ -974,10 +975,10 @@ public class User : IEquatable<User>
     public string? FullName { get; set; }
     public string? EmailAddress { get; set; }
     public bool? IsEmailConfirmed { get; set; } // deprecated in V18.0? removed in V19.0
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastLoginTime { get; set; }
     public bool? IsActive { get; set; } // deprecated in V19.0
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public string? AuthenticationSource { get; set; }
     public string? Password { get; set; } // deprecated in V19.0
@@ -1011,7 +1012,7 @@ public class User : IEquatable<User>
     public bool? ExplicitMayHaveRobotSession { get; set; }
     public bool? ExplicitMayHavePersonalWorkspace { get; set; }
     public bool? ExplicitRestrictToPersonalWorkspace { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastModificationTime { get; set; }
     public Int64? LastModifierUserId { get; set; }
     public Int64? CreatorUserId { get; set; }
@@ -1348,7 +1349,7 @@ public class MaintenanceWindow : IEquatable<MaintenanceWindow>
     public string? CronExpression { get; set; }
     public string? TimezoneId { get; set; }
     public int? Duration { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? NextExecutionTime { get; set; }
 
     // IEquatable<MaintenanceWindow> の実装
@@ -1665,8 +1666,10 @@ public class SimpleRelease
     public string? RobotSize { get; set; }
     public Tag[]? Tags { get; set; }
     public string? RemoteControlAccess { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastModificationTime { get; set; }
     public long? LastModifierUserId { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public long? CreatorUserId { get; set; }
 }
@@ -1904,10 +1907,10 @@ public class Robot
     public User? User { get; set; }
     public bool? IsExternalLicensed { get; set; }
     public bool? LimitConcurrentExecution { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastModificationTime { get; set; }
     public Int64? LastModifierUserId { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public Int64? CreatorUserId { get; set; }
 }
@@ -1942,10 +1945,10 @@ public class RobotsFromFolderModel
     //public User? User { get; set; }
     public bool? IsExternalLicensed { get; set; }
     public bool? LimitConcurrentExecution { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastModificationTime { get; set; }
     public Int64? LastModifierUserId { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public Int64? CreatorUserId { get; set; }
 }
@@ -1999,8 +2002,10 @@ public class ExtendedRobot
     public Dictionary<string, string>? ExecutionSettings { get; set; }
 
     public bool? LimitConcurrentExecution { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastModificationTime { get; set; }
     public long? LastModifierUserId { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public long? CreatorUserId { get; set; }
 }
@@ -2036,10 +2041,10 @@ public class SimpleRobot
     public string[]? ExecutionSettings { get; set; }
     public bool? IsExternalLicensed { get; set; }
     public bool? LimitConcurrentExecution { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastModificationTime { get; set; }
     public Int64? LastModifierUserId { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public Int64? CreatorUserId { get; set; }
     public Int64? Id { get; set; }
@@ -2049,7 +2054,7 @@ public class SimpleRobot
 public class RobotLicense
 {
     public Int64? RobotId { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? Timestamp { get; set; }
     public Int64? Id { get; set; }
 }
@@ -2079,10 +2084,10 @@ public class RobotWithLicense
     //public ExecutionSettings? ExecutionSettings { get; set; } ////////////////
     public bool? IsExternalLicensed { get; set; }
     public bool? LimitConcurrentExecution { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastModificationTime { get; set; }
     public Int64? LastModifierUserId { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public Int64? CreatorUserId { get; set; }
     public Int64? Id { get; set; }
@@ -2100,7 +2105,7 @@ public class LicenseNamedUser
     public string? PathRobotType { get; set; } // Added by UiPathOrch
     public string? Key { get; set; }
     public string? UserName { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastLoginDate { get; set; }
     public int? MachinesCount { get; set; }
     public bool? IsLicensed { get; set; }
@@ -2138,7 +2143,7 @@ public class ConsumptionLicenseStatsModel
     public string? type { get; set; }
     public Int64? used { get; set; }
     public Int64? total { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? timestamp { get; set; }
 }
 
@@ -2167,7 +2172,7 @@ public class LicenseStatsModel
     public string? Path { get; set; } // added by UiPathOrch
     public RobotType? robotType { get; set; }
     public Int64? count { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? timestamp { get; set; }
 }
 
@@ -2193,7 +2198,7 @@ public class Session
     public string? MachineName { get; set; }
     public string? State { get; set; }
     public Job? JobDto { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? ReportingTime { get; set; }
     public string? Info { get; set; }
     public bool? IsUnresponsive { get; set; }
@@ -2203,7 +2208,7 @@ public class Session
     public string? RobotSessionType { get; set; }
     public string? Version { get; set; }
     public string? Source { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? DebugModeExpirationDate { get; set; }
     public UpdateInfo? UpdateInfo { get; set; }
     public string? InstallationId { get; set; }
@@ -2236,10 +2241,10 @@ public class MachineSessionRuntime
     public Int64? Runtimes { get; set; }
     public Int64? UsedRuntimes { get; set; }
     public string? ServiceUserName { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? ReportingTime { get; set; }
     public string? Version { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? DebugModeExpirationDate { get; set; }
     public string? Platform { get; set; }
     public string? EndpointDetection { get; set; }
@@ -2271,7 +2276,7 @@ public class ReleaseVersion
     public Int64? Id { get; set; }
     public Int64? ReleaseId { get; set; }
     public string? VersionNumber { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public string? ReleaseName { get; set; }
 }
@@ -2398,10 +2403,10 @@ public class Release
     public string? RobotSize { get; set; }
     public Tag[]? Tags { get; set; }
     public string? RemoteControlAccess { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastModificationTime { get; set; }
     public Int64? LastModifierUserId { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public Int64? CreatorUserId { get; set; }
 
@@ -2579,10 +2584,10 @@ public class Asset
     public List<AssetUserValue>? UserValues { get; set; }
     public Tag[]? Tags { get; set; }
     public int? FoldersCount { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastModificationTime { get; set; }
     public Int64? LastModifierUserId { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public Int64? CreatorUserId { get; set; }
 }
@@ -2604,7 +2609,7 @@ public class QueueDefinition
     public string? SpecificDataJsonSchema { get; set; }
     public string? OutputDataJsonSchema { get; set; }
     public string? AnalyticsDataJsonSchema { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public Int64? ProcessScheduleId { get; set; }
     public int? SlaInMinutes { get; set; }
@@ -2667,10 +2672,10 @@ public class SimpleUser
     public string? FullName { get; set; }
     public string? EmailAddress { get; set; }
     public bool? IsEmailConfirmed { get; set; } // deprecated in V19.0
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastLoginTime { get; set; }
     public bool? IsActive { get; set; } // deprecated in V19.0
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public string? AuthenticationSource { get; set; }
     public string? Password { get; set; } // deprecated in V19.0
@@ -2702,7 +2707,7 @@ public class SimpleUser
     public bool? ExplicitMayHaveRobotSession { get; set; } // added in V19.0
     public bool? ExplicitMayHavePersonalWorkspace { get; set; } // added in V19.0
     public bool? ExplicitRestrictToPersonalWorkspace { get; set; } // added in V19.0
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastModificationTime { get; set; }
     public long? LastModifierUserId { get; set; }
     public long? CreatorUserId { get; set; }
@@ -2715,7 +2720,7 @@ public class ProcessingException
     public string? Details { get; set; }
     public string? Type { get; set; }
     public string? AssociatedImageFilePath { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
 }
 
@@ -2817,8 +2822,11 @@ public class QueueItemData
     public string? Name { get; set; }
     public string? Priority { get; set; }
     public Dictionary<string, object>? SpecificContent { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? DeferDate { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? DueDate { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? RiskSlaDate { get; set; }
     public string? Reference { get; set; }
     public string? Progress { get; set; }
@@ -2948,7 +2956,7 @@ public class PersonalWorkspace
     public bool? IsActive { get; set; }
     public Int64? OwnerId { get; set; }
     public string? OwnerName { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastLogin { get; set; }
     public Int64[]? ExploringUserIds { get; set; }
 }
@@ -3027,7 +3035,7 @@ public class ProcessSchedule
     public string? StartProcessCron { get; set; }
     public string? StartProcessCronDetails { get; set; }
     public string? StartProcessCronSummary { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? StartProcessNextOccurrence { get; set; }
     public int? StartStrategy { get; set; }
     public RobotExecutor[]? ExecutorRobots { get; set; }
@@ -3042,7 +3050,7 @@ public class ProcessSchedule
     public Int64? CalendarId { get; set; }
     public string? CalendarName { get; set; }
     public string? CalendarKey { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? StopProcessDate { get; set; }
     public string? InputArguments { get; set; }
     public Int64? QueueDefinitionId { get; set; }
@@ -3176,10 +3184,10 @@ public class TestSetPackage
     public string? VersionMask { get; set; }
     public string? PackageIdentifier { get; set; }
     public bool? IncludePrerelease { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastModificationTime { get; set; }
     public Int64? LastModifierUserId { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public Int64? CreatorUserId { get; set; }
     public Int64? Id { get; set; }
@@ -3195,10 +3203,10 @@ public class TestCase
     public string? VersionNumber { get; set; }
     public Int64? TestSetId { get; set; }
     //TestSet
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastModificationTime { get; set; }
     public Int64? LastModifierUserId { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public Int64? CreatorUserId { get; set; }
     public Int64? Id { get; set; }
@@ -3210,10 +3218,10 @@ public class TestSetInputArgument
     public string? Name { get; set; }
     public string? Type { get; set; }
     public string? Value { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastModificationTime { get; set; }
     public Int64? LastModifierUserId { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public Int64? CreatorUserId { get; set; }
     public Int64? Id { get; set; }
@@ -3241,12 +3249,12 @@ public class TestSet
     public TestSetInputArgument[]? InputArguments { get; set; }
     public bool? IsDeleted { get; set; }
     public Int64? DeleterUserId { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? DeletionTime { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastModificationTime { get; set; }
     public Int64? LastModifierUserId { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public Int64? CreatorUserId { get; set; }
 }
@@ -3271,10 +3279,10 @@ public class TestCaseDefinition
     public string? LatestVersion { get; set; }
     public string? LatestPrereleaseVersion { get; set; }
     public string? FeedId { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastModificationTime { get; set; }
     public Int64? LastModifierUserId { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public Int64? CreatorUserId { get; set; }
 }
@@ -3285,7 +3293,7 @@ public class TestSetExecutionAttachment
     public Int64? TestSetExecutionId { get; set; }
     public string? FileName { get; set; }
     public string? MimeType { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public string[]? Tags { get; set; }
     public Int64? Id { get; set; }
@@ -3299,7 +3307,7 @@ public class TestCaseAssertion
     public bool? Succeeded { get; set; }
     public Int64? TestCaseExecutionId { get; set; }
     public bool? HasScreenshot { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public Int64? Id { get; set; }
 }
@@ -3310,7 +3318,7 @@ public class TestCaseExecutionAttachment
     public Int64? TestCaseExecutionId { get; set; }
     public string? FileName { get; set; }
     public string? MimeType { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public string[]? Tags { get; set; }
     public Int64? Id { get; set; }
@@ -3331,9 +3339,9 @@ public class TestCaseExecution
     public Int64? ReleaseVersionId { get; set; }
     public string? VersionNumber { get; set; }
     public string? EntryPointPath { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? StartTime { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? EndTime { get; set; }
     public string? Status { get; set; }
     public TestCaseAssertion[]? TestCaseAssertions { get; set; }
@@ -3379,9 +3387,9 @@ public class TestSetExecution
     public Int64? TestSetId { get; set; }
     public Int64? OrganizationUnitId { get; set; }
     public TestSet? TestSet { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? StartTime { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? EndTime { get; set; }
     public string? Status { get; set; }
     public Int64? ScheduleId { get; set; }
@@ -3392,7 +3400,7 @@ public class TestSetExecution
     public TestCaseExecution[]? TestCaseExecutions { get; set; }
     public TestSetExecutionAttachment[]? Attachments { get; set; }
     public bool? EnforceExecutionOrder { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public Int64? CreatorUserId { get; set; }
 }
@@ -3415,9 +3423,9 @@ public class TestSetSchedule
     public string? CronExpression { get; set; }
     public string? CronDetails { get; set; }
     public string? CronSummary { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? NextOccurrence { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? DisableDate { get; set; }
     public string? ExternalJobKey { get; set; }
     public string? ExternalJobKeyScheduler { get; set; }
@@ -3435,12 +3443,12 @@ public class TestDataQueue
     public int? ConsumedItemsCount { get; set; }
     public bool? IsDeleted { get; set; }
     public Int64? DeleterUserId { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? DeletionTime { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastModificationTime { get; set; }
     public Int64? LastModifierUserId { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
     public Int64? CreatorUserId { get; set; }
     public Int64? Id { get; set; }
@@ -3466,7 +3474,7 @@ public class TestDataQueueItem
 public class MaintenanceStateLog
 {
     public string? state { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? timeStamp { get; set; }
 }
 
@@ -3563,7 +3571,7 @@ public class ExcludedDateNamed // added by UiPathOrch
     public string? Path { get; set; }
     public string? Name { get; set; }
     public string? PathName { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? ExcludedDate { get; set; }
 }
 
@@ -3595,9 +3603,9 @@ public class TaskCatalog
     public string? Key { get; set; }
     public string? Name { get; set; }
     public string? Description { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? CreationTime { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastModificationTime { get; set; }
     public int? FoldersCount { get; set; }
     public bool? Encrypted { get; set; }
@@ -3631,9 +3639,9 @@ public class PmRobotAccount
     public string? id { get; set; }
     public string? name { get; set; }
     public string? displayName { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? creationTime { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? lastLoginTime { get; set; }
     public string[]? groupIds { get; set; } // Guid
 }
@@ -3723,11 +3731,11 @@ public class PmUser
     public string? name { get; set; }
     public string? surname { get; set; }
     public string? displayName { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? creationTime { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? lastModificationTime { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? lastLoginTime { get; set; }
     public string[]? groupIDs { get; set; }
     public Int64 legacyId { get; set; }
@@ -3811,7 +3819,7 @@ public class NuLicensedUser // 適切なクラス名が不明。。
     public string? name { get; set; }
     public string? surname { get; set; }
     public string? displayName { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? lastInUse { get; set; }
     public string[]? userBundleLicenses { get; set; }
     public bool? orphan { get; set; }
@@ -3891,9 +3899,9 @@ public class PmGroup
     public string? name { get; set; }
     public string? displayName { get; set; }
     public int? type { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? creationTime { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? lastModificationTime { get; set; }
     public PmGroupMember[]? members { get; set; }
     public string? mappingRole { get; set; }
@@ -4006,7 +4014,9 @@ public class Secret
     public Int64 id { get; set; }
     public string? description { get; set; }
     public string? secret { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? creationTime { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? expiryTime { get; set; }
 }
 
@@ -4055,9 +4065,9 @@ public class PmDirectoryConnection
     public int? partitionId { get; set; }
     public string? type { get; set; }
     public string? configuration { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? creationTime { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? lastModificationTime { get; set; }
 }
 
@@ -4183,6 +4193,7 @@ public class RoleAssignmentDto // added by UiPathOrch swagger doc にない。
     public string? roleName { get; set; }
     public string? roleType { get; set; }
     public string? createdBy { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? createdOn { get; set; }
     public bool? inherited { get; set; }
     public bool? mutable { get; set; }
@@ -4251,7 +4262,7 @@ public class DuProject
     public string? id { get; set; }
     public string? name { get; set; }
     public string? description { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? createdOn { get; set; }
     public string? detailsUrl { get; set; }
     public string? digitizationStartUrl { get; set; }
@@ -4386,10 +4397,10 @@ public class TmProject
     public string? id { get; set; }
     public string? name { get; set; }
     public string? description { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? created { get; set; }
     public string? createdBy { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? updated { get; set; }
     public string? updatedBy { get; set; }
 }
@@ -4407,10 +4418,10 @@ public class TmRequirement
     public string? id { get; set; }
     public string? name { get; set; }
     public string? description { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? created { get; set; }
     public string? createdBy { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? updated { get; set; }
     public string? updatedBy { get; set; }
 }
@@ -4434,10 +4445,10 @@ public class TmTestCase
     public string? id { get; set; }
     public string? name { get; set; }
     public string? description { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? created { get; set; }
     public string? createdBy { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? updated { get; set; }
     public string? updatedBy { get; set; }
 }
@@ -4459,10 +4470,10 @@ public class TmTestSet
     public string? id { get; set; }
     public string? name { get; set; }
     public string? description { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? created { get; set; }
     public string? createdBy { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? updated { get; set; }
     public string? updatedBy { get; set; }
 }
@@ -4475,11 +4486,11 @@ public class TmTestExecution
     public string? projectId { get; set; }
     public string? testSetId { get; set; }
     public string? testSetObjKey { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? executionStart { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? executionFinished { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? reportingDate { get; set; }
     public string? source { get; set; }
     public string? sourceDetails { get; set; }
@@ -4496,12 +4507,61 @@ public class TmTestExecution
     public string? id { get; set; }
     public string? name { get; set; }
     public string? description { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? created { get; set; }
     public string? createdBy { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? updated { get; set; }
     public string? updatedBy { get; set; }
+}
+
+public class TmTestExecutionResult
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? TestExecution { get; set; } // added by UiPathOrch
+
+    public TmTestCase? testCase { get; set; }
+    public string? id { get; set; }
+    public string? testCaseId { get; set; }
+    public string? projectId { get; set; }
+    public string? automationId { get; set; }
+    public string? jobKey { get; set; }
+    public string? automationProjectName { get; set; }
+    public string? automationTestCaseName { get; set; }
+    public string? testExecutionId { get; set; }
+    public string? variationId { get; set; }
+    public string? testCaseVersion { get; set; }
+    public string? externalTestExecutionId { get; set; }
+    public string? result { get; set; }
+    public bool? hasError { get; set; }
+    public string? executionType { get; set; }
+    public string? businessResult { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? executionStart { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? executionEnd { get; set; }
+    public string? executedBy { get; set; }
+    public string? detailLink { get; set; }
+    public string? defectId { get; set; }
+    public string? hostMachineName { get; set; }
+    public string? info { get; set; }
+    public string? inputArguments { get; set; }
+    public string? outputArguments { get; set; }
+    public string? robotName { get; set; }
+    public string? runtimeType { get; set; }
+    public int? runId { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? updated { get; set; }
+    public int? executionOrder { get; set; }
+    public string? originalResult { get; set; }
+    public string? preCondition { get; set; }
+    public string? postCondition { get; set; }
+    public bool? isPostConditionMet { get; set; }
+    public string? assigneeIdentityProviderId { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? dueDate { get; set; }
 }
 
 // UiPath.TestManagementHub.TestManagement.Abstractions.DTOs.DefectDto
@@ -4515,10 +4575,10 @@ public class TmDefect
     public string? id { get; set; }
     public string? name { get; set; }
     public string? description { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? created { get; set; }
     public string? createdBy { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? updated { get; set; }
     public string? updatedBy { get; set; }
 }
@@ -4533,14 +4593,14 @@ public class TmRole
     public string? resourceType { get; set; }
     public string? id { get; set; }
     public string? tenantId { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? created { get; set; }
     public string? createdBy { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? updated { get; set; }
     public string? updatedBy { get; set; }
     public bool? isDeleted { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? deleted { get; set; }
     public string? deletedBy { get; set; }
 }
@@ -4690,7 +4750,7 @@ public class TmProjectPermission
     public bool? isOwner { get; set; }
     public string? id { get; set; }
     public TmDirectoryUser? user { get; set; }
-    //[JsonConverter(typeof(LocalDateTimeConverter))]
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? lastUpdated { get; set; }
     public string? lastUpdatedBy { get; set; }
     public string[]? roles { get; set; }
