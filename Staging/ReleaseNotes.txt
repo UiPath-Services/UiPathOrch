@@ -1,3 +1,13 @@
+Version: 0.9.15.2
+- Added Remove-OrchEventTrigger cmdlet.
+
+- Added -EntryPointPath alias to -Name parameter of Get-OrchTestCaseExecution.
+
+- Fixed Get-OrchTestCaseExecution filtering by -Name.
+
+- Fixed Get-ChildItem not working properly when there are no folders or projects.
+
+
 Version: 0.9.15.1
 - DateTime properties now return local time instead of UTC, even when not using the default view. Previously, local time was only displayed in the default view. This is a breaking change if you were relying on UTC timestamps.
 
