@@ -934,7 +934,7 @@ internal static class SessionStateExtentios
 
             drive.GetFolders(); // sorted by OrchDirectory and DisplayName
             var dicFolders = drive._dicFoldersForEnumFolders;
-            if (dicFolders is null) continue;
+            if (dicFolders is null || dicFolders.Count == 0) continue;
 
             Folder folder = drive.GetFolder(OrchDriveInfo.PSPathToOrchPath(WildcardPattern.Unescape(p.ProviderPath)));
             if (folder is null) continue;
@@ -1287,7 +1287,7 @@ internal static class SessionStateExtentios
             if (drive is null) continue;
 
             var dicProjects = drive!.GetDuProjects();
-            if (dicProjects is null) continue;
+            if (dicProjects is null || dicProjects.Length == 0) continue;
 
             //Folder folder = null; // drive?.GetFolder(OrchDriveInfo.PSPathToOrchPath(WildcardPattern.Unescape(p.ProviderPath)));
             //if (folder is null) continue;
@@ -1368,7 +1368,7 @@ internal static class SessionStateExtentios
             if (drive is null) continue;
 
             var dicProjects = drive!.GetTmProjects();
-            if (dicProjects is null) continue;
+            if (dicProjects is null || dicProjects.Count == 0) continue;
 
             //Folder folder = null; // drive?.GetFolder(OrchDriveInfo.PSPathToOrchPath(WildcardPattern.Unescape(p.ProviderPath)));
             //if (folder is null) continue;

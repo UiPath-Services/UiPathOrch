@@ -7,17 +7,13 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchTestCaseExecution")]
 [OutputType(typeof(Entities.TestCaseExecution))]
-public class GetTestCaseExecutionCommand : OrchestratorPSCmdlet
+public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TestCaseNameCompleter<TPositional>))]
     [SupportsWildcards]
+    [Alias("EntryPointPath")]
     public string[]? Name { get; set; }
-
-    //[Parameter(Position = 1)]
-    //[ArgumentCompleter(typeof(PackageIdentifierCompleter))]
-    //[SupportsWildcards]
-    //public string[]? PackageIdentifier { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -48,10 +44,9 @@ public class GetTestCaseExecutionCommand : OrchestratorPSCmdlet
                 var entities = result.GetResult(cancelHandler.Token);
                 if (entities is null) continue;
 
-                WriteObject(entities,
-                    //.FilterByWildcards(tc => tc.Name!, wpName)
-                    //.OrderBy(tc => tc.PackageIdentifier)
-                    //.ThenBy(tc => tc.Name),
+                WriteObject(entities
+                    .FilterByWildcards(e => e?.EntryPointPath, wpName)
+                    .OrderBy(e => e.EntryPointPath),
                     true);
             }
             catch (OrchException ex)
