@@ -2097,6 +2097,12 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<ApiTrigger>("/odata/ApiTriggers", folderId);
     }
 
+    public void RemoveEventTrigger(Int64 folderId, string triggerId)
+    {
+        // nothing returns
+        HttpRequest(HttpMethod.Delete, $"/odata/ApiTriggers({triggerId})", folderId);
+    }
+
     public bool? EnableEventTriggers(Int64 folderId, string triggerId, bool enabled = true)
     {
         var payload = new Dictionary<string, object?>
