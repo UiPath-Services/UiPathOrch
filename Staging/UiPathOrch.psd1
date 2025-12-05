@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.15.1'
+ModuleVersion = '0.9.15.2'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -232,6 +232,7 @@ CmdletsToExport = @(
 'Disable-OrchApiTrigger',
 
 'Get-OrchEventTrigger',
+'Remove-OrchEventTrigger',
 'Enable-OrchEventTrigger',
 'Disable-OrchEventTrigger',
 
@@ -399,9 +400,13 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- DateTime properties now return local time instead of UTC, even when not using the default view. Previously, local time was only displayed in the default view. This is a breaking change if you were relying on UTC timestamps.
+        ReleaseNotes = '- Added Remove-OrchEventTrigger cmdlet.
 
-- Improved performance by removing ScriptBlock for timezone conversion from format views.
+- Added -EntryPointPath alias to -Name parameter of Get-OrchTestCaseExecution.
+
+- Fixed Get-OrchTestCaseExecution filtering by -Name.
+
+- Fixed Get-ChildItem not working properly when there are no folders or projects.
 '
 
         # Prerelease string of this module
