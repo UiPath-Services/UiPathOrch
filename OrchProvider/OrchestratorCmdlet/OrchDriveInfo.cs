@@ -1970,6 +1970,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerOrganization<ExternalResource> PmExternalApiResources;
     public readonly ListCachePerOrganization<NuLicensedGroup> PmLicensedGroups;
     public readonly ListCachePerOrganization<NuLicensedUser> PmLicensedUsers;
+    public readonly ListCachePerOrganization<AccessAllowedMember> PmAccessAllowedMember;
 
     // インデックスなしの組織エンティティ
     // これらはマルチスレッドでの取得は避けるべきだ。Path の設定がおかしくなる。
@@ -2089,6 +2090,14 @@ public partial class OrchDriveInfo : PSDriveInfo
             {
                 e.Path = NameColonSeparator;
                 e.userBundleLicenseNames = e.userBundleLicenses?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
+            }
+        );
+
+        PmAccessAllowedMember = new(this,
+            OrchAPISession.GetPmPartitionAccessPolicy,
+            e =>
+            {
+                e.Path = NameColonSeparator;
             }
         );
 

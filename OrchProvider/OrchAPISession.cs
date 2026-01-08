@@ -3393,6 +3393,11 @@ public partial class OrchAPISession : IDisposable
         return body?.FirstOrDefault().Value;
     }
 
+    public AccessAllowedMember[] GetPmPartitionAccessPolicy(string partitionGlobalId)
+    {
+        return HttpRequestPortal<AccessAllowedMember[]>(HttpMethod.Get, $"/api/identity/PartitionAccessPolicy/{partitionGlobalId}") ?? [];
+    }
+
     #endregion
 
     #region Document Understanding
