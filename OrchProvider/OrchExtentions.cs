@@ -101,6 +101,7 @@ internal static class FolderExtensions
     public static string GetPSPath(this ExternalClient entity)        => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
     public static string GetPSPath(this NuLicensedGroup entity)       => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
     public static string GetPSPath(this NuLicensedGroupMember entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    public static string GetPSPath(this AccessAllowedMember entity)   => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
 
     public static string GetPSPath(this DirectoryUser entity)        => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
     public static string GetPSPath(this DirectoryRobotUser entity)   => Path.Combine(entity?.Path ?? "", entity?.name ?? "");

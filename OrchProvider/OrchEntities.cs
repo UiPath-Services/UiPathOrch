@@ -4150,6 +4150,21 @@ public class DirectoryScope
     public bool? isDefault { get; set; }
 }
 
+// private: return value from PartitionAccessPolicy
+public class AccessAllowedMember
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    public string? objectType { get; set; }
+    public string? externalId { get; set; } // string?
+    public string? source { get; set; }
+    public string? identifier { get; set; }
+    public string? name { get; set; }
+    public string? email { get; set; }
+    public string? displayName { get; set; }
+}
+
 #endregion
 
 
