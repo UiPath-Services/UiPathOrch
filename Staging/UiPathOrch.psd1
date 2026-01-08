@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.15.2'
+ModuleVersion = '0.9.15.3'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -334,6 +334,8 @@ CmdletsToExport = @(
 'Copy-PmExternalApplication',
 'Remove-PmExternalApplication',
 
+'Get-PmAccessAllowedMember',
+
 'Get-DuRole',
 'Get-DuDocumentType',
 'Get-DuClassifier',
@@ -400,13 +402,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Added Remove-OrchEventTrigger cmdlet.
-
-- Added -EntryPointPath alias to -Name parameter of Get-OrchTestCaseExecution.
-
-- Fixed Get-OrchTestCaseExecution filtering by -Name.
-
-- Fixed Get-ChildItem not working properly when there are no folders or projects.
+        ReleaseNotes = '- Added Get-PmAccessAllowedMember cmdlet to retrieve partition access policy members.
 '
 
         # Prerelease string of this module

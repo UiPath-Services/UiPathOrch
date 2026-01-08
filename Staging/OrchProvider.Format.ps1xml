@@ -4515,6 +4515,42 @@
     </View>
 
     <View>
+      <Name>AccessAllowedMember</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.AccessAllowedMember</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>identifier</Label></TableColumnHeader>
+          <TableColumnHeader><Label>name</Label></TableColumnHeader>
+          <TableColumnHeader><Label>displayName</Label></TableColumnHeader>
+          <TableColumnHeader><Label>email</Label></TableColumnHeader>
+          <TableColumnHeader><Label>source</Label></TableColumnHeader>
+          <TableColumnHeader><Label>objectType</Label></TableColumnHeader>
+          <TableColumnHeader><Label>externalId</Label></TableColumnHeader>
+        </TableHeaders>
+
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>identifier</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>name</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>displayName</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>email</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>source</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>objectType</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>externalId</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
       <Name>DuRole</Name>
       <ViewSelectedBy>
         <TypeName>UiPath.PowerShell.Entities.DuRole</TypeName>
