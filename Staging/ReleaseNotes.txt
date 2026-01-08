@@ -1,3 +1,7 @@
+Version: 0.9.15.3
+- Added Get-PmAccessAllowedMember cmdlet to retrieve partition access policy members.
+
+
 Version: 0.9.15.2
 - Added Remove-OrchEventTrigger cmdlet.
 
