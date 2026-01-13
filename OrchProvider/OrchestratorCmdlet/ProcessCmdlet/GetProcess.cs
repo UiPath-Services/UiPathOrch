@@ -210,7 +210,7 @@ public class GetProcessCommand : OrchestratorPSCmdlet
                         if (releaseDetailed.EntryPointId is not null)
                         {
                             var feedId = drive.FolderFeedId.Get(folder);
-                            var entryPoints = drive.GetPackageEntryPoints(feedId, releaseDetailed.Name!, releaseDetailed.ProcessVersion!);
+                            var entryPoints = drive.GetPackageEntryPoints(feedId, releaseDetailed.ProcessKey ?? "", releaseDetailed.ProcessVersion!);
                             var entryPath = entryPoints.FirstOrDefault(e => e.Id == releaseDetailed.EntryPointId)?.Path;
                             releaseDetailed.EntryPointPath = entryPath;
                         }
