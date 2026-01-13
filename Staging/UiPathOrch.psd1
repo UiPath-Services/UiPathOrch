@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.15.3'
+ModuleVersion = '0.9.15.4'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -402,7 +402,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Added Get-PmAccessAllowedMember cmdlet to retrieve partition access policy members.
+        ReleaseNotes = '- Fixed Get-OrchProcess -ExportCsv not retrieving process entry points correctly.
 '
 
         # Prerelease string of this module

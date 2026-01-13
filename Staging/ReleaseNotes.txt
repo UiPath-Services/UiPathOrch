@@ -1,3 +1,7 @@
+Version: 0.9.15.4
+- Fixed Get-OrchProcess -ExportCsv not retrieving process entry points correctly.
+
+
 Version: 0.9.15.3
 - Added Get-PmAccessAllowedMember cmdlet to retrieve partition access policy members.
 
