@@ -62,11 +62,6 @@ public class RateLimiter : IDisposable
         await rateLimitSemaphore.WaitAsync(cancellationToken);
     }
 
-    public void Release()
-    {
-        //concurrentSemaphore.Release();
-    }
-
     public void Dispose()
     {
         refillTimer.Dispose();
@@ -90,16 +85,15 @@ public partial class OrchAPISession : IDisposable
     }
 
     // 1秒間の間に送出できるリクエスト数を15に制限
-    private readonly RateLimiter limitter = new(15);
+    private readonly RateLimiter limiter = new(15);
 
     private int http_call_num = 0;
-        private HttpResponseMessage HttpClient_Send(HttpRequestMessage message, HttpClient? httpClient = null, CancellationToken cancellationToken = default)
+    private HttpResponseMessage HttpClient_Send(HttpRequestMessage message, HttpClient? httpClient = null, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        limitter.WaitAsync(cancellationToken).GetAwaiter().GetResult();
-        //limitter.Wait();
-        HttpResponseMessage ret = null;
+        limiter.Wait();
+        HttpResponseMessage? ret = null;
         DateTime reqTime = DateTime.Now;
         DateTime resTime = reqTime;
         int callId = Interlocked.Increment(ref http_call_num);
@@ -121,8 +115,6 @@ public partial class OrchAPISession : IDisposable
         }
         finally
         {
-            limitter.Release();
-
             var logging = _drive._psDrive.Logging;
             bool logEnabled = logging?.Enabled.GetValueOrDefault() ?? false;
             if (logEnabled)
@@ -395,6 +387,7 @@ public partial class OrchAPISession : IDisposable
             {
                 // Dispose managed resources
                 _httpClient?.Dispose();
+                limiter?.Dispose();
                 
                 // 非同期ログライターのDispose
                 DisposeAsyncLogWriter();
