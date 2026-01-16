@@ -270,7 +270,32 @@ public class GetTestSetExecutionCommand : OrchestratorPSCmdlet
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
 
-        string filter = MakeFilter();
+        // すべてのフィルタパラメータが指定されていなければ、キャッシュの内容を返す
+        bool bOutCache = (
+            Last is null &&
+            StartTimeAfter is null &&
+            StartTimeBefore is null &&
+            Status is null &&
+            TriggerType is null &&
+            Skip is null && First is null);
+
+        if (bOutCache)
+        {
+            WriteWarning("Since no filter parameters were specified, the contents of the cache will be output. To query the Orchestrator, please specify at least one filter parameter.");
+
+            foreach (var (drive, folder) in drivesFolders)
+            {
+                if (drive._dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out var entities) ?? false)
+                {
+                    WriteObject(entities.Values
+                        .FilterByWildcards(e => e?.Name, wpName),
+                        true);
+                }
+            }
+            return;
+        }
+
+        string? filter = MakeFilter();
 
         using var results = OrchThreadPool.RunForEach(drivesFolders,
             df => df.folder.GetPSPath(),
