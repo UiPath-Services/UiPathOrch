@@ -682,6 +682,16 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         return tiphelp;
     }
 
+    protected static string TipHelp(TestCaseExecution entity)
+    {
+        string tiphelp = entity.Path ?? "";
+        if (!string.IsNullOrEmpty(entity.EntryPointPath))
+        {
+            tiphelp += $" ({entity.EntryPointPath})";
+        }
+        return tiphelp;
+    }
+
     protected static string TipHelp(TestSetSchedule entity)
     {
         string tiphelp = entity.GetPSPath();
@@ -2055,6 +2065,46 @@ internal class TestSetExecutionNameCompleter : OrchArgumentCompleter
                 {
                     string tiphelp = TipHelp(testSetExecution);
                     yield return new CompletionResult(PathTools.EscapePSText(testSetExecution.Name!), testSetExecution.Name, CompletionResultType.ParameterValue, tiphelp);
+                }
+            }
+        }
+    }
+}
+
+/// <summary>
+/// TestCaseExecution のキャッシュから Id 一覧を取得する completer
+/// </summary>
+internal class TestCaseExecutionIdCompleter : OrchArgumentCompleter
+{
+    public override IEnumerable<CompletionResult> CompleteArgument(
+        string commandName,
+        string parameterName,
+        string wordToComplete,
+        CommandAst commandAst,
+        IDictionary fakeBoundParameters)
+    {
+        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+        var paramDepth = GetParameterValue(commandAst, "Depth");
+        uint.TryParse(paramDepth, out uint depth);
+
+        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+        var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
+
+        var wp = CreateWPFromWordToComplete(wordToComplete);
+
+        foreach (var (drive, folder) in drivesFolders)
+        {
+            // キャッシュから TestCaseExecution の Id 一覧を取得
+            if (drive._dicTestCaseExecutions?.TryGetValue(folder.Id ?? 0, out var cached) ?? false)
+            {
+                foreach (var tce in cached
+                    .Where(tce => tce.Id is not null && wp.IsMatch(tce.Id.ToString()!))
+                    .OrderByDescending(tce => tce.Id))
+                {
+                    string idStr = tce.Id.ToString()!;
+                    string tiphelp = TipHelp(tce);
+                    yield return new CompletionResult(idStr, idStr, CompletionResultType.ParameterValue, tiphelp);
                 }
             }
         }

@@ -2691,6 +2691,44 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<TestCaseExecution>("/odata/TestCaseExecutions", folderId, filter, skip, first);
     }
 
+    public TestCaseExecution? GetTestCaseExecutionWithAssertions(Int64 folderId, Int64 testCaseExecutionId)
+    {
+        return HttpRequest<TestCaseExecution>(HttpMethod.Get, $"/odata/TestCaseExecutions({testCaseExecutionId})?$expand=TestCaseAssertions", folderId);
+    }
+
+    public void DownloadAssertionScreenshot(Int64 folderId, Int64 assertionId, string destinationPath, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        string url = _base_url + $"/api/TestAutomation/GetAssertionScreenshot?testCaseAssertionId={assertionId}&organizationUnitId={folderId}";
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+
+        var response = HttpClient_Send(request, _httpClient, cancellationToken);
+        EnsureSuccessStatusCode(response);
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        using var httpStream = response.Content.ReadAsStream();
+        try
+        {
+            using var fileStream = new FileStream(
+                destinationPath,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.None,
+                bufferSize: 1024 * 128,
+                options: FileOptions.SequentialScan
+            );
+            httpStream.CopyTo(fileStream);
+            fileStream.Flush();
+        }
+        catch
+        {
+            TryDeleteFileQuiet(destinationPath);
+            throw;
+        }
+    }
+
     private class BulkDeleteTestCases
     {
         public List<Int64>? testCaseDefinitionIds { get; set; }
