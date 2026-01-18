@@ -1427,10 +1427,32 @@ public partial class OrchDriveInfo : PSDriveInfo
                 }
             }
 
-            // キャッシュに保存
+            // キャッシュに保存またはマージ
             if (useCache)
             {
                 _dicTestCaseExecutions![folder.Id ?? 0] = testCaseExecutions;
+            }
+            else if (testCaseExecutions.Count > 0)
+            {
+                // filter 付きの場合でも、結果をキャッシュにマージ
+                if (_dicTestCaseExecutions is null)
+                {
+                    lock (_dicTestCaseExecutions_Exceptions)
+                    {
+                        _dicTestCaseExecutions ??= new();
+                    }
+                }
+                var folderId = folder.Id ?? 0;
+                _dicTestCaseExecutions.AddOrUpdate(
+                    folderId,
+                    testCaseExecutions,
+                    (key, existing) =>
+                    {
+                        var existingIds = existing.Where(e => e.Id is not null).Select(e => e.Id!.Value).ToHashSet();
+                        var newItems = testCaseExecutions.Where(e => e.Id is not null && !existingIds.Contains(e.Id.Value));
+                        existing.AddRange(newItems);
+                        return existing;
+                    });
             }
 
             return testCaseExecutions;
