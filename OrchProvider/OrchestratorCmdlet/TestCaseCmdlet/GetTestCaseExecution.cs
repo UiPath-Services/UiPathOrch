@@ -3,7 +3,7 @@ using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.TestSetExecutionName;
+using TPositional = UiPath.PowerShell.Positional.Name; // パラメータセットがあるときはどう定義すればいいのだろう。。
 
 namespace UiPath.PowerShell.Commands;
 
@@ -16,13 +16,14 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(TestSetExecutionNameCompleter))]
     public string? TestSetExecutionName { get; set; }
 
-    // パラメータセット2: パイプ入力 (TestSetExecution)
-    [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = "ByPipeline")]
-    public object? InputObject { get; set; }
+    // パラメータセット2: Id 指定（パイプ入力用）
+    [Parameter(Mandatory = true, ValueFromPipelineByPropertyName = true, ParameterSetName = "ById")]
+    [Alias("Id")]
+    public Int64 TestSetExecutionId { get; set; }
 
     // 共通パラメータ
     [Parameter]
-    [ArgumentCompleter(typeof(TestCaseNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TestCaseExecutionEntryPointCompleter<TPositional>))]
     [SupportsWildcards]
     [Alias("EntryPointPath")]
     public string[]? Name { get; set; }
@@ -34,7 +35,7 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(StaticTextsCompleter<Item10>))]
     public ulong? First { get; set; }
 
-    [Parameter]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
@@ -80,8 +81,8 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
             case "ByName":
                 ProcessByName();
                 break;
-            case "ByPipeline":
-                ProcessByPipeline();
+            case "ById":
+                ProcessById();
                 break;
         }
     }
@@ -143,51 +144,35 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
                     .ThenBy(e => e.EntryPointPath),
                     true);
             }
-            catch (OrchException ex)
+            catch (Exception ex)
             {
-                WriteError(new ErrorRecord(ex, "GetTestCaseExecutionError", ErrorCategory.InvalidOperation, ex.Target));
+                string target = folder.GetPSPath();
+                WriteError(new ErrorRecord(new OrchException(target, ex), "GetTestCaseExecutionError", ErrorCategory.InvalidOperation, target));
             }
         }
     }
 
-    private void ProcessByPipeline()
+    private void ProcessById()
     {
-        // PSObject をアンラップ
-        var input = InputObject;
-        if (input is PSObject pso)
+        // Path がパイプでバインドされていなければカレントロケーションを使用
+        var path = Path ?? [SessionState.Path.CurrentLocation.Path];
+        var (drive, folder) = SessionState.ResolveToSingleFolder(path[0]);
+        var wpName = Name.ConvertToWildcardPatternList();
+
+        try
         {
-            input = pso.BaseObject;
+            string filter = MakeFilter(TestSetExecutionId);
+            var entities = drive.GetTestCaseExecutions(folder, filter, 0, ulong.MaxValue);
+
+            WriteObject(entities
+                .FilterByWildcards(e => e?.EntryPointPath, wpName)
+                .OrderBy(e => e.EntryPointPath),
+                true);
         }
-
-        if (input is TestSetExecution tse)
+        catch (Exception ex)
         {
-            if (tse.Id is null || string.IsNullOrEmpty(tse.Path))
-            {
-                WriteWarning("TestSetExecution is missing Id or Path.");
-                return;
-            }
-
-            var (drive, folder) = SessionState.ResolveToSingleFolder(tse.Path);
-            var wpName = Name.ConvertToWildcardPatternList();
-
-            try
-            {
-                string filter = MakeFilter(tse.Id.Value);
-                var entities = drive.GetTestCaseExecutions(folder, filter, 0, ulong.MaxValue);
-
-                WriteObject(entities
-                    .FilterByWildcards(e => e?.EntryPointPath, wpName)
-                    .OrderBy(e => e.EntryPointPath),
-                    true);
-            }
-            catch (OrchException ex)
-            {
-                WriteError(new ErrorRecord(ex, "GetTestCaseExecutionError", ErrorCategory.InvalidOperation, ex.Target));
-            }
-        }
-        else
-        {
-            WriteWarning($"InputObject must be TestSetExecution, but got {input?.GetType().Name ?? "null"}.");
+            string target = folder.GetPSPath();
+            WriteError(new ErrorRecord(new OrchException(target, ex), "GetTestCaseExecutionError", ErrorCategory.InvalidOperation, target));
         }
     }
 }

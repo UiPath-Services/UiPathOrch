@@ -2132,6 +2132,56 @@ internal class TestCaseExecutionIdCompleter : OrchArgumentCompleter
     }
 }
 
+/// <summary>
+/// TestCaseExecution のキャッシュから EntryPointPath 一覧を distinct して取得する completer
+/// </summary>
+internal class TestCaseExecutionEntryPointCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+{
+    public override IEnumerable<CompletionResult> CompleteArgument(
+        string commandName,
+        string parameterName,
+        string wordToComplete,
+        CommandAst commandAst,
+        IDictionary fakeBoundParameters)
+    {
+        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+        var paramDepth = GetParameterValue(commandAst, "Depth");
+        uint.TryParse(paramDepth, out uint depth);
+
+        var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
+
+        // パラメータで選択済みの Name は、候補から除外する
+        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+
+        var wp = CreateWPFromWordToComplete(wordToComplete);
+        var yielded = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var (drive, folder) in drivesFolders)
+        {
+            if (drive._dicTestCaseExecutions?.TryGetValue(folder.Id ?? 0, out var cached) ?? false)
+            {
+                foreach (var entryPointPath in cached
+                    .Select(e => e.EntryPointPath)
+                    .Where(p => p is not null && wp.IsMatch(p))
+                    .ExcludeByWildcards(te => te, wpName)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(p => p))
+                {
+                    if (yielded.Add(entryPointPath!))
+                    {
+                        yield return new CompletionResult(
+                            PathTools.EscapePSText(entryPointPath),
+                            entryPointPath,
+                            CompletionResultType.ParameterValue,
+                            entryPointPath!);
+                    }
+                }
+            }
+        }
+    }
+}
+
 #region Completers for Platform Management cmdlets
 public class PmGroupNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
 {
