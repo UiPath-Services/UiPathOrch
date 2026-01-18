@@ -2343,8 +2343,8 @@
         <TypeName>UiPath.PowerShell.Entities.TestCaseExecution</TypeName>
       </ViewSelectedBy>
       <GroupBy>
-        <Label>Directory</Label>
-        <PropertyName>Path</PropertyName>
+        <Label>TestSetExecution</Label>
+        <PropertyName>PathTestSetExecutionName</PropertyName>
       </GroupBy>
       <TableControl>
         <TableHeaders>
@@ -2402,6 +2402,65 @@
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>Info</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>TestCaseAssertion</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.TestCaseAssertion</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Id</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>TestCaseExecutionId</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Succeeded</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Message</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>HasScreenshot</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>CreationTime</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>Id</PropertyName>
+                <Alignment>right</Alignment>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>TestCaseExecutionId</PropertyName>
+                <Alignment>right</Alignment>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Succeeded</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Message</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>HasScreenshot</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>CreationTime</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
