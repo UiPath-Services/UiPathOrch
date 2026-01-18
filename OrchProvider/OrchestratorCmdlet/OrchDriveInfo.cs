@@ -1368,6 +1368,82 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     #endregion
 
+    #region OrchTestCaseExecution cache
+    // Key: folderId
+    internal ConcurrentDictionary<Int64, List<TestCaseExecution>>? _dicTestCaseExecutions = null;
+    internal ExceptionsCachePer<Int64> _dicTestCaseExecutions_Exceptions = new();
+
+    /// <summary>
+    /// TestCaseExecution を API から取得し、Path と TestSetExecutionName を設定する。
+    /// キャッシュがあればキャッシュから返す。
+    /// </summary>
+    public List<TestCaseExecution> GetTestCaseExecutions(Folder folder, string? filter = null, ulong skip = 0, ulong first = ulong.MaxValue)
+    {
+        // filter/skip/first 指定がある場合はキャッシュを使わない
+        bool useCache = (filter is null && skip == 0 && first == ulong.MaxValue);
+
+        if (useCache)
+        {
+            _dicTestCaseExecutions_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
+
+            if (_dicTestCaseExecutions is null)
+            {
+                lock (_dicTestCaseExecutions_Exceptions)
+                {
+                    _dicTestCaseExecutions ??= new();
+                }
+            }
+
+            if (_dicTestCaseExecutions.TryGetValue(folder.Id ?? 0, out var cached))
+            {
+                return cached;
+            }
+        }
+
+        try
+        {
+            var testCaseExecutions = OrchAPISession.GetTestCaseExecutions(folder.Id ?? 0, filter, skip, first).ToList();
+            string folderPath = folder.GetPSPath();
+
+            // キャッシュから TestSetExecutionName を取得するための準備
+            ConcurrentDictionary<Int64, TestSetExecution>? folderTestSetExecutions = null;
+            _dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out folderTestSetExecutions);
+
+            foreach (var testCaseExecution in testCaseExecutions)
+            {
+                testCaseExecution.Path = folderPath;
+
+                // TestSetExecutionName をキャッシュから設定
+                if (testCaseExecution.TestSetExecutionId is not null && folderTestSetExecutions is not null)
+                {
+                    if (folderTestSetExecutions.TryGetValue(testCaseExecution.TestSetExecutionId.Value, out var testSetExecution))
+                    {
+                        testCaseExecution.TestSetExecutionName = testSetExecution.Name;
+                        testCaseExecution.PathTestSetExecutionName = Path.Combine(folderPath, testSetExecution.Name!);
+                    }
+                }
+            }
+
+            // キャッシュに保存
+            if (useCache)
+            {
+                _dicTestCaseExecutions![folder.Id ?? 0] = testCaseExecutions;
+            }
+
+            return testCaseExecutions;
+        }
+        catch (HttpResponseException ex)
+        {
+            if (useCache)
+            {
+                _dicTestCaseExecutions_Exceptions.CacheException(folder.Id ?? 0, ex);
+            }
+            throw;
+        }
+    }
+
+    #endregion
+
     #region OrchBucket cache
 
     // key: (folderId, bucketId)
@@ -2027,7 +2103,6 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerFolder<RobotsFromFolderModel> RobotsFromFolder;
     public readonly ListCachePerFolder<Session> Sessions;
     public readonly ListCachePerFolder<TestCaseDefinition> TestCases;
-    public readonly ListCachePerFolder<TestCaseExecution> TestCaseExecutions;
     public readonly ListCachePerFolder<TestDataQueue> TestDataQueues;
     //public readonly ListCachePerFolder<TestDataQueueItem> TestDataQueueItems;
     public readonly ListCachePerFolder<TestSet> TestSets;
@@ -2262,7 +2337,6 @@ public partial class OrchDriveInfo : PSDriveInfo
         RobotsFromFolder               = new(this, OrchAPISession.GetRobotsFromFolder,   (e, folderPath) => e.Path = folderPath);
         Sessions                       = new(this, OrchAPISession.GetSessions,           (e, folderPath) => e.Path = folderPath);
         TestCases                      = new(this, OrchAPISession.GetTestCases,          (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済みだが、実際には API ver に依存しないらしい
-        TestCaseExecutions             = new(this, OrchAPISession.GetTestCaseExecutions, (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済みだが、実際には API ver に依存しないらしい
         TestDataQueues                 = new(this, OrchAPISession.GetTestDataQueues,     (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済みだが、実際には API ver に依存しないらしい
         TestSets                       = new(this, OrchAPISession.GetTestSets,           (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済みだが、実際には API ver に依存しないらしい
         TestSetSchedules               = new(this, OrchAPISession.GetTestSetSchedules,   (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済みだが、実際には API ver に依存しないらしい

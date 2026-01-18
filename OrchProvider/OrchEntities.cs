@@ -3329,6 +3329,10 @@ public class TestCaseExecution
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? TestSetExecutionName { get; set; } // added by UiPathOrch
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? PathTestSetExecutionName { get; set; } // added by UiPathOrch
     public Int64? Id { get; set; }
     public Int64? JobId { get; set; }
     public string? JobKey { get; set; }
