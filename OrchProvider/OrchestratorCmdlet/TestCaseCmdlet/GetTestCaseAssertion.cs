@@ -161,9 +161,10 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
                 WriteObject(assertion);
             }
         }
-        catch (OrchException ex)
+        catch (Exception ex)
         {
-            WriteError(new ErrorRecord(ex, "GetTestCaseAssertionError", ErrorCategory.InvalidOperation, ex.Target));
+            string target = folder.GetPSPath();
+            WriteError(new ErrorRecord(new OrchException(target, ex), "GetTestCaseAssertionError", ErrorCategory.InvalidOperation, target));
         }
     }
 
@@ -206,18 +207,26 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
         {
             _cancelHandler!.Token.ThrowIfCancellationRequested();
 
-            var testSetExecutionId = ResolveTestSetExecutionId(drive, folder, TestSetExecutionName);
-            if (testSetExecutionId is null)
+            try
             {
-                WriteWarning($"TestSetExecution '{TestSetExecutionName}' not found in folder '{folder.GetPSPath()}'.");
-                continue;
-            }
+                var testSetExecutionId = ResolveTestSetExecutionId(drive, folder, TestSetExecutionName);
+                if (testSetExecutionId is null)
+                {
+                    WriteWarning($"TestSetExecution '{TestSetExecutionName}' not found in folder '{folder.GetPSPath()}'.");
+                    continue;
+                }
 
-            var testCaseExecutionIds = GetTestCaseExecutionIds(drive, folder, testSetExecutionId.Value);
-            foreach (var testCaseExecutionId in testCaseExecutionIds)
+                var testCaseExecutionIds = GetTestCaseExecutionIds(drive, folder, testSetExecutionId.Value);
+                foreach (var testCaseExecutionId in testCaseExecutionIds)
+                {
+                    _cancelHandler.Token.ThrowIfCancellationRequested();
+                    ProcessAssertions(drive, folder, testCaseExecutionId);
+                }
+            }
+            catch (Exception ex)
             {
-                _cancelHandler.Token.ThrowIfCancellationRequested();
-                ProcessAssertions(drive, folder, testCaseExecutionId);
+                string target = folder.GetPSPath();
+                WriteError(new ErrorRecord(new OrchException(target, ex), "GetTestCaseAssertionError", ErrorCategory.InvalidOperation, target));
             }
         }
     }
@@ -271,13 +280,21 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
             }
 
             var (drive, folder) = SessionState.ResolveToSingleFolder(tse.Path);
-            _cancelHandler!.Token.ThrowIfCancellationRequested();
-
-            var testCaseExecutionIds = GetTestCaseExecutionIds(drive, folder, tse.Id.Value);
-            foreach (var testCaseExecutionId in testCaseExecutionIds)
+            try
             {
-                _cancelHandler.Token.ThrowIfCancellationRequested();
-                ProcessAssertions(drive, folder, testCaseExecutionId);
+                _cancelHandler!.Token.ThrowIfCancellationRequested();
+
+                var testCaseExecutionIds = GetTestCaseExecutionIds(drive, folder, tse.Id.Value);
+                foreach (var testCaseExecutionId in testCaseExecutionIds)
+                {
+                    _cancelHandler.Token.ThrowIfCancellationRequested();
+                    ProcessAssertions(drive, folder, testCaseExecutionId);
+                }
+            }
+            catch (Exception ex)
+            {
+                string target = folder.GetPSPath();
+                WriteError(new ErrorRecord(new OrchException(target, ex), "GetTestCaseAssertionError", ErrorCategory.InvalidOperation, target));
             }
         }
         else
@@ -304,18 +321,26 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
             else if (!string.IsNullOrEmpty(name))
             {
                 // Name があれば TestSetExecutionName として処理
-                var testSetExecutionId = ResolveTestSetExecutionId(drive, folder, name);
-                if (testSetExecutionId is null)
+                try
                 {
-                    WriteWarning($"TestSetExecution '{name}' not found in folder '{folder.GetPSPath()}'.");
-                    return;
-                }
+                    var testSetExecutionId = ResolveTestSetExecutionId(drive, folder, name);
+                    if (testSetExecutionId is null)
+                    {
+                        WriteWarning($"TestSetExecution '{name}' not found in folder '{folder.GetPSPath()}'.");
+                        return;
+                    }
 
-                var testCaseExecutionIds = GetTestCaseExecutionIds(drive, folder, testSetExecutionId.Value);
-                foreach (var testCaseExecutionId in testCaseExecutionIds)
+                    var testCaseExecutionIds = GetTestCaseExecutionIds(drive, folder, testSetExecutionId.Value);
+                    foreach (var testCaseExecutionId in testCaseExecutionIds)
+                    {
+                        _cancelHandler!.Token.ThrowIfCancellationRequested();
+                        ProcessAssertions(drive, folder, testCaseExecutionId);
+                    }
+                }
+                catch (Exception ex)
                 {
-                    _cancelHandler!.Token.ThrowIfCancellationRequested();
-                    ProcessAssertions(drive, folder, testCaseExecutionId);
+                    string target = folder.GetPSPath();
+                    WriteError(new ErrorRecord(new OrchException(target, ex), "GetTestCaseAssertionError", ErrorCategory.InvalidOperation, target));
                 }
             }
             else
