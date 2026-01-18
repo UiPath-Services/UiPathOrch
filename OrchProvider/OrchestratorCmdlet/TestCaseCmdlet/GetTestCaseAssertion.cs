@@ -5,20 +5,20 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Get, "OrchTestCaseAssertion", DefaultParameterSetName = "ById")]
+[Cmdlet(VerbsCommon.Get, "OrchTestCaseAssertion", DefaultParameterSetName = "ByTestSetExecutionName")]
 [OutputType(typeof(Entities.TestCaseAssertion))]
 public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 {
-    // パラメータセット1: Id 直接指定
+    // パラメータセット1: TestSetExecutionName 直接指定
+    [Parameter(Mandatory = true, Position = 0, ParameterSetName = "ByTestSetExecutionName")]
+    [ArgumentCompleter(typeof(TestSetExecutionNameCompleter))]
+    public string TestSetExecutionName { get; set; } = null!;
+
+    // パラメータセット2: Id 直接指定
     [Parameter(Mandatory = true, Position = 0, ParameterSetName = "ById")]
     [ArgumentCompleter(typeof(TestCaseExecutionIdCompleter))]
     [Alias("TestCaseExecutionId")]
     public Int64[] Id { get; set; } = null!;
-
-    // パラメータセット2: TestSetExecutionName 直接指定
-    [Parameter(Mandatory = true, Position = 0, ParameterSetName = "ByTestSetExecutionName")]
-    [ArgumentCompleter(typeof(TestSetExecutionNameCompleter))]
-    public string TestSetExecutionName { get; set; } = null!;
 
     // パラメータセット3: パイプ入力 (TestCaseExecution または TestSetExecution)
     [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = "ByPipeline")]
@@ -34,12 +34,12 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 
     private string? _resolvedDestination;
     private ConsoleCancelHandler? _cancelHandler;
-    private HashSet<(Int64 folderId, Int64 testCaseExecutionId)> _processedIds = new();
+    private HashSet<(Int64 folderId, Int64 testCaseExecutionId)> _processedIds = [];
 
     /// <summary>
     /// キャッシュまたは API から TestSetExecution を名前で検索し、Id を返す。
     /// </summary>
-    private Int64? ResolveTestSetExecutionId(OrchDriveInfo drive, Folder folder, string name)
+    private static Int64? ResolveTestSetExecutionId(OrchDriveInfo drive, Folder folder, string name)
     {
         if (drive._dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out var cached) ?? false)
         {
@@ -60,7 +60,7 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
     /// <summary>
     /// TestSetExecutionId から TestCaseExecutionId[] を取得する。
     /// </summary>
-    private IEnumerable<Int64> GetTestCaseExecutionIds(OrchDriveInfo drive, Folder folder, Int64 testSetExecutionId)
+    private static IEnumerable<Int64> GetTestCaseExecutionIds(OrchDriveInfo drive, Folder folder, Int64 testSetExecutionId)
     {
         // キャッシュから取得を試みる
         if (drive._dicTestCaseExecutions?.TryGetValue(folder.Id ?? 0, out var cached) ?? false)
@@ -92,8 +92,38 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 
         try
         {
-            var execution = drive.OrchAPISession.GetTestCaseExecutionWithAssertions(folder.Id!.Value, testCaseExecutionId);
-            if (execution?.TestCaseAssertions is null) return;
+            List<TestCaseAssertion>? assertions = null;
+            Int64 folderId = folder.Id!.Value;
+
+            // キャッシュから取得を試みる
+            if (drive._dicTestCaseAssertions?.TryGetValue(folderId, out var folderCache) ?? false)
+            {
+                folderCache.TryGetValue(testCaseExecutionId, out assertions);
+            }
+
+            // キャッシュになければ API から取得
+            if (assertions is null)
+            {
+                var execution = drive.OrchAPISession.GetTestCaseExecutionWithAssertions(folderId, testCaseExecutionId);
+                assertions = execution?.TestCaseAssertions?.ToList() ?? [];
+
+                // キャッシュに保存
+                if (drive._dicTestCaseAssertions is null)
+                {
+                    lock (drive)
+                    {
+                        drive._dicTestCaseAssertions ??= new();
+                    }
+                }
+                if (!drive._dicTestCaseAssertions.TryGetValue(folderId, out folderCache))
+                {
+                    folderCache = new();
+                    drive._dicTestCaseAssertions[folderId] = folderCache;
+                }
+                folderCache[testCaseExecutionId] = assertions;
+            }
+
+            if (assertions.Count == 0) return;
 
             // スクリーンショット保存先ディレクトリ
             string? screenshotDir = null;
@@ -102,11 +132,13 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
                 screenshotDir = System.IO.Path.Combine(_resolvedDestination, folder.DisplayName ?? folder.Id.ToString()!);
             }
 
-            foreach (var assertion in execution.TestCaseAssertions)
+            string folderPath = folder.GetPSPath();
+
+            foreach (var assertion in assertions)
             {
                 _cancelHandler!.Token.ThrowIfCancellationRequested();
 
-                assertion.Path = folder.GetPSPath();
+                assertion.Path = folderPath;
                 assertion.TestCaseExecutionId = testCaseExecutionId;
 
                 // スクリーンショットをダウンロード
@@ -117,7 +149,7 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
                         Directory.CreateDirectory(screenshotDir);
                         string fileName = $"{testCaseExecutionId}_{assertion.Id}.jpg";
                         string filePath = System.IO.Path.Combine(screenshotDir, fileName);
-                        drive.OrchAPISession.DownloadAssertionScreenshot(folder.Id!.Value, assertion.Id.Value, filePath, _cancelHandler.Token);
+                        drive.OrchAPISession.DownloadAssertionScreenshot(folderId, assertion.Id.Value, filePath, _cancelHandler.Token);
                         assertion.ScreenshotPath = filePath;
                     }
                     catch (Exception ex)
@@ -154,29 +186,15 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
     {
         switch (ParameterSetName)
         {
-            case "ById":
-                ProcessById();
-                break;
             case "ByTestSetExecutionName":
                 ProcessByTestSetExecutionName();
+                break;
+            case "ById":
+                ProcessById();
                 break;
             case "ByPipeline":
                 ProcessByPipeline();
                 break;
-        }
-    }
-
-    private void ProcessById()
-    {
-        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path);
-
-        foreach (var (drive, folder) in drivesFolders)
-        {
-            foreach (var testCaseExecutionId in Id)
-            {
-                _cancelHandler!.Token.ThrowIfCancellationRequested();
-                ProcessAssertions(drive, folder, testCaseExecutionId);
-            }
         }
     }
 
@@ -204,14 +222,33 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
         }
     }
 
+    private void ProcessById()
+    {
+        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path);
+
+        foreach (var (drive, folder) in drivesFolders)
+        {
+            foreach (var testCaseExecutionId in Id)
+            {
+                _cancelHandler!.Token.ThrowIfCancellationRequested();
+                ProcessAssertions(drive, folder, testCaseExecutionId);
+            }
+        }
+    }
+
     private void ProcessByPipeline()
     {
-        // PSObject をアンラップ
-        var input = InputObject;
-        if (input is PSObject pso)
+        // PSObject からプロパティを取得するヘルパー
+        static T? GetProperty<T>(PSObject pso, string name)
         {
-            input = pso.BaseObject;
+            var prop = pso.Properties[name];
+            if (prop?.Value is T value)
+                return value;
+            return default;
         }
+
+        var pso = InputObject as PSObject ?? new PSObject(InputObject);
+        var input = pso.BaseObject;
 
         if (input is TestCaseExecution tce)
         {
@@ -245,7 +282,46 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
         }
         else
         {
-            WriteWarning($"InputObject must be TestCaseExecution or TestSetExecution, but got {input?.GetType().Name ?? "null"}.");
+            // ダックタイピング: Id または Name プロパティがあれば処理
+            var id = GetProperty<Int64?>(pso, "Id") ?? GetProperty<long?>(pso, "Id");
+            var name = GetProperty<string>(pso, "Name");
+            var path = GetProperty<string>(pso, "Path");
+
+            // Path がなければ -Path パラメータ、それもなければカレントロケーションを使用
+            if (string.IsNullOrEmpty(path))
+            {
+                path = Path?.FirstOrDefault() ?? SessionState.Path.CurrentLocation.Path;
+            }
+
+            var (drive, folder) = SessionState.ResolveToSingleFolder(path);
+
+            if (id is not null)
+            {
+                // Id があれば TestCaseExecutionId として処理
+                _cancelHandler!.Token.ThrowIfCancellationRequested();
+                ProcessAssertions(drive, folder, id.Value);
+            }
+            else if (!string.IsNullOrEmpty(name))
+            {
+                // Name があれば TestSetExecutionName として処理
+                var testSetExecutionId = ResolveTestSetExecutionId(drive, folder, name);
+                if (testSetExecutionId is null)
+                {
+                    WriteWarning($"TestSetExecution '{name}' not found in folder '{folder.GetPSPath()}'.");
+                    return;
+                }
+
+                var testCaseExecutionIds = GetTestCaseExecutionIds(drive, folder, testSetExecutionId.Value);
+                foreach (var testCaseExecutionId in testCaseExecutionIds)
+                {
+                    _cancelHandler!.Token.ThrowIfCancellationRequested();
+                    ProcessAssertions(drive, folder, testCaseExecutionId);
+                }
+            }
+            else
+            {
+                WriteWarning($"InputObject must have Id or Name property, but got {input?.GetType().Name ?? "null"}.");
+            }
         }
     }
 
