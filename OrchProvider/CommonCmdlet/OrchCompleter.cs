@@ -2021,6 +2021,46 @@ internal class TestSetNameCompleter<TPositional> : OrchArgumentCompleter where T
     }
 }
 
+/// <summary>
+/// TestSetExecution のキャッシュから名前一覧を取得する completer
+/// </summary>
+internal class TestSetExecutionNameCompleter : OrchArgumentCompleter
+{
+    public override IEnumerable<CompletionResult> CompleteArgument(
+        string commandName,
+        string parameterName,
+        string wordToComplete,
+        CommandAst commandAst,
+        IDictionary fakeBoundParameters)
+    {
+        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+        var paramDepth = GetParameterValue(commandAst, "Depth");
+        uint.TryParse(paramDepth, out uint depth);
+
+        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+        var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
+
+        var wp = CreateWPFromWordToComplete(wordToComplete);
+
+        foreach (var (drive, folder) in drivesFolders)
+        {
+            // キャッシュから TestSetExecution の名前一覧を取得（名前で一意にする）
+            if (drive._dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out var cached) ?? false)
+            {
+                foreach (var testSetExecution in cached.Values
+                    .Where(te => te.Name is not null && wp.IsMatch(te.Name))
+                    .DistinctBy(te => te.Name)
+                    .OrderBy(te => te.Name))
+                {
+                    string tiphelp = TipHelp(testSetExecution);
+                    yield return new CompletionResult(PathTools.EscapePSText(testSetExecution.Name!), testSetExecution.Name, CompletionResultType.ParameterValue, tiphelp);
+                }
+            }
+        }
+    }
+}
+
 #region Completers for Platform Management cmdlets
 public class PmGroupNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
 {

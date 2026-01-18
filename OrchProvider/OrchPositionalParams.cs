@@ -70,6 +70,11 @@ internal class DirectoryTypes : IPositionalParameters
     ];
 }
 
+internal class TestSetExecutionName : IPositionalParameters
+{
+    public static string[] Parameters { get; } = ["TestSetExecutionName"];
+}
+
 internal class AssetTypeItems : IPositionalParameters
 {
     public static string[] Parameters { get; } = ["Text", "Integer", "Bool"];

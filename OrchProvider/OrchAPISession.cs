@@ -2686,9 +2686,9 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<TestCaseDefinition>("/odata/TestCaseDefinitions", folderId);
     }
 
-    public IEnumerable<TestCaseExecution> GetTestCaseExecutions(Int64 folderId)
+    public IEnumerable<TestCaseExecution> GetTestCaseExecutions(Int64 folderId, string? filter, ulong skip, ulong first)
     {
-        return GetEnumerable<TestCaseExecution>("/odata/TestCaseExecutions", folderId);
+        return GetEnumerable<TestCaseExecution>("/odata/TestCaseExecutions", folderId, filter, skip, first);
     }
 
     private class BulkDeleteTestCases
