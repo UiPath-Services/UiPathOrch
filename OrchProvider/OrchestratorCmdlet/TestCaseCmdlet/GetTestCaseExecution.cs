@@ -1,4 +1,4 @@
-﻿using System.Management.Automation;
+using System.Management.Automation;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
@@ -7,28 +7,34 @@ using TPositional = UiPath.PowerShell.Positional.TestSetExecutionName;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Get, "OrchTestCaseExecution")]
+[Cmdlet(VerbsCommon.Get, "OrchTestCaseExecution", DefaultParameterSetName = "ByName")]
 [OutputType(typeof(Entities.TestCaseExecution))]
 public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
+    // パラメータセット1: 名前指定
+    [Parameter(Position = 0, ParameterSetName = "ByName")]
     [ArgumentCompleter(typeof(TestSetExecutionNameCompleter))]
     public string? TestSetExecutionName { get; set; }
 
-    [Parameter(ValueFromPipelineByPropertyName = true)]
+    // パラメータセット2: パイプ入力 (TestSetExecution)
+    [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = "ByPipeline")]
+    public object? InputObject { get; set; }
+
+    // 共通パラメータ
+    [Parameter]
     [ArgumentCompleter(typeof(TestCaseNameCompleter<TPositional>))]
     [SupportsWildcards]
     [Alias("EntryPointPath")]
     public string[]? Name { get; set; }
 
-    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Parameter(ParameterSetName = "ByName")]
     public ulong? Skip { get; set; }
 
-    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Parameter(ParameterSetName = "ByName")]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Item10>))]
     public ulong? First { get; set; }
 
-    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Parameter]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
@@ -42,7 +48,7 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
     /// キャッシュまたは API から TestSetExecution を名前で検索し、Id を返す。
     /// 見つからない場合は null を返す。
     /// </summary>
-    private Int64? ResolveTestSetExecutionId(OrchDriveInfo drive, Folder folder, string name)
+    private static Int64? ResolveTestSetExecutionId(OrchDriveInfo drive, Folder folder, string name)
     {
         // まずキャッシュから検索
         if (drive._dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out var cached) ?? false)
@@ -62,12 +68,25 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
         return execution?.Id;
     }
 
-    private static string? MakeFilter(Int64 testSetExecutionId)
+    private static string MakeFilter(Int64 testSetExecutionId)
     {
         return $"&$filter=(TestSetExecutionId%20eq%20{testSetExecutionId})";
     }
 
     protected override void ProcessRecord()
+    {
+        switch (ParameterSetName)
+        {
+            case "ByName":
+                ProcessByName();
+                break;
+            case "ByPipeline":
+                ProcessByPipeline();
+                break;
+        }
+    }
+
+    private void ProcessByName()
     {
         ulong skip = Skip ?? 0;
         ulong first = First ?? ulong.MaxValue;
@@ -128,6 +147,47 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
             {
                 WriteError(new ErrorRecord(ex, "GetTestCaseExecutionError", ErrorCategory.InvalidOperation, ex.Target));
             }
+        }
+    }
+
+    private void ProcessByPipeline()
+    {
+        // PSObject をアンラップ
+        var input = InputObject;
+        if (input is PSObject pso)
+        {
+            input = pso.BaseObject;
+        }
+
+        if (input is TestSetExecution tse)
+        {
+            if (tse.Id is null || string.IsNullOrEmpty(tse.Path))
+            {
+                WriteWarning("TestSetExecution is missing Id or Path.");
+                return;
+            }
+
+            var (drive, folder) = SessionState.ResolveToSingleFolder(tse.Path);
+            var wpName = Name.ConvertToWildcardPatternList();
+
+            try
+            {
+                string filter = MakeFilter(tse.Id.Value);
+                var entities = drive.GetTestCaseExecutions(folder, filter, 0, ulong.MaxValue);
+
+                WriteObject(entities
+                    .FilterByWildcards(e => e?.EntryPointPath, wpName)
+                    .OrderBy(e => e.EntryPointPath),
+                    true);
+            }
+            catch (OrchException ex)
+            {
+                WriteError(new ErrorRecord(ex, "GetTestCaseExecutionError", ErrorCategory.InvalidOperation, ex.Target));
+            }
+        }
+        else
+        {
+            WriteWarning($"InputObject must be TestSetExecution, but got {input?.GetType().Name ?? "null"}.");
         }
     }
 }

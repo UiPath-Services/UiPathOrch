@@ -1373,6 +1373,9 @@ public partial class OrchDriveInfo : PSDriveInfo
     internal ConcurrentDictionary<Int64, List<TestCaseExecution>>? _dicTestCaseExecutions = null;
     internal ExceptionsCachePer<Int64> _dicTestCaseExecutions_Exceptions = new();
 
+    // TestCaseAssertion cache: Key1=folderId, Key2=testCaseExecutionId
+    internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, List<TestCaseAssertion>>>? _dicTestCaseAssertions = null;
+
     /// <summary>
     /// TestCaseExecution を API から取得し、Path と TestSetExecutionName を設定する。
     /// キャッシュがあればキャッシュから返す。

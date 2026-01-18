@@ -2072,7 +2072,7 @@ internal class TestSetExecutionNameCompleter : OrchArgumentCompleter
 }
 
 /// <summary>
-/// TestCaseExecution のキャッシュから Id 一覧を取得する completer
+/// TestCaseExecution と TestCaseAssertion のキャッシュから Id 一覧を取得する completer
 /// </summary>
 internal class TestCaseExecutionIdCompleter : OrchArgumentCompleter
 {
@@ -2092,19 +2092,40 @@ internal class TestCaseExecutionIdCompleter : OrchArgumentCompleter
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
+        var yielded = new HashSet<Int64>();
 
         foreach (var (drive, folder) in drivesFolders)
         {
-            // キャッシュから TestCaseExecution の Id 一覧を取得
-            if (drive._dicTestCaseExecutions?.TryGetValue(folder.Id ?? 0, out var cached) ?? false)
+            Int64 folderId = folder.Id ?? 0;
+
+            // TestCaseExecution キャッシュから Id を取得
+            if (drive._dicTestCaseExecutions?.TryGetValue(folderId, out var tceCache) ?? false)
             {
-                foreach (var tce in cached
+                foreach (var tce in tceCache
                     .Where(tce => tce.Id is not null && wp.IsMatch(tce.Id.ToString()!))
                     .OrderByDescending(tce => tce.Id))
                 {
-                    string idStr = tce.Id.ToString()!;
-                    string tiphelp = TipHelp(tce);
-                    yield return new CompletionResult(idStr, idStr, CompletionResultType.ParameterValue, tiphelp);
+                    if (yielded.Add(tce.Id!.Value))
+                    {
+                        string idStr = tce.Id.ToString()!;
+                        string tiphelp = TipHelp(tce);
+                        yield return new CompletionResult(idStr, idStr, CompletionResultType.ParameterValue, tiphelp);
+                    }
+                }
+            }
+
+            // TestCaseAssertion キャッシュから TestCaseExecutionId を取得
+            if (drive._dicTestCaseAssertions?.TryGetValue(folderId, out var tcaCache) ?? false)
+            {
+                foreach (var testCaseExecutionId in tcaCache.Keys
+                    .Where(id => wp.IsMatch(id.ToString()))
+                    .OrderByDescending(id => id))
+                {
+                    if (yielded.Add(testCaseExecutionId))
+                    {
+                        string idStr = testCaseExecutionId.ToString();
+                        yield return new CompletionResult(idStr, idStr, CompletionResultType.ParameterValue, folder.GetPSPath());
+                    }
                 }
             }
         }
