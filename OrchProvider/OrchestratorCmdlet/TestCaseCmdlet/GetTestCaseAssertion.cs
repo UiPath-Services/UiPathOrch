@@ -30,9 +30,9 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
     public string[]? Path { get; set; }
 
     [Parameter]
-    public string? Destination { get; set; }
+    public string? ScreenshotPath { get; set; }
 
-    private string? _resolvedDestination;
+    private string? _resolvedScreenshotPath;
     private ConsoleCancelHandler? _cancelHandler;
     private HashSet<(Int64 folderId, Int64 testCaseExecutionId)> _processedIds = [];
 
@@ -130,18 +130,18 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 
             // スクリーンショット保存先ディレクトリ
             string? screenshotDir = null;
-            if (_resolvedDestination is not null)
+            if (_resolvedScreenshotPath is not null)
             {
-                // ディレクトリパスを構築: Destination/FolderName/TestSetExecutionName/
+                // ディレクトリパスを構築: ScreenshotPath/FolderName/TestSetExecutionName/
                 var folderName = SanitizePathName(folder.DisplayName ?? folder.Id.ToString()!);
                 if (!string.IsNullOrEmpty(testSetExecutionName))
                 {
                     var sanitizedTestSetName = SanitizePathName(testSetExecutionName);
-                    screenshotDir = System.IO.Path.Combine(_resolvedDestination, folderName, sanitizedTestSetName);
+                    screenshotDir = System.IO.Path.Combine(_resolvedScreenshotPath, folderName, sanitizedTestSetName);
                 }
                 else
                 {
-                    screenshotDir = System.IO.Path.Combine(_resolvedDestination, folderName);
+                    screenshotDir = System.IO.Path.Combine(_resolvedScreenshotPath, folderName);
                 }
             }
 
@@ -193,13 +193,13 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 
     protected override void BeginProcessing()
     {
-        // Destination が指定された場合、パスを解決
-        if (Destination is not null)
+        // ScreenshotPath が指定された場合、パスを解決
+        if (ScreenshotPath is not null)
         {
-            _resolvedDestination = SessionState.Path.GetUnresolvedProviderPathFromPSPath(Destination);
-            if (!Directory.Exists(_resolvedDestination))
+            _resolvedScreenshotPath = SessionState.Path.GetUnresolvedProviderPathFromPSPath(ScreenshotPath);
+            if (!Directory.Exists(_resolvedScreenshotPath))
             {
-                throw new DirectoryNotFoundException($"A directory '{_resolvedDestination}' does not exist.");
+                throw new DirectoryNotFoundException($"A directory '{_resolvedScreenshotPath}' does not exist.");
             }
         }
 
