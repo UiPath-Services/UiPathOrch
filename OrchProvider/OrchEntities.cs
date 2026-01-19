@@ -3305,6 +3305,10 @@ public class TestCaseAssertion
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? TestSetExecutionName { get; set; } // added by UiPathOrch
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? PathTestSetExecutionName { get; set; } // added by UiPathOrch
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? ScreenshotPath { get; set; } // added by UiPathOrch
     public string? Message { get; set; }
     public string? Payload { get; set; }

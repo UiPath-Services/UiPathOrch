@@ -10,9 +10,9 @@ namespace UiPath.PowerShell.Commands;
 public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 {
     // パラメータセット1: TestSetExecutionName 直接指定
-    [Parameter(Mandatory = true, Position = 0, ParameterSetName = "ByTestSetExecutionName")]
+    [Parameter(Position = 0, ParameterSetName = "ByTestSetExecutionName")]
     [ArgumentCompleter(typeof(TestSetExecutionNameCompleter))]
-    public string TestSetExecutionName { get; set; } = null!;
+    public string? TestSetExecutionName { get; set; }
 
     // パラメータセット2: Id 直接指定
     [Parameter(Mandatory = true, Position = 0, ParameterSetName = "ById")]
@@ -81,6 +81,19 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
         return executions.Select(e => e.Id!.Value);
     }
 
+    /// <summary>
+    /// パス名に使用できない文字を _ に置換する
+    /// </summary>
+    private static string SanitizePathName(string name)
+    {
+        char[] invalidChars = System.IO.Path.GetInvalidFileNameChars();
+        foreach (char c in invalidChars)
+        {
+            name = name.Replace(c, '_');
+        }
+        return name;
+    }
+
     private void ProcessAssertions(OrchDriveInfo drive, Folder folder, Int64 testCaseExecutionId)
     {
         // 重複チェック
@@ -112,7 +125,7 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
                 {
                     lock (drive)
                     {
-                        drive._dicTestCaseAssertions ??= new();
+                        drive._dicTestCaseAssertions ??= [];
                     }
                 }
                 if (!drive._dicTestCaseAssertions.TryGetValue(folderId, out folderCache))
@@ -125,20 +138,42 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 
             if (assertions.Count == 0) return;
 
+            string folderPath = folder.GetPSPath();
+
+            // TestSetExecutionName をキャッシュから取得
+            string? testSetExecutionName = null;
+            if (drive._dicTestCaseExecutions?.TryGetValue(folderId, out var tceCache) ?? false)
+            {
+                var tce = tceCache.FirstOrDefault(e => e.Id == testCaseExecutionId);
+                testSetExecutionName = tce?.TestSetExecutionName;
+            }
+
             // スクリーンショット保存先ディレクトリ
             string? screenshotDir = null;
             if (_resolvedDestination is not null)
             {
-                screenshotDir = System.IO.Path.Combine(_resolvedDestination, folder.DisplayName ?? folder.Id.ToString()!);
+                // ディレクトリパスを構築: Destination/FolderName/TestSetExecutionName/
+                var folderName = SanitizePathName(folder.DisplayName ?? folder.Id.ToString()!);
+                if (!string.IsNullOrEmpty(testSetExecutionName))
+                {
+                    var sanitizedTestSetName = SanitizePathName(testSetExecutionName);
+                    screenshotDir = System.IO.Path.Combine(_resolvedDestination, folderName, sanitizedTestSetName);
+                }
+                else
+                {
+                    screenshotDir = System.IO.Path.Combine(_resolvedDestination, folderName);
+                }
             }
-
-            string folderPath = folder.GetPSPath();
 
             foreach (var assertion in assertions)
             {
                 _cancelHandler!.Token.ThrowIfCancellationRequested();
 
                 assertion.Path = folderPath;
+                assertion.TestSetExecutionName = testSetExecutionName;
+                assertion.PathTestSetExecutionName = string.IsNullOrEmpty(testSetExecutionName)
+                    ? folderPath
+                    : System.IO.Path.Combine(folderPath, testSetExecutionName);
                 assertion.TestCaseExecutionId = testCaseExecutionId;
 
                 // スクリーンショットをダウンロード
@@ -152,6 +187,10 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
                         drive.OrchAPISession.DownloadAssertionScreenshot(folderId, assertion.Id.Value, filePath, _cancelHandler.Token);
                         assertion.ScreenshotPath = filePath;
                     }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
+                    }
                     catch (Exception ex)
                     {
                         WriteWarning($"Failed to download screenshot for assertion {assertion.Id}: {OrchException.ExtractMessage(ex.Message)}");
@@ -160,6 +199,10 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 
                 WriteObject(assertion);
             }
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
@@ -203,6 +246,47 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
     {
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path);
 
+        // TestSetExecutionName が指定されていなければ、キャッシュの内容を返す
+        if (TestSetExecutionName is null)
+        {
+            WriteWarning("Since TestSetExecutionName was not specified, the contents of the cache will be output. To query the Orchestrator, please specify TestSetExecutionName parameter.");
+
+            foreach (var (drive, folder) in drivesFolders)
+            {
+                var folderId = folder.Id!.Value;
+                if (drive._dicTestCaseAssertions?.TryGetValue(folderId, out var folderCache) ?? false)
+                {
+                    string folderPath = folder.GetPSPath();
+
+                    foreach (var kvp in folderCache)
+                    {
+                        var testCaseExecutionId = kvp.Key;
+                        var assertions = kvp.Value;
+
+                        // TestSetExecutionName を _dicTestCaseExecutions から取得
+                        string? testSetExecutionName = null;
+                        if (drive._dicTestCaseExecutions?.TryGetValue(folderId, out var tceCache) ?? false)
+                        {
+                            var tce = tceCache.FirstOrDefault(e => e.Id == testCaseExecutionId);
+                            testSetExecutionName = tce?.TestSetExecutionName;
+                        }
+
+                        foreach (var assertion in assertions)
+                        {
+                            assertion.Path = folderPath;
+                            assertion.TestSetExecutionName = testSetExecutionName;
+                            assertion.PathTestSetExecutionName = string.IsNullOrEmpty(testSetExecutionName)
+                                ? folderPath
+                                : System.IO.Path.Combine(folderPath, testSetExecutionName);
+                            assertion.TestCaseExecutionId = testCaseExecutionId;
+                            WriteObject(assertion);
+                        }
+                    }
+                }
+            }
+            return;
+        }
+
         foreach (var (drive, folder) in drivesFolders)
         {
             _cancelHandler!.Token.ThrowIfCancellationRequested();
@@ -222,6 +306,10 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
                     _cancelHandler.Token.ThrowIfCancellationRequested();
                     ProcessAssertions(drive, folder, testCaseExecutionId);
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -291,6 +379,10 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
                     ProcessAssertions(drive, folder, testCaseExecutionId);
                 }
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 string target = folder.GetPSPath();
@@ -336,6 +428,10 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
                         _cancelHandler!.Token.ThrowIfCancellationRequested();
                         ProcessAssertions(drive, folder, testCaseExecutionId);
                     }
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
                 }
                 catch (Exception ex)
                 {

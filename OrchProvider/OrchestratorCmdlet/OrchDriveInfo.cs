@@ -185,6 +185,10 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         //_dicPartitionGlobalId = null; // これは変わらないから、クリアしなくていいだろう。。
 
+        _dicTestSetExecutions = null;
+        _dicTestCaseExecutions = null;
+        _dicTestCaseAssertions = null;
+
         _dicTriggers = null;
         _dicTriggers_Exceptions?.ClearCache();
 
