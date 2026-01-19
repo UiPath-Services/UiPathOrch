@@ -57,6 +57,8 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
 
     [Parameter]
     public uint Depth { get; set; }
+    private HashSet<(Int64 folderId, Int64 testSetExecutionId)> _processedIds = [];
+
 
 
     private string? MakeFilter(Int64? testSetExecutionId)
@@ -190,6 +192,14 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
         // Path がパイプでバインドされていなければカレントロケーションを使用
         var path = Path ?? [SessionState.Path.CurrentLocation.Path];
         var (drive, folder) = SessionState.ResolveToSingleFolder(path[0]);
+
+        // 重複チェック（同じ folder + TestSetExecutionId は処理しない）
+        var key = (folder.Id!.Value, TestSetExecutionId);
+        if (!_processedIds.Add(key))
+        {
+            return; // 既に処理済み
+        }
+
         var wpName = Name.ConvertToWildcardPatternList();
 
         try
