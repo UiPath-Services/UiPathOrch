@@ -2415,8 +2415,8 @@
         <TypeName>UiPath.PowerShell.Entities.TestCaseAssertion</TypeName>
       </ViewSelectedBy>
       <GroupBy>
-        <Label>Directory</Label>
-        <PropertyName>Path</PropertyName>
+        <Label>TestSetExecution</Label>
+        <PropertyName>PathTestSetExecutionName</PropertyName>
       </GroupBy>
       <TableControl>
         <TableHeaders>
@@ -2437,6 +2437,9 @@
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>CreationTime</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>ScreenshotPath</Label>
           </TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
@@ -2461,6 +2464,9 @@
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>CreationTime</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>ScreenshotPath</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
