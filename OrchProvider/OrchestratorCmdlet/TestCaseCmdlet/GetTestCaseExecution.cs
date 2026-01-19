@@ -29,6 +29,19 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
     public string[]? Name { get; set; }
 
     [Parameter(ParameterSetName = "ByName")]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>))]
+    [ValidatePositionalParameter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>]
+    public string? Last { get; set; }
+
+    [Parameter(ParameterSetName = "ByName")]
+    [ArgumentCompleter(typeof(TimeAfterCompleter))]
+    public DateTime? StartTimeAfter { get; set; }
+
+    [Parameter(ParameterSetName = "ByName")]
+    [ArgumentCompleter(typeof(TimeBeforeCompleter))]
+    public DateTime? StartTimeBefore { get; set; }
+
+    [Parameter(ParameterSetName = "ByName")]
     public ulong? Skip { get; set; }
 
     [Parameter(ParameterSetName = "ByName")]
@@ -69,9 +82,51 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
         return execution?.Id;
     }
 
-    private static string MakeFilter(Int64 testSetExecutionId)
+    private string? MakeFilter(Int64? testSetExecutionId)
     {
-        return $"&$filter=(TestSetExecutionId%20eq%20{testSetExecutionId})";
+        var filter = new List<string>();
+
+        if (testSetExecutionId is not null)
+        {
+            filter.Add($"(TestSetExecutionId eq {testSetExecutionId.Value})");
+        }
+
+        #region Last
+        if (Last is not null)
+        {
+            var last = Last.ToLower() switch
+            {
+                "hour" => DateTime.UtcNow.AddHours(-1),
+                "day" => DateTime.UtcNow.AddDays(-1),
+                "week" => DateTime.UtcNow.AddDays(-7),
+                "month" => DateTime.UtcNow.AddMonths(-1),
+                "3months" => DateTime.UtcNow.AddMonths(-3),
+                "6months" => DateTime.UtcNow.AddMonths(-6),
+                "year" => DateTime.UtcNow.AddYears(-1),
+                "3years" => DateTime.UtcNow.AddYears(-3),
+                _ => throw new ArgumentException("Invalid Last parameter. Valid values are 'Hour', 'Day', 'Week', 'Month', '3Months', '6Months', 'Year', '3Years'.")
+            };
+            filter.Add($"(StartTime ge {last:yyyy-MM-ddTHH:mm:ss.fffZ})");
+        }
+        #endregion
+
+        #region StartTimeAfter
+        if (StartTimeAfter is not null)
+        {
+            filter.Add($"(StartTime ge {StartTimeAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+        }
+        #endregion
+
+        #region StartTimeBefore
+        if (StartTimeBefore is not null)
+        {
+            filter.Add($"(StartTime lt {StartTimeBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+        }
+        #endregion
+
+        string? ret = filter.CreateAndFilter(f => f);
+        if (ret is null) return null;
+        return $"&$filter={ret}";
     }
 
     protected override void ProcessRecord()
@@ -96,11 +151,17 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
         var wpName = Name.ConvertToWildcardPatternList();
 
         // すべてのパラメータが指定されていなければ、キャッシュの内容を返す
-        bool bOutCache = (TestSetExecutionName is null && Skip is null && First is null);
+        bool bOutCache = (
+            TestSetExecutionName is null &&
+            Last is null &&
+            StartTimeAfter is null &&
+            StartTimeBefore is null &&
+            Skip is null &&
+            First is null);
 
         if (bOutCache)
         {
-            WriteWarning("Since TestSetExecutionName/Skip/First were not specified, the contents of the cache will be output. To query the Orchestrator, please specify at least one of these parameters.");
+            WriteWarning("Since TestSetExecutionName/Last/StartTimeAfter/StartTimeBefore/Skip/First were not specified, the contents of the cache will be output. To query the Orchestrator, please specify at least one of these parameters.");
 
             foreach (var (drive, folder) in drivesFolders)
             {
@@ -135,7 +196,7 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
                     }
                 }
 
-                string? filter = testSetExecutionId is not null ? MakeFilter(testSetExecutionId.Value) : null;
+                string? filter = MakeFilter(testSetExecutionId);
                 var entities = drive.GetTestCaseExecutions(folder, filter, skip, first);
 
                 WriteObject(entities
@@ -143,6 +204,10 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
                     .OrderBy(e => e.TestSetExecutionId)
                     .ThenBy(e => e.EntryPointPath),
                     true);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {

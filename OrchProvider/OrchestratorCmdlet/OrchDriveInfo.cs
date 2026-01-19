@@ -1416,6 +1416,27 @@ public partial class OrchDriveInfo : PSDriveInfo
             ConcurrentDictionary<Int64, TestSetExecution>? folderTestSetExecutions = null;
             _dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out folderTestSetExecutions);
 
+            // キャッシュにない TestSetExecutionId を収集
+            var missingTestSetExecutionIds = testCaseExecutions
+                .Where(t => t.TestSetExecutionId is not null)
+                .Select(t => t.TestSetExecutionId!.Value)
+                .Distinct()
+                .Where(id => folderTestSetExecutions is null || !folderTestSetExecutions.ContainsKey(id))
+                .ToList();
+
+            // キャッシュにない TestSetExecution を API から取得
+            if (missingTestSetExecutionIds.Count > 0)
+            {
+                var orFilter = missingTestSetExecutionIds.CreateOrFilter(id => $"Id eq {id}");
+                if (orFilter is not null)
+                {
+                    var query = $"&$filter={orFilter}";
+                    GetTestSetExecutions(folder, query, 0, ulong.MaxValue);
+                    // キャッシュが更新されたので再取得
+                    _dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out folderTestSetExecutions);
+                }
+            }
+
             foreach (var testCaseExecution in testCaseExecutions)
             {
                 testCaseExecution.Path = folderPath;
