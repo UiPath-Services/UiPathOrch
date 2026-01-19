@@ -36,26 +36,6 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
     private ConsoleCancelHandler? _cancelHandler;
     private HashSet<(Int64 folderId, Int64 testCaseExecutionId)> _processedIds = [];
 
-    /// <summary>
-    /// キャッシュまたは API から TestSetExecution を名前で検索し、Id を返す。
-    /// </summary>
-    private static Int64? ResolveTestSetExecutionId(OrchDriveInfo drive, Folder folder, string name)
-    {
-        if (drive._dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out var cached) ?? false)
-        {
-            var found = cached.Values.FirstOrDefault(e =>
-                string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase));
-            if (found is not null)
-            {
-                return found.Id;
-            }
-        }
-
-        var filter = $"&$filter=(Name%20eq%20%27{Uri.EscapeDataString(name)}%27)";
-        var results = drive.GetTestSetExecutions(folder, filter, 0, 1);
-        var execution = results.FirstOrDefault();
-        return execution?.Id;
-    }
 
     /// <summary>
     /// TestSetExecutionId から TestCaseExecutionId[] を取得する。
@@ -293,7 +273,7 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 
             try
             {
-                var testSetExecutionId = ResolveTestSetExecutionId(drive, folder, TestSetExecutionName);
+                var testSetExecutionId = drive.ResolveTestSetExecutionId(folder, TestSetExecutionName);
                 if (testSetExecutionId is null)
                 {
                     WriteWarning($"TestSetExecution '{TestSetExecutionName}' not found in folder '{folder.GetPSPath()}'.");
@@ -415,7 +395,7 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
                 // Name があれば TestSetExecutionName として処理
                 try
                 {
-                    var testSetExecutionId = ResolveTestSetExecutionId(drive, folder, name);
+                    var testSetExecutionId = drive.ResolveTestSetExecutionId(folder, name);
                     if (testSetExecutionId is null)
                     {
                         WriteWarning($"TestSetExecution '{name}' not found in folder '{folder.GetPSPath()}'.");
