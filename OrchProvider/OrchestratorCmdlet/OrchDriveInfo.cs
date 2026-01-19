@@ -188,6 +188,8 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicTestSetExecutions = null;
         _dicTestCaseExecutions = null;
         _dicTestCaseAssertions = null;
+        _dicTestSetExecutions_Exceptions?.ClearCache();
+        _dicTestCaseExecutions_Exceptions?.ClearCache();
 
         _dicTriggers = null;
         _dicTriggers_Exceptions?.ClearCache();
@@ -215,8 +217,6 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicTenantId = null;
         _dicTenantKey = null;
 
-        _dicTestSetExecutions = null;
-        _dicTestSetExecutions_Exceptions?.ClearCache();
 
         _dicUsers = null;
         _dicUsers_Exception?.ClearCache();
@@ -1368,6 +1368,30 @@ public partial class OrchDriveInfo : PSDriveInfo
             _dicTestSetExecutions_Exceptions.CacheException(folder.Id ?? 0, ex);
             throw;
         }
+    }
+
+    /// <summary>
+    /// キャッシュまたは API から TestSetExecution を名前で検索し、Id を返す。
+    /// 見つからない場合は null を返す。
+    /// </summary>
+    public Int64? ResolveTestSetExecutionId(Folder folder, string name)
+    {
+        // まずキャッシュから検索
+        if (_dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out var cached) ?? false)
+        {
+            var found = cached.Values.FirstOrDefault(e =>
+                string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase));
+            if (found is not null)
+            {
+                return found.Id;
+            }
+        }
+
+        // キャッシュになければ API で名前検索
+        var filter = $"&$filter=(Name%20eq%20%27{Uri.EscapeDataString(name)}%27)";
+        var results = GetTestSetExecutions(folder, filter, 0, 1);
+        var execution = results.FirstOrDefault();
+        return execution?.Id;
     }
 
     #endregion

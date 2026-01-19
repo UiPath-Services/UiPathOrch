@@ -58,29 +58,6 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
-    /// <summary>
-    /// キャッシュまたは API から TestSetExecution を名前で検索し、Id を返す。
-    /// 見つからない場合は null を返す。
-    /// </summary>
-    private static Int64? ResolveTestSetExecutionId(OrchDriveInfo drive, Folder folder, string name)
-    {
-        // まずキャッシュから検索
-        if (drive._dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out var cached) ?? false)
-        {
-            var found = cached.Values.FirstOrDefault(e =>
-                string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase));
-            if (found is not null)
-            {
-                return found.Id;
-            }
-        }
-
-        // キャッシュになければ API で名前検索
-        var filter = $"&$filter=(Name%20eq%20%27{Uri.EscapeDataString(name)}%27)";
-        var results = drive.GetTestSetExecutions(folder, filter, 0, 1);
-        var execution = results.FirstOrDefault();
-        return execution?.Id;
-    }
 
     private string? MakeFilter(Int64? testSetExecutionId)
     {
@@ -91,7 +68,6 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
             filter.Add($"(TestSetExecutionId eq {testSetExecutionId.Value})");
         }
 
-        #region Last
         if (Last is not null)
         {
             var last = Last.ToLower() switch
@@ -108,22 +84,14 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
             };
             filter.Add($"(StartTime ge {last:yyyy-MM-ddTHH:mm:ss.fffZ})");
         }
-        #endregion
-
-        #region StartTimeAfter
         if (StartTimeAfter is not null)
         {
             filter.Add($"(StartTime ge {StartTimeAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
         }
-        #endregion
-
-        #region StartTimeBefore
         if (StartTimeBefore is not null)
         {
             filter.Add($"(StartTime lt {StartTimeBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
         }
-        #endregion
-
         string? ret = filter.CreateAndFilter(f => f);
         if (ret is null) return null;
         return $"&$filter={ret}";
@@ -188,7 +156,7 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
                 Int64? testSetExecutionId = null;
                 if (!string.IsNullOrEmpty(TestSetExecutionName))
                 {
-                    testSetExecutionId = ResolveTestSetExecutionId(drive, folder, TestSetExecutionName);
+                    testSetExecutionId = drive.ResolveTestSetExecutionId(folder, TestSetExecutionName);
                     if (testSetExecutionId is null)
                     {
                         WriteWarning($"TestSetExecution '{TestSetExecutionName}' not found in folder '{folder.GetPSPath()}'.");
@@ -226,7 +194,7 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
 
         try
         {
-            string filter = MakeFilter(TestSetExecutionId);
+            string? filter = MakeFilter(TestSetExecutionId);
             var entities = drive.GetTestCaseExecutions(folder, filter, 0, ulong.MaxValue);
 
             WriteObject(entities
