@@ -101,6 +101,12 @@ public partial class OrchAPISession : IDisposable
         
         try
         {
+            // オンプレ環境でテナント名が指定されている場合、ヘッダに追加
+            if (!string.IsNullOrEmpty(_authManager._onpremiseTenancy))
+            {
+                message.Headers.TryAddWithoutValidation("X-UIPATH-TenantName", _authManager._onpremiseTenancy);
+            }
+
             reqTime = DateTime.Now;
             HttpClient hc = httpClient ?? HttpClient;
             ret = hc.Send(message, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
@@ -253,23 +259,18 @@ public partial class OrchAPISession : IDisposable
         _httpClient = InitializeHttpClient(drive);
 
         _authManager = new OrchestratorAuthManager(drive, _httpClient);
-        if (_authManager._isUserPassword)
-        {
-            _base_url = _authManager._baseUrl;
-        }
-        else
-        {
-            _base_url = drive._psDrive.Root!;
-        }
-
         if (drive._psDrive.IsCloud)
         {
+            _base_url = drive._psDrive.Root!;
             int slashIndex = _base_url.LastIndexOf('/');
             _base_url_identity = string.Concat(_base_url.AsSpan(0, slashIndex), "/identity_");
             _base_url_portal = string.Concat(_base_url.AsSpan(0, slashIndex), "/portal_");
         }
         else
         {
+            // オンプレ: テナントパスが除去された _baseUrl を使用
+            // テナント指定は X-UIPATH-TenantName ヘッダで行う
+            _base_url = _authManager._baseUrl;
             _base_url_identity = _base_url + "/identity";
             _base_url_portal = _base_url + "/portal";
         }

@@ -14,7 +14,7 @@ internal class OrchestratorAuthManager
     private readonly HttpClient _httpClient;
     private readonly OrchDriveInfo _drive;
     public readonly string _baseUrl;
-    private readonly string? _onpremiseTenancy;
+    internal readonly string? _onpremiseTenancy;
     private readonly bool _isConfidentialApp;
     //private readonly bool _isUserScope;
     public readonly bool _isUserPassword;
@@ -49,7 +49,7 @@ internal class OrchestratorAuthManager
         _baseUrl = drive._psDrive.IsCloud ? _drive!._psDrive.Root!.Substring(0, _drive._psDrive.Root.IndexOf("uipath.com") + "uipath.com".Length)
             : _drive._psDrive.Root!.TrimEnd('/');
 
-        if (_isUserPassword) // Non-Conf User Scope
+        if (!drive._psDrive.IsCloud) // On-premises: remove tenant path from _baseUrl
         {
             // 1. 空チェック
             if (string.IsNullOrWhiteSpace(_baseUrl))
@@ -65,13 +65,13 @@ internal class OrchestratorAuthManager
 
             // 3. 絶対パスから末尾のスラッシュを除去し、'/' 区切りで分割
             var path = uri.AbsolutePath.TrimEnd('/'); // "/" → ""
-            var segments = path.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            var segments = path.Split(['/'], StringSplitOptions.RemoveEmptyEntries);
 
             // 4. ドメインに "uipath.com" を含む場合は、必ずパスにテナンシーが存在すること
             if (uri.Host.Contains("uipath.com", StringComparison.OrdinalIgnoreCase) && segments.Length == 0)
             {
                 throw new InvalidOperationException(
-                    "For domains containing 'uipath.com', the URL must be in the format 'https://domain/tenancy'."
+                    "For domains containing 'uipath.com', the URL must be in the format 'https://domain/org/tenancy'."
                 );
             }
 
