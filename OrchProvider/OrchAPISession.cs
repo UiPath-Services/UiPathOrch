@@ -1709,6 +1709,7 @@ public partial class OrchAPISession : IDisposable
                 if      (release.SpecificPriorityValue >= 61) release.JobPriority = "High";
                 else if (release.SpecificPriorityValue <= 30) release.JobPriority = "Low";
                 else                                          release.JobPriority = "Normal";
+                release.SpecificPriorityValue = null;
             }
             release.VideoRecordingSettings = null;
             release.RetentionAction = null;
