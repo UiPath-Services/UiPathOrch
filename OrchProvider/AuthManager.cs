@@ -45,9 +45,13 @@ internal class OrchestratorAuthManager
         _isUserPassword = !string.IsNullOrEmpty(_drive._psDrive.Password);
         //IdentityUrl = _drive._psDrive.IdentityUrl?.TrimEnd('/');
 
-        //_baseUrl = (_drive.Root!.Contains("uipath.com", StringComparison.InvariantCultureIgnoreCase)
-        _baseUrl = drive._psDrive.IsCloud ? _drive!._psDrive.Root!.Substring(0, _drive._psDrive.Root.IndexOf("uipath.com") + "uipath.com".Length)
-            : _drive._psDrive.Root!.TrimEnd('/');
+        // Cloud: Root = "https://cloud.uipath.com/{org}/{tenant}"
+        //   → strip tenant, keep org: "https://cloud.uipath.com/{org}"
+        //   Identity API now requires /{org}/identity_/ prefix
+        var rootTrimmed = _drive._psDrive.Root!.TrimEnd('/');
+        _baseUrl = drive._psDrive.IsCloud
+            ? rootTrimmed[..rootTrimmed.LastIndexOf('/')]
+            : rootTrimmed;
 
         if (!drive._psDrive.IsCloud) // On-premises: remove tenant path from _baseUrl
         {

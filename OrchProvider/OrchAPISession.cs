@@ -604,7 +604,7 @@ public partial class OrchAPISession : IDisposable
     //    return GetEnumerableWithoutPagingImpl<T[]>(_base_url_portal, endPoint, folderId, query);
     //}
 
-    public string HttpRequestImpl(HttpMethod method, string baseUrl, string endPoint, Int64? folderId, string? payload)
+    public string HttpRequestImpl(HttpMethod method, string baseUrl, string endPoint, Int64? folderId, string? payload = null)
     {
         string url = baseUrl + endPoint;
         var request = new HttpRequestMessage(method, url);
@@ -659,7 +659,7 @@ public partial class OrchAPISession : IDisposable
     {
         if (payload is null)
         {
-            return HttpRequestImpl(method, baseUrl, endPoint, folderId, "");
+            return HttpRequestImpl(method, baseUrl, endPoint, folderId, (string?)null);
         }
         else
         {

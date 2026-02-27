@@ -180,7 +180,25 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
         }
     }
 
-    private string MakeFilter(OrchDriveInfo drive, Folder folder, QueueDefinition queue)
+    // RobotId eq / ReviewerUserId eq は 21件以上で API が 400 を返す
+    private const int SimpleFieldBatchSize = 15;
+
+    private IReadOnlyList<long?>? ResolveRobotIds(OrchDriveInfo drive, Folder folder)
+    {
+        if (Robot is null || Robot.Length == 0) return null;
+        var robots = drive.RobotsFromFolder.Get(folder);
+        return robots.SelectByWildcards(r => r?.Name, Robot).Select(r => r.Id).ToList();
+    }
+
+    private IReadOnlyList<long?>? ResolveReviewerIds(OrchDriveInfo drive, Folder folder)
+    {
+        if (Reviewer is null || Reviewer.Length == 0) return null;
+        var reviewers = drive.Reviewers.Get(folder);
+        return reviewers.SelectByWildcards(r => r?.UserName, Reviewer).Select(r => r.Id).ToList();
+    }
+
+    private string MakeFilter(OrchDriveInfo drive, Folder folder, QueueDefinition queue,
+        IReadOnlyList<long?>? robotIdBatch = null, IReadOnlyList<long?>? reviewerIdBatch = null)
     {
         List<string> filter = [$"(QueueDefinitionId eq {queue.Id})"];
 
@@ -200,20 +218,14 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
             .SelectByWildcards(i => i.Key, Exception)
             .CreateOrFilter(i => $"ProcessingExceptionType eq '{i.Value}'"));
 
-        if (Robot is not null && Robot.Length != 0)
+        if (robotIdBatch is not null)
         {
-            var robots = drive.RobotsFromFolder.Get(folder);
-            filter.AddIfNotNull(robots
-                .SelectByWildcards(r => r?.Name, Robot)
-                .CreateOrFilter(r => $"RobotId eq {r.Id}"));
+            filter.AddIfNotNull(robotIdBatch.CreateOrFilter(r => $"RobotId eq {r}"));
         }
 
-        if (Reviewer is not null && Reviewer.Length != 0)
+        if (reviewerIdBatch is not null)
         {
-            var reviewers = drive.Reviewers.Get(folder);
-            filter.AddIfNotNull(reviewers
-                .SelectByWildcards(r => r?.UserName, Reviewer)
-                .CreateOrFilter(r => $"ReviewerUserId eq {r.Id}"));
+            filter.AddIfNotNull(reviewerIdBatch.CreateOrFilter(r => $"ReviewerUserId eq {r}"));
         }
 
         if (DueDateAfter is not null)
@@ -284,7 +296,7 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
 
         if (bOutCache)
         {
-            WriteWarning("Since no filter parameters were specified, the contents of the cache will be output. To query the Orchestrator, please specify at least one filter parameter.");
+            WriteWarning($"[{MyInvocation.MyCommand.Name}] Since no filter parameters were specified, the contents of the cache will be output. To query the Orchestrator, please specify at least one filter parameter.");
 
             foreach (var (drive, folder) in drivesFolders)
             {
@@ -353,6 +365,30 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
                 continue;
             }
 
+            // フォルダごとにロボット/レビュアーIDを解決してバッチ分割
+            // RobotId eq / ReviewerUserId eq は 21件以上で API が 400 を返すため
+            var allRobotIds = ResolveRobotIds(drive, folder);
+            var allReviewerIds = ResolveReviewerIds(drive, folder);
+
+            if (Robot is not null && Robot.Length != 0 && allRobotIds is not null && allRobotIds.Count == 0)
+                continue; // 一致するロボットなし
+            if (Reviewer is not null && Reviewer.Length != 0 && allReviewerIds is not null && allReviewerIds.Count == 0)
+                continue; // 一致するレビュアーなし
+
+            IReadOnlyList<IReadOnlyList<long?>?> robotBatches;
+            if (allRobotIds is null || allRobotIds.Count <= SimpleFieldBatchSize)
+                robotBatches = new List<IReadOnlyList<long?>?> { allRobotIds };
+            else
+                robotBatches = allRobotIds.Chunk(SimpleFieldBatchSize).Select(b => (IReadOnlyList<long?>?)b.ToList()).ToList();
+
+            IReadOnlyList<IReadOnlyList<long?>?> reviewerBatches;
+            if (allReviewerIds is null || allReviewerIds.Count <= SimpleFieldBatchSize)
+                reviewerBatches = new List<IReadOnlyList<long?>?> { allReviewerIds };
+            else
+                reviewerBatches = allReviewerIds.Chunk(SimpleFieldBatchSize).Select(b => (IReadOnlyList<long?>?)b.ToList()).ToList();
+
+            bool isBatched = robotBatches.Count > 1 || reviewerBatches.Count > 1;
+
             var targetQueues = queues
                 .FilterByWildcards(q => q?.Name, wpName)
                 .OrderBy(q => q.Name).ToList();
@@ -365,30 +401,41 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
                 //reporterQueue.WriteProgress(++indexQueue, queue.GetPSPath());
                 reporterQueue.WriteProgress(++indexQueue);
 
-                string query = MakeFilter(drive, folder, queue);
                 int first = First ?? int.MaxValue; // first は、キューごとにリセット
                 int skip = Skip ?? 0;
 
-                int intReporterItemTotal;
-                string strReporterItemTotal;
-                intReporterItemTotal = (int)first;
-                strReporterItemTotal = $"{first}";
+                int intReporterItemTotal = isBatched ? 0 : (int)first;
                 using ProgressReporter reporterItem = new(this, 3, intReporterItemTotal, "Item  ");
+
+                var allItems = isBatched ? new List<object>() : null;
                 try
                 {
-                    while (first > 0)
+                    foreach (var robotBatch in robotBatches)
                     {
-                        cancelHandler.Token.ThrowIfCancellationRequested();
-                        reporterItem?.WriteProgress(skip % intReporterItemTotal);
+                        foreach (var reviewerBatch in reviewerBatches)
+                        {
+                            string query = MakeFilter(drive, folder, queue, robotBatch, reviewerBatch);
+                            int localSkip = isBatched ? 0 : skip;
+                            int localFirst = isBatched ? int.MaxValue : first;
 
-                        var first2 = int.Min(100, first);
-                        var items = drive.GetQueueItems(folder, queue, query, (ulong)skip, (ulong)first2, OrderBy, OrderAscending.IsPresent);
-                        WriteObject(items, true);
-                        Thread.Sleep(600); // API call rate limit を回避するため待機する
+                            while (localFirst > 0)
+                            {
+                                cancelHandler.Token.ThrowIfCancellationRequested();
+                                if (!isBatched) reporterItem?.WriteProgress(localSkip % intReporterItemTotal);
 
-                        if (items.Count < 100) break;
-                        skip += items.Count;
-                        first -= first2;
+                                var first2 = int.Min(100, localFirst);
+                                var items = drive.GetQueueItems(folder, queue, query, (ulong)localSkip, (ulong)first2, OrderBy, OrderAscending.IsPresent);
+                                if (allItems is not null)
+                                    foreach (var item in items) allItems.Add(item);
+                                else
+                                    WriteObject(items, true);
+                                Thread.Sleep(600); // API call rate limit を回避するため待機する
+
+                                if (items.Count < 100) break;
+                                localSkip += items.Count;
+                                localFirst -= first2;
+                            }
+                        }
                     }
                 }
                 catch (OperationCanceledException)
@@ -398,6 +445,14 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
                 catch (Exception ex)
                 {
                     WriteError(new ErrorRecord(new OrchException(queue.GetPSPath(), ex), "GetQueueItemError", ErrorCategory.InvalidOperation, queue));
+                }
+
+                if (allItems is not null)
+                {
+                    IEnumerable<object> result = allItems;
+                    if (skip > 0) result = result.Skip(skip);
+                    if (first < int.MaxValue) result = result.Take(first);
+                    WriteObject(result, true);
                 }
             }
         }

@@ -204,7 +204,19 @@ public class GetJobCommand : OrchestratorPSCmdlet
         }
     }
 
-    private string? MakeFilter(OrchDriveInfo drive, Folder folder)
+    // Robot/Id eq はナビゲーションプロパティのため、17件以上で API が 400 を返す
+    private const int RobotFilterBatchSize = 10;
+
+    private IReadOnlyList<long?>? ResolveRobotIds(OrchDriveInfo drive)
+    {
+        if (Robot is null || Robot.Length == 0 || Robot.Any(r => r == "*"))
+            return null; // ロボットフィルターなし（全ロボット対象）
+        var wpRobot = Robot.ConvertToWildcardPatternList();
+        var robots = drive.Robots.Get();
+        return robots.SelectByWildcards(r => r?.Name, wpRobot).Select(r => r.Id).ToList();
+    }
+
+    private string? MakeFilter(OrchDriveInfo drive, Folder folder, IReadOnlyList<long?>? robotIdBatch = null)
     {
         List<string> filter = [];
 
@@ -352,13 +364,9 @@ public class GetJobCommand : OrchestratorPSCmdlet
         #endregion
 
         #region Robot
-        if (Robot is not null && Robot.Length > 0 && !Robot.Any(r => r == "*"))
+        if (robotIdBatch is not null)
         {
-            var wpRobot= Robot.ConvertToWildcardPatternList();
-            var robots = drive.Robots.Get();
-            var targetRobots = robots.SelectByWildcards(r => r?.Name, wpRobot);
-            if (!targetRobots.Any()) return "null";
-            filter.AddIfNotNull(targetRobots.Select(r => r.Id).CreateOrFilter(i => $"Robot/Id eq {i}"));
+            filter.AddIfNotNull(robotIdBatch.CreateOrFilter(i => $"Robot/Id eq {i}"));
         }
         #endregion
 
@@ -405,7 +413,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
 
         if (bOutCache)
         {
-            WriteWarning("Since no filter parameters were specified, the contents of the cache will be output. To query the Orchestrator, please specify at least one filter parameter.");
+            WriteWarning($"[{MyInvocation.MyCommand.Name}] Since no filter parameters were specified, the contents of the cache will be output. To query the Orchestrator, please specify at least one filter parameter.");
 
             foreach (var (drive, folder) in drivesFolders)
             {
@@ -471,22 +479,59 @@ public class GetJobCommand : OrchestratorPSCmdlet
             {
                 cancelHandler.Token.ThrowIfCancellationRequested(); // この行は try の外側に置く必要がある。
 
-                string filter = MakeFilter(drive, folder);
-                if (filter == "null") continue;
+                var targetRobotIds = ResolveRobotIds(drive);
+                if (targetRobotIds is not null && targetRobotIds.Count == 0)
+                {
+                    reporter.WriteProgress(++index, $"{folder.GetPSPath()}");
+                    continue; // 一致するロボットなし
+                }
                 reporter.WriteProgress(++index, $"{folder.GetPSPath()}");
-                try
+
+                // ロボットIDをバッチに分割（RobotFilterBatchSize超過時は複数回API呼出し）
+                IEnumerable<IReadOnlyList<long?>?> robotBatches;
+                bool isBatched;
+                if (targetRobotIds is null || targetRobotIds.Count <= RobotFilterBatchSize)
                 {
-                    //var jobs = drive.GetJobs(folder, filter, skip, first, OrderBy, OrderAscending.IsPresent);
-                    var jobs = drive.Jobs.Fetch(folder, filter, skip, first, OrderBy, OrderAscending.IsPresent);
-                    WriteObject(jobs, true);
+                    robotBatches = [(IReadOnlyList<long?>?)targetRobotIds];
+                    isBatched = false;
                 }
-                catch (Exception ex)
+                else
                 {
-                    string target = folder.GetPSPath();
-                    var errorRecord = new ErrorRecord(new OrchException(target, ex), "GetJobError", ErrorCategory.InvalidOperation, target);
-                    WriteError(errorRecord);
+                    robotBatches = targetRobotIds.Chunk(RobotFilterBatchSize).Select(b => (IReadOnlyList<long?>)b.ToList());
+                    isBatched = true;
                 }
-                Thread.Sleep(600); // API call rate limit を回避するため待機する
+
+                var allJobs = isBatched ? new List<object>() : null;
+                foreach (var robotBatch in robotBatches)
+                {
+                    string filter = MakeFilter(drive, folder, robotBatch);
+                    if (filter == "null") continue;
+                    try
+                    {
+                        //var jobs = drive.GetJobs(folder, filter, skip, first, OrderBy, OrderAscending.IsPresent);
+                        var batchSkip = isBatched ? 0UL : skip;
+                        var batchFirst = isBatched ? ulong.MaxValue : first;
+                        var jobs = drive.Jobs.Fetch(folder, filter, batchSkip, batchFirst, OrderBy, OrderAscending.IsPresent);
+                        if (allJobs is not null)
+                            foreach (var j in jobs) allJobs.Add(j);
+                        else
+                            WriteObject(jobs, true);
+                    }
+                    catch (Exception ex)
+                    {
+                        string target = folder.GetPSPath();
+                        var errorRecord = new ErrorRecord(new OrchException(target, ex), "GetJobError", ErrorCategory.InvalidOperation, target);
+                        WriteError(errorRecord);
+                    }
+                    Thread.Sleep(600); // API call rate limit を回避するため待機する
+                }
+                if (allJobs is not null)
+                {
+                    IEnumerable<object> result = allJobs;
+                    if (skip > 0) result = result.Skip((int)skip);
+                    if (first < ulong.MaxValue) result = result.Take((int)first);
+                    WriteObject(result, true);
+                }
             }
             return;
         }

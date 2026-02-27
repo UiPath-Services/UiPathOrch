@@ -1448,17 +1448,21 @@ public partial class OrchDriveInfo : PSDriveInfo
                 .Where(id => folderTestSetExecutions is null || !folderTestSetExecutions.ContainsKey(id))
                 .ToList();
 
-            // キャッシュにない TestSetExecution を API から取得
+            // キャッシュにない TestSetExecution を API から取得（20件ずつバッチ処理）
             if (missingTestSetExecutionIds.Count > 0)
             {
-                var orFilter = missingTestSetExecutionIds.CreateOrFilter(id => $"Id eq {id}");
-                if (orFilter is not null)
+                const int batchSize = 20;
+                foreach (var batch in missingTestSetExecutionIds.Chunk(batchSize))
                 {
-                    var query = $"&$filter={orFilter}";
-                    GetTestSetExecutions(folder, query, 0, ulong.MaxValue);
-                    // キャッシュが更新されたので再取得
-                    _dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out folderTestSetExecutions);
+                    var orFilter = batch.CreateOrFilter(id => $"Id eq {id}");
+                    if (orFilter is not null)
+                    {
+                        var query = $"&$filter={orFilter}";
+                        GetTestSetExecutions(folder, query, 0, ulong.MaxValue);
+                    }
                 }
+                // キャッシュが更新されたので再取得
+                _dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out folderTestSetExecutions);
             }
 
             foreach (var testCaseExecution in testCaseExecutions)
