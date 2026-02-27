@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.15.4'
+ModuleVersion = '0.9.15.5'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -255,6 +255,7 @@ CmdletsToExport = @(
 
 'Get-OrchTestCase',
 'Get-OrchTestCaseExecution',
+'Get-OrchTestCaseAssertion',
 'Remove-OrchTestCase',
 
 'Get-OrchTestSetExecution',
@@ -366,6 +367,7 @@ CmdletsToExport = @(
 'Edit-OrchConfig',
 'Get-OrchPSDrive',
 'Set-OrchLocation',
+'Get-OrchLogLocation',
 'Open-OrchLogLocation'
 )
 
