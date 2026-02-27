@@ -1717,8 +1717,9 @@ public partial class OrchAPISession : IDisposable
         else
         {
             // 11.1 では SpecificPriorityValue が not null だとエラーになることを確認済み
-            // TODO: 12 以降ではどうか？
-            if (ApiVersion < 12 && release.SpecificPriorityValue is not null)
+            // 13.0 では SpecificPriorityValue が not null だとエラーになることを確認済み
+            // TODO: 14 以降ではどうか？
+            if (ApiVersion < 14 && release.SpecificPriorityValue is not null)
             {
                 if      (release.SpecificPriorityValue >= 61) release.JobPriority = "High";
                 else if (release.SpecificPriorityValue <= 30) release.JobPriority = "Low";
