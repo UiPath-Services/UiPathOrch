@@ -1,3 +1,21 @@
+Version: 0.9.15.5
+- Added Get-OrchTestCaseAssertion cmdlet. Retrieves test case assertions for a given test case execution. Supports pipeline input from Get-OrchTestCaseExecution and can download screenshots using the -ScreenshotPath parameter.
+
+- Added Get-OrchLogLocation cmdlet. Returns the log folder path for a specified drive. Useful for scripting access to log files without opening File Explorer.
+
+- Enhanced Get-OrchTestCaseExecution with new filter parameters: -Last, -StartTimeAfter, and -StartTimeBefore. Also added -TestSetExecutionName filter, -Skip and -First pagination parameters. When -PathTestSetExecutionName is specified, the corresponding TestSetExecution is now fetched automatically if not cached.
+
+- Fixed a bug where Get-OrchJob, Get-OrchQueueItem, and Get-OrchTestCaseExecution could fail with HTTP 400 errors when filtering by a large number of robots or test set executions. The OData filter is now automatically split into batches to stay within API limits.
+
+- Fixed on-premises OAuth authentication failing due to an extra tenant path segment being included in the identity server URL.
+
+- Fixed Get-OrchTestCaseExecution returning duplicate results when used as pipeline input to itself.
+
+- (Breaking change) In Get-OrchTestCaseAssertion, the -Destination parameter has been renamed to -ScreenshotPath.
+
+- Get-OrchTestSetExecution now outputs cached results with a warning message when no filter parameters are specified, consistent with other cmdlets such as Get-OrchJob and Get-OrchLog.
+
+
 Version: 0.9.15.4
 - Fixed Get-OrchProcess -ExportCsv not retrieving process entry points correctly.
 
