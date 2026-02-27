@@ -1300,7 +1300,21 @@ public partial class OrchAPISession : IDisposable
         {
             order = $"&$orderby={orderBy} desc";
         }
-        return GetEnumerable<Job>("/odata/Jobs", folderId, $"{filter}&$expand=Robot,Machine,Release{order}", skip, first);
+
+        string expand;
+        // TODO: この数字は正しい？
+        // ApiVersion == 11 のとき、Machine を含めてはいけないことは確認済み
+        // ApiVersion == 13 のとき、Machine を含めて良いことは確認済み
+        if (ApiVersion < 12)
+        {
+            expand = "&$expand=Robot,Release";
+        }
+        else
+        {
+            expand = "&$expand=Robot,Machine,Release";
+        }
+
+        return GetEnumerable<Job>("/odata/Jobs", folderId, $"{filter}{expand}{order}", skip, first);
     }
 
     public Job? GetJob(Int64 folderId, Int64 jobId)
