@@ -357,10 +357,19 @@ public class GetJobCommand : OrchestratorPSCmdlet
         #endregion
 
         #region ProcessType
-        if (ProcessType is null) ProcessType = ["Process"];
-        filter.AddIfNotNull(JobProcessTypeItems.Parameters
-            .SelectByWildcards(i => i, ProcessType)
-            .CreateOrFilter(i => $"ProcessType eq '{i}'"));
+        // TODO: この数字は正しい？
+        // ApiVersion ==  11 のとき、ProcessType should be null であることは確認済み
+        if (drive.OrchAPISession.ApiVersion < 12)
+        {
+            ProcessType = null;
+        }
+        else
+        {
+            ProcessType ??= ["Process"];
+            filter.AddIfNotNull(JobProcessTypeItems.Parameters
+                .SelectByWildcards(i => i, ProcessType)
+                .CreateOrFilter(i => $"ProcessType eq '{i}'"));
+        }
         #endregion
 
         #region Robot
