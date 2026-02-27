@@ -281,7 +281,7 @@ public class GetTestSetExecutionCommand : OrchestratorPSCmdlet
 
         if (bOutCache)
         {
-            WriteWarning("Since no filter parameters were specified, the contents of the cache will be output. To query the Orchestrator, please specify at least one filter parameter.");
+            WriteWarning($"[{MyInvocation.MyCommand.Name}] Since no filter parameters were specified, the contents of the cache will be output. To query the Orchestrator, please specify at least one filter parameter.");
 
             foreach (var (drive, folder) in drivesFolders)
             {
