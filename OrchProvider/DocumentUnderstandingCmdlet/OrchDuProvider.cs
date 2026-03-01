@@ -294,6 +294,25 @@ public class OrchDuProvider : NavigationCmdletProvider
         return true;
     }
 
+    protected override string NormalizeRelativePath(string path, string basePath)
+    {
+        string result = base.NormalizeRelativePath(path, basePath);
+        if (result.StartsWith(System.IO.Path.DirectorySeparatorChar) && result.Length > 1)
+            result = result[1..];
+
+        // Canonicalize project name casing from cache.
+        var projects = PSDriveInfo is OrchDuDriveInfo drive ? drive._dicDuProjects : null;
+        if (projects != null && !string.IsNullOrEmpty(result))
+        {
+            var project = projects.FirstOrDefault(p =>
+                string.Equals(p.name, result, StringComparison.OrdinalIgnoreCase));
+            if (project != null)
+                result = project.name;
+        }
+
+        return result;
+    }
+
     protected override string MakePath(string parent, string child)
     {
         string retNew = base.MakePath(parent, child);

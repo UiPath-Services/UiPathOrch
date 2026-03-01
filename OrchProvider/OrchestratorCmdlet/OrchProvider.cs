@@ -1161,6 +1161,27 @@ public partial class OrchProvider : NavigationCmdletProvider
         return true;
     }
 
+    protected override string NormalizeRelativePath(string path, string basePath)
+    {
+        string result = base.NormalizeRelativePath(path, basePath);
+        if (result.StartsWith(System.IO.Path.DirectorySeparatorChar) && result.Length > 1)
+            result = result[1..];
+
+        // Canonicalize folder name casing from cache (like FileSystemProvider.NormalizeThePath).
+        // Only when folders are already cached — avoid triggering API calls before authentication.
+        if (PSDriveInfo is OrchDriveInfo drive && drive._dicFolders != null && !string.IsNullOrEmpty(result))
+        {
+            string orchPath = result.Replace(System.IO.Path.DirectorySeparatorChar, '/');
+            var folder = drive.GetFolder(orchPath);
+            if (folder != null)
+            {
+                result = folder.FullyQualifiedName?.Replace('/', System.IO.Path.DirectorySeparatorChar);
+            }
+        }
+
+        return result ?? "";
+    }
+
     protected override string MakePath(string parent, string child)
     {
         string retNew = base.MakePath(parent, child);
