@@ -11,9 +11,17 @@ Version: 0.9.15.5
 
 - Fixed Get-OrchTestCaseExecution returning duplicate results when used as pipeline input to itself.
 
-- (Breaking change) In Get-OrchTestCaseAssertion, the -Destination parameter has been renamed to -ScreenshotPath.
-
 - Get-OrchTestSetExecution now outputs cached results with a warning message when no filter parameters are specified, consistent with other cmdlets such as Get-OrchJob and Get-OrchLog.
+
+- Fixed Get-OrchJob compatibility with older on-premises Orchestrator versions. On API versions earlier than 12, the Machine field is excluded from the $expand clause and the ProcessType filter is omitted, preventing request errors on unsupported versions. The threshold has been confirmed up through API version 13, and will be re-evaluated when version 14 is available.
+
+- Fixed on-premises API requests to use X-UIPATH-TenantName header instead of embedding the tenant in the URL path. Also improved Cloud base URL calculation to derive the org path dynamically instead of relying on a hardcoded domain match.
+
+- Tab completion and path resolution now canonicalize folder and project name casing from cache across all providers (Orchestrator, Document Understanding, Test Manager).
+
+- Fixed SpecificPriorityValue being sent to Orchestrator API versions that reject it. The threshold has been raised from ApiVersion 12 to 14, and the value is now cleared after converting to JobPriority.
+
+- Fixed RateLimiter resource leak by adding Dispose and removing unused Release method.
 
 
 Version: 0.9.15.4
