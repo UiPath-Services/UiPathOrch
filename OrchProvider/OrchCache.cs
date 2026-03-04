@@ -10,13 +10,6 @@ public interface ITenantCacheClearable
     void ClearCache();
 }
 
-// IndexedListCachePerTenant で使う予定なのだけど、頑張って実装しなくてもいい気がしてきたな。。
-//public interface IIndexedTenantCacheClearable<TIndex>
-//{
-//    void ClearCache();
-//    void ClearCache(TIndex index);
-//}
-
 public interface IFolderCacheClearable
 {
     void ClearCache();
@@ -25,6 +18,7 @@ public interface IFolderCacheClearable
 
 public class SingleCachePerTenant<T> : ITenantCacheClearable where T : class
 {
+    private readonly object _lock = new();
     private readonly OrchDriveInfo _drive;
     private T? _cache = null;
     private readonly ExceptionCachePerTenant _exception = new();
@@ -47,7 +41,7 @@ public class SingleCachePerTenant<T> : ITenantCacheClearable where T : class
         {
             try
             {
-                lock (this)
+                lock (_lock)
                 {
                     if (_cache is null)
                     {
@@ -77,6 +71,7 @@ public class SingleCachePerTenant<T> : ITenantCacheClearable where T : class
 
 public class ListCachePerTenant<T> : ITenantCacheClearable
 {
+    private readonly object _lock = new();
     private readonly OrchDriveInfo _drive;
     private List<T>? _cache = null;
     private readonly ExceptionCachePerTenant _exception = new();
@@ -99,7 +94,7 @@ public class ListCachePerTenant<T> : ITenantCacheClearable
         {
             try
             {
-                lock (this)
+                lock (_lock)
                 {
                     if (_cache is null)
                     {
@@ -130,116 +125,11 @@ public class ListCachePerTenant<T> : ITenantCacheClearable
     }
 }
 
-// 今のところ、インデックスとして string のみをサポート
-// 今のところ、これを使用しているのは LibraryVersion のみ
-// IndexedListCachePerTenant<Library, LibraryVersion> として使う
-// 実装中。。
-//public class IndexedListCachePerTenant<TIndexEntity, TEntity> : IIndexedTenantCacheClearable<string> where TIndexEntity : notnull
-//{
-//    private readonly OrchDriveInfo _drive;
-
-//    // key: TIndexEntity.Id
-//    private ConcurrentDictionary<string, List<TEntity>>? _cache = null;
-//    private readonly ConcurrentDictionary<string, ExceptionCachePerTenant> _exceptions = new();
-//    private readonly Func<string, IEnumerable<TEntity>> _fetchFunc; // index を渡すと TEntity の列挙が返る
-//    private readonly Func<TIndexEntity, string> _getIdFunc;
-//    private readonly Func<TIndexEntity, string> _getNameFunc;
-//    private readonly Action<TEntity, string, string>? _initializer; // 名前, ドライブ名\名前
-//    private readonly int? _supportedApiVersionFrom;
-
-//    public IndexedListCachePerTenant(
-//        OrchDriveInfo drive,
-//        Func<string, IEnumerable<TEntity>> fetchFunc,
-//        Func<TIndexEntity, string> getIdFunc,
-//        Func<TIndexEntity, string> getNameFunc,
-//        Action<TEntity, string, string>? initializer,
-//        int? supportedApiVersionFrom = null)
-//    {
-//        _drive = drive;
-//        _drive._allTenantCache.Add(this);
-//        _fetchFunc = fetchFunc;
-//        _getIdFunc = getIdFunc;
-//        _getNameFunc = getNameFunc;
-//        _initializer = initializer;
-//        _supportedApiVersionFrom = supportedApiVersionFrom;
-//    }
-
-//    public ICollection<TEntity> Get(TIndexEntity indexEntity)
-//    {
-//        if (_drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom)
-//        {
-//            return [];
-//        }
-
-//        string index = _getIdFunc(indexEntity);
-
-//        if (_exceptions.TryGetValue(index, out var ex))
-//        {
-//            ex.ThrowCachedExceptionIfAny();
-//        }
-
-//        if (_cache is null)
-//        {
-//            lock (this)
-//            {
-//                if (_cache is null)
-//                {
-//                    _cache = [];
-//                }
-//            }
-//        }
-//        if (!_cache.TryGetValue(index, out var entities))
-//        {
-//            try
-//            {
-//                entities = _fetchFunc(index).ToList();
-//                _cache[index] = entities;
-
-//                if (_initializer is not null)
-//                {
-//                    string indexName = _getNameFunc(indexEntity);
-//                    string path = _drive.NameColonSeparator;
-//                    foreach (var entity in entities)
-//                    {
-//                        _initializer(entity, path, indexName);
-//                    }
-//                }
-//            }
-//            catch (HttpResponseException ex)
-//            {
-//                _exceptions.CacheException(ex);
-//                throw;
-//            }
-//        }
-
-//        return entities;
-//    }
-
-//    public void ClearCache()
-//    {
-//        _cache = null;
-//        foreach (var e in _exceptions.Values)
-//        {
-//            e.ClearCache();
-//        }
-//    }
-
-//    public void ClearCache(string index)
-//    {
-//        _cache?.TryRemove(index, out _);
-//        _exceptions.ClearCache(); // ちょっと横着な実装だけど、機能的にはこれで問題ないはず
-//    }
-
-//    public void ClearCache(TIndexEntity indexEntity)
-//    {
-//        ClearCache(_getIdFunc(indexEntity));
-//    }
-//}
-
 // partitionGlobalId をキーとする、組織エンティティ
 // これはすべての組織の、固有のエンティティのキャッシュを表す。
 public class ListCachePerOrganization<T> : ITenantCacheClearable
 {
+    private readonly object _lock = new();
     private readonly OrchDriveInfo _drive;
     private static readonly ConcurrentDictionary<string, List<T>> _cache = [];
     private static readonly ExceptionsCachePer<string> _exception = new(); // per org の例外をこれで保持
@@ -281,7 +171,7 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
 
         if (!_cache.TryGetValue(partitionGlobalId, out var cachePerOrg))
         {
-            lock (this)
+            lock (_lock)
             {
                 if (!_cache.TryGetValue(partitionGlobalId, out cachePerOrg))
                 {
@@ -332,7 +222,7 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
 
         if (_cacheDetailed is null)
         {
-            lock (this)
+            lock (_lock)
             {
                 _cacheDetailed ??= [];
             }
@@ -340,7 +230,7 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
 
         if (!_cacheDetailed.TryGetValue((partitionGlobalId, id), out var cachePerOrgDetailed))
         {
-            lock (this)
+            lock (_lock)
             {
                 if (!_cacheDetailed.TryGetValue((partitionGlobalId, id), out cachePerOrgDetailed))
                 {
@@ -430,17 +320,13 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
         _exception.ClearCache(_drive._dicPartitionGlobalId);
     }
 
-    //public void ClearCacheAll()
-    //{
-    //    _cache.Clear();
-    //    _exception.ClearCache();
-    //}
 }
 
 // partitionGlobalId をキーとする、組織の単一エンティティ
 // これは組織全体で共有される単一のエンティティのキャッシュを表す
 public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : class
 {
+    private readonly object _lock = new();
     private readonly OrchDriveInfo _drive;
     
     // 組織ごとにキャッシュ（static = 全ドライブインスタンスで共有）
@@ -471,7 +357,7 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
 
         if (!_cache.TryGetValue(partitionGlobalId, out var entity))
         {
-            lock (this)
+            lock (_lock)
             {
                 if (!_cache.TryGetValue(partitionGlobalId, out entity))
                 {
@@ -517,6 +403,7 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
 // TEntity: 取得してキャッシュするエンティティ
 public class IndexedCachePerTenant<TIndexEntity, TEntity> : ITenantCacheClearable where TIndexEntity : notnull
 {
+    private readonly object _lock = new();
     private readonly OrchDriveInfo _drive;
 
     // key: TIndexEntity.Id
@@ -558,7 +445,7 @@ public class IndexedCachePerTenant<TIndexEntity, TEntity> : ITenantCacheClearabl
 
         if (_cache is null)
         {
-            lock (this)
+            lock (_lock)
             {
                 _cache ??= [];
             }
@@ -596,6 +483,7 @@ public class IndexedCachePerTenant<TIndexEntity, TEntity> : ITenantCacheClearabl
 
 public class SingleCachePerFolder<T> : IFolderCacheClearable
 {
+    private readonly object _lock = new();
     private readonly OrchDriveInfo _drive;
     private ConcurrentDictionary<Int64, T?>? _cache = null;
     private readonly ExceptionsCachePer<Int64> _exceptions = new();
@@ -627,7 +515,7 @@ public class SingleCachePerFolder<T> : IFolderCacheClearable
 
         if (_cache is null)
         {
-            lock (this)
+            lock (_lock)
             {
                 _cache ??= [];
             }
@@ -675,6 +563,7 @@ public class SingleCachePerFolder<T> : IFolderCacheClearable
 
 public class ListCachePerFolder<T> : IFolderCacheClearable
 {
+    private readonly object _lock = new();
     private readonly OrchDriveInfo _drive;
     private ConcurrentDictionary<Int64, List<T>>? _cache = null;
     private readonly ExceptionsCachePer<Int64> _exceptions = new();
@@ -706,7 +595,7 @@ public class ListCachePerFolder<T> : IFolderCacheClearable
 
         if (_cache is null)
         {
-            lock (this)
+            lock (_lock)
             {
                 _cache ??= [];
             }
@@ -764,6 +653,7 @@ public class ListCachePerFolder<T> : IFolderCacheClearable
 // TEntity: 取得してキャッシュするエンティティ
 public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClearable where TIndexEntity : notnull
 {
+    private readonly object _lock = new();
     private readonly OrchDriveInfo _drive;
 
     // 1st key: folderId
@@ -807,7 +697,7 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
 
         if (_cache is null)
         {
-            lock (this)
+            lock (_lock)
             {
                 if (_cache is null)
                 {
@@ -890,6 +780,7 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
 public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
     where TKey : notnull
 {
+    private readonly object _lock = new();
     private readonly OrchDriveInfo _drive;
 
     // 1st key: folderId, 2nd key: entityKey
@@ -950,7 +841,7 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
 
         if (_cache is null)
         {
-            lock (this)
+            lock (_lock)
             {
                 _cache ??= new();
             }
@@ -1014,7 +905,7 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
 
         if (_cache is null)
         {
-            lock (this)
+            lock (_lock)
             {
                 _cache ??= new();
             }
@@ -1053,6 +944,7 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
 public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
     where TKey : notnull
 {
+    private readonly object _lock = new();
     private readonly OrchDriveInfo _drive;
 
     private ConcurrentDictionary<TKey, TEntity>? _cache = null;
@@ -1102,7 +994,7 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
 
         if (_cache is null)
         {
-            lock (this)
+            lock (_lock)
             {
                 _cache ??= new();
             }
@@ -1147,7 +1039,7 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
     {
         if (_cache is null)
         {
-            lock (this)
+            lock (_lock)
             {
                 _cache ??= new();
             }
@@ -1184,6 +1076,7 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
 public class IncrementalCachePerProject<TKey, TEntity> : ITenantCacheClearable
     where TKey : notnull
 {
+    private readonly object _lock = new();
     private readonly OrchTmDriveInfo _drive;
 
     // 1st key: projectId, 2nd key: entityKey
@@ -1240,7 +1133,7 @@ public class IncrementalCachePerProject<TKey, TEntity> : ITenantCacheClearable
 
         if (_cache is null)
         {
-            lock (this)
+            lock (_lock)
             {
                 _cache ??= new();
             }
@@ -1303,7 +1196,7 @@ public class IncrementalCachePerProject<TKey, TEntity> : ITenantCacheClearable
 
         if (_cache is null)
         {
-            lock (this)
+            lock (_lock)
             {
                 _cache ??= new();
             }
@@ -1335,86 +1228,10 @@ public class IncrementalCachePerProject<TKey, TEntity> : ITenantCacheClearable
 
 #region TestManager 用キャッシュクラス
 
-// fetchFunc: 引数なしで、Enumerable<T> を返す Func
-// 今のところ、TmProject のみで使用している
-// なんだかすごく遅くなってしまったので一旦ボツ。たぶんロックをもう少し広くかけないと、API を何度も呼び出してしまうのではないか。
-//public class TestListCachePerTenant0<T> : ITenantCacheClearable
-//{
-//    private readonly OrchTmDriveInfo _drive;
-//    private List<T>? _cache = null;
-//    private readonly ExceptionCachePerTenant _exception = new();
-//    private readonly Func<IEnumerable<T>?> _fetchFunc;
-//    private readonly Action<T>? _initializer;
-//    private readonly int? _supportedApiVersionFrom;
-
-//    public TestListCachePerTenant0(
-//        OrchTmDriveInfo drive,
-//        Func<IEnumerable<T>?> fetchFunc,
-//        Action<T>? initializer = null,
-//        int? supportedApiVersionFrom = null)
-//    {
-//        _drive = drive;
-//        _fetchFunc = fetchFunc;
-//        _drive._allTenantCache.Add(this);
-//        _initializer = initializer;
-//        _supportedApiVersionFrom = supportedApiVersionFrom;
-//    }
-
-//    public List<T> Get()
-//    {
-//        if (_drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom)
-//        {
-//            return [];
-//        }
-
-//        _exception.ThrowCachedExceptionIfAny();
-
-//        if (_cache is null)
-//        {
-//            lock (this)
-//            {
-//                _cache ??= [];
-//            }
-//        }
-
-//        if (_cache is not null)
-//        {
-//            try
-//            {
-//                _cache = _fetchFunc()?.ToList();
-
-//                if (_initializer is not null && _cache is not null)
-//                {
-//                    foreach (var entity in _cache)
-//                    {
-//                        _initializer(entity);
-//                    }
-//                }
-//            }
-//            catch (HttpResponseException ex)
-//            {
-//                _exception.CacheException(ex);
-//                throw;
-//            }
-//        }
-//        else
-//        {
-//            _cache = [];
-//        }
-
-//        return _cache!;
-//    }
-
-//    public void ClearCache()
-//    {
-//        _cache = null;
-//        _exception.ClearCache();
-//    }
-//}
-
 // fetchFunc: 引数に TmProject を取り、Enumerable<T> を返す Func
 public class TestListCachePerTenant1<T> : ITenantCacheClearable
 {
+    private readonly object _lock = new();
     private readonly OrchTmDriveInfo _drive;
     internal ConcurrentDictionary<string, List<T>>? _cache = null;
     private readonly ExceptionsCachePer<string> _exceptions = new();
@@ -1454,7 +1271,7 @@ public class TestListCachePerTenant1<T> : ITenantCacheClearable
 
         if (_cache is null)
         {
-            lock (this)
+            lock (_lock)
             {
                 _cache ??= [];
             }
@@ -1625,6 +1442,7 @@ public class TestSingleCachePerTenant0<T> : ITenantCacheClearable
 // getFunc: 引数に TmProject を取り、T を返す Func
 public class TestSingleCachePerTenant1<T> : ITenantCacheClearable
 {
+    private readonly object _lock = new();
     private readonly OrchTmDriveInfo _drive;
     private ConcurrentDictionary<string, T?>? _cache = null;
     private readonly ExceptionsCachePer<string> _exceptions = new();
@@ -1656,7 +1474,7 @@ public class TestSingleCachePerTenant1<T> : ITenantCacheClearable
 
         if (_cache is null)
         {
-            lock (this)
+            lock (_lock)
             {
                 _cache ??= [];
             }

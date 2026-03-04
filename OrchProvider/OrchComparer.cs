@@ -79,28 +79,6 @@ public class EntityEqualityComparer<T, TKey> : EqualityComparer<T>
 }
 
 // 3要素の tuple を比較する Comparer
-// 最後の要素は必ず string で、case を無視して比較する
-//internal class ThirdItemIgnoreCaseComparer<T1, T2> : IEqualityComparer<(T1 Item1, T2 Item2, string UserName)>
-//{
-//    public bool Equals((T1 Item1, T2 Item2, string UserName) x,
-//                       (T1 Item1, T2 Item2, string UserName) y)
-//    {
-//        return EqualityComparer<T1>.Default.Equals(x.Item1, y.Item1) &&
-//               EqualityComparer<T2>.Default.Equals(x.Item2, y.Item2) &&
-//               string.Equals(x.UserName, y.UserName, StringComparison.OrdinalIgnoreCase);
-//    }
-
-//    public int GetHashCode((T1 Item1, T2 Item2, string UserName) obj)
-//    {
-//        return HashCode.Combine(
-//            EqualityComparer<T1>.Default.GetHashCode(obj.Item1 ?? default!),
-//            EqualityComparer<T2>.Default.GetHashCode(obj.Item2 ?? default!),
-//            StringComparer.OrdinalIgnoreCase.GetHashCode(obj.UserName)
-//        );
-//    }
-//}
-
-// 3要素の tuple を比較する Comparer
 // 2番目と3番目の要素は必ず string で、case を無視して比較する
 internal class SecondAndThirdItemIgnoreCaseComparer<T1, T2> : IEqualityComparer<((T1 drive, T2 folder), string Item2, string Item3)>
 {
@@ -275,60 +253,3 @@ public class ListStringComparer : IEqualityComparer<List<string>>
     }
 }
 
-// todo: 次の形式を正しくソートできるようにしたい。
-// 1.0.8
-// 1.0.8-alpha.1
-// 1.0.8-alpha  
-// 1.0.7
-// 1.0.6
-//public class PackageVersion : IComparable<PackageVersion>
-//{
-//    public string Version { get; set; }
-//    public int Major { get; private set; }
-//    public int Minor { get; private set; }
-//    public int Patch { get; private set; }
-//    public string Stage { get; private set; }
-
-//    public override string ToString() { return Version; }
-
-//    public PackageVersion(string version)
-//    {
-//        Version = version;
-
-//        string[] parts = version.Split('-');
-//        string[] mainParts = parts[0].Split('.');
-
-//        int major = 0;
-//        int minor = 0;
-//        int patch = 0;
-
-//        if (mainParts.Length >= 1) int.TryParse(mainParts[0], out major);
-//        if (mainParts.Length >= 2) int.TryParse(mainParts[1], out minor);
-//        if (mainParts.Length >= 3) int.TryParse(mainParts[2], out patch);
-
-
-//        Major = major;
-//        Minor = minor;
-//        Patch = patch;
-
-//        Stage = parts.Length > 1 ? parts[1] : string.Empty;
-//    }
-
-//    public int CompareTo(PackageVersion? other)
-//    {
-//        int majorComparison = Major.CompareTo(other.Major);
-//        if (majorComparison != 0) return majorComparison;
-
-//        int minorComparison = Minor.CompareTo(other.Minor);
-//        if (minorComparison != 0) return minorComparison;
-
-//        int patchComparison = Patch.CompareTo(other.Patch);
-//        if (patchComparison != 0) return patchComparison;
-
-//        if (Stage is null && other.Stage is null) return 0;
-//        if (Stage is null) return 1;
-//        if (other.Stage is null) return -1;
-
-//        return Stage.CompareTo(other.Stage);
-//    }
-//}

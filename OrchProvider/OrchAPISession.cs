@@ -23,14 +23,12 @@ namespace UiPath.OrchAPI;
 // スレッドの上限は OrchThreadPoolImpl class で cap するため、このクラスからは除外した
 public class RateLimiter : IDisposable
 {
-    //private readonly SemaphoreSlim concurrentSemaphore;
     private readonly SemaphoreSlim rateLimitSemaphore;
     private readonly int maxRequestsPerSecond;
     private readonly Timer refillTimer; // タイマーが GC で回収されないように、タイマーの参照を保持しておく
 
     public RateLimiter(int maxRequestsPerSecond)
     {
-        //this.concurrentSemaphore = new SemaphoreSlim(maxConcurrentRequests);
         this.maxRequestsPerSecond = maxRequestsPerSecond;
         this.rateLimitSemaphore = new SemaphoreSlim(maxRequestsPerSecond, maxRequestsPerSecond);
 
@@ -40,7 +38,6 @@ public class RateLimiter : IDisposable
 
     private void RefillRateLimitTokens(object state)
     {
-        //lock (rateLimitSemaphore) // SemaphoreSlim はスレッドセーフなので lock の必要はなかった
         {
             // Calculate the number of tokens to release
             int tokensToRelease = maxRequestsPerSecond - rateLimitSemaphore.CurrentCount;
@@ -53,7 +50,6 @@ public class RateLimiter : IDisposable
 
     public void Wait()
     {
-        //concurrentSemaphore.Wait();
         rateLimitSemaphore.Wait();
     }
 
@@ -102,9 +98,9 @@ public partial class OrchAPISession : IDisposable
         try
         {
             // オンプレ環境でテナント名が指定されている場合、ヘッダに追加
-            if (!string.IsNullOrEmpty(_authManager._onpremiseTenancy))
+            if (!string.IsNullOrEmpty(_authManager.OnpremiseTenancy))
             {
-                message.Headers.TryAddWithoutValidation("X-UIPATH-TenantName", _authManager._onpremiseTenancy);
+                message.Headers.TryAddWithoutValidation("X-UIPATH-TenantName", _authManager.OnpremiseTenancy);
             }
 
             reqTime = DateTime.Now;
@@ -270,7 +266,7 @@ public partial class OrchAPISession : IDisposable
         {
             // オンプレ: テナントパスが除去された _baseUrl を使用
             // テナント指定は X-UIPATH-TenantName ヘッダで行う
-            _base_url = _authManager._baseUrl;
+            _base_url = _authManager.BaseUrl;
             _base_url_identity = _base_url + "/identity";
             _base_url_portal = _base_url + "/portal";
         }
@@ -283,7 +279,7 @@ public partial class OrchAPISession : IDisposable
         _drive = drive;
     }
 
-    private static readonly object _authLock = new();
+    private readonly object _authLock = new();
     internal void EnsureAuthenticated()
     {
         if (!_isAuthenticated)
@@ -514,7 +510,7 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    private static readonly StringContent EmptyContent = new("", Encoding.UTF8, @"application/json");
+    private static StringContent CreateEmptyContent() => new("", Encoding.UTF8, @"application/json");
 
     private IEnumerable<T> GetEnumerablePortal<T>(string endPoint, Int64? folderId = null, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
     {
@@ -536,7 +532,7 @@ public partial class OrchAPISession : IDisposable
                 // content が空っぽの場合でも、次の行は必要。
                 // これがないと、Get-OrchPmUser のエンドポイントがエラーを返してしまう。
                 // ほとんどすべてのエンドポイントでは、次の行がなくても大丈夫なのに、、
-                Content = EmptyContent
+                Content = CreateEmptyContent()
             };
             if (folderId.HasValue)
             {
@@ -599,11 +595,6 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerableWithoutPagingImpl<T[]>(_base_url_identity, endPoint, folderId, query);
     }
 
-    //private T[]? GetEnumerableWithoutPagingPortal<T>(string endPoint, Int64? folderId = null, string? query = null)
-    //{
-    //    return GetEnumerableWithoutPagingImpl<T[]>(_base_url_portal, endPoint, folderId, query);
-    //}
-
     public string HttpRequestImpl(HttpMethod method, string baseUrl, string endPoint, Int64? folderId, string? payload = null)
     {
         string url = baseUrl + endPoint;
@@ -623,27 +614,6 @@ public partial class OrchAPISession : IDisposable
         var body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
         return body;
     }
-
-    //public string HttpRequestGcImpl(HttpMethod method, string baseUrl, string? folderKey, string? payload)
-    //{
-    //    var request = new HttpRequestMessage(method, baseUrl);
-    //    if (payload is not null)
-    //    {
-    //        request.Content = new StringContent(payload, Encoding.UTF8, @"application/json");
-    //    }
-
-    //    if (folderKey is not null)
-    //    {
-    //        request.Headers.Add("X-Uipath-Folderkey", folderKey);
-    //    }
-
-    //    //request.Headers.Add("x-uipath-correlation-id", Guid.NewGuid().ToString());
-
-    //    var response = HttpClient_Send(request);
-    //    EnsureSuccessStatusCode(response);
-    //    var body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-    //    return body;
-    //}
 
     public string HttpRequest(HttpMethod method, string endPoint, Int64? folderId, string payload)
     {
