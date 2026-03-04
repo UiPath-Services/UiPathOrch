@@ -69,20 +69,12 @@ class UpdatePmUserSettingCommand : OrchestratorPSCmdlet
         var (locale, localeCode) = _languages.FirstOrDefault(l => l.Locale == Language);
         localeCode ??= Language;
 
-        using var results = OrchThreadPool.RunForEach(drives,
-            drive => drive.NameColonSeparator,
-            drive => drive,
-            drive => drive.PmUsers.Get());
-
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var result in results)
+        foreach (var drive in drives)
         {
             try
             {
-                var entities = result.GetResult(cancelHandler.Token);
+                var entities = drive.PmUsers.Get();
                 if (entities is null) continue;
-
-                var drive = result.Source;
 
                 foreach (var user in entities
                     .FilterByWildcards(user => user?.email, wpEmail)
@@ -98,13 +90,13 @@ class UpdatePmUserSettingCommand : OrchestratorPSCmdlet
                         UpdatePmUserSettingPayload payload = new()
                         {
                             settings = settings,
-                            partitionGlobalId = drive!.GetPartitionGlobalId(),
+                            partitionGlobalId = drive.GetPartitionGlobalId(),
                             userId = user.id
                         };
 
                         try
                         {
-                            drive!.OrchAPISession.PutPmUserSetting(payload);
+                            drive.OrchAPISession.PutPmUserSetting(payload);
                         }
                         catch (Exception ex)
                         {
@@ -113,9 +105,9 @@ class UpdatePmUserSettingCommand : OrchestratorPSCmdlet
                     }
                 }
             }
-            catch (OrchException ex)
+            catch (Exception ex)
             {
-                WriteError(new ErrorRecord(ex, "GetPmUserError", ErrorCategory.InvalidOperation, ex.Target));
+                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetPmUserError", ErrorCategory.InvalidOperation, drive));
             }
         }
     }

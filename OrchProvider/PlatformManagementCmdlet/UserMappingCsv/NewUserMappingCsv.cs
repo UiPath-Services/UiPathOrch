@@ -70,21 +70,15 @@ class NewUserMappingCsvCommand : OrchestratorPSCmdlet
         }
         if (srcGroups is null) return;
 
-        using var results = OrchThreadPool.RunForEach(srcGroups,
-            group => group.GetPSPath(),
-            group => group,
-            group => srcDrive.PmGroups.Get(group.id)
-        );
-
         int index = 0;
-        foreach (var result in results)
+        foreach (var group in srcGroups)
         {
             cancelToken.ThrowIfCancellationRequested();
 
             try
             {
                 reporter.WriteProgress(++index);
-                var detailedSrcGroup = result.GetResult(cancelToken);
+                var detailedSrcGroup = srcDrive.PmGroups.Get(group.id);
 
                 if (detailedSrcGroup is null || detailedSrcGroup.members is null) continue;
 
@@ -105,9 +99,9 @@ class NewUserMappingCsvCommand : OrchestratorPSCmdlet
                     }
                 }
             }
-            catch (OrchException ex)
+            catch (Exception ex)
             {
-                WriteError(new ErrorRecord(ex, "GetPmGroupError", ErrorCategory.InvalidOperation, ex.Target));
+                WriteError(new ErrorRecord(new OrchException(group.GetPSPath(), ex), "GetPmGroupError", ErrorCategory.InvalidOperation, group));
             }
         }
     }
@@ -155,21 +149,15 @@ class NewUserMappingCsvCommand : OrchestratorPSCmdlet
         var folders = srcDrive.GetFolders();
         reporter.TotalNum = folders.Count;
 
-        using var results = OrchThreadPool.RunForEach(folders,
-            folder => folder.GetPSPath(),
-            folder => folder,
-            folder => srcDrive.FolderUsersWithNoInherited.Get(folder)
-        );
-
         int index = 0;
-        foreach (var result in results)
+        foreach (var folder in folders)
         {
             cancelToken.ThrowIfCancellationRequested();
 
             try
             {
                 reporter.WriteProgress(++index);
-                var folderUsers = result.GetResult(cancelToken);
+                var folderUsers = srcDrive.FolderUsersWithNoInherited.Get(folder);
 
                 if (folderUsers is null) continue;
 
@@ -189,9 +177,9 @@ class NewUserMappingCsvCommand : OrchestratorPSCmdlet
                     }
                 }
             }
-            catch (OrchException ex)
+            catch (Exception ex)
             {
-                WriteError(new ErrorRecord(ex, "GetFolderUserError", ErrorCategory.InvalidOperation, ex.Target));
+                WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "GetFolderUserError", ErrorCategory.InvalidOperation, folder));
             }
         }
     }

@@ -58,24 +58,18 @@ public class SearchPmDirectoryCommand : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumPmDrives(Path);
 
-        using var results = OrchThreadPool.RunForEach(drives,
-            drive => drive.NameColonSeparator,
-            drive => drive,
-            drive => drive.SearchPmDirectory(Name!));
-
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var result in results)
+        foreach (var drive in drives)
         {
             try
             {
-                var entityInfo = result.GetResult(cancelHandler.Token);
+                var entityInfo = drive.SearchPmDirectory(Name!);
                 if (entityInfo is null) continue;
 
                 WriteObject(entityInfo, true);
             }
-            catch (OrchException ex)
+            catch (Exception ex)
             {
-                WriteError(new ErrorRecord(ex, "SearchPmDirectoryError", ErrorCategory.InvalidOperation, ex.Target));
+                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "SearchPmDirectoryError", ErrorCategory.InvalidOperation, drive));
             }
         }
     }

@@ -96,27 +96,19 @@ public class GetPmAuditLogCommand : OrchestratorPSCmdlet
 
         string filter = MakeFilter();
 
-        using var results = OrchThreadPool.RunForEach(drives,
-            drive => drive.NameColonSeparator,
-            drive => drive,
-            drive => drive.GetPmAuditLog(filter, skip, first));
-
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var result in results)
+        foreach (var drive in drives)
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             try
             {
-                var entities = result.GetResult(cancelHandler.Token);
+                var entities = drive.GetPmAuditLog(filter, skip, first);
                 if (entities is null) continue;
 
                 // ここでソートしてはいけない
                 WriteObject(entities, true);
             }
-            catch (OrchException ex)
+            catch (Exception ex)
             {
-                WriteError(new ErrorRecord(ex, "GetPmAuditLogError", ErrorCategory.InvalidOperation, ex.Target));
+                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetPmAuditLogError", ErrorCategory.InvalidOperation, drive));
             }
         }
     }

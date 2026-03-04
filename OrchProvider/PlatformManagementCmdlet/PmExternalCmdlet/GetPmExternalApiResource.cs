@@ -57,27 +57,19 @@ public class GetPmExternalApiResourceCommand : OrchestratorPSCmdlet
         var drives = SessionState.EnumPmDrives(Path);
         var wpName = Name.ConvertToWildcardPatternList();
 
-        using var results = OrchThreadPool.RunForEach(drives,
-            drive => drive.NameColonSeparator,
-            drive => drive,
-            drive => drive.PmExternalApiResources.Get());
-
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var result in results)
+        foreach (var drive in drives)
         {
             try
             {
-                var entities = result.GetResult(cancelHandler.Token);
-                if (entities is null) continue;
-
-                WriteObject(entities
+                var resources = drive.PmExternalApiResources.Get();
+                WriteObject(resources
                     .FilterByWildcards(a => a!.name!, wpName)
                     .OrderBy(a => a!.name),
                     true);
             }
-            catch (OrchException ex)
+            catch (Exception ex)
             {
-                WriteError(new ErrorRecord(ex, "GetIdExternalApiResourceError", ErrorCategory.InvalidOperation, ex.Target));
+                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetIdExternalApiResourceError", ErrorCategory.InvalidOperation, drive));
             }
         }
     }
