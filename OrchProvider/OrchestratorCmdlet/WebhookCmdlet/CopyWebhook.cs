@@ -30,7 +30,7 @@ public class CopyWebhookCommand : OrchestratorPSCmdlet
         IWritableHost _this,
         OrchDriveInfo srcDrive,
         List<WildcardPattern>? wpName,
-        IEnumerable<OrchDriveInfo> dstDrives,
+        IList<OrchDriveInfo> dstDrives,
         bool shouldProcess, CancellationToken cancelToken)
     {
         srcDrive.Webhooks.ClearCache();
@@ -47,7 +47,6 @@ public class CopyWebhookCommand : OrchestratorPSCmdlet
             return;
         }
         if (srcWebhooks is null) return;
-
 
         foreach (var dstDrive in dstDrives)
         {
@@ -86,10 +85,7 @@ public class CopyWebhookCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var srcDrive = SessionState.GetOrchDrive(Path!);
-        if (srcDrive is null)
-            throw new Exception("Path is not OrchDrive.");
-
+        var srcDrive = SessionState.GetOrchDrive(Path!) ?? throw new Exception("Path is not OrchDrive.");
         var dstDrives = SessionState.EnumDestinationDrives(Destination!);
 
         var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();

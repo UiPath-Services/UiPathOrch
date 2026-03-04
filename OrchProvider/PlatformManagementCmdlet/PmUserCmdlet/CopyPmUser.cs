@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Management.Automation;
+﻿using System.Management.Automation;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
@@ -165,7 +164,7 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
                     };
                     payload.users.Add(command);
                     #endregion
-                };
+                }
                 #endregion
 
                 if (payload.users.Count == 0) continue;
@@ -178,11 +177,11 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
 
                     if (response?.result?.succeeded ?? false)
                     {
-                        foreach (var user in response?.users ?? [])
+                        foreach (var user in response.users ?? [])
                         {
                             user.Path = dstDrive.NameColonSeparator;
                         }
-                        WriteObject(response?.users?.OrderBy(u => u.email), true);
+                        WriteObject(response.users?.OrderBy(u => u.email), true);
                     }
                 }
                 catch (Exception ex)

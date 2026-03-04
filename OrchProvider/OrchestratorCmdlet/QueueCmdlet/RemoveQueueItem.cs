@@ -99,16 +99,15 @@ public class RemoveQueueItemCommand : OrchestratorPSCmdlet
         var (drive, folder) = SessionState.ResolveToSingleFolder(Path);
         var wpName = new string[] { Name! }.ConvertToWildcardPatternList();
 
-        var queues = drive.Queues.Get(folder).FilterByWildcards(q => q?.Name, wpName);
-        var cnt = queues.Count();
-        if (cnt != 1)
+        var queues = drive.Queues.Get(folder).FilterByWildcards(q => q?.Name, wpName).Take(2).ToList();
+        if (queues.Count != 1)
         {
             string queuePath = System.IO.Path.Combine(folder.GetPSPath(), Name!);
-            if (cnt == 0) throw new Exception($"\"{queuePath}\" does not match any queue.");
-            if (cnt > 1) throw new Exception($"\"{queuePath}\" matches more than one queue.");
+            if (queues.Count == 0) throw new Exception($"\"{queuePath}\" does not match any queue.");
+            if (queues.Count > 1) throw new Exception($"\"{queuePath}\" matches more than one queue.");
         }
 
-        var queue = queues.FirstOrDefault();
+        var queue = queues[0];
         if (queue is null) return; // ここで null になるはずはないが、念のため
         #endregion
 

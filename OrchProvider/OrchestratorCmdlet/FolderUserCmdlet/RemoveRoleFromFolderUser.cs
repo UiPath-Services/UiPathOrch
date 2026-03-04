@@ -232,7 +232,7 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
                         IEnumerable<SimpleRole> existingRoles = user.Roles;
 
                         // 削除するロールを抽出
-                        IEnumerable<SimpleRole> targetRoles = existingRoles!.FilterByWildcards(role => role?.Name, wpRoles);
+                        var targetRoles = existingRoles!.FilterByWildcards(role => role?.Name, wpRoles);
                         if (!targetRoles.Any()) continue;
                         string strTargetRoles = string.Join(", ", targetRoles.Select(role => role.Name));
 

@@ -319,8 +319,8 @@ public class GetJobCommand : OrchestratorPSCmdlet
         #region Priority
         if (Priority is not null)
         {
-            Priority = Priority.ToLower();
-            switch (Priority)
+            var priority = Priority.ToLower();
+            switch (priority)
             {
                 case "critical":
                     filter.Add("(SpecificPriorityValue ge 91) and (SpecificPriorityValue le 100)");
@@ -359,15 +359,11 @@ public class GetJobCommand : OrchestratorPSCmdlet
         #region ProcessType
         // TODO: この数字は正しい？
         // ApiVersion ==  11 のとき、ProcessType should be null であることは確認済み
-        if (drive.OrchAPISession.ApiVersion < 12)
+        if (drive.OrchAPISession.ApiVersion >= 12)
         {
-            ProcessType = null;
-        }
-        else
-        {
-            ProcessType ??= ["Process"];
+            var processType = ProcessType ?? ["Process"];
             filter.AddIfNotNull(JobProcessTypeItems.Parameters
-                .SelectByWildcards(i => i, ProcessType)
+                .SelectByWildcards(i => i, processType)
                 .CreateOrFilter(i => $"ProcessType eq '{i}'"));
         }
         #endregion
@@ -398,7 +394,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
 
         var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
 
-        if (string.IsNullOrEmpty(OrderBy)) OrderBy = "CreationTime";
+        var orderBy = string.IsNullOrEmpty(OrderBy) ? "CreationTime" : OrderBy;
 
         // すべてのパラメータが指定されていなければ、キャッシュの内容を返す
         bool bOutCache = (
@@ -429,7 +425,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
                 var jobs = drive.Jobs.GetCache(folder);
                 if (jobs is not null)
                 {
-                    switch (OrderBy)
+                    switch (orderBy)
                     {
                         case "CreationTime":
                             if (OrderAscending.IsPresent)
@@ -520,7 +516,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
                         //var jobs = drive.GetJobs(folder, filter, skip, first, OrderBy, OrderAscending.IsPresent);
                         var batchSkip = isBatched ? 0UL : skip;
                         var batchFirst = isBatched ? ulong.MaxValue : first;
-                        var jobs = drive.Jobs.Fetch(folder, filter, batchSkip, batchFirst, OrderBy, OrderAscending.IsPresent);
+                        var jobs = drive.Jobs.Fetch(folder, filter, batchSkip, batchFirst, orderBy, OrderAscending.IsPresent);
                         if (allJobs is not null)
                             foreach (var j in jobs) allJobs.Add(j);
                         else

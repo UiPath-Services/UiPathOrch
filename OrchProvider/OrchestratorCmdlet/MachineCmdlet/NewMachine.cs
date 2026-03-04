@@ -82,7 +82,7 @@ public class NewMachineCommand : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(Path);
-        RobotUsers = RobotUsers?.Split1stValueByUnescapedCommas()?.ToArray();
+        var processedRobotUsers = RobotUsers?.Split1stValueByUnescapedCommas();
 
         if (string.IsNullOrEmpty(Type))            { Type = "Template"; }
         if (string.IsNullOrEmpty(AutomationType))  { AutomationType = null; }
@@ -105,10 +105,10 @@ public class NewMachineCommand : OrchestratorPSCmdlet
                 if (ShouldProcess(target, "New Machine"))
                 {
                    List<RobotUser>? lstRobotUsers = null;
-                   if (RobotUsers is not null)
+                   if (processedRobotUsers is not null)
                    {
                         var robots = drive.AllRobotsAcrossFolders.Get();
-                        var wpRobotUsers = RobotUsers.ConvertToWildcardPatternList();
+                        var wpRobotUsers = processedRobotUsers.ConvertToWildcardPatternList();
                         var targetRobots = robots.FilterByWildcards(r => r?.User?.FullName, wpRobotUsers);
                         lstRobotUsers = targetRobots
                             .Select(r => new RobotUser()

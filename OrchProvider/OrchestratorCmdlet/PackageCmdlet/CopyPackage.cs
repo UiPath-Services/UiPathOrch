@@ -327,16 +327,16 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         // 先頭の要素は CSV から入力されている可能性があるので、先頭の要素についてはカンマで区切る
-        Id = Id.Split1stValueByUnescapedCommas()?.ToArray();
-        Version = Version.Split1stValueByUnescapedCommas()?.ToArray();
-        Destination = Destination.Split1stValueByUnescapedCommas()?.ToArray();
+        var processedId = Id.Split1stValueByUnescapedCommas();
+        var processedVersion = Version.Split1stValueByUnescapedCommas();
+        var processedDestination = Destination.Split1stValueByUnescapedCommas();
 
-        var wpId = Id.ConvertToWildcardPatternList();
-        var wpVersion = Version.ConvertToWildcardPatternList();
+        var wpId = processedId.ConvertToWildcardPatternList();
+        var wpVersion = processedVersion.ConvertToWildcardPatternList();
 
         var (srcDrive, srcRootFolder) = SessionState.ResolveToSingleFeedFolder(Path);
         var srcDrivesFolders = SessionState.EnumPackageFeedFolders([srcRootFolder.GetPSPath()], Recurse.IsPresent);
-        var dstDrivesFolders = SessionState.EnumPackageFeedFolders(Destination);
+        var dstDrivesFolders = SessionState.EnumPackageFeedFolders(processedDestination);
 
         if (srcRootFolder != srcDrive.RootFolder && Recurse.IsPresent)
         {

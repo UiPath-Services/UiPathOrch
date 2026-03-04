@@ -337,13 +337,14 @@ public static class ParallelResults
 {
     public static ParallelResult<TSource, TResult>[] ForEach<TSource, TResult>(IEnumerable<TSource> sources, Func<TSource, TResult> forEachBody)
     {
-        var resultsArray = new ParallelResult<TSource, TResult>[sources is ICollection<TSource> collection ? collection.Count : sources.Count()];
+        var srcList = sources as IList<TSource> ?? sources.ToList();
+        var resultsArray = new ParallelResult<TSource, TResult>[srcList.Count];
         using var cancelHandler = new ConsoleCancelHandler();
 
         // コンカレントなスレッド数の上限を4に制限
         using var semaphore = new SemaphoreSlim(4);
 
-        var tasks = sources.Select((source, index) => Task.Run(async () =>
+        var tasks = srcList.Select((source, index) => Task.Run(async () =>
         {
             await semaphore.WaitAsync(cancelHandler.Token);
             try

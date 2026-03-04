@@ -241,7 +241,7 @@ public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
                     IEnumerable<SimpleRole> existingRoles = user.Roles;
 
                     // 追加するロールを抽出(追加済みのロールは除去)
-                    IEnumerable<Role> addingRoles = tenantRoles
+                    var addingRoles = tenantRoles
                         .ExcludeByStructValues(role => role.Id ?? 0, existingRoles!.Select(role => role.Id ?? 0));
                     if (!addingRoles.Any()) continue;
                     var targetRoles = string.Join(", ", addingRoles.Select(r => r.Name).Order());

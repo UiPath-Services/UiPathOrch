@@ -66,14 +66,14 @@ public class AddCalendarDateCommand : OrchestratorPSCmdlet
 
         foreach (var drive in drives)
         {
-            ICollection<ExtendedCalendar> calendars = null; ;
+            ICollection<ExtendedCalendar> calendars = null;
             try
             {
                 calendars = drive.GetCalendars();
             }
             catch (Exception ex)
             {
-                WriteError(new ErrorRecord(ex, "GetCalendarError", ErrorCategory.InvalidOperation, drive));
+                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetCalendarError", ErrorCategory.InvalidOperation, drive));
                 continue;
             }
             if (calendars is null) continue;

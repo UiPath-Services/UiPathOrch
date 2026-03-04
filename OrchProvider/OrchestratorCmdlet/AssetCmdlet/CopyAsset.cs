@@ -1,5 +1,4 @@
 ﻿using System.Management.Automation;
-using System.Reflection.Metadata;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;

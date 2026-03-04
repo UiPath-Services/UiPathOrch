@@ -119,10 +119,9 @@ public class CopyPmExternalApplicationCommand : OrchestratorPSCmdlet
                                     }
                                 }
                             }
-                            catch (Exception ex)
+                            catch (OrchException ex)
                             {
-                                string msg = OrchException.ExtractMessage(ex);
-                                WriteWarning($"\"{dstDrive.NameColonSeparator}\": Failed to add {newApp.name} to PmGroup {srcGroup.name}.");
+                                WriteWarning($"\"{dstDrive.NameColonSeparator}\": Failed to add {newApp.name} to PmGroup {srcGroup.name}. {ex.Message}");
                             }
                         }
                     }

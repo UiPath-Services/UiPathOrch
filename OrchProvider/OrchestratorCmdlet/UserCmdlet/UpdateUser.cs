@@ -160,13 +160,12 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
         var drives = SessionState.EnumOrchDrives(Path);
 
         // CSV に指定された Roles はカンマで区切る
-        Roles = Roles?
+        var processedRoles = Roles?
              .SelectMany(name => name.Split(',', StringSplitOptions.RemoveEmptyEntries))
-             .Select(name => name.Trim())
-             .ToArray();
+             .Select(name => name.Trim());
 
         var wpUserName = UserName!.ConvertToWildcardPatternList();
-        var wpRoles = Roles.ConvertToWildcardPatternList();
+        var wpRoles = processedRoles.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)

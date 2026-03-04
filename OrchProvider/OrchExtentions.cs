@@ -1,6 +1,4 @@
-﻿using Microsoft.ApplicationInsights.DataContracts;
-using System.Collections.ObjectModel;
-using System.Data;
+﻿using System.Collections.ObjectModel;
 using System.Management.Automation;
 using System.Text;
 using System.Text.Json;
@@ -571,11 +569,11 @@ internal static class OrchStringExtensions
         try
         {
             var wpName = new WildcardPattern(name, WildcardOptions.IgnoreCase);
-            var entities = getEntitiesFunc().Where(e => wpName.IsMatch(getNameFunc(e)));
-            switch (entities.Take(2).Count())
+            var entities = getEntitiesFunc().Where(e => wpName.IsMatch(getNameFunc(e))).Take(2).ToList();
+            switch (entities.Count)
             {
                 case 1:
-                    setter(target, getIdFunc(entities.First()));
+                    setter(target, getIdFunc(entities[0]));
                     return true;
                 case 0:
                     host.WriteError(new ErrorRecord(new OrchException(targetName, $"No {nameKind} found with \"{name}\". Please ensure that the specified {nameKind} name is correct."), $"Get{nameKind}Error", ErrorCategory.InvalidOperation, target));

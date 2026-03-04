@@ -51,7 +51,7 @@ public class CopyCredentialStoreCommand : OrchestratorPSCmdlet
     internal static void CopyCredentialStores(
         IWritableHost _this,
         OrchDriveInfo srcDrive, List<WildcardPattern>? wpName,
-        IEnumerable<OrchDriveInfo> dstDrives,
+        IList<OrchDriveInfo> dstDrives,
         bool shouldProcess, CancellationToken cancelToken)
     {
         srcDrive.CredentialStores.ClearCache();
@@ -72,7 +72,7 @@ public class CopyCredentialStoreCommand : OrchestratorPSCmdlet
         using var reporter = new ProgressReporter(_this, 1, 100, "Copying credential stores");
 
         int index = 0;
-        reporter.TotalNum = dstDrives.Count() * stores.Count;
+        reporter.TotalNum = dstDrives.Count * stores.Count;
 
         foreach (var dstDrive in dstDrives)
         {

@@ -92,7 +92,7 @@ public class CopyLibraryCommand : OrchestratorPSCmdlet
     internal static void CopyLibraries(
         IWritableHost _this,
         IEnumerable<OrchDriveInfo> srcDrives, List<WildcardPattern>? wpId, List<WildcardPattern>? wpVersion,
-        IEnumerable<OrchDriveInfo> dstDrives,
+        IList<OrchDriveInfo> dstDrives,
         bool shouldProcess, CancellationToken cancelToken)
     {
         foreach (var srcDrive in srcDrives)
@@ -117,7 +117,7 @@ public class CopyLibraryCommand : OrchestratorPSCmdlet
                         //.OrderBy(version => version.Version!, VersionComparer.Instance)
                         .ToList();
 
-                    using var reporter2 = new ProgressReporter(_this, 2, dstDrives.Count() * versions.Count, "Copying versions...    ");
+                    using var reporter2 = new ProgressReporter(_this, 2, dstDrives.Count * versions.Count, "Copying versions...    ");
                     int index2 = 0;
                     foreach (var version in versions)
                     {

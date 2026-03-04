@@ -29,7 +29,7 @@ public class CopyMachineCommand : OrchestratorPSCmdlet
         IWritableHost _this,
         OrchDriveInfo srcDrive,
         List<WildcardPattern>? wpName,
-        IEnumerable<OrchDriveInfo> dstDrives,
+        IList<OrchDriveInfo> dstDrives,
         bool shouldProcess, CancellationToken cancelToken)
     {
         srcDrive.Machines.ClearCache();
@@ -52,7 +52,7 @@ public class CopyMachineCommand : OrchestratorPSCmdlet
         using var reporter = new ProgressReporter(_this, 1, 100, "Copying machines");
 
         int index = 0;
-        reporter.TotalNum = dstDrives.Count() * srcMachines.Count;
+        reporter.TotalNum = dstDrives.Count * srcMachines.Count;
 
         foreach (var dstDrive in dstDrives)
         {
