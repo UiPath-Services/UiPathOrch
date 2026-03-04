@@ -139,16 +139,11 @@ public class GetUserLicenseGroup: OrchestratorPSCmdlet
 
             if (ExpandAllocation.IsPresent || writer is not null)
             {
-                    using var results = OrchThreadPool.RunForEach(groups,
-                        group => group.GetPSPath(),
-                        group => group,
-                        group => drive.GetPmLicensedGroupAllocations(group));
-
-                foreach (var result in results)
+                foreach (var group in groups)
                 {
                     try
                     {
-                        var entities = result.GetResult(cancelHandler.Token);
+                        var entities = drive.GetPmLicensedGroupAllocations(group);
                         if (entities is null) continue;
 
                         var targetEntities = entities
@@ -164,9 +159,9 @@ public class GetUserLicenseGroup: OrchestratorPSCmdlet
                             WriteCsvContent(writer, targetEntities);
                         }
                     }
-                    catch (OrchException ex)
+                    catch (Exception ex)
                     {
-                        WriteError(new ErrorRecord(ex, "GetPmLicensedGroupError", ErrorCategory.InvalidOperation, ex.Target));
+                        WriteError(new ErrorRecord(new OrchException(group.GetPSPath(), ex), "GetPmLicensedGroupError", ErrorCategory.InvalidOperation, group));
                     }
                 }
             }

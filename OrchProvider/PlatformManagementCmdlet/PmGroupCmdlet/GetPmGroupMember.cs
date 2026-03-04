@@ -72,18 +72,11 @@ public class GetPmGroupMemberCommand : OrchestratorPSCmdlet
                 .FilterByWildcards(g => g?.name!, wpGroupName)
                 .OrderBy(g => g.name);
 
-            using var results = OrchThreadPool.RunForEach(groups,
-                group => group.GetPSPath(),
-                group => group,
-                group => drive.PmGroups.Get(group.id)
-            );
-
-            using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var result in results)
+            foreach (var group in groups)
             {
                 try
                 {
-                    var detailedGroup = result.GetResult(cancelHandler.Token);
+                    var detailedGroup = drive.PmGroups.Get(group.id);
                     if (detailedGroup is null) continue;
 
                     if (writer is not null)
@@ -97,9 +90,9 @@ public class GetPmGroupMemberCommand : OrchestratorPSCmdlet
                         WriteObject(detailedGroup.members.OrderBy(m => m.name), true);
                     }
                 }
-                catch (OrchException ex)
+                catch (Exception ex)
                 {
-                    WriteError(new ErrorRecord(ex, "GetPmGroupMemberError", ErrorCategory.InvalidOperation, ex.Target));
+                    WriteError(new ErrorRecord(new OrchException(group.GetPSPath(), ex), "GetPmGroupMemberError", ErrorCategory.InvalidOperation, group));
                 }
             }
 

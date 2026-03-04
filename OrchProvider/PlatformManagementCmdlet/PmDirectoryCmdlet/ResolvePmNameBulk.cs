@@ -29,11 +29,6 @@ public class SearchPmDirectoryBulkCommand : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumPmDrives(Path);
 
-        using var results = OrchThreadPool.RunForEach(drives,
-            drive => drive.NameColonSeparator,
-            drive => drive,
-            drive => drive.PmBulkResolveByName(EntityType!, Name!, name => name));
-
         string viewName = EntityType!.ToLower() switch
         {
             "user" => "UiPath.PowerShell.Entities.DirectoryUser",
@@ -42,12 +37,11 @@ public class SearchPmDirectoryBulkCommand : OrchestratorPSCmdlet
             _ => null
         };
 
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var result in results)
+        foreach (var drive in drives)
         {
             try
             {
-                var directoryObjects = result.GetResult(cancelHandler.Token);
+                var directoryObjects = drive.PmBulkResolveByName(EntityType!, Name!, name => name);
                 if (directoryObjects is null) continue;
 
                 foreach (var directoryObject in directoryObjects.Values.Where(v => v is not null).OrderBy(v => v!.name))
@@ -58,9 +52,9 @@ public class SearchPmDirectoryBulkCommand : OrchestratorPSCmdlet
                     WriteObject(psObject);
                 }
             }
-            catch (OrchException ex)
+            catch (Exception ex)
             {
-                WriteError(new ErrorRecord(ex, "ResolvePmDirectoryNameBulkError", ErrorCategory.InvalidOperation, ex.Target));
+                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "ResolvePmDirectoryNameBulkError", ErrorCategory.InvalidOperation, drive));
             }
         }
     }

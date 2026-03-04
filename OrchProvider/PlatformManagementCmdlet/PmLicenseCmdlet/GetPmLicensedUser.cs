@@ -127,17 +127,11 @@ public class GetUserLicenseUser: OrchestratorPSCmdlet
         var wpName = Name.ConvertToWildcardPatternList();
         var wpEmail = Email.ConvertToWildcardPatternList();
 
-        using var results = OrchThreadPool.RunForEach(drives,
-            drive => drive.NameColonSeparator,
-            drive => drive,
-            drive => drive.PmLicensedUsers.Get());
-
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var result in results)
+        foreach (var drive in drives)
         {
             try
             {
-                var entities = result.GetResult(cancelHandler.Token);
+                var entities = drive.PmLicensedUsers.Get();
                 if (entities is null) continue;
 
                 var targetEntities = entities
@@ -147,9 +141,9 @@ public class GetUserLicenseUser: OrchestratorPSCmdlet
 
                 WriteObject(targetEntities, true);
             }
-            catch (OrchException ex)
+            catch (Exception ex)
             {
-                WriteError(new ErrorRecord(ex, "GetPmLicensedUserError", ErrorCategory.InvalidOperation, ex.Target));
+                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetPmLicensedUserError", ErrorCategory.InvalidOperation, drive));
             }
         }
     }

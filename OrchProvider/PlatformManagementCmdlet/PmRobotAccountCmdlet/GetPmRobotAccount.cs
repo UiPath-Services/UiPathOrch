@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Management.Automation;
+﻿using System.Management.Automation;
 using System.Text;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
@@ -70,28 +69,16 @@ public class GetPmRobotAccountCommand : OrchestratorPSCmdlet
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
-        using var results = OrchThreadPool.RunForEach(drives,
-            drive => drive.NameColonSeparator,
-            drive => drive,
-            drive => drive.PmRobotAccounts.Get());
-
-        if (ExpandGroup.IsPresent)
-        {
-            ParallelResults3.GroupBy(drives, drive => drive.PmGroups.Get());
-        }
-
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var result in results)
+        foreach (var drive in drives)
         {
             try
             {
-                var robotAccounts = result.GetResult(cancelHandler.Token)?
+                var robotAccounts = drive.PmRobotAccounts.Get()?
                     .Where(r => r is not null)
                     .FilterByWildcards(r => r?.name!, wpName)
                     .OrderBy(r => r?.name);
 
                 if (robotAccounts is null) continue;
-                var drive = result.Source;
 
                 var dicGroups = drive.PmGroups.Get().ToDictionary(g => g.id!);
 
@@ -133,9 +120,9 @@ public class GetPmRobotAccountCommand : OrchestratorPSCmdlet
                     WriteObject(robotAccounts, true);
                 }
             }
-            catch (OrchException ex)
+            catch (Exception ex)
             {
-                var errorRecord = new ErrorRecord(ex, "GetPmRobotAccountError", ErrorCategory.InvalidOperation, ex.Target);
+                var errorRecord = new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetPmRobotAccountError", ErrorCategory.InvalidOperation, drive);
                 WriteError(errorRecord);
             }
         }
