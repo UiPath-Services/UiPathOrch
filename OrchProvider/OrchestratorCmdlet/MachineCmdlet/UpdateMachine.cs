@@ -149,8 +149,8 @@ public class UpdateMachineCommand : OrchestratorPSCmdlet
                 postingMachine.AssignNumberIfNotNull(UnattendedSlots,        (m, v) => m.UnattendedSlots = v);
                 postingMachine.AssignNumberIfNotNull(NonProductionSlots,     (m, v) => m.NonProductionSlots = v);
                 postingMachine.AssignNumberIfNotNull(TestAutomationSlots,    (m, v) => m.TestAutomationSlots = v);
-                postingMachine.AssignStringIfNotNullOrEmpty(AutomationType,  (m, v) => m.AutomationType = v);
-                postingMachine.AssignStringIfNotNullOrEmpty(TargetFramework, (m, v) => m.TargetFramework = v);
+                postingMachine.AssignStringIfNotNull(AutomationType,  (m, v) => m.AutomationType = v);
+                postingMachine.AssignStringIfNotNull(TargetFramework, (m, v) => m.TargetFramework = v);
 
                 if (RobotUsers is not null)
                 {
@@ -208,7 +208,7 @@ public class UpdateMachineCommand : OrchestratorPSCmdlet
 
                             // TODO: AddTrigger.cs にも同じ処理がある。共通化したい
                             #region TimeZone を TimeZoneId に変換
-                            postingMachine.MaintenanceWindow.AssignStringIfNotNullOrEmpty(MaintenanceTimeZoneId, (m, v) => m.TimezoneId = v);
+                            postingMachine.MaintenanceWindow.AssignStringIfNotNull(MaintenanceTimeZoneId, (m, v) => m.TimezoneId = v);
 
                             postingMachine.MaintenanceWindow.AssignIdFromName(
                                 MaintenanceTimeZone,

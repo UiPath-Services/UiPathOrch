@@ -275,7 +275,7 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
 
                 ProcessSchedule postTrigger = OrchCollectionExtensions.DeepCopy(trigger);
 
-                postTrigger.AssignStringIfNotNullOrEmpty(NewName, (s, v) => s.Name = v);
+                postTrigger.AssignStringIfNotNull(NewName, (s, v) => s.Name = v);
 
                 postTrigger.AssignBoolIfNotNull(Enabled, (s, v) => s.Enabled = v);
                 postTrigger.Enabled ??= true;
@@ -283,11 +283,11 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
                 postTrigger.AssignNumberIfNotNullOrZero(StartStrategy, (s, v) => s.StartStrategy = v);
                 postTrigger.StartStrategy ??= 1;
 
-                postTrigger.AssignStringIfNotNullOrEmpty(StopStrategy,                    (s, v) => s.StopStrategy = v);
-                postTrigger.AssignStringIfNotNullOrEmpty(StopProcessExpression,           (s, v) => s.StopProcessExpression = v);
-                postTrigger.AssignStringIfNotNullOrEmpty(KillProcessExpression,           (s, v) => s.KillProcessExpression = v);
-                postTrigger.AssignStringIfNotNullOrEmpty(AlertPendingExpression,          (s, v) => s.AlertPendingExpression = v);
-                postTrigger.AssignStringIfNotNullOrEmpty(AlertRunningExpression,          (s, v) => s.AlertRunningExpression = v);
+                postTrigger.AssignStringIfNotNull(StopStrategy,                    (s, v) => s.StopStrategy = v);
+                postTrigger.AssignStringIfNotNull(StopProcessExpression,           (s, v) => s.StopProcessExpression = v);
+                postTrigger.AssignStringIfNotNull(KillProcessExpression,           (s, v) => s.KillProcessExpression = v);
+                postTrigger.AssignStringIfNotNull(AlertPendingExpression,          (s, v) => s.AlertPendingExpression = v);
+                postTrigger.AssignStringIfNotNull(AlertRunningExpression,          (s, v) => s.AlertRunningExpression = v);
 
                 postTrigger.PackageName = null;
                 postTrigger.ReleaseKey = null;
@@ -296,11 +296,11 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
                 postTrigger.AssignNumberIfNotNullOrZero(ConsecutiveJobFailuresThreshold, (s, v) => s.ConsecutiveJobFailuresThreshold = v);
                 postTrigger.AssignNumberIfNotNullOrZero(JobFailuresGracePeriodInHours,   (s, v) => s.JobFailuresGracePeriodInHours = v);
 
-                postTrigger.AssignStringIfNotNullOrEmpty(RuntimeType,       (s, v) => s.RuntimeType = v);
+                postTrigger.AssignStringIfNotNull(RuntimeType,       (s, v) => s.RuntimeType = v);
                 postTrigger.RuntimeType ??= "Unattended";
 
                 postTrigger.InputArguments ??= "{}";
-                postTrigger.AssignStringIfNotNullOrEmpty(InputArguments,    (s, v) => postTrigger.InputArguments = v);
+                postTrigger.AssignStringIfNotNull(InputArguments,    (s, v) => postTrigger.InputArguments = v);
 
                 postTrigger.AssignBoolIfNotNull(ResumeOnSameContext, (s, v) => s.ResumeOnSameContext = v);
                 postTrigger.ResumeOnSameContext ??= false;
@@ -334,10 +334,10 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
 
                 postTrigger.StartProcessCronSummary = null;
                 postTrigger.StartProcessNextOccurrence = null;
-                postTrigger.AssignStringIfNotNullOrEmpty(StartProcessCron,           (s, v) => s.StartProcessCron = v);
+                postTrigger.AssignStringIfNotNull(StartProcessCron,           (s, v) => s.StartProcessCron = v);
                 postTrigger.StartProcessCron ??= "0 0/1 * 1/1 * ? *";
 
-                postTrigger.AssignStringIfNotNullOrEmpty(StartProcessCronDetails,    (s, v) => s.StartProcessCronDetails = v);
+                postTrigger.AssignStringIfNotNull(StartProcessCronDetails,    (s, v) => s.StartProcessCronDetails = v);
                 postTrigger.StartProcessCronDetails ??= $"\"{{advancedCron\":\"{postTrigger.StartProcessCron}\"}}";
 
                 // SpecificPriorityValue を先に適用、specificPriorityValue が非 null ならそれで上書き
@@ -370,7 +370,7 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
                 #endregion
 
                 #region TimeZone を TimeZoneId に変換
-                postTrigger.AssignStringIfNotNullOrEmpty(TimeZoneId, (s, v) => s.TimeZoneId = v);
+                postTrigger.AssignStringIfNotNull(TimeZoneId, (s, v) => s.TimeZoneId = v);
 
                 postTrigger.AssignIdFromName(
                     TimeZone,

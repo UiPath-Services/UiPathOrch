@@ -213,8 +213,8 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
 
                     //postingUser.AssignStringIfNotNull(FullName,                   (u, v) => u.FullName = v);
 
-                    postingUser.AssignStringIfNotNullOrEmpty(Name,    (u, v) => u.Name = v);
-                    postingUser.AssignStringIfNotNullOrEmpty(Surname, (u, v) => u.Surname = v);
+                    postingUser.AssignStringIfNotNull(Name,    (u, v) => u.Name = v);
+                    postingUser.AssignStringIfNotNull(Surname, (u, v) => u.Surname = v);
 
                     postingUser.AssignBoolIfNotFalse(IsExternalLicensed,          u => u.IsExternalLicensed,          (u, v) => u.IsExternalLicensed = v);
                     postingUser.AssignBoolIfNotFalse(MayHaveUserSession,          u => u.MayHaveUserSession,          (u, v) => u.MayHaveUserSession = v);
@@ -263,10 +263,10 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                         !string.IsNullOrEmpty(UR_LimitConcurrentExecution))
                     {
                         postingUser.UnattendedRobot ??= new();
-                        postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(UR_UserName,               (u, v) => u.UserName = v);
-                        postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(UR_Password,               (u, v) => u.Password = v);
-                        postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(UR_CredentialExternalName, (u, v) => u.CredentialExternalName = v);
-                        postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(UR_CredentialType,         (u, v) => u.CredentialType = v);
+                        postingUser.UnattendedRobot.AssignStringIfNotNull(UR_UserName,               (u, v) => u.UserName = v);
+                        postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(UR_Password,               (u, v) => u.Password = v); // Password は API で取得できないため据え置き
+                        postingUser.UnattendedRobot.AssignStringIfNotNull(UR_CredentialExternalName, (u, v) => u.CredentialExternalName = v);
+                        postingUser.UnattendedRobot.AssignStringIfNotNull(UR_CredentialType,         (u, v) => u.CredentialType = v);
                         postingUser.UnattendedRobot.AssignBoolIfNotFalse(UR_LimitConcurrentExecution, u => u.LimitConcurrentExecution, (u, v) => u.LimitConcurrentExecution = v);
 
                         if (!string.IsNullOrEmpty(UR_CredentialStore))
@@ -290,7 +290,7 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
 
                     void UpdateExecutionSettings(ExecutionSettings executionSettings)
                     {
-                        executionSettings.AssignStringIfNotNullOrEmpty(
+                        executionSettings.AssignStringIfNotNull(
                             ES_TracingLevel, (es, v) =>
                             es.TracingLevel = v);
 

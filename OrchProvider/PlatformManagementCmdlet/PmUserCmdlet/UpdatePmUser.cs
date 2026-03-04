@@ -88,11 +88,11 @@ public class UpdatePmUserCommand : OrchestratorPSCmdlet
                         bypassBasicAuthRestriction = user.bypassBasicAuthRestriction
                     };
 
-                    dst.AssignStringIfNotNullOrEmpty(Name, (u, v) => u.name = v);
-                    dst.AssignStringIfNotNullOrEmpty(DisplayName, (u, v) => u.displayName = v);
-                    dst.AssignStringIfNotNullOrEmpty(Surname, (u, v) => u.surname = v);
-                    //dst.AssignStringIfNotNullOrEmpty(Email, (u, v) => u.email = v);
-                    dst.AssignStringIfNotNullOrEmpty(Password, (u, v) => u.password = v);
+                    dst.AssignStringIfNotNull(Name, (u, v) => u.name = v);
+                    dst.AssignStringIfNotNull(DisplayName, (u, v) => u.displayName = v);
+                    dst.AssignStringIfNotNull(Surname, (u, v) => u.surname = v);
+                    //dst.AssignStringIfNotNull(Email, (u, v) => u.email = v);
+                    dst.AssignStringIfNotNullOrEmpty(Password, (u, v) => u.password = v); // Password は API で取得できないため据え置き
                     dst.AssignBoolIfNotNull(BypassBasicAuthRestriction, (u, v) => u.bypassBasicAuthRestriction = v);
 
                     // 更新があれば API を call する
