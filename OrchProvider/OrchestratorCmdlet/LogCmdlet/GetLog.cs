@@ -252,8 +252,8 @@ public class GetLogCommand : OrchestratorPSCmdlet
         #endregion
 
         #region Level
-        Level ??= "Info";
-        LogLevel logLevel = (LogLevel)Enum.Parse(typeof(LogLevel), Level);
+        var level = Level ?? "Info";
+        LogLevel logLevel = (LogLevel)Enum.Parse(typeof(LogLevel), level);
         filter.Add($"(Level ge '{(int)logLevel}')");
         #endregion
 
@@ -309,7 +309,7 @@ public class GetLogCommand : OrchestratorPSCmdlet
     {
         ulong first = First ?? ulong.MaxValue;
         ulong skip = Skip ?? 0;
-        if (string.IsNullOrEmpty(OrderBy)) OrderBy = "TimeStamp";
+        var orderBy = string.IsNullOrEmpty(OrderBy) ? "TimeStamp" : OrderBy;
 
         // すべてのパラメータが指定されていなければ、キャッシュの内容を返す
         bool bOutCache = (
@@ -333,7 +333,7 @@ public class GetLogCommand : OrchestratorPSCmdlet
             {
                 if (drive._dicRobotLogs?.TryGetValue(folder.Id!.Value, out var logs) ?? false)
                 {
-                    switch (OrderBy)
+                    switch (orderBy)
                     {
                         case "TimeStamp":
                             if (OrderAscending.IsPresent)
@@ -367,7 +367,7 @@ public class GetLogCommand : OrchestratorPSCmdlet
 
             try
             {
-                var logs = drive.GetRobotLogs(folder, query, skip, first, OrderBy, OrderAscending.IsPresent);
+                var logs = drive.GetRobotLogs(folder, query, skip, first, orderBy, OrderAscending.IsPresent);
                 WriteObject(logs, true);
             }
             catch (Exception ex)

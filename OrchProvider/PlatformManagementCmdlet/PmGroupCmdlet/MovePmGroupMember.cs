@@ -42,18 +42,18 @@ public class MoveOrchPmGroupMemberCommand : OrchestratorPSCmdlet
         updates ??= [];
 
         //Type = Type.Split1stValueByUnescapedCommas()?.ToArray();
-        UserName = UserName.Split1stValueByUnescapedCommas()?.ToArray();
-        Destination = Destination.Split1stValueByUnescapedCommas()?.ToArray();
-        Path = Path.Split1stValueByUnescapedCommas()?.ToArray();
+        var processedUserName = UserName.Split1stValueByUnescapedCommas();
+        var processedDestination = Destination.Split1stValueByUnescapedCommas();
+        var processedPath = Path.Split1stValueByUnescapedCommas();
 
-        var drives = SessionState.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(processedPath);
         var wpGroupName = new WildcardPattern(GroupName, WildcardOptions.IgnoreCase);
 
         //var wpType = Type.ConvertToWildcardPatternList();
         //var objectTypes = DirectoryTypes.Items.FilterByWildcards(t => t.Value, wpType).Select(t => t.Key);
 
-        var wpUserName = UserName.ConvertToWildcardPatternList();
-        var wpDestination = Destination.ConvertToWildcardPatternList();
+        var wpUserName = processedUserName.ConvertToWildcardPatternList();
+        var wpDestination = processedDestination.ConvertToWildcardPatternList();
 
         bool keepSource = KeepSource.ToNullableBool() ?? false;
         string action = keepSource ? "Copy PMGroupMember" : "Move PmGroupMember";

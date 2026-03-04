@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
-using System.Management.Automation;
-using System.Management.Automation.Language;
+﻿using System.Management.Automation;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;

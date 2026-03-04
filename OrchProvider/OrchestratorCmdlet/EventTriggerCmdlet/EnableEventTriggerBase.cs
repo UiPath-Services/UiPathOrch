@@ -88,7 +88,7 @@ public class EnableEventTriggerCommandBase<Enable> : OrchestratorPSCmdlet where 
                         catch (Exception ex)
                         {
                             string errorId = $"{(Enable.Value ? "Enable" : "Disable")}EventTriggerError";
-                            WriteError(new ErrorRecord(new OrchException(trigger.GetPSPath(), ex), "EnableEventTriggerError", ErrorCategory.InvalidOperation, trigger));
+                            WriteError(new ErrorRecord(new OrchException(trigger.GetPSPath(), ex), errorId, ErrorCategory.InvalidOperation, trigger));
                         }
                     }
                 }

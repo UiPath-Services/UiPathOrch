@@ -102,11 +102,6 @@ public class EnableLicenseRuntimeCommandBase<Enable> : OrchestratorPSCmdlet wher
             .OrderBy(rt => rt)
             .ToList();
 
-        // drive と robotType の全ての要素の組み合わせを計算
-        var drivesRobotTypes = drives
-            .SelectMany(drive => specifiedRobotType, (drive, robotType) => (drive, robotType))
-            .ToList();
-
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
@@ -136,7 +131,7 @@ public class EnableLicenseRuntimeCommandBase<Enable> : OrchestratorPSCmdlet wher
                         catch (Exception ex)
                         {
                             string errorId = $"{(Enable.Value ? "Enable" : "Disable")}LicenseRuntimeError";
-                            WriteError(new ErrorRecord(new OrchException(target, ex), "EnableLicenseRuntimeError", ErrorCategory.InvalidOperation, license));
+                            WriteError(new ErrorRecord(new OrchException(target, ex), errorId, ErrorCategory.InvalidOperation, license));
                         }
                     }
                 }

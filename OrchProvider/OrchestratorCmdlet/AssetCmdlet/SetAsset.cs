@@ -195,8 +195,8 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                     {
                         var userValues = asset.UserValues?
                             .FilterByWildcards(uv => uv?.UserName, wpUserName)
-                            .FilterByWildcards(uv => uv?.MachineName, wpMachineName);
-                        foreach (var userValue in userValues!)
+                            .FilterByWildcards(uv => uv?.MachineName, wpMachineName) ?? [];
+                        foreach (var userValue in userValues)
                         {
                             bValueExists = true;
                             string tiphelp = TipHelp(asset);

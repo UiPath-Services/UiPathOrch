@@ -70,7 +70,7 @@ public class GetBucketItemCommand : OrchestratorPSCmdlet
                     }
                 }
             }
-            catch(OrchException ex)
+            catch (OrchException ex)
             {
                 WriteError(new ErrorRecord(ex, "GetBucketError", ErrorCategory.InvalidOperation, ex.Target));
             }

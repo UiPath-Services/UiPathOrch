@@ -143,7 +143,7 @@ public class RemoveFolderUserCommand : OrchestratorPSCmdlet
                 //drive.FolderUsersWithNoInherited.ClearCache();
                 var folderUsers = drive.FolderUsersWithNoInherited.Get(folder);
 
-                IEnumerable<UserRoles> filteredUsers = folderUsers
+                var filteredUsers = folderUsers
                     .FilterByWildcards(fu => fu?.UserEntity?.UserName, wpUserName)
                     .FilterByWildcards(fu => fu?.UserEntity?.FullName, wpFullName);
 

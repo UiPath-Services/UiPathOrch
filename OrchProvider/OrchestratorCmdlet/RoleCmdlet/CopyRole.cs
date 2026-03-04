@@ -1,5 +1,4 @@
-﻿using System.Data;
-using System.Management.Automation;
+﻿using System.Management.Automation;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using TPositional = UiPath.PowerShell.Positional.Name_Destination;
@@ -27,7 +26,7 @@ public class CopyRoleCommand : OrchestratorPSCmdlet
     internal static void CopyRoles(
         IWritableHost _this,
         OrchDriveInfo srcDrive, List<WildcardPattern>? wpName,
-        IEnumerable<OrchDriveInfo> dstDrives,
+        IList<OrchDriveInfo> dstDrives,
         bool shouldProcess, CancellationToken cancelToken)
     {
         var srcRoles = srcDrive!.Roles.Get()
@@ -38,7 +37,7 @@ public class CopyRoleCommand : OrchestratorPSCmdlet
         using var reporter = new ProgressReporter(_this, 1, 100, "Copying roles");
 
         int index = 0;
-        reporter.TotalNum = dstDrives.Count() * srcRoles.Count;
+        reporter.TotalNum = dstDrives.Count * srcRoles.Count;
 
         foreach (var dstDrive in dstDrives)
         {

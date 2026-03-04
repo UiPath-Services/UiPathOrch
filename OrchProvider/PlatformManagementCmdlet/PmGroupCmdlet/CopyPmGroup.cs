@@ -2,7 +2,6 @@
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Positional;
 using TPositional = UiPath.PowerShell.Positional.GroupName_Destination;
 
 namespace UiPath.PowerShell.Commands;
@@ -31,8 +30,7 @@ public class CopyPmGroupCommand : OrchestratorPSCmdlet
         string objectType,
         IEnumerable<PmGroupMember> srcMembers)
     {
-        int listCount = srcMembers.Count();
-        if (listCount == 0) return [];
+        if (!srcMembers.Any()) return [];
 
         List<string> retIdentifiers = [];
         List<PmGroupMember> unresolvedMembers = [];
@@ -173,9 +171,9 @@ public class CopyPmGroupCommand : OrchestratorPSCmdlet
                         else
                         {
                             var existingMemberIds = dstGroup.members?.Select(m => m.identifier) ?? [];
-                            var addingMemberIds = directoryUserMemberIDs.Except(existingMemberIds) ?? [];
+                            var addingMemberIds = directoryUserMemberIDs.Except(existingMemberIds);
 
-                            if (addingMemberIds?.Any() ?? false)
+                            if (addingMemberIds.Any())
                             {
                                 newGroup = dstDrive.AddMemberToPmGroup(dstGroup.id, srcDetailedGroup.name, addingMemberIds);
                             }

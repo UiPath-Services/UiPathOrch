@@ -1,5 +1,4 @@
-﻿using System.Data;
-using System.Management.Automation;
+﻿using System.Management.Automation;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
@@ -45,7 +44,7 @@ public class CopyUserCommand : OrchestratorPSCmdlet
         List<WildcardPattern>? wpUserName,
         List<WildcardPattern>? wpFullName,
         List<WildcardPattern>? wpType,
-        IEnumerable<OrchDriveInfo> dstDrives,
+        IList<OrchDriveInfo> dstDrives,
         bool shouldProcess, CancellationToken cancelToken)
     {
         srcDrive._dicUsers = null;
@@ -63,7 +62,7 @@ public class CopyUserCommand : OrchestratorPSCmdlet
         using var reporter = new ProgressReporter(_this, 1, 100, "Copying users");
 
         int index = 0;
-        reporter.TotalNum = dstDrives.Count() * srcUsers.Count;
+        reporter.TotalNum = dstDrives.Count * srcUsers.Count;
 
         foreach (var dstDrive in dstDrives)
         {
@@ -127,8 +126,8 @@ public class CopyUserCommand : OrchestratorPSCmdlet
                         if (dstPmUser is not null)
                         {
                             //WriteError(new ErrorRecord(new OrchException(srcUser.GetPSPath(), $"A user with the same name does not exist in the organization of {dstDrive.NameColonSeparator}."), "SearchUserError", ErrorCategory.InvalidOperation, srcUser));
-                            newUser.DirectoryIdentifier = dstPmUser?.identifier;
-                            newUser.Domain = dstPmUser?.domain;
+                            newUser.DirectoryIdentifier = dstPmUser.identifier;
+                            newUser.Domain = dstPmUser.domain;
                         }
                         else
                         {

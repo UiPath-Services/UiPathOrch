@@ -88,7 +88,7 @@ public class EnableApiTriggerCommandBase<Enable> : OrchestratorPSCmdlet where En
                         catch (Exception ex)
                         {
                             string errorId = $"{(Enable.Value ? "Enable" : "Disable")}ApiTriggerError";
-                            WriteError(new ErrorRecord(new OrchException(trigger.GetPSPath(), ex), "EnableApiTriggerError", ErrorCategory.InvalidOperation, trigger));
+                            WriteError(new ErrorRecord(new OrchException(trigger.GetPSPath(), ex), errorId, ErrorCategory.InvalidOperation, trigger));
                         }
                     }
                 }

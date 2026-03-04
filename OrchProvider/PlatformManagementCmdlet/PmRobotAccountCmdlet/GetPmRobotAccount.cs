@@ -53,7 +53,7 @@ public class GetPmRobotAccountCommand : OrchestratorPSCmdlet
             {
                 if (groups.TryGetValue(groupId, out var group))
                 {
-                    line.Append($",{EscapeCsvValue(group?.name!)}");
+                    line.Append($",{EscapeCsvValue(group.name)}");
                 }
             }
 

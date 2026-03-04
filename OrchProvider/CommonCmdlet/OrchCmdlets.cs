@@ -527,21 +527,21 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         var credentialStores = drive.CredentialStores.Get();
         if (wpCredentialStore is not null)
         {
-            var matchingCredentialStores = credentialStores.Where(cs => wpCredentialStore.IsMatch(cs.Name));
-            if (!matchingCredentialStores.Any())
+            var matchingCredentialStores = credentialStores.Where(cs => wpCredentialStore.IsMatch(cs.Name)).Take(2).ToList();
+            if (matchingCredentialStores.Count == 0)
             {
                 Exception e = new($"CredentialStore '{wpCredentialStore}' does not exist.");
                 WriteError(new ErrorRecord(new OrchException(target, e), "ResolveCredentialStoreError", ErrorCategory.InvalidOperation, target));
                 return null;
             }
-            if (matchingCredentialStores.Take(2).Count() == 2)
+            if (matchingCredentialStores.Count == 2)
             {
                 Exception e = new($"CredentialStore '{wpCredentialStore}' resolved to multiple credential stores. Ignored.");
                 WriteError(new ErrorRecord(new OrchException(target, e), "ResolveCredentialStoreError", ErrorCategory.InvalidOperation, target));
                 return null;
             }
-            // assert(matchingCredentialStores.Couint() == 1)
-            return matchingCredentialStores.First();
+            // assert(matchingCredentialStores.Count == 1)
+            return matchingCredentialStores[0];
         }
         return null;
     }

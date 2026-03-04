@@ -97,7 +97,7 @@ public class RemoveCalendarDateCommand : OrchestratorPSCmdlet
             }
             catch (Exception ex)
             {
-                WriteError(new ErrorRecord(ex, "GetCalendarError", ErrorCategory.InvalidOperation, drive));
+                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetCalendarError", ErrorCategory.InvalidOperation, drive));
                 continue;
             }
             if (calendars is null) continue;

@@ -98,9 +98,9 @@ public class RemoveRoleFromUserCommand : OrchestratorPSCmdlet
         var wpType = Type.ConvertToWildcardPatternList();
 
         // 先頭の要素は CSV から入力されている可能性があるので、先頭の要素についてはカンマで区切る
-        Roles = Roles.Split1stValueByUnescapedCommas()?.ToArray();
+        var processedRoles = Roles.Split1stValueByUnescapedCommas();
 
-        var wpRoles = Roles.ConvertToWildcardPatternList();
+        var wpRoles = processedRoles.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)

@@ -30,7 +30,7 @@ public class CopyCalendarCommand : OrchestratorPSCmdlet
         IWritableHost _this,
         OrchDriveInfo srcDrive,
         List<WildcardPattern>? wpName,
-        IEnumerable<OrchDriveInfo> dstDrives,
+        IList<OrchDriveInfo> dstDrives,
         bool shouldProcess, CancellationToken cancelToken)
     {
         srcDrive._dicCalendars = null;
@@ -52,7 +52,7 @@ public class CopyCalendarCommand : OrchestratorPSCmdlet
         using var reporter = new ProgressReporter(_this, 1, 100, "Copying calendars");
 
         int index = 0;
-        reporter.TotalNum = dstDrives.Count() * srcCalendars.Count;
+        reporter.TotalNum = dstDrives.Count * srcCalendars.Count;
 
         foreach (var dstDrive in dstDrives)
         {

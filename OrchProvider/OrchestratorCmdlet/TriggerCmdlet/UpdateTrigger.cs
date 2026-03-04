@@ -245,11 +245,7 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
         var wpName = Name.ConvertToWildcardPatternList();
         int? specificPriorityValue = ConvertPriorityToSpecificPriorityValue(Priority);
 
-        if (StopProcessDate is not null)
-        {
-            StopProcessDate = StopProcessDate.Value.ToUniversalTime();
-            //DateTime.SpecifyKind(StopProcessDate.Value, DateTimeKind.Utc);
-        }
+        var utcStopProcessDate = StopProcessDate?.ToUniversalTime();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
@@ -383,7 +379,7 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
                 postTrigger.TimeZoneId ??= TimeZoneInfo.Local.Id;
                 #endregion
 
-                postTrigger.AssignDateTimeIfNotNull(StopProcessDate, (s, v) => s.StopProcessDate = v, false);
+                postTrigger.AssignDateTimeIfNotNull(utcStopProcessDate, (s, v) => s.StopProcessDate = v, false);
 
                 if (MachineRobots is not null)
                 {
