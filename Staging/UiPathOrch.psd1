@@ -364,6 +364,7 @@ CmdletsToExport = @(
 
 'Get-OrchHelp',
 'Clear-OrchCache',
+'Get-OrchConfigPath',
 'Edit-OrchConfig',
 'Get-OrchPSDrive',
 'Set-OrchLocation',
