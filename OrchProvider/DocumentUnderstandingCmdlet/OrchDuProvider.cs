@@ -310,7 +310,7 @@ public class OrchDuProvider : NavigationCmdletProvider
                 result = project.name;
         }
 
-        return result;
+        return result ?? "";
     }
 
     protected override string MakePath(string parent, string child)

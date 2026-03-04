@@ -289,7 +289,7 @@ public class OrchTmProvider : NavigationCmdletProvider
                 result = project.projectPrefix;
         }
 
-        return result;
+        return result ?? "";
     }
 
     protected override string MakePath(string parent, string child)
