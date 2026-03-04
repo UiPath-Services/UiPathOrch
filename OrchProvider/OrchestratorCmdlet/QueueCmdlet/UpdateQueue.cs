@@ -182,9 +182,9 @@ public class UpdateQueueCommand : OrchestratorPSCmdlet
                 }
                 #endregion
 
-                newQueue.AssignStringIfNotNullOrEmpty(RetentionAction, (q, v) => q.RetentionAction = v);
+                newQueue.AssignStringIfNotNull(RetentionAction, (q, v) => q.RetentionAction = v);
                 newQueue.AssignNumberIfNotNullOrZero(RetentionPeriod, (q, v) => q.RetentionPeriod = v);
-                newQueue.AssignStringIfNotNullOrEmpty(StaleRetentionAction, (q, v) => q.StaleRetentionAction = v);
+                newQueue.AssignStringIfNotNull(StaleRetentionAction, (q, v) => q.StaleRetentionAction = v);
                 newQueue.AssignNumberIfNotNullOrZero(StaleRetentionPeriod, (q, v) => q.StaleRetentionPeriod = v);
 
                 #region RetentionBucket を RetentionBucketId に変換
@@ -223,15 +223,15 @@ public class UpdateQueueCommand : OrchestratorPSCmdlet
                     newQueue.StaleRetentionBucketId = null;
                 }
 
-                newQueue.AssignStringIfNotNullOrEmpty(NewName,                 (q, v) => q.Name = v);
+                newQueue.AssignStringIfNotNull(NewName,                        (q, v) => q.Name = v);
                 newQueue.AssignStringIfNotNull(Description,                    (q, v) => q.Description = v);
                 newQueue.AssignBoolIfNotNull(AcceptAutomaticallyRetry,         (q, v) => q.AcceptAutomaticallyRetry = v);
                 newQueue.AssignBoolIfNotNull(RetryAbandonedItems,              (q, v) => q.RetryAbandonedItems = v);
                 newQueue.AssignNumberIfNotNullOrZero(MaxNumberOfRetries,       (q, v) => q.MaxNumberOfRetries = v);
                 //newQueue.assig  ProcessScheduleId": null,
-                newQueue.AssignStringIfNotNullOrEmpty(SpecificDataJsonSchema,  (q, v) => q.SpecificDataJsonSchema = v);
-                newQueue.AssignStringIfNotNullOrEmpty(OutputDataJsonSchema,    (q, v) => q.OutputDataJsonSchema = v);
-                newQueue.AssignStringIfNotNullOrEmpty(AnalyticsDataJsonSchema, (q, v) => q.AnalyticsDataJsonSchema = v);
+                newQueue.AssignStringIfNotNull(SpecificDataJsonSchema,         (q, v) => q.SpecificDataJsonSchema = v);
+                newQueue.AssignStringIfNotNull(OutputDataJsonSchema,           (q, v) => q.OutputDataJsonSchema = v);
+                newQueue.AssignStringIfNotNull(AnalyticsDataJsonSchema,        (q, v) => q.AnalyticsDataJsonSchema = v);
                 newQueue.AssignNumberIfNotNullOrZero(SlaInMinutes,             (q, v) => q.SlaInMinutes = v);
                 newQueue.AssignNumberIfNotNullOrZero(RiskSlaInMinutes,         (q, v) => q.RiskSlaInMinutes= v);
 

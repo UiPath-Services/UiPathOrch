@@ -90,7 +90,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string? StaleRetentionBucket { get; set; }
 
-    # region ProcessSettings
+    #region ProcessSettings
     // Job recording (Screenshot)
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<True_False>))]
@@ -323,7 +323,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
         {
-            IEnumerable<Release> processes = null; ;
+            IEnumerable<Release> processes = null;
             try
             {
                 processes = drive.GetReleases(folder);
@@ -377,15 +377,15 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
 
                 #region パラメータで指定された値を設定
 
-                newRelease.AssignStringIfNotNullOrEmpty(NewName,               (r, v) => r.Name = v);
+                newRelease.AssignStringIfNotNull(NewName,                      (r, v) => r.Name = v);
                 newRelease.AssignStringIfNotNull(Description,                  (r, v) => r.Description = v);
-                newRelease.AssignStringIfNotNullOrEmpty(InputArguments,        (r, v) => r.InputArguments = v);
+                newRelease.AssignStringIfNotNull(InputArguments,               (r, v) => r.InputArguments = v);
                 newRelease.AssignNumberIfNotNullOrZero(SpecificPriorityValue,  (r, v) => r.SpecificPriorityValue = v);
                 newRelease.AssignBoolIfNotNull(HiddenForAttendedUser,          (r, v) => r.HiddenForAttendedUser = v);
-                newRelease.AssignStringIfNotNullOrEmpty(RemoteControlAccess,   (r, v) => r.RemoteControlAccess = v);
-                newRelease.AssignStringIfNotNullOrEmpty(RetentionAction,       (r, v) => r.RetentionAction = v);
+                newRelease.AssignStringIfNotNull(RemoteControlAccess,          (r, v) => r.RemoteControlAccess = v);
+                newRelease.AssignStringIfNotNull(RetentionAction,              (r, v) => r.RetentionAction = v);
                 newRelease.AssignNumberIfNotNullOrZero(RetentionPeriod,        (r, v) => r.RetentionPeriod = v);
-                newRelease.AssignStringIfNotNullOrEmpty(StaleRetentionAction,  (r, v) => r.StaleRetentionAction = v);
+                newRelease.AssignStringIfNotNull(StaleRetentionAction,         (r, v) => r.StaleRetentionAction = v);
                 newRelease.AssignNumberIfNotNullOrZero(StaleRetentionPeriod,   (r, v) => r.StaleRetentionPeriod = v);
 
                 #region RetentionBucket を RetentionBucketId に変換する
@@ -421,14 +421,14 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                 newRelease.ProcessSettings.AutopilotForRobots.AssignBoolIfNotNull(A4R_HealingEnabled, (r, v) => r.HealingEnabled = v);
 
                 newRelease.VideoRecordingSettings ??= new();
-                newRelease.VideoRecordingSettings.AssignStringIfNotNullOrEmpty(VideoRecordingType,          (r, v) => r.VideoRecordingType = v);
-                newRelease.VideoRecordingSettings.AssignStringIfNotNullOrEmpty(QueueItemVideoRecordingType, (r, v) => r.QueueItemVideoRecordingType = v);
+                newRelease.VideoRecordingSettings.AssignStringIfNotNull(VideoRecordingType,          (r, v) => r.VideoRecordingType = v);
+                newRelease.VideoRecordingSettings.AssignStringIfNotNull(QueueItemVideoRecordingType, (r, v) => r.QueueItemVideoRecordingType = v);
                 newRelease.VideoRecordingSettings.AssignNumberIfNotNullOrZero(MaxDurationSeconds,           (r, v) => r.MaxDurationSeconds = v);
                 #endregion
 
                 // ProcessVersion を変更した場合には、EntryPointId をつけかえないといけない
                 string currentProcessVersion = newRelease.ProcessVersion;
-                newRelease.AssignStringIfNotNullOrEmpty(Version, (r, v) => r.ProcessVersion = v);
+                newRelease.AssignStringIfNotNull(Version, (r, v) => r.ProcessVersion = v);
                 bool bVersionChanged = (currentProcessVersion != newRelease.ProcessVersion);
 
                 #region EntryPoint を EntryPointId に変換する
@@ -438,15 +438,16 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                     {
                         var feedId = drive.FolderFeedId.Get(folder);
                         // Version を変更したけど、EntryPoint は指定していない場合には、現在の entryPointPath を確認しないと。
-                        if (bVersionChanged && string.IsNullOrEmpty(EntryPoint))
+                        var resolvedEntryPoint = EntryPoint;
+                        if (bVersionChanged && string.IsNullOrEmpty(resolvedEntryPoint))
                         {
                             // 現在の EntryPath を確認
                             var entryPoint = drive.GetPackageEntryPoints(feedId, newRelease?.ProcessKey ?? "", currentProcessVersion!)
                                 .FirstOrDefault(e => e.Id == newRelease?.EntryPointId);
-                            EntryPoint = entryPoint?.Path;
+                            resolvedEntryPoint = entryPoint?.Path;
                         }
                         if (!newRelease.AssignIdFromName(
-                                EntryPoint,
+                                resolvedEntryPoint,
                                 () => drive.GetPackageEntryPoints(feedId, newRelease?.ProcessKey ?? "", newRelease?.ProcessVersion ?? ""),
                                 e => e.Path!,
                                 e => e.Id!,
