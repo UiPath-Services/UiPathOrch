@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using System.Text.Json;
@@ -88,7 +87,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string? StaleRetentionBucket { get; set; }
 
-    # region ProcessSettings
+    #region ProcessSettings
     // Job recording (Screenshot)
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BoolCompleter))]
@@ -316,20 +315,21 @@ public class NewProcessCommand : OrchestratorPSCmdlet
                 else
                 {
                     var versions = drive.GetPackageVersions(folder, targetPackage.Id!)
-                        .Where(v => wpVersion?.IsMatch(v.Version) ?? true); // wpVersion が null なら全てのバージョンを対象にする
+                        .Where(v => wpVersion?.IsMatch(v.Version) ?? true) // wpVersion が null なら全てのバージョンを対象にする
+                        .ToList();
 
-                    if (!versions.Any())
+                    if (versions.Count == 0)
                     {
                         WriteError(new ErrorRecord(new OrchException(target, $"No versions matched with '{Version}'"), "NewProcessError", ErrorCategory.InvalidOperation, folder));
                         continue;
                     }
 
-                    if (versions.Count() > 1)
+                    if (versions.Count > 1)
                     {
                         WriteError(new ErrorRecord(new OrchException(target, $"Resolved to multiple versions with '{Version}'"), "NewProcessError", ErrorCategory.InvalidOperation, folder));
                         continue;
                     }
-                    version = versions.Last();
+                    version = versions[0];
                 }
 
                 Release release = new()
@@ -340,11 +340,8 @@ public class NewProcessCommand : OrchestratorPSCmdlet
                 };
 
                 // Description をパッケージから継承する
-                if (string.IsNullOrEmpty(Description))
-                {
-                    Description = version?.Description;
-                }
-                release.AssignStringIfNotNull(Description, (r, v) => r.Description = v);
+                var desc = string.IsNullOrEmpty(Description) ? version?.Description : Description;
+                release.AssignStringIfNotNull(desc, (r, v) => r.Description = v);
 
                 release.AssignBoolIfNotNull(HiddenForAttendedUser,   (r, v) => r.HiddenForAttendedUser = v);
                 release.AssignStringIfNotNullOrEmpty(RemoteControlAccess,   (r, v) => r.RemoteControlAccess = v);
@@ -356,7 +353,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
                 var feedId = drive.FolderFeedId.Get(folder);
                 if (!release.AssignIdFromName(
                     EntryPoint,
-                    () => drive.GetPackageEntryPoints(feedId, targetPackage.Id!, version?.Version!),
+                    () => drive.GetPackageEntryPoints(feedId, targetPackage.Id!, version!.Version!),
                     e => e.Path!,
                     e => e.Id!,
                     (s, v) => s.EntryPointId = v,
@@ -371,7 +368,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
                 {
                     try
                     {
-                        var entryPoint = drive.OrchAPISession.GetPackageMainEntryPoint(feedId, targetPackage.Id!, version?.Version!);
+                        var entryPoint = drive.OrchAPISession.GetPackageMainEntryPoint(feedId, targetPackage.Id!, version!.Version!);
                         release.EntryPointId = entryPoint?.Id;
                     }
                     catch (Exception ex)
