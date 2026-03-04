@@ -149,11 +149,11 @@ public class GetAssetCommand : OrchestratorPSCmdlet
                     line.Append($"{EscapeCsvValue(asset.Name, true)},");
                     if (isDescriptionOut)
                     {
-                        isDescriptionOut = true;
                         line.Append(",");
                     }
                     else
                     {
+                        isDescriptionOut = true;
                         line.Append($"{asset.Description!},");
                     }
                     line.Append($"{EscapeCsvValue(credentialStore, true)},");

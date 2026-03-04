@@ -150,10 +150,6 @@ public class ConsoleCancelHandler : IDisposable
             {
                 onCancel?.Invoke();
             }
-            //catch (Exception ex)
-            //{
-            //    Console.WriteLine($"An error occurred in the cancellation handler: {ex.Message}");
-            //}
             finally
             {
                 _cts.Cancel(); // Ensure the token is cancelled
@@ -254,7 +250,8 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
         Func<TSource, object> getTargetFunc,
         Func<TSource, TResult> getResultFunc, int maxDegreeOfParallelism = 4)
     {
-        var threads = new OrchTask<TSource, TResult>[sources.Count()];
+        var srcList = sources as IList<TSource> ?? sources.ToList();
+        var threads = new OrchTask<TSource, TResult>[srcList.Count];
         var semaphore = new SemaphoreSlim(maxDegreeOfParallelism);
         var mainContext = SynchronizationContext.Current;
 
@@ -263,7 +260,7 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
             threads[i] = new OrchTask<TSource, TResult>();
         }
 
-        foreach (var (source, index) in sources.Select((source, index) => (source, index)))
+        foreach (var (source, index) in srcList.Select((source, index) => (source, index)))
         {
             Task.Run(async () =>
             {
@@ -334,63 +331,6 @@ public static class OrchThreadPool
         return OrchThreadPoolImpl<TSource, TResult>.RunForEach(sources, getPathFunc, getTargetFunc, getResultFunc);
     }
 }
-
-// 本当は、このクラスのコンストラクタを private にして
-// ForEach() をこのクラスの static method として持たせたい。
-// でも、そうしてしまうと、コンパイラによる型推論ができなくなってしまうのでとても不便。。
-// そのため、型推論を可能にするためのヘルパとして ParallelResults クラスを用意した。
-//public class ParallelResult<TSource, TResult>(TSource source, TResult? result, Exception? ex)
-//{
-//    public TSource Source { get; private set; } = source;
-//    public TResult? Result { get; private set; } = result;
-//    public Exception? Exception { get; private set; } = ex;
-//}
-
-// この ForEach は、すべてのスレッドが終了するまでブロックする。
-// 標準の Parallel.ForEach と同様だが、こちらは各スレッドの戻りを受け取れる。
-// ブロックしたくないときは、この代わりに OrchThreadPoolImpl.RunForEach() を使う。
-// コンパイラによる型推論ができるように、ForEach() は型パラメータをもたないクラスの
-// static method にしておく。
-//public static class ParallelResults
-//{
-//    public static ParallelResult<TSource, TResult>[] ForEach<TSource, TResult>(IEnumerable<TSource> sources, Func<TSource, TResult> forEachBody)
-//    {
-//        var resultsArray = new ParallelResult<TSource, TResult>[sources is ICollection<TSource> collection ? collection.Count : sources.Count()];
-//        using var cancelHandler = new ConsoleCancelHandler();
-//        var task = Task.Run(() =>
-//        {
-//            Parallel.ForEach(sources, new ParallelOptions { CancellationToken = cancelHandler.Token }, (source, state, index) =>
-//            {
-//                try
-//                {
-//                    var result = forEachBody(source);
-//                    resultsArray[index] = new ParallelResult<TSource, TResult>(source, result, null);
-//                }
-//                catch (OperationCanceledException)
-//                {
-//                    state.Break(); // This will stop processing cleanly once all active iterations complete.
-//                    throw;
-//                }
-//                catch (Exception ex)
-//                {
-//                    resultsArray[index] = new ParallelResult<TSource, TResult>(source, default, ex);
-//                }
-//            });
-//        }, cancelHandler.Token);
-
-//        try
-//        {
-//            task.Wait(cancelHandler.Token); // This will throw an exception if the task is canceled.
-//        }
-//        catch (AggregateException ae)
-//        {
-//            ae.Handle(e => e is OperationCanceledException); // Handle the cancellation exception
-//            throw new OperationCanceledException("The operation was canceled.", ae);
-//        }
-
-//        return resultsArray;
-//    }
-//}
 
 // planned to be deprecated
 public static class ParallelResults

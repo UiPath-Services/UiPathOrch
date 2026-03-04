@@ -4,36 +4,6 @@ using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands;
 
-//[AttributeUsage(AttributeTargets.Property | AttributeTargets.Parameter)]
-//public class ValidateEnumAttribute<TEnum> : ValidateArgumentsAttribute
-//    where TEnum : struct, Enum
-//{
-//    private static readonly string[] _validValues = Enum.GetNames(typeof(TEnum));
-
-//    protected override void Validate(object arguments, EngineIntrinsics engineIntrinsics)
-//    {
-//        var values = arguments switch
-//        {
-//            null => [],
-//            string s => [s],
-//            IEnumerable<object> objEnum => objEnum,
-//            IEnumerable nonGenericEnum => nonGenericEnum.Cast<object>(),
-//            _ => [arguments]
-//        };
-
-//        foreach (var v in values)
-//        {
-//            if (v is not string s ||
-//                !_validValues.Any(x => string.Equals(x, s, StringComparison.OrdinalIgnoreCase)))
-//            {
-//                throw new ValidationMetadataException(
-//                    $"Invalid value '{v}'. Allowed values are: {string.Join(", ", _validValues)}."
-//                );
-//            }
-//        }
-//    }
-//}
-
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Parameter)]
 internal class ValidateDictionaryKeyAttribute<TProvider, TValue> : ValidateArgumentsAttribute
     where TProvider : IDictionaryItems<TValue>
@@ -83,47 +53,6 @@ internal class ValidateDictionaryKeyAttribute<TProvider, TValue> : ValidateArgum
         }
     }
 }
-
-/// <summary>
-/// Validates that string[] parameter values match the values in the specified provider's Items dictionary.
-/// </summary>
-//[AttributeUsage(AttributeTargets.Property | AttributeTargets.Parameter)]
-//internal abstract class ValidateDictionaryValueBaseAttribute<TProvider, TValue> : ValidateArgumentsAttribute
-//    where TProvider : IDictionaryItems<TValue>
-//{
-//    private readonly HashSet<string> _validValues;
-
-//    protected ValidateDictionaryValueBaseAttribute()
-//    {
-//        _validValues = new HashSet<string>(
-//            TProvider.Items.Values.Select(v => v?.ToString() ?? string.Empty),
-//            StringComparer.OrdinalIgnoreCase
-//        );
-//    }
-
-//    protected override void Validate(object arguments, EngineIntrinsics engineIntrinsics)
-//    {
-//        var values = arguments switch
-//        {
-//            null => [],
-//            string s => [s],
-//            IEnumerable<object> objEnum => objEnum,
-//            IEnumerable nonGenericEnum => nonGenericEnum.Cast<object>(),
-//            _ => [arguments]
-//        };
-
-//        foreach (var v in values)
-//        {
-//            var s = v?.ToString() ?? string.Empty;
-//            if (!_validValues.Contains(s))
-//            {
-//                throw new ValidationMetadataException(
-//                    $"Invalid value '{s}'. Allowed values are: {string.Join(", ", _validValues)}."
-//                );
-//            }
-//        }
-//    }
-//}
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Parameter)]
 public class ValidatePositionalParameterAttribute<T> : ValidateArgumentsAttribute

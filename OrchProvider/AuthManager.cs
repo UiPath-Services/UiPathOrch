@@ -13,18 +13,15 @@ internal class OrchestratorAuthManager
 {
     private readonly HttpClient _httpClient;
     private readonly OrchDriveInfo _drive;
-    public readonly string _baseUrl;
-    internal readonly string? _onpremiseTenancy;
+    internal string BaseUrl { get; }
+    internal string? OnpremiseTenancy { get; }
     private readonly bool _isConfidentialApp;
-    //private readonly bool _isUserScope;
-    public readonly bool _isUserPassword;
+    private readonly bool _isUserPassword;
 
     internal bool IsConfidentialApp
     {
         get { return _isConfidentialApp; }
     }
-
-    //public string? IdentityUrl;
 
     private string? _access_token;
     private string? _refresh_token;
@@ -39,30 +36,26 @@ internal class OrchestratorAuthManager
         this._drive = drive;
 
         _isConfidentialApp = !string.IsNullOrEmpty(_drive._psDrive.AppSecret);
-        // 機密アプリのユーザーモードをサポートしたいのだけど、RedirectUrl がカスケードして
-        // 設定されてしまうと、なんだかうまくいかないな。。
-        //_isUserScope = !string.IsNullOrEmpty(_drive.RedirectUrl);
         _isUserPassword = !string.IsNullOrEmpty(_drive._psDrive.Password);
-        //IdentityUrl = _drive._psDrive.IdentityUrl?.TrimEnd('/');
 
         // Cloud: Root = "https://cloud.uipath.com/{org}/{tenant}"
         //   → strip tenant, keep org: "https://cloud.uipath.com/{org}"
         //   Identity API now requires /{org}/identity_/ prefix
         var rootTrimmed = _drive._psDrive.Root!.TrimEnd('/');
-        _baseUrl = drive._psDrive.IsCloud
+        BaseUrl = drive._psDrive.IsCloud
             ? rootTrimmed[..rootTrimmed.LastIndexOf('/')]
             : rootTrimmed;
 
-        if (!drive._psDrive.IsCloud) // On-premises: remove tenant path from _baseUrl
+        if (!drive._psDrive.IsCloud) // On-premises: remove tenant path from BaseUrl
         {
             // 1. 空チェック
-            if (string.IsNullOrWhiteSpace(_baseUrl))
+            if (string.IsNullOrWhiteSpace(BaseUrl))
             {
                 throw new InvalidOperationException("The provided URL is null or empty.");
             }
 
             // 2. Uri としてパースを試みる
-            if (!Uri.TryCreate(_baseUrl, UriKind.Absolute, out var uri))
+            if (!Uri.TryCreate(BaseUrl, UriKind.Absolute, out var uri))
             {
                 throw new InvalidOperationException("The provided URL is not a valid absolute URI.");
             }
@@ -82,13 +75,13 @@ internal class OrchestratorAuthManager
             if (segments.Length == 0)
             {
                 // 【ケース1】テナンシーが指定されていない場合（かつ uipath.com 以外のドメイン）
-                _onpremiseTenancy = string.Empty;
-                _baseUrl = uri.GetLeftPart(UriPartial.Authority); // 例: "https://orchestrator.local"
+                OnpremiseTenancy = string.Empty;
+                BaseUrl = uri.GetLeftPart(UriPartial.Authority); // 例: "https://orchestrator.local"
             }
             else
             {
                 // 【ケース2】テナンシーが指定されている場合
-                _onpremiseTenancy = segments.Last();
+                OnpremiseTenancy = segments.Last();
 
                 // テナンシーを除いた残りのパスを再構築
                 var remainingSegments = segments.Take(segments.Length - 1);
@@ -102,8 +95,8 @@ internal class OrchestratorAuthManager
                     Path = newPath
                 };
 
-                // 末尾のスラッシュを除去して _baseUrl にセット
-                _baseUrl = builder.Uri.ToString().TrimEnd('/');
+                // 末尾のスラッシュを除去して BaseUrl にセット
+                BaseUrl = builder.Uri.ToString().TrimEnd('/');
             }
         }
     }
@@ -118,20 +111,6 @@ internal class OrchestratorAuthManager
 
         if (_isConfidentialApp)
         {
-            //if (_isUserScope) ////// Conf User Scope // 機密アプリのユーザースコープ。ここ動くようにしたい、、
-            //{
-            //    string authorizationCode = GetAuthorizationCode(null, driveLetter);
-            //    (_access_token, _refresh_token) = GetAccessToken(new Dictionary<string, string>
-            //    {
-            //        { "grant_type", "client_credentials" },
-            //        { "code", authorizationCode },
-            //        { "client_id", _drive.AppId! },
-            //        { "client_secret", _drive.AppSecret! },
-            //        { "scope", _drive.Scope! }
-            //    });
-            //    return _access_token;
-            //}
-            //else /////////////////// Conf App Scope
             {
                 (_access_token, _refresh_token) = GetAccessToken(new Dictionary<string, string>
                 {
@@ -143,7 +122,7 @@ internal class OrchestratorAuthManager
                 return _access_token;
             }
         }
-        else if (!_isUserPassword) /////////////////////// Non-Conf User Scope
+        else if (!_isUserPassword)
         {
             string codeVerifier = RandomString(80);
             string authorizationCode = GetAuthorizationCode(codeVerifier);
@@ -162,12 +141,12 @@ internal class OrchestratorAuthManager
         {
             LoginModel payload = new()
             {
-                tenancyName = _onpremiseTenancy,
+                tenancyName = OnpremiseTenancy,
                 usernameOrEmailAddress = _drive._psDrive.Username,
                 password = _drive._psDrive.Password
             };
 
-            string url = _baseUrl + "/api/Account/Authenticate";
+            string url = BaseUrl + "/api/Account/Authenticate";
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             string strPayload = JsonSerializer.Serialize(payload);
             request.Content = new StringContent(strPayload, Encoding.UTF8, @"application/json");
@@ -220,9 +199,9 @@ internal class OrchestratorAuthManager
         }
         else
         {
-            endPoint = _baseUrl.Contains("uipath.com", StringComparison.InvariantCultureIgnoreCase)
-                ? _baseUrl + "/identity_/connect/token"
-                : _baseUrl + "/identity/connect/token";
+            endPoint = BaseUrl.Contains("uipath.com", StringComparison.InvariantCultureIgnoreCase)
+                ? BaseUrl + "/identity_/connect/token"
+                : BaseUrl + "/identity/connect/token";
         }
 
         var request = new HttpRequestMessage(HttpMethod.Post, endPoint)
@@ -252,9 +231,8 @@ internal class OrchestratorAuthManager
 
     private static string RandomString(int length)
     {
-        Random random = new();
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        return new string(Enumerable.Range(0, length).Select(_ => chars[random.Next(chars.Length)]).ToArray());
+        return RandomNumberGenerator.GetString(chars, length);
     }
 
     private static string LoadBotImageRandomly()
@@ -299,9 +277,9 @@ internal class OrchestratorAuthManager
         }
         else
         {
-            endPoint = _baseUrl.Contains("uipath.com", StringComparison.InvariantCultureIgnoreCase)
-                ? _baseUrl + "/identity_/connect/authorize"
-                : _baseUrl + "/identity/connect/authorize";
+            endPoint = BaseUrl.Contains("uipath.com", StringComparison.InvariantCultureIgnoreCase)
+                ? BaseUrl + "/identity_/connect/authorize"
+                : BaseUrl + "/identity/connect/authorize";
         }
 
         string authUrl = !string.IsNullOrEmpty(codeVerifier)
@@ -427,69 +405,6 @@ internal class OrchestratorAuthManager
         return authorizationCode;
     }
 
-    // 80 ポート以外のポートも開けるコード？
-    //private string GetAuthorizationCode(string codeVerifier, string driveLetter)
-    //{
-    //    string codeChallenge = GetHash(codeVerifier);
-
-    //    // リダイレクト用のエンドポイントを指定（ここでは5000番ポートを使用）
-    //    string redirectEndpoint = "http://localhost:5000/oauth-callback";
-    //    string authUrl = _baseUrl + $"/identity_/connect/authorize?response_type=code&client_id={_drive.AppId}&scope={_drive.Scope} offline_access&redirect_uri={WebUtility.UrlEncode(redirectEndpoint)}&code_challenge={codeChallenge}&code_challenge_method=S256";
-
-    //    Process.Start(new ProcessStartInfo(authUrl) { UseShellExecute = true });
-
-    //    string authorizationCode = "";
-    //    var hostCompletionSource = new TaskCompletionSource<object>();
-
-    //    var host = new WebHostBuilder()
-    //        .UseKestrel()
-    //        .Configure(app =>
-    //        {
-    //            app.Map("/oauth-callback", builder =>
-    //            {
-    //                builder.Run(async context =>
-    //                {
-    //                    authorizationCode = context.Request.Query["code"];
-
-    //                    Assembly assembly = Assembly.GetExecutingAssembly();
-    //                    using Stream stream = assembly.GetManifestResourceStream("OrchProvider.MountSuccessNotification.html");
-    //                    using StreamReader reader = new StreamReader(stream!);
-    //                    string htmlTemplate = reader.ReadToEnd();
-
-    //                    string responseString = string.Format(htmlTemplate, driveLetter);
-    //                    await context.Response.WriteAsync(responseString);
-
-    //                    hostCompletionSource.SetResult(null);  // Signal the host to shut down.
-    //                });
-    //            });
-    //        })
-    //        .Build();
-
-    //    host.Start();
-
-    //    hostCompletionSource.Task.Wait();  // Wait for the callback to be processed.
-
-    //    host.StopAsync(TimeSpan.FromSeconds(5)).Wait();  // Gracefully stop the server.
-
-    //    return authorizationCode ?? "";
-    //}
-
-    //private int GetAvailablePort(int startRange, int endRange)
-    //{
-    //    IPGlobalProperties ipGlobalProperties = IPGlobalProperties.GetIPGlobalProperties();
-    //    IPEndPoint[] endPoints = ipGlobalProperties.GetActiveTcpListeners();
-
-    //    List<int> usedPorts = endPoints.Select(p => p.Port).ToList();
-    //    for (int port = startRange; port <= endRange; port++)
-    //    {
-    //        if (!usedPorts.Contains(port))
-    //        {
-    //            return port;
-    //        }
-    //    }
-    //    throw new InvalidOperationException("No available port found in the specified range.");
-    //}
-
     private static string GetHash(string input)
     {
         using SHA256 sha256 = SHA256.Create();
@@ -531,6 +446,8 @@ internal class OrchestratorAuthManager
     public string DebugJwtToken()
     {
         var parts = _access_token?.Split('.') ?? [];
+        if (parts.Length != 3) return "";
+
         var payload = parts[1];
         payload = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
         payload = payload.Replace('-', '+').Replace('_', '/');

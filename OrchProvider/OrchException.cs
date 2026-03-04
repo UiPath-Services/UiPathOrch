@@ -98,7 +98,7 @@ public class OrchException : Exception
 
     internal static string? ExtractMessage(string msg)
     {
-        string ret = null;
+        string? ret = null;
         try
         {
             using JsonDocument doc = JsonDocument.Parse(msg);
