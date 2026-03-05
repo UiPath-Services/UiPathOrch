@@ -369,7 +369,10 @@ CmdletsToExport = @(
 'Get-OrchPSDrive',
 'Set-OrchLocation',
 'Get-OrchLogLocation',
-'Open-OrchLogLocation'
+'Open-OrchLogLocation',
+
+'New-OrchUserMappingCsv',
+'Test-OrchUserMappingCsv'
 )
 
 # Variables to export from this module
