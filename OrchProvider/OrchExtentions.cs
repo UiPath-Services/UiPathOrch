@@ -1210,8 +1210,8 @@ internal static class SessionStateExtentios
             var headerLine = enumerator.Current;
             var headers = headerLine.Split(',');
 
-            int sourceIndex = Array.FindIndex(headers, h => h.Trim().Equals("SourceUserName", StringComparison.OrdinalIgnoreCase));
-            int destinationIndex = Array.FindIndex(headers, h => h.Trim().Equals("DestinationUserName", StringComparison.OrdinalIgnoreCase));
+            int sourceIndex = Array.FindIndex(headers, h => h.Trim().Trim('"').Equals("SourceUserName", StringComparison.OrdinalIgnoreCase));
+            int destinationIndex = Array.FindIndex(headers, h => h.Trim().Trim('"').Equals("DestinationUserName", StringComparison.OrdinalIgnoreCase));
 
             if (sourceIndex == -1 || destinationIndex == -1)
                 throw new InvalidOperationException("The CSV file does not contain the required columns: 'SourceUserName' and 'DestinationUserName'.");
@@ -1231,8 +1231,8 @@ internal static class SessionStateExtentios
                 if (columns.Length <= Math.Max(sourceIndex, destinationIndex))
                     continue;
 
-                string sourceUserName = columns[sourceIndex].Trim();
-                string destinationUserName = columns[destinationIndex].Trim();
+                string sourceUserName = columns[sourceIndex].Trim().Trim('"');
+                string destinationUserName = columns[destinationIndex].Trim().Trim('"');
 
                 // Add to dictionary if the source username is not empty
                 if (!string.IsNullOrEmpty(sourceUserName))

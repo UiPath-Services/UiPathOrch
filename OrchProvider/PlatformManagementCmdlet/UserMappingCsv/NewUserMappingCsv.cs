@@ -8,7 +8,7 @@ using User = UiPath.PowerShell.Entities.User;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.New, "OrchUserMappingCsv")]
-class NewUserMappingCsvCommand : OrchestratorPSCmdlet
+public class NewUserMappingCsvCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
@@ -27,7 +27,7 @@ class NewUserMappingCsvCommand : OrchestratorPSCmdlet
     public Encoding? CsvEncoding { get; set; }
 
     private static readonly string DefaultCsvName = "UserMapping.csv";
-    private static readonly string[] CsvHeaders = ["SourceUserName", "SourceEmail", "SourceDisplayName", "SourceSource", "DestinationUserName"];
+    private static readonly string[] CsvHeaders = ["SourceUserName", "SourceEmail", "SourceDisplayName", "SourceSource", "DestinationUserName", "Name", "SurName", "DisplayName"];
 
     class MappingCsvLine
     {
@@ -36,6 +36,10 @@ class NewUserMappingCsvCommand : OrchestratorPSCmdlet
         public string? SourceDisplayName { get; set; }
         public string? SourceSource { get; set; }
         public string? DestinationUserName { get; set; }
+        // New-PmUser 互換カラム（宛先ローカルユーザー作成用）
+        public string? Name { get; set; }
+        public string? SurName { get; set; }
+        public string? DisplayName { get; set; }
     }
 
     private static void WriteCsvContent(StreamWriter writer, Dictionary<string, MappingCsvLine> userMapping)
@@ -47,7 +51,10 @@ class NewUserMappingCsvCommand : OrchestratorPSCmdlet
                 EscapeCsvValue(user.SourceEmail),
                 EscapeCsvValue(user.SourceDisplayName),
                 EscapeCsvValue(user.SourceSource),
-                EscapeCsvValue(user.DestinationUserName)
+                EscapeCsvValue(user.DestinationUserName),
+                EscapeCsvValue(user.Name),
+                EscapeCsvValue(user.SurName),
+                EscapeCsvValue(user.DisplayName)
             ];
             writer.WriteCsvLine(line);
         }
@@ -325,7 +332,10 @@ class NewUserMappingCsvCommand : OrchestratorPSCmdlet
 
             foreach (var dstResolvedUser in dstResolvedUsersByEmail)
             {
-                userMappings[dstResolvedUser.Key].DestinationUserName = dstResolvedUser.Value?.name;
+                if (dicUserMappingsByEmail.TryGetValue(dstResolvedUser.Key, out var line))
+                {
+                    line.DestinationUserName = dstResolvedUser.Value?.name;
+                }
             }
             #endregion
         }

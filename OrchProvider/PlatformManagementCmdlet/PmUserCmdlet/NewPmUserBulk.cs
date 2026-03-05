@@ -58,7 +58,7 @@ public class NewPmUserCommand : OrchestratorPSCmdlet
     Dictionary<(OrchDriveInfo drive, string[] groupNames), Dictionary<string, CsvLine>> _params = new(new DriveGroupIdsComparer());
 
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [Alias("UserName")]
+    [Alias("UserName", "DestinationUserName")]
     public string? Email { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
