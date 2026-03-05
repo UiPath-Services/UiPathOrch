@@ -68,8 +68,10 @@
 - [x] `New-OrchUserMappingCsv` で CSV 生成（5ユーザー検出、SourceSource=local）
 - [x] AI が DestinationUserName, Name, SurName, DisplayName を補完
 - [x] `Test-OrchUserMappingCsv` で検証（0 Error 達成）
-- [ ] `New-PmUser` でローカルユーザー作成
-- [ ] `Copy-Item -Recurse -UserMappingCsv` で統合テスト
+- [x] `New-PmUser` でローカルユーザー作成（5名）
+- [x] `Copy-OrchFolderUser -UserMappingCsv` でフォルダユーザーコピー（ロール含む）
+- [x] `Copy-OrchAsset -UserMappingCsv` で per-user アセットコピー
+- [x] `Copy-Item -Recurse -UserMappingCsv` で統合テスト（フォルダユーザー・アセット OK、パッケージ不在エラーは既知）
 
 ### シナリオ E: クラウド (AD あり) → クラウド (AD なし)
 
