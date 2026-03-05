@@ -38,6 +38,9 @@ public class CopyUserCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string? Path { get; set; }
 
+    [Parameter]
+    public string? UserMappingCsv { get; set; }
+
     internal static void CopyUsers(
         IWritableHost _this,
         OrchDriveInfo srcDrive,
@@ -45,7 +48,8 @@ public class CopyUserCommand : OrchestratorPSCmdlet
         List<WildcardPattern>? wpFullName,
         List<WildcardPattern>? wpType,
         IList<OrchDriveInfo> dstDrives,
-        bool shouldProcess, CancellationToken cancelToken)
+        bool shouldProcess, CancellationToken cancelToken,
+        Dictionary<string, string>? userMapping = null)
     {
         srcDrive._dicUsers = null;
         srcDrive._dicUsersDetailed = null;
@@ -107,6 +111,13 @@ public class CopyUserCommand : OrchestratorPSCmdlet
                         // srcType は、変な値なら "DirectoryUser" に対応する数字にしておく。
                         // でも変な値は将来のバージョンで出てくる可能性があるから、なにか警告した方がいいのかもしれない。
                         var srcType = DirectoryTypeItems.Items.GetValueOrDefault(detailedUser.Type ?? "DirectoryUser", DirectoryTypeItems.Items["DirectoryUser"]);
+
+                        // UserMappingCsv による名前解決
+                        if (userMapping is not null && userMapping.TryGetValue(newUser.UserName!, out var mappedName)
+                            && !string.IsNullOrEmpty(mappedName))
+                        {
+                            newUser.UserName = mappedName;
+                        }
 
                         // 組織の PmUser の中に見つかれば、その identifier を DirectoryIdentifier を設定しておく
                         var dstPmUsers = dstDrive.SearchDirectory(newUser.UserName!)
@@ -301,6 +312,9 @@ public class CopyUserCommand : OrchestratorPSCmdlet
         var dstDrives = SessionState.EnumDestinationDrives(Destination!);
 
         using var cancelHandler = new ConsoleCancelHandler();
-        CopyUsers(this, srcDrive, wpUserName, wpFullName, wpType, dstDrives, false, cancelHandler.Token);
+        var userMapping = dstDrives.Count == 1
+            ? SessionState?.LoadUserMappingCsv(this, srcDrive, dstDrives[0], UserMappingCsv)
+            : null;
+        CopyUsers(this, srcDrive, wpUserName, wpFullName, wpType, dstDrives, false, cancelHandler.Token, userMapping);
     }
 }
