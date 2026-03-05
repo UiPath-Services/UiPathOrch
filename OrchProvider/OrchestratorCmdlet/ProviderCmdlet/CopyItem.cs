@@ -1062,8 +1062,17 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
             if (dstUser is null)
             {
+                // CopyFolderUsers で AssignDirectoryUser が実行済みの場合、
+                // テナントユーザーのキャッシュが古い可能性があるのでクリアして再試行
+                dstDrive._dicUsers = null;
+                dstUsers = dstDrive.GetUsers();
+                dstUser = dstUsers.FirstOrDefault(u => string.Compare(u.UserName, searchName, StringComparison.OrdinalIgnoreCase) == 0);
+            }
+
+            if (dstUser is null)
+            {
                 string target = newFolder.GetPSPath();
-                _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: {dstDrive.NameColon} does not have user with Name = '{srcUser.UserName}'."), "GetCredentialStoreError", ErrorCategory.InvalidOperation, target));
+                _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: {dstDrive.NameColon} does not have user with Name = '{searchName}'."), "FindUserError", ErrorCategory.InvalidOperation, target));
             }
             return dstUser;
         }
