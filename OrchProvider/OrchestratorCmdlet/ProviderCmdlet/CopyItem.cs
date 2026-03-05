@@ -94,6 +94,9 @@ public class CopyItem_DynamicParameters
 {
     [Parameter]
     public SwitchParameter ExcludeEntities { get; set; }
+
+    [Parameter]
+    public string? UserMappingCsv { get; set; }
 }
 
 // Copy-Item cmdlet
@@ -235,7 +238,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     internal static void CopyFolderUsers(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder,  List<WildcardPattern>? wpUserName, List<WildcardPattern>? wpType,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
-        bool shouldProcess, CancellationToken cancelToken)
+        bool shouldProcess, CancellationToken cancelToken,
+        Dictionary<string, string>? userMapping = null)
     {
         if (newFolder.FolderType == "Personal") return;
 
@@ -303,8 +307,16 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         continue;
                     }
 
+                    // UserMappingCsv による名前解決
+                    string resolvedUserName = userName;
+                    if (userMapping is not null && userMapping.TryGetValue(userName, out var mappedName)
+                        && !string.IsNullOrEmpty(mappedName))
+                    {
+                        resolvedUserName = mappedName;
+                    }
+
                     // ディレクトリを検索しなければ。。
-                    var resolvedUsers = dstDrive.SearchDirectory(userName)?
+                    var resolvedUsers = dstDrive.SearchDirectory(resolvedUserName)?
                         .Where(u => u.type == type).ToList();
 
                     DirectoryObject resolved = null;
@@ -620,6 +632,14 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     _this.WriteError(new ErrorRecord(new OrchException(dstFeedFolder, msg, ex), "UploadPackageError", ErrorCategory.InvalidOperation, dstFeedFolder));
                 }
             }
+        }
+
+        // 個人用ワークスペースにパッケージを追加すると、プロセスが自動作成される。
+        // 後続の CopyProcesses() が正しい状態を参照できるよう、プロセスキャッシュをクリアする。
+        if (newFolder.FolderType == "Personal")
+        {
+            dstDrive._dicReleases?.TryRemove(newFolder.Id ?? 0, out var _);
+            dstDrive._dicReleasesDetailed?.TryRemove(newFolder.Id ?? 0, out var _);
         }
     }
 
@@ -1008,8 +1028,9 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     // TODO: この実装が足りてないではないか。ディレクトリ検索でユーザーを探さないと。
     // 現在の実装はローカルユーザーしか探していない。
     internal static Entities.User? FindDstUser(IWritableHost _this,
-        OrchDriveInfo srcDrive, 
-        OrchDriveInfo dstDrive, Folder newFolder, Int64? srcUserId, string msg)
+        OrchDriveInfo srcDrive,
+        OrchDriveInfo dstDrive, Folder newFolder, Int64? srcUserId, string msg,
+        Dictionary<string, string>? userMapping = null)
     {
         if (srcUserId is null || srcUserId == 0) return null;
         //string msg = $"Migrating the user id {Path.Combine(srcDrive.NameColon, srcUserId?.ToString() ?? "")}";
@@ -1023,8 +1044,16 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 return null;
             }
 
+            // UserMappingCsv による名前解決
+            string searchName = srcUser.UserName!;
+            if (userMapping is not null && userMapping.TryGetValue(srcUser.UserName!, out var mappedName)
+                && !string.IsNullOrEmpty(mappedName))
+            {
+                searchName = mappedName;
+            }
+
             var dstUsers = dstDrive.GetUsers();
-            var dstUser = dstUsers.FirstOrDefault(u => string.Compare(u.UserName, srcUser.UserName, StringComparison.OrdinalIgnoreCase) == 0);
+            var dstUser = dstUsers.FirstOrDefault(u => string.Compare(u.UserName, searchName, StringComparison.OrdinalIgnoreCase) == 0);
             if (dstUser is null)
             {
                 // ユーザーが見つからない！ Email でも探してみる。
@@ -1499,10 +1528,11 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         return false;
     }
 
-    internal static void CopyAssets(IWritableHost _this, 
+    internal static void CopyAssets(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
-        bool shouldProcess, CancellationToken cancelToken)
+        bool shouldProcess, CancellationToken cancelToken,
+        Dictionary<string, string>? userMapping = null)
     {
         dstDrive.FolderMachinesAssigned.ClearCache(newFolder);
 
@@ -1541,7 +1571,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                 target = newFolder.GetPSPath();
 
-                bool bCredentailWarningNeeded = false;
+                bool bCredentialWarningNeeded = false;
                 bool bCredentialWarningDone = false;
                 try
                 {
@@ -1564,7 +1594,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         postingAsset.BoolValue = null;
                         postingAsset.StringValue = null;
                         postingAsset.CredentialPassword = "!!!PLEASE UPDATE!!!";
-                        bCredentailWarningNeeded = true;
+                        bCredentialWarningNeeded = true;
                     }
 
                     if (postingAsset.UserValues is not null && postingAsset.UserValues.Count == 0)
@@ -1577,7 +1607,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         List<AssetUserValue>? migratedUserValues = null;
                         foreach (var userValue in postingAsset.UserValues)
                         {
-                            userValue.UserId = FindDstUser(_this, srcDrive, dstDrive, newFolder, userValue.UserId, msg)?.Id;
+                            userValue.UserId = FindDstUser(_this, srcDrive, dstDrive, newFolder, userValue.UserId, msg, userMapping)?.Id;
                             if (userValue.UserId is null || userValue.UserId == 0)
                             {
                                 continue;
@@ -1635,7 +1665,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     //    _this.WriteObject(created);
                     //}
 
-                    if (bCredentailWarningNeeded && !bCredentialWarningDone)
+                    if (bCredentialWarningNeeded && !bCredentialWarningDone)
                     {
                         target = System.IO.Path.Combine(newFolder.GetPSPath(), created?.Name ?? "");
                         _this.WriteWarning($"'{target}': Please update credential asset passwords with Set-OrchCredentialAsset cmdlet.");
@@ -2751,36 +2781,79 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         OrchDriveInfo dstDrive,
         Folder dstFolder,
         bool recurse,
-        CancellationToken cancelToken)
+        CancellationToken cancelToken,
+        Dictionary<string, string>? userMapping = null)
     {
+        if (srcFolder == dstFolder)
+        {
+            WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(),
+                "Cannot copy a folder to itself."),
+                "CopyFolderError", ErrorCategory.InvalidOperation, srcFolder));
+            return false;
+        }
+
+        Folder? destinationWorkspace = null;
         if (srcFolder.FolderType == "Personal")
         {
             if (ExcludeEntities) return false;
-
-            if (srcDrive == dstDrive)
-            {
-                WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(),
-                    "Copying a personal workspace to the same drive is not supported."),
-                    "CopyFolderError", ErrorCategory.InvalidOperation, srcFolder));
-                return false;
-            }
             if (dstFolder != dstDrive.RootFolder)
             {
-                WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(),
-                    "Copying a personal workspace to anything other than a personal workspace with the same name is not supported."),
-                    "CopyFolderError", ErrorCategory.InvalidOperation, srcFolder));
-                return false;
+                // dst が直接指定されていれば、サブフォルダ作成せず中身を直接コピーする
+                destinationWorkspace = dstFolder;
             }
-            // 同名の個人用ワークスペースが存在しなければリターン
-            Folder destinationWorkspace = dstDrive.GetFolder(srcFolder.DisplayName!);
+
+            // UserMappingCsv がある場合は、OwnerId ベースで対応する dst ワークスペースを探す
+            // (dst が明示指定されていなければ)
+            if (destinationWorkspace is null && userMapping is not null)
+            {
+                // src ワークスペースの OwnerId からソースユーザー名を特定
+                var srcWorkspace = srcDrive.PersonalWorkspaces.Get().FirstOrDefault(pw => pw.Id == srcFolder.Id);
+                string? srcOwnerUserName = null;
+                if (srcWorkspace?.OwnerId is not null)
+                {
+                    srcOwnerUserName = srcDrive.GetUsers().FirstOrDefault(u => u.Id == srcWorkspace.OwnerId)?.UserName;
+                }
+                // OwnerId が空の場合はフォルダ名から推定
+                if (string.IsNullOrEmpty(srcOwnerUserName) && srcFolder.DisplayName?.EndsWith("'s workspace") == true)
+                {
+                    srcOwnerUserName = srcFolder.DisplayName[..^"'s workspace".Length];
+                }
+
+                if (!string.IsNullOrEmpty(srcOwnerUserName)
+                    && userMapping.TryGetValue(srcOwnerUserName, out var dstUserName)
+                    && !string.IsNullOrEmpty(dstUserName))
+                {
+                    // dst ユーザーの Id を取得し、PersonalWorkspaces から OwnerId で検索
+                    var dstUser = dstDrive.GetUsers().FirstOrDefault(u => string.Compare(u.UserName, dstUserName, StringComparison.OrdinalIgnoreCase) == 0);
+                    if (dstUser?.Id is not null)
+                    {
+                        var dstWorkspace = dstDrive.PersonalWorkspaces.Get().FirstOrDefault(pw => pw.OwnerId == dstUser.Id);
+                        if (dstWorkspace is not null)
+                        {
+                            destinationWorkspace = dstDrive.GetFolders().FirstOrDefault(f => f.Id == dstWorkspace.Id);
+                        }
+                    }
+                }
+            }
+
+            // マッピングで見つからなかった場合は、従来通り同名フォルダを探す
+            destinationWorkspace ??= dstDrive.GetFolder(srcFolder.DisplayName!);
+
             if (destinationWorkspace is null)
             {
                 WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(),
-                    $"No personal workspace with the same name exists in {dstDrive.NameColonSeparator}. " +
+                    $"No corresponding personal workspace exists in {dstDrive.NameColonSeparator}. " +
                     $"You may want to start exploring the destination personal workspace and reflect it in this PS console by running `Clear-OrchCache {dstDrive.NameColon}'."),
                     "CopyFolderError", ErrorCategory.InvalidOperation, srcFolder));
                 return false;
             }
+        }
+        // src が通常フォルダでも、dst が Personal ワークスペースなら
+        // サブフォルダ作成ではなく中身を直接コピーする
+        else if (dstFolder.FolderType == "Personal")
+        {
+            destinationWorkspace = dstFolder;
+            WriteWarning($"Destination is a personal workspace. Contents of \"{srcFolder.GetPSPath()}\" will be copied directly into \"{dstFolder.GetPSPath()}\" without creating a subfolder.");
         }
 
         string target = $"Item: '{srcFolder.GetPSPath()}' Destination: '{dstFolder.GetPSPath()}'";
@@ -2811,12 +2884,19 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 using ProgressReporter reporter = new(this, 1, totalStageNum, "Copying folder");
                 // 次から始まるスコープ↓は、子供 reporter がタイムリーに消えるように導入したもの。
                 {
-                    reporter.WriteProgress(0, $"\"{srcFolder.GetPSPath()}\" to \"{dstFolder.GetPSPath()}\"");
-
-                    // #0 フォルダー自身をコピー
-                    reporter.WriteProgress(0);
-                    newFolder = CopyFolder(srcDrive, srcFolder, dstDrive, dstFolder, feedType!, cancelToken);
-                    if (newFolder is null) return false;
+                    // #0 フォルダー自身をコピー（個人用ワークスペースはフォルダ作成不要）
+                    if (destinationWorkspace is not null)
+                    {
+                        newFolder = destinationWorkspace;
+                        reporter.WriteProgress(0, $"\"{srcFolder.GetPSPath()}\" to \"{newFolder.GetPSPath()}\"");
+                    }
+                    else
+                    {
+                        reporter.WriteProgress(0, $"\"{srcFolder.GetPSPath()}\" to \"{dstFolder.GetPSPath()}\"");
+                        reporter.WriteProgress(0);
+                        newFolder = CopyFolder(srcDrive, srcFolder, dstDrive, dstFolder, feedType!, cancelToken);
+                        if (newFolder is null) return false;
+                    }
 
                     srcDrive._dicReleases?.TryRemove(srcFolder.Id ?? 0, out _);
                     dstDrive._dicReleases?.TryRemove(dstFolder.Id ?? 0, out _);
@@ -2833,7 +2913,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         srcDrive.FolderUsersWithInherited.ClearCache(srcFolder);
                         srcDrive.FolderUsersWithNoInherited.ClearCache(srcFolder);
                         using var reporterFolderUsers = new ProgressReporter(this, 100, Int32.MaxValue, msg);
-                        CopyFolderUsers(this, srcDrive, srcFolder, null, null, dstDrive, newFolder, reporterFolderUsers, true, cancelToken);
+                        CopyFolderUsers(this, srcDrive, srcFolder, null, null, dstDrive, newFolder, reporterFolderUsers, true, cancelToken, userMapping);
 
                         cancelToken.ThrowIfCancellationRequested();
 
@@ -2876,7 +2956,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         reporter.WriteProgress(++rootIndex);
                         srcDrive.Assets.ClearCache(srcFolder);
                         using var reporterAssets = new ProgressReporter(this, 600, Int32.MaxValue, msg);
-                        CopyAssets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterAssets, true, cancelToken);
+                        CopyAssets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterAssets, true, cancelToken, userMapping);
 
                         cancelToken.ThrowIfCancellationRequested();
 
@@ -2951,9 +3031,13 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 if (recurse)
                 {
                     var subfolders = GetDirectChildFolders(srcDrive.GetFolders(), srcFolder);
-                    foreach (var subfolder in subfolders)
+                    if (newFolder.FolderType == "Personal" && subfolders.Count > 0)
                     {
-                        CopyItemRecurse(srcDrive, subfolder, dstDrive, newFolder, true, cancelToken);
+                        WriteWarning($"Subfolders of \"{srcFolder.GetPSPath()}\" cannot be copied into a personal workspace. Skipping {subfolders.Count} subfolder(s).");
+                    }
+                    else foreach (var subfolder in subfolders)
+                    {
+                        CopyItemRecurse(srcDrive, subfolder, dstDrive, newFolder, true, cancelToken, userMapping);
                         cancelToken.ThrowIfCancellationRequested();
                     }
                 }
@@ -3002,6 +3086,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         {
             return;
         }
+
+        var userMapping = SessionState?.LoadUserMappingCsv(this, srcDrive, dstDrive, dynamicParameters?.UserMappingCsv);
 
         // この親 reporter は、なるべくチカチカしない方が良いので、広いスコープに置く。
         using var cancelHandler = new ConsoleCancelHandler();
@@ -3058,7 +3144,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
             if (ShouldCopyTenantEntities("User", srcDrive, srcDrive.GetUsers(), dstDrive))
             {
-                CopyUserCommand.CopyUsers(this, srcDrive, null, null, null, [dstDrive], true, cancelHandler.Token);
+                CopyUserCommand.CopyUsers(this, srcDrive, null, null, null, [dstDrive], true, cancelHandler.Token, userMapping);
             }
 
             if (ShouldCopyTenantEntities("Machine", srcDrive, srcDrive.Machines.Get(), dstDrive))
@@ -3089,7 +3175,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 var foldersToBeCopied = srcDrive.GetFolders().Where((f => f.ParentId is null && f != srcDrive.RootFolder));
                 foreach (var folderToBeCopied in foldersToBeCopied)
                 {
-                    isDirty = CopyItemRecurse(srcDrive, folderToBeCopied, dstDrive, dstFolder ?? dstDrive.RootFolder!, true, cancelHandler.Token);
+                    isDirty = CopyItemRecurse(srcDrive, folderToBeCopied, dstDrive, dstFolder ?? dstDrive.RootFolder!, true, cancelHandler.Token, userMapping);
                 }
             }
             if (isDirty)
@@ -3103,7 +3189,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         bool bDirty = false;
         try
         {
-            bDirty = CopyItemRecurse(srcDrive, srcFolder, dstDrive, dstFolder ?? dstDrive.RootFolder!, recurse, cancelHandler.Token);
+            bDirty = CopyItemRecurse(srcDrive, srcFolder, dstDrive, dstFolder ?? dstDrive.RootFolder!, recurse, cancelHandler.Token, userMapping);
         }
         catch (Exception)
         {

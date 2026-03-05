@@ -39,8 +39,8 @@ public class CopyFolderUserCommand : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
-    //[Parameter]
-    //public string? UserMappingCsv { get; set; }
+    [Parameter]
+    public string? UserMappingCsv { get; set; }
 
     private class UserNameCompleter : OrchArgumentCompleter
     {
@@ -89,7 +89,7 @@ public class CopyFolderUserCommand : OrchestratorPSCmdlet
 
         var (dstDrive, dstRootFolder) = SessionState.ResolveToSingleFolder(Destination);
 
-        //var userMappingCsv = OrchDriveInfo.LoadUserMappingCsv(this, srcDrive, dstDrive, UserMappingCsv);
+        var userMapping = SessionState?.LoadUserMappingCsv(this, srcDrive, dstDrive, UserMappingCsv);
 
         // コピー元とコピー先が同じなら、何もしない
         if (srcRootFolder == dstRootFolder) return;
@@ -127,7 +127,7 @@ public class CopyFolderUserCommand : OrchestratorPSCmdlet
                 Core.OrchProvider.CopyFolderUsers(this,
                     srcDrive, srcFolder, wpUserName, wpType,
                     dstDrive, dstFolder, reporter,
-                    false, cancelHandler.Token);
+                    false, cancelHandler.Token, userMapping);
                 dstDrive.FolderUsersWithInherited.ClearCache();
                 dstDrive.FolderUsersWithNoInherited.ClearCache();
             }

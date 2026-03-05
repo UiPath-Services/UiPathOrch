@@ -27,11 +27,18 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string? Path { get; set; }
 
+    [Parameter]
+    public string? UserMappingCsv { get; set; }
+
     protected override void ProcessRecord()
     {
         var srcDrive = SessionState.GetPmDrive(Path);
         var dstDrives = SessionState.EnumPmDrives(Destination);
         var wpEmail = Email.ConvertToWildcardPatternList();
+
+        var userMapping = dstDrives.Count == 1
+            ? SessionState?.LoadUserMappingCsv(this, srcDrive, dstDrives[0], UserMappingCsv)
+            : null;
 
         #region コピーするユーザーの一覧を作成
         var targetUsers = new Dictionary<List<string>, List<PmUser>>(new ListStringComparer());
@@ -147,12 +154,23 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
                     #endregion
 
                     #region payload に、このユーザーを追加
+                    // UserMappingCsv による名前解決
+                    string mappedUserName = !string.IsNullOrEmpty(srcUser.email) ? srcUser.email : srcUser.userName;
+                    if (userMapping is not null)
+                    {
+                        string lookupKey = srcUser.email ?? srcUser.userName ?? "";
+                        if (userMapping.TryGetValue(lookupKey, out var mapped) && !string.IsNullOrEmpty(mapped))
+                        {
+                            mappedUserName = mapped;
+                        }
+                    }
+
                     var command = new CreateUserCommandBase()
                     {
                         id = Guid.NewGuid().ToString(),
-                        
-                        userName = !string.IsNullOrEmpty(srcUser.email) ? srcUser.email : srcUser.userName,
-                                                               
+
+                        userName = mappedUserName,
+
                         email = srcUser.email,
                         name = srcUser.name,
                         surname = srcUser.surname,

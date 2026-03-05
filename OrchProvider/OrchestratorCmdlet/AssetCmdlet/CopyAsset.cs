@@ -33,6 +33,9 @@ public class CopyAssetCommand : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
+    [Parameter]
+    public string? UserMappingCsv { get; set; }
+
     protected override void ProcessRecord()
     {
         var (srcDrive, srcRootFolder) = SessionState.ResolveToSingleFolder(Path);
@@ -42,6 +45,8 @@ public class CopyAssetCommand : OrchestratorPSCmdlet
 
         // コピー元とコピー先が同じなら、何もしない
         if (srcRootFolder == dstRootFolder) return;
+
+        var userMapping = SessionState?.LoadUserMappingCsv(this, srcDrive, dstDrive, UserMappingCsv);
 
         var wpName = Name.ConvertToWildcardPatternList();
 
@@ -81,7 +86,7 @@ public class CopyAssetCommand : OrchestratorPSCmdlet
                 Core.OrchProvider.CopyAssets(this,
                     srcDrive, srcFolder, wpName,
                     dstDrive, dstFolder, reporterAssets,
-                    false, cancelHandler.Token);
+                    false, cancelHandler.Token, userMapping);
                 dstDrive.Assets.ClearCache(dstFolder);
             }
             catch (OperationCanceledException)
