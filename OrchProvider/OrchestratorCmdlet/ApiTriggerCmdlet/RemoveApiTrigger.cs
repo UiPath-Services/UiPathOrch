@@ -41,7 +41,7 @@ public class RemoveApiTriggerCommand : OrchestratorPSCmdlet
                 {
                     cancelHandler.Token.ThrowIfCancellationRequested();
 
-                    if (ShouldProcess(trigger.GetPSPath(), "Remove API Trigger"))
+                    if (ShouldProcess(trigger.GetPSPath(), "Remove ApiTrigger"))
                     {
                         try
                         {
@@ -94,7 +94,7 @@ public class RemoveApiTriggerCommand : OrchestratorPSCmdlet
     //            {
     //                cancelHandler.Token.ThrowIfCancellationRequested();
 
-    //                if (ShouldProcess(trigger.GetPSPath(), "Remove API Trigger"))
+    //                if (ShouldProcess(trigger.GetPSPath(), "Remove ApiTrigger"))
     //                {
     //                    try
     //                    {
