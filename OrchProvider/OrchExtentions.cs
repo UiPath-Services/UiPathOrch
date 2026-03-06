@@ -979,7 +979,12 @@ internal static class SessionStateExtentios
     public static List<(OrchDriveInfo drive, Folder folder)> EnumFoldersWithoutPersonalWorkspace(this SessionState? sessionState, IEnumerable<string>? path, bool recurse = false, uint depth = 0, bool includeRoot = false)
     {
         return sessionState.EnumFolders(path, recurse, depth, includeRoot)
-            .Where(df => df.folder.FolderType != "Personal").ToList();
+            .Where(df => df.folder.FolderType != "Personal" && df.folder.FeedType != "PersonalWorkspace").ToList();
+    }
+
+    public static List<(OrchDriveInfo drive, Folder folder)> EnumFoldersWithoutPersonalWorkspace(this SessionState? sessionState, string? path, bool recurse = false, uint depth = 0, bool includeRoot = false)
+    {
+        return sessionState.EnumFoldersWithoutPersonalWorkspace([path], recurse, depth, includeRoot);
     }
 
     public static OrchDriveInfo GetOrchDrive(this SessionState? sessionState, string? path = null)
