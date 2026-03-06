@@ -31,7 +31,7 @@ public class CopyTestSetScheduleCommand : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var (srcDrive, srcRootFolder) = SessionState.ResolveToSingleFolder(Path);
-        var srcDrivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var srcDrivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
 
         var (dstDrive, dstRootFolder) = SessionState.ResolveToSingleFolder(Destination);
 
