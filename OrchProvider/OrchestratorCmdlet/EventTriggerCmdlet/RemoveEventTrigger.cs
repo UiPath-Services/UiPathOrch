@@ -41,7 +41,7 @@ public class RemoveEventTriggerCmdlet : OrchestratorPSCmdlet
                 {
                     cancelHandler.Token.ThrowIfCancellationRequested();
 
-                    if (ShouldProcess(trigger.GetPSPath(), "Remove Event Trigger"))
+                    if (ShouldProcess(trigger.GetPSPath(), "Remove EventTrigger"))
                     {
                         try
                         {

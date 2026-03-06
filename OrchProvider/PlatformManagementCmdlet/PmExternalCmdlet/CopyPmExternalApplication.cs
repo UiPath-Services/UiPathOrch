@@ -45,7 +45,7 @@ public class CopyPmExternalApplicationCommand : OrchestratorPSCmdlet
                 if (string.IsNullOrEmpty(dstPartitionGlobalId)) continue;
                 if (srcPartitionGlobalId == dstPartitionGlobalId) continue;
 
-                if (ShouldProcess(target, "Copy ExternalApplication"))
+                if (ShouldProcess(target, "Copy PmExternalApplication"))
                 {
                     try
                     {

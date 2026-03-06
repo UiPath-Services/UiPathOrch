@@ -96,7 +96,7 @@ public class RemovePmGroupCommand : OrchestratorPSCmdlet
     //            {
     //                cancelHandler.Token.ThrowIfCancellationRequested();
 
-    //                if (ShouldProcess(group!.GetPSPath(), "Remove IdGroup"))
+    //                if (ShouldProcess(group!.GetPSPath(), "Remove PmGroup"))
     //                {
     //                    try
     //                    {

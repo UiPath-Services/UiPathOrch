@@ -44,7 +44,7 @@ public class ResetTestDataQueueItemCommand : OrchestratorPSCmdlet
                 {
                     cancelHandler.Token.ThrowIfCancellationRequested();
 
-                    if (ShouldProcess(queue.GetPSPath(), "Rest TestDataQueueItem"))
+                    if (ShouldProcess(queue.GetPSPath(), "Reset TestDataQueueItem"))
                     {
                         try
                         {
@@ -86,7 +86,7 @@ public class ResetTestDataQueueItemCommand : OrchestratorPSCmdlet
         //        {
         //            cancelHandler.Token.ThrowIfCancellationRequested();
 
-        //            if (ShouldProcess(testDataQueue.GetPSPath(), "Rest Test Data Queue Item"))
+        //            if (ShouldProcess(testDataQueue.GetPSPath(), "Reset TestDataQueueItem"))
         //            {
         //                try
         //                {

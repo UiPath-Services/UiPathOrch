@@ -33,7 +33,7 @@ public class RemoveCredentialStoreCommand : OrchestratorPSCmdlet
                 {
                     cancelHandler.Token.ThrowIfCancellationRequested();
 
-                    if (ShouldProcess(cs.GetPSPath(), "Remove Credential Store"))
+                    if (ShouldProcess(cs.GetPSPath(), "Remove CredentialStore"))
                     {
                         try
                         {
@@ -87,7 +87,7 @@ public class RemoveCredentialStoreCommand : OrchestratorPSCmdlet
     //                cancelHandler.Token.ThrowIfCancellationRequested();
 
     //                string target = System.IO.Path.Combine(drive.NameColon, cs.Name!);
-    //                if (ShouldProcess(target, "Remove Credential Store"))
+    //                if (ShouldProcess(target, "Remove CredentialStore"))
     //                {
     //                    try
     //                    {

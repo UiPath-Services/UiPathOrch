@@ -165,7 +165,7 @@ public class RemoveFolderUserCommand : OrchestratorPSCmdlet
                         targetUser += $" ({folderUser.UserEntity.FullName})";
                     }
 
-                    if (ShouldProcess(targetUser, $"Remove Folder User"))
+                    if (ShouldProcess(targetUser, $"Remove FolderUser"))
                     {
                         try
                         {
@@ -235,7 +235,7 @@ public class RemoveFolderUserCommand : OrchestratorPSCmdlet
     //                cancelHandler.Token.ThrowIfCancellationRequested();
 
     //                targetUser = folderUser.GetPSPath();
-    //                if (ShouldProcess(targetUser, $"Remove Folder User"))
+    //                if (ShouldProcess(targetUser, $"Remove FolderUser"))
     //                {
     //                    try
     //                    {

@@ -94,7 +94,7 @@ public class RemoveTestSetScheduleCommand : OrchestratorPSCmdlet
     //            {
     //                cancelHandler.Token.ThrowIfCancellationRequested();
 
-    //                if (ShouldProcess(testSetSchedule.GetPSPath(), "Remove Test Set Schedule"))
+    //                if (ShouldProcess(testSetSchedule.GetPSPath(), "Remove TestSetSchedule"))
     //                {
     //                    try
     //                    {
