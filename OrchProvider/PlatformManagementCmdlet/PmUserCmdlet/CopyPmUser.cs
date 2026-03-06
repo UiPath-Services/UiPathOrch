@@ -7,7 +7,6 @@ using TPositional = UiPath.PowerShell.Positional.Email_Destination;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "PmUser", SupportsShouldProcess = true)]
-[OutputType(typeof(Entities.PmUser))]
 public class CopyPmUserCommand : OrchestratorPSCmdlet
 {
     // Key: (drive, groupIds) Value: Dictionary<email, csvLine>
@@ -192,15 +191,6 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
                     var response = dstDrive.CreatePmUserBulk(payload);
                     dstDrive.PmUsers.ClearCache();
                     dstDrive.PmGroups.ClearCache();
-
-                    if (response?.result?.succeeded ?? false)
-                    {
-                        foreach (var user in response.users ?? [])
-                        {
-                            user.Path = dstDrive.NameColonSeparator;
-                        }
-                        WriteObject(response.users?.OrderBy(u => u.email), true);
-                    }
                 }
                 catch (Exception ex)
                 {

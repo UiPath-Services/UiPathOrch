@@ -8,7 +8,6 @@ using TPositional = UiPath.PowerShell.Positional.Name_Destination;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "OrchCalendar", SupportsShouldProcess = true)]
-[OutputType(typeof(ExtendedCalendar))]
 public class CopyCalendarCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]

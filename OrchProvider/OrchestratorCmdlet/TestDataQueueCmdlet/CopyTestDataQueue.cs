@@ -7,7 +7,6 @@ using TPositional = UiPath.PowerShell.Positional.Name_Destination;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "OrchTestDataQueue", SupportsShouldProcess = true)]
-[OutputType(typeof(Entities.TestDataQueue))]
 public class CopyTestDataQueueCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]

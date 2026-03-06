@@ -7,7 +7,7 @@ using TPositional = UiPath.PowerShell.Positional.Name;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchActionCatalog")]
-[OutputType(typeof(Bucket))]
+[OutputType(typeof(TaskCatalog))]
 public class GetActionCatalogCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]

@@ -7,7 +7,6 @@ using TPositional = UiPath.PowerShell.Positional.Name_Destination;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "OrchActionCatalog", SupportsShouldProcess = true)]
-//[OutputType(typeof(Bucket))]
 public class CopyActionCatalogCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]

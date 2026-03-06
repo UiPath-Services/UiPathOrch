@@ -8,7 +8,6 @@ using TPositional = UiPath.PowerShell.Positional.Name_Destination;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "OrchBucket", SupportsShouldProcess = true)]
-[OutputType(typeof(Bucket))]
 public class CopyBucketCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]

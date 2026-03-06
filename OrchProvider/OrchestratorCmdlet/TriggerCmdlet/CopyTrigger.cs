@@ -7,7 +7,6 @@ using TPositional = UiPath.PowerShell.Positional.Name_Destination;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "OrchTrigger", SupportsShouldProcess = true)]
-[OutputType(typeof(Entities.ProcessSchedule))]
 public class CopyTriggerCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
