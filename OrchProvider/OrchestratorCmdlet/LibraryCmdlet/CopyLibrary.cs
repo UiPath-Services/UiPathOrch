@@ -9,7 +9,6 @@ using TPositional = UiPath.PowerShell.Positional.Id_Version_Destination;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "OrchLibrary", SupportsShouldProcess = true)]
-[OutputType(typeof(Entities.BulkItemDtoOfString))]
 public class CopyLibraryCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]

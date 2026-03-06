@@ -10,7 +10,6 @@ using TPositional = UiPath.PowerShell.Positional.UserName_Destination;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "OrchUser", SupportsShouldProcess = true)]
-[OutputType(typeof(Entities.User))]
 public class CopyUserCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
