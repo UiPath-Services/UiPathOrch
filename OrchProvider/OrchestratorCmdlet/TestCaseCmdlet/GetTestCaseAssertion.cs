@@ -145,6 +145,11 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
                 }
             }
 
+            if (screenshotDir is not null)
+            {
+                Directory.CreateDirectory(screenshotDir);
+            }
+
             foreach (var assertion in assertions)
             {
                 _cancelHandler!.Token.ThrowIfCancellationRequested();
@@ -161,7 +166,6 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
                 {
                     try
                     {
-                        Directory.CreateDirectory(screenshotDir);
                         string fileName = $"{testCaseExecutionId}_{assertion.Id}.jpg";
                         string filePath = System.IO.Path.Combine(screenshotDir, fileName);
                         drive.OrchAPISession.DownloadAssertionScreenshot(folderId, assertion.Id.Value, filePath, _cancelHandler.Token);
