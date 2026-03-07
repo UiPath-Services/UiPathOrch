@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <helpItems xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" schema="maml" xmlns="http://msh">
   <command:command>
     <command:details>
@@ -22,19 +22,19 @@
       <command:syntaxItem>
         <maml:name>Disable-OrchPersonalWorkspace</maml:name>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+          </maml:description>
+          <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
 If not specified, the current drive will be targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
-        </command:parameter>
-        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
-          <maml:name>Confirm</maml:name>
-          <maml:description>
-            <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
-          </maml:description>
-          <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
         <command:parameter required="true" variableLength="false" globbing="true" pipelineInput="false" position="0" aliases="none">
           <maml:name>UserName</maml:name>
@@ -113,10 +113,10 @@ If not specified, the current drive will be targeted.</maml:para>
         <maml:title>--------- Example 1: Disable personal workspace for a user ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Disable-OrchPersonalWorkspace ytsuda@gmail.com
+PS Orch1:\&gt; Disable-OrchPersonalWorkspace john.doe@example.com
 ```</maml:para>
-          <maml:para></maml:para>
-          <maml:para>Disables the personal workspace for the user ytsuda@gmail.com on the current drive.</maml:para>
+          <maml:para>&#x80;</maml:para>
+          <maml:para>Disables the personal workspace for the user john.doe@example.com on the current drive.</maml:para>
         </maml:introduction>
         <dev:code />
         <dev:remarks />
@@ -125,9 +125,9 @@ PS Orch1:\&gt; Disable-OrchPersonalWorkspace ytsuda@gmail.com
         <maml:title>--------- Example 2: Disable personal workspace on a specific drive ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Disable-OrchPersonalWorkspace ytsuda@gmail.com -Path Orch1:
+PS C:\&gt; Disable-OrchPersonalWorkspace john.doe@example.com -Path Orch1:
 ```</maml:para>
-          <maml:para></maml:para>
+          <maml:para>&#x80;</maml:para>
           <maml:para>Disables the personal workspace for the specified user on the Orch1: drive.</maml:para>
         </maml:introduction>
         <dev:code />
@@ -137,9 +137,9 @@ PS C:\&gt; Disable-OrchPersonalWorkspace ytsuda@gmail.com -Path Orch1:
         <maml:title>--------- Example 3: Preview changes with WhatIf ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Disable-OrchPersonalWorkspace ytsuda@gmail.com -WhatIf
+PS Orch1:\&gt; Disable-OrchPersonalWorkspace john.doe@example.com -WhatIf
 ```</maml:para>
-          <maml:para></maml:para>
+          <maml:para>&#x80;</maml:para>
           <maml:para>Shows what would happen if the cmdlet runs without actually making changes.</maml:para>
         </maml:introduction>
         <dev:code />
@@ -150,6 +150,18 @@ PS Orch1:\&gt; Disable-OrchPersonalWorkspace ytsuda@gmail.com -WhatIf
       <maml:navigationLink>
         <maml:linkText>Online Version</maml:linkText>
         <command:uri />
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Enable-OrchPersonalWorkspace</maml:linkText>
+        <command:uri>Enable-OrchPersonalWorkspace.md</command:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Get-OrchPersonalWorkspace</maml:linkText>
+        <command:uri>Get-OrchPersonalWorkspace.md</command:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Remove-OrchPersonalWorkspace</maml:linkText>
+        <command:uri>Remove-OrchPersonalWorkspace.md</command:uri>
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>
@@ -175,18 +187,18 @@ PS Orch1:\&gt; Disable-OrchPersonalWorkspace ytsuda@gmail.com -WhatIf
       <command:syntaxItem>
         <maml:name>Disable-OrchUserAttended</maml:name>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
-          <maml:name>Path</maml:name>
-          <maml:description>
-            <maml:para>Specifies the target Orch: drives. If not specified, the current drive is targeted. Tab completion suggests available Orch: drives.</maml:para>
-          </maml:description>
-          <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
-        </command:parameter>
-        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Confirm</maml:name>
           <maml:description>
             <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
+          <maml:name>Path</maml:name>
+          <maml:description>
+            <maml:para>Specifies the target Orch: drives. If not specified, the current drive is targeted. Tab completion suggests available Orch: drives.</maml:para>
+          </maml:description>
+          <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="true" variableLength="false" globbing="true" pipelineInput="false" position="0" aliases="none">
           <maml:name>UserName</maml:name>
@@ -274,10 +286,10 @@ Users are tenant-scoped entities. Navigate to the root of an Orch: drive or use 
         <maml:title>--------- Example 1: Disable attended robot for a specific user ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Disable-OrchUserAttended ytsuda@gmail.com
+PS Orch1:\&gt; Disable-OrchUserAttended john.smith
 ```</maml:para>
-          <maml:para></maml:para>
-          <maml:para>Disables the attended robot session for the user "ytsuda@gmail.com". The -UserName parameter is positional (position 0) so the parameter name can be omitted.</maml:para>
+          <maml:para>&#x80;</maml:para>
+          <maml:para>Disables the attended robot session for the user "john.smith". The -UserName parameter is positional (position 0) so the parameter name can be omitted.</maml:para>
         </maml:introduction>
         <dev:code />
         <dev:remarks />
@@ -286,10 +298,10 @@ PS Orch1:\&gt; Disable-OrchUserAttended ytsuda@gmail.com
         <maml:title>--------- Example 2: Disable attended robot for multiple users with a wildcard ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Disable-OrchUserAttended ytsuda*
+PS Orch1:\&gt; Disable-OrchUserAttended dev*
 ```</maml:para>
-          <maml:para></maml:para>
-          <maml:para>Disables the attended robot session for all users whose username starts with "ytsuda".</maml:para>
+          <maml:para>&#x80;</maml:para>
+          <maml:para>Disables the attended robot session for all users whose username starts with "dev".</maml:para>
         </maml:introduction>
         <dev:code />
         <dev:remarks />
@@ -298,10 +310,10 @@ PS Orch1:\&gt; Disable-OrchUserAttended ytsuda*
         <maml:title>--------- Example 3: Disable attended robot from a specific drive ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Disable-OrchUserAttended -Path Orch1:\ -UserName ytsuda+c@gmail.com
+PS C:\&gt; Disable-OrchUserAttended -Path Orch1:\ -UserName jane.doe
 ```</maml:para>
-          <maml:para></maml:para>
-          <maml:para>Disables the attended robot session for "ytsuda+c@gmail.com" on the Orch1 tenant. When -Path uses an absolute path, the command can be run from any location.</maml:para>
+          <maml:para>&#x80;</maml:para>
+          <maml:para>Disables the attended robot session for "jane.doe" on the Orch1 tenant. When -Path uses an absolute path, the command can be run from any location.</maml:para>
         </maml:introduction>
         <dev:code />
         <dev:remarks />
@@ -310,9 +322,9 @@ PS C:\&gt; Disable-OrchUserAttended -Path Orch1:\ -UserName ytsuda+c@gmail.com
         <maml:title>--------- Example 4: Preview changes with -WhatIf ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Disable-OrchUserAttended ytsuda* -WhatIf
+PS Orch1:\&gt; Disable-OrchUserAttended admin* -WhatIf
 ```</maml:para>
-          <maml:para></maml:para>
+          <maml:para>&#x80;</maml:para>
           <maml:para>Shows which users would have their attended robot session disabled without actually making changes.</maml:para>
         </maml:introduction>
         <dev:code />
@@ -323,6 +335,18 @@ PS Orch1:\&gt; Disable-OrchUserAttended ytsuda* -WhatIf
       <maml:navigationLink>
         <maml:linkText>Online Version</maml:linkText>
         <command:uri />
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Enable-OrchUserAttended</maml:linkText>
+        <command:uri>Enable-OrchUserAttended.md</command:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Update-OrchUser</maml:linkText>
+        <command:uri>Update-OrchUser.md</command:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Get-OrchUser</maml:linkText>
+        <command:uri>Get-OrchUser.md</command:uri>
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>
@@ -348,19 +372,19 @@ PS Orch1:\&gt; Disable-OrchUserAttended ytsuda* -WhatIf
       <command:syntaxItem>
         <maml:name>Enable-OrchPersonalWorkspace</maml:name>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+          </maml:description>
+          <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
 If not specified, the current drive will be targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
-        </command:parameter>
-        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
-          <maml:name>Confirm</maml:name>
-          <maml:description>
-            <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
-          </maml:description>
-          <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
         <command:parameter required="true" variableLength="false" globbing="true" pipelineInput="false" position="0" aliases="none">
           <maml:name>UserName</maml:name>
@@ -439,10 +463,10 @@ If not specified, the current drive will be targeted.</maml:para>
         <maml:title>--------- Example 1: Enable personal workspace for a user ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Enable-OrchPersonalWorkspace ytsuda@gmail.com
+PS Orch1:\&gt; Enable-OrchPersonalWorkspace john.doe@example.com
 ```</maml:para>
-          <maml:para></maml:para>
-          <maml:para>Enables the personal workspace for the user ytsuda@gmail.com on the current drive.</maml:para>
+          <maml:para>&#x80;</maml:para>
+          <maml:para>Enables the personal workspace for the user john.doe@example.com on the current drive.</maml:para>
         </maml:introduction>
         <dev:code />
         <dev:remarks />
@@ -451,9 +475,9 @@ PS Orch1:\&gt; Enable-OrchPersonalWorkspace ytsuda@gmail.com
         <maml:title>--------- Example 2: Enable personal workspace on a specific drive ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Enable-OrchPersonalWorkspace ytsuda@gmail.com -Path Orch1:
+PS C:\&gt; Enable-OrchPersonalWorkspace john.doe@example.com -Path Orch1:
 ```</maml:para>
-          <maml:para></maml:para>
+          <maml:para>&#x80;</maml:para>
           <maml:para>Enables the personal workspace for the specified user on the Orch1: drive.</maml:para>
         </maml:introduction>
         <dev:code />
@@ -463,9 +487,9 @@ PS C:\&gt; Enable-OrchPersonalWorkspace ytsuda@gmail.com -Path Orch1:
         <maml:title>--------- Example 3: Preview changes with WhatIf ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Enable-OrchPersonalWorkspace ytsuda@gmail.com -WhatIf
+PS Orch1:\&gt; Enable-OrchPersonalWorkspace john.doe@example.com -WhatIf
 ```</maml:para>
-          <maml:para></maml:para>
+          <maml:para>&#x80;</maml:para>
           <maml:para>Shows what would happen if the cmdlet runs without actually making changes.</maml:para>
         </maml:introduction>
         <dev:code />
@@ -476,6 +500,18 @@ PS Orch1:\&gt; Enable-OrchPersonalWorkspace ytsuda@gmail.com -WhatIf
       <maml:navigationLink>
         <maml:linkText>Online Version</maml:linkText>
         <command:uri />
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Disable-OrchPersonalWorkspace</maml:linkText>
+        <command:uri>Disable-OrchPersonalWorkspace.md</command:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Get-OrchPersonalWorkspace</maml:linkText>
+        <command:uri>Get-OrchPersonalWorkspace.md</command:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Remove-OrchPersonalWorkspace</maml:linkText>
+        <command:uri>Remove-OrchPersonalWorkspace.md</command:uri>
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>
@@ -501,18 +537,18 @@ PS Orch1:\&gt; Enable-OrchPersonalWorkspace ytsuda@gmail.com -WhatIf
       <command:syntaxItem>
         <maml:name>Enable-OrchUserAttended</maml:name>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
-          <maml:name>Path</maml:name>
-          <maml:description>
-            <maml:para>Specifies the target Orch: drives. If not specified, the current drive is targeted. Tab completion suggests available Orch: drives.</maml:para>
-          </maml:description>
-          <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
-        </command:parameter>
-        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Confirm</maml:name>
           <maml:description>
             <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
+          <maml:name>Path</maml:name>
+          <maml:description>
+            <maml:para>Specifies the target Orch: drives. If not specified, the current drive is targeted. Tab completion suggests available Orch: drives.</maml:para>
+          </maml:description>
+          <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="true" variableLength="false" globbing="true" pipelineInput="false" position="0" aliases="none">
           <maml:name>UserName</maml:name>
@@ -600,10 +636,10 @@ Users are tenant-scoped entities. Navigate to the root of an Orch: drive or use 
         <maml:title>--------- Example 1: Enable attended robot for a specific user ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Enable-OrchUserAttended ytsuda@gmail.com
+PS Orch1:\&gt; Enable-OrchUserAttended john.smith
 ```</maml:para>
-          <maml:para></maml:para>
-          <maml:para>Enables the attended robot session for the user "ytsuda@gmail.com". The -UserName parameter is positional (position 0) so the parameter name can be omitted.</maml:para>
+          <maml:para>&#x80;</maml:para>
+          <maml:para>Enables the attended robot session for the user "john.smith". The -UserName parameter is positional (position 0) so the parameter name can be omitted.</maml:para>
         </maml:introduction>
         <dev:code />
         <dev:remarks />
@@ -612,10 +648,10 @@ PS Orch1:\&gt; Enable-OrchUserAttended ytsuda@gmail.com
         <maml:title>--------- Example 2: Enable attended robot for multiple users with a wildcard ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Enable-OrchUserAttended ytsuda*
+PS Orch1:\&gt; Enable-OrchUserAttended dev*
 ```</maml:para>
-          <maml:para></maml:para>
-          <maml:para>Enables the attended robot session for all users whose username starts with "ytsuda".</maml:para>
+          <maml:para>&#x80;</maml:para>
+          <maml:para>Enables the attended robot session for all users whose username starts with "dev".</maml:para>
         </maml:introduction>
         <dev:code />
         <dev:remarks />
@@ -624,10 +660,10 @@ PS Orch1:\&gt; Enable-OrchUserAttended ytsuda*
         <maml:title>--------- Example 3: Enable attended robot from a specific drive ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Enable-OrchUserAttended -Path Orch1:\ -UserName ytsuda+c@gmail.com
+PS C:\&gt; Enable-OrchUserAttended -Path Orch1:\ -UserName jane.doe
 ```</maml:para>
-          <maml:para></maml:para>
-          <maml:para>Enables the attended robot session for "ytsuda+c@gmail.com" on the Orch1 tenant. When -Path uses an absolute path, the command can be run from any location.</maml:para>
+          <maml:para>&#x80;</maml:para>
+          <maml:para>Enables the attended robot session for "jane.doe" on the Orch1 tenant. When -Path uses an absolute path, the command can be run from any location.</maml:para>
         </maml:introduction>
         <dev:code />
         <dev:remarks />
@@ -636,9 +672,9 @@ PS C:\&gt; Enable-OrchUserAttended -Path Orch1:\ -UserName ytsuda+c@gmail.com
         <maml:title>--------- Example 4: Preview changes with -WhatIf ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Enable-OrchUserAttended ytsuda* -WhatIf
+PS Orch1:\&gt; Enable-OrchUserAttended admin* -WhatIf
 ```</maml:para>
-          <maml:para></maml:para>
+          <maml:para>&#x80;</maml:para>
           <maml:para>Shows which users would have their attended robot session enabled without actually making changes.</maml:para>
         </maml:introduction>
         <dev:code />
@@ -649,6 +685,18 @@ PS Orch1:\&gt; Enable-OrchUserAttended ytsuda* -WhatIf
       <maml:navigationLink>
         <maml:linkText>Online Version</maml:linkText>
         <command:uri />
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Disable-OrchUserAttended</maml:linkText>
+        <command:uri>Disable-OrchUserAttended.md</command:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Update-OrchUser</maml:linkText>
+        <command:uri>Update-OrchUser.md</command:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Get-OrchUser</maml:linkText>
+        <command:uri>Get-OrchUser.md</command:uri>
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>
@@ -672,19 +720,19 @@ PS Orch1:\&gt; Enable-OrchUserAttended ytsuda* -WhatIf
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Find-OrchFolderNoUserAssigned</maml:name>
-        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="0" aliases="none">
-          <maml:name>Path</maml:name>
-          <maml:description>
-            <maml:para>Specifies the path to the folder where the search should start.</maml:para>
-          </maml:description>
-          <command:parameterValue required="false" variableLength="true">System.String</command:parameterValue>
-        </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>IncludeInherited</maml:name>
           <maml:description>
             <maml:para>When specified, the cmdlet considers users inherited from parent folders as part of the user assignments. Without this switch, only direct user assignments are checked. A folder with only inherited users (no direct assignments) is returned when this switch is not used, but excluded when this switch is used.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="0" aliases="none">
+          <maml:name>Path</maml:name>
+          <maml:description>
+            <maml:para>Specifies the path to the folder where the search should start.</maml:para>
+          </maml:description>
+          <command:parameterValue required="false" variableLength="true">System.String</command:parameterValue>
         </command:parameter>
       </command:syntaxItem>
     </command:syntax>
@@ -727,7 +775,7 @@ PS Orch1:\&gt; Enable-OrchUserAttended ytsuda* -WhatIf
           <maml:para>```powershell
 PS C:\&gt; Find-OrchFolderNoUserAssigned Orch1:\
 ```</maml:para>
-          <maml:para></maml:para>
+          <maml:para>&#x80;</maml:para>
           <maml:para>Recursively checks all folders under the Orch1:\ root and lists those without direct user assignments.</maml:para>
         </maml:introduction>
         <dev:code />
@@ -739,7 +787,7 @@ PS C:\&gt; Find-OrchFolderNoUserAssigned Orch1:\
           <maml:para>```powershell
 PS C:\&gt; Find-OrchFolderNoUserAssigned Orch1:\ -IncludeInherited
 ```</maml:para>
-          <maml:para></maml:para>
+          <maml:para>&#x80;</maml:para>
           <maml:para>Recursively checks all folders under the Orch1:\ root and lists those without any user assignments, including users inherited from parent folders.</maml:para>
         </maml:introduction>
         <dev:code />
@@ -751,275 +799,9 @@ PS C:\&gt; Find-OrchFolderNoUserAssigned Orch1:\ -IncludeInherited
         <maml:linkText>Online Version</maml:linkText>
         <command:uri />
       </maml:navigationLink>
-    </command:relatedLinks>
-  </command:command>
-  <command:command>
-    <command:details>
-      <command:name>Get-OrchJobVideo</command:name>
-      <maml:description>
-        <maml:para>Gets jobs that have video recordings attached.</maml:para>
-      </maml:description>
-      <command:verb>Get</command:verb>
-      <command:noun>OrchJobVideo</command:noun>
-    </command:details>
-    <maml:description>
-      <maml:para>Gets jobs that have video recordings from UiPath Orchestrator. This function filters jobs from the last week that have the HasVideoRecorded property set to true, returning only process-type jobs with attached video recordings.</maml:para>
-      <maml:para>This is a convenience wrapper around Get-OrchJob that applies the following filters: -ProcessType Process, -Last Week, and HasVideoRecorded -eq $true.</maml:para>
-      <maml:para>Primary Endpoint: GET /odata/Jobs</maml:para>
-      <maml:para>OAuth required scopes: OR.Jobs or OR.Jobs.Read</maml:para>
-      <maml:para>Required permissions: Jobs.View</maml:para>
-    </maml:description>
-    <command:syntax>
-      <command:syntaxItem>
-        <maml:name>Get-OrchJobVideo</maml:name>
-        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="0" aliases="none">
-          <maml:name>Path</maml:name>
-          <maml:description>
-            <maml:para>Specifies the target folders. If not specified, the current folder is targeted.</maml:para>
-          </maml:description>
-          <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
-        </command:parameter>
-        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
-          <maml:name>Recurse</maml:name>
-          <maml:description>
-            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
-          </maml:description>
-          <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
-        </command:parameter>
-        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="2" aliases="none">
-          <maml:name>First</maml:name>
-          <maml:description>
-            <maml:para>Gets only the specified number of jobs. Enter the number of jobs to get.</maml:para>
-          </maml:description>
-          <command:parameterValue required="false" variableLength="true">System.UInt64</command:parameterValue>
-        </command:parameter>
-        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="1" aliases="none">
-          <maml:name>Skip</maml:name>
-          <maml:description>
-            <maml:para>Skips the specified number of jobs and then gets the remaining jobs. Enter the number of jobs to skip.</maml:para>
-          </maml:description>
-          <command:parameterValue required="false" variableLength="true">System.UInt64</command:parameterValue>
-        </command:parameter>
-      </command:syntaxItem>
-    </command:syntax>
-    <command:parameters>
-      <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="2" aliases="none">
-        <maml:name>First</maml:name>
-        <maml:description>
-          <maml:para>Gets only the specified number of jobs. Enter the number of jobs to get.</maml:para>
-        </maml:description>
-        <command:parameterValue required="false" variableLength="true">System.UInt64</command:parameterValue>
-      </command:parameter>
-      <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="0" aliases="none">
-        <maml:name>Path</maml:name>
-        <maml:description>
-          <maml:para>Specifies the target folders. If not specified, the current folder is targeted.</maml:para>
-        </maml:description>
-        <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
-      </command:parameter>
-      <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
-        <maml:name>Recurse</maml:name>
-        <maml:description>
-          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
-        </maml:description>
-        <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
-      </command:parameter>
-      <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="1" aliases="none">
-        <maml:name>Skip</maml:name>
-        <maml:description>
-          <maml:para>Skips the specified number of jobs and then gets the remaining jobs. Enter the number of jobs to skip.</maml:para>
-        </maml:description>
-        <command:parameterValue required="false" variableLength="true">System.UInt64</command:parameterValue>
-      </command:parameter>
-    </command:parameters>
-    <command:inputTypes>
-      <command:inputType>
-        <dev:type>
-          <dev:name>System.String</dev:name>
-        </dev:type>
-        <maml:description>
-          <maml:para>You can pipe folder paths to this cmdlet.</maml:para>
-        </maml:description>
-      </command:inputType>
-    </command:inputTypes>
-    <command:returnValues>
-      <command:returnValue>
-        <dev:type>
-          <dev:name>System.Object</dev:name>
-        </dev:type>
-        <maml:description>
-          <maml:para>Returns Job objects that have video recordings attached, with properties including HasVideoRecorded set to true.</maml:para>
-        </maml:description>
-      </command:returnValue>
-    </command:returnValues>
-    <maml:alertSet>
-      <maml:alert>
-        <maml:para>This is a PowerShell function that wraps Get-OrchJob with the filters -ProcessType Process, -Last Week, and HasVideoRecorded -eq $true.</maml:para>
-      </maml:alert>
-    </maml:alertSet>
-    <command:examples>
-      <command:example>
-        <maml:title>--------- Example 1: Get jobs with video recordings ---------</maml:title>
-        <maml:introduction>
-          <maml:para>```powershell
-PS Orch1:\Shared&gt; Get-OrchJobVideo
-```</maml:para>
-          <maml:para></maml:para>
-          <maml:para>Gets all jobs with video recordings from the last week in the current folder.</maml:para>
-        </maml:introduction>
-        <dev:code />
-        <dev:remarks />
-      </command:example>
-      <command:example>
-        <maml:title>--------- Example 2: Get jobs with video recordings recursively ---------</maml:title>
-        <maml:introduction>
-          <maml:para>```powershell
-PS Orch1:\&gt; Get-OrchJobVideo -Recurse
-```</maml:para>
-          <maml:para></maml:para>
-          <maml:para>Gets all jobs with video recordings from the last week across all folders.</maml:para>
-        </maml:introduction>
-        <dev:code />
-        <dev:remarks />
-      </command:example>
-      <command:example>
-        <maml:title>--------- Example 3: Get the first 10 jobs with video recordings ---------</maml:title>
-        <maml:introduction>
-          <maml:para>```powershell
-PS Orch1:\Shared&gt; Get-OrchJobVideo -First 10
-```</maml:para>
-          <maml:para></maml:para>
-          <maml:para>Gets the first 10 jobs with video recordings from the last week in the current folder.</maml:para>
-        </maml:introduction>
-        <dev:code />
-        <dev:remarks />
-      </command:example>
-    </command:examples>
-    <command:relatedLinks>
       <maml:navigationLink>
-        <maml:linkText>Online Version</maml:linkText>
-        <command:uri />
-      </maml:navigationLink>
-    </command:relatedLinks>
-  </command:command>
-  <command:command>
-    <command:details>
-      <command:name>Get-OrchTestDataQueueItemTable</command:name>
-      <maml:description>
-        <maml:para>Gets test data queue items and displays them in a formatted table.</maml:para>
-      </maml:description>
-      <command:verb>Get</command:verb>
-      <command:noun>OrchTestDataQueueItemTable</command:noun>
-    </command:details>
-    <maml:description>
-      <maml:para>Gets items from test data queues and displays them in a formatted table view. This function is a wrapper around Get-OrchTestDataQueueItem that expands the JSON content of each item into individual columns, making it easier to view structured test data.</maml:para>
-      <maml:para>The output is grouped by test data queue path. Each group displays the queue name followed by a table showing the Id, IsConsumed status, and all data columns parsed from the JSON content.</maml:para>
-      <maml:para>Primary Endpoint: (none)</maml:para>
-      <maml:para>OAuth required scopes: (none)</maml:para>
-      <maml:para>Required permissions: (none)</maml:para>
-    </maml:description>
-    <command:syntax>
-      <command:syntaxItem>
-        <maml:name>Get-OrchTestDataQueueItemTable</maml:name>
-        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="0" aliases="none">
-          <maml:name>Path</maml:name>
-          <maml:description>
-            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
-          </maml:description>
-          <command:parameterValue required="false" variableLength="true">System.String</command:parameterValue>
-        </command:parameter>
-        <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
-          <maml:name>Recurse</maml:name>
-          <maml:description>
-            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
-          </maml:description>
-          <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
-        </command:parameter>
-      </command:syntaxItem>
-    </command:syntax>
-    <command:parameters>
-      <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="0" aliases="none">
-        <maml:name>Path</maml:name>
-        <maml:description>
-          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
-        </maml:description>
-        <command:parameterValue required="false" variableLength="true">System.String</command:parameterValue>
-      </command:parameter>
-      <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
-        <maml:name>Recurse</maml:name>
-        <maml:description>
-          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
-        </maml:description>
-        <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
-      </command:parameter>
-    </command:parameters>
-    <command:inputTypes>
-      <command:inputType>
-        <dev:type>
-          <dev:name>System.String</dev:name>
-        </dev:type>
-        <maml:description>
-          <maml:para>You can pipe a folder path to this cmdlet.</maml:para>
-        </maml:description>
-      </command:inputType>
-    </command:inputTypes>
-    <command:returnValues>
-      <command:returnValue>
-        <dev:type>
-          <dev:name>System.Object</dev:name>
-        </dev:type>
-        <maml:description>
-          <maml:para>This cmdlet outputs formatted table data to the console. Each test data queue is displayed with its items in a table that includes Id, IsConsumed, and all columns parsed from the JSON content.</maml:para>
-        </maml:description>
-      </command:returnValue>
-    </command:returnValues>
-    <maml:alertSet>
-      <maml:alert>
-        <maml:para>This is a PowerShell function that wraps Get-OrchTestDataQueueItem and formats the output using Format-Table for improved readability.</maml:para>
-      </maml:alert>
-    </maml:alertSet>
-    <command:examples>
-      <command:example>
-        <maml:title>--------- Example 1: Display all test data queue items as a table ---------</maml:title>
-        <maml:introduction>
-          <maml:para>```powershell
-PS Orch1:\root&gt; Get-OrchTestDataQueueItemTable
-```</maml:para>
-          <maml:para></maml:para>
-          <maml:para>Gets all test data queue items from the current folder and displays them in a formatted table grouped by queue.</maml:para>
-        </maml:introduction>
-        <dev:code />
-        <dev:remarks />
-      </command:example>
-      <command:example>
-        <maml:title>--------- Example 2: Display test data queue items from a specific folder ---------</maml:title>
-        <maml:introduction>
-          <maml:para>```powershell
-PS C:\&gt; Get-OrchTestDataQueueItemTable Orch1:\root
-```</maml:para>
-          <maml:para></maml:para>
-          <maml:para>Gets all test data queue items from the root folder on Orch1 and displays them in a formatted table.</maml:para>
-        </maml:introduction>
-        <dev:code />
-        <dev:remarks />
-      </command:example>
-      <command:example>
-        <maml:title>--------- Example 3: Display test data queue items recursively ---------</maml:title>
-        <maml:introduction>
-          <maml:para>```powershell
-PS Orch1:\&gt; Get-OrchTestDataQueueItemTable -Recurse
-```</maml:para>
-          <maml:para></maml:para>
-          <maml:para>Gets all test data queue items from the current folder and all its subfolders, displaying them in formatted tables grouped by queue.</maml:para>
-        </maml:introduction>
-        <dev:code />
-        <dev:remarks />
-      </command:example>
-    </command:examples>
-    <command:relatedLinks>
-      <maml:navigationLink>
-        <maml:linkText>Online Version</maml:linkText>
-        <command:uri />
+        <maml:linkText>Get-OrchFolderUser</maml:linkText>
+        <command:uri>Get-OrchFolderUser.md</command:uri>
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>
