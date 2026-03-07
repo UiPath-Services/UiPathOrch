@@ -47,7 +47,7 @@ Required permissions: HttpTriggers.View (source), HttpTriggers.Create (destinati
 
 ## EXAMPLES
 
-### Example 1
+### Example 1: Copy all API triggers to another folder
 
 ```powershell
 PS Orch1:\Shared> Copy-OrchApiTrigger * Orch1:\Dept#2
@@ -55,7 +55,7 @@ PS Orch1:\Shared> Copy-OrchApiTrigger * Orch1:\Dept#2
 
 Copies all API triggers from the 'Shared' folder to the 'Dept#2' folder on the same Orchestrator.
 
-### Example 2
+### Example 2: Copy API triggers using wildcards
 
 ```powershell
 PS Orch1:\Shared> Copy-OrchApiTrigger api* Orch1:\Dept#2
@@ -63,7 +63,7 @@ PS Orch1:\Shared> Copy-OrchApiTrigger api* Orch1:\Dept#2
 
 Copies all API triggers matching the wildcard pattern 'api*' from the 'Shared' folder to the 'Dept#2' folder.
 
-### Example 3
+### Example 3: Copy API triggers across Orchestrator instances
 
 ```powershell
 PS C:\> Copy-OrchApiTrigger -Path Orch1:\Shared * Orch2:\Shared
@@ -72,7 +72,7 @@ PS C:\> Copy-OrchApiTrigger -Path Orch1:\Shared * Orch2:\Shared
 Copies all API triggers from the 'Shared' folder on Orch1 to the 'Shared' folder on Orch2.
 This demonstrates cross-drive copy between different Orchestrator connections.
 
-### Example 4
+### Example 4: Copy API triggers recursively
 
 ```powershell
 PS Orch1:\> Copy-OrchApiTrigger -Recurse * Orch2:\

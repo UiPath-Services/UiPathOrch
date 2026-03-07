@@ -48,24 +48,24 @@ Required permissions: EventTriggers.Edit
 
 ## EXAMPLES
 
-### Example 1
+### Example 1: Enable a specific event trigger
 
 ```powershell
-PS Orch1:\Shared> Enable-OrchEventTrigger aaaa
+PS Orch1:\Shared> Enable-OrchEventTrigger MyEventTrigger
 ```
 
-Enables the event trigger named 'aaaa' in the 'Shared' folder, which is the current location.
+Enables the event trigger named 'MyEventTrigger' in the 'Shared' folder, which is the current location.
 The event trigger must be currently disabled for this command to take effect.
 
-### Example 2
+### Example 2: Enable event triggers using wildcards
 
 ```powershell
-PS Orch1:\Shared> Enable-OrchEventTrigger a*
+PS Orch1:\Shared> Enable-OrchEventTrigger My*
 ```
 
-Enables all disabled event triggers matching the wildcard pattern 'a*' in the 'Shared' folder.
+Enables all disabled event triggers matching the wildcard pattern 'My*' in the 'Shared' folder.
 
-### Example 3
+### Example 3: Enable all event triggers recursively
 
 ```powershell
 PS Orch1:\> Enable-OrchEventTrigger -Recurse *

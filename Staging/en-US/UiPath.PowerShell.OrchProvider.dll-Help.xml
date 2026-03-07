@@ -2954,7 +2954,7 @@ Required permissions: HttpTriggers.View (source), HttpTriggers.Create (destinati
     </maml:alertSet>
     <command:examples>
       <command:example>
-        <maml:title>--------- Example 1 ---------</maml:title>
+        <maml:title>--------- Example 1: Copy all API triggers to another folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
 PS Orch1:\Shared&gt; Copy-OrchApiTrigger * Orch1:\Dept#2
@@ -2966,7 +2966,7 @@ PS Orch1:\Shared&gt; Copy-OrchApiTrigger * Orch1:\Dept#2
         <dev:remarks />
       </command:example>
       <command:example>
-        <maml:title>--------- Example 2 ---------</maml:title>
+        <maml:title>--------- Example 2: Copy API triggers using wildcards ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
 PS Orch1:\Shared&gt; Copy-OrchApiTrigger api* Orch1:\Dept#2
@@ -2978,7 +2978,7 @@ PS Orch1:\Shared&gt; Copy-OrchApiTrigger api* Orch1:\Dept#2
         <dev:remarks />
       </command:example>
       <command:example>
-        <maml:title>--------- Example 3 ---------</maml:title>
+        <maml:title>--------- Example 3: Copy API triggers across Orchestrator instances ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
 PS C:\&gt; Copy-OrchApiTrigger -Path Orch1:\Shared * Orch2:\Shared
@@ -2991,7 +2991,7 @@ This demonstrates cross-drive copy between different Orchestrator connections.</
         <dev:remarks />
       </command:example>
       <command:example>
-        <maml:title>--------- Example 4 ---------</maml:title>
+        <maml:title>--------- Example 4: Copy API triggers recursively ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
 PS Orch1:\&gt; Copy-OrchApiTrigger -Recurse * Orch2:\
@@ -8160,7 +8160,7 @@ Required permissions: HttpTriggers.Edit</maml:para>
     </maml:alertSet>
     <command:examples>
       <command:example>
-        <maml:title>--------- Example 1 ---------</maml:title>
+        <maml:title>--------- Example 1: Disable a specific API trigger ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
 PS Orch1:\Dept#2&gt; Disable-OrchApiTrigger mytrigger
@@ -8173,7 +8173,7 @@ The API trigger must be currently enabled for this command to take effect.</maml
         <dev:remarks />
       </command:example>
       <command:example>
-        <maml:title>--------- Example 2 ---------</maml:title>
+        <maml:title>--------- Example 2: Disable API triggers using wildcards ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
 PS Orch1:\Dept#2&gt; Disable-OrchApiTrigger my*
@@ -8185,7 +8185,7 @@ PS Orch1:\Dept#2&gt; Disable-OrchApiTrigger my*
         <dev:remarks />
       </command:example>
       <command:example>
-        <maml:title>--------- Example 3 ---------</maml:title>
+        <maml:title>--------- Example 3: Disable all API triggers recursively ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
 PS Orch1:\&gt; Disable-OrchApiTrigger -Recurse *
@@ -8349,32 +8349,32 @@ Required permissions: EventTriggers.Edit</maml:para>
     </maml:alertSet>
     <command:examples>
       <command:example>
-        <maml:title>--------- Example 1 ---------</maml:title>
+        <maml:title>--------- Example 1: Disable a specific event trigger ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Disable-OrchEventTrigger aaaa
+PS Orch1:\Shared&gt; Disable-OrchEventTrigger MyEventTrigger
 ```</maml:para>
           <maml:para></maml:para>
-          <maml:para>Disables the event trigger named 'aaaa' in the 'Shared' folder, which is the current location.
+          <maml:para>Disables the event trigger named 'MyEventTrigger' in the 'Shared' folder, which is the current location.
 The event trigger must be currently enabled for this command to take effect.</maml:para>
         </maml:introduction>
         <dev:code />
         <dev:remarks />
       </command:example>
       <command:example>
-        <maml:title>--------- Example 2 ---------</maml:title>
+        <maml:title>--------- Example 2: Disable event triggers using wildcards ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Disable-OrchEventTrigger a*
+PS Orch1:\Shared&gt; Disable-OrchEventTrigger My*
 ```</maml:para>
           <maml:para></maml:para>
-          <maml:para>Disables all enabled event triggers matching the wildcard pattern 'a*' in the 'Shared' folder.</maml:para>
+          <maml:para>Disables all enabled event triggers matching the wildcard pattern 'My*' in the 'Shared' folder.</maml:para>
         </maml:introduction>
         <dev:code />
         <dev:remarks />
       </command:example>
       <command:example>
-        <maml:title>--------- Example 3 ---------</maml:title>
+        <maml:title>--------- Example 3: Disable all event triggers recursively ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
 PS Orch1:\&gt; Disable-OrchEventTrigger -Recurse *
@@ -10092,7 +10092,7 @@ Required permissions: HttpTriggers.Edit</maml:para>
     </maml:alertSet>
     <command:examples>
       <command:example>
-        <maml:title>--------- Example 1 ---------</maml:title>
+        <maml:title>--------- Example 1: Enable a specific API trigger ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
 PS Orch1:\Dept#2&gt; Enable-OrchApiTrigger mytrigger
@@ -10105,7 +10105,7 @@ The API trigger must be currently disabled for this command to take effect.</mam
         <dev:remarks />
       </command:example>
       <command:example>
-        <maml:title>--------- Example 2 ---------</maml:title>
+        <maml:title>--------- Example 2: Enable API triggers using wildcards ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
 PS Orch1:\Dept#2&gt; Enable-OrchApiTrigger my*
@@ -10117,7 +10117,7 @@ PS Orch1:\Dept#2&gt; Enable-OrchApiTrigger my*
         <dev:remarks />
       </command:example>
       <command:example>
-        <maml:title>--------- Example 3 ---------</maml:title>
+        <maml:title>--------- Example 3: Enable all API triggers recursively ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
 PS Orch1:\&gt; Enable-OrchApiTrigger -Recurse *
@@ -10281,32 +10281,32 @@ Required permissions: EventTriggers.Edit</maml:para>
     </maml:alertSet>
     <command:examples>
       <command:example>
-        <maml:title>--------- Example 1 ---------</maml:title>
+        <maml:title>--------- Example 1: Enable a specific event trigger ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Enable-OrchEventTrigger aaaa
+PS Orch1:\Shared&gt; Enable-OrchEventTrigger MyEventTrigger
 ```</maml:para>
           <maml:para></maml:para>
-          <maml:para>Enables the event trigger named 'aaaa' in the 'Shared' folder, which is the current location.
+          <maml:para>Enables the event trigger named 'MyEventTrigger' in the 'Shared' folder, which is the current location.
 The event trigger must be currently disabled for this command to take effect.</maml:para>
         </maml:introduction>
         <dev:code />
         <dev:remarks />
       </command:example>
       <command:example>
-        <maml:title>--------- Example 2 ---------</maml:title>
+        <maml:title>--------- Example 2: Enable event triggers using wildcards ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Enable-OrchEventTrigger a*
+PS Orch1:\Shared&gt; Enable-OrchEventTrigger My*
 ```</maml:para>
           <maml:para></maml:para>
-          <maml:para>Enables all disabled event triggers matching the wildcard pattern 'a*' in the 'Shared' folder.</maml:para>
+          <maml:para>Enables all disabled event triggers matching the wildcard pattern 'My*' in the 'Shared' folder.</maml:para>
         </maml:introduction>
         <dev:code />
         <dev:remarks />
       </command:example>
       <command:example>
-        <maml:title>--------- Example 3 ---------</maml:title>
+        <maml:title>--------- Example 3: Enable all event triggers recursively ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
 PS Orch1:\&gt; Enable-OrchEventTrigger -Recurse *
@@ -16591,7 +16591,7 @@ PS Orch1:\Shared&gt; Get-OrchEventTrigger
         <maml:title>--------- Example 2: Get event triggers by name with wildcards ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Get-OrchEventTrigger aaaa, 2*
+PS Orch1:\Shared&gt; Get-OrchEventTrigger MyTrigger, Daily*
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets event triggers matching the specified names and wildcard patterns in the current folder. Multiple names can be specified as comma-separated values. Event trigger names can be auto-completed with [Ctrl+Space] or [Tab].</maml:para>
@@ -33587,7 +33587,7 @@ Required permissions: HttpTriggers.Delete</maml:para>
     </maml:alertSet>
     <command:examples>
       <command:example>
-        <maml:title>--------- Example 1 ---------</maml:title>
+        <maml:title>--------- Example 1: Remove a specific API trigger ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
 PS Orch1:\Shared&gt; Remove-OrchApiTrigger MyApiTrigger
@@ -33599,7 +33599,7 @@ PS Orch1:\Shared&gt; Remove-OrchApiTrigger MyApiTrigger
         <dev:remarks />
       </command:example>
       <command:example>
-        <maml:title>--------- Example 2 ---------</maml:title>
+        <maml:title>--------- Example 2: Preview removal with -WhatIf ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
 PS Orch1:\Shared&gt; Remove-OrchApiTrigger Test* -WhatIf
@@ -33611,7 +33611,7 @@ PS Orch1:\Shared&gt; Remove-OrchApiTrigger Test* -WhatIf
         <dev:remarks />
       </command:example>
       <command:example>
-        <maml:title>--------- Example 3 ---------</maml:title>
+        <maml:title>--------- Example 3: Remove an API trigger recursively ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
 PS Orch1:\&gt; Remove-OrchApiTrigger -Recurse OldApiTrigger
@@ -33623,7 +33623,7 @@ PS Orch1:\&gt; Remove-OrchApiTrigger -Recurse OldApiTrigger
         <dev:remarks />
       </command:example>
       <command:example>
-        <maml:title>--------- Example 4 ---------</maml:title>
+        <maml:title>--------- Example 4: Remove an API trigger from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
 PS C:\&gt; Remove-OrchApiTrigger -Path Orch1:\Shared MyApiTrigger
@@ -35016,7 +35016,7 @@ Required permissions: EventTriggers.Delete</maml:para>
     </maml:alertSet>
     <command:examples>
       <command:example>
-        <maml:title>--------- Example 1 ---------</maml:title>
+        <maml:title>--------- Example 1: Remove a specific event trigger ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
 PS Orch1:\Shared&gt; Remove-OrchEventTrigger MyEventTrigger
@@ -35028,7 +35028,7 @@ PS Orch1:\Shared&gt; Remove-OrchEventTrigger MyEventTrigger
         <dev:remarks />
       </command:example>
       <command:example>
-        <maml:title>--------- Example 2 ---------</maml:title>
+        <maml:title>--------- Example 2: Preview removal with -WhatIf ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
 PS Orch1:\Shared&gt; Remove-OrchEventTrigger Test* -WhatIf
@@ -35040,7 +35040,7 @@ PS Orch1:\Shared&gt; Remove-OrchEventTrigger Test* -WhatIf
         <dev:remarks />
       </command:example>
       <command:example>
-        <maml:title>--------- Example 3 ---------</maml:title>
+        <maml:title>--------- Example 3: Remove an event trigger recursively ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
 PS Orch1:\&gt; Remove-OrchEventTrigger -Recurse OldEventTrigger
@@ -35052,7 +35052,7 @@ PS Orch1:\&gt; Remove-OrchEventTrigger -Recurse OldEventTrigger
         <dev:remarks />
       </command:example>
       <command:example>
-        <maml:title>--------- Example 4 ---------</maml:title>
+        <maml:title>--------- Example 4: Remove an event trigger from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
 PS C:\&gt; Remove-OrchEventTrigger -Path Orch1:\Shared MyEventTrigger

@@ -46,7 +46,7 @@ Required permissions: EventTriggers.Delete
 
 ## EXAMPLES
 
-### Example 1
+### Example 1: Remove a specific event trigger
 
 ```powershell
 PS Orch1:\Shared> Remove-OrchEventTrigger MyEventTrigger
@@ -54,7 +54,7 @@ PS Orch1:\Shared> Remove-OrchEventTrigger MyEventTrigger
 
 Removes the event trigger named 'MyEventTrigger' from the 'Shared' folder, which is the current location.
 
-### Example 2
+### Example 2: Preview removal with -WhatIf
 
 ```powershell
 PS Orch1:\Shared> Remove-OrchEventTrigger Test* -WhatIf
@@ -62,7 +62,7 @@ PS Orch1:\Shared> Remove-OrchEventTrigger Test* -WhatIf
 
 Shows what would happen if event triggers matching the wildcard pattern 'Test*' were removed from the 'Shared' folder, without actually removing them.
 
-### Example 3
+### Example 3: Remove an event trigger recursively
 
 ```powershell
 PS Orch1:\> Remove-OrchEventTrigger -Recurse OldEventTrigger
@@ -70,7 +70,7 @@ PS Orch1:\> Remove-OrchEventTrigger -Recurse OldEventTrigger
 
 Removes the event trigger named 'OldEventTrigger' from the current folder and all its subfolders.
 
-### Example 4
+### Example 4: Remove an event trigger from a specific folder
 
 ```powershell
 PS C:\> Remove-OrchEventTrigger -Path Orch1:\Shared MyEventTrigger
