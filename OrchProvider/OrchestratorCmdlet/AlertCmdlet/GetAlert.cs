@@ -145,7 +145,8 @@ public class GetAlertCommand : OrchestratorPSCmdlet
             drive => drive,
             drive =>
             {
-                var alerts = drive.OrchAPISession.GetAlerts(query, skip, first).ToList();
+                // GetAlerts() 内で ToList() 済み（遅延評価を回避し、deprecated API の例外を適切に処理するため）
+                var alerts = drive.OrchAPISession.GetAlerts(query, skip, first);
                 foreach (var alert in alerts)
                 {
                     alert.Path = drive.NameColonSeparator;

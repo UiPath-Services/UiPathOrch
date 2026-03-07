@@ -721,7 +721,17 @@ public partial class OrchAPISession : IDisposable
     #region Alert
     public IEnumerable<Alert> GetAlerts(string? query, ulong skip, ulong first)
     {
-        return GetEnumerable<Alert>("/odata/Alerts", null, query, skip, first);
+        try
+        {
+            // GetEnumerable は yield return による遅延評価のため、
+            // ここで ToList() して即座に実行しないと try/catch が効かない
+            return GetEnumerable<Alert>("/odata/Alerts", null, query, skip, first).ToList();
+        }
+        catch (Exception ex) when (ApiVersion >= 18)
+        {
+            throw new InvalidOperationException(
+                $"The Alerts API has been deprecated since Orchestrator API version 18.0.", ex);
+        }
     }
     #endregion
 
