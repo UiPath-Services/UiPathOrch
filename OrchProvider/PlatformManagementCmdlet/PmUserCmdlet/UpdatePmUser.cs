@@ -6,7 +6,6 @@ using TPositional = UiPath.PowerShell.Positional.Email;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsData.Update, "PmUser", SupportsShouldProcess = true)]
-[OutputType(typeof(Entities.PmUser))]
 public class UpdatePmUserCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]

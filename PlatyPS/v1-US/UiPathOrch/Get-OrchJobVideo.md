@@ -165,7 +165,7 @@ You can pipe folder paths to this cmdlet.
 
 ## OUTPUTS
 
-### System.Object
+### UiPath.PowerShell.Entities.Job
 
 Returns Job objects that have video recordings attached, with properties including HasVideoRecorded set to true.
 

@@ -205,7 +205,7 @@ You can pipe the source Path to this cmdlet.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.Role
+### None
 
 This cmdlet does not produce output.
 

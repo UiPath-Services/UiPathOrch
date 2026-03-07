@@ -129,6 +129,7 @@ This cmdlet returns DuRole objects representing Document Understanding roles.
 
 ## NOTES
 
+This cmdlet operates on the UiPathOrchDu provider PSDrive. The returned roles can be used with the -Roles parameter of Add-DuUser.
 
 
 ## RELATED LINKS

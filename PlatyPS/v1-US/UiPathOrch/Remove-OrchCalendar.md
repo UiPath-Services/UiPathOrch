@@ -184,7 +184,7 @@ You can pipe calendar names to this cmdlet via the Name property, or drive names
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.ExtendedCalendar
+### None
 
 This cmdlet does not produce output upon successful removal.
 

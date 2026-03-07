@@ -845,7 +845,7 @@ PS C:\&gt; Find-OrchFolderNoUserAssigned Orch1:\ -IncludeInherited
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>UiPath.PowerShell.Entities.Job</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>Returns Job objects that have video recordings attached, with properties including HasVideoRecorded set to true.</maml:para>
@@ -966,7 +966,7 @@ PS Orch1:\Shared&gt; Get-OrchJobVideo -First 10
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet outputs formatted table data to the console. Each test data queue is displayed with its items in a table that includes Id, IsConsumed, and all columns parsed from the JSON content.</maml:para>

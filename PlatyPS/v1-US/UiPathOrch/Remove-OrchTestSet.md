@@ -225,9 +225,9 @@ You can pipe test set names to this cmdlet via the Name property.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.TestSet
+### None
 
-This cmdlet does not produce output by default.
+This cmdlet does not produce any output.
 
 ## NOTES
 

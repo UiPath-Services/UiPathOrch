@@ -201,6 +201,7 @@ This cmdlet does not produce pipeline output.
 
 ## NOTES
 
+This cmdlet operates on the UiPathOrchTm provider PSDrive. Supports -WhatIf to preview which test cases would be removed.
 
 
 ## RELATED LINKS

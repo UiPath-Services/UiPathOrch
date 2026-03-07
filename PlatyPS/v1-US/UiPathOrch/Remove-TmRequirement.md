@@ -195,12 +195,13 @@ You can pipe requirement names or paths to this cmdlet.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.TmRequirement
+### None
 
 This cmdlet does not produce pipeline output.
 
 ## NOTES
 
+This cmdlet operates on the UiPathOrchTm provider PSDrive. Supports -WhatIf to preview which requirements would be removed.
 
 
 ## RELATED LINKS

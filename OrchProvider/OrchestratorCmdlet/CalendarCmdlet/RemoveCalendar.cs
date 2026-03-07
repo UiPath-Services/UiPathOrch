@@ -7,7 +7,6 @@ using TPositional = UiPath.PowerShell.Positional.Name;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchCalendar", SupportsShouldProcess = true)]
-[OutputType(typeof(ExtendedCalendar))]
 public class RemoveCalendarCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]

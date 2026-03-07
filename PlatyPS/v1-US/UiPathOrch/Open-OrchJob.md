@@ -120,7 +120,7 @@ You can pipe folder paths to the **Path** parameter.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not generate output. It opens a browser window.
 

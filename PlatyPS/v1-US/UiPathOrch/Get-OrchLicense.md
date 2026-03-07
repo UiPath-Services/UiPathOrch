@@ -108,6 +108,7 @@ This cmdlet returns a License object containing license details such as expirati
 
 ## NOTES
 
+This cmdlet is tenant-scoped and returns license summary information including expiration date, allowed/used counts, subscription plan, and licensed features.
 
 
 ## RELATED LINKS

@@ -251,6 +251,7 @@ This cmdlet does not produce pipeline output.
 
 ## NOTES
 
+This cmdlet operates on the UiPathOrchDu provider PSDrive. It resolves user, group, robot account, and external application names against the platform directory service in bulk, and supports pipeline input from CSV files.
 
 
 ## RELATED LINKS

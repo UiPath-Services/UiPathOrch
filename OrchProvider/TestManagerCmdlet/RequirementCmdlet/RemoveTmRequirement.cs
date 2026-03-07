@@ -6,7 +6,6 @@ using TPositional = UiPath.PowerShell.Positional.Name;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "TmRequirement", SupportsShouldProcess = true)]
-[OutputType(typeof(Entities.TmRequirement))]
 public class RemoveTmRequirementCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]

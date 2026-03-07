@@ -130,6 +130,7 @@ This cmdlet returns a TmProjectSettings object representing the settings for a T
 
 ## NOTES
 
+This cmdlet operates on the UiPathOrchTm provider PSDrive. Ensure the configuration file includes "TM." scopes so that the PSDrive is automatically created.
 
 
 ## RELATED LINKS

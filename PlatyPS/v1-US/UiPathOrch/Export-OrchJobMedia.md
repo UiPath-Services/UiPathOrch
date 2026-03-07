@@ -261,11 +261,13 @@ You can pipe the **Path** values to this cmdlet.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not generate specific output objects. Files are downloaded to the destination folder.
 
 ## NOTES
+
+Execution media must be enabled on the Orchestrator and the process must be configured to record execution for media to be available.
 
 ## RELATED LINKS
 

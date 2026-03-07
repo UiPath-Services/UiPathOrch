@@ -263,7 +263,7 @@ This cmdlet does not produce pipeline output. The .nupkg files are saved to the 
 
 ## NOTES
 
-The -Destination directory must exist, or the cmdlet creates it automatically. If the current location is on an Orch: drive and -Destination is not specified, the cmdlet falls back to the current filesystem location.
+If the -Destination directory does not exist, the cmdlet creates it automatically. If the current location is on an Orch: drive and -Destination is not specified, the cmdlet falls back to the current filesystem location.
 
 When exporting with -Recurse, the subfolder hierarchy is preserved using folder display names that are safe for the filesystem.
 

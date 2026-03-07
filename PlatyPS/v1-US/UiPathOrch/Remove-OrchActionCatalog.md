@@ -220,11 +220,13 @@ You can pipe action catalog names to this cmdlet via the Name property.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.Bucket
+### None
 
 This cmdlet does not produce output.
 
 ## NOTES
+
+This cmdlet processes each matching item individually, so if one removal fails, remaining items continue to be processed.
 
 ## RELATED LINKS
 

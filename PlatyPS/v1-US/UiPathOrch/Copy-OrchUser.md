@@ -290,7 +290,7 @@ You can pipe the source Path value to this cmdlet via the Path property.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.User
+### None
 
 This cmdlet does not produce pipeline output. Created users are managed at the destination drive internally. A warning is displayed if the unattended robot password needs to be updated at the destination.
 

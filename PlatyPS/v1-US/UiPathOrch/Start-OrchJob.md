@@ -309,7 +309,7 @@ You can pipe a job count value to the **JobsCount** parameter.
 
 ## OUTPUTS
 
-### System.Object
+### UiPath.PowerShell.Entities.Job
 
 This cmdlet returns the job objects created by Orchestrator.
 

@@ -147,6 +147,7 @@ This cmdlet returns LicenseRuntime objects containing details such as the machin
 
 ## NOTES
 
+This cmdlet is tenant-scoped and supports multi-threaded processing when querying multiple drives or robot types.
 
 
 ## RELATED LINKS

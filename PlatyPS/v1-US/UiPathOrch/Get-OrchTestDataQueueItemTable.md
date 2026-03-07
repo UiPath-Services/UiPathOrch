@@ -122,7 +122,7 @@ You can pipe a folder path to this cmdlet.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet outputs formatted table data to the console. Each test data queue is displayed with its items in a table that includes Id, IsConsumed, and all columns parsed from the JSON content.
 

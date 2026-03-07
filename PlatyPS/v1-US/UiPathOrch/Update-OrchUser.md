@@ -746,7 +746,7 @@ You can pipe UserName, Roles, and Path values to this cmdlet via their property 
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.User
+### None
 
 This cmdlet does not produce output. The user is updated in place on the server. If the deep-copied user object is equal to the original after modifications, the update is skipped silently.
 

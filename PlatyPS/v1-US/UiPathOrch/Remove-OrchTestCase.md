@@ -235,7 +235,7 @@ You can pipe test case names to this cmdlet via the Name property.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.TestCaseDefinition
+### None
 
 This cmdlet does not produce any output.
 

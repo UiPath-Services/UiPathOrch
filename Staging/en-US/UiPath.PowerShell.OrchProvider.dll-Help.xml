@@ -155,7 +155,7 @@ This parameter is mandatory.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet operates on the UiPathOrchDu provider PSDrive. It resolves user, group, robot account, and external application names against the platform directory service in bulk, and supports pipeline input from CSV files.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -3824,7 +3824,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>UiPath.PowerShell.Entities.CredentialStore</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -5847,7 +5847,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>UiPath.PowerShell.Entities.Role</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -6972,7 +6972,7 @@ PS Orch1:\Shared&gt; Copy-OrchTrigger "high trigger" Dept#2 -WhatIf
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>UiPath.PowerShell.Entities.User</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce pipeline output. Created users are managed at the destination drive internally. A warning is displayed if the unattended robot password needs to be updated at the destination.</maml:para>
@@ -9648,7 +9648,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>UiPath.PowerShell.Entities.Webhook</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output. Webhooks are disabled on the Orchestrator server.</maml:para>
@@ -9763,7 +9763,7 @@ PS C:\&gt; Disable-OrchWebhook -Path Orch1: -Name mywebhook
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>On Linux, the cmdlet changes the current location to the configuration file directory. No object output is produced.</maml:para>
@@ -11592,7 +11592,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>UiPath.PowerShell.Entities.Webhook</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output. Webhooks are enabled on the Orchestrator server.</maml:para>
@@ -12069,7 +12069,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not generate specific output objects. Files are downloaded to the destination folder.</maml:para>
@@ -12078,7 +12078,7 @@ The cmdlet is not run.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>Execution media must be enabled on the Orchestrator and the process must be configured to record execution for media to be available.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -12506,7 +12506,7 @@ The cmdlet is not run.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para>The -Destination directory must exist, or the cmdlet creates it automatically. If the current location is on an Orch: drive and -Destination is not specified, the cmdlet falls back to the current filesystem location.
+        <maml:para>If the -Destination directory does not exist, the cmdlet creates it automatically. If the current location is on an Orch: drive and -Destination is not specified, the cmdlet falls back to the current filesystem location.
 
 When exporting with -Recurse, the subfolder hierarchy is preserved using folder display names that are safe for the filesystem.
 
@@ -12669,7 +12669,7 @@ Wildcard characters are permitted.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet operates on the UiPathOrchDu provider PSDrive. Ensure the configuration file includes "Du." scopes so that the PSDrive is automatically created.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -12804,7 +12804,7 @@ Wildcard characters are permitted.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet operates on the UiPathOrchDu provider PSDrive. Ensure the configuration file includes "Du." scopes so that the PSDrive is automatically created.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -12939,7 +12939,7 @@ Wildcard characters are permitted.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet operates on the UiPathOrchDu provider PSDrive. Ensure the configuration file includes "Du." scopes so that the PSDrive is automatically created.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -13061,7 +13061,7 @@ If not specified, the current drive is targeted.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet operates on the UiPathOrchDu provider PSDrive. The returned roles can be used with the -Roles parameter of Add-DuUser.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -13144,9 +13144,7 @@ PS C:\&gt; Get-DuRole -Path Orch1Du:
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>CsvEncoding</maml:name>
           <maml:description>
-            <maml:para>Specifies the character encoding for the CSV file.
-If not specified, the default encoding is used.
-This parameter is only effective when `-ExportCsv` is also specified.</maml:para>
+            <maml:para>Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compatibility. Tab completion suggests all available system encodings (e.g., utf-8, shift_jis, us-ascii). This parameter is only effective when -ExportCsv is also specified.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Text.Encoding</command:parameterValue>
         </command:parameter>
@@ -13173,9 +13171,7 @@ Wildcard characters are permitted.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>CsvEncoding</maml:name>
         <maml:description>
-          <maml:para>Specifies the character encoding for the CSV file.
-If not specified, the default encoding is used.
-This parameter is only effective when `-ExportCsv` is also specified.</maml:para>
+          <maml:para>Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compatibility. Tab completion suggests all available system encodings (e.g., utf-8, shift_jis, us-ascii). This parameter is only effective when -ExportCsv is also specified.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Text.Encoding</command:parameterValue>
       </command:parameter>
@@ -15498,7 +15494,7 @@ If not specified, the current drive is targeted.</maml:para>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>CsvEncoding</maml:name>
           <maml:description>
-            <maml:para>Specifies the encoding to use when writing the CSV file. If not specified, the default encoding is used. Tab completion dynamically suggests available encoding names.</maml:para>
+            <maml:para>Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compatibility. Tab completion suggests all available system encodings (e.g., utf-8, shift_jis, us-ascii).</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Text.Encoding</command:parameterValue>
         </command:parameter>
@@ -15536,7 +15532,7 @@ If not specified, the current drive is targeted.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>CsvEncoding</maml:name>
         <maml:description>
-          <maml:para>Specifies the encoding to use when writing the CSV file. If not specified, the default encoding is used. Tab completion dynamically suggests available encoding names.</maml:para>
+          <maml:para>Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compatibility. Tab completion suggests all available system encodings (e.g., utf-8, shift_jis, us-ascii).</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Text.Encoding</command:parameterValue>
       </command:parameter>
@@ -18271,7 +18267,7 @@ Enter the number of objects to skip.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>Execution media must be enabled on the Orchestrator and the process must be configured to record execution for media to be available.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -18822,7 +18818,7 @@ If not specified, the current drive is targeted.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet is tenant-scoped and returns license summary information including expiration date, allowed/used counts, subscription plan, and licensed features.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -18946,7 +18942,7 @@ If not specified, the current drive is targeted.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet is tenant-scoped and supports multi-threaded processing when querying multiple drives or robot types.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -19082,7 +19078,7 @@ If not specified, the current drive is targeted.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet is tenant-scoped and supports multi-threaded processing when querying multiple drives or robot types.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -19239,7 +19235,7 @@ If not specified, the current drive is targeted.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet is tenant-scoped and supports multi-threaded processing when querying multiple drives.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -19758,7 +19754,7 @@ PS Orch1:\Shared&gt; Get-OrchLog -Last Day -OrderBy TimeStamp -OrderAscending
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet does not make any API calls. It returns the local file system path where logs are stored for the specified drive.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -27531,7 +27527,7 @@ If not specified, the current drive is targeted.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet operates on the UiPathOrchTm provider PSDrive. Ensure the configuration file includes "TM." scopes so that the PSDrive is automatically created.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -27639,7 +27635,7 @@ PS C:\&gt; Get-TmConfiguration Orch1Tm:
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet operates on the UiPathOrchTm provider PSDrive. Ensure the configuration file includes "TM." scopes so that the PSDrive is automatically created.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -27759,7 +27755,7 @@ PS Orch1Tm:\&gt; Get-TmProjectPermission -Recurse
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet operates on the UiPathOrchTm provider PSDrive. Ensure the configuration file includes "TM." scopes so that the PSDrive is automatically created.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -27895,7 +27891,7 @@ Wildcard characters are permitted.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet operates on the UiPathOrchTm provider PSDrive. Results are sorted by object key.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -28001,7 +27997,7 @@ If not specified, the current drive is targeted.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet operates on the UiPathOrchTm provider PSDrive. Returns server metadata such as version and build details.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -28125,7 +28121,7 @@ Wildcard characters are permitted.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet operates on the UiPathOrchTm provider PSDrive. Results are sorted by object key.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -28261,7 +28257,7 @@ Wildcard characters are permitted.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet operates on the UiPathOrchTm provider PSDrive. Results are sorted alphabetically by name.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -28397,7 +28393,7 @@ Wildcard characters are permitted.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet operates on the UiPathOrchTm provider PSDrive. Results are sorted by object key.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -32111,7 +32107,7 @@ PS Orch1:\Shared&gt; New-OrchTrigger NewTrigger1 BlankProcess19 -WhatIf
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>CsvEncoding</maml:name>
           <maml:description>
-            <maml:para>Specifies the character encoding for the CSV file. If not specified, the default encoding is used.</maml:para>
+            <maml:para>Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compatibility. Tab completion suggests all available system encodings (e.g., utf-8, shift_jis, us-ascii).</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Text.Encoding</command:parameterValue>
         </command:parameter>
@@ -32142,7 +32138,7 @@ PS Orch1:\Shared&gt; New-OrchTrigger NewTrigger1 BlankProcess19 -WhatIf
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>CsvEncoding</maml:name>
         <maml:description>
-          <maml:para>Specifies the character encoding for the CSV file. If not specified, the default encoding is used.</maml:para>
+          <maml:para>Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compatibility. Tab completion suggests all available system encodings (e.g., utf-8, shift_jis, us-ascii).</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Text.Encoding</command:parameterValue>
       </command:parameter>
@@ -32754,7 +32750,7 @@ PS Orch1:\&gt; New-PmUser newuser@example.com -Name Test -WhatIf
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not generate output. It opens a browser window.</maml:para>
@@ -33208,7 +33204,7 @@ Only directly assigned (non-inherited) roles are removed.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet operates on the UiPathOrchDu provider PSDrive. Only directly assigned (non-inherited) roles can be removed; inherited roles are skipped with no error.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -33379,7 +33375,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>UiPath.PowerShell.Entities.Bucket</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -33388,7 +33384,7 @@ The cmdlet is not run.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet processes each matching item individually, so if one removal fails, remaining items continue to be processed.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -33866,13 +33862,13 @@ PS Orch1:\&gt; Remove-OrchAsset -Recurse -Name 'Legacy*'
         <dev:remarks />
       </command:example>
       <command:example>
-        <maml:title>--------- Example 6: Remove assets recursively ---------</maml:title>
+        <maml:title>--------- Example 6: Remove assets from immediate subfolders only ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Remove-OrchAsset -Recurse -Name 'Temp*'
+PS Orch1:\&gt; Remove-OrchAsset -Depth 1 -Name 'Temp*'
 ```</maml:para>
           <maml:para></maml:para>
-          <maml:para>Removes assets matching "Temp*" from the root folder and all subfolders recursively.</maml:para>
+          <maml:para>Removes assets matching "Temp*" from the root folder and its immediate subfolders (depth 1). When -Depth is specified, -Recurse is implied.</maml:para>
         </maml:introduction>
         <dev:code />
         <dev:remarks />
@@ -34438,7 +34434,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>UiPath.PowerShell.Entities.ExtendedCalendar</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output upon successful removal.</maml:para>
@@ -35635,7 +35631,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not generate output objects.</maml:para>
@@ -35644,7 +35640,7 @@ The cmdlet is not run.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet processes each matching item individually, so if one removal fails, remaining items continue to be processed.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -36534,7 +36530,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>UiPath.PowerShell.Entities.PersonalWorkspace</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce pipeline output. The personal workspace is removed from the Orchestrator.</maml:para>
@@ -37966,7 +37962,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>UiPath.PowerShell.Entities.TestCaseDefinition</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce any output.</maml:para>
@@ -38185,7 +38181,7 @@ The cmdlet is not run.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet processes each matching item individually, so if one removal fails, remaining items continue to be processed.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -38367,10 +38363,10 @@ PS Orch1:\Shared&gt; Remove-OrchTestDataQueue * -WhatIf
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>UiPath.PowerShell.Entities.TestSet</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
-          <maml:para>This cmdlet does not produce output by default.</maml:para>
+          <maml:para>This cmdlet does not produce any output.</maml:para>
         </maml:description>
       </command:returnValue>
     </command:returnValues>
@@ -38572,7 +38568,7 @@ The cmdlet is not run.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet processes each matching item individually, so if one removal fails, remaining items continue to be processed.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -39347,7 +39343,7 @@ PS C:\&gt; Remove-OrchWebhook -Path Orch1: -Name ObsoleteHook
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>UiPath.PowerShell.Entities.PmGroupMember</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce pipeline output. The allocation removal is performed as a side effect.</maml:para>
@@ -40594,7 +40590,7 @@ PS Orch1:\&gt; Remove-PmRobotAccount MyRobot -Confirm
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>UiPath.PowerShell.Entities.PmUser</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output. The deletion is performed as a side effect.</maml:para>
@@ -40790,7 +40786,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>UiPath.PowerShell.Entities.TmRequirement</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce pipeline output.</maml:para>
@@ -40799,7 +40795,7 @@ The cmdlet is not run.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet operates on the UiPathOrchTm provider PSDrive. Supports -WhatIf to preview which requirements would be removed.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -40967,7 +40963,7 @@ The cmdlet is not run.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet operates on the UiPathOrchTm provider PSDrive. Supports -WhatIf to preview which test cases would be removed.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -41135,7 +41131,7 @@ The cmdlet is not run.</maml:para>
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet operates on the UiPathOrchTm provider PSDrive. Supports -WhatIf to preview which test sets would be removed.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -41520,7 +41516,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>UiPath.PowerShell.Entities.TestDataQueue</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -43713,7 +43709,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>UiPath.PowerShell.Entities.Job</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet returns the job objects created by Orchestrator.</maml:para>
@@ -44187,7 +44183,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not generate output by default.</maml:para>
@@ -44357,7 +44353,7 @@ PS Orch1:\Shared&gt; Stop-OrchJob -Id 12345, 12346 -WhatIf
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not generate output by default.</maml:para>
@@ -47675,7 +47671,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>UiPath.PowerShell.Entities.User</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output. The user is updated in place on the server. If the deep-copied user object is equal to the original after modifications, the update is skipped silently.</maml:para>
@@ -47950,7 +47946,7 @@ PS Orch1:\&gt; Import-Csv C:\temp\user-updates.csv | Update-OrchUser
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>UiPath.PowerShell.Entities.PmUser</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output. The update is performed as a side effect.</maml:para>
