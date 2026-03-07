@@ -1,0 +1,161 @@
+---
+document type: cmdlet
+external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
+HelpUri: ''
+Locale: en-US
+Module Name: UiPathOrch
+ms.date: 03/06/2026
+PlatyPS schema version: 2024-05-01
+title: Get-DuDocumentType
+---
+
+# Get-DuDocumentType
+
+## SYNOPSIS
+
+Gets document types of Document Understanding.
+
+## SYNTAX
+
+### __AllParameterSets
+
+```
+Get-DuDocumentType [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [<CommonParameters>]
+```
+
+## ALIASES
+
+## DESCRIPTION
+
+Retrieves document types from Document Understanding projects.
+Results are filtered by the `-Name` parameter using wildcard matching and returned in alphabetical order.
+This cmdlet operates on the PSDrive of the UiPathOrchDu provider.
+If the scope in the configuration file includes "Du.", the PSDrive of the UiPathOrchDu provider will be automatically added.
+You can confirm this with the Get-PSDrive cmdlet.
+The configuration file can be opened with the Edit-OrchConfig cmdlet.
+
+Primary Endpoint: GET /du_/api/framework/projects/{projectId}/document-types?api-version=1
+
+OAuth Required scopes: Du.Digitization.Api or Du.Classification.Api or Du.Extraction.Api or Du.Validation.Api
+
+## EXAMPLES
+
+### Example 1: Get all document types in the current project
+
+```powershell
+PS Orch1Du:\MyProject> Get-DuDocumentType
+```
+
+Gets all document types from the current Document Understanding project.
+
+### Example 2: Get document types by name with wildcards
+
+```powershell
+PS Orch1Du:\MyProject> Get-DuDocumentType Invoice*
+```
+
+Gets document types whose name starts with "Invoice" from the current project.
+
+### Example 3: Get document types from a specific project
+
+```powershell
+PS C:\> Get-DuDocumentType -Path Orch1Du:\MyProject -Recurse
+```
+
+Gets all document types from the specified project and all its subfolders.
+
+## PARAMETERS
+
+### -Path
+
+Specifies the target folder.
+If not specified, the current folder will be targeted.
+
+```yaml
+Type: System.String[]
+DefaultValue: None
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Recurse
+
+Specifies that the operation should include the target folder and all its subfolders.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: False
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Name
+
+Specifies the name of the document types to be retrieved.
+Wildcard characters are permitted.
+
+```yaml
+Type: System.String[]
+DefaultValue: None
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 0
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### CommonParameters
+
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
+-InformationAction, -InformationVariable, -OutBuffer, -OutVariable, -PipelineVariable,
+-ProgressAction, -Verbose, -WarningAction, and -WarningVariable. For more information, see
+[about_CommonParameters](https://go.microsoft.com/fwlink/?LinkID=113216).
+
+## INPUTS
+
+### System.String[]
+
+You can pipe document type names or paths to this cmdlet.
+
+## OUTPUTS
+
+### UiPath.PowerShell.Entities.DuDocumentType
+
+This cmdlet returns DuDocumentType objects representing Document Understanding document types.
+
+## NOTES
+
+
+
+## RELATED LINKS
+
+Get-DuClassifier
+
+Get-DuExtractor
