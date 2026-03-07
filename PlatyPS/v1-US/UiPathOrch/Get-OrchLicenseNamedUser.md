@@ -139,6 +139,7 @@ This cmdlet returns LicenseNamedUser objects containing details such as the user
 
 ## NOTES
 
+This cmdlet is tenant-scoped and supports multi-threaded processing when querying multiple drives or robot types.
 
 
 ## RELATED LINKS

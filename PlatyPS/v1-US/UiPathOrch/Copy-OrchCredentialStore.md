@@ -205,7 +205,7 @@ You can pipe the source Path to this cmdlet.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.CredentialStore
+### None
 
 This cmdlet does not produce output.
 

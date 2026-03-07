@@ -152,6 +152,7 @@ This cmdlet returns DuExtractor objects representing Document Understanding extr
 
 ## NOTES
 
+This cmdlet operates on the UiPathOrchDu provider PSDrive. Ensure the configuration file includes "Du." scopes so that the PSDrive is automatically created.
 
 
 ## RELATED LINKS

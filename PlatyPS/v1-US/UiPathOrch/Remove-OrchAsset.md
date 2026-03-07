@@ -91,13 +91,13 @@ PS Orch1:\> Remove-OrchAsset -Recurse -Name 'Legacy*'
 
 Removes all assets matching "Legacy*" from the root folder and all subfolders recursively.
 
-### Example 6: Remove assets recursively
+### Example 6: Remove assets from immediate subfolders only
 
 ```powershell
-PS Orch1:\> Remove-OrchAsset -Recurse -Name 'Temp*'
+PS Orch1:\> Remove-OrchAsset -Depth 1 -Name 'Temp*'
 ```
 
-Removes assets matching "Temp*" from the root folder and all subfolders recursively.
+Removes assets matching "Temp*" from the root folder and its immediate subfolders (depth 1). When -Depth is specified, -Recurse is implied.
 
 ## PARAMETERS
 

@@ -6,7 +6,6 @@ using TPositional = UiPath.PowerShell.Positional.Name;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Reset, "OrchTestDataQueueItem", SupportsShouldProcess = true)]
-[OutputType(typeof(Entities.TestDataQueue))]
 public class ResetTestDataQueueItemCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]

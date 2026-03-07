@@ -151,6 +151,7 @@ This cmdlet returns DuDocumentType objects representing Document Understanding d
 
 ## NOTES
 
+This cmdlet operates on the UiPathOrchDu provider PSDrive. Ensure the configuration file includes "Du." scopes so that the PSDrive is automatically created.
 
 
 ## RELATED LINKS

@@ -8,7 +8,6 @@ using TPositional = UiPath.PowerShell.Positional.Name_OwnerName;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchPersonalWorkspace", SupportsShouldProcess = true)]
-[OutputType(typeof(Entities.PersonalWorkspace))]
 public class RemovePersonalWorkspaceCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]

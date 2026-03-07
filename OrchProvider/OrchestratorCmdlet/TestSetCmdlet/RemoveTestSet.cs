@@ -7,7 +7,6 @@ using TPositional = UiPath.PowerShell.Positional.Name;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchTestSet", SupportsShouldProcess = true)]
-[OutputType(typeof(TestSet))]
 public class RemoveTestSetCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]

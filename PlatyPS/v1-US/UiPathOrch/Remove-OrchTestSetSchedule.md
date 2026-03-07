@@ -226,6 +226,8 @@ This cmdlet does not produce output.
 
 ## NOTES
 
+This cmdlet processes each matching item individually, so if one removal fails, remaining items continue to be processed.
+
 ## RELATED LINKS
 
 Get-OrchTestSetSchedule

@@ -11,7 +11,6 @@ using TPositional = UiPath.PowerShell.Positional.UserName;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsData.Update, "OrchUser", SupportsShouldProcess = true)]
-[OutputType(typeof(Entities.User))]
 public class UpdateUserCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]

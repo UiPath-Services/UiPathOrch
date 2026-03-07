@@ -151,6 +151,7 @@ This cmdlet returns DuClassifier objects representing Document Understanding cla
 
 ## NOTES
 
+This cmdlet operates on the UiPathOrchDu provider PSDrive. Ensure the configuration file includes "Du." scopes so that the PSDrive is automatically created.
 
 
 ## RELATED LINKS

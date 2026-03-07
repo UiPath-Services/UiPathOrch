@@ -145,6 +145,7 @@ This cmdlet returns LicenseStatsModel objects containing the robot type, usage c
 
 ## NOTES
 
+This cmdlet is tenant-scoped and supports multi-threaded processing when querying multiple drives.
 
 
 ## RELATED LINKS

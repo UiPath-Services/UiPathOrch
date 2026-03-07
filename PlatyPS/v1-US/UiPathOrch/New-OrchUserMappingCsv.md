@@ -69,7 +69,7 @@ Generates the user mapping CSV with UTF-8 encoding.
 
 ### -CsvEncoding
 
-Specifies the character encoding for the CSV file. If not specified, the default encoding is used.
+Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compatibility. Tab completion suggests all available system encodings (e.g., utf-8, shift_jis, us-ascii).
 
 ```yaml
 Type: System.Text.Encoding

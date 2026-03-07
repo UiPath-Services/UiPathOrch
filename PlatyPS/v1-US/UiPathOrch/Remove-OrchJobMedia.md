@@ -223,11 +223,13 @@ You can pipe the **Path** values to this cmdlet.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not generate output objects.
 
 ## NOTES
+
+This cmdlet processes each matching item individually, so if one removal fails, remaining items continue to be processed.
 
 ## RELATED LINKS
 

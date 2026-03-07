@@ -153,6 +153,7 @@ This cmdlet returns TmTestExecution objects representing Test Manager test execu
 
 ## NOTES
 
+This cmdlet operates on the UiPathOrchTm provider PSDrive. Results are sorted alphabetically by name.
 
 
 ## RELATED LINKS

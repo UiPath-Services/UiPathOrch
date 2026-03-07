@@ -283,7 +283,7 @@ You can pipe an array of folder paths to the **Path** parameter.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not generate output by default.
 

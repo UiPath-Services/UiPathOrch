@@ -225,6 +225,7 @@ This cmdlet does not produce pipeline output.
 
 ## NOTES
 
+This cmdlet operates on the UiPathOrchDu provider PSDrive. Only directly assigned (non-inherited) roles can be removed; inherited roles are skipped with no error.
 
 
 ## RELATED LINKS

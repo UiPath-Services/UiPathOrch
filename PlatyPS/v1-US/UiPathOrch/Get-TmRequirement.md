@@ -153,6 +153,7 @@ This cmdlet returns TmRequirement objects representing Test Manager requirements
 
 ## NOTES
 
+This cmdlet operates on the UiPathOrchTm provider PSDrive. Results are sorted by object key.
 
 
 ## RELATED LINKS

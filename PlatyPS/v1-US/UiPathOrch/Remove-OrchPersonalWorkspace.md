@@ -201,7 +201,7 @@ You can pipe workspace names via the Name property, owner names via the OwnerNam
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.PersonalWorkspace
+### None
 
 This cmdlet does not produce pipeline output. The personal workspace is removed from the Orchestrator.
 

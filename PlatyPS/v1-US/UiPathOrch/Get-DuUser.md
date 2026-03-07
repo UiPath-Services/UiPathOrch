@@ -123,9 +123,7 @@ HelpMessage: ''
 
 ### -CsvEncoding
 
-Specifies the character encoding for the CSV file.
-If not specified, the default encoding is used.
-This parameter is only effective when `-ExportCsv` is also specified.
+Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compatibility. Tab completion suggests all available system encodings (e.g., utf-8, shift_jis, us-ascii). This parameter is only effective when -ExportCsv is also specified.
 
 ```yaml
 Type: System.Text.Encoding

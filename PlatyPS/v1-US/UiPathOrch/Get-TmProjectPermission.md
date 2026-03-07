@@ -130,6 +130,7 @@ This cmdlet returns TmProjectPermission objects representing the permissions con
 
 ## NOTES
 
+This cmdlet operates on the UiPathOrchTm provider PSDrive. Ensure the configuration file includes "TM." scopes so that the PSDrive is automatically created.
 
 
 ## RELATED LINKS

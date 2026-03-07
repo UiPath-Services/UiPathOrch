@@ -93,6 +93,8 @@ Returns the file system path of the log folder.
 
 ## NOTES
 
+This cmdlet does not make any API calls. It returns the local file system path where logs are stored for the specified drive.
+
 ## RELATED LINKS
 
 Open-OrchLogLocation

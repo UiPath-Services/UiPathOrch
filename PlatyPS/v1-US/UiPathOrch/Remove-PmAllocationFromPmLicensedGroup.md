@@ -230,7 +230,7 @@ You can pipe objects with GroupName, UserName, and Path properties to this cmdle
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.PmGroupMember
+### None
 
 This cmdlet does not produce pipeline output. The allocation removal is performed as a side effect.
 

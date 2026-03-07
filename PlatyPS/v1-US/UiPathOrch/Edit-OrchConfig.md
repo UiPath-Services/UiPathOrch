@@ -103,7 +103,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 On Linux, the cmdlet changes the current location to the configuration file directory. No object output is produced.
 

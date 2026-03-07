@@ -241,7 +241,7 @@ You can pipe test data queue names to this cmdlet via the Name property.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.TestDataQueue
+### None
 
 This cmdlet does not produce output.
 

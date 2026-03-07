@@ -7,7 +7,6 @@ using TPositional = UiPath.PowerShell.Positional.Email;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "PmUser", SupportsShouldProcess = true)]
-[OutputType(typeof(PmUser))]
 public class RemovePmUserCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]

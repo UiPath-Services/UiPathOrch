@@ -178,7 +178,7 @@ You can pipe webhook names to this cmdlet via the Name property.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.Webhook
+### None
 
 This cmdlet does not produce output. Webhooks are disabled on the Orchestrator server.
 

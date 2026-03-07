@@ -211,7 +211,7 @@ You can pipe email addresses to this cmdlet via the Email property.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.PmUser
+### None
 
 This cmdlet does not produce output. The deletion is performed as a side effect.
 

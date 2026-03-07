@@ -209,6 +209,8 @@ This cmdlet returns ExecutionMedia objects representing recordings associated wi
 
 ## NOTES
 
+Execution media must be enabled on the Orchestrator and the process must be configured to record execution for media to be available.
+
 ## RELATED LINKS
 
 Export-OrchJobMedia

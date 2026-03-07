@@ -98,6 +98,7 @@ This cmdlet returns a TmServerInfo object containing Test Manager server details
 
 ## NOTES
 
+This cmdlet operates on the UiPathOrchTm provider PSDrive. Returns server metadata such as version and build details.
 
 
 ## RELATED LINKS
