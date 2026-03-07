@@ -215,7 +215,7 @@ Specifies the names of assets to copy. This is a mandatory parameter. Supports w
 ```yaml
 Type: System.String[]
 DefaultValue: None
-SupportsWildcards: false
+SupportsWildcards: true
 Aliases: []
 ParameterSets:
 - Name: (All)

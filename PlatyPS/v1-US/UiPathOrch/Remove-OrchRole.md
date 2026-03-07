@@ -169,7 +169,7 @@ You can pipe role names to this cmdlet via the Name property.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce output.
 

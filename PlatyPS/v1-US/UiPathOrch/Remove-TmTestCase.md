@@ -72,8 +72,7 @@ Shows what would happen when removing all test cases from the current project, w
 
 ### -Path
 
-Specifies the target folder.
-If not specified, the current folder will be targeted.
+Specifies the target folder. If not specified, the current folder is targeted.
 
 ```yaml
 Type: System.String[]
@@ -94,7 +93,7 @@ HelpMessage: ''
 
 ### -Recurse
 
-Specifies that the operation should include the target folder and all its subfolders.
+Includes the target folder and all its subfolders in the operation.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -196,7 +195,7 @@ You can pipe test case names or paths to this cmdlet.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce pipeline output.
 

@@ -78,7 +78,7 @@ Removes the webhook named "ObsoleteHook" from the Orch1 drive. When -Path uses a
 ### -Path
 
 Specifies the name of the target drives.
-If not specified, the current drive will be targeted.
+If not specified, the current drive is targeted.
 
 ```yaml
 Type: System.String[]
@@ -178,7 +178,7 @@ You can pipe webhook names to this cmdlet via the Name property.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce output. Webhooks are deleted from the Orchestrator server.
 

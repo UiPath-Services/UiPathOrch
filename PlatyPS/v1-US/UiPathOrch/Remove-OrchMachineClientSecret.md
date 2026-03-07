@@ -203,7 +203,7 @@ You can pipe the Name and SecretId values to this cmdlet. This enables pipeline 
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce output.
 

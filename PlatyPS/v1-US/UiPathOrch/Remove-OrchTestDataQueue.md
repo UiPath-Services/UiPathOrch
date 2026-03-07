@@ -220,7 +220,7 @@ You can pipe test data queue names to this cmdlet via the Name property.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce output.
 

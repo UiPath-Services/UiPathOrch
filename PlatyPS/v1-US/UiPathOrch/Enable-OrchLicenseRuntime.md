@@ -89,7 +89,7 @@ Enables all currently disabled runtime licenses for the `Unattended` robot type 
 ### -Path
 
 Specifies the name of the target drives.
-If not specified, the current drive will be targeted.
+If not specified, the current drive is targeted.
 
 ```yaml
 Type: System.String[]
@@ -210,7 +210,7 @@ You can pipe robot type names to the **RobotType** parameter, key values to the 
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce output. It enables runtime licenses as a side effect.
 

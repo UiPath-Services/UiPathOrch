@@ -61,8 +61,7 @@ Opens the details page for job 150565000 from the Shared folder in the default w
 
 ### -Path
 
-Specifies the target folder.
-If not specified, the current folder will be targeted.
+Specifies the target folder. If not specified, the current folder is targeted.
 
 ```yaml
 Type: System.String[]

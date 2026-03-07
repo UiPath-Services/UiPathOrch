@@ -91,7 +91,7 @@ Shows what would happen without actually importing any items.
 
 ### -Path
 
-Specifies the target folder. If not specified, the current folder will be targeted.
+Specifies the target folder. If not specified, the current folder is targeted.
 
 ```yaml
 Type: System.String[]

@@ -62,10 +62,10 @@ Gets all test set executions from the current folder that started within the las
 ### Example 2: Get test set executions by name
 
 ```powershell
-PS Orch1:\root> Get-OrchTestSetExecution hoge -Last 3Years
+PS Orch1:\root> Get-OrchTestSetExecution SmokeTest -Last 3Years
 ```
 
-Gets test set executions named "hoge" from the last 3 years.
+Gets test set executions named "SmokeTest" from the last 3 years.
 
 ### Example 3: Get cancelled test set executions
 

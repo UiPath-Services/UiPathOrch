@@ -134,7 +134,7 @@ Gets audit logs from the last month, skipping the first 50 results and returning
 ### -Path
 
 Specifies the name of the target drives.
-If not specified, the current drive will be targeted.
+If not specified, the current drive is targeted.
 
 ```yaml
 Type: System.String[]

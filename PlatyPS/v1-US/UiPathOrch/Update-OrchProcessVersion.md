@@ -294,7 +294,7 @@ You can pipe a version string to this cmdlet via the Version property.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce standard output. Use -Verbose to see details of version updates performed.
 

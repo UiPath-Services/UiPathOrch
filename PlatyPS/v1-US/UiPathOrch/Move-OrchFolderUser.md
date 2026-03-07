@@ -233,7 +233,7 @@ You can pipe usernames, destination paths, and source paths to this cmdlet via t
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce output.
 

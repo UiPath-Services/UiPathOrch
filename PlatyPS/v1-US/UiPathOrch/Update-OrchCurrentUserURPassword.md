@@ -194,7 +194,7 @@ You can pipe drive paths to this cmdlet via the Path property.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce output. The password is updated on the server.
 

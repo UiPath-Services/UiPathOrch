@@ -11,6 +11,7 @@ using TPositional = UiPath.PowerShell.Positional.Name_RuntimeType_JobsCount;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsLifecycle.Start, "OrchJob", SupportsShouldProcess = true)]
+[OutputType(typeof(Entities.Job))]
 public class StartJobCommand : OrchestratorPSCmdlet
 {
     private static readonly string[] validRuntimeType = [

@@ -222,7 +222,7 @@ You can pipe package IDs and versions to this cmdlet via the Id and Version prop
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce pipeline output.
 

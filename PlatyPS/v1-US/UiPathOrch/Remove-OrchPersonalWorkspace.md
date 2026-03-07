@@ -79,7 +79,7 @@ Shows which personal workspaces would be removed without actually removing them.
 ### -Path
 
 Specifies the name of the target drives.
-If not specified, the current drive will be targeted.
+If not specified, the current drive is targeted.
 
 ```yaml
 Type: System.String[]

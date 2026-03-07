@@ -80,7 +80,7 @@ Disables maintenance mode on the session with the specified session ID on the Or
 ### -Path
 
 Specifies the name of the target drives.
-If not specified, the current drive will be targeted.
+If not specified, the current drive is targeted.
 
 ```yaml
 Type: System.String[]
@@ -268,7 +268,7 @@ You can pipe session IDs via SessionId.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce pipeline output. The maintenance mode state is updated on the Orchestrator.
 

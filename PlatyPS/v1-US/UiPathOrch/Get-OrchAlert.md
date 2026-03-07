@@ -108,7 +108,7 @@ Gets alerts created between March 1 and March 5, 2026.
 ### -Path
 
 Specifies the name of the target drives.
-If not specified, the current drive will be targeted.
+If not specified, the current drive is targeted.
 
 ```yaml
 Type: System.String[]

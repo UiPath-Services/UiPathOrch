@@ -249,7 +249,7 @@ You can pipe the PropagateToSubFolders value to this cmdlet.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce output.
 

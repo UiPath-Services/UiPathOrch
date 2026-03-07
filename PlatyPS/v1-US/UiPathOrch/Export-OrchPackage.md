@@ -257,7 +257,7 @@ You can pipe a destination path to this cmdlet via the Destination property.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce pipeline output. The .nupkg files are saved to the -Destination directory.
 

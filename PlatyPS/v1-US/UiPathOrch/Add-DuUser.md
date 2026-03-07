@@ -78,8 +78,7 @@ Shows what would happen when adding the user ytsuda+c@gmail.com with the "DU Val
 
 ### -Path
 
-Specifies the target folder.
-If not specified, the current folder will be targeted.
+Specifies the target folder. If not specified, the current folder is targeted.
 
 ```yaml
 Type: System.String[]
@@ -100,7 +99,7 @@ HelpMessage: ''
 
 ### -Recurse
 
-Specifies that the operation should include the target folder and all its subfolders.
+Includes the target folder and all its subfolders in the operation.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -246,7 +245,7 @@ You can pipe Type, Name, Roles, and Path values to this cmdlet by property name.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce pipeline output.
 

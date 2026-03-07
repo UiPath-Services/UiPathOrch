@@ -296,7 +296,7 @@ You can pipe usernames, roles, full names, types, and paths to this cmdlet via t
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce output.
 

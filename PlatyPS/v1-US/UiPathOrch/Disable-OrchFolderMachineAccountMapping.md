@@ -243,7 +243,7 @@ You can pipe machine names to this cmdlet via the Name property, and user names 
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce output.
 

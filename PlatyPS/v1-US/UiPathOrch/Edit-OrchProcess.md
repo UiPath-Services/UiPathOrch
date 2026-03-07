@@ -126,7 +126,7 @@ You can pipe process names to this cmdlet via the Name property.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce any output. It opens the process edit page in the default web browser.
 

@@ -38,6 +38,10 @@ The configuration file can be opened with the Edit-OrchConfig cmdlet.
 
 Primary Endpoint: GET /{partitionGlobalId}/pap_/api/userroleassignments?scope=/tenant/{tenantKey}/DocumentUnderstanding/projects/{projectId}&serviceName=DocumentUnderstanding
 
+OAuth required scopes: (Document Understanding PAP API)
+
+Required permissions: (managed by Document Understanding)
+
 ## EXAMPLES
 
 ### Example 1: Get all users in the current project
@@ -77,8 +81,7 @@ Exports the users from the specified project to a UTF-8 encoded CSV file.
 
 ### -Path
 
-Specifies the target folder.
-If not specified, the current folder will be targeted.
+Specifies the target folder. If not specified, the current folder is targeted.
 
 ```yaml
 Type: System.String[]
@@ -99,7 +102,7 @@ HelpMessage: ''
 
 ### -Recurse
 
-Specifies that the operation should include the target folder and all its subfolders.
+Includes the target folder and all its subfolders in the operation.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -208,7 +211,7 @@ When `-ExportCsv` is specified, no objects are written to the pipeline.
 
 ## NOTES
 
-
+This cmdlet operates on the UiPathOrchDu provider PSDrive. Ensure the configuration file includes "Du." scopes so that the PSDrive is automatically created. Use Edit-OrchConfig to open the configuration file and Get-PSDrive to verify the drive exists.
 
 ## RELATED LINKS
 

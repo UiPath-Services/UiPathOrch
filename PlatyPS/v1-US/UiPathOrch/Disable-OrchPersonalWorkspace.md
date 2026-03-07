@@ -73,7 +73,7 @@ Shows what would happen if the cmdlet runs without actually making changes.
 ### -Path
 
 Specifies the name of the target drives.
-If not specified, the current drive will be targeted.
+If not specified, the current drive is targeted.
 
 ```yaml
 Type: System.String[]
@@ -172,7 +172,7 @@ You can pipe user names to this cmdlet via the UserName property.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce output directly. It calls Update-OrchUser to update user settings.
 

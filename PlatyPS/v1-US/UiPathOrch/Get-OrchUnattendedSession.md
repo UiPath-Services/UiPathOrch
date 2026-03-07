@@ -78,7 +78,7 @@ Gets all disconnected unattended sessions from the Orch1: drive.
 ### -Path
 
 Specifies the name of the target drives.
-If not specified, the current drive will be targeted.
+If not specified, the current drive is targeted.
 
 ```yaml
 Type: System.String[]
