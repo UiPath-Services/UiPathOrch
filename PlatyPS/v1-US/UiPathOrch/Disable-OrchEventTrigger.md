@@ -48,24 +48,24 @@ Required permissions: EventTriggers.Edit
 
 ## EXAMPLES
 
-### Example 1
+### Example 1: Disable a specific event trigger
 
 ```powershell
-PS Orch1:\Shared> Disable-OrchEventTrigger aaaa
+PS Orch1:\Shared> Disable-OrchEventTrigger MyEventTrigger
 ```
 
-Disables the event trigger named 'aaaa' in the 'Shared' folder, which is the current location.
+Disables the event trigger named 'MyEventTrigger' in the 'Shared' folder, which is the current location.
 The event trigger must be currently enabled for this command to take effect.
 
-### Example 2
+### Example 2: Disable event triggers using wildcards
 
 ```powershell
-PS Orch1:\Shared> Disable-OrchEventTrigger a*
+PS Orch1:\Shared> Disable-OrchEventTrigger My*
 ```
 
-Disables all enabled event triggers matching the wildcard pattern 'a*' in the 'Shared' folder.
+Disables all enabled event triggers matching the wildcard pattern 'My*' in the 'Shared' folder.
 
-### Example 3
+### Example 3: Disable all event triggers recursively
 
 ```powershell
 PS Orch1:\> Disable-OrchEventTrigger -Recurse *

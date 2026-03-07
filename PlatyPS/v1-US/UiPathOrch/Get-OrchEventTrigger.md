@@ -58,7 +58,7 @@ Gets all event triggers in the current folder.
 ### Example 2: Get event triggers by name with wildcards
 
 ```powershell
-PS Orch1:\Shared> Get-OrchEventTrigger aaaa, 2*
+PS Orch1:\Shared> Get-OrchEventTrigger MyTrigger, Daily*
 ```
 
 Gets event triggers matching the specified names and wildcard patterns in the current folder. Multiple names can be specified as comma-separated values. Event trigger names can be auto-completed with [Ctrl+Space] or [Tab].

@@ -48,7 +48,7 @@ Required permissions: HttpTriggers.Edit
 
 ## EXAMPLES
 
-### Example 1
+### Example 1: Disable a specific API trigger
 
 ```powershell
 PS Orch1:\Dept#2> Disable-OrchApiTrigger mytrigger
@@ -57,7 +57,7 @@ PS Orch1:\Dept#2> Disable-OrchApiTrigger mytrigger
 Disables the API trigger named 'mytrigger' in the 'Dept#2' folder, which is the current location.
 The API trigger must be currently enabled for this command to take effect.
 
-### Example 2
+### Example 2: Disable API triggers using wildcards
 
 ```powershell
 PS Orch1:\Dept#2> Disable-OrchApiTrigger my*
@@ -65,7 +65,7 @@ PS Orch1:\Dept#2> Disable-OrchApiTrigger my*
 
 Disables all enabled API triggers matching the wildcard pattern 'my*' in the 'Dept#2' folder.
 
-### Example 3
+### Example 3: Disable all API triggers recursively
 
 ```powershell
 PS Orch1:\> Disable-OrchApiTrigger -Recurse *

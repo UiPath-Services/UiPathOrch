@@ -46,7 +46,7 @@ Required permissions: HttpTriggers.Delete
 
 ## EXAMPLES
 
-### Example 1
+### Example 1: Remove a specific API trigger
 
 ```powershell
 PS Orch1:\Shared> Remove-OrchApiTrigger MyApiTrigger
@@ -54,7 +54,7 @@ PS Orch1:\Shared> Remove-OrchApiTrigger MyApiTrigger
 
 Removes the API trigger named 'MyApiTrigger' from the 'Shared' folder, which is the current location.
 
-### Example 2
+### Example 2: Preview removal with -WhatIf
 
 ```powershell
 PS Orch1:\Shared> Remove-OrchApiTrigger Test* -WhatIf
@@ -62,7 +62,7 @@ PS Orch1:\Shared> Remove-OrchApiTrigger Test* -WhatIf
 
 Shows what would happen if API triggers matching the wildcard pattern 'Test*' were removed from the 'Shared' folder, without actually removing them.
 
-### Example 3
+### Example 3: Remove an API trigger recursively
 
 ```powershell
 PS Orch1:\> Remove-OrchApiTrigger -Recurse OldApiTrigger
@@ -70,7 +70,7 @@ PS Orch1:\> Remove-OrchApiTrigger -Recurse OldApiTrigger
 
 Removes the API trigger named 'OldApiTrigger' from the current folder and all its subfolders.
 
-### Example 4
+### Example 4: Remove an API trigger from a specific folder
 
 ```powershell
 PS C:\> Remove-OrchApiTrigger -Path Orch1:\Shared MyApiTrigger
