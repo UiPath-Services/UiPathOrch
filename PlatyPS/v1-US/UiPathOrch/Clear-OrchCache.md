@@ -82,7 +82,7 @@ The current drive can be specified using a period (.), which represents the curr
 ### -Path
 
 Specifies the name of the target drives.
-If not specified, the current drive will be targeted.
+If not specified, the current drive is targeted.
 
 ```yaml
 Type: System.String[]

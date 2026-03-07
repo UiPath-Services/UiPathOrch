@@ -183,7 +183,7 @@ You can pipe usernames and path values to this cmdlet via the UserName and Path 
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce output. The user is updated via Update-OrchUser internally.
 

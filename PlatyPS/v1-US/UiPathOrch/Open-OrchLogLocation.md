@@ -92,7 +92,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce pipeline output. On Windows, it opens File Explorer. On Linux, it changes the current location.
 

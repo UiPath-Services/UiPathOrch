@@ -221,7 +221,7 @@ You can pipe trigger names to this cmdlet via the Name property.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce output. Triggers are enabled on the Orchestrator server.
 

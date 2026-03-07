@@ -200,7 +200,7 @@ You can pipe robot account names to this cmdlet via the Name property.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce pipeline output. The copy operation is performed as a side effect.
 

@@ -278,7 +278,7 @@ You can pipe usernames, roles, and paths to this cmdlet via the UserName, Roles,
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce output.
 

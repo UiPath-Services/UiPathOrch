@@ -519,7 +519,7 @@ You can pipe the Path, Description, and other string properties to this cmdlet.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce output. Machine definitions are updated in place on the Orchestrator server.
 

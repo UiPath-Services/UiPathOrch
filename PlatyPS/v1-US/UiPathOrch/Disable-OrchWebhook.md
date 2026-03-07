@@ -78,7 +78,7 @@ Disables the webhook named "mywebhook" on the Orch1 drive. When -Path uses an ab
 ### -Path
 
 Specifies the name of the target drives.
-If not specified, the current drive will be targeted.
+If not specified, the current drive is targeted.
 
 ```yaml
 Type: System.String[]

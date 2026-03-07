@@ -281,7 +281,7 @@ You can pipe bucket names or file paths to this cmdlet via the Name and FullPath
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce pipeline output. Files are written to the local filesystem at the specified destination.
 

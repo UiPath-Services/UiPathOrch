@@ -76,7 +76,7 @@ Gets webhooks whose name starts with "my" from the Orch1 drive. When -Path uses 
 ### -Path
 
 Specifies the name of the target drives.
-If not specified, the current drive will be targeted.
+If not specified, the current drive is targeted.
 
 ```yaml
 Type: System.String[]

@@ -271,7 +271,7 @@ You can pipe usernames, full names, and paths to this cmdlet via the UserName, F
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce output.
 

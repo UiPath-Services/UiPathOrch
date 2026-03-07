@@ -108,8 +108,7 @@ Pipes test set execution objects to retrieve all assertions for each test set ex
 
 ### -Path
 
-Specifies the target folder.
-If not specified, the current folder will be targeted.
+Specifies the target folder. If not specified, the current folder is targeted.
 
 ```yaml
 Type: System.String[]

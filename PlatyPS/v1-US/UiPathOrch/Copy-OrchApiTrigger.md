@@ -253,7 +253,7 @@ You can pipe a destination path to this cmdlet.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce output.
 

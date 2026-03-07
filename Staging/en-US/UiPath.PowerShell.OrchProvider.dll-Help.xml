@@ -24,15 +24,14 @@
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -97,15 +96,14 @@ This parameter is mandatory.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -148,7 +146,7 @@ This parameter is mandatory.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce pipeline output.</maml:para>
@@ -416,7 +414,7 @@ PS C:\&gt; Add-OrchAssetLink -Path Orch1:\Shared -Name TestAsset1 -Link Orch1:\D
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -491,7 +489,7 @@ The cmdlet is not run.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -541,7 +539,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output. The calendar is created or updated silently.</maml:para>
@@ -759,7 +757,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -991,7 +989,7 @@ PS Orch1:\Shared&gt; Add-OrchFolderMachine m* -WhatIf
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -1398,7 +1396,7 @@ PS Orch1:\&gt; Add-OrchMachineClientSecret * -WhatIf
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -2448,7 +2446,7 @@ PS Orch1:\&gt; Add-PmLicenseToPmLicensedGroup "Automation Developers" "Citizen D
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -2495,7 +2493,7 @@ The cmdlet is not run.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -2718,7 +2716,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -2938,7 +2936,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -3069,7 +3067,7 @@ PS Orch1:\&gt; Copy-OrchApiTrigger -Recurse * Orch2:\
           </maml:description>
           <command:parameterValue required="true" variableLength="true">System.String</command:parameterValue>
         </command:parameter>
-        <command:parameter required="true" variableLength="false" globbing="false" pipelineInput="false" position="0" aliases="none">
+        <command:parameter required="true" variableLength="false" globbing="true" pipelineInput="false" position="0" aliases="none">
           <maml:name>Name</maml:name>
           <maml:description>
             <maml:para>Specifies the names of assets to copy. This is a mandatory parameter. Supports wildcards to copy multiple assets. Tab completion lists assets from the source folder.</maml:para>
@@ -3114,7 +3112,7 @@ PS Orch1:\&gt; Copy-OrchApiTrigger -Recurse * Orch2:\
         </maml:description>
         <command:parameterValue required="true" variableLength="true">System.String</command:parameterValue>
       </command:parameter>
-      <command:parameter required="true" variableLength="false" globbing="false" pipelineInput="false" position="0" aliases="none">
+      <command:parameter required="true" variableLength="false" globbing="true" pipelineInput="false" position="0" aliases="none">
         <maml:name>Name</maml:name>
         <maml:description>
           <maml:para>Specifies the names of assets to copy. This is a mandatory parameter. Supports wildcards to copy multiple assets. Tab completion lists assets from the source folder.</maml:para>
@@ -4045,7 +4043,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -7736,7 +7734,7 @@ PS Orch1:\&gt; Copy-PmGroup * -Destination Orch2: -WhatIf
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce pipeline output. The copy operation is performed as a side effect.</maml:para>
@@ -8040,15 +8038,14 @@ PS Orch1:\&gt; Copy-PmUser * -Destination Orch2: -WhatIf
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -8112,15 +8109,14 @@ Tab completion lists only enabled API triggers.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -8146,7 +8142,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -8231,15 +8227,14 @@ PS Orch1:\&gt; Disable-OrchApiTrigger -Recurse *
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -8303,15 +8298,14 @@ Tab completion lists only enabled event triggers.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -8337,7 +8331,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -8537,7 +8531,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -8702,7 +8696,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -8786,7 +8780,7 @@ PS C:\&gt; Disable-OrchFolderMachineInherit -Path Orch1:\Shared ba*
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -8840,7 +8834,7 @@ The cmdlet is not run.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -8873,7 +8867,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output. It disables runtime licenses as a side effect.</maml:para>
@@ -8978,7 +8972,7 @@ PS Orch1:\&gt; Disable-OrchLicenseRuntime Unattended 'xxx*'
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -9067,7 +9061,7 @@ The cmdlet is not run.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -9115,7 +9109,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce pipeline output. The maintenance mode state is updated on the Orchestrator.</maml:para>
@@ -9307,7 +9301,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -9498,7 +9492,7 @@ PS Orch1:\Shared&gt; Disable-OrchTestSetSchedule * -WhatIf
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output. Triggers are disabled on the Orchestrator server.</maml:para>
@@ -9581,7 +9575,7 @@ PS Orch1:\&gt; Disable-OrchTrigger -Recurse *
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -9628,7 +9622,7 @@ The cmdlet is not run.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -9894,7 +9888,7 @@ PS C:\&gt; Edit-OrchConfig Notepad
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce any output. It opens the process edit page in the default web browser.</maml:para>
@@ -9976,15 +9970,14 @@ PS C:\&gt; Edit-OrchProcess -Path Orch1:\Shared -Name BlankProcess19
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -10048,15 +10041,14 @@ Tab completion lists only disabled API triggers.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -10082,7 +10074,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -10167,15 +10159,14 @@ PS Orch1:\&gt; Enable-OrchApiTrigger -Recurse *
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -10239,15 +10230,14 @@ Tab completion lists only disabled event triggers.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -10273,7 +10263,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -10473,7 +10463,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -10638,7 +10628,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -10722,7 +10712,7 @@ PS C:\&gt; Enable-OrchFolderMachineInherit -Path Orch1:\Shared ba*
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -10776,7 +10766,7 @@ The cmdlet is not run.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -10809,7 +10799,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output. It enables runtime licenses as a side effect.</maml:para>
@@ -10914,7 +10904,7 @@ PS Orch1:\&gt; Enable-OrchLicenseRuntime Unattended 'new*'
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -11003,7 +10993,7 @@ The cmdlet is not run.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -11051,7 +11041,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce pipeline output. The maintenance mode state is updated on the Orchestrator.</maml:para>
@@ -11243,7 +11233,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -11434,7 +11424,7 @@ PS Orch1:\Shared&gt; Enable-OrchTestSetSchedule * -WhatIf
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output. Triggers are enabled on the Orchestrator server.</maml:para>
@@ -11529,7 +11519,7 @@ PS C:\&gt; Enable-OrchTrigger -Path Orch1:\root -Name "high trigger"
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -11576,7 +11566,7 @@ The cmdlet is not run.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -11832,7 +11822,7 @@ PS C:\&gt; Enable-OrchWebhook -Path Orch1: -Name mywebhook
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce pipeline output. Files are written to the local filesystem at the specified destination.</maml:para>
@@ -11945,15 +11935,14 @@ What if: Performing the operation "Export BucketItem" on target "Item: Orch1:\Sh
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -12031,15 +12020,14 @@ Please specify a folder on the FileSystem drive.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -12293,7 +12281,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce pipeline output. Library packages are saved as .nupkg files to the specified destination directory.</maml:para>
@@ -12509,7 +12497,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce pipeline output. The .nupkg files are saved to the -Destination directory.</maml:para>
@@ -12614,15 +12602,14 @@ PS Orch1:\&gt; Export-OrchPackage -Recurse '*' -Destination C:\full-backup
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -12648,15 +12635,14 @@ Wildcard characters are permitted.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -12751,15 +12737,14 @@ PS C:\&gt; Get-DuClassifier -Path Orch1Du:\Predefined -Recurse
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -12785,15 +12770,14 @@ Wildcard characters are permitted.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -12888,15 +12872,14 @@ PS C:\&gt; Get-DuDocumentType -Path Orch1Du:\MyProject -Recurse
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -12922,15 +12905,14 @@ Wildcard characters are permitted.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -13025,7 +13007,7 @@ PS C:\&gt; Get-DuExtractor -Path Orch1Du:\Predefined -Recurse
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -13052,7 +13034,7 @@ Wildcard characters are permitted.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -13139,6 +13121,8 @@ PS C:\&gt; Get-DuRole -Path Orch1Du:
     <maml:description>
       <maml:para>Retrieves users (including groups, robot accounts, and external applications) that are assigned to Document Understanding projects along with their role assignments. Results are filtered by the `-Name` parameter using wildcard matching and returned in alphabetical order. When `-ExportCsv` is specified, results are exported to a CSV file instead of being written to the pipeline. This cmdlet operates on the PSDrive of the UiPathOrchDu provider. If the scope in the configuration file includes "Du.", the PSDrive of the UiPathOrchDu provider will be automatically added. You can confirm this with the Get-PSDrive cmdlet. The configuration file can be opened with the Edit-OrchConfig cmdlet.</maml:para>
       <maml:para>Primary Endpoint: GET /{partitionGlobalId}/pap_/api/userroleassignments?scope=/tenant/{tenantKey}/DocumentUnderstanding/projects/{projectId}&amp;serviceName=DocumentUnderstanding</maml:para>
+      <maml:para>OAuth required scopes: (Document Understanding PAP API)</maml:para>
+      <maml:para>Required permissions: (managed by Document Understanding)</maml:para>
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
@@ -13146,15 +13130,14 @@ PS C:\&gt; Get-DuRole -Path Orch1Du:
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -13216,15 +13199,14 @@ Wildcard characters are permitted.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -13252,7 +13234,7 @@ When `-ExportCsv` is specified, no objects are written to the pipeline.</maml:pa
     </command:returnValues>
     <maml:alertSet>
       <maml:alert>
-        <maml:para />
+        <maml:para>This cmdlet operates on the UiPathOrchDu provider PSDrive. Ensure the configuration file includes "Du." scopes so that the PSDrive is automatically created. Use Edit-OrchConfig to open the configuration file and Get-PSDrive to verify the drive exists.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -13612,7 +13594,7 @@ PS C:\&gt; Get-OrchActivitySetting Orch1:\,Orch2:\
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -13710,7 +13692,7 @@ Enter the number of objects to get.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -13899,15 +13881,14 @@ PS Orch1:\&gt; Get-OrchAlert -CreationTimeAfter '2026-03-01' -CreationTimeBefore
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -13947,15 +13928,14 @@ A depth of 0 indicates the current location only, with no subfolders included. W
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -14536,7 +14516,7 @@ PS Orch1:\&gt; Get-OrchAssetLink -Recurse
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -14619,7 +14599,7 @@ Enter the number of objects to skip.</maml:para>
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -14731,7 +14711,7 @@ Enter the number of objects to get.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -15511,7 +15491,7 @@ PS Orch1:\Shared&gt; Get-OrchBucketItem Test* *.csv
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -15592,7 +15572,7 @@ If not specified, the current drive will be targeted.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -16510,15 +16490,14 @@ PS C:\&gt; Get-OrchCurrentUser Orch1:\,Orch2:\
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -16558,15 +16537,14 @@ A depth of 0 indicates the current location only, with no subfolders included. W
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -17210,15 +17188,14 @@ PS C:\&gt; Get-OrchFolderMachineAccountMapping -Path Orch1:\Production
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="0" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -17244,15 +17221,14 @@ A depth of 0 indicates the current location only, with no subfolders included. W
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="0" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -17661,15 +17637,14 @@ PS C:\&gt; Get-OrchHelp
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -17694,15 +17669,14 @@ A depth of 0 indicates the current location only, with no subfolders included. W
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -17927,8 +17901,7 @@ Enter the number of objects to get.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -17949,7 +17922,7 @@ If not specified, the current folder will be targeted.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -18191,15 +18164,14 @@ PS C:\&gt; Get-OrchJob -Last Month -Path 'Orch1:\Shared' -Recurse -First 50 -Ski
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -18249,15 +18221,14 @@ Enter the number of objects to get.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -18383,7 +18354,7 @@ PS C:\&gt; Get-OrchJobMedia -Path Orch1:\Production
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -18394,7 +18365,7 @@ If not specified, the current drive will be targeted.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -18813,7 +18784,7 @@ PS Orch1:\&gt; Get-OrchLibraryVersion -HostFeed -Id ABC.*
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -18824,7 +18795,7 @@ If not specified, the current drive will be targeted.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -18923,7 +18894,7 @@ PS C:\&gt; Get-OrchLicense Orch1:, Orch2:
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -18941,7 +18912,7 @@ If not specified, the current drive will be targeted.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -19059,7 +19030,7 @@ PS C:\&gt; Get-OrchLicenseNamedUser -RobotType Unattended -Path Orch1:
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -19077,7 +19048,7 @@ If not specified, the current drive will be targeted.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -19208,7 +19179,7 @@ PS Orch1:\&gt; Get-OrchLicenseRuntime Unattended | Where-Object { $_.Enabled -eq
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -19233,7 +19204,7 @@ If not specified, the current drive will be targeted.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -19353,15 +19324,14 @@ PS C:\&gt; Get-OrchLicenseStats -Last Week -Path Orch1:
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -19523,8 +19493,7 @@ Enter the number of objects to get.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -19538,7 +19507,7 @@ If not specified, the current folder will be targeted.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -20729,7 +20698,7 @@ PS Orch1:\&gt; Get-OrchPackageVersion -Recurse Blank*
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -20754,7 +20723,7 @@ If not specified, the current drive will be targeted.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -22210,10 +22179,10 @@ PS Orch1:\&gt; Get-OrchRobot
         <maml:title>--------- Example 2: Get robots by username ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Get-OrchRobot -Username hoge\*
+PS Orch1:\&gt; Get-OrchRobot -Username CORP\*
 ```</maml:para>
           <maml:para></maml:para>
-          <maml:para>Gets robots whose username matches `hoge\*`.</maml:para>
+          <maml:para>Gets robots whose username matches `CORP\*`.</maml:para>
         </maml:introduction>
         <dev:code />
         <dev:remarks />
@@ -22234,7 +22203,7 @@ PS Orch1:\&gt; Get-OrchRobot -Username autogen\*
         <maml:title>--------- Example 4: Get robots from a specific drive ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchRobot -Path Orch1:\ -Username hoge\ff
+PS C:\&gt; Get-OrchRobot -Path Orch1:\ -Username CORP\Robot01
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets the robot with the specified username from the Orch1 tenant.</maml:para>
@@ -22602,15 +22571,14 @@ PS C:\&gt; Get-OrchSetting -Path Orch1:\,Orch2:\
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -22650,15 +22618,14 @@ A depth of 0 indicates the current location only, with no subfolders included. W
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -22784,8 +22751,7 @@ PS Orch1:\&gt; Get-OrchTestCase -Recurse | Format-Table Name, PackageIdentifier
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -22809,8 +22775,7 @@ If not specified, the current folder will be targeted.</maml:para>
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -22834,8 +22799,7 @@ If not specified, the current folder will be targeted.</maml:para>
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -22873,8 +22837,7 @@ If not specified, the current folder will be targeted.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -23019,15 +22982,14 @@ PS Orch1:\root&gt; Get-OrchTestSetExecution -Last 3Years | Get-OrchTestCaseAsser
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -23096,15 +23058,14 @@ Enter the number of objects to skip.</maml:para>
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -23166,15 +23127,14 @@ Enter the number of objects to get.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -23255,10 +23215,10 @@ When no query parameters (TestSetExecutionName, Last, StartTimeAfter, StartTimeB
         <maml:title>--------- Example 1: Get test case executions by test set execution name ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\root&gt; Get-OrchTestCaseExecution hoge
+PS Orch1:\root&gt; Get-OrchTestCaseExecution SmokeTest
 ```</maml:para>
           <maml:para></maml:para>
-          <maml:para>Gets all test case execution results for the test set execution named "hoge" from the current folder. The -TestSetExecutionName parameter is positional (position 0) so the parameter name can be omitted.</maml:para>
+          <maml:para>Gets all test case execution results for the test set execution named "SmokeTest" from the current folder. The -TestSetExecutionName parameter is positional (position 0) so the parameter name can be omitted.</maml:para>
         </maml:introduction>
         <dev:code />
         <dev:remarks />
@@ -24071,10 +24031,10 @@ PS Orch1:\root&gt; Get-OrchTestSetExecution -Last 3Years
         <maml:title>--------- Example 2: Get test set executions by name ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\root&gt; Get-OrchTestSetExecution hoge -Last 3Years
+PS Orch1:\root&gt; Get-OrchTestSetExecution SmokeTest -Last 3Years
 ```</maml:para>
           <maml:para></maml:para>
-          <maml:para>Gets test set executions named "hoge" from the last 3 years.</maml:para>
+          <maml:para>Gets test set executions named "SmokeTest" from the last 3 years.</maml:para>
         </maml:introduction>
         <dev:code />
         <dev:remarks />
@@ -24553,7 +24513,7 @@ PS Orch1:\root&gt; Get-OrchTrigger -ExportCsv c:triggers.csv
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -24571,7 +24531,7 @@ If not specified, the current drive will be targeted.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -25420,7 +25380,7 @@ PS C:\&gt; Get-OrchUserSession -Path Orch1:\
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -25445,7 +25405,7 @@ If not specified, the current drive will be targeted.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -27533,7 +27493,7 @@ PS Orch1:\&gt; Get-PmUser -ExportCsv C:\temp\users.csv -CsvEncoding shift_jis
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -27544,7 +27504,7 @@ If not specified, the current drive will be targeted.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -27628,15 +27588,14 @@ PS C:\&gt; Get-TmConfiguration Orch1Tm:
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -27646,15 +27605,14 @@ If not specified, the current folder will be targeted.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -27750,15 +27708,14 @@ PS Orch1Tm:\&gt; Get-TmProjectPermission -Recurse
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -27768,15 +27725,14 @@ If not specified, the current folder will be targeted.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -27872,15 +27828,14 @@ PS Orch1Tm:\&gt; Get-TmProjectSetting -Recurse
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -27906,15 +27861,14 @@ Wildcard characters are permitted.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -28009,7 +27963,7 @@ PS C:\&gt; Get-TmRequirement -Path Orch1Tm:\MTP -Recurse
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -28020,7 +27974,7 @@ If not specified, the current drive will be targeted.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -28104,15 +28058,14 @@ PS C:\&gt; Get-TmServerInfo Orch1Tm:
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -28138,15 +28091,14 @@ Wildcard characters are permitted.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -28242,15 +28194,14 @@ PS C:\&gt; Get-TmTestCase -Path Orch1Tm:\MTP -Recurse
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -28276,15 +28227,14 @@ Wildcard characters are permitted.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -28380,15 +28330,14 @@ PS C:\&gt; Get-TmTestExecution -Path Orch1Tm:\SKK -Recurse
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -28414,15 +28363,14 @@ Wildcard characters are permitted.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -28642,7 +28590,7 @@ PS C:\&gt; Get-TmTestSet -Path Orch1Tm:\SKK -Recurse
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce pipeline output. Files are uploaded to the specified storage bucket on the Orchestrator.</maml:para>
@@ -29117,7 +29065,7 @@ PS Orch1:\&gt; Import-OrchPackage C:\exported-packages\ -Recurse
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder. If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -29204,7 +29152,7 @@ PS Orch1:\&gt; Import-OrchPackage C:\exported-packages\ -Recurse
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder. If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -29456,7 +29404,7 @@ What if: Performing the operation "Import QueueItem" on target "Queue: 'TestQueu
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -29676,7 +29624,7 @@ PS Orch1:\Shared&gt; Move-OrchFolderUser ytsuda@gmail.com Orch1:\Dept#2 -WhatIf
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce pipeline output. Group updates are performed as a side effect via the PUT API.</maml:para>
@@ -32756,8 +32704,7 @@ PS Orch1:\&gt; New-PmUser newuser@example.com -Name Test -WhatIf
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -32781,8 +32728,7 @@ If not specified, the current folder will be targeted.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -32897,7 +32843,7 @@ If not specified, the current drive will be used.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce pipeline output. On Windows, it opens File Explorer. On Linux, it changes the current location.</maml:para>
@@ -33147,15 +33093,14 @@ PS C:\&gt; Redo-OrchQueueItem -Path Orch1:\Shared -Name TestQueue2 -Id 70345
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -33213,15 +33158,14 @@ This parameter is mandatory.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -33255,7 +33199,7 @@ Only directly assigned (non-inherited) roles are removed.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce pipeline output.</maml:para>
@@ -33527,15 +33471,14 @@ PS Orch1:\Shared&gt; Remove-OrchActionCatalog * -WhatIf
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -33597,15 +33540,14 @@ A depth of 0 indicates the current location only, with no subfolders included. W
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -33631,7 +33573,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -34065,7 +34007,7 @@ PS Orch1:\&gt; Remove-OrchAsset -Recurse -Name 'Temp*'
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output. The bucket is deleted from the Orchestrator.</maml:para>
@@ -34297,7 +34239,7 @@ What if: Performing the operation "Remove Bucket" on target "Orch1:\Shared\TestB
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce pipeline output. The specified files are deleted from the storage bucket.</maml:para>
@@ -34423,7 +34365,7 @@ What if: Performing the operation "Remove BucketItem" on target "Orch1:\Shared\D
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -34470,7 +34412,7 @@ The cmdlet is not run.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -34597,7 +34539,7 @@ What if: Performing the operation "Remove Calendar" on target "'Japan Holidays [
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -34658,7 +34600,7 @@ The cmdlet is not run.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -34708,7 +34650,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output. The calendar is updated silently.</maml:para>
@@ -34878,7 +34820,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -34958,15 +34900,14 @@ PS C:\&gt; Remove-OrchCredentialStore -Path Orch1:\ OldVault
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -35028,15 +34969,14 @@ A depth of 0 indicates the current location only, with no subfolders included. W
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -35062,7 +35002,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -35259,7 +35199,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -35478,7 +35418,7 @@ PS Orch1:\Shared&gt; Remove-OrchFolderMachine * -WhatIf
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -35585,15 +35525,14 @@ PS Orch1:\&gt; Remove-OrchFolderUser -Recurse -UserName ytsuda@gmail.com
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -35655,15 +35594,14 @@ A depth of 0 indicates the current location only, with no subfolders included. W
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -35875,7 +35813,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce pipeline output.</maml:para>
@@ -36039,7 +35977,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -36219,7 +36157,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -36412,7 +36350,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce pipeline output.</maml:para>
@@ -36509,7 +36447,7 @@ PS C:\&gt; Remove-OrchPackage -Path Orch1:\Shared -Id BlankProcess19 -Version 1.
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -36570,7 +36508,7 @@ The cmdlet is not run.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -36787,7 +36725,7 @@ PS Orch1:\&gt; Remove-OrchPersonalWorkspace -OwnerName john* -WhatIf
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce any output.</maml:para>
@@ -37371,7 +37309,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -37595,7 +37533,7 @@ PS C:\&gt; Remove-OrchRole -Path Orch1:\ OldRole
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -37926,15 +37864,14 @@ PS Orch1:\&gt; Remove-OrchRoleFromUser ytsuda@gmail.com Administrator -WhatIf
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -37996,15 +37933,14 @@ A depth of 0 indicates the current location only, with no subfolders included. W
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -38240,7 +38176,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -38627,7 +38563,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -38818,7 +38754,7 @@ PS Orch1:\Shared&gt; Remove-OrchTestSetSchedule * -WhatIf
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output. Triggers are deleted from the Orchestrator server.</maml:para>
@@ -39026,7 +38962,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output.</maml:para>
@@ -39145,7 +39081,7 @@ PS C:\&gt; Remove-OrchUser -Path Orch1:\ -UserName old-user -NoMatchWarning
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -39192,7 +39128,7 @@ The cmdlet is not run.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -39218,7 +39154,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output. Webhooks are deleted from the Orchestrator server.</maml:para>
@@ -39779,7 +39715,7 @@ PS Orch1:\&gt; Remove-PmExternalApplication MyApp -Confirm
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output. The deletion is performed as a side effect.</maml:para>
@@ -40164,7 +40100,7 @@ PS Orch1:\&gt; Remove-PmGroupMember Automation* DirectoryUser *@gmail.com -WhatI
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output. The deletion is performed as a side effect.</maml:para>
@@ -40480,7 +40416,7 @@ PS Orch1:\&gt; Remove-PmLicenseFromPmLicensedGroup Developers "Citizen Developer
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce pipeline output. The deletion is performed as a side effect.</maml:para>
@@ -40764,15 +40700,14 @@ PS Orch1:\&gt; Remove-PmUser ytsuda* -WhatIf
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -40822,15 +40757,14 @@ This parameter is mandatory.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -40934,15 +40868,14 @@ PS Orch1Tm:\MTP&gt; Remove-TmRequirement * -WhatIf
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -40992,15 +40925,14 @@ This parameter is mandatory.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -41026,7 +40958,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce pipeline output.</maml:para>
@@ -41104,15 +41036,14 @@ PS Orch1Tm:\MTP&gt; Remove-TmTestCase * -WhatIf
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -41162,15 +41093,14 @@ This parameter is mandatory.</maml:para>
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -41196,7 +41126,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce pipeline output.</maml:para>
@@ -41376,7 +41306,7 @@ PS Orch1Tm:\MTP&gt; Remove-TmTestSet * -WhatIf
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce any output.</maml:para>
@@ -41858,7 +41788,7 @@ PS C:\&gt; Resolve-PmDirectoryNameBulk -EntityType User -Name ytsuda@gmail.com -
           <maml:name>Path</maml:name>
           <maml:description>
             <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
@@ -41883,7 +41813,7 @@ If not specified, the current drive will be targeted.</maml:para>
         <maml:name>Path</maml:name>
         <maml:description>
           <maml:para>Specifies the name of the target drives.
-If not specified, the current drive will be targeted.</maml:para>
+If not specified, the current drive is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
@@ -42895,7 +42825,7 @@ PS Orch1:\Shared&gt; Set-OrchCredentialAsset -Name AdminCred -Credential $cred
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce pipeline output. It changes the current working directory.</maml:para>
@@ -43623,15 +43553,14 @@ PS Orch1:\&gt; Set-PmRobotAccount MyRobot1 "Automation Developers" -WhatIf
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -43728,15 +43657,14 @@ A depth of 0 indicates the current location only, with no subfolders included. W
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -44097,15 +44025,14 @@ PS Orch1:\Shared&gt; Start-OrchTestSet * -WhatIf
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Path</maml:name>
           <maml:description>
-            <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+            <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
         </command:parameter>
         <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
           <maml:name>Recurse</maml:name>
           <maml:description>
-            <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+            <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
         </command:parameter>
@@ -44195,15 +44122,14 @@ A depth of 0 indicates the current location only, with no subfolders included. W
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Path</maml:name>
         <maml:description>
-          <maml:para>Specifies the target folder.
-If not specified, the current folder will be targeted.</maml:para>
+          <maml:para>Specifies the target folder. If not specified, the current folder is targeted.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String[]</command:parameterValue>
       </command:parameter>
       <command:parameter required="false" variableLength="false" globbing="false" pipelineInput="false" position="Named" aliases="none">
         <maml:name>Recurse</maml:name>
         <maml:description>
-          <maml:para>Specifies that the operation should include the target folder and all its subfolders.</maml:para>
+          <maml:para>Includes the target folder and all its subfolders in the operation.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.Management.Automation.SwitchParameter</command:parameterValue>
       </command:parameter>
@@ -44731,7 +44657,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output. The password is updated on the server.</maml:para>
@@ -45109,7 +45035,7 @@ The cmdlet is not run.</maml:para>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce output. Machine definitions are updated in place on the Orchestrator server.</maml:para>
@@ -46028,7 +45954,7 @@ PS Orch1:\&gt; Import-Csv C:\temp\processes.csv | Update-OrchProcess
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <dev:name>System.Object</dev:name>
+          <dev:name>None</dev:name>
         </dev:type>
         <maml:description>
           <maml:para>This cmdlet does not produce standard output. Use -Verbose to see details of version updates performed.</maml:para>

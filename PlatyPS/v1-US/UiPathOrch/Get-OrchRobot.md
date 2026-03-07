@@ -55,10 +55,10 @@ Gets all robots from the current Orchestrator tenant.
 ### Example 2: Get robots by username
 
 ```powershell
-PS Orch1:\> Get-OrchRobot -Username hoge\*
+PS Orch1:\> Get-OrchRobot -Username CORP\*
 ```
 
-Gets robots whose username matches `hoge\*`.
+Gets robots whose username matches `CORP\*`.
 
 ### Example 3: Get robots by username pattern
 
@@ -71,7 +71,7 @@ Gets robots whose username matches `autogen\*`.
 ### Example 4: Get robots from a specific drive
 
 ```powershell
-PS C:\> Get-OrchRobot -Path Orch1:\ -Username hoge\ff
+PS C:\> Get-OrchRobot -Path Orch1:\ -Username CORP\Robot01
 ```
 
 Gets the robot with the specified username from the Orch1 tenant.

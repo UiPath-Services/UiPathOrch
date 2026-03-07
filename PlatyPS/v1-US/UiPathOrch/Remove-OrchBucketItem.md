@@ -268,7 +268,7 @@ You can pipe bucket names to this cmdlet via the Name property.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce pipeline output. The specified files are deleted from the storage bucket.
 

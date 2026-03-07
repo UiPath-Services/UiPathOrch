@@ -90,8 +90,7 @@ Gets all test case definitions from all folders recursively and displays them in
 
 ### -Path
 
-Specifies the target folder.
-If not specified, the current folder will be targeted.
+Specifies the target folder. If not specified, the current folder is targeted.
 
 ```yaml
 Type: System.String[]
@@ -112,7 +111,7 @@ HelpMessage: ''
 
 ### -Recurse
 
-Specifies that the operation should include the target folder and all its subfolders.
+Includes the target folder and all its subfolders in the operation.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter

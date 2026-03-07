@@ -85,7 +85,7 @@ Adds December 25, 2025 to the "Company Holidays" calendar, even though the date 
 ### -Path
 
 Specifies the name of the target drives.
-If not specified, the current drive will be targeted.
+If not specified, the current drive is targeted.
 
 ```yaml
 Type: System.String[]
@@ -239,7 +239,7 @@ You can pipe multiple excluded dates to this cmdlet via the ExcludedDate propert
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce output. The calendar is created or updated silently.
 

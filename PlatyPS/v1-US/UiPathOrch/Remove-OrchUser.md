@@ -257,7 +257,7 @@ You can pipe UserName, FullName, Type, and Path values to this cmdlet via their 
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce output.
 

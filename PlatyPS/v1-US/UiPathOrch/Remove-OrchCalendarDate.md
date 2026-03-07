@@ -87,7 +87,7 @@ Shows what would happen without actually modifying the calendar. Use this to ver
 ### -Path
 
 Specifies the name of the target drives.
-If not specified, the current drive will be targeted.
+If not specified, the current drive is targeted.
 
 ```yaml
 Type: System.String[]
@@ -220,7 +220,7 @@ You can pipe multiple excluded dates to this cmdlet via the ExcludedDate propert
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce output. The calendar is updated silently.
 

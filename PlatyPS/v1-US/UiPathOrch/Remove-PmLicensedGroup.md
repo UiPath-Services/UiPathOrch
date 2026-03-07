@@ -168,7 +168,7 @@ You can pipe group names to this cmdlet via the GroupName property.
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce output. The deletion is performed as a side effect.
 

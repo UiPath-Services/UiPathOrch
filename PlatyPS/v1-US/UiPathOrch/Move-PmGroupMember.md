@@ -252,7 +252,7 @@ You can pipe objects with GroupName, UserName, Destination, KeepSource, and Path
 
 ## OUTPUTS
 
-### System.Object
+### None
 
 This cmdlet does not produce pipeline output. Group updates are performed as a side effect via the PUT API.
 

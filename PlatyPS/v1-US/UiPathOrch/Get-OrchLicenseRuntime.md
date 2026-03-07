@@ -86,7 +86,7 @@ Gets runtime licenses for the `Unattended` robot type and filters to show only t
 ### -Path
 
 Specifies the name of the target drives.
-If not specified, the current drive will be targeted.
+If not specified, the current drive is targeted.
 
 ```yaml
 Type: System.String[]

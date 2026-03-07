@@ -59,10 +59,10 @@ Required permissions: TestSetExecutions.View
 ### Example 1: Get test case executions by test set execution name
 
 ```powershell
-PS Orch1:\root> Get-OrchTestCaseExecution hoge
+PS Orch1:\root> Get-OrchTestCaseExecution SmokeTest
 ```
 
-Gets all test case execution results for the test set execution named "hoge" from the current folder. The -TestSetExecutionName parameter is positional (position 0) so the parameter name can be omitted.
+Gets all test case execution results for the test set execution named "SmokeTest" from the current folder. The -TestSetExecutionName parameter is positional (position 0) so the parameter name can be omitted.
 
 ### Example 2: Get test case executions from the last year
 
@@ -108,8 +108,7 @@ Gets the first 10 test case execution results from the last 3 years. Use -Skip a
 
 ### -Path
 
-Specifies the target folder.
-If not specified, the current folder will be targeted.
+Specifies the target folder. If not specified, the current folder is targeted.
 
 ```yaml
 Type: System.String[]
@@ -130,7 +129,7 @@ HelpMessage: ''
 
 ### -Recurse
 
-Specifies that the operation should include the target folder and all its subfolders.
+Includes the target folder and all its subfolders in the operation.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
