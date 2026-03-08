@@ -1,12 +1,12 @@
 # Version: 0.9.16.0
 ## New Features
-- Added Switch-OrchCurrentUser cmdlet. Opens an InPrivate browser window to re-authenticate with a different account. Useful when SSO auto-login prevents account switching.
+- Added Import-OrchConfig cmdlet. Imports the configuration file and creates PSDrives for all enabled tenants. Use this to apply configuration changes without restarting the PowerShell session.
 
-- Added Import-OrchConfig cmdlet. Mounts all PSDrives defined in the configuration file. Supports -Force to reload even when the configuration has not changed. Previously, drives were only created via module import.
-
-- Added New-OrchPSDrive cmdlet. Creates a new PSDrive entry in the configuration file interactively.
+- Added New-OrchPSDrive cmdlet. Creates a new PSDrive in the current session without using the configuration file.
 
 - Added Get-OrchConfigPath cmdlet. Returns the path to the UiPathOrch configuration file, allowing AI and scripts to directly read or edit it.
+
+- Added Switch-OrchCurrentUser cmdlet. Opens an InPrivate browser window to re-authenticate with a different account. Useful when SSO auto-login prevents account switching.
 
 - Added Entra ID login warning. When connecting to a drive, UiPathOrch checks the JWT token and displays a warning if the user is not signed in via Entra ID. For AD-integrated organizations, UiPathOrch automatically directs the user to the Entra ID login page during PKCE authentication.
 
