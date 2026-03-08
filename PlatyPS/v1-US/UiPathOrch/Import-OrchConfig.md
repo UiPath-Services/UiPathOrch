@@ -6,34 +6,34 @@ Locale: en-US
 Module Name: UiPathOrch
 ms.date: 03/08/2026
 PlatyPS schema version: 2024-05-01
-title: Mount-OrchPSDrive
+title: Import-OrchConfig
 ---
 
-# Mount-OrchPSDrive
+# Import-OrchConfig
 
 ## SYNOPSIS
 
-Mounts UiPathOrch PSDrives from the configuration file.
+Imports the UiPathOrch configuration file and creates PSDrives.
 
 ## SYNTAX
 
 ### __AllParameterSets
 
 ```
-Mount-OrchPSDrive [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
+Import-OrchConfig [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## ALIASES
 
 ## DESCRIPTION
 
-The `Mount-OrchPSDrive` cmdlet reads the UiPathOrchConfig.json configuration file and mounts all enabled Orchestrator tenants as PSDrives. All existing UiPathOrch drives (including Document Understanding and Test Manager drives) are removed and re-created from the configuration file. Cached data in the existing drives is discarded.
+The `Import-OrchConfig` cmdlet reads the UiPathOrchConfig.json configuration file and creates PSDrives for all enabled Orchestrator tenants. All existing UiPathOrch drives (including Document Understanding and Test Manager drives) are removed and re-created. Cached data in the existing drives is discarded.
 
-If the configuration file has not changed since the last mount, the cmdlet skips remounting. Use `-Force` to override this check and force a remount.
+If the configuration file has not changed since the last import, the cmdlet skips re-creation. Use `-Force` to override this check.
 
-Use this cmdlet to reload the configuration after editing UiPathOrchConfig.json with `Edit-OrchConfig`, without restarting the PowerShell session.
+Use this cmdlet to apply configuration changes after editing UiPathOrchConfig.json with `Edit-OrchConfig`, without restarting the PowerShell session.
 
-This cmdlet can also be used for initial setup: after the module is imported for the first time and the configuration file is created with `Edit-OrchConfig`, run `Mount-OrchPSDrive` to mount the drives.
+This cmdlet can also be used for initial setup: after the configuration file is created with `Edit-OrchConfig`, run `Import-OrchConfig` to create the drives.
 
 Primary Endpoint: (none)
 
@@ -43,35 +43,35 @@ Required permissions: (none)
 
 ## EXAMPLES
 
-### Example 1: Mount drives from the configuration file
+### Example 1: Import configuration and create drives
 
 ```powershell
-PS C:\> Mount-OrchPSDrive
+PS C:\> Import-OrchConfig
 ```
 
-Reads UiPathOrchConfig.json and mounts all enabled drives.
+Reads UiPathOrchConfig.json and creates PSDrives for all enabled tenants.
 
-### Example 2: Reload configuration after editing
+### Example 2: Apply configuration changes
 
 ```powershell
 PS C:\> Edit-OrchConfig
-PS C:\> Mount-OrchPSDrive
+PS C:\> Import-OrchConfig
 ```
 
 Opens the configuration file for editing, then reloads it to apply the changes.
 
-### Example 3: Force remount
+### Example 3: Force re-creation
 
 ```powershell
-PS C:\> Mount-OrchPSDrive -Force
+PS C:\> Import-OrchConfig -Force
 ```
 
-Forces remounting all drives even if the configuration file has not changed since the last mount.
+Forces re-creation of all drives even if the configuration file has not changed since the last import.
 
 ### Example 4: Preview with -WhatIf
 
 ```powershell
-PS C:\> Mount-OrchPSDrive -WhatIf
+PS C:\> Import-OrchConfig -WhatIf
 ```
 
 Shows the configuration file path that would be loaded without actually removing or creating any drives.
@@ -80,7 +80,7 @@ Shows the configuration file path that would be loaded without actually removing
 
 ### -Force
 
-Forces remounting all drives even if the configuration file has not changed since the last mount. Without this switch, the cmdlet skips remounting when the file's last write time matches the previous mount.
+Forces re-creation of all drives even if the configuration file has not changed since the last import. Without this switch, the cmdlet skips when the file's last write time matches the previous import.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -161,11 +161,11 @@ This cmdlet does not accept pipeline input.
 
 ### None
 
-This cmdlet does not produce output. Use `-Verbose` to see the number of drives mounted.
+This cmdlet does not produce output. Use `-Verbose` to see the number of drives created.
 
 ## NOTES
 
-This cmdlet removes all existing UiPathOrch, UiPathOrchDu, and UiPathOrchTm drives before creating new ones. Any cached data is discarded. Run `Get-OrchPSDrive` after mounting to verify the drive configuration.
+This cmdlet removes all existing UiPathOrch, UiPathOrchDu, and UiPathOrchTm drives before creating new ones. Any cached data is discarded. Run `Get-OrchPSDrive` after importing to verify the drive configuration.
 
 ## RELATED LINKS
 

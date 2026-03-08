@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.15.5'
+ModuleVersion = '0.9.16.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -81,7 +81,7 @@ FunctionsToExport = @(
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @(
-'Mount-OrchPSDrive',
+'Import-OrchConfig',
 'New-OrchPSDrive',
 'Switch-OrchCurrentUser',
 'Get-OrchPSDrive',
@@ -412,29 +412,47 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '- Added Get-OrchTestCaseAssertion cmdlet. Retrieves test case assertions for a given test case execution. Supports pipeline input from Get-OrchTestCaseExecution and can download screenshots using the -ScreenshotPath parameter.
+        ReleaseNotes = '## New Features
+- Added Switch-OrchCurrentUser cmdlet. Opens an InPrivate browser window to re-authenticate with a different account. Useful when SSO auto-login prevents account switching.
 
-- Added Get-OrchLogLocation cmdlet. Returns the log folder path for a specified drive. Useful for scripting access to log files without opening File Explorer.
+- Added Import-OrchConfig cmdlet. Mounts all PSDrives defined in the configuration file. Supports -Force to reload even when the configuration has not changed. Previously, drives were only created via module import.
 
-- Enhanced Get-OrchTestCaseExecution with new filter parameters: -Last, -StartTimeAfter, and -StartTimeBefore. Also added -TestSetExecutionName filter, -Skip and -First pagination parameters. When -PathTestSetExecutionName is specified, the corresponding TestSetExecution is now fetched automatically if not cached.
+- Added New-OrchPSDrive cmdlet. Creates a new PSDrive entry in the configuration file interactively.
 
-- Fixed a bug where Get-OrchJob, Get-OrchQueueItem, and Get-OrchTestCaseExecution could fail with HTTP 400 errors when filtering by a large number of robots or test set executions. The OData filter is now automatically split into batches to stay within API limits.
+- Added Get-OrchConfigPath cmdlet. Returns the path to the UiPathOrch configuration file, allowing AI and scripts to directly read or edit it.
 
-- Fixed on-premises OAuth authentication failing due to an extra tenant path segment being included in the identity server URL.
+- Added Entra ID login warning. When connecting to a drive, UiPathOrch checks the JWT token and displays a warning if the user is not signed in via Entra ID. For AD-integrated organizations, UiPathOrch automatically directs the user to the Entra ID login page during PKCE authentication.
 
-- Fixed Get-OrchTestCaseExecution returning duplicate results when used as pipeline input to itself.
+- Added handling for deprecated Alerts API: returns an error on API v18+.
 
-- Get-OrchTestSetExecution now outputs cached results with a warning message when no filter parameters are specified, consistent with other cmdlets such as Get-OrchJob and Get-OrchLog.
+- (Experimental) Added New-OrchUserMappingCsv and Test-OrchUserMappingCsv cmdlets for cross-organization tenant migration with username mapping. New-OrchUserMappingCsv generates a CSV that maps source directory users to destination directory users by searching the destination directory. Test-OrchUserMappingCsv validates the mapping. All copy cmdlets now accept the -UserMappingCsv parameter to translate user references during migration.
 
-- Fixed Get-OrchJob compatibility with older on-premises Orchestrator versions. On API versions earlier than 12, the Machine field is excluded from the $expand clause and the ProcessType filter is omitted, preventing request errors on unsupported versions. The threshold has been confirmed up through API version 13, and will be re-evaluated when version 14 is available.
+## Bug Fixes
+- Fixed Cloud PKCE authorize URL to use the updated UiPath Identity Server endpoint with acr_values for organization routing.
 
-- Fixed on-premises API requests to use X-UIPATH-TenantName header instead of embedding the tenant in the URL path. Also improved Cloud base URL calculation to derive the org path dynamically instead of relying on a hardcoded domain match.
+- Fixed New-OrchProcess bugs: triple enumeration of packages, Description property leaking between calls, and nullable handling.
 
-- Tab completion and path resolution now canonicalize folder and project name casing from cache across all providers (Orchestrator, Document Understanding, Test Manager).
+- Fixed parameter mutation bugs and ErrorId usage across 47 files.
 
-- Fixed SpecificPriorityValue being sent to Orchestrator API versions that reject it. The threshold has been raised from ApiVersion 12 to 14, and the value is now cleared after converting to JobPriority.
+- Fixed Pm cmdlets race condition by converting from parallel to sequential execution when sharing cache.
 
-- Fixed RateLimiter resource leak by adding Dispose and removing unused Release method.
+- Fixed Personal workspace exclusion across FolderUser, FolderMachine, and Test cmdlets.
+
+- Fixed OutputType attributes: corrected ActionCatalog type, removed incorrect OutputType from Copy cmdlets.
+
+- Fixed ShouldProcess messages: typos and naming consistency.
+
+- Removed uipath.com domain check from Document Understanding and Test Manager drive creation, enabling Automation Suite environments.
+
+## Documentation
+- Rewrote all cmdlet help documentation using PlatyPS v1. 238 markdown help files with standardized descriptions, 1030+ examples, parameter documentation.
+
+- Removed legacy PDF documentation and Japanese-language help files. All documentation is now in English markdown format.
+
+- Added AI-oriented guide documents (Docs/01-Essentials.md, 02-CmdletReference.md, 03-MigrationGuide.md) for module usage, cmdlet reference, and tenant migration procedures.
+
+## Breaking Changes
+- Update cmdlets (Set-Orch*) now treat empty string "" as an intentional value clear. Previously, empty strings were silently ignored.
 '
 
         # Prerelease string of this module

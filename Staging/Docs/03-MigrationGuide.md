@@ -24,7 +24,7 @@ Before beginning the migration process, set up your environment:
 2. Mount the Orchestrator drives:
 
 ```powershell
-Mount-OrchPSDrive
+Import-OrchConfig
 ```
 
 3. Verify that the source and destination tenants are mounted as PSDrives:
@@ -208,7 +208,7 @@ Find the source drive's PSDrive entry and change the `Scope` value:
 1. Remove all scopes with `.Write` suffix (e.g., `OR.Assets.Write`)
 2. Add the `.Read` suffix to scopes that have neither `.Read` nor `.Write`
 
-After editing, run `Mount-OrchPSDrive` to reload the configuration.
+After editing, run `Import-OrchConfig` to reload the configuration.
 
 > **Note**: Adding Platform Management API scopes (those starting with `PM.`,
 > e.g., `PM.User.Read`, `PM.Group.Read`, `PM.RobotAccount.Read`) enables

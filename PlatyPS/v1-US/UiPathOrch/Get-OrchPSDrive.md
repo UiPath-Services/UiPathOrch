@@ -143,7 +143,7 @@ This cmdlet enumerates Orchestrator, Document Understanding, and Test Manager dr
 
 ## RELATED LINKS
 
-Mount-OrchPSDrive
+Import-OrchConfig
 
 New-OrchPSDrive
 

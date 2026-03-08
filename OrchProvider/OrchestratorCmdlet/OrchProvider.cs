@@ -97,13 +97,13 @@ public partial class OrchProvider : NavigationCmdletProvider
     private static UiPathOrchConfig? _config;
 
     /// <summary>
-    /// Mount-OrchPSDrive から呼び出される。設定ファイルの再読み込み時に _config を更新する。
+    /// Import-OrchConfig から呼び出される。設定ファイルの再読み込み時に _config を更新する。
     /// </summary>
     internal static void SetConfig(UiPathOrchConfig config) => _config = config;
 
     /// <summary>
     /// InitializeDefaultDrives() がマウントした時点の設定ファイル更新日時。
-    /// Mount-OrchPSDrive はこの値と現在のファイル更新日時を比較し、
+    /// Import-OrchConfig はこの値と現在のファイル更新日時を比較し、
     /// 変わっていなければ再マウントをスキップする。
     /// </summary>
     internal static DateTime? ConfigLastWriteTimeUtc { get; set; }
@@ -317,7 +317,7 @@ public partial class OrchProvider : NavigationCmdletProvider
                     Process.Start(startInfo);
                 }
 
-                WriteWarning($"Please edit '{configFilePath}'. After saving your changes, run `Mount-OrchPSDrive` to reload the configuration.");
+                WriteWarning($"Please edit '{configFilePath}'. After saving your changes, run `Import-OrchConfig` to reload the configuration.");
 
                 return null;
 
@@ -388,7 +388,7 @@ public partial class OrchProvider : NavigationCmdletProvider
                 };
                 Process.Start(startInfo);
 
-                WriteWarning($"Please edit '{configFilePath}'. After saving your changes, run `Mount-OrchPSDrive` to reload the configuration.");
+                WriteWarning($"Please edit '{configFilePath}'. After saving your changes, run `Import-OrchConfig` to reload the configuration.");
             }
             else
             {
@@ -404,7 +404,7 @@ public partial class OrchProvider : NavigationCmdletProvider
                 // 設定ファイルがあるパスに移動
                 SessionState.Path.SetLocation(folder);
 
-                WriteWarning($"Please edit './{fileName}'. After saving your changes, run Mount-OrchPSDrive to reload the configuration.");
+                WriteWarning($"Please edit './{fileName}'. After saving your changes, run Import-OrchConfig to reload the configuration.");
             }
             return null;
         }

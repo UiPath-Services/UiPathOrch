@@ -23,13 +23,13 @@ operates on live production systems.
 ## CRITICAL AI EXECUTION RULES
 
 ### NEVER VIOLATE THESE RULES:
-1. START SESSION: Execute Mount-OrchPSDrive, then Get-OrchPSDrive to verify available drives
+1. START SESSION: Execute Import-OrchConfig, then Get-OrchPSDrive to verify available drives
 2. ALWAYS confirm target drive with user when multiple drives exist
 3. ALWAYS use -WhatIf first for destructive operations
 4. ALWAYS run Clear-OrchCache before retrying after errors
 
 ### IMMEDIATE FAILURE CONDITIONS:
-- No drives found → Tell user to run Edit-OrchConfig, then Mount-OrchPSDrive
+- No drives found → Tell user to run Edit-OrchConfig, then Import-OrchConfig
 - Permission error → Follow error protocol below
 - Connection timeout → Clear-OrchCache and retry once
 
@@ -229,7 +229,7 @@ Clear-OrchCache  # Force refresh all cached data
 
 ```powershell
 # 1. Mount drives from configuration
-Mount-OrchPSDrive
+Import-OrchConfig
 
 # 2. Check available connections
 Get-OrchPSDrive
@@ -309,7 +309,7 @@ Get-OrchFolderUser               # Folder access assignments
 - **Connection Issues**: Clear-OrchCache; then retry operation
 - **Permission Errors**: Check Get-OrchUserPrivilege and Get-OrchFolderUser
 - **Performance Issues**: Use specific folder paths with -Path instead of -Recurse
-- **Drive Mount Issues**: Run Edit-OrchConfig to reconfigure, then Mount-OrchPSDrive to reload. Use Get-OrchConfigPath to retrieve the config file path so AI can directly inspect or edit it
+- **Drive Mount Issues**: Run Edit-OrchConfig to reconfigure, then Import-OrchConfig to reload. Use Get-OrchConfigPath to retrieve the config file path so AI can directly inspect or edit it
 - **Confidential App Errors**: Normal for user info commands, try alternative verification
 - **Entra ID Warning**: Use Switch-OrchCurrentUser to sign in via Entra ID
 - **SSO auto-login prevents account switch**: Use Switch-OrchCurrentUser to open InPrivate browser and choose a different account

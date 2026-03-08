@@ -444,7 +444,7 @@ The drive created by this cmdlet is not saved to the configuration file. It exis
 
 ## RELATED LINKS
 
-Mount-OrchPSDrive
+Import-OrchConfig
 
 Get-OrchPSDrive
 
