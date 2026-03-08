@@ -300,9 +300,13 @@ public partial class OrchAPISession : IDisposable
                     string token = _authManager.RequestToken();
                     SetToken(token);
 
-                    // TODO: 警告をどのタイミングで、どのように表示すれば良いか？
-                    //bool bMesasge = _authManager.ShouldShowEntraIdWarning();
-                    //string s = _authManager.DebugJwtToken();
+                    // Entra ID 警告: 組織にログインしていない場合に警告を表示
+                    if (_drive is not null && _authManager.ShouldShowEntraIdWarning())
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.Error.WriteLine($"WARNING: [{_drive.NameColon}] You are not signed in to the organization via Entra ID. Some operations may require organization-level access. Use Switch-OrchCurrentUser to sign in with a different account.");
+                        Console.ResetColor();
+                    }
 
                     _isAuthenticated = true;
                     _expiryTime = DateTime.Now.AddHours(1);
