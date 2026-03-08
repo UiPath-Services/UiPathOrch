@@ -71,7 +71,7 @@ Gets all queue definitions whose name starts with "Test" from the current folder
 ### Example 4: Get queues from a specific folder
 
 ```powershell
-PS C:\> Get-OrchQueue -Path Orch1:\Production -Name TestQueue2
+PS C:\> Get-OrchQueue -Path Orch1:\Production TestQueue2
 ```
 
 Gets the queue definition named "TestQueue2" from the Production folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.

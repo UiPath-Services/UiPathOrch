@@ -67,7 +67,7 @@ Required permissions: TestSetExecutions.View
 ### Example 1: Get assertions by test set execution name
 
 ```powershell
-PS Orch1:\Shared> Get-OrchTestCaseAssertion 'TestSet-TestProject-Migration-01'
+PS Orch1:\Shared> Get-OrchTestCaseAssertion TestSet-TestProject-Migration-01
 ```
 
 Gets all test case assertions for the test set execution named "TestSet-TestProject-Migration-01" from the current folder. The -TestSetExecutionName parameter is positional (position 0) so the parameter name can be omitted.
@@ -91,7 +91,7 @@ Pipes test case execution objects from the last 3 years to retrieve their assert
 ### Example 4: Get assertions with screenshot download
 
 ```powershell
-PS Orch1:\Shared> Get-OrchTestCaseAssertion 'TestSet-TestProject-Migration-01' -ScreenshotPath C:\temp
+PS Orch1:\Shared> Get-OrchTestCaseAssertion TestSet-TestProject-Migration-01 -ScreenshotPath C:\temp
 ```
 
 Gets all assertions for the specified test set execution and downloads assertion screenshots to C:\temp. Screenshots are saved as JPEG files organized into subdirectories by folder name and test set execution name. The -ScreenshotPath directory must already exist.

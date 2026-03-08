@@ -64,7 +64,7 @@ Creates a new text asset named "MyConfig" with the specified value. When -ValueT
 ### Example 2: Preview asset creation with -WhatIf
 
 ```powershell
-PS Orch1:\Shared> Set-OrchAsset -ValueType Integer -Name RetryCount -Value '3' -Description 'Max retry attempts' -WhatIf
+PS Orch1:\Shared> Set-OrchAsset -ValueType Integer -Name RetryCount -Value 3 -Description 'Max retry attempts' -WhatIf
 ```
 
 ```output
@@ -76,7 +76,7 @@ Shows what would happen without executing the command. The -WhatIf output shows 
 ### Example 3: Update an existing asset value
 
 ```powershell
-PS Orch1:\Shared> Set-OrchAsset -Name TestAsset1 -Value 'NewValue'
+PS Orch1:\Shared> Set-OrchAsset -Name TestAsset1 -Value NewValue
 ```
 
 Updates the value of an existing asset. The -ValueType and -Description remain unchanged. No output is produced on update; output is only returned when creating a new asset.
@@ -92,7 +92,7 @@ Creates a boolean asset using positional parameters. Parameter positions are: 0=
 ### Example 5: Update multiple assets with wildcards
 
 ```powershell
-PS Orch1:\Shared> Set-OrchAsset -Name 'Test*' -Value 'bulk-update'
+PS Orch1:\Shared> Set-OrchAsset -Name Test* -Value bulk-update
 ```
 
 Updates all assets whose names match the wildcard pattern. If no assets match, no action is taken and no error is raised.
@@ -100,7 +100,7 @@ Updates all assets whose names match the wildcard pattern. If no assets match, n
 ### Example 6: Set a per-robot asset value
 
 ```powershell
-PS Orch1:\Shared> Set-OrchAsset -Name AppConfig -Value 'robot-specific-value' -UserName testrobot01
+PS Orch1:\Shared> Set-OrchAsset -Name AppConfig -Value robot-specific-value -UserName testrobot01
 ```
 
 Sets a per-robot value for the specified user. The asset's ValueScope changes to PerRobot. When -MachineName is omitted, the value applies to the user regardless of machine.
@@ -108,7 +108,7 @@ Sets a per-robot value for the specified user. The asset's ValueScope changes to
 ### Example 7: Set a per-robot value with machine assignment
 
 ```powershell
-PS Orch1:\Shared> Set-OrchAsset -Name AppConfig -Value 'machine-specific' -UserName testrobot01 -MachineName aiai
+PS Orch1:\Shared> Set-OrchAsset -Name AppConfig -Value machine-specific -UserName testrobot01 -MachineName aiai
 ```
 
 Sets a per-robot value for a specific user and machine combination. Both -UserName and -MachineName support wildcards and multiple comma-separated values.

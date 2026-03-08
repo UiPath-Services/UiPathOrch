@@ -73,7 +73,7 @@ Gets all test case definitions whose name starts with "Test" from the current fo
 ### Example 4: Get test cases from a specific folder
 
 ```powershell
-PS C:\> Get-OrchTestCase -Path Orch1:\Production -Name TestCase.xaml
+PS C:\> Get-OrchTestCase -Path Orch1:\Production TestCase.xaml
 ```
 
 Gets the test case definition named "TestCase.xaml" from the Production folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.

@@ -71,7 +71,7 @@ Gets all storage buckets whose name starts with "Test" from the current folder. 
 ### Example 4: Get buckets from a specific folder
 
 ```powershell
-PS C:\> Get-OrchBucket -Path Orch1:\Production -Name TestBucket2
+PS C:\> Get-OrchBucket -Path Orch1:\Production TestBucket2
 ```
 
 Gets the storage bucket named "TestBucket2" from the Production folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.

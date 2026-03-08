@@ -67,7 +67,7 @@ Copies all queues matching "Test*" from the current folder to the Dept#2 folder.
 ### Example 3: Copy a queue across Orchestrator instances
 
 ```powershell
-PS C:\> Copy-OrchQueue -Path Orch1:\Shared -Name TestQueue2 -Destination Orch2:\Shared
+PS C:\> Copy-OrchQueue -Path Orch1:\Shared TestQueue2 Orch2:\Shared
 ```
 
 Copies the queue named "TestQueue2" from the Shared folder on Orch1 to the Shared folder on Orch2. The queue definition is recreated on the destination Orchestrator with the same configuration.

@@ -66,7 +66,7 @@ Gets all webhooks whose name contains "web" from the current drive.
 ### Example 4: Get webhooks from a specific drive
 
 ```powershell
-PS C:\> Get-OrchWebhook -Path Orch1: -Name my*
+PS C:\> Get-OrchWebhook -Path Orch1: my*
 ```
 
 Gets webhooks whose name starts with "my" from the Orch1 drive. When -Path uses an absolute path, the command can be run from any location.

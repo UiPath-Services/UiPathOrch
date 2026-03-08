@@ -67,7 +67,7 @@ Copies all storage buckets matching "Test*" from the current folder to the Dept#
 ### Example 3: Copy a bucket across Orchestrator instances
 
 ```powershell
-PS C:\> Copy-OrchBucket -Path Orch1:\Shared -Name TestBucket2 -Destination Orch2:\Shared
+PS C:\> Copy-OrchBucket -Path Orch1:\Shared TestBucket2 Orch2:\Shared
 ```
 
 Copies the storage bucket named "TestBucket2" from the Shared folder on Orch1 to the Shared folder on Orch2. The bucket definition is recreated on the destination Orchestrator with the same configuration.

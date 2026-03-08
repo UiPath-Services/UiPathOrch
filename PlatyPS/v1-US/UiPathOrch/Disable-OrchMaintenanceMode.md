@@ -70,7 +70,7 @@ Disables maintenance mode on all maintenance-mode sessions on the Orch1: drive.
 ### Example 4: Disable maintenance mode for a specific session ID
 
 ```powershell
-PS C:\> Disable-OrchMaintenanceMode -SessionId 12345 -Path Orch1:
+PS C:\> Disable-OrchMaintenanceMode -Path Orch1: -SessionId 12345
 ```
 
 Disables maintenance mode on the session with the specified session ID on the Orch1: drive.

@@ -75,7 +75,7 @@ Shows which processes would be removed without actually removing them.
 ### Example 4: Remove a process from a specific folder
 
 ```powershell
-PS C:\> Remove-OrchProcess -Path Orch1:\Shared -Name BlankProcess19
+PS C:\> Remove-OrchProcess -Path Orch1:\Shared BlankProcess19
 ```
 
 Removes the process named "BlankProcess19" from the Shared folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.
@@ -83,7 +83,7 @@ Removes the process named "BlankProcess19" from the Shared folder. When -Path us
 ### Example 5: Remove processes recursively
 
 ```powershell
-PS Orch1:\> Remove-OrchProcess -Recurse -Name *Legacy* -Confirm
+PS Orch1:\> Remove-OrchProcess -Recurse *Legacy* -Confirm
 ```
 
 Removes all processes matching "*Legacy*" from all folders, prompting for confirmation before each removal.

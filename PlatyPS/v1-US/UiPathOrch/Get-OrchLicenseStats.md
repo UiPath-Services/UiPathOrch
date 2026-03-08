@@ -70,7 +70,7 @@ Gets license statistics for the last year.
 ### Example 4: Get license statistics from a specific drive
 
 ```powershell
-PS C:\> Get-OrchLicenseStats -Last Week -Path Orch1:
+PS C:\> Get-OrchLicenseStats -Path Orch1: -Last Week
 ```
 
 Gets license statistics for the last week from the drive named `Orch1`.

@@ -47,7 +47,7 @@ Required permissions: Machines.Edit
 ### Example 1: Disable a specific runtime license
 
 ```powershell
-PS Orch1:\> Disable-OrchLicenseRuntime Unattended 'm2'
+PS Orch1:\> Disable-OrchLicenseRuntime Unattended m2
 ```
 
 Disables the runtime license with the key `m2` for the `Unattended` robot type.
@@ -63,7 +63,7 @@ Disables all currently enabled runtime licenses for the `Unattended` robot type.
 ### Example 3: Preview disabling with -WhatIf
 
 ```powershell
-PS Orch1:\> Disable-OrchLicenseRuntime Unattended 'm2' -WhatIf
+PS Orch1:\> Disable-OrchLicenseRuntime Unattended m2 -WhatIf
 ```
 
 Shows what would happen if the cmdlet disables the specified runtime license without actually performing the operation.
@@ -71,7 +71,7 @@ Shows what would happen if the cmdlet disables the specified runtime license wit
 ### Example 4: Disable runtime licenses from a specific drive
 
 ```powershell
-PS C:\> Disable-OrchLicenseRuntime -RobotType Unattended -Key 'm2' -Path Orch1:
+PS C:\> Disable-OrchLicenseRuntime -Path Orch1: -RobotType Unattended -Key m2
 ```
 
 Disables the specified runtime license from the drive named `Orch1`.
@@ -79,7 +79,7 @@ Disables the specified runtime license from the drive named `Orch1`.
 ### Example 5: Disable runtime licenses matching a wildcard pattern
 
 ```powershell
-PS Orch1:\> Disable-OrchLicenseRuntime Unattended 'xxx*'
+PS Orch1:\> Disable-OrchLicenseRuntime Unattended xxx*
 ```
 
 Disables all currently enabled runtime licenses for the `Unattended` robot type whose key matches the pattern `xxx*`.

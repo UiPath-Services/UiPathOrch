@@ -77,7 +77,7 @@ Shows what would happen without actually deleting any items.
 ### Example 4: Remove queue items from a specific folder
 
 ```powershell
-PS C:\> Remove-OrchQueueItem -Path Orch1:\Shared -Name TestQueue2 -Id 70345,70346,70347
+PS C:\> Remove-OrchQueueItem -Path Orch1:\Shared TestQueue2 -Id 70345,70346,70347
 ```
 
 Deletes the queue items with IDs 70345, 70346, and 70347 from TestQueue2 in the Shared folder on Orch1.

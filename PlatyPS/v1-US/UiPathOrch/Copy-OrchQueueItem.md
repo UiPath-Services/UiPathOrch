@@ -79,7 +79,7 @@ Shows what would happen without actually copying any items.
 ### Example 4: Copy queue items across Orchestrator instances
 
 ```powershell
-PS C:\> Copy-OrchQueueItem -Path Orch1:\Shared -Name TestQueue2 -Destination Orch2:\Shared
+PS C:\> Copy-OrchQueueItem -Path Orch1:\Shared TestQueue2 Orch2:\Shared
 ```
 
 Copies all "New" queue items from the TestQueue2 in the Shared folder on Orch1 to the TestQueue2 in the Shared folder on Orch2.

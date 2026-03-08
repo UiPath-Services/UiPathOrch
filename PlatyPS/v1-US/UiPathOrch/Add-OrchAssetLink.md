@@ -65,7 +65,7 @@ Shows what would happen without executing the command.
 ### Example 3: Link multiple assets to multiple folders
 
 ```powershell
-PS Orch1:\Shared> Add-OrchAssetLink -Name 'Test*' -Link Orch1:\Dept#2, Orch1:\Dept#3
+PS Orch1:\Shared> Add-OrchAssetLink -Name Test* -Link Orch1:\Dept#2, Orch1:\Dept#3
 ```
 
 Links all assets matching "Test*" to both the Dept#2 and Dept#3 folders. Both -Name and -Link accept wildcards and comma-separated values.
@@ -73,7 +73,7 @@ Links all assets matching "Test*" to both the Dept#2 and Dept#3 folders. Both -N
 ### Example 4: Link an asset from a specific source folder
 
 ```powershell
-PS C:\> Add-OrchAssetLink -Path Orch1:\Shared -Name TestAsset1 -Link Orch1:\Dept#2
+PS C:\> Add-OrchAssetLink -Path Orch1:\Shared TestAsset1 -Link Orch1:\Dept#2
 ```
 
 Links the asset from the Shared folder to the Dept#2 folder. When -Path uses an absolute path, the command can be run from any location.

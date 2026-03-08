@@ -78,7 +78,7 @@ Gets all assets in the Shared folder that are linked to multiple folders. The ou
 ### Example 2: Get links for a specific asset
 
 ```powershell
-PS Orch1:\Shared> Get-OrchAssetLink -Name DatabaseConnection
+PS Orch1:\Shared> Get-OrchAssetLink DatabaseConnection
 ```
 
 Gets the folder links for the "DatabaseConnection" asset. Shows all folders that can access this asset.
@@ -86,7 +86,7 @@ Gets the folder links for the "DatabaseConnection" asset. Shows all folders that
 ### Example 3: Get asset links from a specific folder
 
 ```powershell
-PS C:\> Get-OrchAssetLink -Path Orch1:\Shared -Name 'Test*'
+PS C:\> Get-OrchAssetLink -Path Orch1:\Shared Test*
 ```
 
 Gets asset links for assets matching "Test*" in the Shared folder. When -Path uses an absolute path, the command can be run from any location.

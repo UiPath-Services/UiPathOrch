@@ -57,7 +57,7 @@ Copies all users from the Orch1 organization to the Orch2 organization, preservi
 ### Example 2: Copy specific users across drives
 
 ```powershell
-PS C:\> Copy-PmUser -Email ytsuda@gmail.com -Path Orch1: -Destination Orch2:
+PS C:\> Copy-PmUser -Path Orch1: -Email ytsuda@gmail.com -Destination Orch2:
 ```
 
 Copies the specified user from the Orch1 organization to the Orch2 organization.

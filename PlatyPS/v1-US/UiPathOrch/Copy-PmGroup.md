@@ -57,7 +57,7 @@ Copies all groups and their members from the Orch1 organization to the Orch2 org
 ### Example 2: Copy a specific group across drives
 
 ```powershell
-PS C:\> Copy-PmGroup -GroupName "Automation Developers" -Path Orch1: -Destination Orch2:
+PS C:\> Copy-PmGroup -Path Orch1: -GroupName "Automation Developers" -Destination Orch2:
 ```
 
 Copies the "Automation Developers" group and its members from the Orch1 organization to the Orch2 organization.

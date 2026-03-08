@@ -68,7 +68,7 @@ Enables all disabled webhooks on the current drive. Webhooks that are already en
 ### Example 4: Enable a webhook on a specific drive
 
 ```powershell
-PS C:\> Enable-OrchWebhook -Path Orch1: -Name mywebhook
+PS C:\> Enable-OrchWebhook -Path Orch1: mywebhook
 ```
 
 Enables the webhook named "mywebhook" on the Orch1 drive. When -Path uses an absolute path, the command can be run from any location.

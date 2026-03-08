@@ -87,7 +87,7 @@ Exports the excluded dates of all calendars on Orch1: to a CSV file in the C:\te
 ### Example 6: Get calendars using wildcards across multiple drives
 
 ```powershell
-PS C:\> Get-OrchCalendar -Path Orch1: -Name *Calendar*
+PS C:\> Get-OrchCalendar -Path Orch1: *Calendar*
 ```
 
 Gets all calendars matching `*Calendar*` from the Orch1 drive.

@@ -68,7 +68,7 @@ Shows which machines would be removed without actually deleting them.
 ### Example 4: Remove a machine from a specific drive
 
 ```powershell
-PS C:\> Remove-OrchMachine -Path Orch1:\ -Name pool
+PS C:\> Remove-OrchMachine -Path Orch1:\ pool
 ```
 
 Removes the machine named 'pool' from the Orch1 tenant. When -Path uses an absolute path, the command can be run from any location.

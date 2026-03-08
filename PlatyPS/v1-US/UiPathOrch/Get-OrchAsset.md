@@ -74,7 +74,7 @@ Gets only credential-type assets from all folders. Valid values for -ValueType a
 ### Example 4: Get an asset from a specific folder
 
 ```powershell
-PS C:\> Get-OrchAsset -Path Orch1:\Production -Name DatabaseConnection
+PS C:\> Get-OrchAsset -Path Orch1:\Production DatabaseConnection
 ```
 
 Gets the asset named "DatabaseConnection" from the Production folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.

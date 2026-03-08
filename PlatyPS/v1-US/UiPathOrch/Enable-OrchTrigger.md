@@ -71,7 +71,7 @@ Enables all disabled triggers across all folders recursively.
 ### Example 4: Enable a trigger in a specific folder
 
 ```powershell
-PS C:\> Enable-OrchTrigger -Path Orch1:\root -Name "high trigger"
+PS C:\> Enable-OrchTrigger -Path Orch1:\root "high trigger"
 ```
 
 Enables the trigger named "high trigger" in the root folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.

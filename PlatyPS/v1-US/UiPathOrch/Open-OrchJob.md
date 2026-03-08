@@ -52,7 +52,7 @@ Opens the details page for job 150565000 in the default web browser.
 ### Example 2: Open a job from a specific folder
 
 ```powershell
-PS C:\> Open-OrchJob -Id 150565000 -Path Orch1:\Shared
+PS C:\> Open-OrchJob -Path Orch1:\Shared -Id 150565000
 ```
 
 Opens the details page for job 150565000 from the Shared folder in the default web browser.

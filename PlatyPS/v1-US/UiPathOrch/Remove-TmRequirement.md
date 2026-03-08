@@ -55,7 +55,7 @@ Removes the requirement named "Obsolete Requirement" from the current project. T
 ### Example 2: Remove requirements from a specific project
 
 ```powershell
-PS C:\> Remove-TmRequirement Test* -Path Orch1Tm:\MTP -Recurse
+PS C:\> Remove-TmRequirement -Path Orch1Tm:\MTP Test* -Recurse
 ```
 
 Removes all requirements whose name starts with "Test" from the specified project and all its subfolders.

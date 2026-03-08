@@ -63,7 +63,7 @@ Copies all calendars from Orch1: to Orch2:.
 ### Example 3: Copy calendars across drives using absolute paths
 
 ```powershell
-PS C:\> Copy-OrchCalendar -Path Orch1: -Name '*Holiday*' -Destination Orch2:
+PS C:\> Copy-OrchCalendar -Path Orch1: *Holiday* Orch2:
 ```
 
 Copies all calendars matching "*Holiday*" from Orch1: to Orch2:. This command can be executed from any drive.

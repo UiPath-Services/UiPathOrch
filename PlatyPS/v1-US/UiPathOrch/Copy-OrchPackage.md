@@ -67,7 +67,7 @@ Copies only version 1.0.3 of "BlankProcess19" to the Dept#2 folder. All three po
 ### Example 3: Copy packages to another Orchestrator instance
 
 ```powershell
-PS Orch1:\Shared> Copy-OrchPackage '*' -Destination Orch2:\Shared
+PS Orch1:\Shared> Copy-OrchPackage * -Destination Orch2:\Shared
 ```
 
 Copies all packages and all their versions from the Shared folder on Orch1 to the Shared folder on Orch2. Cross-drive copy enables migration between Orchestrator instances.
@@ -75,7 +75,7 @@ Copies all packages and all their versions from the Shared folder on Orch1 to th
 ### Example 4: Copy packages recursively preserving folder hierarchy
 
 ```powershell
-PS C:\> Copy-OrchPackage -Path Orch1:\ -Recurse '*' -Destination Orch2:\
+PS C:\> Copy-OrchPackage -Path Orch1:\ -Recurse * Orch2:\
 ```
 
 Copies all packages from all folders on Orch1 to Orch2, preserving the folder hierarchy. Subfolders are matched by relative path on the destination. The -Recurse parameter can only be used when the source is the root folder.

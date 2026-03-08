@@ -74,7 +74,7 @@ Adds the "Executor" role to the user whose display name is "Yoshifumi Tsuda" in 
 ### Example 4: Add a role to all directory users recursively
 
 ```powershell
-PS Orch1:\> Add-OrchRoleToFolderUser -Recurse -UserName '*' -Roles Executor -Type DirectoryUser
+PS Orch1:\> Add-OrchRoleToFolderUser -Recurse -UserName * -Roles Executor -Type DirectoryUser
 ```
 
 Adds the "Executor" role to all directory users in all folders. Users who already have the role are skipped.

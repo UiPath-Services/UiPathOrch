@@ -71,7 +71,7 @@ Resolves the specified application name against the connected directory service.
 ### Example 4: Resolve names from a specific organization
 
 ```powershell
-PS C:\> Resolve-PmDirectoryNameBulk -EntityType User -Name ytsuda@gmail.com -Path Orch1:
+PS C:\> Resolve-PmDirectoryNameBulk -Path Orch1: -EntityType User -Name ytsuda@gmail.com
 ```
 
 Resolves the specified user name against the directory connected to the Orch1 organization.

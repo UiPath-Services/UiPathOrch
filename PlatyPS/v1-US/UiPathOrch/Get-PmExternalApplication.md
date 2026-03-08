@@ -70,7 +70,7 @@ Gets all external applications whose names start with "ほえほえ".
 ### Example 4: Get external applications from a specific organization
 
 ```powershell
-PS C:\> Get-PmExternalApplication -Path Orch1: -Name uipathorch
+PS C:\> Get-PmExternalApplication -Path Orch1: uipathorch
 ```
 
 Gets the specified external application from the Orch1 organization drive.

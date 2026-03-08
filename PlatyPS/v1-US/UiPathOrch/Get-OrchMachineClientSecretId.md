@@ -73,7 +73,7 @@ Gets all client secrets and pipes those created before October 2024 to Remove-Or
 ### Example 4: Get secrets from a specific drive
 
 ```powershell
-PS C:\> Get-OrchMachineClientSecretId -Path Orch1:\ -Name machine1
+PS C:\> Get-OrchMachineClientSecretId -Path Orch1:\ machine1
 ```
 
 Gets client secret information for "machine1" from the Orch1 tenant.

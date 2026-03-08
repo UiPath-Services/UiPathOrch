@@ -77,7 +77,7 @@ Shows which machines would be copied without actually executing the copy.
 ### Example 4: Copy from a specific source drive
 
 ```powershell
-PS C:\> Copy-OrchMachine -Path Orch1:\ -Name pool -Destination Orch2:\
+PS C:\> Copy-OrchMachine -Path Orch1:\ pool Orch2:\
 ```
 
 Copies the machine named 'pool' from Orch1 to Orch2. When -Path uses an absolute path, the command can be run from any location.

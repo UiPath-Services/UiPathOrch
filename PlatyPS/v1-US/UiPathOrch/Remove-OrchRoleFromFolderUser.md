@@ -74,7 +74,7 @@ Removes the "Executor" role from the user whose display name is "Yoshifumi Tsuda
 ### Example 4: Remove a role from all users recursively
 
 ```powershell
-PS Orch1:\> Remove-OrchRoleFromFolderUser -Recurse -UserName '*' -Roles Executor -Type DirectoryUser
+PS Orch1:\> Remove-OrchRoleFromFolderUser -Recurse * -Roles Executor -Type DirectoryUser
 ```
 
 Removes the "Executor" role from all directory users in all folders. Users who do not have the role are skipped.

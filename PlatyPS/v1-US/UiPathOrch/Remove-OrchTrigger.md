@@ -71,7 +71,7 @@ Removes all triggers whose name starts with "OldTrigger" from the current folder
 ### Example 4: Remove a trigger from a specific folder
 
 ```powershell
-PS C:\> Remove-OrchTrigger -Path Orch1:\Shared -Name ObsoleteTrigger
+PS C:\> Remove-OrchTrigger -Path Orch1:\Shared ObsoleteTrigger
 ```
 
 Removes the trigger named "ObsoleteTrigger" from the Shared folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.

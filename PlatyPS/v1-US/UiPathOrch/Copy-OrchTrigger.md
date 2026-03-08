@@ -63,7 +63,7 @@ Copies all triggers matching "*trigger*" from the current folder to the Dept#2 f
 ### Example 3: Copy a trigger across Orchestrator instances
 
 ```powershell
-PS C:\> Copy-OrchTrigger -Path Orch1:\Shared -Name "high trigger" -Destination Orch2:\Shared
+PS C:\> Copy-OrchTrigger -Path Orch1:\Shared "high trigger" Orch2:\Shared
 ```
 
 Copies the trigger named "high trigger" from the Shared folder on Orch1 to the Shared folder on Orch2. Trigger settings including executor robots and machine robots are carried over.

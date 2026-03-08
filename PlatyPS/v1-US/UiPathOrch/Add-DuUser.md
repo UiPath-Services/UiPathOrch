@@ -61,7 +61,7 @@ Adds the directory user ytsuda@gmail.com to the current Document Understanding p
 ### Example 2: Add a directory group to a specific project
 
 ```powershell
-PS C:\> Add-DuUser DirectoryGroup Administrators DU* -Path Orch1Du:\MyProject
+PS C:\> Add-DuUser -Path Orch1Du:\MyProject DirectoryGroup Administrators DU*
 ```
 
 Adds the directory group "Administrators" to the specified project with all roles whose name starts with "DU".

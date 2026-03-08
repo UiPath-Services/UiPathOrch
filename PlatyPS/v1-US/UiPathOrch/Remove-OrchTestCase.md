@@ -75,7 +75,7 @@ Shows which test cases would be removed without actually removing them.
 ### Example 4: Remove a test case from a specific folder
 
 ```powershell
-PS C:\> Remove-OrchTestCase -Path Orch1:\QA -Name LoginTest
+PS C:\> Remove-OrchTestCase -Path Orch1:\QA LoginTest
 ```
 
 Removes the test case definition named "LoginTest" from the QA folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.
@@ -83,7 +83,7 @@ Removes the test case definition named "LoginTest" from the QA folder. When -Pat
 ### Example 5: Remove test cases recursively with confirmation
 
 ```powershell
-PS Orch1:\> Remove-OrchTestCase -Recurse -Name *Legacy* -Confirm
+PS Orch1:\> Remove-OrchTestCase -Recurse *Legacy* -Confirm
 ```
 
 Removes all test case definitions matching "*Legacy*" from all folders, prompting for confirmation before each removal.

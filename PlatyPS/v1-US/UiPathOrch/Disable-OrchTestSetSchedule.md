@@ -45,7 +45,7 @@ Required permissions: TestSetSchedules.Edit
 ### Example 1: Disable a test set schedule
 
 ```powershell
-PS Orch1:\Shared> Disable-OrchTestSetSchedule 'Sample-Test-Schedule'
+PS Orch1:\Shared> Disable-OrchTestSetSchedule Sample-Test-Schedule
 ```
 
 Disables the test set schedule named 'Sample-Test-Schedule' in the current folder.

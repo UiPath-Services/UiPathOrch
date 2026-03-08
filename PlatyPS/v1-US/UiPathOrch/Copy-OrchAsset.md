@@ -57,7 +57,7 @@ Copies the asset "TestAsset1" from the current folder (Shared) to the Dept#2 fol
 ### Example 2: Preview copy with -WhatIf
 
 ```powershell
-PS Orch1:\Shared> Copy-OrchAsset -Name 'Test*' -Destination Orch1:\Dept#2 -WhatIf
+PS Orch1:\Shared> Copy-OrchAsset Test* -Destination Orch1:\Dept#2 -WhatIf
 ```
 
 ```output
@@ -71,7 +71,7 @@ Shows which assets would be copied without executing the command. Wildcard patte
 ### Example 3: Copy all assets to another Orchestrator instance
 
 ```powershell
-PS Orch1:\Shared> Copy-OrchAsset -Name '*' -Destination Orch2:\Shared
+PS Orch1:\Shared> Copy-OrchAsset * -Destination Orch2:\Shared
 ```
 
 Copies all assets from the Shared folder on Orch1 to the Shared folder on Orch2. Cross-drive copy enables migration between Orchestrator instances.
@@ -79,7 +79,7 @@ Copies all assets from the Shared folder on Orch1 to the Shared folder on Orch2.
 ### Example 4: Copy assets recursively with folder hierarchy
 
 ```powershell
-PS C:\> Copy-OrchAsset -Path Orch1:\Shared -Recurse -Name '*' -Destination Orch2:\Shared
+PS C:\> Copy-OrchAsset -Path Orch1:\Shared -Recurse * Orch2:\Shared
 ```
 
 Copies all assets from Shared and all its subfolders on Orch1, preserving the folder hierarchy relative to the source root. Subfolders are matched by relative path on the destination.
@@ -87,7 +87,7 @@ Copies all assets from Shared and all its subfolders on Orch1, preserving the fo
 ### Example 5: Copy with user mapping for cross-instance migration
 
 ```powershell
-PS C:\> Copy-OrchAsset -Path Orch1:\Shared -Name '*' -Destination Orch2:\Shared -UserMappingCsv c:user-mapping.csv
+PS C:\> Copy-OrchAsset -Path Orch1:\Shared * Orch2:\Shared -UserMappingCsv c:user-mapping.csv
 ```
 
 Copies assets with a user mapping CSV file for per-robot assets. The CSV maps source usernames to destination usernames, enabling cross-instance migration where user accounts differ. Use New-OrchUserMappingCsv to generate the mapping file.
@@ -95,7 +95,7 @@ Copies assets with a user mapping CSV file for per-robot assets. The CSV maps so
 ### Example 6: Copy from a specific folder using -Path
 
 ```powershell
-PS C:\> Copy-OrchAsset -Path Orch1:\Shared -Name TestAsset1 -Destination Orch1:\Dept#2
+PS C:\> Copy-OrchAsset -Path Orch1:\Shared TestAsset1 Orch1:\Dept#2
 ```
 
 Copies the asset from the Shared folder to the Dept#2 folder. When -Path uses an absolute path, the command can be run from any location.

@@ -62,7 +62,7 @@ Opens the edit page for all processes matching the wildcard pattern "Blank*" in 
 ### Example 3: Open the edit page from a specific folder
 
 ```powershell
-PS C:\> Edit-OrchProcess -Path Orch1:\Shared -Name BlankProcess19
+PS C:\> Edit-OrchProcess -Path Orch1:\Shared BlankProcess19
 ```
 
 Opens the edit page for the process named "BlankProcess19" in the Shared folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.

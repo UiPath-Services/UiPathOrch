@@ -65,7 +65,7 @@ Downloads only PDF files from the storage bucket named "TestBucket2" to C:\Expor
 ### Example 3: Export from a specific folder
 
 ```powershell
-PS C:\> Export-OrchBucketItem -Path Orch1:\Shared -Name TestBucket2 -Destination C:\Backup
+PS C:\> Export-OrchBucketItem -Path Orch1:\Shared TestBucket2 -Destination C:\Backup
 ```
 
 Downloads all files from the storage bucket named "TestBucket2" in the Shared folder to C:\Backup. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.

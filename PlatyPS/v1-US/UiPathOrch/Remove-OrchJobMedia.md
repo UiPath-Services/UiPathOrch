@@ -67,7 +67,7 @@ Shows what would happen if the cmdlet runs without actually removing any media. 
 ### Example 4: Remove media from a specific folder
 
 ```powershell
-PS C:\> Remove-OrchJobMedia -JobId 12345 -Path Orch1:\Shared
+PS C:\> Remove-OrchJobMedia -Path Orch1:\Shared -JobId 12345
 ```
 
 Removes execution media for job ID 12345 from the specified Orchestrator folder.

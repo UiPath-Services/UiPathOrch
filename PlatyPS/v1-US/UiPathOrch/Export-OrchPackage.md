@@ -65,7 +65,7 @@ Exports version 1.0.0 of "MyProcess" to the C:\packages directory. All three pos
 ### Example 3: Export all packages using wildcards
 
 ```powershell
-PS Orch1:\Shared> Export-OrchPackage '*' -Destination C:\backup
+PS Orch1:\Shared> Export-OrchPackage * -Destination C:\backup
 ```
 
 Exports all versions of all packages from the current folder to C:\backup.
@@ -81,7 +81,7 @@ Exports all packages containing "Invoice" in their Id from the Production folder
 ### Example 5: Export packages recursively preserving folder structure
 
 ```powershell
-PS Orch1:\> Export-OrchPackage -Recurse '*' -Destination C:\full-backup
+PS Orch1:\> Export-OrchPackage -Recurse * -Destination C:\full-backup
 ```
 
 Exports all packages from all folders, creating subdirectories under C:\full-backup that match the Orchestrator folder hierarchy.

@@ -63,7 +63,7 @@ Removes all storage buckets whose name starts with "Temp" from the current folde
 ### Example 3: Remove a bucket from a specific folder
 
 ```powershell
-PS C:\> Remove-OrchBucket -Path Orch1:\Shared -Name TestBucket
+PS C:\> Remove-OrchBucket -Path Orch1:\Shared TestBucket
 ```
 
 Removes the storage bucket named "TestBucket" from the Shared folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.

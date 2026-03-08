@@ -67,7 +67,7 @@ Shows what would happen without actually retrying the items.
 ### Example 3: Retry failed items from a specific folder
 
 ```powershell
-PS C:\> Redo-OrchQueueItem -Path Orch1:\Shared -Name TestQueue2 -Id 70345
+PS C:\> Redo-OrchQueueItem -Path Orch1:\Shared TestQueue2 -Id 70345
 ```
 
 Retries the failed queue item with ID 70345 in TestQueue2 located in the Shared folder on Orch1.
