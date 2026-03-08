@@ -21,10 +21,10 @@ tenant to a destination tenant using UiPathOrch PowerShell cmdlets.
 Before beginning the migration process, set up your environment:
 
 1. Start a PowerShell console using `start_powershell_console`.
-2. Import the UiPathOrch module:
+2. Mount the Orchestrator drives:
 
 ```powershell
-Import-Module UiPathOrch
+Mount-OrchPSDrive
 ```
 
 3. Verify that the source and destination tenants are mounted as PSDrives:
@@ -202,7 +202,7 @@ Find the source drive's PSDrive entry and change the `Scope` value:
 1. Remove all scopes with `.Write` suffix (e.g., `OR.Assets.Write`)
 2. Add the `.Read` suffix to scopes that have neither `.Read` nor `.Write`
 
-After editing, restart the PowerShell session and reconnect the drives.
+After editing, run `Mount-OrchPSDrive` to reload the configuration.
 
 > **Note**: Adding Platform Management API scopes (those starting with `PM.`,
 > e.g., `PM.User.Read`, `PM.Group.Read`, `PM.RobotAccount.Read`) enables
