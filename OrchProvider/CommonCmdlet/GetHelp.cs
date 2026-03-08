@@ -16,46 +16,54 @@ namespace UiPath.PowerShell.OrchProvider
 
             var docsPath = Path.Combine(modulePath!, "Docs");
 
-            var txtFiles = new StringBuilder();
+            // Collect .md and .txt doc files with TOC line counts
+            var docFiles = new StringBuilder();
+            var tocCommands = new StringBuilder();
             if (Directory.Exists(docsPath))
             {
-                foreach (var file in Directory.GetFiles(docsPath, "*.txt").OrderBy(Path.GetFileName))
+                var docExtensions = new[] { "*.md", "*.txt" };
+                foreach (var ext in docExtensions)
                 {
-                    var fi = new FileInfo(file);
-                    var sizeKB = Math.Round(fi.Length / 1024.0, 1);
-                    txtFiles.AppendLine($"  📄 {fi.Name} ({sizeKB}KB)");
-                }
-            }
-
-            var pdfFiles = new StringBuilder();
-            if (Directory.Exists(docsPath))
-            {
-                foreach (var file in Directory.GetFiles(docsPath, "*.pdf"))
-                {
-                    var fi = new FileInfo(file);
-                    var sizeMB = Math.Round(fi.Length / (1024.0 * 1024.0), 1);
-                    pdfFiles.AppendLine($"  📄 {fi.Name} ({sizeMB}MB)");
+                    foreach (var file in Directory.GetFiles(docsPath, ext).OrderBy(Path.GetFileName))
+                    {
+                        var fi = new FileInfo(file);
+                        // Find TOC end line (line starting with "Use Show-TextFiles")
+                        var lines = File.ReadAllLines(file);
+                        var tocEnd = 0;
+                        for (int i = 0; i < lines.Length; i++)
+                        {
+                            if (lines[i].StartsWith("Use Show-TextFiles"))
+                            {
+                                tocEnd = i + 1;
+                                break;
+                            }
+                        }
+                        var sizeKB = Math.Round(fi.Length / 1024.0, 1);
+                        docFiles.AppendLine($"  📄 {fi.Name} ({sizeKB}KB)");
+                        if (tocEnd > 0)
+                        {
+                            var filePath = Path.Combine(docsPath, fi.Name);
+                            tocCommands.AppendLine($"Show-TextFiles \"{filePath}\" -LineRange 1,{tocEnd}");
+                        }
+                    }
                 }
             }
 
             WriteObject($@"UiPathOrch Module Documentation
 ===============================
 
-📁 Module Path: {modulePath}
+📁 Docs Path: {docsPath}
 
-📚 LLM Documentation ({docsPath}):
-{txtFiles}
-📖 PDF Manuals (Human Reference):
-{pdfFiles}
-🤖 LLM Quick Start:
-Get-Content ""{Path.Combine(docsPath, "01-Essentials.txt")}""
-
+📚 Documentation:
+{docFiles}
+🤖 How to read docs (show TOC of each document):
+{tocCommands}
 🚀 Essential Commands:
 Get-OrchPSDrive                       # ALWAYS start here
-Get-OrchCurrentUser                   # Verify connection  
+Get-OrchCurrentUser                   # Verify connection
 Clear-OrchCache                       # Reset on errors
 
-💡 LLM Tip: Read 01-Essentials.txt first for mandatory execution rules
+💡 Read TOC first, then use -LineRange to read specific sections
 ");
  
         }

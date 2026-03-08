@@ -1,71 +1,77 @@
-============================================
-UiPathOrch Module - Essential Guide for LLMs
-============================================
+# UiPathOrch Module - Essential Guide for AI
+
+```
+SECTIONS:
+  23: CRITICAL AI EXECUTION RULES
+  36: MANDATORY AI DECISION FLOW
+  56: PATH PROPERTY - CRITICAL FOR CONTEXT
+  85: ERROR HANDLING PROTOCOL
+  109: CONFIDENTIAL APP CONSIDERATIONS
+  127: UIPATH ORCHESTRATOR ARCHITECTURE
+  174: PERMISSION MODEL
+  183: PERFORMANCE & CACHE MANAGEMENT
+  205: QUICK REFERENCE
+  248: CMDLET-SPECIFIC GUIDANCE
+```
+
+Use Show-TextFiles with -LineRange to read specific sections.
 
 ATTENTION: This document provides operational guidelines for safely using the
 UiPathOrch PowerShell module to control UiPath Orchestrator. This module
 operates on live production systems.
 
-🚨 CRITICAL LLM EXECUTION RULES
+## CRITICAL AI EXECUTION RULES
 
-NEVER VIOLATE THESE RULES:
+### NEVER VIOLATE THESE RULES:
 1. START SESSION: Execute Get-OrchPSDrive once to verify available drives
 2. ALWAYS confirm target drive with user when multiple drives exist
 3. ALWAYS use -WhatIf first for destructive operations
-4. ALWAYS use executeImmediately=true (never false - you lose visibility)
-5. ALWAYS run Clear-OrchCache before retrying after errors
+4. ALWAYS run Clear-OrchCache before retrying after errors
 
-IMMEDIATE FAILURE CONDITIONS:
+### IMMEDIATE FAILURE CONDITIONS:
 - No drives found → Tell user to run Edit-OrchConfig
 - Permission error → Follow error protocol below
 - Connection timeout → Clear-OrchCache and retry once
 
-⚡ MANDATORY LLM DECISION FLOW
+## MANDATORY AI DECISION FLOW
 
-Step 1: Environment Verification (ALWAYS REQUIRED)
---------------------------------------------------
-Execute: Get-OrchPSDrive  # executeImmediately=true
+### Step 1: Environment Verification (ALWAYS REQUIRED)
+Execute: Get-OrchPSDrive
 CRITICAL: Use Get-Help Get-OrchPSDrive -Examples for decision logic patterns
 
-Step 2: Command Classification
-------------------------------
-Read-Only Operations (executeImmediately=true):
+### Step 2: Command Classification
+Read-Only Operations:
 - Get-*, dir, cd, Clear-OrchCache, Get-Help
 
 Destructive Operations (Two-Step Process):
 - Start-*, Stop-*, New-*, Add-*, Remove-*, Update-*, Set-*, Import-*
 - CRITICAL: See Get-Help Start-OrchJob -Examples for safe execution patterns
 
-Step 3: Safe Execution Protocol
--------------------------------
+### Step 3: Safe Execution Protocol
 FOR DESTRUCTIVE OPERATIONS:
-1. FIRST: Execute with -WhatIf (executeImmediately=true)
+1. FIRST: Execute with -WhatIf
 2. SHOW results to user and ask: 'Should I proceed with this operation?'
-3. IF user confirms: Execute without -WhatIf (executeImmediately=true)
+3. IF user confirms: Execute without -WhatIf
 
-🗂️ PATH PROPERTY - CRITICAL FOR CONTEXT
-========================================
+## PATH PROPERTY - CRITICAL FOR CONTEXT
 
-⚠️  UiPathOrch vs Standard PowerShell Properties
-------------------------------------------------
+### UiPathOrch vs Standard PowerShell Properties
 UiPathOrch objects use custom .Path property (NOT PSPath):
 - .Path = "Orch1:\Shared\Production" ✅ Shows UiPath folder structure
 - .PSPath = "" (empty/unreliable) ❌ Standard PowerShell property
 - .PSParentPath = "" (empty/unreliable) ❌ Standard PowerShell property
 
-🚫 COMMON LLM MISTAKES TO AVOID
--------------------------------
+### COMMON AI MISTAKES TO AVOID
 ❌ Using PSPath/PSParentPath for folder location
-❌ Creating custom FolderPath calculations  
+❌ Creating custom FolderPath calculations
 ❌ Assuming standard PowerShell path properties work
 ✅ ALWAYS use the .Path property for UiPathOrch objects
 
-📋 CORRECT PATH USAGE EXAMPLES
-------------------------------
+### CORRECT PATH USAGE EXAMPLES
 # Show all triggers with their locations
 Get-OrchTrigger -Recurse | Select-Object Path, Name, Enabled, ReleaseName
 
-# Show all assets with folder context  
+# Show all assets with folder context
 Get-OrchAsset -Recurse | Select-Object Path, Name, ValueType, Value
 
 # Show all users with organizational context
@@ -76,10 +82,9 @@ Get-OrchProcess -Recurse | Select-Object Path, Name, ProcessVersion
 
 KEY RULE: Always include Path in Select-Object for clarity and troubleshooting.
 
-🛠 ERROR HANDLING PROTOCOL
+## ERROR HANDLING PROTOCOL
 
-Automatic Error Classification
-------------------------------
+### Automatic Error Classification
 IF error contains ["Unauthorized", "AppId", "OAuth"]:
     → OAuth/Connection issue → Check drive configuration, suggest Edit-OrchConfig
 
@@ -95,17 +100,15 @@ IF error contains ["not found", "does not exist"]:
 IF error contains ["This operation is not supported in a Confidential app"]:
     → Confidential App Limitation → This is normal for certain commands (e.g., Get-OrchCurrentUser)
 
-Standard LLM Error Response Template
-------------------------------------
+### Standard AI Error Response Template
 ❌ [Command] failed: [error message]
 🔧 Diagnosis: [error type from above]
 💡 Action: [specific action taken]
 📋 Result: [outcome of recovery attempt]
 
-🔐 CONFIDENTIAL APP CONSIDERATIONS
+## CONFIDENTIAL APP CONSIDERATIONS
 
-Understanding Confidential App Limitations
-------------------------------------------
+### Understanding Confidential App Limitations
 - Confidential apps have OAuth2 restrictions on certain user information endpoints
 - Commands that typically fail in Confidential apps:
   * Get-OrchCurrentUser (user verification)
@@ -115,46 +118,41 @@ Understanding Confidential App Limitations
   * All folder navigation (cd, dir)
   * Most management operations (Start-OrchJob, etc.)
 
-Workarounds for Confidential Apps
----------------------------------
+### Workarounds for Confidential Apps
 Instead of Get-OrchCurrentUser for verification:
 1. Use successful drive mounting as connection proof
 2. Use Get-OrchPSDrive to verify drive status
 3. Test with simple operations like 'dir' or 'Get-OrchProcess'
 
-🏗 UIPATH ORCHESTRATOR ARCHITECTURE
+## UIPATH ORCHESTRATOR ARCHITECTURE
 
-Hierarchy Structure
--------------------
+### Hierarchy Structure
 Organization → Tenant → Folder (up to 7 levels)
 - Tenant: Contains Users, Machines, Libraries, Packages, Audit, Webhooks
 - Folder: Contains Processes, Jobs, Queues, Assets, Robots, Triggers
 
 Important: Tenant-level entities appear in root folder of UiPathOrch drive.
 
-📁 FOLDER SYSTEM KNOWLEDGE
+### Folder System Knowledge
 
-Folder Types
------------
-1. **Standard Folder** (FolderType = "Standard"): 
+#### Folder Types
+1. **Standard Folder** (FolderType = "Standard"):
    - Normal project folders where you deploy and run automations
    - Full access to all features (processes, jobs, queues, assets, etc.)
 
-2. **Personal Workspace** (FolderType = "Personal"): 
+2. **Personal Workspace** (FolderType = "Personal"):
    - Private folder for individual users
    - Only the owner and admins can access
 
-3. **Solution Folder** (FolderType = "Solution"): 
+3. **Solution Folder** (FolderType = "Solution"):
    - Container for complete solution deployments
    - Groups related automation projects together
 
-Folder Provisioning
-------------------
+#### Folder Provisioning
 - **Modern (ProvisionType = "Automatic")**: Current standard, supports up to 7 folder levels
 - **Classic (ProvisionType = "Manual")**: Legacy method, flat structure only (deprecated)
 
-Feed System
-----------
+#### Feed System
 1. **Tenant Feed (FeedType = "Processes")**:
    - Folder uses centralized tenant package storage
 
@@ -173,20 +171,18 @@ Process Deployment Flow:
 2. Assign Package to Folder as a Process
 3. Execute Process as Jobs
 
-🔐 PERMISSION MODEL
+## PERMISSION MODEL
 
-Three-Level Permission System (Simplified)
-------------------------------------------
+### Three-Level Permission System (Simplified)
 1. **OAuth Scope Level**: What API operations your connection can perform
 2. **Tenant Role Level**: Access to tenant-wide resources (users, machines, settings)
 3. **Folder Role Level**: Access to folder-specific resources (processes, jobs, queues)
 
 Think of it as: Connection Permission → Tenant Permission → Folder Permission
 
-⚡ PERFORMANCE & CACHE MANAGEMENT
+## PERFORMANCE & CACHE MANAGEMENT
 
-Cache Behavior
--------------
+### Cache Behavior
 **STANDARD CMDLETS** (Get-OrchUser, Get-OrchProcess, Get-OrchAsset, etc.):
 - First execution: Downloads ALL entities and caches them locally
 - Subsequent executions: Returns cached data instantly (no network calls)
@@ -195,8 +191,7 @@ Cache Behavior
 - WITH filter parameters: Always queries server (real-time data)
 - WITHOUT filter parameters: Shows cached data only (may be empty initially)
 
-Performance Tips
----------------
+### Performance Tips
 # For large environments - target specific folders
 Get-OrchAsset -Path "Shared\Production" 'Config*'
 
@@ -204,14 +199,12 @@ Get-OrchAsset -Path "Shared\Production" 'Config*'
 cd MyDrive:\TargetFolder
 Get-OrchProcess  # Now operates on current folder
 
-Cache Management
----------------
+### Cache Management
 Clear-OrchCache  # Force refresh all cached data
 
-📚 QUICK REFERENCE
+## QUICK REFERENCE
 
-Session Initialization
-----------------------
+### Session Initialization
 # 1. Check available connections
 Get-OrchPSDrive
 
@@ -224,8 +217,7 @@ Get-OrchCurrentUser  # May fail in Confidential apps - this is normal
 # 4. Explore folder structure
 dir -Recurse | Select-Object FullName, FolderType
 
-Essential Operations
-------------------
+### Essential Operations
 # Asset management with Path
 Get-OrchAsset -Recurse | Select-Object Path, Name, ValueType, Value
 Set-OrchAsset -ValueType Text -Name "ConfigValue" -Value "NewSetting" -WhatIf
@@ -240,50 +232,45 @@ Get-OrchTrigger -Recurse | Select-Object Path, Name, Enabled, ReleaseName
 # User management with Path
 Get-OrchUser | Select-Object Path, UserName, FullName
 
-Permission Verification
-----------------------
+### Permission Verification
 Get-OrchPSDrive | Select-Object Name, Root, Scope, IsConf  # Drive status
 Get-OrchRole -ExpandPermission   # Detailed role permissions
 Get-OrchUserPrivilege            # Your effective permissions
 Get-OrchFolderUser               # Folder access assignments
 
-Troubleshooting Quick Fixes
----------------------------
+### Troubleshooting Quick Fixes
 - **Connection Issues**: Clear-OrchCache; then retry operation
 - **Permission Errors**: Check Get-OrchUserPrivilege and Get-OrchFolderUser
 - **Performance Issues**: Use specific folder paths with -Path instead of -Recurse
 - **Drive Mount Issues**: Run Edit-OrchConfig to reconfigure
 - **Confidential App Errors**: Normal for user info commands, try alternative verification
 
-🎯 CMDLET-SPECIFIC GUIDANCE
+## CMDLET-SPECIFIC GUIDANCE
 
-Best Practice Approach
-----------------------
+### Best Practice Approach
 1. **ALWAYS start with**: Get-Help [CmdletName] -Examples
 2. **Check cmdlet help BEFORE** creating custom procedures
 3. **Use 01-Essentials.txt** only for:
    - Environment verification (Get-OrchPSDrive)
-   - Error handling protocols  
+   - Error handling protocols
    - Safety procedures (-WhatIf usage)
    - Path property usage
    - Architecture understanding
 
-Example Help Commands:
+### Example Help Commands:
 Get-Help Get-OrchJob -Examples     # Practical job management examples
 Get-Help Start-OrchJob -Examples   # Safe job execution patterns
 Get-Help Edit-OrchConfig -Examples # Configuration procedures
 
-📚 OFFICIAL RESOURCES
-
+### OFFICIAL RESOURCES
 - UiPath Marketplace: https://marketplace.uipath.com/listings/uipathorch
 - PowerShell Gallery: https://www.powershellgallery.com/packages/UiPathOrch
 
-================================================================================
-Version: 1.4 | Last Updated: June 2025 | Target: LLM Operations
-Key Improvements: 
+---
+Version: 1.4 | Last Updated: June 2025 | Target: AI Operations
+Key Improvements:
 - Dedicated PATH PROPERTY section with clear examples
 - Emphasized .Path vs PSPath/PSParentPath differences
-- Added common LLM mistakes section
+- Added common AI mistakes section
 - Reorganized structure for better flow
 - Enhanced examples with Path property usage
-================================================================================
