@@ -45,7 +45,7 @@ Required permissions: TestSetSchedules.Edit
 ### Example 1: Enable a test set schedule
 
 ```powershell
-PS Orch1:\Shared> Enable-OrchTestSetSchedule 'Sample-Test-Schedule'
+PS Orch1:\Shared> Enable-OrchTestSetSchedule Sample-Test-Schedule
 ```
 
 Enables the test set schedule named 'Sample-Test-Schedule' in the current folder.

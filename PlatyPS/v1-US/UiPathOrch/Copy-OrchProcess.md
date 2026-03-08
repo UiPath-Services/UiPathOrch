@@ -77,7 +77,7 @@ Shows what would happen without actually copying.
 ### Example 4: Copy a process across Orchestrator instances
 
 ```powershell
-PS C:\> Copy-OrchProcess -Path Orch1:\Shared -Name BlankProcess19 -Destination Orch2:\Shared
+PS C:\> Copy-OrchProcess -Path Orch1:\Shared BlankProcess19 Orch2:\Shared
 ```
 
 Copies the process named "BlankProcess19" from the Shared folder on Orch1 to the Shared folder on Orch2. The package is automatically uploaded to the destination Orchestrator feed if it does not already exist.

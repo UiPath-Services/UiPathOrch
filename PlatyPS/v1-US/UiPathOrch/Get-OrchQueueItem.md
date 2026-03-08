@@ -94,7 +94,7 @@ Gets successful queue items from the "TestQueue2" queue, ordered by end processi
 ### Example 6: Get items from a specific folder with robot filter
 
 ```powershell
-PS C:\> Get-OrchQueueItem -Path Orch1:\Production -Name TestQueue2 -Robot Robot01
+PS C:\> Get-OrchQueueItem -Path Orch1:\Production TestQueue2 -Robot Robot01
 ```
 
 Gets queue items from the "TestQueue2" queue in the Production folder that were processed by "Robot01". When -Path uses an absolute path (Orch1:\...), the command can be run from any location.

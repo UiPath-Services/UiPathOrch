@@ -54,7 +54,7 @@ Removes the calendar named "Old Holidays" from the current Orchestrator drive. S
 ### Example 2: Remove calendars using a wildcard
 
 ```powershell
-PS Orch1:\> Remove-OrchCalendar '*2024*'
+PS Orch1:\> Remove-OrchCalendar *2024*
 ```
 
 Removes all calendars whose names match "*2024*" from the current Orchestrator drive.

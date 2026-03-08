@@ -68,7 +68,7 @@ Gets runtime licenses for the `Unattended` and `NonProduction` robot types.
 ### Example 4: Get runtime licenses from a specific drive
 
 ```powershell
-PS C:\> Get-OrchLicenseRuntime -RobotType Unattended -Path Orch1:
+PS C:\> Get-OrchLicenseRuntime -Path Orch1: -RobotType Unattended
 ```
 
 Gets runtime licenses for the `Unattended` robot type from the drive named `Orch1`.

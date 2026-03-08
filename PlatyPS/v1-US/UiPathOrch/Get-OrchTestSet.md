@@ -61,7 +61,7 @@ Gets all test sets whose name starts with "TestSet" from the current folder. The
 ### Example 3: Get a specific test set from a specific folder
 
 ```powershell
-PS C:\> Get-OrchTestSet -Path Orch1:\Shared -Name 'TestSet-TestProject-Migration-001'
+PS C:\> Get-OrchTestSet -Path Orch1:\Shared TestSet-TestProject-Migration-001
 ```
 
 Gets the test set named "TestSet-TestProject-Migration-001" from the Shared folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.

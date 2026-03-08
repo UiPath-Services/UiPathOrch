@@ -54,7 +54,7 @@ Required permissions: Units.View or SubFolders.View (source), Units.Edit or SubF
 ### Example 1: Copy all user assignments to another folder
 
 ```powershell
-PS Orch1:\Shared> Copy-OrchFolderUser '*' Orch1:\Dept#2
+PS Orch1:\Shared> Copy-OrchFolderUser * Orch1:\Dept#2
 ```
 
 Copies all folder user assignments from the current folder (Shared) to the Dept#2 folder on the same Orchestrator instance. The -UserName and -Destination parameters are positional (positions 0 and 1).
@@ -70,7 +70,7 @@ Copies the folder assignment for user "ytsuda@gmail.com" (including their folder
 ### Example 3: Copy only directory users with -Type filter
 
 ```powershell
-PS Orch1:\Shared> Copy-OrchFolderUser '*' Orch1:\Dept#2 -Type DirectoryUser
+PS Orch1:\Shared> Copy-OrchFolderUser * Orch1:\Dept#2 -Type DirectoryUser
 ```
 
 Copies only directory user assignments (excluding groups, robots, and external applications) from the current folder to the Dept#2 folder.
@@ -78,7 +78,7 @@ Copies only directory user assignments (excluding groups, robots, and external a
 ### Example 4: Copy recursively to another Orchestrator instance
 
 ```powershell
-PS C:\> Copy-OrchFolderUser -Path Orch1:\Shared -Recurse '*' Orch2:\Shared -UserMappingCsv C:\temp\user-mapping.csv
+PS C:\> Copy-OrchFolderUser -Path Orch1:\Shared -Recurse * Orch2:\Shared -UserMappingCsv C:\temp\user-mapping.csv
 ```
 
 Copies all folder user assignments from Shared and all its subfolders on Orch1, preserving the folder hierarchy at the destination on Orch2. The user mapping CSV maps source usernames to destination usernames for cross-instance migration.

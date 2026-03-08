@@ -98,7 +98,7 @@ Retrieves the first 5 alerts after skipping the initial 3 alerts. This is useful
 ### Example 7: Get alerts within a specific time range
 
 ```powershell
-PS Orch1:\> Get-OrchAlert -CreationTimeAfter '2026-03-01' -CreationTimeBefore '2026-03-05'
+PS Orch1:\> Get-OrchAlert -CreationTimeAfter 2026-03-01 -CreationTimeBefore 2026-03-05
 ```
 
 Gets alerts created between March 1 and March 5, 2026.

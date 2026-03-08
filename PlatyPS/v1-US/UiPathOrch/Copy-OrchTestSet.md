@@ -73,7 +73,7 @@ Shows what would happen without actually copying.
 ### Example 4: Copy a test set across Orchestrator instances
 
 ```powershell
-PS C:\> Copy-OrchTestSet -Path Orch1:\Shared -Name * -Destination Orch2:\Shared
+PS C:\> Copy-OrchTestSet -Path Orch1:\Shared * Orch2:\Shared
 ```
 
 Copies all test sets from the Shared folder on Orch1 to the Shared folder on Orch2.

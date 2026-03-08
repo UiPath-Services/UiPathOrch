@@ -69,7 +69,7 @@ Removes the queue named "TestQueue2" from the root folder and all subfolders rec
 ### Example 4: Remove a queue from a specific folder
 
 ```powershell
-PS C:\> Remove-OrchQueue -Path Orch1:\Shared -Name TestQueue2
+PS C:\> Remove-OrchQueue -Path Orch1:\Shared TestQueue2
 ```
 
 Removes the queue definition named "TestQueue2" from the Shared folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.

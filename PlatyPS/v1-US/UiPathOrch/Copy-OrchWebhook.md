@@ -61,7 +61,7 @@ Copies all webhooks matching "my*" from the current drive to the Orch2 drive.
 ### Example 3: Copy a webhook across Orchestrator instances
 
 ```powershell
-PS C:\> Copy-OrchWebhook -Path Orch1: -Name mywebhook -Destination Orch2:
+PS C:\> Copy-OrchWebhook -Path Orch1: mywebhook Orch2:
 ```
 
 Copies the webhook named "mywebhook" from Orch1 to Orch2. Webhook settings including Url, event subscriptions, and AllowInsecureSsl are carried over.

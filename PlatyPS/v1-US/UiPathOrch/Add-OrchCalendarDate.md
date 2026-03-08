@@ -51,7 +51,7 @@ Required permissions: Settings.Create Settings.Edit
 ### Example 1: Add a holiday to a calendar
 
 ```powershell
-PS Orch1:\> Add-OrchCalendarDate 'Japan Holidays' '2026-05-05'
+PS Orch1:\> Add-OrchCalendarDate 'Japan Holidays' 2026-05-05
 ```
 
 Adds May 5, 2026 as a non-working day to the calendar named "Japan Holidays". Since -Name and -ExcludedDate are positional parameters (Position 0 and 1), their parameter names can be omitted.
@@ -59,7 +59,7 @@ Adds May 5, 2026 as a non-working day to the calendar named "Japan Holidays". Si
 ### Example 2: Add multiple dates to a calendar
 
 ```powershell
-PS Orch1:\> Add-OrchCalendarDate 'US Holidays' '2026-07-04','2026-09-07','2026-11-26'
+PS Orch1:\> Add-OrchCalendarDate 'US Holidays' 2026-07-04,2026-09-07,2026-11-26
 ```
 
 Adds three dates (July 4, September 7, and November 26, 2026) as non-working days to the "US Holidays" calendar.
@@ -67,7 +67,7 @@ Adds three dates (July 4, September 7, and November 26, 2026) as non-working day
 ### Example 3: Create a new calendar with dates
 
 ```powershell
-PS Orch1:\> Add-OrchCalendarDate 'New Year 2027' '2027-01-01','2027-01-02','2027-01-03'
+PS Orch1:\> Add-OrchCalendarDate 'New Year 2027' 2027-01-01,2027-01-02,2027-01-03
 ```
 
 If the calendar "New Year 2027" does not exist, it is created with the specified excluded dates. If it already exists, the dates are merged with the existing ones.
@@ -75,7 +75,7 @@ If the calendar "New Year 2027" does not exist, it is created with the specified
 ### Example 4: Add a past date using -IncludePastDate
 
 ```powershell
-PS C:\> Add-OrchCalendarDate -Path Orch1: -Name 'Company Holidays' -ExcludedDate '2025-12-25' -IncludePastDate
+PS C:\> Add-OrchCalendarDate -Path Orch1: 'Company Holidays' -ExcludedDate 2025-12-25 -IncludePastDate
 ```
 
 Adds December 25, 2025 to the "Company Holidays" calendar, even though the date is in the past. Without -IncludePastDate, past dates are silently ignored.

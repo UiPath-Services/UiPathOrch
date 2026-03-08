@@ -55,7 +55,7 @@ Copies all external applications from the Orch1 organization to the Orch2 organi
 ### Example 2: Copy a specific external application across drives
 
 ```powershell
-PS C:\> Copy-PmExternalApplication -Name uipathorch -Path Orch1: -Destination Orch2:
+PS C:\> Copy-PmExternalApplication -Path Orch1: uipathorch Orch2:
 ```
 
 Copies the external application named "uipathorch" from the Orch1 organization to the Orch2 organization.

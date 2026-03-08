@@ -71,7 +71,7 @@ Gets the process named "BlankProcess19" and fetches full details including Proce
 ### Example 4: Get processes from a specific folder
 
 ```powershell
-PS C:\> Get-OrchProcess -Path Orch1:\Production -Name BlankProcess19
+PS C:\> Get-OrchProcess -Path Orch1:\Production BlankProcess19
 ```
 
 Gets the process named "BlankProcess19" from the Production folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.

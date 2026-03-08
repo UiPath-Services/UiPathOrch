@@ -55,7 +55,7 @@ Copies all robot accounts from the Orch1 organization to the Orch2 organization,
 ### Example 2: Copy a specific robot account across drives
 
 ```powershell
-PS C:\> Copy-PmRobotAccount -Name MyRobot1 -Path Orch1: -Destination Orch2:
+PS C:\> Copy-PmRobotAccount -Path Orch1: MyRobot1 Orch2:
 ```
 
 Copies the specified robot account from the Orch1 organization to the Orch2 organization.

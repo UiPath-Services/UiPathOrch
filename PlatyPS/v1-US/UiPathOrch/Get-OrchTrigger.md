@@ -71,7 +71,7 @@ Gets all triggers whose name contains "trigger" from the current folder.
 ### Example 4: Get triggers from a specific folder
 
 ```powershell
-PS C:\> Get-OrchTrigger -Path Orch1:\root -Name *trigger*
+PS C:\> Get-OrchTrigger -Path Orch1:\root *trigger*
 ```
 
 Gets triggers whose name contains "trigger" from the root folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.

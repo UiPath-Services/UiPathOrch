@@ -57,7 +57,7 @@ Removes the "DU Validator" role from the user john.doe@example.com in the curren
 ### Example 2: Remove all roles from matching users in a specific project
 
 ```powershell
-PS C:\> Remove-DuRoleFromDuUser john* * -Path Orch1Du:\MyProject
+PS C:\> Remove-DuRoleFromDuUser -Path Orch1Du:\MyProject john* *
 ```
 
 Removes all directly assigned roles from all users whose display name starts with "john" in the specified project.

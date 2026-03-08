@@ -66,7 +66,7 @@ Required permissions: Assets.Create, Assets.Edit, Assets.Delete
 ### Example 1: Create a credential asset
 
 ```powershell
-PS Orch1:\Shared> Set-OrchCredentialAsset -Name ApiCredential -CredentialUsername 'apiuser' -CredentialPassword 'secret123'
+PS Orch1:\Shared> Set-OrchCredentialAsset -Name ApiCredential -CredentialUsername apiuser -CredentialPassword 'secret123'
 ```
 
 Creates a new credential asset with the specified username and password. The asset is stored in the default credential store (Orchestrator Database).
@@ -74,7 +74,7 @@ Creates a new credential asset with the specified username and password. The ass
 ### Example 2: Preview credential operations with -WhatIf
 
 ```powershell
-PS Orch1:\Shared> Set-OrchCredentialAsset -Name TestCredential1 -CredentialUsername 'newuser' -CredentialPassword 'newpass' -WhatIf
+PS Orch1:\Shared> Set-OrchCredentialAsset -Name TestCredential1 -CredentialUsername newuser -CredentialPassword 'newpass' -WhatIf
 ```
 
 ```output
@@ -86,7 +86,7 @@ Shows what would happen without executing. The -WhatIf output shows "Add Credent
 ### Example 3: Update credential username and password
 
 ```powershell
-PS Orch1:\Shared> Set-OrchCredentialAsset -Name TestCredential1 -CredentialUsername 'updateduser' -CredentialPassword 'updatedpass'
+PS Orch1:\Shared> Set-OrchCredentialAsset -Name TestCredential1 -CredentialUsername updateduser -CredentialPassword 'updatedpass'
 ```
 
 Updates both the username and password of an existing credential asset. No output is produced on update; output is only returned when creating a new asset.
@@ -110,7 +110,7 @@ Creates or updates a credential asset that references an external credential sto
 ### Example 6: Set a per-robot credential
 
 ```powershell
-PS Orch1:\Shared> Set-OrchCredentialAsset -Name AppCredential -UserName testrobot01 -CredentialUsername 'robotuser' -CredentialPassword 'robotpass'
+PS Orch1:\Shared> Set-OrchCredentialAsset -Name AppCredential -UserName testrobot01 -CredentialUsername robotuser -CredentialPassword 'robotpass'
 ```
 
 Sets a per-robot credential value for a specific user. The asset's ValueScope changes to PerRobot. Multiple -UserName and -MachineName values can be specified with wildcards.
@@ -126,7 +126,7 @@ Removes the credential asset by specifying an empty string as the password witho
 ### Example 8: Create a credential in a specific folder
 
 ```powershell
-PS C:\> Set-OrchCredentialAsset -Path Orch1:\Production -Name DbCredential -CredentialUsername 'dbadmin' -CredentialPassword 'dbpass123'
+PS C:\> Set-OrchCredentialAsset -Path Orch1:\Production -Name DbCredential -CredentialUsername dbadmin -CredentialPassword 'dbpass123'
 ```
 
 Creates a credential asset in the Production folder using -Path. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.

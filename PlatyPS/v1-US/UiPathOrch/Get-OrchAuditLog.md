@@ -68,7 +68,7 @@ Gets all audit logs from the last day. The `-Last` parameter is positional (posi
 ### Example 2: Get audit logs from a specific drive
 
 ```powershell
-PS C:\> Get-OrchAuditLog -Last Week -Path Orch1:
+PS C:\> Get-OrchAuditLog -Path Orch1: -Last Week
 ```
 
 Gets audit logs from the last week on the Orch1: drive. This command can be executed from any drive.
@@ -92,7 +92,7 @@ Gets audit logs from the last week where the action is Create or Delete.
 ### Example 5: Get audit logs within a time range
 
 ```powershell
-PS Orch1:\> Get-OrchAuditLog -ExecutionTimeAfter '2026-03-01' -ExecutionTimeBefore '2026-03-05'
+PS Orch1:\> Get-OrchAuditLog -ExecutionTimeAfter 2026-03-01 -ExecutionTimeBefore 2026-03-05
 ```
 
 Gets audit logs with execution times between March 1 and March 5, 2026.

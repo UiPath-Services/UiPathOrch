@@ -49,7 +49,7 @@ Required permissions: Settings.Create Settings.Edit
 ### Example 1: Remove a date from a calendar
 
 ```powershell
-PS Orch1:\> Remove-OrchCalendarDate 'Japan Holidays' '2026-05-05'
+PS Orch1:\> Remove-OrchCalendarDate 'Japan Holidays' 2026-05-05
 ```
 
 Removes May 5, 2026 from the "Japan Holidays" calendar. Since -Name and -ExcludedDate are positional parameters (Position 0 and 1), their parameter names can be omitted.
@@ -57,7 +57,7 @@ Removes May 5, 2026 from the "Japan Holidays" calendar. Since -Name and -Exclude
 ### Example 2: Remove multiple dates from a calendar
 
 ```powershell
-PS Orch1:\> Remove-OrchCalendarDate 'US Holidays' '2026-07-04','2026-09-07'
+PS Orch1:\> Remove-OrchCalendarDate 'US Holidays' 2026-07-04,2026-09-07
 ```
 
 Removes July 4 and September 7, 2026 from the "US Holidays" calendar.
@@ -65,7 +65,7 @@ Removes July 4 and September 7, 2026 from the "US Holidays" calendar.
 ### Example 3: Remove dates from a calendar on a specific drive
 
 ```powershell
-PS C:\> Remove-OrchCalendarDate -Path Orch1: -Name 'Company Holidays' -ExcludedDate '2026-12-25'
+PS C:\> Remove-OrchCalendarDate -Path Orch1: 'Company Holidays' -ExcludedDate 2026-12-25
 ```
 
 Removes December 25, 2026 from the "Company Holidays" calendar on the Orch1: drive. This command can be executed from any drive.
@@ -73,7 +73,7 @@ Removes December 25, 2026 from the "Company Holidays" calendar on the Orch1: dri
 ### Example 4: Preview removal with -WhatIf
 
 ```powershell
-PS Orch1:\> Remove-OrchCalendarDate 'Japan Holidays' '2026-01-01' -WhatIf
+PS Orch1:\> Remove-OrchCalendarDate 'Japan Holidays' 2026-01-01 -WhatIf
 ```
 
 ```output

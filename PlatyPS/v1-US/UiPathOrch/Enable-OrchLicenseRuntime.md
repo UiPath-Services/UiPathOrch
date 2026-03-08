@@ -47,7 +47,7 @@ Required permissions: Machines.Edit
 ### Example 1: Enable a specific runtime license
 
 ```powershell
-PS Orch1:\> Enable-OrchLicenseRuntime Unattended 'm2'
+PS Orch1:\> Enable-OrchLicenseRuntime Unattended m2
 ```
 
 Enables the runtime license with the key `m2` for the `Unattended` robot type.
@@ -63,7 +63,7 @@ Enables all currently disabled runtime licenses for the `Unattended` robot type.
 ### Example 3: Preview enabling with -WhatIf
 
 ```powershell
-PS Orch1:\> Enable-OrchLicenseRuntime Unattended 'm2' -WhatIf
+PS Orch1:\> Enable-OrchLicenseRuntime Unattended m2 -WhatIf
 ```
 
 Shows what would happen if the cmdlet enables the specified runtime license without actually performing the operation.
@@ -71,7 +71,7 @@ Shows what would happen if the cmdlet enables the specified runtime license with
 ### Example 4: Enable runtime licenses from a specific drive
 
 ```powershell
-PS C:\> Enable-OrchLicenseRuntime -RobotType Unattended -Key 'm2' -Path Orch1:
+PS C:\> Enable-OrchLicenseRuntime -Path Orch1: -RobotType Unattended -Key m2
 ```
 
 Enables the specified runtime license from the drive named `Orch1`.
@@ -79,7 +79,7 @@ Enables the specified runtime license from the drive named `Orch1`.
 ### Example 5: Enable runtime licenses matching a wildcard pattern
 
 ```powershell
-PS Orch1:\> Enable-OrchLicenseRuntime Unattended 'new*'
+PS Orch1:\> Enable-OrchLicenseRuntime Unattended new*
 ```
 
 Enables all currently disabled runtime licenses for the `Unattended` robot type whose key matches the pattern `new*`.

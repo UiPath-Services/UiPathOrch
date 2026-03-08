@@ -93,7 +93,7 @@ Previews hiding all processes starting with "Blank" from attended users across a
 ### Example 5: Update a process from a specific folder
 
 ```powershell
-PS C:\> Update-OrchProcess -Path Orch1:\Production -Name BlankProcess19 -AlwaysRunning True -Priority High
+PS C:\> Update-OrchProcess -Path Orch1:\Production BlankProcess19 -AlwaysRunning True -Priority High
 ```
 
 Sets the BlankProcess19 in the Production folder to always-running mode with high priority. When -Path uses an absolute path, the command can be run from any location.

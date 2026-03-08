@@ -55,7 +55,7 @@ Removes the test case named "Obsolete Test" from the current project. The name c
 ### Example 2: Remove test cases from a specific project
 
 ```powershell
-PS C:\> Remove-TmTestCase Draft* -Path Orch1Tm:\MTP -Recurse
+PS C:\> Remove-TmTestCase -Path Orch1Tm:\MTP Draft* -Recurse
 ```
 
 Removes all test cases whose name starts with "Draft" from the specified project and all its subfolders.

@@ -68,7 +68,7 @@ Displays what would happen if all webhooks matching "*Legacy*" were removed, wit
 ### Example 4: Remove a webhook from a specific drive
 
 ```powershell
-PS C:\> Remove-OrchWebhook -Path Orch1: -Name ObsoleteHook
+PS C:\> Remove-OrchWebhook -Path Orch1: ObsoleteHook
 ```
 
 Removes the webhook named "ObsoleteHook" from the Orch1 drive. When -Path uses an absolute path, the command can be run from any location.

@@ -62,7 +62,7 @@ Searches the connected directory for entities matching "admin".
 ### Example 3: Search a specific organization's directory
 
 ```powershell
-PS C:\> Search-PmDirectory -Name admin -Path Orch1:
+PS C:\> Search-PmDirectory -Path Orch1: admin
 ```
 
 Searches the directory connected to the Orch1 organization for entities matching "admin".

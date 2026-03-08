@@ -67,7 +67,7 @@ Gets all jobs created within the last day from the current folder.
 ### Example 2: Get a specific job by ID
 
 ```powershell
-PS C:\> Get-OrchJob -Id 147426438 -Path 'Orch1:\Shared'
+PS C:\> Get-OrchJob -Path Orch1:\Shared -Id 147426438
 ```
 
 Gets the job with the specified ID from the Shared folder.
@@ -91,7 +91,7 @@ Gets jobs for processes matching the wildcard pattern `Blank*` that are in the F
 ### Example 5: Get jobs with a time range filter
 
 ```powershell
-PS Orch1:\Shared> Get-OrchJob -CreationTimeAfter '2026-03-01' -CreationTimeBefore '2026-03-05'
+PS Orch1:\Shared> Get-OrchJob -CreationTimeAfter 2026-03-01 -CreationTimeBefore 2026-03-05
 ```
 
 Gets jobs created between March 1 and March 5, 2026.
@@ -99,7 +99,7 @@ Gets jobs created between March 1 and March 5, 2026.
 ### Example 6: Get jobs from a specific folder
 
 ```powershell
-PS C:\> Get-OrchJob -Last Week -Path Orch1:\Production
+PS C:\> Get-OrchJob -Path Orch1:\Production -Last Week
 ```
 
 Gets jobs created within the last week from the Production folder.
@@ -107,7 +107,7 @@ Gets jobs created within the last week from the Production folder.
 ### Example 7: Get jobs recursively with paging
 
 ```powershell
-PS C:\> Get-OrchJob -Last Month -Path 'Orch1:\Shared' -Recurse -First 50 -Skip 100
+PS C:\> Get-OrchJob -Path Orch1:\Shared -Last Month -Recurse -First 50 -Skip 100
 ```
 
 Gets jobs created within the last month from the Shared folder and all its subfolders, skipping the first 100 results and returning the next 50.

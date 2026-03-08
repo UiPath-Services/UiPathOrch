@@ -52,7 +52,7 @@ Searches the directory for users matching "ytsuda".
 ### Example 2: Search for a user on a specific drive
 
 ```powershell
-PS C:\> Search-OrchDirectory ytsuda@gmail.com -Path Orch1:
+PS C:\> Search-OrchDirectory -Path Orch1: ytsuda@gmail.com
 ```
 
 Searches the directory on the Orch1: drive for the specified user.
@@ -60,7 +60,7 @@ Searches the directory on the Orch1: drive for the specified user.
 ### Example 3: Search across multiple drives
 
 ```powershell
-PS C:\> Search-OrchDirectory -Name admin -Path Orch1:,Orch2:
+PS C:\> Search-OrchDirectory -Path Orch1:,Orch2: admin
 ```
 
 Searches the directory on both Orch1: and Orch2: drives. Queries are executed in parallel.

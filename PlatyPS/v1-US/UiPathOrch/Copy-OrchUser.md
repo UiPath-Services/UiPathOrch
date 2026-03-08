@@ -62,7 +62,7 @@ Copies the user "ytsuda@gmail.com" from the current tenant (Orch1) to the Orch2 
 ### Example 2: Copy all users to another instance
 
 ```powershell
-PS Orch1:\> Copy-OrchUser '*' Orch2:\
+PS Orch1:\> Copy-OrchUser * Orch2:\
 ```
 
 Copies all users from the Orch1 tenant to the Orch2 tenant.
@@ -70,7 +70,7 @@ Copies all users from the Orch1 tenant to the Orch2 tenant.
 ### Example 3: Preview copy with -WhatIf
 
 ```powershell
-PS Orch1:\> Copy-OrchUser '*' Orch2:\ -WhatIf
+PS Orch1:\> Copy-OrchUser * Orch2:\ -WhatIf
 ```
 
 Shows which users would be copied without executing the command.
@@ -78,7 +78,7 @@ Shows which users would be copied without executing the command.
 ### Example 4: Copy users of a specific type
 
 ```powershell
-PS Orch1:\> Copy-OrchUser '*' Orch2:\ -Type DirectoryUser
+PS Orch1:\> Copy-OrchUser * Orch2:\ -Type DirectoryUser
 ```
 
 Copies only directory users (excluding groups, robots, and applications) from Orch1 to Orch2.
@@ -86,7 +86,7 @@ Copies only directory users (excluding groups, robots, and applications) from Or
 ### Example 5: Copy with user mapping for cross-instance migration
 
 ```powershell
-PS C:\> Copy-OrchUser -Path Orch1:\ '*' Orch2:\ -UserMappingCsv C:\temp\user-mapping.csv
+PS C:\> Copy-OrchUser -Path Orch1:\ * Orch2:\ -UserMappingCsv C:\temp\user-mapping.csv
 ```
 
 Copies users with a user mapping CSV file that maps source usernames to destination usernames. Use New-OrchUserMappingCsv to generate the mapping file. When -Path uses an absolute path, the command can be run from any location.
@@ -94,7 +94,7 @@ Copies users with a user mapping CSV file that maps source usernames to destinat
 ### Example 6: Copy users filtered by full name
 
 ```powershell
-PS Orch1:\> Copy-OrchUser '*' Orch2:\ -FullName 'Yoshifumi*'
+PS Orch1:\> Copy-OrchUser * Orch2:\ -FullName Yoshifumi*
 ```
 
 Copies users whose display name starts with "Yoshifumi" from Orch1 to Orch2. Both -UserName and -FullName filters are applied together.

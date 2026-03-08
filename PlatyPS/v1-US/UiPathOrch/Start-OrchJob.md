@@ -46,7 +46,7 @@ Required permissions: Jobs.Create
 ### Example 1: Start a job for a specific process
 
 ```powershell
-PS Orch1:\Shared> Start-OrchJob -Name 'BlankProcess19'
+PS Orch1:\Shared> Start-OrchJob BlankProcess19
 ```
 
 Starts a job for the process named `BlankProcess19` in the current folder.
@@ -54,7 +54,7 @@ Starts a job for the process named `BlankProcess19` in the current folder.
 ### Example 2: Start a job with a specific runtime type
 
 ```powershell
-PS Orch1:\Shared> Start-OrchJob -Name 'BlankProcess19' -RuntimeType Unattended
+PS Orch1:\Shared> Start-OrchJob BlankProcess19 -RuntimeType Unattended
 ```
 
 Starts an Unattended job for the process named `BlankProcess19`.
@@ -62,7 +62,7 @@ Starts an Unattended job for the process named `BlankProcess19`.
 ### Example 3: Start multiple jobs
 
 ```powershell
-PS Orch1:\Shared> Start-OrchJob -Name 'BlankProcess19' -RuntimeType Unattended -JobsCount 3
+PS Orch1:\Shared> Start-OrchJob BlankProcess19 -RuntimeType Unattended -JobsCount 3
 ```
 
 Starts 3 Unattended jobs for the process named `BlankProcess19`.
@@ -70,7 +70,7 @@ Starts 3 Unattended jobs for the process named `BlankProcess19`.
 ### Example 4: Start a job with input arguments
 
 ```powershell
-PS Orch1:\Shared> Start-OrchJob -Name 'BlankProcess19' -InputArguments '{"FilePath":"C:\\Invoices","BatchSize":10}'
+PS Orch1:\Shared> Start-OrchJob BlankProcess19 -InputArguments '{"FilePath":"C:\\Invoices","BatchSize":10}'
 ```
 
 Starts a job for the process named `BlankProcess19` and passes the specified JSON input arguments.
@@ -78,7 +78,7 @@ Starts a job for the process named `BlankProcess19` and passes the specified JSO
 ### Example 5: Preview with -WhatIf
 
 ```powershell
-PS Orch1:\Shared> Start-OrchJob -Name 'Report*' -WhatIf
+PS Orch1:\Shared> Start-OrchJob Report* -WhatIf
 ```
 
 Shows what jobs would be started for all processes matching `Report*` without actually starting them.
@@ -86,7 +86,7 @@ Shows what jobs would be started for all processes matching `Report*` without ac
 ### Example 6: Start jobs from a specific folder
 
 ```powershell
-PS C:\> Start-OrchJob -Name 'BlankProcess19' -Path 'Orch1:\Shared'
+PS C:\> Start-OrchJob -Path Orch1:\Shared BlankProcess19
 ```
 
 Starts a job for the process named `BlankProcess19` in the Shared folder.

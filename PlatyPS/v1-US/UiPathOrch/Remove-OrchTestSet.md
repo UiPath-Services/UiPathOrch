@@ -75,7 +75,7 @@ Shows which test sets would be removed without actually removing them.
 ### Example 4: Remove a test set from a specific folder
 
 ```powershell
-PS C:\> Remove-OrchTestSet -Path Orch1:\Shared -Name ObsoleteTests
+PS C:\> Remove-OrchTestSet -Path Orch1:\Shared ObsoleteTests
 ```
 
 Removes the test set named "ObsoleteTests" from the Shared folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.

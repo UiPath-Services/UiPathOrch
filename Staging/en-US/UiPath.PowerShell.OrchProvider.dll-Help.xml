@@ -175,7 +175,7 @@ PS Orch1Du:\MyProject&gt; Add-DuUser DirectoryUser ytsuda@gmail.com "DU Administ
         <maml:title>--------- Example 2: Add a directory group to a specific project ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Add-DuUser DirectoryGroup Administrators DU* -Path Orch1Du:\MyProject
+PS C:\&gt; Add-DuUser -Path Orch1Du:\MyProject DirectoryGroup Administrators DU*
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Adds the directory group "Administrators" to the specified project with all roles whose name starts with "DU".</maml:para>
@@ -359,7 +359,7 @@ What if: Performing the operation "Add AssetLink 'Orch1:\Dept#2'" on target "Orc
         <maml:title>--------- Example 3: Link multiple assets to multiple folders ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Add-OrchAssetLink -Name 'Test*' -Link Orch1:\Dept#2, Orch1:\Dept#3
+PS Orch1:\Shared&gt; Add-OrchAssetLink -Name Test* -Link Orch1:\Dept#2, Orch1:\Dept#3
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Links all assets matching "Test*" to both the Dept#2 and Dept#3 folders. Both -Name and -Link accept wildcards and comma-separated values.</maml:para>
@@ -371,7 +371,7 @@ PS Orch1:\Shared&gt; Add-OrchAssetLink -Name 'Test*' -Link Orch1:\Dept#2, Orch1:
         <maml:title>--------- Example 4: Link an asset from a specific source folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Add-OrchAssetLink -Path Orch1:\Shared -Name TestAsset1 -Link Orch1:\Dept#2
+PS C:\&gt; Add-OrchAssetLink -Path Orch1:\Shared TestAsset1 -Link Orch1:\Dept#2
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Links the asset from the Shared folder to the Dept#2 folder. When -Path uses an absolute path, the command can be run from any location.</maml:para>
@@ -558,7 +558,7 @@ When a calendar name that does not match any existing calendar is specified and 
         <maml:title>--------- Example 1: Add a holiday to a calendar ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Add-OrchCalendarDate 'Japan Holidays' '2026-05-05'
+PS Orch1:\&gt; Add-OrchCalendarDate 'Japan Holidays' 2026-05-05
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Adds May 5, 2026 as a non-working day to the calendar named "Japan Holidays". Since -Name and -ExcludedDate are positional parameters (Position 0 and 1), their parameter names can be omitted.</maml:para>
@@ -570,7 +570,7 @@ PS Orch1:\&gt; Add-OrchCalendarDate 'Japan Holidays' '2026-05-05'
         <maml:title>--------- Example 2: Add multiple dates to a calendar ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Add-OrchCalendarDate 'US Holidays' '2026-07-04','2026-09-07','2026-11-26'
+PS Orch1:\&gt; Add-OrchCalendarDate 'US Holidays' 2026-07-04,2026-09-07,2026-11-26
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Adds three dates (July 4, September 7, and November 26, 2026) as non-working days to the "US Holidays" calendar.</maml:para>
@@ -582,7 +582,7 @@ PS Orch1:\&gt; Add-OrchCalendarDate 'US Holidays' '2026-07-04','2026-09-07','202
         <maml:title>--------- Example 3: Create a new calendar with dates ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Add-OrchCalendarDate 'New Year 2027' '2027-01-01','2027-01-02','2027-01-03'
+PS Orch1:\&gt; Add-OrchCalendarDate 'New Year 2027' 2027-01-01,2027-01-02,2027-01-03
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>If the calendar "New Year 2027" does not exist, it is created with the specified excluded dates. If it already exists, the dates are merged with the existing ones.</maml:para>
@@ -594,7 +594,7 @@ PS Orch1:\&gt; Add-OrchCalendarDate 'New Year 2027' '2027-01-01','2027-01-02','2
         <maml:title>--------- Example 4: Add a past date using -IncludePastDate ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Add-OrchCalendarDate -Path Orch1: -Name 'Company Holidays' -ExcludedDate '2025-12-25' -IncludePastDate
+PS C:\&gt; Add-OrchCalendarDate -Path Orch1: 'Company Holidays' -ExcludedDate 2025-12-25 -IncludePastDate
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Adds December 25, 2025 to the "Company Holidays" calendar, even though the date is in the past. Without -IncludePastDate, past dates are silently ignored.</maml:para>
@@ -1453,7 +1453,7 @@ PS Orch1:\Shared&gt; Add-OrchRoleToFolderUser -FullName "Yoshifumi Tsuda" -Roles
         <maml:title>--------- Example 4: Add a role to all directory users recursively ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Add-OrchRoleToFolderUser -Recurse -UserName '*' -Roles Executor -Type DirectoryUser
+PS Orch1:\&gt; Add-OrchRoleToFolderUser -Recurse -UserName * -Roles Executor -Type DirectoryUser
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Adds the "Executor" role to all directory users in all folders. Users who already have the role are skipped.</maml:para>
@@ -3204,7 +3204,7 @@ PS Orch1:\Shared&gt; Copy-OrchAsset -Name TestAsset1 -Destination Orch1:\Dept#2
         <maml:title>--------- Example 2: Preview copy with -WhatIf ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Copy-OrchAsset -Name 'Test*' -Destination Orch1:\Dept#2 -WhatIf
+PS Orch1:\Shared&gt; Copy-OrchAsset Test* -Destination Orch1:\Dept#2 -WhatIf
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>```output
@@ -3222,7 +3222,7 @@ What if: Performing the operation "Copy Asset" on target "Item: 'Orch1:\Shared\T
         <maml:title>--------- Example 3: Copy all assets to another Orchestrator instance ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Copy-OrchAsset -Name '*' -Destination Orch2:\Shared
+PS Orch1:\Shared&gt; Copy-OrchAsset * -Destination Orch2:\Shared
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies all assets from the Shared folder on Orch1 to the Shared folder on Orch2. Cross-drive copy enables migration between Orchestrator instances.</maml:para>
@@ -3234,7 +3234,7 @@ PS Orch1:\Shared&gt; Copy-OrchAsset -Name '*' -Destination Orch2:\Shared
         <maml:title>--------- Example 4: Copy assets recursively with folder hierarchy ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Copy-OrchAsset -Path Orch1:\Shared -Recurse -Name '*' -Destination Orch2:\Shared
+PS C:\&gt; Copy-OrchAsset -Path Orch1:\Shared -Recurse * Orch2:\Shared
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies all assets from Shared and all its subfolders on Orch1, preserving the folder hierarchy relative to the source root. Subfolders are matched by relative path on the destination.</maml:para>
@@ -3246,7 +3246,7 @@ PS C:\&gt; Copy-OrchAsset -Path Orch1:\Shared -Recurse -Name '*' -Destination Or
         <maml:title>--------- Example 5: Copy with user mapping for cross-instance migration ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Copy-OrchAsset -Path Orch1:\Shared -Name '*' -Destination Orch2:\Shared -UserMappingCsv c:user-mapping.csv
+PS C:\&gt; Copy-OrchAsset -Path Orch1:\Shared * Orch2:\Shared -UserMappingCsv c:user-mapping.csv
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies assets with a user mapping CSV file for per-robot assets. The CSV maps source usernames to destination usernames, enabling cross-instance migration where user accounts differ. Use New-OrchUserMappingCsv to generate the mapping file.</maml:para>
@@ -3258,7 +3258,7 @@ PS C:\&gt; Copy-OrchAsset -Path Orch1:\Shared -Name '*' -Destination Orch2:\Shar
         <maml:title>--------- Example 6: Copy from a specific folder using -Path ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Copy-OrchAsset -Path Orch1:\Shared -Name TestAsset1 -Destination Orch1:\Dept#2
+PS C:\&gt; Copy-OrchAsset -Path Orch1:\Shared TestAsset1 Orch1:\Dept#2
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies the asset from the Shared folder to the Dept#2 folder. When -Path uses an absolute path, the command can be run from any location.</maml:para>
@@ -3465,7 +3465,7 @@ PS Orch1:\Shared&gt; Copy-OrchBucket Test* Dept#2
         <maml:title>--------- Example 3: Copy a bucket across Orchestrator instances ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Copy-OrchBucket -Path Orch1:\Shared -Name TestBucket2 -Destination Orch2:\Shared
+PS C:\&gt; Copy-OrchBucket -Path Orch1:\Shared TestBucket2 Orch2:\Shared
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies the storage bucket named "TestBucket2" from the Shared folder on Orch1 to the Shared folder on Orch2. The bucket definition is recreated on the destination Orchestrator with the same configuration.</maml:para>
@@ -3674,7 +3674,7 @@ PS Orch1:\&gt; Copy-OrchCalendar * Orch2:
         <maml:title>--------- Example 3: Copy calendars across drives using absolute paths ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Copy-OrchCalendar -Path Orch1: -Name '*Holiday*' -Destination Orch2:
+PS C:\&gt; Copy-OrchCalendar -Path Orch1: *Holiday* Orch2:
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies all calendars matching "*Holiday*" from Orch1: to Orch2:. This command can be executed from any drive.</maml:para>
@@ -4310,7 +4310,7 @@ For cross-instance migration, a user mapping CSV is required because user identi
         <maml:title>--------- Example 1: Copy all user assignments to another folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Copy-OrchFolderUser '*' Orch1:\Dept#2
+PS Orch1:\Shared&gt; Copy-OrchFolderUser * Orch1:\Dept#2
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies all folder user assignments from the current folder (Shared) to the Dept#2 folder on the same Orchestrator instance. The -UserName and -Destination parameters are positional (positions 0 and 1).</maml:para>
@@ -4334,7 +4334,7 @@ PS Orch1:\Shared&gt; Copy-OrchFolderUser ytsuda@gmail.com Orch1:\Dept#2
         <maml:title>--------- Example 3: Copy only directory users with -Type filter ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Copy-OrchFolderUser '*' Orch1:\Dept#2 -Type DirectoryUser
+PS Orch1:\Shared&gt; Copy-OrchFolderUser * Orch1:\Dept#2 -Type DirectoryUser
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies only directory user assignments (excluding groups, robots, and external applications) from the current folder to the Dept#2 folder.</maml:para>
@@ -4346,7 +4346,7 @@ PS Orch1:\Shared&gt; Copy-OrchFolderUser '*' Orch1:\Dept#2 -Type DirectoryUser
         <maml:title>--------- Example 4: Copy recursively to another Orchestrator instance ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Copy-OrchFolderUser -Path Orch1:\Shared -Recurse '*' Orch2:\Shared -UserMappingCsv C:\temp\user-mapping.csv
+PS C:\&gt; Copy-OrchFolderUser -Path Orch1:\Shared -Recurse * Orch2:\Shared -UserMappingCsv C:\temp\user-mapping.csv
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies all folder user assignments from Shared and all its subfolders on Orch1, preserving the folder hierarchy at the destination on Orch2. The user mapping CSV maps source usernames to destination usernames for cross-instance migration.</maml:para>
@@ -4548,7 +4548,7 @@ PS Orch1:\&gt; Copy-OrchLibrary UiPath.* 1.0.* Orch2:\
         <maml:title>--------- Example 3: Copy libraries from any location using -Path ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Copy-OrchLibrary UiPath.* -Destination Orch2:\ -Path Orch1:\
+PS C:\&gt; Copy-OrchLibrary -Path Orch1:\ UiPath.* -Destination Orch2:\
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies all libraries whose Id starts with "UiPath." from Orch1 to Orch2. When -Path specifies the source drive with an absolute path, the command can be run from any location.</maml:para>
@@ -4756,7 +4756,7 @@ PS Orch1:\&gt; Copy-OrchMachine * Orch2:\ -WhatIf
         <maml:title>--------- Example 4: Copy from a specific source drive ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Copy-OrchMachine -Path Orch1:\ -Name pool -Destination Orch2:\
+PS C:\&gt; Copy-OrchMachine -Path Orch1:\ pool Orch2:\
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies the machine named 'pool' from Orch1 to Orch2. When -Path uses an absolute path, the command can be run from any location.</maml:para>
@@ -4983,7 +4983,7 @@ PS Orch1:\Shared&gt; Copy-OrchPackage BlankProcess19 1.0.3 Orch1:\Dept#2
         <maml:title>--------- Example 3: Copy packages to another Orchestrator instance ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Copy-OrchPackage '*' -Destination Orch2:\Shared
+PS Orch1:\Shared&gt; Copy-OrchPackage * -Destination Orch2:\Shared
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies all packages and all their versions from the Shared folder on Orch1 to the Shared folder on Orch2. Cross-drive copy enables migration between Orchestrator instances.</maml:para>
@@ -4995,7 +4995,7 @@ PS Orch1:\Shared&gt; Copy-OrchPackage '*' -Destination Orch2:\Shared
         <maml:title>--------- Example 4: Copy packages recursively preserving folder hierarchy ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Copy-OrchPackage -Path Orch1:\ -Recurse '*' -Destination Orch2:\
+PS C:\&gt; Copy-OrchPackage -Path Orch1:\ -Recurse * Orch2:\
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies all packages from all folders on Orch1 to Orch2, preserving the folder hierarchy. Subfolders are matched by relative path on the destination. The -Recurse parameter can only be used when the source is the root folder.</maml:para>
@@ -5229,7 +5229,7 @@ What if: Performing the operation "Copy Process" on target "Item: 'BlankProcess1
         <maml:title>--------- Example 4: Copy a process across Orchestrator instances ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Copy-OrchProcess -Path Orch1:\Shared -Name BlankProcess19 -Destination Orch2:\Shared
+PS C:\&gt; Copy-OrchProcess -Path Orch1:\Shared BlankProcess19 Orch2:\Shared
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies the process named "BlankProcess19" from the Shared folder on Orch1 to the Shared folder on Orch2. The package is automatically uploaded to the destination Orchestrator feed if it does not already exist.</maml:para>
@@ -5448,7 +5448,7 @@ PS Orch1:\Shared&gt; Copy-OrchQueue Test* Dept#2
         <maml:title>--------- Example 3: Copy a queue across Orchestrator instances ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Copy-OrchQueue -Path Orch1:\Shared -Name TestQueue2 -Destination Orch2:\Shared
+PS C:\&gt; Copy-OrchQueue -Path Orch1:\Shared TestQueue2 Orch2:\Shared
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies the queue named "TestQueue2" from the Shared folder on Orch1 to the Shared folder on Orch2. The queue definition is recreated on the destination Orchestrator with the same configuration.</maml:para>
@@ -5701,7 +5701,7 @@ What if: Performing the operation "Copy QueueItem" on target "Item: 'TestQueue2 
         <maml:title>--------- Example 4: Copy queue items across Orchestrator instances ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Copy-OrchQueueItem -Path Orch1:\Shared -Name TestQueue2 -Destination Orch2:\Shared
+PS C:\&gt; Copy-OrchQueueItem -Path Orch1:\Shared TestQueue2 Orch2:\Shared
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies all "New" queue items from the TestQueue2 in the Shared folder on Orch1 to the TestQueue2 in the Shared folder on Orch2.</maml:para>
@@ -6339,7 +6339,7 @@ PS Orch1:\Shared&gt; Copy-OrchTestSet * Orch1:\Dept#2 -WhatIf
         <maml:title>--------- Example 4: Copy a test set across Orchestrator instances ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Copy-OrchTestSet -Path Orch1:\Shared -Name * -Destination Orch2:\Shared
+PS C:\&gt; Copy-OrchTestSet -Path Orch1:\Shared * Orch2:\Shared
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies all test sets from the Shared folder on Orch1 to the Shared folder on Orch2.</maml:para>
@@ -6771,7 +6771,7 @@ PS Orch1:\Shared&gt; Copy-OrchTrigger *trigger* Dept#2
         <maml:title>--------- Example 3: Copy a trigger across Orchestrator instances ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Copy-OrchTrigger -Path Orch1:\Shared -Name "high trigger" -Destination Orch2:\Shared
+PS C:\&gt; Copy-OrchTrigger -Path Orch1:\Shared "high trigger" Orch2:\Shared
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies the trigger named "high trigger" from the Shared folder on Orch1 to the Shared folder on Orch2. Trigger settings including executor robots and machine robots are carried over.</maml:para>
@@ -7009,7 +7009,7 @@ PS Orch1:\&gt; Copy-OrchUser ytsuda@gmail.com Orch2:\
         <maml:title>--------- Example 2: Copy all users to another instance ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Copy-OrchUser '*' Orch2:\
+PS Orch1:\&gt; Copy-OrchUser * Orch2:\
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies all users from the Orch1 tenant to the Orch2 tenant.</maml:para>
@@ -7021,7 +7021,7 @@ PS Orch1:\&gt; Copy-OrchUser '*' Orch2:\
         <maml:title>--------- Example 3: Preview copy with -WhatIf ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Copy-OrchUser '*' Orch2:\ -WhatIf
+PS Orch1:\&gt; Copy-OrchUser * Orch2:\ -WhatIf
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Shows which users would be copied without executing the command.</maml:para>
@@ -7033,7 +7033,7 @@ PS Orch1:\&gt; Copy-OrchUser '*' Orch2:\ -WhatIf
         <maml:title>--------- Example 4: Copy users of a specific type ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Copy-OrchUser '*' Orch2:\ -Type DirectoryUser
+PS Orch1:\&gt; Copy-OrchUser * Orch2:\ -Type DirectoryUser
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies only directory users (excluding groups, robots, and applications) from Orch1 to Orch2.</maml:para>
@@ -7045,7 +7045,7 @@ PS Orch1:\&gt; Copy-OrchUser '*' Orch2:\ -Type DirectoryUser
         <maml:title>--------- Example 5: Copy with user mapping for cross-instance migration ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Copy-OrchUser -Path Orch1:\ '*' Orch2:\ -UserMappingCsv C:\temp\user-mapping.csv
+PS C:\&gt; Copy-OrchUser -Path Orch1:\ * Orch2:\ -UserMappingCsv C:\temp\user-mapping.csv
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies users with a user mapping CSV file that maps source usernames to destination usernames. Use New-OrchUserMappingCsv to generate the mapping file. When -Path uses an absolute path, the command can be run from any location.</maml:para>
@@ -7057,7 +7057,7 @@ PS C:\&gt; Copy-OrchUser -Path Orch1:\ '*' Orch2:\ -UserMappingCsv C:\temp\user-
         <maml:title>--------- Example 6: Copy users filtered by full name ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Copy-OrchUser '*' Orch2:\ -FullName 'Yoshifumi*'
+PS Orch1:\&gt; Copy-OrchUser * Orch2:\ -FullName Yoshifumi*
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies users whose display name starts with "Yoshifumi" from Orch1 to Orch2. Both -UserName and -FullName filters are applied together.</maml:para>
@@ -7235,7 +7235,7 @@ PS Orch1:\&gt; Copy-OrchWebhook my* Orch2:
         <maml:title>--------- Example 3: Copy a webhook across Orchestrator instances ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Copy-OrchWebhook -Path Orch1: -Name mywebhook -Destination Orch2:
+PS C:\&gt; Copy-OrchWebhook -Path Orch1: mywebhook Orch2:
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies the webhook named "mywebhook" from Orch1 to Orch2. Webhook settings including Url, event subscriptions, and AllowInsecureSsl are carried over.</maml:para>
@@ -7404,7 +7404,7 @@ PS Orch1:\&gt; Copy-PmExternalApplication * Orch2:
         <maml:title>--------- Example 2: Copy a specific external application across drives ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Copy-PmExternalApplication -Name uipathorch -Path Orch1: -Destination Orch2:
+PS C:\&gt; Copy-PmExternalApplication -Path Orch1: uipathorch Orch2:
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies the external application named "uipathorch" from the Orch1 organization to the Orch2 organization.</maml:para>
@@ -7586,7 +7586,7 @@ PS Orch1:\&gt; Copy-PmGroup * -Destination Orch2:
         <maml:title>--------- Example 2: Copy a specific group across drives ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Copy-PmGroup -GroupName "Automation Developers" -Path Orch1: -Destination Orch2:
+PS C:\&gt; Copy-PmGroup -Path Orch1: -GroupName "Automation Developers" -Destination Orch2:
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies the "Automation Developers" group and its members from the Orch1 organization to the Orch2 organization.</maml:para>
@@ -7765,7 +7765,7 @@ PS Orch1:\&gt; Copy-PmRobotAccount * Orch2:
         <maml:title>--------- Example 2: Copy a specific robot account across drives ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Copy-PmRobotAccount -Name MyRobot1 -Path Orch1: -Destination Orch2:
+PS C:\&gt; Copy-PmRobotAccount -Path Orch1: MyRobot1 Orch2:
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies the specified robot account from the Orch1 organization to the Orch2 organization.</maml:para>
@@ -7963,7 +7963,7 @@ PS Orch1:\&gt; Copy-PmUser * -Destination Orch2:
         <maml:title>--------- Example 2: Copy specific users across drives ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Copy-PmUser -Email ytsuda@gmail.com -Path Orch1: -Destination Orch2:
+PS C:\&gt; Copy-PmUser -Path Orch1: -Email ytsuda@gmail.com -Destination Orch2:
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Copies the specified user from the Orch1 organization to the Orch2 organization.</maml:para>
@@ -8884,7 +8884,7 @@ The cmdlet is not run.</maml:para>
         <maml:title>--------- Example 1: Disable a specific runtime license ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Disable-OrchLicenseRuntime Unattended 'm2'
+PS Orch1:\&gt; Disable-OrchLicenseRuntime Unattended m2
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Disables the runtime license with the key `m2` for the `Unattended` robot type.</maml:para>
@@ -8908,7 +8908,7 @@ PS Orch1:\&gt; Disable-OrchLicenseRuntime Unattended *
         <maml:title>--------- Example 3: Preview disabling with -WhatIf ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Disable-OrchLicenseRuntime Unattended 'm2' -WhatIf
+PS Orch1:\&gt; Disable-OrchLicenseRuntime Unattended m2 -WhatIf
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Shows what would happen if the cmdlet disables the specified runtime license without actually performing the operation.</maml:para>
@@ -8920,7 +8920,7 @@ PS Orch1:\&gt; Disable-OrchLicenseRuntime Unattended 'm2' -WhatIf
         <maml:title>--------- Example 4: Disable runtime licenses from a specific drive ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Disable-OrchLicenseRuntime -RobotType Unattended -Key 'm2' -Path Orch1:
+PS C:\&gt; Disable-OrchLicenseRuntime -Path Orch1: -RobotType Unattended -Key m2
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Disables the specified runtime license from the drive named `Orch1`.</maml:para>
@@ -8932,7 +8932,7 @@ PS C:\&gt; Disable-OrchLicenseRuntime -RobotType Unattended -Key 'm2' -Path Orch
         <maml:title>--------- Example 5: Disable runtime licenses matching a wildcard pattern ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Disable-OrchLicenseRuntime Unattended 'xxx*'
+PS Orch1:\&gt; Disable-OrchLicenseRuntime Unattended xxx*
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Disables all currently enabled runtime licenses for the `Unattended` robot type whose key matches the pattern `xxx*`.</maml:para>
@@ -9162,7 +9162,7 @@ PS C:\&gt; Disable-OrchMaintenanceMode -Path Orch1:
         <maml:title>--------- Example 4: Disable maintenance mode for a specific session ID ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Disable-OrchMaintenanceMode -SessionId 12345 -Path Orch1:
+PS C:\&gt; Disable-OrchMaintenanceMode -Path Orch1: -SessionId 12345
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Disables maintenance mode on the session with the specified session ID on the Orch1: drive.</maml:para>
@@ -9318,7 +9318,7 @@ The cmdlet is not run.</maml:para>
         <maml:title>--------- Example 1: Disable a test set schedule ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Disable-OrchTestSetSchedule 'Sample-Test-Schedule'
+PS Orch1:\Shared&gt; Disable-OrchTestSetSchedule Sample-Test-Schedule
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Disables the test set schedule named 'Sample-Test-Schedule' in the current folder.</maml:para>
@@ -9703,7 +9703,7 @@ PS Orch1:\&gt; Disable-OrchWebhook *
         <maml:title>--------- Example 4: Disable a webhook on a specific drive ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Disable-OrchWebhook -Path Orch1: -Name mywebhook
+PS C:\&gt; Disable-OrchWebhook -Path Orch1: mywebhook
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Disables the webhook named "mywebhook" on the Orch1 drive. When -Path uses an absolute path, the command can be run from any location.</maml:para>
@@ -9931,7 +9931,7 @@ PS Orch1:\Shared&gt; Edit-OrchProcess Blank*
         <maml:title>--------- Example 3: Open the edit page from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Edit-OrchProcess -Path Orch1:\Shared -Name BlankProcess19
+PS C:\&gt; Edit-OrchProcess -Path Orch1:\Shared BlankProcess19
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Opens the edit page for the process named "BlankProcess19" in the Shared folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.</maml:para>
@@ -10816,7 +10816,7 @@ The cmdlet is not run.</maml:para>
         <maml:title>--------- Example 1: Enable a specific runtime license ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Enable-OrchLicenseRuntime Unattended 'm2'
+PS Orch1:\&gt; Enable-OrchLicenseRuntime Unattended m2
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Enables the runtime license with the key `m2` for the `Unattended` robot type.</maml:para>
@@ -10840,7 +10840,7 @@ PS Orch1:\&gt; Enable-OrchLicenseRuntime Unattended *
         <maml:title>--------- Example 3: Preview enabling with -WhatIf ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Enable-OrchLicenseRuntime Unattended 'm2' -WhatIf
+PS Orch1:\&gt; Enable-OrchLicenseRuntime Unattended m2 -WhatIf
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Shows what would happen if the cmdlet enables the specified runtime license without actually performing the operation.</maml:para>
@@ -10852,7 +10852,7 @@ PS Orch1:\&gt; Enable-OrchLicenseRuntime Unattended 'm2' -WhatIf
         <maml:title>--------- Example 4: Enable runtime licenses from a specific drive ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Enable-OrchLicenseRuntime -RobotType Unattended -Key 'm2' -Path Orch1:
+PS C:\&gt; Enable-OrchLicenseRuntime -Path Orch1: -RobotType Unattended -Key m2
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Enables the specified runtime license from the drive named `Orch1`.</maml:para>
@@ -10864,7 +10864,7 @@ PS C:\&gt; Enable-OrchLicenseRuntime -RobotType Unattended -Key 'm2' -Path Orch1
         <maml:title>--------- Example 5: Enable runtime licenses matching a wildcard pattern ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Enable-OrchLicenseRuntime Unattended 'new*'
+PS Orch1:\&gt; Enable-OrchLicenseRuntime Unattended new*
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Enables all currently disabled runtime licenses for the `Unattended` robot type whose key matches the pattern `new*`.</maml:para>
@@ -11094,7 +11094,7 @@ PS Orch1:\&gt; Enable-OrchMaintenanceMode ROBOT-SERVER01 -Force
         <maml:title>--------- Example 4: Enable maintenance mode on a specific session ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Enable-OrchMaintenanceMode -SessionId 12345 -Path Orch1:
+PS C:\&gt; Enable-OrchMaintenanceMode -Path Orch1: -SessionId 12345
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Enables maintenance mode on the session with the specified session ID on the Orch1: drive.</maml:para>
@@ -11250,7 +11250,7 @@ The cmdlet is not run.</maml:para>
         <maml:title>--------- Example 1: Enable a test set schedule ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Enable-OrchTestSetSchedule 'Sample-Test-Schedule'
+PS Orch1:\Shared&gt; Enable-OrchTestSetSchedule Sample-Test-Schedule
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Enables the test set schedule named 'Sample-Test-Schedule' in the current folder.</maml:para>
@@ -11479,7 +11479,7 @@ PS Orch1:\&gt; Enable-OrchTrigger -Recurse *
         <maml:title>--------- Example 4: Enable a trigger in a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Enable-OrchTrigger -Path Orch1:\root -Name "high trigger"
+PS C:\&gt; Enable-OrchTrigger -Path Orch1:\root "high trigger"
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Enables the trigger named "high trigger" in the root folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.</maml:para>
@@ -11647,7 +11647,7 @@ PS Orch1:\&gt; Enable-OrchWebhook *
         <maml:title>--------- Example 4: Enable a webhook on a specific drive ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Enable-OrchWebhook -Path Orch1: -Name mywebhook
+PS C:\&gt; Enable-OrchWebhook -Path Orch1: mywebhook
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Enables the webhook named "mywebhook" on the Orch1 drive. When -Path uses an absolute path, the command can be run from any location.</maml:para>
@@ -11867,7 +11867,7 @@ PS Orch1:\Shared&gt; Export-OrchBucketItem TestBucket2 *.pdf C:\Export
         <maml:title>--------- Example 3: Export from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Export-OrchBucketItem -Path Orch1:\Shared -Name TestBucket2 -Destination C:\Backup
+PS C:\&gt; Export-OrchBucketItem -Path Orch1:\Shared TestBucket2 -Destination C:\Backup
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Downloads all files from the storage bucket named "TestBucket2" in the Shared folder to C:\Backup. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.</maml:para>
@@ -12542,7 +12542,7 @@ PS Orch1:\Shared&gt; Export-OrchPackage MyProcess 1.0.0 C:\packages
         <maml:title>--------- Example 3: Export all packages using wildcards ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Export-OrchPackage '*' -Destination C:\backup
+PS Orch1:\Shared&gt; Export-OrchPackage * -Destination C:\backup
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Exports all versions of all packages from the current folder to C:\backup.</maml:para>
@@ -12566,7 +12566,7 @@ PS C:\&gt; Export-OrchPackage -Path Orch1:\Production -Id *Invoice* -Destination
         <maml:title>--------- Example 5: Export packages recursively preserving folder structure ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Export-OrchPackage -Recurse '*' -Destination C:\full-backup
+PS Orch1:\&gt; Export-OrchPackage -Recurse * -Destination C:\full-backup
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Exports all packages from all folders, creating subdirectories under C:\full-backup that match the Orchestrator folder hierarchy.</maml:para>
@@ -13838,7 +13838,7 @@ PS Orch1:\&gt; Get-OrchAlert -Skip 3 -First 5
         <maml:title>--------- Example 7: Get alerts within a specific time range ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Get-OrchAlert -CreationTimeAfter '2026-03-01' -CreationTimeBefore '2026-03-05'
+PS Orch1:\&gt; Get-OrchAlert -CreationTimeAfter 2026-03-01 -CreationTimeBefore 2026-03-05
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets alerts created between March 1 and March 5, 2026.</maml:para>
@@ -14244,7 +14244,7 @@ PS Orch1:\&gt; Get-OrchAsset -Recurse -ValueType Credential
         <maml:title>--------- Example 4: Get an asset from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchAsset -Path Orch1:\Production -Name DatabaseConnection
+PS C:\&gt; Get-OrchAsset -Path Orch1:\Production DatabaseConnection
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets the asset named "DatabaseConnection" from the Production folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.</maml:para>
@@ -14445,7 +14445,7 @@ Name: Orch1:\Shared\DatabaseConnection</maml:para>
         <maml:title>--------- Example 2: Get links for a specific asset ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Get-OrchAssetLink -Name DatabaseConnection
+PS Orch1:\Shared&gt; Get-OrchAssetLink DatabaseConnection
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets the folder links for the "DatabaseConnection" asset. Shows all folders that can access this asset.</maml:para>
@@ -14457,7 +14457,7 @@ PS Orch1:\Shared&gt; Get-OrchAssetLink -Name DatabaseConnection
         <maml:title>--------- Example 3: Get asset links from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchAssetLink -Path Orch1:\Shared -Name 'Test*'
+PS C:\&gt; Get-OrchAssetLink -Path Orch1:\Shared Test*
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets asset links for assets matching "Test*" in the Shared folder. When -Path uses an absolute path, the command can be run from any location.</maml:para>
@@ -14805,7 +14805,7 @@ PS Orch1:\&gt; Get-OrchAuditLog Day
         <maml:title>--------- Example 2: Get audit logs from a specific drive ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchAuditLog -Last Week -Path Orch1:
+PS C:\&gt; Get-OrchAuditLog -Path Orch1: -Last Week
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets audit logs from the last week on the Orch1: drive. This command can be executed from any drive.</maml:para>
@@ -14841,7 +14841,7 @@ PS Orch1:\&gt; Get-OrchAuditLog -Last Week -Action Create,Delete
         <maml:title>--------- Example 5: Get audit logs within a time range ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Get-OrchAuditLog -ExecutionTimeAfter '2026-03-01' -ExecutionTimeBefore '2026-03-05'
+PS Orch1:\&gt; Get-OrchAuditLog -ExecutionTimeAfter 2026-03-01 -ExecutionTimeBefore 2026-03-05
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets audit logs with execution times between March 1 and March 5, 2026.</maml:para>
@@ -15207,7 +15207,7 @@ PS Orch1:\Shared&gt; Get-OrchBucket Test*
         <maml:title>--------- Example 4: Get buckets from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchBucket -Path Orch1:\Production -Name TestBucket2
+PS C:\&gt; Get-OrchBucket -Path Orch1:\Production TestBucket2
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets the storage bucket named "TestBucket2" from the Production folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.</maml:para>
@@ -15422,7 +15422,7 @@ PS Orch1:\Shared&gt; Get-OrchBucketItem TestBucket2 *.csv
         <maml:title>--------- Example 4: Get items from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchBucketItem -Path Orch1:\Production -Name TestBucket2
+PS C:\&gt; Get-OrchBucketItem -Path Orch1:\Production TestBucket2
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets all files from the storage bucket named "TestBucket2" in the Production folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.</maml:para>
@@ -15671,7 +15671,7 @@ PS C:\&gt; Get-OrchCalendar -Path Orch1: -ExportCsv C:\temp
         <maml:title>--------- Example 6: Get calendars using wildcards across multiple drives ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchCalendar -Path Orch1: -Name *Calendar*
+PS C:\&gt; Get-OrchCalendar -Path Orch1: *Calendar*
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets all calendars matching `*Calendar*` from the Orch1 drive.</maml:para>
@@ -18061,7 +18061,7 @@ PS Orch1:\Shared&gt; Get-OrchJob -Last Day
         <maml:title>--------- Example 2: Get a specific job by ID ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchJob -Id 147426438 -Path 'Orch1:\Shared'
+PS C:\&gt; Get-OrchJob -Path Orch1:\Shared -Id 147426438
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets the job with the specified ID from the Shared folder.</maml:para>
@@ -18097,7 +18097,7 @@ PS Orch1:\Shared&gt; Get-OrchJob -ReleaseName Blank* -State Faulted,Successful
         <maml:title>--------- Example 5: Get jobs with a time range filter ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Get-OrchJob -CreationTimeAfter '2026-03-01' -CreationTimeBefore '2026-03-05'
+PS Orch1:\Shared&gt; Get-OrchJob -CreationTimeAfter 2026-03-01 -CreationTimeBefore 2026-03-05
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets jobs created between March 1 and March 5, 2026.</maml:para>
@@ -18109,7 +18109,7 @@ PS Orch1:\Shared&gt; Get-OrchJob -CreationTimeAfter '2026-03-01' -CreationTimeBe
         <maml:title>--------- Example 6: Get jobs from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchJob -Last Week -Path Orch1:\Production
+PS C:\&gt; Get-OrchJob -Path Orch1:\Production -Last Week
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets jobs created within the last week from the Production folder.</maml:para>
@@ -18121,7 +18121,7 @@ PS C:\&gt; Get-OrchJob -Last Week -Path Orch1:\Production
         <maml:title>--------- Example 7: Get jobs recursively with paging ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchJob -Last Month -Path 'Orch1:\Shared' -Recurse -First 50 -Skip 100
+PS C:\&gt; Get-OrchJob -Path Orch1:\Shared -Last Month -Recurse -First 50 -Skip 100
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets jobs created within the last month from the Shared folder and all its subfolders, skipping the first 100 results and returning the next 50.</maml:para>
@@ -18986,7 +18986,7 @@ PS Orch1:\&gt; Get-OrchLicenseNamedUser Attended, Development
         <maml:title>--------- Example 4: Get named user licenses from a specific drive ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchLicenseNamedUser -RobotType Unattended -Path Orch1:
+PS C:\&gt; Get-OrchLicenseNamedUser -Path Orch1: -RobotType Unattended
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets named user licenses for the `Unattended` robot type from the drive named `Orch1`.</maml:para>
@@ -19122,7 +19122,7 @@ PS Orch1:\&gt; Get-OrchLicenseRuntime Unattended, NonProduction
         <maml:title>--------- Example 4: Get runtime licenses from a specific drive ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchLicenseRuntime -RobotType Unattended -Path Orch1:
+PS C:\&gt; Get-OrchLicenseRuntime -Path Orch1: -RobotType Unattended
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets runtime licenses for the `Unattended` robot type from the drive named `Orch1`.</maml:para>
@@ -19279,7 +19279,7 @@ PS Orch1:\&gt; Get-OrchLicenseStats Year
         <maml:title>--------- Example 4: Get license statistics from a specific drive ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchLicenseStats -Last Week -Path Orch1:
+PS C:\&gt; Get-OrchLicenseStats -Path Orch1: -Last Week
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets license statistics for the last week from the drive named `Orch1`.</maml:para>
@@ -19653,7 +19653,7 @@ PS Orch1:\Shared&gt; Get-OrchLog -Last Day -WindowsIdentity 'DOMAIN\user*'
         <maml:title>--------- Example 6: Get logs using a time range ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Get-OrchLog -TimeStampAfter '2026-03-01' -TimeStampBefore '2026-03-05'
+PS Orch1:\Shared&gt; Get-OrchLog -TimeStampAfter 2026-03-01 -TimeStampBefore 2026-03-05
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets logs with timestamps between March 1 and March 5, 2026.</maml:para>
@@ -19665,7 +19665,7 @@ PS Orch1:\Shared&gt; Get-OrchLog -TimeStampAfter '2026-03-01' -TimeStampBefore '
         <maml:title>--------- Example 7: Get logs for a specific job key from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchLog -Path 'Orch1:\Shared' -JobKey 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' -Last Month
+PS C:\&gt; Get-OrchLog -Path Orch1:\Shared -JobKey a1b2c3d4-e5f6-7890-abcd-ef1234567890 -Last Month
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets logs from the last month for the specified job key from the Shared folder.</maml:para>
@@ -19677,7 +19677,7 @@ PS C:\&gt; Get-OrchLog -Path 'Orch1:\Shared' -JobKey 'a1b2c3d4-e5f6-7890-abcd-ef
         <maml:title>--------- Example 8: Get logs recursively with paging ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchLog -Path 'Orch1:\Shared' -Recurse -Last Week -First 100 -Skip 50
+PS C:\&gt; Get-OrchLog -Path Orch1:\Shared -Recurse -Last Week -First 100 -Skip 50
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets logs from the last week from the Shared folder and all its subfolders, skipping the first 50 results and returning the next 100.</maml:para>
@@ -19963,7 +19963,7 @@ PS Orch1:\&gt; Get-OrchMachine machine*
         <maml:title>--------- Example 4: Get machines from a specific Orchestrator instance ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchMachine -Path Orch1:\ -Name MachineTemp1
+PS C:\&gt; Get-OrchMachine -Path Orch1:\ MachineTemp1
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets the machine named "MachineTemp1" from the Orch1 instance. When -Path uses an absolute path (Orch1:\), the command can be run from any location.</maml:para>
@@ -20151,7 +20151,7 @@ PS Orch1:\&gt; Get-OrchMachineClientSecretId | Where-Object CreationTime -LT 202
         <maml:title>--------- Example 4: Get secrets from a specific drive ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchMachineClientSecretId -Path Orch1:\ -Name machine1
+PS C:\&gt; Get-OrchMachineClientSecretId -Path Orch1:\ machine1
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets client secret information for "machine1" from the Orch1 tenant.</maml:para>
@@ -20999,7 +20999,7 @@ PS Orch1:\Shared&gt; Get-OrchProcess BlankProcess19 -ExpandDetails
         <maml:title>--------- Example 4: Get processes from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchProcess -Path Orch1:\Production -Name BlankProcess19
+PS C:\&gt; Get-OrchProcess -Path Orch1:\Production BlankProcess19
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets the process named "BlankProcess19" from the Production folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.</maml:para>
@@ -21552,7 +21552,7 @@ PS Orch1:\Shared&gt; Get-OrchQueue Test*
         <maml:title>--------- Example 4: Get queues from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchQueue -Path Orch1:\Production -Name TestQueue2
+PS C:\&gt; Get-OrchQueue -Path Orch1:\Production TestQueue2
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets the queue definition named "TestQueue2" from the Production folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.</maml:para>
@@ -22034,7 +22034,7 @@ PS Orch1:\Shared&gt; Get-OrchQueueItem TestQueue2 -Status Successful -OrderBy En
         <maml:title>--------- Example 6: Get items from a specific folder with robot filter ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchQueueItem -Path Orch1:\Production -Name TestQueue2 -Robot Robot01
+PS C:\&gt; Get-OrchQueueItem -Path Orch1:\Production TestQueue2 -Robot Robot01
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets queue items from the "TestQueue2" queue in the Production folder that were processed by "Robot01". When -Path uses an absolute path (Orch1:\...), the command can be run from any location.</maml:para>
@@ -22692,7 +22692,7 @@ PS Orch1:\Shared&gt; Get-OrchTestCase Test*
         <maml:title>--------- Example 4: Get test cases from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchTestCase -Path Orch1:\Production -Name TestCase.xaml
+PS C:\&gt; Get-OrchTestCase -Path Orch1:\Production TestCase.xaml
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets the test case definition named "TestCase.xaml" from the Production folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.</maml:para>
@@ -22888,7 +22888,7 @@ When -ScreenshotPath is specified, only assertions with HasScreenshot set to tru
         <maml:title>--------- Example 1: Get assertions by test set execution name ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Get-OrchTestCaseAssertion 'TestSet-TestProject-Migration-01'
+PS Orch1:\Shared&gt; Get-OrchTestCaseAssertion TestSet-TestProject-Migration-01
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets all test case assertions for the test set execution named "TestSet-TestProject-Migration-01" from the current folder. The -TestSetExecutionName parameter is positional (position 0) so the parameter name can be omitted.</maml:para>
@@ -22924,7 +22924,7 @@ PS Orch1:\Shared&gt; Get-OrchTestCaseExecution -Last 3Years | Get-OrchTestCaseAs
         <maml:title>--------- Example 4: Get assertions with screenshot download ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Get-OrchTestCaseAssertion 'TestSet-TestProject-Migration-01' -ScreenshotPath C:\temp
+PS Orch1:\Shared&gt; Get-OrchTestCaseAssertion TestSet-TestProject-Migration-01 -ScreenshotPath C:\temp
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets all assertions for the specified test set execution and downloads assertion screenshots to C:\temp. Screenshots are saved as JPEG files organized into subdirectories by folder name and test set execution name. The -ScreenshotPath directory must already exist.</maml:para>
@@ -23749,7 +23749,7 @@ PS Orch1:\Shared&gt; Get-OrchTestSet TestSet*
         <maml:title>--------- Example 3: Get a specific test set from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchTestSet -Path Orch1:\Shared -Name 'TestSet-TestProject-Migration-001'
+PS C:\&gt; Get-OrchTestSet -Path Orch1:\Shared TestSet-TestProject-Migration-001
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets the test set named "TestSet-TestProject-Migration-001" from the Shared folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.</maml:para>
@@ -24051,7 +24051,7 @@ PS Orch1:\root&gt; Get-OrchTestSetExecution -Status Cancelled -Last 3Years
         <maml:title>--------- Example 4: Get test set executions within a date range ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\root&gt; Get-OrchTestSetExecution -StartTimeAfter '2025-02-01' -StartTimeBefore '2025-03-01'
+PS Orch1:\root&gt; Get-OrchTestSetExecution -StartTimeAfter 2025-02-01 -StartTimeBefore 2025-03-01
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets all test set executions that started in February 2025.</maml:para>
@@ -24445,7 +24445,7 @@ PS Orch1:\root&gt; Get-OrchTrigger *trigger*
         <maml:title>--------- Example 4: Get triggers from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchTrigger -Path Orch1:\root -Name *trigger*
+PS C:\&gt; Get-OrchTrigger -Path Orch1:\root *trigger*
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets triggers whose name contains "trigger" from the root folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.</maml:para>
@@ -25472,7 +25472,7 @@ PS Orch1:\&gt; Get-OrchWebhook *web*
         <maml:title>--------- Example 4: Get webhooks from a specific drive ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-OrchWebhook -Path Orch1: -Name my*
+PS C:\&gt; Get-OrchWebhook -Path Orch1: my*
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets webhooks whose name starts with "my" from the Orch1 drive. When -Path uses an absolute path, the command can be run from any location.</maml:para>
@@ -26303,7 +26303,7 @@ PS Orch1:\&gt; Get-PmExternalApplication ほえほえ*
         <maml:title>--------- Example 4: Get external applications from a specific organization ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-PmExternalApplication -Path Orch1: -Name uipathorch
+PS C:\&gt; Get-PmExternalApplication -Path Orch1: uipathorch
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets the specified external application from the Orch1 organization drive.</maml:para>
@@ -27263,7 +27263,7 @@ PS Orch1:\&gt; Get-PmRobotAccount -ExportCsv C:\temp\robots.csv -CsvEncoding shi
         <maml:title>--------- Example 6: Get robot accounts from a specific organization ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Get-PmRobotAccount -Path Orch1: -Name MyRobot*
+PS C:\&gt; Get-PmRobotAccount -Path Orch1: MyRobot*
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Gets robot accounts whose name starts with "MyRobot" from the Orch1 organization drive.</maml:para>
@@ -32779,7 +32779,7 @@ PS Orch1:\Shared&gt; Open-OrchJob -Id 150565000
         <maml:title>--------- Example 2: Open a job from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Open-OrchJob -Id 150565000 -Path Orch1:\Shared
+PS C:\&gt; Open-OrchJob -Path Orch1:\Shared -Id 150565000
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Opens the details page for job 150565000 from the Shared folder in the default web browser.</maml:para>
@@ -33051,7 +33051,7 @@ What if: Performing the operation "Redo QueueItem" on target "Queue: 'TestQueue2
         <maml:title>--------- Example 3: Retry failed items from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Redo-OrchQueueItem -Path Orch1:\Shared -Name TestQueue2 -Id 70345
+PS C:\&gt; Redo-OrchQueueItem -Path Orch1:\Shared TestQueue2 -Id 70345
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Retries the failed queue item with ID 70345 in TestQueue2 located in the Shared folder on Orch1.</maml:para>
@@ -33224,7 +33224,7 @@ PS Orch1Du:\MyProject&gt; Remove-DuRoleFromDuUser john.doe@example.com "DU Valid
         <maml:title>--------- Example 2: Remove all roles from matching users in a specific project ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Remove-DuRoleFromDuUser john* * -Path Orch1Du:\MyProject
+PS C:\&gt; Remove-DuRoleFromDuUser -Path Orch1Du:\MyProject john* *
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes all directly assigned roles from all users whose display name starts with "john" in the specified project.</maml:para>
@@ -33800,7 +33800,7 @@ The cmdlet processes each matching asset individually, so if one removal fails (
         <maml:title>--------- Example 1: Remove a specific asset ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Remove-OrchAsset -Name ObsoleteAsset
+PS Orch1:\Shared&gt; Remove-OrchAsset ObsoleteAsset
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes the asset named "ObsoleteAsset" from the current folder.</maml:para>
@@ -33812,7 +33812,7 @@ PS Orch1:\Shared&gt; Remove-OrchAsset -Name ObsoleteAsset
         <maml:title>--------- Example 2: Preview removal with -WhatIf ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Remove-OrchAsset -Name 'Test*' -WhatIf
+PS Orch1:\Shared&gt; Remove-OrchAsset Test* -WhatIf
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>```output
@@ -33829,7 +33829,7 @@ What if: Performing the operation "Remove Asset" on target "Orch1:\Shared\TestAs
         <maml:title>--------- Example 3: Remove all credential assets ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Remove-OrchAsset -Name '*' -ValueType Credential
+PS Orch1:\Shared&gt; Remove-OrchAsset * -ValueType Credential
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes all credential-type assets from the current folder while leaving Text, Bool, and Integer assets intact. The -ValueType parameter filters by asset type.</maml:para>
@@ -33841,7 +33841,7 @@ PS Orch1:\Shared&gt; Remove-OrchAsset -Name '*' -ValueType Credential
         <maml:title>--------- Example 4: Remove assets from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Remove-OrchAsset -Path Orch1:\Shared -Name TempAsset
+PS C:\&gt; Remove-OrchAsset -Path Orch1:\Shared TempAsset
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes the asset from the Shared folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.</maml:para>
@@ -33853,7 +33853,7 @@ PS C:\&gt; Remove-OrchAsset -Path Orch1:\Shared -Name TempAsset
         <maml:title>--------- Example 5: Remove assets recursively from all folders ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Remove-OrchAsset -Recurse -Name 'Legacy*'
+PS Orch1:\&gt; Remove-OrchAsset -Recurse Legacy*
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes all assets matching "Legacy*" from the root folder and all subfolders recursively.</maml:para>
@@ -33865,7 +33865,7 @@ PS Orch1:\&gt; Remove-OrchAsset -Recurse -Name 'Legacy*'
         <maml:title>--------- Example 6: Remove assets from immediate subfolders only ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Remove-OrchAsset -Depth 1 -Name 'Temp*'
+PS Orch1:\&gt; Remove-OrchAsset -Depth 1 Temp*
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes assets matching "Temp*" from the root folder and its immediate subfolders (depth 1). When -Depth is specified, -Recurse is implied.</maml:para>
@@ -34046,7 +34046,7 @@ PS Orch1:\Shared&gt; Remove-OrchBucket Temp*
         <maml:title>--------- Example 3: Remove a bucket from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Remove-OrchBucket -Path Orch1:\Shared -Name TestBucket
+PS C:\&gt; Remove-OrchBucket -Path Orch1:\Shared TestBucket
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes the storage bucket named "TestBucket" from the Shared folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.</maml:para>
@@ -34465,7 +34465,7 @@ PS Orch1:\&gt; Remove-OrchCalendar 'Old Holidays'
         <maml:title>--------- Example 2: Remove calendars using a wildcard ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Remove-OrchCalendar '*2024*'
+PS Orch1:\&gt; Remove-OrchCalendar *2024*
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes all calendars whose names match "*2024*" from the current Orchestrator drive.</maml:para>
@@ -34665,7 +34665,7 @@ If the specified dates do not exist in the calendar, the calendar is left unchan
         <maml:title>--------- Example 1: Remove a date from a calendar ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Remove-OrchCalendarDate 'Japan Holidays' '2026-05-05'
+PS Orch1:\&gt; Remove-OrchCalendarDate 'Japan Holidays' 2026-05-05
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes May 5, 2026 from the "Japan Holidays" calendar. Since -Name and -ExcludedDate are positional parameters (Position 0 and 1), their parameter names can be omitted.</maml:para>
@@ -34677,7 +34677,7 @@ PS Orch1:\&gt; Remove-OrchCalendarDate 'Japan Holidays' '2026-05-05'
         <maml:title>--------- Example 2: Remove multiple dates from a calendar ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Remove-OrchCalendarDate 'US Holidays' '2026-07-04','2026-09-07'
+PS Orch1:\&gt; Remove-OrchCalendarDate 'US Holidays' 2026-07-04,2026-09-07
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes July 4 and September 7, 2026 from the "US Holidays" calendar.</maml:para>
@@ -34689,7 +34689,7 @@ PS Orch1:\&gt; Remove-OrchCalendarDate 'US Holidays' '2026-07-04','2026-09-07'
         <maml:title>--------- Example 3: Remove dates from a calendar on a specific drive ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Remove-OrchCalendarDate -Path Orch1: -Name 'Company Holidays' -ExcludedDate '2026-12-25'
+PS C:\&gt; Remove-OrchCalendarDate -Path Orch1: 'Company Holidays' -ExcludedDate 2026-12-25
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes December 25, 2026 from the "Company Holidays" calendar on the Orch1: drive. This command can be executed from any drive.</maml:para>
@@ -34701,7 +34701,7 @@ PS C:\&gt; Remove-OrchCalendarDate -Path Orch1: -Name 'Company Holidays' -Exclud
         <maml:title>--------- Example 4: Preview removal with -WhatIf ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Remove-OrchCalendarDate 'Japan Holidays' '2026-01-01' -WhatIf
+PS Orch1:\&gt; Remove-OrchCalendarDate 'Japan Holidays' 2026-01-01 -WhatIf
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>```output
@@ -35684,7 +35684,7 @@ PS Orch1:\Shared&gt; Remove-OrchJobMedia -JobId 12345 -WhatIf
         <maml:title>--------- Example 4: Remove media from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Remove-OrchJobMedia -JobId 12345 -Path Orch1:\Shared
+PS C:\&gt; Remove-OrchJobMedia -Path Orch1:\Shared -JobId 12345
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes execution media for job ID 12345 from the specified Orchestrator folder.</maml:para>
@@ -36026,7 +36026,7 @@ PS Orch1:\&gt; Remove-OrchMachine Test* -WhatIf
         <maml:title>--------- Example 4: Remove a machine from a specific drive ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Remove-OrchMachine -Path Orch1:\ -Name pool
+PS C:\&gt; Remove-OrchMachine -Path Orch1:\ pool
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes the machine named 'pool' from the Orch1 tenant. When -Path uses an absolute path, the command can be run from any location.</maml:para>
@@ -36780,7 +36780,7 @@ What if: Performing the operation "Remove Process" on target "OldProcess [Shared
         <maml:title>--------- Example 4: Remove a process from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Remove-OrchProcess -Path Orch1:\Shared -Name BlankProcess19
+PS C:\&gt; Remove-OrchProcess -Path Orch1:\Shared BlankProcess19
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes the process named "BlankProcess19" from the Shared folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.</maml:para>
@@ -36792,7 +36792,7 @@ PS C:\&gt; Remove-OrchProcess -Path Orch1:\Shared -Name BlankProcess19
         <maml:title>--------- Example 5: Remove processes recursively ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Remove-OrchProcess -Recurse -Name *Legacy* -Confirm
+PS Orch1:\&gt; Remove-OrchProcess -Recurse *Legacy* -Confirm
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes all processes matching "*Legacy*" from all folders, prompting for confirmation before each removal.</maml:para>
@@ -36984,7 +36984,7 @@ PS Orch1:\&gt; Remove-OrchQueue TestQueue2 -Recurse
         <maml:title>--------- Example 4: Remove a queue from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Remove-OrchQueue -Path Orch1:\Shared -Name TestQueue2
+PS C:\&gt; Remove-OrchQueue -Path Orch1:\Shared TestQueue2
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes the queue definition named "TestQueue2" from the Shared folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.</maml:para>
@@ -37194,7 +37194,7 @@ What if: Performing the operation "Remove QueueItem" on target "Queue: 'OrderQue
         <maml:title>--------- Example 4: Remove queue items from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Remove-OrchQueueItem -Path Orch1:\Shared -Name TestQueue2 -Id 70345,70346,70347
+PS C:\&gt; Remove-OrchQueueItem -Path Orch1:\Shared TestQueue2 -Id 70345,70346,70347
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Deletes the queue items with IDs 70345, 70346, and 70347 from TestQueue2 in the Shared folder on Orch1.</maml:para>
@@ -37586,7 +37586,7 @@ PS Orch1:\Shared&gt; Remove-OrchRoleFromFolderUser -FullName "Yoshifumi Tsuda" -
         <maml:title>--------- Example 4: Remove a role from all users recursively ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Remove-OrchRoleFromFolderUser -Recurse -UserName '*' -Roles Executor -Type DirectoryUser
+PS Orch1:\&gt; Remove-OrchRoleFromFolderUser -Recurse * -Roles Executor -Type DirectoryUser
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes the "Executor" role from all directory users in all folders. Users who do not have the role are skipped.</maml:para>
@@ -38021,7 +38021,7 @@ What if: Performing the operation "Remove TestCase" on target "OldLoginTest [Sha
         <maml:title>--------- Example 4: Remove a test case from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Remove-OrchTestCase -Path Orch1:\QA -Name LoginTest
+PS C:\&gt; Remove-OrchTestCase -Path Orch1:\QA LoginTest
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes the test case definition named "LoginTest" from the QA folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.</maml:para>
@@ -38033,7 +38033,7 @@ PS C:\&gt; Remove-OrchTestCase -Path Orch1:\QA -Name LoginTest
         <maml:title>--------- Example 5: Remove test cases recursively with confirmation ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\&gt; Remove-OrchTestCase -Recurse -Name *Legacy* -Confirm
+PS Orch1:\&gt; Remove-OrchTestCase -Recurse *Legacy* -Confirm
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes all test case definitions matching "*Legacy*" from all folders, prompting for confirmation before each removal.</maml:para>
@@ -38420,7 +38420,7 @@ What if: Performing the operation "Remove TestSet" on target "OldSmokeTests [Sha
         <maml:title>--------- Example 4: Remove a test set from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Remove-OrchTestSet -Path Orch1:\Shared -Name ObsoleteTests
+PS C:\&gt; Remove-OrchTestSet -Path Orch1:\Shared ObsoleteTests
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes the test set named "ObsoleteTests" from the Shared folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.</maml:para>
@@ -38805,7 +38805,7 @@ PS Orch1:\&gt; Remove-OrchTrigger -Recurse OldTrigger*
         <maml:title>--------- Example 4: Remove a trigger from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Remove-OrchTrigger -Path Orch1:\Shared -Name ObsoleteTrigger
+PS C:\&gt; Remove-OrchTrigger -Path Orch1:\Shared ObsoleteTrigger
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes the trigger named "ObsoleteTrigger" from the Shared folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.</maml:para>
@@ -39205,7 +39205,7 @@ PS Orch1:\&gt; Remove-OrchWebhook *Legacy* -WhatIf
         <maml:title>--------- Example 4: Remove a webhook from a specific drive ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Remove-OrchWebhook -Path Orch1: -Name ObsoleteHook
+PS C:\&gt; Remove-OrchWebhook -Path Orch1: ObsoleteHook
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes the webhook named "ObsoleteHook" from the Orch1 drive. When -Path uses an absolute path, the command can be run from any location.</maml:para>
@@ -40815,7 +40815,7 @@ PS Orch1Tm:\MTP&gt; Remove-TmRequirement "Obsolete Requirement"
         <maml:title>--------- Example 2: Remove requirements from a specific project ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Remove-TmRequirement Test* -Path Orch1Tm:\MTP -Recurse
+PS C:\&gt; Remove-TmRequirement -Path Orch1Tm:\MTP Test* -Recurse
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes all requirements whose name starts with "Test" from the specified project and all its subfolders.</maml:para>
@@ -40983,7 +40983,7 @@ PS Orch1Tm:\MTP&gt; Remove-TmTestCase "Obsolete Test"
         <maml:title>--------- Example 2: Remove test cases from a specific project ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Remove-TmTestCase Draft* -Path Orch1Tm:\MTP -Recurse
+PS C:\&gt; Remove-TmTestCase -Path Orch1Tm:\MTP Draft* -Recurse
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes all test cases whose name starts with "Draft" from the specified project and all its subfolders.</maml:para>
@@ -41151,7 +41151,7 @@ PS Orch1Tm:\MTP&gt; Remove-TmTestSet "Old Test Set"
         <maml:title>--------- Example 2: Remove test sets from a specific project ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Remove-TmTestSet Draft* -Path Orch1Tm:\MTP -Recurse
+PS C:\&gt; Remove-TmTestSet -Path Orch1Tm:\MTP Draft* -Recurse
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Removes all test sets whose name starts with "Draft" from the specified project and all its subfolders.</maml:para>
@@ -41351,7 +41351,7 @@ What if: Performing the operation "Reset Process Version" on target "BlankProces
         <maml:title>--------- Example 3: Roll back a process from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Reset-OrchProcessVersion -Path Orch1:\Production -Name BlankProcess19
+PS C:\&gt; Reset-OrchProcessVersion -Path Orch1:\Production BlankProcess19
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Rolls back the process named "BlankProcess19" in the Production folder to its previous version. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.</maml:para>
@@ -41744,7 +41744,7 @@ PS Orch1:\&gt; Resolve-PmDirectoryNameBulk Application uipathorch
         <maml:title>--------- Example 4: Resolve names from a specific organization ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Resolve-PmDirectoryNameBulk -EntityType User -Name ytsuda@gmail.com -Path Orch1:
+PS C:\&gt; Resolve-PmDirectoryNameBulk -Path Orch1: -EntityType User -Name ytsuda@gmail.com
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Resolves the specified user name against the directory connected to the Orch1 organization.</maml:para>
@@ -41864,7 +41864,7 @@ PS Orch1:\&gt; Search-OrchDirectory ytsuda
         <maml:title>--------- Example 2: Search for a user on a specific drive ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Search-OrchDirectory ytsuda@gmail.com -Path Orch1:
+PS C:\&gt; Search-OrchDirectory -Path Orch1: ytsuda@gmail.com
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Searches the directory on the Orch1: drive for the specified user.</maml:para>
@@ -41876,7 +41876,7 @@ PS C:\&gt; Search-OrchDirectory ytsuda@gmail.com -Path Orch1:
         <maml:title>--------- Example 3: Search across multiple drives ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Search-OrchDirectory -Name admin -Path Orch1:,Orch2:
+PS C:\&gt; Search-OrchDirectory -Path Orch1:,Orch2: admin
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Searches the directory on both Orch1: and Orch2: drives. Queries are executed in parallel.</maml:para>
@@ -42001,7 +42001,7 @@ PS Orch1:\&gt; Search-PmDirectory admin
         <maml:title>--------- Example 3: Search a specific organization's directory ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Search-PmDirectory -Name admin -Path Orch1:
+PS C:\&gt; Search-PmDirectory -Path Orch1: admin
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Searches the directory connected to the Orch1 organization for entities matching "admin".</maml:para>
@@ -42225,7 +42225,7 @@ PS Orch1:\Shared&gt; Set-OrchAsset -Name MyConfig -Value 'https://api.example.co
         <maml:title>--------- Example 2: Preview asset creation with -WhatIf ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Set-OrchAsset -ValueType Integer -Name RetryCount -Value '3' -Description 'Max retry attempts' -WhatIf
+PS Orch1:\Shared&gt; Set-OrchAsset -ValueType Integer -Name RetryCount -Value 3 -Description 'Max retry attempts' -WhatIf
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>```output
@@ -42241,7 +42241,7 @@ What if: Performing the operation "Add Asset" on target "Orch1:\Shared\RetryCoun
         <maml:title>--------- Example 3: Update an existing asset value ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Set-OrchAsset -Name TestAsset1 -Value 'NewValue'
+PS Orch1:\Shared&gt; Set-OrchAsset -Name TestAsset1 -Value NewValue
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Updates the value of an existing asset. The -ValueType and -Description remain unchanged. No output is produced on update; output is only returned when creating a new asset.</maml:para>
@@ -42265,7 +42265,7 @@ PS Orch1:\Shared&gt; Set-OrchAsset Bool MaintenanceMode False
         <maml:title>--------- Example 5: Update multiple assets with wildcards ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Set-OrchAsset -Name 'Test*' -Value 'bulk-update'
+PS Orch1:\Shared&gt; Set-OrchAsset -Name Test* -Value bulk-update
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Updates all assets whose names match the wildcard pattern. If no assets match, no action is taken and no error is raised.</maml:para>
@@ -42277,7 +42277,7 @@ PS Orch1:\Shared&gt; Set-OrchAsset -Name 'Test*' -Value 'bulk-update'
         <maml:title>--------- Example 6: Set a per-robot asset value ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Set-OrchAsset -Name AppConfig -Value 'robot-specific-value' -UserName testrobot01
+PS Orch1:\Shared&gt; Set-OrchAsset -Name AppConfig -Value robot-specific-value -UserName testrobot01
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Sets a per-robot value for the specified user. The asset's ValueScope changes to PerRobot. When -MachineName is omitted, the value applies to the user regardless of machine.</maml:para>
@@ -42289,7 +42289,7 @@ PS Orch1:\Shared&gt; Set-OrchAsset -Name AppConfig -Value 'robot-specific-value'
         <maml:title>--------- Example 7: Set a per-robot value with machine assignment ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Set-OrchAsset -Name AppConfig -Value 'machine-specific' -UserName testrobot01 -MachineName aiai
+PS Orch1:\Shared&gt; Set-OrchAsset -Name AppConfig -Value machine-specific -UserName testrobot01 -MachineName aiai
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Sets a per-robot value for a specific user and machine combination. Both -UserName and -MachineName support wildcards and multiple comma-separated values.</maml:para>
@@ -42650,7 +42650,7 @@ Credential assets reference a CredentialStore via CredentialStoreId. Use Get-Orc
         <maml:title>--------- Example 1: Create a credential asset ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Set-OrchCredentialAsset -Name ApiCredential -CredentialUsername 'apiuser' -CredentialPassword 'secret123'
+PS Orch1:\Shared&gt; Set-OrchCredentialAsset -Name ApiCredential -CredentialUsername apiuser -CredentialPassword 'secret123'
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Creates a new credential asset with the specified username and password. The asset is stored in the default credential store (Orchestrator Database).</maml:para>
@@ -42662,7 +42662,7 @@ PS Orch1:\Shared&gt; Set-OrchCredentialAsset -Name ApiCredential -CredentialUser
         <maml:title>--------- Example 2: Preview credential operations with -WhatIf ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Set-OrchCredentialAsset -Name TestCredential1 -CredentialUsername 'newuser' -CredentialPassword 'newpass' -WhatIf
+PS Orch1:\Shared&gt; Set-OrchCredentialAsset -Name TestCredential1 -CredentialUsername newuser -CredentialPassword 'newpass' -WhatIf
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>```output
@@ -42678,7 +42678,7 @@ What if: Performing the operation "Update CredentialAsset" on target "Orch1:\Sha
         <maml:title>--------- Example 3: Update credential username and password ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Set-OrchCredentialAsset -Name TestCredential1 -CredentialUsername 'updateduser' -CredentialPassword 'updatedpass'
+PS Orch1:\Shared&gt; Set-OrchCredentialAsset -Name TestCredential1 -CredentialUsername updateduser -CredentialPassword 'updatedpass'
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Updates both the username and password of an existing credential asset. No output is produced on update; output is only returned when creating a new asset.</maml:para>
@@ -42714,7 +42714,7 @@ PS Orch1:\Shared&gt; Set-OrchCredentialAsset -Name VaultSecret -ExternalName 'va
         <maml:title>--------- Example 6: Set a per-robot credential ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Set-OrchCredentialAsset -Name AppCredential -UserName testrobot01 -CredentialUsername 'robotuser' -CredentialPassword 'robotpass'
+PS Orch1:\Shared&gt; Set-OrchCredentialAsset -Name AppCredential -UserName testrobot01 -CredentialUsername robotuser -CredentialPassword 'robotpass'
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Sets a per-robot credential value for a specific user. The asset's ValueScope changes to PerRobot. Multiple -UserName and -MachineName values can be specified with wildcards.</maml:para>
@@ -42738,7 +42738,7 @@ PS Orch1:\Shared&gt; Set-OrchCredentialAsset -Name ObsoleteCredential -Credentia
         <maml:title>--------- Example 8: Create a credential in a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Set-OrchCredentialAsset -Path Orch1:\Production -Name DbCredential -CredentialUsername 'dbadmin' -CredentialPassword 'dbpass123'
+PS C:\&gt; Set-OrchCredentialAsset -Path Orch1:\Production -Name DbCredential -CredentialUsername dbadmin -CredentialPassword 'dbpass123'
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Creates a credential asset in the Production folder using -Path. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.</maml:para>
@@ -43726,7 +43726,7 @@ The cmdlet is not run.</maml:para>
         <maml:title>--------- Example 1: Start a job for a specific process ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Start-OrchJob -Name 'BlankProcess19'
+PS Orch1:\Shared&gt; Start-OrchJob BlankProcess19
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Starts a job for the process named `BlankProcess19` in the current folder.</maml:para>
@@ -43738,7 +43738,7 @@ PS Orch1:\Shared&gt; Start-OrchJob -Name 'BlankProcess19'
         <maml:title>--------- Example 2: Start a job with a specific runtime type ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Start-OrchJob -Name 'BlankProcess19' -RuntimeType Unattended
+PS Orch1:\Shared&gt; Start-OrchJob BlankProcess19 -RuntimeType Unattended
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Starts an Unattended job for the process named `BlankProcess19`.</maml:para>
@@ -43750,7 +43750,7 @@ PS Orch1:\Shared&gt; Start-OrchJob -Name 'BlankProcess19' -RuntimeType Unattende
         <maml:title>--------- Example 3: Start multiple jobs ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Start-OrchJob -Name 'BlankProcess19' -RuntimeType Unattended -JobsCount 3
+PS Orch1:\Shared&gt; Start-OrchJob BlankProcess19 -RuntimeType Unattended -JobsCount 3
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Starts 3 Unattended jobs for the process named `BlankProcess19`.</maml:para>
@@ -43762,7 +43762,7 @@ PS Orch1:\Shared&gt; Start-OrchJob -Name 'BlankProcess19' -RuntimeType Unattende
         <maml:title>--------- Example 4: Start a job with input arguments ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Start-OrchJob -Name 'BlankProcess19' -InputArguments '{"FilePath":"C:\\Invoices","BatchSize":10}'
+PS Orch1:\Shared&gt; Start-OrchJob BlankProcess19 -InputArguments '{"FilePath":"C:\\Invoices","BatchSize":10}'
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Starts a job for the process named `BlankProcess19` and passes the specified JSON input arguments.</maml:para>
@@ -43774,7 +43774,7 @@ PS Orch1:\Shared&gt; Start-OrchJob -Name 'BlankProcess19' -InputArguments '{"Fil
         <maml:title>--------- Example 5: Preview with -WhatIf ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS Orch1:\Shared&gt; Start-OrchJob -Name 'Report*' -WhatIf
+PS Orch1:\Shared&gt; Start-OrchJob Report* -WhatIf
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Shows what jobs would be started for all processes matching `Report*` without actually starting them.</maml:para>
@@ -43786,7 +43786,7 @@ PS Orch1:\Shared&gt; Start-OrchJob -Name 'Report*' -WhatIf
         <maml:title>--------- Example 6: Start jobs from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Start-OrchJob -Name 'BlankProcess19' -Path 'Orch1:\Shared'
+PS C:\&gt; Start-OrchJob -Path Orch1:\Shared BlankProcess19
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Starts a job for the process named `BlankProcess19` in the Shared folder.</maml:para>
@@ -45709,7 +45709,7 @@ What if: Performing the operation "Update Process" on target "BlankProcess27 [Sh
         <maml:title>--------- Example 5: Update a process from a specific folder ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Update-OrchProcess -Path Orch1:\Production -Name BlankProcess19 -AlwaysRunning True -Priority High
+PS C:\&gt; Update-OrchProcess -Path Orch1:\Production BlankProcess19 -AlwaysRunning True -Priority High
 ```</maml:para>
           <maml:para></maml:para>
           <maml:para>Sets the BlankProcess19 in the Production folder to always-running mode with high priority. When -Path uses an absolute path, the command can be run from any location.</maml:para>

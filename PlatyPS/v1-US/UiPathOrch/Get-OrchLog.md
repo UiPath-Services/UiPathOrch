@@ -91,7 +91,7 @@ Gets logs from the last day for Windows identities matching the wildcard pattern
 ### Example 6: Get logs using a time range
 
 ```powershell
-PS Orch1:\Shared> Get-OrchLog -TimeStampAfter '2026-03-01' -TimeStampBefore '2026-03-05'
+PS Orch1:\Shared> Get-OrchLog -TimeStampAfter 2026-03-01 -TimeStampBefore 2026-03-05
 ```
 
 Gets logs with timestamps between March 1 and March 5, 2026.
@@ -99,7 +99,7 @@ Gets logs with timestamps between March 1 and March 5, 2026.
 ### Example 7: Get logs for a specific job key from a specific folder
 
 ```powershell
-PS C:\> Get-OrchLog -Path 'Orch1:\Shared' -JobKey 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' -Last Month
+PS C:\> Get-OrchLog -Path Orch1:\Shared -JobKey a1b2c3d4-e5f6-7890-abcd-ef1234567890 -Last Month
 ```
 
 Gets logs from the last month for the specified job key from the Shared folder.
@@ -107,7 +107,7 @@ Gets logs from the last month for the specified job key from the Shared folder.
 ### Example 8: Get logs recursively with paging
 
 ```powershell
-PS C:\> Get-OrchLog -Path 'Orch1:\Shared' -Recurse -Last Week -First 100 -Skip 50
+PS C:\> Get-OrchLog -Path Orch1:\Shared -Recurse -Last Week -First 100 -Skip 50
 ```
 
 Gets logs from the last week from the Shared folder and all its subfolders, skipping the first 50 results and returning the next 100.

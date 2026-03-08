@@ -78,7 +78,7 @@ Gets all test set executions with a Cancelled status from the last 3 years.
 ### Example 4: Get test set executions within a date range
 
 ```powershell
-PS Orch1:\root> Get-OrchTestSetExecution -StartTimeAfter '2025-02-01' -StartTimeBefore '2025-03-01'
+PS Orch1:\root> Get-OrchTestSetExecution -StartTimeAfter 2025-02-01 -StartTimeBefore 2025-03-01
 ```
 
 Gets all test set executions that started in February 2025.

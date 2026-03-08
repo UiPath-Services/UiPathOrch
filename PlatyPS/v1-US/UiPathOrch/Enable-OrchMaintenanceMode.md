@@ -70,7 +70,7 @@ Enables maintenance mode on the specified machine and immediately kills all runn
 ### Example 4: Enable maintenance mode on a specific session
 
 ```powershell
-PS C:\> Enable-OrchMaintenanceMode -SessionId 12345 -Path Orch1:
+PS C:\> Enable-OrchMaintenanceMode -Path Orch1: -SessionId 12345
 ```
 
 Enables maintenance mode on the session with the specified session ID on the Orch1: drive.

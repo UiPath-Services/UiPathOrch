@@ -71,7 +71,7 @@ Gets all machines whose names start with "machine" from the current Orchestrator
 ### Example 4: Get machines from a specific Orchestrator instance
 
 ```powershell
-PS C:\> Get-OrchMachine -Path Orch1:\ -Name MachineTemp1
+PS C:\> Get-OrchMachine -Path Orch1:\ MachineTemp1
 ```
 
 Gets the machine named "MachineTemp1" from the Orch1 instance. When -Path uses an absolute path (Orch1:\), the command can be run from any location.

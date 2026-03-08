@@ -93,7 +93,7 @@ Exports all robot accounts to a CSV file using Shift_JIS encoding for compatibil
 ### Example 6: Get robot accounts from a specific organization
 
 ```powershell
-PS C:\> Get-PmRobotAccount -Path Orch1: -Name MyRobot*
+PS C:\> Get-PmRobotAccount -Path Orch1: MyRobot*
 ```
 
 Gets robot accounts whose name starts with "MyRobot" from the Orch1 organization drive.

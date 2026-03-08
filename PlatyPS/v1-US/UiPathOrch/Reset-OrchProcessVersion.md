@@ -69,7 +69,7 @@ Shows what would happen without actually rolling back the process.
 ### Example 3: Roll back a process from a specific folder
 
 ```powershell
-PS C:\> Reset-OrchProcessVersion -Path Orch1:\Production -Name BlankProcess19
+PS C:\> Reset-OrchProcessVersion -Path Orch1:\Production BlankProcess19
 ```
 
 Rolls back the process named "BlankProcess19" in the Production folder to its previous version. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.

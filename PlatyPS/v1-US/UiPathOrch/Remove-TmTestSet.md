@@ -55,7 +55,7 @@ Removes the test set named "Old Test Set" from the current project. The name con
 ### Example 2: Remove test sets from a specific project
 
 ```powershell
-PS C:\> Remove-TmTestSet Draft* -Path Orch1Tm:\MTP -Recurse
+PS C:\> Remove-TmTestSet -Path Orch1Tm:\MTP Draft* -Recurse
 ```
 
 Removes all test sets whose name starts with "Draft" from the specified project and all its subfolders.

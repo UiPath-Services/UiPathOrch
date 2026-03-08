@@ -68,7 +68,7 @@ Gets named user licenses for the `Attended` and `Development` robot types.
 ### Example 4: Get named user licenses from a specific drive
 
 ```powershell
-PS C:\> Get-OrchLicenseNamedUser -RobotType Unattended -Path Orch1:
+PS C:\> Get-OrchLicenseNamedUser -Path Orch1: -RobotType Unattended
 ```
 
 Gets named user licenses for the `Unattended` robot type from the drive named `Orch1`.

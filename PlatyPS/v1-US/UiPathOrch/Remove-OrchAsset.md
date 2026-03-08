@@ -49,7 +49,7 @@ Required permissions: Assets.Delete
 ### Example 1: Remove a specific asset
 
 ```powershell
-PS Orch1:\Shared> Remove-OrchAsset -Name ObsoleteAsset
+PS Orch1:\Shared> Remove-OrchAsset ObsoleteAsset
 ```
 
 Removes the asset named "ObsoleteAsset" from the current folder.
@@ -57,7 +57,7 @@ Removes the asset named "ObsoleteAsset" from the current folder.
 ### Example 2: Preview removal with -WhatIf
 
 ```powershell
-PS Orch1:\Shared> Remove-OrchAsset -Name 'Test*' -WhatIf
+PS Orch1:\Shared> Remove-OrchAsset Test* -WhatIf
 ```
 
 ```output
@@ -70,7 +70,7 @@ Shows which assets would be removed without executing the command. Wildcard patt
 ### Example 3: Remove all credential assets
 
 ```powershell
-PS Orch1:\Shared> Remove-OrchAsset -Name '*' -ValueType Credential
+PS Orch1:\Shared> Remove-OrchAsset * -ValueType Credential
 ```
 
 Removes all credential-type assets from the current folder while leaving Text, Bool, and Integer assets intact. The -ValueType parameter filters by asset type.
@@ -78,7 +78,7 @@ Removes all credential-type assets from the current folder while leaving Text, B
 ### Example 4: Remove assets from a specific folder
 
 ```powershell
-PS C:\> Remove-OrchAsset -Path Orch1:\Shared -Name TempAsset
+PS C:\> Remove-OrchAsset -Path Orch1:\Shared TempAsset
 ```
 
 Removes the asset from the Shared folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.
@@ -86,7 +86,7 @@ Removes the asset from the Shared folder. When -Path uses an absolute path (Orch
 ### Example 5: Remove assets recursively from all folders
 
 ```powershell
-PS Orch1:\> Remove-OrchAsset -Recurse -Name 'Legacy*'
+PS Orch1:\> Remove-OrchAsset -Recurse Legacy*
 ```
 
 Removes all assets matching "Legacy*" from the root folder and all subfolders recursively.
@@ -94,7 +94,7 @@ Removes all assets matching "Legacy*" from the root folder and all subfolders re
 ### Example 6: Remove assets from immediate subfolders only
 
 ```powershell
-PS Orch1:\> Remove-OrchAsset -Depth 1 -Name 'Temp*'
+PS Orch1:\> Remove-OrchAsset -Depth 1 Temp*
 ```
 
 Removes assets matching "Temp*" from the root folder and its immediate subfolders (depth 1). When -Depth is specified, -Recurse is implied.

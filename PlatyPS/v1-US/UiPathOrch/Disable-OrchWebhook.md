@@ -68,7 +68,7 @@ Disables all enabled webhooks on the current drive. Webhooks that are already di
 ### Example 4: Disable a webhook on a specific drive
 
 ```powershell
-PS C:\> Disable-OrchWebhook -Path Orch1: -Name mywebhook
+PS C:\> Disable-OrchWebhook -Path Orch1: mywebhook
 ```
 
 Disables the webhook named "mywebhook" on the Orch1 drive. When -Path uses an absolute path, the command can be run from any location.

@@ -61,7 +61,7 @@ Copies all versions matching "1.0.*" of libraries whose Id starts with "UiPath."
 ### Example 3: Copy libraries from any location using -Path
 
 ```powershell
-PS C:\> Copy-OrchLibrary UiPath.* -Destination Orch2:\ -Path Orch1:\
+PS C:\> Copy-OrchLibrary -Path Orch1:\ UiPath.* -Destination Orch2:\
 ```
 
 Copies all libraries whose Id starts with "UiPath." from Orch1 to Orch2. When -Path specifies the source drive with an absolute path, the command can be run from any location.
