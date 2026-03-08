@@ -11,7 +11,7 @@ SECTIONS:
   189: PERMISSION MODEL
   198: PERFORMANCE & CACHE MANAGEMENT
   226: QUICK REFERENCE
-  278: CMDLET-SPECIFIC GUIDANCE
+  281: CMDLET-SPECIFIC GUIDANCE
 ```
 
 Use Show-TextFiles with -LineRange to read specific sections.
@@ -23,13 +23,13 @@ operates on live production systems.
 ## CRITICAL AI EXECUTION RULES
 
 ### NEVER VIOLATE THESE RULES:
-1. START SESSION: Execute Get-OrchPSDrive once to verify available drives
+1. START SESSION: Execute Mount-OrchPSDrive, then Get-OrchPSDrive to verify available drives
 2. ALWAYS confirm target drive with user when multiple drives exist
 3. ALWAYS use -WhatIf first for destructive operations
 4. ALWAYS run Clear-OrchCache before retrying after errors
 
 ### IMMEDIATE FAILURE CONDITIONS:
-- No drives found → Tell user to run Edit-OrchConfig
+- No drives found → Tell user to run Edit-OrchConfig, then Mount-OrchPSDrive
 - Permission error → Follow error protocol below
 - Connection timeout → Clear-OrchCache and retry once
 
@@ -228,16 +228,19 @@ Clear-OrchCache  # Force refresh all cached data
 ### Session Initialization
 
 ```powershell
-# 1. Check available connections
+# 1. Mount drives from configuration
+Mount-OrchPSDrive
+
+# 2. Check available connections
 Get-OrchPSDrive
 
-# 2. Connect to target environment
+# 3. Connect to target environment
 cd Orch1:
 
-# 3. Verify connection (skip if Confidential app)
+# 4. Verify connection (skip if Confidential app)
 Get-OrchCurrentUser  # May fail in Confidential apps - this is normal
 
-# 4. Explore folder structure
+# 5. Explore folder structure
 dir -Recurse | Select-Object FullName, FolderType
 ```
 
@@ -272,7 +275,7 @@ Get-OrchFolderUser               # Folder access assignments
 - **Connection Issues**: Clear-OrchCache; then retry operation
 - **Permission Errors**: Check Get-OrchUserPrivilege and Get-OrchFolderUser
 - **Performance Issues**: Use specific folder paths with -Path instead of -Recurse
-- **Drive Mount Issues**: Run Edit-OrchConfig to reconfigure. Use Get-OrchConfigPath to retrieve the config file path so AI can directly inspect or edit it
+- **Drive Mount Issues**: Run Edit-OrchConfig to reconfigure, then Mount-OrchPSDrive to reload. Use Get-OrchConfigPath to retrieve the config file path so AI can directly inspect or edit it
 - **Confidential App Errors**: Normal for user info commands, try alternative verification
 
 ## CMDLET-SPECIFIC GUIDANCE

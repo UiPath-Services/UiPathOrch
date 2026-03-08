@@ -20,7 +20,7 @@ Mounts UiPathOrch PSDrives from the configuration file.
 ### __AllParameterSets
 
 ```
-Mount-OrchPSDrive [-WhatIf] [-Confirm] [<CommonParameters>]
+Mount-OrchPSDrive [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -28,6 +28,8 @@ Mount-OrchPSDrive [-WhatIf] [-Confirm] [<CommonParameters>]
 ## DESCRIPTION
 
 The `Mount-OrchPSDrive` cmdlet reads the UiPathOrchConfig.json configuration file and mounts all enabled Orchestrator tenants as PSDrives. All existing UiPathOrch drives (including Document Understanding and Test Manager drives) are removed and re-created from the configuration file. Cached data in the existing drives is discarded.
+
+If the configuration file has not changed since the last mount, the cmdlet skips remounting. Use `-Force` to override this check and force a remount.
 
 Use this cmdlet to reload the configuration after editing UiPathOrchConfig.json with `Edit-OrchConfig`, without restarting the PowerShell session.
 
@@ -58,7 +60,15 @@ PS C:\> Mount-OrchPSDrive
 
 Opens the configuration file for editing, then reloads it to apply the changes.
 
-### Example 3: Preview with -WhatIf
+### Example 3: Force remount
+
+```powershell
+PS C:\> Mount-OrchPSDrive -Force
+```
+
+Forces remounting all drives even if the configuration file has not changed since the last mount.
+
+### Example 4: Preview with -WhatIf
 
 ```powershell
 PS C:\> Mount-OrchPSDrive -WhatIf
@@ -67,6 +77,27 @@ PS C:\> Mount-OrchPSDrive -WhatIf
 Shows the configuration file path that would be loaded without actually removing or creating any drives.
 
 ## PARAMETERS
+
+### -Force
+
+Forces remounting all drives even if the configuration file has not changed since the last mount. Without this switch, the cmdlet skips remounting when the file's last write time matches the previous mount.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: False
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
 
 ### -Confirm
 
