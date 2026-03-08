@@ -23,6 +23,9 @@ internal class OrchestratorAuthManager
         get { return _isConfidentialApp; }
     }
 
+    /// InPrivate ブラウザで PKCE 認証を開く
+    internal bool UseInPrivate { get; set; }
+
     private string? _access_token;
     private string? _refresh_token;
 
@@ -271,20 +274,30 @@ internal class OrchestratorAuthManager
     private string GetAuthorizationCode(string? codeVerifier)
     {
         string endPoint;
+        string acrValues = "";
         if (!string.IsNullOrEmpty(_drive._psDrive.IdentityUrl))
         {
             endPoint = _drive._psDrive.IdentityUrl + "/connect/authorize";
         }
+        else if (_drive._psDrive.IsCloud)
+        {
+            // Cloud: authorize endpoint は org prefix なしの共通パスを使用し、
+            // acr_values で組織名を指定する（UiPath Identity の仕様変更に対応）
+            var baseUri = new Uri(BaseUrl);
+            string orgName = baseUri.AbsolutePath.Trim('/');
+            endPoint = $"{baseUri.Scheme}://{baseUri.Host}/identity_/connect/authorize";
+            acrValues = UseInPrivate
+                ? "" // InPrivate: acr_values を省略し、認証プロバイダ選択画面を表示する
+                : $"&acr_values=tenantName:{orgName}&prompt=select_account";
+        }
         else
         {
-            endPoint = BaseUrl.Contains("uipath.com", StringComparison.InvariantCultureIgnoreCase)
-                ? BaseUrl + "/identity_/connect/authorize"
-                : BaseUrl + "/identity/connect/authorize";
+            endPoint = BaseUrl + "/identity/connect/authorize";
         }
 
         string authUrl = !string.IsNullOrEmpty(codeVerifier)
-            ? $"{endPoint}?response_type=code&client_id={_drive._psDrive.AppId}&scope={_drive._psDrive.Scope} offline_access&redirect_uri={WebUtility.UrlEncode(_drive._psDrive.RedirectUrl)}&code_challenge={GetHash(codeVerifier)}&code_challenge_method=S256"
-            : $"{endPoint}?response_type=code&client_id={_drive._psDrive.AppId}&scope={_drive._psDrive.Scope} offline_access&redirect_uri={WebUtility.UrlEncode(_drive._psDrive.RedirectUrl)}";
+            ? $"{endPoint}?response_type=code&client_id={_drive._psDrive.AppId}&scope={_drive._psDrive.Scope} offline_access&redirect_uri={WebUtility.UrlEncode(_drive._psDrive.RedirectUrl)}&code_challenge={GetHash(codeVerifier)}&code_challenge_method=S256{acrValues}"
+            : $"{endPoint}?response_type=code&client_id={_drive._psDrive.AppId}&scope={_drive._psDrive.Scope} offline_access&redirect_uri={WebUtility.UrlEncode(_drive._psDrive.RedirectUrl)}{acrValues}";
 
         using var listener = new HttpListener();
         try
@@ -302,7 +315,23 @@ internal class OrchestratorAuthManager
             throw new InvalidOperationException(message, ex);
         }
 
-        Process.Start(new ProcessStartInfo(authUrl) { UseShellExecute = true });
+        if (UseInPrivate)
+        {
+            // InPrivate ブラウザで開く（Edge + 一時プロファイルで Cookie を完全分離）
+            string edgePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFilesX86),
+                @"Microsoft\Edge\Application\msedge.exe");
+            if (!File.Exists(edgePath))
+            {
+                edgePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFiles),
+                    @"Microsoft\Edge\Application\msedge.exe");
+            }
+            string tempProfile = Path.Combine(Path.GetTempPath(), "UiPathOrch_" + Guid.NewGuid().ToString("N")[..8]);
+            Process.Start(new ProcessStartInfo(edgePath, $"--inprivate --user-data-dir=\"{tempProfile}\" \"{authUrl}\"") { UseShellExecute = false });
+        }
+        else
+        {
+            Process.Start(new ProcessStartInfo(authUrl) { UseShellExecute = true });
+        }
 
         string? authorizationCode = null;
         Exception? capturedException = null;
