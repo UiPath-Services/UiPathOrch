@@ -83,6 +83,7 @@ FunctionsToExport = @(
 CmdletsToExport = @(
 'Mount-OrchPSDrive',
 'New-OrchPSDrive',
+'Switch-OrchCurrentUser',
 'Get-OrchPSDrive',
 
 'Get-OrchLibrary',

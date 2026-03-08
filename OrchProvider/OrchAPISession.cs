@@ -280,6 +280,14 @@ public partial class OrchAPISession : IDisposable
     }
 
     private readonly object _authLock = new();
+    internal void ClearAuthentication()
+    {
+        lock (_authLock)
+        {
+            _isAuthenticated = false;
+        }
+    }
+
     internal void EnsureAuthenticated()
     {
         if (!_isAuthenticated)
