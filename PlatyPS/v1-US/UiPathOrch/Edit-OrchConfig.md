@@ -33,7 +33,7 @@ On Windows, the cmdlet launches Notepad by default or the default application as
 
 If the configuration file does not exist, the cmdlet creates a default configuration file before opening it.
 
-After saving changes to the configuration file, restart the PowerShell session and run `Import-Module UiPathOrch` to apply the new settings and mount the configured Orchestrator tenants as PSDrives.
+After saving changes to the configuration file, run `Mount-OrchPSDrive` to reload the configuration and mount the configured Orchestrator tenants as PSDrives.
 
 The -EditorType parameter supports tab completion. Press [Ctrl+Space] or [Tab] to see available editor types.
 
@@ -114,5 +114,7 @@ The configuration file path can be retrieved using the Get-OrchConfigPath cmdlet
 On Windows, if the preferred editor cannot be launched, the cmdlet automatically falls back to the alternate editor. On Linux, editors cannot be launched directly from the cmdlet; instead, the cmdlet navigates to the configuration file directory and prompts you to edit the file manually.
 
 ## RELATED LINKS
+
+Mount-OrchPSDrive
 
 Get-OrchConfigPath
