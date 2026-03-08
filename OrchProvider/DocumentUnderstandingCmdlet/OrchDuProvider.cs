@@ -74,7 +74,7 @@ public class OrchDuProvider : NavigationCmdletProvider
             {
                 if (drive.Enabled is null || drive.Enabled.GetValueOrDefault())
                 {
-                    if ((drive.Scope?.Contains("Du.") ?? false) && (drive.Root?.Contains("uipath.com") ?? false))
+                    if (drive.Scope?.Contains("Du.") ?? false)
                     {
                         string root = drive.Root.TrimEnd('/') + "/du_";
 
