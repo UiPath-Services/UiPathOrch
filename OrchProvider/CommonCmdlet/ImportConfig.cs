@@ -6,11 +6,11 @@ using UiPath.PowerShell.Entities.JsonConverter;
 namespace UiPath.PowerShell.Commands;
 
 /// <summary>
-/// Mounts UiPathOrch PSDrives from the configuration file.
+/// Imports the UiPathOrch configuration file and creates PSDrives.
 /// All existing OrchDriveInfo instances and their caches are destroyed and re-created.
 /// </summary>
-[Cmdlet(VerbsData.Mount, "OrchPSDrive", SupportsShouldProcess = true)]
-public class MountPSDriveCommand : PSCmdlet
+[Cmdlet(VerbsData.Import, "OrchConfig", SupportsShouldProcess = true)]
+public class ImportOrchConfigCommand : PSCmdlet
 {
     [Parameter]
     public SwitchParameter Force { get; set; }
@@ -50,7 +50,7 @@ public class MountPSDriveCommand : PSCmdlet
             return;
         }
 
-        if (!ShouldProcess(configFilePath, "Mount-OrchPSDrive"))
+        if (!ShouldProcess(configFilePath, "Import-OrchConfig"))
         {
             return;
         }

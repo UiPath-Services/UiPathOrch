@@ -33,7 +33,7 @@ On Windows, the cmdlet launches Notepad by default or the default application as
 
 If the configuration file does not exist, the cmdlet creates a default configuration file before opening it.
 
-After saving changes to the configuration file, run `Mount-OrchPSDrive` to reload the configuration and mount the configured Orchestrator tenants as PSDrives.
+After saving changes to the configuration file, run `Import-OrchConfig` to reload the configuration and mount the configured Orchestrator tenants as PSDrives.
 
 The -EditorType parameter supports tab completion. Press [Ctrl+Space] or [Tab] to see available editor types.
 
@@ -115,6 +115,6 @@ On Windows, if the preferred editor cannot be launched, the cmdlet automatically
 
 ## RELATED LINKS
 
-Mount-OrchPSDrive
+Import-OrchConfig
 
 Get-OrchConfigPath
