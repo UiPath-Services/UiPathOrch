@@ -112,7 +112,7 @@ public class MountPSDriveCommand : PSCmdlet
             {
                 try
                 {
-                    string root = psDrive.Root.TrimEnd('/') + "/du_";
+                    string root = psDrive.Root?.TrimEnd('/') + "/du_";
                     var duProvider = SessionState.Provider.GetOne("UiPathOrchDu");
                     var duDrive = new OrchDuDriveInfo(duProvider, psDrive.Name + "Du", psDrive.Description ?? "", root);
                     SessionState.Drive.New(duDrive, scope: "Global");
@@ -130,7 +130,7 @@ public class MountPSDriveCommand : PSCmdlet
             {
                 try
                 {
-                    string root = psDrive.Root.TrimEnd('/') + "/testmanager_";
+                    string root = psDrive.Root?.TrimEnd('/') + "/testmanager_";
                     var tmProvider = SessionState.Provider.GetOne("UiPathOrchTm");
                     var tmDrive = new OrchTmDriveInfo(tmProvider, psDrive.Name + "Tm", psDrive.Description ?? "", root);
                     SessionState.Drive.New(tmDrive, scope: "Global");

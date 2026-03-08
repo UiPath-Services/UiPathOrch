@@ -378,3 +378,6 @@ NuGet.Config
 *.html
 *.bak
 *.xlsx
+
+# Generated help XML (built from PlatyPS markdown)
+Staging/en-US/*-Help.xml
