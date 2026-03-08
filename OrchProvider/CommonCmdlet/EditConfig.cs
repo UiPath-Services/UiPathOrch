@@ -124,7 +124,7 @@ public class EditConfigCommand : PSCmdlet
                 WriteError(new ErrorRecord(ex, "LaunchEditorFailed", ErrorCategory.ResourceUnavailable, configFilePath));
             }
 
-            WriteWarning($"Please edit '{configFilePath}'. After saving your changes, restart the PowerShell session and run `Import-Module UiPathOrch` to mount your Orchestrator tenants as PSDrives.");
+            WriteWarning($"Please edit '{configFilePath}'. After saving your changes, run `Mount-OrchPSDrive` to reload the configuration.");
             return;
         }
 
@@ -139,7 +139,7 @@ public class EditConfigCommand : PSCmdlet
         // 設定ファイルがあるパスに移動
         SessionState.Path.SetLocation(folder);
 
-        WriteWarning($"Please edit './{fileName}'. After saving your changes, restart the PowerShell session and run Import-Module UiPathOrch to mount your Orchestrator tenants as PSDrives. Use `popd` to return to the previous location.");
+        WriteWarning($"Please edit './{fileName}'. After saving your changes, run Mount-OrchPSDrive to reload the configuration. Use `popd` to return to the previous location.");
 
 
         //string candidate = string.IsNullOrEmpty(EditorType) ? "nano" : EditorType.ToLowerInvariant();

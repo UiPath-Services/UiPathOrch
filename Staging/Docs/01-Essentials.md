@@ -4,14 +4,14 @@
 SECTIONS:
   23: CRITICAL AI EXECUTION RULES
   36: MANDATORY AI DECISION FLOW
-  56: PATH PROPERTY - CRITICAL FOR CONTEXT
-  85: ERROR HANDLING PROTOCOL
-  109: CONFIDENTIAL APP CONSIDERATIONS
-  127: UIPATH ORCHESTRATOR ARCHITECTURE
-  174: PERMISSION MODEL
-  183: PERFORMANCE & CACHE MANAGEMENT
-  205: QUICK REFERENCE
-  248: CMDLET-SPECIFIC GUIDANCE
+  71: PATH PROPERTY - CRITICAL FOR CONTEXT
+  100: ERROR HANDLING PROTOCOL
+  124: CONFIDENTIAL APP CONSIDERATIONS
+  142: UIPATH ORCHESTRATOR ARCHITECTURE
+  189: PERMISSION MODEL
+  198: PERFORMANCE & CACHE MANAGEMENT
+  226: QUICK REFERENCE
+  278: CMDLET-SPECIFIC GUIDANCE
 ```
 
 Use Show-TextFiles with -LineRange to read specific sections.
@@ -53,6 +53,21 @@ FOR DESTRUCTIVE OPERATIONS:
 2. SHOW results to user and ask: 'Should I proceed with this operation?'
 3. IF user confirms: Execute without -WhatIf
 
+### Capturing -WhatIf Output
+
+When using PowerShell.MCP, -WhatIf output (ShouldProcess messages) is not visible
+to AI. Stream redirection (`*>&1`), `-WarningVariable`, and `-InformationVariable`
+cannot capture it either. Use `Start-Transcript` instead.
+
+```powershell
+Start-Transcript -Path C:\temp\whatif.txt -Force
+Start-OrchJob Report* -WhatIf
+Stop-Transcript
+Show-TextFiles C:\temp\whatif.txt
+```
+
+Lines beginning with `What if:` in the transcript file are the -WhatIf output.
+
 ## PATH PROPERTY - CRITICAL FOR CONTEXT
 
 ### UiPathOrch vs Standard PowerShell Properties
@@ -69,16 +84,16 @@ UiPathOrch objects use custom .Path property (NOT PSPath):
 
 ### CORRECT PATH USAGE EXAMPLES
 # Show all triggers with their locations
-Get-OrchTrigger -Recurse | Select-Object Path, Name, Enabled, ReleaseName
+Get-OrchTrigger -Path Orch1:\ -Recurse | Select-Object Path, Name, Enabled, ReleaseName
 
 # Show all assets with folder context
-Get-OrchAsset -Recurse | Select-Object Path, Name, ValueType, Value
+Get-OrchAsset -Path Orch1:\ -Recurse | Select-Object Path, Name, ValueType, Value
 
 # Show all users with organizational context
-Get-OrchUser | Select-Object Path, UserName, FullName
+Get-OrchUser -Path Orch1: | Select-Object Path, UserName, FullName
 
 # Show all processes with their folder locations
-Get-OrchProcess -Recurse | Select-Object Path, Name, ProcessVersion
+Get-OrchProcess -Path Orch1:\ -Recurse | Select-Object Path, Name, ProcessVersion
 
 KEY RULE: Always include Path in Select-Object for clarity and troubleshooting.
 
@@ -101,10 +116,10 @@ IF error contains ["This operation is not supported in a Confidential app"]:
     → Confidential App Limitation → This is normal for certain commands (e.g., Get-OrchCurrentUser)
 
 ### Standard AI Error Response Template
-❌ [Command] failed: [error message]
-🔧 Diagnosis: [error type from above]
-💡 Action: [specific action taken]
-📋 Result: [outcome of recovery attempt]
+- ❌ [Command] failed: [error message]
+- 🔧 Diagnosis: [error type from above]
+- 💡 Action: [specific action taken]
+- 📋 Result: [outcome of recovery attempt]
 
 ## CONFIDENTIAL APP CONSIDERATIONS
 
@@ -192,57 +207,72 @@ Think of it as: Connection Permission → Tenant Permission → Folder Permissio
 - WITHOUT filter parameters: Shows cached data only (may be empty initially)
 
 ### Performance Tips
+
+```powershell
 # For large environments - target specific folders
-Get-OrchAsset -Path "Shared\Production" 'Config*'
+Get-OrchAsset -Path Orch1:\Shared\Production Config*
 
 # Navigate to folder first for batch operations
-cd MyDrive:\TargetFolder
+cd Orch1:\TargetFolder
 Get-OrchProcess  # Now operates on current folder
+```
 
 ### Cache Management
+
+```powershell
 Clear-OrchCache  # Force refresh all cached data
+```
 
 ## QUICK REFERENCE
 
 ### Session Initialization
+
+```powershell
 # 1. Check available connections
 Get-OrchPSDrive
 
 # 2. Connect to target environment
-cd MyDrive:
+cd Orch1:
 
 # 3. Verify connection (skip if Confidential app)
 Get-OrchCurrentUser  # May fail in Confidential apps - this is normal
 
 # 4. Explore folder structure
 dir -Recurse | Select-Object FullName, FolderType
+```
 
 ### Essential Operations
+
+```powershell
 # Asset management with Path
-Get-OrchAsset -Recurse | Select-Object Path, Name, ValueType, Value
-Set-OrchAsset -ValueType Text -Name "ConfigValue" -Value "NewSetting" -WhatIf
+Get-OrchAsset -Path Orch1:\ -Recurse | Select-Object Path, Name, ValueType, Value
+Set-OrchAsset -ValueType Text -Name ConfigValue -Value NewSetting -WhatIf
 
 # Process and Job management with Path
-Get-OrchProcess -Recurse | Select-Object Path, Name, ProcessVersion
-Start-OrchJob -ProcessName "MyProcess" -WhatIf
+Get-OrchProcess -Path Orch1:\ -Recurse | Select-Object Path, Name, ProcessVersion
+Start-OrchJob MyProcess -WhatIf
 
 # Trigger management with Path
-Get-OrchTrigger -Recurse | Select-Object Path, Name, Enabled, ReleaseName
+Get-OrchTrigger -Path Orch1:\ -Recurse | Select-Object Path, Name, Enabled, ReleaseName
 
 # User management with Path
-Get-OrchUser | Select-Object Path, UserName, FullName
+Get-OrchUser -Path Orch1: | Select-Object Path, UserName, FullName
+```
 
 ### Permission Verification
+
+```powershell
 Get-OrchPSDrive | Select-Object Name, Root, Scope, IsConf  # Drive status
 Get-OrchRole -ExpandPermission   # Detailed role permissions
 Get-OrchUserPrivilege            # Your effective permissions
 Get-OrchFolderUser               # Folder access assignments
+```
 
 ### Troubleshooting Quick Fixes
 - **Connection Issues**: Clear-OrchCache; then retry operation
 - **Permission Errors**: Check Get-OrchUserPrivilege and Get-OrchFolderUser
 - **Performance Issues**: Use specific folder paths with -Path instead of -Recurse
-- **Drive Mount Issues**: Run Edit-OrchConfig to reconfigure
+- **Drive Mount Issues**: Run Edit-OrchConfig to reconfigure. Use Get-OrchConfigPath to retrieve the config file path so AI can directly inspect or edit it
 - **Confidential App Errors**: Normal for user info commands, try alternative verification
 
 ## CMDLET-SPECIFIC GUIDANCE

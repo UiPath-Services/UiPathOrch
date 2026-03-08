@@ -81,6 +81,10 @@ FunctionsToExport = @(
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @(
+'Mount-OrchPSDrive',
+'New-OrchPSDrive',
+'Get-OrchPSDrive',
+
 'Get-OrchLibrary',
 'Get-OrchLibraryVersion',
 'Remove-OrchLibrary',
@@ -366,7 +370,6 @@ CmdletsToExport = @(
 'Clear-OrchCache',
 'Get-OrchConfigPath',
 'Edit-OrchConfig',
-'Get-OrchPSDrive',
 'Set-OrchLocation',
 'Get-OrchLogLocation',
 'Open-OrchLogLocation',

@@ -96,6 +96,11 @@ public partial class OrchProvider : NavigationCmdletProvider
 {
     private static UiPathOrchConfig? _config;
 
+    /// <summary>
+    /// Mount-OrchPSDrive から呼び出される。設定ファイルの再読み込み時に _config を更新する。
+    /// </summary>
+    internal static void SetConfig(UiPathOrchConfig config) => _config = config;
+
     #region CmdletProvider overrides
 
     protected override ProviderInfo Start(ProviderInfo providerInfo)
@@ -305,7 +310,7 @@ public partial class OrchProvider : NavigationCmdletProvider
                     Process.Start(startInfo);
                 }
 
-                WriteWarning($"Please edit the '{configFilePath}'. Once edited, launch a new PS session and `Import-Module UiPathOrch` to mount your Orchestrator tenants as PSDrives.");
+                WriteWarning($"Please edit '{configFilePath}'. After saving your changes, run `Mount-OrchPSDrive` to reload the configuration.");
 
                 return null;
 
@@ -375,7 +380,7 @@ public partial class OrchProvider : NavigationCmdletProvider
                 };
                 Process.Start(startInfo);
 
-                WriteWarning($"Please edit '{configFilePath}'. After saving your changes, restart the PowerShell session and run `Import-Module UiPathOrch` to mount your Orchestrator tenants as PSDrives.");
+                WriteWarning($"Please edit '{configFilePath}'. After saving your changes, run `Mount-OrchPSDrive` to reload the configuration.");
             }
             else
             {
@@ -391,7 +396,7 @@ public partial class OrchProvider : NavigationCmdletProvider
                 // 設定ファイルがあるパスに移動
                 SessionState.Path.SetLocation(folder);
 
-                WriteWarning($"Please edit './{fileName}'. After saving your changes, restart the PowerShell session and run Import-Module UiPathOrch to mount your Orchestrator tenants as PSDrives.");
+                WriteWarning($"Please edit './{fileName}'. After saving your changes, run Mount-OrchPSDrive to reload the configuration.");
             }
             return null;
         }
