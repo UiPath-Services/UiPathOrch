@@ -101,6 +101,13 @@ public partial class OrchProvider : NavigationCmdletProvider
     /// </summary>
     internal static void SetConfig(UiPathOrchConfig config) => _config = config;
 
+    /// <summary>
+    /// InitializeDefaultDrives() がマウントした時点の設定ファイル更新日時。
+    /// Mount-OrchPSDrive はこの値と現在のファイル更新日時を比較し、
+    /// 変わっていなければ再マウントをスキップする。
+    /// </summary>
+    internal static DateTime? ConfigLastWriteTimeUtc { get; set; }
+
     #region CmdletProvider overrides
 
     protected override ProviderInfo Start(ProviderInfo providerInfo)
@@ -357,6 +364,7 @@ public partial class OrchProvider : NavigationCmdletProvider
                         "NewPSDriveError", ErrorCategory.InvalidData, drive.Name));
                 }
             }
+            ConfigLastWriteTimeUtc = File.GetLastWriteTimeUtc(configFilePath);
             return ret;
         }
         else

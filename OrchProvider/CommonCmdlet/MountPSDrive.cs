@@ -14,7 +14,16 @@ public class MountPSDriveCommand : PSCmdlet
 {
     protected override void ProcessRecord()
     {
+        // 設定ファイルが前回マウント時から変わっていなければスキップ
         string configFilePath = Core.OrchProvider.GetConfigFilePath();
+        if (Core.OrchProvider.ConfigLastWriteTimeUtc is not null
+            && System.IO.File.Exists(configFilePath)
+            && System.IO.File.GetLastWriteTimeUtc(configFilePath) == Core.OrchProvider.ConfigLastWriteTimeUtc)
+        {
+            WriteVerbose("Configuration file has not changed since the last mount. Skipping.");
+            return;
+        }
+
         if (!System.IO.File.Exists(configFilePath))
         {
             WriteWarning($"Configuration file not found: {configFilePath}");
@@ -139,6 +148,7 @@ public class MountPSDriveCommand : PSCmdlet
             }
         }
 
+        Core.OrchProvider.ConfigLastWriteTimeUtc = System.IO.File.GetLastWriteTimeUtc(configFilePath);
         WriteVerbose($"{driveCount} drive(s) mounted from '{configFilePath}'.");
     }
 }
