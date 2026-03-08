@@ -246,8 +246,11 @@ dir -Recurse | Select-Object FullName, FolderType
 
 ### Entra ID Warning
 
-When connecting to a drive, if the user is not signed in to the organization
-via Entra ID (signed in with a local account instead), a warning is displayed:
+For AD-integrated organizations, UiPathOrch automatically directs the user to
+the Entra ID login page during PKCE authentication.
+
+If the user signs in with a local account instead of Entra ID, a warning is
+displayed:
 
 ```
 WARNING: [Orch1:] You are not signed in to the organization via Entra ID.

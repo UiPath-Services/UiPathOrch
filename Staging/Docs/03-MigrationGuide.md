@@ -129,12 +129,15 @@ or Entra ID, additional setup is required to enable directory user operations:
 
 1. **Configure UiPathOrch with a non-confidential application**: This is
    required to enable the PKCE-based authentication flow.
-2. **Verify Entra ID login status**: When connecting to a drive, UiPathOrch
-   automatically checks whether you are signed in via Entra ID. If not, a
-   warning is displayed:
+2. **Verify Entra ID login status**: For AD-integrated organizations,
+   UiPathOrch automatically directs the user to the Entra ID login page
+   during PKCE authentication. After connecting, UiPathOrch checks whether
+   you are signed in via Entra ID. If not, a warning is displayed:
    ```
    WARNING: [Orch1:] You are not signed in to the organization via Entra ID.
    ```
+   This warning typically appears when the user signs in with a local account
+   instead of Entra ID.
 3. **Switch account if needed**: If the warning appears and you need
    organization-level access, use `Switch-OrchCurrentUser` to re-authenticate
    with the correct account:
