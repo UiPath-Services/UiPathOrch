@@ -12,15 +12,19 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsData.Mount, "OrchPSDrive", SupportsShouldProcess = true)]
 public class MountPSDriveCommand : PSCmdlet
 {
+    [Parameter]
+    public SwitchParameter Force { get; set; }
+
     protected override void ProcessRecord()
     {
-        // 設定ファイルが前回マウント時から変わっていなければスキップ
+        // -Force が指定されていない場合、設定ファイルが前回マウント時から変わっていなければスキップ
         string configFilePath = Core.OrchProvider.GetConfigFilePath();
-        if (Core.OrchProvider.ConfigLastWriteTimeUtc is not null
+        if (!Force
+            && Core.OrchProvider.ConfigLastWriteTimeUtc is not null
             && System.IO.File.Exists(configFilePath)
             && System.IO.File.GetLastWriteTimeUtc(configFilePath) == Core.OrchProvider.ConfigLastWriteTimeUtc)
         {
-            WriteVerbose("Configuration file has not changed since the last mount. Skipping.");
+            WriteVerbose("Configuration file has not changed since the last mount. Skipping. Use -Force to override.");
             return;
         }
 
@@ -49,6 +53,13 @@ public class MountPSDriveCommand : PSCmdlet
         if (!ShouldProcess(configFilePath, "Mount-OrchPSDrive"))
         {
             return;
+        }
+
+        // カレントロケーションが Orch ドライブ上だとドライブ削除できないため、C: に移動
+        var currentDrive = SessionState.Drive.Current;
+        if (currentDrive is OrchDriveInfo or OrchDuDriveInfo or OrchTmDriveInfo)
+        {
+            SessionState.Path.SetLocation(@"C:");
         }
 
         // 既存のドライブをすべて削除（キャッシュもクリアされる）
