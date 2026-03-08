@@ -244,6 +244,37 @@ Get-OrchCurrentUser  # May fail in Confidential apps - this is normal
 dir -Recurse | Select-Object FullName, FolderType
 ```
 
+### Entra ID Warning
+
+When connecting to a drive, if the user is not signed in to the organization
+via Entra ID (signed in with a local account instead), a warning is displayed:
+
+```
+WARNING: [Orch1:] You are not signed in to the organization via Entra ID.
+Some operations may require organization-level access.
+Use Switch-OrchCurrentUser to sign in with a different account.
+```
+
+This warning appears when the JWT token indicates GlobalIdp authentication
+instead of Entra ID (aad). Organization-level operations (Platform Management
+cmdlets, Active Directory user search) may fail without Entra ID login.
+
+### Switching Accounts
+
+To sign in with a different account (e.g., switching from SSO to a Google
+account), use `Switch-OrchCurrentUser`:
+
+```powershell
+# Switch user on current drive
+Switch-OrchCurrentUser
+
+# Switch user on a specific drive
+Switch-OrchCurrentUser Orch1:
+```
+
+This opens an InPrivate browser window for authentication, bypassing existing
+SSO sessions. After switching, all cached data is cleared automatically.
+
 ### Essential Operations
 
 ```powershell
@@ -277,6 +308,8 @@ Get-OrchFolderUser               # Folder access assignments
 - **Performance Issues**: Use specific folder paths with -Path instead of -Recurse
 - **Drive Mount Issues**: Run Edit-OrchConfig to reconfigure, then Mount-OrchPSDrive to reload. Use Get-OrchConfigPath to retrieve the config file path so AI can directly inspect or edit it
 - **Confidential App Errors**: Normal for user info commands, try alternative verification
+- **Entra ID Warning**: Use Switch-OrchCurrentUser to sign in via Entra ID
+- **SSO auto-login prevents account switch**: Use Switch-OrchCurrentUser to open InPrivate browser and choose a different account
 
 ## CMDLET-SPECIFIC GUIDANCE
 

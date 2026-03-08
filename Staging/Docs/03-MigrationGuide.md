@@ -129,21 +129,24 @@ or Entra ID, additional setup is required to enable directory user operations:
 
 1. **Configure UiPathOrch with a non-confidential application**: This is
    required to enable the PKCE-based authentication flow.
-2. **Log in to the organization via browser first**: Open the organization URL
-   (e.g., `https://cloud.uipath.com/org`) and sign in. This browser session
-   enables directory search through PKCE authentication.
-3. **Then use UiPathOrch cmdlets**: Once signed in via the browser, the cmdlets
-   will leverage PKCE to authenticate, allowing operations in the context of
-   the logged-in organization.
+2. **Verify Entra ID login status**: When connecting to a drive, UiPathOrch
+   automatically checks whether you are signed in via Entra ID. If not, a
+   warning is displayed:
+   ```
+   WARNING: [Orch1:] You are not signed in to the organization via Entra ID.
+   ```
+3. **Switch account if needed**: If the warning appears and you need
+   organization-level access, use `Switch-OrchCurrentUser` to re-authenticate
+   with the correct account:
+   ```powershell
+   Switch-OrchCurrentUser Orch1:
+   ```
+   This opens an InPrivate browser window where you can select the appropriate
+   identity provider (e.g., Microsoft/Entra ID, Google) and account.
 
-Without this browser login step, UiPathOrch will fail to search for AD/Entra
-ID users (e.g., `Search-OrchDirectory`, `New-OrchUserMappingCsv`, and copy
-cmdlets that resolve directory users).
-
-> **How to check if you are logged in**: Go to the Automation Cloud home page.
-> If you see a message saying "You are signed in with a local user account.
-> This organization supports Entra ID directory integration...", sign out and
-> sign in again through the organization-specific URL shown in the message.
+Without Entra ID login, UiPathOrch will fail to search for AD/Entra ID users
+(e.g., `Search-OrchDirectory`, `New-OrchUserMappingCsv`, and copy cmdlets
+that resolve directory users).
 
 ### How to Capture -WhatIf Output
 
