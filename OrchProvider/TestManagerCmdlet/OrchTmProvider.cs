@@ -65,7 +65,7 @@ public class OrchTmProvider : NavigationCmdletProvider
             {
                 if (drive.Enabled is null || drive.Enabled.GetValueOrDefault())
                 {
-                    if ((drive.Scope?.Contains("TM.") ?? false) && (drive.Root?.Contains("uipath.com") ?? false))
+                    if (drive.Scope?.Contains("TM.") ?? false)
                     {
                         string root = drive.Root.TrimEnd('/') + "/testmanager_";
 

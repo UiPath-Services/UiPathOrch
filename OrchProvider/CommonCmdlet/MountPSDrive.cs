@@ -108,7 +108,7 @@ public class MountPSDriveCommand : PSCmdlet
         {
             if (psDrive.Enabled is not null && !psDrive.Enabled.GetValueOrDefault()) continue;
 
-            if ((psDrive.Scope?.Contains("Du.") ?? false) && (psDrive.Root?.Contains("uipath.com") ?? false))
+            if (psDrive.Scope?.Contains("Du.") ?? false)
             {
                 try
                 {
@@ -126,7 +126,7 @@ public class MountPSDriveCommand : PSCmdlet
         {
             if (psDrive.Enabled is not null && !psDrive.Enabled.GetValueOrDefault()) continue;
 
-            if ((psDrive.Scope?.Contains("TM.") ?? false) && (psDrive.Root?.Contains("uipath.com") ?? false))
+            if (psDrive.Scope?.Contains("TM.") ?? false)
             {
                 try
                 {
