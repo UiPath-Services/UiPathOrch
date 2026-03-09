@@ -32,7 +32,6 @@ class RemoveAssetLinkCommand : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
-    // TODO: Would like to share this as GetLinkedAssetName
     private class NameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(

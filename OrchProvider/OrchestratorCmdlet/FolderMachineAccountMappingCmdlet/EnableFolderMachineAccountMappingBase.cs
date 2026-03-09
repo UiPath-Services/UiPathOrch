@@ -25,7 +25,6 @@ public class EnableFolderMachineAccountMappingCommandBase<Enable> : Orchestrator
     public uint Depth { get; set; }
 
     // Only enumerate folder machines that are not PropagateToSubFolders
-    // TODO: The same thing exists in a cmdlet in the same folder
     internal class FolderMachineNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
     {
         public override IEnumerable<CompletionResult> CompleteArgument(

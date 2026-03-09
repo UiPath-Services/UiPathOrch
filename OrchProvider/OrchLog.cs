@@ -249,7 +249,6 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    // TODO: Move to OrchExtentions.cs
     private string SanitizeDriveName()
     {
         string driveName = _drive._psDrive.Name!;

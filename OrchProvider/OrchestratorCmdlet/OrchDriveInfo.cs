@@ -168,9 +168,9 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicLibraryVersions = null; // If an exception occurs, it should have already been thrown when getting _dicLibraries, so this should be fine..
         _dicLibraryVersionsInHostFeed = null;
 
-        _dicLicenseNamedUser = null; // TODO: Add exception cache
+        _dicLicenseNamedUser = null;
 
-        _dicLicenseRuntime = null; // TODO: Add exception cache
+        _dicLicenseRuntime = null;
 
         _dicMachineClientSecrets = null;
         _dicMachineClientSecrets_Exception.ClearCache();
@@ -197,7 +197,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicTriggersDetailed = null;
         _dicTriggersDetailed_Exceptions.ClearCache();
 
-        _dicQueueLinks = null; // TODO: Add exception cache
+        _dicQueueLinks = null;
         _dicQueueItems = null;
 
         //_dicReleaseList = null;
