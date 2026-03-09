@@ -71,8 +71,8 @@ public class GetFolderUsageCommand : OrchestratorPSCmdlet
             return;
         }
 
-        // マルチスレッドで呼び出すと、サーバーからの結果が不安定になるような気がする。。
-        // ここはシングルスレッドで問い合わせておく。
+        // Calling with multiple threads seems to make the server results unstable...
+        // Query using a single thread here.
 
         foreach (var p in _inputParameters)
         {

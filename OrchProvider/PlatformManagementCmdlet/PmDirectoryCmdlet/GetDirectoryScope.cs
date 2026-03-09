@@ -6,7 +6,7 @@ using UiPath.PowerShell.Completer;
 
 namespace UiPath.PowerShell.Commands;
 
-// たぶん動いているんだけど、空っぽしか返ってこないので動作を確認できないな。
+// It's probably working, but only returns empty results so the behavior cannot be verified.
 [Cmdlet(VerbsCommon.Get, "PmDirectoryScope")]
 [OutputType(typeof(PmDirectoryEntityInfo))]
 class SearchPmDirectoryScopeCmdlet : OrchestratorPSCmdlet

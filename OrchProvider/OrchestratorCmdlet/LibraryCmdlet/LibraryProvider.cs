@@ -59,13 +59,13 @@ class LibraryProvider : NavigationCmdletProvider, IContentCmdletProvider
         }
     }
 
-    // TODO: これ何か実装した方が良いのでは？ でも呼ばれたことがないような気がする。。
+    // TODO: Maybe we should implement something here? But I don't think this has ever been called..
     protected override bool IsValidPath(string path)
     {
         return true;
     }
 
-    // ItemExists メソッドは、ワイルドカードを処理する必要はないっぽい。
+    // The ItemExists method apparently does not need to handle wildcards.
     protected override bool ItemExists(string path)
     {
         if (_dicLibraryVersions is null)
@@ -86,7 +86,7 @@ class LibraryProvider : NavigationCmdletProvider, IContentCmdletProvider
         yield break;
         //using var resultTracker = new ThreadResultsTracker<LibraryVersion>(libraries.Count());
 
-        //// 並行にライブラリバージョンを取得
+        //// Fetch library versions in parallel
         //Task.Run(() =>
         //{
         //    ForEach(libraries, (library, state, index) =>
@@ -158,8 +158,8 @@ class LibraryProvider : NavigationCmdletProvider, IContentCmdletProvider
         }
     }
 
-    // GetChildnames は、オブジェクトでなく名前の string 値のみを WriteItemObject する必要がある。
-    // このメソッドは、Get-ChildItem -Name を実行すると呼び出される。
+    // GetChildNames must pass only the name string value (not the object) to WriteItemObject.
+    // This method is called when running Get-ChildItem -Name.
     protected override void GetChildNames(string path, ReturnContainers returnContainers)
     {
         foreach (var versionsError in GetLibraryVersions())
@@ -181,7 +181,7 @@ class LibraryProvider : NavigationCmdletProvider, IContentCmdletProvider
 
     protected override bool HasChildItems(string path)
     {
-        // path がルートの場合に限り、ファイルが存在すれば true を返す
+        // Return true only when path is root and files exist
         return IsItemContainer(path);
     }
 
@@ -302,25 +302,25 @@ internal class LibraryContentReader : IContentReader
         {
             if (disposing)
             {
-                // TODO: マネージド状態を破棄します (マネージド オブジェクト)
+                // TODO: Dispose managed state (managed objects)
             }
 
-            // TODO: アンマネージド リソース (アンマネージド オブジェクト) を解放し、ファイナライザーをオーバーライドします
-            // TODO: 大きなフィールドを null に設定します
+            // TODO: Free unmanaged resources (unmanaged objects) and override finalizer
+            // TODO: Set large fields to null
             disposedValue = true;
         }
     }
 
-    // // TODO: 'Dispose(bool disposing)' にアンマネージド リソースを解放するコードが含まれる場合にのみ、ファイナライザーをオーバーライドします
+    // // TODO: Override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
     // ~LibraryContentReader()
     // {
-    //     // このコードを変更しないでください。クリーンアップ コードを 'Dispose(bool disposing)' メソッドに記述します
+    //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
     //     Dispose(disposing: false);
     // }
 
     void IDisposable.Dispose()
     {
-        // このコードを変更しないでください。クリーンアップ コードを 'Dispose(bool disposing)' メソッドに記述します
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
@@ -351,25 +351,25 @@ internal class LibraryContentWriter : IContentWriter
         {
             if (disposing)
             {
-                // TODO: マネージド状態を破棄します (マネージド オブジェクト)
+                // TODO: Dispose managed state (managed objects)
             }
 
-            // TODO: アンマネージド リソース (アンマネージド オブジェクト) を解放し、ファイナライザーをオーバーライドします
-            // TODO: 大きなフィールドを null に設定します
+            // TODO: Free unmanaged resources (unmanaged objects) and override finalizer
+            // TODO: Set large fields to null
             disposedValue = true;
         }
     }
 
-    // // TODO: 'Dispose(bool disposing)' にアンマネージド リソースを解放するコードが含まれる場合にのみ、ファイナライザーをオーバーライドします
+    // // TODO: Override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
     // ~LibraryContentWriter()
     // {
-    //     // このコードを変更しないでください。クリーンアップ コードを 'Dispose(bool disposing)' メソッドに記述します
+    //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
     //     Dispose(disposing: false);
     // }
 
     public void Dispose()
     {
-        // このコードを変更しないでください。クリーンアップ コードを 'Dispose(bool disposing)' メソッドに記述します
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }

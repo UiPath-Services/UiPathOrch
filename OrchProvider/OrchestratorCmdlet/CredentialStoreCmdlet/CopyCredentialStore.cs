@@ -8,9 +8,9 @@ using TPositional = UiPath.PowerShell.Positional.Name_Destination;
 
 namespace UiPath.PowerShell.Commands;
 
-// この cmdlet は動作しない。GetCredential で取得できる store には
-// 作成時に必要となるデータが一部含まれていない。
-// 一応、private として残しておく。
+// This cmdlet does not work. The store retrieved by GetCredential does not
+// contain some data required for creation.
+// Keeping it as private for now.
 
 [Cmdlet(VerbsCommon.Copy, "OrchCredentialStore", SupportsShouldProcess = true)]
 public class CopyCredentialStoreCommand : OrchestratorPSCmdlet
@@ -55,7 +55,7 @@ public class CopyCredentialStoreCommand : OrchestratorPSCmdlet
     {
         srcDrive.CredentialStores.ClearCache();
 
-        // この実装はこれで良い
+        // This implementation is fine as is
         List<CredentialStore> stores = null;
         try
         {
@@ -80,7 +80,7 @@ public class CopyCredentialStoreCommand : OrchestratorPSCmdlet
                 cancelToken.ThrowIfCancellationRequested();
                 reporter.WriteProgress(++index, $"{store.GetPSPath()} to {dstDrive.NameColonSeparator}");
 
-                // コピー元の store が "Orchestrator Database" で、かつコピー先に同名の store がある場合にはスキップ
+                // Skip if the source store is "Orchestrator Database" and a store with the same name exists at the destination
                 if (string.Compare(store.Name, "Orchestrator Database", true) == 0)
                 {
                     var dstStores = dstDrive.CredentialStores.Get();
@@ -93,7 +93,7 @@ public class CopyCredentialStoreCommand : OrchestratorPSCmdlet
                 if (shouldProcess || _this.ShouldProcess(store.GetPSPath(), "Copy CredentialStore"))
                 {
                     CredentialStore postingStore = OrchCollectionExtensions.DeepCopy(store);
-                    // postingStore.Path = null; // JsonIgnore 属性がついているので不要
+                    // postingStore.Path = null; // Not needed because it has the JsonIgnore attribute
                     postingStore.Id = null;
 
                     try

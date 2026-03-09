@@ -30,23 +30,23 @@ public class GetLogCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(LevelCompleter))]
     public string? Level { get; set; }
 
-    // OC API の制限？不具合？で、複数のマシンを指定したフィルターが機能しない。
-    // 本当は、配列にしてワイルドカードもサポートしたいが、動かない。
-    // そのため、配列での指定はできないようにしておく。
+    // Due to an OC API limitation or bug, a filter specifying multiple machines does not work.
+    // Ideally we would support an array with wildcards, but it doesn't work.
+    // Therefore, array input is not allowed for this parameter.
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(MachineCompleter))]
     public string? Machine { get; set; }
 
-    // OC API の制限？不具合？で、複数のプロセスを指定したフィルターが機能しない。
-    // "((ProcessName eq 'OpenAvidemux') or (ProcessName eq 'OrchestratorManager'))" とか。
-    // 本当は、配列にしてワイルドカードもサポートしたいが、動かない。
-    // そのため、配列での指定はできないようにしておく。
+    // Due to an OC API limitation or bug, a filter specifying multiple processes does not work.
+    // e.g. "((ProcessName eq 'OpenAvidemux') or (ProcessName eq 'OrchestratorManager'))".
+    // Ideally we would support an array with wildcards, but it doesn't work.
+    // Therefore, array input is not allowed for this parameter.
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ListReleasesCompleter<Id_Level>))]
     public string? ProcessName { get; set; }
 
-    // なぜか、これは複数の Identity を or で連結したフィルターが動作する。
-    // ワイルドカードをサポートできるのでうれしい。
+    // For some reason, a filter joining multiple Identities with "or" works here.
+    // This allows us to support wildcards, which is nice.
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(WindowsIdentityCompleter))]
     [SupportsWildcards]
@@ -119,7 +119,7 @@ public class GetLogCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Machine は、候補から除外する
+            // Exclude Machines already selected by the parameter from the candidates
             var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -151,7 +151,7 @@ public class GetLogCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Machine は、候補から除外する
+            // Exclude WindowsIdentities already selected by the parameter from the candidates
             var wpWindowsIdentity = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -184,12 +184,12 @@ public class GetLogCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Machine は、候補から除外する
+            // Exclude JobKeys already selected by the parameter from the candidates
             var wpJobKey = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            // API call はしないので、スレッドを起こす必要はない
+            // No API call is needed, so there is no need to spawn threads
 
             foreach (var (drive, folder) in drivesFolders)
             {
@@ -311,7 +311,7 @@ public class GetLogCommand : OrchestratorPSCmdlet
         ulong skip = Skip ?? 0;
         var orderBy = string.IsNullOrEmpty(OrderBy) ? "TimeStamp" : OrderBy;
 
-        // すべてのパラメータが指定されていなければ、キャッシュの内容を返す
+        // If no parameters are specified, return the contents of the cache
         bool bOutCache = (
             Last is null &&
             TimeStampAfter is null &&

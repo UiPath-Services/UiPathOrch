@@ -54,7 +54,7 @@ public class GetAssetCommand : OrchestratorPSCmdlet
 
     private static void WriteCsvContent(StreamWriter writer, IEnumerable<Asset> output)
     {
-        // 各アセットに対してデータ行を書き込む
+        // Write data rows for each asset
         foreach (var asset in output.Where(a => a.ValueType != "Credential"))
         {
             bool isDescriptionOut = false;
@@ -100,7 +100,7 @@ public class GetAssetCommand : OrchestratorPSCmdlet
 
     private void WriteCredentialCsvContent(StreamWriter writer, IEnumerable<Asset> output)
     {
-        // 各アセットに対してデータ行を書き込む
+        // Write data rows for each asset
         foreach (var asset in output.Where(a => a.ValueType == "Credential"))
         {
             #region find the name of CredentialStore
@@ -212,14 +212,14 @@ public class GetAssetCommand : OrchestratorPSCmdlet
                 }
                 else if (!ExpandUserValues.IsPresent)
                 {
-                    // global 値のみ出力する
+                    // Output only global values
                     WriteObject(output, true);
                 }
                 else
                 {
                     foreach (var asset in output)
                     {
-                        // global 値を AssetUserValue 型で出力する
+                        // Output the global value as AssetUserValue type
                         if (!string.IsNullOrEmpty(asset.Value))
                         {
                             AssetUserValue globalValue = new()

@@ -8,8 +8,8 @@ using TPositional = UiPath.PowerShell.Positional.GroupName;
 
 namespace UiPath.PowerShell.Commands;
 
-// このコマンドレットからは、メンバーを追加する機能は外す。
-// 空っぽのグループを追加するだけのコマンドレットでないと、ShouldProcess がうまいことサポートできないため。
+// The ability to add members is excluded from this cmdlet.
+// ShouldProcess cannot be properly supported unless this cmdlet only creates empty groups.
 
 [Cmdlet(VerbsCommon.New, "PmGroup", SupportsShouldProcess = true)]
 public class AddPmGroupCommand : OrchestratorPSCmdlet
@@ -36,7 +36,7 @@ public class AddPmGroupCommand : OrchestratorPSCmdlet
             var drives = ResolvePmDrives(fakeBoundParameters);
             var results = ParallelResults3.GroupBy(drives, drive => drive.PmGroups.Get());
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude Names already selected via parameters from candidates
             var names = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
             var entities = results.SelectMany(e => e);

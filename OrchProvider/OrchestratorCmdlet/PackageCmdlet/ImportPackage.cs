@@ -33,7 +33,7 @@ public class ImportPackageCommand : OrchestratorPSCmdlet
                 }
             }
         }
-        catch { } // この例外は握りつぶす
+        catch { } // Swallow this exception
 
         return false;
     }
@@ -103,7 +103,7 @@ public class ImportPackageCommand : OrchestratorPSCmdlet
                 reporter.WriteProgress(++index);
                 try
                 {
-                    // targetFolder に同名のパッケージがあれば、警告を表示してコピーをスキップする
+                    // If a package with the same name already exists in targetFolder, show a warning and skip the copy
                     if (PackageExists(drive, targetFolder, fullPath))
                     {
                         WriteError(new ErrorRecord(new InvalidOperationException($"\"{fullPath}\": Package already exists in {targetFolder.GetPSPath()}. Skipping the import."), "ImportPackageError", ErrorCategory.WriteError, targetFolder));

@@ -33,7 +33,7 @@ public class RemovePmUserCommand : OrchestratorPSCmdlet
             User? currentUser = null;
             try
             {
-                // 先に OR.User.Read があるか確認してから呼び出す方が良いが。。
+                // Ideally we should check if OR.User.Read scope is available before calling, but...
                 currentUser = drive.GetCurrentUser();
             }
             catch { }
@@ -48,8 +48,8 @@ public class RemovePmUserCommand : OrchestratorPSCmdlet
 
                 if (NoMatchWarning.IsPresent && !targetUsers.Any())
                 {
-                    // ちょっと適当な実装だけど、これでも CSV インポート時にちゃんと動くから十分か。。
-                    // ちゃんと実装するには、UserName の配列を先頭から順にひとつずつ処理しないといけない。
+                    // This implementation is a bit rough, but it works properly during CSV import, so it should be sufficient.
+                    // A proper implementation would need to process the UserName array one element at a time from the beginning.
                     WriteWarning($"No match found for UserName '{Email![0]}'.");
                     continue;
                 }
@@ -69,13 +69,13 @@ public class RemovePmUserCommand : OrchestratorPSCmdlet
                             {
                                 try
                                 {
-                                    // これを呼び出すなら、バルクで呼び出した方がいいんだけど、とりあえずいいか。。
+                                    // If we're calling this, it would be better to use a bulk call, but this is fine for now.
                                     drive.OrchAPISession.RemovePmUser(partitionGlobalId!, user.id!);
                                 }
                                 catch
                                 {
                                     drive.OrchAPISession.RemovePmUserDeprecated(user.id!);
-                                    // RemovePmUserDeprecated() が呼び出せたら、まだ deprecated していない
+                                    // If RemovePmUserDeprecated() succeeded, the API is not yet deprecated
                                     drive.OrchAPISession.PmApiDeprecated = false;
                                 }
                             }
@@ -104,8 +104,8 @@ public class RemovePmUserCommand : OrchestratorPSCmdlet
         }
     }
 
-    // マルチスレッド化したバージョン
-    // HTTP call を cap した状態では逆に遅くなる場合があるため、シングルスレッドで書き直した
+    // Multi-threaded version
+    // Rewrote as single-threaded because it could be slower when HTTP calls are capped
     //protected override void ProcessRecord()
     //{
     //    var drives = OrchDriveInfo.EnumOrchDrives(Path);

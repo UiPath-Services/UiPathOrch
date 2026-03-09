@@ -25,11 +25,11 @@ internal class FolderComparer : IComparer<Folder?>
         if (x is null) return -1;
         if (y is null) return 1;
 
-        // OrchDirectory に対して比較
+        // Compare by OrchDirectory
         int orchDirectoryComparison = string.Compare(x.Path, y.Path, StringComparison.OrdinalIgnoreCase);
         if (orchDirectoryComparison != 0) return orchDirectoryComparison;
 
-        // OrchDirectory が等しい場合、DisplayName に対して比較
+        // If OrchDirectory is equal, compare by DisplayName
         return string.Compare(x.DisplayName, y.DisplayName, StringComparison.OrdinalIgnoreCase);
     }
 }
@@ -78,8 +78,8 @@ public class EntityEqualityComparer<T, TKey> : EqualityComparer<T>
     }
 }
 
-// 3要素の tuple を比較する Comparer
-// 2番目と3番目の要素は必ず string で、case を無視して比較する
+// Comparer for 3-element tuples.
+// The 2nd and 3rd elements are always strings and are compared case-insensitively.
 internal class SecondAndThirdItemIgnoreCaseComparer<T1, T2> : IEqualityComparer<((T1 drive, T2 folder), string Item2, string Item3)>
 {
     public bool Equals(
@@ -102,8 +102,8 @@ internal class SecondAndThirdItemIgnoreCaseComparer<T1, T2> : IEqualityComparer<
     }
 }
 
-// 4要素の tuple を比較する Comparer
-// 最後の要素は必ず string で、case を無視して比較する
+// Comparer for 4-element tuples.
+// The last element is always a string and is compared case-insensitively.
 internal class ForthItemIgnoreCaseComparer<T1, T2, T3> : IEqualityComparer<(T1 Item1, T2 Item2, T3 Item3, string UserName)>
 {
     public bool Equals((T1 Item1, T2 Item2, T3 Item3, string UserName) x,
@@ -149,7 +149,7 @@ public partial class VersionComparer : IComparer<string>
         int patchComparison = xParts.patch.CompareTo(yParts.patch);
         if (patchComparison != 0) return patchComparison;
 
-        // Stageの有無に基づく比較
+        // Compare based on presence/absence of Stage
         if (xParts.stage is null && yParts.stage is not null) return 1;
         if (xParts.stage is not null && yParts.stage is null) return -1;
 
@@ -223,8 +223,8 @@ public class ObjKeyComparer : IComparer<string>
     }
 }
 
-// List<string> を辞書のキーとして使えるようにするための comparer
-// キーは辞書順にソートしておかなければいけない
+// Comparer that allows List<string> to be used as a dictionary key.
+// Keys must be sorted in lexicographic order.
 public class ListStringComparer : IEqualityComparer<List<string>>
 {
     public bool Equals(List<string>? x, List<string>? y)
@@ -243,7 +243,7 @@ public class ListStringComparer : IEqualityComparer<List<string>>
             return 0;
         }
 
-        // リスト内のすべての要素を個別に組み合わせてハッシュコードを生成
+        // Generate a hash code by combining all elements in the list individually
         int hash = 17;
         foreach (var item in obj)
         {

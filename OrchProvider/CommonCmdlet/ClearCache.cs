@@ -17,7 +17,7 @@ public class ClearCacheCommand : PSCmdlet
     [Parameter]
     public SwitchParameter AllDrives { get; set; }
 
-    // これはすべてのプロバイダを列挙しないといけないから、共通化できない
+    // This cannot be shared because it needs to enumerate all providers
     public class Position0AllDriveCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -27,7 +27,7 @@ public class ClearCacheCommand : PSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            // パラメータで選択済みのドライブは、候補から除外する
+            // Exclude drives already selected via the parameter
             var wpPath = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -80,7 +80,7 @@ public class ClearCacheCommand : PSCmdlet
             tmDrives = SessionState.EnumTmDrives(Path).ToList();
         }
 
-        // Path の指定がなく、カレントドライブが OrchDrive でない場合は、すべての OrchDrive のキャッシュをクリアする
+        // If no Path is specified and the current drive is not an OrchDrive, clear the cache for all OrchDrives
         if (AllDrives.IsPresent || (drives!.Count == 0 && duDrives!.Count == 0 && tmDrives!.Count == 0))
         {
             foreach (var drive in SessionState.EnumAllOrchDrives())

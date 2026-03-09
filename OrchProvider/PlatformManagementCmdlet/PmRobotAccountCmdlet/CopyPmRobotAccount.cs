@@ -23,7 +23,7 @@ public class CopyPmRobotAccountCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        // TODO: この例外は GetOrchDrive() の中からスローして良いのではないか？
+        // TODO: Shouldn't this exception be thrown from inside GetOrchDrive()?
         var srcDrive = SessionState.GetPmDrive(Path!) ?? throw new Exception("Path is not OrchDrive.");
 
         var dstDrives = SessionState.EnumDestinationDrives(Destination!);
@@ -58,7 +58,7 @@ public class CopyPmRobotAccountCommand : OrchestratorPSCmdlet
                     {
                         var dstPartitionGlobalId = dstDrive.GetPartitionGlobalId();
 
-                        // コピー元とコピー先が同じ場合は何もしない
+                        // Do nothing if source and destination are the same
                         if (srcPartitionGlobalId == dstPartitionGlobalId)
                         {
                             index += targetRobots.Count;
@@ -73,7 +73,7 @@ public class CopyPmRobotAccountCommand : OrchestratorPSCmdlet
                         {
                             try
                             {
-                                // この名前のロボットを新規追加
+                                // Create a new robot with this name
                                 var cmd = new CreateRobotAccountCommand()
                                 {
                                     partitionGlobalId = dstPartitionGlobalId,

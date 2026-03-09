@@ -31,7 +31,7 @@ public class GetDuRoleCommand : OrchestratorPSCmdlet
         {
             var drives = ResolveDuDrives(fakeBoundParameters);
 
-            // パラメータで選択済みの DuRole は、候補から除外する
+            // Exclude already-selected DuRole values from completion candidates
             var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);

@@ -13,7 +13,7 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.UpdateLicensedGroupResponse))]
 public class AddPmLicenseToPmLicenseGroup: OrchestratorPSCmdlet
 {
-    // code を管理
+    // Manages license codes
     //private Dictionary<(OrchDriveInfo drive, NuLicensedGroup group), HashSet<string>>? _parameterSets;
     private Dictionary<(OrchDriveInfo drive, PmDirectoryEntityInfo group), HashSet<string>>? _parameterSets;
 
@@ -185,7 +185,7 @@ public class AddPmLicenseToPmLicenseGroup: OrchestratorPSCmdlet
             int initialCount = existingSet.Count;
             existingSet.UnionWith(codesToAdd);
 
-            // 追加すべきライセンスがなければ処理をスキップ
+            // Skip processing if there are no licenses to add
             if (existingSet.Count == initialCount) continue;
 
             string target = group.GetPSPath();

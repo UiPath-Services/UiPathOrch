@@ -76,9 +76,9 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         {
             StringConstantExpressionAst stringAst => stringAst.Value,
             VariableExpressionAst variableAst => variableAst.VariablePath.UserPath,
-            ErrorExpressionAst errorAst => errorAst.ToString(),// ErrorExpressionAstの場合、適切な情報を取得するか、エラーメッセージを返す
-            _ => element.ToString(),// 未知のCommandElementAstのサブタイプの場合、その情報を取得するか、
-                                    // 適切なデフォルトの動作を定義します。
+            ErrorExpressionAst errorAst => errorAst.ToString(),// For ErrorExpressionAst, retrieve appropriate info or return an error message
+            _ => element.ToString(),// For unknown CommandElementAst subtypes, retrieve info or
+                                    // define appropriate default behavior.
         };
         return ret.Trim().TrimEnd(',');
     }
@@ -119,13 +119,13 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
             return false;
         }
 
-        // コマンドの各要素を反復処理し、指定されたパラメータ名を探す
+        // Iterate through each command element to find the specified parameter name
         foreach (var element in commandAst.CommandElements)
         {
-            // パラメータ名をチェック
+            // Check the parameter name
             if (element is CommandParameterAst param &&
                 param.ParameterName.Equals(parameterName, StringComparison.OrdinalIgnoreCase) &&
-                param.Argument is null) // スイッチパラメータには引数がない
+                param.Argument is null) // Switch parameters have no arguments
             {
                 return true;
             }
@@ -134,7 +134,7 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         return false;
     }
 
-    // TODO: スイッチパラメータに値が指定されていた場合の処理が正しくない気がする
+    // TODO: The handling when a value is specified for a switch parameter may not be correct
     public static string? GetParameterValue(CommandAst commandAst, string parameterName, string[]? positionalParams = null)
     {
         var elements = commandAst.CommandElements.Skip(1).Select(e => e.ToString()).ToList();
@@ -154,7 +154,7 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
 
                 if (currentParamName.Equals(parameterName, StringComparison.OrdinalIgnoreCase))
                 {
-                    // 現在のパラメータが取り出したいパラメータの場合の処理
+                    // Handle when the current parameter is the one we want to extract
                     if (elements[i].Contains(':'))
                     {
                         return elements[i].Substring(elements[i].IndexOf(':') + 1).Trim();
@@ -166,7 +166,7 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
                 }
                 else if (isSwitchParam)
                 {
-                    // スイッチパラメータの場合、単に削除する
+                    // For switch parameters, simply remove them
                     elements.RemoveAt(i);
                     i--;
                     if (isPositionalParam && positionIndex > i)
@@ -176,18 +176,18 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
                 }
                 else
                 {
-                    // 通常のパラメータの場合、パラメータ名と値を削除
-                    elements.RemoveAt(i); // パラメータ名を削除
+                    // For regular parameters, remove both the parameter name and value
+                    elements.RemoveAt(i); // Remove the parameter name
                     if (i < elements.Count && !elements[i].StartsWith("-"))
                     {
-                        elements.RemoveAt(i); // パラメータ値を削除
+                        elements.RemoveAt(i); // Remove the parameter value
                     }
                     i--;
                 }
             }
         }
 
-        // 残った要素から位置パラメータの値を取得
+        // Get the positional parameter value from the remaining elements
         if (0 <= positionIndex && positionIndex < elements.Count)
         {
             return elements[positionIndex];
@@ -207,26 +207,26 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
 
     protected static List<OrchDriveInfo> ResolvePmDrives(IDictionary fakeBoundParameters)
     {
-        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+        // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         return SessionState.EnumPmDrives(paramPath);
     }
 
     protected static List<OrchDriveInfo> ResolveOrchDrives(IDictionary fakeBoundParameters)
     {
-        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+        // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         return SessionState.EnumOrchDrives(paramPath);
     }
 
     protected static List<OrchDuDriveInfo> ResolveDuDrives(IDictionary fakeBoundParameters)
     {
-        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+        // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         return SessionState.EnumDuDrives(paramPath);
     }
 
-    // ResolveTmDrives() はなくて良いのだっけ？
+    // Do we not need a ResolveTmDrives()?
 
     protected static List<(OrchDriveInfo drive, Folder folder)> ResolvePath(CommandAst commandAst, IDictionary fakeBoundParameters, bool includeRoot = false)
     {
@@ -315,7 +315,7 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
             }
             break;
         }
-        // ここで、newName は存在しない、新しい名前として適切であるはず
+        // At this point, newName should be a suitable new name that does not already exist
         return newName;
     }
 
@@ -340,37 +340,37 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         return existingMembers;
     }
 
-    // positional parameters の一覧を、リフレクションで取得する試験的な実装
-    // これを使えば、positinal parameter の一覧はテンプレートパラメータで completer class に渡す必要がなくなる
-    // うまく動きそうだけど、これを使うと completer を .ps1 から使うことができなくなる。。
-    // つらい
-    // .ps1 の function からも completer を使えた方がいいよね？
-    // すると、やはり positinal parameter の一覧はテンプレートパラメータで completer class に渡すしかない
+    // Experimental implementation to retrieve the list of positional parameters via reflection.
+    // Using this would eliminate the need to pass the positional parameter list as a template parameter to the completer class.
+    // It seems to work, but using this prevents the completer from being used from .ps1 scripts.
+    // That's unfortunate.
+    // It would be better if the completer could also be used from .ps1 functions, right?
+    // So we still have to pass the positional parameter list as a template parameter to the completer class.
     //private static readonly Dictionary<string, Dictionary<string, string[]>> _cache = new();
 
-    // これを completer の CompleteArgument() から呼び出すと、positional parameters の一覧を配列で取得できる
-    // parameter set を考慮する実装が不完全だが、positional parameters の一覧を取得することはできている
-    // ただし、リフレクションを適切に動作させるには、cmdlet class の名前が cmdlet name のハイフンを除去したものと同一に
-    // なっている必要があることに注意。
+    // Calling this from the completer's CompleteArgument() retrieves the list of positional parameters as an array.
+    // The implementation for handling parameter sets is incomplete, but it successfully retrieves the positional parameter list.
+    // Note that for reflection to work correctly, the cmdlet class name must match the cmdlet name
+    // with hyphens removed.
     //protected string[]? GetPositionalParameterList(string commandName, IDictionary fakeBoundParameters)
     //{
-    //    // キャッシュを確認
+    //    // Check the cache
     //    if (_cache.TryGetValue(commandName, out var cachedParameterSets))
     //    {
-    //        // パラメータセットが一つしかない場合はそれをデフォルトとして使用
+    //        // If there is only one parameter set, use it as the default
     //        if (cachedParameterSets.Count == 1)
     //        {
     //            return cachedParameterSets.Values.First();
     //        }
 
-    //        // 現在のパラメータセットを推測
+    //        // Infer the current parameter set
     //        string? currentParameterSet = DetermineCurrentParameterSet(cachedParameterSets.Keys, fakeBoundParameters);
     //        return currentParameterSet is not null && cachedParameterSets.ContainsKey(currentParameterSet)
     //            ? cachedParameterSets[currentParameterSet]
     //            : null;
     //    }
 
-    //    // コマンドクラスの型を取得
+    //    // Get the command class type
     //    string className = $"UiPath.PowerShell.Commands.{commandName.Replace("-", "")}Command, UiPath.PowerShell.OrchProvider";
     //    Type commandType = Type.GetType(className);
 
@@ -378,7 +378,7 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
     //    {
     //        var parameterSets = new Dictionary<string, List<string>>();
 
-    //        // パラメータプロパティを取得し、パラメータセットを考慮して positional parameter を抽出
+    //        // Get parameter properties and extract positional parameters, considering parameter sets
     //        foreach (var property in commandType.GetProperties())
     //        {
     //            var parameterAttributes = property.GetCustomAttributes<ParameterAttribute>();
@@ -411,7 +411,7 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
 
     //        _cache[commandName] = positionalParameterSets;
 
-    //        // パラメータセットが一つしかない場合はそれを返す
+    //        // If there is only one parameter set, return it
     //        if (positionalParameterSets.Count == 1)
     //        {
     //            return positionalParameterSets.Values.First();
@@ -428,10 +428,10 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
 
     //private string? DetermineCurrentParameterSet(IEnumerable<string> parameterSetNames, IDictionary fakeBoundParameters)
     //{
-    //    // パラメータセットの候補を順にチェックして、fakeBoundParameters に一致するものを特定
+    //    // Check parameter set candidates in order and identify the one matching fakeBoundParameters
     //    foreach (var setName in parameterSetNames)
     //    {
-    //        // "__DefaultParameterSet__" を優先して返す
+    //        // Prioritize returning "__DefaultParameterSet__"
     //        if (setName == "__DefaultParameterSet__")
     //        {
     //            return setName;
@@ -446,7 +446,7 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
     //        }
     //    }
 
-    //    return null; // 一致するパラメータセットが見つからない場合
+    //    return null; // No matching parameter set found
     //}
 
     protected static string TipHelp(OrchDriveInfo drive)
@@ -481,7 +481,7 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         {
             0 => "DirectoryUser: ",
             1 => "DirectoryGroup: ",
-            2 => "DirectoryMachine: ", // これ正しい？
+            2 => "DirectoryMachine: ", // Is this correct?
             3 => "DirectoryRobot: ",
             4 => "DirectoryExternalApplication: ",
             _ => "unknown: "
@@ -762,7 +762,7 @@ internal class ActionCatalogNameCompleter<TPositional> : OrchArgumentCompleter w
     {
         var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -794,7 +794,7 @@ internal class ApiTriggerNameCompleter<TPositional> : OrchArgumentCompleter wher
     {
         var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -825,7 +825,7 @@ internal class EventTriggerNameCompleter<TPositional> : OrchArgumentCompleter wh
     {
         var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -856,10 +856,10 @@ internal class AssetNameCompleter<TPositional> : OrchArgumentCompleter where TPo
     {
         var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
-        // パラメータで選択された ValueType のみ対象とする
+        // Only target the ValueType selected via the parameter
         var wpValueType = CreateWPListFromOtherParameters(commandAst, "ValueType", TPositional.Parameters);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -930,7 +930,7 @@ internal class BucketNameCompleter<TPositional, WritableOnly> : OrchArgumentComp
     {
         var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -970,10 +970,10 @@ internal class BucketFullPathCompleter<TPositional> : OrchArgumentCompleter wher
     {
         var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-        // パラメータで選択された Name のみ対象とする
+        // Only target Names selected via the parameter
         var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
-        // パラメータで選択済みの FullPath は、候補から除外する
+        // Exclude FullPaths already selected via the parameter
         var wpFullPath = CreateWPListFromParameter(commandAst, "FullPath", TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1011,10 +1011,10 @@ internal class CalendarNameCompleter<TPositional> : OrchArgumentCompleter where 
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+        // Extract path from the parameter. If not specified, target the current directory.
         var drives = ResolveOrchDrives(fakeBoundParameters);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1052,7 +1052,7 @@ internal class CredentialStoreNameCompleter<TPositional> : OrchArgumentCompleter
     {
         var drives = ResolveOrchDrives(fakeBoundParameters);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1090,7 +1090,7 @@ internal class FolderMachineNameCompleter<TPositional> : OrchArgumentCompleter w
     {
         var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1121,7 +1121,7 @@ internal class MachineNameCompleter<TPositional> : OrchArgumentCompleter where T
     {
         var drives = ResolveOrchDrives(fakeBoundParameters);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1159,7 +1159,7 @@ internal class MachineRobotUsersCompleter<TPositional> : OrchArgumentCompleter w
     {
         var drives = ResolveOrchDrives(fakeBoundParameters);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpRobotUsers = CreateWPListFromParameter(commandAst, "RobotUsers", TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1191,10 +1191,10 @@ internal class LibraryIdCompleter<TPositional> : OrchArgumentCompleter where TPo
         var drives = ResolveOrchDrives(fakeBoundParameters);
         var hostFeed = GetSwitchParameterValue(commandAst, "HostFeed");
 
-        // パラメータで選択済みの Id は、候補から除外する
+        // Exclude Ids already selected via the parameter
         var wpId = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
-        // パラメータで選択された Version のみ対象とする
+        // Only target Versions selected via the parameter
         var wpVersion = CreateWPListFromOtherParameters(commandAst, "Version", TPositional.Parameters);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1227,10 +1227,10 @@ internal class LibraryVersionCompleter<TPositional> : OrchArgumentCompleter wher
         var drives = ResolveOrchDrives(fakeBoundParameters);
         var hostFeed = GetSwitchParameterValue(commandAst, "HostFeed");
 
-        // パラメータで選択済みの Id は、候補から除外する
+        // Exclude Ids already selected via the parameter
         var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
 
-        // パラメータで選択済みの Version は、候補から除外する
+        // Exclude Versions already selected via the parameter
         var wpVersion = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1274,11 +1274,11 @@ internal class PackageIdCompleter<TPositional> : OrchArgumentCompleter where TPo
     {
         var recurse = GetSwitchParameterValue(commandAst, "Recurse");
 
-        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+        // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse); ////////////////////////TODO★
 
-        // パラメータで選択済みの Id は、候補から除外する
+        // Exclude Ids already selected via the parameter
         var wpId = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1310,14 +1310,14 @@ internal class PackageVersionCompleter<TPositional> : OrchArgumentCompleter wher
     {
         var recurse = GetSwitchParameterValue(commandAst, "Recurse");
 
-        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+        // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse);
 
-        // パラメータで選択された Id のみ対象とする
+        // Only target Ids selected via the parameter
         var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
 
-        // パラメータで選択済みの Version は、候補から除外する
+        // Exclude Versions already selected via the parameter
         var wpVersion = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1356,7 +1356,7 @@ internal class ProcessNameCompleter<TPositional> : OrchArgumentCompleter where T
     {
         var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-        // パラメータで選択済みのライブラリ名は、候補から除外する
+        // Exclude library names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1388,7 +1388,7 @@ internal class QueueNameCompleter<TPositional> : OrchArgumentCompleter where TPo
     {
         var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1420,18 +1420,18 @@ internal class ListReleasesCompleter<TPositional> : OrchArgumentCompleter where 
     {
         var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-        // パラメータで選択済みの Process は、候補から除外する
+        // Exclude Processes already selected via the parameter
         var paramName = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
         var wpName = paramName.ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
 
-        // ListReleases は非公開の API のようだから、GetReleases を使った方が良さそうだ。
-        // ApiVersion == 13 のとき、ListReleases は動作しなかった。
+        // ListReleases appears to be a private API, so using GetReleases is probably better.
+        // ListReleases did not work when ApiVersion == 13.
         var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder));
 
-        // こっちの方が、Orchestrator に対する負荷が少ないとか、処理が早いとか、あるのかもしれない。。
+        // This might have less load on Orchestrator or be faster to process.
         // var results = ParallelResults.ForEach(drivesFolders, df => df.drive.ListReleases(df.folder));
 
         foreach (var result in results)
@@ -1459,7 +1459,7 @@ internal class RoleNameCompleter<TPositional> : OrchArgumentCompleter where TPos
     {
         var drives = ResolveOrchDrives(fakeBoundParameters);
 
-        // パラメータで選択済みのライブラリ名は、候補から除外する
+        // Exclude library names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1491,10 +1491,10 @@ public class TenantUserUserNameCompleter<TPositional> : OrchArgumentCompleter wh
     {
         var drives = ResolveOrchDrives(fakeBoundParameters);
 
-        // パラメータで選択済みのユーザー名は、候補から除外する
+        // Exclude user names already selected via the parameter
         var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
-        // パラメータで選択された FullName のみ対象とする
+        // Only target FullNames selected via the parameter
         var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
 
         var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
@@ -1530,10 +1530,10 @@ public class TenantUserFullNameCompleter<TPositional> : OrchArgumentCompleter wh
     {
         var drives = ResolveOrchDrives(fakeBoundParameters);
 
-        // パラメータで選択された UserName のみ対象とする
+        // Only target UserNames selected via the parameter
         var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
 
-        // パラメータで選択済みのユーザー名は、候補から除外する
+        // Exclude user names already selected via the parameter
         var wpFullName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
@@ -1589,7 +1589,7 @@ internal class TriggerNameCompleter<TPositional> : OrchArgumentCompleter where T
     {
         var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1646,7 +1646,7 @@ internal class WebhookNameCompleter<TPositional> : OrchArgumentCompleter where T
     {
         var drives = ResolveOrchDrives(fakeBoundParameters);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1703,7 +1703,7 @@ internal class PmDirectoryNameCompleter<TPositional> : OrchArgumentCompleter whe
         foreach (var result in results)
         {
             foreach (var entityInfo in result
-                .Where(s => !names.Contains(s.identityName)) // 入力済みのものを除く
+                .Where(s => !names.Contains(s.identityName)) // Exclude already-entered items
                 .Where(s => s.objectType == kind)
                 .OrderBy(s => s.identityName))
             {
@@ -1746,7 +1746,7 @@ internal class PmDirectoryNameCompleter4Du<TPositional> : OrchArgumentCompleter 
         {
             var drive = result.Source;
             foreach (var entityInfo in result
-                .Where(s => !names.Contains(s.identityName)) // 入力済みのものを除く
+                .Where(s => !names.Contains(s.identityName)) // Exclude already-entered items
                 .Where(s => types.Contains(s?.objectType))
                 .OrderBy(s => s.identityName))
             {
@@ -1769,17 +1769,17 @@ internal class UserNameInPmGroupCompleter<TPositional> : OrchArgumentCompleter w
     {
         var drives = ResolvePmDrives(fakeBoundParameters);
 
-        // パラメータで選択済みの UserName は、候補から除外する
+        // Exclude UserNames already selected via the parameter
         var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
         var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        // 指定されたグループの既存のメンバーを取得する
+        // Get existing members of the specified group
         var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", TPositional.Parameters);
         var existingMemberIds = GetExistingMembers(drives, wpGroupName);
 
-        // 各グループの詳細を取得する
+        // Get details for each group
         var results = ParallelResults3.GroupBy(drives, drive =>
         {
             var groups = drive.PmGroups.Get()
@@ -1788,7 +1788,7 @@ internal class UserNameInPmGroupCompleter<TPositional> : OrchArgumentCompleter w
             return ParallelResults3.ForEach(groups, group => drive.PmGroups.Get(group?.id));
         });
 
-        // グループのメンバーとなっている DirectoryUser を収集する
+        // Collect DirectoryUsers that are members of the groups
         List<PmGroupMember> users = [];
         foreach (var result in results)
         {
@@ -1802,7 +1802,7 @@ internal class UserNameInPmGroupCompleter<TPositional> : OrchArgumentCompleter w
             }
         }
 
-        // 条件に合致する DirectoryUser を候補として表示する
+        // Display matching DirectoryUsers as completion candidates
         foreach (var user in users
             .Where(e => wp.IsMatch(e?.name))
             .ExcludeByWildcards(e => e?.name!, wpUserName)
@@ -1825,13 +1825,13 @@ internal class TypeInPmGroupCompleter<TPositional> : OrchArgumentCompleter where
     {
         var drives = ResolvePmDrives(fakeBoundParameters);
 
-        // パラメータで選択済みの UserName は、候補から除外する
+        // Exclude UserNames already selected via the parameter
         var wpType = CreateWPListFromParameter(commandAst, "Type", TPositional.Parameters, wordToComplete);
         var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        // 指定されたグループの既存のメンバーを取得する
+        // Get existing members of the specified group
         var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", TPositional.Parameters);
         var existingMembers = GetExistingMembers(drives, wpGroupName);
 
@@ -1858,7 +1858,7 @@ internal class ExternalApplicationNameCompleter<TPositional> : OrchArgumentCompl
     {
         var drives = ResolvePmDrives(fakeBoundParameters);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1892,11 +1892,11 @@ internal class TestCaseNameCompleter<TPositional> : OrchArgumentCompleter where 
         var paramDepth = GetParameterValue(commandAst, "Depth");
         uint.TryParse(paramDepth, out uint depth);
 
-        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+        // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth); ///////// ★TODO
         
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1930,11 +1930,11 @@ internal class TestDataQueueNameCompleter<TPositional> : OrchArgumentCompleter w
         var paramDepth = GetParameterValue(commandAst, "Depth");
         uint.TryParse(paramDepth, out uint depth);
 
-        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+        // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1968,11 +1968,11 @@ internal class TestScheduleNameCompleter<TPositional> : OrchArgumentCompleter wh
         var paramDepth = GetParameterValue(commandAst, "Depth");
         uint.TryParse(paramDepth, out uint depth);
 
-        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+        // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -2006,11 +2006,11 @@ internal class TestSetNameCompleter<TPositional> : OrchArgumentCompleter where T
         var paramDepth = GetParameterValue(commandAst, "Depth");
         uint.TryParse(paramDepth, out uint depth);
 
-        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+        // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -2032,7 +2032,7 @@ internal class TestSetNameCompleter<TPositional> : OrchArgumentCompleter where T
 }
 
 /// <summary>
-/// TestSetExecution のキャッシュから名前一覧を取得する completer
+/// Completer that retrieves name list from the TestSetExecution cache
 /// </summary>
 internal class TestSetExecutionNameCompleter : OrchArgumentCompleter
 {
@@ -2047,7 +2047,7 @@ internal class TestSetExecutionNameCompleter : OrchArgumentCompleter
         var paramDepth = GetParameterValue(commandAst, "Depth");
         uint.TryParse(paramDepth, out uint depth);
 
-        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+        // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
@@ -2055,7 +2055,7 @@ internal class TestSetExecutionNameCompleter : OrchArgumentCompleter
 
         foreach (var (drive, folder) in drivesFolders)
         {
-            // キャッシュから TestSetExecution の名前一覧を取得（名前で一意にする）
+            // Get TestSetExecution name list from cache (deduplicated by name)
             if (drive._dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out var cached) ?? false)
             {
                 foreach (var testSetExecution in cached.Values
@@ -2072,7 +2072,7 @@ internal class TestSetExecutionNameCompleter : OrchArgumentCompleter
 }
 
 /// <summary>
-/// TestCaseExecution と TestCaseAssertion のキャッシュから Id 一覧を取得する completer
+/// Completer that retrieves Id list from the TestCaseExecution and TestCaseAssertion caches
 /// </summary>
 internal class TestCaseExecutionIdCompleter : OrchArgumentCompleter
 {
@@ -2087,7 +2087,7 @@ internal class TestCaseExecutionIdCompleter : OrchArgumentCompleter
         var paramDepth = GetParameterValue(commandAst, "Depth");
         uint.TryParse(paramDepth, out uint depth);
 
-        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+        // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
@@ -2098,7 +2098,7 @@ internal class TestCaseExecutionIdCompleter : OrchArgumentCompleter
         {
             Int64 folderId = folder.Id ?? 0;
 
-            // TestCaseExecution キャッシュから Id を取得
+            // Get Ids from the TestCaseExecution cache
             if (drive._dicTestCaseExecutions?.TryGetValue(folderId, out var tceCache) ?? false)
             {
                 foreach (var tce in tceCache
@@ -2114,7 +2114,7 @@ internal class TestCaseExecutionIdCompleter : OrchArgumentCompleter
                 }
             }
 
-            // TestCaseAssertion キャッシュから TestCaseExecutionId を取得
+            // Get TestCaseExecutionId from the TestCaseAssertion cache
             if (drive._dicTestCaseAssertions?.TryGetValue(folderId, out var tcaCache) ?? false)
             {
                 foreach (var testCaseExecutionId in tcaCache.Keys
@@ -2133,7 +2133,7 @@ internal class TestCaseExecutionIdCompleter : OrchArgumentCompleter
 }
 
 /// <summary>
-/// TestCaseExecution のキャッシュから EntryPointPath 一覧を distinct して取得する completer
+/// Completer that retrieves a distinct list of EntryPointPath values from the TestCaseExecution cache
 /// </summary>
 internal class TestCaseExecutionEntryPointCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
 {
@@ -2151,7 +2151,7 @@ internal class TestCaseExecutionEntryPointCompleter<TPositional> : OrchArgumentC
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -2194,7 +2194,7 @@ public class PmGroupNameCompleter<TPositional> : OrchArgumentCompleter where TPo
     {
         var drives = ResolvePmDrives(fakeBoundParameters);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -2232,7 +2232,7 @@ internal class PmRobotAccountNameCompleter<TPositional> : OrchArgumentCompleter 
     {
         var drives = ResolvePmDrives(fakeBoundParameters);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -2265,7 +2265,7 @@ internal class PmUserEmailCompleter<TPositional> : OrchArgumentCompleter where T
     {
         var drives = ResolvePmDrives(fakeBoundParameters);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpEmail = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -2300,7 +2300,7 @@ internal class PmLicensedGroupNameCompleter<TPositional> : OrchArgumentCompleter
     {
         var drives = ResolvePmDrives(fakeBoundParameters);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpGroupName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -2335,11 +2335,11 @@ internal class TmRequirementNameCompleter<TPositional> : OrchArgumentCompleter w
     {
         var recurse = GetSwitchParameterValue(commandAst, "Recurse");
 
-        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+        // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         var drivesFolders = SessionState.EnumTmFolders(paramPath, recurse);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -2371,11 +2371,11 @@ internal class TmTestSetNameCompleter<TPositional> : OrchArgumentCompleter where
     {
         var recurse = GetSwitchParameterValue(commandAst, "Recurse");
 
-        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+        // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         var drivesFolders = SessionState.EnumTmFolders(paramPath, recurse);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -2407,11 +2407,11 @@ internal class TmTestCaseNameCompleter<TPositional> : OrchArgumentCompleter wher
     {
         var recurse = GetSwitchParameterValue(commandAst, "Recurse");
 
-        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+        // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         var drivesFolders = SessionState.EnumTmFolders(paramPath, recurse);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -2443,11 +2443,11 @@ internal class TmTestExecutionNameCompleter<TPositional> : OrchArgumentCompleter
     {
         var recurse = GetSwitchParameterValue(commandAst, "Recurse");
 
-        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+        // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         var drivesFolders = SessionState.EnumTmFolders(paramPath, recurse);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -2470,7 +2470,7 @@ internal class TmTestExecutionNameCompleter<TPositional> : OrchArgumentCompleter
 
 #endregion
 
-// このパラメータは、どうせ値をひとつしか受け入れないから、positional param を考慮する必要もない。。
+// This parameter only accepts a single value, so there is no need to consider positional parameters.
 
 internal class StaticTextsCompleter<TItems> : OrchArgumentCompleter where TItems : IPositionalParameters
 {
@@ -2496,7 +2496,7 @@ internal class StaticTextsCompleter<TItems> : OrchArgumentCompleter where TItems
 
 internal class BoolCompleter : StaticTextsCompleter<True_False> { }
 
-// key は必ず string
+// key is always a string
 internal class KeyOfDictionaryCompleter<TItems, TValue> : OrchArgumentCompleter where TItems : IDictionaryItems<TValue>
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
@@ -2522,7 +2522,7 @@ internal class KeyOfDictionaryCompleter<TItems, TValue> : OrchArgumentCompleter 
     }
 }
 
-// value は必ず string
+// value is always a string
 internal class ValueOfDictionaryCompleter<TItems> : OrchArgumentCompleter where TItems : IDictionaryItems<string>
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
@@ -2547,7 +2547,7 @@ internal class ValueOfDictionaryCompleter<TItems> : OrchArgumentCompleter where 
     }
 }
 
-// このパラメータは、どうせ値をひとつしか受け入れないから、positional param を考慮する必要もない。。
+// This parameter only accepts a single value, so there is no need to consider positional parameters.
 internal class TimeAfterCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
@@ -2562,7 +2562,7 @@ internal class TimeAfterCompleter : OrchArgumentCompleter
     }
 }
 
-// このパラメータは、どうせ値をひとつしか受け入れないから、positional param を考慮する必要もない。。
+// This parameter only accepts a single value, so there is no need to consider positional parameters.
 internal class TimeBeforeCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
@@ -2603,7 +2603,7 @@ public class DriveCompleter<TPositional> : OrchArgumentCompleter where TPosition
     {
         var drives = SessionState.EnumAllOrchDrives();
 
-        // パラメータで選択済みのドライブは、候補から除外する
+        // Exclude drives already selected via the parameter
         var wpPath = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var matchingDrives = drives.ExcludeByWildcards(d => d?.NameColon, wpPath);
@@ -2621,12 +2621,12 @@ public class DriveCompleter<TPositional> : OrchArgumentCompleter where TPosition
     }
 }
 
-// positional parameter となっていない -Path パラメータのための drive name completer
+// Drive name completer for the -Path parameter that is not a positional parameter
 public class DriveCompleter : DriveCompleter<Positional.Empty>
 {
 }
 
-// DriveCompleter と良く似ているのだけど、これはコピー元のドライブを除外する機能がある。
+// Similar to DriveCompleter, but this has the ability to exclude the source drive.
 internal class DestinationDriveCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
@@ -2639,7 +2639,7 @@ internal class DestinationDriveCompleter<TPositional> : OrchArgumentCompleter wh
         var sourceDrives = ResolveOrchDrives(fakeBoundParameters);
         var drives = SessionState.EnumAllOrchDrives();
 
-        // パラメータで選択済みのドライブは、候補から除外する
+        // Exclude drives already selected via the parameter
         var wpDestination = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -2669,7 +2669,7 @@ internal class TmDriveCompleter<T> : OrchArgumentCompleter where T : IPositional
     {
         var drives = SessionState.EnumAllTmDrives();
 
-        // パラメータで選択済みのドライブは、候補から除外する
+        // Exclude drives already selected via the parameter
         var wpPath = CreateWPListFromParameter(commandAst, parameterName, T.Parameters, wordToComplete);
         var matchingDrives = drives.ExcludeByWildcards(d => d?.NameColon, wpPath);
 
@@ -2697,11 +2697,11 @@ internal class DuNameCompleter<TPositional> : OrchArgumentCompleter where TPosit
     {
         var recurse = GetSwitchParameterValue(commandAst, "Recurse");
 
-        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+        // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         var drivesProjects = SessionState.EnumDuFolders(paramPath, recurse);
 
-        // パラメータで選択済みの Name は、候補から除外する
+        // Exclude Names already selected via the parameter
         var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -2722,10 +2722,10 @@ internal class DuNameCompleter<TPositional> : OrchArgumentCompleter where TPosit
     }
 }
 
-// 三嶋さん(KDDI)からのリクエスト Add-DuUser に User Principal Name を指定できるように
-// するなら、次が必要だと思うが、良い実装が思いつかない。
-// パフォーマンスを犠牲にするか、あるいは複雑なパラメータを追加するか。。
-// 自分としては、どちらも受け入れがたいな。。
+// Request from Mishima-san (KDDI): To allow specifying a User Principal Name for Add-DuUser,
+// the following would be needed, but I cannot think of a good implementation.
+// Either sacrifice performance or add complex parameters.
+// Personally, neither option is acceptable.
 //internal class DuUserNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
 //{
 //    public override IEnumerable<CompletionResult> CompleteArgument(
@@ -2737,11 +2737,11 @@ internal class DuNameCompleter<TPositional> : OrchArgumentCompleter where TPosit
 //    {
 //        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
 
-//        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+//        // Extract path from the parameter. If not specified, target the current directory.
 //        var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
 //        var drivesProjects = OrchDuDriveInfo.EnumFolders(paramPath, recurse);
 
-//        // パラメータで選択済みの Name は、候補から除外する
+//        // Exclude Names already selected via the parameter
 //        var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
 //        var wp = CreateWPFromWordToComplete(wordToComplete);

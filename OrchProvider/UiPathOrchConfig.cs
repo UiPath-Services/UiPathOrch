@@ -62,7 +62,7 @@ public class PSDrive
     public string? Name { get; set; }
     public string? Description { get; set; }
 
-    // これ、BaseUrl と TenancyName に分けて指定できるようにしたいが、
+    // I'd like to allow specifying this separately as BaseUrl and TenancyName, but...
     private string? _root;
     public string? Root
     {
@@ -146,15 +146,15 @@ public class PSDrive
         IgnoreSslErrors ??= globalSettings?.IgnoreSslErrors;
         Enabled ??= globalSettings?.Enabled;
 
-        // 自動で HttpListener プレフィックスを生成
+        // Auto-generate the HttpListener prefix
         if (string.IsNullOrEmpty(HttpListener) && !string.IsNullOrEmpty(RedirectUrl))
         {
-            // 設定ファイルに HttpListener がない場合は、RedirectUrl から自動生成する
+            // If HttpListener is not in the config file, auto-generate it from RedirectUrl
             Uri redirectUri = new(RedirectUrl!);
             HttpListener = $"{redirectUri.Scheme}://{redirectUri.Host}:{redirectUri.Port}{redirectUri.AbsolutePath}/";
         }
 
-        // ここで自動で IdentityUrl を生成したいのだけど、何だか分からなくなった。。
+        // I'd like to auto-generate the IdentityUrl here, but it got confusing...
         //if (string.IsNullOrEmpty(IdentityUrl))
         //{
         //    IdentityUrl = IsCloud ?

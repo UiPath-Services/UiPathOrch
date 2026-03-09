@@ -68,7 +68,7 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(CredentialStoreNameCompleter<TPositional>))]
-    //[SupportsWildcards] // 面倒なのでいっか
+    //[SupportsWildcards] // Not worth the effort
     public string? UR_CredentialStore { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -127,7 +127,7 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            // Extract the path from parameters. If not specified, target the current directory
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
             var drives = SessionState.EnumOrchDrives(paramPath);
 
@@ -158,7 +158,7 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumOrchDrives(Path);
 
-        // CSV に指定された Roles はカンマで区切る
+        // Split Roles specified in CSV by commas
         var processedRoles = Roles?
              .SelectMany(name => name.Split(',', StringSplitOptions.RemoveEmptyEntries))
              .Select(name => name.Trim());
@@ -191,12 +191,12 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                         continue;
                     }
 
-                    // あとで正しく dirty かどうかを確認できるように、RolesList をソートしておく
+                    // Sort RolesList so we can correctly check for dirty state later
                     detailedUser.RolesList = detailedUser.RolesList?.Order().ToArray();
 
-                    // サーバーから返る Password には "*****" が入っていたりする。
-                    // 間違ってパスワードを "*****" で更新したりしないように、null を入れておく。
-                    // 等値性を正しく判断できるようにするためにも有用だ。
+                    // The Password returned from the server may contain "*****".
+                    // Set it to null to prevent accidentally updating the password with "*****".
+                    // This also helps correctly evaluate equality.
                     if (detailedUser.UnattendedRobot is not null)
                     {
                         detailedUser.UnattendedRobot.Password = null;
@@ -262,7 +262,7 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                     {
                         postingUser.UnattendedRobot ??= new();
                         postingUser.UnattendedRobot.AssignStringIfNotNull(UR_UserName,               (u, v) => u.UserName = v);
-                        postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(UR_Password,               (u, v) => u.Password = v); // Password は API で取得できないため据え置き
+                        postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(UR_Password,               (u, v) => u.Password = v); // Password cannot be retrieved via API, so leave as-is
                         postingUser.UnattendedRobot.AssignStringIfNotNull(UR_CredentialExternalName, (u, v) => u.CredentialExternalName = v);
                         postingUser.UnattendedRobot.AssignStringIfNotNull(UR_CredentialType,         (u, v) => u.CredentialType = v);
                         postingUser.UnattendedRobot.AssignBoolIfNotFalse(UR_LimitConcurrentExecution, u => u.LimitConcurrentExecution, (u, v) => u.LimitConcurrentExecution = v);
@@ -331,8 +331,8 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                         ES_FontSmoothing is not null ||
                         ES_AutoDownloadProcess is not null))
                     {
-                        // UnattendedRobot.ExecutionSetting と合わせて、
-                        // RobotProvision.ExecutionSettings も同じように更新するように修正した。
+                        // Updated to also apply the same changes to RobotProvision.ExecutionSettings,
+                        // in addition to UnattendedRobot.ExecutionSettings.
                         if (postingUser.RobotProvision is not null)
                         {
                             postingUser.RobotProvision.ExecutionSettings ??= new();
@@ -344,13 +344,13 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                             postingUser.UnattendedRobot.ExecutionSettings ??= new();
                             UpdateExecutionSettings(postingUser.UnattendedRobot.ExecutionSettings);
                         }
-                        //if (postingUser.type == 3) // robot の場合
+                        //if (postingUser.type == 3) // for robots
                         //{
 
                         //}
                     }
 
-                    // こういうエラー処理は、API 側に任せた方が良いか。。
+                    // Perhaps this kind of error handling should be left to the API side..
                     //if (postingUser.UpdatePolicy is not null)
                     //{
                     //    if (string.IsNullOrEmpty(postingUser.UpdatePolicy.SpecificVersion) &&
@@ -362,7 +362,7 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                     //}
 
 
-                    //if (user.type == 3) // robot の場合
+                    //if (user.type == 3) // for robots
                     //{
                     //    postingUser.MayHaveUserSession = false; // prohibit 'Standard Interface'
                     //    postingUser.MayHaveUnattendedSession = true;
@@ -372,15 +372,15 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                     //        LimitConcurrentExecution = false,
                     //    };
                     //}
-                    //else if (user.type == 4) // application の場合
+                    //else if (user.type == 4) // for applications
                     //{
                     //    postingUser.MayHaveUserSession = false; // prohibit 'Standard Interface'
                     //}
 
                     if (postingUser.Equals(detailedUser)) continue;
 
-                    // 次のプロパティは、web interface からは POST されていないようだ。
-                    // null を入れておくべきか？
+                    // The following properties do not seem to be POSTed from the web interface.
+                    // Should we set them to null?
                     //postingUser.DirectoryIdentifier = null;
                     //postingUser.Domain = null;
                     //postingUser.Name = null;

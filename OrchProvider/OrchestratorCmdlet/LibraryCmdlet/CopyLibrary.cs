@@ -33,20 +33,20 @@ public class CopyLibraryCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string? Path { get; set; }
 
-    // 宛先のフィードに、同名で同バージョンのライブラリが存在するか？
-    // HostFeed はコピー元についてであるので、このメソッドにおいては HostFeed は考慮する必要はない。
+    // Does a library with the same name and version already exist in the destination feed?
+    // HostFeed pertains to the source, so it does not need to be considered in this method.
     private static bool LibraryExists(OrchDriveInfo drive, LibraryVersion version)
     {
         try
         {
-            // Key でも検索できるんだけど、キャッシュが壊れちゃう。
+            // We could also search by Key, but that would corrupt the cache.
             var dstExistingVersions = drive.GetLibraryVersions(version.Id!);
             if (dstExistingVersions is not null)
             {
                 return dstExistingVersions.Any(v => v.Version == version.Version);
             }
         }
-        catch { } // この例外は握りつぶす
+        catch { } // Swallow this exception
 
         return false;
     }
@@ -135,7 +135,7 @@ public class CopyLibraryCommand : OrchestratorPSCmdlet
                                     string errmsg = $"\"{dstDrive.NameColonSeparator}\": Library copying is disabled because the library feed is set to 'Only host feed'. " +
                                                     $"To enable copying, please go to the tenant settings page and change the Library feeds setting to 'Only tenant feed' " +
                                                     $"or 'Both host and tenant feeds'.";
-                                    // 残りの処理は全部スキップで良いな。
+                                    // We can skip all remaining processing.
                                     _this.WriteError(new ErrorRecord(new InvalidOperationException(errmsg), "CopyLibraryError", ErrorCategory.WriteError, dstDrive));
                                     return;
                                 }
@@ -146,7 +146,7 @@ public class CopyLibraryCommand : OrchestratorPSCmdlet
 
                             if (srcDrive == dstDrive) continue;
 
-                            // dstDrive に同名のパッケージがあれば、警告を表示してコピーをスキップする
+                            // If a library with the same name already exists in dstDrive, show a warning and skip the copy
                             if (LibraryExists(dstDrive, version))
                             {
                                 _this.WriteError(new ErrorRecord(new InvalidOperationException($"\"{version.GetPSPath()}:{version.Version}\": Library already exists in {dstDrive.NameColonSeparator}. Skipping the copy."), "CopyLibraryError", ErrorCategory.WriteError, dstDrive));
@@ -155,7 +155,7 @@ public class CopyLibraryCommand : OrchestratorPSCmdlet
 
                             if (shouldProcess || _this.ShouldProcess(target, $"Copy Library"))
                             {
-                                // 進捗は、実際にコピーするときにだけ表示された方が良い
+                                // Progress should only be displayed when actually copying
                                 reporter2.WriteProgress(++index2, $"{key}.nupkg to {dstDrive.NameColonSeparator}");
 
                                 if (fileName is null)
@@ -186,7 +186,7 @@ public class CopyLibraryCommand : OrchestratorPSCmdlet
 
         var wpId = Id.ConvertToWildcardPatternList();
         var wpVersion = Version
-            .Split1stValueByUnescapedCommas() // CSV から入力されている可能性があるので、カンマで区切る
+            .Split1stValueByUnescapedCommas() // May come from CSV input, so split by commas
             .ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
@@ -194,10 +194,10 @@ public class CopyLibraryCommand : OrchestratorPSCmdlet
 
 
 
-        // マルチスレッド版。ちゃんと動作しているが、シングルスレッドで書き直すことにした。
-        // コピー元ドライブをマルチスレッドにすることは意味がなかった。。
-        // GetLibraries() はコストが安いし、各ドライブに対して一度しか実行しない
-        // そもそも、コピー元はひとつしか指定できないようにしてあるしな。。
+        // Multi-threaded version. It works correctly, but we decided to rewrite it as single-threaded.
+        // Making the source drives multi-threaded turned out to be pointless..
+        // GetLibraries() is cheap and only runs once per drive.
+        // Besides, only one source can be specified anyway..
         //using var results = OrchThreadPool.RunForEach(srcDrives,
         //    drive => drive.NameColonSeparator,
         //    drive => drive,
@@ -239,7 +239,7 @@ public class CopyLibraryCommand : OrchestratorPSCmdlet
 
         //                        if (srcDrive == dstDrive) continue;
 
-        //                        // dstDrive に同名のパッケージがあれば、警告を表示してコピーをスキップする
+        //                        // If a library with the same name already exists in dstDrive, show a warning and skip the copy
         //                        if (LibraryExists(dstDrive, version))
         //                        {
         //                            WriteError(new ErrorRecord(new InvalidOperationException($"\"{version.GetPSPath()}:{version.Version}\": Library already exists in {dstDrive.NameColonSeparator}. Skipping the copy."), "CopyLibraryError", ErrorCategory.WriteError, dstDrive));
@@ -248,7 +248,7 @@ public class CopyLibraryCommand : OrchestratorPSCmdlet
 
         //                        if (ShouldProcess(target, $"Copy Library"))
         //                        {
-        //                            // 進捗は、実際にコピーするときにだけ表示された方が良い
+        //                            // Progress should only be displayed when actually copying
         //                            reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {key}.nupkg to {dstDrive.NameColonSeparator}");
 
         //                            if (fileName is null)

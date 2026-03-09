@@ -59,10 +59,10 @@ public class GetQueueCommand : OrchestratorPSCmdlet
         "Tags"
     ];
 
-    // TODO: detailedQueue をキャッシュすべきだ。
+    // TODO: detailedQueue should be cached.
     private void WriteCsvContent(StreamWriter writer, IEnumerable<Entities.QueueDefinition> output)
     {
-        // 各キューに対してデータ行を書き込む
+        // Write data rows for each queue
         foreach (var q in output)
         {
             var (drive, folder) = SessionState.EnumFolders(q.Path).First();

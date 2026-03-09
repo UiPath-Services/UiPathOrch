@@ -13,10 +13,10 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
     // Key: (drive, group), Value: Members
     private Dictionary<(OrchDriveInfo drive, PmGroup group), HashSet<PmGroupMember>>? _parameterSets = null;
 
-    // CSV で重複した行を除去するために使う
+    // Used to remove duplicate rows from CSV
     private Dictionary<(OrchDriveInfo drive, PmGroup group), HashSet<PmGroupMember>>? _visitedUsersHash = null;
 
-    // CSV で指定したユーザー名ワイルドカードの重複を除去するために使う
+    // Used to remove duplicate user name wildcard patterns from CSV
     private HashSet<(OrchDriveInfo drive, PmGroup group, string type, string userName)>? _visitedUserPatterns = null;
 
     private class DirectoryType(int type, string objectKind)
@@ -59,14 +59,14 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumPmDrives(Path);
 
-        // CSV に指定された GroupName はカンマで区切る
+        // Split GroupName specified in CSV by commas
         var groupName = GroupName!
             .SelectMany(g => g.Split(',', StringSplitOptions.RemoveEmptyEntries))
             .Select(g => g.Trim())
             .ToArray();
         var wpGroupName = groupName.ConvertToWildcardPatternList();
 
-        // CSV に指定された Type はカンマで区切る
+        // Split Type specified in CSV by commas
         var type = Type!
              .SelectMany(t => t.Split(',', StringSplitOptions.RemoveEmptyEntries))
              .Select(t => t.Trim())
@@ -75,8 +75,8 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
 
         var wpUserName = UserName.ConvertToWildcardPatternList();
 
-        // 指定されたパラメータを保持する
-        // ドライブ、グループ、ユーザーは展開する
+        // Preserve the specified parameters.
+        // Expand drives, groups, and users.
         foreach (var drive in drives)
         {
             var targetGroups = drive.PmGroups.Get()
@@ -91,7 +91,7 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
 
             foreach (var group in targetGroups)
             {
-                // このグループのメンバを取得
+                // Get the members of this group
                 var detailedGroup = drive.PmGroups.Get(group?.id);
 
                 var targetMembers = detailedGroup?.members?
@@ -101,7 +101,7 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
                 if (NoMatchWarning.IsPresent && !(targetMembers?.Any() ?? false))
                 {
                     _visitedUserPatterns ??= [];
-                    // ちょっと雑だけど、CSV を処理する場合は配列にひとつの要素しかないのでこれで十分か。
+                    // A bit rough, but when processing CSV, there's only one element in the array, so this is sufficient.
                     if (!_visitedUserPatterns.Add((drive, group!, Type![0], UserName![0])))
                         continue;
 
@@ -109,7 +109,7 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
 
                     continue;
                 }
-                if (targetMembers is null) continue; // !WarnOnNoMatch.IsPresent の場合を考慮
+                if (targetMembers is null) continue; // Handle the case when !WarnOnNoMatch.IsPresent
 
                 foreach (var member in targetMembers)
                 {
@@ -122,7 +122,7 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
 
                     if (!visitedUsers!.Add(member))
                     {
-                        // 処理済みなのでスキップする
+                        // Already processed, so skip
                         continue;
                     }
 

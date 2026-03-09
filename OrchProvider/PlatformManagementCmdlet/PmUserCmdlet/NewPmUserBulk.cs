@@ -9,9 +9,9 @@ namespace UiPath.PowerShell.Commands;
 
 class CsvLine(string? name, string? surname, string? displayName, string? type, string? bypassBasicAuthRestriction, string? invitationAccepted)
 {
-    // id は API call 時に new Guid() で生成
-    // email は Dictionary の Key で管理
-    // userName は email と同じものにする
+    // id is generated with new Guid() at API call time
+    // email is managed as the Dictionary key
+    // userName is set to the same value as email
     public string? name { get; set; } = name;
     public string? surname { get; set; } = surname;
     public string? displayName { get; set; } = displayName;
@@ -20,27 +20,27 @@ class CsvLine(string? name, string? surname, string? displayName, string? type, 
     public bool? invitationAccepted { get; set; } = invitationAccepted.ToNullableBool();
 }
 
-// TODO: これは OrchComparer.cs に移すべきだ多分。
+// TODO: This should probably be moved to OrchComparer.cs.
 internal class DriveGroupIdsComparer : IEqualityComparer<(OrchDriveInfo drive, string[] groupIds)>
 {
     public bool Equals((OrchDriveInfo drive, string[] groupIds) x, (OrchDriveInfo drive, string[] groupIds) y)
     {
-        // drive は単純な参照比較
+        // drive uses simple reference comparison
         if (!ReferenceEquals(x.drive, y.drive))
         {
             return false;
         }
 
-        // groupIds は内容を比較
+        // groupIds uses content comparison
         return x.groupIds.SequenceEqual(y.groupIds);
     }
 
     public int GetHashCode((OrchDriveInfo drive, string[] groupIds) obj)
     {
-        // drive のハッシュコードを使用
+        // Use the hash code of drive
         int hash = obj.drive.GetHashCode();
 
-        // groupIds の内容に基づいてハッシュコードを計算
+        // Calculate hash code based on the contents of groupIds
         foreach (var guid in obj.groupIds)
         {
             hash = hash ^ guid.GetHashCode();
@@ -93,7 +93,7 @@ public class NewPmUserCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        // CSV に指定された GroupName はカンマで区切る
+        // Split GroupName specified in CSV by commas
         var groupNameEnum = GroupName.Split1stValueByUnescapedCommas();
 
         _params ??= [];
@@ -103,13 +103,13 @@ public class NewPmUserCommand : OrchestratorPSCmdlet
         foreach (var drive in drives)
         {
             var groups = drive.PmGroups.Get();
-            // 既存のグループ名はケースを無視する必要はないが、新規作成のグループ名についてはケースを無視しておかないと。
+            // Case sensitivity doesn't matter for existing group names, but we need to ignore case for newly created group names.
             HashSet<string> groupNames = new(StringComparer.OrdinalIgnoreCase);
             
             foreach (var groupName in groupNameEnum ?? [])
             {
-                // グループ名がワイルドカードを含んでいれば展開、そうでなければそのまま保持
-                // で、そのまま保持した名前のグループが存在しなければ、後でグループを作成
+                // If the group name contains wildcards, expand them; otherwise keep it as-is.
+                // If a group with the kept name doesn't exist, create it later.
                 if (WildcardPattern.ContainsWildcardCharacters(groupName))
                 {
                     var wpGroupName = new WildcardPattern(groupName, WildcardOptions.IgnoreCase);
@@ -124,7 +124,7 @@ public class NewPmUserCommand : OrchestratorPSCmdlet
                 }
             }
 
-            string[] orderedGroupNames = [.. groupNames.Order()]; // キーとして利用できるようにソートする
+            string[] orderedGroupNames = [.. groupNames.Order()]; // Sort so it can be used as a key
 
             string target = System.IO.Path.Combine(drive.NameColonSeparator, Email!);
             if (_params.TryGetValue((drive, orderedGroupNames)!, out var userName_line))
@@ -160,7 +160,7 @@ public class NewPmUserCommand : OrchestratorPSCmdlet
             var drive = param.Key.drive;
             var groupNames = param.Key.groupNames;
 
-            // グループ名からグループ ID を取得
+            // Get group IDs from group names
             List<string> groupIds = [];
             foreach (var groupName in groupNames)
             {
@@ -192,7 +192,7 @@ public class NewPmUserCommand : OrchestratorPSCmdlet
                     invitationAccepted = line.invitationAccepted
                 };
 
-                // userName と email の両方に email を入れる
+                // Set the email value in both userName and email fields
                 user.AssignStringIfNotNullOrEmpty(email,            (u, v) => u.userName = v);
                 user.AssignStringIfNotNullOrEmpty(email,            (u, v) => u.email = v);
                 user.AssignStringIfNotNullOrEmpty(line.name,        (u, v) => u.name = v);

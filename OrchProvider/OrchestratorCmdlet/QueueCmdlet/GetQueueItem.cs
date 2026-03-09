@@ -115,7 +115,7 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude Names already selected by the parameter from the candidates
             var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -153,7 +153,7 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude Names already selected by the parameter from the candidates
             var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -180,7 +180,7 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
         }
     }
 
-    // RobotId eq / ReviewerUserId eq は 21件以上で API が 400 を返す
+    // RobotId eq / ReviewerUserId eq causes API to return 400 when there are 21 or more items
     private const int SimpleFieldBatchSize = 15;
 
     private IReadOnlyList<long?>? ResolveRobotIds(OrchDriveInfo drive, Folder folder)
@@ -268,7 +268,7 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
             filter.Add($"(EndProcessing lt {EndProcessingBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
         }
 
-        //filter.Add("Id gt 18288985"); // Id も query に使えるようだ。
+        //filter.Add("Id gt 18288985"); // It seems Id can also be used in queries.
         string ret = filter.CreateAndFilter(s => s);
         return $"&$filter={ret}";
     }
@@ -302,7 +302,7 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
             {
                 if (drive._dicQueueItems?.TryGetValue(folder.Id!.Value, out var queueItemsPerFolder) ?? false)
                 {
-                    foreach (var queuesItems in queueItemsPerFolder.OrderBy(q => q.Key)) // キューの名前でソート
+                    foreach (var queuesItems in queueItemsPerFolder.OrderBy(q => q.Key)) // Sort by queue name
                     {
                         var queueName = queuesItems.Key;
                         var queueItemId_items = queuesItems.Value;
@@ -365,15 +365,15 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
                 continue;
             }
 
-            // フォルダごとにロボット/レビュアーIDを解決してバッチ分割
-            // RobotId eq / ReviewerUserId eq は 21件以上で API が 400 を返すため
+            // Resolve robot/reviewer IDs per folder and split into batches
+            // RobotId eq / ReviewerUserId eq causes API to return 400 when there are 21 or more items
             var allRobotIds = ResolveRobotIds(drive, folder);
             var allReviewerIds = ResolveReviewerIds(drive, folder);
 
             if (Robot is not null && Robot.Length != 0 && allRobotIds is not null && allRobotIds.Count == 0)
-                continue; // 一致するロボットなし
+                continue; // No matching robots
             if (Reviewer is not null && Reviewer.Length != 0 && allReviewerIds is not null && allReviewerIds.Count == 0)
-                continue; // 一致するレビュアーなし
+                continue; // No matching reviewers
 
             IReadOnlyList<IReadOnlyList<long?>?> robotBatches;
             if (allRobotIds is null || allRobotIds.Count <= SimpleFieldBatchSize)
@@ -401,7 +401,7 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
                 //reporterQueue.WriteProgress(++indexQueue, queue.GetPSPath());
                 reporterQueue.WriteProgress(++indexQueue);
 
-                int first = First ?? int.MaxValue; // first は、キューごとにリセット
+                int first = First ?? int.MaxValue; // first is reset per queue
                 int skip = Skip ?? 0;
 
                 int intReporterItemTotal = isBatched ? 0 : (int)first;
@@ -429,7 +429,7 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
                                     foreach (var item in items) allItems.Add(item);
                                 else
                                     WriteObject(items, true);
-                                Thread.Sleep(600); // API call rate limit を回避するため待機する
+                                Thread.Sleep(600); // Wait to avoid API call rate limit
 
                                 if (items.Count < 100) break;
                                 localSkip += items.Count;
@@ -458,7 +458,7 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
         }
 
 
-        // multi-threaded な実装。rate limit があるから、single thread で待機しながら回した方が良い。
+        // Multi-threaded implementation. Since there is a rate limit, it's better to use single thread with waits.
         //using var cancelHandler = new ConsoleCancelHandler();
         //foreach (var (drive, folder) in drivesFolders)
         //{
@@ -497,7 +497,7 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
         //            var queueItems = item.GetResult(cancelHandler.Token);
         //            if (queueItems is null) continue;
 
-        //            // Skip と First をサポートするコマンドレットでは OrderBy してはいけない
+        //            // Cmdlets that support Skip and First must not OrderBy
         //            foreach (var queueItem in queueItems)
         //            {
         //                WriteObject(queueItem);

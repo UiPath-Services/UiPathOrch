@@ -64,7 +64,7 @@ public class NewBucketCommand : OrchestratorPSCmdlet
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
             var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Buckets.Get(df.folder));
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude Names already selected by parameter from candidates
             var names = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
             var entities = results.SelectMany(e => e);

@@ -18,7 +18,7 @@ using System.Net;
 
 namespace UiPath.PowerShell.Commands;
 
-#region 実装方法を探し中..
+#region Searching for implementation approach..
 
 #if false
 
@@ -75,7 +75,7 @@ public class ConnectMachineCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        // job から key を取得
+        // Get the key from the job
         EnsureLocationInOrchestratorFolder();
         Folder folder = OrchDriveInfo.GetCurrentFolder();
         var job = OrchAPI.GetJob(folder!.Id ?? 0, JobId ?? 0);

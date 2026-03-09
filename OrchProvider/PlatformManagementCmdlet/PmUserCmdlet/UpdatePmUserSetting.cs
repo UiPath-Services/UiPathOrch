@@ -8,7 +8,7 @@ using TPositional = UiPath.PowerShell.Positional.Email_Language;
 
 namespace UiPath.PowerShell.Commands;
 
-// なんだかうまく動かないな。。いったん保留で。
+// This doesn't seem to work properly... putting on hold for now.
 [Cmdlet(VerbsData.Update, "PmUserSetting")]
 //[OutputType(typeof(Entities.PmUser))]
 class UpdatePmUserSettingCommand : OrchestratorPSCmdlet

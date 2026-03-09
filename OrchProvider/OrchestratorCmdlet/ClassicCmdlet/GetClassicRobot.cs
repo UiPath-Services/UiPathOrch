@@ -52,7 +52,7 @@ public class GetClassicRobotCommand : OrchestratorPSCmdlet
     {
         foreach (var r in output)
         {
-            #region CredentialStoreId を Name に変換
+            #region Convert CredentialStoreId to Name
             //string credentialStoreName = null;
             //if (r?.Robot?.CredentialStoreId is not null)
             //{

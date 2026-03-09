@@ -95,7 +95,7 @@ public class UpdateQueueCommand : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
-    // キューの Tags 専用
+    // Dedicated to queue Tags
     private class TagsCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -107,7 +107,7 @@ public class UpdateQueueCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Id は、候補から除外する
+            // Exclude Names already selected by the parameter from the candidates
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
             var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Queues.Get(df.folder));
@@ -159,12 +159,12 @@ public class UpdateQueueCommand : OrchestratorPSCmdlet
                 //QueueDefinition newQueue = OrchCollectionExtensions.DeepCopyAsSubClass<QueueDefinition, QueueDefinitionPosting>(queue);
                 QueueDefinition newQueue = OrchCollectionExtensions.DeepCopy<QueueDefinition>(queue);
 
-                #region 現在の Retention を取得
+                #region Get the current Retention settings
                 QueueRetentionSetting retention = null;
                 try
                 {
-                    // TODO: 15 で成功するか？ たぶん失敗するはず
-                    // 16 で成功することは確認済み
+                    // TODO: Will this succeed with version 15? Probably not
+                    // Confirmed to succeed with version 16
                     if (drive.OrchAPISession.ApiVersion >= 16)
                     {
                         retention = drive.OrchAPISession.GetQueueRetention(folder.Id ?? 0, queue.Id ?? 0);
@@ -187,7 +187,7 @@ public class UpdateQueueCommand : OrchestratorPSCmdlet
                 newQueue.AssignStringIfNotNull(StaleRetentionAction, (q, v) => q.StaleRetentionAction = v);
                 newQueue.AssignNumberIfNotNullOrZero(StaleRetentionPeriod, (q, v) => q.StaleRetentionPeriod = v);
 
-                #region RetentionBucket を RetentionBucketId に変換
+                #region Convert RetentionBucket to RetentionBucketId
                 newQueue.AssignIdFromName(
                     RetentionBucket,
                     () => drive.Buckets.Get(folder),
@@ -235,7 +235,7 @@ public class UpdateQueueCommand : OrchestratorPSCmdlet
                 newQueue.AssignNumberIfNotNullOrZero(SlaInMinutes,             (q, v) => q.SlaInMinutes = v);
                 newQueue.AssignNumberIfNotNullOrZero(RiskSlaInMinutes,         (q, v) => q.RiskSlaInMinutes= v);
 
-                #region Release を ReleaseId に変換する
+                #region Convert Release to ReleaseId
                 newQueue.AssignIdFromName(
                     Release,
                     () => drive.GetReleases(folder),

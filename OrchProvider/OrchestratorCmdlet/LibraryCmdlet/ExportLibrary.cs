@@ -42,7 +42,7 @@ public class ExportLibraryCommand : OrchestratorPSCmdlet
             Destination = SessionState.Path.CurrentFileSystemLocation.Path;
         }
 
-        // PSDrive のパスを、実際のファイルシステムのパスに変換
+        // Convert the PSDrive path to the actual file system path
         Destination = SessionState.Path.GetUnresolvedProviderPathFromPSPath(Destination);
 
         if (!Directory.Exists(Destination))
@@ -50,8 +50,8 @@ public class ExportLibraryCommand : OrchestratorPSCmdlet
             throw new DirectoryNotFoundException($"A directory '{Destination}' does not exist.");
         }
 
-        // 最初にすべてまとめて非同期に API call するバージョン
-        // ちゃんと動いているけど、API call の数が多すぎてしまうかも。
+        // Version that makes all API calls asynchronously upfront
+        // It works correctly, but might result in too many API calls.
 #if false
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,
@@ -116,10 +116,10 @@ public class ExportLibraryCommand : OrchestratorPSCmdlet
             }
         }
 #endif
-        // 最初の GetLibrary() だけ非同期に実行するバージョン
-        // GetLibraryVersion() は、ダウンロードの直前に呼び出す。
-        // これくらいの方がバランスが良いか。
-        // GetLibraryVersion() の実行時間は、さほど長くないし。
+        // Version that only runs the initial GetLibrary() asynchronously.
+        // GetLibraryVersion() is called just before download.
+        // This is probably a better balance.
+        // GetLibraryVersion() execution time is not that long anyway.
 #if true
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,
@@ -134,7 +134,7 @@ public class ExportLibraryCommand : OrchestratorPSCmdlet
             try
             {
                 var libraries = result.GetResult(cancelHandler.Token);
-                var drive = result.Source; // Source プロパティを参照するのは、GetResult() の後にする必要がある
+                var drive = result.Source; // The Source property must be accessed after GetResult()
 
                 foreach (var library in libraries!
                     .FilterByWildcards(l => l?.Id, wpId)

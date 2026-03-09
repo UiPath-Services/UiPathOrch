@@ -35,7 +35,7 @@ public class CopyTriggerCommand : OrchestratorPSCmdlet
 
         var (dstDrive, dstRootFolder) = SessionState.ResolveToSingleFolder(Destination);
 
-        // コピー元とコピー先が同じなら、何もしない
+        // If source and destination are the same, do nothing
         if (srcRootFolder == dstRootFolder) return;
 
         var wpName = Name.ConvertToWildcardPatternList();
@@ -48,7 +48,7 @@ public class CopyTriggerCommand : OrchestratorPSCmdlet
 
             try
             {
-                // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
+                // If there are no entities to copy, there is no need to look up the dstFolder
                 //srcDrive._dicTriggers?.TryRemove(srcFolder.Id ?? 0, out _);
                 var srcEntities = srcDrive.GetTriggers(srcFolder).FilterByWildcards(e => e?.Name, wpName);
                 if (!srcEntities.Any()) continue;
@@ -62,7 +62,7 @@ public class CopyTriggerCommand : OrchestratorPSCmdlet
             Folder? dstFolder = this.GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
             if (dstFolder is null || srcFolder == dstFolder) continue;
 
-            // キャッシュをクリアしておく
+            // Clear the cache beforehand
             dstDrive.FolderMachinesAssigned.ClearCache(dstFolder);
 
             try

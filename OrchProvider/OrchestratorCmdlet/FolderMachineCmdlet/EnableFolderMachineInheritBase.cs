@@ -27,7 +27,7 @@ public class EnableFolderMachineInheritCommandBase<EnableInherit> : Orchestrator
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude Names already selected via parameter from the candidates
             var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -86,7 +86,7 @@ public class EnableFolderMachineInheritCommandBase<EnableInherit> : Orchestrator
                         try
                         {
                             drive.OrchAPISession.SetFolderMachineInherit(folder.Id!.Value, machine.Id!.Value, EnableInherit.Value);
-                            // 本当は、このフォルダーとそのサブフォルダーのキャッシュだけをクリアすべきだが、
+                            // Ideally, we should only clear the cache for this folder and its subfolders, but
                             drive.FolderMachinesAssigned.ClearCache();
                         }
                         catch (Exception ex)

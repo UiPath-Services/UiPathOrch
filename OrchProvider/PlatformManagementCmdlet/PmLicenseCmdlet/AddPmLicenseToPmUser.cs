@@ -13,7 +13,7 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.UpdateLicensedGroupResponse))]
 public class AddPmLicenseToPmUserCmdlet : OrchestratorPSCmdlet
 {
-    // code を管理
+    // Manages license codes
     //private Dictionary<(OrchDriveInfo drive, NuLicensedGroup group), HashSet<string>>? _parameterSets;
     private Dictionary<(OrchDriveInfo drive, PmDirectoryEntityInfo group), HashSet<string>>? _parameterSets;
 
@@ -49,7 +49,7 @@ public class AddPmLicenseToPmUserCmdlet : OrchestratorPSCmdlet
 
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            // パラメータで選択済みのユーザー名は、候補から除外する
+            // Exclude user names already selected via parameters from candidates
             var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -131,9 +131,8 @@ public class AddPmLicenseToPmUserCmdlet : OrchestratorPSCmdlet
         {
             foreach (var email in Email ?? [])
             {
-                // licensed user でなければ 
-                // POST /portal_/api/license/accountant/UserLicense/users
-                // を呼ぶ
+                // If not a licensed user,
+                // call POST /portal_/api/license/accountant/UserLicense/users
 
                 var existingLicensedUsers = drive.PmLicensedUsers.Get();
                 var targetUser = existingLicensedUsers.FirstOrDefault(e => string.Compare(e.name, email, true) == 0);
@@ -143,7 +142,7 @@ public class AddPmLicenseToPmUserCmdlet : OrchestratorPSCmdlet
                     var resolvedUser = drive.PmBulkResolveByName("user", [email], e => e, null);
                     if (resolvedUser == null || !resolvedUser.Any())
                     {
-                        // 指定のユーザーは存在しない
+                        // The specified user does not exist
                         continue;
                     }
 

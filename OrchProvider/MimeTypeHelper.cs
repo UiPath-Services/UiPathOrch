@@ -4,7 +4,7 @@ public static class MimeTypeHelper
 {
     private static readonly Dictionary<string, string> MimeTypes = new(StringComparer.OrdinalIgnoreCase)
     {
-        // 画像ファイル
+        // Image files
         { ".gif",  "image/gif" },
         { ".jpg",  "image/jpeg" },
         { ".jpeg", "image/jpeg" },
@@ -16,7 +16,7 @@ public static class MimeTypeHelper
         { ".tiff", "image/tiff" },
         { ".tif",  "image/tiff" },
 
-        // ドキュメント
+        // Documents
         { ".pdf",  "application/pdf" },
         { ".doc",  "application/msword" },
         { ".docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
@@ -34,7 +34,7 @@ public static class MimeTypeHelper
         { ".ppt",  "application/vnd.ms-powerpoint" },
         { ".pptx", "application/vnd.openxmlformats-officedocument.presentationml.presentation" },
 
-        // テキスト
+        // Text
         { ".txt",  "text/plain" },
         { ".html", "text/html" },
         { ".htm",  "text/html" },
@@ -45,14 +45,14 @@ public static class MimeTypeHelper
         { ".csv",  "text/csv" },
         { ".rtf",  "application/rtf" },
 
-        // アーカイブ
+        // Archives
         { ".zip", "application/zip" },
         { ".rar", "application/vnd.rar" },
         { ".7z",  "application/x-7z-compressed" },
         { ".tar", "application/x-tar" },
         { ".gz",  "application/gzip" },
 
-        // 音声・動画
+        // Audio and video
         { ".mp3",  "audio/mpeg" },
         { ".wav",  "audio/wav" },
         { ".flac", "audio/flac" },
@@ -62,7 +62,7 @@ public static class MimeTypeHelper
         { ".wmv",  "video/x-ms-wmv" },
         { ".flv",  "video/x-flv" },
 
-        // その他
+        // Other
         { ".exe", "application/x-msdownload" },
         //{ ".msi", "application/octet-stream" },
         { ".dll", "application/x-msdownload" }

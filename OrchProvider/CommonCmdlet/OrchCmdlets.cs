@@ -53,13 +53,13 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
     {
         if (value is null) return "";
 
-        // PowerShell のワイルドカード文字をエスケープ
+        // Escape PowerShell wildcard characters
         if (escapeWildcard)
         {
             value = WildcardPattern.Escape(value);
         }
 
-        // CSV特有のエスケープ処理
+        // CSV-specific escaping
         if (value.IndexOfAny([',', '"', '\n', '\r']) >= 0)
         {
             return $"\"{value.Replace("\"", "\"\"")}\"";
@@ -115,14 +115,14 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
 
         string format = "yyyy-MM-ddTHH:mm:ss";
 
-        // Utcの場合、末尾にZを付加
+        // If UTC, append "Z" suffix
         if (dateTime.Value.Kind == DateTimeKind.Utc)
         {
             return dateTime.Value.ToString(format) + "Z";
         }
         else
         {
-            // LocalまたはUnspecifiedの場合
+            // Local or Unspecified
             return dateTime.Value.ToString(format);
         }
     }
@@ -138,7 +138,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         {
             resolvedPaths = state.Path.GetResolvedPSPathFromPSPath(paramExportCsv);
         }
-        catch // (ディレクトリパスではなく) ファイルパスを指定した場合は、存在しないファイル名を除外して親フォルダパスを探し直す
+        catch // If a file path (not a directory path) was specified, strip the non-existent file name and re-resolve the parent folder path
         {
             string parentFolder = Path.GetDirectoryName(paramExportCsv);
             defaultFileName = Path.GetFileName(paramExportCsv);
@@ -163,7 +163,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
                 psPath = resolvedPath.Path;
                 physicalPath = resolvedPath.ProviderPath;
                 break;
-            //case 0: // GetResolvedPSPathFromPSPath() が例外をスローするはずなので、これはない
+            //case 0: // This should not happen because GetResolvedPSPathFromPSPath() would throw an exception
                 //var parentFolder = Path.GetDirectoryName(paramExportCsv);
                 //var fileName = Path.GetFileName(paramExportCsv);
                 //resolvedPaths = state.Path.GetResolvedPSPathFromPSPath(parentFolder);
@@ -194,32 +194,32 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
 
         encoding ??= Encoding.Default;
 
-        // utf-8 の場合には、BOM を追加する
+        // For UTF-8, add a BOM
         if (encoding is UTF8Encoding)
         {
             encoding = new UTF8Encoding(true);
         }
-        // utf-16 or utf-16BE が指定された場合にも BOM を追加する
+        // For UTF-16 or UTF-16BE, also add a BOM
         else if (encoding is UnicodeEncoding unicodeEncoding)
         {
-            // エンディアンをバイト配列から確認する
+            // Determine endianness from the byte array
             byte[] testBytes = unicodeEncoding.GetBytes("A");
 
-            // ビッグエンディアンの場合、"A" (U+0041) のバイト配列は [0x00, 0x41] になる
+            // For big-endian, "A" (U+0041) is encoded as [0x00, 0x41]
             bool isBigEndian = testBytes[0] == 0x00 && testBytes[1] == 0x41;
 
-            // BOM 付きの UnicodeEncoding に変換
+            // Convert to a UnicodeEncoding with BOM
             encoding = new UnicodeEncoding(isBigEndian, true);
         }
         else if (encoding is UTF32Encoding utf32Encoding)
         {
-            // UTF-32 エンコーディングの場合、エンディアンをバイト配列から確認する
+            // For UTF-32 encoding, determine endianness from the byte array
             byte[] testBytes = utf32Encoding.GetBytes("A");
 
-            // ビッグエンディアンの場合、"A" (U+0041) のバイト配列は [0x00, 0x00, 0x00, 0x41] になる
+            // For big-endian, "A" (U+0041) is encoded as [0x00, 0x00, 0x00, 0x41]
             bool isBigEndian = testBytes[0] == 0x00 && testBytes[1] == 0x00 && testBytes[2] == 0x00 && testBytes[3] == 0x41;
 
-            // BOM 付きの UTF32Encoding に変換
+            // Convert to a UTF32Encoding with BOM
             encoding = new UTF32Encoding(isBigEndian, true);
         }
 
@@ -275,9 +275,9 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
 
         List<MachineRobotSessionForSerialize> mrss = [];
 
-        // drive.RobotsFromFolder.Get(folder) を使う方が、どんなタイミングでも期待通り動きそうだけど
-        // completer の実装においては、パフォーマンスも大事かな。。
-        // すでに登録済みの内容をシリアライズするのだし、drive.Robots.Get() でも動きそうな気がする
+        // Using drive.RobotsFromFolder.Get(folder) would be more reliable in all scenarios,
+        // but performance matters for the completer implementation.
+        // Since we are serializing already-registered content, drive.Robots.Get() should work fine.
         var robots = drive.Robots.Get();
         foreach (var mr in machineRobots)
         {
@@ -301,7 +301,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
             if (string.IsNullOrEmpty(sessionName) && (mr.SessionId.GetValueOrDefault() != 0))
             {
                 var session = drive.MachineSessionRuntimesByFolder.Get(folder)
-                    //.Where(s => s.RuntimeType == "Unattended") // これ不要。RuntimeType が違っても SessionId は同じになるため。
+                    //.Where(s => s.RuntimeType == "Unattended") // Not needed. SessionId is the same regardless of RuntimeType.
                     .Where(s => s.SessionId == mr.SessionId)
                     .FirstOrDefault();
                 sessionName = session?.HostMachineName + " - " + session?.ServiceUserName;
@@ -322,8 +322,8 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
     private readonly Lazy<HashSet<string>> ValidScopes = new(() =>
         ["Default", "Shared", "PersonalWorkspace", "Cloud", "AutomationCloudRobot", "ElasticRobot"]);
 
-    // executorRobots は RobotName の列挙を渡す
-    // SelectMany() の結果を連結しているから、内部で List<RobotExecutor> を構築する必要はない。その方が効率的。
+    // executorRobots receives an enumeration of RobotName values.
+    // Since we concatenate SelectMany() results, there is no need to build an internal List<RobotExecutor>. This is more efficient.
     internal static RobotExecutor[]? DeserializeExecutorRobots(IWritableHost? _this, OrchDriveInfo drive, Folder folder, string target, IEnumerable<string>? executorRobots)
     {
         if (executorRobots is null || executorRobots.All(string.IsNullOrEmpty)) return null;
@@ -334,7 +334,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
             var result = executorRobots
                 .SelectMany(executorRobot =>
                 {
-                    // 合致するロボット一覧を抽出
+                    // Extract matching robots
                     var wpRobotName = new WildcardPattern(executorRobot, WildcardOptions.IgnoreCase);
                     var targetRobots = robots.Where(r => wpRobotName.IsMatch(r.Name));
 
@@ -366,15 +366,15 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         {
             var tenantUsers = drive.GetUsers();
 
-            // これを呼び出しておかないと、Orchestrator がロボットの検索に失敗してしまう
-            // んだけど、GetUsers() で置き換えたからもう呼ばなくても良いな。
+            // This call was previously needed to prevent Orchestrator from failing to find robots,
+            // but since we replaced it with GetUsers(), it is no longer necessary.
             //_ = drive.RobotsFromFolder.Get(folder);
 
-            // この中にはワイルドカードが入っている可能性があるので、すべて展開していく
+            // These may contain wildcards, so expand all of them
             IEnumerable<MachineRobotSessionForSerialize?> mrss = null;
             if (machineRobots.Length == 1 && machineRobots[0].StartsWith('[')) // && machineRobots[0].EndsWith(']'))
             {
-                // CSV からインポートした場合は配列としてデシリアライズ
+                // When imported from CSV, deserialize as an array
                 mrss = JsonSerializer.Deserialize<MachineRobotSessionForSerialize[]>(machineRobots[0]);
             }
             else
@@ -386,8 +386,8 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
 
             foreach (var mrs in mrss ?? [])
             {
-                // UserName を適切な Id に変換
-                // ワイルドカードをサポートするため、複数の User が出てくる場合がある
+                // Resolve UserName to the appropriate Id
+                // Multiple Users may match because wildcards are supported
                 List<Entities.User> users = null;
                 if (!string.IsNullOrEmpty(mrs?.UserName))
                 {
@@ -399,8 +399,8 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
                     }
                 }
 
-                // MachineName を適切な Id に変換
-                // ワイルドカードをサポートするため、複数の Machine が出てくる場合がある
+                // Resolve MachineName to the appropriate Id
+                // Multiple Machines may match because wildcards are supported
                 List<MachineFolder> machines = null;
                 if (!string.IsNullOrEmpty(mrs?.MachineName))
                 {
@@ -415,22 +415,22 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
                     }
                 }
 
-                // user と machine の両方がなければスキップ
+                // Skip if neither user nor machine is available
                 if ((users is null || users.Count == 0) && (machines is null || machines.Count == 0)) continue;
 
-                // 便宜上、要素をひとつだけ入れておく
+                // For convenience, insert a single null element as a placeholder
                 if (users is null || users.Count == 0) users = [null];
                 if (machines is null || machines.Count == 0) machines = [null];
 
-                // SessionName を適切な Id に変換
-                // ワイルドカードをサポートするため、複数の Session が出てくる場合がある
+                // Resolve SessionName to the appropriate Id
+                // Multiple Sessions may match because wildcards are supported
                 List<MachineSessionRuntime> sessions = null;
                 if (!string.IsNullOrEmpty(mrs?.SessionName))
                 {
                     var wpSessionName = new WildcardPattern(mrs.SessionName, WildcardOptions.IgnoreCase);
                     sessions = drive.MachineSessionRuntimesByFolder.Get(folder)
-                        //.Where(s => s.RuntimeType == "Unattended") // これ不要。RuntimeType が違っても SessionId は同じになるため。
-                        //.Where(s => wpMachineName.IsMatch(s.MachineName)) // この条件はあとで判断する
+                        //.Where(s => s.RuntimeType == "Unattended") // Not needed. SessionId is the same regardless of RuntimeType.
+                        //.Where(s => wpMachineName.IsMatch(s.MachineName)) // This condition is evaluated later
                         .Where(s =>
                         {
                             var sessionName = s.HostMachineName;
@@ -448,17 +448,17 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
                         WriteWarning($"'{target}': The session name '{mrs.SessionName}' does not match any in '{folder.GetPSPath()}'.");
                     }
                 }
-                // 便宜上、要素をひとつだけ入れておく
+                // For convenience, insert a single null element as a placeholder
                 if (sessions is null || sessions.Count == 0) sessions = [null];
 
-                // すべての組み合わせを生成して処理
+                // Generate and process all combinations
                 var combinations = users
                     .SelectMany(user => machines, (user, machine) => new { user, machine })
                     .SelectMany(pair => sessions, (pair, session) => new { pair.user, pair.machine, session });
 
                 foreach (var c in combinations)
                 {
-                    // セッションの MachineId が不一致ならスキップ
+                    // Skip if the session's MachineId does not match
                     if (c.session is not null && c.machine?.Id != c.session.MachineId) continue;
 
                     targets.Add(new MachineRobotSession()
@@ -512,9 +512,9 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
 
         if (match.Success)
         {
-            // 前の部分
+            // The preceding part
             string id = match.Groups[1].Value;
-            // 3つの数字
+            // The three numeric segments
             string version = $"{match.Groups[2].Value}.{match.Groups[3].Value}.{match.Groups[4].Value}";
 
             return (id, version);

@@ -8,7 +8,7 @@ public class LibraryDriveInfo : PSDriveInfo
     internal OrchDriveInfo ParentDrive { get; }
     public OrchAPISession OrchAPISession { get; }
 
-    // LibraryProvider の Start で初期化する
+    // Initialized in LibraryProvider's Start method
     internal static SessionState? SessionState;
 
     //internal List<LibraryVersion> _dicLibraryVersion = null;

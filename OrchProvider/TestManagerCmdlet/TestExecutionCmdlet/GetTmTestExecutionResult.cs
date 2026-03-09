@@ -38,7 +38,7 @@ class GetTmTestExecutionResultCmdlet : OrchestratorPSCmdlet
         var drivesProjects = SessionState.EnumTmFolders(Path, Recurse.IsPresent);
         var wpName = Name.ConvertToWildcardPatternList();
 
-        // TmTestExecutions を先に取得して、(drive, project, testExecution) のリストを作成
+        // First retrieve TmTestExecutions to build a list of (drive, project, testExecution)
         var testExecutionsList = new List<(OrchTmDriveInfo drive, Entities.TmProject project, Entities.TmTestExecution testExecution)>();
         foreach (var (drive, project) in drivesProjects)
         {
@@ -56,7 +56,7 @@ class GetTmTestExecutionResultCmdlet : OrchestratorPSCmdlet
             }
         }
 
-        // 並列で TmTestExecutionResult を取得
+        // Retrieve TmTestExecutionResult in parallel
         using var results = OrchThreadPool.RunForEach(testExecutionsList,
             item => item.project.GetPSPath(),
             item => item.testExecution,
@@ -78,7 +78,7 @@ class GetTmTestExecutionResultCmdlet : OrchestratorPSCmdlet
             }
         }
 
-        // シングルスレッド版
+        // Single-threaded version
         //foreach (var (drive, project) in drivesProjects)
         //{
         //    try

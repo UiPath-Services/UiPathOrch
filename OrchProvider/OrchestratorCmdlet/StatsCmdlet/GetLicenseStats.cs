@@ -40,8 +40,8 @@ public class GetLicenseStatsCommand : OrchestratorPSCmdlet
             days = ((int)(DateTime.Today - last).TotalDays);
         }
 
-        // ToList() は遅延評価を抑止し、各スレッド内で問い合わせを行えるようにするために必要
-        // まだキャッシュ作ってないから。。
+        // ToList() is needed to prevent deferred evaluation and allow queries within each thread.
+        // Cache has not been implemented yet...
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,
             drive => drive,

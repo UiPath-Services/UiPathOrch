@@ -22,7 +22,7 @@ internal static class FolderExtensions
     }
 
     /// <summary>
-    /// srcRootFolder からの相対パスを返す
+    /// Returns the relative path from srcRootFolder.
     /// </summary>
     public static string GetRelativePath(this Folder srcFolder, Folder srcRootFolder)
     {
@@ -73,7 +73,7 @@ internal static class FolderExtensions
     public static string GetPSPath(this Entities.Job entity)           => Path.Combine(entity?.Path ?? "", entity?.Id.ToString() ?? "");
 
     /// <summary>
-    /// ジョブ情報をツールチップ用の文字列にフォーマットします。
+    /// Formats job information as a string for tooltips.
     /// </summary>
     public static string FormatTooltip(this Entities.Job job)
     {
@@ -125,21 +125,21 @@ internal static class FolderExtensions
 
 internal static class OrchCollectionExtensions
 {
-    // 次のメソッドは、T& を比較するときにパフォーマンスが == よりも悪くなる。null もチェックしてないな。。
-    // これを使うのはやめて、== で比較すべきだ。
-    // == と SafeEquals() と SafeSequenceEquals() のどれを使うべきか、間違えないようにしないと。
+    // The following method has worse performance than == when comparing T& references. It also does not check for null.
+    // Stop using this and compare with == instead.
+    // Be careful not to confuse when to use ==, SafeEquals(), and SafeSequenceEquals().
     //public static bool SafeEquals<T>(this T? obj1, T obj2) where T : struct
     //{
     //    return obj1.Equals(obj2);
     //}
 
-    // 参照型の値を比較するときには、これが便利だ。
+    // This is useful when comparing reference type values.
     public static bool SafeEquals<T>(this T? obj1, T? obj2) where T : class
     {
         return ReferenceEquals(obj1, obj2) || (obj1 is not null && obj1.Equals(obj2));
     }
 
-    // 配列とかリストを比べるときは、これだ。
+    // Use this when comparing arrays or lists.
     public static bool SafeSequenceEquals<T>(this IEnumerable<T>? collection1, IEnumerable<T>? collection2)
     {
         if (ReferenceEquals(collection1, collection2)) return true;
@@ -181,16 +181,16 @@ internal static class OrchCollectionExtensions
         return input;
     }
 
-    // これあった方がいいかな。。
+    // Is this needed?
     //public static WildcardPattern ConvertToWildcardPattern(this string input)
     //{
     //    return new WildcardPattern(input, WildcardOptions.IgnoreCase);
     //}
 
-    // WildcardPattern の列挙は、なんども繰り返して使用することになるので、ここで List にして返しておく方が良い。
+    // Since WildcardPattern enumeration is used repeatedly, it is better to return it as a List here.
     public static List<WildcardPattern>? ConvertToWildcardPatternList(this IEnumerable<string?>? input)
     {
-        // PathTools.UnescapePSText(n) はしなくても良いのだっけ？
+        // Is it OK to not call PathTools.UnescapePSText(n)?
         return input?.Select(n => new WildcardPattern(n, WildcardOptions.IgnoreCase)).ToList();
     }
 
@@ -212,7 +212,7 @@ internal static class OrchCollectionExtensions
         return source.Where(item => values.Contains(selector(item)));
     }
 
-    // patterns が空であれば、source のすべての要素をそのまま返す
+    // If patterns is empty, return all elements of source as-is
     public static IEnumerable<T> FilterByWildcards<T>(
         this IEnumerable<T> source,
         Func<T?, string?> selector,
@@ -222,7 +222,7 @@ internal static class OrchCollectionExtensions
         return source.Where(item => patterns.Any(pattern => pattern.IsMatch(selector(item))));
     }
 
-    // patterns が空であれば、source のすべての要素をそのまま返す
+    // If patterns is empty, return all elements of source as-is
     public static IEnumerable<T> FilterByWildcards<T>(
         this IEnumerable<T> source,
         Func<T?, string?> selector,
@@ -233,7 +233,7 @@ internal static class OrchCollectionExtensions
         return source.FilterByWildcards(selector, wpPatterns);
     }
 
-    // patterns が空であれば、空を返す
+    // If patterns is empty, return empty
     public static IEnumerable<T> SelectByWildcards<T>(
         this IEnumerable<T> source,
         Func<T?, string?> selector,
@@ -243,7 +243,7 @@ internal static class OrchCollectionExtensions
         return source.Where(item => patterns.Any(pattern => pattern.IsMatch(selector(item))));
     }
 
-    // patterns が空であれば、空を返す
+    // If patterns is empty, return empty
     public static IEnumerable<T> SelectByWildcards<T>(
         this IEnumerable<T> source,
         Func<T?, string?> selector,
@@ -295,7 +295,7 @@ internal static class OrchCollectionExtensions
     #region
     private static string UnescapeBackticks(string input)
     {
-        // バッククォートのエスケープを解除
+        // Unescape backtick escaping
         return input.Replace("``", "`").Replace("`", "");
     }
 
@@ -306,7 +306,7 @@ internal static class OrchCollectionExtensions
             return Enumerable.Empty<string>();
         }
 
-        // 正規表現パターン
+        // Regular expression pattern
         var pattern = @"((?:[^`]|``|`.)+?)(?:,|$)";
         var matches = Regex.Matches(input, pattern);
 
@@ -317,8 +317,8 @@ internal static class OrchCollectionExtensions
         return result;
     }
 
-    // CSV から入力されている可能性があるので、先頭の要素をカンマで区切る。残りの要素はそのまま使用する。
-    // 次のような処理なんだけど、エスケープされたカンマでは区切らないように工夫しておく
+    // Since the input may come from CSV, split the first element by commas. Use the remaining elements as-is.
+    // The following processing ensures that escaped commas are not used as delimiters.
     // sourceArray = Version[0].Split(',').Concat(Version.Skip(1)).ToArray();
     internal static IEnumerable<string>? Split1stValueByUnescapedCommas(this IEnumerable<string>? source)
     {
@@ -362,7 +362,7 @@ internal static class OrchStringExtensions
         string invalidChars = new string(Path.GetInvalidFileNameChars())
                             + new string(Path.GetInvalidPathChars());
 
-        // 無効な文字を '_' に置換
+        // Replace invalid characters with '_'
         string validString = new(originalString
           .Select(ch => invalidChars.Contains(ch) ? '_' : ch)
           .ToArray());
@@ -379,10 +379,10 @@ internal static class OrchStringExtensions
           .Select(ch => invalidChars.Contains(ch) ? '_' : ch)
           .ToArray());
 
-        // 末尾の . やスペースは削除
+        // Remove trailing dots and spaces
         validString = validString.TrimEnd('.', ' ');
 
-        // Windows の予約語チェック
+        // Check for Windows reserved words
         string[] reservedNames = {
             "CON","PRN","AUX","NUL",
             "COM1","COM2","COM3","COM4","COM5","COM6","COM7","COM8","COM9",
@@ -393,7 +393,7 @@ internal static class OrchStringExtensions
             validString = "_" + validString;
         }
 
-        // 長さ制限 (255)
+        // Length limit (255)
         if (validString.Length > 255)
             validString = validString.Substring(0, 255);
 
@@ -454,10 +454,10 @@ internal static class OrchStringExtensions
     }
 
     // Generic method for nullable numeric types
-    // ゼロは設定しない。CSV の空列を int? のパラメータで受け取ると、ゼロになってしまうため。
-    // このメソッドを使えば、CSV で int のパラメータに空欄を指定してもゼロで既存データを上書きすることはない。
-    // TODO: いや、CSV でもコマンドラインでも、"" を指定した場合には null を設定すべきではないか？
-    // このメソッドは廃止して AssignNumberIfNotNull() で置換した方が良さそうな気がする。
+    // Do not set zero. When a CSV empty column is received by an int? parameter, it becomes zero.
+    // Using this method, specifying a blank for an int parameter in CSV will not overwrite existing data with zero.
+    // TODO: Actually, should null be set when "" is specified from either CSV or command line?
+    // It might be better to deprecate this method and replace with AssignNumberIfNotNull().
     public static void AssignNumberIfNotNullOrZero<T, N>(this T target, N? value, Action<T, N?> setter) where N : struct, IComparable
     {
         if (value.HasValue && !value.Value.Equals(default(N)))
@@ -466,10 +466,10 @@ internal static class OrchStringExtensions
         }
     }
 
-    // ゼロを受け付けるメンバの場合には、こちらを使う。
-    // CSV で空列を指定した場合には、パラメータにゼロが渡されるので注意が必要。
-    // 既存の値が不明な場合には、CSV からその列を削除しておく。そうすれば、その列の int 型パラメータには null が渡される。
-    // TODO: cmdlet の int パラメータは、すべて string? に修正すべきだ。
+    // Use this for members that accept zero.
+    // Note that when a CSV empty column is specified, zero is passed to the parameter.
+    // If the existing value is unknown, remove that column from the CSV. Then null will be passed to the int parameter.
+    // TODO: All int parameters on cmdlets should be changed to string?.
     public static void AssignNumberIfNotNull<T, N>(this T target, N? value, Action<T, N?> setter) where N : struct, IComparable
     {
         if (value.HasValue)
@@ -478,8 +478,8 @@ internal static class OrchStringExtensions
         }
     }
 
-    // string 値を int に変換して設定する。"" などの数値でない値を指定した場合には、null を設定する。
-    // null を指定した場合には何もしない
+    // Convert a string value to int and assign. If a non-numeric value like "" is specified, set null.
+    // If null is specified, do nothing.
     public static void AssignNumberIfNotNull<T>(this T target, string? value, Action<T, int?> setter)
     {
         if (value is not null)
@@ -519,12 +519,12 @@ internal static class OrchStringExtensions
         }
     }
 
-    // 現在の値が null であれば、false を代入しないように工夫されたバージョン
+    // Version that avoids assigning false when the current value is null
     public static void AssignBoolIfNotFalse<T>(this T target, string? value, Func<T, bool?> getter, Action<T, bool?> setter)
     {
         if (value is not null && bool.TryParse(value, out var result))
         {
-            // 代入先が null で、かつ代入する値が false の場合には何もしない
+            // Do nothing if the target is null and the value to assign is false
             if (getter(target) is null && !result) return;
 
             setter(target, result);
@@ -546,8 +546,8 @@ internal static class OrchStringExtensions
         }
     }
 
-    // nameKind には capitalized の名前を渡すこと。
-    // 処理が継続できない場合に false を返す。
+    // Pass a capitalized name for nameKind.
+    // Returns false if processing cannot continue.
     public static bool AssignIdFromName<T, TElement, TId>(
         this T target,
         string? name,
@@ -594,7 +594,7 @@ internal static class OrchStringExtensions
     {
         if (input is null) return null;
 
-        // ピリオドで分割
+        // Split by period
         string[] parts = input.Split('.');
 
         if (parts.Length >= 3)
@@ -605,8 +605,8 @@ internal static class OrchStringExtensions
         return input;
     }
 
-    // 次のふたつのメソッドは、ラムダ式を使って実装を完全に共通にすることもできるが、とても使いにくくなってしまう。
-    // ReplaceLastNumberWithAsterisk() の実装を共通にしたことで良しとするか。。
+    // The following two methods could share a fully common implementation using lambda expressions, but that would be very difficult to use.
+    // Having a shared implementation of ReplaceLastNumberWithAsterisk() should suffice.
     public static void AssignUpdatePolicy(this User target, string? typeValue, string? versionValue)
     {
         if (!string.IsNullOrEmpty(typeValue) || !string.IsNullOrEmpty(versionValue))
@@ -659,8 +659,8 @@ internal static class OrchStringExtensions
         }
     }
 
-    // keyValues は = で区切られた key と value。"tag1" とか "tag2=value" とか。
-    // Add-OrchHoge とか、Update-OrchHoge の中で使う。
+    // keyValues are key-value pairs separated by =. e.g., "tag1" or "tag2=value".
+    // Used inside Add-OrchHoge, Update-OrchHoge, etc.
     public static IEnumerable<Tag> ConvertToTags(this string[]? keyValues)
     {
         foreach (var keyValue in keyValues?.SelectMany(elem => elem.Split(',')) ?? [])
@@ -668,7 +668,7 @@ internal static class OrchStringExtensions
             if (string.IsNullOrEmpty(keyValue)) continue;
             string[] parts = keyValue.Split('=', 2);
 
-            // キーと値を取得
+            // Get the key and value
             string key = parts[0];
             string value = parts.Length > 1 ? parts[1] : null;
             Tag tag = new()
@@ -680,14 +680,14 @@ internal static class OrchStringExtensions
         }
     }
 
-    // これは、WriteCsvContent() の中から呼び出す。
+    // This is called from within WriteCsvContent().
     internal static string? ConvertToString(this Tag[]? tags)
     {
         if (tags is null) return null;
         return string.Join(',', tags.Select(t => t.ToString()));
     }
 
-    // obsoleted: ConvertToTags() を使うべし
+    // obsoleted: Use ConvertToTags() instead
     //public static Tag[]? DeserializeFromJson(this string? jsonText)
     //{
     //    if (string.IsNullOrWhiteSpace(jsonText))
@@ -712,7 +712,7 @@ internal static class OrchStringExtensions
     }
 
     /// <summary>
-    /// LF 改行（\n）を使用して、指定された文字列と改行を追加します。
+    /// Appends the specified string followed by a LF newline (\n).
     /// </summary>
     public static StringBuilder AppendLineLf(this StringBuilder sb, string? value)
     {
@@ -739,8 +739,8 @@ internal static class OrchDriveFolderExtensions
 
 internal static class OrchWriterExtensions
 {
-    // writer.WriteLine(string.Join(',', values) とすると、内部で string を連結してしまう。
-    // 逐次 writer.Write() を呼ぶ方が効率的だ。
+    // Using writer.WriteLine(string.Join(',', values) would concatenate strings internally.
+    // Calling writer.Write() sequentially is more efficient.
     internal static void WriteCsvLine(this TextWriter? writer, IEnumerable<string?> values)
     {
         if (writer is null) return;
@@ -750,19 +750,19 @@ internal static class OrchWriterExtensions
         {
             if (!first)
             {
-                writer.Write(','); // 2個目以降はカンマを入れる
+                writer.Write(','); // Insert comma after the first element
             }
             else first = false;
             writer.Write(value);
         }
-        writer.WriteLine(); // 最後に改行を追加
+        writer.WriteLine(); // Add a newline at the end
     }
 }
 
-// PSCmdlet の文脈においては、PSCmdlet.SessionState に対して呼び出すべきだ。
-// PSCmdlet.SessionState にアクセスできない文脈においては、OrchDriveInfo.SessionState に対して呼び出すが良い。
-// OrchDriveInfo.SessionState は OrchProvider.Start() で設定しているが、この値が不正になる状況があった。
-// 通常使っている限りにおいては一度も遭遇したことがないが、PowerShell.MCP から使うときに current location が正しく取れないことがあった。
+// In the context of PSCmdlet, this should be called on PSCmdlet.SessionState.
+// In contexts where PSCmdlet.SessionState is not accessible, use OrchDriveInfo.SessionState instead.
+// OrchDriveInfo.SessionState is set in OrchProvider.Start(), but there have been situations where this value becomes invalid.
+// This has never been encountered in normal usage, but the current location could not be correctly retrieved when using PowerShell.MCP.
 internal static class SessionStateExtentios
 {
     public static IEnumerable<OrchDriveInfo> EnumAllOrchDrives(this SessionState? sessionState)
@@ -792,8 +792,8 @@ internal static class SessionStateExtentios
             .OrderBy(d => d.Name);
     }
 
-    // paths を指定しない場合、カレントドライブのみを返す
-    // T には OrchDriveInfo, OrchDuDriveInfo などを指定できる
+    // If paths is not specified, return only the current drive.
+    // T can be OrchDriveInfo, OrchDuDriveInfo, etc.
     public static List<T> EnumOrchDrivesImpl<T>(this SessionState? sessionState, IEnumerable<string?>? path = null) where T : PSDriveInfo
     {
         OrchDriveInfo.SessionState = sessionState;
@@ -816,13 +816,13 @@ internal static class SessionStateExtentios
         return drives.Distinct().ToList();
     }
 
-    // paths を指定しない場合、カレントドライブのみを返す
+    // If paths is not specified, return only the current drive
     public static List<OrchDriveInfo> EnumOrchDrives(this SessionState? sessionState, IEnumerable<string?>? path = null)
     {
         return sessionState.EnumOrchDrivesImpl<OrchDriveInfo>(path);
     }
 
-    // paths を指定しない場合、カレントドライブのみを返す
+    // If paths is not specified, return only the current drive
     public static List<OrchDuDriveInfo> EnumDuDrives(this SessionState? sessionState, IEnumerable<string?>? path = null)
     {
         return sessionState.EnumOrchDrivesImpl<OrchDuDriveInfo>(path);
@@ -833,8 +833,8 @@ internal static class SessionStateExtentios
         return sessionState.EnumOrchDrivesImpl<OrchTmDriveInfo>(path);
     }
 
-    // paths を指定しない場合、カレントドライブのみを返す
-    // PmDrive は、任意のドライブから検索できないといけないから実装が別だ。
+    // If paths is not specified, return only the current drive
+    // PmDrive has a separate implementation because it must be searchable from any drive.
 
     public static List<OrchDriveInfo> EnumPmDrives(this SessionState? sessionState, IEnumerable<string?>? path = null)
     {
@@ -876,8 +876,8 @@ internal static class SessionStateExtentios
     }
 
 
-    // EnumOrchDrive と似ているけど、こちらはカレントドライブを考慮しない。
-    // Destination を解決するのに使う。
+    // Similar to EnumOrchDrive, but this does not consider the current drive.
+    // Used to resolve Destination.
     public static List<OrchDriveInfo> EnumDestinationDrives(this SessionState? sessionState, IEnumerable<string> paths)
     {
         OrchDriveInfo.SessionState = sessionState;
@@ -914,7 +914,7 @@ internal static class SessionStateExtentios
         }
     }
 
-    // TODO: 引数に IWritableHost を追加して、パスをひとつずつ解釈するようにしたい。
+    // TODO: Want to add IWritableHost as an argument to interpret paths one by one.
     public static List<(OrchDriveInfo drive, Folder folder)> EnumFolders(this SessionState? sessionState, IEnumerable<string?>? path, bool recurse = false, uint depth = 0, bool includeRoot = false)
     {
         OrchDriveInfo.SessionState = sessionState;
@@ -948,7 +948,7 @@ internal static class SessionStateExtentios
 
             HashSet<string> visited = [];
 
-            // dicFolders にはルートフォルダーが含まれないため、ルートだけ先にここで探して追加する
+            // dicFolders does not contain the root folder, so search for and add root first here
             if (includeRoot && currentDepth == 0)
             {
                 ret.Add((drive!, drive!.RootFolder!));
@@ -998,13 +998,13 @@ internal static class SessionStateExtentios
         }
         if (srcDrives.Count == 0)
         {
-            // たぶん先に EnumOrchDrives() が例外を投げているはずなので、ここは実行されないと思う。
+            // EnumOrchDrives() should have already thrown an exception, so this probably will not execute.
             throw new Exception($"Cannot find path '{path}' because it does not exist.");
         }
         return srcDrives[0];
     }
 
-    // 実装がだいぶ重複している。きれいにしたいが、EnumOrchDrives() と EnumPmDrives() の実装が結構違う。。
+    // The implementation has significant duplication. Would like to clean up, but EnumOrchDrives() and EnumPmDrives() differ considerably.
     public static OrchDriveInfo GetPmDrive(this SessionState sessionState, string? path = null)
     {
         OrchDriveInfo.SessionState = sessionState;
@@ -1016,20 +1016,20 @@ internal static class SessionStateExtentios
         }
         if (srcDrives.Count == 0)
         {
-            // たぶん先に EnumPmDrives() が例外を投げているはずなので、ここは実行されないと思う。
+            // EnumPmDrives() should have already thrown an exception, so this probably will not execute.
             throw new Exception($"Cannot find path '{path}' because it does not exist.");
         }
         return srcDrives[0];
     }
 
     // planned to be obsoleted
-    // ResolveToSingleFolder() を使って書き直すべきだ。
+    // This should be rewritten using ResolveToSingleFolder().
     public static List<(OrchDriveInfo drive, Folder folder)> EnumFolders(this SessionState? sessionState, string? path, bool recurse = false, uint depth = 0, bool includeRoot = false)
     {
         return sessionState.EnumFolders([path], recurse, depth, includeRoot);
     }
 
-    // TODO: これを一般化しなければ。★★★★
+    // TODO: This needs to be generalized.
     public static (OrchDriveInfo drive, Folder folder) ResolveToSingleFolder(this SessionState? sessionState, string? path)
     {
         var ret = sessionState.EnumFolders(path, false, 0, true);
@@ -1104,7 +1104,7 @@ internal static class SessionStateExtentios
         }
     }
 
-    // TODO: このメソッドを参照する completer はすべてきれいに書き直せる
+    // TODO: All completers referencing this method can be cleanly rewritten
     public static List<(OrchDriveInfo drive, Folder folder)> EnumPackageFeedFolders(this SessionState? sessionState, IEnumerable<string?>? path, bool recurse = false)
     {
         var paths = sessionState.ResolveOrchDrivePaths(path);
@@ -1131,7 +1131,7 @@ internal static class SessionStateExtentios
 
             ret.Add((drive!, feedFolder));
 
-            // folder がルートディレクトリで、かつ recurse の場合に限り子フォルダーを列挙する
+            // Enumerate child folders only when folder is the root directory and recurse is specified
             if ((folder.ParentId is null && folder.FolderType != "Personal") && recurse)
             {
                 var folders = drive!.GetFolders(); // sorted by OrchDirectory and DisplayName
@@ -1158,7 +1158,7 @@ internal static class SessionStateExtentios
     //public static List<(OrchDriveInfo drive, Folder folder)> ResolveToSingleFeedFolder(string? path)
     public static (OrchDriveInfo drive, Folder folder) ResolveToSingleFeedFolder(this SessionState? sessionState, string? path)
     {
-        // まず、単一のフォルダに解決する
+        // First, resolve to a single folder
         var ret = sessionState.EnumPackageFeedFolders([path], false);
         if (ret.Count == 0)
         {
@@ -1169,7 +1169,7 @@ internal static class SessionStateExtentios
             throw new Exception($"Path '{path}' resolved to multiple folders.");
         }
 
-        // recurse で、かつ解決したフォルダがルートフォルダであれば、サブフォルダも取得
+        // If recurse and the resolved folder is the root folder, also get subfolders
         //if (recurse)
         //{
         //    var (drive, folder) = ret[0];
@@ -1296,7 +1296,7 @@ internal static class SessionStateExtentios
             //Folder folder = null; // drive?.GetFolder(OrchDriveInfo.PSPathToOrchPath(WildcardPattern.Unescape(p.ProviderPath)));
             //if (folder is null) continue;
 
-            // Recurse が指定されていて、かつルートフォルダであれば、すべてのプロジェクトを返せばOK
+            // If Recurse is specified and this is the root folder, just return all projects
             if (recurse && p.Path.EndsWith(System.IO.Path.DirectorySeparatorChar))
             {
                 foreach (var project in dicProjects)
@@ -1307,13 +1307,13 @@ internal static class SessionStateExtentios
                 continue;
             }
 
-            // dicFolders にはルートフォルダーが含まれないため、ルートだけ先にここで探して追加する
+            // dicFolders does not contain the root folder, so search for and add root first here
             //if (includeRoot)
             //{
             //    ret.Add((drive!, null));
             //}
 
-            // p からプロジェクト名を取り出す
+            // Extract the project name from p
             string projectName = Path.GetFileName(p.Path);
 
             foreach (var project in dicProjects)
@@ -1377,7 +1377,7 @@ internal static class SessionStateExtentios
             //Folder folder = null; // drive?.GetFolder(OrchDriveInfo.PSPathToOrchPath(WildcardPattern.Unescape(p.ProviderPath)));
             //if (folder is null) continue;
 
-            // Recurse が指定されていて、かつルートフォルダであれば、すべてのプロジェクトを返せばOK
+            // If Recurse is specified and this is the root folder, just return all projects
             if (recurse && p.Path.EndsWith(System.IO.Path.DirectorySeparatorChar))
             {
                 foreach (var project in dicProjects)
@@ -1388,13 +1388,13 @@ internal static class SessionStateExtentios
                 continue;
             }
 
-            // dicFolders にはルートフォルダーが含まれないため、ルートだけ先にここで探して追加する
+            // dicFolders does not contain the root folder, so search for and add root first here
             //if (includeRoot)
             //{
             //    ret.Add((drive!, null));
             //}
 
-            // p からプロジェクト名を取り出す
+            // Extract the project name from p
             string projectPrefix = Path.GetFileName(p.Path);
 
             foreach (var project in dicProjects)

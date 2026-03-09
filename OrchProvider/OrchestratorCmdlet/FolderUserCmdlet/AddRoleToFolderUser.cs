@@ -42,7 +42,7 @@ public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
-    // TODO: FolderUserUserNameCompleter class を作成するのが吉か。
+    // TODO: It would be better to create a FolderUserUserNameCompleter class.
     private class UserNameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -54,17 +54,17 @@ public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePathWithoutPersonalWorkspace(commandAst, fakeBoundParameters);
 
-            // パラメータで選択された FullName のみ対象とする
+            // Only include FullNames selected via parameter
             var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
 
-            // パラメータで選択済みの UserName は、候補から除外する
+            // Exclude UserNames already selected via parameter from the candidates
             var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
 
             var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            // このフォルダに追加済みのユーザーのみ表示する
+            // Only show users already assigned to this folder
             var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
             foreach (var result in results)
@@ -95,17 +95,17 @@ public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePathWithoutPersonalWorkspace(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの FullName は、候補から除外する
+            // Exclude FullNames already selected via parameter from the candidates
             var wpFullName = CreateWPListFromParameter(commandAst, "FullName", TPositional.Parameters, wordToComplete);
 
-            // パラメータで選択された UserName のみ対象とする
+            // Only include UserNames selected via parameter
             var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
 
             var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            // このフォルダに追加済みのユーザーのみ表示する
+            // Only show users already assigned to this folder
             var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
             foreach (var result in results)
@@ -137,7 +137,7 @@ public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
             var drivesFolders = ResolvePathWithoutPersonalWorkspace(commandAst, fakeBoundParameters);
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            // 操作対象の User を抽出する
+            // Extract the target Users for the operation
 
             var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
             var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
@@ -153,15 +153,15 @@ public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
 
             foreach (var (drive, folder) in drivesFolders)
             {
-                // このフォルダーで利用可能なロールの一覧
+                // List of roles available in this folder
                 var tenantRoles = drive.Roles.Get().Where(tr => tr.Type != "Tenant").ToList();
 
-                // このフォルダーに割り当て済みのユーザー一覧
+                // List of users already assigned to this folder
                 var folderUsers = drive.FolderUsersWithNoInherited.Get(folder);
 
                 if (folderUsers.Count != 0)
                 {
-                    // パラメータで指定された、割り当て済みのユーザーを取り出す
+                    // Extract the assigned users specified by parameters
                     var folderUsersFiltered = folderUsers
                         .FilterByWildcards(u => u?.UserEntity?.FullName, wpFullName)
                         .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName)
@@ -205,11 +205,11 @@ public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
         var wpUserName = UserName.ConvertToWildcardPatternList();
         var wpType = Type.ConvertToWildcardPatternList();
 
-        // 先頭の要素は CSV から入力されている可能性があるので、先頭の要素についてはカンマで区切る
+        // The first element may come from CSV input, so split the first element by commas
         //if (Roles is not null && Roles.Length > 0) Roles = Roles[0].Split(',').Concat(Roles.Skip(1)).ToArray();
         var wpRoles = Roles.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
 
-        // 対象のドライブの roles を、非同期にまとめて取得する
+        // Fetch roles for the target drives asynchronously in bulk
         // ParallelResults.ForEach(drives, drive => drive.Roles.Get());
 
         using var results = OrchThreadPool.RunForEach(drivesFolders,
@@ -229,7 +229,7 @@ public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
                     .Where(role => role.Type != "Tenant")
                     .FilterByWildcards(role => role?.Name, wpRoles);
 
-                // 編集対象のユーザーを抽出する
+                // Extract the users to be edited
                 List<UserRoles> editingUsers = existingUsers!
                     .FilterByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
                     .FilterByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
@@ -240,13 +240,13 @@ public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
                 {
                     IEnumerable<SimpleRole> existingRoles = user.Roles;
 
-                    // 追加するロールを抽出(追加済みのロールは除去)
+                    // Extract roles to add (excluding already assigned roles)
                     var addingRoles = tenantRoles
                         .ExcludeByStructValues(role => role.Id ?? 0, existingRoles!.Select(role => role.Id ?? 0));
                     if (!addingRoles.Any()) continue;
                     var targetRoles = string.Join(", ", addingRoles.Select(r => r.Name).Order());
 
-                    // 追加するロールを抽出(追加済みのロールを含む)
+                    // Extract roles to add (including already assigned roles)
                     List<Int64> allRoles = existingRoles!
                         .Select(r => r.Id ?? 0)
                         .Concat(addingRoles.Select(r => r.Id ?? 0)).Distinct().ToList();

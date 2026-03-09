@@ -1,8 +1,8 @@
 ﻿namespace UiPath.PowerShell.Positional;
 
-// これらのクラスは、型パラメータとして使用する。
+// These classes are used as type parameters.
 
-// key は必ず string
+// Key is always string
 internal interface IDictionaryItems<TValue>
 {
     static abstract Dictionary<string, TValue> Items { get; }

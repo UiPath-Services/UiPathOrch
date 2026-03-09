@@ -12,7 +12,7 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsCommon.Add, "PmGroupMember", SupportsShouldProcess = true)]
 public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
 {
-    // パラメータを、Path と PmGroup だけ展開して保持
+    // Expand and hold parameters for Path and PmGroup only
     //private List<(OrchDriveInfo Drive, PmGroup Group, string Type, string UserName)>? _csvLines;
     //private HashSet<(OrchDriveInfo Drive, PmGroup Group, string Type, string UserName)>? _csvLines;
 
@@ -50,8 +50,8 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
     {
         private static bool IsMemberOf(PmGroup group, PmDirectoryEntityInfo user)
         {
-            // identifier では正しく確認できない。identifierName で確認する必要がある。
-            // ひとつでも同じなら true だな
+            // Cannot verify correctly with identifier. Must check using identifierName.
+            // Returns true if at least one matches.
             return group.members?.Any(m => string.Compare(m.name, user.identityName, true) == 0) ?? false;
         }
 
@@ -98,13 +98,13 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
                     .FilterByWildcards(u => u?.objectType, wpType2)
                     .OrderBy(e => e.identityName))
                 {
-                    // updatingGroups に含まれるすべてのグループが、メンバーとして user を含んでいれば continue する
+                    // Skip if all groups in updatingGroups already contain the user as a member
                     if (IsMemberOfAll(updatingGroups, user)) continue;
 
-                    // もしローカルグループだったら continue する
+                    // Skip if it is a local group
                     if (user.objectType == "DirectoryGroup" && user.source == "local") continue;
 
-                    // ちなみに、SearchPmDirectory() は 非機密アプリを返さないのでこれで OK
+                    // Note: SearchPmDirectory() does not return non-confidential apps, so this is fine
 
                     bFound = true;
                     string tiphelp = user.TipHelp();
@@ -127,17 +127,17 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
         UserName = UserName.Split1stValueByUnescapedCommas()?.ToArray();
         Path = Path.Split1stValueByUnescapedCommas()?.ToArray();
 
-        // ユーザー名は case を無視して重複チェックする
+        // Check for duplicate user names ignoring case
         _csvLines ??= new(new ForthItemIgnoreCaseComparer<OrchDriveInfo, PmGroup, string>());
 
         var drives = SessionState.EnumPmDrives(Path);
         var wpGroupName = GroupName.ConvertToWildcardPatternList();
-        var wpType = Type.ConvertToWildcardPatternList(); // Type はワイルドカードをサポートしない
+        var wpType = Type.ConvertToWildcardPatternList(); // Type does not support wildcards
         //var objectTypes = DirectoryTypes.Items.FilterByWildcards(t => t.Value, wpType).Select(t => t.Key);
 
-        // bulk でユーザー情報を問い合わせるには、ユーザーを Type でグループ化しなければ。
-        // いや、ここでは CSV の情報を集約するだけで十分か。
-        // TODO: 指定したワイルドカードが、どのグループ名にも合致しない場合には警告出した方が良さそうだけど、ちと面倒だね。。
+        // To query user information in bulk, users would need to be grouped by Type.
+        // Actually, just aggregating the CSV information here is sufficient.
+        // TODO: Should probably warn when a wildcard doesn't match any group names, but that's a bit tedious.
         foreach (var drive in drives)
         {
             var groups = drive.PmGroups.Get();
@@ -160,9 +160,9 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
     {
         if (_csvLines is null) return;
 
-        // 追加したい名前を一括してディレクトリに問い合わせ。
-        // 種別ごとにまとめて、問い合わせる必要がある。
-        // ロボットは一括して問い合わせできないので別途。
+        // Query the directory in bulk for the names to add.
+        // Queries must be grouped by type.
+        // Robots cannot be queried in bulk, so they are handled separately.
         foreach (var lines in _csvLines.GroupBy(g => (g.drive, g.type)))
         {
             var (drive, type) = lines.Key;
@@ -186,7 +186,7 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
                             .Where(t => t.objectType == type)
                             .FirstOrDefault(t => string.Compare(t.identityName, name.userName, true) == 0);
 
-                        // 当たらなかったら警告を表示
+                        // Display a warning if not found
                         if (addingMember is null)
                         {
                             WriteWarning($"\"{drive.NameColonSeparator}\": {type} \"{name.userName}\" not found. Ignoring.");
@@ -208,15 +208,15 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
             }
         }
 
-        // ここから本番
-        // メンバーをグループに追加していく。
+        // Now the actual processing begins.
+        // Add members to their groups.
         foreach (var drivesGroups in _csvLines.GroupBy(g => (g.drive, g.group)))
         {
             var (drive, group) = drivesGroups.Key;
 
             try
             {
-                // 更新対象の各グループのメンバー一覧を取得
+                // Get the member list for each group to be updated
                 var detailedGroup = drive.PmGroups.Get(group.id);
                 if (detailedGroup is null) continue;
 
@@ -273,7 +273,7 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
 
                 if (identifiers.Count > 0)
                 {
-                    // 既存のグループにメンバーを追加
+                    // Add members to the existing group
                     var updatedGroup = drive.AddMemberToPmGroup(group.id, group.name, identifiers);
                     if (updatedGroup is not null)
                     {

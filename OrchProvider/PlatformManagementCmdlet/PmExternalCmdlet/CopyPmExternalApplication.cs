@@ -49,8 +49,8 @@ public class CopyPmExternalApplicationCommand : OrchestratorPSCmdlet
                 {
                     try
                     {
-                        #region 同名のアプリが宛先組織にあればスキップ
-                        // API 側でエラーにならないので一応やっとくか。。
+                        #region Skip if an app with the same name exists in the destination organization
+                        // The API doesn't return an error, so let's check just in case.
                         var dstApps = dstDrive.PmExternalClients.Get();
                         var dstApp = dstApps.FirstOrDefault(src => string.Compare(src.name, srcApp.name, true) == 0);
                         if (dstApp is not null)
@@ -87,13 +87,13 @@ public class CopyPmExternalApplicationCommand : OrchestratorPSCmdlet
                         WriteObject(newApp);
                         dstDrive.PmExternalClients.ClearCache();
 
-                        // 非機密アプリはグループに所属できないので、後続の処理は不要
+                        // Non-confidential apps cannot belong to groups, so no further processing is needed
                         if (!newApp.isConfidential.GetValueOrDefault())
                         {
                             continue;
                         }
 
-                        // グループを探して追加しないと。。
+                        // Need to find and add to groups.
                         var dirEntries = dstDrive.PmBulkResolveByName("application", [newApp], app => app.name!);
                         var newAppDirEntry = dirEntries.Values.FirstOrDefault(e => string.Compare(e?.name, newApp.name, true) == 0);
                         if (newAppDirEntry is null) continue;
@@ -105,15 +105,15 @@ public class CopyPmExternalApplicationCommand : OrchestratorPSCmdlet
                                 var detailedSrcGroup = srcDrive.PmGroups.Get(srcGroup.id);
                                 if (detailedSrcGroup?.members?.Any(m => string.Compare(m.name, srcApp.name, true) == 0) ?? false)
                                 {
-                                    // srcApp は srcGroup に所属している
-                                    // 同名のグループを dstDrive で検索し、なければ同名のグループを dstDrive に追加
+                                    // srcApp belongs to srcGroup.
+                                    // Search for a group with the same name in dstDrive; if not found, create one.
                                     var dstGroups = dstDrive.PmGroups.Get();
                                     var dstGroup = dstGroups.FirstOrDefault(g => string.Compare(g.name, srcGroup.name, true) == 0);
-                                    if (dstGroup is null) // dstDrive に新規グループを作成して、newApp.id を追加
+                                    if (dstGroup is null) // Create a new group in dstDrive and add newApp.id
                                     {
                                         dstGroup = dstDrive.CreatePmGroup(srcGroup.name, [newAppDirEntry.identifier!]);
                                     }
-                                    else // dstDrive の既存グループに newApp を追加
+                                    else // Add newApp to the existing group in dstDrive
                                     {
                                         dstDrive.AddMemberToPmGroup(dstGroup.id, dstGroup.name, [newAppDirEntry.identifier]);
                                     }

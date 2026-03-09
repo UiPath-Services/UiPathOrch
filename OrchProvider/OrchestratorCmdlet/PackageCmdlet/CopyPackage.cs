@@ -48,13 +48,13 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters, true);
 
-            // パラメータで選択済みの Destination は、候補から除外する
+            // Exclude already-selected Destination values from the candidates
             var selectedDestination = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete)
                 .SelectMany(p => SessionState!.Path.GetResolvedPSPathFromPSPath(p))
                 .Select(p => WildcardPattern.Unescape(p.Path.TrimEnd(System.IO.Path.DirectorySeparatorChar)))
                 .ToList();
 
-            #region 指定されたパスを解決する // TODO: 何かこの条件おかしいな？
+            #region Resolve the specified path // TODO: Something seems off with this condition?
             if (wordToComplete != System.IO.Path.DirectorySeparatorChar.ToString() && wordToComplete != "/" && !wordToComplete.EndsWith(':') &&
                 (!string.IsNullOrEmpty(wordToComplete) || wordToComplete.EndsWith(System.IO.Path.DirectorySeparatorChar) || wordToComplete.EndsWith('/')))
             {
@@ -77,10 +77,10 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
 
                 var folder = drive.GetFolder(p2);
 
-                // コピー元のフォルダーは外す。ただしルートフォルダは候補に含める
+                // Exclude the source folder, but keep the root folder as a candidate
                 if (folder!.Id is not null && drivesFolders.Contains((drive!, folder!))) continue;
 
-                // 選択済みのフォルダーは外す。
+                // Exclude already-selected folders.
                 if (selectedDestination.Contains(p.Path)) continue;
 
                 if (folder?.ParentId is null && folder?.FeedType == "FolderHierarchy")
@@ -110,7 +110,7 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            // なんかこの条件おかしいな？
+            // Something seems off with this condition?
             if (wordToComplete != System.IO.Path.DirectorySeparatorChar.ToString() && wordToComplete != "/" && !wordToComplete.EndsWith(':') &&
                 (!string.IsNullOrEmpty(wordToComplete) || wordToComplete.EndsWith(System.IO.Path.DirectorySeparatorChar) || wordToComplete.EndsWith('/')))
             {
@@ -156,19 +156,19 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
     {
         try
         {
-            // Key でも検索できるんだけど、キャッシュが壊れちゃう。
+            // We could also search by Key, but that would corrupt the cache.
             var dstExistingVersions = drive.GetPackageVersions(folder, version.Id!);
             if (dstExistingVersions is not null)
             {
                 return dstExistingVersions.Any(v => v.Version == version.Version);
             }
         }
-        catch { } // この例外は握りつぶす
+        catch { } // Swallow this exception
 
         return false;
     }
 
-    // TODO: IWritableHost の拡張メソッドにするべきか？
+    // TODO: Should this be an extension method on IWritableHost?
     private static bool DownloadPackage(IWritableHost _this, OrchDriveInfo srcDrive, string? srcFeedId, Package srcVersion, out string? fileName, out byte[]? fileContent)
     {
         try
@@ -197,7 +197,7 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
                 dstDrive._dicPackages?.TryRemove(dstFeedId ?? "", out var _);
                 dstDrive._dicPackageVersions?.TryRemove(dstFeedId ?? "", out var _);
 
-                // コピー先フィードが個人用ワークスペースなら、プロセスのキャッシュもクリアする
+                // If the destination feed is a personal workspace, also clear the process cache
                 if (dstFolder.FolderType == "Personal")
                 {
                     dstDrive._dicReleases?.TryRemove(dstFolder.Id ?? 0, out var _);
@@ -264,13 +264,13 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
                             cancelToken.ThrowIfCancellationRequested();
 
                             Folder? dstFolder = _this.GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder, true);
-                            // 同名のフォルダがない場合は、コピー処理をスキップする
+                            // Skip the copy if no folder with the same name exists
                             if (dstFolder is null) throw new NoCorrespondDestinatoinFolderException();
 
                             if (srcFolder == dstFolder) continue;
 
-                            // 同名のフォルダはあるが、フォルダフィードがない場合には、コピー処理をスキップする
-                            // （テナントフィードにコピーすることはしない）
+                            // Skip the copy if the folder exists but has no folder feed
+                            // (we do not copy to the tenant feed)
                             if (dstFolder != dstDrive.RootFolder && dstFolder.FeedType != "FolderHierarchy")
                             {
                                 _this.WriteError(new ErrorRecord(
@@ -281,7 +281,7 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
                                 throw new NoCorrespondDestinatoinFolderException();
                             }
 
-                            // dstFolder に同名のパッケージがあれば、警告を表示してコピーをスキップする
+                            // If a package with the same name already exists in dstFolder, show a warning and skip the copy
                             if (PackageExists(dstDrive, dstFolder, srcVersion))
                             {
                                 _this.WriteError(new ErrorRecord(new InvalidOperationException($"\"{srcVersion.GetPSPath()}:{srcVersion.Version}\": Package already exists in {dstFolder.GetPSPath()}. Skipping the copy."), "CopyPackageError", ErrorCategory.WriteError, dstFolder));
@@ -293,7 +293,7 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
 
                             if (shouldProcess || _this.ShouldProcess(target, $"Copy Package"))
                             {
-                                // 進捗は、実際にコピーするときにだけ表示された方が良い
+                                // Progress should only be displayed when actually copying
                                 reporter3.WriteProgress(++index3, $"{key}.nupkg to {dstDrive.NameColonSeparator}");
 
                                 if (fileName is null)
@@ -308,8 +308,8 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
             }
             catch (NoCorrespondDestinatoinFolderException)
             {
-                // この例外は、コピー先フォルダーがない場合に処理をスキップするときにスローされる。
-                // 警告はコンソールに出力済みなので、ここでは何もしない
+                // This exception is thrown to skip processing when the destination folder does not exist.
+                // The warning has already been written to the console, so nothing to do here
             }
             catch (OperationCanceledException)
             {
@@ -317,7 +317,7 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
             }
             catch (Exception ex)
             {
-                // だいぶ雑だな。。とりあえずいいか、、
+                // This is pretty rough.. but good enough for now..
                 _this.WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, ex), "CopyFolderMachineError", ErrorCategory.InvalidOperation, srcDrive));
             }
         }
@@ -325,7 +325,7 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        // 先頭の要素は CSV から入力されている可能性があるので、先頭の要素についてはカンマで区切る
+        // The first element may come from CSV input, so split the first element by commas
         var processedId = Id.Split1stValueByUnescapedCommas();
         var processedVersion = Version.Split1stValueByUnescapedCommas();
         var processedDestination = Destination.Split1stValueByUnescapedCommas();

@@ -35,7 +35,7 @@ public class OpenJobCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Id は、候補から除外する
+            // Exclude Ids that have already been selected via parameters
             var paramId = GetParameterValues(commandAst, "Id", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);

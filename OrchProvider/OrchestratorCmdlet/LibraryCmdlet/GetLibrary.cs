@@ -39,8 +39,8 @@ public class GetLibraryCommand : OrchestratorPSCmdlet
                 var libraries = result.GetResult(cancelHandler.Token);
                 if (libraries is null) continue;
 
-                // WriteObject(coll, true) で出力すると、処理が遅いときに Ctrl+C で止まらないな。。
-                // 次のように、ひとつずつ出力した方がいいのかもしれない。
+                // When outputting with WriteObject(coll, true), Ctrl+C doesn't stop it when processing is slow..
+                // It might be better to output one at a time, as shown below.
                 foreach (var library in libraries.FilterByWildcards(l => l?.Id, wpId).OrderBy(l => l.Id!.ToLower()))
                 {
                     cancelHandler.Token.ThrowIfCancellationRequested();

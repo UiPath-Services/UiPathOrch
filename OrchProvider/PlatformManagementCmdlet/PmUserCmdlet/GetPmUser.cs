@@ -46,14 +46,14 @@ public class GetPmUserCommand : OrchestratorPSCmdlet
     {
         foreach (var user in output)
         {
-            #region groupId を groupName に変換
+            #region Convert groupId to groupName
             List<string> groupNames = [];
             if (user.groupIDs is not null && user.groupIDs.Any())
             {
                 var groups = drive.PmGroups.Get();
                 foreach (var groupId in user.groupIDs)
                 {
-                    var group = groups.FirstOrDefault(g => g.id == groupId); // 辞書にしてから検索すべきなのか？
+                    var group = groups.FirstOrDefault(g => g.id == groupId); // Should we convert to a dictionary before searching?
                     if (group is not null)
                     {
                         if (!string.IsNullOrEmpty(group.name))

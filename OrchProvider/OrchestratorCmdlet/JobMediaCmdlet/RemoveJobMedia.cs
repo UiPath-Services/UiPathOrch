@@ -36,7 +36,7 @@ public class RemoveJobMediaCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの JobId は、候補から除外する
+            // Exclude JobIds already selected by the parameter from the candidates
             var paramJobId = GetParameterValues(commandAst, "JobId", TPositional.Parameters, wordToComplete).Select(s => long.Parse(s));
             //var wpJobId = paramJobId.Select(un => new WildcardPattern(un, WildcardOptions.IgnoreCase)).ToList();
 
@@ -46,7 +46,7 @@ public class RemoveJobMediaCommand : OrchestratorPSCmdlet
             List<(Int64 folderId, ExecutionMedia media)> results = new();
             foreach (var (drive, folder) in drivesFolders)
             {
-                // キャッシュ済みならキャッシュを使う
+                // Use the cache if available
                 if (drive._dicJobsHavingExecutionMedia is not null && drive._dicJobsHavingExecutionMedia.TryGetValue(folder.Id ?? 0, out var jobsHavingMedia))
                 {
                     foreach (var media in jobsHavingMedia)
@@ -54,7 +54,7 @@ public class RemoveJobMediaCommand : OrchestratorPSCmdlet
                         results.Add((folder.Id ?? 0, media));
                     }
                 }
-                else // 未キャッシュなら取得する
+                else // If not cached, fetch from the server
                 {
                     foreach (var media in drive.GetExecutionMedia(folder))
                     {
@@ -77,8 +77,8 @@ public class RemoveJobMediaCommand : OrchestratorPSCmdlet
     {
         var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
 
-        // ワイルドカードをサポートしないため、
-        // あらかじめ非同期で対象の ExecutionMedia を取得しておくことは不要
+        // Since wildcards are not supported,
+        // there is no need to asynchronously pre-fetch the target ExecutionMedia
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)

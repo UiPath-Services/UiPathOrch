@@ -51,7 +51,7 @@ public class CopyRoleCommand : OrchestratorPSCmdlet
                 cancelToken.ThrowIfCancellationRequested();
                 reporter.WriteProgress(++index, $"{role.GetPSPath()} to {dstDrive.NameColonSeparator}");
 
-                // コピー元のロールが IsStatic で、かつコピー先に同名のロールがある場合にはスキップ
+                // Skip if the source role is static and a role with the same name exists at the destination
                 if (role.IsStatic.GetValueOrDefault())
                 {
                     var dstRoles = dstDrive.Roles.Get();

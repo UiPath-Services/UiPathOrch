@@ -34,14 +34,14 @@ public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
         var cmp = StringComparer.CurrentCultureIgnoreCase;
         var dirSeps = new[] { System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar };
 
-        // Recurse=false → 深さ0。Recurse=true かつ Depth 未指定 → 無制限
+        // Recurse=false -> depth 0. Recurse=true with Depth unspecified -> unlimited
         uint effDepth = !Recurse ? 0u
             : (MyInvocation.BoundParameters.ContainsKey(nameof(Depth)) ? Depth : uint.MaxValue);
 
         static string LastDirName(string path)
             => System.IO.Path.GetFileName(System.IO.Path.TrimEndingDirectorySeparator(path));
 
-        // .NET 8 標準の深さ制御を利用
+        // Use .NET 8 standard depth control
         static EnumerationOptions MakeEnumOptions(uint maxDepth) => new EnumerationOptions
         {
             RecurseSubdirectories = maxDepth == uint.MaxValue || maxDepth > 0u,
@@ -64,7 +64,7 @@ public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
             {
                 if (System.IO.File.Exists(src))
                 {
-                    // 単一ファイル：destination は常に空、bucket は直近親フォルダ名
+                    // Single file: destination is always empty, bucket is the nearest parent folder name
                     var f = System.IO.Path.GetFullPath(src);
                     if (!seen.Add(f)) continue;
 
@@ -74,7 +74,7 @@ public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
                 }
                 else if (System.IO.Directory.Exists(src))
                 {
-                    // フォルダ：そのフォルダをアンカーにして配下を列挙（Depth/Recurse 適用）
+                    // Folder: enumerate descendants using this folder as anchor (applying Depth/Recurse)
                     var anchor = System.IO.Path.GetFullPath(src);
 
                     IEnumerable<string> files;
@@ -93,21 +93,21 @@ public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
                     {
                         if (!seen.Add(f)) continue;
 
-                        // アンカーからの相対パスで destination / bucket を決める
-                        var rel = System.IO.Path.GetRelativePath(anchor, f);          // 例: "sub\subsub\桶\file.csv"
+                        // Determine destination / bucket from the relative path to the anchor
+                        var rel = System.IO.Path.GetRelativePath(anchor, f);          // e.g.: "sub\subsub\bucket\file.csv"
                         var relDir = System.IO.Path.GetDirectoryName(rel) ?? "";
                         var parts = relDir.Split(dirSeps, StringSplitOptions.RemoveEmptyEntries);
 
                         string bucket, dest;
                         if (parts.Length == 0)
                         {
-                            bucket = LastDirName(anchor);   // 直下ファイル：バケットはアンカー名
+                            bucket = LastDirName(anchor);   // Direct child file: bucket is the anchor name
                             dest = "";
                         }
                         else
                         {
-                            bucket = parts[^1];             // 直近親をバケットに
-                            dest = parts.Length > 1       // それ以前を destination に（'/' 連結）
+                            bucket = parts[^1];             // Use the nearest parent as bucket
+                            dest = parts.Length > 1       // Use preceding parts as destination (joined with '/')
                                 ? string.Join('/', parts, 0, parts.Length - 1)
                                 : "";
                         }
@@ -122,7 +122,7 @@ public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
             }
         }
 
-        // 安定した出力順：destination → bucket → ファイル名 → フルパス
+        // Stable output order: destination -> bucket -> file name -> full path
         foreach (var r in rows
             .OrderBy(t => t.destination, cmp)
             .ThenBy(t => t.bucketName, cmp)
@@ -153,7 +153,7 @@ public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
                 //WriteObject($"'{filePath}' '{dir}' '{bucketName}'");
                 //continue;
 
-                // -Recurse が指定されている場合に限り、dir を考慮する
+                // Only consider dir when -Recurse is specified
                 string targetFolderPath;
                 if (Recurse)
                 {
@@ -195,7 +195,7 @@ public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
 
                 if (wpName is not null)
                 {
-                    // -Name が指定されていなければ、それを使う
+                    // If -Name is specified, use it
                     targetBuckets = buckets
                         .FilterByWildcards(b => b!.Name, wpName)
                         .OrderBy(b => b.Name);
@@ -207,9 +207,9 @@ public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
                 }
                 else
                 {
-                    // -Name が指定されていなければ、ローカルフォルダから抽出
+                    // If -Name is not specified, extract from local folder
 
-                    // 1) 大小無視の完全一致を優先
+                    // 1) Prioritize case-insensitive exact match
                     var bucket = buckets.FirstOrDefault(b =>
                         string.Equals(b.Name, bucketName, StringComparison.OrdinalIgnoreCase));
 
@@ -219,12 +219,12 @@ public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
                     }
                     else
                     {
-                        // 2) 置換エクスポート対策: '_' を 1文字ワイルドカードとして解釈
+                        // 2) Handle character replacement from export: interpret '_' as single-character wildcard
                         var bucketWildcard = bucketName.Replace('_', '?');
                         var wp = new WildcardPattern(bucketWildcard,
                             WildcardOptions.IgnoreCase | WildcardOptions.CultureInvariant);
 
-                        // 0/1/複数 を一度の列挙で判定
+                        // Determine 0/1/multiple matches in a single enumeration
                         var matches = buckets.Where(b => wp.IsMatch(b.Name)).Take(2).ToList();
 
                         if (matches.Count == 0)
@@ -246,7 +246,7 @@ public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
                 {
                     cancelHandler.Token.ThrowIfCancellationRequested();
 
-                    // targetFolder にある bucket に、filePath をアップロードする
+                    // Upload filePath to the bucket in targetFolder
                     string target = $"Item: '{filePath}' Folder: '{targetFolder.GetPSPath()}' Bucket: '{targetBucket.Name}'";
                     if (ShouldProcess(target, "Import BucketItem"))
                     {

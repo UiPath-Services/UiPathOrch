@@ -18,7 +18,7 @@ public class GetOrchPSDriveCommand : OrchestratorPSCmdlet
     [Parameter]
     public SwitchParameter Force { get; set; }
 
-    // OrchDriveInfoBase クラスを作成できれば、ここをいい感じで実装できそうだが。。
+    // If we could create an OrchDriveInfoBase class, this could be implemented more cleanly.
     //private void EnumDrives<T>() where T : OrchDriveInfoBase
     //{
     //    IEnumerable<T> drives = null;

@@ -97,7 +97,7 @@ public class RemoveRoleFromUserCommand : OrchestratorPSCmdlet
         var wpFullName = FullName.ConvertToWildcardPatternList();
         var wpType = Type.ConvertToWildcardPatternList();
 
-        // 先頭の要素は CSV から入力されている可能性があるので、先頭の要素についてはカンマで区切る
+        // The first element may have been input from CSV, so split it by commas
         var processedRoles = Roles.Split1stValueByUnescapedCommas();
 
         var wpRoles = processedRoles.ConvertToWildcardPatternList();

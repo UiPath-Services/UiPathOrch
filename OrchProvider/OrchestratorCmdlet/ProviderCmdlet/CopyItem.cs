@@ -7,8 +7,8 @@ using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Core;
 
-// Cmdlet class のインスタンスと、CmdletProvider class のインスタンスを統一的に扱えるようにするためのインターフェイス。
-// Cmdlet と CmdletProvider のサブクラスで実装しておくと便利だ。
+// Interface to handle Cmdlet class instances and CmdletProvider class instances uniformly.
+// Convenient to implement in subclasses of Cmdlet and CmdletProvider.
 public interface IWritableHost
 {
     public void WriteError(ErrorRecord errorRecord);
@@ -20,16 +20,16 @@ public interface IWritableHost
     //public void ThrowTerminatingError(ErrorRecord errorRecord);
 }
 
-// 画面にエラーを出力する処理は、このクラスに集約する。
+// Error output to the console is consolidated in this class.
 public static class IWritableHostExtensions
 {
-    // この実装の一部は Folder の拡張メソッドにした方がいいような気がするが、
+    // Some of this implementation should probably be refactored as Folder extension methods, but
     internal static Folder? GetRelativeDstFolder(this IWritableHost _this, Folder srcRootFolder, Folder srcFolder, OrchDriveInfo dstDrive, Folder dstRootFolder, bool includeRoot = false)
     {
         var strDstRootFolder = dstRootFolder.FullyQualifiedName;
         //if (strDstRootFolder != "") strDstRootFolder += '/';
 
-        // srcFolder の、srcRootFolder からの相対パスを取得
+        // Get the relative path of srcFolder from srcRootFolder
         string relativePath = srcFolder.GetRelativePath(srcRootFolder);
 
         string strDstFolder = null;
@@ -74,7 +74,7 @@ public static class IWritableHostExtensions
         return dstFolder;
     }
 
-    // 例外処理とコンソールへのエラーメッセージ出力が不要の場合には、drive.CreatePmGroup() を直接呼び出してほしい。
+    // If exception handling and error message output to the console are not needed, call drive.CreatePmGroup() directly.
     internal static PmGroup? CreatePmGroup(this IWritableHost _this, OrchDriveInfo drive, string? groupName, IEnumerable<string>? memberIds = null)
     {
         PmGroup ret = null;
@@ -100,16 +100,16 @@ public class CopyItem_DynamicParameters
 }
 
 // Copy-Item cmdlet
-// TODO: フォルダの Description を更新する手段として、Set-ItemProperty を実装したい。
+// TODO: Implement Set-ItemProperty as a means to update folder Description.
 public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 {
     private bool ExcludeEntities = false;
 
-    // テナントパッケージのキャッシュは、一度だけクリアしたいがどうやって実装できるか、、
+    // We want to clear the tenant package cache only once, but how to implement that..
     //private ReadOnlyCollection<Package> tenantPackagesCache = null;
 
-    // このメソッドは IEnumerable<Folder> を返すと問題が出るので、List<Folder> を返す必要がある
-    // (enumeration 中にフォルダを作成すると、enumeration を継続できなくなる)
+    // This method must return List<Folder> instead of IEnumerable<Folder> because
+    // creating folders during enumeration would break the enumeration
     private static List<Folder> GetDirectChildFolders(ReadOnlyCollection<Folder> folders, Folder parentFolder)
     {
         List<Folder> ret = new();
@@ -130,7 +130,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     {
         string newFolderDisplayName = srcFolder.DisplayName;
 
-        // 同じ親フォルダーの中でコピーを指示した場合には、コピー先のフォルダー名に - Copy を付加する
+        // When copying within the same parent folder, append " - Copy" to the destination folder name
         Folder srcParentFolder = srcDrive.GetParentFolder(srcFolder);
         if (srcParentFolder == dstFolder)
         {
@@ -148,7 +148,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 {
                     newFolderDisplayName = $"{srcFolder.DisplayName} - Copy ({index})";
                 }
-                // newFolderDisplayName と同じ名前がなければ break
+                // Break if no folder with the same name as newFolderDisplayName exists
                 if (!siblingFolders.Any(f => f.DisplayName == newFolderDisplayName))
                 {
                     break;
@@ -157,13 +157,13 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             }
         }
 
-        // 同名の既存フォルダが存在すれば、フォルダを作成せずに既存フォルダを返す
+        // If an existing folder with the same name exists, return it without creating a new one
         Folder targetFolder = dstDrive.GetFolders()
             .Where(f => f.ParentId == dstFolder.Id)
             .FirstOrDefault(f => string.Compare(f.DisplayName, newFolderDisplayName, StringComparison.OrdinalIgnoreCase) == 0);
         if (targetFolder is not null)
         {
-            // この警告は、うるさいから出さなくてもいいか。。
+            // This warning might be too noisy, so maybe we don't need it..
             //string target = targetFolder.GetPSPath();
             //WriteWarning($"The target folder exists. Copying the contents from \"{srcFolder.GetPSPath()}\"...");
             return targetFolder;
@@ -179,7 +179,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         {
             newFolder.Path = dstFolder.GetPSPath();
             WriteItemObject(newFolder, newFolder.GetPSPath(), true);
-            dstDrive._dicFolders!.Add(newFolder); // いったん、ソート順を気にせず追加しておく
+            dstDrive._dicFolders!.Add(newFolder); // Add for now without worrying about sort order
         }
         return newFolder;
     }
@@ -207,7 +207,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             Role roleToAdded;
             if (srcDrive == dstDrive)
             {
-                // 名前で探しても見つかるはずだけど、Id で探したほうが安全かな。。
+                // Searching by name should work, but searching by Id is probably safer..
                 roleToAdded = dstTenantRoles.FirstOrDefault(r => r.Id == ur.Id);
             }
             else
@@ -215,8 +215,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 roleToAdded = dstTenantRoles.FirstOrDefault(r => string.Compare(r.Name, ur.Name, StringComparison.OrdinalIgnoreCase) == 0);
             }
 
-            // 別のテナント間でのフォルダコピーでは、同名のロールがない場合があるので
-            // エラーを表示して、処理を継続する
+            // When copying folders between different tenants, a role with the same name may not exist,
+            // so display an error and continue processing
             if (roleToAdded is null)
             {
                 _this.WriteError(new ErrorRecord(
@@ -225,8 +225,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 continue;
             }
 
-            // クラシックフォルダーから取得したフォルダーユーザーには
-            // テナントロールが含まれているので、それを除いておかねばならない
+            // Folder users retrieved from classic folders include tenant roles,
+            // so those must be excluded
             if (roleToAdded.Type != "Tenant")
             {
                 retRoles.Add(roleToAdded.Id ?? 0);
@@ -250,7 +250,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             return;
         }
 
-        // すでに割り当て済みのユーザーを取得する
+        // Get already-assigned users
         var dstFolderUsers = dstDrive.FolderUsersWithNoInherited.Get(newFolder)
             .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName)
             .FilterByWildcards(u => u?.UserEntity?.Type, wpType).ToList();
@@ -274,8 +274,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 // assert(userRoles.Roles.Any())
                 List<Int64> newRoleIds = FindDstRoles(_this, srcDrive, userRole.Roles!, dstDrive, msg);
 
-                // フォルダロールがひとつもなければ、API call は失敗するので、エラーを出力しこのユーザーは追加しない
-                // と思ったけど、mix のロールが割り当て済みならエラーにならない気がするので、API call してみる。
+                // If there are no folder roles, the API call will fail, so output an error and skip this user
+                // ...or so I thought, but if mixed roles are already assigned, it may not error, so try the API call.
                 //if (newRoleIds is null || !newRoleIds.Any())
                 //{
                 //    _this.WriteError(new ErrorRecord(new OrchException(targetFolder, $"{msg}: No roles matched."), "CopyFolderError", ErrorCategory.InvalidOperation, newFolder));
@@ -290,8 +290,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     }
                 ];
 
-                // すでに同じユーザーがこのフォルダーにアサイン済みであれば
-                // 既存のロールを保持するようにする
+                // If the same user is already assigned to this folder,
+                // preserve the existing roles
                 var existingSameNameUser = dstFolderUsers.FirstOrDefault(u => string.Compare(u.UserEntity?.UserName, userRole.UserEntity?.UserName, StringComparison.OrdinalIgnoreCase) == 0);
                 if (existingSameNameUser is not null)
                 {
@@ -307,7 +307,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         continue;
                     }
 
-                    // UserMappingCsv による名前解決
+                    // Name resolution via UserMappingCsv
                     string resolvedUserName = userName;
                     if (userMapping is not null && userMapping.TryGetValue(userName, out var mappedName)
                         && !string.IsNullOrEmpty(mappedName))
@@ -315,7 +315,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         resolvedUserName = mappedName;
                     }
 
-                    // ディレクトリを検索しなければ。。
+                    // Need to search the directory..
                     var resolvedUsers = dstDrive.SearchDirectory(resolvedUserName)?
                         .Where(u => u.type == type).ToList();
 
@@ -333,16 +333,16 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                     else if (resolvedUsers is null || resolvedUsers.Count == 0)
                     {
-                        // srcDrive のユーザーと同名のユーザーが、dstDrive のディレクトリに見つからない！
-                        // そこで、このユーザーの email でも dstDrive で検索する。
+                        // A user with the same name as the srcDrive user was not found in the dstDrive directory!
+                        // So also search dstDrive using this user's email address.
 
-                        // まず srcUser の email を確認する。
+                        // First, check the srcUser's email.
                         var srcUserEmail = srcDrive.GetUsers().FirstOrDefault(u => u.Id == userRole.UserEntity?.Id)?.EmailAddress;
 
-                        // TODO: ローカルユーザーにいなければ、ディレクトリを探さないと。
+                        // TODO: If not found among local users, need to search the directory.
                         //if (string.IsNullOrEmpty(srcUserEmail))
                         //{
-                        //    // もしテナントユーザーにいなければ、ディレクトリを検索する。
+                        //    // If not found among tenant users, search the directory.
                         //    var srcDirectoryUser = srcDrive.SearchPmDirectory(userName)?
                         //        .Where(u => u.type == type)
                         //        .Where(u => string.Compare(u.identityName, userName, true) == 0)
@@ -392,11 +392,11 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
         if (drive.OrchAPISession.AuthManager.IsConfidentialApp)
         {
-            // 機密アプリの場合には、この機密アプリをアサインする
+            // For confidential apps, assign this confidential app
         }
         else
         {
-            // 非機密アプリの場合には、現在のユーザーをアサインする
+            // For non-confidential apps, assign the current user
             var currentUser = drive.GetCurrentUser();
             if (currentUser is null) return false;
             DomainUserAssignment duser = new()
@@ -462,7 +462,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             .FolderMachinesAssigned.Get(newFolder)
             .ToDictionary(m => m.Name!, StringComparer.OrdinalIgnoreCase);
 
-        // 宛先が同じドライブでも、名前で Id を探した方がいいかな。。
+        // Even if the destination is the same drive, it might be better to look up Id by name..
         //if (srcDrive == dstDrive)
         //{
         //    reporter.TotalNum = srcMachines.Count;
@@ -513,11 +513,11 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             _this.WriteError(new ErrorRecord(new OrchException(targetFolder, "Assigning machines failed.", ex), "AssignFolderMachineError", ErrorCategory.InvalidOperation, targetFolder));
         }
 
-        #region srcMachine の PropagateToSubFolders が true なら、dstMachine でも true にする
+        #region If srcMachine's PropagateToSubFolders is true, set it to true on dstMachine as well
         foreach (var dstMachine in machinesToBeAdded)
         {
             var srcMachine = srcMachines.FirstOrDefault(m => string.Compare(m.Name, dstMachine.Name, true) == 0);
-            if (srcMachine is null) continue; // null のはずはないが念のため
+            if (srcMachine is null) continue; // Should never be null, but just in case
 
             if (srcMachine.PropagateToSubFolders.GetValueOrDefault())
             {
@@ -541,7 +541,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         OrchDriveInfo srcDrive, Folder srcFolder, 
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter, CancellationToken cancelToken)
     {
-        // srcFolder と dstFolder の両方がルート直下のフィードつきフォルダーでなければ、何もしない
+        // Do nothing unless both srcFolder and dstFolder are root-level folders with feeds
         if (srcFolder.FeedType != "FolderHierarchy" ||
             newFolder.FeedType != "FolderHierarchy" ||
             srcFolder.ParentId is not null ||
@@ -573,13 +573,13 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             return;
         }
 
-        // スクリプトで連続して cmdlet を実行することを考えると、
-        // いちいちキャッシュをクリアするべきじゃなかった。。
-        // 下記はコメントアウトしておく。
+        // Considering that cmdlets may be executed consecutively in a script,
+        // we shouldn't have been clearing the cache each time..
+        // Comment out the below.
 
-        // 最新の状態をコピーできるように、このフォルダーのキャッシュを削除する
-        // テナントのパッケージについては、削除する適切なタイミングがないが
-        // 前段の条件式により、ここには到達しないので、考慮する必要はない
+        // Clear this folder's cache so we can copy the latest state
+        // For tenant packages, there is no appropriate time to clear the cache,
+        // but due to the preceding conditions, this code path is never reached, so no concern
         //if (!string.IsNullOrEmpty(srcFeedId))
         //{
         //    srcDrive!._dicPackages?.TryRemove(srcFeedId, out _);
@@ -634,8 +634,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             }
         }
 
-        // 個人用ワークスペースにパッケージを追加すると、プロセスが自動作成される。
-        // 後続の CopyProcesses() が正しい状態を参照できるよう、プロセスキャッシュをクリアする。
+        // Adding a package to a personal workspace automatically creates a process.
+        // Clear the process cache so the subsequent CopyProcesses() sees the correct state.
         if (newFolder.FolderType == "Personal")
         {
             dstDrive._dicReleases?.TryRemove(newFolder.Id ?? 0, out var _);
@@ -678,14 +678,14 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken)
     {
-        // スクリプトで連続して cmdlet を実行することを考えると、
-        // いちいちキャッシュをクリアするべきじゃなかった。。
-        // 下記はコメントアウトしておく。
+        // Considering that cmdlets may be executed consecutively in a script,
+        // we shouldn't have been clearing the cache each time..
+        // Comment out the below.
 
-        // 最新の状態をコピーできるように、このフォルダーのキャッシュを削除する
+        // Clear this folder's cache so we can copy the latest state
         //srcDrive._dicReleases?.TryRemove(srcFolder.Id ?? 0, out _);
 
-        // あとで最新のプロセス一覧を取得する必要があるため、dstDrive のキャッシュも削除しておく
+        // Also clear the dstDrive cache since we need to get the latest process list later
         //dstDrive._dicReleases?.TryRemove(newFolder.Id ?? 0, out _);
 
         string msg = "Copying the process(es)";
@@ -716,14 +716,14 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             {
                 msg = $"Copying process {process.GetPSPath()}";
 
-                // GetRelease と GetReleaseById で、返される内容がどの程度異なるか？
-                // 少なくとも、GetReleaseById でないと返されない内容があるのは確かなようだ。
+                // How much do the contents returned by GetRelease and GetReleaseById differ?
+                // At the very least, there is content that is only returned by GetReleaseById.
                 //var releaseInCache = processes.FirstOrDefault(p => p.Id == process.Id);
 
                 //reporter.WriteProgress(++index, $"{index:D}/{processes.Count} {process.Name}");
                 reporter.WriteProgress(++index);
 
-                #region src の release 情報を取得
+                #region Get the source release information
                 Release srcRelease = null;
                 try
                 {
@@ -748,12 +748,12 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 //}
                 #endregion
 
-                #region srcRelease のエントリポイントの Id を取得
+                #region Get the entry point Id of the srcRelease
                 #endregion
 
                 string dstFeedId = dstDrive.FolderFeedId.Get(newFolder);
 
-                #region エントリポイントの Id を移行
+                #region Migrate the entry point Id
                 try
                 {
                     if (srcRelease.EntryPointId.HasValue)
@@ -770,17 +770,17 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 }
                 catch (Exception ex)
                 {
-                    // 少しエラー処理が適当かな。。あとで丁寧に書き直したい。この一部を↑の region に移す。
+                    // The error handling here is a bit rough.. Would like to rewrite this more carefully later. Move part of this to the region above.
                     string msg2 = "Migrating entry point id {srcRelease.EntryPointId} failed.";
                     _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: {msg2}", ex), "GetProcessError", ErrorCategory.InvalidOperation, target));
-                    // ここでは continue しない方が良い。
+                    // Better not to continue here.
                 }
                 #endregion
 
-                #region コピー先にある、同名のプロセスを削除する
-                // ここまで、問題なくプロセスをコピーする準備が整ったら、
-                // 個人用ワークスペースにプロセスをコピーする場合に限り、同名の既存プロセスがあれば、上書きコピーする。
-                // つまり、同名の既存のプロセスがあれば、削除しておく。
+                #region Delete existing process with the same name at the destination
+                // Once we've successfully prepared to copy the process up to this point,
+                // only when copying to a personal workspace, overwrite if an existing process with the same name exists.
+                // In other words, if an existing process with the same name exists, delete it first.
                 if (newFolder.FolderType == "Personal")
                 {
                     Release existingRelease = null;
@@ -801,7 +801,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 }
                 #endregion
 
-                #region srcRelease の ReleaseRetension を取得
+                #region Get the ReleaseRetention of the srcRelease
                 ReleaseRetentionSetting srcRetention = null;
                 try
                 {
@@ -814,12 +814,12 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 }
                 #endregion
 
-                #region dstFolder に Release を作成
+                #region Create the Release in dstFolder
                 Release created = null;
                 try
                 {
                     Release postingRelease = OrchCollectionExtensions.DeepCopy(srcRelease);
-                    // postingRelease.Path = null;// JsonIgnore 属性がついているので不要
+                    // postingRelease.Path = null;// Not needed since it has the JsonIgnore attribute
                     postingRelease.CreationTime = null;
                     postingRelease.CreatorUserId = null;
                     postingRelease.Id = null;
@@ -854,11 +854,11 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         postingRelease.RetentionPeriod ??= 30;
                     }
 
-                    // EnvironmentId は、モダンフォルダーでは null にしておかないといけない。
-                    // クラシックフォルダー（ProvisionType == "Manual"）でも、正しい Id に付け替えないと動かない。
-                    // けど、Get-OrchEnvironment みたいなのは作らなくても良いかなと思う。。
-                    // コピー元とコピー先のフォルダーが同じであれば、EnvironmentId はそのままにして
-                    // そうでなければ null にしとけ。
+                    // EnvironmentId must be set to null for modern folders.
+                    // Even for classic folders (ProvisionType == "Manual"), it won't work unless replaced with the correct Id.
+                    // But I don't think we need to create something like Get-OrchEnvironment..
+                    // If the source and destination folders are the same, keep the EnvironmentId as-is;
+                    // otherwise set it to null.
                     //if (newFolder.ProvisionType != "Manual")
                     if (srcDrive != dstDrive || srcFolder != newFolder)
                     {
@@ -872,7 +872,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                     created = dstDrive.OrchAPISession.PostRelease(newFolder.Id ?? 0, postingRelease);
 
-                    // 画面が乱れるから、この表示はしなくて良いか。。
+                    // This output clutters the screen, so maybe we don't need it..
                     //if (!shouldProcess && created is not null)
                     //{
                     //    created.Path = newFolder.GetPSPath();
@@ -890,8 +890,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 }
                 #endregion
 
-                // 古いバージョンの API だと、下記が必要になるのか？
-                //#region srcRelease の ReleaseRetension を取得
+                // Is the below needed for older API versions?
+                //#region Get the ReleaseRetention of the srcRelease
                 //ReleaseRetentionSetting srcRetention;
                 //try
                 //{
@@ -910,7 +910,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 //    continue;
                 //}
 
-                //#region createdRelease に ReleaseRetension をコピー
+                //#region Copy ReleaseRetention to createdRelease
                 //try
                 //{
                 //    srcRetention.ReleaseId = created.Id;
@@ -931,7 +931,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
     }
 
-    // コピー先にグループがない場合には、同じ名前のグループを作成する
+    // If the group does not exist at the destination, create a group with the same name
     internal static List<PmGroup>? FindDstPmGroups(IWritableHost _this,
         OrchDriveInfo srcDrive, IEnumerable<string>? srcPmGroupIds,
         OrchDriveInfo dstDrive, string msg)
@@ -1025,8 +1025,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
     }
 
-    // TODO: この実装が足りてないではないか。ディレクトリ検索でユーザーを探さないと。
-    // 現在の実装はローカルユーザーしか探していない。
+    // TODO: Is this implementation incomplete? Need to search the directory for users.
+    // The current implementation only searches local users.
     internal static Entities.User? FindDstUser(IWritableHost _this,
         OrchDriveInfo srcDrive,
         OrchDriveInfo dstDrive, Folder newFolder, Int64? srcUserId, string msg,
@@ -1044,7 +1044,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 return null;
             }
 
-            // UserMappingCsv による名前解決
+            // Name resolution via UserMappingCsv
             string searchName = srcUser.UserName!;
             if (userMapping is not null && userMapping.TryGetValue(srcUser.UserName!, out var mappedName)
                 && !string.IsNullOrEmpty(mappedName))
@@ -1056,14 +1056,14 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             var dstUser = dstUsers.FirstOrDefault(u => string.Compare(u.UserName, searchName, StringComparison.OrdinalIgnoreCase) == 0);
             if (dstUser is null)
             {
-                // ユーザーが見つからない！ Email でも探してみる。
+                // User not found! Try searching by email as well.
                 dstUser = dstUsers.FirstOrDefault(u => string.Compare(u.UserName, srcUser.EmailAddress, StringComparison.OrdinalIgnoreCase) == 0);
             }
 
             if (dstUser is null)
             {
-                // CopyFolderUsers で AssignDirectoryUser が実行済みの場合、
-                // テナントユーザーのキャッシュが古い可能性があるのでクリアして再試行
+                // If AssignDirectoryUser was already executed in CopyFolderUsers,
+                // the tenant user cache may be stale, so clear it and retry
                 dstDrive._dicUsers = null;
                 dstUsers = dstDrive.GetUsers();
                 dstUser = dstUsers.FirstOrDefault(u => string.Compare(u.UserName, searchName, StringComparison.OrdinalIgnoreCase) == 0);
@@ -1128,7 +1128,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             string? srcRobot_Username = null;
             if (srcFolder.ProvisionType == "Manual")
             {
-                // クラシックフォルダの場合には、GET /odata/Sessions でクラシックロボットを探す
+                // For classic folders, search for classic robots via GET /odata/Sessions
                 var sessions = srcDrive.Sessions.Get(srcFolder);
                 var srcRobot = sessions.FirstOrDefault(s => s.Robot?.Id == srcRobotId);
                 if (srcRobot is null)
@@ -1153,13 +1153,13 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
             //msg = $"Migrating id of the robot {Path.Combine(srcDrive.NameColon, srcRobot.Name!)}";
 
-            // 現在の実装では、ロボットを UR の Windows アカウント名 (domain\user みたいな ID) で探している
-            // ロボット自体の名前で探す方が良いのか？（できるのか？）
-            // クラシックロボットでは、それっぽいロボット名が見つからない
+            // The current implementation searches for robots by the UR's Windows account name (an ID like domain\user)
+            // Would it be better to search by the robot's own name? (Is that possible?)
+            // For classic robots, no matching robot name can be found
 
             var dstRobots = dstDrive.RobotsFromFolder.Get(dstFolder);
             var dstRobot = dstRobots?.FirstOrDefault(r => 
-                r.Type == srcRobot_Type && // たぶん、この srcRobot.Type は必ず "Unattended" になっているはず。。
+                r.Type == srcRobot_Type && // This srcRobot.Type should always be "Unattended"..
                 string.Compare(r.Username, srcRobot_Username, StringComparison.OrdinalIgnoreCase) == 0);
             if (dstRobot is null)
             {
@@ -1228,7 +1228,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             //string query = $"&$filter=((MachineType%20ne%20%27Template%27)%20or%20(MachineScope%20ne%20%27Cloud%27))%20and%20MachineId%20eq%20{dstMachineId}&runtimeType=Unattended&robotId={dstRobotId}";
             //string query = $"&robotId={dstRobot.Id.Value}&MachineId%20eq%20{dstMachineFolder.Id}";
 
-            // TODO: これはキャッシュにかえた。ちゃんと動いているか？
+            // TODO: Changed this to use cache. Is it working correctly?
             var srcSessions = srcDrive.MachineSessionRuntimesByFolder.Get(srcFolder).ToList();
             srcSession = srcSessions.FirstOrDefault(s => s.SessionId == srcSessionId);
             if (srcSession is null)
@@ -1286,11 +1286,11 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     {
         if (srcQueueId is null || srcQueueId.Value == 0) return null;
 
-        // スクリプトで連続して cmdlet を実行することを考えると、
-        // いちいちキャッシュをクリアするべきじゃなかった。。
-        // 下記はコメントアウトしておく。
+        // Considering that cmdlets may be executed consecutively in a script,
+        // we shouldn't have been clearing the cache each time..
+        // Comment out the below.
 
-        // 最新の状態をコピーできるように、このフォルダーのキャッシュを削除する
+        // Clear this folder's cache so we can copy the latest state
         //srcDrive._dicQueueDefinitions?.TryRemove(srcFolder.Id ?? 0, out var _);
 
         QueueDefinition srcQueue = null;
@@ -1475,7 +1475,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         OrchDriveInfo srcDrive, Folder srcFolder, 
         OrchDriveInfo dstDrive, Folder newFolder, Asset asset, string msg)
     {
-        // TODO: この数字は正しいか？ 12 より古い数字の Orchestrator はもうないような気がする。
+        // TODO: Is this version number correct? There likely aren't any Orchestrators older than v12 anymore.
         if (srcDrive.OrchAPISession.ApiVersion < 12) return false;
         if (dstDrive.OrchAPISession.ApiVersion < 12) return false;
 
@@ -1571,8 +1571,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 //reporter.WriteProgress(++index, asset.Name);
                 reporter.WriteProgress(++index);
 
-                // リンクを取得し、ターゲットドライブのリンク先フォルダに同名のエンティティがあれば
-                // そこにリンクを張るだけにする
+                // Get links, and if an entity with the same name exists in the linked folder of the target drive,
+                // just create a link to it instead
                 if (LinkAsset(_this, srcDrive, srcFolder, dstDrive, newFolder, asset, msg))
                 {
                     continue;
@@ -1595,7 +1595,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     postingAsset.LastModificationTime = null;
                     postingAsset.LastModifierUserId = null;
                     postingAsset.FoldersCount = null;
-                    // postingAsset.Path = null; // JsonIgnore 属性がついているので不要
+                    // postingAsset.Path = null; // Not needed since it has the JsonIgnore attribute
 
                     if (postingAsset.ValueType == "Credential")
                     {
@@ -1609,7 +1609,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     if (postingAsset.UserValues is not null && postingAsset.UserValues.Count == 0)
                     {
                         postingAsset.UserValues = null;
-                        postingAsset.ValueScope = "Global"; // ISSUE: UserValues がないアセットなのに、"PerRobot" となっている場合があった
+                        postingAsset.ValueScope = "Global"; // ISSUE: Some assets had "PerRobot" despite having no UserValues
                     }
                     if (postingAsset.UserValues is not null)
                     {
@@ -1636,9 +1636,9 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                             userValue.Id = null;
                             userValue.Value = null;
-                            // userValue.Path = null; // JsonIgnore 属性がついているので不要
-                            // userValue.Name = null; // JsonIgnore 属性がついているので不要
-                            // userValue.PathName = null; // JsonIgnore 属性がついているので不要
+                            // userValue.Path = null; // Not needed since it has the JsonIgnore attribute
+                            // userValue.Name = null; // Not needed since it has the JsonIgnore attribute
+                            // userValue.PathName = null; // Not needed since it has the JsonIgnore attribute
                             userValue.CredentialStoreId = FindDstCredentialStore(_this,
                                 srcDrive, dstDrive, newFolder, userValue.CredentialStoreId, msg)?.Id;
 
@@ -1667,7 +1667,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                     var created = dstDrive.OrchAPISession.AddAsset(newFolder.Id ?? 0, postingAsset);
 
-                    // 画面が乱れるから、この表示はしなくて良いか。。
+                    // This output clutters the screen, so maybe we don't need it..
                     //if (!shouldProcess && created is not null)
                     //{
                     //    created.Path = newFolder.GetPSPath();
@@ -1681,8 +1681,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         bCredentialWarningDone = true;
                     }
 
-                    // キャッシュのクリアは、各 Copy-OrchXxx ですることに決めた。ここではしない。
-                    // フォルダのコピー時には、コピー先の新規フォルダのキャッシュは空だからね。
+                    // Decided to clear the cache in each Copy-OrchXxx. Not doing it here.
+                    // When copying folders, the destination new folder's cache is empty anyway.
                     //dstDrive._dicAssets?.TryRemove(newFolder.Id.Value!, out _);
                 }
                 catch (Exception ex)
@@ -1697,7 +1697,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         OrchDriveInfo srcDrive, Folder srcFolder, 
         OrchDriveInfo dstDrive, Folder newFolder, QueueDefinition queue)
     {
-        // TODO: この数字は正しいか？ 12 より古い数字の Orchestrator はもうないような気がする。
+        // TODO: Is this version number correct? There likely aren't any Orchestrators older than v12 anymore.
         if (srcDrive.OrchAPISession.ApiVersion < 12) return false;
         if (dstDrive.OrchAPISession.ApiVersion < 12) return false;
 
@@ -1771,11 +1771,11 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken)
     {
-        // スクリプトで連続して cmdlet を実行することを考えると、
-        // いちいちキャッシュをクリアするべきじゃなかった。。
-        // 下記はコメントアウトしておく。
+        // Considering that cmdlets may be executed consecutively in a script,
+        // we shouldn't have been clearing the cache each time..
+        // Comment out the below.
 
-        // 最新の状態をコピーできるように、このフォルダーのキャッシュを削除する
+        // Clear this folder's cache so we can copy the latest state
         //srcDrive._dicQueueDefinitions?.TryRemove(srcFolder.Id ?? 0, out _);
 
         string target = srcFolder.GetPSPath();
@@ -1811,8 +1811,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                 QueueDefinition postingQueue = null;
 
-                // リンクを取得し、ターゲットドライブのリンク先フォルダに同名のエンティティがあれば
-                // そこにリンクを張るだけにする
+                // Get links, and if an entity with the same name exists in the linked folder of the target drive,
+                // just create a link to it instead
                 if (LinkQueue(_this, srcDrive, srcFolder, dstDrive, newFolder, queue))
                 {
                     continue;
@@ -1843,9 +1843,9 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         srcQueue.ReleaseId, msg)?.Id;
                 }
 
-                // TODO: ProcessScheduleId がコピーできていない気がする？
-                // どこかから移行しないといけなそうな値だ。
-                // Get-OrchQueue -Recurse | select name,ProcessScheduleId で確認
+                // TODO: I don't think ProcessScheduleId is being copied properly?
+                // It seems like a value that needs to be migrated from somewhere.
+                // Verify with Get-OrchQueue -Recurse | select name,ProcessScheduleId
                 postingQueue = new QueueDefinition()
                 {
                     Name = srcQueue.Name,
@@ -1861,8 +1861,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     AnalyticsDataJsonSchema = srcQueue.AnalyticsDataJsonSchema,
                     SlaInMinutes = srcQueue.SlaInMinutes,
                     RiskSlaInMinutes = srcQueue.RiskSlaInMinutes,
-                    RetentionAction = srcQueue.RetentionAction ?? "Delete", // TODO: OR バージョン依存。CreateQueue() 側で行うべきかも
-                    RetentionPeriod = srcQueue.RetentionPeriod ?? 30, // TODO: OR バージョン依存。CreateQueue() 側で行うべきかも
+                    RetentionAction = srcQueue.RetentionAction ?? "Delete", // TODO: OR version dependent. Should probably be done in CreateQueue()
+                    RetentionPeriod = srcQueue.RetentionPeriod ?? 30, // TODO: OR version dependent. Should probably be done in CreateQueue()
                     RetentionBucketId = FindDstBucket(_this,
                             srcDrive, srcFolder, srcQueue.RetentionBucketId,
                             dstDrive, newFolder, "Copy Process", msg)?.Id,
@@ -1876,7 +1876,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                 if (dstDrive.OrchAPISession.ApiVersion >= 19)
                 {
-                    // None は Keep という意味。Automation Cloud では、None は使えない。
+                    // "None" means "Keep". In Automation Cloud, "None" cannot be used.
                     if (string.IsNullOrEmpty(postingQueue.RetentionAction) || postingQueue.RetentionAction == "None")
                     {
                         postingQueue.RetentionAction = "Delete";
@@ -1900,7 +1900,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 {
                     var created = dstDrive.OrchAPISession.CreateQueue(newFolder.Id ?? 0, postingQueue!);
 
-                    // 画面が乱れるから、この表示はしなくて良いか。。
+                    // This output clutters the screen, so maybe we don't need it..
                     //if (!shouldProcess && created is not null)
                     //{
                     //    created.Path = newFolder.GetPSPath();
@@ -1975,7 +1975,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 {
                     dstSessions.Add(new MachineRobotSession()
                     {
-                        // RobotId を移行
+                        // Migrate RobotId
                         RobotId = robotId,
                         MachineId = machineId,
                         SessionId = (machineId is null) ? null : FindDstSession(_this, srcDrive, srcFolder, dstDrive, newFolder, machineRobot.SessionId, msg)?.SessionId
@@ -2034,59 +2034,59 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 postingTrigger.StartProcessNextOccurrence = null;
                 postingTrigger.Key = null;
                 postingTrigger.ReleaseKey = null;
-                // postingTrigger.Path = null; // JsonIgnore 属性がついているので不要
+                // postingTrigger.Path = null; // Not needed since it has the JsonIgnore attribute
                 postingTrigger.TimeZoneIana = null;
                 postingTrigger.ExternalJobKeyScheduler = null;
                 postingTrigger.StartProcessCronSummary = null;
                 postingTrigger.PackageName = null;
                 if (postingTrigger.SpecificPriorityValue.HasValue) postingTrigger.JobPriority = null;
 
-                // API で取得したトリガーの Enabled は null になることはないようだ。
-                // また、Enabled を null としてトリガーを POST すると、この Enabled は true になるようだ。
+                // The Enabled property of triggers retrieved via API never seems to be null.
+                // Also, if Enabled is set to null when POSTing a trigger, it becomes true.
                 if (postingTrigger.Enabled.GetValueOrDefault())
                 {
-                    // コピー元のトリガーが true である場合に限り警告
+                    // Only warn when the source trigger's Enabled is true
                     _this.WriteWarning($"'{newFolder.GetPSPath()}\\{srcTrigger.Name}': This trigger will be disabled. Please enable it if necessary.");
                 }
-                // どんな場合であれ、false を代入しておく方が安全だ。
-                postingTrigger.Enabled = false; // コピーしたエンティティは無効にしておく
+                // In any case, it is safer to set it to false.
+                postingTrigger.Enabled = false; // Disable copied entities
 
-                // キューIDを移行
-                // TODO: この条件式不要、中身だけあればいい気がする
+                // Migrate queue ID
+                // TODO: This condition might be unnecessary, just the body should suffice
                 if (srcTrigger.QueueDefinitionId.GetValueOrDefault() != 0)
                 {
                     postingTrigger.QueueDefinitionId = FindDstQueue(_this,
                         srcDrive, srcFolder,
                         dstDrive, newFolder, srcTrigger.QueueDefinitionId, msg)?.Id;
-                    // キュートリガーなのにキューが見つからなかったら、これはコピーしなくて良いのでは。
+                    // If this is a queue trigger but the queue was not found, we probably don't need to copy it.
                     if (postingTrigger.QueueDefinitionId is null) continue;
                 }
 
-                // プロセスIDを移行
+                // Migrate process ID
                 postingTrigger.ReleaseId = FindDstRelease(_this,
                     srcDrive, srcFolder,
                     dstDrive, newFolder, srcTrigger.ReleaseId, msg)?.Id;
                 if (postingTrigger.ReleaseId is null)
                 {
-                    // ReleaseId は埋まっていないと API がエラーを返すため、処理を続行できない
-                    // エラーは FindDstRelease() が出力済み
+                    // The API returns an error if ReleaseId is not populated, so we cannot continue
+                    // The error has already been output by FindDstRelease()
                     continue;
                 }
 
-                // MachineRobots を移行
+                // Migrate MachineRobots
                 postingTrigger.MachineRobots = MigrateMachineRobots(_this, msg,
                     srcDrive, srcFolder,
                     dstDrive, newFolder,
                     postingTrigger.MachineRobots,
                     postingTrigger.ExecutorRobots);
 
-                // ExecutorRobots を移行
+                // Migrate ExecutorRobots
                 postingTrigger.ExecutorRobots = MigrateExecutorRobots(_this, msg,
                     srcDrive, srcFolder,
                     dstDrive, newFolder,
                     postingTrigger.ExecutorRobots);
 
-                // カレンダー Id を移行
+                // Migrate calendar Id
                 postingTrigger.CalendarId = FindDstCalendar(_this, srcDrive, dstDrive,
                     postingTrigger.CalendarId, msg)?.Id;
                 postingTrigger.CalendarKey = null;
@@ -2094,7 +2094,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 if (newFolder.ProvisionType != "Manual")
                 {
                     postingTrigger.EnvironmentId = null;
-                    postingTrigger.StartStrategy = 1;// StartStrategy って何だろう。。
+                    postingTrigger.StartStrategy = 1;// What is StartStrategy exactly..
                 }
 
                 if (postingTrigger.StopProcessDate < DateTime.Now)
@@ -2108,7 +2108,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 {
                     var created = dstDrive.OrchAPISession.PostProcessSchedule(newFolder.Id ?? 0, postingTrigger);
 
-                    // 画面が乱れるから、この表示はしなくて良いか。。
+                    // This output clutters the screen, so maybe we don't need it..
                     //if (!shouldProcess && created is not null)
                     //{
                     //    created.Path = newFolder.GetPSPath();
@@ -2128,8 +2128,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken)
     {
-        // TODO: 14 で成功するか？
-        // TODO: 15 で成功するか？
+        // TODO: Does this succeed in v14?
+        // TODO: Does this succeed in v15?
         if (srcDrive.OrchAPISession.ApiVersion < 14) return;
 
         string target = srcFolder.GetPSPath();
@@ -2166,16 +2166,16 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 var postingTrigger = OrchCollectionExtensions.DeepCopy(trigger);
                 postingTrigger.Id = null;
                 postingTrigger.OrganizationUnitId = null;
-                // postingTrigger.Path = null; // JsonIgnore 属性がついているので不要
+                // postingTrigger.Path = null; // Not needed since it has the JsonIgnore attribute
 
-                // ReleaseKey を移行
+                // Migrate ReleaseKey
                 var dstRelease = FindDstRelease(_this,
                         srcDrive, srcFolder,
                         dstDrive, newFolder, trigger.Release?.Id, msg);
                 postingTrigger!.ReleaseKey = dstRelease?.Key;
                 if (postingTrigger!.ReleaseKey is null) continue;
 
-                // MachineRobots を移行
+                // Migrate MachineRobots
                 postingTrigger.MachineRobots = MigrateMachineRobots(_this, msg,
                     srcDrive, srcFolder,
                     dstDrive, newFolder,
@@ -2185,7 +2185,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 {
                     var created = dstDrive.OrchAPISession.CreateHttpTrigger(newFolder.Id ?? 0, postingTrigger);
 
-                    // 画面が乱れるから、この表示はしなくて良いか。。
+                    // This output clutters the screen, so maybe we don't need it..
                     //if (!shouldProcess && created is not null)
                     //{
                     //    created.Path = newFolder.GetPSPath();
@@ -2270,11 +2270,11 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken)
     {
-        // スクリプトで連続して cmdlet を実行することを考えると、
-        // いちいちキャッシュをクリアするべきじゃなかった。。
-        // 下記はコメントアウトしておく。
+        // Considering that cmdlets may be executed consecutively in a script,
+        // we shouldn't have been clearing the cache each time..
+        // Comment out the below.
 
-        // 最新の状態をコピーできるように、このフォルダーのキャッシュを削除する
+        // Clear this folder's cache so we can copy the latest state
         //srcDrive._dicBuckets?.TryRemove(srcFolder.Id ?? 0, out _);
 
         string target = srcFolder.GetPSPath();
@@ -2305,8 +2305,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 //reporter.WriteProgress(++index, bucket.Name);
                 reporter.WriteProgress(++index);
 
-                // リンクを取得し、ターゲットドライブのリンク先フォルダに同名のエンティティがあれば
-                // そこにリンクを張るだけにする
+                // Get links, and if an entity with the same name exists in the linked folder of the target drive,
+                // just create a link to it instead
                 if (LinkBucket(_this, srcDrive, srcFolder, dstDrive, newFolder, bucket))
                 {
                     continue;
@@ -2314,7 +2314,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                 var postingBucket = OrchCollectionExtensions.DeepCopy(bucket);
                 postingBucket.Id = null;
-                // postingBucket.Path = null; // JsonIgnore 属性がついているので不要
+                // postingBucket.Path = null; // Not needed since it has the JsonIgnore attribute
                 postingBucket.FoldersCount = null;
                 postingBucket.Identifier = Guid.NewGuid().ToString();
 
@@ -2330,7 +2330,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 {
                     var created = dstDrive.OrchAPISession.PostBucket(newFolder.Id ?? 0, postingBucket);
 
-                    // 画面が乱れるから、この表示はしなくて良いか。。
+                    // This output clutters the screen, so maybe we don't need it..
                     //if (!shouldProcess && created is not null)
                     //{
                     //    created.Path = newFolder.GetPSPath();
@@ -2350,8 +2350,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
     }
 
-    // TestCase をコピーする必要はない。
-    // TestCase は、テストプロセスパッケージをコピーすることにより作成される。
+    // There is no need to copy TestCases.
+    // TestCases are created by copying the test process package.
 
     internal static TestCaseDefinition? FindDstTestCase(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder, Int64? srcDefinitionId,
@@ -2385,16 +2385,16 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     {
         if (newFolder.FolderType == "Personal") return;
 
-        // TODO: この数字は正しいか？
-        // 16 ではテストエンティティがないことは確認済み
+        // TODO: Is this version number correct?
+        // Confirmed that test entities do not exist in v16
         //if (srcDrive.OrchAPISession.ApiVersion < 17) return;
         //if (dstDrive.OrchAPISession.ApiVersion < 17) return;
 
-        // スクリプトで連続して cmdlet を実行することを考えると、
-        // いちいちキャッシュをクリアするべきじゃなかった。。
-        // 下記はコメントアウトしておく。
+        // Considering that cmdlets may be executed consecutively in a script,
+        // we shouldn't have been clearing the cache each time..
+        // Comment out the below.
 
-        // 最新の状態をコピーできるように、このフォルダーのキャッシュを削除する
+        // Clear this folder's cache so we can copy the latest state
         //srcDrive._dicTestSets?.TryRemove(srcFolder.Id ?? 0, out _);
 
         string msg = $"Copying test sets";
@@ -2451,9 +2451,9 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                                     dstDrive, newFolder, tc.ReleaseId, msg)?.Id;
                             }
 
-                            // TODO: ほえほえを適切なメッセージに直す
+                            // TODO: Replace placeholder with an appropriate message
                             postingTestSet.RobotId = FindDstRobot(_this,
-                                srcDrive, dstDrive, newFolder, postingTestSet.RobotId, "ほえほえ")?.Id;
+                                srcDrive, dstDrive, newFolder, postingTestSet.RobotId, "Migrating test set robot")?.Id;
 
                             dstDrive.OrchAPISession.CreateTestSet(newFolder.Id ?? 0, postingTestSet);
                         }
@@ -2479,7 +2479,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     {
         if (newFolder.FolderType == "Personal") return;
 
-        // 17 ではテストエンティティがないことは確認済み
+        // Confirmed that test entities do not exist in v17
         //if (srcDrive.OrchAPISession.ApiVersion < 18) return;
         //if (dstDrive.OrchAPISession.ApiVersion < 18) return;
 
@@ -2544,15 +2544,15 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     {
         if (newFolder.FolderType == "Personal") return;
 
-        // 17 ではテストエンティティがないことは確認済み
+        // Confirmed that test entities do not exist in v17
         //if (srcDrive.OrchAPISession.ApiVersion < 18) return;
         //if (dstDrive.OrchAPISession.ApiVersion < 18) return;
 
-        // スクリプトで連続して cmdlet を実行することを考えると、
-        // いちいちキャッシュをクリアするべきじゃなかった。。
-        // 下記はコメントアウトしておく。
+        // Considering that cmdlets may be executed consecutively in a script,
+        // we shouldn't have been clearing the cache each time..
+        // Comment out the below.
 
-        // 最新の状態をコピーできるように、このフォルダーのキャッシュを削除する
+        // Clear this folder's cache so we can copy the latest state
         //srcDrive._dicTestSetSchedules?.TryRemove(srcFolder.Id ?? 0, out _);
 
         string msg = $"Copying test schedules";
@@ -2584,7 +2584,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                 var postingTestSetSchedule = OrchCollectionExtensions.DeepCopy(testSetSchedule);
                 postingTestSetSchedule.Id = null;
-                // postingTestSetSchedule.Path = null; // JsonIgnore 属性がついているので不要
+                // postingTestSetSchedule.Path = null; // Not needed since it has the JsonIgnore attribute
                 postingTestSetSchedule.TestSetId = FindDstTestSet(_this,
                     srcDrive, srcFolder, postingTestSetSchedule.TestSetId,
                     dstDrive, newFolder, msg)?.Id;
@@ -2611,15 +2611,15 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     {
         if (newFolder.FolderType == "Personal") return;
 
-        // 17 ではテストエンティティがないことは確認済み
+        // Confirmed that test entities do not exist in v17
         //if (srcDrive.OrchAPISession.ApiVersion < 18) return;
         //if (srcDrive.OrchAPISession.ApiVersion < 18) return;
 
-        // スクリプトで連続して cmdlet を実行することを考えると、
-        // いちいちキャッシュをクリアするべきじゃなかった。。
-        // 下記はコメントアウトしておく。
+        // Considering that cmdlets may be executed consecutively in a script,
+        // we shouldn't have been clearing the cache each time..
+        // Comment out the below.
 
-        // 最新の状態をコピーできるように、このフォルダーのキャッシュを削除する
+        // Clear this folder's cache so we can copy the latest state
         //srcDrive._dicTestDataQueues?.TryRemove(srcFolder.Id ?? 0, out _);
 
         string msg = $"Copying test data queues";
@@ -2653,7 +2653,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                 var postingTestDataQueue = OrchCollectionExtensions.DeepCopy(testDataQueue);
                 postingTestDataQueue.Id = null;
-                // postingTestDataQueue.Path = null; // JsonIgnore 属性がついているので不要
+                // postingTestDataQueue.Path = null; // Not needed since it has the JsonIgnore attribute
                 postingTestDataQueue.ItemsCount = null;
                 postingTestDataQueue.ConsumedItemsCount = null;
                 postingTestDataQueue.LastModificationTime = null;
@@ -2681,7 +2681,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken)
     {
-        // TODO: この数字は必要？
+        // TODO: Is this version number needed?
         //if (srcDrive.OrchAPISession.ApiVersion < 14) return;
 
         string msg = $"Copying action catalogs";
@@ -2713,7 +2713,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                 var postingTaskCatalog = OrchCollectionExtensions.DeepCopy(srcTaskCatalog);
                 postingTaskCatalog.Id = null;
-                // postingTaskCatalog.Path = null; // JsonIgnore 属性がついているので不要
+                // postingTaskCatalog.Path = null; // Not needed since it has the JsonIgnore attribute
                 postingTaskCatalog.Key = null;
                 postingTaskCatalog.CreationTime = null;
                 postingTaskCatalog.FoldersCount = null;
@@ -2740,11 +2740,11 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
     }
 
-    // コピー先（新規作成した）フォルダーには、自動で自身が Folder Administrator Role で割り当てられている。
-    // コピー元のフォルダーに、自身が割り当てられていなければ、このフォルダーから自身を剥がす。
-    // コピー元のフォルダーに、自身が割り当てられているが Folder Administrator Role をもたない場合は
-    // 自身から Folder Administrator Role を剥がす。
-    // この処理は、ほかのすべてのコピー処理が完了してから行う。（さもないと、ほかのコピー処理が失敗してしまう）
+    // The newly created destination folder automatically has the current user assigned with the Folder Administrator Role.
+    // If the current user is not assigned to the source folder, unassign them from this folder.
+    // If the current user is assigned to the source folder but does not have the Folder Administrator Role,
+    // remove the Folder Administrator Role from the current user.
+    // This operation must be performed after all other copy operations are complete. (Otherwise, the other copy operations will fail.)
     internal static void UnassignMyselfAtNewFolder(
         OrchDriveInfo srcDrive, Folder srcFolder,
         OrchDriveInfo dstDrive, Folder newFolder)
@@ -2756,7 +2756,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         var srcMyself = srcFolderUsers?.FirstOrDefault(u => string.Compare(u.UserEntity!.UserName, dstCurrentUser.UserName, StringComparison.OrdinalIgnoreCase) == 0);
         if (srcMyself is null)
         {
-            // コピー元フォルダーに自身は割り当てられていないので、コピー先から自身を剥がす
+            // The current user is not assigned to the source folder, so unassign them from the destination
             try
             {
                 dstDrive.OrchAPISession.UnassignUserFromFolder(newFolder.Id ?? 0, dstCurrentUser.Id ?? 0);
@@ -2767,8 +2767,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             return;
         }
 
-        // コピー元フォルダーの自身に Folder Administrator ロールが割り当てられていなければ
-        // コピー先フォルダーの自身から Folder Administrator ロールを剥がす
+        // If the current user does not have the Folder Administrator role in the source folder,
+        // remove the Folder Administrator role from the current user in the destination folder
         bool srcIhaveFolderAdministratorRole = srcMyself.Roles?.Any(r => string.Compare(r.Name, "Folder Administrator", StringComparison.OrdinalIgnoreCase) == 0) ?? false;
         if (!srcIhaveFolderAdministratorRole)
         {
@@ -2807,22 +2807,22 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             if (ExcludeEntities) return false;
             if (dstFolder != dstDrive.RootFolder)
             {
-                // dst が直接指定されていれば、サブフォルダ作成せず中身を直接コピーする
+                // If dst is directly specified, copy contents directly without creating a subfolder
                 destinationWorkspace = dstFolder;
             }
 
-            // UserMappingCsv がある場合は、OwnerId ベースで対応する dst ワークスペースを探す
-            // (dst が明示指定されていなければ)
+            // If UserMappingCsv is provided, find the corresponding dst workspace based on OwnerId
+            // (only if dst is not explicitly specified)
             if (destinationWorkspace is null && userMapping is not null)
             {
-                // src ワークスペースの OwnerId からソースユーザー名を特定
+                // Determine the source user name from the src workspace's OwnerId
                 var srcWorkspace = srcDrive.PersonalWorkspaces.Get().FirstOrDefault(pw => pw.Id == srcFolder.Id);
                 string? srcOwnerUserName = null;
                 if (srcWorkspace?.OwnerId is not null)
                 {
                     srcOwnerUserName = srcDrive.GetUsers().FirstOrDefault(u => u.Id == srcWorkspace.OwnerId)?.UserName;
                 }
-                // OwnerId が空の場合はフォルダ名から推定
+                // If OwnerId is empty, infer from the folder name
                 if (string.IsNullOrEmpty(srcOwnerUserName) && srcFolder.DisplayName?.EndsWith("'s workspace") == true)
                 {
                     srcOwnerUserName = srcFolder.DisplayName[..^"'s workspace".Length];
@@ -2832,7 +2832,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     && userMapping.TryGetValue(srcOwnerUserName, out var dstUserName)
                     && !string.IsNullOrEmpty(dstUserName))
                 {
-                    // dst ユーザーの Id を取得し、PersonalWorkspaces から OwnerId で検索
+                    // Get the dst user's Id and search PersonalWorkspaces by OwnerId
                     var dstUser = dstDrive.GetUsers().FirstOrDefault(u => string.Compare(u.UserName, dstUserName, StringComparison.OrdinalIgnoreCase) == 0);
                     if (dstUser?.Id is not null)
                     {
@@ -2845,7 +2845,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 }
             }
 
-            // マッピングで見つからなかった場合は、従来通り同名フォルダを探す
+            // If not found via mapping, fall back to searching for a folder with the same name
             destinationWorkspace ??= dstDrive.GetFolder(srcFolder.DisplayName!);
 
             if (destinationWorkspace is null)
@@ -2857,8 +2857,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 return false;
             }
         }
-        // src が通常フォルダでも、dst が Personal ワークスペースなら
-        // サブフォルダ作成ではなく中身を直接コピーする
+        // Even if src is a regular folder, if dst is a Personal workspace,
+        // copy contents directly without creating a subfolder
         else if (dstFolder.FolderType == "Personal")
         {
             destinationWorkspace = dstFolder;
@@ -2873,12 +2873,12 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             // queues, triggers, API triggers, buckets, testsets, testschedules, testdataqueues
             int totalStageNum = 13;
             if (srcFolder.FolderType == "Personal") totalStageNum = 9;
-            // Apps はコピーできるんだっけ？
+            // Can Apps be copied?
 
             try
             {
-                // srcFolder がルート直下ではなく、かつ dstFolder がルートでないときは
-                // フィードを外してコピーする
+                // When srcFolder is not directly under root and dstFolder is not root,
+                // copy without the feed
                 string feedType;
                 if (srcFolder.ParentId is not null && dstFolder != dstDrive.RootFolder)
                 {
@@ -2891,9 +2891,9 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                 Folder newFolder;
                 using ProgressReporter reporter = new(this, 1, totalStageNum, "Copying folder");
-                // 次から始まるスコープ↓は、子供 reporter がタイムリーに消えるように導入したもの。
+                // The scope starting below was introduced so that child reporters are disposed of in a timely manner.
                 {
-                    // #0 フォルダー自身をコピー（個人用ワークスペースはフォルダ作成不要）
+                    // #0 Copy the folder itself (no folder creation needed for personal workspaces)
                     if (destinationWorkspace is not null)
                     {
                         newFolder = destinationWorkspace;
@@ -2915,7 +2915,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     {
                         int rootIndex = 0;
 
-                        // #1 フォルダーユーザーをコピー
+                        // #1 Copy folder users
                         string msg;
                         msg = "Copying folder users...      ";
                         reporter.WriteProgress(++rootIndex);
@@ -2926,7 +2926,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                         cancelToken.ThrowIfCancellationRequested();
 
-                        // #2 フォルダーマシンをコピー
+                        // #2 Copy folder machines
                         msg = "Copying folder machines...   ";
                         reporter.WriteProgress(++rootIndex);
                         srcDrive.FolderMachinesAssigned.ClearCache(srcFolder);
@@ -2935,8 +2935,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                         cancelToken.ThrowIfCancellationRequested();
 
-                        // #3 バケットをコピー
-                        // プロセスをコピーする前に、先にバケットをコピーしておく必要がある
+                        // #3 Copy buckets
+                        // Buckets must be copied before copying processes
                         msg = "Copying buckets...           ";
                         reporter.WriteProgress(++rootIndex);
                         using var reporterBuckets = new ProgressReporter(this, 300, Int32.MaxValue, msg);
@@ -2944,7 +2944,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                         cancelToken.ThrowIfCancellationRequested();
 
-                        // #4 フォルダーパッケージをコピー
+                        // #4 Copy folder packages
                         msg = "Copying packages...          ";
                         reporter.WriteProgress(++rootIndex);
                         using var reporterPackages = new ProgressReporter(this, 400, Int32.MaxValue, msg);
@@ -2952,7 +2952,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                         cancelToken.ThrowIfCancellationRequested();
 
-                        // #5 プロセスをコピー
+                        // #5 Copy processes
                         msg = "Copying processes...         ";
                         reporter.WriteProgress(++rootIndex);
                         using var reporterProcesses = new ProgressReporter(this, 500, Int32.MaxValue, msg);
@@ -2960,7 +2960,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                         cancelToken.ThrowIfCancellationRequested();
 
-                        // #6 アセットをコピー
+                        // #6 Copy assets
                         msg = "Copying assets...            ";
                         reporter.WriteProgress(++rootIndex);
                         srcDrive.Assets.ClearCache(srcFolder);
@@ -2969,7 +2969,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                         cancelToken.ThrowIfCancellationRequested();
 
-                        // #7 キューをコピー
+                        // #7 Copy queues
                         msg = "Copying queues...            ";
                         reporter.WriteProgress(++rootIndex);
                         using var reporterQueues = new ProgressReporter(this, 700, Int32.MaxValue, msg);
@@ -2977,7 +2977,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                         cancelToken.ThrowIfCancellationRequested();
 
-                        // #8 トリガーをコピー
+                        // #8 Copy triggers
                         msg = "Copying triggers...          ";
                         reporter.WriteProgress(++rootIndex);
                         srcDrive._dicTriggers?.TryRemove(srcFolder.Id ?? 0, out _);
@@ -2986,7 +2986,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                         cancelToken.ThrowIfCancellationRequested();
 
-                        // #8 APIトリガーをコピー
+                        // #8 Copy API triggers
                         msg = "Copying API triggers...      ";
                         reporter.WriteProgress(++rootIndex);
                         srcDrive.ApiTriggers.ClearCache(srcFolder);
@@ -2995,14 +2995,14 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                         cancelToken.ThrowIfCancellationRequested();
 
-                        // #xx テストケースはコピーする必要がない。
-                        // パッケージとプロセスをコピーすれば、自動で出てくる。
+                        // #xx Test cases do not need to be copied.
+                        // They are automatically created when packages and processes are copied.
                         //msg = "Copying test cases...        ";
                         //reporter.WriteProgress();
                         //using var reporterTestCases = new ProgressReporter(this, 1100, Int32.MaxValue, msg);
                         //CopyTestCases(this, srcDrive, srcFolder, dstDrive, newFolder, reporterTestCases);
 
-                        // #10 テストセットをコピー
+                        // #10 Copy test sets
                         msg = "Copying test sets...         ";
                         reporter.WriteProgress(++rootIndex);
                         using var reporterTestSets = new ProgressReporter(this, 1000, Int32.MaxValue, msg);
@@ -3010,7 +3010,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                         cancelToken.ThrowIfCancellationRequested();
 
-                        // #11 テストセットスケジュールをコピー
+                        // #11 Copy test set schedules
                         msg = "Copying test schedules...    ";
                         reporter.WriteProgress(++rootIndex);
                         using var reporterTestSchedules = new ProgressReporter(this, 1100, Int32.MaxValue, msg);
@@ -3018,7 +3018,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                         cancelToken.ThrowIfCancellationRequested();
 
-                        // #12 テストデータキューをコピー
+                        // #12 Copy test data queues
                         msg = "Copying test data queues...  ";
                         reporter.WriteProgress(++rootIndex);
                         using var reporterTestDataQueues = new ProgressReporter(this, 1200, Int32.MaxValue, msg);
@@ -3026,7 +3026,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                         cancelToken.ThrowIfCancellationRequested();
 
-                        // #13 アクションカタログをコピー
+                        // #13 Copy action catalogs
                         msg = "Copying action catalogs...   ";
                         reporter.WriteProgress(++rootIndex);
                         using var reporterActionCatalogs = new ProgressReporter(this, 1300, Int32.MaxValue, msg);
@@ -3051,9 +3051,9 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     }
                 }
 
-                // コピー元フォルダーに自身がアサインされていなければ
-                // コピー先フォルダーから自身を剥がす
-                // これ剥がしちゃうと、リンクがコピーできないな。。
+                // If the current user is not assigned to the source folder,
+                // unassign them from the destination folder
+                // But if we unassign, links cannot be copied..
                 // UnassignMyselfAtNewFolder(srcDrive, srcFolder, dstDrive, newFolder);
             }
             catch (Exception ex)
@@ -3098,7 +3098,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
         var userMapping = SessionState?.LoadUserMappingCsv(this, srcDrive, dstDrive, dynamicParameters?.UserMappingCsv);
 
-        // この親 reporter は、なるべくチカチカしない方が良いので、広いスコープに置く。
+        // This parent reporter should avoid flickering, so place it in a wide scope.
         using var cancelHandler = new ConsoleCancelHandler();
 
         srcDrive.OrchAPISession.EnsureAuthenticated();
@@ -3122,13 +3122,13 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
 
         var dstFolder = dstDrive.GetFolder(OrchDriveInfo.PSPathToOrchPath(copyPath));
-        if (dstFolder is null) // コピー先に指定されていたのは、存在しないフォルダー名
+        if (dstFolder is null) // The destination specified was a non-existent folder name
         {
             WriteError(new ErrorRecord(new OrchException(path, $"{dstDrive.NameColon} does not have folder '{copyPath}'."), "CopyFolderError", ErrorCategory.InvalidOperation, path));
             return;
         }
 
-        // まず、ルートからルートにコピーする場合には、すべてのテナントエンティティをコピーする。
+        // First, when copying from root to root, copy all tenant entities.
         if (!ExcludeEntities && srcFolder == srcDrive.RootFolder && dstFolder == dstDrive.RootFolder)
         {
             if (ShouldCopyTenantEntities("Library", srcDrive, srcDrive.LibrariesInTenant.Get(), dstDrive))
@@ -3172,15 +3172,15 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             }
         }
 
-        // ルートフォルダに対して ShouldProcess("/") を呼び出したくないので
-        // ルートフォルダーを recursive copy する場合には特別扱いする
+        // We don't want to call ShouldProcess("/") on the root folder,
+        // so handle recursive copy of the root folder as a special case
         if (srcFolder == srcDrive.RootFolder)
         {
             bool isDirty = false;
             if (recurse)
             {
-                // 個人用ワークスペースとルート直下のフォルダをすべて列挙する。
-                // 個人用ワークスペースのフォルダーには、なぜか ParentId が入っていることがあるが、GetFolders() で詐称している。
+                // Enumerate all personal workspaces and root-level folders.
+                // Personal workspace folders sometimes have a ParentId for some reason, but GetFolders() masks this.
                 var foldersToBeCopied = srcDrive.GetFolders().Where((f => f.ParentId is null && f != srcDrive.RootFolder));
                 foreach (var folderToBeCopied in foldersToBeCopied)
                 {
@@ -3202,8 +3202,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
         catch (Exception)
         {
-            // 例外が漏れた場合は、フォルダーが作成されたかされていないか分からない。。
-            // ので、フォルダキャッシュをクリアしちゃう。
+            // If an exception leaked, we don't know whether the folder was created or not..
+            // So clear the folder cache.
             dstDrive._dicFolders = null;
             dstDrive._dicFoldersForEnumFolders = null;
             throw;

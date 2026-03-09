@@ -22,8 +22,8 @@ public class AddAssetLinkCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
-    // TODO: この実装はきれいにできる
-    // Parallel.ForEach は使わないようにすべきだ。
+    // TODO: This implementation can be cleaned up
+    // Should avoid using Parallel.ForEach.
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(Path);

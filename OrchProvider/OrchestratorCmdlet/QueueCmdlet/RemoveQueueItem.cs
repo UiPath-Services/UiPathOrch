@@ -35,13 +35,13 @@ public class RemoveQueueItemCommand : OrchestratorPSCmdlet
     public string? RowVersion { get; set; }
 
     //[Parameter]
-    private int ChunkSize { get; set; } = 1000; // ChunkSize は 1000 に固定しておく
+    private int ChunkSize { get; set; } = 1000; // ChunkSize is fixed at 1000
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string? Path { get; set; }
 
-    // キャッシュにある Id を列挙する
+    // Enumerate Ids available in the cache
     internal class IdCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -55,7 +55,7 @@ public class RemoveQueueItemCommand : OrchestratorPSCmdlet
 
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
-            // パラメータで選択済みの Id は、候補から除外する
+            // Exclude Ids already selected by the parameter from the candidates
             var ids = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -95,7 +95,7 @@ public class RemoveQueueItemCommand : OrchestratorPSCmdlet
     private QueueDefinition? _currentQueue = null;
     protected override void ProcessRecord()
     {
-        #region この line の drive, folder, queue を解決する
+        #region Resolve the drive, folder, and queue for this line
         var (drive, folder) = SessionState.ResolveToSingleFolder(Path);
         var wpName = new string[] { Name! }.ConvertToWildcardPatternList();
 
@@ -108,7 +108,7 @@ public class RemoveQueueItemCommand : OrchestratorPSCmdlet
         }
 
         var queue = queues[0];
-        if (queue is null) return; // ここで null になるはずはないが、念のため
+        if (queue is null) return; // Should never be null here, but just in case
         #endregion
 
         if (_currentQueue != queue)
@@ -116,9 +116,9 @@ public class RemoveQueueItemCommand : OrchestratorPSCmdlet
             _currentQueue = queue;
             if (_csvLines?.Count > 0)
             {
-                // ここまでに蓄積した _csvLines に含まれるアイテムを、キューから削除する
+                // Delete the items contained in the accumulated _csvLines from the queue
                 var csvLines = _csvLines;
-                _csvLines = null; // マルチスレッドで再入することはないはずだが念のため
+                _csvLines = null; // Re-entry from multiple threads should not happen, but just in case
                 RemoveItems(csvLines);
             }
         }
@@ -143,7 +143,7 @@ public class RemoveQueueItemCommand : OrchestratorPSCmdlet
 
         using var cancelHandler = new ConsoleCancelHandler();
 
-        // この RemoveItems() に渡される csvLines には、単一のキューしか含まれないはずだから、GroupBy は不要だ。
+        // The csvLines passed to this RemoveItems() should only contain a single queue, so GroupBy is unnecessary.
         //foreach (var groupedLines in csvLines.GroupBy(l => l.Queue).OrderBy(g => g.Key.Name))
         var drive = csvLines.First().Drive;
         var folder = csvLines.First().Folder;
@@ -152,7 +152,7 @@ public class RemoveQueueItemCommand : OrchestratorPSCmdlet
         string target = queue.GetPSPath();
         if (ShouldProcess(target, "Remove Queue Items"))
         {
-            #region すべての _csvLines の RowVersion を確認
+            #region Verify RowVersion for all _csvLines
             {
                 using ProgressReporter reporterRowVersion = new(this, 105, csvLines.Count, "Confirming RowVersions");
                 int idxRowVersion = 0;
@@ -160,10 +160,10 @@ public class RemoveQueueItemCommand : OrchestratorPSCmdlet
                 {
                     reporterRowVersion.WriteProgress(++idxRowVersion, queue.GetPSPath());
 
-                    // rowVersion が指定されていない場合
+                    // If rowVersion is not specified
                     if (string.IsNullOrEmpty(line.RowVersion))
                     {
-                        // まず、キャッシュの中から探す
+                        // First, look in the cache
                         if (line.Drive._dicQueueItems?.TryGetValue(line.Folder.Id!.Value, out var itemsPerFolder) ?? false)
                         {
                             if (itemsPerFolder?.TryGetValue(queue.Name!, out var itemsPerQueue) ?? false)
@@ -175,7 +175,7 @@ public class RemoveQueueItemCommand : OrchestratorPSCmdlet
                             }
                         }
 
-                        // キャッシュになければ、API で取得する
+                        // If not in the cache, retrieve via API
                         if (string.IsNullOrEmpty(line.RowVersion))
                         {
                             QueueItem item = null;
@@ -201,7 +201,7 @@ public class RemoveQueueItemCommand : OrchestratorPSCmdlet
             #endregion
 
             var linesToRemove = csvLines.Where(l => !string.IsNullOrEmpty(l.RowVersion)).ToList();
-            // ここまでで、削除すべきアイテムの一覧を作成できた。これを ChunkSize 個ずつ削除
+            // At this point, the list of items to delete has been built. Delete them in chunks of ChunkSize
 
             int idxRemove = 0;
             using ProgressReporter reporterRemove = new(this, 5, linesToRemove.Count, "Removing items");
@@ -221,14 +221,14 @@ public class RemoveQueueItemCommand : OrchestratorPSCmdlet
                 {
                     var result = drive.OrchAPISession.DeleteBulkQueueItem(folder.Id!.Value, payload);
 
-                    // キャッシュを取得
+                    // Get the cache
                     Dictionary<string, Dictionary<Int64, QueueItem>> itemsPerFolder = null;
                     drive._dicQueueItems?.TryGetValue(folder.Id.Value, out itemsPerFolder);
 
                     Dictionary<Int64, QueueItem> itemsPerQueue = null;
                     itemsPerFolder?.TryGetValue(queue.Name!, out itemsPerQueue);
 
-                    // 削除に失敗したアイテムを出力。RowVersion は出力しない方が良いな。
+                    // Output items that failed to delete. Better not to output RowVersion.
                     if (result?.FailedItems is not null && result.FailedItems.Length > 0)
                     {
                         WriteWarning($"\"{queue.GetPSPath()}\" Failed to remove items: {result.Message}");
@@ -242,7 +242,7 @@ public class RemoveQueueItemCommand : OrchestratorPSCmdlet
                             }
                             else
                             {
-                                // この cmdlet を単独で実行したときは、キャッシュがない可能性あるよな。。
+                                // When this cmdlet is run standalone, the cache may not exist..
                                 WriteObject(new QueueItem()
                                 {
                                     Id = failedItemId,
@@ -254,18 +254,18 @@ public class RemoveQueueItemCommand : OrchestratorPSCmdlet
                         }
                     }
 
-                    // アイテム削除の成功・失敗によらず、処理対象としたアイテムのキャッシュは削除しないと。
+                    // Regardless of whether item deletion succeeded or failed, the cache for processed items must be removed.
                     if (itemsPerQueue is not null)
                     {
                         foreach (var entry in payload.queueItems)
                         {
                             if (entry.Id is null) continue;
-                            // 正しく処理できていれば、キャッシュを削除する代わりに Status を Deleted にするだけでも良さそうだが、
-                            // RowVersion は変化しているはずだしな。。
+                            // If processed correctly, it might be enough to just set Status to Deleted instead of removing the cache,
+                            // but the RowVersion should have changed..
                             itemsPerQueue.Remove(entry.Id.Value);
                         }
                     }
-                    //Thread.Sleep(600); // API call rate limit はないのだけど、入れた方がいいのか？
+                    //Thread.Sleep(600); // There is no API call rate limit, but should we add it?
                 }
                 catch (Exception ex)
                 {

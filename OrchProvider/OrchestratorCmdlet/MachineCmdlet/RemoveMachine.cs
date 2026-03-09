@@ -17,7 +17,7 @@ public class RemoveMachineCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 
-    // TODO: これはマルチスレッド化できる。
+    // TODO: This can be made multi-threaded.
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(Path);

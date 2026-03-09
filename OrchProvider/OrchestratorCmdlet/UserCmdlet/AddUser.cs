@@ -14,8 +14,8 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.User))]
 public class AddUserCommand : OrchestratorPSCmdlet
 {
-    // UserName を case-insensitive に比較するために必要
-    // OrchComparer.cs に移動した方が良いか？
+    // Needed for case-insensitive comparison of UserName
+    // Should this be moved to OrchComparer.cs?
     internal class CsvLineComparer : IEqualityComparer<(OrchDriveInfo drive, int type, string userName)>
     {
         public bool Equals((OrchDriveInfo drive, int type, string userName) x, (OrchDriveInfo drive, int type, string userName) y)
@@ -215,7 +215,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
         }
     }
 
-    // Key: DirectoryObject.type;  Value: エンティティ内の Type
+    // Key: DirectoryObject.type;  Value: Type within the entity
     private static readonly Dictionary<int, string> Types = new() {
         { 0, "DirectoryUser" },
         { 1, "DirectoryGroup" },
@@ -275,7 +275,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(CredentialStoreNameCompleter<TPositional>))]
-    //[SupportsWildcards] // 面倒なのでいっか
+    //[SupportsWildcards] // Not worth the effort
     public string? UR_CredentialStore { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -343,7 +343,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
 
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            // パラメータで選択済みのユーザー名は、候補から除外する
+            // Exclude user names that have already been selected via parameters
             var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
             var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
 
@@ -416,7 +416,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
     {
         _csvLines ??= new Dictionary<(OrchDriveInfo drive, int type, string userName), CsvLine>(new CsvLineComparer());
 
-        // 先頭の要素は CSV から入力されている可能性があるので、先頭の要素についてはカンマで区切る
+        // The first element may have been input from CSV, so split it by commas
         Path = Path.Split1stValueByUnescapedCommas()?.ToArray();
         Type = Type.Split1stValueByUnescapedCommas()?.ToArray();
         UserName = UserName.Split1stValueByUnescapedCommas()?.ToArray();
@@ -454,7 +454,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
 
             foreach (var specifiedRole in roles)
             {
-                #region 存在しないロールが指定された場合には警告する
+                #region Warn if a non-existent role is specified
                 var wpRole = new WildcardPattern(specifiedRole, WildcardOptions.IgnoreCase);
                 if (!existingRoles.Any(r => wpRole.IsMatch(r.Name)))
                 {
@@ -470,7 +470,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
                 }
                 #endregion
 
-                #region フォルダーロールが指定された場合には警告する
+                #region Warn if a folder role is specified
                 foreach (var role in existingRoles
                     .Where(r => r.Type == "Folder" && wpRole.IsMatch(r.Name))
                     .OrderBy(r => r.Name))
@@ -523,7 +523,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
 
     private bool UserAlreadyExists(Dictionary<OrchDriveInfo, Dictionary<string, Entities.User>> existingUsersPerDrive, OrchDriveInfo drive, string userName)
     {
-        // まだキャッシュを未作成なら作成する
+        // Create the cache if it hasn't been created yet
         if (!existingUsersPerDrive.TryGetValue(drive, out var existingUsers))
         {
             var eusers = drive.GetUsers();
@@ -534,10 +534,10 @@ public class AddUserCommand : OrchestratorPSCmdlet
             existingUsersPerDrive[drive] = existingUsers;
         }
 
-        // キャッシュを検索する
+        // Search the cache
         if (existingUsers.TryGetValue(userName, out var existingUser))
         {
-            // このユーザーが、すでにテナントに追加済みなら警告してスキップ
+            // If this user is already added to the tenant, warn and skip
             string existingUserName = $"{existingUser.UserName}";
             if (!string.IsNullOrEmpty(existingUser.FullName))
             {
@@ -590,7 +590,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
             }
             if (user is null)
             {
-                // ユーザーが見つからない場合でも、progress bar が進捗するようにしておく
+                // Ensure the progress bar advances even when the user is not found
                 reporter.WriteProgress(++index, System.IO.Path.Combine(drive.NameColonSeparator, userName));
                 continue;
             }
@@ -666,7 +666,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
                         postingUser.UnattendedRobot.CredentialStoreId = targetStore?.Id;
                     }
 
-                    // パスワードが指定されていれば、CredentialStoreId を埋めておく
+                    // If a password is specified, populate the CredentialStoreId
                     if (postingUser.UnattendedRobot.Password is not null && postingUser.UnattendedRobot.CredentialStoreId is null)
                     {
                         var credentialStores = drive.CredentialStores.Get();
@@ -720,7 +720,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
                     line.ES_AutoDownloadProcess is not null)
                 {
                     //  0: User, 1: Group, 2: Machine, 3: Robot, 4: ExternalApplication
-                    // UnattendedRobot は、User と Robot で構成可能だ。
+                    // UnattendedRobot can be configured for User and Robot.
                     if (user.type == 0 || user.type == 3)
                     {
                         postingUser.UnattendedRobot ??= new();
@@ -728,7 +728,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
                         UpdateExecutionSettings(postingUser.UnattendedRobot.ExecutionSettings);
                     }
 
-                    // RobotProvision は Attended だから User のみ構成可能だ。
+                    // RobotProvision is Attended, so it can only be configured for User.
                     if (user.type == 0)
                     {
                         postingUser.RobotProvision ??= new();
@@ -737,12 +737,12 @@ public class AddUserCommand : OrchestratorPSCmdlet
                     }
                 }
 
-                if (user.type == 3) // robot の場合
+                if (user.type == 3) // For robot type
                 {
                     postingUser.MayHaveUserSession = false; // prohibit 'Standard Interface'
-                    postingUser.MayHaveUnattendedSession = true; // 必ず true でないと。
-                    postingUser.MayHavePersonalWorkspace = false; // 必ず false でいいや。
-                    postingUser.MayHaveRobotSession = false; // これがないと失敗する
+                    postingUser.MayHaveUnattendedSession = true; // Must be true.
+                    postingUser.MayHavePersonalWorkspace = false; // Always false is fine.
+                    postingUser.MayHaveRobotSession = false; // Required or it will fail
 
                     postingUser.UnattendedRobot ??= new();
 
@@ -754,12 +754,12 @@ public class AddUserCommand : OrchestratorPSCmdlet
                     //postingUser.UpdatePolicy ??= new();
                     //postingUser.UpdatePolicy.Type ??= "None";
                 }
-                else if (user.type == 4) // application の場合
+                else if (user.type == 4) // For application type
                 {
                     postingUser.MayHaveUserSession ??= false; // prohibit 'Standard Interface'
                 }
 
-                if (user.type == 0 || user.type == 3) // user もしくは robot の場合
+                if (user.type == 0 || user.type == 3) // For user or robot type
                 {
                     if (postingUser.UnattendedRobot is not null)
                     {

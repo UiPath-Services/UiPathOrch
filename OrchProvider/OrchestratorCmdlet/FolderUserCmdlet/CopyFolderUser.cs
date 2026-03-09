@@ -17,7 +17,7 @@ public class CopyFolderUserCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? UserName { get; set; }
 
-    // TODO: これは string[] にしても良い気がする？
+    // TODO: Could this be changed to string[]?
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string? Destination { get; set; }
@@ -54,7 +54,7 @@ public class CopyFolderUserCommand : OrchestratorPSCmdlet
 
             var IncludeInherited = GetFakeBoundParameterAsBool(fakeBoundParameters, "IncludeInherited");
 
-            // パラメータで選択済みの UserName は、候補から除外する
+            // Exclude UserNames already selected via parameter from the candidates
             var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
             var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
 
@@ -90,7 +90,7 @@ public class CopyFolderUserCommand : OrchestratorPSCmdlet
 
         var userMapping = SessionState?.LoadUserMappingCsv(this, srcDrive, dstDrive, UserMappingCsv);
 
-        // コピー元とコピー先が同じなら、何もしない
+        // Do nothing if source and destination are the same
         if (srcRootFolder == dstRootFolder) return;
 
         var wpUserName = UserName.ConvertToWildcardPatternList();
@@ -104,7 +104,7 @@ public class CopyFolderUserCommand : OrchestratorPSCmdlet
 
             try
             {
-                // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
+                // No need to search for dstFolder if there are no entities to copy
                 //srcDrive.FolderUsersWithInherited.ClearCache();
                 //srcDrive.FolderUsersWithNoInherited.ClearCache();
                 var srcEntities = srcDrive.FolderUsersWithNoInherited.Get(srcFolder)

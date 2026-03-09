@@ -20,8 +20,8 @@ public class NewMachineCommand : OrchestratorPSCmdlet
     [Parameter(ValueFromPipelineByPropertyName = true)]
     public string? Description { get; set; }
 
-    // 現在は Template と Standard と Serverless をサポート
-    // AutomationCloudRobot もサポートしなければ。
+    // Currently supports Template, Standard, and Serverless.
+    // AutomationCloudRobot also needs to be supported.
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Template_Standard_Serverless>))]
     public string? Type { get; set; }
@@ -71,7 +71,7 @@ public class NewMachineCommand : OrchestratorPSCmdlet
             var drives = ResolveOrchDrives(fakeBoundParameters);
             var results = ParallelResults3.GroupBy(drives, drive => drive.Machines.Get());
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude Names already selected via parameter from the candidates
             var names = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
             var entities = results.SelectMany(e => e);

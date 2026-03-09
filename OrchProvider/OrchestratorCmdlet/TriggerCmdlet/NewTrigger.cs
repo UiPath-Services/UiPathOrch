@@ -30,12 +30,12 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(BoolCompleter))]
     public string? Enabled { get; set; }
 
-    // このパラメータはコマンドラインでの指定を受け付けない
-    // CSV で "" が指定されたら 45 にしてしまえば良いので、この型は int にする
+    // This parameter does not accept command-line input
+    // Since we can just treat "" in CSV as 45, the type is int
     [Parameter(DontShow = true, ValueFromPipelineByPropertyName = true)]
     public int? SpecificPriorityValue { get; set; }
 
-    // このパラメータは CSV インポートを受け付けない
+    // This parameter does not accept CSV import
     [Parameter]
     [ArgumentCompleter(typeof(StaticTextsCompleter<JobPriorityItems>))]
     public string? Priority { get; set; }
@@ -158,7 +158,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
             var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetTriggers(df.folder));
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude already-selected Names from candidates
             var names = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
             var entities = results.SelectMany(e => e);
@@ -166,8 +166,8 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
         }
     }
 
-    // 利用可能なユーザー名一覧を候補に表示。New-OrchTrigger のための実装。
-    // Update-OrchTrigger では、現在の内容を表示する方が使いやすいと思うので、この実装を共有はしない。。
+    // Display a list of available user names as candidates. Implementation for New-OrchTrigger.
+    // For Update-OrchTrigger, displaying the current values would be more user-friendly, so this implementation is not shared.
     private class ExecutorRobotsCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -179,7 +179,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの ExecutorRobots は、候補から除外する
+            // Exclude already-selected ExecutorRobots from candidates
             var wpExecutorRobots = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -234,7 +234,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの MachineRobots は、候補から除外する
+            // Exclude already-selected MachineRobots from candidates
             var wpMachineRobots = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -263,19 +263,19 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
                 sessions.AddRange(sessionsPerFolder.Result);
             }
 
-            // すべての組み合わせを生成して処理
+            // Generate and process all combinations
             var combinations = users
                 .SelectMany(user => machines, (user, machine) => new { user, machine })
                 .SelectMany(pair => sessions, (pair, session) => new { pair.user, pair.machine, session });
 
             foreach (var c in combinations)
             {
-                // セッションの MachineId が不一致ならスキップ
+                // Skip if the session's MachineId does not match
                 if (c.session is not null && c.machine?.Id != c.session.MachineId) continue;
 
-                // Dynamic Allocation の場合には user を指定せずも可能だが、
-                // machine mapping の場合には user は null ではいけない。
-                // 候補が多すぎても不便だし、user が null のものはすべて候補から外す
+                // For Dynamic Allocation, user can be omitted,
+                // but for machine mapping, user must not be null.
+                // Too many candidates would be inconvenient, so exclude all entries where user is null
                 //if (c.user is null && c.machine is null) continue;
                 if (c.user is null) continue;
 
@@ -301,7 +301,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
         Path = Path.Split1stValueByUnescapedCommas()?.ToArray();
         Name = Name.Split1stValueByUnescapedCommas()?.ToArray();
         ExecutorRobots = ExecutorRobots.Split1stValueByUnescapedCommas()?.ToArray();
-        // MachineRobots は JsonSerializer でデシリアライズするので、ここでカンマで区切る必要はない
+        // MachineRobots is deserialized by JsonSerializer, so there is no need to split by commas here
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
@@ -332,7 +332,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
                 schedule.AssignNumberIfNotNullOrZero(JobFailuresGracePeriodInHours,   (s, v) => s.JobFailuresGracePeriodInHours = v);
 
                 #region SpecificPriorityValue
-                // SpecificPriorityValue を先に適用、specificPriorityValue が非 null ならそれで上書き
+                // Apply SpecificPriorityValue first, then override with specificPriorityValue if non-null
                 schedule.AssignNumberIfNotNullOrZero(SpecificPriorityValue,           (s, v) => s.SpecificPriorityValue = v);
                 schedule.AssignNumberIfNotNullOrZero(specificPriorityValue,           (s, v) => s.SpecificPriorityValue = v);
                 #endregion
@@ -350,7 +350,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
 
                 schedule.AssignBoolIfNotNull(IsConnected,         (s, v) => s.IsConnected = v);
 
-                #region // CalendarName を CalendarId に変換
+                #region // Convert CalendarName to CalendarId
                 schedule.AssignIdFromName(
                     CalendarName,
                     drive.GetCalendars!,
@@ -373,7 +373,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
                 schedule.AssignStringIfNotNullOrEmpty(StartProcessCronDetails,     (s, v) => s.StartProcessCronDetails = v);
                 schedule.StartProcessCronDetails ??= $"{{\"advancedCron\":\"{schedule.StartProcessCron}\"}}";
 
-                #region ReleaseName を ReleaseId に変換
+                #region Convert ReleaseName to ReleaseId
                 schedule.AssignIdFromName(
                     ReleaseName,
                     () => drive.GetReleases(folder),
@@ -383,7 +383,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
                     this, target, "Release");
                 #endregion
 
-                #region QueueDefinitionName を QueueDefinitionId に変換
+                #region Convert QueueDefinitionName to QueueDefinitionId
                 schedule.AssignIdFromName(
                     QueueDefinitionName,
                     () => drive.Queues.Get(folder),
@@ -393,7 +393,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
                     this, target, "Queue");
                 #endregion
 
-                #region TimeZone を TimeZoneId に変換
+                #region Convert TimeZone to TimeZoneId
                 schedule.AssignStringIfNotNullOrEmpty(TimeZoneId, (s, v) => s.TimeZoneId = v);
 
                 schedule.AssignIdFromName(
@@ -409,10 +409,10 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
 
                 schedule.AssignDateTimeIfNotNull(StopProcessDate, (s, v) => s.StopProcessDate = v);
 
-                // ExecutorRobots をデシリアライズ
+                // Deserialize ExecutorRobots
                 schedule.ExecutorRobots = DeserializeExecutorRobots(this, drive, folder, schedule.GetPSPath(), ExecutorRobots);
 
-                // MachineRobots をデシリアライズ
+                // Deserialize MachineRobots
                 schedule.MachineRobots = DeserializeMachineRobotSessions(this, drive, folder, schedule.GetPSPath(), MachineRobots);
 
                 if (ShouldProcess(target, "New Trigger"))

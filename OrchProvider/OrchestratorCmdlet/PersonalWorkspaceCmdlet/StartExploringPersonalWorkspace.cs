@@ -2,10 +2,10 @@
 
 namespace UiPath.PowerShell.Commands;
 
-// パーソナルワークスペースを dir で表示できたとしても、権限がないので
-// あまり役に立たない。
-// /odata/PersonalWorkspaces({key})/UiPath.Server.Configuration.OData.StartExploring は
-// OAuth 認証をサポートしないため、この cmdlet は動作しない。一旦、非公開として残しておく。
+// Even if personal workspaces could be displayed with dir, it wouldn't be very useful
+// because the user lacks the necessary permissions.
+// /odata/PersonalWorkspaces({key})/UiPath.Server.Configuration.OData.StartExploring
+// does not support OAuth authentication, so this cmdlet does not work. Kept as unpublished for now.
 //[Cmdlet(VerbsLifecycle.Start, "OrchExploringPersonalWorkspace", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.QueueDefinition))]
 class StartExploringPersonalWorkspaceCommand : OrchestratorPSCmdlet
@@ -30,7 +30,7 @@ class StartExploringPersonalWorkspaceCommand : OrchestratorPSCmdlet
     //    {
     //        var drives = ResolveDrives(fakeBoundParameters);
 
-    //        // パラメータで選択済みの Name は、候補から除外する
+    //        // Exclude Names already selected by the parameter from the candidates
     //        var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Parameters, wordToComplete);
 
     //        var wp = CreateWPFromWordToComplete(wordToComplete);

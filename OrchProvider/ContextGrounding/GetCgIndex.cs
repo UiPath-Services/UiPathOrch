@@ -7,7 +7,7 @@ using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands;
 
-// 残念、動かない
+// Unfortunately, this does not work
 //[Cmdlet(VerbsCommon.Get, "OrchCgIndex")]
 //[OutputType(typeof(Bucket))]
 class GetCgIndexCommand : OrchestratorPSCmdlet

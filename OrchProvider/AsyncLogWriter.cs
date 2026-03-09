@@ -5,8 +5,8 @@ using System.Diagnostics;
 namespace UiPath.OrchAPI;
 
 /// <summary>
-/// 非同期ログ書き込みを提供するクラス
-/// Channelベースのキューイングシステムでログ書き込みのブロッキングを解消
+/// Provides asynchronous log writing.
+/// Uses a Channel-based queuing system to eliminate blocking on log writes.
 /// </summary>
 public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
 {
@@ -19,7 +19,7 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
     private readonly LogMetrics _metrics;
     private volatile bool _disposed;
 
-    // 設定可能なパラメータ
+    // Configurable parameters
     private readonly int _batchSize;
     private readonly int _flushIntervalMs;
 
@@ -32,7 +32,7 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
         _shutdownCts = new CancellationTokenSource();
         _metrics = new LogMetrics();
 
-        // チャネルの設定
+        // Channel configuration
         var options = new BoundedChannelOptions(maxQueueSize)
         {
             FullMode = BoundedChannelFullMode.Wait,
@@ -44,12 +44,12 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
         _logQueue = Channel.CreateBounded<LogEntry>(options);
         _writer = _logQueue.Writer;
         
-        // バックグラウンドでの処理タスクを開始
+        // Start the background processing task
         _processingTask = ProcessLogEntriesAsync(_shutdownCts.Token);
     }
 
     /// <summary>
-    /// ログエントリーを非同期でキューに追加します
+    /// Asynchronously enqueues a log entry.
     /// </summary>
     public async ValueTask WriteAsync(string logContent, CancellationToken cancellationToken = default)
     {
@@ -64,18 +64,18 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
         }
         catch (InvalidOperationException)
         {
-            // チャネルが閉じられている場合
+            // Channel has been closed
             _metrics.RecordDroppedEntry();
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            // キャンセル要求は正常なケース
+            // Cancellation request is a normal case
         }
     }
 
     /// <summary>
-    /// 同期版
-    /// ノンブロッキングでキューに追加を試行
+    /// Synchronous version.
+    /// Attempts to enqueue in a non-blocking manner.
     /// </summary>
     //public void Write(string logContent)
     //{
@@ -86,18 +86,18 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
         
     //    if (!_writer.TryWrite(entry))
     //    {
-    //        // キューがフルまたは閉じられている場合
+    //        // Queue is full or has been closed
     //        _metrics.RecordDroppedEntry();
     //    }
     //}
 
     /// <summary>
-    /// ログ統計情報を取得
+    /// Gets log statistics.
     /// </summary>
     public LogStatistics GetStatistics() => _metrics.GetStatistics();
 
     /// <summary>
-    /// バックグラウンドでログエントリーを処理
+    /// Processes log entries in the background.
     /// </summary>
     private async Task ProcessLogEntriesAsync(CancellationToken cancellationToken)
     {
@@ -121,7 +121,7 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
                 }
             }
 
-            // シャットダウン時の残りエントリー処理
+            // Process remaining entries during shutdown
             if (buffer.Count > 0)
             {
                 await FlushBufferAsync(buffer, cancellationToken);
@@ -129,17 +129,17 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            // 正常なシャットダウン
+            // Normal shutdown
         }
         catch (Exception ex)
         {
-            // エラーログは別の手段で記録
+            // Record error logs through an alternative means
             Debug.WriteLine($"AsyncLogWriter processing failed: {ex}");
         }
     }
 
     /// <summary>
-    /// バッファーの内容をファイルに書き込み
+    /// Writes the buffer contents to a file.
     /// </summary>
     private async Task FlushBufferAsync(List<LogEntry> buffer, CancellationToken cancellationToken)
     {
@@ -149,14 +149,14 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
         await _fileSemaphore.WaitAsync(cancellationToken);
         try
         {
-            // ディレクトリが存在しない場合は作成
+            // Create the directory if it does not exist
             var directory = Path.GetDirectoryName(_logFilePath);
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
             }
 
-            // バッチ書き込み用のStringBuilder
+            // StringBuilder for batch writing
             var stringBuilder = new StringBuilder();
             int totalBytes = 0;
 
@@ -168,7 +168,7 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
 
             await File.AppendAllTextAsync(_logFilePath, stringBuilder.ToString(), cancellationToken);
             
-            // メトリクス更新
+            // Update metrics
             _metrics.RecordBatchWritten(buffer.Count, totalBytes);
         }
         catch (DirectoryNotFoundException ex)
@@ -194,7 +194,7 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
     }
 
     /// <summary>
-    /// 非同期でのシャットダウン
+    /// Asynchronous shutdown.
     /// </summary>
     public async ValueTask DisposeAsync()
     {
@@ -205,10 +205,10 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
 
         try
         {
-            // 新しいエントリーの受付を停止
+            // Stop accepting new entries
             _writer.Complete();
 
-            // バックグラウンド処理の完了を待機（タイムアウト付き）
+            // Wait for background processing to complete (with timeout)
             _shutdownCts.CancelAfter(TimeSpan.FromSeconds(10));
             await _processingTask;
         }
@@ -224,7 +224,7 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
     }
 
     /// <summary>
-    /// 同期版のDispose（IDisposableインターフェース）
+    /// Synchronous Dispose (IDisposable interface).
     /// </summary>
     public void Dispose()
     {
@@ -247,12 +247,12 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
 }
 
 /// <summary>
-/// ログエントリーを表す内部構造体
+/// Internal struct representing a log entry.
 /// </summary>
 internal readonly record struct LogEntry(DateTime Timestamp, string Content);
 
 /// <summary>
-/// ログメトリクスを管理するクラス
+/// Class that manages log metrics.
 /// </summary>
 public sealed class LogMetrics
 {
@@ -285,7 +285,7 @@ public sealed class LogMetrics
 }
 
 /// <summary>
-/// ログ統計情報を表す構造体
+/// Struct representing log statistics.
 /// </summary>
 public readonly record struct LogStatistics(
     long TotalEntriesWritten,

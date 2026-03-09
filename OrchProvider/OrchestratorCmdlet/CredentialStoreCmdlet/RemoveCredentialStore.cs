@@ -59,9 +59,9 @@ public class RemoveCredentialStoreCommand : OrchestratorPSCmdlet
         }
     }
 
-    // マルチスレッド化したバージョン
-    // HTTP call を cap した状態では逆に遅くなる場合があるため、シングルスレッドで書き直した
-    // cap はドライブ毎にするから、マルチスレッドのままでも良い気もするが。。
+    // Multi-threaded version
+    // Rewrote as single-threaded because it can be slower when HTTP calls are capped
+    // Since the cap is per drive, it might be fine to keep it multi-threaded though..
     //protected override void ProcessRecord()
     //{
     //    var drives = OrchDriveInfo.EnumOrchDrives(Path);

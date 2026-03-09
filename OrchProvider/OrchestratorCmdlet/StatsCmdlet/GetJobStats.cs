@@ -17,7 +17,7 @@ public class GetJobStatsCommand : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumOrchDrives(Path);
 
-        // ToList() は遅延評価を抑止し、各スレッド内で問い合わせを行えるようにするために必要
+        // ToList() is needed to prevent deferred evaluation and allow queries within each thread
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,
             drive => drive,

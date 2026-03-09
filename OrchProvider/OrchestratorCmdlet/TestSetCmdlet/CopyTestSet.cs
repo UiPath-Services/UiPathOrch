@@ -35,7 +35,7 @@ public class CopyTestSetCommand : OrchestratorPSCmdlet
 
         var (dstDrive, dstRootFolder) = SessionState.ResolveToSingleFolder(Destination);
 
-        // コピー元とコピー先が同じなら、何もしない
+        // If source and destination are the same, do nothing
         if (srcRootFolder == dstRootFolder) return;
 
         var wpName = Name.ConvertToWildcardPatternList();
@@ -49,7 +49,7 @@ public class CopyTestSetCommand : OrchestratorPSCmdlet
 
             try
             {
-                // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
+                // If there are no entities to copy, there is no need to look up the dstFolder
                 //srcDrive._dicTestSets?.TryRemove(srcFolder.Id ?? 0, out _);
                 var srcEntities = srcDrive.TestSets.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName);
                 if (!srcEntities.Any()) continue;

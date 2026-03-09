@@ -69,7 +69,7 @@ public class RemoveCalendarDateCommand : OrchestratorPSCmdlet
 
                     foreach (var date in targetDates)
                     {
-                        if (paramExcludedDate.Contains(date)) continue; // 指定済みの日付を除外
+                        if (paramExcludedDate.Contains(date)) continue; // Exclude already-specified dates
                         string dateString = date.Date.ToShortDateString();
                         string tiphelp = calendarDetailed.GetPSPath();
                         if (string.IsNullOrEmpty(tiphelp)) tiphelp = dateString;
@@ -85,7 +85,7 @@ public class RemoveCalendarDateCommand : OrchestratorPSCmdlet
         var drives = SessionState.EnumOrchDrives(Path);
         var wpName = Name.ConvertToWildcardPatternList();
 
-        // 時刻成分をゼロにしておく
+        // Zero out the time component
         ExcludedDate = ExcludedDate!.Select(d => d.Date).ToArray();
 
         foreach (var drive in drives)
@@ -136,7 +136,7 @@ public class RemoveCalendarDateCommand : OrchestratorPSCmdlet
                 .OrderBy(d => d)
                 .ToArray();
 
-            // 追加した日付リストが元と変化していなければ API を call しない
+            // Skip the API call if the date list has not changed from the original
             if (keepDates.Length == calendar.ExcludedDates.Length) continue;
 
             string target = calendar.GetPSPath();
@@ -154,14 +154,14 @@ public class RemoveCalendarDateCommand : OrchestratorPSCmdlet
                     var updatedCalendar = drive.OrchAPISession.PutCalendar(postingCalendar);
                     drive._dicCalendars = null;
 
-                    // updatedCalendar の内容が不足している。Key も空っぽだ。
-                    // WriteObject() はしない方が良い。
+                    // updatedCalendar has incomplete data. Key is also empty.
+                    // It's better not to call WriteObject().
                     //if (updatedCalendar is not null)
                     //{
                     //    updatedCalendar.Path = drive.NameColon;
                     //    WriteObject(updatedCalendar);
-                    //    // 下記はうまくいかない。PutCalendar が返すデータに不足がある。TimeZoneId が null だ。
-                    //    // ここでは、キャッシュを空にしておくべきだ。
+                    //    // The below doesn't work. PutCalendar returns incomplete data. TimeZoneId is null.
+                    //    // We should clear the cache here instead.
                     //    //drive._dicCalendars ??= [];
                     //    //drive._dicCalendars[updatedCalendar.Id!.Value] = updatedCalendar;
                     //}

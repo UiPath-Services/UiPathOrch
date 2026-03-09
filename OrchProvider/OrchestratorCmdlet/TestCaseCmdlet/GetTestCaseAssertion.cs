@@ -9,22 +9,22 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.TestCaseAssertion))]
 public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 {
-    // パラメータセット1: TestSetExecutionName 直接指定
+    // Parameter set 1: Specify TestSetExecutionName directly
     [Parameter(Position = 0, ParameterSetName = "ByTestSetExecutionName")]
     [ArgumentCompleter(typeof(TestSetExecutionNameCompleter))]
     public string? TestSetExecutionName { get; set; }
 
-    // パラメータセット2: Id 直接指定
+    // Parameter set 2: Specify Id directly
     [Parameter(Mandatory = true, Position = 0, ParameterSetName = "ById")]
     [ArgumentCompleter(typeof(TestCaseExecutionIdCompleter))]
     [Alias("TestCaseExecutionId")]
     public Int64[] Id { get; set; } = null!;
 
-    // パラメータセット3: パイプ入力 (TestCaseExecution または TestSetExecution)
+    // Parameter set 3: Pipeline input (TestCaseExecution or TestSetExecution)
     [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = "ByPipeline")]
     public object? InputObject { get; set; }
 
-    // 共通パラメータ
+    // Common parameters
     [Parameter]
     [SupportsWildcards]
     public string[]? Path { get; set; }
@@ -38,11 +38,11 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 
 
     /// <summary>
-    /// TestSetExecutionId から TestCaseExecutionId[] を取得する。
+    /// Gets TestCaseExecutionId[] from a TestSetExecutionId.
     /// </summary>
     private static IEnumerable<Int64> GetTestCaseExecutionIds(OrchDriveInfo drive, Folder folder, Int64 testSetExecutionId)
     {
-        // キャッシュから取得を試みる
+        // Try to get from cache
         if (drive._dicTestCaseExecutions?.TryGetValue(folder.Id ?? 0, out var cached) ?? false)
         {
             var ids = cached
@@ -55,14 +55,14 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
             }
         }
 
-        // キャッシュになければ API で取得
+        // If not in cache, get from API
         var filter = $"&$filter=(TestSetExecutionId%20eq%20{testSetExecutionId})";
         var executions = drive.GetTestCaseExecutions(folder, filter, 0, ulong.MaxValue);
         return executions.Select(e => e.Id!.Value);
     }
 
     /// <summary>
-    /// パス名に使用できない文字を _ に置換する
+    /// Replaces characters that are invalid in path names with _
     /// </summary>
     private static string SanitizePathName(string name)
     {
@@ -76,11 +76,11 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 
     private void ProcessAssertions(OrchDriveInfo drive, Folder folder, Int64 testCaseExecutionId)
     {
-        // 重複チェック
+        // Duplicate check
         var key = (folder.Id!.Value, testCaseExecutionId);
         if (!_processedIds.Add(key))
         {
-            return; // 既に処理済み
+            return; // Already processed
         }
 
         try
@@ -88,19 +88,19 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
             List<TestCaseAssertion>? assertions = null;
             Int64 folderId = folder.Id!.Value;
 
-            // キャッシュから取得を試みる
+            // Try to get from cache
             if (drive._dicTestCaseAssertions?.TryGetValue(folderId, out var folderCache) ?? false)
             {
                 folderCache.TryGetValue(testCaseExecutionId, out assertions);
             }
 
-            // キャッシュになければ API から取得
+            // If not in cache, get from API
             if (assertions is null)
             {
                 var execution = drive.OrchAPISession.GetTestCaseExecutionWithAssertions(folderId, testCaseExecutionId);
                 assertions = execution?.TestCaseAssertions?.ToList() ?? [];
 
-                // キャッシュに保存
+                // Save to cache
                 if (drive._dicTestCaseAssertions is null)
                 {
                     lock (drive)
@@ -120,7 +120,7 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 
             string folderPath = folder.GetPSPath();
 
-            // TestSetExecutionName をキャッシュから取得
+            // Get TestSetExecutionName from cache
             string? testSetExecutionName = null;
             if (drive._dicTestCaseExecutions?.TryGetValue(folderId, out var tceCache) ?? false)
             {
@@ -128,11 +128,11 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
                 testSetExecutionName = tce?.TestSetExecutionName;
             }
 
-            // スクリーンショット保存先ディレクトリ
+            // Screenshot save destination directory
             string? screenshotDir = null;
             if (_resolvedScreenshotPath is not null)
             {
-                // ディレクトリパスを構築: ScreenshotPath/FolderName/TestSetExecutionName/
+                // Build directory path: ScreenshotPath/FolderName/TestSetExecutionName/
                 var folderName = SanitizePathName(folder.DisplayName ?? folder.Id.ToString()!);
                 if (!string.IsNullOrEmpty(testSetExecutionName))
                 {
@@ -161,7 +161,7 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
                     : System.IO.Path.Combine(folderPath, testSetExecutionName);
                 assertion.TestCaseExecutionId = testCaseExecutionId;
 
-                // スクリーンショットをダウンロード
+                // Download screenshot
                 if (screenshotDir is not null && (assertion.HasScreenshot ?? false) && assertion.Id is not null)
                 {
                     try
@@ -197,7 +197,7 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 
     protected override void BeginProcessing()
     {
-        // ScreenshotPath が指定された場合、パスを解決
+        // If ScreenshotPath is specified, resolve the path
         if (ScreenshotPath is not null)
         {
             _resolvedScreenshotPath = SessionState.Path.GetUnresolvedProviderPathFromPSPath(ScreenshotPath);
@@ -230,7 +230,7 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
     {
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path);
 
-        // TestSetExecutionName が指定されていなければ、キャッシュの内容を返す
+        // If TestSetExecutionName is not specified, return the cache contents
         if (TestSetExecutionName is null)
         {
             WriteWarning("Since TestSetExecutionName was not specified, the contents of the cache will be output. To query the Orchestrator, please specify TestSetExecutionName parameter.");
@@ -247,7 +247,7 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
                         var testCaseExecutionId = kvp.Key;
                         var assertions = kvp.Value;
 
-                        // TestSetExecutionName を _dicTestCaseExecutions から取得
+                        // Get TestSetExecutionName from _dicTestCaseExecutions
                         string? testSetExecutionName = null;
                         if (drive._dicTestCaseExecutions?.TryGetValue(folderId, out var tceCache) ?? false)
                         {
@@ -319,7 +319,7 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 
     private void ProcessByPipeline()
     {
-        // PSObject からプロパティを取得するヘルパー
+        // Helper to get a property from PSObject
         static T? GetProperty<T>(PSObject pso, string name)
         {
             var prop = pso.Properties[name];
@@ -375,12 +375,12 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
         }
         else
         {
-            // ダックタイピング: Id または Name プロパティがあれば処理
+            // Duck typing: process if there is an Id or Name property
             var id = GetProperty<Int64?>(pso, "Id") ?? GetProperty<long?>(pso, "Id");
             var name = GetProperty<string>(pso, "Name");
             var path = GetProperty<string>(pso, "Path");
 
-            // Path がなければ -Path パラメータ、それもなければカレントロケーションを使用
+            // If Path is missing, use the -Path parameter; if that is also missing, use the current location
             if (string.IsNullOrEmpty(path))
             {
                 path = Path?.FirstOrDefault() ?? SessionState.Path.CurrentLocation.Path;
@@ -390,13 +390,13 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 
             if (id is not null)
             {
-                // Id があれば TestCaseExecutionId として処理
+                // If Id exists, process it as TestCaseExecutionId
                 _cancelHandler!.Token.ThrowIfCancellationRequested();
                 ProcessAssertions(drive, folder, id.Value);
             }
             else if (!string.IsNullOrEmpty(name))
             {
-                // Name があれば TestSetExecutionName として処理
+                // If Name exists, process it as TestSetExecutionName
                 try
                 {
                     var testSetExecutionId = drive.ResolveTestSetExecutionId(folder, name);

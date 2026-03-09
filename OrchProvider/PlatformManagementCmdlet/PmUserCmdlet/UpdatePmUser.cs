@@ -23,7 +23,7 @@ public class UpdatePmUserCommand : OrchestratorPSCmdlet
     [Parameter(ValueFromPipelineByPropertyName = true)]
     public string? Surname { get; set; }
 
-    // 既存ユーザーの Email は、API で変更できないようだ。
+    // It seems that the Email of an existing user cannot be changed via the API.
     //[Parameter(ValueFromPipelineByPropertyName = true)]
     //public string? Email { get; set; }
 
@@ -34,11 +34,11 @@ public class UpdatePmUserCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(BoolCompleter))]
     public string? BypassBasicAuthRestriction { get; set; }
 
-    // TODO: グループの所属も指定できた方が便利なのか？
-    // groupIDsToAdd と groupIDsToRemove を payload に含めないといけないが、ちと面倒。
-    // ほかの cmdlet で可能な操作だから、一旦良いことにする。
+    // TODO: Would it be useful to also allow specifying group membership?
+    // We would need to include groupIDsToAdd and groupIDsToRemove in the payload, which is a bit tedious.
+    // Since this can be done with other cmdlets, leaving it for now.
 
-    // 以下は payload に含める必要がない
+    // The following do not need to be included in the payload
 
     //[Parameter(ValueFromPipelineByPropertyName = true)]
     //public bool? isActive { get; set; }
@@ -91,10 +91,10 @@ public class UpdatePmUserCommand : OrchestratorPSCmdlet
                     dst.AssignStringIfNotNull(DisplayName, (u, v) => u.displayName = v);
                     dst.AssignStringIfNotNull(Surname, (u, v) => u.surname = v);
                     //dst.AssignStringIfNotNull(Email, (u, v) => u.email = v);
-                    dst.AssignStringIfNotNullOrEmpty(Password, (u, v) => u.password = v); // Password は API で取得できないため据え置き
+                    dst.AssignStringIfNotNullOrEmpty(Password, (u, v) => u.password = v); // Password cannot be retrieved via API, so leave as-is
                     dst.AssignBoolIfNotNull(BypassBasicAuthRestriction, (u, v) => u.bypassBasicAuthRestriction = v);
 
-                    // 更新があれば API を call する
+                    // Call the API if there are any updates
                     if (src.name != dst.name ||
                         src.displayName != dst.displayName ||
                         src.surname != dst.surname ||

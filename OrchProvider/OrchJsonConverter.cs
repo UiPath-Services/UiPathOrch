@@ -11,7 +11,7 @@ public class JsonTools
     internal static readonly JsonSerializerOptions jsoWhenWritingNull = new()
     {
         //Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
-        //Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, // エンコードを抑制
+        //Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, // Suppress encoding
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
@@ -63,15 +63,15 @@ public class JsonTools
     }
 }
 
-// OR から返される JSON テキストの ResolutionWidth などが、文字列だったり数値だったりするので
-// どちらの場合でも数値にデシリアライズできるようにするためのコンバータ。
+// Converter for fields like ResolutionWidth in JSON text returned by OR, which can be
+// either strings or numeric values, allowing deserialization to the correct value in either case.
 public class StringOrIntConverter : JsonConverter<int>
 {
     public override int Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType == JsonTokenType.String)
         {
-            // トークンが文字列の場合
+            // When the token is a string
             if (int.TryParse(reader.GetString(), out int result))
             {
                 return result;
@@ -79,7 +79,7 @@ public class StringOrIntConverter : JsonConverter<int>
         }
         else if (reader.TokenType == JsonTokenType.Number)
         {
-            // トークンが数値の場合
+            // When the token is a number
             return reader.GetInt32();
         }
 
@@ -92,7 +92,7 @@ public class StringOrIntConverter : JsonConverter<int>
     }
 }
 
-// OR に DateTime を JSON でポストするとき、末尾に Z を付加するためのコンバータ。
+// Converter to append 'Z' to the end when posting DateTime values as JSON to OR.
 //public class DateTimeJsonConverter : JsonConverter<DateTime>
 //{
 //    public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -102,15 +102,15 @@ public class StringOrIntConverter : JsonConverter<int>
 
 //    public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
 //    {
-//        // UTC に変換し、"yyyy-MM-ddTHH:mm:ssZ" 形式で出力
+//        // Convert to UTC and output in "yyyy-MM-ddTHH:mm:ssZ" format
 //        writer.WriteStringValue(value.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"));
 //    }
 //}
 
-// ローカル時刻にデシリアライズするコンバータ。
-// これ自体は正しく動作することを確認しているが、CSV にローカル時刻で出力したファイルを
-// インポートするときに問題が出そうなので、適用を躊躇している。
-// 本当はすべてのエンティティの DataTime 型プロパティに指定したいが。。
+// Converter that deserializes to local time.
+// Confirmed to work correctly on its own, but problems arise when importing files
+// that were exported with local time to CSV, so this has been removed from application.
+// Ideally, this should be applied to all DateTime properties on all entities.
 public class LocalDateTimeConverter : JsonConverter<DateTime?>
 {
     public override DateTime? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -120,7 +120,7 @@ public class LocalDateTimeConverter : JsonConverter<DateTime?>
             return null;
         }
 
-        // UTC DateTime をローカル時刻に変換して返す
+        // Convert the UTC DateTime to local time and return
         DateTime utcDateTime = reader.GetDateTime();
         return utcDateTime.ToLocalTime();
     }
@@ -129,7 +129,7 @@ public class LocalDateTimeConverter : JsonConverter<DateTime?>
     {
         if (value.HasValue)
         {
-            // ローカル時刻を UTC に変換してから JSON に書き込む
+            // Convert local time to UTC before writing to JSON
             writer.WriteStringValue(value.Value.ToUniversalTime());
         }
         else
@@ -185,7 +185,7 @@ public class DateTimeArrayJsonConverter : JsonConverter<DateTime[]>
     }
 }
 
-// Member を、適切なサブクラスでデシリアライズするためのコンバータ。
+// Converter for deserializing Member into the appropriate subclass.
 public class MemberConverter : JsonConverter<PmGroupMember>
 {
     public override PmGroupMember? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -211,28 +211,28 @@ public class MemberConverter : JsonConverter<PmGroupMember>
     }
 }
 
-// 詳細不明な配列型について、デシリアライズが失敗したら例外をスローせずに null を入れるコンバータ。
-// swagger doc に記載されていない型については、この属性をつけておくと安心だ。
-// ただし、型が明確なメンバについてはつけない方が良い。将来、型の説明が swagger に追加されたら、この属性は外すべきだ。
+// Converter that swallows exceptions and returns null for array types with detailed unknowns during deserialization.
+// For types not documented in the swagger doc, having this safeguard is reassuring.
+// However, do not use this for members with known types. If type info is added to swagger later, this safeguard should be removed.
 public class SafeArrayConverter<T> : JsonConverter<T[]?>
 {
     public override T[]? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         try
         {
-            // 通常の配列としてデシリアライズを試行
+            // Attempt deserialization as a normal array
             return JsonSerializer.Deserialize<T[]>(ref reader, options);
         }
         catch (JsonException)
         {
-            // デシリアライズ失敗時は null を返す
+            // Return null if deserialization fails
             return null;
         }
     }
 
     public override void Write(Utf8JsonWriter writer, T[]? value, JsonSerializerOptions options)
     {
-        // 配列を通常通りシリアライズ
+        // Serialize the array normally
         JsonSerializer.Serialize(writer, value, options);
     }
 }

@@ -39,7 +39,7 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
             ? SessionState?.LoadUserMappingCsv(this, srcDrive, dstDrives[0], UserMappingCsv)
             : null;
 
-        #region コピーするユーザーの一覧を作成
+        #region Build list of users to copy
         var targetUsers = new Dictionary<List<string>, List<PmUser>>(new ListStringComparer());
         try
         {
@@ -75,7 +75,7 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
             return;
         }
 
-        #region srcDrive のグループ一覧を取得
+        #region Get group list from srcDrive
         IEnumerable<PmGroup> srcGroups;
         try
         {
@@ -96,7 +96,7 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
                 continue;
             }
 
-            #region dstDrive のグループ一覧を取得
+            #region Get group list from dstDrive
             Dictionary<string, PmGroup> dstGroups;
             try
             {
@@ -112,10 +112,10 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
             foreach (var groupedUsers in targetUsers)
             {
                 var srcGroupIds = groupedUsers.Key;
-                var srcUsers = groupedUsers.Value; // 同じ srcGroups に所属する srcUser 一覧
+                var srcUsers = groupedUsers.Value; // List of srcUsers belonging to the same srcGroups
 
 
-                #region payload を作成
+                #region Build the payload
                 var payload = new CreateUsersCommand()
                 {
                     users = [],
@@ -126,7 +126,7 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
                 };
                 #endregion
 
-                #region dstDrive のユーザー一覧を取得
+                #region Get user list from dstDrive
                 Dictionary<string, PmUser> dstUsers = null;
                 try
                 {
@@ -141,10 +141,10 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
                 }
                 #endregion
 
-                #region 同じ srcGroups に所属する srcUsers を、単一の payload に追加
+                #region Add srcUsers belonging to the same srcGroups into a single payload
                 foreach (var srcUser in srcUsers)
                 {
-                    #region すでに dstDrive に同名のユーザーがいればスキップ
+                    #region Skip if a user with the same name already exists in dstDrive
                     if (dstUsers?.ContainsKey(srcUser.email!) ?? false)
                     {
                         WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, $"Username '{srcUser.email}' is already taken."), "GetPmGroupError", ErrorCategory.InvalidOperation, srcDrive));
@@ -152,8 +152,8 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
                     }
                     #endregion
 
-                    #region payload に、このユーザーを追加
-                    // UserMappingCsv による名前解決
+                    #region Add this user to the payload
+                    // Name resolution via UserMappingCsv
                     string mappedUserName = !string.IsNullOrEmpty(srcUser.email) ? srcUser.email : srcUser.userName;
                     if (userMapping is not null)
                     {
@@ -174,9 +174,9 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
                         name = srcUser.name,
                         surname = srcUser.surname,
                         displayName = srcUser.displayName,
-                        //type = srcUser.type, // なぜ型が違うのか？
+                        //type = srcUser.type, // Why is the type different?
                         bypassBasicAuthRestriction = srcUser.bypassBasicAuthRestriction,
-                        // legacyId // これは多分不要であろう。
+                        // legacyId // This is probably not needed.
                         invitationAccepted = srcUser.invitationAccepted
                     };
                     payload.users.Add(command);

@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Core;
 
 public static class PathTools
 {
-    // コマンドレットの completer で候補を表示するときは、こちらを使う。
+    // Use this when displaying candidates in a cmdlet completer.
     public static string EscapePSText(string? input)
     {
 //            return "'" + WildcardPattern.Escape(input) + "'";
@@ -32,7 +32,7 @@ public static class PathTools
         return ret;
     }
 
-    // コマンドレットの completer で候補を表示するときは、こちらを使う。
+    // Use this when displaying candidates in a cmdlet completer.
     public static string EscapeNonWildcardText(string? input)
     {
         if (string.IsNullOrEmpty(input))
@@ -40,8 +40,8 @@ public static class PathTools
         return "'" + input.Replace("'", "''") + "'";
     }
 
-    // プロバイダの GetChildItems で WriteItemObject() するときは、こちらを使う。
-    // [ や ] などは自動で処理されるっぽい。* と ? は、ファイル名として想定されない？
+    // Use this when calling WriteItemObject() in the provider's GetChildItems.
+    // Characters like [ and ] seem to be handled automatically. * and ? are presumably not expected in file names.
     public static string EscapePSText2(string? input)
     {
         //            return "'" + WildcardPattern.Escape(input) + "'";
@@ -95,7 +95,7 @@ public static class PathTools
         return match.Success ? match.Value : "";
     }
 
-    // OrchDriveInfo.ExpandLocalPath() と組み合わせて使う
+    // Used in combination with OrchDriveInfo.ExpandLocalPath()
     public static IEnumerable<(string FullPath, string RelativePath)> OrderByFileNameVersion(
         this IEnumerable<(string FullPath, string RelativePath)> files)
     {
@@ -118,13 +118,13 @@ public class ConsoleCancelHandler : IDisposable
     private readonly ConsoleCancelEventHandler _handler;
     private bool _cancelKeyPressed;
 
-    // キャンセルキーが押されたかどうかを示すプロパティ
+    // Property indicating whether the cancel key was pressed
     public bool CancelKeyPressed => _cancelKeyPressed;
 
-    // CancellationTokenSource を公開するプロパティ
+    // Property exposing the CancellationTokenSource
     public CancellationToken Token => _cts.Token;
 
-    // デフォルトコンストラクタ
+    // Default constructor
     public ConsoleCancelHandler()
     {
         _cts = new CancellationTokenSource();
@@ -132,7 +132,7 @@ public class ConsoleCancelHandler : IDisposable
         Console.CancelKeyPress += _handler;
     }
 
-    // キャンセル処理のデリゲートを受け取るコンストラクタ
+    // Constructor that accepts a delegate for cancellation handling
     public ConsoleCancelHandler(Action onCancel)
     {
         _cts = new CancellationTokenSource();
@@ -140,7 +140,7 @@ public class ConsoleCancelHandler : IDisposable
         Console.CancelKeyPress += _handler;
     }
 
-    // 共通の初期化処理
+    // Common initialization logic
     private ConsoleCancelEventHandler CreateHandler(Action? onCancel)
     {
         return (sender, args) =>
@@ -158,7 +158,7 @@ public class ConsoleCancelHandler : IDisposable
         };
     }
 
-    // Dispose パターンの実装
+    // Dispose pattern implementation
     public void Dispose()
     {
         Console.CancelKeyPress -= _handler;
@@ -186,7 +186,7 @@ public class OrchTask<TSource, TResult> : IDisposable
     {
         _source = source;
         Result = result;
-        CompletedEvent.Set(); // 処理が完了したことを示す
+        CompletedEvent.Set(); // Signal that processing is complete
     }
 
     public void SetException(TSource source, string path, object target, Exception ex)
@@ -195,12 +195,12 @@ public class OrchTask<TSource, TResult> : IDisposable
         Path = path;
         Target = target;
         Exception = ex;
-        CompletedEvent.Set(); // 処理が完了したことを示す
+        CompletedEvent.Set(); // Signal that processing is complete
     }
 
     public TResult? GetResult(CancellationToken token)
     {
-        CompletedEvent.Wait(token); // スレッドの結果がセットされるまで待機
+        CompletedEvent.Wait(token); // Wait until the thread result is set
 
         if (Exception is not null)
         {
@@ -220,9 +220,9 @@ public class OrchTask<TSource, TResult> : IDisposable
     }
 }
 
-// このクラスの RunForEach() は、メインスレッドをブロックしない。
-// このクラスのインスタンスから foreach で取り出した各 item に対して
-// GetResult() を呼び出すと、対応するスレッドが終了するまで待機する。
+// RunForEach() of this class does not block the main thread.
+// When calling GetResult() on each item retrieved via foreach from an instance of this class,
+// it waits until the corresponding thread has finished.
 public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<OrchTask<TSource, TResult>>
 {
     private readonly OrchTask<TSource, TResult>[] _threads;
@@ -235,16 +235,16 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
         _semaphore = semaphore;
     }
 
-    // 外部から OrchTask 配列を渡してインスタンスを作成するファクトリメソッド
+    // Factory method that creates an instance from an externally provided OrchTask array
     public static OrchThreadPoolImpl<TSource, TResult> CreateInstance(
         OrchTask<TSource, TResult>[] threads, SemaphoreSlim semaphore)
     {
         return new OrchThreadPoolImpl<TSource, TResult>(threads, semaphore);
     }
 
-    // await Task.Yield() ではなく、SynchronizationContext を使ってメインスレッドに制御を渡す実装
-    // semaphore は、スレッドリソースが枯渇しないようにして、スレッドを起こせる状態を維持するために必要
-    // semaphore がないと、メインスレッドの GetResult() とデッドロックする可能性がある
+    // Uses SynchronizationContext instead of await Task.Yield() to yield control to the main thread.
+    // The semaphore is needed to prevent thread resource exhaustion and keep threads available.
+    // Without the semaphore, there is a risk of deadlock with the main thread's GetResult().
     public static OrchThreadPoolImpl<TSource, TResult> RunForEach(IEnumerable<TSource> sources,
         Func<TSource, string> getPathFunc,
         Func<TSource, object> getTargetFunc,
@@ -264,13 +264,13 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
         {
             Task.Run(async () =>
             {
-                await semaphore.WaitAsync(); // 並列度の制限を管理
+                await semaphore.WaitAsync(); // Manage concurrency limits
                 try
                 {
                     var result = await Task.Run(() => getResultFunc(source));
 
-                    // メインスレッドで SetResult() する
-                    // これにより、一時的にメインスレッドに制御を渡せる
+                    // Call SetResult() on the main thread.
+                    // This temporarily yields control to the main thread.
                     if (mainContext is not null)
                     {
                         mainContext.Post(_ =>
@@ -301,7 +301,7 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
     {
         foreach (var thread in _threads)
         {
-            thread.Dispose(); // リソースの解放
+            thread.Dispose(); // Release resources
         }
         GC.SuppressFinalize(this);
     }
@@ -341,7 +341,7 @@ public static class ParallelResults
         var resultsArray = new ParallelResult<TSource, TResult>[srcList.Count];
         using var cancelHandler = new ConsoleCancelHandler();
 
-        // コンカレントなスレッド数の上限を4に制限
+        // Limit the maximum number of concurrent threads to 4
         using var semaphore = new SemaphoreSlim(4);
 
         var tasks = srcList.Select((source, index) => Task.Run(async () =>
@@ -381,9 +381,9 @@ public static class ParallelResults
 }
 
 /// <summary>
-/// ある <typeparamref name="TItem"/> と、それに紐づく <typeparamref name="TSource"/> を保持します。<br/>
-/// - bucket.Name のようにアイテムとして直接操作可能（暗黙変換）<br/>
-/// - bucket.Source で元データにアクセス可能
+/// Holds a <typeparamref name="TItem"/> and its associated <typeparamref name="TSource"/>.<br/>
+/// - Can be used directly as the item (e.g., bucket.Name) via implicit conversion.<br/>
+/// - The original data is accessible via bucket.Source.
 /// </summary>
 public sealed class WithSource<TSource, TItem>
 {
@@ -397,13 +397,13 @@ public sealed class WithSource<TSource, TItem>
     }
 
     /// <summary>
-    /// LINQ から <c>b.Name</c> のように直接扱えるよう
-    /// <c>WithSource</c> から <typeparamref name="TItem"/> への暗黙変換を提供。
+    /// Provides implicit conversion from <c>WithSource</c> to <typeparamref name="TItem"/>
+    /// so it can be used directly in LINQ as <c>b.Name</c>.
     /// </summary>
     public static implicit operator TItem(WithSource<TSource, TItem> self) => self.Item;
 
     /// <summary>
-    /// <code>var (source, item) = withSource;</code> のようなパターンマッチ分解を許可。
+    /// Allows pattern-matching deconstruction like <code>var (source, item) = withSource;</code>.
     /// </summary>
     public void Deconstruct(out TSource source, out TItem item)
     {
@@ -415,9 +415,9 @@ public sealed class WithSource<TSource, TItem>
 }
 
 /// <summary>
-/// ForEach 内部で使う結果コンテナ。外部へは公開しませんが、必要なら public でも OK。
+/// Result container used internally by ForEach. Not exposed externally, but can be public if needed.
 /// planned to be deprecated
-/// ParallelResult3 を使うように直すべきだ。
+/// Should be refactored to use ParallelResult3.
 /// </summary>
 public sealed class ParallelResult<TSource, TResult>
 {
@@ -451,7 +451,7 @@ public sealed class SourceGroup<TSource, TItem> : IEnumerable<TItem>
 }
 
 /// <summary>
-/// ソースごとに並列実行し、結果をグループで返すユーティリティ。
+/// Utility that executes in parallel for each source and returns results grouped by source.
 /// </summary>
 public static class ParallelResults3
 {
@@ -540,8 +540,8 @@ public static class ParallelResults3
     }
 }
 
-// このクラスのインスタンスを保持する変数のスコープが終わると、自動でプログレスバーを破棄する。
-// この変数は、using を伴って定義することが必要。
+// When the variable holding an instance of this class goes out of scope, the progress bar is automatically disposed.
+// This variable must be declared with a using statement.
 public class ProgressReporter(IWritableHost provider, int id, int totalNum, string activity) : IDisposable
 {
     private IWritableHost? provider = provider;
@@ -580,6 +580,6 @@ public class ProgressReporter(IWritableHost provider, int id, int totalNum, stri
     public void Dispose()
     {
         CompleteProgress();
-        GC.SuppressFinalize(this); // Dispose が呼ばれた後はファイナライザを抑制
+        GC.SuppressFinalize(this); // Suppress the finalizer after Dispose has been called
     }
 }

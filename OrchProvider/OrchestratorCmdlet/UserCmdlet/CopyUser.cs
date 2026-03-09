@@ -88,8 +88,8 @@ public class CopyUserCommand : OrchestratorPSCmdlet
                         string srcPartitionGlobalId = srcDrive.GetPartitionGlobalId();
                         string dstPartitionGlobalId = dstDrive.GetPartitionGlobalId();
 
-                        // 同じ組織なら DirectoryIdentifier をそのまま使っても良さそうだけど
-                        // Domain は "autogen" で良いのだろうか。
+                        // For the same organization, we could probably reuse DirectoryIdentifier as-is,
+                        // but is "autogen" the right value for Domain?
                         //if (newUser.DirectoryIdentifier is null && srcPartitionGlobalId == dstPartitionGlobalId)
                         ////if (false)
                         //{
@@ -107,27 +107,27 @@ public class CopyUserCommand : OrchestratorPSCmdlet
 
                         User newUser = OrchCollectionExtensions.DeepCopy(detailedUser);
 
-                        // srcType は、変な値なら "DirectoryUser" に対応する数字にしておく。
-                        // でも変な値は将来のバージョンで出てくる可能性があるから、なにか警告した方がいいのかもしれない。
+                        // If srcType has an unexpected value, default to the number corresponding to "DirectoryUser".
+                        // However, unexpected values may appear in future versions, so perhaps we should issue a warning.
                         var srcType = DirectoryTypeItems.Items.GetValueOrDefault(detailedUser.Type ?? "DirectoryUser", DirectoryTypeItems.Items["DirectoryUser"]);
 
-                        // UserMappingCsv による名前解決
+                        // Name resolution via UserMappingCsv
                         if (userMapping is not null && userMapping.TryGetValue(newUser.UserName!, out var mappedName)
                             && !string.IsNullOrEmpty(mappedName))
                         {
                             newUser.UserName = mappedName;
                         }
 
-                        // 組織の PmUser の中に見つかれば、その identifier を DirectoryIdentifier を設定しておく
+                        // If found among the organization's PmUsers, set the identifier as DirectoryIdentifier
                         var dstPmUsers = dstDrive.SearchDirectory(newUser.UserName!)
                             .Where(u => string.Compare(u.identityName, newUser.UserName, true) == 0 && u.type == srcType)
                             .ToList();
                         DirectoryObject dstPmUser = null;
-                        if (dstPmUsers.Count == 1) dstPmUser = dstPmUsers.First(); // ひとつだけ見つかった場合に限り処理
+                        if (dstPmUsers.Count == 1) dstPmUser = dstPmUsers.First(); // Only process when exactly one match is found
 
                         if (dstPmUser is null && !string.IsNullOrEmpty(newUser.EmailAddress) && newUser.UserName != newUser.EmailAddress)
                         {
-                            // 見つからない場合は、メールアドレスでも探してみる
+                            // If not found, also try searching by email address
                             dstPmUser = dstDrive.SearchDirectory(newUser.EmailAddress)
                                 .Where(u => string.Compare(u.identityName, newUser.EmailAddress, true) == 0 && u.type == srcType)
                                 .FirstOrDefault();
@@ -159,7 +159,7 @@ public class CopyUserCommand : OrchestratorPSCmdlet
                         newUser.Key = null;
                         newUser.Id = null;
                         newUser.IsEmailConfirmed = null;
-                        // newUser.Path = null; // JsonIgnore 属性がついているので不要
+                        // newUser.Path = null; // Not needed since it has the JsonIgnore attribute
                         newUser.TenantId = null;
                         newUser.TenantKey = null;
                         newUser.TenancyName = null;
@@ -172,7 +172,7 @@ public class CopyUserCommand : OrchestratorPSCmdlet
                         newUser.IsActive = null;
                         newUser.LoginProviders = null; // not sure it need to be removed
                         newUser.ProvisionType = null; // need to be removed
-                        newUser.UserRoles = null; // ロール名の一覧が RolesList に入っているので、UserRoles は不要
+                        newUser.UserRoles = null; // UserRoles is not needed since role names are stored in RolesList
 
                         var dstRoles = dstDrive.Roles.Get();
                         List<string> rolesToBeRemoved = null;
@@ -181,7 +181,7 @@ public class CopyUserCommand : OrchestratorPSCmdlet
                             var destinationRole = dstRoles.FirstOrDefault(r => string.Compare(r.Name, role, StringComparison.OrdinalIgnoreCase) == 0);
 
                             string? targetUser = null;
-                            #region コピー先に存在しないロールは警告して除外する
+                            #region Warn and exclude roles that do not exist at the destination
                             if (destinationRole is null)
                             {
                                 rolesToBeRemoved ??= [];
@@ -197,7 +197,7 @@ public class CopyUserCommand : OrchestratorPSCmdlet
                             }
                             #endregion
 
-                            #region フォルダロールは警告して除外する
+                            #region Warn and exclude folder roles
                             else if (destinationRole.Type == "Folder")
                             {
                                 rolesToBeRemoved ??= [];
@@ -215,7 +215,7 @@ public class CopyUserCommand : OrchestratorPSCmdlet
 
                         if (newUser.RobotProvision is not null)
                         {
-                            // たぶん RobotProvision.RobotId は null にしておけば良い
+                            // Setting RobotProvision.RobotId to null should be sufficient
                             newUser.RobotProvision.RobotId = null;
                             //newUser.RobotProvision.RobotId = OrchFolderProvider.FindDstRobot(
                             //    this, srcDrive, dstDrive, dstDrive.RootFolder!,
@@ -230,14 +230,14 @@ public class CopyUserCommand : OrchestratorPSCmdlet
                                     newUser.UnattendedRobot.CredentialStoreId, srcUser.GetPSPath())?.Id;
                             }
 
-                            // たぶん UnattendedRobot.RobotId は null にしておけば良い
+                            // Setting UnattendedRobot.RobotId to null should be sufficient
                             newUser.UnattendedRobot.RobotId = null;
                             //newUser.UnattendedRobot.RobotId = OrchFolderProvider.FindDstRobot(
                             //    this, srcDrive, dstDrive, dstDrive.RootFolder!,
                             //    newUser.UnattendedRobot.CredentialStoreId, srcUser.GetPSPath())?.Id;
                             newUser.UnattendedRobot.Password = null;
 
-                            // TODO: UR のパスワードを更新してくれ、という警告出した方がいいのでは。
+                            // TODO: Perhaps we should issue a warning to update the UR password.
                         }
 
                         // migrating classic folders list. I am not sure this is needed;

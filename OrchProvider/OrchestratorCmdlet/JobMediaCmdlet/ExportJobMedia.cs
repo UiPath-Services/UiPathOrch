@@ -40,7 +40,7 @@ public class SaveJobMediaCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの JobId は、候補から除外する
+            // Exclude JobIds already selected by the parameter from the candidates
             var paramJobId = GetParameterValues(commandAst, "JobId", TPositional.Parameters, wordToComplete).Select(id => long.Parse(id));
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -49,7 +49,7 @@ public class SaveJobMediaCommand : OrchestratorPSCmdlet
             List<(Int64 folderId, ExecutionMedia media)> results = [];
             foreach (var (drive, folder) in drivesFolders)
             {
-                // キャッシュ済みならキャッシュを使う
+                // Use the cache if available
                 if (drive._dicJobsHavingExecutionMedia is not null && drive._dicJobsHavingExecutionMedia.TryGetValue(folder.Id ?? 0, out var jobsHavingMedia))
                 {
                     foreach (var media in jobsHavingMedia)
@@ -57,7 +57,7 @@ public class SaveJobMediaCommand : OrchestratorPSCmdlet
                         results.Add((folder.Id ?? 0, media));
                     }
                 }
-                else // 未キャッシュなら取得する
+                else // If not cached, fetch from the server
                 {
                     foreach (var media in drive.GetExecutionMedia(folder))
                     {
@@ -89,7 +89,7 @@ public class SaveJobMediaCommand : OrchestratorPSCmdlet
             throw new DirectoryNotFoundException($"Directory {Destination} doesn't exist.");
         }
 
-        #region あらかじめ、非同期で対象の ExecutionMedia を取得しておく
+        #region Pre-fetch target ExecutionMedia asynchronously
         Parallel.ForEach(drivesFolders, (driveFolder, state, index) =>
         {
             var (drive, folder) = driveFolder;
@@ -101,7 +101,7 @@ public class SaveJobMediaCommand : OrchestratorPSCmdlet
         });
         #endregion
 
-        #region 合計でいくつのファイルをダウンロードするのか数える
+        #region Count the total number of files to download
         int totalFileNum = 0;
         foreach (var (drive, folder) in drivesFolders)
         {

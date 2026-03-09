@@ -83,7 +83,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
-    // 存在しないアセットを "New asset name here" として表示するので、これは共通化できない
+    // Cannot be shared because non-existent assets are displayed as "New asset name here"
     private class NameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -95,7 +95,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude Names already selected by the parameter from the candidates
             var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -133,10 +133,10 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの UserName は、候補から除外する
+            // Only target Names already selected by the parameter
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
-            // パラメータで選択済みの UserName は、候補から除外する
+            // Exclude UserNames already selected by the parameter from the candidates
             var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -169,11 +169,11 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの MachineName は、候補から除外する
+            // Exclude MachineNames already selected by the parameter from the candidates
             var wpMachineName = CreateWPListFromParameter(commandAst, "MachineName", TPositional.Parameters, wordToComplete);
 
-            // TODO: 既存のユーザー名とマシン名の組み合わせは、候補に表示しないようにする
-            // ややこしいから、いいか。。
+            // TODO: Exclude existing user name and machine name combinations from the candidates
+            // It's complicated, so let's skip it for now..
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -193,7 +193,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
         }
     }
 
-    // StaticTextCompleter で書き直せる
+    // Can be rewritten using StaticTextCompleter
     private class CredentialUsernameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -231,7 +231,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Only target Names already selected by the parameter
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
             //var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -310,12 +310,12 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
 
     protected void RetrieveAllAssets()
     {
-        // 対象のフォルダの Asset を、非同期にまとめて取得する
+        // Retrieve Assets for the target folders asynchronously in bulk
         var _ = ParallelResults.ForEach(parameters, param =>
         {
             var drivesFolders = SessionState.EnumFolders(param.Path);
 
-            // 展開済みなので、フォルダはいっこしか展開されないはずだが、いちおう繰り返す
+            // Since the path is already resolved, only one folder should be expanded, but iterate just in case
             return ParallelResults.ForEach(drivesFolders, driveFolder =>
             {
                 var (drive, folder) = driveFolder;
@@ -344,7 +344,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                     return null;
 
                 isDirty = true;
-                // メモリ内にアセットを新規作成
+                // Create a new asset in memory
                 asset = new Asset
                 {
                     Name = name,
@@ -359,7 +359,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
             }
             else
             {
-                // 既存アセットをコピーして、メモリ内にアセットを作成
+                // Copy the existing asset and create an asset in memory
                 Asset newAsset = new()
                 {
                     Key = asset.Key,
@@ -376,7 +376,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                     Tags = asset.Tags,
                 };
 
-                // 既存アセットの UserValues をメモリ内にコピー
+                // Copy the existing asset's UserValues into memory
                 if (asset.UserValues is not null && asset.UserValues.Count != 0)
                 {
                     newAsset.UserValues = new List<AssetUserValue>();
@@ -399,7 +399,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                 }
                 asset = newAsset;
             }
-            // 最後に isDirty が true になっていれば、parameterSets.Add(asset) する。ここではまだしない
+            // If isDirty is true at the end, call parameterSets.Add(asset). Don't do it here yet
             //parameterSets.Add(asset);
         }
 
@@ -422,18 +422,18 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
             }
         }
 
-        // ここまでで、Description と CredentialStoreId をメモリ内に更新完了
-        // ただし、UserValues への CredentialStoreId の更新はまだ
+        // At this point, Description and CredentialStoreId have been updated in memory
+        // However, CredentialStoreId for UserValues has not been updated yet
 
-        // CredentialPassword が指定されなかったときは、Credential を更新しない
-        // (CredentialPassword に '' が指定されたときは、アセットを削除するために後続の処理を続行する)
+        // When CredentialPassword is not specified, do not update the Credential
+        // (When CredentialPassword is set to '', continue subsequent processing to delete the asset)
 
-        // Global 値を更新
+        // Update Global value
         if (specifiedUsers is null)
         {
             if (specifiedMachines is not null && specifiedMachines.Any(m => m is not null))
             {
-                // マシンを無視する旨の警告
+                // Warning that machines will be ignored
                 string strMachineNames = string.Join(", ", param.MachineName!);
                 var errorRecord = new ErrorRecord(new OrchException(target, $"UserName is not specified. MachineName '{strMachineNames}' ignored."), "SetAssetError", ErrorCategory.InvalidOperation, target);
                 WriteError(errorRecord);
@@ -455,7 +455,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                     asset.CredentialUsername = param.CredentialUsername;
                 }
 
-                if ((asset.CredentialUsername != param.CredentialUsername || string.IsNullOrEmpty(param.CredentialUsername)) && param.CredentialPassword == "") // "" が指定された場合は、Global 値を削除する
+                if ((asset.CredentialUsername != param.CredentialUsername || string.IsNullOrEmpty(param.CredentialUsername)) && param.CredentialPassword == "") // If "" is specified, delete the Global value
                 {
                     isDirty = true;
                     asset.ValueScope = "PerRobot";
@@ -464,7 +464,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                     asset.CredentialPassword = null;
                     asset.CredentialStoreId = null;
                 }
-                else if (!string.IsNullOrEmpty(param.CredentialPassword)) // CredentialPassword に何かが指定された場合に限り、これを更新する
+                else if (!string.IsNullOrEmpty(param.CredentialPassword)) // Only update this when CredentialPassword has a value specified
                 {
                     isDirty = true;
                     asset.CredentialPassword = param.CredentialPassword;
@@ -472,9 +472,9 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                 }
             }
         }
-        else // PerRobot 値を更新
+        else // Update PerRobot value
         {
-            // CredentialStore が指定された場合は、全ての UserValues の CredentialStoreId を更新
+            // If CredentialStore is specified, update the CredentialStoreId for all UserValues
             if (credentialStoreId != 0 && asset.UserValues is not null)
             {
                 foreach (var uv in asset.UserValues)
@@ -487,7 +487,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                 }
             }
 
-            // 当該の UserValue を探して更新                        
+            // Find and update the corresponding UserValue
             foreach (var user in specifiedUsers)
             {
                 foreach (var machine in specifiedMachines!)
@@ -497,8 +497,8 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                     AssetUserValue userValue = asset.UserValues.FirstOrDefault(uv => uv.UserId == user.Id && uv.MachineId == machine?.Id);
                     if (string.IsNullOrEmpty(param.CredentialUsername) && (param.CredentialPassword == "" || param.ExternalName == ""))
                     {
-                        // CredentialPassword に "" もしくは ExternalName に "" が指定された場合は
-                        // このアセット値を削除する
+                        // If CredentialPassword is set to "" or ExternalName is set to "",
+                        // delete this asset value
                         if (userValue is not null)
                         {
                             isDirty = true;
@@ -559,7 +559,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
 
     protected void BuildAssetDataFromParameterSets()
     {
-        // パフォーマンス向上のため、対象のフォルダの Asset を先にまとめて取得しておく
+        // For performance, retrieve all Assets for the target folders in advance
         RetrieveAllAssets();
 
         foreach (var param in parameters)
@@ -628,7 +628,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                 }
                 if (specifiedMachines is null || !specifiedMachines.Any())
                 {
-                    // 処理の便宜上、null の要素をひとつだけ入れておく
+                    // For processing convenience, insert a single null element
                     //specifiedMachines = new ExtendedMachine?[] { null };
                     specifiedMachines = [null];
                 }
@@ -640,7 +640,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                     var matchingAssets = existingAssets.FilterByWildcards(n => n?.Name, wpName);
                     if (matchingAssets.Any())
                     {
-                        // 既存のアセットを更新
+                        // Update existing assets
                         foreach (var matchingAsset in matchingAssets)
                         {
                             var asset = UpdateAssetInMemory(drive, folder, matchingAsset.Name!, param, specifiedUsers!, specifiedMachines, credentialStoreId);
@@ -650,7 +650,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                     }
                     else
                     {
-                        // 新規アセットを作成
+                        // Create a new asset
                         var asset = UpdateAssetInMemory(drive, folder, name, param, specifiedUsers!, specifiedMachines, credentialStoreId);
                         if (asset is not null && !parameterSets.Contains(asset))
                             parameterSets.Add(asset);
@@ -668,7 +668,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
 
         using var reporter = new ProgressReporter(this, 1, parameterSets.Count, "Updating credential assets");
 
-        // グループ化したパラメータセットを処理する
+        // Process the grouped parameter sets
         try
         {
             int index = 0;
@@ -695,7 +695,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
 
                 try
                 {
-                    if (existingAsset is null) // アセットを新規追加
+                    if (existingAsset is null) // Add a new asset
                     {
                         if (!asset.HasDefaultValue.GetValueOrDefault() && (asset.UserValues is null || !asset.UserValues.Any()))
                         {
@@ -713,7 +713,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                     }
                     else
                     {
-                        // アセットを削除
+                        // Delete the asset
                         if (!asset.HasDefaultValue.GetValueOrDefault() && (asset.UserValues is null || !asset.UserValues.Any()))
                         {
                             if (ShouldProcess(target, "Remove CredentialAsset"))
@@ -721,7 +721,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                                 drive.OrchAPISession.RemoveAsset(folder.Id ?? 0, asset.Id ?? 0);
                             }
                         }
-                        else // アセットを更新
+                        else // Update the asset
                         {
                             if (ShouldProcess(target, "Update CredentialAsset"))
                             {

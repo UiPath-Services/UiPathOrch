@@ -5,7 +5,7 @@ using TPositional = UiPath.PowerShell.Positional.Email;
 
 namespace UiPath.PowerShell.Commands;
 
-// この API は無効化されているため使えない
+// This API is disabled and cannot be used
 //[Cmdlet(VerbsCommon.Get, "PmUserLoginAttempt")]
 //[OutputType(typeof(Entities.IdUser))]
 class GetPmUserLoginAttemptCommand : OrchestratorPSCmdlet

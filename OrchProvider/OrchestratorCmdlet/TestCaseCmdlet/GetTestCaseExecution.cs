@@ -3,7 +3,7 @@ using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.Name; // パラメータセットがあるときはどう定義すればいいのだろう。。
+using TPositional = UiPath.PowerShell.Positional.Name; // How should this be defined when there are parameter sets..
 
 namespace UiPath.PowerShell.Commands;
 
@@ -11,17 +11,17 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.TestCaseExecution))]
 public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
 {
-    // パラメータセット1: 名前指定
+    // Parameter set 1: Specify by name
     [Parameter(Position = 0, ParameterSetName = "ByName")]
     [ArgumentCompleter(typeof(TestSetExecutionNameCompleter))]
     public string? TestSetExecutionName { get; set; }
 
-    // パラメータセット2: Id 指定（パイプ入力用）
+    // Parameter set 2: Specify by Id (for pipeline input)
     [Parameter(Mandatory = true, ValueFromPipelineByPropertyName = true, ParameterSetName = "ById")]
     [Alias("Id")]
     public Int64 TestSetExecutionId { get; set; }
 
-    // 共通パラメータ
+    // Common parameters
     [Parameter]
     [ArgumentCompleter(typeof(TestCaseExecutionEntryPointCompleter<TPositional>))]
     [SupportsWildcards]
@@ -120,7 +120,7 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
 
-        // すべてのパラメータが指定されていなければ、キャッシュの内容を返す
+        // If no parameters are specified, return the cache contents
         bool bOutCache = (
             TestSetExecutionName is null &&
             Last is null &&
@@ -154,7 +154,7 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
 
             try
             {
-                // TestSetExecutionName から Id を解決
+                // Resolve Id from TestSetExecutionName
                 Int64? testSetExecutionId = null;
                 if (!string.IsNullOrEmpty(TestSetExecutionName))
                 {
@@ -189,15 +189,15 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
 
     private void ProcessById()
     {
-        // Path がパイプでバインドされていなければカレントロケーションを使用
+        // If Path is not bound via pipeline, use the current location
         var path = Path ?? [SessionState.Path.CurrentLocation.Path];
         var (drive, folder) = SessionState.ResolveToSingleFolder(path[0]);
 
-        // 重複チェック（同じ folder + TestSetExecutionId は処理しない）
+        // Duplicate check (skip if the same folder + TestSetExecutionId was already processed)
         var key = (folder.Id!.Value, TestSetExecutionId);
         if (!_processedIds.Add(key))
         {
-            return; // 既に処理済み
+            return; // Already processed
         }
 
         var wpName = Name.ConvertToWildcardPatternList();

@@ -3,7 +3,7 @@ using UiPath.PowerShell.Core;
 
 namespace UiPath.PowerShell.Commands;
 
-// 残念ながら、これは OAuth app からは動かないようだ。
+// Unfortunately, this does not seem to work from an OAuth app.
 //[Cmdlet(VerbsCommon.Get, "OrchConnection")]
 //[OutputType(typeof(Bucket))]
 class GetConnectionCommand : OrchestratorPSCmdlet

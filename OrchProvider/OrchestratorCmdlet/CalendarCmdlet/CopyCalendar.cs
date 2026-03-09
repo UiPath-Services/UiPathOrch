@@ -35,7 +35,7 @@ public class CopyCalendarCommand : OrchestratorPSCmdlet
         srcDrive._dicCalendars = null;
         srcDrive._dicCalendars_Exceptions.ClearCache();
 
-        // この実装はこれで良い。
+        // This implementation is fine as is.
         ICollection<ExtendedCalendar>? srcCalendars;
         try
         {
@@ -79,7 +79,7 @@ public class CopyCalendarCommand : OrchestratorPSCmdlet
                         newCalendar.TimeZoneId = null;
                         newCalendar.Key = null;
                         newCalendar.Id = null;
-                        //newCalendar.Path = null; // JsonIgnore 属性がついているので不要
+                        //newCalendar.Path = null; // Not needed since it has the JsonIgnore attribute
                         var createdCalendar = dstDrive.OrchAPISession.PostCalendar(newCalendar);
                         if (createdCalendar is not null)
                         {

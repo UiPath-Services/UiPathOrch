@@ -42,9 +42,9 @@ class GetTestCommand : OrchestratorPSCmdlet
     {
         Task.Run(() =>
         {
-            Thread.Sleep(2000); // 2秒待機
+            Thread.Sleep(2000); // Wait 2 seconds
 
-            // PSReadLine の Insert を呼び出す
+            // Call PSReadLine's Insert method
             var script = $@"[Microsoft.PowerShell.PSConsoleReadLine]::Insert(""cd orch1:"")";
             this.InvokeCommand.InvokeScript(script);
         });

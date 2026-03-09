@@ -20,7 +20,7 @@ public class GetRobotCommand : OrchestratorPSCmdlet
     [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     [ArgumentCompleter(typeof(UsernameCompleter))]
-    public string[]? Username { get; set; } // Entities.Robot の定義を尊重した capitalization
+    public string[]? Username { get; set; } // Capitalization follows the Entities.Robot definition
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]

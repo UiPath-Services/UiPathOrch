@@ -32,7 +32,7 @@ class RemoveAssetLinkCommand : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
-    // TODO: GetLinkedAssetName として共通化したい
+    // TODO: Would like to share this as GetLinkedAssetName
     private class NameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -44,14 +44,14 @@ class RemoveAssetLinkCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude Names already selected by the parameter from the candidates
             var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
             var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Assets.Get(df.folder));
 
-            // TODO: link も取得する。link を複数もつアセットだけを候補に表示したい。
+            // TODO: Also retrieve links. Want to show only assets with multiple links as candidates.
 
             foreach (var result in results)
             {
@@ -68,7 +68,7 @@ class RemoveAssetLinkCommand : OrchestratorPSCmdlet
         }
     }
 
-    // TODO: シングルスレッド化しないと。
+    // TODO: Should be converted to single-threaded.
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);

@@ -5,7 +5,7 @@ using TPositional = UiPath.PowerShell.Positional.Path;
 
 namespace UiPath.PowerShell.Commands;
 
-// host admin のみ
+// Host admin only
 
 //[Cmdlet(VerbsCommon.Get, "PmSetting")]
 //[OutputType(typeof(Entities.PmUser))]
@@ -29,11 +29,11 @@ class GetPmSettingCommand : OrchestratorPSCmdlet
     //        CommandAst commandAst,
     //        IDictionary fakeBoundParameters)
     //    {
-    //        // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+    //        // Extract the path from parameters. If not specified, target the current directory.
     //        var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
     //        var drives = OrchDriveInfo.EnumOrchDrives(paramPath);
 
-    //        // パラメータで選択済みの Name は、候補から除外する
+    //        // Exclude Names already selected via parameters from candidates
     //        var wpUserName = CreateWPListFromParameter(commandAst, "UserName", positionalParams, wordToComplete);
 
     //        var wp = CreateWPFromWordToComplete(wordToComplete);

@@ -73,10 +73,10 @@ public class GetFolderUserCommand : OrchestratorPSCmdlet
 
             var IncludeInherited = GetFakeBoundParameterAsBool(fakeBoundParameters, "IncludeInherited");
 
-            // パラメータで選択済みの UserName は、候補から除外する
+            // Exclude UserNames already selected via parameter from the candidates
             var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
 
-            // パラメータで選択された FullName のみ対象とする
+            // Only include FullNames selected via parameter
             var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
             var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
 
@@ -118,12 +118,12 @@ public class GetFolderUserCommand : OrchestratorPSCmdlet
 
             var IncludeInherited = GetFakeBoundParameterAsBool(fakeBoundParameters, "IncludeInherited");
 
-            // パラメータで選択された UserName のみ対象とする
+            // Only include UserNames selected via parameter
             var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
 
             var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
 
-            // パラメータで選択済みの FullName は、候補から除外する
+            // Exclude FullNames already selected via parameter from the candidates
             var wpFullName = CreateWPListFromParameter(commandAst, "FullName", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -152,16 +152,16 @@ public class GetFolderUserCommand : OrchestratorPSCmdlet
 
     private static void WriteCsvContent(StreamWriter writer, IEnumerable<Entities.UserRoles> output)
     {
-        // 各フォルダーユーザーに対してデータ行を書き込む
+        // Write data rows for each folder user
         foreach (var p in output)
         {
             string[] line = [
                 EscapeCsvValue(p.Path, true),
                 EscapeCsvValue(p?.UserEntity?.Type),
 
-                // DirectoryGroup については、UserName 列に FullName を出力する。。
-                // これは、PmBulkResolveByName() が case を区別するためだ。
-                // Add-OrchFolderUser でグループをインポートできるようにするには、こうしておく必要がある。。
+                // For DirectoryGroup, output FullName in the UserName column...
+                // This is because PmBulkResolveByName() is case-sensitive.
+                // This is necessary to allow importing groups with Add-OrchFolderUser.
                 p?.UserEntity?.Type == "DirectoryGroup" ?
                     EscapeCsvValue(p?.UserEntity?.FullName) :
                     EscapeCsvValue(p?.UserEntity?.UserName),

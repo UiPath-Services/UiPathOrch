@@ -1,9 +1,9 @@
 ﻿namespace UiPath.PowerShell.Positional;
 
-// これらのクラスは、型パラメータとして使用する。
-// code bloat を抑止するため、同じ定義に対しては同じクラスを使う必要がある。そのため、ここでまとめて定義しておく。
-// と思ったけど、実は C# の場合は（C++ とは違って）違うクラスを型パラメータとして使っても code bloat は発生しないかな。。
-// .ps1 から completer を使うときには、public な型パラメータが必要になるから、これはこれで良いか。
+// These classes are used as type parameters.
+// To prevent code bloat, the same class should be reused for the same definition, which is why they are defined together here.
+// Actually, in C# (unlike C++) using different classes as type parameters may not cause code bloat...
+// Since public type parameters are needed when using completers from .ps1, this approach is fine as-is.
 
 public interface IBoolParameter
 {
@@ -64,7 +64,7 @@ internal class DirectoryTypes : IPositionalParameters
 {
     public static string[] Parameters { get; } = [
         "DirectoryUser",
-        "DirectoryGroup", // ローカルグループにローカルグループは追加できないことに注意（ADグループは可能）
+        "DirectoryGroup", // Note: local groups cannot be added to local groups (AD groups are allowed)
         "DirectoryRobotUser",
         "DirectoryApplication"
     ];

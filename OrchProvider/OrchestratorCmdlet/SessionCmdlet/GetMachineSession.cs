@@ -7,7 +7,7 @@ using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands;
 
-// フィルタを構築するパラメータは全部廃止して、フォルダごとに全部取得してキャッシュするように修正した。
+// All filter-building parameters have been removed; changed to fetch and cache everything per folder.
 [Cmdlet(VerbsCommon.Get, "OrchMachineSession")]
 [OutputType(typeof(Entities.MachineSessionRuntime))]
 public class GetMachineSessionCommand : OrchestratorPSCmdlet

@@ -73,13 +73,13 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            // パラメータで選択済みの Id は、候補から除外する
+            // Exclude Ids already selected by the parameter from the candidates
             var paramId = GetParameterValues(commandAst, "Id", TPositional.Parameters, wordToComplete);
             var wpId = paramId.ConvertToWildcardPatternList();
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            // キャッシュを使うので、マルチスレッド化する必要はない
+            // Using the cache, so there is no need to use multiple threads
             var results = new List<AuditLog>();
             foreach (var drive in drives)
             {
@@ -110,7 +110,7 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            // パラメータで選択済みの User は、候補から除外する
+            // Exclude UserNames already selected by the parameter from the candidates
             var paramUserName = GetParameterValues(commandAst, "UserName", TPositional.Parameters, wordToComplete);
             var wpUserName = paramUserName.ConvertToWildcardPatternList();
 
@@ -227,13 +227,13 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
             return order;
     }
 
-    // あれ？ どこかにこんなのが必要そうなのがあった気がするが、、
+    // Hmm? I recall there was something somewhere that seemed to need this...
     //private string DecodeBase64_ExtractGzip(string encodedData)
     //{
-    //    // Base64 デコード
+    //    // Base64 decode
     //    byte[] decodedData = Convert.FromBase64String(encodedData);
 
-    //    // GZip 展開
+    //    // GZip decompress
     //    using (var inputStream = new MemoryStream(decodedData))
     //    using (var gzipStream = new GZipStream(inputStream, CompressionMode.Decompress))
     //    using (var reader = new StreamReader(gzipStream))
@@ -281,17 +281,17 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
                 }
             }
 
-            // シングルスレッド版
+            // Single-threaded version
             //foreach (var log in logs)
             //{
             //    try
             //    {
             //        var apiCalled = drive.GetAuditLogDetails(log);
             //        WriteObject(log?.Details, true);
-            //        // Details を取得しようとすると、いつも同じ監査ログでエラーになる。
-            //        // API call rate limit のためにエラーになるのかと思ったけど、
-            //        // web interface でも同じ症状になるので、これは rate limit のせいじゃないな。
-            //        // マルチスレッド化しておいて問題ないようだ。
+            //        // When trying to get Details, it always fails on the same audit log entries.
+            //        // I thought it might be due to API call rate limiting,
+            //        // but the same issue occurs in the web interface, so it's not caused by rate limiting.
+            //        // It appears safe to use multiple threads here.
             //        if (apiCalled) Thread.Sleep(600); 
             //    }
             //    catch (Exception ex)
@@ -310,7 +310,7 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumOrchDrives(Path);
 
-        // すべてのパラメータが指定されていなければ、キャッシュの内容を返す
+        // If no parameters are specified, return the contents of the cache
         bool bOutCache = (
             Last is null &&
             Component is null &&
@@ -345,8 +345,8 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
             {
                 try
                 {
-                    // Skip と First をサポートする cmdlet は、ここでソートしてはいけない
-                    // サーバーから返された順を尊重しないと。
+                    // Cmdlets that support Skip and First must not sort here;
+                    // the order returned by the server must be respected.
                     WriteLog(drive, drive.GetAuditLogs(filter, skip, first));
                 }
                 catch (Exception ex)

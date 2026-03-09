@@ -58,8 +58,8 @@ public class StopJobCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Id は、候補から除外する
-            // TODO: これ入力時にはワイルドカードをサポートしてもいいのでは？
+            // Exclude Ids that have already been selected via parameters
+            // TODO: Should we support wildcards for input here?
             var paramId = GetParameterValues(commandAst, "Id", TPositional.Parameters, wordToComplete).Select(id => Int64.Parse(id));
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -71,13 +71,13 @@ public class StopJobCommand : OrchestratorPSCmdlet
 
                 try
                 {
-                    // キャッシュが残っていればそれを使う
+                    // Use the cache if it still exists
                     var folderJobs = drive.Jobs.GetCache(folder);
                     if (folderJobs is not null)
                     {
                         results.Add(folderJobs.Values.ToList().AsReadOnly());
                     }
-                    else // キャッシュがなければ取得する
+                    else // If no cache exists, fetch from the API
                     {
                         results.Add(drive.Jobs.Fetch(folder, "&$filter=((ProcessType%20eq%20%27Process%27)%20and%20((State%20eq%20%27Pending%27)%20or%20(State%20eq%20%27Running%27)%20or%20(State%20eq%20%27Stopping%27)%20or%20(State%20eq%20%27Suspended%27)%20or%20(State%20eq%20%27Resumed%27)))"));
                     }
@@ -100,12 +100,12 @@ public class StopJobCommand : OrchestratorPSCmdlet
     {
         if (Job is not null)
         {
-            // Get-OrchJob からパイプ入力
-            // 停止済みとマークされているジョブは処理しない
+            // Pipe input from Get-OrchJob
+            // Skip jobs that are already marked as stopped
             if (alreadyStoppedStates.Contains(Job.State))
                 return;
 
-            // Path を展開した上で、parameters に追加
+            // Resolve Path, then add to the parameters list
             var drivesFolders = SessionState.EnumFolders(new string[] { Job.Path! });
             foreach (var (drive, folder) in drivesFolders)
             {
@@ -120,20 +120,20 @@ public class StopJobCommand : OrchestratorPSCmdlet
         }
         else
         {
-            // コマンドラインから入力
+            // Input from command line
             var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
 
             foreach (var (drive, folder) in drivesFolders)
             {
-                // このフォルダーの Job キャッシュを取得
-                // パラメータごとに drive.Jobs.Fetch() を呼ばないように、キャッシュを直接読み取る
-                // (無駄に drive.Jobs.Fetch() を呼び出すと、処理が遅くなってしまう)
+                // Get the Job cache for this folder
+                // Read the cache directly to avoid calling drive.Jobs.Fetch() for each parameter
+                // (unnecessary calls to drive.Jobs.Fetch() slow down processing)
                 var folderJobs = drive.Jobs.GetCache(folder);
                 if (folderJobs is not null)
                 {
                     foreach (var jobId in Id!)
                     {
-                        // キャッシュに停止済みとマークされているジョブは処理しない
+                        // Skip jobs that are marked as stopped in the cache
                         if (folderJobs.TryGetValue(jobId, out var job))
                         {
                             if (alreadyStoppedStates.Contains(job.State))

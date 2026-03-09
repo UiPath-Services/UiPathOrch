@@ -1,4 +1,4 @@
-#pragma warning disable IDE1006 // 命名スタイル
+#pragma warning disable IDE1006 // Naming styles
 
 using System.Net;
 using System.Net.Http.Headers;
@@ -17,15 +17,15 @@ using User = UiPath.PowerShell.Entities.User;
 
 namespace UiPath.OrchAPI;
 
-// リソースへのアクセスを制限
-// 同時にアクセスできる回数: maxConcurrentRequests
-// 1秒間の間にアクセスできる回数: maxRequestsPerSecond
-// スレッドの上限は OrchThreadPoolImpl class で cap するため、このクラスからは除外した
+// Limits access to resources.
+// Maximum concurrent accesses: maxConcurrentRequests
+// Maximum requests per second: maxRequestsPerSecond
+// Thread limits are capped by the OrchThreadPoolImpl class, so they are excluded from this class.
 public class RateLimiter : IDisposable
 {
     private readonly SemaphoreSlim rateLimitSemaphore;
     private readonly int maxRequestsPerSecond;
-    private readonly Timer refillTimer; // タイマーが GC で回収されないように、タイマーの参照を保持しておく
+    private readonly Timer refillTimer; // Keep a reference to the timer so it is not garbage collected
 
     public RateLimiter(int maxRequestsPerSecond)
     {
@@ -80,7 +80,7 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    // 1秒間の間に送出できるリクエスト数を15に制限
+    // Limit the number of requests that can be sent per second to 15
     private readonly RateLimiter limiter = new(15);
 
     private int http_call_num = 0;
@@ -97,7 +97,7 @@ public partial class OrchAPISession : IDisposable
         
         try
         {
-            // オンプレ環境でテナント名が指定されている場合、ヘッダに追加
+            // Add tenant name to headers if specified in on-premises environment
             if (!string.IsNullOrEmpty(_authManager.OnpremiseTenancy))
             {
                 message.Headers.TryAddWithoutValidation("X-UIPATH-TenantName", _authManager.OnpremiseTenancy);
@@ -113,7 +113,7 @@ public partial class OrchAPISession : IDisposable
         {
             resTime = DateTime.Now;
             hasException = true;
-            throw; // 例外は再スロー
+            throw; // Re-throw the exception
         }
         finally
         {
@@ -121,19 +121,19 @@ public partial class OrchAPISession : IDisposable
             bool logEnabled = logging?.Enabled.GetValueOrDefault() ?? false;
             if (logEnabled)
             {
-                // 異常時は非同期で安全に処理し、BuildCombinedLogBlockも非同期実行
+                // Handle errors safely and asynchronously; also execute BuildCombinedLogBlock asynchronously
                 _ = Task.Run(async () => {
                     try
                     {
                         string? combinedLogBlock;
                         if (hasException)
                         {
-                            // キャンセル/エラー時は簡易ログのみ
+                            // Only simple logging on cancellation/error
                             combinedLogBlock = $"{reqTime:HH:mm:ss.fff} #{callId:D4} {message.Method} {message.RequestUri}\n{resTime:HH:mm:ss.fff} RES Status: ERROR/CANCELLED\n\n";
                         }
                         else
                         {
-                            // 正常時は通常のログ生成
+                            // Normal log generation for successful requests
                             combinedLogBlock = BuildCombinedLogBlock(reqTime, message, resTime, ret, callId, logging?.InternalLogLevel);
                         }
                         
@@ -144,7 +144,7 @@ public partial class OrchAPISession : IDisposable
                     }
                     catch (Exception ex)
                     {
-                        // ログエラーは無視（デバッグ出力のみ、再帰防止）
+                        // Ignore log errors (debug output only, to prevent recursion)
                         System.Diagnostics.Debug.WriteLine($"Async log write failed: {ex.Message}");
                     }
                 });
@@ -152,7 +152,7 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    private DateTime _expiryTime; // トークンが expire する正確な時刻を保持
+    private DateTime _expiryTime; // Holds the exact time when the token expires
     private readonly OrchestratorAuthManager _authManager;
 
     internal OrchestratorAuthManager AuthManager
@@ -211,7 +211,7 @@ public partial class OrchAPISession : IDisposable
                     UseProxy = true
                 };
 
-                // SSL 証明書がない場合の例外を無視する
+                // Ignore exceptions when SSL certificates are missing
                 if (drive._psDrive.IgnoreSslErrors.GetValueOrDefault(false))
                 {
                     handler.ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => true;
@@ -226,7 +226,7 @@ public partial class OrchAPISession : IDisposable
         }
         else
         {
-            // SSL 証明書がない場合の例外を無視する
+            // Ignore exceptions when SSL certificates are missing
             if (drive._psDrive.IgnoreSslErrors.GetValueOrDefault(false))
             {
                 var handler = new HttpClientHandler
@@ -264,8 +264,8 @@ public partial class OrchAPISession : IDisposable
         }
         else
         {
-            // オンプレ: テナントパスが除去された _baseUrl を使用
-            // テナント指定は X-UIPATH-TenantName ヘッダで行う
+            // On-premises: use _baseUrl with tenancy path removed.
+            // Tenancy is specified via the X-UIPATH-TenantName header.
             _base_url = _authManager.BaseUrl;
             _base_url_identity = _base_url + "/identity";
             _base_url_portal = _base_url + "/portal";
@@ -300,7 +300,7 @@ public partial class OrchAPISession : IDisposable
                     string token = _authManager.RequestToken();
                     SetToken(token);
 
-                    // Entra ID 警告: 組織にログインしていない場合に警告を表示
+                    // Entra ID warning: display warning if not signed in to the organization
                     if (_drive is not null && _authManager.ShouldShowEntraIdWarning())
                     {
                         Console.ForegroundColor = ConsoleColor.Yellow;
@@ -322,13 +322,13 @@ public partial class OrchAPISession : IDisposable
                                 ApiVersion = version;
                             }
                         }
-                        catch {} // この例外は握りつぶす
+                        catch {} // Swallow this exception
                     }
                 }
             }
         }
 
-        // トークンが切れる5分前を過ぎていたら、トークンをリフレッシュする
+        // Refresh the token if we are past 5 minutes before expiry
         DateTime now = DateTime.Now;
         if (now > _expiryTime.AddMinutes(-5))
         {
@@ -398,7 +398,7 @@ public partial class OrchAPISession : IDisposable
                 _httpClient?.Dispose();
                 limiter?.Dispose();
                 
-                // 非同期ログライターのDispose
+                // Dispose the async log writer
                 DisposeAsyncLogWriter();
             }
         }
@@ -487,7 +487,7 @@ public partial class OrchAPISession : IDisposable
             ulong top = Math.Min(first - total, 1000);
             if (top == 0) break;
 
-            // パラメータ名に $ がつかない。$top とか $skip でないので要注意。
+            // Note: parameter names do not have a $ prefix. They are "top" and "skip", not "$top" and "$skip".
             string url = $"{_base_url_identity}{endPoint}?top={top}&skip={skip}{query}";
 
             var request = new HttpRequestMessage(HttpMethod.Get, url);
@@ -536,14 +536,14 @@ public partial class OrchAPISession : IDisposable
             ulong top = Math.Min(first - total, 1000);
             if (top == 0) break;
 
-            // パラメータ名に $ がつかない。$top とか $skip でないので要注意。
+            // Note: parameter names do not have a $ prefix. They are "top" and "skip", not "$top" and "$skip".
             string url = $"{_base_url_portal}{endPoint}?top={top}&skip={skip}{query}";
 
             var request = new HttpRequestMessage(HttpMethod.Get, url)
             {
-                // content が空っぽの場合でも、次の行は必要。
-                // これがないと、Get-OrchPmUser のエンドポイントがエラーを返してしまう。
-                // ほとんどすべてのエンドポイントでは、次の行がなくても大丈夫なのに、、
+                // The following line is needed even when the content is empty.
+                // Without it, the Get-OrchPmUser endpoint returns an error.
+                // Almost all other endpoints work fine without this line, though.
                 Content = CreateEmptyContent()
             };
             if (folderId.HasValue)
@@ -574,7 +574,7 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    // ページングのサポートがない
+    // No pagination support
     private TColl? GetEnumerableWithoutPagingImpl<TColl>(string baseUrl, string endPoint, Int64? folderId = null, string? query = null)
     {
         endPoint = $"{baseUrl}{endPoint}?$count=false{query}";
@@ -660,7 +660,7 @@ public partial class OrchAPISession : IDisposable
         return HttpRequestImpl(method, _base_url_identity, endPoint, folderId, payload);
     }
 
-    // 非公開の API を呼び出す用
+    // For calling undocumented/private APIs
     public string HttpRequestPortal(HttpMethod method, string endPoint, Int64? folderId = null, object? payload = null)
     {
         return HttpRequestImpl(method, _base_url_portal, endPoint, folderId, payload);
@@ -735,8 +735,8 @@ public partial class OrchAPISession : IDisposable
     {
         try
         {
-            // GetEnumerable は yield return による遅延評価のため、
-            // ここで ToList() して即座に実行しないと try/catch が効かない
+            // Because GetEnumerable uses lazy evaluation via yield return,
+            // ToList() must be called here for immediate execution, otherwise try/catch will not work.
             return GetEnumerable<Alert>("/odata/Alerts", null, query, skip, first).ToList();
         }
         catch (Exception ex) when (ApiVersion >= 18)
@@ -756,7 +756,7 @@ public partial class OrchAPISession : IDisposable
 
     public QueueDefinition? GetQueue(Int64 folderId, Int64 queueId)
     {
-        // TODO: ApiVersion が 17 とか 18 のときはどっちを呼び出すべきか？
+        // TODO: Which one should be called when ApiVersion is 17 or 18?
         if (ApiVersion >= 19)
         {
             return HttpRequest<QueueDefinition>(HttpMethod.Get, $"/odata/QueueDefinitions/UiPath.Server.Configuration.OData.GetQueue(id={queueId})", folderId);
@@ -780,7 +780,7 @@ public partial class OrchAPISession : IDisposable
                 }
                 catch
                 {
-                    // ここは握りつぶすので良いか、
+                    // Is it OK to swallow this?
                 }
             }
 
@@ -788,8 +788,8 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    // 非公開の API のようだ
-    // Copy-OrchQueueItem cmdlet の進捗を表示するのに使いたいが。。
+    // This appears to be an undocumented API.
+    // Would like to use it to display progress for the Copy-OrchQueueItem cmdlet, but...
     //public void ListQueues()
     //{
     //  GET "/odata/QueueDefinitions/UiPath.Server.Configuration.OData.ListQueues"
@@ -803,7 +803,7 @@ public partial class OrchAPISession : IDisposable
 
     public QueueDefinition? CreateQueue(Int64 folderId, QueueDefinition queue)
     {
-        // StaleRetention は、ApiVersion = 17 では web interface にないことを確認済み 
+        // Confirmed that StaleRetention is not present in the web interface for ApiVersion = 17 
         if (ApiVersion < 19)
         {
             queue.StaleRetentionAction = null;
@@ -812,17 +812,17 @@ public partial class OrchAPISession : IDisposable
             queue.StaleRetentionBucketName = null;
         }
 
-        // OC 22.10.1 (15.0) で動作確認済み POST /odata/QueueDefinitions
-        // OC 23.4.0 (16.0) で動作確認済み POST /odata/QueueDefinitions/UiPath.Server.Configuration.OData.CreateQueue
-        // OC 23.10.0 (17.0) で動作確認済み POST /odata/QueueDefinitions/UiPath.Server.Configuration.OData.CreateQueue
+        // Verified on OC 22.10.1 (15.0) POST /odata/QueueDefinitions
+        // Verified on OC 23.4.0 (16.0) POST /odata/QueueDefinitions/UiPath.Server.Configuration.OData.CreateQueue
+        // Verified on OC 23.10.0 (17.0) POST /odata/QueueDefinitions/UiPath.Server.Configuration.OData.CreateQueue
         if (ApiVersion >= 16)
         {
             return HttpRequest<QueueDefinition>(HttpMethod.Post, "/odata/QueueDefinitions/UiPath.Server.Configuration.OData.CreateQueue", folderId, queue);
         }
         else
         {
-            // TODO: 下記は ApiVersion < 19 のときにすべきではないか？
-            // EditQueue() でも同じ処理をすべきではないか？
+            // TODO: Should the following only be done when ApiVersion < 19?
+            // Should EditQueue() also perform the same processing?
             queue.RetentionAction = null;
             queue.RetentionPeriod = null;
             queue.RetentionBucketId = null;
@@ -833,7 +833,7 @@ public partial class OrchAPISession : IDisposable
 
     public void EditQueue(Int64 folderId, QueueDefinition queue)
     {
-        // 何も返さない
+        // Returns nothing
         HttpRequest(HttpMethod.Post, "/odata/QueueDefinitions/UiPath.Server.Configuration.OData.EditQueue", folderId, queue);
     }
 
@@ -857,7 +857,7 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Post, "/odata/QueueDefinitions/UiPath.Server.Configuration.OData.ShareToFolders", folderId, foldersShare);
     }
 
-    // TODO: きれいに書き直す
+    // TODO: Rewrite cleanly
     public void AddQueueItem(Int64 folderId, string queueName, Dictionary<string, object> specificContent, QueuePriority priority = QueuePriority.Normal)
     {
         var itemData = new Dictionary<string, object>()
@@ -875,7 +875,7 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Post, "/odata/Queues/UiPathODataSvc.AddQueueItem", folderId, itemData);
     }
 
-    // filter には "&$filter=()" のようなのを渡す必要がある
+    // filter must be passed in the format "&$filter=()"
     public IEnumerable<QueueItem> GetQueueItems(Int64 folderId, string? filter, ulong skip, ulong first, string? orderBy = null, bool orderAscending = false)
     {
         if (string.IsNullOrEmpty(orderBy)) orderBy = "EndProcessing";
@@ -927,7 +927,7 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<RobotsFromFolderModel>($"/odata/Robots/UiPath.Server.Configuration.OData.GetRobotsFromFolder(folderId={folderId})");
     }
 
-    // マシン作成・更新時に使う。フィルターを設定していることに注意。このフィルタテキストはキャッシュ側でもつべきかもしれない。
+    // Used when creating/updating machines. Note the filter is set. This filter text might be better held on the cache side.
     public IEnumerable<ExtendedRobot> FindAllRobotsAcrossFolders()
     {
         return GetEnumerable<ExtendedRobot>($"/odata/Robots/UiPath.Server.Configuration.OData.FindAllAcrossFolders", null,
@@ -949,7 +949,7 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<BulkOperationResponseDtoOfFailedQueueItem>(HttpMethod.Post, "/odata/Queues/UiPathODataSvc.BulkAddQueueItems", folderId, payload);
     }
 
-    // この API は、Robot からしか呼びだすことができない。。
+    // This API can only be called from Robot...
     //public QueueItem? StartTransaction(Int64 folderId, TransactionData payload)
     //{
     //    QueuesStartTransactionRequest pl = new()
@@ -964,7 +964,7 @@ public partial class OrchAPISession : IDisposable
 
     #region CredentialStores
 
-    // Type を取得できない。Post するときに必要なのに。。
+    // Cannot retrieve Type. It is needed when posting, though...
     public IEnumerable<CredentialStore> GetCredentialStores()
     {
         //return GetEnumerable<CredentialStore>("/odata/CredentialStores?$expand=Type");
@@ -995,7 +995,7 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<Webhook>("/odata/Webhooks");
     }
 
-    // 空が返る
+    // Returns empty
     public void RemoveWebhooks(Int64 webhookId)
     {
         HttpRequest(HttpMethod.Delete, $"/odata/Webhooks({webhookId})");
@@ -1059,7 +1059,7 @@ public partial class OrchAPISession : IDisposable
         var newFolder = HttpRequest<Folder>(HttpMethod.Post, "/odata/Folders", null, payload);
         if (newFolder is not null)
         {
-            newFolder.FeedType = feedType; // OC Issue: なぜか FeedType が必ず Process になってしまうので直す
+            newFolder.FeedType = feedType; // OC Issue: FeedType always becomes Process for some reason, so fix it
         }
         return newFolder;
     }
@@ -1098,7 +1098,7 @@ public partial class OrchAPISession : IDisposable
             endPoint += $"?targetParentId={parentFolderId}";
         }
 
-        // 何も返らない
+        // Returns nothing
         HttpRequest(HttpMethod.Put, endPoint);
     }
 
@@ -1107,9 +1107,9 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<LibraryFeed[]>(HttpMethod.Get, "/api/PackageFeeds/GetLibraryFeeds");
     }
 
-    // このメソッドは、"" を返すべきではない
-    // このメソッドを呼ぶ側が、必要に応じて null を "" に変換する必要がある
-    // (Dictionary のキーとして使う場合など)
+    // This method should not return ""
+    // The caller needs to convert null to "" as necessary
+    // (e.g., when used as a dictionary key)
     public string? GetFolderFeedId(Int64? folderId)
     {
         if (folderId is null || folderId == 0)
@@ -1182,15 +1182,15 @@ public partial class OrchAPISession : IDisposable
         public bool? InheritEnabled { get; set; } = inheritEnabled;
     }
 
-    // ApiVersion = 15 で動作確認済み
+    // Verified on ApiVersion = 15
     public void SetFolderMachineInherit(Int64 folderId, Int64 machineId, bool enabled)
     {
         FolderMachineInherit payload = new(machineId, folderId, enabled);
-        // "" が返る
+        // Returns ""
         HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.ToggleFolderMachineInherit", folderId, payload);
     }
 
-    // TODO: ここでフィルター指定してるけど、まあいいか。。キャッシュ側で実装した方があとあと嬉しいかもしれないけど、
+    // TODO: Specifying the filter here, but that should be fine... It might be better to implement on the cache side later.
     public IEnumerable<ExtendedRobot> GetFolderRobots(Int64 folderId, MachineFolder machine)
     {
         return GetEnumerable<ExtendedRobot>($"/odata/Robots/UiPath.Server.Configuration.OData.GetFolderRobots(folderId={folderId},machineId={machine.Id})",
@@ -1205,7 +1205,7 @@ public partial class OrchAPISession : IDisposable
 
     public void SetMachineRobots(SetMachineRobotsCmd cmd)
     {
-        // 何も返らない
+        // Returns nothing
         HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.SetMachineRobots", null, cmd);
     }
 
@@ -1226,11 +1226,11 @@ public partial class OrchAPISession : IDisposable
             }
         };
 
-        // 何も返らない
+        // Returns nothing
         HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.UpdateMachinesToFolderAssociations", folderId, payload);
     }
 
-    // TODO: この API は deprecated かもしれない。Automation Cloud は違う API を call している。
+    // TODO: This API might be deprecated. Automation Cloud calls a different API.
     public void UnassignMachinesFromFolder(Int64 folderId, IEnumerable<Int64> machineIds)
     {
         UpdateMachinesToFolderAssociationsRequest payload = new()
@@ -1265,7 +1265,7 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<PersonalWorkspace>("/odata/PersonalWorkspaces");
     }
 
-    // 現在、この API は OAuth をサポートしていないため呼び出せない。
+    // Currently, this API cannot be called because it does not support OAuth.
     //public void StartExploringPersonalWorkspace(Int64? folderId)
     //{
     //    string body = HttpRequest(HttpMethod.Get, $"/odata/PersonalWorkspaces({folderId})/UiPath.Server.Configuration.OData.StartExploring");
@@ -1294,9 +1294,9 @@ public partial class OrchAPISession : IDisposable
         }
 
         string expand;
-        // TODO: この数字は正しい？
-        // ApiVersion == 11 のとき、Machine を含めてはいけないことは確認済み
-        // ApiVersion == 13 のとき、Machine を含めて良いことは確認済み
+        // TODO: Is this number correct?
+        // Confirmed that Machine must not be included when ApiVersion == 11
+        // Confirmed that Machine can be included when ApiVersion == 13
         if (ApiVersion < 12)
         {
             expand = "&$expand=Robot,Release";
@@ -1351,7 +1351,7 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Post, "/odata/Jobs/UiPath.Server.Configuration.OData.StopJobs", folderId, payload);
     }
 
-    // TODO: これ使ってないけど、実装をきれいにできたい。
+    // TODO: Not using this, but would like to clean up the implementation.
     //public string? StartRemoteControl(Int64 folderId, string jobKey)
     //{
     //    var payload = new Dictionary<string, string>();
@@ -1392,7 +1392,7 @@ public partial class OrchAPISession : IDisposable
 
     public void PatchMachine(ExtendedMachine machine)
     {
-        // 空文字列が返る
+        // Returns an empty string
         HttpRequest(HttpMethod.Patch, $"/odata/Machines({machine.Id!.Value})", null, machine);
     }
 
@@ -1407,7 +1407,7 @@ public partial class OrchAPISession : IDisposable
         {
             ["machineIds"] = machineIds
         };
-        // なぜか Post で正しい。
+        // POST is correct for some reason.
         HttpRequest(HttpMethod.Post, $"/odata/Machines/UiPath.Server.Configuration.OData.DeleteBulk", null, payload);
     }
 
@@ -1417,7 +1417,7 @@ public partial class OrchAPISession : IDisposable
 
     public IEnumerable<Library> GetLibraries(string? feedId = null)
     {
-        //return GetEnumerable<Library>("/odata/Libraries?$orderby=Id%20desc"); // なぜか動かない？
+        //return GetEnumerable<Library>("/odata/Libraries?$orderby=Id%20desc"); // doesn't work for some reason?
         return GetEnumerable<Library>("/odata/Libraries", null, feedId is null ? null : $"&feedId={feedId}");
     }
 
@@ -1450,9 +1450,9 @@ public partial class OrchAPISession : IDisposable
 
     public PackageEntryPoint? GetPackageMainEntryPoint(string? feedId, string packageId, string packageVersion)
     {
-        if (ApiVersion < 12) return null; // 11.1 では Not found になることを確認済み TODO: 12 以降では？ New-OrchProcess で確認。
+        if (ApiVersion < 12) return null; // Confirmed it returns Not Found on 11.1. TODO: What about 12+? Verify with New-OrchProcess.
 
-        // TODO: コロンもエンコードすべきな気がするが、
+        // TODO: Colons should probably be encoded too, but...
         //string endPoint = $"/odata/Processes/UiPath.Server.Configuration.OData.GetPackageMainEntryPoint(key='{HttpUtility.UrlEncode(packageId)}:{packageVersion}')";
 
         string key = $"{packageId}:{packageVersion}";
@@ -1497,14 +1497,14 @@ public partial class OrchAPISession : IDisposable
 
     public BulkItemDtoOfString? UploadLibrary(string fileName, byte[] file)
     {
-        // MultipartFormDataContentを作成
+        // Create MultipartFormDataContent
         using var content = new MultipartFormDataContent("----UiPathOrchBoundary");
 
-        // ファイル内容をByteArrayContentとして読み込む
+        // Read file contents as ByteArrayContent
         var fileContent = new ByteArrayContent(file);
         fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
 
-        // contentにファイル内容を追加
+        // Add file contents to the content
         content.Add(fileContent, "uploads[]", fileName);
 
         //var request = new HttpRequestMessage(HttpMethod.Post, $"/odata/Libraries/UiPath.Server.Configuration.OData.UploadPackage()?feedId={feedId}");
@@ -1513,7 +1513,7 @@ public partial class OrchAPISession : IDisposable
             Content = content
         };
 
-        // HTTP POSTリクエストを送信し、レスポンスを取得
+        // Send the HTTP POST request and get the response
         var response = HttpClient_Send(request);
         EnsureSuccessStatusCode(response);
 
@@ -1531,15 +1531,15 @@ public partial class OrchAPISession : IDisposable
 
     public BulkItemDtoOfString? UploadPackage(string? feedId, string fileName, byte[] file)
     {
-        // MultipartFormDataContentを作成
+        // Create MultipartFormDataContent
         using var content = new MultipartFormDataContent("----UiPathOrchBoundary");
-        // 送信するファイルの情報を追加
+        // Add file information to send
 
-        // ファイル内容をByteArrayContentとして読み込む
+        // Read file contents as ByteArrayContent
         var fileContent = new ByteArrayContent(file);
         fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
 
-        // contentにファイル内容を追加
+        // Add file contents to the content
         content.Add(fileContent, "uploads[]", fileName);
 
         var request = new HttpRequestMessage(HttpMethod.Post, _base_url + $"/odata/Processes/UiPath.Server.Configuration.OData.UploadPackage()?feedId={feedId}")
@@ -1547,11 +1547,11 @@ public partial class OrchAPISession : IDisposable
             Content = content
         };
 
-        // HTTP POSTリクエストを送信し、レスポンスを取得
+        // Send the HTTP POST request and get the response
         var response = HttpClient_Send(request);
         EnsureSuccessStatusCode(response);
 
-        // レスポンス内容を読み取る
+        // Read the response content
         string body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
         var objBody = JsonSerializer.Deserialize<HttpBodyValues<BulkItemDtoOfString>>(body)!;
         return objBody.value?[0];
@@ -1577,7 +1577,7 @@ public partial class OrchAPISession : IDisposable
         string? ret = null;
         if (contentDisposition is not null)
         {
-            // "filename*" を優先して使用する
+            // Prefer using "filename*"
             var fileNameStar = contentDisposition.FileNameStar;
             if (!string.IsNullOrEmpty(fileNameStar))
             {
@@ -1593,7 +1593,7 @@ public partial class OrchAPISession : IDisposable
             }
         }
 
-        // ReadAsByteArrayAsync の結果を非同期で待機
+        // Await the result of ReadAsByteArrayAsync
         var responseBytes = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
         return (ret, responseBytes);
     }
@@ -1615,7 +1615,7 @@ public partial class OrchAPISession : IDisposable
         string? ret = null;
         if (contentDisposition is not null)
         {
-            // "filename*" を優先して使用する
+            // Prefer using "filename*"
             var fileNameStar = contentDisposition.FileNameStar;
             if (!string.IsNullOrEmpty(fileNameStar))
             {
@@ -1672,8 +1672,8 @@ public partial class OrchAPISession : IDisposable
         if (release.RetentionPeriod      == 0) release.RetentionPeriod      = null;
         if (release.StaleRetentionPeriod == 0) release.StaleRetentionPeriod = null;
 
-        // TODO: この条件は正しいか？
-        // ApiVersion = 17: Retention はある、StaleRetention はない
+        // TODO: Is this condition correct?
+        // ApiVersion = 17: Retention exists, StaleRetention does not
         if (ApiVersion < 19)
         {
             release.StaleRetentionPeriod = null;
@@ -1684,14 +1684,14 @@ public partial class OrchAPISession : IDisposable
             }
         }
 
-        // OC 22.10.1 (15.0) で動作確認済み POST /odata/Releases
-        // OC 23.4.0 (16.0) で動作確認済み POST /odata/Releases
-        // OC 23.10.6 (17.0) で動作確認済み POST /odata/Releases/UiPath.Server.Configuration.OData.CreateRelease
-        // Automation Cloud (19.0) で動作確認済み POST /odata/Releases/UiPath.Server.Configuration.OData.CreateRelease
+        // Verified on OC 22.10.1 (15.0) POST /odata/Releases
+        // Verified on OC 23.4.0 (16.0) POST /odata/Releases
+        // Verified on OC 23.10.6 (17.0) POST /odata/Releases/UiPath.Server.Configuration.OData.CreateRelease
+        // Verified on Automation Cloud (19.0) POST /odata/Releases/UiPath.Server.Configuration.OData.CreateRelease
         if (ApiVersion >= 19)
         {
-            // Automation Cloud に対しては、RetentionAction は "None" は使えないようだ。
-            // TODO: MSI Orchestrator についてはどうか？ Automation Suite に対してはどうか？
+            // It seems RetentionAction "None" cannot be used with Automation Cloud.
+            // TODO: What about MSI Orchestrator? What about Automation Suite?
             if (_drive._psDrive.IsCloud)
             {
                 if (string.IsNullOrEmpty(release.RetentionAction) || release.RetentionAction == "None")
@@ -1708,9 +1708,9 @@ public partial class OrchAPISession : IDisposable
         }
         else
         {
-            // 11.1 では SpecificPriorityValue が not null だとエラーになることを確認済み
-            // 13.0 では SpecificPriorityValue が not null だとエラーになることを確認済み
-            // TODO: 14 以降ではどうか？
+            // Confirmed that non-null SpecificPriorityValue causes an error on 11.1
+            // Confirmed that non-null SpecificPriorityValue causes an error on 13.0
+            // TODO: What about 14 and later?
             if (ApiVersion < 14 && release.SpecificPriorityValue is not null)
             {
                 if      (release.SpecificPriorityValue >= 61) release.JobPriority = "High";
@@ -1726,19 +1726,19 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    // 非公開の API だな。
+    // This is an undocumented API.
     public void EditRelease(Int64 folderId, Release release)
     {
-        // TODO: ApiVersion < 19 のとき、StaleRetention に null を設定すべきではないか？
-        // 何も返さない
+        // TODO: When ApiVersion < 19, should StaleRetention be set to null?
+        // Returns nothing
         HttpRequest(HttpMethod.Post, "/odata/Releases/UiPath.Server.Configuration.OData.EditRelease", folderId, release);
     }
 
     #region ReleaseRetention
     public ReleaseRetentionSetting? GetReleaseRetention(Int64 folderId, Int64 releaseId)
     {
-        // API ver が 16.0 の場合には、リテンションポリシーを読み取れなかった。
-        // API ver が 17.0 の場合には、リテンションポリシーを読み取れた。
+        // Could not read the retention policy with API ver 16.0.
+        // Could read the retention policy with API ver 17.0.
         if (ApiVersion < 17) return null;
         return HttpRequest<ReleaseRetentionSetting>(HttpMethod.Get, $"/odata/ReleaseRetention({releaseId})", folderId);
     }
@@ -1816,7 +1816,7 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<ProcessSchedule>(HttpMethod.Get, $"/odata/ProcessSchedules({processScheduleId})", folderId);
     }
 
-    // トリガーの ExecutorRobots を取得
+    // Get the ExecutorRobots of the trigger
     public Int64[]? GetRobotIdsForSchedule(Int64 folderId, Int64 processScheduleId)
     {
         return HttpRequest<HttpBodyValue<Int64[]>>(HttpMethod.Get, $"/odata/ProcessSchedules/UiPath.Server.Configuration.OData.GetRobotIdsForSchedule(key={processScheduleId})", folderId)?.value;
@@ -1829,7 +1829,7 @@ public partial class OrchAPISession : IDisposable
 
     public void PutProcessSchedule(Int64 folderId, ProcessSchedule schedule)
     {
-        // 何も返さない
+        // Returns nothing
         HttpRequest(HttpMethod.Put, $"/odata/ProcessSchedules({schedule.Id})", folderId, schedule);
     }
 
@@ -1869,7 +1869,7 @@ public partial class OrchAPISession : IDisposable
         string body = HttpRequest(HttpMethod.Delete, $"/odata/Buckets({bucketId})", folderId);
     }
 
-    // 何も返らない
+    // Returns nothing
     public void DeleteBucketItem(Int64 folderId, Int64 bucketId, string fullPath)
     {
         HttpRequest(HttpMethod.Delete, $"/odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.DeleteFile?path={Uri.EscapeDataString(fullPath)}", folderId);
@@ -1899,7 +1899,7 @@ public partial class OrchAPISession : IDisposable
     {
         if (string.IsNullOrWhiteSpace(headerName)) return true;
 
-        // HttpRequestMessage.Headers で設定できない/危険な代表例を除外
+        // Exclude typical headers that cannot or should not be set via HttpRequestMessage.Headers
         return headerName.Equals("Content-Length", StringComparison.OrdinalIgnoreCase)
             || headerName.Equals("Host", StringComparison.OrdinalIgnoreCase)
             || headerName.Equals("Connection", StringComparison.OrdinalIgnoreCase)
@@ -1937,7 +1937,7 @@ public partial class OrchAPISession : IDisposable
 
     public async Task ReadBucketItemAsync(BlobFileAccess? access, string destinationPath, CancellationToken cancellationToken = default)
     {
-        // CancellationTokenをチェック
+        // Check CancellationToken
         cancellationToken.ThrowIfCancellationRequested();
         
         if (access == null || string.IsNullOrWhiteSpace(access.Verb) || string.IsNullOrWhiteSpace(access.Uri))
@@ -1950,19 +1950,19 @@ public partial class OrchAPISession : IDisposable
         if (!Uri.TryCreate(access.Uri, UriKind.Absolute, out var _))
             throw new ArgumentException($"Invalid Uri: {access.Uri}", nameof(access));
 
-        // ファイル操作前にCancellationTokenをチェック
+        // Check CancellationToken before file operations
         cancellationToken.ThrowIfCancellationRequested();
 
         using var req = new HttpRequestMessage(method, access.Uri);
         AddHeaders(req, access);
 
-        // BucketItem の取得時には、Authorization ヘッダを除外しなければいけない。
-        // マルチスレッドで Bucket を取得しているため、_httpClient の default header から Authorization ヘッダを
-        // 一時的に除外することはできない。
-        // BucketItem 専用の HttpClient を準備するのが安全だ。
+        // When retrieving BucketItems, the Authorization header must be excluded.
+        // Since Buckets are fetched using multiple threads, the Authorization header cannot be
+        // temporarily removed from _httpClient default headers.
+        // It is safe to prepare a dedicated HttpClient for BucketItems.
         _httpClientForBucketItem ??= InitializeHttpClient(_drive);
 
-        // access.RequiresAuth が true のときには、Authorization を残した状態でリクエストする必要があるのだろうか？
+        // When access.RequiresAuth is true, should the request be sent with the Authorization header retained?
         using var res = HttpClient_Send(req, _httpClientForBucketItem, cancellationToken);
 
         res.EnsureSuccessStatusCode();
@@ -1979,7 +1979,7 @@ public partial class OrchAPISession : IDisposable
                 options: FileOptions.SequentialScan
             );
 
-            // 非同期でCopyToを実行し、CancellationTokenを渡す
+            // Execute CopyTo asynchronously, passing the CancellationToken
             await httpStream.CopyToAsync(fileStream, cancellationToken);
             await fileStream.FlushAsync(cancellationToken);
         }
@@ -1990,7 +1990,7 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    // 同期版
+    // Synchronous version
     public void ReadBucketItem(BlobFileAccess? access, string destinationPath, CancellationToken cancellationToken = default)
     {
         ReadBucketItemAsync(access, destinationPath, cancellationToken).GetAwaiter().GetResult();
@@ -2000,7 +2000,7 @@ public partial class OrchAPISession : IDisposable
     {
         cancelToken.ThrowIfCancellationRequested();
 
-        // いったん PUT のみサポート。必要なら、後日に POST のサポートも足さないといけない。
+        // For now, only PUT is supported. POST support may need to be added later if needed.
         if (access.Verb!.ToUpper() != "PUT") throw new NotImplementedException();
 
         if (!Uri.TryCreate(access.Uri, UriKind.Absolute, out var _))
@@ -2019,13 +2019,13 @@ public partial class OrchAPISession : IDisposable
         };
         AddHeaders(req, access);
 
-        // BucketItem の取得時には、Authorization ヘッダを除外しなければいけない。
-        // マルチスレッドで Bucket を取得しているため、_httpClient の default header から Authorization ヘッダを
-        // 一時的に除外することはできない。
-        // BucketItem 専用の HttpClient を準備するのが安全だ。
+        // When retrieving BucketItems, the Authorization header must be excluded.
+        // Since Buckets are fetched using multiple threads, the Authorization header cannot be
+        // temporarily removed from _httpClient default headers.
+        // It is safe to prepare a dedicated HttpClient for BucketItems.
         _httpClientForBucketItem ??= InitializeHttpClient(_drive);
 
-        // access.RequiresAuth が true のときには、Authorization を残した状態でリクエストする必要があるのだろうか？
+        // When access.RequiresAuth is true, should the request be sent with the Authorization header retained?
         using var res = HttpClient_Send(req, _httpClientForBucketItem, cancelToken);
 
         res.EnsureSuccessStatusCode();
@@ -2063,7 +2063,7 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<HttpTrigger>("/odata/HttpTriggers", folderId);
     }
 
-    // TODO: これどこからも使っていない。良くないのでは？
+    // TODO: This is not used anywhere. Is that a problem?
     public HttpTrigger? GetHttpTrigger(Int64 folderId, string triggerId)
     {
         return HttpRequest<HttpTrigger>(HttpMethod.Get, $"/odata/HttpTriggers({triggerId})", folderId);
@@ -2095,7 +2095,7 @@ public partial class OrchAPISession : IDisposable
     #region EventTrigger
     public IEnumerable<ApiTrigger> GetEventTriggers(Int64 folderId)
     {
-        EnsureVersionSupport(14); // 正確な数字は未確認。。
+        EnsureVersionSupport(14); // The exact number has not been confirmed.
         return GetEnumerable<ApiTrigger>("/odata/ApiTriggers", folderId);
     }
 
@@ -2184,7 +2184,7 @@ public partial class OrchAPISession : IDisposable
             p.RoleId = null;
         }
 
-        // 何も返らない
+        // Returns nothing
         HttpRequest(HttpMethod.Put, $"/odata/Roles({role.Id})", null, role);
     }
 
@@ -2201,7 +2201,7 @@ public partial class OrchAPISession : IDisposable
     {
         return GetEnumerable<User>("/odata/Users", null, "&$expand=OrganizationUnits,UserRoles");
 
-        //return GetEnumerable<User>("/odata/Users", null, "&$expand=OrganizationUnits,UserRoles,UnattendedRobot"); // エラーになってしまう
+        //return GetEnumerable<User>("/odata/Users", null, "&$expand=OrganizationUnits,UserRoles,UnattendedRobot"); // This causes an error
     }
 
     public User? GetUser(Int64 userId)
@@ -2220,14 +2220,14 @@ public partial class OrchAPISession : IDisposable
         {
             if (user.NotificationSubscription is not null)
             {
-                // ApiVersion 18 で追加された。
+                // Added in ApiVersion 18.
                 user.NotificationSubscription.RateLimitsDaily = null;
                 user.NotificationSubscription.RateLimitsRealTime = null;
             }
         }
         else
         {
-            user.BypassBasicAuthRestriction = null; // ApiVersion 18 で deprecated だ。
+            user.BypassBasicAuthRestriction = null; // Deprecated in ApiVersion 18.
         }
 
         //if (user.UnattendedRobot is not null)
@@ -2292,7 +2292,7 @@ public partial class OrchAPISession : IDisposable
 
     #region DirectoryService
 
-    // この API の quota は、300回/5分だ。
+    // The quota for this API is 300 calls per 5 minutes.
     // https://uipath-japan.slack.com/archives/C0175DZP4PQ/p1751336407409919?thread_ts=1751275792.210139&cid=C0175DZP4PQ
     private DateTime        _lastSearchDirectory = DateTime.MinValue;
     private readonly object _lockSearchDirectory = new object();
@@ -2350,14 +2350,14 @@ public partial class OrchAPISession : IDisposable
 
     #region Stats
 
-    // 空っぽが返ってしまう。。
+    // Returns empty...
     //public IEnumerable<ConsumptionLicenseStatsModel> GetStatsLicenseConsumption(int tenantId, int days)
     //{
     //    string body = HttpRequest(HttpMethod.Get, $"/api/Stats/GetConsumptionLicenseStats?tenantId={tenantId}&days={days}");
     //    yield break;
     //}
 
-    // これも動作しない。すべて -1 が返ってきてしまう。。
+    // This does not work either. All values return -1...
     // Requires authentication.
     //public IEnumerable<CountStats> GetCountStats()
     //{
@@ -2377,7 +2377,7 @@ public partial class OrchAPISession : IDisposable
         return ret ?? [];
     }
 
-    // Not Found が返ってしまう。。
+    // Returns Not Found...
     public IEnumerable<CountStats> GetSessionStats()
     {
         var ret = HttpRequest<CountStats[]>(HttpMethod.Get, "/api/Stats/GetSessionsStats'");
@@ -2390,7 +2390,7 @@ public partial class OrchAPISession : IDisposable
 
     public IEnumerable<Asset> GetAssets(Int64 folderId)
     {
-        // なぜか UserValues.CredentialUsername が空で返ってきてしまう。不具合なのか？
+        // For some reason, UserValues.CredentialUsername is returned empty. Is this a bug?
         //return GetEnumerable<Asset>("/odata/Assets/UiPath.Server.Configuration.OData.GetFiltered", folderId, "&$expand=UserValues");
         return GetEnumerable<Asset>("/odata/Assets", folderId, "&$expand=UserValues");
     }
@@ -2516,7 +2516,7 @@ public partial class OrchAPISession : IDisposable
     //            break;
     //    }
 
-    //    // 引数で指定されない場合は、元の UserValues を保持する
+    //    // If not specified as an argument, retain the original UserValues
     //    userValues ??= asset.UserValues;
 
     //    if (userValues is null || !userValues.Any())
@@ -2568,7 +2568,7 @@ public partial class OrchAPISession : IDisposable
 
     public AccessibleFoldersDto? GetFoldersForAsset(Int64 folderId, Int64 assetId)
     {
-        EnsureVersionSupport(12); // 多分もっと後ろのバージョンだと思う
+        EnsureVersionSupport(12); // Probably a later version is actually required
         return HttpRequest<AccessibleFoldersDto>(HttpMethod.Get, $"/odata/Assets/UiPath.Server.Configuration.OData.GetFoldersForAsset(id={assetId})", folderId);
     }
 
@@ -2605,7 +2605,7 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Post, "/odata/ExecutionMedia/UiPath.Server.Configuration.OData.DeleteMediaByJobId", folderId, payload);
     }
 
-    // TODO: このエンドポイントは、Authorization ヘッダがなくても動いているような気がする？
+    // TODO: This endpoint seems to work even without the Authorization header?
     public async Task<(string? FileName, byte[] FileContent)> DownloadMediaByJobId(Int64 folderId, Int64 jobId)
     {
         string endPoint = _base_url + $"/odata/ExecutionMedia/UiPath.Server.Configuration.OData.DownloadMediaByJobId(jobId={jobId})";
@@ -2620,7 +2620,7 @@ public partial class OrchAPISession : IDisposable
         string? ret = null;
         if (contentDisposition is not null)
         {
-            // "filename*" を優先して使用する
+            // Prefer using "filename*"
             var fileNameStar = contentDisposition.FileNameStar;
             if (!string.IsNullOrEmpty(fileNameStar))
             {
@@ -2636,7 +2636,7 @@ public partial class OrchAPISession : IDisposable
             }
         }
 
-        // ReadAsByteArrayAsync の結果を非同期で待機
+        // Await the result of ReadAsByteArrayAsync
         var responseBytes = await response.Content.ReadAsByteArrayAsync();
         return (ret, responseBytes);
     }
@@ -2645,13 +2645,13 @@ public partial class OrchAPISession : IDisposable
 
     #region Session
 
-    // クラシックフォルダのロボットを取得
+    // Get classic folder robots
     public IEnumerable<Session> GetSessions(Int64 folderId)
     {
         return GetEnumerable<Session>("/odata/Sessions", folderId, "&$expand=Robot($expand=License)");
     }
 
-    // クラシックフォルダのロボットを有効化/無効化
+    // Enable/disable classic folder robots
     public void ToggleEnabledStatus(Int64 folderId, Int64 robotId, bool enabled)
     {
         RobotsToggleEnabledStatusRequest payload = new()
@@ -2679,7 +2679,7 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<MachineSessionRuntime>($"/odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimesByFolderId(folderId={folderId})", folderId, query, skip, first);
     }
 
-    // テスト
+    // Test
     //public void GetMachineSessions(Int64 machineId)
     //{
     //    HttpRequest(HttpMethod.Get, $"/odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessions({machineId})");
@@ -2789,7 +2789,7 @@ public partial class OrchAPISession : IDisposable
 
     public void CancelTestSetExecutions(Int64 folderId, Int64 testSetExecutionId)
     {
-        // "null" が返るようだ
+        // Appears to return "null"
         HttpRequest(HttpMethod.Post, $"/api/TestAutomation/CancelTestSetExecution?testSetExecutionId={testSetExecutionId}", folderId);
     }
 
@@ -2879,7 +2879,7 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<ExtendedCalendar>($"/odata/Calendars");
     }
 
-    // ExcludedDates を取得するには、GetCalendars(id) を呼ぶ必要がある。
+    // To get ExcludedDates, GetCalendars(id) must be called.
     public ExtendedCalendar? GetCalendar(Int64 calendarId)
     {
         return HttpRequest<ExtendedCalendar>(HttpMethod.Get, $"/odata/Calendars({calendarId})");
@@ -2919,7 +2919,7 @@ public partial class OrchAPISession : IDisposable
             //stopJobsStrategy = force ? "Kill" : "SoftStop"
             stopJobsStrategy = force ? "Kill" : null
         };
-        // 何も返らない
+        // Returns nothing
         HttpRequest(HttpMethod.Post, $"/odata/Sessions/UiPath.Server.Configuration.OData.SetMaintenanceMode", null, payload);
     }
 
@@ -2946,7 +2946,7 @@ public partial class OrchAPISession : IDisposable
 
     #region Integration Service
 
-    // 残念ながら、これは OAuth app からは動かないようだ。
+    // Unfortunately, this does not seem to work from an OAuth app.
     //public void GetConnections(Int64 folderId)
     //{
     //    var ret = HttpRequestImpl(HttpMethod.Get, _base_url, "/connections_/api/v1/Connections", folderId);
@@ -2958,22 +2958,22 @@ public partial class OrchAPISession : IDisposable
 
     //private static string TrimUrl(string url)
     //{
-    //    // URLをスラッシュで分割
+    //    // Split the URL by slashes
     //    string[] parts = url.Split('/');
 
-    //    // 後ろから3番目のスラッシュまでの部分を再結合
+    //    // Rejoin up to the 3rd slash from the end
     //    if (parts.Length > 3)
     //    {
     //        return string.Join("/", parts, 0, parts.Length - 2) + "/portal_/api/identity";
     //    }
     //    else
     //    {
-    //        // 分割した結果が3パート以下の場合、そのまま返す
+    //        // If the split result has 3 or fewer parts, return as-is
     //        return url;
     //    }
     //}
 
-    // AD 連携している Platform Management の環境用
+    // For Platform Management environments with AD integration
     //private IEnumerable<T> GetEnumerablePmDirectory<T>(string endPoint, Int64? folderId = null, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
     //{
     //    //string anotherBaseUrl = TrimUrl(_base_url);
@@ -2984,7 +2984,7 @@ public partial class OrchAPISession : IDisposable
     //    while (true)
     //    {
     //        ulong top = Math.Min(first - total, 50);
-    //        // パラメータ名に $ がつかない。$top とか $skip でないので要注意。
+    //        // Note: parameter names do not have a $ prefix. They are "top" and "skip", not "$top" and "$skip".
     //        //string url = $"{_base_url_identity}{endPoint}?top={top}&skip={skip}{query}";
     //        string url = $"{_base_url_identity}{endPoint}?top={top}&skip={skip}{query}";
 
@@ -3020,13 +3020,13 @@ public partial class OrchAPISession : IDisposable
     //}
 
 
-    // 200 で空っぽが返ってしまう。。
+    // Returns empty with status 200...
     public UserProfile? GetPmUserProfile()
     {
         return HttpRequestIdentity<UserProfile>(HttpMethod.Get, "/api/Account/Profile");
     }
 
-    // このエンドポイントは、host admin でないと動かない
+    // This endpoint only works with host admin privileges
     public void GetPmSetting()
     {
         string body = HttpRequestIdentity(HttpMethod.Get, "/api/Setting");
@@ -3042,13 +3042,13 @@ public partial class OrchAPISession : IDisposable
     {
         get
         {
-            // ApiVersion < 19 であれば必ず false だ。
+            // Always false if ApiVersion < 19.
             if (ApiVersion < 19) _pmApiDeprecated = false;
 
-            // ApiVersion == 19 だと、どっちだか分からない。。
-            // まず新しい方の API を呼んでみるしかない。
+            // If ApiVersion == 19, it could be either...
+            // We have no choice but to try the newer API first.
 
-            // ApiVersion >= 20 であれば必ず true だ。
+            // Always true if ApiVersion >= 20.
             if (ApiVersion >= 20) _pmApiDeprecated = true;
 
             return _pmApiDeprecated;
@@ -3067,18 +3067,18 @@ public partial class OrchAPISession : IDisposable
             {
                 try
                 {
-                    // 現在の Automation Cloud は次を呼び出せるようだ。
+                    // The current Automation Cloud appears to be able to call the following.
                     return GetEnumerablePortal<PmUser>("/api/identity/User/users/licenses");
                 }
                 catch
                 {
-                    // TODO: 今はすべての例外において deprecated API にフォールバックしているが、本来は
-                    // not found みたいなエラーの場合に限り、PmApiDeprecated = false とすべきだ。
-                    // Automation Cloud だけなら、フォールバックしない方が安全なのだけど
-                    // Automation Suite で動作しなくなってしまう可能性を考慮し、フォールバックしておく。
+                    // TODO: Currently falling back to the deprecated API for all exceptions, but ideally
+                    // PmApiDeprecated should only be set to false for errors like not found.
+                    // For Automation Cloud alone, not falling back would be safer,
+                    // but we fall back considering the possibility of it not working on Automation Suite.
                     PmApiDeprecated = false;
 
-                    // 2025/6/12 つい最近までこれが動いていたはずだが、次のエラーが返るようになった。
+                    // 2025/6/12 This should have been working until recently, but it now returns the following error.
                     // User Partition API is deprecated
                     return GetEnumerablePortal<PmUser>($"/api/identity/UserPartition/licenses", null, $"&partitionGlobalId={partitionGlobalId}");
                 }
@@ -3090,13 +3090,13 @@ public partial class OrchAPISession : IDisposable
         }
         else
         {
-            // obsoleted なんだけど、MSI OC ではこっちを呼び出さないといけないんだな。。
+            // This is obsoleted, but MSI OC requires calling this one...
             return GetEnumerableIdentity<PmUser>($"/api/UserPartition/users/{partitionGlobalId}");
         }
     }
 
     // entityType: "user", "group", or "application"
-    // "robot" を渡すとエラーになる。
+    // Passing "robot" causes an error.
     // No "PM.xxx" scope needed
     public Dictionary<string, PmGroupMember>? PmBulkResolveByName(string partitionGlobalId, string entityType, IEnumerable<string> names)
     {
@@ -3132,7 +3132,7 @@ public partial class OrchAPISession : IDisposable
         return HttpRequestIdentity<BulkCreateResponse>(HttpMethod.Post, $"/api/User/BulkCreate", null, createUsersCommand);
     }
 
-    // この API は無効化されているため使えない
+    // This API is disabled and cannot be used
     public void GetPmUserLoginAttempts(string userId)
     {
         string body = HttpRequestIdentity(HttpMethod.Get, $"/api/User/{userId}/loginAttempts");
@@ -3140,8 +3140,8 @@ public partial class OrchAPISession : IDisposable
 
     public void PutPmUser(string userId, PowerShell.Entities.UpdateUserCommand command)
     {
-        // {"succeeded":true,"errors":[]} みたいのが返るけど、無視で良いか。
-        // エラーのときには例外で処理しているしな。。
+        // Returns something like {"succeeded":true,"errors":[]}, but we can ignore it.
+        // Errors are handled via exceptions anyway.
         HttpRequestIdentity(HttpMethod.Put, $"/api/User/{userId}", null, command);
     }
 
@@ -3179,35 +3179,35 @@ public partial class OrchAPISession : IDisposable
     //    return GetEnumerableWithoutPagingPortal<PmGroup>($"/api/identity/Group/{partitionGlobalId}/licenses") ?? [];
     //}
 
-    // 非公開の API だな。。なんじゃこりゃ簡単に URL を構築できない。
+    // This is an undocumented API. The URL cannot be easily constructed.
     // "/portal_/api/orchestrator/tags/yotsuda/svc3?skip=0&take=10&startsWith=&type=Label"
     //public void GetTags()
     //{
     //    string body = HttpRequestPortal(HttpMethod.Get, "/api/orchestrator/tags");
     //}
 
-    // 非公開の API だな。。
+    // This is an undocumented API.
     public IEnumerable<PmAuditLog> GetPmAuditLog(string? partitionGlobalId, string? query, ulong skip, ulong first)
     {
         if (string.IsNullOrEmpty(partitionGlobalId)) return [];
         return GetEnumerablePortal<PmAuditLog>($"/api/auditLog/{partitionGlobalId}", null, query, skip, first);
     }
 
-    // 非公開の API だな。。
+    // This is an undocumented API.
     //public AvailableUserBundle[] GetPmLicensedUsersAvailableLicenses()
     //{
     //    return HttpRequestPortal<AvailableUserBundle[]>(HttpMethod.Get, $"/api/license/accountant/UserLicense") ?? [];
     //}
 
-    // 非公開の API だな。。
+    // This is an undocumented API.
     public AvailableUserBundles? GetPmLicensedGroupsAvailableLicenses(string? groupId)
     {
         if (groupId is null) return null;
         return HttpRequestPortal<AvailableUserBundles>(HttpMethod.Get, $"/api/license/accountant/UserLicense/group/?id={groupId}");
     }
 
-    // 非公開の API だな。。
-    // なぜか partitionGlobalId は不要だが、キャッシュと統合するために引数を追加してある。
+    // This is an undocumented API.
+    // partitionGlobalId is not needed for some reason, but the parameter is added to integrate with the cache.
     public IEnumerable<NuLicensedGroup> GetPmLicensedGroups(string? partitionGlobalId)
     {
         return GetEnumerablePortal<NuLicensedGroup>("/api/license/accountant/UserLicense/group/page");
@@ -3218,7 +3218,7 @@ public partial class OrchAPISession : IDisposable
         public string? id { get; set; }
     }
 
-    // 非公開の API だな。。
+    // This is an undocumented API.
     public void RemovePmLicensedGroup(string? groupId)
     {
         if (groupId is null) return;
@@ -3230,26 +3230,26 @@ public partial class OrchAPISession : IDisposable
         HttpRequestPortal(HttpMethod.Delete, "/api/license/accountant/UserLicense/group", null, removeGroup);
     }
 
-    // 非公開の API だな。。
+    // This is an undocumented API.
     public IEnumerable<NuLicensedGroupMember> GetPmLicenseGroupAllocations(string? groupId)
     {
         return GetEnumerablePortal<NuLicensedGroupMember>($"/api/license/accountant/UserLicense/group/{groupId}/allocations");
     }
 
-    // 非公開の API だな。。
+    // This is an undocumented API.
     public UpdateLicensedGroupResponse? PutPmLicenseGroup(UpdateLicensedGroupCommand command)
     {
         return HttpRequestPortal<UpdateLicensedGroupResponse>(HttpMethod.Put, "/api/license/accountant/UserLicense/group", null, command);
     }
 
-    // 非公開の API だな。。
+    // This is an undocumented API.
     public void DeletePmLicenseGroupAllocations(string? groupId, string userId)
     {
         HttpRequestPortal(HttpMethod.Delete, $"/api/license/accountant/UserLicense/group/{groupId}/user/{userId}");
     }
 
-    // 非公開の API だな。。
-    // なぜか partitionGlobalId は不要だが、キャッシュと統合するために引数を追加してある。
+    // This is an undocumented API.
+    // partitionGlobalId is not needed for some reason, but the parameter is added to integrate with the cache.
     public IEnumerable<NuLicensedUser> GetPmLicensedUsers(string? partitionGlobalId)
     {
         return GetEnumerablePortal<NuLicensedUser>("/portal_/api/license/accountant/UserLicense/user/page");
@@ -3312,7 +3312,7 @@ public partial class OrchAPISession : IDisposable
         return HttpRequestIdentity<PmRobotAccount>(HttpMethod.Post, $"/api/RobotAccount", null, cmd);
     }
 
-    // なぜか partitionGlobalId は不要。
+    // partitionGlobalId is not needed for some reason.
     public PmRobotAccount? UpdatePmRobot(string robotId, UpdateRobotAccountCommand cmd)
     {
         return HttpRequestIdentity<PmRobotAccount>(HttpMethod.Put, $"/api/RobotAccount/{robotId}", null, cmd);
@@ -3332,7 +3332,7 @@ public partial class OrchAPISession : IDisposable
         HttpRequestIdentity(HttpMethod.Delete, $"/api/RobotAccount/{partitionGlobalId}", null, payload);
     }
 
-    // なぜか partitionGlobalId は不要だが、キャッシュと統合するために引数を追加してある。
+    // partitionGlobalId is not needed for some reason, but the parameter is added to integrate with the cache.
     public IEnumerable<ExternalResource> GetPmExternalApiResource(string partitionGlobalId)
     {
         return GetEnumerableWithoutPagingIdentity<ExternalResource>("/api/ExternalApiResource") ?? [];
@@ -3348,13 +3348,13 @@ public partial class OrchAPISession : IDisposable
         return HttpRequestIdentity<ExternalClient>(HttpMethod.Get, $"/api/ExternalClient/{partitionGlobalId}/{id}");
     }
 
-    // これは、OrchDriveInfo にラッパーメソッドを作成しなくても良いかな。。
+    // This probably does not need a wrapper method in OrchDriveInfo.
     public ExternalClientCreated? PostPmExternalClient(CreateExternalClientCommand app)
     {
         return HttpRequestIdentity<ExternalClientCreated>(HttpMethod.Post, "/api/ExternalClient", null, app);
     }
 
-    // 何も返さない
+    // Returns nothing
     public void DeletePmExternalClient(string partitionGlobalId, string id)
     {
         HttpRequestIdentity(HttpMethod.Delete, $"/api/ExternalClient/{partitionGlobalId}/{id}");
@@ -3366,23 +3366,23 @@ public partial class OrchAPISession : IDisposable
     //    return GetEnumerableIdentity<int>($"/Client");
     //}
 
-    // TODO: Get-OrchIdDirectoryConfiguration cmdlet とか作れそう。
-    // completer には、GetIdentityAvailableDirectoryTypes() の戻りを使えば良い。
-    // でも何の役に立つのか、、
-    // identifier には directory adapter を渡す必要がある。
-    // "aad" とか "Saml2" とか "scim" とか。
+    // TODO: Could create a Get-OrchIdDirectoryConfiguration cmdlet.
+    // The completer could use the return value of GetIdentityAvailableDirectoryTypes().
+    // But what would it be useful for...
+    // identifier needs to be a directory adapter.
+    // e.g., "aad", "Saml2", "scim", etc.
     public void GetPmDirectoryConfiguration(string identifier)
     {
         string body = HttpRequestIdentity(HttpMethod.Get, $"/api/DirectoryConnection/DirectoryConfiguration?identifier={identifier}");
     }
 
-    // ["aad","Saml2","scim"] みたいなものが返る。
+    // Returns something like ["aad","Saml2","scim"].
     public string[]? GetPmAvailableDirectoryTypes()
     {
         return HttpRequestIdentity<string[]>(HttpMethod.Get, "/api/DirectoryConnection/AvailableDirectoryTypes");
     }
 
-    // 空の配列が返るようだ。うーん。
+    // Seems to return an empty array. Hmm.
     public void GetPmExternalIdentityProvider(string partitionGlobalId)
     {
         string body = HttpRequestIdentity(HttpMethod.Get, $"/api/ExternalIdentityProvider?partitionGlobalId={partitionGlobalId}");
@@ -3394,8 +3394,8 @@ public partial class OrchAPISession : IDisposable
     //    string body = HttpRequestIdentity(HttpMethod.Get, "/IdentityResource");
     //}
 
-    // うまく動く。
-    // TODO: Get-OrchIdLanguage cmdlet を実装する。
+    // Works correctly.
+    // TODO: Implement a Get-OrchIdLanguage cmdlet.
     public void GetPmLanguage()
     {
         string body = HttpRequestIdentity(HttpMethod.Get, "/api/Language");
@@ -3406,14 +3406,14 @@ public partial class OrchAPISession : IDisposable
         HttpRequestIdentity(HttpMethod.Get, $"/api/Setting", null, (object)$"&partitionGlobalId={partitionGlobalId}&userId={userId}");
     }
 
-    // 空の配列が返るようだ。うーん。
+    // Seems to return an empty array. Hmm.
     public void GetPmRule(string partitionGlobalId)
     {
         string body = HttpRequestIdentity(HttpMethod.Get, $"/api/Rule/{partitionGlobalId}");
     }
 
-    // 残念、機密アプリでは動作しない。空が返る。
-    // 非機密アプリで呼び出した場合でも、GetCurrentUser の方がリッチな情報を得られる。使えない。。
+    // Unfortunately, this does not work with confidential apps. Returns empty.
+    // Even when called from a non-confidential app, GetCurrentUser provides richer information. Not useful.
     //public void GetPmUserOrgsInfo()
     //{
     //    string body = HttpRequestPm(HttpMethod.Get, "/api/UserOrgs/userOrgsLocalByAuth0Token");
@@ -3425,8 +3425,8 @@ public partial class OrchAPISession : IDisposable
     //    string body = HttpRequestIdentity(HttpMethod.Get, $"/api/UserOrgs/userOrgs?email={email}");
     //}
 
-    // これで partitionGlobalId が取れそう。
-    // 機密アプリでは、partitionGlobalId を取得できない場合もあるようだ？
+    // This should be able to get the partitionGlobalId.
+    // With confidential apps, it seems partitionGlobalId may not always be retrievable?
     public PmAuthenticationRoot? GetPmAuthenticationSetting(string partitionGlobalId)
     {
         var body = HttpRequestIdentity<Dictionary<string, PmAuthenticationRoot>>(HttpMethod.Get, $"/api/AuthenticationSetting/getAll/{partitionGlobalId}");
@@ -3448,7 +3448,7 @@ public partial class OrchAPISession : IDisposable
         return body?.projects;
     }
 
-    // どうも動かない。。困ったな
+    // Does not seem to work... This is problematic.
     public void CreateDuProjects(CreateDuProjectCmd cmd)
     {
         var body = HttpRequest(HttpMethod.Post, "/du_/api/app/web/projects?api-version=1.4", null, cmd);
@@ -3472,7 +3472,7 @@ public partial class OrchAPISession : IDisposable
         return body?.extractors;
     }
 
-    // TODO: paging をサポートしないといけないのではないか？
+    // TODO: Should pagination be supported?
     public DuUser[]? GetDuUsers(string? partitionGlobalId, string? tenantKey, string? projectId)
     {
         Uri uri = new(_base_url);
@@ -3493,7 +3493,7 @@ public partial class OrchAPISession : IDisposable
         return results?.results;
     }
 
-    // TODO: paging をサポートしないといけないのではないか？
+    // TODO: Should pagination be supported?
     public DuRole[]? GetDuRoles(string? partitionGlobalId)
     {
         Uri uri = new(_base_url);
@@ -3504,7 +3504,7 @@ public partial class OrchAPISession : IDisposable
         return results?.results;
     }
 
-    // 何も返さない
+    // Returns nothing
     public void SetDuRoleToDuUser(string? partitionGlobalId, UserRoleAssignmentsCmd payload)
     {
         Uri uri = new(_base_url);
@@ -3515,7 +3515,7 @@ public partial class OrchAPISession : IDisposable
 
     #region TestManager
 
-    // PagingModel でページング
+    // Pagination with PagingModel
     private IEnumerable<T> GetEnumerableTm<T>(string endPoint, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
     {
         ulong total = 0;
@@ -3548,7 +3548,7 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    // PagingModel2 でページング
+    // Pagination with PagingModel2
     private IEnumerable<T> GetEnumerableTm2<T>(string endPoint, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
     {
         ulong total = 0;
@@ -3581,7 +3581,7 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    // paging なし
+    // No pagination
     private IEnumerable<T> GetEnumerableTm3<T>(string endPoint, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
     {
         ulong total = 0;
@@ -3606,7 +3606,7 @@ public partial class OrchAPISession : IDisposable
                     if (total == first)
                         break;
                 }
-                if (total == first) // TODO: 正しい？
+                if (total == first) // TODO: Is this correct?
                     break;
             }
             else
@@ -3626,7 +3626,7 @@ public partial class OrchAPISession : IDisposable
 
     public void RemoveTmProject(string projectId)
     {
-        // 何も返らない
+        // Returns nothing
         HttpRequest(HttpMethod.Delete, $"/testmanager_/api/v2/projects/{projectId}");
     }
 
@@ -3647,7 +3647,7 @@ public partial class OrchAPISession : IDisposable
 
     public void RemoveTmTestCase(string projectId, string testCaseId)
     {
-        // 空が返る
+        // Returns empty
         HttpRequest(HttpMethod.Delete, $"/testmanager_/api/v2/{projectId}/testcases/{testCaseId}");
     }
 
@@ -3661,8 +3661,8 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Delete, $"/testmanager_/api/v2/{projectId}/testsets/{testSetId}");
     }
 
-    // このエンドポイントは、/testexecutions/filtered と同じ結果を返しているように見える。
-    // パラメータが使えないのかな？
+    // This endpoint appears to return the same results as /testexecutions/filtered.
+    // Are the parameters unusable?
     public IEnumerable<TmTestExecution> GetTmTestExecutions(string projectId)
     {
         return GetEnumerableTm<TmTestExecution>($"/testmanager_/api/v2/{projectId}/testexecutions");
@@ -3711,7 +3711,7 @@ public partial class OrchAPISession : IDisposable
     #endregion
 
     #region Context Grounding
-    // 残念、動かない。エラーは返らないが、空っぽのエンティティが返る。。
+    // Unfortunately, this does not work. No error is returned, but an empty entity is returned.
     //public string GetCgIndex(string partitionGlobalId, string tenantKey, string folderKey)
     //{
     //    Uri uri = new(_base_url);
@@ -3721,4 +3721,4 @@ public partial class OrchAPISession : IDisposable
     #endregion
 }
 
-#pragma warning restore IDE1006 // 命名スタイル
+#pragma warning restore IDE1006 // Naming styles

@@ -6,7 +6,7 @@ using TPositional = UiPath.PowerShell.Positional.Last;
 
 namespace UiPath.PowerShell.Commands;
 
-// not found が返ってしまう？
+// Returns not found?
 //[Cmdlet(VerbsCommon.Get, "OrchSessionStats")]
 [OutputType(typeof(Entities.CountStats))]
 class GetSessionStatsCommand : OrchestratorPSCmdlet

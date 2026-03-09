@@ -47,14 +47,14 @@ public class RemoveFolderUserCommand : OrchestratorPSCmdlet
             var paramDepth = GetParameterValue(commandAst, "Depth");
             _= uint.TryParse(paramDepth, out uint depth);
 
-            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            // Extract path from parameter. If not specified, target the current directory.
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
             var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
-            // パラメータで選択済みの UserName は、候補から除外する
+            // Exclude UserNames already selected via parameter from the candidates
             var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
 
-            // パラメータで選択された FullName のみ対象とする
+            // Only include FullNames selected via parameter
             var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -89,14 +89,14 @@ public class RemoveFolderUserCommand : OrchestratorPSCmdlet
             var paramDepth = GetParameterValue(commandAst, "Depth");
             uint.TryParse(paramDepth, out uint depth);
 
-            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            // Extract path from parameter. If not specified, target the current directory.
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
             var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
-            // パラメータで選択された UserName のみ対象とする
+            // Only include UserNames selected via parameter
             var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
 
-            // パラメータで選択済みの FullName は、候補から除外する
+            // Exclude FullNames already selected via parameter from the candidates
             var wpFullName = CreateWPListFromParameter(commandAst, "FullName", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -139,7 +139,7 @@ public class RemoveFolderUserCommand : OrchestratorPSCmdlet
         {
             try
             {
-                //drive.FolderUsersWithInherited.ClearCache(); // 一貫したキャッシュを保持できるように、こっちもクリアしておく
+                //drive.FolderUsersWithInherited.ClearCache(); // Also clear this to maintain cache consistency
                 //drive.FolderUsersWithNoInherited.ClearCache();
                 var folderUsers = drive.FolderUsersWithNoInherited.Get(folder);
 
@@ -149,8 +149,8 @@ public class RemoveFolderUserCommand : OrchestratorPSCmdlet
 
                 if (NoMatchWarning.IsPresent && !filteredUsers.Any())
                 {
-                    // ちょっと適当な実装だけど、これでも CSV インポート時にちゃんと動くから十分か。。
-                    // ちゃんと実装するには、UserName の配列を先頭から順にひとつずつ処理しないといけない。
+                    // A somewhat rough implementation, but it works correctly during CSV import so it's good enough...
+                    // A proper implementation would need to process the UserName array one by one from the beginning.
                     WriteWarning($"No match found for UserName '{UserName?[0]}' and FullName '{FullName?[0]}'.");
                     continue;
                 }
@@ -192,8 +192,8 @@ public class RemoveFolderUserCommand : OrchestratorPSCmdlet
         }
     }
 
-    // マルチスレッド化したバージョン
-    // HTTP call を cap した状態では逆に遅くなる場合があるため、シングルスレッドで書き直した
+    // Multi-threaded version
+    // Rewritten as single-threaded because it can actually be slower when HTTP calls are capped
     //protected override void ProcessRecord()
     //{
     //    if ((FullName is null || FullName.Length == 0) && (UserName is null || UserName.Length == 0))
@@ -205,7 +205,7 @@ public class RemoveFolderUserCommand : OrchestratorPSCmdlet
     //    var wpUserName = UserName?.Select(un => new WildcardPattern(un, WildcardOptions.IgnoreCase)).ToList();
     //    var wpFullName = FullName?.Select(fn => new WildcardPattern(fn, WildcardOptions.IgnoreCase)).ToList();
 
-    //    // あらかじめ、非同期で対象のフォルダーユーザーを取得しておく
+    //    // Pre-fetch target folder users asynchronously
     //    Parallel.ForEach(drivesFolders, driveFolders =>
     //    {
     //        var (drive, folder) = driveFolders;
