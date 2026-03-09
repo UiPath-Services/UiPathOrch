@@ -31,10 +31,10 @@ public class EnableLicenseRuntimeCommandBase<Enable> : OrchestratorPSCmdlet wher
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            // パラメータで選択された RobotType のみ対象とする
+            // Target only the RobotTypes selected by the parameter
             var wpRobotTypes = CreateWPListFromOtherParameters(commandAst, "RobotType", TPositional.Parameters);
 
-            // パラメータで選択済みの Key は、候補から除外する
+            // Exclude Keys already selected by the parameter from the candidates
             var wpKey = CreateWPListFromParameter(commandAst, "Key", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -47,16 +47,16 @@ public class EnableLicenseRuntimeCommandBase<Enable> : OrchestratorPSCmdlet wher
             var results = new ConcurrentBag<IEnumerable<LicenseRuntime>>();
             Parallel.ForEach(drives, drive =>
             {
-                // キャッシュされていない robotType についてのみ GetLicenseRuntime() で取得する
+                // Only fetch via GetLicenseRuntime() for robotTypes that are not cached
                 IEnumerable<string> nonCachedRobotTypes;
                 if (drive._dicLicenseRuntime is null)
                 {
-                    // キャッシュがなければ全て取得
+                    // If there is no cache, fetch all
                     nonCachedRobotTypes = specifiedRobotTypes;
                 }
                 else
                 {
-                    // キャッシュがあれば、まだキャッシュしていないものだけ取得
+                    // If cache exists, only fetch those not yet cached
                     nonCachedRobotTypes = specifiedRobotTypes
                         .Where(rt => !drive._dicLicenseRuntime!.ContainsKey(rt));
                 }

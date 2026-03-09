@@ -23,7 +23,7 @@ public class CopyPmGroupCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string? Path { get; set; }
 
-    // objectType には "user" もしくは "application" を指定する必要がある
+    // objectType must be set to "user" or "application"
     private List<string> FindIdentifiers(
         OrchDriveInfo drive,
         string srcGroupPath,
@@ -43,7 +43,7 @@ public class CopyPmGroupCommand : OrchestratorPSCmdlet
             .Where(u => u.Value is not null)
             .Select(u => u.Value!.identifier!));
 
-        // name で見つからなかったユーザーは、email でも検索する
+        // For users not found by name, also search by email
         if (unresolvedMembers.Count > 0)
         {
             List<PmGroupMember> unresolvedEmails = [];
@@ -57,11 +57,11 @@ public class CopyPmGroupCommand : OrchestratorPSCmdlet
                 .Where(u => u.Value is not null)
                 .Select(u => u.Value!.identifier!));
 
-            // name でも email でも見つからなかったユーザーについては、エラーを出力
+            // Output an error for users not found by either name or email
             foreach (var unresolvedEmail in unresolvedEmails)
             {
-                // ローカルユーザー、ロボットアカウント、アプリについてはエラーを表示すべきでない
-                // グループの中にローカルグループは入っていない
+                // Should not display errors for local users, robot accounts, and apps
+                // Local groups are not included within groups
                 if (unresolvedEmail.source == "local" || unresolvedEmail.source == "app") continue;
 
                 string userName = unresolvedEmail.name;
@@ -74,8 +74,8 @@ public class CopyPmGroupCommand : OrchestratorPSCmdlet
         return retIdentifiers;
     }
 
-    // 複数のグループにまたがって、メンバーディレクトリに問い合わせるのはやりすぎだと思う。
-    // 各グループごとに、そのメンバーをバルクでディレクトリに問い合わせるのが妥当な実装であろう。。
+    // Querying the member directory across multiple groups would be overkill.
+    // A reasonable implementation is to query the directory in bulk for each group's members.
     protected override void ProcessRecord()
     {
         var srcDrive = SessionState.GetPmDrive(Path);
@@ -110,8 +110,8 @@ public class CopyPmGroupCommand : OrchestratorPSCmdlet
                 {
                     try
                     {
-                        // グループに含まれるメンバーを一括してディレクトリに問い合わせる
-                        // ユーザー・グループ・アプリを別にして問い合わせないと。
+                        // Query the directory in bulk for all members in the group.
+                        // Users, groups, and apps must be queried separately.
                         List<string> directoryUserMemberIDs = [];
 
                         foreach (var groupedMembers in srcDetailedGroup.members?
@@ -151,15 +151,15 @@ public class CopyPmGroupCommand : OrchestratorPSCmdlet
                                         {
                                             directoryUserMemberIDs.Add(addingMember.id);
                                         }
-                                        // 当たらなかったら、黙って無視。
+                                        // If not found, silently ignore.
                                     }
                                     break;
                             }
                         }
 
-                        // ここまでで、グループに追加するメンバーをすべて抽出済み
+                        // At this point, all members to add to the group have been extracted.
 
-                        // 同名のグループを探して、あればそのグループに entries を追加する
+                        // Find a group with the same name; if found, add entries to that group.
                         var dstGroups = dstDrive.PmGroups.Get();
                         var dstGroup = dstGroups.FirstOrDefault(g => string.Compare(srcDetailedGroup.name, g.name, true) == 0);
 

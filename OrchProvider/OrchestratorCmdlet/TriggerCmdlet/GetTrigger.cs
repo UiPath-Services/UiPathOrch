@@ -73,7 +73,7 @@ public class GetTriggerCommand : OrchestratorPSCmdlet
 
     private void WriteCsvContent(StreamWriter writer, ProcessSchedule t)
     {
-        #region ExecutorRobots の Id を Name に変換して出力
+        #region Convert ExecutorRobots IDs to Names for output
         string executorRobots = null;
         if (t.ExecutorRobots is not null && t.ExecutorRobots.Length != 0)
         {
@@ -89,7 +89,7 @@ public class GetTriggerCommand : OrchestratorPSCmdlet
         }
         #endregion
 
-        #region MachineRobots の Id を Name に変換して出力
+        #region Convert MachineRobots IDs to Names for output
         string machineRobots = null;
         if (t.MachineRobots is not null && t.MachineRobots.Length != 0)
         {

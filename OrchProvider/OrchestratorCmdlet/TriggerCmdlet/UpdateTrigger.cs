@@ -25,12 +25,12 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(BoolCompleter))]
     public string? Enabled { get; set; }
 
-    // このパラメータはコマンドラインでの指定を受け付けない
-    // CSV で "" が指定されたら 45 にしてしまえば良いので、この型は int にする
+    // This parameter does not accept command-line input
+    // Since we can just treat "" in CSV as 45, the type is int
     [Parameter(DontShow = true, ValueFromPipelineByPropertyName = true)]
     public int? SpecificPriorityValue { get; set; }
 
-    // このパラメータは CSV インポートを受け付けない
+    // This parameter does not accept CSV import
     [Parameter]
     [ArgumentCompleter(typeof(StaticTextsCompleter<JobPriorityItems>))]
     public string? Priority { get; set; }
@@ -64,7 +64,7 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(StaticTextsCompleter<RuntimeTypes>))]
     public string? RuntimeType { get; set; }
 
-    // TODO: completer がほしい
+    // TODO: Need a completer
     [Parameter(ValueFromPipelineByPropertyName = true)]
     public string? InputArguments { get; set; }
 
@@ -147,9 +147,9 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
-    // 現在トリガに設定されているユーザー名を候補に表示。Update-OrchTrigger のための実装。
-    // New-OrchTrigger では、利用可能なユーザーをすべて表示する方が使いやすいと思うので、この実装を共有はしない。。
-    // TODO: いや、これ設定できる値を全部列挙した方が使いやすいような気がするが。。
+    // Display user names currently configured on the trigger as candidates. Implementation for Update-OrchTrigger.
+    // For New-OrchTrigger, showing all available users would be more user-friendly, so this implementation is not shared.
+    // TODO: Actually, listing all configurable values might be more user-friendly...
     private class ExecutorRobotsCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -161,10 +161,10 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude already-selected Names from candidates
             var wpExecutorRobots = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
-            // 指定の Name のトリガーの ExecutorRobots を取得して表示
+            // Retrieve and display ExecutorRobots for triggers matching the specified Name
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -204,7 +204,7 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude already-selected Names from candidates
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -306,7 +306,7 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
 
                 postTrigger.AssignBoolIfNotNull(IsConnected, (s, v) => s.IsConnected = v);
 
-                #region // CalendarName を CalendarId に変換
+                #region // Convert CalendarName to CalendarId
                 postTrigger.AssignIdFromName(
                     CalendarName,
                     drive.GetCalendars!,
@@ -336,7 +336,7 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
                 postTrigger.AssignStringIfNotNull(StartProcessCronDetails,    (s, v) => s.StartProcessCronDetails = v);
                 postTrigger.StartProcessCronDetails ??= $"\"{{advancedCron\":\"{postTrigger.StartProcessCron}\"}}";
 
-                // SpecificPriorityValue を先に適用、specificPriorityValue が非 null ならそれで上書き
+                // Apply SpecificPriorityValue first, then override with specificPriorityValue if non-null
                 postTrigger.AssignNumberIfNotNullOrZero(SpecificPriorityValue, (s, v) => s.SpecificPriorityValue = v);
                 postTrigger.AssignNumberIfNotNullOrZero(specificPriorityValue, (s, v) => s.SpecificPriorityValue = v);
 
@@ -345,7 +345,7 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
                     postTrigger.JobPriority = null;
                 }
 
-                #region ReleaseName を ReleaseId に変換
+                #region Convert ReleaseName to ReleaseId
                 postTrigger.AssignIdFromName(
                     ReleaseName,
                     () => drive.GetReleases(folder),
@@ -355,7 +355,7 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
                     this, target, "Release");
                 #endregion
 
-                #region QueueDefinitionName を QueueDefinitionId に変換
+                #region Convert QueueDefinitionName to QueueDefinitionId
                 postTrigger.AssignIdFromName(
                     QueueDefinitionName,
                     () => drive.Queues.Get(folder),
@@ -365,7 +365,7 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
                     this, target, "Queue");
                 #endregion
 
-                #region TimeZone を TimeZoneId に変換
+                #region Convert TimeZone to TimeZoneId
                 postTrigger.AssignStringIfNotNull(TimeZoneId, (s, v) => s.TimeZoneId = v);
 
                 postTrigger.AssignIdFromName(
@@ -392,7 +392,7 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
                 }
 
                 postTrigger.EnvironmentId = null;
-                postTrigger.CalendarName = null; // CalendarId があるので、CalendarName は不要
+                postTrigger.CalendarName = null; // Not needed since CalendarId is present
                 postTrigger.Key = null;
                 postTrigger.TimeZoneIana = null;
                 postTrigger.Tags = null;

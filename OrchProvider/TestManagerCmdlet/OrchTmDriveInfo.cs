@@ -8,24 +8,24 @@ namespace UiPath.PowerShell.Core;
 
 public class OrchTmDriveInfo : PSDriveInfo
 {
-    // テストのテナントエンティティ
-    // 数字は getter (OrchAPISession.cs にあるメソッド) の引数の数を示す
+    // Test tenant entities
+    // The number indicates the parameter count of the getter method (in OrchAPISession.cs)
     public TestSingleCachePerTenant0<TmServerInfo>      TmServerInformation = null!;
     public TestSingleCachePerTenant0<TmConfig>          TmConfiguration     = null!;
     public TestSingleCachePerTenant1<TmProjectSettings> TmProjectSetting    = null!;
 
-    // テストのリストエンティティ
+    // Test list entities
     //public TestListCachePerTenant0<TmProject>           TmProjects           = null!;
     public TestListCachePerTenant1<TmTestCase>          TmTestCases          = null!;
     public TestListCachePerTenant1<TmTestSet>           TmTestSets           = null!;
     public TestListCachePerTenant1<TmTestExecution>     TmTestExecutions     = null!;
     public TestListCachePerTenant1<TmRequirement>       TmRequirements       = null!;
     public TestListCachePerTenant1<TmProjectPermission> TmProjectPermissions = null!;
-    // インクリメンタルキャッシュ
+    // Incremental cache
     public IncrementalCachePerProject<string, TmTestExecutionResult> TmTestExecutionResults = null!;
 
 
-    // これらはドライブごとに保持する必要があるため、 Cache クラスの static メンバにはできない
+    // These must be held per drive, so they cannot be static members of the Cache class
     internal readonly List<ITenantCacheClearable> _allTenantCache = [];
     internal readonly List<IFolderCacheClearable> _allFolderCache = [];
 
@@ -39,7 +39,7 @@ public class OrchTmDriveInfo : PSDriveInfo
 
             #region initialize test entity caches
 
-            // ParentDrive を設定した後に、キャッシュを初期化する必要がある
+            // Caches need to be initialized after ParentDrive is set
             //TmProjects = new(this, OrchAPISession.GetTmProjects, e =>
             //{
             //    e.Path = NameColonSeparator;
@@ -67,7 +67,7 @@ public class OrchTmDriveInfo : PSDriveInfo
                     e.PathProject = e.Path + '\\' + e.Project;
                 });
 
-            // インクリメンタルキャッシュ
+            // Incremental cache
             TmTestExecutionResults = new(this,
                 OrchAPISession.GetTmTestExecutionsResult,
                 e => e.id,
@@ -101,7 +101,7 @@ public class OrchTmDriveInfo : PSDriveInfo
 
     protected internal Folder? RootFolder;
 
-    // このコンストラクタを実行するタイミングでは、NameColonSeparator は利用できない
+    // At the time this constructor runs, NameColonSeparator is not yet available
     public OrchTmDriveInfo(ProviderInfo provider, string driveName, string description, string root) :
         base(driveName, provider, driveName + ':' + Path.DirectorySeparatorChar, description, null, root)
     {

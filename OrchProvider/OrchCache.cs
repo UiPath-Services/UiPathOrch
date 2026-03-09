@@ -125,25 +125,25 @@ public class ListCachePerTenant<T> : ITenantCacheClearable
     }
 }
 
-// partitionGlobalId をキーとする、組織エンティティ
-// これはすべての組織の、固有のエンティティのキャッシュを表す。
+// Organization entities keyed by partitionGlobalId.
+// This represents the cache of unique entities across all organizations.
 public class ListCachePerOrganization<T> : ITenantCacheClearable
 {
     private readonly object _lock = new();
     private readonly OrchDriveInfo _drive;
     private static readonly ConcurrentDictionary<string, List<T>> _cache = [];
-    private static readonly ExceptionsCachePer<string> _exception = new(); // per org の例外をこれで保持
+    private static readonly ExceptionsCachePer<string> _exception = new(); // Holds per-org exceptions
     // input: partitionGlobalId
     private readonly Func<string, IEnumerable<T>> _getter;
     private readonly Action<T>? _initializer;
 
-    // -ExpandDetail できるエンティティについては、下記も必要となる
+    // The following is also needed for entities that support -ExpandDetail
     private readonly Func<T, string?>? _getterId;
-    // (partitionGlobalId, id) をキーとする、組織エンティティの詳細キャッシュ
+    // Detailed cache of organization entities keyed by (partitionGlobalId, id)
     private static ConcurrentDictionary<(string partitionGlobalId, string id), T?>? _cacheDetailed = null;
     private readonly Func<string, string, T?>? _getterDetailed;
-    // (partitionGlobalId, id) をキーとする、組織エンティティの詳細取得時の例外キャッシュ
-    private static readonly ExceptionsCachePer<(string partitionGlobalId, string id)> _exceptionDetailed = new(); // per (org, id) の例外をこれで保持
+    // Exception cache for detailed organization entity retrieval keyed by (partitionGlobalId, id)
+    private static readonly ExceptionsCachePer<(string partitionGlobalId, string id)> _exceptionDetailed = new(); // Holds per (org, id) exceptions
 
     public ListCachePerOrganization(
         OrchDriveInfo drive,
@@ -190,7 +190,7 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
         }
         foreach (var t in cachePerOrg.Where(t => t is not null))
         {
-            // 詳細キャッシュがあれば、それを返す
+            // Return the detailed cache if it exists
             if (_cacheDetailed is not null && _cacheDetailed.TryGetValue((partitionGlobalId, _getterId!(t)!), out var detailedEntity))
             {
                 if (_initializer is not null && detailedEntity is not null)
@@ -261,10 +261,10 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
         var id = _getterId?.Invoke(t);
         if (string.IsNullOrEmpty(partitionGlobalId) || string.IsNullOrEmpty(id)) return;
 
-        // _cache の更新（リストが存在しなければ何もしない）
+        // Update _cache (do nothing if the list does not exist)
         if (_cache.TryGetValue(partitionGlobalId, out var list))
         {
-            // メインスレッドのみから呼ばれる前提なので lock は不要
+            // No lock needed since this is assumed to be called only from the main thread
             bool replaced = false;
             for (int i = 0; i < list.Count; i++)
             {
@@ -281,7 +281,7 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
             }
         }
 
-        // _cacheDetailed の Upsert
+        // Upsert into _cacheDetailed
         if (_cacheDetailed is not null)
         {
             _cacheDetailed[(partitionGlobalId, id)] = t;
@@ -322,18 +322,18 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
 
 }
 
-// partitionGlobalId をキーとする、組織の単一エンティティ
-// これは組織全体で共有される単一のエンティティのキャッシュを表す
+// Single organization entity keyed by partitionGlobalId.
+// This represents the cache of a single entity shared across the entire organization.
 public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : class
 {
     private readonly object _lock = new();
     private readonly OrchDriveInfo _drive;
     
-    // 組織ごとにキャッシュ（static = 全ドライブインスタンスで共有）
+    // Cache per organization (static = shared across all drive instances)
     private static readonly ConcurrentDictionary<string, T> _cache = [];
     private static readonly ExceptionsCachePer<string> _exception = new();
     
-    // getter: partitionGlobalId を引数に取り、T を返す
+    // getter: takes partitionGlobalId as argument and returns T
     private readonly Func<string, T?> _getter;
     private readonly Action<T>? _initializer;
 
@@ -380,7 +380,7 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
         }
         else if (entity is not null && _initializer is not null)
         {
-            // キャッシュ済みの場合も initializer を実行（Pathの設定など）
+            // Execute initializer even when cached (e.g., setting Path)
             _initializer(entity);
         }
         
@@ -397,10 +397,10 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
     }
 }
 
-// 今のところ、インデックスとしては Int64 のみをサポート。この型もパラメータ化した方がいいのかもしれない
-// TIndexEntity: インデックスを含むエンティティ
-// getIndex(TIndexEntity): TIndexEntity から Int64 のインデックス値を取得する Func
-// TEntity: 取得してキャッシュするエンティティ
+// Currently, only Int64 is supported as the index type. This type might benefit from parameterization.
+// TIndexEntity: Entity containing the index
+// getIndex(TIndexEntity): Func to get the Int64 index value from TIndexEntity
+// TEntity: Entity to retrieve and cache
 public class IndexedCachePerTenant<TIndexEntity, TEntity> : ITenantCacheClearable where TIndexEntity : notnull
 {
     private readonly object _lock = new();
@@ -409,10 +409,10 @@ public class IndexedCachePerTenant<TIndexEntity, TEntity> : ITenantCacheClearabl
     // key: TIndexEntity.Id
     private ConcurrentDictionary<Int64, TEntity?>? _cache = null;
     private readonly ExceptionsCachePer<Int64> _exceptions = new();
-    private readonly Func<Int64, TEntity?> _fetchFunc; // index を渡すと TEntity が返る
+    private readonly Func<Int64, TEntity?> _fetchFunc; // Passes an index and returns TEntity
     private readonly Func<TIndexEntity, Int64> _getIdFunc;
     private readonly Func<TIndexEntity, string> _getNameFunc;
-    private readonly Action<TEntity, string>? _initializer; // 名前
+    private readonly Action<TEntity, string>? _initializer; // Name
     private readonly int? _supportedApiVersionFrom;
 
     public IndexedCachePerTenant(
@@ -635,7 +635,7 @@ public class ListCachePerFolder<T> : IFolderCacheClearable
 
     public void ClearCache(Folder folder)
     {
-        // root folder は、Id が null であることに注意！
+        // Note that the root folder has a null Id!
         ClearCache(folder.Id);
     }
 
@@ -646,11 +646,11 @@ public class ListCachePerFolder<T> : IFolderCacheClearable
     }
 }
 
-// 今のところ、インデックスとしては Int64 のみをサポート。この型もパラメータ化した方がいいのかもしれない
-// TODO: GetById() を実装すると良いのではないか？
-// TIndexEntity: インデックスを含むエンティティ
-// getIndex(TIndexEntity): TIndexEntity から Int64 のインデックス値を取得する Func
-// TEntity: 取得してキャッシュするエンティティ
+// Currently, only Int64 is supported as the index type. This type might benefit from parameterization.
+// TODO: Would it be good to implement GetById()?
+// TIndexEntity: Entity containing the index
+// getIndex(TIndexEntity): Func to get the Int64 index value from TIndexEntity
+// TEntity: Entity to retrieve and cache
 public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClearable where TIndexEntity : notnull
 {
     private readonly object _lock = new();
@@ -659,12 +659,12 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
     // 1st key: folderId
     // 2nd key: TIndexEntity.Id
     private ConcurrentDictionary<Int64, Dictionary<Int64, List<TEntity>>>? _cache = null;
-    // この例外キャッシュの機能がいまいちだな。。フォルダごとにキャッシュをクリアできるといいのに。
+    // The exception cache functionality is not great... It would be nice to be able to clear the cache per folder.
     private readonly ExceptionsCachePer<(Int64, Int64)> _exceptions = new();
-    private readonly Func<Int64, TIndexEntity, IEnumerable<TEntity>> _fetchFunc; // folderId と index を渡すと TEntity の列挙が返る
+    private readonly Func<Int64, TIndexEntity, IEnumerable<TEntity>> _fetchFunc; // Passes folderId and index, returns an enumeration of TEntity
     private readonly Func<TIndexEntity, Int64> _getIdFunc;
     private readonly Func<TIndexEntity, string> _getNameFunc;
-    private readonly Action<TEntity, string, string, string>? _initializer; // フォルダパス, 名前, フォルダパス\名前
+    private readonly Action<TEntity, string, string, string>? _initializer; // folder path, name, folder path\name
     private readonly int? _supportedApiVersionFrom;
 
     public IndexedListCachePerFolder(
@@ -745,7 +745,7 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
     public void ClearCache(Int64 folderId)
     {
         _cache?.TryRemove(folderId, out _);
-        _exceptions.ClearCache(); // ちょっと横着な実装だけど、機能的にはこれで問題ないはず
+        _exceptions.ClearCache(); // A bit of a lazy implementation, but should be functionally fine
     }
 
     public void ClearCache(Folder folder)
@@ -758,7 +758,7 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
         if (_cache?.TryGetValue(folder.Id.GetValueOrDefault(), out var cachePerFolder) ?? false)
         {
             cachePerFolder.Remove(id);
-            _exceptions.ClearCache(); // ちょっと横着な実装だけど、機能的にはこれで問題ないはず
+            _exceptions.ClearCache(); // A bit of a lazy implementation, but should be functionally fine
         }
     }
 
@@ -769,14 +769,14 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
     }
 }
 
-#region Incremental Cache Classes (Job, AuditLog 用)
+#region Incremental Cache Classes (for Job, AuditLog)
 
 /// <summary>
-/// フォルダごとに、フィルタリング結果を蓄積する Dictionary 型キャッシュ。
-/// Job のような大量データ向け。全件取得せず、API クエリ結果を追記していく。
+/// Dictionary-type cache that accumulates filtering results per folder.
+/// Designed for large datasets like Jobs. Does not fetch all items; appends API query results incrementally.
 /// </summary>
-/// <typeparam name="TKey">エンティティのキー型（例: Int64）</typeparam>
-/// <typeparam name="TEntity">エンティティ型（例: Job）</typeparam>
+/// <typeparam name="TKey">Entity key type (e.g., Int64)</typeparam>
+/// <typeparam name="TEntity">Entity type (e.g., Job)</typeparam>
 public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
     where TKey : notnull
 {
@@ -787,16 +787,16 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
     private ConcurrentDictionary<Int64, ConcurrentDictionary<TKey, TEntity>>? _cache = null;
     private readonly ExceptionsCachePer<Int64> _exceptions = new();
 
-    // API 呼び出し関数
+    // API call function
     private readonly Func<Int64, string?, ulong, ulong, string?, bool, IEnumerable<TEntity>> _fetchFunc;
 
-    // エンティティからキーを取得する関数
+    // Function to get the key from an entity
     private readonly Func<TEntity, TKey?> _getKeyFunc;
 
-    // 初期化処理（Path 設定など）
+    // Initialization processing (e.g., setting Path)
     private readonly Action<TEntity, string>? _initializer;
 
-    // キャッシュ追加前の追加処理（既存キャッシュとのマージなど）
+    // Additional processing before adding to cache (e.g., merging with existing cache)
     private readonly Action<TEntity, TEntity?>? _mergeFunc;
 
     public IncrementalCachePerFolder(
@@ -815,7 +815,7 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
     }
 
     /// <summary>
-    /// フォルダのキャッシュ Dictionary を取得（読み取り専用アクセス用）
+    /// Gets the cache Dictionary for a folder (for read-only access)
     /// </summary>
     public ConcurrentDictionary<TKey, TEntity>? GetCache(Folder folder)
     {
@@ -825,7 +825,7 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
     }
 
     /// <summary>
-    /// API を呼び出してエンティティを取得し、キャッシュに追加する
+    /// Calls the API to retrieve entities and adds them to the cache
     /// </summary>
     public ReadOnlyCollection<TEntity> Fetch(
         Folder folder,
@@ -872,7 +872,7 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
             var key = _getKeyFunc(entity);
             if (key is not null)
             {
-                // マージ処理（既存キャッシュの値を新エンティティに引き継ぐなど）
+                // Merge processing (e.g., carrying over values from existing cache to new entities)
                 if (_mergeFunc is not null && folderCache.TryGetValue(key, out var cached))
                 {
                     _mergeFunc(entity, cached);
@@ -897,7 +897,7 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
 
 
     /// <summary>
-    /// 単一エンティティをキャッシュに追加する（外部で API 取得後に呼び出す用）
+    /// Adds a single entity to the cache (for calling after external API retrieval)
     /// </summary>
     public void AddToCache(Folder folder, TEntity entity)
     {
@@ -936,11 +936,11 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
 }
 
 /// <summary>
-/// テナント全体で、フィルタリング結果を蓄積する Dictionary 型キャッシュ。
-/// AuditLog のような大量データ向け。全件取得せず、API クエリ結果を追記していく。
+/// Dictionary-type cache that accumulates filtering results across the entire tenant.
+/// Designed for large datasets like AuditLog. Does not fetch all items; appends API query results incrementally.
 /// </summary>
-/// <typeparam name="TKey">エンティティのキー型（例: Int64）</typeparam>
-/// <typeparam name="TEntity">エンティティ型（例: AuditLog）</typeparam>
+/// <typeparam name="TKey">Entity key type (e.g., Int64)</typeparam>
+/// <typeparam name="TEntity">Entity type (e.g., AuditLog)</typeparam>
 public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
     where TKey : notnull
 {
@@ -950,16 +950,16 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
     private ConcurrentDictionary<TKey, TEntity>? _cache = null;
     private readonly ExceptionCachePerTenant _exception = new();
 
-    // API 呼び出し関数
+    // API call function
     private readonly Func<string?, ulong, ulong, IEnumerable<TEntity>> _fetchFunc;
 
-    // エンティティからキーを取得する関数
+    // Function to get the key from an entity
     private readonly Func<TEntity, TKey?> _getKeyFunc;
 
-    // 初期化処理（Path 設定など）
+    // Initialization processing (e.g., setting Path)
     private readonly Action<TEntity, string>? _initializer;
 
-    // キャッシュ追加前の追加処理（既存キャッシュとのマージなど）
+    // Additional processing before adding to cache (e.g., merging with existing cache)
     private readonly Action<TEntity, TEntity?>? _mergeFunc;
 
     public IncrementalCachePerTenant(
@@ -978,12 +978,12 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
     }
 
     /// <summary>
-    /// キャッシュ Dictionary を取得（読み取り専用アクセス用）
+    /// Gets the cache Dictionary (for read-only access)
     /// </summary>
     public ConcurrentDictionary<TKey, TEntity>? GetCache() => _cache;
 
     /// <summary>
-    /// API を呼び出してエンティティを取得し、キャッシュに追加する
+    /// Calls the API to retrieve entities and adds them to the cache
     /// </summary>
     public ReadOnlyCollection<TEntity> Fetch(
         string? query = null,
@@ -1019,7 +1019,7 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
             var key = _getKeyFunc(entity);
             if (key is not null)
             {
-                // マージ処理（既存キャッシュの値を新エンティティに引き継ぐなど）
+                // Merge processing (e.g., carrying over values from existing cache to new entities)
                 if (_mergeFunc is not null && _cache.TryGetValue(key, out var cached))
                 {
                     _mergeFunc(entity, cached);
@@ -1033,7 +1033,7 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
 
 
     /// <summary>
-    /// 単一エンティティをキャッシュに追加する（外部で API 取得後に呼び出す用）
+    /// Adds a single entity to the cache (for calling after external API retrieval)
     /// </summary>
     public void AddToCache(TEntity entity)
     {
@@ -1068,11 +1068,11 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
 
 
 /// <summary>
-/// プロジェクトごとに、フィルタリング結果を蓄積する Dictionary 型キャッシュ。
-/// TmTestExecutionResult のような大量データ向け。全件取得せず、API クエリ結果を追記していく。
+/// Dictionary-type cache that accumulates filtering results per project.
+/// Designed for large datasets like TmTestExecutionResult. Does not fetch all items; appends API query results incrementally.
 /// </summary>
-/// <typeparam name="TKey">エンティティのキー型（例: string）</typeparam>
-/// <typeparam name="TEntity">エンティティ型（例: TmTestExecutionResult）</typeparam>
+/// <typeparam name="TKey">Entity key type (e.g., string)</typeparam>
+/// <typeparam name="TEntity">Entity type (e.g., TmTestExecutionResult)</typeparam>
 public class IncrementalCachePerProject<TKey, TEntity> : ITenantCacheClearable
     where TKey : notnull
 {
@@ -1083,16 +1083,16 @@ public class IncrementalCachePerProject<TKey, TEntity> : ITenantCacheClearable
     private ConcurrentDictionary<string, ConcurrentDictionary<TKey, TEntity>>? _cache = null;
     private readonly ExceptionsCachePer<string> _exceptions = new();
 
-    // API 呼び出し関数
+    // API call function
     private readonly Func<string, string, IEnumerable<TEntity>> _fetchFunc;
 
-    // エンティティからキーを取得する関数
+    // Function to get the key from an entity
     private readonly Func<TEntity, TKey?> _getKeyFunc;
 
-    // 初期化処理（Path 設定など）
+    // Initialization processing (e.g., setting Path)
     private readonly Action<TEntity, TmProject>? _initializer;
 
-    // キャッシュ追加前の追加処理（既存キャッシュとのマージなど）
+    // Additional processing before adding to cache (e.g., merging with existing cache)
     private readonly Action<TEntity, TEntity?>? _mergeFunc;
 
     public IncrementalCachePerProject(
@@ -1111,7 +1111,7 @@ public class IncrementalCachePerProject<TKey, TEntity> : ITenantCacheClearable
     }
 
     /// <summary>
-    /// プロジェクトのキャッシュ Dictionary を取得（読み取り専用アクセス用）
+    /// Gets the cache Dictionary for a project (for read-only access)
     /// </summary>
     public ConcurrentDictionary<TKey, TEntity>? GetCache(TmProject project)
     {
@@ -1121,10 +1121,10 @@ public class IncrementalCachePerProject<TKey, TEntity> : ITenantCacheClearable
     }
 
     /// <summary>
-    /// API を呼び出してエンティティを取得し、キャッシュに追加する
+    /// Calls the API to retrieve entities and adds them to the cache
     /// </summary>
-    /// <param name="project">対象プロジェクト</param>
-    /// <param name="subKey">サブキー（例: testExecutionId）</param>
+    /// <param name="project">Target project</param>
+    /// <param name="subKey">Sub-key (e.g., testExecutionId)</param>
     public ReadOnlyCollection<TEntity> Fetch(TmProject project, string subKey)
     {
         string projectId = project.id ?? "";
@@ -1163,7 +1163,7 @@ public class IncrementalCachePerProject<TKey, TEntity> : ITenantCacheClearable
             var key = _getKeyFunc(entity);
             if (key is not null)
             {
-                // マージ処理（既存キャッシュの値を新エンティティに引き継ぐなど）
+                // Merge processing (e.g., carrying over values from existing cache to new entities)
                 if (_mergeFunc is not null && projectCache.TryGetValue(key, out var cached))
                 {
                     _mergeFunc(entity, cached);
@@ -1188,7 +1188,7 @@ public class IncrementalCachePerProject<TKey, TEntity> : ITenantCacheClearable
     }
 
     /// <summary>
-    /// 単一エンティティをキャッシュに追加する（外部で API 取得後に呼び出す用）
+    /// Adds a single entity to the cache (for calling after external API retrieval)
     /// </summary>
     public void AddToCache(TmProject project, TEntity entity)
     {
@@ -1226,9 +1226,9 @@ public class IncrementalCachePerProject<TKey, TEntity> : ITenantCacheClearable
     }
 }
 
-#region TestManager 用キャッシュクラス
+#region Cache classes for TestManager
 
-// fetchFunc: 引数に TmProject を取り、Enumerable<T> を返す Func
+// fetchFunc: Func that takes a TmProject and returns Enumerable<T>
 public class TestListCachePerTenant1<T> : ITenantCacheClearable
 {
     private readonly object _lock = new();
@@ -1253,7 +1253,7 @@ public class TestListCachePerTenant1<T> : ITenantCacheClearable
     }
 
     /// <summary>
-    /// キャッシュが存在するかどうかを確認する
+    /// Checks whether the cache exists
     /// </summary>
     public bool HasCache(TmProject project)
     {
@@ -1316,8 +1316,8 @@ public class TestListCachePerTenant1<T> : ITenantCacheClearable
     }
 
     /// <summary>
-    /// 複数のプロジェクトに対して並列でキャッシュを取得する。
-    /// キャッシュがあるプロジェクトはスレッドを起動せずに即座に結果をセットする。
+    /// Retrieves cache for multiple projects in parallel.
+    /// Projects with existing cache are resolved immediately without starting a thread.
     /// </summary>
     public static OrchThreadPoolImpl<(OrchTmDriveInfo drive, TmProject project), List<T>> RunForEach(
         IEnumerable<(OrchTmDriveInfo drive, TmProject project)> sources,
@@ -1338,14 +1338,14 @@ public class TestListCachePerTenant1<T> : ITenantCacheClearable
         {
             var cache = getCacheFunc(source.drive);
 
-            // キャッシュがあれば即座に結果をセット（スレッド起動なし）
+            // If cache exists, set result immediately (no thread startup)
             if (cache._cache?.TryGetValue(source.project.id!, out var cached) ?? false)
             {
                 threads[index].SetResult(source, cached);
                 continue;
             }
 
-            // キャッシュがなければスレッドで取得
+            // If no cache, retrieve via thread
             Task.Run(async () =>
             {
                 await semaphore.WaitAsync();
@@ -1380,7 +1380,7 @@ public class TestListCachePerTenant1<T> : ITenantCacheClearable
     }
 }
 
-// getFunc: 引数なしで、T を返す Func
+// getFunc: Func with no arguments that returns T
 public class TestSingleCachePerTenant0<T> : ITenantCacheClearable
 {
     private readonly OrchTmDriveInfo _drive;
@@ -1439,7 +1439,7 @@ public class TestSingleCachePerTenant0<T> : ITenantCacheClearable
     }
 }
 
-// getFunc: 引数に TmProject を取り、T を返す Func
+// getFunc: Func that takes a TmProject and returns T
 public class TestSingleCachePerTenant1<T> : ITenantCacheClearable
 {
     private readonly object _lock = new();

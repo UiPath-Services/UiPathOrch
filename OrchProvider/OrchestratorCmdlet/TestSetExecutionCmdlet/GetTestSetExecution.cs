@@ -71,21 +71,21 @@ public class GetTestSetExecutionCommand : OrchestratorPSCmdlet
             var paramDepth = GetParameterValue(commandAst, "Depth");
             uint.TryParse(paramDepth, out uint depth);
 
-            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            // Extract path from parameters. If not specified, target the current directory
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
             var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude Names already selected by parameter from candidates
             var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            // GetTestSetExecutions() は、キャッシュがあっても毎回取りにいく。
-            // そのため、completer でこれを呼び出すのは不適。
+            // GetTestSetExecutions() fetches from the API every time even if a cache exists.
+            // Therefore, it is not suitable to call this from a completer.
             // var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetTestSetExecutions(df.folder));
 
-            // キャッシュがない場合に限り、GetTestSetExecutions() を呼ぶ。
-            // キャッシュがあれば、それを使う。
+            // Only call GetTestSetExecutions() when there is no cache.
+            // If a cache exists, use it.
             foreach (var (drive, folder) in drivesFolders)
             {
                 ICollection<TestSetExecution> testSetExecutions;
@@ -111,7 +111,7 @@ public class GetTestSetExecutionCommand : OrchestratorPSCmdlet
         }
     }
 
-    // TODO: StaticTextCompleter で書き直す
+    // TODO: Rewrite using StaticTextCompleter
     private class StatusCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -121,7 +121,7 @@ public class GetTestSetExecutionCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            // パラメータで選択済みの SourceType は、候補から除外する
+            // Exclude SourceType values already selected by parameter from candidates
             var wpStatus = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -133,7 +133,7 @@ public class GetTestSetExecutionCommand : OrchestratorPSCmdlet
         }
     }
 
-    // TODO: StaticTextCompleter で書き直す
+    // TODO: Rewrite using StaticTextCompleter
     private class TriggerTypeCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -143,7 +143,7 @@ public class GetTestSetExecutionCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            // パラメータで選択済みの TriggerType は、候補から除外する
+            // Exclude TriggerType values already selected by parameter from candidates
             var paramStatus = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
             var wpStatus = paramStatus.ConvertToWildcardPatternList();
 
@@ -270,7 +270,7 @@ public class GetTestSetExecutionCommand : OrchestratorPSCmdlet
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
 
-        // すべてのフィルタパラメータが指定されていなければ、キャッシュの内容を返す
+        // If no filter parameters are specified, return the cache contents
         bool bOutCache = (
             Last is null &&
             StartTimeAfter is null &&
@@ -311,7 +311,7 @@ public class GetTestSetExecutionCommand : OrchestratorPSCmdlet
                 var entities = result.GetResult(cancelHandler.Token);
                 if (entities is null) continue;
 
-                // この cmdlet は -Skip と -First をサポートするため、ここで出力をソートしてはいけない
+                // This cmdlet supports -Skip and -First, so output must not be sorted here
                 WriteObject(entities
                     .FilterByWildcards(e => e?.Name, wpName),
                     true);

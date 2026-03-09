@@ -35,7 +35,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
-    // TODO: ResettableProcessNameCompleter として共通化する
+    // TODO: Generalize as ResettableProcessNameCompleter
     private class NameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -47,7 +47,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みのパッケージ名は、候補から除外する
+            // Exclude already-selected package names from candidates
             var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -62,7 +62,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
                     .OrderBy(r => r.Name)
                     .ToList();
 
-                // 対象のリリースに対応するパッケージをフィードから取り出す
+                // Retrieve packages from the feed corresponding to the target releases
                 return ParallelResults3.GroupBy(releases, release => drive.GetPackageVersions(folder, release.Name!));
             });
 
@@ -70,8 +70,8 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
             {
                 foreach (var versions in releases)
                 {
-                    // パッケージが複数ないプロセスは、update/reset できない
-                    // 最新バージョン以外のバージョンにアップデートする場合もあることに注意
+                    // Processes without multiple package versions cannot be updated/reset
+                    // Note that updates to versions other than the latest are also possible
                     if (versions.Take(2).Count() < 2) continue;
 
                     var release = versions.Source;
@@ -93,8 +93,8 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みのパッケージ名は、候補から除外する
-            // parameter set が異なるため、positional parameter が異なることに注意
+            // Exclude already-selected package names from candidates
+            // Note that positional parameters differ because the parameter set is different
             var wpId = CreateWPListFromParameter(commandAst, parameterName, Positional.Id_Version.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -109,7 +109,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
                     .OrderBy(r => r.Name)
                     .ToList();
 
-                // 対象のリリースに対応するパッケージをフィードから取り出す
+                // Retrieve packages from the feed corresponding to the target releases
                 return ParallelResults3.GroupBy(releases, release => drive.GetPackageVersions(folder, release.Name!));
             });
 
@@ -117,8 +117,8 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
             {
                 foreach (var versions in releases)
                 {
-                    // パッケージが複数ないプロセスは、update/reset できない
-                    // 最新バージョン以外のバージョンにアップデートする場合もあることに注意
+                    // Processes without multiple package versions cannot be updated/reset
+                    // Note that updates to versions other than the latest are also possible
                     if (versions.Take(2).Count() < 2) continue;
 
                     var release = versions.Source;
@@ -140,10 +140,10 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択された Name のみ対象とする
+            // Target only the Name selected by parameters
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
-            // パラメータで選択済みの Version 候補から除外する
+            // Exclude already-selected Version from candidates
             var wpVersion = CreateWPListFromParameter(commandAst, "Version", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -157,7 +157,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
                     .FilterByWildcards(r => r?.Name, wpName)
                     .ToList();
 
-                // 対象のリリースに対応するパッケージをフィードから取り出す
+                // Retrieve packages from the feed corresponding to the target releases
                 return ParallelResults3.GroupBy(releases, release => drive.GetPackageVersions(folder, release.Name!)
                     .Where(version => version.Version != release.CurrentVersion!.VersionNumber)
                 );
@@ -269,7 +269,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
                         }
                         else
                         {
-                            // 対象のリリースに対応するパッケージをフィードから取り出す
+                            // Retrieve packages from the feed corresponding to the target release
                             var packageVersions = drive.GetPackageVersions(folder, release.Name!).Select(p => p.Version!);
 
                             var toVersion = packageVersions.Where(v => wpVersion.IsMatch(v)).LastOrDefault();
@@ -303,8 +303,8 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
         }
     }
 
-    // マルチスレッド化したバージョン
-    // HTTP call を cap した状態では逆に遅くなる場合があるため、シングルスレッドで書き直した
+    // Multi-threaded version
+    // Rewritten as single-threaded because it could be slower when HTTP calls are capped
     //protected override void ProcessRecord()
     //{
     //    var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
@@ -355,7 +355,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
     //                }
     //                else
     //                {
-    //                    // 対象のリリースに対応するパッケージをフィードから取り出す
+    //                    // Retrieve packages from the feed corresponding to the target release
     //                    var packageVersions = drive.GetPackageVersions(folder, release.Name!).Select(p => p.Version!);
 
     //                    var toVersions = packageVersions.Where(v => wpVersion.IsMatch(v));

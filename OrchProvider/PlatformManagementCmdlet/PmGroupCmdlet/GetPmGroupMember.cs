@@ -37,7 +37,7 @@ public class GetPmGroupMemberCommand : OrchestratorPSCmdlet
 
     private static void WriteCsvContent(StreamWriter writer, PmGroup group)
     {
-        // 各グループに対してデータ行を書き込む
+        // Write data rows for each group
         if (group?.members is null) return;
 
         foreach (var member in group.members
@@ -48,7 +48,7 @@ public class GetPmGroupMemberCommand : OrchestratorPSCmdlet
             string[] line = [
                 EscapeCsvValue(member.Path, true),
                 EscapeCsvValue(member.groupName, true),
-                EscapeCsvValue(member.objectType), ////////// TODO: これ変換必要だっけ？
+                EscapeCsvValue(member.objectType), ////////// TODO: Does this need conversion?
                 EscapeCsvValue(member.name),
                 member.email ?? "",
                 member.source ?? ""

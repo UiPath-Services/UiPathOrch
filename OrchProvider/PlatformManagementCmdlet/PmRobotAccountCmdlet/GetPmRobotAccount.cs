@@ -41,7 +41,7 @@ public class GetPmRobotAccountCommand : OrchestratorPSCmdlet
     //private static void WriteCsvContent(StreamWriter writer, IEnumerable<PmRobotAccount> robotAccounts, ConcurrentDictionary<string, PmGroup> groups)
     private static void WriteCsvContent(StreamWriter writer, IEnumerable<PmRobotAccount> robotAccounts, Dictionary<string, PmGroup> groups)
     {
-        // データ行を書き込む
+        // Write data rows
         foreach (var robotAccount in robotAccounts
             .OrderBy(ra => ra.name))
         {

@@ -46,7 +46,7 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
-    // AddFolderUser.cs の同名のクラスと、実装がほぼ同一だ。
+    // The implementation is nearly identical to the class with the same name in AddFolderUser.cs.
     //private class UserNameCompleter4Du : OrchArgumentCompleter
     //{
     //    //  0: User, 1: Group, 2: Machine, 3: Robot, 4: ExternalApplication
@@ -73,9 +73,9 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
 
     //        var drives = ResolveDuDrives(fakeBoundParameters);
 
-    //        // フォルダに割り当て済みのユーザーを候補から除外する処理は、いったん実装せずとした
+    //        // Excluding users already assigned to the folder is not implemented for now
     //        //var existingMemberIds = GetExistingMemberIds(drives, wpName);
-    //        // アサイン済みのユーザーを除外するため、アサイン済みのユーザーを取得
+    //        // Retrieve assigned users in order to exclude them
     //        //ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
 
     //        var paramUserName = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -104,7 +104,7 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
     //    }
     //}
 
-    // この RoleCompleter は、ユーザーにアサインされていないロールだけを列挙する
+    // This RoleCompleter only enumerates roles that are NOT assigned to the user
     private class RoleCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -117,10 +117,10 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
             //var drives = ResolveDuDrives(fakeBoundParameters);
             var drivesProjects = ResolveDuPath(commandAst, fakeBoundParameters);
 
-            // この名前のユーザーにアサイン済みの Role は除外する
+            // Exclude roles already assigned to users with this name
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
-            // パラメータで選択済みの Role は除外する
+            // Exclude already-selected Role values from completion candidates
             var wpRole = CreateWPListFromParameter(commandAst, "Role", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -139,8 +139,8 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
                     .ExcludeByWildcards(e => e?.name!, wpRole)
                     .OrderBy(e => e?.name))
                 {
-                    // 対象のすべてのユーザーについて、このロールがアサイン済みであれば表示しない
-                    // これだと、Inherited のロールも表示しないけど、いいか。
+                    // If this role is already assigned to all target users, don't show it.
+                    // This also hides inherited roles, but that should be fine.
                     if (users.Count != 0 && users.All(u => u.roleAssignmentDtos?.Select(r => r.roleId).Contains(role.id) ?? false)) continue;
 
                     string tiphelp = role.GetPSPath();
@@ -154,7 +154,7 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
     {
         _csvLines ??= new Dictionary<((OrchDuDriveInfo drive, DuProject project), string type, string name), CsvLine>(new SecondAndThirdItemIgnoreCaseComparer<OrchDuDriveInfo, DuProject>());
 
-        // 先頭の要素は CSV から入力されている可能性があるので、先頭の要素についてはカンマで区切る
+        // The first element may have been input from CSV, so split the first element by commas
         Path = Path.Split1stValueByUnescapedCommas()?.ToArray();
         Type = Type.Split1stValueByUnescapedCommas()?.ToArray();
         Name = Name.Split1stValueByUnescapedCommas()?.ToArray();
@@ -200,14 +200,14 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
 
     protected override void EndProcessing()
     {
-        // ここの実装は Add-OrchPmGroupMember cmdlet と良く似ているので、適宜参照してほしい。
+        // The implementation here is very similar to the Add-OrchPmGroupMember cmdlet; refer to it as needed.
 
         if (_csvLines is null) return;
 
-        // 追加したい名前を一括してディレクトリに問い合わせ。
-        // 種別ごとにまとめて、問い合わせる必要がある。
-        // ロボットは一括して問い合わせできないので別途。
-        // ここ、ほぼ Add-OrchPmGroupMember の実装と同一だな。。実装を共有できると良いけど、
+        // Bulk-query the directory for all names to add.
+        // Need to group by type for querying.
+        // Robots cannot be queried in bulk, so they are handled separately.
+        // This is nearly identical to the Add-OrchPmGroupMember implementation.. It would be nice to share the code.
 
         using var cancelHandler = new ConsoleCancelHandler();
 
@@ -234,7 +234,7 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
                             .Where(t => t.objectType == type)
                             .FirstOrDefault(t => string.Compare(t.identityName, line.Key.name, true) == 0);
 
-                        // 当たらなかったら警告を表示
+                        // Show a warning if no match is found
                         if (addingMember is null)
                         {
                             WriteWarning($"\"{drive.NameColonSeparator}\": \"{line.Key.name}\" ({type}) not found. Ignoring.");
@@ -252,16 +252,16 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
             }
         }
 
-        // ここから本番
-        // メンバーをプロジェクトに追加していく。
-        // ドライブでグループ化し、このプロジェクトに追加するユーザー一覧をすべてペイロードに集約する
+        // Now the actual processing begins.
+        // Add members to the project.
+        // Group by drive and aggregate all users to add to this project into the payload
         UserRoleAssignmentsCmd payload = new()
         {
             roleAssignmentsToAdd = [],
             roleAssignmentsToDelete = []
         };
 
-        HashSet<DuProject> updatedProjects = []; // 最後に、キャッシュをクリアするのに使う
+        HashSet<DuProject> updatedProjects = []; // Used at the end to clear the cache
         foreach (var lines in _csvLines.GroupBy(line => line.Key.Item1.drive))
         {
 

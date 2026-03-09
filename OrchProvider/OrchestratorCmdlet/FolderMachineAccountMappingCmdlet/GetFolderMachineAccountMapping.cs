@@ -28,8 +28,8 @@ public class GetFolderMachineAccountMappingCommand : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
-    // PropagateToSubFolders ではないフォルダマシンだけを列挙
-    // TODO: 同じものが同じフォルダの cmdlet にある
+    // Only enumerate folder machines that are not PropagateToSubFolders
+    // TODO: The same thing exists in a cmdlet in the same folder
     internal class FolderMachineNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -41,7 +41,7 @@ public class GetFolderMachineAccountMappingCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude Names already selected via parameter from the candidates
             var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -111,7 +111,7 @@ public class GetFolderMachineAccountMappingCommand : OrchestratorPSCmdlet
             }
         }
 
-        // シングルスレッドで実装すると、次のようになる
+        // A single-threaded implementation would look like this
         //foreach (var (drive, folder) in drivesFolders)
         //{
         //    var folderMachines = drive.FolderMachinesAssigned.Get(folder)

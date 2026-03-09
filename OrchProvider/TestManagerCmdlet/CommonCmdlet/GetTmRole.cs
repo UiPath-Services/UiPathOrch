@@ -7,7 +7,7 @@ using TPositional = UiPath.PowerShell.Positional.Path;
 
 namespace UiPath.PowerShell.Commands;
 
-// Forbidden になってしまうので一旦ボツ。
+// Shelved for now because the API returns Forbidden.
 [Cmdlet(VerbsCommon.Get, "TmRole")]
 [OutputType(typeof(Entities.TmRole))]
 class GetTmRoleCommand : OrchestratorPSCmdlet
@@ -30,11 +30,11 @@ class GetTmRoleCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            // Extract path from parameters. If not specified, target the current directory
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
             var drives = SessionState.EnumTmDrives(paramPath);
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude already-selected Name values from completion candidates
             var wpname = CreateWPListFromParameter(commandAst, "name", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);

@@ -21,7 +21,7 @@ public class EnableEventTriggerCommandBase<Enable> : OrchestratorPSCmdlet where 
     [Parameter]
     public uint Depth { get; set; }
 
-    // 無効となっている Event trigger だけを列挙するので、これは共通にできない
+    // This cannot be shared because it only enumerates disabled Event triggers
     internal class NameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -33,7 +33,7 @@ public class EnableEventTriggerCommandBase<Enable> : OrchestratorPSCmdlet where 
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude already-selected Names from candidates
             var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Parameters, wordToComplete);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

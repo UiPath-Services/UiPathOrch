@@ -14,11 +14,11 @@ public class ExceptionCachePerTenant
 {
     private Exception? _exceptionCache;
 
-    // 再度 API call しても、必ず同じ原因で失敗する例外についてはキャッシュしておき
-    // あとでまた同じ API call してしまうことを抑止する
+    // Cache exceptions that will always fail for the same reason on subsequent API calls,
+    // to prevent making the same failing API call again.
     public void CacheException(HttpResponseException ex)
     {
-        // TODO: 例外をキャッシュすべき条件が、ほかにもないか？
+        // TODO: Are there other conditions under which we should cache exceptions?
         if (ex.StatusCode == HttpStatusCode.Forbidden ||
             ex.StatusCode == HttpStatusCode.BadGateway ||
             ex.StatusCode == HttpStatusCode.BadRequest ||
@@ -30,7 +30,7 @@ public class ExceptionCachePerTenant
         }
     }
 
-    // キャッシュした例外があればスローする
+    // Throw the cached exception if one exists
     public void ThrowCachedExceptionIfAny()
     {
         if (_exceptionCache is not null)
@@ -47,15 +47,15 @@ public class ExceptionCachePerTenant
 
 public class ExceptionsCachePer<T> where T : IEquatable<T>
 {
-    // Lazy<T> はスレッドセーフであることに注意
+    // Note that Lazy<T> is thread-safe
     private readonly Lazy<ConcurrentDictionary<T, Exception>> _exceptionsCache =
         new(() => new ConcurrentDictionary<T, Exception>());
 
-    // 再度 API call しても、必ず同じ原因で失敗する例外についてはキャッシュしておき
-    // あとでまた同じ API call してしまうことを抑止する
+    // Cache exceptions that will always fail for the same reason on subsequent API calls,
+    // to prevent making the same failing API call again.
     public void CacheException(T key, HttpResponseException ex)
     {
-        // TODO: 例外をキャッシュすべき条件が、ほかにもないか？
+        // TODO: Are there other conditions under which we should cache exceptions?
         if (ex.StatusCode == HttpStatusCode.Forbidden ||
             ex.StatusCode == HttpStatusCode.BadGateway ||
             ex.StatusCode == HttpStatusCode.BadRequest ||
@@ -67,7 +67,7 @@ public class ExceptionsCachePer<T> where T : IEquatable<T>
         }
     }
 
-    // キャッシュした例外があればスローする
+    // Throw the cached exception if one exists
     public void ThrowCachedExceptionIfAny(T key)
     {
         if (_exceptionsCache.IsValueCreated &&

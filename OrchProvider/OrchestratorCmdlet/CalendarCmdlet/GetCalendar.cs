@@ -41,7 +41,7 @@ public class GetCalendarCommand : OrchestratorPSCmdlet
 
     private static void WriteCsvContent(StreamWriter writer, ExcludedDateNamed output)
     {
-        // 各カレンダーに対してデータ行を書き込む
+        // Write a data row for each calendar
         string[] line = [
             EscapeCsvValue(output.Path, true),
             EscapeCsvValue(output.Name, true),

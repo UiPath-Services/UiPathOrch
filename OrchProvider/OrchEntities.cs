@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities.JsonConverter;
 
-#pragma warning disable IDE1006 // 命名スタイル
+#pragma warning disable IDE1006 // Naming styles
 
 namespace UiPath.PowerShell.Entities;
 
@@ -15,10 +15,9 @@ public class HttpBodyValue<T>
 
 public class HttpBodyValues<T>
 {
-    // 次のメンバで全体の要素数を取得できるけど、これを活用しても
-    // 要素数がちょうど 1000 個のときに、次の call でゼロ個の要素を取得するような
-    // 無駄を省けるだけだな。。
-    // @odata.count に依存せず処理した方が安全な気がするので、しない。
+    // The following member can get the total element count, but using it would only
+    // avoid the waste of fetching zero elements on the next call when there are exactly 1000 elements.
+    // It feels safer to process without depending on @odata.count, so we don't use it.
     //[JsonPropertyName("@odata.count")]
     //public int OdataCount { get; set; }
     public T[]? value { get; set; }
@@ -88,7 +87,7 @@ public class OrchPSDrive
                 ProxySettings.Credentials = new()
                 {
                     Username = drive._psDrive.Proxy.Credentials.Username
-                    // Password は入れないでおく
+                    // Do not include the Password
                 };
             }
         }
@@ -485,7 +484,7 @@ public class MachineVpnSettings : IEquatable<MachineVpnSettings>
 {
     public string? cidr { get; set; }
 
-    // IEquatable<MachineVpnSettings> の実装
+    // IEquatable<MachineVpnSettings> implementation
     public bool Equals(MachineVpnSettings? other)
     {
         if (other is null)
@@ -494,10 +493,10 @@ public class MachineVpnSettings : IEquatable<MachineVpnSettings>
         return cidr == other.cidr;
     }
 
-    // Object.Equals のオーバーライド
+    // Object.Equals override
     public override bool Equals(object? obj) => Equals(obj as MachineVpnSettings);
 
-    // GetHashCode のオーバーライド
+    // GetHashCode override
     public override int GetHashCode()
     {
         return cidr is not null ? cidr.GetHashCode() : 0;
@@ -514,7 +513,7 @@ public class UpdateInfo : IEquatable<UpdateInfo>
     public bool? IsCommunity { get; set; }
     public string? StatusInfo { get; set; }
 
-    // IEquatable<UpdateInfo> の実装
+    // IEquatable<UpdateInfo> implementation
     public bool Equals(UpdateInfo? other)
     {
         if (other is null)
@@ -527,10 +526,10 @@ public class UpdateInfo : IEquatable<UpdateInfo>
                StatusInfo == other.StatusInfo;
     }
 
-    // Object.Equals のオーバーライド
+    // Object.Equals override
     public override bool Equals(object? obj) => Equals(obj as UpdateInfo);
 
-    // GetHashCode のオーバーライド
+    // GetHashCode override
     public override int GetHashCode()
     {
         return HashCode.Combine(
@@ -572,7 +571,7 @@ public class ExtendedMachine : IEquatable<ExtendedMachine>
     public MachineVpnSettings? VpnSettings { get; set; }
     public UpdateInfo? UpdateInfo { get; set; }
 
-    // IEquatable<ExtendedMachine> の実装
+    // IEquatable<ExtendedMachine> implementation
     public bool Equals(ExtendedMachine? other)
     {
         if (other is null)
@@ -593,18 +592,18 @@ public class ExtendedMachine : IEquatable<ExtendedMachine>
                AutomationCloudTestAutomationSlots == other.AutomationCloudTestAutomationSlots &&
                Key == other.Key &&
                EndpointDetectionStatus == other.EndpointDetectionStatus &&
-               // RobotVersions の比較
+               // RobotVersions comparison
                ((RobotVersions is null && other.RobotVersions is null) ||
                 (RobotVersions is not null && other.RobotVersions is not null &&
                  RobotVersions.SequenceEqual(other.RobotVersions))) &&
-               // RobotUsers の比較
+               // RobotUsers comparison
                ((RobotUsers is null && other.RobotUsers is null) ||
                 (RobotUsers is not null && other.RobotUsers is not null &&
                  RobotUsers.SequenceEqual(other.RobotUsers))) &&
                AutomationType == other.AutomationType &&
                TargetFramework == other.TargetFramework &&
                Equals(UpdatePolicy, other.UpdatePolicy) &&
-               // Tags の比較
+               // Tags comparison
                ((Tags is null && other.Tags is null) ||
                 (Tags is not null && other.Tags is not null &&
                  Tags.SequenceEqual(other.Tags))) &&
@@ -613,13 +612,13 @@ public class ExtendedMachine : IEquatable<ExtendedMachine>
                Equals(UpdateInfo, other.UpdateInfo);
     }
 
-    // Object.Equals のオーバーライド
+    // Object.Equals override
     public override bool Equals(object? obj) => Equals(obj as ExtendedMachine);
 
-    // GetHashCode のオーバーライド
+    // GetHashCode override
     public override int GetHashCode()
     {
-        // 分割してハッシュ計算
+        // Split hash calculation
         var hash1 = HashCode.Combine(Id, Name, Description, Type, LicenseKey, ClientSecret, Scope, NonProductionSlots);
         var hash2 = HashCode.Combine(UnattendedSlots, HeadlessSlots, TestAutomationSlots, AutomationCloudSlots,
                                      AutomationCloudTestAutomationSlots, Key, EndpointDetectionStatus,
@@ -631,7 +630,7 @@ public class ExtendedMachine : IEquatable<ExtendedMachine>
         return HashCode.Combine(hash1, hash2, hash3);
     }
 
-    // シーケンスのハッシュコードを計算するヘルパーメソッド
+    // Helper method to compute the hash code of a sequence
     private static int GetSequenceHashCode<T>(IEnumerable<T> sequence)
     {
         var hashCode = new HashCode();
@@ -644,12 +643,12 @@ public class ExtendedMachine : IEquatable<ExtendedMachine>
 }
 
 // CreatedMachine // added by UiPathOrch
-// ビュー定義を切り替えるために必要
+// Needed to switch view definitions
 public class CreatedMachine : ExtendedMachine
 {
 }
 
-// SecretKey 作成時に、API から結果を受け取る
+// Receives the result from the API when creating a SecretKey
 public class MachineClientSecretResponse // added by UiPathOrch
 {
     public Int64? id { get; set; }
@@ -658,7 +657,7 @@ public class MachineClientSecretResponse // added by UiPathOrch
     public DateTime? creationTime { get; set; }
 }
 
-// AddMachineSecretKeyResponse を cmdlet で出力する
+// Output AddMachineSecretKeyResponse from a cmdlet
 public class MachineSecretKey // added by UiPathOrch
 {
     public string? Path { get; set; }
@@ -708,10 +707,10 @@ public class UserRole : IEquatable<UserRole>
                Id == other.Id;
     }
 
-    // object.Equals のオーバーライド
+    // object.Equals override
     public override bool Equals(object? obj) => Equals(obj as UserRole);
 
-    // GetHashCode のオーバーライド
+    // GetHashCode override
     public override int GetHashCode()
     {
         return HashCode.Combine(
@@ -739,10 +738,10 @@ public class OrganizationUnit : IEquatable<OrganizationUnit>
                Id == other.Id;
     }
 
-    // object.Equals のオーバーライド
+    // object.Equals override
     public override bool Equals(object? obj) => Equals(obj as OrganizationUnit);
 
-    // GetHashCode のオーバーライド
+    // GetHashCode override
     public override int GetHashCode()
     {
         return HashCode.Combine(DisplayName, Id);
@@ -767,10 +766,10 @@ public class AttendedRobot : IEquatable<AttendedRobot>
                ExecutionSettings.SafeEquals(other.ExecutionSettings);
     }
 
-    // object.Equals のオーバーライド
+    // object.Equals override
     public override bool Equals(object? obj) => Equals(obj as AttendedRobot);
 
-    // GetHashCode のオーバーライド
+    // GetHashCode override
     public override int GetHashCode()
     {
         return HashCode.Combine(UserName, RobotId, RobotType, ExecutionSettings);
@@ -784,15 +783,15 @@ public class ExecutionSettings : IEquatable<ExecutionSettings>
     public bool? StudioNotifyServer { get; set; }
     public bool? LoginToConsole { get; set; }
 
-    // Orchestrator のバージョンによって、string だったり int だったり。
+    // Can be either string or int depending on the Orchestrator version.
     [JsonConverter(typeof(StringOrIntConverter))]
     public int? ResolutionWidth { get; set; }
 
-    // Orchestrator のバージョンによって、string だったり int だったり。
+    // Can be either string or int depending on the Orchestrator version.
     [JsonConverter(typeof(StringOrIntConverter))]
     public int? ResolutionHeight { get; set; }
 
-    // Orchestrator のバージョンによって、string だったり int だったり。
+    // Can be either string or int depending on the Orchestrator version.
     [JsonConverter(typeof(StringOrIntConverter))]
     public int? ResolutionDepth { get; set; }
 
@@ -813,10 +812,10 @@ public class ExecutionSettings : IEquatable<ExecutionSettings>
                AutoDownloadProcess == other.AutoDownloadProcess;
     }
 
-    // object.Equals のオーバーライド
+    // object.Equals override
     public override bool Equals(object? obj) => Equals(obj as ExecutionSettings);
 
-    // GetHashCode のオーバーライド
+    // GetHashCode override
     public override int GetHashCode()
     {
         return HashCode.Combine(
@@ -861,13 +860,13 @@ public class UnattendedRobot : IEquatable<UnattendedRobot>
         return ret;
     }
 
-    // object.Equals のオーバーライド
+    // object.Equals override
     public override bool Equals(object? obj) => Equals(obj as UnattendedRobot);
 
-    // GetHashCode のオーバーライド
+    // GetHashCode override
     public override int GetHashCode()
     {
-        // まずは 8つまでのプロパティを結合
+        // First, combine up to 8 properties
         int hash1 = HashCode.Combine(
             UserName,
             Password,
@@ -879,12 +878,12 @@ public class UnattendedRobot : IEquatable<UnattendedRobot>
             RobotId
         );
 
-        // 残りのプロパティを別で結合し、さらに最終的に両方のハッシュを結合
+        // Combine remaining properties separately, then combine both hashes
         int hash2 = HashCode.Combine(
             MachineMappingsCount
         );
 
-        // 最終的なハッシュコードを生成
+        // Generate the final hash code
         return HashCode.Combine(hash1, hash2);
     }
 }
@@ -926,13 +925,13 @@ public class UserNotificationSubscription : IEquatable<UserNotificationSubscript
                Webhooks == other.Webhooks;
     }
 
-    // object.Equals のオーバーライド
+    // object.Equals override
     public override bool Equals(object? obj) => Equals(obj as UserNotificationSubscription);
 
-    // GetHashCode のオーバーライド
+    // GetHashCode override
     public override int GetHashCode()
     {
-        // まずは 8つまでのプロパティを結合
+        // First, combine up to 8 properties
         int hash1 = HashCode.Combine(
             Queues,
             Robots,
@@ -944,7 +943,7 @@ public class UserNotificationSubscription : IEquatable<UserNotificationSubscript
             CloudRobots
         );
 
-        // 残りのプロパティを別で結合し、さらに最終的に両方のハッシュを結合
+        // Combine remaining properties separately, then combine both hashes
         int hash2 = HashCode.Combine(
             Serverless,
             Export,
@@ -952,13 +951,13 @@ public class UserNotificationSubscription : IEquatable<UserNotificationSubscript
             RateLimitsRealTime
         );
 
-        // 最終的なハッシュコードを生成
+        // Generate the final hash code
         return HashCode.Combine(hash1, hash2);
     }
 }
 
 // added by UiPathOrch
-// undocumented っぽい。適切なクラス名が分からないので適当。
+// Appears to be undocumented. The proper class name is unknown, so this is a placeholder.
 public class AvailableVersions
 {
     public string[]? availableVersions { get; set; }
@@ -988,7 +987,7 @@ public class User : IEquatable<User>
     public bool? IsExternalLicensed { get; set; }
     public UserRole[]? UserRoles { get; set; }
     public string[]? RolesList { get; set; }
-    // TODO: ExternalRoles がない。
+    // TODO: ExternalRoles is missing.
     public string[]? LoginProviders { get; set; }
     public List<OrganizationUnit>? OrganizationUnits { get; set; } // deprecated in V19.0
     public int? TenantId { get; set; }
@@ -1007,7 +1006,7 @@ public class User : IEquatable<User>
     public bool? MayHaveUnattendedSession { get; set; }
     public bool? MayHavePersonalWorkspace { get; set; }
     public bool? RestrictToPersonalWorkspace { get; set; }
-    public bool? BypassBasicAuthRestriction { get; set; } // TODO: あれ？ api v18.0 で無くなった？ 除外しても良いのか、
+    public bool? BypassBasicAuthRestriction { get; set; } // TODO: Huh? Was this removed in api v18.0? Is it safe to exclude?
     public UpdatePolicy? UpdatePolicy { get; set; }
     public string? AccountId { get; set; }
     public bool? HasOnlyInheritedPrivileges { get; set; }
@@ -1025,7 +1024,7 @@ public class User : IEquatable<User>
         if (other is null) return false;
 
         bool ret = Id == other.Id;
-        //ret &= Path == other.Path; // Path は除外する
+        //ret &= Path == other.Path; // Exclude Path
         ret = ret && Name == other.Name;
         ret = ret && Surname == other.Surname;
         ret = ret && UserName == other.UserName;
@@ -1040,10 +1039,10 @@ public class User : IEquatable<User>
         ret = ret && AuthenticationSource == other.AuthenticationSource;
         ret = ret && Password == other.Password;
         ret = ret && IsExternalLicensed == other.IsExternalLicensed;
-        ret = ret && UserRoles.SafeSequenceEquals(other.UserRoles); // 配列の比較
-        ret = ret && RolesList.SafeSequenceEquals(other.RolesList); // 配列の比較
-        ret = ret && LoginProviders.SafeSequenceEquals(other.LoginProviders); // 配列の比較
-        //ret = ret && OrganizationUnits.SafeSequenceEquals(other.OrganizationUnits); // リストの比較
+        ret = ret && UserRoles.SafeSequenceEquals(other.UserRoles); // Array comparison
+        ret = ret && RolesList.SafeSequenceEquals(other.RolesList); // Array comparison
+        ret = ret && LoginProviders.SafeSequenceEquals(other.LoginProviders); // Array comparison
+        //ret = ret && OrganizationUnits.SafeSequenceEquals(other.OrganizationUnits); // List comparison
         ret = ret && TenantId == other.TenantId;
         ret = ret && TenancyName == other.TenancyName;
         ret = ret && TenantDisplayName == other.TenantDisplayName;
@@ -1051,9 +1050,9 @@ public class User : IEquatable<User>
         ret = ret && Type == other.Type;
         ret = ret && ProvisionType == other.ProvisionType;
         ret = ret && LicenseType == other.LicenseType;
-        ret = ret && RobotProvision.SafeEquals(other.RobotProvision); // クラスの比較
-        ret = ret && UnattendedRobot.SafeEquals(other.UnattendedRobot); // クラスの比較
-        ret = ret && NotificationSubscription.SafeEquals(other.NotificationSubscription); // クラスの比較
+        ret = ret && RobotProvision.SafeEquals(other.RobotProvision); // Class comparison
+        ret = ret && UnattendedRobot.SafeEquals(other.UnattendedRobot); // Class comparison
+        ret = ret && NotificationSubscription.SafeEquals(other.NotificationSubscription); // Class comparison
         ret = ret && Key == other.Key;
         ret = ret && MayHaveUserSession == other.MayHaveUserSession;
         ret = ret && MayHaveRobotSession == other.MayHaveRobotSession;
@@ -1074,10 +1073,10 @@ public class User : IEquatable<User>
         return ret;
     }
 
-    // object.Equals のオーバーライド
+    // object.Equals override
     public override bool Equals(object? obj) => Equals(obj as User);
 
-    // GetHashCode のオーバーライド
+    // GetHashCode override
     public override int GetHashCode()
     {
         int hash1 = HashCode.Combine(Id, Name, Surname, UserName, Domain, DirectoryIdentifier, FullName);
@@ -1091,19 +1090,19 @@ public class User : IEquatable<User>
     }
 }
 
-public class Item_IdName // added by UiPathOrch 正しいクラス名は不明。
+public class Item_IdName // added by UiPathOrch The proper class name is unknown.
 {
     public Int64? id { get; set; }
     public string? name { get; set; }
 }
 
-public class UP_RoleEntry // added by UiPathOrch 正しいクラス名は不明。
+public class UP_RoleEntry // added by UiPathOrch The proper class name is unknown.
 {
     public string? type { get; set; }
     public Item_IdName? value { get; set; }
 }
 
-public class UP_Roles // added by UiPathOrch 正しいクラス名は不明。
+public class UP_Roles // added by UiPathOrch The proper class name is unknown.
 {
     public UP_RoleEntry[]? @explicit { get; set; }
     public UP_RoleEntry[]? inherited { get; set; }
@@ -1115,13 +1114,13 @@ public class UP_Roles // added by UiPathOrch 正しいクラス名は不明。
     }
 }
 
-public class Item_TypeValue // added by UiPathOrch 正しいクラス名は不明。
+public class Item_TypeValue // added by UiPathOrch The proper class name is unknown.
 {
     public string? type { get; set; }
     public string? value { get; set; }
 }
 
-public class UP_Access // added by UiPathOrch 正しいクラス名は不明。
+public class UP_Access // added by UiPathOrch The proper class name is unknown.
 {
     public Item_TypeValue? @explicit { get; set; }
     public Item_TypeValue[]? inherited { get; set; }
@@ -1133,14 +1132,14 @@ public class UP_Access // added by UiPathOrch 正しいクラス名は不明。
     }
 }
 
-public class UP_PermissionEntry // added by UiPathOrch 正しいクラス名は不明。
+public class UP_PermissionEntry // added by UiPathOrch The proper class name is unknown.
 {
     public string? type { get; set; }
     public bool? value { get; set; }
     public Item_IdName[]? groups { get; set; }
 }
 
-public class UP_ProjectPermission // added by UiPathOrch 正しいクラス名は不明。
+public class UP_ProjectPermission // added by UiPathOrch The proper class name is unknown.
 {
     public UP_PermissionEntry? @explicit { get; set; }
     public UP_PermissionEntry? inherited { get; set; }
@@ -1152,19 +1151,19 @@ public class UP_ProjectPermission // added by UiPathOrch 正しいクラス名�
     }
 }
 
-public class UP_UpdatePolicyValue // added by UiPathOrch 正しいクラス名は不明。
+public class UP_UpdatePolicyValue // added by UiPathOrch The proper class name is unknown.
 {
     public string? type { get; set; }
     public string? specificVersion { get; set; }
 }
 
-public class UP_UpdatePolicyEntry // added by UiPathOrch 正しいクラス名は不明。
+public class UP_UpdatePolicyEntry // added by UiPathOrch The proper class name is unknown.
 {
     public string? type { get; set; }
     public UP_UpdatePolicyValue? value { get; set; }
 }
 
-public class UP_UpdatePolicy // added by UiPathOrch 正しいクラス名は不明。
+public class UP_UpdatePolicy // added by UiPathOrch The proper class name is unknown.
 {
     public UP_UpdatePolicyEntry? @explicit { get; set; }
     public UP_UpdatePolicyEntry[]? inherited { get; set; }
@@ -1176,7 +1175,7 @@ public class UP_UpdatePolicy // added by UiPathOrch 正しいクラス名は不�
     }
 }
 
-public class UserPrivilege // added by UiPathOrch 正しいクラス名は不明。
+public class UserPrivilege // added by UiPathOrch The proper class name is unknown.
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
@@ -1257,7 +1256,7 @@ public class MachinesRobotVersion : IEquatable<MachinesRobotVersion>
     public string? Version { get; set; }
     public long? MachineId { get; set; }
 
-    // IEquatable<MachinesRobotVersion> の実装
+    // IEquatable<MachinesRobotVersion> implementation
     public bool Equals(MachinesRobotVersion? other)
     {
         if (other is null)
@@ -1268,10 +1267,10 @@ public class MachinesRobotVersion : IEquatable<MachinesRobotVersion>
                MachineId == other.MachineId;
     }
 
-    // Object.Equals のオーバーライド
+    // Object.Equals override
     public override bool Equals(object? obj) => Equals(obj as MachinesRobotVersion);
 
-    // GetHashCode のオーバーライド
+    // GetHashCode override
     public override int GetHashCode()
     {
         return HashCode.Combine(Count, Version, MachineId);
@@ -1324,10 +1323,10 @@ public class UpdatePolicy : IEquatable<UpdatePolicy>
                SpecificVersion == other.SpecificVersion;
     }
 
-    // object.Equals のオーバーライド
+    // object.Equals override
     public override bool Equals(object? obj) => Equals(obj as UpdatePolicy);
 
-    // GetHashCode のオーバーライド
+    // GetHashCode override
     public override int GetHashCode()
     {
         return HashCode.Combine(Type, SpecificVersion);
@@ -1355,7 +1354,7 @@ public class MaintenanceWindow : IEquatable<MaintenanceWindow>
     [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? NextExecutionTime { get; set; }
 
-    // IEquatable<MaintenanceWindow> の実装
+    // IEquatable<MaintenanceWindow> implementation
     public bool Equals(MaintenanceWindow? other)
     {
         if (other is null)
@@ -1369,10 +1368,10 @@ public class MaintenanceWindow : IEquatable<MaintenanceWindow>
                NextExecutionTime == other.NextExecutionTime;
     }
 
-    // Object.Equals のオーバーライド
+    // Object.Equals override
     public override bool Equals(object? obj) => Equals(obj as MaintenanceWindow);
 
-    // GetHashCode のオーバーライド
+    // GetHashCode override
     public override int GetHashCode()
     {
         return HashCode.Combine(
@@ -1483,7 +1482,7 @@ public class Role
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
-    public Int64? Id { get; set; } // swagger doc によれば、これは int なのだけど。。
+    public Int64? Id { get; set; } // According to the swagger doc, this should be int, but...
     public string? Name { get; set; }
     public string? DisplayName { get; set; }
     public string? Type { get; set; }
@@ -1798,9 +1797,9 @@ public class Log
     public string? RuntimeType { get; set; }
     public Int64? Id { get; set; }
 
-    // Dictionary のキーとして利用できるプロパティがない。Id はすべてゼロが返ってしまう。
-    // そのため、この一連のログは HashSet<Log> で管理する。
-    // 同じ行が複数回 HashSet<Log> に入ることがないように、Equals() と GetHashCode() をオーバーライドしておく。
+    // There is no property that can be used as a dictionary key. Id always returns zero.
+    // Therefore, these logs are managed with HashSet<Log>.
+    // Override Equals() and GetHashCode() to prevent the same row from appearing multiple times in the HashSet<Log>.
     public override bool Equals(object? obj)
     {
         if (obj is Log other)
@@ -1826,7 +1825,7 @@ public class Log
     {
         int hash = HashCode.Combine(Level, WindowsIdentity, ProcessName, TimeStamp, Message, JobKey, RawMessage, RobotName);
 
-        // それ以外のプロパティで追加のハッシュコードを計算して統合
+        // Compute additional hash codes from remaining properties and combine
         return HashCode.Combine(hash, HostMachineName, MachineId, MachineKey, RuntimeType, Id);
     }
 }
@@ -2013,7 +2012,7 @@ public class ExtendedRobot
     public long? CreatorUserId { get; set; }
 }
 
-public class SetMachineRobotsCmd // added by UiPathOrch 正しいクラス名が不明。
+public class SetMachineRobotsCmd // added by UiPathOrch. The proper class name is unknown.
 {
     public long? MachineId { get; set; }
     public long? FolderId { get; set; }
@@ -2124,7 +2123,7 @@ public class LicenseRuntime
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // Added by UiPathOrch
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? RobotType { get; set; } // Added by UiPathOrch /////////////////////// PathRobotType は？
+    public string? RobotType { get; set; } // Added by UiPathOrch /////////////////////// What about PathRobotType?
     public string? Key { get; set; }
     public Int64? MachineId { get; set; }
     public string? MachineName { get; set; }
@@ -2377,7 +2376,7 @@ public class Release
     public Environment? Environment { get; set; }
     public Int64? EntryPointId { get; set; }
     public string? EntryPointPath { get; set; }
-    public EntryPoint? EntryPoint { get; set; } // swagger doc には記載があるが、返ってこないようだ。。一応残しておく。
+    public EntryPoint? EntryPoint { get; set; } // Documented in swagger doc, but does not seem to be returned. Keeping it just in case.
     public string? InputArguments { get; set; }
     public string? EnvironmentVariables { get; set; } // added in V19.0
     public string? ProcessType { get; set; }
@@ -2550,8 +2549,8 @@ public class Tag
     public string? Value { get; set; }
     public string? DisplayValue { get; set; }
 
-    // TODO: これ除去しないとだめだな。。ConvertTo-Json の結果が不正になる。
-    // 代わりに、ビュー定義ファイルにこれと同じのを書いておくと良さげだ。
+    // TODO: This needs to be removed... It causes incorrect ConvertTo-Json results.
+    // Instead, the same thing should be written in the view definition file.
     public override string? ToString()
     {
         if (string.IsNullOrEmpty(DisplayName)) return null;
@@ -2784,7 +2783,7 @@ public class QueueItem
 }
 
 // QueueItemDataDto
-// DeferDate とかは DateTime なんだけど、CSV インポートする都合で string にしてある。。
+// DeferDate etc. are DateTime, but defined as string for CSV import compatibility.
 public class QueueItemData4CsvImport
 {
     public string? Name { get; set; }
@@ -2907,7 +2906,7 @@ public class FailedQueueItem
 }
 
 // BulkOperationResponseDtoOfFailedQueueItemDto
-// Issue? swagger doc ではメンバが小文字になってたけど、実際には capital だった。v19.0 の swagger.json で修正された。
+// Issue? Members were lowercase in the swagger doc, but actually capitalized. Fixed in the v19.0 swagger.json.
 public class BulkOperationResponseDtoOfFailedQueueItem
 {
     public bool? Success { get; set; }
@@ -3008,7 +3007,7 @@ public class MachineRobotSession
     public string? SessionName { get; set; }
 }
 
-// Get-OrchTrigger -ExportCsv で MachineRobots をシリアライズするためのもの
+// Used to serialize MachineRobots for Get-OrchTrigger -ExportCsv
 public class MachineRobotSessionForSerialize // added by UiPathOrch
 {
     public string? UserName { get; set; }
@@ -3120,8 +3119,8 @@ public abstract class TriggerBase
 
 public class HttpTrigger : TriggerBase
 {
-    // TODO: Properties はどのように定義すべき？
-    // Dictionary<string, object> としてベースクラスに配置すべきか？
+    // TODO: How should Properties be defined?
+    // Should it be placed in the base class as Dictionary<string, object>?
     public string? CallingMode { get; set; }
     public string? Method { get; set; }
     public string? Slug { get; set; }
@@ -3756,10 +3755,10 @@ public class PmUser
     public Int64 legacyId { get; set; }
     public bool? isActive { get; set; }
     public bool? bypassBasicAuthRestriction { get; set; }
-    public Int64? type { get; set; } // ISSUE: swagger では string となっている
+    public Int64? type { get; set; } // ISSUE: Defined as string in swagger
     public bool? invitationAccepted { get; set; }
 
-    // 以下は AD 連携の場合に固有か？
+    // Are the following properties specific to AD integration?
     public string? userId { get; set; }
     public string[]? userBundleCodes { get; set; }
     public bool? useExternalLicense { get; set; }
@@ -3810,7 +3809,7 @@ public class UpdatePmUserSettingPayload // added by UiPathOrch
 }
 
 // added by UiPathOrch
-public class NuLicensedGroup // 適切なクラス名が不明。。
+public class NuLicensedGroup // The proper class name is unknown.
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
@@ -3824,7 +3823,7 @@ public class NuLicensedGroup // 適切なクラス名が不明。。
 }
 
 // added by UiPathOrch
-public class NuLicensedUser // 適切なクラス名が不明。。
+public class NuLicensedUser // The proper class name is unknown.
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
@@ -3853,7 +3852,7 @@ public class NuLicensedGroupMember : NuLicensedUser
 }
 
 // added by UiPathOrch
-public class AvailableUserBundle // 適切なクラス名が不明。。
+public class AvailableUserBundle // The proper class name is unknown.
 {
     public string? code { get; set; }
     public string? name { get; set; } // added by UiPathOrch
@@ -3862,7 +3861,7 @@ public class AvailableUserBundle // 適切なクラス名が不明。。
 }
 
 // added by UiPathOrch
-public class AvailableUserBundles // 適切なクラス名が不明。。
+public class AvailableUserBundles // The proper class name is unknown.
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
@@ -3880,7 +3879,7 @@ public class AvailableUserBundles // 適切なクラス名が不明。。
 }
 
 // added by UiPathOrch
-public class UpdateLicensedGroupCommand // 適切なクラス名が不明。。
+public class UpdateLicensedGroupCommand // The proper class name is unknown.
 {
     public string[]? ubls { get; set; }
     public string? id { get; set; } // Guid
@@ -3888,7 +3887,7 @@ public class UpdateLicensedGroupCommand // 適切なクラス名が不明。。
 }
 
 // added by UiPathOrch
-public class UpdateLicensedGroupResponse // 適切なクラス名が不明。。
+public class UpdateLicensedGroupResponse // The proper class name is unknown.
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
@@ -3926,7 +3925,7 @@ public class PmGroup
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string[]? userBundleLicenseNames { get; set; } // added by UiPathOrch
 
-    // public string? userBundleLeases { get; set; } // undocumented これ中身が分からない。
+    // public string? userBundleLeases { get; set; } // undocumented. Contents are unknown.
     public bool? useExternalLicense { get; set; } // undocumented
     public bool? orphan { get; set; } // undocumented
 }
@@ -4049,8 +4048,8 @@ public class ExternalClient
     public Secret[]? secrets { get; set; }
 }
 
-// Copy-PmExternalApplication の返り値として使用
-// 既定のビューを変更するために必要
+// Used as the return value of Copy-PmExternalApplication.
+// Needed to change the default view.
 public class ExternalClientCreated: ExternalClient
 {
 }
@@ -4110,8 +4109,8 @@ public class PmAuthenticationRoot
     public string? hostConnectionType { get; set; }
 }
 
-// HashSet<T> で管理するため、IEquatable が必要
-public class PmAuditLog : IEquatable<PmAuditLog> // added by UiPathOrch 適切なクラス名が不明。。
+// IEquatable is needed because this is managed with HashSet<T>.
+public class PmAuditLog : IEquatable<PmAuditLog> // added by UiPathOrch. The proper class name is unknown.
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
@@ -4128,13 +4127,13 @@ public class PmAuditLog : IEquatable<PmAuditLog> // added by UiPathOrch 適切�
     public string? detailsVersion { get; set; }
     public string? source { get; set; }
 
-    // IEquatable<T> の実装
+    // IEquatable<T> implementation
     public bool Equals(PmAuditLog? other)
     {
         if (other is null)
             return false;
 
-        // Path と auditLogDetailsExpanded は考慮しない
+        // Do not consider Path and auditLogDetailsExpanded
         return createdOn == other.createdOn &&
                category == other.category &&
                action == other.action &&
@@ -4185,7 +4184,7 @@ public class AccessAllowedMember
 
 #region Document Understanding
 
-public class ActionDetail // added by UiPathOrch swagger doc にない。
+public class ActionDetail // added by UiPathOrch Not in the swagger doc.
 {
     public string? id { get; set; }
     public string? name { get; set; }
@@ -4197,7 +4196,7 @@ public class ActionDetail // added by UiPathOrch swagger doc にない。
     public string? description { get; set; }
 }
 
-public class DuRole // added by UiPathOrch swagger doc にない。
+public class DuRole // added by UiPathOrch Not in the swagger doc.
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
@@ -4212,7 +4211,7 @@ public class DuRole // added by UiPathOrch swagger doc にない。
     public ActionDetail[]? actionDetails { get; set; }
 }
 
-public class RoleAssignmentDto // added by UiPathOrch swagger doc にない。
+public class RoleAssignmentDto // added by UiPathOrch Not in the swagger doc.
 {
     public string? id { get; set; }
     public string? securityPrincipalId { get; set; }
@@ -4229,7 +4228,7 @@ public class RoleAssignmentDto // added by UiPathOrch swagger doc にない。
     public bool? mutable { get; set; }
 }
 
-public class DuUser // added by UiPathOrch swagger doc にない。
+public class DuUser // added by UiPathOrch Not in the swagger doc.
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
@@ -4245,7 +4244,7 @@ public class DuUser // added by UiPathOrch swagger doc にない。
 
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     private string? _name; // added by UiPathOrch
-    internal string? Name // 多分 null になることはないと思うが、
+    internal string? Name // Probably never null, but just in case.
     {
         get
         {
@@ -4258,19 +4257,19 @@ public class DuUser // added by UiPathOrch swagger doc にない。
         }
     }
 
-    // 三嶋さん(KDDI)からのリクエスト Add-DuUser に User Principal Name を指定できるように
-    // するなら、次が必要だと思うが、良い実装が思いつかない。
-    // パフォーマンスを犠牲にするか、あるいは複雑なパラメータを追加するか。。
-    // 自分としては、どちらも受け入れがたいな。。
+    // Request from Mishima-san (KDDI): To allow specifying User Principal Name in Add-DuUser,
+    // the following would be needed, but I can't think of a good implementation.
+    // Either sacrifice performance or add complex parameters...
+    // Personally, neither option is acceptable.
     //[JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    //internal string? UserName { get; set; }// 多分 null になることはないと思うが、
+    //internal string? UserName { get; set; }// Probably never null, but just in case.
 }
 
 public class DuRoleAssignment // added by UiPathOrch
 {
     public string? roleId { get; set; }
     public string? scope { get; set; }
-    public string? securityPrincipalId { get; set; } // Guid っぽいけど、user id なので string にしておく。
+    public string? securityPrincipalId { get; set; } // Looks like a Guid, but keeping it as string since it's a user id.
     public int? securityPrincipalType { get; set; }
 }
 
@@ -4806,4 +4805,4 @@ public class OrchRolePermissionExpanded
 }
 #endregion
 
-#pragma warning restore IDE1006 // 命名スタイル
+#pragma warning restore IDE1006 // Naming styles

@@ -109,7 +109,7 @@ public class NewQueueCommand : OrchestratorPSCmdlet
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
             var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Queues.Get(df.folder));
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude Names already selected by the parameter from the candidates
             var names = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
             var entities = results.SelectMany(e => e);
@@ -146,7 +146,7 @@ public class NewQueueCommand : OrchestratorPSCmdlet
                 newQueue.AssignStringIfNotNullOrEmpty(OutputDataJsonSchema,    (q, v) => q.OutputDataJsonSchema = v);
                 newQueue.AssignStringIfNotNullOrEmpty(AnalyticsDataJsonSchema, (q, v) => q.AnalyticsDataJsonSchema = v);
 
-                #region Release を ReleaseId に変換
+                #region Convert Release to ReleaseId
                 newQueue.AssignIdFromName(
                     Release,
                     () => drive.GetReleases(folder),
@@ -173,7 +173,7 @@ public class NewQueueCommand : OrchestratorPSCmdlet
                         newQueue.RetentionPeriod = 30;
                     }
 
-                    #region RetentionBucket を RetentionBucketId に変換
+                    #region Convert RetentionBucket to RetentionBucketId
                     newQueue.AssignIdFromName(
                         RetentionBucket,
                         () => drive.Buckets.Get(folder),

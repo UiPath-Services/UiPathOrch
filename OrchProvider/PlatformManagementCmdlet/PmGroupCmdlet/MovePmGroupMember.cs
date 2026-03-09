@@ -6,7 +6,7 @@ using TPositional = UiPath.PowerShell.Positional.GroupName_UserName_Destination;
 
 namespace UiPath.PowerShell.Commands;
 
-// -Type が未実装だけど、これで良いのかな。。
+// -Type is not yet implemented, but is this okay for now...
 [Cmdlet(VerbsCommon.Move, "PmGroupMember", SupportsShouldProcess = true)]
 public class MoveOrchPmGroupMemberCommand : OrchestratorPSCmdlet
 {
@@ -77,8 +77,8 @@ public class MoveOrchPmGroupMemberCommand : OrchestratorPSCmdlet
             var srcGroups = existingGroups.Where(g => wpGroupName.IsMatch(g.name));
             var dstGroups = existingGroups.FilterByWildcards(g => g?.name, wpDestination);
 
-            // source group が一つであることを sure にするのが面倒くさい。。
-            // 複数指定した場合でも、そのまま動かしちゃうのでいいか。。
+            // It's tedious to ensure the source group is exactly one...
+            // Even if multiple are specified, we'll just process them all, which should be fine.
 
             foreach (var srcGroup in srcGroups.OrderBy(g => g.name))
             {
@@ -94,7 +94,7 @@ public class MoveOrchPmGroupMemberCommand : OrchestratorPSCmdlet
                     {
                         if (ShouldProcess(member.GetPSPath(), action))
                         {
-                            // まず dstGroup への追加を記録
+                            // First, record the addition to dstGroup
                             if (updates.TryGetValue((drive, dstGroup), out var groupToAddMember))
                             {
                                 groupToAddMember.directoryUserIDsToAdd ??= [];
@@ -110,7 +110,7 @@ public class MoveOrchPmGroupMemberCommand : OrchestratorPSCmdlet
                                 };
                             }
 
-                            // 続いて、srcGroup からの削除を記録
+                            // Next, record the removal from srcGroup
                             if (!keepSource)
                             {
                                 if (updates.TryGetValue((drive, srcGroup), out var groupToRemoveMember))
@@ -144,11 +144,11 @@ public class MoveOrchPmGroupMemberCommand : OrchestratorPSCmdlet
             var (drive, group) = update.Key;
             var command = update.Value;
 
-            // add と remove の両方にある id は除去しておく
+            // Remove ids that appear in both the add and remove lists
             if (command.directoryUserIDsToAdd is not null && command.directoryUserIDsToRemove is not null)
             {
                 var commonElements = command.directoryUserIDsToAdd.Intersect(command.directoryUserIDsToRemove).ToList();
-                // 共通の要素を両方のリストから削除
+                // Remove common elements from both lists
                 foreach (var item in commonElements)
                 {
                     command.directoryUserIDsToAdd.Remove(item);
@@ -158,23 +158,23 @@ public class MoveOrchPmGroupMemberCommand : OrchestratorPSCmdlet
 
             List<string> existingMemberIds = group.members?.Select(m => m.identifier!).ToList();
 
-            // すでにグループにある id は、add から除去しておく
+            // Remove ids that are already in the group from the add list
             if (command.directoryUserIDsToAdd is not null && existingMemberIds  is not null)
             {
                 command.directoryUserIDsToAdd.RemoveAll(m => existingMemberIds.Contains(m));
             }
 
-            // すでにグループにない id は、remove から削除しておく
+            // Remove ids that are not already in the group from the remove list
             if (command.directoryUserIDsToRemove is not null && existingMemberIds is not null)
             {
                 command.directoryUserIDsToRemove.RemoveAll(m => !existingMemberIds.Contains(m));
             }
 
-            // 空っぽになったリストには null を入れておく
+            // Set empty lists to null
             if (command.directoryUserIDsToAdd   ?.Count == 0) command.directoryUserIDsToAdd    = null;
             if (command.directoryUserIDsToRemove?.Count == 0) command.directoryUserIDsToRemove = null;
 
-            // 両方 null なら、API call は不要
+            // If both are null, no API call is needed
             if (command.directoryUserIDsToAdd    is null &&
                 command.directoryUserIDsToRemove is null)
             {

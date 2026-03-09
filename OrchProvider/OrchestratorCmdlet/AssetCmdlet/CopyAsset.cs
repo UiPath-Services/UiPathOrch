@@ -43,21 +43,21 @@ public class CopyAssetCommand : OrchestratorPSCmdlet
 
         var (dstDrive, dstRootFolder) = SessionState.ResolveToSingleFolder(Destination);
 
-        // コピー元とコピー先が同じなら、何もしない
+        // If the source and destination are the same, do nothing
         if (srcRootFolder == dstRootFolder) return;
 
         var userMapping = SessionState?.LoadUserMappingCsv(this, srcDrive, dstDrive, UserMappingCsv);
 
         var wpName = Name.ConvertToWildcardPatternList();
 
-        // キャッシュは暗黙にクリアしない方が良いか。。
+        // It may be better not to clear the cache implicitly..
         //srcDrive._dicExtendedMachines = null;
         //srcDrive._dicAssetLinks = null;
         //srcDrive._dicCredentialStores = null;
         //dstDrive._dicCredentialStores = null;
-        //srcDrive._dicUsers = null; // TODO: AD ユーザーに対応する必要があるのではないか？
+        //srcDrive._dicUsers = null; // TODO: Do we need to handle AD users?
         //dstDrive._dicUsers = null;
-        //srcDrive._dicExtendedMachines = null; // dstDrive のキャッシュはクリア不要。フォルダマシンを取得するため。
+        //srcDrive._dicExtendedMachines = null; // No need to clear dstDrive's cache, since we need to get folder machines.
 
         using var reporterAssets = new ProgressReporter(this, 600, Int32.MaxValue, "Copying assets...");
         using var cancelHandler = new ConsoleCancelHandler();
@@ -67,7 +67,7 @@ public class CopyAssetCommand : OrchestratorPSCmdlet
 
             try
             {
-                // コピー対象のエンティティがひとつもなければ、dstFolder を検索する必要はない
+                // If there are no entities to copy, there is no need to look up the dstFolder
                 //srcDrive._dicAssets?.TryRemove(srcFolder.Id ?? 0, out _);
                 var srcEntities = srcDrive.Assets.Get(srcFolder).FilterByWildcards(e => e?.Name, wpName);
                 if (!srcEntities.Any()) continue;

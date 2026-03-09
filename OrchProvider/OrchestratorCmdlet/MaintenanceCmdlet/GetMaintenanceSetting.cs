@@ -7,7 +7,7 @@ using TPositional = UiPath.PowerShell.Positional.Path;
 namespace UiPath.PowerShell.Commands;
 
 // host only
-// host って何や？
+// What does "host" mean here?
 
 //[Cmdlet(VerbsCommon.Get, "OrchMaintenanceSetting")]
 [OutputType(typeof(Entities.MaintenanceSetting))]

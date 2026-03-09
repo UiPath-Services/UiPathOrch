@@ -102,7 +102,7 @@ public class GetProcessCommand : OrchestratorPSCmdlet
 
     private void WriteCsvContent(StreamWriter writer, Entities.Release release)
     {
-        // 各プロセスに対してデータ行を書き込む
+        // Write a data row for each process
         string? retentionBucket = GetBucketName(release, release.RetentionBucketId, "RetentionBucketId");
         string? staleRetentionBucket = GetBucketName(release, release.StaleRetentionBucketId, "StaleRetentionBucketId");
 

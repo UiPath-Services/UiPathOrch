@@ -43,7 +43,7 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
-    // TODO: これは共通化できる気がする
+    // TODO: I think this can be shared/refactored into common code
     private class FolderUserUserNameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -57,14 +57,14 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
             var paramDepth = GetParameterValue(commandAst, "Depth");
             uint.TryParse(paramDepth, out uint depth);
 
-            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            // Extract path from parameter. If not specified, target the current directory.
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
             var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
-            // パラメータで選択済みの UserName は、候補から除外する
+            // Exclude UserNames already selected via parameter from the candidates
             var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
 
-            // パラメータで選択された FullName のみ対象とする
+            // Only include FullNames selected via parameter
             var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
 
             var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
@@ -103,14 +103,14 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
             var paramDepth = GetParameterValue(commandAst, "Depth");
             uint.TryParse(paramDepth, out uint depth);
 
-            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            // Extract path from parameter. If not specified, target the current directory.
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
             var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
-            // パラメータで選択された UserName のみ対象とする
+            // Only include UserNames selected via parameter
             var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
 
-            // パラメータで選択済みの FullName は、候補から除外する
+            // Exclude FullNames already selected via parameter from the candidates
             var wpFullName = CreateWPListFromParameter(commandAst, "FullName", TPositional.Parameters, wordToComplete);
 
             var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
@@ -149,7 +149,7 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
             var paramDepth = GetParameterValue(commandAst, "Depth");
             uint.TryParse(paramDepth, out uint depth);
 
-            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            // Extract path from parameter. If not specified, target the current directory.
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
             var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
@@ -187,7 +187,7 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
         }
     }
 
-    // もともとマルチスレッドにしていなかった
+    // This was not multi-threaded to begin with
     protected override void ProcessRecord()
     {
         if (UserName?.Length == 0 || string.IsNullOrEmpty(UserName?[0])) UserName = null;
@@ -205,7 +205,7 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
         var wpUserName = UserName.ConvertToWildcardPatternList();
         var wpType = Type.ConvertToWildcardPatternList();
 
-        // 先頭の要素は CSV から入力されている可能性があるので、先頭の要素についてはカンマで区切る
+        // The first element may come from CSV input, so split the first element by commas
         //if (Roles is not null && Roles.Length > 0) Roles = Roles[0].Split(',').Concat(Roles.Skip(1)).ToArray();
         var wpRoles = Roles.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
 
@@ -217,7 +217,7 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
                 var tenantRoles = drive.Roles.Get().Where(role => role.Type != "Tenant").FilterByWildcards(role => role?.DisplayName, wpRoles);
                 try
                 {
-                    // 編集対象のユーザーを抽出する
+                    // Extract the users to be edited
                     var existingUsers = drive.FolderUsersWithNoInherited.Get(folder);
                     List<UserRoles> editingUsers = existingUsers
                         .FilterByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
@@ -231,12 +231,12 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
 
                         IEnumerable<SimpleRole> existingRoles = user.Roles;
 
-                        // 削除するロールを抽出
+                        // Extract roles to be removed
                         var targetRoles = existingRoles!.FilterByWildcards(role => role?.Name, wpRoles);
                         if (!targetRoles.Any()) continue;
                         string strTargetRoles = string.Join(", ", targetRoles.Select(role => role.Name));
 
-                        // 削除するロールを除去
+                        // Remove the roles to be deleted
                         IEnumerable<SimpleRole> keepingRoles = existingRoles!.ExcludeByWildcards(role => role?.Name, wpRoles!);
 
                         string targetUser = user.GetPSPath();

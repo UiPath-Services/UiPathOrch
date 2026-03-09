@@ -18,7 +18,7 @@ public class GetFolderMachineCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(FolderMachineNameCompleter<TPositional>))]
     public string[]? Name { get; set; }
 
-    // これ足すの大変だな。。
+    // Adding this would be a lot of work...
     //[Parameter]
     //public SwitchParameter IncludeInherited { get; set; }
 
@@ -46,7 +46,7 @@ public class GetFolderMachineCommand : OrchestratorPSCmdlet
 
     private static void WriteCsvContent(StreamWriter writer, IEnumerable<MachineFolder> output)
     {
-        // 各フォルダーマシンに対してデータ行を書き込む
+        // Write data rows for each folder machine
         foreach (var m in output.Where(m => m.IsAssignedToFolder.GetValueOrDefault()))
         {
             string[] line = [

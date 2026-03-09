@@ -42,7 +42,7 @@ public class GetExecutionSettingCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            // パラメータで選択済みの Scope は、候補から除外する
+            // Exclude Scopes already selected by the parameter from the candidates
             var wpScope = CreateWPListFromParameter(commandAst, "Scope", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -72,7 +72,7 @@ public class GetExecutionSettingCommand : OrchestratorPSCmdlet
 
             var specifiedScopes = scopeList.FilterByWildcards(s => s.Value, wpScope);
 
-            // パラメータで選択済みの Key は、候補から除外する
+            // Exclude DisplayNames already selected by the parameter from the candidates
             var wpDisplayName = CreateWPListFromParameter(commandAst, "DisplayName", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);

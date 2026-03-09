@@ -39,12 +39,12 @@ public class GetPackageVersionCommand : OrchestratorPSCmdlet
             var paramDepth = GetParameterValue(commandAst, "Depth");
             uint.TryParse(paramDepth, out uint depth);
 
-            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            // Extract the path from parameters. If not specified, target the current directory
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
             var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse);
             int totalFolderCount = drivesFolders.Count;
 
-            // パラメータで選択済みの Id は、候補から除外する
+            // Exclude already-selected Id values from the candidates
             var wpId = CreateWPListFromParameter(commandAst, "Id", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -76,14 +76,14 @@ public class GetPackageVersionCommand : OrchestratorPSCmdlet
         {
             var recurse = GetSwitchParameterValue(commandAst, "Recurse");
 
-            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            // Extract the path from parameters. If not specified, target the current directory
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
             var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse);
 
-            // パラメータで選択された Id のみ対象とする
+            // Only target the Id values selected via parameters
             var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
 
-            // パラメータで選択済みの Version は、候補から除外する
+            // Exclude already-selected Version values from the candidates
             var wpVersion = CreateWPListFromParameter(commandAst, "Version", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);

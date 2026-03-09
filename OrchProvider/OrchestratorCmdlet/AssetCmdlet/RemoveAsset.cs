@@ -41,10 +41,10 @@ public class RemoveAssetCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択された Name のみ対象とする
+            // Only target the Names selected by the parameter
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
-            // パラメータで選択済みの ValueType は、候補から除外する
+            // Exclude ValueTypes already selected by the parameter from the candidates
             var wpValueType = CreateWPListFromParameter(commandAst, "ValueType", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -111,8 +111,8 @@ public class RemoveAssetCommand : OrchestratorPSCmdlet
         }
     }
 
-    // マルチスレッド化したバージョン
-    // HTTP call を cap した状態では逆に遅くなる場合があるため、シングルスレッドで書き直した
+    // Multi-threaded version
+    // Rewritten as single-threaded because it can be slower when HTTP calls are capped
     //protected override void ProcessRecord()
     //{
     //    var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);

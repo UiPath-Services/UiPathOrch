@@ -66,8 +66,8 @@ public class RemoveTmRequirementCommand : OrchestratorPSCmdlet
         }
     }
 
-    // マルチスレッド化したバージョン
-    // HTTP call を cap した状態では逆に遅くなる場合があるため、シングルスレッドで書き直した
+    // Multi-threaded version
+    // Rewritten as single-threaded because it can be slower when HTTP calls are capped
     //protected override void ProcessRecord()
     //{
     //    var drivesProjects = OrchTmDriveInfo.EnumFolders(Path, Recurse.IsPresent);

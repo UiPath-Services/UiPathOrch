@@ -26,8 +26,8 @@ public class SetAssetCommand : OrchestratorPSCmdlet
 {
     private readonly List<SetAssetCommandParameter> parameters = [];
 
-    // 現在の実装では、大量の行を含む CSV を処理するのが遅い。
-    // Dictionary に変更したいけど、ちと面倒。。
+    // The current implementation is slow when processing CSVs with a large number of rows.
+    // Would like to switch to a Dictionary, but it's a bit of a hassle..
     private readonly List<Asset> parameterSets = [];
     
     private const string Default = "DefaultParameterSet";
@@ -77,7 +77,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
     //[Parameter(ParameterSetName = GenerateTemplateCsv, Position = 1)]
     //public string? TemplateCsvPath { get; set; }
 
-    // 存在しないアセットを "New asset name here" として表示するので、これは共通化できない
+    // Cannot be shared because non-existent assets are displayed as "New asset name here"
     private class NameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -87,13 +87,13 @@ public class SetAssetCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            // Extract the path from the parameters. If not specified, target the current directory
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択された ValueType のみ対象とする
+            // Only target the ValueType selected by the parameter
             var wpValueType = CreateWPListFromOtherParameters(commandAst, "ValueType", TPositional.Parameters);
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude Names already selected by the parameter from the candidates
             var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -234,10 +234,10 @@ public class SetAssetCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの UserName は、候補から除外する
+            // Exclude UserNames already selected by the parameter from the candidates
             var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
 
-            //// パラメータで選択済みの Name のみ対象とする
+            //// Only target Names already selected by the parameter
             //var wpName = CreateWPListFromOtherParameters(commandAst, "Name", positionalParams);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -270,11 +270,11 @@ public class SetAssetCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの MachineName は、候補から除外する
+            // Exclude MachineNames already selected by the parameter from the candidates
             var wpMachineName = CreateWPListFromParameter(commandAst, "MachineName", TPositional.Parameters, wordToComplete);
 
-            // TODO: 既存のユーザー名とマシン名の組み合わせは、候補に表示しないようにする
-            // ややこしいから、いいか。。
+            // TODO: Exclude existing user name and machine name combinations from the candidates
+            // It's complicated, so let's skip it for now..
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -315,12 +315,12 @@ public class SetAssetCommand : OrchestratorPSCmdlet
 
     protected void RetrieveAllAssets()
     {
-        // 対象のフォルダの Asset を、非同期にまとめて取得する
+        // Retrieve Assets for the target folders asynchronously in bulk
         var _ = ParallelResults.ForEach(parameters, param =>
         {
             var drivesFolders = SessionState.EnumFolders(param.Path);
 
-            // 展開済みなので、フォルダはいっこしか展開されないはずだが、いちおう繰り返す
+            // Since the path is already resolved, only one folder should be expanded, but iterate just in case
             return ParallelResults.ForEach(drivesFolders, driveFolder =>
             {
                 var (drive, folder) = driveFolder;
@@ -407,7 +407,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                 }
                 asset = newAsset;
             }
-            // 最後に isDirty が true になっていれば、parameterSets.Add(asset) する。ここではまだしない
+            // If isDirty is true at the end, call parameterSets.Add(asset). Don't do it here yet
             //parameterSets.Add(asset);
         }
 
@@ -424,8 +424,8 @@ public class SetAssetCommand : OrchestratorPSCmdlet
             asset.ValueType = param.ValueType;
         }
 
-        // Value が指定されなかったときは、Value を更新しない
-        // (Value に '' が指定されたときは、アセットを削除するために後続の処理を続行する)
+        // When Value is not specified, do not update Value
+        // (When Value is set to '', continue subsequent processing to delete the asset)
         if (param.Value is null)
         {
             if (isDirty)
@@ -458,18 +458,18 @@ public class SetAssetCommand : OrchestratorPSCmdlet
             }
         }
 
-        // Global 値を更新
+        // Update Global value
         if (specifiedUsers is null)
         {
             if (specifiedMachines is not null && specifiedMachines.Any(m => m is not null))
             {
-                // マシンを無視する旨の警告
+                // Warning that machines will be ignored
                 string strMachineNames = string.Join(", ", param.MachineName!);
                 var errorRecord = new ErrorRecord(new OrchException(target, $"UserName was not specified. MachineName '{strMachineNames}' ignored."), "SetAssetError", ErrorCategory.InvalidOperation, target);
                 WriteError(errorRecord);
             }
 
-            if (param.Value == "" && !string.IsNullOrEmpty(asset.Value)) // "" が指定された場合は、Global 値を削除する
+            if (param.Value == "" && !string.IsNullOrEmpty(asset.Value)) // If "" is specified, delete the Global value
             {
                 isDirty = true;
                 asset.ValueScope = "PerRobot";
@@ -517,7 +517,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                 }
             }
         }
-        else // PerRobot 値を更新
+        else // Update PerRobot value
         {
             foreach (var user in specifiedUsers)
             {
@@ -612,7 +612,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
 
     protected void BuildAssetDataFromParameterSets()
     {
-        // パフォーマンス向上のため、対象のフォルダの Asset を先にまとめて取得しておく
+        // For performance, retrieve all Assets for the target folders in advance
         RetrieveAllAssets();
 
         using var cancelHandler = new ConsoleCancelHandler();
@@ -676,7 +676,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                 // expand MachineName
                 if (wpMachineName is not null)
                 {
-                    var tenantMachines = drive.Machines.Get(); // ★TODO: ここは FolderMachinesAssigned.Get(folder) に変えておかねば。
+                    var tenantMachines = drive.Machines.Get(); // *TODO: This should be changed to FolderMachinesAssigned.Get(folder).
                     specifiedMachines = tenantMachines.FilterByWildcards(m => m?.Name, wpMachineName);
                     if (!specifiedMachines.Any())
                     {
@@ -689,7 +689,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                 }
                 if (specifiedMachines is null || !specifiedMachines.Any())
                 {
-                    // 処理の便宜上、null の要素をひとつだけ入れておく
+                    // For processing convenience, insert a single null element
                     specifiedMachines = [null];
                 }
 
@@ -701,7 +701,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                     var matchingAssets = existingAssets.FilterByWildcards(n => n?.Name, wpName);
                     if (matchingAssets.Any())
                     {
-                        // 既存のアセットを更新
+                        // Update existing assets
                         foreach (var matchingAsset in matchingAssets)
                         {
                             var asset = UpdateAssetInMemory(drive, folder, matchingAsset.Name!, param, specifiedUsers!, specifiedMachines);
@@ -715,7 +715,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                     }
                     else
                     {
-                        // 新規アセットを作成
+                        // Create a new asset
                         var asset = UpdateAssetInMemory(drive, folder, WildcardPattern.Unescape(name), param, specifiedUsers!, specifiedMachines);
                         if (asset is not null && !parameterSets.Contains(asset))
                             parameterSets.Add(asset);
@@ -733,7 +733,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
 
         using var reporter = new ProgressReporter(this, 1, parameterSets.Count, "Updating Assets");
 
-        // グループ化したパラメータセットを処理する
+        // Process the grouped parameter sets
         try
         {
             int index = 0;
@@ -761,7 +761,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
 
                 try
                 {
-                    if (existingAsset is null) // アセットを新規追加
+                    if (existingAsset is null) // Add a new asset
                     {
                         if (!asset.HasDefaultValue.GetValueOrDefault() && (asset.UserValues is null || !asset.UserValues.Any()))
                         {
@@ -779,7 +779,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                     }
                     else
                     {
-                        // アセットを削除
+                        // Delete the asset
                         if (!asset.HasDefaultValue.GetValueOrDefault() && (asset.UserValues is null || !asset.UserValues.Any()))
                         {
                             if (ShouldProcess(target, "Remove Asset"))
@@ -787,13 +787,13 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                                 drive.OrchAPISession.RemoveAsset(folder.Id ?? 0, asset.Id ?? 0);
                             }
                         }
-                        else // アセットを更新
+                        else // Update the asset
                         {
                             if (ShouldProcess(target, "Update Asset"))
                             {
                                 drive.OrchAPISession.PutAsset(folder.Id ?? 0, asset);
 
-                                // もし UserValues を含まないアセットであれば、リンク先フォルダーを確認してキャッシュをクリアする
+                                // If the asset does not contain UserValues, check the linked folders and clear the cache
                                 try
                                 {
                                     if (asset.UserValues is null || asset.UserValues.Count() == 0)

@@ -53,7 +53,7 @@ public class GetBucketCommand : OrchestratorPSCmdlet
     {
         foreach (var bucket in output)
         {
-            #region CredentialId を Name に変換
+            #region Convert CredentialId to Name
             string credentialStoreName = null;
             if (bucket.CredentialStoreId is not null)
             {

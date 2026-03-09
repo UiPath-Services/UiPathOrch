@@ -23,7 +23,7 @@ public class RemoveLibraryCommand : OrchestratorPSCmdlet//, IDynamicParameters
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 
-    // もともとマルチスレッドになってなかった
+    // This was never multi-threaded to begin with
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(Path);

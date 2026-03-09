@@ -17,7 +17,7 @@ public class ImportOrchConfigCommand : PSCmdlet
 
     protected override void ProcessRecord()
     {
-        // -Force が指定されていない場合、設定ファイルが前回マウント時から変わっていなければスキップ
+        // If -Force is not specified, skip if the config file has not changed since the last mount
         string configFilePath = Core.OrchProvider.GetConfigFilePath();
         if (!Force
             && Core.OrchProvider.ConfigLastWriteTimeUtc is not null
@@ -35,7 +35,7 @@ public class ImportOrchConfigCommand : PSCmdlet
             return;
         }
 
-        // 設定ファイルを読み込み・デシリアライズ
+        // Read and deserialize the configuration file
         string json = System.IO.File.ReadAllText(configFilePath);
         UiPathOrchConfig config;
         try
@@ -55,15 +55,15 @@ public class ImportOrchConfigCommand : PSCmdlet
             return;
         }
 
-        // カレントロケーションが Orch ドライブ上だとドライブ削除できないため、C: に移動
+        // If the current location is on an Orch drive, switch to C: since we cannot remove a drive while it is current
         var currentDrive = SessionState.Drive.Current;
         if (currentDrive is OrchDriveInfo or OrchDuDriveInfo or OrchTmDriveInfo)
         {
             SessionState.Path.SetLocation(@"C:");
         }
 
-        // 既存のドライブをすべて削除（キャッシュもクリアされる）
-        // Du/Tm を先に削除してから Orch を削除する（Du/Tm は Orch に依存しているため）
+        // Remove all existing drives (caches are also cleared)
+        // Remove Du/Tm first, then Orch, because Du/Tm depend on Orch
         foreach (var drive in SessionState.EnumAllDuDrives().ToList())
         {
             SessionState.Drive.Remove(drive.Name, true, null);
@@ -79,17 +79,17 @@ public class ImportOrchConfigCommand : PSCmdlet
             SessionState.Drive.Remove(drive.Name, true, null);
         }
 
-        // グローバル設定を適用
+        // Apply global settings
         if (config.Proxy is not null)
         {
             config.Proxy.Enabled ??= true;
         }
         config.Enabled ??= true;
 
-        // _config を更新
+        // Update _config
         Core.OrchProvider.SetConfig(config);
 
-        // Orch ドライブを作成
+        // Create Orch drives
         ProviderInfo orchProvider;
         try
         {
@@ -123,7 +123,7 @@ public class ImportOrchConfigCommand : PSCmdlet
             }
         }
 
-        // Du ドライブを作成
+        // Create Du drives
         foreach (var psDrive in config.PSDrives!)
         {
             if (psDrive.Enabled is not null && !psDrive.Enabled.GetValueOrDefault()) continue;
@@ -141,7 +141,7 @@ public class ImportOrchConfigCommand : PSCmdlet
             }
         }
 
-        // Tm ドライブを作成
+        // Create Tm drives
         foreach (var psDrive in config.PSDrives!)
         {
             if (psDrive.Enabled is not null && !psDrive.Enabled.GetValueOrDefault()) continue;

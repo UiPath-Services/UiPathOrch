@@ -14,10 +14,10 @@ public class GetDuUserCommand : OrchestratorPSCmdlet
     //private const string UserNameSet = "UserNameSet";
     //private const string UserSet = "UserSet";
 
-    // 三嶋さん(KDDI)からのリクエスト Add-DuUser に User Principal Name を指定できるように
-    // するなら、次が必要だと思うが、良い実装が思いつかない。
-    // パフォーマンスを犠牲にするか、あるいは複雑なパラメータを追加するか。。
-    // 自分としては、どちらも受け入れがたいな。。
+    // Feature request from Mishima-san (KDDI): allow specifying User Principal Name in Add-DuUser.
+    // The code below would be needed for that, but I can't think of a good implementation.
+    // Either sacrifice performance, or add complex parameters..
+    // Personally, neither option is acceptable..
     //[Parameter(ParameterSetName = UserNameSet, Position = 0, ValueFromPipelineByPropertyName = true)]
     //[ArgumentCompleter(typeof(DuUserNameCompleter<TPositional>))]
     //[SupportsWildcards]
@@ -62,7 +62,7 @@ public class GetDuUserCommand : OrchestratorPSCmdlet
             string[] line = [
                 EscapeCsvValue(user.Path, true),
                 EscapeCsvValue(user.type, true),
-                EscapeCsvValue(user.Name), // Add-DuUser の -DisplayName はワイルドカードをサポートしない 
+                EscapeCsvValue(user.Name), // Add-DuUser's -DisplayName does not support wildcards
                 EscapeCsvValue(user.roleAssignmentDtos?.Select(r => r.roleName), true)
             ];
 

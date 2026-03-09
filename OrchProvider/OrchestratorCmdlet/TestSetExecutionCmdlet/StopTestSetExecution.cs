@@ -29,11 +29,11 @@ public class StopTestExecutionCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            // Extract path from parameters. If not specified, target the current directory
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
             var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath);
 
-            // パラメータで選択済みの Id は、候補から除外する
+            // Exclude Ids already selected by parameter from candidates
             var paramId = GetParameterValues(commandAst, "Id", TPositional.Parameters, wordToComplete).Select(id => long.Parse(id));
 
             var wp = CreateWPFromWordToComplete(wordToComplete);

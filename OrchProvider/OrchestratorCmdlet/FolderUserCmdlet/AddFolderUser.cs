@@ -65,9 +65,9 @@ if (string.IsNullOrEmpty(wordToComplete))
 
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            // フォルダに割り当て済みのユーザーを候補から除外する処理は、いったん実装せずとした
+            // Excluding users already assigned to the folder from candidates is not implemented for now.
             //var existingMemberIds = GetExistingMemberIds(drives, wpName);
-            // アサイン済みのユーザーを除外するため、アサイン済みのユーザーを取得
+            // Fetch assigned users to exclude already assigned users
             //ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
 
             var paramUserName = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -110,7 +110,7 @@ if (string.IsNullOrEmpty(wordToComplete))
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            // パラメータで選択済みの Roles は、候補から除外する
+            // Exclude Roles already selected via parameter from the candidates
             var wpRoles = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -137,7 +137,7 @@ if (string.IsNullOrEmpty(wordToComplete))
         }
     }
 
-    // UserName をバルクで問い合わせるため、CSV ファイルをすべて読み込んでから処理する
+    // Read all CSV file entries first before processing, to query UserNames in bulk
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
@@ -172,9 +172,9 @@ if (string.IsNullOrEmpty(wordToComplete))
     {
         if (parameters is null) return;
 
-        // ドライブと Type でグループ化し、ユーザー名をバルクで問い合わせておく
-        // 実際の use case を考慮すると、まとめて問い合わせてしまう方が効率的なことが多いだろう。
-        // -Confirm を指定して、途中で処理をやめる場合などは、無駄な問い合わせが発生することになるが。。
+        // Group by drive and Type, and query user names in bulk.
+        // Considering actual use cases, querying in bulk is often more efficient.
+        // However, if -Confirm is used and processing is aborted midway, unnecessary queries will occur...
         foreach (var param in parameters
             .GroupBy(p => (p.drive, p.type))
             .OrderBy(g => g.Key.drive.Name))
@@ -186,15 +186,15 @@ if (string.IsNullOrEmpty(wordToComplete))
             var groupsByType = param.GroupBy(g => g.type);
             foreach (var groupByType in groupsByType)
             {
-                // Robot は PmBulkResolveByName では検索できない！
-                // Robot はバルクで問い合わせできないのだから、登録の直前に検索した方が良い。
+                // Robots cannot be searched via PmBulkResolveByName!
+                // Since Robots cannot be queried in bulk, it's better to search just before registration.
                 if (type == "DirectoryRobot") continue;
 
                 var userNames = param.Select(p => p.userName);
                 try
                 {
-                    // 結果はキャッシュされるので、ここで受け取る必要はない
-                    // result はデバッグ用だね。
+                    // Results are cached, so no need to receive them here.
+                    // result is for debugging purposes.
                     var result = drive.PmBulkResolveByName(kind, userNames, u => u);
                 }
                 catch (Exception ex)
@@ -205,7 +205,7 @@ if (string.IsNullOrEmpty(wordToComplete))
             }
         }
 
-        // フォルダでグループ化し、ユーザーをひとりずつ追加していく
+        // Group by folder and add users one by one
         foreach (var param in parameters
             .GroupBy(p => (p.drive, p.folder))
             .OrderBy(g => g.Key.drive.Name)
@@ -221,14 +221,14 @@ if (string.IsNullOrEmpty(wordToComplete))
                 string foundUserDisplayName = null;
                 string foundUserIdentifier = null;
 
-                #region ユーザーをキャッシュから検索
+                #region Search for user from cache
                 if (type == "DirectoryRobot")
                 {
-                    // Robot はここで検索
+                    // Search for Robot here
                     DirectoryObject? member = null;
                     try
                     {
-                        // 3 はロボットを指す。DirectoryTypeItems を参照
+                        // 3 refers to Robot. See DirectoryTypeItems
                         member = ResolveDirectoryName(this, drive, userName, 3);
                     }
                     catch(Exception ex)
@@ -244,8 +244,8 @@ if (string.IsNullOrEmpty(wordToComplete))
                 }
                 else
                 {
-                    // Robot 以外はキャッシュから取得
-                    // ここで API call は発生しないはずだから、例外は出力しなくて良いか。
+                    // For non-Robot types, retrieve from cache.
+                    // No API calls should occur here, so no need to output exceptions.
                     try
                     {
                         var kind = ConvertToKind(type);
@@ -283,7 +283,7 @@ if (string.IsNullOrEmpty(wordToComplete))
 
                 if (ShouldProcess(target, $"Add {type} to Folder"))
                 {
-                    #region ロールを検索
+                    #region Search for roles
                     IEnumerable<Role> existingRoles = null;
                     if (roles?.Length > 0)
                     {
@@ -298,8 +298,8 @@ if (string.IsNullOrEmpty(wordToComplete))
                         }
                     }
 
-                    // 指定された Roles に、既存のロールに合致しないパターンがあれば警告
-                    // 微妙に無駄な処理があるが、まあいいか。。
+                    // Warn if any specified Roles patterns don't match existing roles.
+                    // There's some slightly redundant processing, but that's fine...
                     foreach (var role in roles ?? [])
                     {
                         var wpRole = new WildcardPattern(role, WildcardOptions.IgnoreCase);
@@ -309,7 +309,7 @@ if (string.IsNullOrEmpty(wordToComplete))
                         }
                     }
 
-                    // ロールを検索
+                    // Search for roles
                     var wpRoles = roles.ConvertToWildcardPatternList();
                     var addingRoles = existingRoles?.SelectByWildcards(role => role?.Name, wpRoles);
 
@@ -330,18 +330,18 @@ if (string.IsNullOrEmpty(wordToComplete))
                         ]
                     };
 
-                    // 次は、どっちを呼び出すのが正しいのでしょうか。
-                    // どちらを呼び出しても動作するようだけど。
+                    // Which one is the correct one to call?
+                    // Both seem to work, though.
                     try
                     {
-                        drive.OrchAPISession.AssignDomainUser(assignment); // swagger doc に記載があるほう
-                        //drive.OrchAPISession.AssignDirectoryUser(assignment); // web interface が実際に呼び出すほう
+                        drive.OrchAPISession.AssignDomainUser(assignment); // The one documented in swagger
+                        //drive.OrchAPISession.AssignDirectoryUser(assignment); // The one actually called by the web interface
 
                         drive.FolderUsersWithNoInherited.ClearCache();
                         drive.FolderUsersWithInherited.ClearCache();
                         drive.ClearFolderCache(folder);
 
-                        Thread.Sleep(600); // API call rate limit を回避するため待機する
+                        Thread.Sleep(600); // Wait to avoid API call rate limit
                     }
                     catch (Exception ex)
                     {
@@ -362,20 +362,20 @@ if (string.IsNullOrEmpty(wordToComplete))
         var drives = SessionState.EnumOrchDrives(Path);
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
 
-        // 先頭の要素は CSV から入力されている可能性があるので、先頭の要素についてはカンマで区切る
-        // Roles はあとでまた使うので、区切り直した値を Roles にも入れておく
+        // The first element may come from CSV input, so split the first element by commas.
+        // Since Roles will be used again later, also store the re-split values back into Roles.
         Roles = Roles?.Split1stValueByUnescapedCommas()?.ToArray();
         var wpRoles = Roles.ConvertToWildcardPatternList();
 
-        // これはしなくて良いか。。
+        // Maybe this isn't needed...
         //ParallelResults.ForEach(drives, drive => drive.Roles.Get());
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
         {
-            // 個人用ワークスペースには、ユーザーを割り当てできないが
-            // EnumFoldersWithoutPersonalWorkspace() により除外されているので
-            // ここで考慮する必要はない
+            // Users cannot be assigned to personal workspaces,
+            // but they are already excluded by EnumFoldersWithoutPersonalWorkspace(),
+            // so no need to handle that here.
             //if (folder.FolderType == "Personal") continue;
 
             IEnumerable<Role> existingRoles = null;
@@ -392,8 +392,8 @@ if (string.IsNullOrEmpty(wordToComplete))
                 }
             }
 
-            // 指定された Roles に、既存のロールに合致しないパターンがあれば警告
-            // 微妙に無駄な処理があるが、まあいいか。。
+            // Warn if any specified Roles patterns don't match existing roles.
+            // There's some slightly redundant processing, but that's fine...
             foreach (var role in Roles ?? [])
             {
                 var wpRole = new WildcardPattern(role, WildcardOptions.IgnoreCase);
@@ -403,12 +403,12 @@ if (string.IsNullOrEmpty(wordToComplete))
                 }
             }
 
-            // ロールを検索
+            // Search for roles
             var addingRoles = existingRoles?.SelectByWildcards(role => role?.Name, wpRoles);
 
-            // ディレクトリから、追加すべき名前を検索
-            // bulk で検索すると、ユーザーに対して親切なメッセージを表示できないため
-            // ひとりずつ検索する
+            // Search for names to add from the directory.
+            // Search one by one instead of bulk, because bulk search
+            // cannot provide user-friendly messages.
             foreach (var userName in UserName!)
             {
                 cancelHandler.Token.ThrowIfCancellationRequested();
@@ -426,7 +426,7 @@ if (string.IsNullOrEmpty(wordToComplete))
                 }
                 if (member is null) continue;
 
-                // このフォルダに追加済みのユーザーは除外する処理は未実装
+                // Excluding users already added to this folder is not yet implemented
 
                 string target = $"{member.identityName}";
                 if (!string.IsNullOrEmpty(member.displayName))
@@ -460,16 +460,16 @@ if (string.IsNullOrEmpty(wordToComplete))
                             ]
                         };
 
-                        // 次は、どっちを呼び出すのが正しいのでしょうか。
-                        // どちらを呼び出しても動作するようだけど。
-                        drive.OrchAPISession.AssignDomainUser(assignment); // swagger doc に記載があるほう
-                        //drive.OrchAPISession.AssignDirectoryUser(assignment); // web interface が実際に呼び出すほう
+                        // Which one is the correct one to call?
+                        // Both seem to work, though.
+                        drive.OrchAPISession.AssignDomainUser(assignment); // The one documented in swagger
+                        //drive.OrchAPISession.AssignDirectoryUser(assignment); // The one actually called by the web interface
 
                         drive.FolderUsersWithNoInherited.ClearCache();
                         drive.FolderUsersWithInherited.ClearCache();
                         drive.ClearFolderCache(folder);
 
-                        Thread.Sleep(600); // API call rate limit を回避するため待機する
+                        Thread.Sleep(600); // Wait to avoid API call rate limit
                     }
                     catch (Exception ex)
                     {

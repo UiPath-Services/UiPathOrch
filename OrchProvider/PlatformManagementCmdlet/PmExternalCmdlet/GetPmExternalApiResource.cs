@@ -31,7 +31,7 @@ public class GetPmExternalApiResourceCommand : OrchestratorPSCmdlet
         {
             var drives = ResolvePmDrives(fakeBoundParameters);
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude Names already selected via parameters from candidates
             var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);

@@ -36,7 +36,7 @@ public class NewUserMappingCsvCommand : OrchestratorPSCmdlet
         public string? SourceDisplayName { get; set; }
         public string? SourceSource { get; set; }
         public string? DestinationUserName { get; set; }
-        // New-PmUser 互換カラム（宛先ローカルユーザー作成用）
+        // New-PmUser compatible columns (for creating local users at the destination)
         public string? Name { get; set; }
         public string? SurName { get; set; }
         public string? DisplayName { get; set; }
@@ -284,14 +284,14 @@ public class NewUserMappingCsvCommand : OrchestratorPSCmdlet
             using ProgressReporter reporterUsers = new(this, 200, Int32.MaxValue, msg);
             EnumerateTenantUsers(srcDrive, userMappings, reporterUsers, cancelHandler.Token);
 
-            // テナントユーザー以外にも、ディレクトリユーザーをフォルダに assign できるから、これは必要だろう。
+            // This is necessary because directory users (not just tenant users) can be assigned to folders.
             msg = "Enumerating Users assigned in Folders...";
             using ProgressReporter reporterFolderUsers = new(this, 300, Int32.MaxValue, msg);
             EnumerateFolderUsers(srcDrive, userMappings, reporterFolderUsers, cancelHandler.Token);
 
-            // 良く考えたら、アセットは検索する必要がないな。
-            // フォルダに割り当てられたユーザーでないと、アセットに割り当てることができないはずだ。
-            // アセット作成後に、ユーザーを unassign したらどうなるのか？ でもそれは考慮しなくていいや。
+            // On second thought, there's no need to search assets.
+            // Only users assigned to a folder should be assignable to an asset.
+            // What happens if you unassign a user after creating the asset? But we don't need to worry about that.
             //msg = "Enumerating Users assigned in Assets... ";
             //using ProgressReporter reporterAssets = new(this, 400, Int32.MaxValue, msg);
             //EnumerateAssetUsers(srcDrive, userMappings, reporterAssets, cancelHandler.Token);
@@ -309,7 +309,7 @@ public class NewUserMappingCsvCommand : OrchestratorPSCmdlet
             }
 
             msg = $"Searching Destination directory...     ";
-            #region まず UserName で探す
+            #region First, search by UserName
             var dstResolvedUsersByUserName = dstDrive.PmBulkResolveByName("user",
                 userMappings.Where(u => string.IsNullOrEmpty(u.Value.DestinationUserName)),
                 u => u.Key);
@@ -320,12 +320,12 @@ public class NewUserMappingCsvCommand : OrchestratorPSCmdlet
             }
             #endregion
 
-            #region 見つからなかったユーザーは Email でも探す
+            #region Search by Email for users not found
             var dstResolvedUsersByEmail = dstDrive.PmBulkResolveByName("user",
                 userMappings.Where(u => string.IsNullOrEmpty(u.Value.DestinationUserName) && !string.IsNullOrEmpty(u.Value.SourceEmail)),
                 u => u.Value.SourceEmail!);
 
-            // 先に辞書にしちゃう方がいいか、
+            // Better to convert to a dictionary first.
             var dicUserMappingsByEmail = userMappings
                 .Where(kv => !string.IsNullOrEmpty(kv.Value.SourceEmail))
                 .ToDictionary(kv => kv.Value.SourceEmail!, kv => kv.Value);

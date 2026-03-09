@@ -27,7 +27,7 @@ public class GetAssetLinkCommand : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
-    // TODO: GetLinkedAssetName として共通化したい
+    // TODO: Would like to share this as GetLinkedAssetName
     private class NameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -39,7 +39,7 @@ public class GetAssetLinkCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude Names already selected by the parameter from the candidates
             var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -62,7 +62,7 @@ public class GetAssetLinkCommand : OrchestratorPSCmdlet
         }
     }
 
-    // TODO: この実装はきれいにできる
+    // TODO: This implementation can be cleaned up
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);

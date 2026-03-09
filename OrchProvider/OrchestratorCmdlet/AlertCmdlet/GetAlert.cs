@@ -46,7 +46,7 @@ public class GetAlertCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 
-    // TODO: StaticTextCompleter で書き直す
+    // TODO: Rewrite using StaticTextCompleter
     private class SeverityCompleter : OrchArgumentCompleter
     {
         private static readonly Dictionary<string, string> candidates = new()
@@ -145,7 +145,7 @@ public class GetAlertCommand : OrchestratorPSCmdlet
             drive => drive,
             drive =>
             {
-                // GetAlerts() 内で ToList() 済み（遅延評価を回避し、deprecated API の例外を適切に処理するため）
+                // ToList() has already been called inside GetAlerts() (to avoid deferred evaluation and properly handle deprecated API exceptions)
                 var alerts = drive.OrchAPISession.GetAlerts(query, skip, first);
                 foreach (var alert in alerts)
                 {

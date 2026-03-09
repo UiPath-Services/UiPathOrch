@@ -21,7 +21,7 @@ public class EnableApiTriggerCommandBase<Enable> : OrchestratorPSCmdlet where En
     [Parameter]
     public uint Depth { get; set; }
 
-    // 無効となっている API trigger だけを列挙するので、これは共通にできない
+    // This cannot be shared because it only enumerates disabled API triggers
     internal class NameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -33,7 +33,7 @@ public class EnableApiTriggerCommandBase<Enable> : OrchestratorPSCmdlet where En
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude already-selected Names from candidates
             var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Parameters, wordToComplete);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -104,8 +104,8 @@ public class EnableApiTriggerCommandBase<Enable> : OrchestratorPSCmdlet where En
         }
     }
 
-    // マルチスレッド化したバージョン
-    // HTTP call を cap した状態では逆に遅くなる場合があるため、シングルスレッドで書き直した
+    // Multi-threaded version
+    // Rewritten as single-threaded because it could be slower when HTTP calls are capped
     //protected override void ProcessRecord()
     //{
     //    var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);

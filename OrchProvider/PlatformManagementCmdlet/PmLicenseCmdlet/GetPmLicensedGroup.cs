@@ -27,7 +27,7 @@ public class GetUserLicenseGroup: OrchestratorPSCmdlet
     [Parameter(ParameterSetName = "ExpandAllocation")]
     public SwitchParameter ExpandAllocation { get; set; }
 
-    // TODO: これ実装する必要がある。この CSV を、Add-OrchPmLicenseToLicenseGroup cmdlet でインポートできるようにしたい。
+    // TODO: This needs to be implemented. We want to make this CSV importable by the Add-OrchPmLicenseToLicenseGroup cmdlet.
     //[Parameter(ParameterSetName = "License")]
     //public SwitchParameter License { get; set; }
 
@@ -53,8 +53,8 @@ public class GetUserLicenseGroup: OrchestratorPSCmdlet
         "LastInUse"
     ];
 
-    // この CSV は、Remove-OrchPmAllocationFromPmUserLicenseGroup にインポートすることを意図したものなので
-    // これで良い。
+    // This CSV is intended to be imported by Remove-OrchPmAllocationFromPmUserLicenseGroup,
+    // so this format is fine.
     private static void WriteCsvContent(StreamWriter writer, IEnumerable<NuLicensedGroupMember> output)
     {
         foreach (var member in output)

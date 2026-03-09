@@ -40,12 +40,12 @@ public class NewProcessCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(InputArgumentsCompleter))]
     public string? InputArguments { get; set; }
 
-    // このパラメータはコマンドラインでの指定を受け付けない
-    // CSV で "" が指定されたら 45 にしてしまえば良いので、この型は int にする
+    // This parameter does not accept command-line input
+    // Since we can just treat "" in CSV as 45, the type is int
     [Parameter(DontShow = true, ValueFromPipelineByPropertyName = true)]
     public int? SpecificPriorityValue { get; set; }
 
-    // このパラメータは CSV インポートを受け付けない
+    // This parameter does not accept CSV import
     [Parameter]
     [ArgumentCompleter(typeof(StaticTextsCompleter<JobPriorityItems>))]
     public string? Priority { get; set; }
@@ -64,7 +64,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(StaticTextsCompleter<Delete_Archive>))]
     public string? RetentionAction { get; set; }
 
-    // 0 だったら 30 に補正する
+    // If 0, correct to 30
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Item30>))]
     public int? RetentionPeriod { get; set; }
@@ -140,7 +140,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Item180>))]
-    public int? MaxDurationSeconds { get; set; } // 既定値がわからない。180 かな。
+    public int? MaxDurationSeconds { get; set; } // Default value is unknown. Possibly 180.
     #endregion
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -167,7 +167,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Id は、候補から除外する
+            // Exclude IDs already selected by other parameters from candidates
             var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
             var wpVersion = CreateWPListFromOtherParameters(commandAst, "Version", TPositional.Parameters);
 
@@ -214,7 +214,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Id は、候補から除外する
+            // Exclude IDs already selected by other parameters from candidates
             var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
             var wpVersion = CreateWPListFromOtherParameters(commandAst, "Version", TPositional.Parameters);
             var wpEntryPoint = CreateWPListFromOtherParameters(commandAst, "EntryPoint", TPositional.Parameters);
@@ -278,7 +278,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
 
         //HiddenForAttendedUser ??= false;
         SpecificPriorityValue ??= ConvertPriorityToSpecificPriorityValue(Priority);
-        SpecificPriorityValue ??= 45; // null であれば 45 に補正
+        SpecificPriorityValue ??= 45; // If null, correct to 45
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
@@ -309,13 +309,13 @@ public class NewProcessCommand : OrchestratorPSCmdlet
                 Package? version = null;
                 if (Version is null)
                 {
-                    // 当該パッケージの最新のバージョンを確認する
+                    // Get the latest version of the package
                     version = targetPackage;
                 }
                 else
                 {
                     var versions = drive.GetPackageVersions(folder, targetPackage.Id!)
-                        .Where(v => wpVersion?.IsMatch(v.Version) ?? true) // wpVersion が null なら全てのバージョンを対象にする
+                        .Where(v => wpVersion?.IsMatch(v.Version) ?? true) // If wpVersion is null, target all versions
                         .ToList();
 
                     if (versions.Count == 0)
@@ -339,7 +339,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
                     Name = WildcardPattern.Unescape(name),
                 };
 
-                // Description をパッケージから継承する
+                // Inherit Description from the package
                 var desc = string.IsNullOrEmpty(Description) ? version?.Description : Description;
                 release.AssignStringIfNotNull(desc, (r, v) => r.Description = v);
 
@@ -349,7 +349,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
                 release.AssignNumberIfNotNullOrZero(SpecificPriorityValue, (r, v) => r.SpecificPriorityValue = v);
                 release.AssignTags(Tags, (r, v) => r.Tags = v);
 
-                #region EntryPoint を EntryPointId に変換
+                #region Convert EntryPoint to EntryPointId
                 var feedId = drive.FolderFeedId.Get(folder);
                 if (!release.AssignIdFromName(
                     EntryPoint,
@@ -363,7 +363,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
                 }
                 #endregion
 
-                // EntryPoint が指定されていなければ、既定の MainEntryPoint を取り出す
+                // If EntryPoint is not specified, retrieve the default MainEntryPoint
                 if (release.EntryPointId is null)
                 {
                     try
@@ -396,14 +396,14 @@ public class NewProcessCommand : OrchestratorPSCmdlet
                 //release.ProcessSettings.AutoStartProcess ??= false;
                 //release.ProcessSettings.AlwaysRunning ??= false;
 
-                // OC 22.10.1 (15.0) で動作確認済み
-                // OC 23.4.0 (16.0) で動作確認済み
-                // OC 23.10.6 (17.0) で動作確認済み
+                // Verified on OC 22.10.1 (15.0)
+                // Verified on OC 23.4.0 (16.0)
+                // Verified on OC 23.10.6 (17.0)
                 if (drive.OrchAPISession.ApiVersion >= 17)
                 {
                     release.RetentionAction = (string.IsNullOrEmpty(RetentionAction)) ? "Delete" : RetentionAction;
                     release.RetentionPeriod = (RetentionPeriod is null || RetentionPeriod == 0) ? 30 : RetentionPeriod;
-                    #region RetentionBucket を RetentionBucketId に変換
+                    #region Convert RetentionBucket to RetentionBucketId
                     release.AssignIdFromName(
                         RetentionBucket,
                         () => drive.Buckets.Get(folder),
@@ -415,7 +415,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
 
                     release.StaleRetentionAction = (string.IsNullOrEmpty(StaleRetentionAction)) ? "Delete" : StaleRetentionAction;
                     release.StaleRetentionPeriod = (StaleRetentionPeriod is null || StaleRetentionPeriod == 0) ? 30 : StaleRetentionPeriod;
-                    #region StaleRetentionBucket を StaleRetentionBucketId に変換
+                    #region Convert StaleRetentionBucket to StaleRetentionBucketId
                     release.AssignIdFromName(
                         StaleRetentionBucket,
                         () => drive.Buckets.Get(folder),

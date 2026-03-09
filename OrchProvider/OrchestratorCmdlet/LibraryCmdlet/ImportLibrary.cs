@@ -30,7 +30,7 @@ public class ImportLibraryCommand : OrchestratorPSCmdlet
                 }
             }
         }
-        catch { } // この例外は握りつぶす
+        catch { } // Swallow this exception
 
         return false;
     }
@@ -40,7 +40,7 @@ public class ImportLibraryCommand : OrchestratorPSCmdlet
         var drives = SessionState.EnumOrchDrives(Path);
         var pkgFilePaths = SessionState.ExpandLocalPath(Source, "*.nupkg").OrderByFileNameVersion();
 
-        // この実装は、このままで良いか。
+        // This implementation should be fine as is.
         var importTasks = drives
             .SelectMany(drive => pkgFilePaths, (drive, pkgFilePath) => 
                 (drive, pkgFilePath.FullPath, pkgFilePath.RelativePath))
@@ -63,7 +63,7 @@ public class ImportLibraryCommand : OrchestratorPSCmdlet
                 reporter.WriteProgress(++index);
                 try
                 {
-                    // drive に同名のライブラリがあれば、警告を表示してインポートをスキップする
+                    // If a library with the same name already exists on the drive, show a warning and skip the import
                     if (LibraryExists(drive, fullPath))
                     {
                         WriteError(new ErrorRecord(new InvalidOperationException($"\"{fullPath}\": Library already exists in {drive.NameColonSeparator}. Skipping the import."), "ImportLibraryError", ErrorCategory.WriteError, drive));

@@ -16,18 +16,18 @@ using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Entities.JsonConverter;
 using UiPath.PowerShell.Positional;
 
-// インストール方法
-// 1. PowerShell 7 をインストール。PowerShell-7.x.x-win-x64.msi をダウンロード。PowerShell 5 と side by side でインストールできる。
+// Installation instructions
+// 1. Install PowerShell 7. Download PowerShell-7.x.x-win-x64.msi. It can be installed side by side with PowerShell 5.
 // https://github.com/PowerShell/PowerShell/releases/
-// 2. Install-Package UiPathOrch を実行。
-// 3. Import-Package UiPathOrch を実行。画面の指示に従い、設定ファイルを記載。Orchestrator の管理画面で、外部アプリの ID を払い出す必要がある。
+// 2. Run Install-Package UiPathOrch.
+// 3. Run Import-Package UiPathOrch. Follow the on-screen instructions to configure the settings file. You need to create an external app ID in the Orchestrator admin console.
 //
-// もし、PSReadLine が無効化されている旨の警告が表示された場合は、Tab もしくは Ctrl+Space による補完が動作しない。
-// Import-Module PSReadLine を実行すると、補完が動作するようになる。この恒久的な対処方法は、下記にある。
+// If a warning is displayed that PSReadLine is disabled, Tab or Ctrl+Space completion will not work.
+// Running Import-Module PSReadLine will enable completion. A permanent fix is described at:
 // https://iwasi.hatenablog.jp/entry/2020/12/13/161312
 //
-// pwsh.exe を起動時に自動で Import-Module UiPathOrch を実行するには、このコマンド行を pwshl.exe のプロファイルに追加する。
-// プロファイルのパスは、pwsh コンソールで $profile と入力すると確認できる。
+// To automatically run Import-Module UiPathOrch when pwsh.exe starts, add this command line to the pwsh.exe profile.
+// You can check the profile path by typing $profile in the pwsh console.
 
 namespace UiPath.PowerShell.Core;
 
@@ -47,13 +47,13 @@ public class GetChildItems_Parameters
 
 public class NewDrive_Parameters
 {
-    // パラメータセット1: AppId + AppSecret
+    // Parameter set 1: AppId + AppSecret
     private const string AppAuthParamSet = "AppAuth";
 
-    // パラメータセット2: Username + Password
+    // Parameter set 2: Username + Password
     private const string UserAuthParamSet = "UserAuth";
 
-    // パラメータセット3: AccessToken
+    // Parameter set 3: AccessToken
     private const string TokenAuthParamSet = "TokenAuth";
 
     [Parameter(ParameterSetName = AppAuthParamSet)]
@@ -97,14 +97,14 @@ public partial class OrchProvider : NavigationCmdletProvider
     private static UiPathOrchConfig? _config;
 
     /// <summary>
-    /// Import-OrchConfig から呼び出される。設定ファイルの再読み込み時に _config を更新する。
+    /// Called from Import-OrchConfig. Updates _config when the configuration file is reloaded.
     /// </summary>
     internal static void SetConfig(UiPathOrchConfig config) => _config = config;
 
     /// <summary>
-    /// InitializeDefaultDrives() がマウントした時点の設定ファイル更新日時。
-    /// Import-OrchConfig はこの値と現在のファイル更新日時を比較し、
-    /// 変わっていなければ再マウントをスキップする。
+    /// The last write time of the configuration file when InitializeDefaultDrives() mounted drives.
+    /// Import-OrchConfig compares this value with the current file's last write time,
+    /// and skips remounting if they are the same.
     /// </summary>
     internal static DateTime? ConfigLastWriteTimeUtc { get; set; }
 
@@ -118,7 +118,7 @@ public partial class OrchProvider : NavigationCmdletProvider
         return ret;
     }
 
-    // 可能な場合には、必ず OrchDriveInfo よりも GetOrchDriveInfo() を使う必要がある。
+    // Always use GetOrchDriveInfo() instead of OrchDriveInfo whenever possible.
     protected OrchDriveInfo OrchDriveInfo => (OrchDriveInfo)this.PSDriveInfo;
     protected OrchDriveInfo? GetOrchDriveInfo(string path)
     {
@@ -180,7 +180,7 @@ public partial class OrchProvider : NavigationCmdletProvider
             string documents = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
             return System.IO.Path.Combine(documents, "PowerShell", "Modules", moduleName);
         }
-        else // Unix 系 (Linux / macOS)
+        else // Unix-based (Linux / macOS)
         {
             string home = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
             return System.IO.Path.Combine(home, ".local", "share", "powershell", "Modules", moduleName);
@@ -222,7 +222,7 @@ public partial class OrchProvider : NavigationCmdletProvider
 
     private void WarningPSDriveConfig(PSDrive drive)
     {
-        // Scope に関する警告は、パスワードが設定されていない場合に限り出力する
+        // Only output Scope warnings when no password is set
         if (string.IsNullOrEmpty(drive.Password))
         {
             if (string.IsNullOrWhiteSpace(drive.Scope))
@@ -281,8 +281,8 @@ public partial class OrchProvider : NavigationCmdletProvider
             }
         }
 
-        // Username の指定がなく、AppSecret の指定がなく、AccessToken の指定もない場合には
-        // RedirectUrl が指定されてないと。
+        // If Username is not specified, AppSecret is not specified, and AccessToken is not specified,
+        // then RedirectUrl must be specified.
         if (string.IsNullOrWhiteSpace(drive.Username) &&
             string.IsNullOrWhiteSpace(drive.AppSecret) &&
             string.IsNullOrEmpty(drive.AccessToken) &&
@@ -369,7 +369,7 @@ public partial class OrchProvider : NavigationCmdletProvider
         }
         else
         {
-            #region 環境変数 UIPATHORCH_SUPPRESS_CONFIG_CREATION が 1 であれば、設定ファイルを作成しない
+            #region Do not create config file if env var UIPATHORCH_SUPPRESS_CONFIG_CREATION is 1
             var suppressConfigCreation = System.Environment.GetEnvironmentVariable("UIPATHORCH_SUPPRESS_CONFIG_CREATION");
             bool shouldSuppress =
                 suppressConfigCreation?.Equals("1", StringComparison.OrdinalIgnoreCase) == true ||
@@ -392,16 +392,16 @@ public partial class OrchProvider : NavigationCmdletProvider
             }
             else
             {
-                // Linux 環境ではエディタをうまく起動できない。。
-                // ディレクトリを移動して、編集を促すメッセージを出力する。元のディレクトリに戻るには popd を実行する。
+                // Cannot reliably launch an editor in Linux environments..
+                // Move to the directory and output a message prompting the user to edit. Run popd to return to the original directory.
                 string folder = System.IO.Path.GetDirectoryName(configFilePath);
                 string fileName = System.IO.Path.GetFileName(configFilePath);
 
-                // 現在のロケーションをデフォルトスタックにプッシュ
-                // したいけど、ここではまだちゃんと動かないっぽい。。
+                // Would like to push the current location to the default stack,
+                // but it doesn't seem to work properly at this point..
                 //SessionState.Path.PushCurrentLocation("default");
 
-                // 設定ファイルがあるパスに移動
+                // Move to the path where the config file is located
                 SessionState.Path.SetLocation(folder);
 
                 WriteWarning($"Please edit './{fileName}'. After saving your changes, run Import-OrchConfig to reload the configuration.");
@@ -417,34 +417,34 @@ public partial class OrchProvider : NavigationCmdletProvider
 
     protected override PSDriveInfo? NewDrive(PSDriveInfo drive)
     {
-        // drive が OrchDriveInfo であれば、InitializeDefaultDrives() が実行されている (New-PSDrive cmdlet の実行ではない)
+        // If drive is an OrchDriveInfo, InitializeDefaultDrives() was executed (not a New-PSDrive cmdlet call)
         if (drive is OrchDriveInfo orchDrive)
         {
-            // プロバイダクラスのロード順によっては、このタイミングではまだ UiPathOrchTm プロバイダは未登録。
-            // 下記の処理を、すべてのプロバイダの NewDrive で行うことで、UiPathOrch と UiPathOrchTm を確実に関連づけるようにする。
+            // Depending on the provider class loading order, the UiPathOrchTm provider may not be registered yet at this point.
+            // By performing the following logic in NewDrive for all providers, we ensure UiPathOrch and UiPathOrchTm are reliably associated.
             #region Find and associate Du drives
             try
             {
                 // var duProvider = SessionState.Provider.GetOne("UiPathOrchDu");
-                // 例外が出なければ、tmProvider is not null になっている
+                // If no exception is thrown, tmProvider is not null
                 var duDrive = SessionState.Drive.Get(drive.Name + "Du") as OrchDuDriveInfo;
                 duDrive!._parentDrive = (OrchDriveInfo)drive;
             }
-            catch { } // ここでうまくいかない場合には、OrchDuDriveInfo.NewDrive が処理するはず
+            catch { } // If this fails, OrchDuDriveInfo.NewDrive should handle it
             #endregion
 
 
-            // プロバイダクラスのロード順によっては、このタイミングではまだ UiPathOrchTm プロバイダは未登録。
-            // 下記の処理を、すべてのプロバイダの NewDrive で行うことで、UiPathOrch と UiPathOrchTm を確実に関連づけるようにする。
+            // Depending on the provider class loading order, the UiPathOrchTm provider may not be registered yet at this point.
+            // By performing the following logic in NewDrive for all providers, we ensure UiPathOrch and UiPathOrchTm are reliably associated.
             #region Find and associate Tm drives
             try
             {
                 // var tmProvider = SessionState.Provider.GetOne("UiPathOrchTm");
-                // 例外が出なければ、tmProvider is not null になっている
+                // If no exception is thrown, tmProvider is not null
                 var tmDrive = SessionState.Drive.Get(drive.Name + "Tm") as OrchTmDriveInfo;
                 tmDrive!.ParentDrive = (OrchDriveInfo)drive;
             }
-            catch { } // ここでうまくいかない場合には、OrchTmDriveInfo.NewDrive が処理するはず
+            catch { } // If this fails, OrchTmDriveInfo.NewDrive should handle it
             #endregion
 
             #region adding library feed drive
@@ -461,12 +461,12 @@ public partial class OrchProvider : NavigationCmdletProvider
             return orchDrive;
         }
 
-        // drive が PSDriveInfo であれば、InitializeDefaultDrives() ではなく New-PSDrive -PSProvider UiPathOrch が実行されている
+        // If drive is a PSDriveInfo, New-PSDrive -PSProvider UiPathOrch was executed (not InitializeDefaultDrives())
         var parameters = DynamicParameters as NewDrive_Parameters;
         PSDrive psDrive = new()
         {
-            Name = drive.Name, // mandatory なのでかならず -Name で渡されてくる
-            Root = drive.Root, // mandatory なのでかならず -Root で渡されてくる
+            Name = drive.Name, // Mandatory, so it is always passed via -Name
+            Root = drive.Root, // Mandatory, so it is always passed via -Root
             Description = drive.Description,
             IdentityUrl = parameters?.IdentityUrl,
             AppId = parameters?.AppId,
@@ -545,7 +545,7 @@ public partial class OrchProvider : NavigationCmdletProvider
         Process.Start(new ProcessStartInfo(endpoint) { UseShellExecute = true });
     }
 
-    // TODO: これ何か実装した方が良いのでは？ でも呼ばれたことがないような気がする。。
+    // TODO: Should we implement something here? Though it seems like this is never called..
     protected override bool IsValidPath(string path)
     {
         //Tools.DebugFuncEntry("IsValidPath", path, SessionState);
@@ -553,8 +553,8 @@ public partial class OrchProvider : NavigationCmdletProvider
         return true;
     }
 
-    // たぶん実装完了
-    // ItemExists メソッドは、ワイルドカードを処理する必要はないっぽい。
+    // Probably implementation complete
+    // The ItemExists method does not seem to need to handle wildcards.
     protected override bool ItemExists(string path)
     {
         //var (drive, folder) = ExtractOrchDriveAndFolder(path);
@@ -664,7 +664,7 @@ public partial class OrchProvider : NavigationCmdletProvider
     //    }
     //}
 
-    // TODO: フォルダの Description を更新する実装。SetItemProperty に移動したい。一旦コメントアウト。
+    // TODO: Implementation to update the folder's Description. Want to move this to SetItemProperty. Commented out for now.
     //protected override object SetItemDynamicParameters(string path, object value)
     //{
     //_this = this;
@@ -701,10 +701,10 @@ public partial class OrchProvider : NavigationCmdletProvider
         GetChildItems(path, recurse, 0);
     }
 
-    // フォルダの深さ (含むスラッシュの数+1) を返す
-    // "" の深さ: 0
-    // "folder" の深さ: 1
-    // "folder/sub" の深さ: 2
+    // Returns the depth of the folder (number of slashes + 1)
+    // Depth of "": 0
+    // Depth of "folder": 1
+    // Depth of "folder/sub": 2
     public static uint FolderDepth(string orchestratorPath)
     {
         if (string.IsNullOrEmpty(orchestratorPath))
@@ -725,7 +725,7 @@ public partial class OrchProvider : NavigationCmdletProvider
         using var writer = OrchestratorPSCmdlet.WriteCsvHeader(physicalCsvPath, encoding, headers);
         if (writer is null) return null;
 
-        // 各フォルダに対してデータ行を書き込む
+        // Write a data row for each folder
         foreach (var folder in output.Where(f => f.FolderType != "Personal"))
         {
             string[] line = [
@@ -786,8 +786,8 @@ public partial class OrchProvider : NavigationCmdletProvider
 
                         if (string.IsNullOrEmpty(parameters?.ExportCsv))
                         {
-                            // 個人用ワークスペースと同名のフォルダが存在する可能性がある
-                            // 自動補完が適切に動作できるように、同名のフォルダを複数出力することは避ける
+                            // A folder with the same name as a personal workspace may exist
+                            // To ensure auto-completion works properly, avoid outputting multiple folders with the same name
                             if (dupCheck.Add(psPathEscaped))
                             {
                                 WriteItemObject(folder, psPathEscaped, true);
@@ -823,8 +823,8 @@ public partial class OrchProvider : NavigationCmdletProvider
                         string psPathEscaped = drive.NameColon + PathTools.EscapePSText2(psPath);
                         //string psPathEscaped = PathTools.EscapePSText2(psPath);
 
-                        // 個人用ワークスペースと同名のフォルダを作成することができてしまう
-                        // 自動補完が適切に動作できるように、同名のフォルダを複数出力することは避ける
+                        // It is possible to create a folder with the same name as a personal workspace
+                        // To ensure auto-completion works properly, avoid outputting multiple folders with the same name
                         if (string.IsNullOrEmpty(parameters?.ExportCsv))
                         {
                             if (dupCheck.Add(psPathEscaped))
@@ -883,8 +883,8 @@ public partial class OrchProvider : NavigationCmdletProvider
         //.Replace("]", "`]");
     }
 
-    // GetChildnames は、オブジェクトでなく名前の string 値のみを WriteItemObject する必要がある。
-    // このメソッドは、Get-ChildItem -Name を実行すると呼び出される。
+    // GetChildNames must call WriteItemObject with only the name string value, not the object.
+    // This method is called when Get-ChildItem -Name is executed.
     protected override void GetChildNames(string path, ReturnContainers returnContainers)
     {
         OrchDriveInfo drive = GetOrchDriveInfo(path);
@@ -914,7 +914,7 @@ public partial class OrchProvider : NavigationCmdletProvider
         }
     }
 
-    // 必ず true を返した方が、操作誤りで rmdir を実行しちゃう事故が減るような気がする。
+    // Always returning true seems to reduce accidental rmdir operations due to user error.
     protected override bool HasChildItems(string path)
     {
         var drive = GetOrchDriveInfo(path);
@@ -961,7 +961,7 @@ public partial class OrchProvider : NavigationCmdletProvider
             string name = (newItemValue as PSObject)?.Properties["Name"]?.Value as string;
             if (name is not null)
             {
-                // TODO: Unescape() は必要か？？ ★★★★★★
+                // TODO: Is Unescape() needed??
                 //path = System.IO.Path.Combine(path, WildcardPattern.Unescape(name));
                 path = System.IO.Path.Combine(path, name);
             }
@@ -1080,7 +1080,7 @@ public partial class OrchProvider : NavigationCmdletProvider
         }
     }
 
-    // TODO: Rename-Item で Description を変更するのは不自然なのでやめる。
+    // TODO: Changing Description via Rename-Item is unnatural, so removing this.
     //protected override object RenameItemDynamicParameters(string path, string newName)
     //{
     //    _this = this;
@@ -1130,8 +1130,8 @@ public partial class OrchProvider : NavigationCmdletProvider
         {
             try
             {
-                // 個人ワークスペースフォルダの場合には、所有者のワークスペースを無効に設定する
-                // でないと、削除したワークスペースフォルダが自動ですぐに復活してしまう
+                // For personal workspace folders, disable the owner's workspace first
+                // Otherwise, the deleted workspace folder will be automatically recreated immediately
                 if (folder.FolderType == "Personal")
                 {
                     var personalWorkspaces = drive.PersonalWorkspaces.Get();
@@ -1149,8 +1149,8 @@ public partial class OrchProvider : NavigationCmdletProvider
                     drive.PersonalWorkspaces.ClearCache();
                 }
 
-                // いまいちなんだけど、GetFolders() の実装に合わせて、個人ワークスペースを削除した場合も _dicFolders をクリアしておく。。
-                // これにより GetFolders() が正しく動作する。いつか直したい
+                // Not ideal, but to match the GetFolders() implementation, clear _dicFolders when a personal workspace is deleted too..
+                // This ensures GetFolders() works correctly. Want to fix this eventually
                 drive._dicFolders = null;
                 drive._dicFoldersForEnumFolders = null;
 
@@ -1170,7 +1170,7 @@ public partial class OrchProvider : NavigationCmdletProvider
 
     protected override bool IsItemContainer(string path)
     {
-        // このプロバイダは、フォルダしか返さない（ファイルに相当するアイテムは返さない）
+        // This provider only returns folders (no file-equivalent items)
         return true;
     }
 

@@ -55,14 +55,14 @@ public class MoveFolderUserCommand : OrchestratorPSCmdlet
             var paramDepth = GetParameterValue(commandAst, "Depth");
             _= uint.TryParse(paramDepth, out uint depth);
 
-            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            // Extract path from parameter. If not specified, target the current directory.
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
             var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
-            // パラメータで選択済みの UserName は、候補から除外する
+            // Exclude UserNames already selected via parameter from the candidates
             var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
 
-            // パラメータで選択された FullName のみ対象とする
+            // Only include FullNames selected via parameter
             var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -152,27 +152,27 @@ public class MoveFolderUserCommand : OrchestratorPSCmdlet
                     {
                         try
                         {
-                            // 宛先フォルダーに割り当てる
+                            // Assign to the destination folder
                             dstDrive.OrchAPISession.AssignUser(dstFolder.Id!.Value, targetUser!.Id!.Value,
                                 targetUser.Roles?
                                 .Where(r => r.Id is not null)
                                 .Select(r => r.Id!.Value));
 
-                            // 子フォルダーのキャッシュも削除しないといけない？ いやそうではないはずだ
-                            // dstDrive.ClearFolderCache(srcFolder); これ必要だっけ？
+                            // Do we also need to clear the cache of child folders? No, that shouldn't be necessary.
+                            // dstDrive.ClearFolderCache(srcFolder); Is this needed?
                             dstDrive.FolderUsersWithInherited.ClearCache();
                             dstDrive.FolderUsersWithNoInherited.ClearCache();
 
                             if (!keepSource)
                             {
-                                // 元フォルダーから削除する
+                                // Remove from the source folder
                                 srcDrive.OrchAPISession.UnassignUserFromFolder(srcFolder.Id!.Value, targetUser.Id.Value);
                                 srcDrive.FolderUsersWithInherited.ClearCache();
                                 srcDrive.FolderUsersWithNoInherited.ClearCache();
-                                // srcDrive.ClearFolderCache(srcFolder); これ必要だっけ？
+                                // srcDrive.ClearFolderCache(srcFolder); Is this needed?
                             }
 
-                            //Thread.Sleep(600); // API call rate limit を回避するため待機する
+                            //Thread.Sleep(600); // Wait to avoid API call rate limit
                         }
                         catch (Exception ex)
                         {

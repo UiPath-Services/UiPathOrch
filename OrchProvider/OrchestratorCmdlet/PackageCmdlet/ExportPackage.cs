@@ -41,14 +41,14 @@ public class ExportPackageCommand : OrchestratorPSCmdlet
         {
             var recurse = GetSwitchParameterValue(commandAst, "Recurse");
 
-            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            // Extract the path from parameters. If not specified, target the current directory
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
             var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse);
 
-            // パラメータで選択済みの Id は、候補から除外する
+            // Exclude already-selected Id values from the candidates
             var wpId = CreateWPListFromParameter(commandAst, "Id", TPositional.Parameters, wordToComplete);
 
-            // パラメータで選択された Version のみ対象とする
+            // Only target the Version values selected via parameters
             var paramVersion = GetParameterValues(commandAst, "Version", TPositional.Parameters).ToList();
             var wpVersion = paramVersion.Select(ver => new WildcardPattern(ver, WildcardOptions.IgnoreCase)).ToList();
 
@@ -82,14 +82,14 @@ public class ExportPackageCommand : OrchestratorPSCmdlet
         {
             var recurse = GetSwitchParameterValue(commandAst, "Recurse");
 
-            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            // Extract the path from parameters. If not specified, target the current directory
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
             var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse);
 
-            // パラメータで選択された Id のみ対象とする
+            // Only target the Id values selected via parameters
             var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
 
-            // パラメータで選択済みの Version は、候補から除外する
+            // Exclude already-selected Version values from the candidates
             var wpVersion = CreateWPListFromParameter(commandAst, "Version", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -130,7 +130,7 @@ public class ExportPackageCommand : OrchestratorPSCmdlet
             Destination = SessionState.Path.CurrentFileSystemLocation.Path;
         }
         
-        // PSDrive のパスを、実際のファイルシステムのパスに変換
+        // Convert the PSDrive path to the actual file system path
         Destination = SessionState.Path.GetUnresolvedProviderPathFromPSPath(Destination);
 
         if (!Directory.Exists(Destination))
@@ -138,8 +138,8 @@ public class ExportPackageCommand : OrchestratorPSCmdlet
             throw new DirectoryNotFoundException($"A directory '{Destination}' does not exist.");
         }
 
-        // 最初にすべてまとめて非同期に API call するバージョン
-        // ちゃんと動いているけど、API call の数が多すぎてしまうかも。
+        // Version that makes all API calls asynchronously upfront
+        // It works correctly, but might result in too many API calls.
 #if false
         using var results = OrchThreadPool.RunForEach(drivesFolders,
             df => df.folder.GetPSPath(),
@@ -231,9 +231,9 @@ public class ExportPackageCommand : OrchestratorPSCmdlet
         }
 #endif
 
-        // 最初の GetPackage() だけ非同期に実行するバージョン
-        // GetPackageVersion() は、ダウンロードの直前に呼び出す。
-        // フォルダフィードが多い場合は、処理開始までに時間がかかるかな？
+        // Version that only runs the initial GetPackage() asynchronously.
+        // GetPackageVersion() is called just before download.
+        // If there are many folder feeds, it may take a while before processing starts.
 #if false
         using var results = OrchThreadPool.RunForEach(drivesFolders,
             df => df.folder.GetPSPath(),
@@ -319,7 +319,7 @@ public class ExportPackageCommand : OrchestratorPSCmdlet
         }
 #endif
 
-        // 完全にシングルスレッドで処理するバージョン
+        // Fully single-threaded version
         using var cancelHandler = new ConsoleCancelHandler();
         using ProgressReporter reporter = new(this, 1, 100, "Export packages");
         foreach (var (drive, folder) in drivesFolders)

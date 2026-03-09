@@ -22,7 +22,7 @@ public class EnableTestSetScheduleCommandBase<Enable> : OrchestratorPSCmdlet whe
     [Parameter]
     public uint Depth { get; set; }
 
-    // この completer は、無効なスケジュールだけを表示するので共通化できない
+    // This completer cannot be shared because it only shows disabled schedules
     internal class NameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -36,11 +36,11 @@ public class EnableTestSetScheduleCommandBase<Enable> : OrchestratorPSCmdlet whe
             var paramDepth = GetParameterValue(commandAst, "Depth");
             uint.TryParse(paramDepth, out uint depth);
 
-            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            // Extract path from parameters. If not specified, target the current directory
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
             var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude Names already selected by parameter from candidates
             var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);

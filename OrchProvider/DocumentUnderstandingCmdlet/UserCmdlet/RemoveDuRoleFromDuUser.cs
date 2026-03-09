@@ -14,16 +14,16 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
     //private const string UserNameSet = "UserNameSet";
     //private const string UserSet = "UserSet";
 
-    // 三嶋さん(KDDI)からのリクエスト Add-DuUser に User Principal Name を指定できるように
-    // するなら、次が必要だと思うが、良い実装が思いつかない。
-    // パフォーマンスを犠牲にするか、あるいは複雑なパラメータを追加するか。。
-    // 自分としては、どちらも受け入れがたいな。。
+    // Feature request from Mishima-san (KDDI): allow specifying User Principal Name in Add-DuUser.
+    // The code below would be needed for that, but I can't think of a good implementation.
+    // Either sacrifice performance, or add complex parameters..
+    // Personally, neither option is acceptable..
     //[Parameter(ParameterSetName = UserNameSet, Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true)]
     //[ArgumentCompleter(typeof(DuUserNameCompleter<TPositional>))]
     //[SupportsWildcards]
     //public string[]? UserName { get; set; }
 
-    // 本当は、Inherited でないロールがひとつもないユーザーの名前はリストしないようにしたい。
+    // Ideally, we would not list users who have no non-inherited roles.
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DuNameCompleter<TPositional>))]
     [SupportsWildcards]
@@ -41,7 +41,7 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
-    // この RoleCompleter は、ユーザーにアサインされているロールだけを列挙する
+    // This RoleCompleter only enumerates roles that are assigned to the user
     private class RoleCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -53,13 +53,13 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
         {
             var drivesProjects = ResolveDuPath(commandAst, fakeBoundParameters);
 
-            // この名前のユーザーにアサイン済みの Role は除外する
+            // Filter to roles assigned to users with this name
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
-            // この名前のユーザーにアサイン済みの Role は除外する
+            // Filter to roles assigned to users with this name
             //var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
 
-            // パラメータで選択済みの Role は除外する
+            // Exclude already-selected Role values from completion candidates
             var wpRole = CreateWPListFromParameter(commandAst, "Role", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);

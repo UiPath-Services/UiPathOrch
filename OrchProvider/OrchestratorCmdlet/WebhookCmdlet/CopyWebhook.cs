@@ -34,7 +34,7 @@ public class CopyWebhookCommand : OrchestratorPSCmdlet
     {
         srcDrive.Webhooks.ClearCache();
 
-        // この実装はこれで良い。
+        // This implementation is fine as is.
         ICollection<Webhook>? srcWebhooks = null;
         try
         {
@@ -64,7 +64,7 @@ public class CopyWebhookCommand : OrchestratorPSCmdlet
                         var newWebhook = OrchCollectionExtensions.DeepCopy(srcWebhook);
                         newWebhook.Key = null;
                         newWebhook.Id = null;
-                        // newWebhook.Path = null; // JsonIgnore 属性がついているので不要
+                        // newWebhook.Path = null; // Not needed since it has the JsonIgnore attribute
                         var createdWebhook = dstDrive.OrchAPISession.CreateWebhook(newWebhook);
                         if (createdWebhook is not null)
                         {

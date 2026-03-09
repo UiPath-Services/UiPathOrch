@@ -9,8 +9,8 @@ using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands;
 
-// TODO: ExtendedMachine.Scope == "AutomationCloudRobot" となっているマシンは
-// 別のエンドポイントで更新が必要のようだ。
+// TODO: Machines with ExtendedMachine.Scope == "AutomationCloudRobot"
+// appear to require updates via a different endpoint.
 // https://cloud.uipath.com/yotsuda/svc1/orchestrator_/odata/CloudTemplates({machineId})
 [Cmdlet(VerbsData.Update, "OrchMachine", SupportsShouldProcess = true)]
 public class UpdateMachineCommand : OrchestratorPSCmdlet
@@ -87,7 +87,7 @@ public class UpdateMachineCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 
-    // マシンの Tags 専用
+    // Dedicated to machine Tags
     private class TagsCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -99,7 +99,7 @@ public class UpdateMachineCommand : OrchestratorPSCmdlet
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude Names already selected via parameter from the candidates
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
             var results = ParallelResults3.GroupBy(drives, drive => drive.Machines.Get());
@@ -154,13 +154,13 @@ public class UpdateMachineCommand : OrchestratorPSCmdlet
 
                 if (RobotUsers is not null)
                 {
-                    // 変更されたかを正しく確認できるようにソートしておく
+                    // Sort to correctly detect whether changes were made
                     //machine.RobotUsers = machine?.RobotUsers?.OrderBy(r => r.UserName).ToList();
-                    // と思ったけど、RobotUsers メンバの同一性の確認は無理な気がする。。ので諦める
-                    // -RobotUsers が指定された場合には、必ず Machine を Update することになる
-                    // ExtendedRobot class の Equals() では RobotUsers の同値性を確認せず
-                    // ここで RobotUsers の UserName と RobotId だけを使って同値性を確認すれば
-                    // まあできなくもないが、、今はちと面倒なのでそこまでしない
+                    // On second thought, comparing RobotUsers member equality seems infeasible... so giving up.
+                    // When -RobotUsers is specified, the Machine will always be updated.
+                    // The ExtendedRobot class's Equals() does not check RobotUsers equality;
+                    // we could check equality using only UserName and RobotId of RobotUsers here,
+                    // but it's a bit too cumbersome for now, so skipping that.
 
                     var robots = drive.AllRobotsAcrossFolders.Get();
                     var wpRobotUsers = RobotUsers.ConvertToWildcardPatternList();
@@ -206,8 +206,8 @@ public class UpdateMachineCommand : OrchestratorPSCmdlet
                             postingMachine.MaintenanceWindow.AssignNumberIfNotNullOrZero(MaintenanceDuration, (m, v) => m.Duration = v);
                             postingMachine.MaintenanceWindow.AssignBoolIfNotNull(MaintenanceEnabled, (m, v) => m.Enabled = v);
 
-                            // TODO: AddTrigger.cs にも同じ処理がある。共通化したい
-                            #region TimeZone を TimeZoneId に変換
+                            // TODO: The same logic exists in AddTrigger.cs. Should be refactored into shared code.
+                            #region Convert TimeZone to TimeZoneId
                             postingMachine.MaintenanceWindow.AssignStringIfNotNull(MaintenanceTimeZoneId, (m, v) => m.TimezoneId = v);
 
                             postingMachine.MaintenanceWindow.AssignIdFromName(

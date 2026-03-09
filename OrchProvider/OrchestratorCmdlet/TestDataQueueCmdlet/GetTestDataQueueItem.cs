@@ -89,9 +89,9 @@ public class GetTestDataQueueItemCommand : OrchestratorPSCmdlet
                         var entities = thread.GetResult(cancelHandler.Token);
                         WriteObject(entities, true);
 
-                        // JSON を展開して出力する
-                        // いちおう動くが、コンソール側で Format-List にリダイレクトしないと
-                        // きれいな結果が得られない。。
+                        // Expand JSON and output
+                        // It works, but clean results cannot be obtained unless
+                        // redirected to Format-List on the console side..
                         //if (entities!.Count == 0) continue;
                         //var list = new List<PSObject>();
                         //foreach (var entity in entities!)

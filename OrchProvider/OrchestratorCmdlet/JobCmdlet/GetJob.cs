@@ -118,7 +118,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Id は、候補から除外する
+            // Exclude Ids that have already been selected via parameters
             var paramId = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -139,8 +139,8 @@ public class GetJobCommand : OrchestratorPSCmdlet
         }
     }
 
-    // TODO: StaticTextCompleter で書き直す
-    // あるいは KeyOfDictionaryCompleter を使うか。
+    // TODO: Rewrite using StaticTextCompleter
+    // or alternatively use KeyOfDictionaryCompleter.
     private class PriorityCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -204,13 +204,13 @@ public class GetJobCommand : OrchestratorPSCmdlet
         }
     }
 
-    // Robot/Id eq はナビゲーションプロパティのため、17件以上で API が 400 を返す
+    // Robot/Id eq is a navigation property, so the API returns 400 when there are 17 or more
     private const int RobotFilterBatchSize = 10;
 
     private IReadOnlyList<long?>? ResolveRobotIds(OrchDriveInfo drive)
     {
         if (Robot is null || Robot.Length == 0 || Robot.Any(r => r == "*"))
-            return null; // ロボットフィルターなし（全ロボット対象）
+            return null; // No robot filter (target all robots)
         var wpRobot = Robot.ConvertToWildcardPatternList();
         var robots = drive.Robots.Get();
         return robots.SelectByWildcards(r => r?.Name, wpRobot).Select(r => r.Id).ToList();
@@ -357,8 +357,8 @@ public class GetJobCommand : OrchestratorPSCmdlet
         #endregion
 
         #region ProcessType
-        // TODO: この数字は正しい？
-        // ApiVersion ==  11 のとき、ProcessType should be null であることは確認済み
+        // TODO: Are these numbers correct?
+        // Confirmed that when ApiVersion == 11, ProcessType should be null
         if (drive.OrchAPISession.ApiVersion >= 12)
         {
             var processType = ProcessType ?? ["Process"];
@@ -396,7 +396,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
 
         var orderBy = string.IsNullOrEmpty(OrderBy) ? "CreationTime" : OrderBy;
 
-        // すべてのパラメータが指定されていなければ、キャッシュの内容を返す
+        // If no parameters are specified, return the contents of the cache
         bool bOutCache = (
             Id is null &&
             Last is null &&
@@ -482,17 +482,17 @@ public class GetJobCommand : OrchestratorPSCmdlet
             int index = 0;
             foreach (var (drive, folder) in drivesFolders)
             {
-                cancelHandler.Token.ThrowIfCancellationRequested(); // この行は try の外側に置く必要がある。
+                cancelHandler.Token.ThrowIfCancellationRequested(); // This line must be placed outside the try block.
 
                 var targetRobotIds = ResolveRobotIds(drive);
                 if (targetRobotIds is not null && targetRobotIds.Count == 0)
                 {
                     reporter.WriteProgress(++index, $"{folder.GetPSPath()}");
-                    continue; // 一致するロボットなし
+                    continue; // No matching robots
                 }
                 reporter.WriteProgress(++index, $"{folder.GetPSPath()}");
 
-                // ロボットIDをバッチに分割（RobotFilterBatchSize超過時は複数回API呼出し）
+                // Split robot IDs into batches (multiple API calls when exceeding RobotFilterBatchSize)
                 IEnumerable<IReadOnlyList<long?>?> robotBatches;
                 bool isBatched;
                 if (targetRobotIds is null || targetRobotIds.Count <= RobotFilterBatchSize)
@@ -528,7 +528,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
                         var errorRecord = new ErrorRecord(new OrchException(target, ex), "GetJobError", ErrorCategory.InvalidOperation, target);
                         WriteError(errorRecord);
                     }
-                    Thread.Sleep(600); // API call rate limit を回避するため待機する
+                    Thread.Sleep(600); // Wait to avoid API call rate limit
                 }
                 if (allJobs is not null)
                 {
@@ -541,12 +541,12 @@ public class GetJobCommand : OrchestratorPSCmdlet
             return;
         }
 
-        // Id の指定がある場合は、その Job のみ取得する
+        // If Id is specified, retrieve only that specific Job
         foreach (var (drive, folder) in drivesFolders)
         {
             foreach (var jobId in Id!)
             {
-                cancelHandler.Token.ThrowIfCancellationRequested(); // この行は try の外側に置く必要がある。
+                cancelHandler.Token.ThrowIfCancellationRequested(); // This line must be placed outside the try block.
                 try
                 {
                     var job = drive.GetJob(folder, jobId);
@@ -561,7 +561,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
                     var errorRecord = new ErrorRecord(new OrchException(target, ex), "GetJobError", ErrorCategory.InvalidOperation, target);
                     WriteError(errorRecord);
                 }
-                Thread.Sleep(600); // API call rate limit を回避するため待機する
+                Thread.Sleep(600); // Wait to avoid API call rate limit
             }
         }
     }

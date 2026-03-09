@@ -22,7 +22,7 @@ public class SwitchOrchCurrentUserCommand : OrchestratorPSCmdlet
             {
                 try
                 {
-                    // 既存の認証とキャッシュをクリアして再認証する
+                    // Clear existing authentication and cache, then re-authenticate
                     drive.OrchAPISession.ClearAuthentication();
                     drive.ClearAllCache();
                     drive.OrchAPISession.AuthManager.UseInPrivate = true;

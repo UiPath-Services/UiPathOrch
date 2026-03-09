@@ -23,7 +23,7 @@ internal class OrchestratorAuthManager
         get { return _isConfidentialApp; }
     }
 
-    /// InPrivate ブラウザで PKCE 認証を開く
+    /// Open PKCE authentication in an InPrivate browser
     internal bool UseInPrivate { get; set; }
 
     private string? _access_token;
@@ -51,23 +51,23 @@ internal class OrchestratorAuthManager
 
         if (!drive._psDrive.IsCloud) // On-premises: remove tenant path from BaseUrl
         {
-            // 1. 空チェック
+            // 1. Empty check
             if (string.IsNullOrWhiteSpace(BaseUrl))
             {
                 throw new InvalidOperationException("The provided URL is null or empty.");
             }
 
-            // 2. Uri としてパースを試みる
+            // 2. Attempt to parse as a Uri
             if (!Uri.TryCreate(BaseUrl, UriKind.Absolute, out var uri))
             {
                 throw new InvalidOperationException("The provided URL is not a valid absolute URI.");
             }
 
-            // 3. 絶対パスから末尾のスラッシュを除去し、'/' 区切りで分割
+            // 3. Remove trailing slash from the absolute path and split by '/'
             var path = uri.AbsolutePath.TrimEnd('/'); // "/" → ""
             var segments = path.Split(['/'], StringSplitOptions.RemoveEmptyEntries);
 
-            // 4. ドメインに "uipath.com" を含む場合は、必ずパスにテナンシーが存在すること
+            // 4. If the domain contains "uipath.com", the path must include a tenancy
             if (uri.Host.Contains("uipath.com", StringComparison.OrdinalIgnoreCase) && segments.Length == 0)
             {
                 throw new InvalidOperationException(
@@ -77,28 +77,28 @@ internal class OrchestratorAuthManager
 
             if (segments.Length == 0)
             {
-                // 【ケース1】テナンシーが指定されていない場合（かつ uipath.com 以外のドメイン）
+                // Case 1: No tenancy specified (and domain is not uipath.com)
                 OnpremiseTenancy = string.Empty;
-                BaseUrl = uri.GetLeftPart(UriPartial.Authority); // 例: "https://orchestrator.local"
+                BaseUrl = uri.GetLeftPart(UriPartial.Authority); // e.g., "https://orchestrator.local"
             }
             else
             {
-                // 【ケース2】テナンシーが指定されている場合
+                // Case 2: Tenancy is specified
                 OnpremiseTenancy = segments.Last();
 
-                // テナンシーを除いた残りのパスを再構築
+                // Reconstruct the remaining path without the tenancy
                 var remainingSegments = segments.Take(segments.Length - 1);
                 string newPath = remainingSegments.Any()
-                    ? "/" + string.Join("/", remainingSegments) // 例: "/folder1"
-                    : "/"; // ドメイン直下しかない場合は "/" をセット
+                    ? "/" + string.Join("/", remainingSegments) // e.g., "/folder1"
+                    : "/"; // Set "/" when there is only the domain root
 
-                // UriBuilder で scheme+authority+新しいパスを組み立て
+                // Build scheme+authority+new path using UriBuilder
                 var builder = new UriBuilder(uri)
                 {
                     Path = newPath
                 };
 
-                // 末尾のスラッシュを除去して BaseUrl にセット
+                // Remove trailing slash and set as BaseUrl
                 BaseUrl = builder.Uri.ToString().TrimEnd('/');
             }
         }
@@ -240,7 +240,7 @@ internal class OrchestratorAuthManager
 
     private static string LoadBotImageRandomly()
     {
-        // 埋め込みリソースの名前一覧
+        // List of embedded resource names
         var resourceNames = new List<string>
         {
             "autopilot.png",
@@ -253,7 +253,7 @@ internal class OrchestratorAuthManager
             "searching.png"
         };
 
-        // ランダムに1つ選択
+        // Randomly select one
         var random = new Random();
         int index = random.Next(resourceNames.Count);
         string selectedResource = resourceNames[index];
@@ -261,13 +261,13 @@ internal class OrchestratorAuthManager
         using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("OrchProvider.bot." + selectedResource);
         if (stream is null) return "";
 
-        // ストリームをバイト配列に変換
+        // Convert the stream to a byte array
         using var memoryStream = new MemoryStream();
 
         stream.CopyTo(memoryStream);
         byte[] imageBytes = memoryStream.ToArray();
 
-        // Base64にエンコード
+        // Encode to Base64
         return Convert.ToBase64String(imageBytes);
     }
 
@@ -281,13 +281,13 @@ internal class OrchestratorAuthManager
         }
         else if (_drive._psDrive.IsCloud)
         {
-            // Cloud: authorize endpoint は org prefix なしの共通パスを使用し、
-            // acr_values で組織名を指定する（UiPath Identity の仕様変更に対応）
+            // Cloud: The authorize endpoint uses a common path without the org prefix,
+            // and specifies the organization name via acr_values (to accommodate UiPath Identity spec changes).
             var baseUri = new Uri(BaseUrl);
             string orgName = baseUri.AbsolutePath.Trim('/');
             endPoint = $"{baseUri.Scheme}://{baseUri.Host}/identity_/connect/authorize";
             acrValues = UseInPrivate
-                ? "" // InPrivate: acr_values を省略し、認証プロバイダ選択画面を表示する
+                ? "" // InPrivate: omit acr_values to display the authentication provider selection screen
                 : $"&acr_values=tenantName:{orgName}&prompt=select_account";
         }
         else
@@ -317,7 +317,7 @@ internal class OrchestratorAuthManager
 
         if (UseInPrivate)
         {
-            // InPrivate ブラウザで開く（Edge + 一時プロファイルで Cookie を完全分離）
+            // Open in InPrivate browser (Edge + temporary profile for complete cookie isolation)
             string edgePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFilesX86),
                 @"Microsoft\Edge\Application\msedge.exe");
             if (!File.Exists(edgePath))
@@ -358,7 +358,7 @@ internal class OrchestratorAuthManager
                             using StreamReader reader = new(stream!);
                             string htmlTemplate = await reader.ReadToEndAsync();
 
-                            // 画像とバージョン情報の埋め込み
+                            // Embed image and version information
                             var version = Assembly.GetExecutingAssembly().GetName().Version;
                             string responseString = string.Format(htmlTemplate, _drive._psDrive.Root, _drive.NameColon, version, LoadBotImageRandomly());
 
@@ -367,17 +367,17 @@ internal class OrchestratorAuthManager
                             context.Response.ContentType = "text/html; charset=UTF-8";
                             context.Response.Headers["Connection"] = "close";
 
-                            // レスポンスを送信
+                            // Send the response
                             await using var output = context.Response.OutputStream;
                             await output.WriteAsync(buffer, cts);
                             await output.FlushAsync();
 
-                            await Task.Delay(50); // 画面が真っ白になることがあるんだけど、これで回避できるのかな。。
+                            await Task.Delay(50); // The screen sometimes goes blank -- not sure if this delay helps...
 
-                            // レスポンスを明示的に終了
+                            // Explicitly close the response
                             context.Response.Close();
 
-                            // ループを終了
+                            // Exit the loop
                             break;
                         }
                     }
@@ -412,7 +412,7 @@ internal class OrchestratorAuthManager
         }
         finally
         {
-            // リスナーの停止
+            // Stop the listener
             if (listener.IsListening)
             {
                 listener.Stop();
@@ -441,8 +441,8 @@ internal class OrchestratorAuthManager
         return Convert.ToBase64String(data).TrimEnd('=').Replace("+", "-").Replace("/", "_");
     }
 
-    /// Entra ID 警告メッセージを表示すべきかチェック
-    /// 警告を表示すべき場合は true
+    /// Check whether the Entra ID warning message should be displayed.
+    /// Returns true if the warning should be shown.
     public bool ShouldShowEntraIdWarning()
     {
         try
@@ -450,7 +450,7 @@ internal class OrchestratorAuthManager
             var parts = _access_token?.Split('.') ?? [];
             if (parts.Length != 3) return false;
 
-            // Base64URLデコード
+            // Base64URL decode
             var payload = parts[1];
             payload = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
             payload = payload.Replace('-', '+').Replace('_', '/');

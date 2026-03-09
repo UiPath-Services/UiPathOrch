@@ -9,7 +9,7 @@ using TPositional = UiPath.PowerShell.Positional.Type_Name;
 
 namespace UiPath.PowerShell.Commands;
 
-// 残念ながら、external app ではこの API を呼び出せないようだ。
+// Unfortunately, it seems this API cannot be called with an external app.
 //[Cmdlet(VerbsCommon.Get, "OrchAllRolesForUser")]
 //[OutputType(typeof(Entities.Role))]
 class GetAllRolesForUserCommand : OrchestratorPSCmdlet

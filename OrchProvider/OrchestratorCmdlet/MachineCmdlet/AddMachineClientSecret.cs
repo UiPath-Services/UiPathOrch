@@ -22,10 +22,10 @@ public class AddMachineClientSecretCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 
-    // Scope が "PersonalWorkspace" と "AutomationCloudRobot" のマシンは除外するため、この completer は共通化できない
-    // 除外する Scope をパラメータ化して、処理を共通にした方が良さそうだけど、ちと面倒。。
-    // というか、列挙する部分とかフィルタする部分をパラメータ化するクラスを導入して
-    // より一般に共通化できるのではないか？
+    // This completer cannot be shared because it excludes machines with Scope "PersonalWorkspace" and "AutomationCloudRobot".
+    // It would be better to parameterize the excluded Scopes and share the logic, but that's a bit cumbersome...
+    // Actually, we could introduce a class that parameterizes the enumeration and filtering parts
+    // to generalize this more broadly.
     private class MachineNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -37,7 +37,7 @@ public class AddMachineClientSecretCommand : OrchestratorPSCmdlet
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude Names already selected via parameter from the candidates
             var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -49,7 +49,7 @@ public class AddMachineClientSecretCommand : OrchestratorPSCmdlet
             {
                 foreach (var machine in result
                     .Where(m => wp.IsMatch(m.Name))
-                    .Where(m => m.Scope != "PersonalWorkspace" && m.Scope != "AutomationCloudRobot") // 共通の処理との差異はここだけ
+                    .Where(m => m.Scope != "PersonalWorkspace" && m.Scope != "AutomationCloudRobot") // This is the only difference from the shared logic
                     .ExcludeByWildcards(m => m?.Name, wpName)
                     .OrderBy(m => m.Name!))
                 {

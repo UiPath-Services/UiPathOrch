@@ -40,12 +40,12 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(InputArgumentsCompleter))]
     public string? InputArguments { get; set; }
 
-    // このパラメータはコマンドラインでの指定を受け付けない
-    // CSV で "" が指定されたら 45 にしてしまえば良いので、この型は int にする
+    // This parameter does not accept command-line input
+    // Since we can just treat "" in CSV as 45, the type is int
     [Parameter(DontShow = true, ValueFromPipelineByPropertyName = true)]
     public int? SpecificPriorityValue { get; set; }
 
-    // このパラメータは CSV インポートを受け付けない
+    // This parameter does not accept CSV import
     [Parameter]
     [ArgumentCompleter(typeof(StaticTextsCompleter<JobPriorityItems>))]
     public string? Priority { get; set; }
@@ -66,7 +66,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(StaticTextsCompleter<Delete_Archive>))]
     public string? RetentionAction { get; set; }
 
-    // 0 だったら 30 に補正する
+    // If 0, correct to 30
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Item30>))]
     public int? RetentionPeriod { get; set; }
@@ -80,7 +80,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(StaticTextsCompleter<Delete_Archive>))]
     public string? StaleRetentionAction { get; set; }
 
-    // 0 だったら 180 に補正する
+    // If 0, correct to 180
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Item180>))]
     public int? StaleRetentionPeriod { get; set; }
@@ -143,7 +143,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Item180>))]
-    public int? MaxDurationSeconds { get; set; } // 既定値がわからない。180 かな。
+    public int? MaxDurationSeconds { get; set; } // Default value is unknown. Possibly 180.
     #endregion
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -243,7 +243,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Id は、候補から除外する
+            // Exclude IDs already selected by other parameters from candidates
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Positional.Name.Parameters);
 
             var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder));
@@ -278,7 +278,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
         }
     }
 
-    // プロセスの Tags 専用
+    // Dedicated to process Tags
     private class TagsCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -290,7 +290,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Id は、候補から除外する
+            // Exclude IDs already selected by other parameters from candidates
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
             var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder));
@@ -337,9 +337,9 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
 
             var targetProcesses = processes.SelectByWildcards(p => p?.Name, wpName);
 
-            // GetReleaseById() は、繰り返し処理に入る前に実行する必要がある。
-            // (繰り返し処理の中で呼び出すと、繰り返しが壊れてしまう)
-            // どうせその必要があるのだから、スレッド起こして実行した方が良いな。
+            // GetReleaseById() must be called before entering the iteration loop.
+            // (Calling it inside the loop would break the iteration.)
+            // Since it needs to be done anyway, it's better to run it on a separate thread.
             using var results = OrchThreadPool.RunForEach(targetProcesses,
                 proc => proc.GetPSPath(),
                 proc => proc,
@@ -354,15 +354,15 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
 
                 string target = process.GetPSPath();
 
-                // 既存のプロセスの内容から、post data を作成
+                // Create post data from the existing process content
                 Release newRelease = OrchCollectionExtensions.DeepCopy(process)!;
 
-                // 19.0 以降では、GetReleaseById() を呼び出すことで Retention を取得できるため下記は不要
+                // From version 19.0 onwards, Retention can be obtained by calling GetReleaseById(), so the following is unnecessary
                 if (drive.OrchAPISession.ApiVersion < 19)
                 {
                     try
                     {
-                        // 既存の Retention を取得して設定しておく
+                        // Retrieve and set the existing Retention
                         var retention = drive.OrchAPISession.GetReleaseRetention(folder.Id!.Value, process!.Id!.Value);
                         newRelease.RetentionAction = retention?.Action;
                         newRelease.RetentionPeriod = retention?.Period;
@@ -375,7 +375,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                     }
                 }
 
-                #region パラメータで指定された値を設定
+                #region Set values specified by parameters
 
                 newRelease.AssignStringIfNotNull(NewName,                      (r, v) => r.Name = v);
                 newRelease.AssignStringIfNotNull(Description,                  (r, v) => r.Description = v);
@@ -388,7 +388,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                 newRelease.AssignStringIfNotNull(StaleRetentionAction,         (r, v) => r.StaleRetentionAction = v);
                 newRelease.AssignNumberIfNotNullOrZero(StaleRetentionPeriod,   (r, v) => r.StaleRetentionPeriod = v);
 
-                #region RetentionBucket を RetentionBucketId に変換する
+                #region Convert RetentionBucket to RetentionBucketId
                 newRelease.AssignIdFromName(
                     RetentionBucket,
                     () => drive.Buckets.Get(folder),
@@ -426,22 +426,22 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                 newRelease.VideoRecordingSettings.AssignNumberIfNotNullOrZero(MaxDurationSeconds,           (r, v) => r.MaxDurationSeconds = v);
                 #endregion
 
-                // ProcessVersion を変更した場合には、EntryPointId をつけかえないといけない
+                // When ProcessVersion is changed, EntryPointId must be reassigned
                 string currentProcessVersion = newRelease.ProcessVersion;
                 newRelease.AssignStringIfNotNull(Version, (r, v) => r.ProcessVersion = v);
                 bool bVersionChanged = (currentProcessVersion != newRelease.ProcessVersion);
 
-                #region EntryPoint を EntryPointId に変換する
+                #region Convert EntryPoint to EntryPointId
                 if (bVersionChanged || !string.IsNullOrEmpty(EntryPoint))
                 {
                     try
                     {
                         var feedId = drive.FolderFeedId.Get(folder);
-                        // Version を変更したけど、EntryPoint は指定していない場合には、現在の entryPointPath を確認しないと。
+                        // When Version was changed but EntryPoint was not specified, we need to check the current entryPointPath.
                         var resolvedEntryPoint = EntryPoint;
                         if (bVersionChanged && string.IsNullOrEmpty(resolvedEntryPoint))
                         {
-                            // 現在の EntryPath を確認
+                            // Check the current EntryPath
                             var entryPoint = drive.GetPackageEntryPoints(feedId, newRelease?.ProcessKey ?? "", currentProcessVersion!)
                                 .FirstOrDefault(e => e.Id == newRelease?.EntryPointId);
                             resolvedEntryPoint = entryPoint?.Path;
@@ -465,7 +465,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                 }
                 #endregion
 
-                // RetentionPeriod は mandatory なので念のため。
+                // RetentionPeriod is mandatory, so set it just in case.
                 if (string.IsNullOrEmpty(newRelease!.RetentionAction))
                 {
                     newRelease.RetentionAction = (string.IsNullOrEmpty(RetentionAction)) ? "Delete" : RetentionAction;
@@ -476,7 +476,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                 }
                 newRelease.RetentionPeriod ??= 30;
 
-                // GetStaleReleaseRetention() みたいのは呼び出していないから、上みたいな丁寧な処理は不要か。
+                // Since we are not calling something like GetStaleReleaseRetention(), the careful handling above is probably unnecessary.
                 //newRelease.StaleRetentionAction = string.IsNullOrEmpty(StaleRetentionAction) ? "Delete" : StaleRetentionAction;
                 //if (newRelease.StaleRetentionAction == "Delete")
                 //{
@@ -486,7 +486,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
 
                 if (newRelease.SpecificPriorityValue is not null)
                 {
-                    newRelease.JobPriority = null; // これは SpecificPriorityValue で指定する
+                    newRelease.JobPriority = null; // This is specified via SpecificPriorityValue
                 }
 
                 if (ShouldProcess(target, "Update Process"))

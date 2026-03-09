@@ -25,7 +25,7 @@ public partial class OrchAPISession : IDisposable
         bool outputUiPathHeader = false;
         bool outputBody = false;
 
-        // エラーが起きていれば、必ず summary/header/body をすべて出力
+        // If an error occurred, always output all of summary/header/body
         if (!response?.IsSuccessStatusCode ?? false)
         {
             outputSummary = true;
@@ -37,14 +37,14 @@ public partial class OrchAPISession : IDisposable
             switch (currentLevel)
             {
                 case LoggingLevel.Error:
-                    // エラーが発生していなければ何も出力しない
+                    // Output nothing if no error occurred
                     break;
                 case LoggingLevel.Info:
                     outputSummary = true;
                     break;
                 case LoggingLevel.Trace:
                     outputSummary = true;
-                    outputUiPathHeader = true; // 特定のヘッダのみ出力
+                    outputUiPathHeader = true; // Output only specific headers
                     outputBody = true;
                     break;
                 case LoggingLevel.Verbose:
@@ -60,7 +60,7 @@ public partial class OrchAPISession : IDisposable
         var sb = new StringBuilder();
 
         // --------------------
-        // リクエスト部分
+        // Request section
         // --------------------
         if (outputSummary)
         {
@@ -69,7 +69,7 @@ public partial class OrchAPISession : IDisposable
 
         if (outputHeader)
         {
-            // 両方のヘッダーをマージする
+            // Merge both sets of headers
             var mergedReqHeaders = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
             foreach (var header in message.Headers)
             {
@@ -96,7 +96,7 @@ public partial class OrchAPISession : IDisposable
         {
             var filteredHeaders = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
 
-            // 通常のヘッダーから "UIPATH" を含むものを抽出
+            // Extract headers containing "UIPATH" from regular headers
             foreach (var header in message.Headers)
             {
                 if (header.Key.Contains("UIPATH", StringComparison.OrdinalIgnoreCase))
@@ -105,7 +105,7 @@ public partial class OrchAPISession : IDisposable
                 }
             }
 
-            // コンテンツヘッダーからも抽出し、既存キーがあれば追加
+            // Also extract from content headers, appending to existing keys if present
             if (message.Content != null)
             {
                 foreach (var header in message.Content.Headers)
@@ -138,13 +138,13 @@ public partial class OrchAPISession : IDisposable
                 string reqBody;
                 if (isErrorOrCancelled)
                 {
-                    // エラー/キャンセル時のみタイムアウト付き（1秒）
+                    // Only use timeout (1 second) on error/cancellation
                     using var cts = new CancellationTokenSource(1000);
                     reqBody = message.Content.ReadAsStringAsync(cts.Token).GetAwaiter().GetResult();
                 }
                 else
                 {
-                    // 正常時は元の処理（タイムアウトなし）
+                    // Normal case: original processing (no timeout)
                     reqBody = message.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                 }
                 
@@ -156,12 +156,12 @@ public partial class OrchAPISession : IDisposable
             }
             catch
             {
-                // エラー時はスキップ
+                // Skip on error
             }
         }
 
         // --------------------
-        // レスポンス部分
+        // Response section
         // --------------------
         if (response is not null)
         {
@@ -172,7 +172,7 @@ public partial class OrchAPISession : IDisposable
 
             if (outputHeader)
             {
-                // 両方のレスポンスヘッダーをマージする
+                // Merge both sets of response headers
                 var mergedResHeaders = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
                 foreach (var header in response.Headers)
                 {
@@ -200,7 +200,7 @@ public partial class OrchAPISession : IDisposable
             {
                 try
                 {
-                    // ContentType を取得。存在しない場合はテキストとみなす。
+                    // Get the ContentType. If not present, treat as text.
                     string? mediaType = response.Content.Headers.ContentType?.MediaType;
                     bool isTextual = string.IsNullOrEmpty(mediaType) ||
                                      mediaType.StartsWith("text/", StringComparison.OrdinalIgnoreCase) ||
@@ -214,13 +214,13 @@ public partial class OrchAPISession : IDisposable
                         string resBody;
                         if (isErrorOrCancelled)
                         {
-                            // エラー/キャンセル時のみタイムアウト付き（1秒）
+                            // Only use timeout (1 second) on error/cancellation
                             using var cts = new CancellationTokenSource(1000);
                             resBody = response.Content.ReadAsStringAsync(cts.Token).GetAwaiter().GetResult();
                         }
                         else
                         {
-                            // 正常時は元の処理（タイムアウトなし）
+                            // Normal case: original processing (no timeout)
                             resBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                         }
                         
@@ -233,7 +233,7 @@ public partial class OrchAPISession : IDisposable
                 }
                 catch
                 {
-                    // エラー時はスキップ
+                    // Skip on error
                 }
             }
         }
@@ -249,12 +249,12 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    // TODO: OrchExtentions.cs に移動する
+    // TODO: Move to OrchExtentions.cs
     private string SanitizeDriveName()
     {
         string driveName = _drive._psDrive.Name!;
 
-        // ファイル名に使用できない文字をすべてアンダースコアに置換する
+        // Replace all characters that are invalid in file names with underscores
         foreach (char invalidChar in System.IO.Path.GetInvalidFileNameChars())
         {
             driveName = driveName.Replace(invalidChar, '_');
@@ -290,7 +290,7 @@ public partial class OrchAPISession : IDisposable
     }
 
 
-    // 新しい非同期ログシステム
+    // New async log system
     private AsyncLogWriter? _asyncLogWriter;
 
     private AsyncLogWriter GetAsyncLogWriter()
@@ -305,13 +305,13 @@ public partial class OrchAPISession : IDisposable
         return _asyncLogWriter;
     }
 
-    // 同期版
+    // Synchronous version
     //private void WriteLogBlock(string? logBlock)
     //{
     //    if (string.IsNullOrEmpty(logBlock))
     //        return;
 
-    //    // 非同期ログライターを使用（ノンブロッキング）
+    //    // Use the async log writer (non-blocking)
     //    GetAsyncLogWriter().Write(logBlock);
     //}
 
@@ -323,7 +323,7 @@ public partial class OrchAPISession : IDisposable
         await GetAsyncLogWriter().WriteAsync(logBlock, cancellationToken);
     }
 
-    // ログ統計情報を取得
+    // Get log statistics
     public LogStatistics GetLogStatistics()
     {
         return _asyncLogWriter?.GetStatistics() ?? default;
@@ -337,7 +337,7 @@ public partial class OrchAPISession : IDisposable
         }
         catch (Exception ex)
         {
-            // ログ処理のエラーは無視（再帰的なログ書き込みを避けるため）
+            // Ignore log processing errors (to avoid recursive log writing)
             System.Diagnostics.Debug.WriteLine($"Log writer disposal error: {ex}");
         }
     }

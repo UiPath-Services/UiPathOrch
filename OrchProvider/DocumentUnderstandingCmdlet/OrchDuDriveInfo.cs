@@ -36,7 +36,7 @@ public class OrchDuDriveInfo : PSDriveInfo
 
     protected internal Folder? RootFolder;
 
-    // このコンストラクタを実行するタイミングでは、NameColonSeparator は利用できない
+    // At the time this constructor runs, NameColonSeparator is not yet available
     public OrchDuDriveInfo(ProviderInfo provider, string driveName, string description, string root) :
         base(driveName, provider, driveName + ':' + Path.DirectorySeparatorChar, description, null, root)
     {
@@ -68,11 +68,11 @@ public class OrchDuDriveInfo : PSDriveInfo
 
     #region Document Understanding cache
 
-    // このエンティティは、テナントではなく組織に所属している。
-    // あるべきでいえば、ドライブの static なメンバに partitionGlobalId をキーとして保持すべきだ。
-    // ドライブごとにキャッシュをもつのは非効率なんだけど、とりあえず良いか。。
-    // TODO: static メンバにして、partitionGlobalId をキーにする形に書き直す。
-    // でも、書き直すと Path の形式が不自然になってしまうな。。
+    // This entity belongs to the organization, not the tenant.
+    // Ideally, it should be stored in a static member of the drive keyed by partitionGlobalId.
+    // Having a cache per drive is inefficient, but it's fine for now..
+    // TODO: Rewrite to use a static member keyed by partitionGlobalId.
+    // However, rewriting it that way would make the Path format look unnatural..
     internal DuRole[]? _dicDuRoles = null;
     internal readonly ExceptionCachePerTenant _dicDuRoles_Exception = new();
     public DuRole[]? GetDuRoles()
@@ -189,11 +189,11 @@ public class OrchDuDriveInfo : PSDriveInfo
                     }
                     _dicDuUsers[(partitionGlobalId, tenantKey, project.id)] = users;
 
-                    // 三嶋さん(KDDI)からのリクエスト Add-DuUser に User Principal Name を指定できるように
-                    // するなら、次が必要だと思うが、良い実装が思いつかない。
-                    // パフォーマンスを犠牲にするか、あるいは複雑なパラメータを追加するか。。
-                    // 自分としては、どちらも受け入れがたいな。。
-                    //#region UserName をバルクで問い合わせる
+                    // Feature request from Mishima-san (KDDI): allow specifying User Principal Name in Add-DuUser.
+                    // The code below would be needed for that, but I can't think of a good implementation.
+                    // Either sacrifice performance, or add complex parameters..
+                    // Personally, neither option is acceptable..
+                    //#region Bulk-query UserName
                     //foreach (var groupedUsers in users.GroupBy(u => u.type))
                     //{
                     //    var entityType = groupedUsers.Key switch

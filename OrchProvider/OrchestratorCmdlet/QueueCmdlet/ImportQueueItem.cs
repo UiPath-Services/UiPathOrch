@@ -44,7 +44,7 @@ public class ImportQueueItemCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
-    // TODO: 次のようなダブルクォートを含む csv を適切にパースできていないな。。
+    // TODO: Not properly parsing CSVs that contain double quotes like the following..
     /*
     Path,Type,UserName,Roles
     TestTenant:,DirectoryUser,LynneR@1pf2dr.onmicrosoft.com,
@@ -67,7 +67,7 @@ public class ImportQueueItemCommand : OrchestratorPSCmdlet
 
         foreach (var fullLine in File.ReadLines(csvFilePath, CsvEncoding))
         {
-            bool lineHasError = false; // この行にエラーがあるかどうかを追跡するフラグ
+            bool lineHasError = false; // Flag to track whether this line has an error
             string line = fullLine.TrimEnd('\r');
 
             for (int i = 0; i < line.Length; i++)
@@ -122,10 +122,10 @@ public class ImportQueueItemCommand : OrchestratorPSCmdlet
 
             if (lineHasError)
             {
-                // エラーがあった行はすべてのデータを捨てる
+                // Discard all data for lines that had errors
                 currentField.Clear();
                 currentRow.Clear();
-                continue; // 次の行へ進む
+                continue; // Proceed to the next line
             }
 
             // Add the last field if we're not inside quotes (end of line)
@@ -213,7 +213,7 @@ public class ImportQueueItemCommand : OrchestratorPSCmdlet
                         }
                         break;
                     case "Reference":
-                        // "" であっても設定の必要がある
+                        // Must be set even when the value is ""
                         queueItem.Reference = value;
                         break;
                     default: // SpecificContent

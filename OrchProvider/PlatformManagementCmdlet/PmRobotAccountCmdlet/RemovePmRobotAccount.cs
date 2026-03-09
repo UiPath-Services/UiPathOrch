@@ -65,8 +65,8 @@ public class RemovePmRobotAccountCommand : OrchestratorPSCmdlet
         }
     }
 
-    // マルチスレッド化したバージョン
-    // HTTP call を cap した状態では逆に遅くなる場合があるため、シングルスレッドで書き直した
+    // Multi-threaded version
+    // Rewrote as single-threaded because it could be slower when HTTP calls are capped
     //protected override void ProcessRecord()
     //{
     //    var drives = OrchDriveInfo.EnumOrchDrives(Path);

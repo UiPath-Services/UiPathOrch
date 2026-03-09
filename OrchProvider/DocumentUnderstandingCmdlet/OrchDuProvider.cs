@@ -65,7 +65,7 @@ public class OrchDuProvider : NavigationCmdletProvider
             }
             catch
             {
-                // 設定ファイルが不正なケースは、OrchProvider が処理する
+                // Invalid config file cases are handled by OrchProvider
                 return null;
             }
 
@@ -88,7 +88,7 @@ public class OrchDuProvider : NavigationCmdletProvider
             return ret;
         }
 
-        // 設定ファイルが存在しないケースは、OrchProvider が処理する
+        // Missing config file cases are handled by OrchProvider
         return null;
     }
 
@@ -96,12 +96,12 @@ public class OrchDuProvider : NavigationCmdletProvider
     {
         OrchDuDriveInfo duDrive = (OrchDuDriveInfo)drive;
 
-        // プロバイダクラスのロード順によっては、このタイミングではまだ UiPathOrch プロバイダは未登録。
-        // 下記の処理を、すべてのプロバイダの NewDrive で行うことで、UiPathOrch と UiPathOrchDu を確実に関連づけるようにする。
+        // Depending on the provider class loading order, the UiPathOrch provider may not be registered yet at this point.
+        // By performing the following in every provider's NewDrive, we ensure UiPathOrch and UiPathOrchDu are reliably associated.
         try
         {
             // var orchProvider = SessionState.Provider.GetOne("UiPathOrch");
-            // 例外が出なければ、orchProvider is not null になっている
+            // If no exception is thrown, orchProvider is guaranteed to be not null
             var orchDrive = SessionState.Drive.Get(drive.Name.Substring(0, drive.Name.Length - 2)) as OrchDriveInfo;
             duDrive._parentDrive = orchDrive;
         }
@@ -138,13 +138,13 @@ public class OrchDuProvider : NavigationCmdletProvider
         }
     }
 
-    // TODO: これ何か実装した方が良いのでは？ でも呼ばれたことがないような気がする。。
+    // TODO: Should we implement something here? But it seems like this has never been called..
     protected override bool IsValidPath(string path)
     {
         return true;
     }
 
-    // ItemExists メソッドは、ワイルドカードを処理する必要はないっぽい。
+    // The ItemExists method apparently does not need to handle wildcards.
     protected override bool ItemExists(string path)
     {
         string path2 = System.IO.Path.GetFileName(path);
@@ -177,8 +177,8 @@ public class OrchDuProvider : NavigationCmdletProvider
         }
     }
 
-    // GetChildnames は、オブジェクトでなく名前の string 値のみを WriteItemObject する必要がある。
-    // このメソッドは、Get-ChildItem -Name を実行すると呼び出される。
+    // GetChildNames must call WriteItemObject with just the name string, not the object.
+    // This method is invoked when running Get-ChildItem -Name.
     protected override void GetChildNames(string path, ReturnContainers returnContainers)
     {
         var projects = OrchDuDriveInfo.GetDuProjects();
@@ -290,7 +290,7 @@ public class OrchDuProvider : NavigationCmdletProvider
 
     protected override bool IsItemContainer(string path)
     {
-        // このプロバイダは、コンテナしか返さない（ファイルに相当するアイテムは返さない）
+        // This provider only returns containers (it does not return items equivalent to files)
         return true;
     }
 

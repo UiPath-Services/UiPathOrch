@@ -37,11 +37,11 @@ public class GetDuDocumentTypeCommand : OrchestratorPSCmdlet
         {
             var recurse = GetSwitchParameterValue(commandAst, "Recurse");
 
-            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            // Extract path from parameters. If not specified, target the current directory
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
             var drivesProjects = SessionState.EnumDuFolders(paramPath, recurse);
 
-            // パラメータで選択済みの DocumentTypeName は、候補から除外する
+            // Exclude already-selected DocumentTypeName values from completion candidates
             var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -67,7 +67,7 @@ public class GetDuDocumentTypeCommand : OrchestratorPSCmdlet
         var drivesProjects = SessionState.EnumDuFolders(Path, Recurse);
         var wpName = Name.ConvertToWildcardPatternList();
 
-        // 同期バージョン
+        // Synchronous version
         //foreach (var driveProject in drivesProjects)
         //{
         //    var (drive, project) = driveProject;
@@ -78,7 +78,7 @@ public class GetDuDocumentTypeCommand : OrchestratorPSCmdlet
         //        true);
         //}
 
-        // 非同期バージョン
+        // Asynchronous version
         using var results = OrchThreadPool.RunForEach(drivesProjects,
             dp => dp.project.GetPSPath(),
             dp => dp.project,

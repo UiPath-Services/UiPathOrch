@@ -15,8 +15,8 @@ using User = UiPath.PowerShell.Entities.User;
 
 namespace UiPath.PowerShell.Core;
 
-// OrchDriveInfo, OrchDuDriveInfo, OrchTmDriveInfo に共通のベースクラスを作成したいが
-// ちょっと大変。。いったん先延ばし。
+// Would like to create a common base class for OrchDriveInfo, OrchDuDriveInfo, and OrchTmDriveInfo,
+// but it's a bit of work.. postponing for now.
 // 
 //public class OrchDriveInfoBase : PSDriveInfo
 //{
@@ -65,7 +65,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     //public bool _warningOutput = false;
 
-    // OrchFolderProvider の Start で初期化する
+    // Initialized in OrchFolderProvider's Start method
     internal static SessionState? SessionState;
 
     public static string GetTopParentPath(string orchPath)
@@ -73,10 +73,10 @@ public partial class OrchDriveInfo : PSDriveInfo
         int index = orchPath.IndexOf('/');
         if (index == -1)
         {
-            return orchPath; // パスにスラッシュが含まれていない場合はそのまま返す
+            return orchPath; // Return as-is if the path does not contain a slash
         }
 
-        // スラッシュまでの部分文字列を取得
+        // Get the substring up to the slash
         return orchPath[..index];
     }
 
@@ -165,12 +165,12 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         _dicJobsHavingExecutionMedia = null;
 
-        _dicLibraryVersions = null; // 例外が発生するとしたら、_dicLibraries 取得時に発生しているはずだから、まあいいか。。
+        _dicLibraryVersions = null; // If an exception occurs, it should have already been thrown when getting _dicLibraries, so this should be fine..
         _dicLibraryVersionsInHostFeed = null;
 
-        _dicLicenseNamedUser = null; // TODO: 例外キャッシュを追加
+        _dicLicenseNamedUser = null; // TODO: Add exception cache
 
-        _dicLicenseRuntime = null; // TODO: 例外キャッシュを追加
+        _dicLicenseRuntime = null; // TODO: Add exception cache
 
         _dicMachineClientSecrets = null;
         _dicMachineClientSecrets_Exception.ClearCache();
@@ -178,12 +178,12 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicPackages = null;
         _dicPackages_Exceptions?.ClearCache();
 
-        _dicPackageVersions = null; // 例外が発生するとしたら、_dicPackages 取得時に発生しているはずだから、まあいいか。。
+        _dicPackageVersions = null; // If an exception occurs, it should have already been thrown when getting _dicPackages, so this should be fine..
 
         _dicPackageEntryPoint = null;
         _dicPackageEntryPoint_Exception?.ClearCache();
 
-        //_dicPartitionGlobalId = null; // これは変わらないから、クリアしなくていいだろう。。
+        //_dicPartitionGlobalId = null; // This doesn't change, so no need to clear it..
 
         _dicTestSetExecutions = null;
         _dicTestCaseExecutions = null;
@@ -197,7 +197,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicTriggersDetailed = null;
         _dicTriggersDetailed_Exceptions.ClearCache();
 
-        _dicQueueLinks = null; // TODO: 例外キャッシュを追加
+        _dicQueueLinks = null; // TODO: Add exception cache
         _dicQueueItems = null;
 
         //_dicReleaseList = null;
@@ -247,7 +247,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         #endregion
     }
 
-    // TODO: このメソッドの実装は不完全のはず。。
+    // TODO: This method's implementation is probably incomplete..
     public void ClearFolderCache(Folder? folder)
     {
         if (folder is null || folder.Id is null || folder.Id.Value == 0) return;
@@ -258,7 +258,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             cache.ClearCache(folder);
         }
 
-        //_dicAssetLinks = null; // TODO: もっとかしこく必要な部分だけクリアしたいが、、面倒くさい
+        //_dicAssetLinks = null; // TODO: Would like to clear only the necessary parts more intelligently, but it's too much effort
         _dicJobsHavingExecutionMedia?.TryRemove(folderId, out _);
         _dicTriggers?.TryRemove(folderId, out _);
         _dicQueueLinks = null;
@@ -291,8 +291,8 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         if (_dicAuditLogs is null)
         {
-            // うまく動いていたけど、concurrent な方が安全かな？
-            // ConcurrentDictionary で書き直してしまえ。
+            // It was working fine, but concurrent might be safer?
+            // Let's just rewrite it with ConcurrentDictionary.
             //_dicAuditLogs = new HashSet<AuditLog>(new EntityEqualityComparer<AuditLog, Int64>(log => log.Id ?? 0));
             lock (_dicAuditLogs_Exceptions)
             {
@@ -324,7 +324,7 @@ public partial class OrchDriveInfo : PSDriveInfo
                 }
             }
 
-            // Details をキャッシュ取得済みであれば、付け替える
+            // If Details were already fetched and cached, replace them
             if (_dicAuditLogs.TryGetValue(log.Id!.Value, out var cached))
             {
                 log.Details = cached?.Details;
@@ -333,11 +333,11 @@ public partial class OrchDriveInfo : PSDriveInfo
             _dicAuditLogs[log.Id!.Value] = log;
         }
 
-        // 今回の問い合わせ結果のみを返す
+        // Return only the results from this query
         return queriedLogs.AsReadOnly();
     }
 
-    // API call が発生したら true を返す
+    // Returns true if an API call was made
     public bool GetAuditLogDetails(AuditLog log)
     {
         if (log.Id is null || log.Details is not null) return false;
@@ -362,10 +362,10 @@ public partial class OrchDriveInfo : PSDriveInfo
         return jobs.AsReadOnly();
     }
 
-    // このメソッドは IncrementalCachePerFolder クラスに統合しても良いのだけど、ちょっと複雑になるので、いったん保留。理由:
-    // 1. キャッシュクラスのコンストラクタがシンプルに保たれる
-    // 2. 単一取得の API は種類によって異なる可能性があるため、汎用化しにくい
-    // 3. AddToCache メソッドは汎用的で、他の用途にも使える
+    // This method could be integrated into the IncrementalCachePerFolder class, but it gets a bit complex, so postponing. Reasons:
+    // 1. The cache class constructor stays simple
+    // 2. Single-item fetch APIs may differ by type, making it hard to generalize
+    // 3. The AddToCache method is generic and can be used for other purposes
     public Job? GetJob(Folder folder, Int64 jobId)
     {
         var job = OrchAPISession.GetJob(folder.Id ?? 0, jobId);
@@ -378,8 +378,8 @@ public partial class OrchDriveInfo : PSDriveInfo
     }
 
     // key: folderId, hash
-    // Log の Id は必ずゼロが返ってしまうので、うまくキャッシュすることができない
-    // 仕方がないので、ハッシュ値で辞書を作成する。
+    // The Log's Id always returns zero, so it cannot be cached properly
+    // As a workaround, create a dictionary using hash values.
     internal ConcurrentDictionary<Int64, HashSet<Log>>? _dicRobotLogs = null;
     public ReadOnlyCollection<Log> GetRobotLogs(Folder folder, string? query, ulong skip, ulong first, string? orderBy = null, bool orderAscending = false)
     {
@@ -396,7 +396,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             _dicRobotLogs[folder.Id ?? 0] = folderLogs;
         }
 
-        // 必ず問い合わせる
+        // Always query the API
         var logs = OrchAPISession.GetRobotLogs(folder.Id ?? 0, query, skip, first, orderBy, orderAscending).ToList();
         string folderPath = folder.GetPSPath();
         foreach (var log in logs)
@@ -427,7 +427,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         var result = OrchAPISession.GetExecutionMedia(folder.Id ?? 0, skip, first).ToList();
         _dicJobsHavingExecutionMedia[folder.Id ?? 0] = result;
 
-        #region  この JobId がキャッシュされていない場合に限り、Jobs キャッシュに入れておく
+        #region  Add to Jobs cache only if this JobId is not already cached
         var jobs = Jobs.GetCache(folder);
         foreach (var media in result)
         {
@@ -455,8 +455,8 @@ public partial class OrchDriveInfo : PSDriveInfo
     }
 
     #region OrchReleaseList cache
-    // この API は非公開であり、古いバージョンの Orchestrator では動かない場合があるようだ。
-    // そのため、しばらく封印する。
+    // This API is undocumented, and it seems it may not work on older versions of Orchestrator.
+    // Therefore, sealing it off for now.
     // Key: folderId
     //internal ConcurrentDictionary<Int64, List<Release>>? _dicReleaseList;
     //internal ExceptionsCachePer<Int64> _dicReleaseList_Exceptions = new();
@@ -575,9 +575,9 @@ public partial class OrchDriveInfo : PSDriveInfo
             {
                 ExtendedUser exUser = OrchAPISession.GetCurrentUserExtended();
                 if (!string.IsNullOrEmpty(exUser?.AccountId))
-                    _dicPartitionGlobalId = exUser?.AccountId; // 恐らく AC ではこっち。
+                    _dicPartitionGlobalId = exUser?.AccountId; // Probably this one for Automation Cloud.
                 else
-                    _dicPartitionGlobalId = exUser?.TenantKey; // 恐らくオンプレではこっち。
+                    _dicPartitionGlobalId = exUser?.TenantKey; // Probably this one for on-premises.
                 _dicTenantId = exUser?.TenantId;
                 _dicTenantKey = exUser?.TenantKey;
                 if (exUser is not null && exUser.PersonalWorkspace is not null)
@@ -615,10 +615,10 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         lock (_dicPartitionGlobalIdLock)
         {
-            // ここを実行するときは、必ず機密アプリの場合になっている
-            // 非機密アプリでは、ログイン時に GetCurrentUser() を実行しているはず。
-            // ただし、OrchProvider より先に OrchDmProvider か OrchTmProvider でログインした場合には
-            // GetCurrentUser() を実行していないので、非機密アプリになっている可能性もある。
+            // When reaching this code, it should always be a confidential app
+            // For non-confidential apps, GetCurrentUser() should have been called during login.
+            // However, if OrchDmProvider or OrchTmProvider logged in before OrchProvider,
+            // GetCurrentUser() was not called, so it could be a non-confidential app.
             var users = GetUsers();
             foreach (var user in users)
             {
@@ -633,7 +633,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     }
 
     internal int? _dicTenantId = null;
-    internal string? _dicTenantKey = null; // これは Guid なのか？ オンプレと AC で違うのか？
+    internal string? _dicTenantKey = null; // Is this a Guid? Does it differ between on-premises and AC?
     internal object _dicTenantIdLock = new();
     internal (int? id, string? key) GetTenantId()
     {
@@ -641,8 +641,8 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         lock (_dicPartitionGlobalIdLock)
         {
-            // ここを実行するときは、必ず機密アプリの場合になっている
-            // 非機密アプリでは、ログイン時に GetCurrentUser() を実行しているはず。
+            // When reaching this code, it should always be a confidential app
+            // For non-confidential apps, GetCurrentUser() should have been called during login.
             try
             {
                 var users = GetUsers();
@@ -675,13 +675,13 @@ public partial class OrchDriveInfo : PSDriveInfo
             var owner = users.FirstOrDefault(o => o.Id == userId);
             if (owner is not null)
             {
-                // ここはキャッシュをピンポイントで削除できるので、消しておくか。
-                // 頻繁に実行する処理ではないし、この方が安全だよね。。
+                // We can pinpoint-delete the cache here, so let's do it.
+                // This is not a frequently executed operation, and it's safer this way..
                 _dicUsersDetailed?.TryRemove(owner.Id!.Value, out _);
 
                 var detailedOwner = GetUser(owner);
 
-                // もし GetUser() に失敗したら、このエンティティを安全に更新できないため、更新しない
+                // If GetUser() fails, we cannot safely update this entity, so skip the update
                 if (detailedOwner is null) return false;
 
                 if (detailedOwner.MayHavePersonalWorkspace.GetValueOrDefault())
@@ -689,8 +689,8 @@ public partial class OrchDriveInfo : PSDriveInfo
                     var postingUser = OrchCollectionExtensions.DeepCopy(detailedOwner);
                     if (postingUser.UnattendedRobot is not null)
                     {
-                        // サーバーから返る Password には "*****" が入っていたりする。
-                        // 間違ってパスワードを "*****" で更新したりしないように、null を入れておく。
+                        // The Password returned from the server may contain "*****".
+                        // Set it to null to prevent accidentally updating the password with "*****".
                         postingUser.UnattendedRobot.Password = null;
                     }
                     postingUser.MayHavePersonalWorkspace = false;
@@ -702,7 +702,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         }
         catch
         {
-            return false; // この例外は握りつぶす
+            return false; // Swallow this exception
         }
         return true;
     }
@@ -754,7 +754,7 @@ public partial class OrchDriveInfo : PSDriveInfo
                 _dicLicenseRuntime ??= new ConcurrentDictionary<string, List<LicenseRuntime>>(StringComparer.OrdinalIgnoreCase);
             }
         }
-        // LicenseRuntime はキャッシュせず、都度問い合わせる
+        // LicenseRuntime is not cached; query each time
 //            if (!_dicRuntimeLicense.TryGetValue(robotType, out var ret))
 //            {
             List<LicenseRuntime> ret = OrchAPISession.GetLicensesRuntime(robotType).ToList();
@@ -775,7 +775,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     internal ExceptionsCachePer<Int64> _dicTriggers_Exceptions = new();
     public ICollection<ProcessSchedule> GetTriggers(Folder folder)
     {
-        // ApiVersion == 11.1 のとき、個人用ワークスペースにはトリガーがないことを確認済み
+        // Confirmed that personal workspaces have no triggers when ApiVersion == 11.1
         if (OrchAPISession.ApiVersion < 12 && folder.FolderType == "Personal") return [];
 
         _dicTriggers_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
@@ -870,7 +870,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     #region OrchAsset cache
 
     // key: (folderId, assetId)
-    // assetId だけで一意になりそうだけど、念のため folderId もキーに含めておく。
+    // assetId alone should be unique, but including folderId in the key just to be safe.
     internal ConcurrentDictionary<(Int64 folderId, Int64 assetId), AccessibleFoldersDto?>? _dicAssetLinks = null;
     internal readonly ExceptionsCachePer<(Int64, Int64)> _dicAssetLinks_Exception = new();
     public AccessibleFoldersDto? GetFoldersForAsset(Folder folder, Asset asset)
@@ -930,7 +930,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         }
         if (!_dicReleases.TryGetValue(folder.Id!.Value, out var releasesPerFolder))
         {
-            // TODO: このへん、何か最適化されていないようだ？
+            // TODO: Something seems unoptimized around here?
             lock (_dicReleases)
             {
                 releasesPerFolder ??= [];
@@ -1112,7 +1112,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     #region OrchPackageVersion cache
     // <Key: FeedId, <Key: Id, Package>>
     internal ConcurrentDictionary<string, ConcurrentDictionary<string, List<Package>>>? _dicPackageVersions = null;
-    // processId に "id:version" を渡さないでね。それをするとキャッシュが壊れちゃう。
+    // Do not pass "id:version" as processId. Doing so will corrupt the cache.
     public ReadOnlyCollection<Package> GetPackageVersions(Folder folder, string processId)
     {
         string feedId = FolderFeedId.Get(folder) ?? "";
@@ -1219,7 +1219,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     #endregion
 
     // key: (folderId, assetId)
-    // bucketId だけで一意になりそうだけど、念のため folderId もキーに含めておく。
+    // bucketId alone should be unique, but include folderId in the key as well just in case.
     internal ConcurrentDictionary<(Int64 folderId, Int64 bucketId), AccessibleFoldersDto?>? _dicQueueLinks = null;
     public AccessibleFoldersDto? GetFoldersForQueue(Folder folder, QueueDefinition queue)
     {
@@ -1329,8 +1329,8 @@ public partial class OrchDriveInfo : PSDriveInfo
     //private ReadOnlyCollection<TestSetExecution>? _dicTestSetExecutionsEmpty = null;
     public ReadOnlyCollection<TestSetExecution> GetTestSetExecutions(Folder folder, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
     {
-        // TODO: 16 未満の数字は正しいか？ 15.0 では、取得がエラーになることは確認済みだが、
-        // いや、そのエラーは ApiVersion に非依存のようだ。。
+        // TODO: Is the threshold of < 16 correct? Confirmed that retrieval errors occur on 15.0,
+        // but actually, the error seems to be independent of ApiVersion..
         //if (OrchAPISession.ApiVersion < 16)
         //{
         //    _dicTestSetExecutionsEmpty ??= new List<TestSetExecution>().AsReadOnly();
@@ -1371,12 +1371,12 @@ public partial class OrchDriveInfo : PSDriveInfo
     }
 
     /// <summary>
-    /// キャッシュまたは API から TestSetExecution を名前で検索し、Id を返す。
-    /// 見つからない場合は null を返す。
+    /// Searches for a TestSetExecution by name from cache or API and returns its Id.
+    /// Returns null if not found.
     /// </summary>
     public Int64? ResolveTestSetExecutionId(Folder folder, string name)
     {
-        // まずキャッシュから検索
+        // First search the cache
         if (_dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out var cached) ?? false)
         {
             var found = cached.Values.FirstOrDefault(e =>
@@ -1387,7 +1387,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             }
         }
 
-        // キャッシュになければ API で名前検索
+        // If not in cache, search by name via API
         var filter = $"&$filter=(Name%20eq%20%27{Uri.EscapeDataString(name)}%27)";
         var results = GetTestSetExecutions(folder, filter, 0, 1);
         var execution = results.FirstOrDefault();
@@ -1405,12 +1405,12 @@ public partial class OrchDriveInfo : PSDriveInfo
     internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, List<TestCaseAssertion>>>? _dicTestCaseAssertions = null;
 
     /// <summary>
-    /// TestCaseExecution を API から取得し、Path と TestSetExecutionName を設定する。
-    /// キャッシュがあればキャッシュから返す。
+    /// Retrieves TestCaseExecution from the API and sets Path and TestSetExecutionName.
+    /// Returns from cache if available.
     /// </summary>
     public List<TestCaseExecution> GetTestCaseExecutions(Folder folder, string? filter = null, ulong skip = 0, ulong first = ulong.MaxValue)
     {
-        // filter/skip/first 指定がある場合はキャッシュを使わない
+        // Do not use cache when filter/skip/first are specified
         bool useCache = (filter is null && skip == 0 && first == ulong.MaxValue);
 
         if (useCache)
@@ -1436,11 +1436,11 @@ public partial class OrchDriveInfo : PSDriveInfo
             var testCaseExecutions = OrchAPISession.GetTestCaseExecutions(folder.Id ?? 0, filter, skip, first).ToList();
             string folderPath = folder.GetPSPath();
 
-            // キャッシュから TestSetExecutionName を取得するための準備
+            // Prepare to retrieve TestSetExecutionName from cache
             ConcurrentDictionary<Int64, TestSetExecution>? folderTestSetExecutions = null;
             _dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out folderTestSetExecutions);
 
-            // キャッシュにない TestSetExecutionId を収集
+            // Collect TestSetExecutionIds that are not in the cache
             var missingTestSetExecutionIds = testCaseExecutions
                 .Where(t => t.TestSetExecutionId is not null)
                 .Select(t => t.TestSetExecutionId!.Value)
@@ -1448,7 +1448,7 @@ public partial class OrchDriveInfo : PSDriveInfo
                 .Where(id => folderTestSetExecutions is null || !folderTestSetExecutions.ContainsKey(id))
                 .ToList();
 
-            // キャッシュにない TestSetExecution を API から取得（20件ずつバッチ処理）
+            // Fetch TestSetExecutions not in cache from the API (batched in groups of 20)
             if (missingTestSetExecutionIds.Count > 0)
             {
                 const int batchSize = 20;
@@ -1461,7 +1461,7 @@ public partial class OrchDriveInfo : PSDriveInfo
                         GetTestSetExecutions(folder, query, 0, ulong.MaxValue);
                     }
                 }
-                // キャッシュが更新されたので再取得
+                // Re-fetch since the cache was updated
                 _dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out folderTestSetExecutions);
             }
 
@@ -1469,7 +1469,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             {
                 testCaseExecution.Path = folderPath;
 
-                // TestSetExecutionName をキャッシュから設定
+                // Set TestSetExecutionName from cache
                 if (testCaseExecution.TestSetExecutionId is not null && folderTestSetExecutions is not null)
                 {
                     if (folderTestSetExecutions.TryGetValue(testCaseExecution.TestSetExecutionId.Value, out var testSetExecution))
@@ -1480,14 +1480,14 @@ public partial class OrchDriveInfo : PSDriveInfo
                 }
             }
 
-            // キャッシュに保存またはマージ
+            // Save to or merge into cache
             if (useCache)
             {
                 _dicTestCaseExecutions![folder.Id ?? 0] = testCaseExecutions;
             }
             else if (testCaseExecutions.Count > 0)
             {
-                // filter 付きの場合でも、結果をキャッシュにマージ
+                // Even with a filter, merge results into the cache
                 if (_dicTestCaseExecutions is null)
                 {
                     lock (_dicTestCaseExecutions_Exceptions)
@@ -1525,7 +1525,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     #region OrchBucket cache
 
     // key: (folderId, bucketId)
-    // bucketId だけで一意になりそうだけど、念のため folderId もキーに含めておく。
+    // bucketId alone should be unique, but including folderId in the key just to be safe.
     internal ConcurrentDictionary<(Int64 folderId, Int64 bucketId), AccessibleFoldersDto?>? _dicBucketLinks = null;
     internal ExceptionsCachePer<(Int64, Int64)> _dicBucketLinks_Exceptions = new();
     public AccessibleFoldersDto? GetFoldersForBucket(Folder folder, Bucket bucket)
@@ -1607,13 +1607,13 @@ public partial class OrchDriveInfo : PSDriveInfo
         return _dicCalendars?.Values;
     }
 
-    // ここでは例外をキャッシュしなくても十分な気がする
+    // Caching exceptions here probably isn't necessary
     //internal readonly ExceptionsCachePer<long> _dicCalendar_Exceptions = new();
     public ExtendedCalendar? GetCalendar(ExtendedCalendar calendar)
     {
         if (_dicCalendars is null)
         {
-            lock (_dicCalendars_Exceptions) // dead lock を避けるため、同じオブジェクトでロックしないと。
+            lock (_dicCalendars_Exceptions) // Must lock on the same object to avoid deadlocks.
             {
                 _dicCalendars ??= [];
             }
@@ -1621,14 +1621,14 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         if (_dicCalendars.TryGetValue(calendar.Id!.Value, out var extendedCalendar))
         {
-            if (calendar.ExcludedDates?.Length != 0) // もう取得済み・キャッシュ済みなのでこのまま返す
+            if (calendar.ExcludedDates?.Length != 0) // Already fetched and cached, return as-is
                 return calendar;
         }
 
         calendar = OrchAPISession.GetCalendar(calendar.Id.Value);
         if (calendar is null)
         {
-            //_dicCalendars[calendarId] = null; // null をコレクションに入れると後が面倒なので、キャッシュはしないでおく。。
+            //_dicCalendars[calendarId] = null; // Adding null to the collection causes trouble later, so skip caching..
             return null;
         }
         calendar.Path = NameColonSeparator;
@@ -1685,7 +1685,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     internal readonly ExceptionCachePerTenant _dicPmAuditLogs_Exception = new();
     public ReadOnlyCollection<PmAuditLog> GetPmAuditLog(string? query, ulong skip, ulong first)
     {
-        // こいつはマルチスレッドを考慮する必要はないはずだが、念のため。。
+        // This shouldn't need to be thread-safe, but just to be safe..
         if (_dicPmAuditLogs is null)
         {
             lock (_dicPmAuditLogs_Exception)
@@ -1694,7 +1694,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             }
         }
 
-        // 必ず問い合わせる
+        // Always query the API
         var partitionGlobalId = GetPartitionGlobalId();
         var logs = OrchAPISession.GetPmAuditLog(partitionGlobalId, query, skip, first).ToList();
         foreach (var log in logs)
@@ -1707,7 +1707,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         return logs.AsReadOnly();
     }
 
-    // key: 検索テキスト
+    // key: search text
     internal ConcurrentDictionary<string, PmDirectoryEntityInfo[]?>? _dicSearchPmDirectory = null;
     internal readonly ExceptionsCachePer<string> _dicSearchPmDirectory_Exception = new();
     public PmDirectoryEntityInfo[]? SearchPmDirectory(string key)
@@ -1744,8 +1744,8 @@ public partial class OrchDriveInfo : PSDriveInfo
     }
 
     // key: (name, kind)
-    // kind: "user", "group", or "application" ロボットは検索できないようだ。
-    // unresolvedList は出力パラメータ。解決できなかった名前を、元の T のリストで返す。
+    // kind: "user", "group", or "application" - robots cannot be searched apparently.
+    // unresolvedList is an output parameter. Returns unresolved names as the original T list.
     internal ConcurrentDictionary<(string, string), PmGroupMember?>? _dicPmBulkResolveByName = null;
     internal readonly ExceptionCachePerTenant _dicPmBulkResolveByName_Exception = new();
     public Dictionary<string, PmGroupMember?> PmBulkResolveByName<T>(
@@ -1768,7 +1768,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             }
         }
 
-        // まだ問い合わせていない names or emails の一覧を作成
+        // Build a list of names or emails that haven't been queried yet
         List<T> needQueryUsers = users
             .Where(user => !string.IsNullOrEmpty(getSearchKeyFunc(user)))
             .Where(user => !_dicPmBulkResolveByName.ContainsKey((kind, getSearchKeyFunc(user))))
@@ -1802,16 +1802,16 @@ public partial class OrchDriveInfo : PSDriveInfo
             }
         }
 
-        // キャッシュをそのまま返すのではなく、今回の問い合わせの対象（users）の結果だけを返す
+        // Rather than returning the entire cache, return only the results for the queried users
         Dictionary<string, T> dicList = [];
 
-        // unresolvedList が渡されている場合には、このリストを作成する。
-        // users を高速に検索できるように、辞書にしておく。
+        // If unresolvedList is provided, build this list.
+        // Use a dictionary for fast user lookup.
         if (unresolvedList is not null)
         {
             dicList = users.ToDictionary(u => getSearchKeyFunc(u), u => u, StringComparer.OrdinalIgnoreCase);
 
-            // 検索キーが null のものは、未解決リストに追加する
+            // Add entries with null search keys to the unresolved list
             foreach (var user in users)
             {
                 if (string.IsNullOrEmpty(getSearchKeyFunc(user)))
@@ -1829,13 +1829,13 @@ public partial class OrchDriveInfo : PSDriveInfo
             {
                 continue;
             }
-            // すべて辞書に入っているはず。。見つからなかった名前には null が入っている。
+            // Everything should be in the dictionary.. Names not found will have null values.
             if (_dicPmBulkResolveByName.TryGetValue((kind, key), out PmGroupMember value))
             {
                 ret[key] = value;
                 if (value is null && dicList is not null)
                 {
-                    // これも必ず辞書に入っているはず。。
+                    // This should also always be in the dictionary..
                     if (dicList.TryGetValue(key, out var unresolvedEntry))
                     {
                         unresolvedList!.Add(unresolvedEntry);
@@ -1852,8 +1852,8 @@ public partial class OrchDriveInfo : PSDriveInfo
     internal readonly ExceptionsCachePer<string>_dicSearchDirectory_Exception = new();
     public IEnumerable<DirectoryObject> SearchDirectory(string name)
     {
-        // この API は、'+' を含むユーザー名を検索できないようだ。
-        // 念のため、+ のほか '-' と '_' についても検索ワードから除いて処理する
+        // This API cannot search for user names containing '+'.
+        // As a precaution, also exclude '-' and '_' from the search word
         int index = name.IndexOfAny(['+', '-', '_']);
         string searchWord = index >= 0 ? name.Substring(0, index) : name;
 
@@ -1884,11 +1884,11 @@ public partial class OrchDriveInfo : PSDriveInfo
             }
         }
 
-        // name で前方一致検索して、当たればそれを返す
+        // Search by name prefix match, return results if found
         var ret = value?.Where(obj => obj.identityName?.StartsWith(name, StringComparison.OrdinalIgnoreCase) ?? false) ?? [];
         if (ret.Any()) return ret;
 
-        // 当たらなければ、全部返す。この中に含まれているエントリがひとつだけなら、それが検索したいユーザーであるはずだ。
+        // If no prefix match, return all results. If there's only one entry, it should be the desired user.
         return value ?? [];
     }
 
@@ -1926,17 +1926,17 @@ public partial class OrchDriveInfo : PSDriveInfo
         var newGroup = OrchAPISession.CreatePmGroup(createGroupCommand);
         if (newGroup is not null)
         {
-            newGroup.Path = NameColonSeparator; // キャッシュに入れる必要はないが、このメソッドが返す PmGroup に設定するのは必要だ。
+            newGroup.Path = NameColonSeparator; // Not needed for the cache, but necessary to set on the PmGroup returned by this method.
             _dicSearchDirectory = null;
             _dicSearchDirectory_Exception.ClearCache();
             _dicSearchPmDirectory = null;
             _dicSearchPmDirectory_Exception.ClearCache();
 
-            // PmGroup のキャッシュを削除すると、直後に PmGroups.Get() を呼び出したとき、この戻り値に
-            // 作成したばかりの PmGroup が含まれない場合があるようだ。
-            // そのため、ここではキャッシュを削除せず、キャッシュを更新するようにしておく。
-            // CreateXxx() が正しい結果を返さないことがあったので、一貫したキャッシュを構築するため
-            // CreateXxx() を呼び出した後は、キャッシュをクリアするようにしていたのだけど、ちと困るな。。
+            // If we clear the PmGroup cache, the newly created PmGroup may not be included
+            // in the return value when PmGroups.Get() is called immediately after.
+            // Therefore, update the cache here instead of clearing it.
+            // We used to clear the cache after calling CreateXxx() to build a consistent cache,
+            // since CreateXxx() sometimes returned incorrect results, but this is problematic..
             PmGroups.Set(newGroup);
         }
         return newGroup;
@@ -1982,9 +1982,9 @@ public partial class OrchDriveInfo : PSDriveInfo
         }
         PmGroups.ClearCache(groupId);
 
-        PmUsers.ClearCache(); // 内部にグループIDを含む
-        PmRobotAccounts.ClearCache(); // 内部にグループIDを含む
-        // PmExternalClients.ClearCache(); // この中にグループIDはない
+        PmUsers.ClearCache(); // Contains group IDs internally
+        PmRobotAccounts.ClearCache(); // Contains group IDs internally
+        // PmExternalClients.ClearCache(); // This does not contain group IDs
 
         return ret;
     }
@@ -2009,9 +2009,9 @@ public partial class OrchDriveInfo : PSDriveInfo
         }
         PmGroups.ClearCache(ret?.id);
 
-        PmUsers.ClearCache(); // 内部にグループIDを含む
-        PmRobotAccounts.ClearCache(); // 内部にグループIDを含む
-        // PmExternalClients.ClearCache(); // この中にグループIDはない
+        PmUsers.ClearCache(); // Contains group IDs internally
+        PmRobotAccounts.ClearCache(); // Contains group IDs internally
+        // PmExternalClients.ClearCache(); // This does not contain group IDs
 
         return ret;
     }
@@ -2116,7 +2116,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         }
     }
 
-    // 組織のリストエンティティ
+    // Organization list entities
     public readonly ListCachePerOrganization<PmUser> PmUsers;
     public readonly ListCachePerOrganization<PmGroup> PmGroups;
     public readonly ListCachePerOrganization<PmRobotAccount> PmRobotAccounts;
@@ -2126,15 +2126,15 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerOrganization<NuLicensedUser> PmLicensedUsers;
     public readonly ListCachePerOrganization<AccessAllowedMember> PmAccessAllowedMember;
 
-    // インデックスなしの組織エンティティ
-    // これらはマルチスレッドでの取得は避けるべきだ。Path の設定がおかしくなる。
+    // Non-indexed organization entities
+    // These should not be fetched in multi-threaded contexts. Path assignment will break.
     public readonly SingleCachePerOrganization<PmAuthenticationRoot> PmAuthenticationSetting;
 
-    // これらはドライブごとに保持する必要があるため、 Cache クラスの static メンバにはできない
+    // These must be kept per drive, so they cannot be static members of the Cache class
     internal readonly List<ITenantCacheClearable> _allTenantCache = [];
     internal readonly List<IFolderCacheClearable> _allFolderCache = [];
 
-    // インデックスなしのテナントエンティティ
+    // Non-indexed tenant entities
     public readonly SingleCachePerTenant<ActivitySettings> ActivitySettings;
     public readonly SingleCachePerTenant<string[]> AvailableVersions;
     public readonly SingleCachePerTenant<ODataValueOfString> ConnectionString;
@@ -2142,10 +2142,10 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly SingleCachePerTenant<License> LicenseSettings;
     public readonly SingleCachePerTenant<LibraryFeed[]> LibraryFeeds;
 
-    // インデックスつきテナントエンティティ
+    // Indexed tenant entities
     public readonly IndexedCachePerTenant<User, UserPrivilege> UserPrivileges;
 
-    // テナントのリストエンティティ
+    // Tenant list entities
     public readonly ListCachePerTenant<ResponseDictionaryItem> AuthenticationSettings;
     public readonly ListCachePerTenant<CredentialStore> CredentialStores;
     public readonly ListCachePerTenant<Robot> Robots;
@@ -2160,7 +2160,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerTenant<Webhook> Webhooks;
     public readonly ListCachePerTenant<ResponseDictionaryItem> WebSettings;
 
-    // インデックスなしのフォルダーエンティティ
+    // Non-indexed folder entities
     public readonly SingleCachePerFolder<EntitiesSummary> EntitiesSummary;
     public readonly SingleCachePerFolder<string> FolderFeedId;
 
@@ -2188,19 +2188,19 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerFolder<UserRobots> UserRobots;
     public readonly ListCachePerFolder<MachineRuntime> RuntimesForFolder;
 
-    // インデックスつきフォルダーエンティティ
+    // Indexed folder entities
     public readonly IndexedListCachePerFolder<MachineFolder, ExtendedRobot> FolderRobots;
     public readonly IndexedListCachePerFolder<MachineFolder, RobotUser> MachinesRobots;
     public readonly IndexedListCachePerFolder<Bucket, BlobFile> BucketFiles;
     public readonly IndexedListCachePerFolder<Release, SubtypedPackageResource> ReleaseRequirements;
     public readonly IndexedListCachePerFolder<TestDataQueue, TestDataQueueItem> TestDataQueueItems;
 
-    //public readonly CachePerFolder<Release> Processes; // これはインデックスがついてた。。
+    //public readonly CachePerFolder<Release> Processes; // This one was indexed..
 
-    // フォルダーエンティティのインクリメンタルキャッシュ
+    // Incremental cache for folder entities
     public readonly IncrementalCachePerFolder<Int64, Job> Jobs;
 
-    // このコンストラクタを実行するタイミングでは、NameColonSeparator は利用できない
+    // At the time this constructor runs, NameColonSeparator is not yet available
     public OrchDriveInfo(ProviderInfo provider, PSDrive drive) :
         base(drive.Name, provider, drive.Name + ':' + Path.DirectorySeparatorChar, drive.Description, null, drive.Root)
     {
@@ -2208,9 +2208,9 @@ public partial class OrchDriveInfo : PSDriveInfo
         _psDrive.Root = _psDrive.Root?.TrimEnd('/');
         RootFolder = new Folder() { DisplayName = "", FullyQualifiedName = "", Path = NameColonSeparator };
 
-        // キャッシュを初期化
+        // Initialize caches
 
-        // 組織のリストエンティティ
+        // Organization list entities
         PmUsers                = new(this, OrchAPISession.GetPmUsers,                 e => e.Path = NameColonSeparator);
         PmGroups               = new(this, OrchAPISession.GetPmGroups,                e =>
             {
@@ -2254,7 +2254,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             }
         );
 
-        // インデックスなしの組織エンティティ
+        // Non-indexed organization entities
         PmAuthenticationSetting = new(this,
             OrchAPISession.GetPmAuthenticationSetting,
             e =>
@@ -2274,7 +2274,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             }
         );
 
-        // インデックスなしのテナントエンティティ
+        // Non-indexed tenant entities
         ActivitySettings       = new(this, OrchAPISession.GetActivitySettings,        e => e.Path = NameColonSeparator);
         ConnectionString       = new(this, OrchAPISession.GetConnectionString,        e => e.Path = NameColonSeparator);
         LicenseSettings        = new(this, OrchAPISession.GetLicenseSettings,         e => e.Path = NameColonSeparator);
@@ -2302,8 +2302,8 @@ public partial class OrchDriveInfo : PSDriveInfo
                 }
                 else
                 {
-                    // 11.1 では、ロボット一覧取得で API call が発生していなかった。。ユーザーからそれっぽいのを作ってみる。
-                    // TODO: 12 以降ではどうか？
+                    // In 11.1, the robot listing did not produce an API call.. Try building something similar from users.
+                    // TODO: How does this work in version 12 and later?
                     var users = GetUsers();
                     foreach (var user in users)
                     {
@@ -2311,7 +2311,7 @@ public partial class OrchDriveInfo : PSDriveInfo
                     }
                     return users.Select(u => new Robot()
                     {
-                        // TODO: ここ未完成。なんちゃって実装。
+                        // TODO: This is incomplete. Rough/placeholder implementation.
                         Path = NameColonSeparator,
                         Id = u.UnattendedRobot?.RobotId ?? u.RobotProvision?.RobotId,
                         Type = u.RobotProvision?.RobotType,
@@ -2329,8 +2329,8 @@ public partial class OrchDriveInfo : PSDriveInfo
             }
         );
 
-        // 現行の実装では、必ず GetCredentialStore を呼び出している。
-        // Get-OrchCredentialStore cmdlet に、-ExpandDetails parameter を実装して、この呼び出しは分離すべきかもしれない。
+        // The current implementation always calls GetCredentialStore.
+        // We should consider adding an -ExpandDetails parameter to the Get-OrchCredentialStore cmdlet and separating this call.
         CredentialStores = new(this, () =>
             {
                 var stores = OrchAPISession.GetCredentialStores();
@@ -2358,7 +2358,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             }
         );
 
-        // 15 の web interface で &$expand=UpdateInfo が付与されていることを確認済み
+        // Confirmed that the v15 web interface includes &$expand=UpdateInfo
         Machines = new(this,
             OrchAPISession.ApiVersion >= 12
                 ? () => OrchAPISession.GetMachines("&$expand=UpdateInfo")
@@ -2389,7 +2389,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             }
         );
 
-        // インデックスつきのテナントエンティティ
+        // Indexed tenant entities
         UserPrivileges = new(this, OrchAPISession.GetUserPrivilege, e => e.Id!.Value, e => e.UserName!,
             (e, userName) => 
             { 
@@ -2398,12 +2398,12 @@ public partial class OrchDriveInfo : PSDriveInfo
             }
         );
 
-        // インデックスなしのフォルダエンティティ
-        // 下記は 11.1 ではエラーになることを確認済み。TODO: feedId はどうやって取得するのか？ 12 以降ではどうか？
+        // Non-indexed folder entities
+        // Confirmed that the below returns an error in 11.1. TODO: How do we get feedId? How does this work in version 12 and later?
         EntitiesSummary                = new(this, fid => OrchAPISession.GetEntitiesSummary(fid!.Value), (e, folderPath) => e.Path = folderPath);
         FolderFeedId                   = new(this, OrchAPISession.GetFolderFeedId, null, 12);
-        ActionCatalogs                 = new(this, OrchAPISession.GetTaskCatalogs,       (e, folderPath) => e.Path = folderPath, 16); // 16 でエラーが返らないことを確認済み
-        ApiTriggers                    = new(this, OrchAPISession.GetHttpTriggers,       (e, folderPath) => e.Path = folderPath, 18); // 17 で web interface にないことを確認済み (17 で実行してもエラーは返らないようだが、)
+        ActionCatalogs                 = new(this, OrchAPISession.GetTaskCatalogs,       (e, folderPath) => e.Path = folderPath, 16); // Confirmed no error is returned in v16
+        ApiTriggers                    = new(this, OrchAPISession.GetHttpTriggers,       (e, folderPath) => e.Path = folderPath, 18); // Confirmed not present in the v17 web interface (executing in v17 does not return an error, though)
         EventTriggers                  = new(this, OrchAPISession.GetEventTriggers,      (e, folderPath) => e.Path = folderPath, 18);
         Buckets                        = new(this, OrchAPISession.GetBuckets,            (e, folderPath) => e.Path = folderPath);
         Environments                   = new(this, OrchAPISession.GetEnvironments,       (e, folderPath) => e.Path = folderPath);
@@ -2414,10 +2414,10 @@ public partial class OrchDriveInfo : PSDriveInfo
         Reviewers                      = new(this, OrchAPISession.GetReviewers);
         RobotsFromFolder               = new(this, OrchAPISession.GetRobotsFromFolder,   (e, folderPath) => e.Path = folderPath);
         Sessions                       = new(this, OrchAPISession.GetSessions,           (e, folderPath) => e.Path = folderPath);
-        TestCases                      = new(this, OrchAPISession.GetTestCases,          (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済みだが、実際には API ver に依存しないらしい
-        TestDataQueues                 = new(this, OrchAPISession.GetTestDataQueues,     (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済みだが、実際には API ver に依存しないらしい
-        TestSets                       = new(this, OrchAPISession.GetTestSets,           (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済みだが、実際には API ver に依存しないらしい
-        TestSetSchedules               = new(this, OrchAPISession.GetTestSetSchedules,   (e, folderPath) => e.Path = folderPath); // 17 で web interface にないことを確認済みだが、実際には API ver に依存しないらしい
+        TestCases                      = new(this, OrchAPISession.GetTestCases,          (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
+        TestDataQueues                 = new(this, OrchAPISession.GetTestDataQueues,     (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
+        TestSets                       = new(this, OrchAPISession.GetTestSets,           (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
+        TestSetSchedules               = new(this, OrchAPISession.GetTestSetSchedules,   (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
         UserRobots                     = new(this, OrchAPISession.GetUserRobots);
 
         Assets = new(this, OrchAPISession.GetAssets, (e, folderPath) =>
@@ -2440,7 +2440,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             (e, folderPath) => e.Path = folderPath
         );
 
-        // 15: ?$filter=((((IsAssignedToFolder eq true) or (IsInherited eq true))))
+        // v15: ?$filter=((((IsAssignedToFolder eq true) or (IsInherited eq true))))
         FolderMachinesAssigned = new(this,
             OrchAPISession.ApiVersion >= 12
                 ? fid => OrchAPISession.GetMachinesAssignedTo(fid, "&$filter=((IsAssignedToFolder eq true) or (IsInherited eq true))")
@@ -2453,7 +2453,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             (e, folderPath) => e.Path = folderPath
         );
 
-        // Processes はインデックスがついているので、下記ではキャッシュを実装できない
+        // Processes is indexed, so the cache cannot be implemented as shown below
         //Processes = new(this,
         //    OrchAPISession.ApiVersion >= 12
         //        ? fid => OrchAPISession.GetReleases(fid, "&$expand=Environment,CurrentVersion,ReleaseVersions,EntryPoint")
@@ -2461,7 +2461,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         //    (e, folderPath) => e.Path = folderPath
         //);
 
-        // インデックスつきのフォルダーエンティティ
+        // Indexed folder entities
         BucketFiles = new(this, OrchAPISession.GetBucketFiles,
             bucket => bucket.Id!.Value,
             bucket => bucket.Name!,
@@ -2514,7 +2514,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             }
         );
 
-        // フォルダーエンティティのインクリメンタルキャッシュ
+        // Incremental cache for folder entities
         Jobs = new IncrementalCachePerFolder<Int64, Job>(
             this,
             //(folderId, query, skip, first, orderBy, orderAsc) => OrchAPISession.GetJobs(folderId, query, skip, first, orderBy, orderAsc),
@@ -2541,14 +2541,14 @@ public partial class OrchDriveInfo : PSDriveInfo
             {
                 tasks.Add(Task.Run(() =>
                 {
-                    // この例外は握りつぶす
+                    // Swallow this exception
                     try { user = GetCurrentUser() as ExtendedUser; } catch { }
                 }));
 
                 // get personal workspaces that being explored
                 tasks.Add(Task.Run(() =>
                 {
-                    // この例外は握りつぶす
+                    // Swallow this exception
                     try { personalWorkspaces = PersonalWorkspaces.Get(); } catch { }
                 }));
             }
@@ -2557,38 +2557,38 @@ public partial class OrchDriveInfo : PSDriveInfo
             List<Folder> folders = null;
             tasks.Add(Task.Run(() =>
             {
-                // もし例外が発生したら、そのまま漏らす
+                // If an exception occurs, let it propagate
                 folders = OrchAPISession.GetFolders().ToList();
             }));
 
             Task.WaitAll([..tasks]);
 
-            // current user の戻りを処理
+            // Process the current user result
             string personalWorkspaceName = "";
             if (user is not null && user.PersonalWorkspace is not null)
             {
                 personalWorkspaceName = user.PersonalWorkspace.DisplayName;
-                user.PersonalWorkspace.ParentId = null; // なぜか値が入っていることがあるので修正
+                user.PersonalWorkspace.ParentId = null; // Fix: this sometimes has a value for some reason
                 user.PersonalWorkspace.Path = NameColonSeparator;
-                user.PersonalWorkspace.FolderType ??= "Personal"; // なぜか ApiVer == 11.1 では null になっているので修正
-                user.PersonalWorkspace.FeedType = "FolderHierarchy"; // なぜか "Processes" が入っているので修正
+                user.PersonalWorkspace.FolderType ??= "Personal"; // Fix: this is null in ApiVer 11.1 for some reason
+                user.PersonalWorkspace.FeedType = "FolderHierarchy"; // Fix: this contains "Processes" for some reason
                 //user.PersonalWorkspace.FullName = NameColonSeparator + WildcardPattern.Escape(user.PersonalWorkspace.DisplayName);
                 user.PersonalWorkspace.FullName = NameColonSeparator + user.PersonalWorkspace.DisplayName;
                 _dicFolders = [user.PersonalWorkspace];
                 _dicFoldersForEnumFolders = [user.PersonalWorkspace];
             }
 
-            // personal workspaces that being explored の戻りを処理
+            // Process the personal workspaces being explored result
             #region retriving Exploring Personal Workspace
             if (personalWorkspaces is not null)
             {
                 foreach (var ws in personalWorkspaces
-                    .Where(ws => ws.Name != personalWorkspaceName && // My Workspace は直前の current user の処理で追加済みなので除外
+                    .Where(ws => ws.Name != personalWorkspaceName && // Exclude My Workspace since it was already added in the current user processing above
                         (user is not null && ws.ExploringUserIds is not null && ws.ExploringUserIds.Any(id => id == user?.Id)))
                     .OrderBy(ws => ws.Name)) 
                 {
-                    // 自分が exploring 中の、他人のワークスペースを追加する
-                    // (explore していないワークスペースには、権限がなくアクセスできないため)
+                    // Add other users' workspaces that we are currently exploring
+                    // (Workspaces we are not exploring are inaccessible due to lack of permissions)
 //                        if (user is not null && ws.ExploringUserIds is not null && ws.ExploringUserIds.Any(id => id == user?.Id))
                     {
                         var pwFolder = new Folder()
@@ -2615,13 +2615,13 @@ public partial class OrchDriveInfo : PSDriveInfo
             }
             #endregion
 
-            // folders の戻りを処理
+            // Process the folders result
             foreach (var folder in folders ?? [])
             {
-                // 追加済みのフォルダーをスキップ
-                folder.FolderType ??= "Standard"; // なぜか ApiVer == 11.1 では null になっているので修正
+                // Skip already-added folders
+                folder.FolderType ??= "Standard"; // Fix: this is null in ApiVer 11.1 for some reason
 
-                // Path メンバに、親フォルダの名前を入れておく
+                // Set the Path member to the parent folder name
                 int idx = folder.FullyQualifiedName!.LastIndexOf('/');
                 if (idx != -1)
                 {
@@ -2638,43 +2638,43 @@ public partial class OrchDriveInfo : PSDriveInfo
                     //folder.FullName = NameColon + WildcardPattern.Escape(orchPath);
                 }
             }
-            // _dicFolders は、GetChildItems 用だ。
+            // _dicFolders is used by GetChildItems.
             _dicFolders ??= [];
             _dicFoldersForEnumFolders ??= [];
             if (folders is not null)
             {
-                #region _dicFolders を構築
-                // 1. 最初に、ルート直下のフォルダをすべて追加
-                // 1-1. personal workspace folder をすべて追加（これはすでに済み）
-                // 1-2. それ以外のルート直下のフォルダを追加
+                #region Build _dicFolders
+                // 1. First, add all folders directly under the root
+                // 1-1. Add all personal workspace folders (already done above)
+                // 1-2. Add the remaining folders directly under the root
                 _dicFolders.AddRange(folders
                     .Where(f => !f.FullyQualifiedName!.Contains('/'))
                     .OrderBy(f => f.FullyQualifiedNameOrderable));
 
-                // 2. personal workspace folder 配下にあるフォルダをすべて追加
+                // 2. Add all folders under personal workspace folders
                 _dicFolders.AddRange(folders
                     .Where(f => f.FeedType == "PersonalWorkspace")
-                    .Where(f => f.FullyQualifiedName!.Contains('/')) // これはなくても良い気がするが、
+                    .Where(f => f.FullyQualifiedName!.Contains('/')) // This filter may not be necessary, but keeping it
                     .OrderBy(f => f.FullyQualifiedNameOrderable));
 
-                // 3. 残りのフォルダをすべて追加
+                // 3. Add all remaining folders
                 _dicFolders.AddRange(folders
                     .Where(f => f.FeedType != "PersonalWorkspace")
                     .Where(f => f.FullyQualifiedName!.Contains('/'))
                     .OrderBy(f => f.FullyQualifiedNameOrderable));
                 #endregion
 
-                #region _dicFoldersForEnumFolders を構築
-                // _dicFoldersForEnumFolders は、OrchDriveInfo.EnumFolders() 用だ。微妙にソート順が違う。
-                // 1. 最初に、personal workspace folder をすべて追加 (ルート直下のものだけ済みだ)
-                // personal workspace folder 配下にあるフォルダを追加してから、FullyQualifiedName でソートし直すのが良かろう
+                #region Build _dicFoldersForEnumFolders
+                // _dicFoldersForEnumFolders is used by OrchDriveInfo.EnumFolders(). The sort order differs slightly.
+                // 1. First, add all personal workspace folders (only root-level ones are done so far)
+                // Add folders under personal workspace folders, then re-sort by FullyQualifiedName
                 _dicFoldersForEnumFolders.AddRange(folders
                     .Where(f => f.FeedType == "PersonalWorkspace"));
                 _dicFoldersForEnumFolders = _dicFoldersForEnumFolders
                     .OrderBy(f => f.FullyQualifiedNameOrderable)
                     .ToList();
 
-                // 2. 残りのフォルダをすべて追加
+                // 2. Add all remaining folders
                 _dicFoldersForEnumFolders.AddRange(folders
                     .Where(f => f.FeedType != "PersonalWorkspace")
                     .OrderBy(f => f.FullyQualifiedNameOrderable));

@@ -77,7 +77,7 @@ public class TestUserMappingCsvCommand : OrchestratorPSCmdlet
         var srcDrive = SessionState.GetOrchDrive(SourceTenant);
         var dstDrive = SessionState.GetOrchDrive(DestinationTenant);
 
-        // CSV を読み込む
+        // Read the CSV
         string physicalPath = SessionState.Path.GetUnresolvedProviderPathFromPSPath(CsvFile!);
         List<MappingEntry> entries;
         try
@@ -96,7 +96,7 @@ public class TestUserMappingCsvCommand : OrchestratorPSCmdlet
             return;
         }
 
-        // ソーステナントのユーザー一覧を取得
+        // Get the user list from the source tenant
         var srcUsers = srcDrive.GetUsers();
 
         int okCount = 0;
@@ -108,13 +108,13 @@ public class TestUserMappingCsvCommand : OrchestratorPSCmdlet
             string sourceUserName = entry.SourceUserName;
             string? destinationUserName = entry.DestinationUserName;
 
-            // SourceUserName がソーステナントに存在するか確認
+            // Check if SourceUserName exists in the source tenant
             var srcUser = srcUsers.FirstOrDefault(u => string.Compare(u.UserName, sourceUserName, StringComparison.OrdinalIgnoreCase) == 0);
 
             bool srcFound = srcUser is not null;
             if (!srcFound)
             {
-                // フォルダユーザーとしても探す
+                // Also search as a folder user
                 try
                 {
                     var folders = srcDrive.GetFolders();
@@ -130,7 +130,7 @@ public class TestUserMappingCsvCommand : OrchestratorPSCmdlet
                 }
                 catch
                 {
-                    // フォルダユーザーの検索に失敗しても続行
+                    // Continue even if folder user search fails
                 }
             }
 
@@ -140,7 +140,7 @@ public class TestUserMappingCsvCommand : OrchestratorPSCmdlet
                 warningCount++;
             }
 
-            // DestinationUserName が空でないか確認
+            // Check if DestinationUserName is not empty
             if (string.IsNullOrEmpty(destinationUserName))
             {
                 WriteWarning($"[WARNING] SourceUserName '{sourceUserName}' has empty DestinationUserName.");
@@ -148,7 +148,7 @@ public class TestUserMappingCsvCommand : OrchestratorPSCmdlet
                 continue;
             }
 
-            // DestinationUserName がデスティネーションディレクトリに存在するか確認
+            // Check if DestinationUserName exists in the destination directory
             try
             {
                 var resolved = dstDrive.SearchDirectory(destinationUserName)?
@@ -161,7 +161,7 @@ public class TestUserMappingCsvCommand : OrchestratorPSCmdlet
                 }
                 else
                 {
-                    // ディレクトリに見つからない場合、ローカルユーザー作成に必要な情報があるか確認
+                    // If not found in the directory, check if the necessary information for local user creation is available
                     bool hasName = !string.IsNullOrEmpty(entry.Name) || !string.IsNullOrEmpty(entry.DisplayName);
 
                     if (hasName)
@@ -191,7 +191,7 @@ public class TestUserMappingCsvCommand : OrchestratorPSCmdlet
             }
         }
 
-        // サマリを出力
+        // Output summary
         WriteObject($"Validation complete: {okCount} OK, {warningCount} Warning(s), {errorCount} Error(s) out of {entries.Count} entries.");
 
         if (errorCount == 0 && warningCount == 0)

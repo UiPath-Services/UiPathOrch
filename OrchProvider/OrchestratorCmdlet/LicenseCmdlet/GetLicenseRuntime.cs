@@ -29,7 +29,7 @@ public class GetLicenseRuntimeCommand : OrchestratorPSCmdlet
             .OrderBy(rt => rt)
             .ToList();
 
-        // drive と robotType の全ての要素の組み合わせを計算
+        // Compute the Cartesian product of all drives and robotTypes
         var drivesRobottypes = drives
             .SelectMany(drive => specifiedRobotType, (drive, robotType) => (drive, robotType))
             .ToList();

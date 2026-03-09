@@ -54,14 +54,14 @@ public class AddCalendarDateCommand : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumOrchDrives(Path);
 
-        // 指定された日時は、時刻成分をゼロにして UTC として解釈する
+        // Zero out the time component of the specified dates and interpret them as UTC
         ExcludedDate = ExcludedDate?.Select(d => DateTime.SpecifyKind(d.Date, DateTimeKind.Utc)).ToArray();
 
-        // 今日以降の日付のみ追加する
+        // Only add dates from today onward
         if (!IncludePastDate.IsPresent)
         {
             DateTime today = DateTime.Today;
-            ExcludedDate = ExcludedDate?.Where(d => d >= today).ToArray(); // 昨日以前の日付を除外する
+            ExcludedDate = ExcludedDate?.Where(d => d >= today).ToArray(); // Exclude dates before today
         }
 
         foreach (var drive in drives)
@@ -82,7 +82,7 @@ public class AddCalendarDateCommand : OrchestratorPSCmdlet
             {
                 var wpName = new WildcardPattern(name, WildcardOptions.IgnoreCase);
                 var targetCalendars = calendars.Where(c => wpName.IsMatch(c.Name));
-                if (!targetCalendars.Any()) // ひとつも合致しなければ、新規に作成する
+                if (!targetCalendars.Any()) // If no matches, create a new calendar
                 {
                     if (WildcardPattern.ContainsWildcardCharacters(name))
                     {
@@ -92,7 +92,7 @@ public class AddCalendarDateCommand : OrchestratorPSCmdlet
                     string unescapedName = WildcardPattern.Unescape(name);
                     if (_parameters.TryGetValue((drive, unescapedName), out var calendarExcludedDates))
                     {
-                        var (calendar, excludedDates) = calendarExcludedDates; // calendar は null になっているはず
+                        var (calendar, excludedDates) = calendarExcludedDates; // calendar should be null at this point
                         excludedDates.AddRange(ExcludedDate ?? []);
                     }
                     else
@@ -126,7 +126,7 @@ public class AddCalendarDateCommand : OrchestratorPSCmdlet
             var (drive, calendarName) = p.Key;
             var (calendar, excludedDates) = p.Value;
 
-            if (calendar is null) // カレンダーを新規作成
+            if (calendar is null) // Create a new calendar
             {
                 string target = System.IO.Path.Combine(drive.NameColonSeparator, calendarName);
                 if (ShouldProcess(target, "Add Calendar"))
@@ -147,8 +147,8 @@ public class AddCalendarDateCommand : OrchestratorPSCmdlet
                         //{
                         //    createdCalendar.Path = drive.NameColon;
                         //    WriteObject(createdCalendar);
-                        //    // 下記はうまくいかない。PostCalendar が返すデータに不足がある。TimeZoneId が null だ。
-                        //    // ここでは、キャッシュを空にしておくべきだ。
+                        //    // The below doesn't work. PostCalendar returns incomplete data. TimeZoneId is null.
+                        //    // We should clear the cache here instead.
                         //    //drive._dicCalendars ??= [];
                         //    //drive._dicCalendars[createdCalendar.Id!.Value] = createdCalendar;
                         //}
@@ -159,18 +159,18 @@ public class AddCalendarDateCommand : OrchestratorPSCmdlet
                     }
                 }
             }
-            else // カレンダーを更新
+            else // Update the calendar
             {
                 string target = calendar.GetPSPath();
 
-                var extendedCalendar = drive.GetCalendar(calendar); // 既存のカレンダーの ExcludedDate を取得
+                var extendedCalendar = drive.GetCalendar(calendar); // Get ExcludedDates from the existing calendar
                 if (extendedCalendar!.ExcludedDates is not null)
                 {
                     //excludedDates?.AddRange(extendedCalendar.ExcludedDates.Select(d => d.ToUniversalTime()));
                     excludedDates?.AddRange(extendedCalendar.ExcludedDates);
                 }
 
-                #region 追加した日付リストが元と変化していなければ API を call しない
+                #region Skip the API call if the date list has not changed from the original
                 excludedDates = excludedDates?.Distinct().ToList();
                 if (excludedDates?.Count == extendedCalendar?.ExcludedDates?.Length) continue;
                 #endregion
@@ -194,8 +194,8 @@ public class AddCalendarDateCommand : OrchestratorPSCmdlet
                         //{
                         //    updatedCalendar.Path = drive.NameColon;
                         //    WriteObject(updatedCalendar);
-                        //    // 下記はうまくいかない。PutCalendar が返すデータに不足がある。TimeZoneId が null だ。
-                        //    // ここでは、キャッシュを空にしておくべきだ。
+                        //    // The below doesn't work. PutCalendar returns incomplete data. TimeZoneId is null.
+                        //    // We should clear the cache here instead.
                         //    //drive._dicCalendars ??= [];
                         //    //drive._dicCalendars[updatedCalendar.Id!.Value] = updatedCalendar;
                         //}

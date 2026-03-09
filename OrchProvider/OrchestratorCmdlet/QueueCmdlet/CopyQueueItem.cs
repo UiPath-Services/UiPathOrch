@@ -36,7 +36,7 @@ public class CopyQueueItemCommand : OrchestratorPSCmdlet
 
         var (dstDrive, dstRootFolder) = SessionState.ResolveToSingleFolder(Destination);
 
-        // コピー元とコピー先が同じなら、何もしない
+        // If the source and destination are the same, do nothing
         if (srcRootFolder == dstRootFolder) return;
 
         var wpName = Name.ConvertToWildcardPatternList();
@@ -44,7 +44,7 @@ public class CopyQueueItemCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         using ProgressReporter reporterQueue = new(this, 3, int.MaxValue, "Copying new items");
 
-        // 処理対象とするキューの数を数える
+        // Count the number of queues to be processed
         reporterQueue.TotalNum = srcDrivesFolders.CountEntities(
             drive => drive.Queues,
             e => e.FilterByWildcards(q => q?.Name, wpName)
@@ -76,7 +76,7 @@ public class CopyQueueItemCommand : OrchestratorPSCmdlet
                     }
 
                     string progressNew = $"{{0}} {srcQueue.GetPSPath()} to {dstQueue.GetPSPath()}";
-                    reporterQueue.WriteProgress(idxQueue, string.Format(progressNew, 0)); // 最後のゼロは処理中のアイテム数だ。
+                    reporterQueue.WriteProgress(idxQueue, string.Format(progressNew, 0)); // The trailing zero is the number of items being processed.
 
                     string target = $"Items in '{srcQueue.GetPSPath()}' Destination: '{dstQueue.GetPSPath()}'";
 
@@ -84,8 +84,8 @@ public class CopyQueueItemCommand : OrchestratorPSCmdlet
                     {
                         string query = $"&$filter=((QueueDefinitionId eq {srcQueue.Id}) and (Status eq '0'))";
 
-                        #region srcItems に追加するコメントを構築しておく
-                        // この処理はいったんしないでおくか。。
+                        #region Build the comment to append to srcItems
+                        // Let's skip this processing for now..
                         //string comment = "This item was copied to ";
                         //if (srcDrive._psDrive.Root != dstDrive._psDrive.Root)
                         //{
@@ -96,14 +96,14 @@ public class CopyQueueItemCommand : OrchestratorPSCmdlet
 
                         ulong first = 0;
 
-                        // このループ内で、srcQueue の items を100個ずつ取得して、dstQueue に100個ずつ追加する。
+                        // In this loop, retrieve srcQueue items 100 at a time and add them to dstQueue 100 at a time.
                         DateTime getQueueItemsCalled = DateTime.Now;
                         while (true)
                         {
                             cancelHandler.Token.ThrowIfCancellationRequested();
 
                             List<QueueItem> srcItems;
-                            try // srcQueue から、Status が New の items を一括取得(上限100コ)
+                            try // Bulk-retrieve items with Status "New" from srcQueue (up to 100)
                             {
                                 srcItems = srcDrive.GetQueueItems(srcFolder, srcQueue, query, 100 * first, 100);
                                 if (srcItems.Count == 0) break;
@@ -117,7 +117,7 @@ public class CopyQueueItemCommand : OrchestratorPSCmdlet
 
                             try
                             {
-                                #region dstQueue に items を一括追加、失敗したアイテムの Id は failedSrcItemIds に入る
+                                #region Bulk-add items to dstQueue; Ids of failed items go into failedSrcItemIds
                                 BulkAddQueueItemsRequest payload = new()
                                 {
                                     queueName = dstQueue.Name,
@@ -128,7 +128,7 @@ public class CopyQueueItemCommand : OrchestratorPSCmdlet
                                 int index = 0;
                                 foreach (var srcItem in srcItems)
                                 {
-#if false // コピー先のアイテムの SpecificContent に、コピー元アイテムの情報を追記するのはどうなのか。あった方が安心な気もするが、
+#if false // Should we append source item info to the destination item's SpecificContent? It might be reassuring to have it, but
                                     srcItem.SpecificContent ??= [];
 
                                     if (srcDrive._psDrive.Root != dstDrive._psDrive.Root)
@@ -151,8 +151,8 @@ public class CopyQueueItemCommand : OrchestratorPSCmdlet
                                         Progress = srcItem.Progress,
                                         //Source = item.
                                         //ParentOperationId = item.
-                                        Id = srcItem.Id,  // payload には載せないが、処理の都合上覚えておく
-                                        Key = srcItem.Key // payload には載せないが、処理の都合上覚えておく
+                                        Id = srcItem.Id,  // Not included in the payload, but kept for processing purposes
+                                        Key = srcItem.Key // Not included in the payload, but kept for processing purposes
                                     };
                                 }
 
@@ -160,12 +160,12 @@ public class CopyQueueItemCommand : OrchestratorPSCmdlet
                                 Dictionary<Int64, QueueItem> copiedSrcItems = srcItems.ToDictionary(i => i.Id!.Value);
 #endregion
 
-                                #region コピーに失敗したアイテムを出力し、画面に警告を出力
+                                #region Output items that failed to copy and display warnings on screen
                                 HashSet<Int64> failedSrcItemIds = [];
                                 foreach (var failedDstItem in failedItems?.FailedItems ?? [])
                                 {
                                     if (failedDstItem.Ordinal is null) continue;
-                                    var failedPayloadItem = payload.queueItems[failedDstItem.Ordinal.Value-1]; // Ordinal は 1ベースのようだ
+                                    var failedPayloadItem = payload.queueItems[failedDstItem.Ordinal.Value-1]; // Ordinal appears to be 1-based
                                     if (failedSrcItemIds.Add(failedPayloadItem.Id!.Value))
                                     {
                                         string warning = $"'{srcQueue.GetPSPath()}': Add item failed: {failedDstItem.ErrorMessage} Id: {failedPayloadItem.Id} Key: '{failedPayloadItem.Key}'";
@@ -177,11 +177,11 @@ public class CopyQueueItemCommand : OrchestratorPSCmdlet
                                 }
                                 #endregion
 
-                                // コピーに成功した srcQueue の items を出力
+                                // Output the items from srcQueue that were successfully copied
                                 WriteObject(copiedSrcItems.Values, true);
 
-                                #region コピーが成功した srcQueue のすべての items に同じコメントを追加
-                                // ちと処理が遅いな。いらないか。。
+                                #region Add the same comment to all successfully copied items in srcQueue
+                                // The processing is a bit slow. Maybe not needed..
 #if false
                                 foreach (var srcItem in copiedSrcItems.Values)
                                 {
@@ -189,7 +189,7 @@ public class CopyQueueItemCommand : OrchestratorPSCmdlet
                                     {
                                         srcDrive.OrchAPISession.PostQueueItemComments(srcFolder.Id!.Value, srcItem.Id!.Value, comment);
                                     }
-                                    catch { } // とりあえずサボっておくか。。
+                                    catch { } // Let's skip error handling for now..
                                 }
 #endif
 #endregion
@@ -199,7 +199,7 @@ public class CopyQueueItemCommand : OrchestratorPSCmdlet
                                 WriteError(new ErrorRecord(new OrchException(dstQueue.GetPSPath(), ex), "GetQueueItemError", ErrorCategory.InvalidOperation, dstQueue));
                             }
 
-                            Thread.Sleep(int.Max(0, (int)(601 - (DateTime.Now - getQueueItemsCalled).TotalMilliseconds))); // API call rate limit を回避するため待機する
+                            Thread.Sleep(int.Max(0, (int)(601 - (DateTime.Now - getQueueItemsCalled).TotalMilliseconds))); // Wait to avoid API call rate limit
                         }
                     }
                 }

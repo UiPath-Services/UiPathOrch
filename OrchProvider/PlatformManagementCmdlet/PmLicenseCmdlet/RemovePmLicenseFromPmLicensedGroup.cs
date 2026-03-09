@@ -13,7 +13,7 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.UpdateLicensedGroupResponse))]
 public class RemoveLicenseFromLicenseGroup: OrchestratorPSCmdlet
 {
-    // code を管理
+    // Manages license codes
     private Dictionary<(OrchDriveInfo drive, NuLicensedGroup group), HashSet<string>>? _parameterSets;
 
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
@@ -123,7 +123,7 @@ public class RemoveLicenseFromLicenseGroup: OrchestratorPSCmdlet
             int initialCount = existingSet.Count;
             existingSet.ExceptWith(codesToRemove);
 
-            // 削除すべきライセンスがなければ処理をスキップ
+            // Skip processing if there are no licenses to remove
             if (existingSet.Count == initialCount) continue;
 
             string target = group.GetPSPath();

@@ -42,14 +42,14 @@ public class RemovePackageCommand : OrchestratorPSCmdlet
         {
             var recurse = GetSwitchParameterValue(commandAst, "Recurse");
 
-            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            // Extract the path from parameters. If not specified, target the current directory
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
             var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse);
 
-            // パラメータで選択済みの Id は、候補から除外する
+            // Exclude already-selected Id values from the candidates
             var wpId = CreateWPListFromParameter(commandAst, "Id", TPositional.Parameters, wordToComplete);
 
-            // パラメータで選択された Version のみ対象とする
+            // Only target the Version values selected via parameters
             var wpVersion = CreateWPListFromOtherParameters(commandAst, "Version", TPositional.Parameters);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -83,14 +83,14 @@ public class RemovePackageCommand : OrchestratorPSCmdlet
             var recurse = GetSwitchParameterValue(commandAst, "Recurse");
             var paramDepth = GetParameterValue(commandAst, "Depth");
 
-            // パラメータからパスを抽出する。指定がなければ、カレントディレクトリを対象にする
+            // Extract the path from parameters. If not specified, target the current directory
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
             var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse);
 
-            // パラメータで選択された Id のみ対象とする
+            // Only target the Id values selected via parameters
             var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
 
-            // パラメータで選択済みの Version は、候補から除外する
+            // Exclude already-selected Version values from the candidates
             var wpVersion = CreateWPListFromParameter(commandAst, "Version", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -135,10 +135,10 @@ public class RemovePackageCommand : OrchestratorPSCmdlet
             var feedFolders = SessionState.EnumPackageFeedFolders(drives.SelectMany(d => new[] { $"{d.Name}:{System.IO.Path.DirectorySeparatorChar}", $"{d.Name}:{System.IO.Path.DirectorySeparatorChar}*" }))
                 .Select(df => df.folder.GetPSPath());
 
-            // パラメータで選択済みの Path は、候補から除外する
+            // Exclude already-selected Path values from the candidates
             var wpPath = CreateWPListFromParameter(commandAst, "Path", TPositional.Parameters, wordToComplete);
 
-            // パラメータで選択済みの Destination も、候補から除外する
+            // Also exclude already-selected Destination values from the candidates
             var wpDestination = CreateWPListFromOtherParameters(commandAst, "Destination", TPositional.Parameters);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -224,8 +224,8 @@ public class RemovePackageCommand : OrchestratorPSCmdlet
         }
     }
 
-    // マルチスレッド化したバージョン
-    // HTTP call を cap した状態では逆に遅くなる場合があるため、シングルスレッドで書き直した
+    // Multi-threaded version
+    // Rewrote as single-threaded because it could be slower when HTTP calls are capped
     //protected override void ProcessRecord()
     //{
     //    var drivesFolders = OrchDriveInfo.EnumPackageFeedFolders(Path, Recurse.IsPresent);

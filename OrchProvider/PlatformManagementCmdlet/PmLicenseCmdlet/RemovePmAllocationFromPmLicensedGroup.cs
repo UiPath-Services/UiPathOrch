@@ -84,8 +84,8 @@ public class RemoveAllocationFromUserLicenseGroup: OrchestratorPSCmdlet
 
             if (NoMatchWarning.IsPresent && !targetGroups.Any())
             {
-                // ちょっと適当な実装だけど、これでも CSV インポート時にちゃんと動くから十分か。。
-                // ちゃんと実装するには、GroupName の配列を先頭から順にひとつずつ処理しないといけない。
+                // This implementation is a bit rough, but it works properly during CSV import, so it should be sufficient.
+                // A proper implementation would need to process the GroupName array one element at a time from the beginning.
                 WriteWarning($"No match found for GroupName '{GroupName![0]}'.");
                 continue;
             }
@@ -99,8 +99,8 @@ public class RemoveAllocationFromUserLicenseGroup: OrchestratorPSCmdlet
 
                 if (NoMatchWarning.IsPresent && !targetUsers.Any())
                 {
-                    // ちょっと適当な実装だけど、これでも CSV インポート時にちゃんと動くから十分か。。
-                    // ちゃんと実装するには、UserName の配列を先頭から順にひとつずつ処理しないといけない。
+                    // This implementation is a bit rough, but it works properly during CSV import, so it should be sufficient.
+                    // A proper implementation would need to process the UserName array one element at a time from the beginning.
                     WriteWarning($"No match found for UserName '{UserName![0]}'.");
                     continue;
                 }

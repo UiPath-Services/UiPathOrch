@@ -8,8 +8,8 @@ using UiPath.PowerShell.Core;
 
 namespace UiPath.PowerShell.Commands;
 
-// Linux 環境では、うまくエディタが起動できない。
-// current location を移動して、編集してくれとメッセージを出すだけにしておくか。。
+// On Linux, we cannot reliably launch an editor.
+// Instead, just change the current location and display a message prompting the user to edit manually.
 [Cmdlet(VerbsData.Edit, "OrchConfig")]
 public class EditConfigCommand : PSCmdlet
 {
@@ -51,7 +51,7 @@ public class EditConfigCommand : PSCmdlet
             {
                 if (ed is null)
                 {
-                    // Windows: ファイルの拡張子に関連付けられたエディタで起動
+                    // Windows: launch with the editor associated with the file extension
                     Process.Start(new ProcessStartInfo(configFilePath) { UseShellExecute = true });
                     return null;
                 }
@@ -93,7 +93,7 @@ public class EditConfigCommand : PSCmdlet
             catch (Exception ex)
             {
                 ret = ex;
-                // 次の候補へフォールバック
+                // Fall back to the next candidate
             }
         }
         return ret;
@@ -128,15 +128,15 @@ public class EditConfigCommand : PSCmdlet
             return;
         }
 
-        // Linux 環境ではエディタをうまく起動できない。。
-        // ディレクトリを移動して、編集を促すメッセージを出力する。元のディレクトリに戻るには popd を実行する。
+        // On Linux, we cannot reliably launch an editor.
+        // Change to the config directory and display a message prompting the user to edit. Use popd to return to the previous directory.
         string folder = Path.GetDirectoryName(configFilePath);
         string fileName = Path.GetFileName(configFilePath);
 
-        // 現在のロケーションをデフォルトスタックにプッシュ
+        // Push the current location onto the default stack
         SessionState.Path.PushCurrentLocation("default");
 
-        // 設定ファイルがあるパスに移動
+        // Change to the directory containing the configuration file
         SessionState.Path.SetLocation(folder);
 
         WriteWarning($"Please edit './{fileName}'. After saving your changes, run Import-OrchConfig to reload the configuration. Use `popd` to return to the previous location.");

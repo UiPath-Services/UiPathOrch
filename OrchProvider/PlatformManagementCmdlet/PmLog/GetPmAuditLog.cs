@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.PmAuditLog))]
 public class GetPmAuditLogCommand : OrchestratorPSCmdlet
 {
-    // 試してみたけど、この API はフィルターを指定しても機能しないようだ。。
+    // Tried it, but this API doesn't seem to work even when specifying filters.
     //[Parameter(ValueFromPipelineByPropertyName = true)]
     //[ArgumentCompleter(typeof(StaticTextsCompleter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>))]
     //[ValidatePositionalParameter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>]
@@ -42,7 +42,7 @@ public class GetPmAuditLogCommand : OrchestratorPSCmdlet
     {
         //List<string> filter = [];
 
-        // 残念、動かない
+        // Unfortunately, this doesn't work
         //#region TimeStampAfter
         //if (TimeStampAfter is not null)
         //{
@@ -56,9 +56,9 @@ public class GetPmAuditLogCommand : OrchestratorPSCmdlet
         }
         else
         {
-            // ここは return null としても適切に動作するようだが
-            // 別の version の Orchestrator でも動作するのか良く分からないので
-            // ソート条件を明示しておく
+            // Returning null here seems to work properly, but
+            // it's unclear whether it works on other Orchestrator versions,
+            // so explicitly specify the sort condition
             return "&sortBy=CreatedOn&sortOrder=desc";
         }
 
@@ -74,7 +74,7 @@ public class GetPmAuditLogCommand : OrchestratorPSCmdlet
 
         var drives = SessionState.EnumPmDrives(Path);
 
-        // すべてのパラメータが指定されていなければ、キャッシュの内容を返す
+        // If no parameters are specified, return the cache contents
         bool bOutCache = (Skip is null && First is null);
 
         if (bOutCache)
@@ -103,7 +103,7 @@ public class GetPmAuditLogCommand : OrchestratorPSCmdlet
                 var entities = drive.GetPmAuditLog(filter, skip, first);
                 if (entities is null) continue;
 
-                // ここでソートしてはいけない
+                // Do not sort here
                 WriteObject(entities, true);
             }
             catch (Exception ex)

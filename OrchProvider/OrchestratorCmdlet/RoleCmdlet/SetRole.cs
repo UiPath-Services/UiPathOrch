@@ -13,7 +13,7 @@ public class SetRoleCommand : OrchestratorPSCmdlet
 {
     private class PermissionParams(string? scope, string? view, string? edit, string? create, string? delete)
     {
-        // PermissionName は辞書のキーで管理
+        // PermissionName is managed as a dictionary key
         public string? Scope { get; set; } = scope;
         public bool? View   { get; set; } = view.ToNullableBool();
         public bool? Edit   { get; set; } = edit.ToNullableBool();
@@ -102,7 +102,7 @@ public class SetRoleCommand : OrchestratorPSCmdlet
         }
     }
 
-    // isDirty を返す
+    // Returns isDirty
     private bool SetPermission(string target, Role postingRole, string permissionFullName, PermissionParams permission, bool? newValue)
     {
         bool isDirty = false;
@@ -205,11 +205,11 @@ public class SetRoleCommand : OrchestratorPSCmdlet
             var wpName = new WildcardPattern(name);
 
             var targetRoles = existingRoles
-                //.Where(r => r.IsEditable.GetValueOrDefault()) // この条件入れると、新規に追加しようとしちゃう。。
+                //.Where(r => r.IsEditable.GetValueOrDefault()) // Adding this condition causes it to try creating new roles instead..
                 .Where(r => wpName.IsMatch(r.Name))
                 .ToList();
 
-            if (targetRoles.Count != 0) // 既存のロールを更新
+            if (targetRoles.Count != 0) // Update existing roles
             {
                 foreach (var role in targetRoles.OrderBy(r => r.Name))
                 {
@@ -225,8 +225,8 @@ public class SetRoleCommand : OrchestratorPSCmdlet
                     var postingRole = OrchCollectionExtensions.DeepCopy(role);
                     foreach (var (permissionName, permission) in roleParams.Permissions)
                     {
-                        // isDirty が true であっても、SetPermission() を呼び出す必要があるため
-                        // ここで shortcut な論理和演算子 || は使ってはいけない
+                        // Even if isDirty is already true, we still need to call SetPermission(),
+                        // so we must not use the short-circuit OR operator || here
                         isDirty = isDirty | SetPermission(target, postingRole, permissionName + ".View",   permission, permission.View);
                         isDirty = isDirty | SetPermission(target, postingRole, permissionName + ".Edit",   permission, permission.Edit);
                         isDirty = isDirty | SetPermission(target, postingRole, permissionName + ".Create", permission, permission.Create);
@@ -237,7 +237,7 @@ public class SetRoleCommand : OrchestratorPSCmdlet
                     {
                         try
                         {
-                            // 何も返らない
+                            // Returns nothing
                             drive.OrchAPISession.PutRole(postingRole);
                             drive.Roles.ClearCache();
                         }
@@ -248,7 +248,7 @@ public class SetRoleCommand : OrchestratorPSCmdlet
                     }
                 }
             }
-            else // 新規にロールを作成
+            else // Create a new role
             {
                 string nameUnescaped = WildcardPattern.Unescape(name);
                 string target = drive.NameColonSeparator + nameUnescaped;
@@ -256,7 +256,7 @@ public class SetRoleCommand : OrchestratorPSCmdlet
                 {
                     try
                     {
-                        // parameterSet を Role に変換して POST する
+                        // Convert the parameterSet to a Role and POST it
                         var postingRole = RoleParamsToRole(nameUnescaped, roleParams);
                         var createdRole = drive.OrchAPISession.PostRole(postingRole);
                         drive.Roles.ClearCache();

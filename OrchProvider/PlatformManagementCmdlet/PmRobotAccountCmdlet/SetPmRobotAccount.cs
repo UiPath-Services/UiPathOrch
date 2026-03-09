@@ -87,7 +87,7 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
         {
             var drives = ResolvePmDrives(fakeBoundParameters);
 
-            // パラメータで選択済みのライブラリ名は、候補から除外する
+            // Exclude names already selected via parameters from candidates
             var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -124,7 +124,7 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
         {
             var drives = ResolvePmDrives(fakeBoundParameters);
 
-            // パラメータで選択済みのライブラリ名は、候補から除外する
+            // Exclude names already selected via parameters from candidates
             var wpGroupName = CreateWPListFromParameter(commandAst, "GroupName", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -146,7 +146,7 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
         }
     }
 
-    // これだと、適切にキャッシュをクリアできないな。先頭行の Path しか処理できない。
+    // This approach cannot properly clear the cache. It can only process the Path from the first row.
     //protected override void BeginProcessing()
     //{
     //    var drives = OrchDriveInfo.EnumOrchDrives(Path);
@@ -161,10 +161,10 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumPmDrives(Path);
 
-        // CSV インポート時に適切に処理できるようするため、GroupName を変更してはいけない
+        // GroupName must not be modified to ensure proper handling during CSV import
         string?[] groupNames = GroupName ?? [];
 
-        // CSV に指定された GroupName はカンマで区切る
+        // Split GroupName specified in CSV by commas
         groupNames = groupNames
              .SelectMany(name => (name ?? "").Split(separator, StringSplitOptions.RemoveEmptyEntries))
              .Select(name => name.Trim())
@@ -224,7 +224,7 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
                     .ToList();
             }
 
-            #region Everyone グループの id を追加
+            #region Add the Everyone group id
             var everyoneGroup = existingGroups
                 .FirstOrDefault(g => string.Compare(g!.name, "Everyone", StringComparison.OrdinalIgnoreCase) == 0);
             if (everyoneGroup is not null)
@@ -275,7 +275,7 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
                         .Where(r => r is not null)
                         .OrderBy(r => r.name))
                     {
-                        // 更新があるかを確認し、なければスキップ
+                        // Check if there are any updates; skip if none
                         bool areEqual = robot.groupIds!.Length == groupIdsToSet!.Count &&
                                 robot.groupIds!.Order().Zip(groupIdsToSet!.ToList().Order(), (a, b) => a == b).All(equal => equal);
                         if (areEqual) continue;
@@ -284,9 +284,9 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
 
                         if (ShouldProcess(target, "Update PmRobotAccount"))
                         {
-                            // この名前のロボットを更新
+                            // Update the robot with this name
 
-                            #region 指定されなかったグループの id を列挙
+                            #region Enumerate group ids that were not specified
                             List<string> groupIDsToRemove = existingGroups
                                 .Where(g => !(groupIdsToSet?.Contains(g.id!) ?? false))
                                 .Select(g => g.id!)

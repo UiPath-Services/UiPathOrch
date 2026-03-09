@@ -100,7 +100,7 @@ public class GetUserCommand : OrchestratorPSCmdlet
             EscapeCsvValue(p.UpdatePolicy?.Type),
             EscapeCsvValue(p.UpdatePolicy?.SpecificVersion),
             EscapeCsvValue(p.UnattendedRobot?.UserName),
-            EscapeCsvValue(""), // p.UnattendedRobot?.Password // ここにはごみなテキストが入っているので、出力しないでおく
+            EscapeCsvValue(""), // p.UnattendedRobot?.Password // This field contains garbage text, so we skip outputting it
             EscapeCsvValue(ur_credentialStore, true),
             EscapeCsvValue(p.UnattendedRobot?.CredentialExternalName),
             EscapeCsvValue(p.UnattendedRobot?.CredentialType),
@@ -143,8 +143,8 @@ public class GetUserCommand : OrchestratorPSCmdlet
                     .OrderBy(u => u.UserName)
                     .ToList();
 
-                // 詳細を取得する必要があれば、ユーザーごとにスレッドを起こして
-                // GetUser(user) を呼び出す
+                // If details need to be retrieved, spawn a thread per user
+                // and call GetUser(user)
                 if (ExpandDetails.IsPresent || writer is not null)
                 {
                     using var results = OrchThreadPool.RunForEach(targetUsers

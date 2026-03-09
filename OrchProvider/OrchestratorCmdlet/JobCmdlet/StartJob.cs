@@ -99,7 +99,7 @@ public class StartJobCommand : OrchestratorPSCmdlet
             var type = Type.GetType(typeName);
             if (type is null)
                 return false;
-            // IsPrimitive は bool や char も含むため、それらは除外する
+            // IsPrimitive includes bool and char, so exclude those
             return (type.IsPrimitive && type != typeof(bool) && type != typeof(char))
                    || type == typeof(decimal);
         }
@@ -133,7 +133,7 @@ public class StartJobCommand : OrchestratorPSCmdlet
                     string json = "{" + string.Join(",", args.Select(a =>
                     {
                         string value;
-                        // 型オブジェクトに変換して正確な比較を行う
+                        // Convert to a type object for accurate comparison
                         var type = Type.GetType(a.type ?? "string");
                         if (type == typeof(string)) { value = "\"\""; }
                         else if (type == typeof(bool)) { value = "false"; }

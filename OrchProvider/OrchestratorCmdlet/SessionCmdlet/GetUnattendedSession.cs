@@ -45,8 +45,8 @@ public class GetUnattendedSessionCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter<Last>))]
     public string[]? Path { get; set; }
 
-    // TODO: 存在する Status だけを候補に出す方が良い
-    // TODO: これのままにするなら、StaticTextCompleter で書き直さないと。
+    // TODO: It would be better to only show existing statuses as candidates
+    // TODO: If keeping this as is, it should be rewritten using StaticTextCompleter.
     private class StatusCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(

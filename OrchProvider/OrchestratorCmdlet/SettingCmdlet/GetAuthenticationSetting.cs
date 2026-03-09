@@ -33,7 +33,7 @@ public class GetAuthenticationSettingCommand : OrchestratorPSCmdlet
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            // パラメータで選択済みの Key は、候補から除外する
+            // Exclude Keys already selected by the parameter from the candidates
             var wpKey = CreateWPListFromParameter(commandAst, "Key", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);

@@ -17,7 +17,7 @@ public class EnableWebhookCommandBase<Enable> : OrchestratorPSCmdlet where Enabl
     [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
     public string[]? Path { get; set; }
 
-    // これは無効な Webhook だけを列挙するので、共通化できない。
+    // This only enumerates disabled Webhooks, so it cannot be shared.
     internal class NameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -29,7 +29,7 @@ public class EnableWebhookCommandBase<Enable> : OrchestratorPSCmdlet where Enabl
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Exclude already-selected Name values from the candidates
             var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -106,8 +106,8 @@ public class EnableWebhookCommandBase<Enable> : OrchestratorPSCmdlet where Enabl
         }
     }
 
-    // マルチスレッド化したバージョン
-    // HTTP call を cap した状態では逆に遅くなる場合があるため、シングルスレッドで書き直した
+    // Multi-threaded version
+    // Rewrote as single-threaded because it could be slower when HTTP calls are capped
     //protected override void ProcessRecord()
     //{
     //    var drives = OrchDriveInfo.EnumOrchDrives(Path);

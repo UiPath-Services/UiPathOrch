@@ -79,7 +79,7 @@ public class CopyMachineCommand : OrchestratorPSCmdlet
                         try
                         {
                             var newMachine = OrchCollectionExtensions.DeepCopy(machine);
-                            // newMachine.Path = null; // JsonIgnore 属性がついているので不要
+                            // newMachine.Path = null; // Not needed because it has a JsonIgnore attribute
                             newMachine.LicenseKey = null;
                             newMachine.Key = null;
                             newMachine.Id = null;
@@ -92,7 +92,7 @@ public class CopyMachineCommand : OrchestratorPSCmdlet
                                 var robotUsers = new List<RobotUser>();
                                 foreach (var robotUser in machine.RobotUsers)
                                 {
-                                    // TODO: ユーザーとロボットの Id の移行を、OrchFolderProvider の static method で行うように統一。
+                                    // TODO: Unify user and robot Id migration to use a static method in OrchFolderProvider.
                                     var srcRobots = srcDrive.Robots.Get();
                                     var srcRobot = srcRobots.FirstOrDefault(r => r.Id == robotUser.RobotId);
 
@@ -133,7 +133,7 @@ public class CopyMachineCommand : OrchestratorPSCmdlet
                             //if (addedMachine is not null)
                             //{
                             //    addedMachine.Path = dstDrive.NameColonSeparator;
-                            //    _this.WriteObject(addedMachine); // provider cmdlet からは実行できないな。。
+                            //    _this.WriteObject(addedMachine); // Cannot call this from a provider cmdlet...
                             //}
                             dstDrive.Machines.ClearCache();
                         }

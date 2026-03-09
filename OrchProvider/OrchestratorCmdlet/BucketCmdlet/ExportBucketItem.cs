@@ -45,7 +45,7 @@ public class ExportBucketItemCmdlet : OrchestratorPSCmdlet
             Destination = SessionState.Path.CurrentFileSystemLocation.Path;
         }
 
-        // PSDrive のパスを、実際のファイルシステムのパスに変換
+        // Convert PSDrive path to actual file system path
         Destination = SessionState.Path.GetUnresolvedProviderPathFromPSPath(Destination);
 
         if (!Directory.Exists(Destination))
@@ -72,7 +72,7 @@ public class ExportBucketItemCmdlet : OrchestratorPSCmdlet
                     .FilterByWildcards(e => e?.Name, wpName)
                     .OrderBy(e => e.Name))
                 {
-                    // Path からの相対パスを取得
+                    // Get the relative path from Path
                     var eachDestination = System.IO.Path.Combine(Destination, folder.GetRelativePath(srcRootFolder), bucket.Name!.MakeValidFolderName());
 
                     string target = null;

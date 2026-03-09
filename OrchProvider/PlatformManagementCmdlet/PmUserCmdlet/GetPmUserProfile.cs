@@ -5,8 +5,8 @@ using TPositional = UiPath.PowerShell.Positional.Path;
 
 namespace UiPath.PowerShell.Commands;
 
-// このエンドポイントからは空が返ってきてしまう。。
-// いったん非公開で残しておく。
+// This endpoint returns empty results...
+// Keeping it non-public for now.
 //[Cmdlet(VerbsCommon.Get, "PmUserProfile")]
 [OutputType(typeof(Entities.UserProfile))]
 class GetPmUserProfileCommand : OrchestratorPSCmdlet

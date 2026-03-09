@@ -44,7 +44,7 @@ public class RedoQueueItemCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            // パラメータで選択済みの Name は、候補から除外する
+            // Only target Names already selected by the parameter
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
             var wpId = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
@@ -63,7 +63,7 @@ public class RedoQueueItemCommand : OrchestratorPSCmdlet
                 {
                     List<QueueItem> items = null;
 
-                    #region キャッシュされたアイテムを取得
+                    #region Get cached items
                     if (drive._dicQueueItems?.TryGetValue(folder.Id!.Value, out var itemsPerFolder) ?? false)
                     {
                         if (itemsPerFolder.TryGetValue(queue.Name!, out var itemsPerQueue))
@@ -76,7 +76,7 @@ public class RedoQueueItemCommand : OrchestratorPSCmdlet
                     }
                     #endregion
 
-                    // キャッシュが空なら、リトライ可能な最初の 100 個のアイテムを取得
+                    // If the cache is empty, retrieve the first 100 retryable items
                     if (items is null)
                     {
                         items = drive.GetQueueItems(folder, queue, MakeFilter(queue), 0, 100);
@@ -173,7 +173,7 @@ public class RedoQueueItemCommand : OrchestratorPSCmdlet
             Dictionary<Int64, QueueItem> retryableQueueItems = [];
             try
             {
-                // retryable なアイテムを取得する。このアイテムの上限は 1000 とする。
+                // Retrieve retryable items. The upper limit for items is 1000.
                 ulong skip = 0;
                 while (skip < 1000)
                 {
@@ -186,7 +186,7 @@ public class RedoQueueItemCommand : OrchestratorPSCmdlet
                         retryableQueueItems[item.Id!.Value] = item;
                     }
 
-                    Thread.Sleep(600); // API call rate limit を回避するため待機する
+                    Thread.Sleep(600); // Wait to avoid API call rate limit
 
                     if (items.Count < 100) break;
                     skip += (ulong)items.Count;
@@ -208,9 +208,9 @@ public class RedoQueueItemCommand : OrchestratorPSCmdlet
                 QueueItem item = null;
                 bool found = retryableQueueItems.TryGetValue(id, out item);
 
-                // ひとつずつ問い合わせると遅いので、やらない。
-                // -Force が指定されているときに限り、問い合わせるようにしても良いが
-                // ちと仕様が過剰な気がする。。
+                // Querying one by one is slow, so we don't do it.
+                // We could allow querying only when -Force is specified,
+                // but that feels like over-engineering..
                 //if (!found && Force)
                 //{
                 //    try
@@ -231,7 +231,7 @@ public class RedoQueueItemCommand : OrchestratorPSCmdlet
 
                 string tiphelp = OrchArgumentCompleter.TipHelp(item);
 
-                // この TipHelp は拡張メソッドにした方が良い。GetPSPath() と同じ場所に並べるべきだ。
+                // This TipHelp should be an extension method. It should be placed alongside GetPSPath().
                 if (ShouldProcess(tiphelp, "Retry QueueItem"))
                 {
                     retryingItems.Add(item);
