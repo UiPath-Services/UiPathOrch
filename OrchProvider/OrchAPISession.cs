@@ -163,7 +163,7 @@ public partial class OrchAPISession : IDisposable
     internal readonly string _base_url;
     internal readonly string _base_url_identity;
     internal readonly string _base_url_portal;
-    internal bool _isAuthenticated = false;
+    internal volatile bool _isAuthenticated = false;
     private bool _disposed = false;
     private readonly OrchDriveInfo _drive;
     public double? ApiVersion;
