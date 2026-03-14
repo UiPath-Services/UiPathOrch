@@ -303,6 +303,7 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
         {
             thread.Dispose(); // Release resources
         }
+        _semaphore.Dispose();
         GC.SuppressFinalize(this);
     }
 
