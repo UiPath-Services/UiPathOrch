@@ -168,6 +168,10 @@ public partial class OrchAPISession : IDisposable
     private readonly OrchDriveInfo _drive;
     public double? ApiVersion;
 
+    // Deferred warning message to be displayed when a cmdlet runs (not during tab completion)
+    internal string? PendingWarning { get; private set; }
+    internal void ClearPendingWarning() => PendingWarning = null;
+
     #region Authentication
 
     internal HttpClient InitializeHttpClient(OrchDriveInfo drive)
@@ -300,12 +304,10 @@ public partial class OrchAPISession : IDisposable
                     string token = _authManager.RequestToken();
                     SetToken(token);
 
-                    // Entra ID warning: display warning if not signed in to the organization
+                    // Entra ID warning: defer display until a cmdlet runs (avoid polluting tab completion)
                     if (_drive is not null && _authManager.ShouldShowEntraIdWarning())
                     {
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.Error.WriteLine($"WARNING: [{_drive.NameColon}] You are not signed in to the organization via Entra ID. Some operations may require organization-level access. Use Switch-OrchCurrentUser to sign in with a different account.");
-                        Console.ResetColor();
+                        PendingWarning = $"[{_drive.NameColon}] You are not signed in to the organization via Entra ID. Some operations may require organization-level access. Use Switch-OrchCurrentUser to sign in with a different account.";
                     }
 
                     _isAuthenticated = true;
