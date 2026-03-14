@@ -445,6 +445,18 @@ internal static class OrchStringExtensions
         }
     }
 
+    // Overload with change detection: returns true if the value was actually changed
+    public static bool AssignStringIfNotNull<T>(this T target, string? value, Func<T, string?> getter, Action<T, string?> setter)
+    {
+        if (value is null) return false;
+        var current = getter(target);
+        // Treat null and "" as equivalent (CSV exports null as "")
+        if (string.IsNullOrEmpty(current) && string.IsNullOrEmpty(value)) return false;
+        if (current == value) return false;
+        setter(target, value);
+        return true;
+    }
+
     public static void AssignStringIfNotNullOrEmpty<T>(this T target, string? value, Action<T, string?> setter)
     {
         if (!string.IsNullOrEmpty(value))
@@ -464,6 +476,15 @@ internal static class OrchStringExtensions
         {
             setter(target, value);
         }
+    }
+
+    // Overload with change detection
+    public static bool AssignNumberIfNotNullOrZero<T, N>(this T target, N? value, Func<T, N?> getter, Action<T, N?> setter) where N : struct, IComparable
+    {
+        if (!value.HasValue || value.Value.Equals(default(N))) return false;
+        if (Nullable.Equals(getter(target), value)) return false;
+        setter(target, value);
+        return true;
     }
 
     // Use this for members that accept zero.
@@ -498,17 +519,32 @@ internal static class OrchStringExtensions
     // Method for bool properties
     public static void AssignBoolIfNotNull<T>(this T target, string? value, Action<T, bool?> setter)
     {
-        if (value is not null)
+        if (string.IsNullOrEmpty(value)) return; // null or "" means "not specified"
+
+        if (bool.TryParse(value, out var result))
         {
-            if (bool.TryParse(value, out var result))
-            {
-                setter(target, result);
-            }
-            else
-            {
-                setter(target, null);
-            }
+            setter(target, result);
         }
+        else
+        {
+            setter(target, null);
+        }
+    }
+
+    // Overload with change detection
+    public static bool AssignBoolIfNotNull<T>(this T target, string? value, Func<T, bool?> getter, Action<T, bool?> setter)
+    {
+        if (string.IsNullOrEmpty(value)) return false;
+
+        bool? newValue;
+        if (bool.TryParse(value, out var result))
+            newValue = result;
+        else
+            newValue = null;
+
+        if (getter(target) == newValue) return false;
+        setter(target, newValue);
+        return true;
     }
 
     public static void AssignBoolIfNotNull<T>(this T target, bool? value, Action<T, bool?> setter)
@@ -522,7 +558,9 @@ internal static class OrchStringExtensions
     // Version that avoids assigning false when the current value is null
     public static void AssignBoolIfNotFalse<T>(this T target, string? value, Func<T, bool?> getter, Action<T, bool?> setter)
     {
-        if (value is not null && bool.TryParse(value, out var result))
+        if (string.IsNullOrEmpty(value)) return; // null or "" means "not specified"
+
+        if (bool.TryParse(value, out var result))
         {
             // Do nothing if the target is null and the value to assign is false
             if (getter(target) is null && !result) return;
