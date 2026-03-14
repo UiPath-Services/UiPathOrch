@@ -35,6 +35,23 @@ public class EncodingArgumentTransformationAttribute : ArgumentTransformationAtt
 
 public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
 {
+    // Flush deferred warnings so they appear during cmdlet execution,
+    // not during tab completion where Console output would corrupt the prompt.
+    protected override void BeginProcessing()
+    {
+        base.BeginProcessing();
+
+        foreach (var drive in SessionState.EnumAllOrchDrives())
+        {
+            var warning = drive.OrchAPISession.PendingWarning;
+            if (warning is not null)
+            {
+                drive.OrchAPISession.ClearPendingWarning();
+                WriteWarning(warning);
+            }
+        }
+    }
+
     internal static string ConvertToUnsecureString(SecureString securePassword)
     {
         IntPtr unmanagedString = IntPtr.Zero;
