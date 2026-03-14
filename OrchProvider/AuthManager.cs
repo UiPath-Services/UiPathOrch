@@ -288,7 +288,7 @@ internal class OrchestratorAuthManager
             endPoint = $"{baseUri.Scheme}://{baseUri.Host}/identity_/connect/authorize";
             acrValues = UseInPrivate
                 ? "" // InPrivate: omit acr_values to display the authentication provider selection screen
-                : $"&acr_values=tenantName:{orgName}&prompt=select_account";
+                : $"&acr_values=tenantName:{orgName}";
         }
         else
         {
