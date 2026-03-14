@@ -267,7 +267,7 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
                 await semaphore.WaitAsync(); // Manage concurrency limits
                 try
                 {
-                    var result = await Task.Run(() => getResultFunc(source));
+                    var result = getResultFunc(source);
 
                     // Call SetResult() on the main thread.
                     // This temporarily yields control to the main thread.
