@@ -498,7 +498,6 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
 
                 if (!releaseDirty && retentionUpdate is null && staleRetentionUpdate is null)
                 {
-                    WriteVerbose($"Skipping '{target}': no changes detected.");
                     continue;
                 }
 
