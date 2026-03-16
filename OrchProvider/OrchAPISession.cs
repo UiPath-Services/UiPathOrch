@@ -851,6 +851,16 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Post, "/odata/QueueDefinitions/UiPath.Server.Configuration.OData.EditQueue", folderId, queue);
     }
 
+    public void PutQueueDefinition(Int64 folderId, QueueDefinition queue)
+    {
+        HttpRequest(HttpMethod.Put, $"/odata/QueueDefinitions({queue.Id!.Value})", folderId, queue);
+    }
+
+    public void PutQueueRetention(Int64 folderId, Int64 queueId, QueueRetentionSetting setting)
+    {
+        HttpRequest(HttpMethod.Put, $"/odata/QueueRetention({queueId})", folderId, setting);
+    }
+
     public void RemoveQueue(Int64 folderId, Int64 queueId)
     {
         HttpRequest(HttpMethod.Delete, $"/odata/QueueDefinitions({queueId})", folderId);
