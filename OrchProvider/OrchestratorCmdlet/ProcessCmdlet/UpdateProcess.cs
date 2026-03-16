@@ -335,7 +335,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
             }
             if (processes is null) continue;
 
-            var targetProcesses = processes.SelectByWildcards(p => p?.Name, wpName);
+            var targetProcesses = processes.SelectByWildcards(p => p?.Name, wpName).OrderBy(p => p.Name);
 
             // GetReleaseById() must be called before entering the iteration loop.
             // (Calling it inside the loop would break the iteration.)
