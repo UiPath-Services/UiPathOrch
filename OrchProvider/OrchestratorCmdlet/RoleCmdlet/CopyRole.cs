@@ -69,12 +69,15 @@ public class CopyRoleCommand : OrchestratorPSCmdlet
                         var addedRole = dstDrive.OrchAPISession.PostRole(role);
                         //addedRole.Path = dstDrive.NameColonSeparator;
                         //WriteObject(addedRole);
-                        dstDrive.Roles.ClearCache();
                     }
                     catch (Exception ex)
                     {
                         var errorRecord = new ErrorRecord(new OrchException(item, ex), "CopyRoleError", ErrorCategory.InvalidOperation, destination);
                         _this.WriteError(errorRecord);
+                    }
+                    finally
+                    {
+                        dstDrive.Roles.ClearCache();
                     }
                 }
             }
