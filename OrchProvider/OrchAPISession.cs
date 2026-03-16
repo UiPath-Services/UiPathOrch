@@ -1702,16 +1702,28 @@ public partial class OrchAPISession : IDisposable
         if (release.RetentionPeriod      == 0) release.RetentionPeriod      = null;
         if (release.StaleRetentionPeriod == 0) release.StaleRetentionPeriod = null;
 
-        // TODO: Is this condition correct?
-        // ApiVersion = 17: Retention exists, StaleRetention does not
+        // Strip properties not supported by older API versions.
+        // EnvironmentVariables: added in v19.0
+        // HiddenForAttendedUser: added in v17.0
+        // RemoteControlAccess: added in v16.0
         if (ApiVersion < 19)
         {
+            release.EnvironmentVariables = null;
             release.StaleRetentionPeriod = null;
             release.StaleRetentionAction = null;
+            release.StaleRetentionBucketId = null;
             if (release.ProcessSettings is not null)
             {
                 release.ProcessSettings.AutopilotForRobots = null;
             }
+        }
+        if (ApiVersion < 17)
+        {
+            release.HiddenForAttendedUser = null;
+        }
+        if (ApiVersion < 16)
+        {
+            release.RemoteControlAccess = null;
         }
 
         // Verified on OC 22.10.1 (15.0) POST /odata/Releases
@@ -1752,6 +1764,10 @@ public partial class OrchAPISession : IDisposable
             release.RetentionAction = null;
             release.RetentionPeriod = null;
             release.RetentionBucketId = null;
+            release.Tags = null;
+            release.ResourceOverwrites = null;
+            release.FeedId = null;
+            release.ProcessSettings = null;
             return HttpRequest<Release>(HttpMethod.Post, "/odata/Releases", folderId, release);
         }
     }
