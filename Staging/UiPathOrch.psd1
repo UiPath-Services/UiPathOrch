@@ -298,6 +298,7 @@ CmdletsToExport = @(
 'Disable-OrchWebhook',
 
 'Get-OrchSetting',
+'Set-OrchSetting',
 'Get-OrchExecutionSetting',
 'Get-OrchWebSetting',
 'Get-OrchAuthenticationSetting',
