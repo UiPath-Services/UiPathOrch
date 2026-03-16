@@ -457,6 +457,17 @@ internal static class OrchStringExtensions
         return true;
     }
 
+    /// <summary>Compare against <paramref name="source"/>, set on <paramref name="target"/>. For PATCH payloads.</summary>
+    public static bool AssignStringIfNotNull<T>(this T target, string? value, T source, Func<T, string?> getter, Action<T, string?> setter)
+    {
+        if (value is null) return false;
+        var current = getter(source);
+        if (string.IsNullOrEmpty(current) && string.IsNullOrEmpty(value)) return false;
+        if (current == value) return false;
+        setter(target, value);
+        return true;
+    }
+
     public static void AssignStringIfNotNullOrEmpty<T>(this T target, string? value, Action<T, string?> setter)
     {
         if (!string.IsNullOrEmpty(value))
@@ -483,6 +494,15 @@ internal static class OrchStringExtensions
     {
         if (!value.HasValue || value.Value.Equals(default(N))) return false;
         if (Nullable.Equals(getter(target), value)) return false;
+        setter(target, value);
+        return true;
+    }
+
+    /// <summary>Compare against <paramref name="source"/>, set on <paramref name="target"/>. For PATCH payloads.</summary>
+    public static bool AssignNumberIfNotNullOrZero<T, N>(this T target, N? value, T source, Func<T, N?> getter, Action<T, N?> setter) where N : struct, IComparable
+    {
+        if (!value.HasValue || value.Value.Equals(default(N))) return false;
+        if (Nullable.Equals(getter(source), value)) return false;
         setter(target, value);
         return true;
     }
@@ -543,6 +563,22 @@ internal static class OrchStringExtensions
             newValue = null;
 
         if (getter(target) == newValue) return false;
+        setter(target, newValue);
+        return true;
+    }
+
+    /// <summary>Compare against <paramref name="source"/>, set on <paramref name="target"/>. For PATCH payloads.</summary>
+    public static bool AssignBoolIfNotNull<T>(this T target, string? value, T source, Func<T, bool?> getter, Action<T, bool?> setter)
+    {
+        if (string.IsNullOrEmpty(value)) return false;
+
+        bool? newValue;
+        if (bool.TryParse(value, out var result))
+            newValue = result;
+        else
+            newValue = null;
+
+        if (getter(source) == newValue) return false;
         setter(target, newValue);
         return true;
     }

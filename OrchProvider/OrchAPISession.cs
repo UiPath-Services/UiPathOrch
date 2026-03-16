@@ -1728,12 +1728,9 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    // This is an undocumented API.
-    public void EditRelease(Int64 folderId, Release release)
+    public void PatchRelease(Int64 folderId, Release release)
     {
-        // TODO: When ApiVersion < 19, should StaleRetention be set to null?
-        // Returns nothing
-        HttpRequest(HttpMethod.Post, "/odata/Releases/UiPath.Server.Configuration.OData.EditRelease", folderId, release);
+        HttpRequest(HttpMethod.Patch, $"/odata/Releases({release.Id!.Value})", folderId, release);
     }
 
     #region ReleaseRetention
