@@ -722,6 +722,12 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<ExecutionSettingsConfiguration>(HttpMethod.Get, $"/odata/Settings/UiPath.Server.Configuration.OData.GetExecutionSettingsConfiguration(scope={scope})");
     }
 
+    public void UpdateSettingsBulk(IEnumerable<Settings> settings)
+    {
+        var payload = new { settings = settings.Select(s => new { s.Name, s.Value }).ToArray() };
+        HttpRequest(HttpMethod.Post, "/odata/Settings/UiPath.Server.Configuration.OData.UpdateBulk", null, payload);
+    }
+
     public ResponseDictionary? GetWebSettings()
     {
         return HttpRequest<ResponseDictionary>(HttpMethod.Get, "/odata/Settings/UiPath.Server.Configuration.OData.GetWebSettings");
