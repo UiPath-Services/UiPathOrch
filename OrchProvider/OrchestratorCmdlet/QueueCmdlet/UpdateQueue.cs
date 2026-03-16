@@ -188,47 +188,80 @@ public class UpdateQueueCommand : OrchestratorPSCmdlet
                 }
 
                 #region Retention (uses separate PutQueueRetention API)
+                // Queue list API does not return retention fields, so fetch current values
+                // from the dedicated QueueRetention API when any retention parameter is specified.
+                bool hasRetentionParam = RetentionAction is not null || (RetentionPeriod is not null && RetentionPeriod != 0) || RetentionBucket is not null;
+                bool hasStaleRetentionParam = StaleRetentionAction is not null || (StaleRetentionPeriod is not null && StaleRetentionPeriod != 0) || StaleRetentionBucket is not null;
+
+                QueueRetentionSetting? currentRetention = null;
+                if (hasRetentionParam || hasStaleRetentionParam)
+                {
+                    try
+                    {
+                        currentRetention = drive.OrchAPISession.GetQueueRetention(folder.Id ?? 0, queue.Id ?? 0);
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteError(new ErrorRecord(new OrchException(target, "Failed to get queue retention settings.", ex), "GetQueueRetentionError", ErrorCategory.InvalidOperation, target));
+                    }
+                }
+
                 QueueRetentionSetting? retentionUpdate = null;
+                if (hasRetentionParam && currentRetention is not null)
                 {
                     var ret = new QueueRetentionSetting { QueueDefinitionId = queue.Id!.Value };
                     bool retDirty = false;
-                    if (RetentionAction is not null && RetentionAction != (queue.RetentionAction ?? "")) { ret.Action = RetentionAction; retDirty = true; }
-                    if (RetentionPeriod is not null && RetentionPeriod != 0 && RetentionPeriod != queue.RetentionPeriod) { ret.Period = RetentionPeriod; retDirty = true; }
+                    if (RetentionAction is not null && RetentionAction != (currentRetention.Action ?? "")) { ret.Action = RetentionAction; retDirty = true; }
+                    if (RetentionPeriod is not null && RetentionPeriod != 0 && RetentionPeriod != currentRetention.Period) { ret.Period = RetentionPeriod; retDirty = true; }
                     ret.AssignIdFromName(
                         RetentionBucket,
                         () => drive.Buckets.Get(folder),
                         e => e.Name!,
                         e => e.Id!,
-                        (s, v) => { if (queue.RetentionBucketId != v) { s.BucketId = v; retDirty = true; } },
+                        (s, v) => { if (currentRetention.BucketId != v) { s.BucketId = v; retDirty = true; } },
                         this, target, "RetentionBucket");
                     if (retDirty)
                     {
-                        ret.Action ??= queue.RetentionAction ?? "Delete";
-                        ret.Period ??= queue.RetentionPeriod ?? 30;
-                        ret.BucketId ??= queue.RetentionBucketId;
+                        ret.Action ??= currentRetention.Action ?? "Delete";
+                        ret.Period ??= currentRetention.Period ?? 30;
+                        ret.BucketId ??= currentRetention.BucketId;
                         retentionUpdate = ret;
                     }
                 }
 
                 QueueRetentionSetting? staleRetentionUpdate = null;
+                if (hasStaleRetentionParam)
                 {
-                    var ret = new QueueRetentionSetting { QueueDefinitionId = queue.Id!.Value, Type = "Stale" };
-                    bool retDirty = false;
-                    if (StaleRetentionAction is not null && StaleRetentionAction != (queue.StaleRetentionAction ?? "")) { ret.Action = StaleRetentionAction; retDirty = true; }
-                    if (StaleRetentionPeriod is not null && StaleRetentionPeriod != 0 && StaleRetentionPeriod != queue.StaleRetentionPeriod) { ret.Period = StaleRetentionPeriod; retDirty = true; }
-                    ret.AssignIdFromName(
-                        StaleRetentionBucket,
-                        () => drive.Buckets.Get(folder),
-                        e => e.Name!,
-                        e => e.Id!,
-                        (s, v) => { if (queue.StaleRetentionBucketId != v) { s.BucketId = v; retDirty = true; } },
-                        this, target, "StaleRetentionBucket");
-                    if (retDirty)
+                    QueueRetentionSetting? currentStale = null;
+                    try
                     {
-                        ret.Action ??= queue.StaleRetentionAction ?? "Delete";
-                        ret.Period ??= queue.StaleRetentionPeriod ?? 30;
-                        ret.BucketId ??= queue.StaleRetentionBucketId;
-                        staleRetentionUpdate = ret;
+                        currentStale = drive.OrchAPISession.GetQueueRetention(folder.Id ?? 0, queue.Id ?? 0, "Stale");
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteError(new ErrorRecord(new OrchException(target, "Failed to get stale queue retention settings.", ex), "GetQueueRetentionError", ErrorCategory.InvalidOperation, target));
+                    }
+
+                    if (currentStale is not null)
+                    {
+                        var ret = new QueueRetentionSetting { QueueDefinitionId = queue.Id!.Value, Type = "Stale" };
+                        bool retDirty = false;
+                        if (StaleRetentionAction is not null && StaleRetentionAction != (currentStale.Action ?? "")) { ret.Action = StaleRetentionAction; retDirty = true; }
+                        if (StaleRetentionPeriod is not null && StaleRetentionPeriod != 0 && StaleRetentionPeriod != currentStale.Period) { ret.Period = StaleRetentionPeriod; retDirty = true; }
+                        ret.AssignIdFromName(
+                            StaleRetentionBucket,
+                            () => drive.Buckets.Get(folder),
+                            e => e.Name!,
+                            e => e.Id!,
+                            (s, v) => { if (currentStale.BucketId != v) { s.BucketId = v; retDirty = true; } },
+                            this, target, "StaleRetentionBucket");
+                        if (retDirty)
+                        {
+                            ret.Action ??= currentStale.Action ?? "Delete";
+                            ret.Period ??= currentStale.Period ?? 30;
+                            ret.BucketId ??= currentStale.BucketId;
+                            staleRetentionUpdate = ret;
+                        }
                     }
                 }
                 #endregion

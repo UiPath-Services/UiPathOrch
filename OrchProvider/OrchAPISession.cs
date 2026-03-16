@@ -815,6 +815,12 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<QueueRetentionSetting>(HttpMethod.Get, $"/odata/QueueRetention({queueId})", folderId);
     }
 
+    public QueueRetentionSetting? GetQueueRetention(Int64 folderId, Int64 queueId, string retentionType)
+    {
+        EnsureVersionSupport(14);
+        return HttpRequest<QueueRetentionSetting>(HttpMethod.Get, $"/odata/QueueRetention({queueId})?retentionType={retentionType}", folderId);
+    }
+
     public QueueDefinition? CreateQueue(Int64 folderId, QueueDefinition queue)
     {
         // Confirmed that StaleRetention is not present in the web interface for ApiVersion = 17 

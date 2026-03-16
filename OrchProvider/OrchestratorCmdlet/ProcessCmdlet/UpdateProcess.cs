@@ -520,6 +520,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                         }
 
                         drive._dicReleases?.TryRemove(folder.Id ?? 0, out var _);
+                        drive._dicReleasesDetailed?.TryRemove(folder.Id ?? 0, out var _);
                     }
                     catch (Exception ex)
                     {
