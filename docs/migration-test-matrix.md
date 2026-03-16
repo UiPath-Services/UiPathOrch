@@ -13,7 +13,7 @@
 | 4 | Automation Cloud (API v20) | Automation Cloud (API v20) | Not tested |
 | 5 | On-prem (same version) | On-prem (same version) | Not tested |
 | 6 | Automation Cloud | Automation Cloud (same org, different tenant) | Not tested |
-| 7 | Automation Cloud | Automation Cloud (cross-org) | Not tested |
+| 7 | Automation Cloud (yotsuda) | Automation Cloud (kzsai, cross-org) | Done (2026-03-17). 0 "must not be null". Copy-PmUser tested. All errors are server/license constraints (quota, permissions, library feed). |
 
 ### By AD Integration and User Mapping
 
