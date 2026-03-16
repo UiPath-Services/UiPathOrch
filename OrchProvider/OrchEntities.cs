@@ -68,10 +68,7 @@ public class OrchPSDrive
         PartitionGlobalId = drive._dicPartitionGlobalId;
         TenantId = drive._dicTenantId;
         TenantKey = drive._dicTenantKey;
-        var token = drive.OrchAPISession.AuthManager.AccessToken;
-        AccessToken = token is not null && token.Length > 20
-            ? string.Concat(token.AsSpan(0, 10), "...", token.AsSpan(token.Length - 10))
-            : token;
+        AccessToken = drive.OrchAPISession.AuthManager.AccessToken;
         if (drive._psDrive.Proxy is not null)
         {
             ProxySettings = new()
