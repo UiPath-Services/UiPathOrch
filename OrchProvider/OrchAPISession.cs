@@ -94,7 +94,9 @@ public partial class OrchAPISession : IDisposable
         DateTime resTime = reqTime;
         int callId = Interlocked.Increment(ref http_call_num);
         bool hasException = false;
-        
+        var logging = _drive._psDrive.Logging;
+        bool logEnabled = logging?.Enabled.GetValueOrDefault() ?? false;
+
         try
         {
             // Add tenant name to headers if specified in on-premises environment
@@ -107,6 +109,18 @@ public partial class OrchAPISession : IDisposable
             HttpClient hc = httpClient ?? HttpClient;
             ret = hc.Send(message, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             resTime = DateTime.Now;
+
+            // Buffer response body when the async logger will need to read it,
+            // preventing "stream already consumed" race between caller and logger.
+            if (logEnabled && httpClient == null && ret.Content != null)
+            {
+                var level = logging?.InternalLogLevel ?? LoggingLevel.Info;
+                if (!ret.IsSuccessStatusCode || level >= LoggingLevel.Trace)
+                {
+                    ret.Content.LoadIntoBufferAsync().GetAwaiter().GetResult();
+                }
+            }
+
             return ret;
         }
         catch (Exception)
@@ -117,8 +131,6 @@ public partial class OrchAPISession : IDisposable
         }
         finally
         {
-            var logging = _drive._psDrive.Logging;
-            bool logEnabled = logging?.Enabled.GetValueOrDefault() ?? false;
             if (logEnabled)
             {
                 // Handle errors safely and asynchronously; also execute BuildCombinedLogBlock asynchronously
