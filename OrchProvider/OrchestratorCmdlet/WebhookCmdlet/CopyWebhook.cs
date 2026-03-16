@@ -65,6 +65,16 @@ public class CopyWebhookCommand : OrchestratorPSCmdlet
                         newWebhook.Key = null;
                         newWebhook.Id = null;
                         // newWebhook.Path = null; // Not needed since it has the JsonIgnore attribute
+
+                        // Older Orchestrator versions (< v16) do not have a Name field.
+                        // Generate a default name from the URL when copying to v16+.
+                        if (dstDrive.OrchAPISession.ApiVersion >= 16
+                            && string.IsNullOrEmpty(newWebhook.Name) && !string.IsNullOrEmpty(newWebhook.Url))
+                        {
+                            try { newWebhook.Name = new Uri(newWebhook.Url).Host; }
+                            catch { newWebhook.Name = "webhook"; }
+                        }
+
                         var createdWebhook = dstDrive.OrchAPISession.CreateWebhook(newWebhook);
                         if (createdWebhook is not null)
                         {
