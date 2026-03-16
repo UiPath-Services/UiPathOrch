@@ -13,18 +13,39 @@
 | 5 | Automation Cloud | Automation Cloud (same org, different tenant) | Not tested |
 | 6 | Automation Cloud | Automation Cloud (cross-org) | Not tested |
 
+### By AD Integration and User Mapping
+
+| # | Source | Destination | User Mapping | Status |
+|---|---|---|---|---|
+| 7 | No AD (local users) | No AD (local users) | Case A (same usernames) | Done (2026-03-16, #1 #2) |
+| 8 | No AD (local users) | No AD or AD | Case B (username format changes, e.g. `admin` → `admin@company.com`) | Not tested |
+| 9 | AD (Entra ID) | AD (Entra ID), same directory | Case A (same usernames) | Not tested |
+| 10 | AD (Entra ID) | AD (Entra ID), different directory | Case B (different email domains) | Not tested |
+| 11 | AD (on-prem AD) | AD (Entra ID) | Case B (`DOMAIN\user` → `user@company.com`) | Not tested |
+| 12 | No AD (local users) | AD (Entra ID) | Case B (local names → email addresses) | Not tested |
+
+**Note**: `copy -Recurse Source:\ Destination:\` copies folder-level user
+assignments but does NOT create organization-level users. When migrating
+to a different identity provider, users must be created in the destination
+organization first (via `Copy-PmUser` or manually), then use
+`-UserMappingCsv` to map old usernames to new ones.
+
 ### Priority
 
 **High** (common scenarios):
 - #3: Tenant consolidation (Cloud → Cloud, same version)
 - #5: Tenant reorganization (same org)
+- #8: On-prem to Cloud with username changes (most common real migration)
 
 **Medium**:
 - #6: Cross-org migration (Case B user mapping)
+- #11: On-prem AD to Entra ID (common modernization path)
 - On-prem with other versions (23.4, 23.10, 24.10, etc.)
 
-**Low** (already covered by hardest cases):
+**Low** (already covered or rare):
 - #1, #2: Tested. The largest version gap (v13 ↔ v20).
+- #9: Same directory, usernames match. Unlikely to have issues.
+- #4: Same version on-prem. Requires 2nd on-prem environment.
 
 ## Issues Found and Fixed
 
@@ -48,6 +69,22 @@
 | Queue | ReleaseId requires SLA on v19+ | CopyQueues: auto-set 24h SLA for v19+ destination |
 | Role | "Custom mixed roles can no longer be created" | Server constraint, not fixable |
 | User | On-prem local users don't exist in Cloud | Expected (Case B / manual) |
+
+## UserMappingCsv Testing Notes
+
+The `-UserMappingCsv` parameter has NOT been tested in actual migration.
+It is used by the following cmdlets:
+- `Copy-PmUser`
+- `Copy-OrchUser`
+- `Copy-OrchAsset`
+- `Copy-OrchFolderUser`
+- `copy` (`Copy-Item`)
+
+Key scenarios to test:
+- On-prem local user `admin` → Cloud email `admin@company.com`
+- On-prem AD user `DOMAIN\jsmith` → Entra ID `jsmith@company.com`
+- Generate CSV with `New-OrchUserMappingCsv`, validate with
+  `Test-OrchUserMappingCsv`, then migrate with `-UserMappingCsv`
 
 ## Notes
 
