@@ -626,7 +626,12 @@ Entities requiring post-processing because passwords are not migrated:
   order matters. For example, processes depend on packages, so packages must
   be copied first.
 - **Each copy operation is independent**: If copying one entity fails, it does
-  not affect the copying of other entities.
+  not affect the copying of other entities. Cross-version and cross-platform
+  migrations (e.g., Automation Cloud to on-premises) will produce errors for
+  entities that are incompatible with the destination. These errors are
+  expected and can be reviewed after the migration completes. Fix the
+  underlying issues and re-run the migration — already-copied entities are
+  skipped automatically.
 - **Personal workspaces**: To migrate personal workspaces, exploration must be
   started in the Orchestrator Web UI on both sides, followed by running
   `Clear-OrchCache`. Personal workspaces can only be automatically copied when
