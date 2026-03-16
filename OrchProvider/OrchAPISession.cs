@@ -1901,6 +1901,21 @@ public partial class OrchAPISession : IDisposable
 
     public ProcessSchedule? PostProcessSchedule(Int64 folderId, ProcessSchedule schedule)
     {
+        // Strip properties not supported by older API versions.
+        if (ApiVersion < 15)
+        {
+            schedule.Tags = null;
+            schedule.ConsecutiveJobFailuresThreshold = null;
+            schedule.JobFailuresGracePeriodInHours = null;
+            schedule.IsConnected = null;
+            schedule.ActivateOnJobComplete = null;
+            schedule.ItemsActivationThreshold = null;
+            schedule.ItemsPerJobActivationTarget = null;
+            schedule.MaxJobsForActivation = null;
+            schedule.ResumeOnSameContext = null;
+            schedule.RunAsMe = null;
+            schedule.MachineRobots = null;
+        }
         return HttpRequest<ProcessSchedule>(HttpMethod.Post, "/odata/ProcessSchedules", folderId, schedule);
     }
 
@@ -1938,6 +1953,10 @@ public partial class OrchAPISession : IDisposable
 
     public Bucket? PostBucket(Int64 folderId, Bucket bucket)
     {
+        if (ApiVersion < 15)
+        {
+            bucket.Tags = null;
+        }
         return HttpRequest<Bucket>(HttpMethod.Post, "/odata/Buckets", folderId, bucket);
     }
 
