@@ -16,6 +16,7 @@ public class SetSettingCommand : OrchestratorPSCmdlet
     public string? Name { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(ValueCompleter))]
     public string? Value { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -47,8 +48,35 @@ public class SetSettingCommand : OrchestratorPSCmdlet
                     .Where(e => wp.IsMatch(e.Name))
                     .OrderBy(e => e.Name))
                 {
-                    string tooltip = $"{item.Value}";
+                    string tooltip = $"{item.Name}  current value: [{item.Value}]";
                     yield return new CompletionResult(PathTools.EscapePSText(item.Name), item.Name, CompletionResultType.ParameterValue, tooltip);
+                }
+            }
+        }
+    }
+
+    private class ValueCompleter : OrchArgumentCompleter
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drives = ResolveOrchDrives(fakeBoundParameters);
+            var paramName = GetParameterValue(commandAst, "Name", TPositional.Parameters);
+            if (string.IsNullOrEmpty(paramName)) yield break;
+
+            var results = ParallelResults3.GroupBy(drives, drive => drive.Settings.Get());
+
+            foreach (var result in results)
+            {
+                var item = result.FirstOrDefault(e => string.Equals(e.Name, paramName, StringComparison.OrdinalIgnoreCase));
+                if (item is not null && item.Value is not null)
+                {
+                    string tooltip = $"{item.Name}  current value";
+                    yield return new CompletionResult(PathTools.EscapePSText(item.Value), item.Value, CompletionResultType.ParameterValue, tooltip);
                 }
             }
         }
