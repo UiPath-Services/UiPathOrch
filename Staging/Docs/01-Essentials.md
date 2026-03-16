@@ -1,20 +1,15 @@
 # UiPathOrch Module - Essential Guide for AI
 
-```
-SECTIONS:
-  23: CRITICAL AI EXECUTION RULES
-  36: MANDATORY AI DECISION FLOW
-  71: PATH PROPERTY - CRITICAL FOR CONTEXT
-  100: ERROR HANDLING PROTOCOL
-  124: CONFIDENTIAL APP CONSIDERATIONS
-  142: UIPATH ORCHESTRATOR ARCHITECTURE
-  189: PERMISSION MODEL
-  198: PERFORMANCE & CACHE MANAGEMENT
-  226: QUICK REFERENCE
-  281: CMDLET-SPECIFIC GUIDANCE
-```
-
-Use Show-TextFiles with -LineRange to read specific sections.
+- [Critical AI Execution Rules](#critical-ai-execution-rules)
+- [Mandatory AI Decision Flow](#mandatory-ai-decision-flow)
+- [Path Property - Critical for Context](#path-property---critical-for-context)
+- [Error Handling Protocol](#error-handling-protocol)
+- [Confidential App Considerations](#confidential-app-considerations)
+- [UiPath Orchestrator Architecture](#uipath-orchestrator-architecture)
+- [Permission Model](#permission-model)
+- [Performance & Cache Management](#performance--cache-management)
+- [Quick Reference](#quick-reference)
+- [Cmdlet-Specific Guidance](#cmdlet-specific-guidance)
 
 ATTENTION: This document provides operational guidelines for safely using the
 UiPathOrch PowerShell module to control UiPath Orchestrator. This module
@@ -83,6 +78,8 @@ UiPathOrch objects use custom .Path property (NOT PSPath):
 ✅ ALWAYS use the .Path property for UiPathOrch objects
 
 ### CORRECT PATH USAGE EXAMPLES
+
+```powershell
 # Show all triggers with their locations
 Get-OrchTrigger -Path Orch1:\ -Recurse | Select-Object Path, Name, Enabled, ReleaseName
 
@@ -94,6 +91,7 @@ Get-OrchUser -Path Orch1: | Select-Object Path, UserName, FullName
 
 # Show all processes with their folder locations
 Get-OrchProcess -Path Orch1:\ -Recurse | Select-Object Path, Name, ProcessVersion
+```
 
 KEY RULE: Always include Path in Select-Object for clarity and troubleshooting.
 
@@ -217,6 +215,18 @@ cd Orch1:\TargetFolder
 Get-OrchProcess  # Now operates on current folder
 ```
 
+**Volume cmdlet cache usage**: Volume cmdlets such as Get-OrchJob query the
+server when filter parameters are specified, and the results are cached. On
+subsequent calls without filter parameters, cached data is returned instantly.
+
+```powershell
+# First call: fetch from server with filters (results are cached)
+Get-OrchJob -Path Orch1:\ -Recurse -Last 7d
+
+# Subsequent calls: retrieve from cache without filters
+Get-OrchJob | Where-Object State -eq Running
+```
+
 ### Cache Management
 
 ```powershell
@@ -228,7 +238,7 @@ Clear-OrchCache  # Force refresh all cached data
 ### Session Initialization
 
 ```powershell
-# 1. Mount drives from configuration
+# 1. Import configuration and create drives
 Import-OrchConfig
 
 # 2. Check available connections
@@ -327,9 +337,12 @@ Get-OrchFolderUser               # Folder access assignments
    - Architecture understanding
 
 ### Example Help Commands:
+
+```powershell
 Get-Help Get-OrchJob -Examples     # Practical job management examples
 Get-Help Start-OrchJob -Examples   # Safe job execution patterns
 Get-Help Edit-OrchConfig -Examples # Configuration procedures
+```
 
 ### OFFICIAL RESOURCES
 - UiPath Marketplace: https://marketplace.uipath.com/listings/uipathorch

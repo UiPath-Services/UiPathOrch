@@ -1,20 +1,17 @@
-# UiPathOrch Module - Tenant Migration Guide
+# UiPathOrch Module - Migration & Copy Guide
 
-```
-SECTIONS:
-   19: Getting Started
-   57: Phase 1 - Interview and Migration Planning
-  114: Phase 2 - Environment Preparation
-  172: Phase 3 - Migration Execution
-  379: Phase 4 - Post-Migration Verification
-  387: Phase 5 - Feedback
-  450: Appendix
-```
+- [Getting Started](#getting-started)
+- [Phase 1: Interview and Migration Planning](#phase-1-interview-and-migration-planning)
+- [Phase 2: Environment Preparation](#phase-2-environment-preparation)
+- [Phase 3: Migration Execution](#phase-3-migration-execution)
+- [Phase 4: Post-Migration Verification](#phase-4-post-migration-verification)
+- [Phase 5: Feedback](#phase-5-feedback)
+- [Copying Individual Entities](#copying-individual-entities)
+- [Appendix](#appendix)
 
-Use Show-TextFiles with -LineRange to read specific sections.
-
-This guide describes the procedure for migrating entities from a source
-tenant to a destination tenant using UiPathOrch PowerShell cmdlets.
+For lift-and-shift migration, start at [Getting Started](#getting-started).
+The [Copying Individual Entities](#copying-individual-entities) section
+covers selective or partial copying scenarios.
 
 ## Getting Started
 
@@ -40,7 +37,7 @@ AI can directly read and edit this file to assist with configuration:
 
 ```powershell
 $configPath = Get-OrchConfigPath
-Show-TextFiles $configPath          # Read current configuration
+Get-Content $configPath             # Read current configuration
 Edit-OrchConfig Default             # Or open in default editor
 ```
 
@@ -450,6 +447,98 @@ Overall Result: [Successful / Partially successful / Failed]
 Additional Comments:
 - [Any other observations]
 ```
+
+---
+
+## Copying Individual Entities
+
+For selective or partial copying (not full lift-and-shift migration),
+use individual `Copy-Orch*` cmdlets.
+
+### Copying Tenant-Level Entities
+
+When the current drive is the source tenant, `-Path` can be omitted:
+
+```powershell
+PS Orch1:\> Copy-OrchCalendar 'My Calendar' Orch2:
+PS Orch1:\> Copy-OrchCalendar * Orch2:
+```
+
+Otherwise, use `-Path` to specify the source:
+
+```powershell
+Copy-OrchCalendar -Path Orch1: * Orch2:
+```
+
+### Copying Folder-Level Entities
+
+When the current folder is the source, `-Path` can be omitted:
+
+```powershell
+PS Orch1:\Shared> Copy-OrchAsset * \AnotherFolder
+```
+
+Otherwise, use `-Path` to specify the source. Use `-Recurse` to include
+subfolders:
+
+```powershell
+# Copy all assets from a specific folder
+Copy-OrchAsset -Path Orch1:\Shared * Orch2:\Shared
+
+# Copy all assets from all folders (preserving folder structure)
+Copy-OrchAsset -Path Orch1:\ -Recurse * Orch2:\
+
+# Copy within the same tenant (between folders)
+Copy-OrchAsset -Path Orch1:\FolderA * \FolderB
+```
+
+### Copying Folders
+
+The `copy` command (`Copy-Item`) copies folders along with all their
+contained entities (packages, processes, assets, queues, triggers, etc.):
+
+```powershell
+# Copy all folders and their entities
+copy -Recurse Orch1:\* Orch2:\
+
+# Copy a specific folder
+copy Orch1:\Shared Orch2:\
+```
+
+Classic folders are automatically converted to modern folders when copied.
+
+### Copying via CSV
+
+Export entities to CSV, edit as needed, then import into a Copy cmdlet.
+This is useful for selective copying or modifying values during the copy.
+
+The `-ExportCsv` CSV does not include a `Destination` column. Add a
+`Destination` column to the CSV and fill in the target path for each row:
+
+```powershell
+# 1. Export asset names to CSV
+Get-OrchAsset -Path Orch1:\Shared | Select-Object Path, Name | Export-Csv C:\temp\assets.csv
+
+# 2. Add a Destination column and set the target path for each row
+
+# 3. Import and copy
+Import-Csv C:\temp\assets.csv | Copy-OrchAsset
+```
+
+For folder user assignments:
+
+```powershell
+Get-OrchFolderUser -Path Orch1:\Shared -ExportCsv C:\temp\folder-users.csv
+# Edit the Path column in the CSV (e.g., Orch1:\Shared → Orch2:\Shared)
+Import-Csv C:\temp\folder-users.csv | Add-OrchFolderUser
+```
+
+### Personal Workspaces
+
+Personal workspaces can be operated on, provided that exploration has been
+started in the Orchestrator Web UI. Since starting exploration is not
+supported via API, it must be done manually. After starting exploration,
+run `Clear-OrchCache` to refresh.
 
 ---
 
