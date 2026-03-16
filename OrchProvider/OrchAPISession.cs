@@ -1902,20 +1902,24 @@ public partial class OrchAPISession : IDisposable
     public ProcessSchedule? PostProcessSchedule(Int64 folderId, ProcessSchedule schedule)
     {
         // Strip properties not supported by older API versions.
-        if (ApiVersion < 15)
+        if (ApiVersion < 19)
         {
             schedule.Tags = null;
             schedule.ConsecutiveJobFailuresThreshold = null;
             schedule.JobFailuresGracePeriodInHours = null;
             schedule.IsConnected = null;
+            schedule.RunAsMe = null;
+            schedule.AlertPendingExpression = null;
+            schedule.AlertRunningExpression = null;
+        }
+        if (ApiVersion < 15)
+        {
             schedule.ActivateOnJobComplete = null;
             schedule.ItemsActivationThreshold = null;
-            schedule.ItemsPerJobActivationTarget = null;
-            schedule.MaxJobsForActivation = null;
-            schedule.ResumeOnSameContext = null;
-            schedule.RunAsMe = null;
-            schedule.MachineRobots = null;
         }
+        // v13 requires StartProcessCronDetails and ExternalJobKey
+        schedule.StartProcessCronDetails ??= $"{{\"advancedCron\":\"{schedule.StartProcessCron}\"}}";
+        schedule.ExternalJobKey ??= "";
         return HttpRequest<ProcessSchedule>(HttpMethod.Post, "/odata/ProcessSchedules", folderId, schedule);
     }
 
