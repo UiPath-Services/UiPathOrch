@@ -24,7 +24,7 @@ public class SetSettingCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
-    private readonly List<Settings> _pendingSettings = new();
+    private readonly List<Settings> _pendingSettings = [];
     private string[]? _resolvedPath;
 
     private class NameCompleter : OrchArgumentCompleter
