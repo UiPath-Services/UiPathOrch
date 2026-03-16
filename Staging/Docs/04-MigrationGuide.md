@@ -250,17 +250,53 @@ before starting the copy.
 
 ### Step 1: Copy Organization-Level Entities (Cross-Organization Only)
 
+`copy -Recurse Source:\ Destination:\` copies tenant and folder entities
+but does NOT create organization-level users. Users must exist in the
+destination organization before their folder assignments can be copied.
+
+#### 1-1: Investigate source users
+
+First, list all users in the source tenant and classify them:
+
 ```powershell
+Get-OrchUser -Path Source: | Select-Object UserName, Type | Format-Table
+```
+
+User types:
+| Type | Description | Action |
+|---|---|---|
+| `DirectoryUser` | AD / Entra ID user | Create in destination directory, or map with UserMappingCsv |
+| `DirectoryGroup` | AD / Entra ID group | Create in destination directory |
+| `DirectoryRobot` | Robot account | Copy with `Copy-PmRobotAccount` |
+| `DirectoryExternalApplication` | External app | Recreate manually |
+| `User` | Local user (on-prem) | Copy with `Copy-PmUser` |
+
+Ask the user:
+- Which directory users exist in the destination organization?
+- Do any usernames change format (e.g., `admin` → `admin@company.com`)?
+- Are there local users that need to be recreated?
+
+#### 1-2: Copy local users and robot accounts
+
+```powershell
+# Copy local users (skip if destination uses AD only)
 Copy-PmUser -Path Source: * Destination:
+
+# Copy robot accounts
 Copy-PmRobotAccount -Path Source: * Destination:
 ```
 
 - `Copy-PmUser` automatically creates the groups that the copied users belong
   to. Therefore, there is no need to explicitly copy groups.
-- If the organization is integrated with Active Directory, copying AD users is
-  unnecessary. However, if local users exist, copy them as needed.
-- However, if directory users are added to local groups, those groups need to
-  be migrated:
+- If the source organization is integrated with Active Directory, local user
+  copy is unnecessary — only directory users need to exist in the destination.
+- Directory users (AD / Entra ID) cannot be copied via API. They must be
+  added to the destination organization through the identity provider.
+
+#### 1-3: Copy group memberships
+
+If directory users are added to local groups, those groups need to be
+migrated:
 
 ```powershell
 Get-PmGroupMember -Path Source: -ExportCsv c:\groups.csv
