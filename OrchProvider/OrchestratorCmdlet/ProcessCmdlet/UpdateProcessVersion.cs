@@ -155,6 +155,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
                     .Where(r => wp.IsMatch(r.Name))
                     .Where(r => r.ProcessType != "TestAutomationProcess")
                     .FilterByWildcards(r => r?.Name, wpName)
+                    .OrderBy(r => r.Name)
                     .ToList();
 
                 // Retrieve packages from the feed corresponding to the target releases
@@ -246,7 +247,8 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
 
                     foreach (var release in releases
                         .Where(r => r.ProcessType != "TestAutomationProcess")
-                        .FilterByWildcards(r => r?.Name, wpName))
+                        .FilterByWildcards(r => r?.Name, wpName)
+                        .OrderBy(r => r.Name))
                     {
                         cancelHandler.Token.ThrowIfCancellationRequested();
 

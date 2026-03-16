@@ -261,7 +261,7 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
             }
             if (triggers is null) continue;
 
-            var targetTriggers = triggers.SelectByWildcards(t => t?.Name, wpName);
+            var targetTriggers = triggers.SelectByWildcards(t => t?.Name, wpName).OrderBy(t => t.Name);
 
             foreach (var trigger in targetTriggers)
             {
@@ -271,40 +271,32 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
 
                 ProcessSchedule postTrigger = OrchCollectionExtensions.DeepCopy(trigger);
 
-                postTrigger.AssignStringIfNotNull(NewName, (s, v) => s.Name = v);
-
-                postTrigger.AssignBoolIfNotNull(Enabled, (s, v) => s.Enabled = v);
-                postTrigger.Enabled ??= true;
-
-                postTrigger.AssignNumberIfNotNullOrZero(StartStrategy, (s, v) => s.StartStrategy = v);
-                postTrigger.StartStrategy ??= 1;
-
-                postTrigger.AssignStringIfNotNull(StopStrategy,                    (s, v) => s.StopStrategy = v);
-                postTrigger.AssignStringIfNotNull(StopProcessExpression,           (s, v) => s.StopProcessExpression = v);
-                postTrigger.AssignStringIfNotNull(KillProcessExpression,           (s, v) => s.KillProcessExpression = v);
-                postTrigger.AssignStringIfNotNull(AlertPendingExpression,          (s, v) => s.AlertPendingExpression = v);
-                postTrigger.AssignStringIfNotNull(AlertRunningExpression,          (s, v) => s.AlertRunningExpression = v);
-
-                postTrigger.PackageName = null;
-                postTrigger.ReleaseKey = null;
-                postTrigger.ConsecutiveJobFailuresThreshold = null;
-                postTrigger.JobFailuresGracePeriodInHours = null;
-                postTrigger.AssignNumberIfNotNullOrZero(ConsecutiveJobFailuresThreshold, (s, v) => s.ConsecutiveJobFailuresThreshold = v);
-                postTrigger.AssignNumberIfNotNullOrZero(JobFailuresGracePeriodInHours,   (s, v) => s.JobFailuresGracePeriodInHours = v);
-
-                postTrigger.AssignStringIfNotNull(RuntimeType,       (s, v) => s.RuntimeType = v);
-                postTrigger.RuntimeType ??= "Unattended";
-
-                postTrigger.InputArguments ??= "{}";
-                postTrigger.AssignStringIfNotNull(InputArguments,    (s, v) => postTrigger.InputArguments = v);
-
-                postTrigger.AssignBoolIfNotNull(ResumeOnSameContext, (s, v) => s.ResumeOnSameContext = v);
-                postTrigger.ResumeOnSameContext ??= false;
-
-                postTrigger.AssignBoolIfNotNull(RunAsMe, (s, v) => s.RunAsMe = v);
-                postTrigger.RunAsMe ??= false;
-
-                postTrigger.AssignBoolIfNotNull(IsConnected, (s, v) => s.IsConnected = v);
+                #region Apply user-specified parameters with dirty detection
+                bool dirty = false;
+                dirty |= postTrigger.AssignStringIfNotNull(NewName,                        trigger, s => s.Name,                    (s, v) => s.Name = v);
+                dirty |= postTrigger.AssignBoolIfNotNull(Enabled,                          trigger, s => s.Enabled,                 (s, v) => s.Enabled = v);
+                dirty |= postTrigger.AssignNumberIfNotNullOrZero(StartStrategy,            trigger, s => s.StartStrategy,           (s, v) => s.StartStrategy = v);
+                dirty |= postTrigger.AssignStringIfNotNull(StopStrategy,                   trigger, s => s.StopStrategy,            (s, v) => s.StopStrategy = v);
+                dirty |= postTrigger.AssignStringIfNotNull(StopProcessExpression,          trigger, s => s.StopProcessExpression,   (s, v) => s.StopProcessExpression = v);
+                dirty |= postTrigger.AssignStringIfNotNull(KillProcessExpression,          trigger, s => s.KillProcessExpression,   (s, v) => s.KillProcessExpression = v);
+                dirty |= postTrigger.AssignStringIfNotNull(AlertPendingExpression,         trigger, s => s.AlertPendingExpression,  (s, v) => s.AlertPendingExpression = v);
+                dirty |= postTrigger.AssignStringIfNotNull(AlertRunningExpression,         trigger, s => s.AlertRunningExpression,  (s, v) => s.AlertRunningExpression = v);
+                dirty |= postTrigger.AssignNumberIfNotNullOrZero(ConsecutiveJobFailuresThreshold, trigger, s => s.ConsecutiveJobFailuresThreshold, (s, v) => s.ConsecutiveJobFailuresThreshold = v);
+                dirty |= postTrigger.AssignNumberIfNotNullOrZero(JobFailuresGracePeriodInHours,   trigger, s => s.JobFailuresGracePeriodInHours,   (s, v) => s.JobFailuresGracePeriodInHours = v);
+                dirty |= postTrigger.AssignStringIfNotNull(RuntimeType,                    trigger, s => s.RuntimeType,             (s, v) => s.RuntimeType = v);
+                dirty |= postTrigger.AssignStringIfNotNull(InputArguments,                 trigger, s => s.InputArguments,          (s, v) => s.InputArguments = v);
+                dirty |= postTrigger.AssignBoolIfNotNull(ResumeOnSameContext,              trigger, s => s.ResumeOnSameContext,     (s, v) => s.ResumeOnSameContext = v);
+                dirty |= postTrigger.AssignBoolIfNotNull(RunAsMe,                          trigger, s => s.RunAsMe,                (s, v) => s.RunAsMe = v);
+                dirty |= postTrigger.AssignBoolIfNotNull(IsConnected,                      trigger, s => s.IsConnected,            (s, v) => s.IsConnected = v);
+                dirty |= postTrigger.AssignBoolIfNotNull(ActivateOnJobComplete,            trigger, s => s.ActivateOnJobComplete,  (s, v) => s.ActivateOnJobComplete = v);
+                dirty |= postTrigger.AssignNumberIfNotNullOrZero(ItemsActivationThreshold,    trigger, s => s.ItemsActivationThreshold,    (s, v) => s.ItemsActivationThreshold = v);
+                dirty |= postTrigger.AssignNumberIfNotNullOrZero(ItemsPerJobActivationTarget, trigger, s => s.ItemsPerJobActivationTarget, (s, v) => s.ItemsPerJobActivationTarget = v);
+                dirty |= postTrigger.AssignNumberIfNotNullOrZero(MaxJobsForActivation,        trigger, s => s.MaxJobsForActivation,        (s, v) => s.MaxJobsForActivation = v);
+                dirty |= postTrigger.AssignStringIfNotNull(StartProcessCron,               trigger, s => s.StartProcessCron,       (s, v) => s.StartProcessCron = v);
+                dirty |= postTrigger.AssignStringIfNotNull(StartProcessCronDetails,        trigger, s => s.StartProcessCronDetails,(s, v) => s.StartProcessCronDetails = v);
+                dirty |= postTrigger.AssignNumberIfNotNullOrZero(SpecificPriorityValue,    trigger, s => s.SpecificPriorityValue,  (s, v) => s.SpecificPriorityValue = v);
+                dirty |= postTrigger.AssignNumberIfNotNullOrZero(specificPriorityValue,    trigger, s => s.SpecificPriorityValue,  (s, v) => s.SpecificPriorityValue = v);
+                dirty |= postTrigger.AssignStringIfNotNull(TimeZoneId,                     trigger, s => s.TimeZoneId,             (s, v) => s.TimeZoneId = v);
 
                 #region // Convert CalendarName to CalendarId
                 postTrigger.AssignIdFromName(
@@ -312,38 +304,9 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
                     drive.GetCalendars!,
                     e => e.Name!,
                     e => e.Id!,
-                    (s, v) => s.CalendarId = v,
+                    (s, v) => { if (trigger.CalendarId != v) { s.CalendarId = v; dirty = true; } },
                     this, target, "Calendar");
-
-                postTrigger.UseCalendar = (postTrigger.CalendarId is not null);
                 #endregion
-
-                postTrigger.ExternalJobKeyScheduler = null;
-
-                postTrigger.ItemsActivationThreshold = null;
-                postTrigger.ItemsPerJobActivationTarget = null;
-                postTrigger.AssignNumberIfNotNullOrZero(ItemsActivationThreshold,    (s, v) => s.ItemsActivationThreshold = v);
-                postTrigger.AssignNumberIfNotNullOrZero(ItemsPerJobActivationTarget, (s, v) => s.ItemsPerJobActivationTarget = v);
-                postTrigger.MaxJobsForActivation = null;
-                postTrigger.AssignNumberIfNotNullOrZero(MaxJobsForActivation,        (s, v) => s.MaxJobsForActivation = v);
-                postTrigger.AssignBoolIfNotNull(ActivateOnJobComplete,               (s, v) => s.ActivateOnJobComplete = v);
-
-                postTrigger.StartProcessCronSummary = null;
-                postTrigger.StartProcessNextOccurrence = null;
-                postTrigger.AssignStringIfNotNull(StartProcessCron,           (s, v) => s.StartProcessCron = v);
-                postTrigger.StartProcessCron ??= "0 0/1 * 1/1 * ? *";
-
-                postTrigger.AssignStringIfNotNull(StartProcessCronDetails,    (s, v) => s.StartProcessCronDetails = v);
-                postTrigger.StartProcessCronDetails ??= $"\"{{advancedCron\":\"{postTrigger.StartProcessCron}\"}}";
-
-                // Apply SpecificPriorityValue first, then override with specificPriorityValue if non-null
-                postTrigger.AssignNumberIfNotNullOrZero(SpecificPriorityValue, (s, v) => s.SpecificPriorityValue = v);
-                postTrigger.AssignNumberIfNotNullOrZero(specificPriorityValue, (s, v) => s.SpecificPriorityValue = v);
-
-                if (postTrigger.SpecificPriorityValue is not null)
-                {
-                    postTrigger.JobPriority = null;
-                }
 
                 #region Convert ReleaseName to ReleaseId
                 postTrigger.AssignIdFromName(
@@ -351,7 +314,7 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
                     () => drive.GetReleases(folder),
                     e => e.Name!,
                     e => e.Id!,
-                    (s, v) => s.ReleaseId = v,
+                    (s, v) => { if (trigger.ReleaseId != v) { s.ReleaseId = v; dirty = true; } },
                     this, target, "Release");
                 #endregion
 
@@ -361,41 +324,70 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
                     () => drive.Queues.Get(folder),
                     e => e.Name!,
                     e => e.Id!,
-                    (s, v) => s.QueueDefinitionId = v,
+                    (s, v) => { if (trigger.QueueDefinitionId != v) { s.QueueDefinitionId = v; dirty = true; } },
                     this, target, "Queue");
                 #endregion
 
                 #region Convert TimeZone to TimeZoneId
-                postTrigger.AssignStringIfNotNull(TimeZoneId, (s, v) => s.TimeZoneId = v);
-
                 postTrigger.AssignIdFromName(
                     TimeZone,
                     TimeZoneInfo.GetSystemTimeZones,
                     e => e.DisplayName,
                     e => e.Id!,
-                    (s, v) => s.TimeZoneId = v,
+                    (s, v) => { if (trigger.TimeZoneId != v) { s.TimeZoneId = v; dirty = true; } },
                     this, target, "TimeZone");
-
-                postTrigger.TimeZoneId ??= TimeZoneInfo.Local.Id;
                 #endregion
 
                 postTrigger.AssignDateTimeIfNotNull(utcStopProcessDate, (s, v) => s.StopProcessDate = v, false);
+                if (utcStopProcessDate is not null) dirty = true;
 
                 if (MachineRobots is not null)
                 {
                     postTrigger.MachineRobots = DeserializeMachineRobotSessions(this, drive, folder, postTrigger.GetPSPath(), MachineRobots);
+                    dirty = true;
                 }
 
                 if (ExecutorRobots is not null)
                 {
                     postTrigger.ExecutorRobots = DeserializeExecutorRobots(this, drive, folder, postTrigger.GetPSPath(), ExecutorRobots);
+                    dirty = true;
+                }
+                #endregion
+
+                if (!dirty)
+                {
+                    continue;
                 }
 
+                #region Apply defaults required by PUT
+                postTrigger.Enabled ??= true;
+                postTrigger.StartStrategy ??= 1;
+                postTrigger.RuntimeType ??= "Unattended";
+                postTrigger.InputArguments ??= "{}";
+                postTrigger.ResumeOnSameContext ??= false;
+                postTrigger.RunAsMe ??= false;
+                postTrigger.StartProcessCron ??= "0 0/1 * 1/1 * ? *";
+                postTrigger.StartProcessCronDetails ??= $"\"{{advancedCron\":\"{postTrigger.StartProcessCron}\"}}";
+                postTrigger.TimeZoneId ??= TimeZoneInfo.Local.Id;
+                postTrigger.UseCalendar = (postTrigger.CalendarId is not null);
+                if (postTrigger.SpecificPriorityValue is not null)
+                {
+                    postTrigger.JobPriority = null;
+                }
+                #endregion
+
+                #region Nullify fields not needed for PUT
+                postTrigger.PackageName = null;
+                postTrigger.ReleaseKey = null;
+                postTrigger.ExternalJobKeyScheduler = null;
+                postTrigger.StartProcessCronSummary = null;
+                postTrigger.StartProcessNextOccurrence = null;
                 postTrigger.EnvironmentId = null;
-                postTrigger.CalendarName = null; // Not needed since CalendarId is present
+                postTrigger.CalendarName = null;
                 postTrigger.Key = null;
                 postTrigger.TimeZoneIana = null;
                 postTrigger.Tags = null;
+                #endregion
 
                 if (ShouldProcess(target, "Update Trigger"))
                 {

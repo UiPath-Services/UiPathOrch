@@ -149,91 +149,26 @@ public class UpdateQueueCommand : OrchestratorPSCmdlet
             }
             if (queues is null) continue;
 
-            var targetQueues = queues.SelectByWildcards(p => p?.Name, wpName);
+            var targetQueues = queues.SelectByWildcards(p => p?.Name, wpName).OrderBy(q => q.Name);
 
             foreach (var queue in targetQueues)
             {
                 cancelHandler.Token.ThrowIfCancellationRequested();
 
                 string target = queue.GetPSPath();
-                //QueueDefinition newQueue = OrchCollectionExtensions.DeepCopyAsSubClass<QueueDefinition, QueueDefinitionPosting>(queue);
                 QueueDefinition newQueue = OrchCollectionExtensions.DeepCopy<QueueDefinition>(queue);
 
-                #region Get the current Retention settings
-                QueueRetentionSetting retention = null;
-                try
-                {
-                    // TODO: Will this succeed with version 15? Probably not
-                    // Confirmed to succeed with version 16
-                    if (drive.OrchAPISession.ApiVersion >= 16)
-                    {
-                        retention = drive.OrchAPISession.GetQueueRetention(folder.Id ?? 0, queue.Id ?? 0);
-                        if (retention is not null)
-                        {
-                            newQueue.RetentionAction = retention.Action;
-                            newQueue.RetentionPeriod = retention.Period;
-                            newQueue.RetentionBucketId = retention.BucketId;
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    WriteError(new ErrorRecord(new OrchException(target, $"\"{target}\": Failed to get queue retention settings", ex), "GetQueueError", ErrorCategory.InvalidOperation, target));
-                }
-                #endregion
-
-                newQueue.AssignStringIfNotNull(RetentionAction, (q, v) => q.RetentionAction = v);
-                newQueue.AssignNumberIfNotNullOrZero(RetentionPeriod, (q, v) => q.RetentionPeriod = v);
-                newQueue.AssignStringIfNotNull(StaleRetentionAction, (q, v) => q.StaleRetentionAction = v);
-                newQueue.AssignNumberIfNotNullOrZero(StaleRetentionPeriod, (q, v) => q.StaleRetentionPeriod = v);
-
-                #region Convert RetentionBucket to RetentionBucketId
-                newQueue.AssignIdFromName(
-                    RetentionBucket,
-                    () => drive.Buckets.Get(folder),
-                    e => e.Name!,
-                    e => e.Id!,
-                    (s, v) => s.RetentionBucketId = v,
-                    this, target, "RetentionBucket");
-
-                newQueue.AssignIdFromName(
-                    StaleRetentionBucket,
-                    () => drive.Buckets.Get(folder),
-                    e => e.Name!,
-                    e => e.Id!,
-                    (s, v) => s.StaleRetentionBucketId = v,
-                    this, target, "StaleRetentionBucket");
-                #endregion
-
-                if (drive.OrchAPISession.ApiVersion >= 19)
-                {
-                    if (string.IsNullOrEmpty(newQueue.RetentionAction) || newQueue.RetentionAction == "None")
-                    {
-                        newQueue.RetentionAction = "Delete";
-                        newQueue.RetentionPeriod ??= 30;
-                    }
-                }
-
-                if (newQueue.RetentionAction != "Archive")
-                {
-                    newQueue.RetentionBucketId = null;
-                }
-                if (newQueue.StaleRetentionAction != "Archive")
-                {
-                    newQueue.StaleRetentionBucketId = null;
-                }
-
-                newQueue.AssignStringIfNotNull(NewName,                        (q, v) => q.Name = v);
-                newQueue.AssignStringIfNotNull(Description,                    (q, v) => q.Description = v);
-                newQueue.AssignBoolIfNotNull(AcceptAutomaticallyRetry,         (q, v) => q.AcceptAutomaticallyRetry = v);
-                newQueue.AssignBoolIfNotNull(RetryAbandonedItems,              (q, v) => q.RetryAbandonedItems = v);
-                newQueue.AssignNumberIfNotNullOrZero(MaxNumberOfRetries,       (q, v) => q.MaxNumberOfRetries = v);
-                //newQueue.assig  ProcessScheduleId": null,
-                newQueue.AssignStringIfNotNull(SpecificDataJsonSchema,         (q, v) => q.SpecificDataJsonSchema = v);
-                newQueue.AssignStringIfNotNull(OutputDataJsonSchema,           (q, v) => q.OutputDataJsonSchema = v);
-                newQueue.AssignStringIfNotNull(AnalyticsDataJsonSchema,        (q, v) => q.AnalyticsDataJsonSchema = v);
-                newQueue.AssignNumberIfNotNullOrZero(SlaInMinutes,             (q, v) => q.SlaInMinutes = v);
-                newQueue.AssignNumberIfNotNullOrZero(RiskSlaInMinutes,         (q, v) => q.RiskSlaInMinutes= v);
+                bool queueDirty = false;
+                queueDirty |= newQueue.AssignStringIfNotNull(NewName,                      queue, q => q.Name,                    (q, v) => q.Name = v);
+                queueDirty |= newQueue.AssignStringIfNotNull(Description,                  queue, q => q.Description,             (q, v) => q.Description = v);
+                queueDirty |= newQueue.AssignBoolIfNotNull(AcceptAutomaticallyRetry,        queue, q => q.AcceptAutomaticallyRetry, (q, v) => q.AcceptAutomaticallyRetry = v);
+                queueDirty |= newQueue.AssignBoolIfNotNull(RetryAbandonedItems,             queue, q => q.RetryAbandonedItems,      (q, v) => q.RetryAbandonedItems = v);
+                queueDirty |= newQueue.AssignNumberIfNotNullOrZero(MaxNumberOfRetries,      queue, q => q.MaxNumberOfRetries,       (q, v) => q.MaxNumberOfRetries = v);
+                queueDirty |= newQueue.AssignStringIfNotNull(SpecificDataJsonSchema,        queue, q => q.SpecificDataJsonSchema,   (q, v) => q.SpecificDataJsonSchema = v);
+                queueDirty |= newQueue.AssignStringIfNotNull(OutputDataJsonSchema,          queue, q => q.OutputDataJsonSchema,     (q, v) => q.OutputDataJsonSchema = v);
+                queueDirty |= newQueue.AssignStringIfNotNull(AnalyticsDataJsonSchema,       queue, q => q.AnalyticsDataJsonSchema,  (q, v) => q.AnalyticsDataJsonSchema = v);
+                queueDirty |= newQueue.AssignNumberIfNotNullOrZero(SlaInMinutes,            queue, q => q.SlaInMinutes,             (q, v) => q.SlaInMinutes = v);
+                queueDirty |= newQueue.AssignNumberIfNotNullOrZero(RiskSlaInMinutes,        queue, q => q.RiskSlaInMinutes,         (q, v) => q.RiskSlaInMinutes = v);
 
                 #region Convert Release to ReleaseId
                 newQueue.AssignIdFromName(
@@ -241,17 +176,96 @@ public class UpdateQueueCommand : OrchestratorPSCmdlet
                     () => drive.GetReleases(folder),
                     e => e.Name!,
                     e => e.Id!,
-                    (s, v) => s.ReleaseId = v,
+                    (s, v) => { if (queue.ReleaseId != v) { s.ReleaseId = v; queueDirty = true; } },
                     this, target, "Release");
                 #endregion
 
-                newQueue.AssignTags(Tags, (r, v) => r.Tags = v);
+                var effectiveTags = Tags?.Where(t => !string.IsNullOrEmpty(t)).ToArray();
+                if (effectiveTags is not null && effectiveTags.Length != 0)
+                {
+                    newQueue.AssignTags(effectiveTags, (r, v) => r.Tags = v);
+                    queueDirty = true;
+                }
+
+                #region Retention (uses separate PutQueueRetention API)
+                QueueRetentionSetting? retentionUpdate = null;
+                {
+                    var ret = new QueueRetentionSetting { QueueDefinitionId = queue.Id!.Value };
+                    bool retDirty = false;
+                    if (RetentionAction is not null && RetentionAction != (queue.RetentionAction ?? "")) { ret.Action = RetentionAction; retDirty = true; }
+                    if (RetentionPeriod is not null && RetentionPeriod != 0 && RetentionPeriod != queue.RetentionPeriod) { ret.Period = RetentionPeriod; retDirty = true; }
+                    ret.AssignIdFromName(
+                        RetentionBucket,
+                        () => drive.Buckets.Get(folder),
+                        e => e.Name!,
+                        e => e.Id!,
+                        (s, v) => { if (queue.RetentionBucketId != v) { s.BucketId = v; retDirty = true; } },
+                        this, target, "RetentionBucket");
+                    if (retDirty)
+                    {
+                        ret.Action ??= queue.RetentionAction ?? "Delete";
+                        ret.Period ??= queue.RetentionPeriod ?? 30;
+                        ret.BucketId ??= queue.RetentionBucketId;
+                        retentionUpdate = ret;
+                    }
+                }
+
+                QueueRetentionSetting? staleRetentionUpdate = null;
+                {
+                    var ret = new QueueRetentionSetting { QueueDefinitionId = queue.Id!.Value, Type = "Stale" };
+                    bool retDirty = false;
+                    if (StaleRetentionAction is not null && StaleRetentionAction != (queue.StaleRetentionAction ?? "")) { ret.Action = StaleRetentionAction; retDirty = true; }
+                    if (StaleRetentionPeriod is not null && StaleRetentionPeriod != 0 && StaleRetentionPeriod != queue.StaleRetentionPeriod) { ret.Period = StaleRetentionPeriod; retDirty = true; }
+                    ret.AssignIdFromName(
+                        StaleRetentionBucket,
+                        () => drive.Buckets.Get(folder),
+                        e => e.Name!,
+                        e => e.Id!,
+                        (s, v) => { if (queue.StaleRetentionBucketId != v) { s.BucketId = v; retDirty = true; } },
+                        this, target, "StaleRetentionBucket");
+                    if (retDirty)
+                    {
+                        ret.Action ??= queue.StaleRetentionAction ?? "Delete";
+                        ret.Period ??= queue.StaleRetentionPeriod ?? 30;
+                        ret.BucketId ??= queue.StaleRetentionBucketId;
+                        staleRetentionUpdate = ret;
+                    }
+                }
+                #endregion
+
+                // Strip retention fields from queue PUT payload (managed via separate API)
+                newQueue.RetentionAction = null;
+                newQueue.RetentionPeriod = null;
+                newQueue.RetentionBucketId = null;
+                newQueue.RetentionBucketName = null;
+                newQueue.StaleRetentionAction = null;
+                newQueue.StaleRetentionPeriod = null;
+                newQueue.StaleRetentionBucketId = null;
+                newQueue.StaleRetentionBucketName = null;
+
+                if (!queueDirty && retentionUpdate is null && staleRetentionUpdate is null)
+                {
+                    continue;
+                }
 
                 if (ShouldProcess(target, "Update Queue"))
                 {
                     try
                     {
-                        drive.OrchAPISession.EditQueue(folder.Id!.Value, newQueue);
+                        if (queueDirty)
+                        {
+                            drive.OrchAPISession.PutQueueDefinition(folder.Id!.Value, newQueue);
+                        }
+
+                        if (retentionUpdate is not null)
+                        {
+                            drive.OrchAPISession.PutQueueRetention(folder.Id!.Value, queue.Id!.Value, retentionUpdate);
+                        }
+                        if (staleRetentionUpdate is not null)
+                        {
+                            drive.OrchAPISession.PutQueueRetention(folder.Id!.Value, queue.Id!.Value, staleRetentionUpdate);
+                        }
+
                         drive.Queues.ClearCache(folder);
                     }
                     catch (Exception ex)
