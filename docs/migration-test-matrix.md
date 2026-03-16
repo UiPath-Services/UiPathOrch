@@ -8,7 +8,7 @@
 |---|---|---|---|
 | 1 | Automation Cloud (API v20) | On-prem MSI 21.10.4 (API v13) | Done (2026-03-16) |
 | 2 | On-prem MSI 21.10.4 (API v13) | Automation Cloud (API v20) | Done (2026-03-16) |
-| 3 | Automation Cloud (API v20) | On-prem MSI 20.10.16 (API v11) | Done (2026-03-17). 97 "must not be null" errors. Many v11-incompatible properties remain. Low priority fix (v11 is EOL). |
+| 3 | Automation Cloud (API v20) | On-prem MSI 20.10.16 (API v11) | Done (2026-03-17). Fixed: Role(Type), Release(EntryPointId), Machine(RobotUsers,UpdatePolicy,MaintenanceWindow). Remaining: Serverless machines (server constraint), triggers depend on process copy success. |
 | 4 | Automation Cloud (API v20) | Automation Cloud (API v20) | Not tested |
 | 5 | On-prem (same version) | On-prem (same version) | Not tested |
 | 6 | Automation Cloud | Automation Cloud (same org, different tenant) | Not tested |

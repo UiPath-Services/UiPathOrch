@@ -1926,6 +1926,11 @@ public partial class OrchAPISession : IDisposable
             schedule.ActivateOnJobComplete = null;
             schedule.ItemsActivationThreshold = null;
         }
+        // ResumeOnSameContext: not accepted by v11
+        if (ApiVersion < 13)
+        {
+            schedule.ResumeOnSameContext = null;
+        }
         // v13 requires StartProcessCronDetails and ExternalJobKey
         schedule.StartProcessCronDetails ??= $"{{\"advancedCron\":\"{schedule.StartProcessCron}\"}}";
         schedule.ExternalJobKey ??= "";
