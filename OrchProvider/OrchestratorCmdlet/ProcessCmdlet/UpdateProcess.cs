@@ -354,116 +354,113 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
 
                 string target = process.GetPSPath();
 
-                // Create post data with only the properties needed for EditRelease
-                Release newRelease = new()
-                {
-                    Id = process.Id,
-                    Key = process.Key,
-                    Name = process.Name,
-                    Description = process.Description,
-                    ProcessKey = process.ProcessKey,
-                    ProcessVersion = process.ProcessVersion,
-                    EntryPointId = process.EntryPointId,
-                    EnvironmentVariables = process.EnvironmentVariables,
-                    InputArguments = process.InputArguments,
-                    SpecificPriorityValue = process.SpecificPriorityValue,
-                    JobPriority = process.JobPriority,
-                    RobotSize = process.RobotSize,
-                    HiddenForAttendedUser = process.HiddenForAttendedUser,
-                    //ResourceOverwrites = process.ResourceOverwrites,
-                    RemoteControlAccess = process.RemoteControlAccess,
-                    RetentionAction = process.RetentionAction,
-                    RetentionPeriod = process.RetentionPeriod,
-                    RetentionBucketId = process.RetentionBucketId,
-                    StaleRetentionAction = process.StaleRetentionAction,
-                    StaleRetentionPeriod = process.StaleRetentionPeriod,
-                    StaleRetentionBucketId = process.StaleRetentionBucketId,
-                    Tags = process.Tags,
-                    ProcessSettings = OrchCollectionExtensions.DeepCopy(process.ProcessSettings),
-                    VideoRecordingSettings = OrchCollectionExtensions.DeepCopy(process.VideoRecordingSettings),
-                };
-
-                // From version 19.0 onwards, Retention can be obtained by calling GetReleaseById(), so the following is unnecessary
-                if (drive.OrchAPISession.ApiVersion < 19)
-                {
-                    try
-                    {
-                        // Retrieve and set the existing Retention
-                        var retention = drive.OrchAPISession.GetReleaseRetention(folder.Id!.Value, process!.Id!.Value);
-                        newRelease.RetentionAction = retention?.Action;
-                        newRelease.RetentionPeriod = retention?.Period;
-                        newRelease.RetentionBucketId = retention?.BucketId;
-                    }
-                    catch (Exception ex)
-                    {
-                        string msg2 = $"Get release retention failed.";
-                        WriteError(new ErrorRecord(new OrchException(target, msg2, ex), "GetReleaseRetentionError", ErrorCategory.InvalidOperation, target));
-                    }
-                }
+                // Build PATCH payload with only user-specified properties
+                Release newRelease = new() { Id = process.Id };
 
                 #region Set values specified by parameters
 
-                bool dirty = false;
-                dirty |= newRelease.AssignStringIfNotNull(NewName,                      r => r.Name,                      (r, v) => r.Name = v);
-                dirty |= newRelease.AssignStringIfNotNull(Description,                  r => r.Description,               (r, v) => r.Description = v);
-                dirty |= newRelease.AssignStringIfNotNull(InputArguments,               r => r.InputArguments,            (r, v) => r.InputArguments = v);
-                dirty |= newRelease.AssignNumberIfNotNullOrZero(SpecificPriorityValue,  r => r.SpecificPriorityValue,     (r, v) => r.SpecificPriorityValue = v);
-                dirty |= newRelease.AssignBoolIfNotNull(HiddenForAttendedUser,          r => r.HiddenForAttendedUser,     (r, v) => r.HiddenForAttendedUser = v);
-                dirty |= newRelease.AssignStringIfNotNull(RemoteControlAccess,          r => r.RemoteControlAccess,       (r, v) => r.RemoteControlAccess = v);
-                dirty |= newRelease.AssignStringIfNotNull(RetentionAction,              r => r.RetentionAction,           (r, v) => r.RetentionAction = v);
-                dirty |= newRelease.AssignNumberIfNotNullOrZero(RetentionPeriod,        r => r.RetentionPeriod,           (r, v) => r.RetentionPeriod = v);
-                dirty |= newRelease.AssignStringIfNotNull(StaleRetentionAction,         r => r.StaleRetentionAction,      (r, v) => r.StaleRetentionAction = v);
-                dirty |= newRelease.AssignNumberIfNotNullOrZero(StaleRetentionPeriod,   r => r.StaleRetentionPeriod,      (r, v) => r.StaleRetentionPeriod = v);
+                bool releaseDirty = false;
+                releaseDirty |= newRelease.AssignStringIfNotNull(NewName,                      process, r => r.Name,                  (r, v) => r.Name = v);
+                releaseDirty |= newRelease.AssignStringIfNotNull(Description,                  process, r => r.Description,           (r, v) => r.Description = v);
+                releaseDirty |= newRelease.AssignStringIfNotNull(InputArguments,               process, r => r.InputArguments,        (r, v) => r.InputArguments = v);
+                releaseDirty |= newRelease.AssignNumberIfNotNullOrZero(SpecificPriorityValue,  process, r => r.SpecificPriorityValue, (r, v) => r.SpecificPriorityValue = v);
+                releaseDirty |= newRelease.AssignBoolIfNotNull(HiddenForAttendedUser,          process, r => r.HiddenForAttendedUser, (r, v) => r.HiddenForAttendedUser = v);
+                releaseDirty |= newRelease.AssignStringIfNotNull(RemoteControlAccess,          process, r => r.RemoteControlAccess,   (r, v) => r.RemoteControlAccess = v);
+                #region Retention (uses separate PutReleaseRetention API)
+                ReleaseRetentionSetting? retentionUpdate = null;
+                {
+                    var ret = new ReleaseRetentionSetting { ReleaseId = process.Id };
+                    bool retDirty = false;
+                    if (RetentionAction is not null && RetentionAction != (process.RetentionAction ?? "")) { ret.Action = RetentionAction; retDirty = true; }
+                    if (RetentionPeriod is not null && RetentionPeriod != 0 && RetentionPeriod != process.RetentionPeriod) { ret.Period = RetentionPeriod; retDirty = true; }
+                    ret.AssignIdFromName(
+                        RetentionBucket,
+                        () => drive.Buckets.Get(folder),
+                        e => e.Name!,
+                        e => e.Id!,
+                        (s, v) => { if (process.RetentionBucketId != v) { s.BucketId = v; retDirty = true; } },
+                        this, target, "RetentionBucket");
+                    if (retDirty)
+                    {
+                        // PUT requires all fields; fill unspecified fields from current values
+                        ret.Action ??= process.RetentionAction ?? "Delete";
+                        ret.Period ??= process.RetentionPeriod ?? 30;
+                        ret.BucketId ??= process.RetentionBucketId;
+                        retentionUpdate = ret;
+                    }
+                }
 
-                #region Convert RetentionBucket to RetentionBucketId
-                // TODO: AssignIdFromName has no change-detection overload, so dirty is captured via closure in the setter lambda.
-                newRelease.AssignIdFromName(
-                    RetentionBucket,
-                    () => drive.Buckets.Get(folder),
-                    e => e.Name!,
-                    e => e.Id!,
-                    (s, v) => { if (s.RetentionBucketId != v) { s.RetentionBucketId = v; dirty = true; } },
-                    this, target, "RetentionBucket");
-
-                newRelease.AssignIdFromName(
-                    StaleRetentionBucket,
-                    () => drive.Buckets.Get(folder),
-                    e => e.Name!,
-                    e => e.Id!,
-                    (s, v) => { if (s.StaleRetentionBucketId != v) { s.StaleRetentionBucketId = v; dirty = true; } },
-                    this, target, "StaleRetentionBucket");
+                ReleaseRetentionSetting? staleRetentionUpdate = null;
+                {
+                    var ret = new ReleaseRetentionSetting { ReleaseId = process.Id, Type = "Stale" };
+                    bool retDirty = false;
+                    if (StaleRetentionAction is not null && StaleRetentionAction != (process.StaleRetentionAction ?? "")) { ret.Action = StaleRetentionAction; retDirty = true; }
+                    if (StaleRetentionPeriod is not null && StaleRetentionPeriod != 0 && StaleRetentionPeriod != process.StaleRetentionPeriod) { ret.Period = StaleRetentionPeriod; retDirty = true; }
+                    ret.AssignIdFromName(
+                        StaleRetentionBucket,
+                        () => drive.Buckets.Get(folder),
+                        e => e.Name!,
+                        e => e.Id!,
+                        (s, v) => { if (process.StaleRetentionBucketId != v) { s.BucketId = v; retDirty = true; } },
+                        this, target, "StaleRetentionBucket");
+                    if (retDirty)
+                    {
+                        ret.Action ??= process.StaleRetentionAction ?? "Delete";
+                        ret.Period ??= process.StaleRetentionPeriod ?? 30;
+                        ret.BucketId ??= process.StaleRetentionBucketId;
+                        staleRetentionUpdate = ret;
+                    }
+                }
                 #endregion
 
-                // TODO: Tags are not compared against existing values — dirty is set unconditionally when tags are specified.
                 var effectiveTags = Tags?.Where(t => !string.IsNullOrEmpty(t)).ToArray();
                 if (effectiveTags is not null && effectiveTags.Length != 0)
                 {
                     newRelease.AssignTags(effectiveTags, (r, v) => r.Tags = v);
-                    dirty = true;
+                    releaseDirty = true;
                 }
 
-                newRelease.ProcessSettings ??= new();
-                dirty |= newRelease.ProcessSettings.AssignBoolIfNotNull(ErrorRecordingEnabled, r => r.ErrorRecordingEnabled, (r, v) => r.ErrorRecordingEnabled = v);
-                dirty |= newRelease.ProcessSettings.AssignNumberIfNotNullOrZero(Duration,      r => r.Duration,              (r, v) => r.Duration = v);
-                dirty |= newRelease.ProcessSettings.AssignNumberIfNotNullOrZero(Frequency,     r => r.Frequency,             (r, v) => r.Frequency = v);
-                dirty |= newRelease.ProcessSettings.AssignNumberIfNotNullOrZero(Quality,       r => r.Quality,               (r, v) => r.Quality = v);
-                dirty |= newRelease.ProcessSettings.AssignBoolIfNotNull(AutoStartProcess,      r => r.AutoStartProcess,      (r, v) => r.AutoStartProcess = v);
-                dirty |= newRelease.ProcessSettings.AssignBoolIfNotNull(AlwaysRunning,         r => r.AlwaysRunning,         (r, v) => r.AlwaysRunning = v);
+                #region ProcessSettings (only include if any sub-property is specified)
+                {
+                    var ps = new ProcessSettings();
+                    var psSource = process.ProcessSettings ?? new();
+                    bool psDirty = false;
+                    psDirty |= ps.AssignBoolIfNotNull(ErrorRecordingEnabled, psSource, r => r.ErrorRecordingEnabled, (r, v) => r.ErrorRecordingEnabled = v);
+                    psDirty |= ps.AssignNumberIfNotNullOrZero(Duration,      psSource, r => r.Duration,              (r, v) => r.Duration = v);
+                    psDirty |= ps.AssignNumberIfNotNullOrZero(Frequency,     psSource, r => r.Frequency,             (r, v) => r.Frequency = v);
+                    psDirty |= ps.AssignNumberIfNotNullOrZero(Quality,       psSource, r => r.Quality,               (r, v) => r.Quality = v);
+                    psDirty |= ps.AssignBoolIfNotNull(AutoStartProcess,      psSource, r => r.AutoStartProcess,      (r, v) => r.AutoStartProcess = v);
+                    psDirty |= ps.AssignBoolIfNotNull(AlwaysRunning,         psSource, r => r.AlwaysRunning,         (r, v) => r.AlwaysRunning = v);
 
-                newRelease.ProcessSettings.AutopilotForRobots ??= new();
-                dirty |= newRelease.ProcessSettings.AutopilotForRobots.AssignBoolIfNotNull(A4R_Enabled,        r => r.Enabled,        (r, v) => r.Enabled = v);
-                dirty |= newRelease.ProcessSettings.AutopilotForRobots.AssignBoolIfNotNull(A4R_HealingEnabled, r => r.HealingEnabled, (r, v) => r.HealingEnabled = v);
+                    var a4r = new AutopilotForRobotsSettings();
+                    var a4rSource = psSource.AutopilotForRobots ?? new();
+                    bool a4rDirty = false;
+                    a4rDirty |= a4r.AssignBoolIfNotNull(A4R_Enabled,        a4rSource, r => r.Enabled,        (r, v) => r.Enabled = v);
+                    a4rDirty |= a4r.AssignBoolIfNotNull(A4R_HealingEnabled, a4rSource, r => r.HealingEnabled, (r, v) => r.HealingEnabled = v);
+                    if (a4rDirty) { ps.AutopilotForRobots = a4r; psDirty = true; }
 
-                newRelease.VideoRecordingSettings ??= new();
-                dirty |= newRelease.VideoRecordingSettings.AssignStringIfNotNull(VideoRecordingType,          r => r.VideoRecordingType,          (r, v) => r.VideoRecordingType = v);
-                dirty |= newRelease.VideoRecordingSettings.AssignStringIfNotNull(QueueItemVideoRecordingType, r => r.QueueItemVideoRecordingType, (r, v) => r.QueueItemVideoRecordingType = v);
-                dirty |= newRelease.VideoRecordingSettings.AssignNumberIfNotNullOrZero(MaxDurationSeconds,    r => r.MaxDurationSeconds,          (r, v) => r.MaxDurationSeconds = v);
+                    if (psDirty) { newRelease.ProcessSettings = ps; releaseDirty = true; }
+                }
+                #endregion
+
+                #region VideoRecordingSettings (only include if any sub-property is specified)
+                {
+                    var vrs = new VideoRecordingSettings();
+                    var vrsSource = process.VideoRecordingSettings ?? new();
+                    bool vrsDirty = false;
+                    vrsDirty |= vrs.AssignStringIfNotNull(VideoRecordingType,          vrsSource, r => r.VideoRecordingType,          (r, v) => r.VideoRecordingType = v);
+                    vrsDirty |= vrs.AssignStringIfNotNull(QueueItemVideoRecordingType, vrsSource, r => r.QueueItemVideoRecordingType, (r, v) => r.QueueItemVideoRecordingType = v);
+                    vrsDirty |= vrs.AssignNumberIfNotNullOrZero(MaxDurationSeconds,    vrsSource, r => r.MaxDurationSeconds,          (r, v) => r.MaxDurationSeconds = v);
+
+                    if (vrsDirty) { newRelease.VideoRecordingSettings = vrs; releaseDirty = true; }
+                }
+                #endregion
+
                 #endregion
 
                 // When ProcessVersion is changed, EntryPointId must be reassigned
-                string currentProcessVersion = newRelease.ProcessVersion;
-                dirty |= newRelease.AssignStringIfNotNull(Version, r => r.ProcessVersion, (r, v) => r.ProcessVersion = v);
-                bool bVersionChanged = (currentProcessVersion != newRelease.ProcessVersion);
+                releaseDirty |= newRelease.AssignStringIfNotNull(Version, process, r => r.ProcessVersion, (r, v) => r.ProcessVersion = v);
+                bool bVersionChanged = newRelease.ProcessVersion is not null;
 
                 #region Convert EntryPoint to EntryPointId
                 if (bVersionChanged || !string.IsNullOrEmpty(EntryPoint))
@@ -476,16 +473,16 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                         if (bVersionChanged && string.IsNullOrEmpty(resolvedEntryPoint))
                         {
                             // Check the current EntryPath
-                            var entryPoint = drive.GetPackageEntryPoints(feedId, newRelease?.ProcessKey ?? "", currentProcessVersion!)
-                                .FirstOrDefault(e => e.Id == newRelease?.EntryPointId);
+                            var entryPoint = drive.GetPackageEntryPoints(feedId, process.ProcessKey ?? "", process.ProcessVersion!)
+                                .FirstOrDefault(e => e.Id == process.EntryPointId);
                             resolvedEntryPoint = entryPoint?.Path;
                         }
                         if (!newRelease.AssignIdFromName(
                                 resolvedEntryPoint,
-                                () => drive.GetPackageEntryPoints(feedId, newRelease?.ProcessKey ?? "", newRelease?.ProcessVersion ?? ""),
+                                () => drive.GetPackageEntryPoints(feedId, process.ProcessKey ?? "", newRelease.ProcessVersion ?? process.ProcessVersion ?? ""),
                                 e => e.Path!,
                                 e => e.Id!,
-                                (s, v) => s!.EntryPointId = v,
+                                (s, v) => { if (process.EntryPointId != v) { s!.EntryPointId = v; releaseDirty = true; } },
                                 this, target, "EntryPoint"))
                         {
                             continue;
@@ -499,31 +496,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                 }
                 #endregion
 
-                // RetentionPeriod is mandatory, so set it just in case.
-                if (string.IsNullOrEmpty(newRelease!.RetentionAction))
-                {
-                    newRelease.RetentionAction = (string.IsNullOrEmpty(RetentionAction)) ? "Delete" : RetentionAction;
-                }
-                if (newRelease.RetentionAction == "Delete")
-                {
-                    newRelease.RetentionBucketId = null;
-                }
-                newRelease.RetentionPeriod ??= 30;
-
-                // Since we are not calling something like GetStaleReleaseRetention(), the careful handling above is probably unnecessary.
-                //newRelease.StaleRetentionAction = string.IsNullOrEmpty(StaleRetentionAction) ? "Delete" : StaleRetentionAction;
-                //if (newRelease.StaleRetentionAction == "Delete")
-                //{
-                //    newRelease.StaleRetentionBucketId = null;
-                //}
-                //newRelease.StaleRetentionPeriod ??= 180;
-
-                if (newRelease.SpecificPriorityValue is not null)
-                {
-                    newRelease.JobPriority = null; // This is specified via SpecificPriorityValue
-                }
-
-                if (!dirty)
+                if (!releaseDirty && retentionUpdate is null && staleRetentionUpdate is null)
                 {
                     WriteVerbose($"Skipping '{target}': no changes detected.");
                     continue;
@@ -533,9 +506,21 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                 {
                     try
                     {
-                        drive.OrchAPISession.EditRelease(folder.Id!.Value, newRelease);
+                        if (releaseDirty)
+                        {
+                            drive.OrchAPISession.PatchRelease(folder.Id!.Value, newRelease);
+                        }
+
+                        if (retentionUpdate is not null)
+                        {
+                            drive.OrchAPISession.PutReleaseRetention(folder.Id!.Value, process.Id!.Value, retentionUpdate);
+                        }
+                        if (staleRetentionUpdate is not null)
+                        {
+                            drive.OrchAPISession.PutReleaseRetention(folder.Id!.Value, process.Id!.Value, staleRetentionUpdate);
+                        }
+
                         drive._dicReleases?.TryRemove(folder.Id ?? 0, out var _);
-                        //drive._dicReleaseList?.TryRemove(folder.Id ?? 0, out var _);
                     }
                     catch (Exception ex)
                     {
