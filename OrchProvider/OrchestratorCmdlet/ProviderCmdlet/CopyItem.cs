@@ -1876,6 +1876,15 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                 if (dstDrive.OrchAPISession.ApiVersion >= 19)
                 {
+                    // Newer versions require SLA or Trigger when ReleaseId is set.
+                    // Set a default SLA to preserve the process association.
+                    if (postingQueue.ReleaseId is not null
+                        && (postingQueue.SlaInMinutes is null || postingQueue.SlaInMinutes == 0)
+                        && (postingQueue.ProcessScheduleId is null || postingQueue.ProcessScheduleId == 0))
+                    {
+                        postingQueue.SlaInMinutes = 1440; // 24 hours
+                    }
+
                     // "None" means "Keep". In Automation Cloud, "None" cannot be used.
                     if (string.IsNullOrEmpty(postingQueue.RetentionAction) || postingQueue.RetentionAction == "None")
                     {
