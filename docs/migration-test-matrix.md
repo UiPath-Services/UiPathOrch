@@ -1,81 +1,51 @@
 # Migration Test Matrix
 
-## Available Test Environments
-
-| Drive | Type | API Version | Root |
-|---|---|---|---|
-| local: | On-premises MSI | v13 | orchestrator.local |
-| Orch1: | Automation Cloud | v20 | cloud.uipath.com/yotsuda/svc1 |
-| Orch2: | Automation Cloud | v20 | cloud.uipath.com/yotsuda/svc3 |
-| Orch4: | Automation Cloud | v20 | cloud.uipath.com/yotsuda/svc4 |
-| Orch5: | Automation Cloud | v20 | cloud.uipath.com/yotsuda/svc5 |
-| stage: | Staging Cloud | TBD | staging.uipath.com |
-| AraiStg: | Staging Cloud | TBD | staging.uipath.com |
-
 ## Test Combinations
 
 ### By Version Direction
 
-| # | Source | Destination | Direction | Status |
-|---|---|---|---|---|
-| 1 | Cloud (v20) | On-prem (v13) | New → Old | Done (2026-03-16) |
-| 2 | On-prem (v13) | Cloud (v20) | Old → New | Done (2026-03-16) |
-| 3 | Cloud (v20) | Cloud (v20) | Same version | Not tested |
-| 4 | On-prem (v13) | On-prem (v13) | Same version | Not tested |
+| # | Source | Destination | Status |
+|---|---|---|---|
+| 1 | Automation Cloud (API v20) | On-prem MSI 21.10.4 (API v13) | Done (2026-03-16) |
+| 2 | On-prem MSI 21.10.4 (API v13) | Automation Cloud (API v20) | Done (2026-03-16) |
+| 3 | Automation Cloud (API v20) | Automation Cloud (API v20) | Not tested |
+| 4 | On-prem (same version) | On-prem (same version) | Not tested |
+| 5 | Automation Cloud | Automation Cloud (same org, different tenant) | Not tested |
+| 6 | Automation Cloud | Automation Cloud (cross-org) | Not tested |
 
-### By Organization
+### Priority
 
-| # | Source | Destination | Same Org? | Status |
-|---|---|---|---|---|
-| 5 | Orch2: (yotsuda) | Orch1: (yotsuda) | Yes (same org, different tenant) | Not tested |
-| 6 | Orch2: (yotsuda) | kzsai: (kzsai) | No (cross-org) | Not tested |
+**High** (common scenarios):
+- #3: Tenant consolidation (Cloud → Cloud, same version)
+- #5: Tenant reorganization (same org)
 
-### By Platform
+**Medium**:
+- #6: Cross-org migration (Case B user mapping)
+- On-prem with other versions (23.4, 23.10, 24.10, etc.)
 
-| # | Source | Destination | Platforms | Status |
-|---|---|---|---|---|
-| 7 | Cloud | Cloud | AC → AC | Not tested |
-| 8 | Cloud | On-prem | AC → MSI | Done (2026-03-16) |
-| 9 | On-prem | Cloud | MSI → AC | Done (2026-03-16) |
-| 10 | On-prem | On-prem | MSI → MSI | Not tested (need 2nd on-prem) |
-
-## Priority for Testing
-
-### High Priority (common migration scenarios)
-- **#3 Cloud → Cloud (same version)**: Most common migration scenario
-  (tenant consolidation). Use Orch2: → Orch1: or Orch4:.
-- **#5 Same org, different tenant**: Common for tenant reorganization.
-
-### Medium Priority
-- **#6 Cross-org**: Covered by Case B user mapping. Test with
-  Orch2: → kzsai: if available.
-- **#4 On-prem → On-prem**: Requires 2nd on-prem environment (myonprem:
-  uses same server as local:, so may not be a valid test).
-
-### Low Priority (already tested)
-- **#1 Cloud → On-prem** and **#2 On-prem → Cloud**: The most difficult
-  combinations due to version differences. Already tested and bugs fixed.
+**Low** (already covered by hardest cases):
+- #1, #2: Tested. The largest version gap (v13 ↔ v20).
 
 ## Issues Found and Fixed
 
-### Test #1: Cloud (v20) → On-prem (v13)
+### Test #1: Automation Cloud (v20) → On-prem MSI 21.10.4 (v13)
 
 | Entity | Issue | Fix |
 |---|---|---|
-| Release | Tags, ResourceOverwrites, FeedId, ProcessSettings, HiddenForAttendedUser, RemoteControlAccess, EnvironmentVariables | PostRelease: strip by API version |
-| Machine | AutomationCloudSlots, AutomationType, TargetFramework, Tags | AddMachine: strip by API version |
-| Webhook | Name, Description, Key (added in v16) | CreateWebhook: strip for < v16 |
-| Queue | Tags, Encrypted, RetryAbandonedItems | CreateQueue: strip for < v16 |
-| Asset | Key, Tags | AddAsset: strip for < v15 |
-| Bucket | Tags | PostBucket: strip for < v15 |
-| Trigger | ActivateOnJobComplete, ItemsActivationThreshold; missing StartProcessCronDetails and ExternalJobKey | PostProcessSchedule: strip and default |
+| Release | Unsupported properties: Tags, ResourceOverwrites, FeedId, ProcessSettings, HiddenForAttendedUser (v17+), RemoteControlAccess (v16+), EnvironmentVariables (v19+) | PostRelease: strip by API version |
+| Machine | AutomationCloudSlots (v15+), AutomationType (v15+), TargetFramework (v15+), Tags (v15+) | AddMachine: strip by API version |
+| Webhook | Name, Description, Key (v16+) | CreateWebhook: strip for < v16 |
+| Queue | Tags, Encrypted, RetryAbandonedItems (not in v13) | CreateQueue: strip for < v16 |
+| Asset | Key, Tags (v15+) | AddAsset: strip for < v15 |
+| Bucket | Tags (v15+) | PostBucket: strip for < v15 |
+| Trigger | ActivateOnJobComplete, ItemsActivationThreshold (not in v13); missing StartProcessCronDetails and ExternalJobKey (required by v13) | PostProcessSchedule: strip and add defaults |
 
-### Test #2: On-prem (v13) → Cloud (v20)
+### Test #2: On-prem MSI 21.10.4 (v13) → Automation Cloud (v20)
 
 | Entity | Issue | Fix |
 |---|---|---|
-| Webhook | No Name field in v13 | CopyWebhook: auto-generate from URL host |
-| Queue | ReleaseId requires SLA on v19+ | CopyQueues: auto-set 24h SLA when needed |
+| Webhook | No Name field in v13 | CopyWebhook: auto-generate from URL host for v16+ destination |
+| Queue | ReleaseId requires SLA on v19+ | CopyQueues: auto-set 24h SLA for v19+ destination |
 | Role | "Custom mixed roles can no longer be created" | Server constraint, not fixable |
 | User | On-prem local users don't exist in Cloud | Expected (Case B / manual) |
 
@@ -85,5 +55,5 @@
 - HTTP logging (Verbose level) is essential for diagnosing failures.
 - Swagger version comparison is the definitive way to determine when
   properties were introduced.
-- The `Set-OrchSetting` cmdlet can be used to configure the destination
-  tenant's library feed before migration.
+- `Set-OrchSetting` can configure the destination tenant's library feed
+  before migration.
