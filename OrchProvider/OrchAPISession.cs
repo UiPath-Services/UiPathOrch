@@ -1436,6 +1436,13 @@ public partial class OrchAPISession : IDisposable
             machine.TargetFramework = null;
             machine.Tags = null;
         }
+        // RobotUsers, UpdatePolicy, MaintenanceWindow: not supported on v11
+        if (ApiVersion < 13)
+        {
+            machine.RobotUsers = null;
+            machine.UpdatePolicy = null;
+            machine.MaintenanceWindow = null;
+        }
         return HttpRequest<CreatedMachine>(HttpMethod.Post, "/odata/Machines", null, machine);
     }
 
@@ -1802,6 +1809,8 @@ public partial class OrchAPISession : IDisposable
             release.ResourceOverwrites = null;
             release.FeedId = null;
             release.ProcessSettings = null;
+            // EntryPointId: added in v15.0
+            if (ApiVersion < 15) release.EntryPointId = null;
             return HttpRequest<Release>(HttpMethod.Post, "/odata/Releases", folderId, release);
         }
     }
@@ -2265,6 +2274,8 @@ public partial class OrchAPISession : IDisposable
         role.Id = null;
         role.IsEditable = null;
         role.IsStatic = null;
+        // Type: added in v15.0
+        if (ApiVersion < 15) role.Type = null;
         foreach (var p in role.Permissions ?? [])
         {
             p.Id = null;
