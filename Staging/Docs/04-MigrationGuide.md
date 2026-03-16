@@ -645,6 +645,10 @@ Copy-OrchAsset -Path "Source:\user1's workspace" * -Destination "Destination:\ne
 # ... and other folder entities similarly
 ```
 
+- **Queue SLA auto-assignment**: When copying a queue that has an associated
+  process (ReleaseId) but no SLA, a default SLA of 24 hours is automatically
+  set to preserve the process association. Review and adjust the SLA after
+  migration if needed.
 - **Queue items**: Due to API constraints, queue items are not automatically
   copied when copying folders. Copy them separately using
   `Copy-OrchQueueItem` (only Status=New items can be copied).
