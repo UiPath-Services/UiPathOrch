@@ -847,6 +847,13 @@ public partial class OrchAPISession : IDisposable
             queue.RetentionPeriod = null;
             queue.RetentionBucketId = null;
             queue.RetentionBucketName = null;
+            // Tags, Encrypted, RetryAbandonedItems, IsProcessInCurrentFolder,
+            // FoldersCount: not present in v11-v13
+            queue.Tags = null;
+            queue.Encrypted = null;
+            queue.RetryAbandonedItems = null;
+            queue.IsProcessInCurrentFolder = null;
+            queue.FoldersCount = null;
             return HttpRequest<QueueDefinition>(HttpMethod.Post, "/odata/QueueDefinitions", folderId, queue);
         }
     }
@@ -1033,6 +1040,13 @@ public partial class OrchAPISession : IDisposable
 
     public Webhook? CreateWebhook(Webhook webhook)
     {
+        // Name, Description, Key: added in v16.0
+        if (ApiVersion < 16)
+        {
+            webhook.Name = null;
+            webhook.Description = null;
+            webhook.Key = null;
+        }
         return HttpRequest<Webhook>(HttpMethod.Post, "/odata/Webhooks", null, webhook);
     }
 
@@ -1402,6 +1416,20 @@ public partial class OrchAPISession : IDisposable
 
     public CreatedMachine? AddMachine(ExtendedMachine machine) //, IEnumerable<RobotUser> robotUsers)
     {
+        // Strip properties not supported by older API versions.
+        // AutomationCloudTestAutomationSlots: added in v16.0
+        // AutomationCloudSlots, AutomationType, TargetFramework: added in v15.0
+        if (ApiVersion < 16)
+        {
+            machine.AutomationCloudTestAutomationSlots = null;
+        }
+        if (ApiVersion < 15)
+        {
+            machine.AutomationCloudSlots = null;
+            machine.AutomationType = null;
+            machine.TargetFramework = null;
+            machine.Tags = null;
+        }
         return HttpRequest<CreatedMachine>(HttpMethod.Post, "/odata/Machines", null, machine);
     }
 
@@ -2445,6 +2473,12 @@ public partial class OrchAPISession : IDisposable
 
     public Asset? AddAsset(Int64 folderId, Asset asset)
     {
+        // Key, Tags: added in v15.0
+        if (ApiVersion < 15)
+        {
+            asset.Key = null;
+            asset.Tags = null;
+        }
         return HttpRequest<Asset>(HttpMethod.Post, $"/odata/Assets", folderId, asset);
     }
 
