@@ -119,6 +119,28 @@ Based on the interview results, create a migration plan that includes:
   like `Orch1:` and `Orch2:` risk confusing the source and destination. Drive
   names can be changed in the configuration file (`Edit-OrchConfig Default`).
 
+### Library Feed Setting
+
+If the destination tenant's library feed is set to "Only host feed",
+library copying will fail. Check the current setting and ask the user
+which option to use:
+
+```powershell
+Get-OrchSetting -Path Destination: 'Deployment.Libraries.FeedScope'
+```
+
+| Value | Description |
+|---|---|
+| `Host` | Only host feed (libraries cannot be copied) |
+| `Tenant` | Only tenant feed |
+| `Both` | Both host and tenant feeds |
+
+After confirming with the user:
+
+```powershell
+Set-OrchSetting -Path Destination: -Name 'Deployment.Libraries.FeedScope' -Value 'Tenant'
+```
+
 ### Active Directory Integration Prerequisites
 
 If the source or destination tenant is integrated with Active Directory (AD)
@@ -584,8 +606,22 @@ Entities requiring post-processing because passwords are not migrated:
 ### Important Notes
 
 - **Destination tenant library feed settings**: To copy libraries, the
-  destination tenant's library feed settings must be set to "Tenant feed only"
-  or "Both host and tenant feeds".
+  destination tenant's library feed must be enabled. Check and set it with:
+
+  ```powershell
+  # Check current setting
+  Get-OrchSetting -Path Destination: 'Deployment.Libraries.FeedScope'
+
+  # Set to allow tenant feed (required for library copy)
+  Set-OrchSetting -Path Destination: -Name 'Deployment.Libraries.FeedScope' -Value 'Tenant'
+  ```
+
+  Valid values for `Deployment.Libraries.FeedScope`:
+  | Value | Description |
+  |---|---|
+  | `Host` | Only host feed (libraries cannot be copied) |
+  | `Tenant` | Only tenant feed |
+  | `Both` | Both host and tenant feeds |
 - **Entity dependencies**: Some entities reference other entities, so copy
   order matters. For example, processes depend on packages, so packages must
   be copied first.
