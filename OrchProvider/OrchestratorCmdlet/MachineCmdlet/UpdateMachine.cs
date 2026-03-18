@@ -144,28 +144,25 @@ public class UpdateMachineCommand : OrchestratorPSCmdlet
                     continue;
                 }
 
-                var postingMachine = OrchCollectionExtensions.DeepCopy(machine);
-                postingMachine.AssignStringIfNotNull(Description,            (m, v) => m.Description = v);
-                postingMachine.AssignNumberIfNotNull(UnattendedSlots,        (m, v) => m.UnattendedSlots = v);
-                postingMachine.AssignNumberIfNotNull(NonProductionSlots,     (m, v) => m.NonProductionSlots = v);
-                postingMachine.AssignNumberIfNotNull(TestAutomationSlots,    (m, v) => m.TestAutomationSlots = v);
-                postingMachine.AssignStringIfNotNull(AutomationType,  (m, v) => m.AutomationType = v);
-                postingMachine.AssignStringIfNotNull(TargetFramework, (m, v) => m.TargetFramework = v);
+                // Build a PATCH payload with only the properties that need updating.
+                // Since PatchMachine uses HTTP PATCH and null properties are excluded
+                // from JSON serialization (WhenWritingNull), only specified parameters are sent.
+                var patch = new ExtendedMachine { Id = machine.Id };
+                bool dirty = false;
+
+                dirty |= patch.AssignStringIfNotNull(Description,         machine, m => m.Description,         (m, v) => m.Description = v);
+                dirty |= patch.AssignNumberIfNotNull(UnattendedSlots,     machine, m => m.UnattendedSlots,     (m, v) => m.UnattendedSlots = v);
+                dirty |= patch.AssignNumberIfNotNull(NonProductionSlots,  machine, m => m.NonProductionSlots,  (m, v) => m.NonProductionSlots = v);
+                dirty |= patch.AssignNumberIfNotNull(TestAutomationSlots, machine, m => m.TestAutomationSlots, (m, v) => m.TestAutomationSlots = v);
+                dirty |= patch.AssignStringIfNotNull(AutomationType,      machine, m => m.AutomationType,  (m, v) => m.AutomationType = v);
+                dirty |= patch.AssignStringIfNotNull(TargetFramework,     machine, m => m.TargetFramework, (m, v) => m.TargetFramework = v);
 
                 if (RobotUsers is not null)
                 {
-                    // Sort to correctly detect whether changes were made
-                    //machine.RobotUsers = machine?.RobotUsers?.OrderBy(r => r.UserName).ToList();
-                    // On second thought, comparing RobotUsers member equality seems infeasible... so giving up.
-                    // When -RobotUsers is specified, the Machine will always be updated.
-                    // The ExtendedRobot class's Equals() does not check RobotUsers equality;
-                    // we could check equality using only UserName and RobotId of RobotUsers here,
-                    // but it's a bit too cumbersome for now, so skipping that.
-
                     var robots = drive.AllRobotsAcrossFolders.Get();
                     var wpRobotUsers = RobotUsers.ConvertToWildcardPatternList();
                     var targetRobots = robots.FilterByWildcards(r => r?.User?.FullName, wpRobotUsers);
-                    postingMachine.RobotUsers = targetRobots
+                    patch.RobotUsers = targetRobots
                         .Select(r => new RobotUser()
                         {
                             UserName = r.Username,
@@ -173,56 +170,56 @@ public class UpdateMachineCommand : OrchestratorPSCmdlet
                         })
                         .OrderBy(r => r.UserName)
                         .ToList();
+                    dirty = true;
                 }
 
-                postingMachine.AssignUpdatePolicy(UpdatePolicyType, UpdatePolicyVersion);
+                if (!string.IsNullOrEmpty(UpdatePolicyType) || !string.IsNullOrEmpty(UpdatePolicyVersion))
+                {
+                    patch.AssignUpdatePolicy(UpdatePolicyType, UpdatePolicyVersion);
+                    dirty = true;
+                }
 
-                postingMachine.AssignTags(Tags, (m, v) => m.Tags = v);
+                if (Tags is not null)
+                {
+                    patch.AssignTags(Tags, (m, v) => m.Tags = v);
+                    dirty = true;
+                }
 
-                if (postingMachine.Equals(machine)) continue;
+                if (!string.IsNullOrEmpty(MaintenanceCron) ||
+                    (MaintenanceDuration is not null && MaintenanceDuration != 0) ||
+                    !string.IsNullOrEmpty(MaintenanceEnabled) ||
+                    !string.IsNullOrEmpty(MaintenanceTimeZone))
+                {
+                    patch.MaintenanceWindow = machine.MaintenanceWindow ?? new();
+                    patch.MaintenanceWindow.AssignStringIfNotNull(MaintenanceCron, (m, v) => m.CronExpression = v);
+                    patch.MaintenanceWindow.AssignNumberIfNotNullOrZero(MaintenanceDuration, (m, v) => m.Duration = v);
+                    patch.MaintenanceWindow.AssignBoolIfNotNull(MaintenanceEnabled, (m, v) => m.Enabled = v);
 
-                string target = machine?.GetPSPath();
+                    // TODO: The same logic exists in AddTrigger.cs. Should be refactored into shared code.
+                    #region Convert TimeZone to TimeZoneId
+                    patch.MaintenanceWindow.AssignStringIfNotNull(MaintenanceTimeZoneId, (m, v) => m.TimezoneId = v);
+
+                    patch.MaintenanceWindow.AssignIdFromName(
+                        MaintenanceTimeZone,
+                        TimeZoneInfo.GetSystemTimeZones,
+                        e => e.DisplayName,
+                        e => e.Id!,
+                        (m, v) => m.TimezoneId = v,
+                        this, machine.GetPSPath(), "TimeZone");
+
+                    patch.MaintenanceWindow.TimezoneId ??= TimeZoneInfo.Local.Id;
+                    #endregion
+                    dirty = true;
+                }
+
+                if (!dirty) continue;
+
+                string target = machine.GetPSPath();
                 if (ShouldProcess(target, "Update Machine"))
                 {
                     try
                     {
-                        postingMachine.EndpointDetectionStatus = null;
-                        postingMachine.Key = null;
-                        postingMachine.RobotVersions = null;
-                        postingMachine.UpdateInfo = null;
-
-                        foreach (var ru in postingMachine.RobotUsers ?? [])
-                        {
-                            ru.HasTriggers = null;
-                        }
-
-                        if (!string.IsNullOrEmpty(MaintenanceCron) ||
-                            (MaintenanceDuration is not null && MaintenanceDuration != 0) ||
-                            !string.IsNullOrEmpty(MaintenanceEnabled) ||
-                            !string.IsNullOrEmpty(MaintenanceTimeZone))
-                        {
-                            postingMachine.MaintenanceWindow ??= new();
-                            postingMachine.MaintenanceWindow.AssignStringIfNotNull(MaintenanceCron, (m, v) => m.CronExpression = v);
-                            postingMachine.MaintenanceWindow.AssignNumberIfNotNullOrZero(MaintenanceDuration, (m, v) => m.Duration = v);
-                            postingMachine.MaintenanceWindow.AssignBoolIfNotNull(MaintenanceEnabled, (m, v) => m.Enabled = v);
-
-                            // TODO: The same logic exists in AddTrigger.cs. Should be refactored into shared code.
-                            #region Convert TimeZone to TimeZoneId
-                            postingMachine.MaintenanceWindow.AssignStringIfNotNull(MaintenanceTimeZoneId, (m, v) => m.TimezoneId = v);
-
-                            postingMachine.MaintenanceWindow.AssignIdFromName(
-                                MaintenanceTimeZone,
-                                TimeZoneInfo.GetSystemTimeZones,
-                                e => e.DisplayName,
-                                e => e.Id!,
-                                (m, v) => m.TimezoneId = v,
-                                this, target, "TimeZone");
-
-                            postingMachine.MaintenanceWindow.TimezoneId ??= TimeZoneInfo.Local.Id;
-                            #endregion
-                        }
-
-                        drive.OrchAPISession.PatchMachine(postingMachine);
+                        drive.OrchAPISession.PatchMachine(patch);
                         drive.Machines.ClearCache();
                     }
                     catch (Exception ex)

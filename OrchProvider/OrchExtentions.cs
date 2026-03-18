@@ -519,6 +519,14 @@ internal static class OrchStringExtensions
         }
     }
 
+    public static bool AssignNumberIfNotNull<T, N>(this T target, N? value, T source, Func<T, N?> getter, Action<T, N?> setter) where N : struct, IComparable
+    {
+        if (!value.HasValue) return false;
+        if (Nullable.Equals(getter(source), value)) return false;
+        setter(target, value);
+        return true;
+    }
+
     // Convert a string value to int and assign. If a non-numeric value like "" is specified, set null.
     // If null is specified, do nothing.
     public static void AssignNumberIfNotNull<T>(this T target, string? value, Action<T, int?> setter)
