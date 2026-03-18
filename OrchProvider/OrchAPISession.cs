@@ -187,8 +187,6 @@ public partial class OrchAPISession : IDisposable
     // Whether the Entra ID warning check has been performed
     internal bool EntraIdWarningChecked { get; set; }
 
-    public string DebugJwtToken() => _authManager.DebugJwtToken();
-
     #region Authentication
 
     internal HttpClient InitializeHttpClient(OrchDriveInfo drive)

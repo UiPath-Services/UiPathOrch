@@ -48,7 +48,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     private OrchAPISession? _orchAPISession;
     private readonly object _orchAPISessionLock = new();
-    public OrchAPISession OrchAPISession
+    internal OrchAPISession OrchAPISession
     {
         get
         {
