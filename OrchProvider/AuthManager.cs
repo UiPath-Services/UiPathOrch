@@ -506,5 +506,4 @@ internal class OrchestratorAuthManager
         var json = Encoding.UTF8.GetString(jsonBytes);
         return json;
     }
-
 }
