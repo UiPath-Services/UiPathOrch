@@ -9,12 +9,10 @@ namespace UiPath.PowerShell.OrchProvider
     {
         protected override void ProcessRecord()
         {
-            var assembly = AppDomain.CurrentDomain.GetAssemblies()
-                .FirstOrDefault(a => a.GetName().Name == "UiPath.PowerShell.OrchProvider");
-            var modulePath = assembly != null ? Path.GetDirectoryName(assembly.Location) :
-                @"C:\Program Files\PowerShell\7\Modules\UiPathOrch";
+            var modulePath = MyInvocation.MyCommand.Module?.ModuleBase
+                ?? Path.GetDirectoryName(typeof(GetOrchDocumentationCommand).Assembly.Location);
 
-            var docsPath = Path.Combine(modulePath!, "Docs");
+            var docsPath = GetTrueCasePath(Path.Combine(modulePath!, "Docs"));
 
             var docFiles = new StringBuilder();
             if (Directory.Exists(docsPath))
@@ -44,6 +42,15 @@ Essential Commands:
   Clear-OrchCache                 Reset on errors
   Get-Help <CmdletName> -Examples Cmdlet usage examples
 ");
+        }
+
+        private static string GetTrueCasePath(string path)
+        {
+            var di = new DirectoryInfo(path);
+            if (di.Parent is null) return di.Root.FullName;
+            var parent = GetTrueCasePath(di.Parent.FullName);
+            var match = Directory.GetFileSystemEntries(parent, di.Name);
+            return match.Length > 0 ? match[0] : path;
         }
     }
 }
