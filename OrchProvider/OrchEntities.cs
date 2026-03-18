@@ -477,32 +477,14 @@ public class BulkItemDtoOfString
 }
 
 // MachineVpnSettingsDto
-public class MachineVpnSettings : IEquatable<MachineVpnSettings>
+public class MachineVpnSettings
 {
     public string? cidr { get; set; }
-
-    // IEquatable<MachineVpnSettings> implementation
-    public bool Equals(MachineVpnSettings? other)
-    {
-        if (other is null)
-            return false;
-
-        return cidr == other.cidr;
-    }
-
-    // Object.Equals override
-    public override bool Equals(object? obj) => Equals(obj as MachineVpnSettings);
-
-    // GetHashCode override
-    public override int GetHashCode()
-    {
-        return cidr is not null ? cidr.GetHashCode() : 0;
-    }
 }
 
 // UpdateInfoDto
 // TODO: confirm case
-public class UpdateInfo : IEquatable<UpdateInfo>
+public class UpdateInfo
 {
     public string? UpdateStatus { get; set; }
     public string? Reason { get; set; }
@@ -510,36 +492,9 @@ public class UpdateInfo : IEquatable<UpdateInfo>
     public bool? IsCommunity { get; set; }
     public string? StatusInfo { get; set; }
 
-    // IEquatable<UpdateInfo> implementation
-    public bool Equals(UpdateInfo? other)
-    {
-        if (other is null)
-            return false;
-
-        return UpdateStatus == other.UpdateStatus &&
-               Reason == other.Reason &&
-               TargetUpdateVersion == other.TargetUpdateVersion &&
-               IsCommunity == other.IsCommunity &&
-               StatusInfo == other.StatusInfo;
-    }
-
-    // Object.Equals override
-    public override bool Equals(object? obj) => Equals(obj as UpdateInfo);
-
-    // GetHashCode override
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(
-            UpdateStatus,
-            Reason,
-            TargetUpdateVersion,
-            IsCommunity,
-            StatusInfo
-        );
-    }
 }
 
-public class ExtendedMachine : IEquatable<ExtendedMachine>
+public class ExtendedMachine
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
@@ -568,75 +523,6 @@ public class ExtendedMachine : IEquatable<ExtendedMachine>
     public MachineVpnSettings? VpnSettings { get; set; }
     public UpdateInfo? UpdateInfo { get; set; }
 
-    // IEquatable<ExtendedMachine> implementation
-    public bool Equals(ExtendedMachine? other)
-    {
-        if (other is null)
-            return false;
-
-        return Id == other.Id &&
-               Name == other.Name &&
-               Description == other.Description &&
-               Type == other.Type &&
-               LicenseKey == other.LicenseKey &&
-               ClientSecret == other.ClientSecret &&
-               Scope == other.Scope &&
-               NonProductionSlots == other.NonProductionSlots &&
-               UnattendedSlots == other.UnattendedSlots &&
-               HeadlessSlots == other.HeadlessSlots &&
-               TestAutomationSlots == other.TestAutomationSlots &&
-               AutomationCloudSlots == other.AutomationCloudSlots &&
-               AutomationCloudTestAutomationSlots == other.AutomationCloudTestAutomationSlots &&
-               Key == other.Key &&
-               EndpointDetectionStatus == other.EndpointDetectionStatus &&
-               // RobotVersions comparison
-               ((RobotVersions is null && other.RobotVersions is null) ||
-                (RobotVersions is not null && other.RobotVersions is not null &&
-                 RobotVersions.SequenceEqual(other.RobotVersions))) &&
-               // RobotUsers comparison
-               ((RobotUsers is null && other.RobotUsers is null) ||
-                (RobotUsers is not null && other.RobotUsers is not null &&
-                 RobotUsers.SequenceEqual(other.RobotUsers))) &&
-               AutomationType == other.AutomationType &&
-               TargetFramework == other.TargetFramework &&
-               Equals(UpdatePolicy, other.UpdatePolicy) &&
-               // Tags comparison
-               ((Tags is null && other.Tags is null) ||
-                (Tags is not null && other.Tags is not null &&
-                 Tags.SequenceEqual(other.Tags))) &&
-               Equals(MaintenanceWindow, other.MaintenanceWindow) &&
-               Equals(VpnSettings, other.VpnSettings) &&
-               Equals(UpdateInfo, other.UpdateInfo);
-    }
-
-    // Object.Equals override
-    public override bool Equals(object? obj) => Equals(obj as ExtendedMachine);
-
-    // GetHashCode override
-    public override int GetHashCode()
-    {
-        // Split hash calculation
-        var hash1 = HashCode.Combine(Id, Name, Description, Type, LicenseKey, ClientSecret, Scope, NonProductionSlots);
-        var hash2 = HashCode.Combine(UnattendedSlots, HeadlessSlots, TestAutomationSlots, AutomationCloudSlots,
-                                     AutomationCloudTestAutomationSlots, Key, EndpointDetectionStatus,
-                                     RobotVersions is not null ? GetSequenceHashCode(RobotVersions) : 0);
-        var hash3 = HashCode.Combine(RobotUsers is not null ? GetSequenceHashCode(RobotUsers) : 0, AutomationType,
-                                     TargetFramework, UpdatePolicy, Tags is not null ? GetSequenceHashCode(Tags) : 0,
-                                     MaintenanceWindow, VpnSettings, UpdateInfo);
-
-        return HashCode.Combine(hash1, hash2, hash3);
-    }
-
-    // Helper method to compute the hash code of a sequence
-    private static int GetSequenceHashCode<T>(IEnumerable<T> sequence)
-    {
-        var hashCode = new HashCode();
-        foreach (var item in sequence)
-        {
-            hashCode.Add(item);
-        }
-        return hashCode.ToHashCode();
-    }
 }
 
 // CreatedMachine // added by UiPathOrch
@@ -683,7 +569,7 @@ public class UserRobots
 }
 
 // UserRoleDto
-public class UserRole : IEquatable<UserRole>
+public class UserRole
 {
     public Int64? UserId { get; set; }
     public int? RoleId { get; set; }
@@ -691,90 +577,26 @@ public class UserRole : IEquatable<UserRole>
     public string? RoleName { get; set; }
     public string? RoleType { get; set; }
     public Int64? Id { get; set; }
-
-    public bool Equals(UserRole? other)
-    {
-        if (other is null) return false;
-
-        return UserId == other.UserId &&
-               RoleId == other.RoleId &&
-               UserName == other.UserName &&
-               RoleName == other.RoleName &&
-               RoleType == other.RoleType &&
-               Id == other.Id;
-    }
-
-    // object.Equals override
-    public override bool Equals(object? obj) => Equals(obj as UserRole);
-
-    // GetHashCode override
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(
-            UserId,
-            RoleId,
-            UserName,
-            RoleName,
-            RoleType,
-            Id
-        );
-    }
 }
 
 // OrganizationUnitDto
-public class OrganizationUnit : IEquatable<OrganizationUnit>
+public class OrganizationUnit
 {
     public string? DisplayName { get; set; }
     public Int64? Id { get; set; }
-
-    public bool Equals(OrganizationUnit? other)
-    {
-        if (other is null) return false;
-
-        return DisplayName == other.DisplayName &&
-               Id == other.Id;
-    }
-
-    // object.Equals override
-    public override bool Equals(object? obj) => Equals(obj as OrganizationUnit);
-
-    // GetHashCode override
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(DisplayName, Id);
-    }
 }
 
 // AttendedRobotDto
-public class AttendedRobot : IEquatable<AttendedRobot>
+public class AttendedRobot
 {
     public string? UserName { get; set; }
     public ExecutionSettings? ExecutionSettings { get; set; }
     public Int64? RobotId { get; set; }
     public string? RobotType { get; set; }
-
-    public bool Equals(AttendedRobot? other)
-    {
-        if (other is null) return false;
-
-        return UserName == other.UserName &&
-               RobotId == other.RobotId &&
-               RobotType == other.RobotType &&
-               ExecutionSettings.SafeEquals(other.ExecutionSettings);
-    }
-
-    // object.Equals override
-    public override bool Equals(object? obj) => Equals(obj as AttendedRobot);
-
-    // GetHashCode override
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(UserName, RobotId, RobotType, ExecutionSettings);
-    }
 }
 
 // ExecutionSettings // added by UiPathOrch
-public class ExecutionSettings : IEquatable<ExecutionSettings>
+public class ExecutionSettings
 {
     public string? TracingLevel { get; set; }
     public bool? StudioNotifyServer { get; set; }
@@ -794,42 +616,10 @@ public class ExecutionSettings : IEquatable<ExecutionSettings>
 
     public bool? FontSmoothing { get; set; }
     public bool? AutoDownloadProcess { get; set; }
-
-    public bool Equals(ExecutionSettings? other)
-    {
-        if (other is null) return false;
-
-        return TracingLevel == other.TracingLevel &&
-               StudioNotifyServer == other.StudioNotifyServer &&
-               LoginToConsole == other.LoginToConsole &&
-               ResolutionWidth == other.ResolutionWidth &&
-               ResolutionHeight == other.ResolutionHeight &&
-               ResolutionDepth == other.ResolutionDepth &&
-               FontSmoothing == other.FontSmoothing &&
-               AutoDownloadProcess == other.AutoDownloadProcess;
-    }
-
-    // object.Equals override
-    public override bool Equals(object? obj) => Equals(obj as ExecutionSettings);
-
-    // GetHashCode override
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(
-            TracingLevel,
-            StudioNotifyServer,
-            LoginToConsole,
-            ResolutionWidth,
-            ResolutionHeight,
-            ResolutionDepth,
-            FontSmoothing,
-            AutoDownloadProcess
-        );
-    }
 }
 
 // UnattendedRobotDto
-public class UnattendedRobot : IEquatable<UnattendedRobot>
+public class UnattendedRobot
 {
     public string? UserName { get; set; }
     public string? Password { get; set; }
@@ -840,52 +630,9 @@ public class UnattendedRobot : IEquatable<UnattendedRobot>
     public bool? LimitConcurrentExecution { get; set; }
     public Int64? RobotId { get; set; }
     public int? MachineMappingsCount { get; set; }
-
-    public bool Equals(UnattendedRobot? other)
-    {
-        if (other is null) return false;
-
-        bool ret = UserName == other.UserName;
-        ret = ret && Password == other.Password;
-        ret = ret && CredentialStoreId == other.CredentialStoreId;
-        ret = ret && CredentialType == other.CredentialType;
-        ret = ret && CredentialExternalName == other.CredentialExternalName;
-        ret = ret && ExecutionSettings.SafeEquals(other.ExecutionSettings);
-        ret = ret && LimitConcurrentExecution == other.LimitConcurrentExecution;
-        ret = ret && RobotId == other.RobotId;
-        ret = ret && MachineMappingsCount == other.MachineMappingsCount;
-        return ret;
-    }
-
-    // object.Equals override
-    public override bool Equals(object? obj) => Equals(obj as UnattendedRobot);
-
-    // GetHashCode override
-    public override int GetHashCode()
-    {
-        // First, combine up to 8 properties
-        int hash1 = HashCode.Combine(
-            UserName,
-            Password,
-            CredentialStoreId,
-            CredentialType,
-            CredentialExternalName,
-            ExecutionSettings,
-            LimitConcurrentExecution,
-            RobotId
-        );
-
-        // Combine remaining properties separately, then combine both hashes
-        int hash2 = HashCode.Combine(
-            MachineMappingsCount
-        );
-
-        // Generate the final hash code
-        return HashCode.Combine(hash1, hash2);
-    }
 }
 
-public class UserNotificationSubscription : IEquatable<UserNotificationSubscription>
+public class UserNotificationSubscription
 {
     public bool? Queues { get; set; }
     public bool? Robots { get; set; }
@@ -901,56 +648,6 @@ public class UserNotificationSubscription : IEquatable<UserNotificationSubscript
     public bool? RateLimitsRealTime { get; set; }
     public bool? AutopilotForRobotsDetectedIssues { get; set; }
     public bool? Webhooks { get; set; }
-
-    public bool Equals(UserNotificationSubscription? other)
-    {
-        if (other is null) return false;
-
-        return Queues == other.Queues &&
-               Robots == other.Robots &&
-               Jobs == other.Jobs &&
-               Schedules == other.Schedules &&
-               Tasks == other.Tasks &&
-               QueueItems == other.QueueItems &&
-               Insights == other.Insights &&
-               CloudRobots == other.CloudRobots &&
-               Serverless == other.Serverless &&
-               Export == other.Export &&
-               RateLimitsDaily == other.RateLimitsDaily &&
-               RateLimitsRealTime == other.RateLimitsRealTime &&
-               AutopilotForRobotsDetectedIssues == other.AutopilotForRobotsDetectedIssues &&
-               Webhooks == other.Webhooks;
-    }
-
-    // object.Equals override
-    public override bool Equals(object? obj) => Equals(obj as UserNotificationSubscription);
-
-    // GetHashCode override
-    public override int GetHashCode()
-    {
-        // First, combine up to 8 properties
-        int hash1 = HashCode.Combine(
-            Queues,
-            Robots,
-            Jobs,
-            Schedules,
-            Tasks,
-            QueueItems,
-            Insights,
-            CloudRobots
-        );
-
-        // Combine remaining properties separately, then combine both hashes
-        int hash2 = HashCode.Combine(
-            Serverless,
-            Export,
-            RateLimitsDaily,
-            RateLimitsRealTime
-        );
-
-        // Generate the final hash code
-        return HashCode.Combine(hash1, hash2);
-    }
 }
 
 // added by UiPathOrch
@@ -961,7 +658,7 @@ public class AvailableVersions
 }
 
 // UserDto
-public class User : IEquatable<User>
+public class User
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
@@ -1015,76 +712,6 @@ public class User : IEquatable<User>
     public DateTime? LastModificationTime { get; set; }
     public Int64? LastModifierUserId { get; set; }
     public Int64? CreatorUserId { get; set; }
-
-    public bool Equals(User? other)
-    {
-        if (other is null) return false;
-
-        bool ret = Id == other.Id;
-        //ret &= Path == other.Path; // Exclude Path
-        ret = ret && Name == other.Name;
-        ret = ret && Surname == other.Surname;
-        ret = ret && UserName == other.UserName;
-        ret = ret && Domain == other.Domain;
-        ret = ret && DirectoryIdentifier == other.DirectoryIdentifier;
-        ret = ret && FullName == other.FullName;
-        ret = ret && EmailAddress == other.EmailAddress;
-        //ret = ret && IsEmailConfirmed == other.IsEmailConfirmed;
-        ret = ret && LastLoginTime == other.LastLoginTime;
-        ret = ret && IsActive == other.IsActive;
-        ret = ret && CreationTime == other.CreationTime;
-        ret = ret && AuthenticationSource == other.AuthenticationSource;
-        ret = ret && Password == other.Password;
-        ret = ret && IsExternalLicensed == other.IsExternalLicensed;
-        ret = ret && UserRoles.SafeSequenceEquals(other.UserRoles); // Array comparison
-        ret = ret && RolesList.SafeSequenceEquals(other.RolesList); // Array comparison
-        ret = ret && LoginProviders.SafeSequenceEquals(other.LoginProviders); // Array comparison
-        //ret = ret && OrganizationUnits.SafeSequenceEquals(other.OrganizationUnits); // List comparison
-        ret = ret && TenantId == other.TenantId;
-        ret = ret && TenancyName == other.TenancyName;
-        ret = ret && TenantDisplayName == other.TenantDisplayName;
-        ret = ret && TenantKey == other.TenantKey;
-        ret = ret && Type == other.Type;
-        ret = ret && ProvisionType == other.ProvisionType;
-        ret = ret && LicenseType == other.LicenseType;
-        ret = ret && RobotProvision.SafeEquals(other.RobotProvision); // Class comparison
-        ret = ret && UnattendedRobot.SafeEquals(other.UnattendedRobot); // Class comparison
-        ret = ret && NotificationSubscription.SafeEquals(other.NotificationSubscription); // Class comparison
-        ret = ret && Key == other.Key;
-        ret = ret && MayHaveUserSession == other.MayHaveUserSession;
-        ret = ret && MayHaveRobotSession == other.MayHaveRobotSession;
-        ret = ret && MayHaveUnattendedSession == other.MayHaveUnattendedSession;
-        ret = ret && MayHavePersonalWorkspace == other.MayHavePersonalWorkspace;
-        ret = ret && RestrictToPersonalWorkspace == other.RestrictToPersonalWorkspace;
-        //ret = ret && BypassBasicAuthRestriction == other.BypassBasicAuthRestriction;
-        ret = ret && UpdatePolicy.SafeEquals(other.UpdatePolicy);
-        ret = ret && AccountId == other.AccountId;
-        ret = ret && HasOnlyInheritedPrivileges == other.HasOnlyInheritedPrivileges;
-        ret = ret && ExplicitMayHaveUserSession == other.ExplicitMayHaveUserSession;
-        ret = ret && ExplicitMayHaveRobotSession == other.ExplicitMayHaveRobotSession;
-        ret = ret && ExplicitMayHavePersonalWorkspace == other.ExplicitMayHavePersonalWorkspace;
-        ret = ret && ExplicitRestrictToPersonalWorkspace == other.ExplicitRestrictToPersonalWorkspace;
-        ret = ret && LastModificationTime == other.LastModificationTime;
-        ret = ret && LastModifierUserId == other.LastModifierUserId;
-        ret = ret && CreatorUserId == other.CreatorUserId;
-        return ret;
-    }
-
-    // object.Equals override
-    public override bool Equals(object? obj) => Equals(obj as User);
-
-    // GetHashCode override
-    public override int GetHashCode()
-    {
-        int hash1 = HashCode.Combine(Id, Name, Surname, UserName, Domain, DirectoryIdentifier, FullName);
-        int hash2 = HashCode.Combine(EmailAddress, IsEmailConfirmed, LastLoginTime, IsActive, CreationTime, AuthenticationSource, Password, IsExternalLicensed);
-        int hash3 = HashCode.Combine(UserRoles, RolesList, LoginProviders, OrganizationUnits, TenantId, TenancyName, TenantDisplayName, TenantKey);
-        int hash4 = HashCode.Combine(Type, ProvisionType, LicenseType, RobotProvision, UnattendedRobot, NotificationSubscription, Key, MayHaveUserSession);
-        int hash5 = HashCode.Combine(MayHaveRobotSession, MayHaveUnattendedSession, BypassBasicAuthRestriction, MayHavePersonalWorkspace, UpdatePolicy, AccountId, LastModificationTime);
-        int hash6 = HashCode.Combine(LastModifierUserId, CreatorUserId, RestrictToPersonalWorkspace);
-
-        return HashCode.Combine(hash1, hash2, hash3, hash4, hash5, hash6);
-    }
 }
 
 public class Item_IdName // added by UiPathOrch The proper class name is unknown.
@@ -1247,35 +874,15 @@ public class UserEntity
     public Int64? Id { get; set; }
 }
 
-public class MachinesRobotVersion : IEquatable<MachinesRobotVersion>
+public class MachinesRobotVersion
 {
     public long? Count { get; set; }
     public string? Version { get; set; }
     public long? MachineId { get; set; }
-
-    // IEquatable<MachinesRobotVersion> implementation
-    public bool Equals(MachinesRobotVersion? other)
-    {
-        if (other is null)
-            return false;
-
-        return Count == other.Count &&
-               Version == other.Version &&
-               MachineId == other.MachineId;
-    }
-
-    // Object.Equals override
-    public override bool Equals(object? obj) => Equals(obj as MachinesRobotVersion);
-
-    // GetHashCode override
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(Count, Version, MachineId);
-    }
 }
 
 // RobotUserDto
-public class RobotUser : IEquatable<RobotUser>
+public class RobotUser
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
@@ -1286,48 +893,14 @@ public class RobotUser : IEquatable<RobotUser>
     public string? UserName { get; set; }
     public Int64? RobotId { get; set; }
     public bool? HasTriggers { get; set; }
-
-    public bool Equals(RobotUser? other)
-    {
-        if (other is null)
-            return false;
-
-        return UserName == other.UserName &&
-               RobotId == other.RobotId &&
-               HasTriggers == other.HasTriggers;
-    }
-
-    public override bool Equals(object? obj) => Equals(obj as RobotUser);
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(UserName, RobotId, HasTriggers);
-    }
 }
 
 
 // UpdatePolicyDto
-public class UpdatePolicy : IEquatable<UpdatePolicy>
+public class UpdatePolicy
 {
     public string? Type { get; set; }
     public string? SpecificVersion { get; set; }
-
-    public bool Equals(UpdatePolicy? other)
-    {
-        if (other is null) return false;
-
-        return Type == other.Type &&
-               SpecificVersion == other.SpecificVersion;
-    }
-
-    // object.Equals override
-    public override bool Equals(object? obj) => Equals(obj as UpdatePolicy);
-
-    // GetHashCode override
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(Type, SpecificVersion);
-    }
 }
 
 // SessionMaintenanceModeParameters
@@ -1341,7 +914,7 @@ public class SessionMaintenanceModeParameters
 }
 
 // MaintenanceWindowDto
-public class MaintenanceWindow : IEquatable<MaintenanceWindow>
+public class MaintenanceWindow
 {
     public bool? Enabled { get; set; }
     public string? JobStopStrategy { get; set; }
@@ -1350,36 +923,6 @@ public class MaintenanceWindow : IEquatable<MaintenanceWindow>
     public int? Duration { get; set; }
     [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? NextExecutionTime { get; set; }
-
-    // IEquatable<MaintenanceWindow> implementation
-    public bool Equals(MaintenanceWindow? other)
-    {
-        if (other is null)
-            return false;
-
-        return Enabled == other.Enabled &&
-               JobStopStrategy == other.JobStopStrategy &&
-               CronExpression == other.CronExpression &&
-               TimezoneId == other.TimezoneId &&
-               Duration == other.Duration &&
-               NextExecutionTime == other.NextExecutionTime;
-    }
-
-    // Object.Equals override
-    public override bool Equals(object? obj) => Equals(obj as MaintenanceWindow);
-
-    // GetHashCode override
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(
-            Enabled,
-            JobStopStrategy,
-            CronExpression,
-            TimezoneId,
-            Duration,
-            NextExecutionTime
-        );
-    }
 }
 
 // MachineFolderDto
