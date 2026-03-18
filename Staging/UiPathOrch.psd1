@@ -414,46 +414,40 @@ PrivateData = @{
 
         # ReleaseNotes of this module
         ReleaseNotes = '## New Features
-- Added Import-OrchConfig cmdlet. Imports the configuration file and creates PSDrives for all enabled tenants. Use this to apply configuration changes without restarting the PowerShell session.
+- Added Set-OrchSetting cmdlet for updating tenant settings, with a Value completer that shows the current value.
 
-- Added New-OrchPSDrive cmdlet. Creates a new PSDrive in the current session without using the configuration file.
+- Added Getting Started guide (Docs/00-GettingStarted.md).
 
-- Added Get-OrchConfigPath cmdlet. Returns the path to the UiPathOrch configuration file, allowing AI and scripts to directly read or edit it.
+- Added CSV Export & Import guide (Docs/03-CsvExportImport.md).
 
-- Added Switch-OrchCurrentUser cmdlet. Opens an InPrivate browser window to re-authenticate with a different account. Useful when SSO auto-login prevents account switching.
+## Improvements
+- Entra ID warning now only fires when the tenant has Entra ID integration and the user is not signed in via Entra ID. Previously it triggered for all non-Entra ID users regardless of tenant configuration.
 
-- Added Entra ID login warning. When connecting to a drive, UiPathOrch checks the JWT token and displays a warning if the user is not signed in via Entra ID. For AD-integrated organizations, UiPathOrch automatically directs the user to the Entra ID login page during PKCE authentication.
+- Improved cross-version migration compatibility: copy and create operations for processes, machines, webhooks, queues, assets, buckets, schedules, and roles now work with older API versions (including On-prem 20.10 / API v11).
 
-- Added handling for deprecated Alerts API: returns an error on API v18+.
+- Improved Update cmdlets: Update-OrchQueue, Update-OrchTrigger, and Update-OrchProcessVersion now detect changes before making API calls, skipping no-op updates.
 
-- (Experimental) Added New-OrchUserMappingCsv and Test-OrchUserMappingCsv cmdlets for cross-organization tenant migration with username mapping. New-OrchUserMappingCsv generates a CSV that maps source directory users to destination directory users by searching the destination directory. Test-OrchUserMappingCsv validates the mapping. All copy cmdlets now accept the -UserMappingCsv parameter to translate user references during migration.
+- Replaced undocumented EditRelease API with public PATCH and PutReleaseRetention endpoints.
+
+- Sort target processes by name in Update-OrchProcess.
+
+- Improved organization ID resolution by extracting it directly from the JWT token, avoiding extra API calls.
 
 ## Bug Fixes
-- Fixed Cloud PKCE authorize URL to use the updated UiPath Identity Server endpoint with acr_values for organization routing.
+- Fixed Entra ID warning appearing during tab completion by deferring display to cmdlet execution.
 
-- Fixed New-OrchProcess bugs: triple enumeration of packages, Description property leaking between calls, and nullable handling.
+- Fixed cache and retention comparison issues in Update cmdlets.
 
-- Fixed parameter mutation bugs and ErrorId usage across 47 files.
+- Fixed Queue ReleaseId and Webhook Name for cross-version copy.
 
-- Fixed Pm cmdlets race condition by converting from parallel to sequential execution when sharing cache.
+- Fixed role cache not clearing on error in CopyRoles, causing stale data.
 
-- Fixed Personal workspace exclusion across FolderUser, FolderMachine, and Test cmdlets.
+- Fixed HTTP response body stream race between caller and async logger.
 
-- Fixed OutputType attributes: corrected ActionCatalog type, removed incorrect OutputType from Copy cmdlets.
-
-- Fixed ShouldProcess messages: typos and naming consistency.
-
-- Removed uipath.com domain check from Document Understanding and Test Manager drive creation, enabling Automation Suite environments.
+- Fixed minor resource disposal and thread pool issues.
 
 ## Documentation
-- Rewrote all cmdlet help documentation using PlatyPS v1. 238 markdown help files with standardized descriptions, 1030+ examples, parameter documentation.
-
-- Removed legacy PDF documentation and Japanese-language help files. All documentation is now in English markdown format.
-
-- Added AI-oriented guide documents (Docs/01-Essentials.md, 02-CmdletReference.md, 03-MigrationGuide.md) for module usage, cmdlet reference, and tenant migration procedures.
-
-## Breaking Changes
-- Update cmdlets (Set-Orch*) now treat empty string "" as an intentional value clear. Previously, empty strings were silently ignored.
+- Reorganized documentation: renamed MigrationGuide to 04-MigrationGuide.md, added cross-version migration guidance, library feed settings, Queue SLA auto-assignment, and user investigation procedure.
 '
 
         # Prerelease string of this module
