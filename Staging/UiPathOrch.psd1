@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.16.0'
+ModuleVersion = '0.9.16.1'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()

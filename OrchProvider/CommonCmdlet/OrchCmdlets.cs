@@ -47,6 +47,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
             if (warning is not null)
             {
                 drive.OrchAPISession.ClearPendingWarning();
+                drive.OrchAPISession.EntraIdWarningChecked = true;
                 WriteWarning(warning);
             }
         }

@@ -441,35 +441,56 @@ internal class OrchestratorAuthManager
         return Convert.ToBase64String(data).TrimEnd('=').Replace("+", "-").Replace("/", "_");
     }
 
-    /// Check whether the Entra ID warning message should be displayed.
-    /// Returns true if the warning should be shown.
-    public bool ShouldShowEntraIdWarning()
+    /// Check whether the current user is NOT signed in via Entra ID.
+    /// Returns true if the user is a local (non-Entra ID) user.
+    public bool IsNonEntraIdUser()
     {
         try
         {
-            var parts = _access_token?.Split('.') ?? [];
-            if (parts.Length != 3) return false;
-
-            // Base64URL decode
-            var payload = parts[1];
-            payload = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
-            payload = payload.Replace('-', '+').Replace('_', '/');
-
-            var jsonBytes = Convert.FromBase64String(payload);
-            var json = Encoding.UTF8.GetString(jsonBytes);
-
-            using JsonDocument doc = JsonDocument.Parse(json);
+            using JsonDocument doc = ParseJwtPayload();
             if (doc.RootElement.TryGetProperty("ext_idp_disp_name", out JsonElement element))
             {
-                return element.GetString() == "GlobalIdp";
+                return element.GetString() != "aad";
             }
-
-            return false;
+            return false; // No ext_idp_disp_name (e.g., Confidential App) — not applicable
         }
         catch
         {
             return false;
         }
+    }
+
+    /// Get the partition global ID (prt_id) from the JWT token.
+    public string? GetPartitionGlobalIdFromJwt()
+    {
+        try
+        {
+            using JsonDocument doc = ParseJwtPayload();
+            if (doc.RootElement.TryGetProperty("prt_id", out JsonElement element))
+            {
+                return element.GetString();
+            }
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private JsonDocument ParseJwtPayload()
+    {
+        var parts = _access_token?.Split('.') ?? [];
+        if (parts.Length != 3) throw new InvalidOperationException("Invalid JWT");
+
+        // Base64URL decode
+        var payload = parts[1];
+        payload = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
+        payload = payload.Replace('-', '+').Replace('_', '/');
+
+        var jsonBytes = Convert.FromBase64String(payload);
+        var json = Encoding.UTF8.GetString(jsonBytes);
+        return JsonDocument.Parse(json);
     }
 
     public string DebugJwtToken()

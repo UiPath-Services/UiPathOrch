@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
+using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Entities;
@@ -746,6 +747,40 @@ public partial class OrchProvider : NavigationCmdletProvider
         if (drive is null)
         {
             return;
+        }
+
+        drive.OrchAPISession.EnsureAuthenticated();
+
+        // Check Entra ID warning (once per drive session).
+        // The warning is set to PendingWarning (not displayed here) because GetChildItems
+        // is also called during tab completion, where WriteWarning output would be silently lost.
+        // PendingWarning is flushed by OrchCmdlets.BeginProcessing, which also sets EntraIdWarningChecked.
+        if (!drive.OrchAPISession.EntraIdWarningChecked && drive.OrchAPISession.PendingWarning is null)
+        {
+            try
+            {
+                if (drive.OrchAPISession.AuthManager.IsNonEntraIdUser())
+                {
+                    var prtId = drive.GetPartitionGlobalId();
+                    if (prtId is not null)
+                    {
+                        var authSetting = drive.PmAuthenticationSetting.Get();
+                        if (authSetting?.authenticationSettingType == "aad")
+                        {
+                            drive.OrchAPISession.PendingWarning = $"[{drive.NameColon}] You are not signed in to the organization via Entra ID. Some operations may require organization-level access. Use Switch-OrchCurrentUser to sign in with a different account.";
+                        }
+                        else
+                        {
+                            drive.OrchAPISession.EntraIdWarningChecked = true;
+                        }
+                    }
+                }
+                else
+                {
+                    drive.OrchAPISession.EntraIdWarningChecked = true;
+                }
+            }
+            catch {} // Swallow - don't block navigation for a warning
         }
 
         var parameters = DynamicParameters as GetChildItems_Parameters;
