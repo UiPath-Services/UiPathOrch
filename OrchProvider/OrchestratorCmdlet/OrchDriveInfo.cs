@@ -48,7 +48,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     private OrchAPISession? _orchAPISession;
     private readonly object _orchAPISessionLock = new();
-    internal OrchAPISession OrchAPISession
+    public OrchAPISession OrchAPISession
     {
         get
         {
@@ -613,12 +613,13 @@ public partial class OrchDriveInfo : PSDriveInfo
     {
         if (_dicPartitionGlobalId is not null) return _dicPartitionGlobalId;
 
+        // Try to get from JWT first (fast path)
+        _dicPartitionGlobalId = OrchAPISession.AuthManager.GetPartitionGlobalIdFromJwt();
+        if (_dicPartitionGlobalId is not null) return _dicPartitionGlobalId;
+
         lock (_dicPartitionGlobalIdLock)
         {
-            // When reaching this code, it should always be a confidential app
-            // For non-confidential apps, GetCurrentUser() should have been called during login.
-            // However, if OrchDmProvider or OrchTmProvider logged in before OrchProvider,
-            // GetCurrentUser() was not called, so it could be a non-confidential app.
+            // Fallback: query via API (confidential app, or JWT without prt_id)
             var users = GetUsers();
             foreach (var user in users)
             {

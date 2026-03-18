@@ -181,8 +181,13 @@ public partial class OrchAPISession : IDisposable
     public double? ApiVersion;
 
     // Deferred warning message to be displayed when a cmdlet runs (not during tab completion)
-    internal string? PendingWarning { get; private set; }
+    internal string? PendingWarning { get; set; }
     internal void ClearPendingWarning() => PendingWarning = null;
+
+    // Whether the Entra ID warning check has been performed
+    internal bool EntraIdWarningChecked { get; set; }
+
+    public string DebugJwtToken() => _authManager.DebugJwtToken();
 
     #region Authentication
 
@@ -315,12 +320,6 @@ public partial class OrchAPISession : IDisposable
                     // Set initial token
                     string token = _authManager.RequestToken();
                     SetToken(token);
-
-                    // Entra ID warning: defer display until a cmdlet runs (avoid polluting tab completion)
-                    if (_drive is not null && _authManager.ShouldShowEntraIdWarning())
-                    {
-                        PendingWarning = $"[{_drive.NameColon}] You are not signed in to the organization via Entra ID. Some operations may require organization-level access. Use Switch-OrchCurrentUser to sign in with a different account.";
-                    }
 
                     _isAuthenticated = true;
                     _expiryTime = DateTime.Now.AddHours(1);
