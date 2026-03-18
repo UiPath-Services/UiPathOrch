@@ -613,6 +613,26 @@ internal static class OrchStringExtensions
         }
     }
 
+    /// <summary>Compare against <paramref name="source"/>, set on <paramref name="target"/>. For dirty-flag tracking with PUT payloads.</summary>
+    public static bool AssignBoolIfNotFalse<T>(this T target, string? value, T source, Func<T, bool?> getter, Action<T, bool?> setter)
+    {
+        if (string.IsNullOrEmpty(value)) return false;
+
+        if (bool.TryParse(value, out var result))
+        {
+            // Skip if source already has the same value
+            if (getter(source) == result) return false;
+
+            // Apply the original "not false" guard against the target (DeepCopy),
+            // not the source, to preserve the existing behavior.
+            if (getter(target) is null && !result) return false;
+
+            setter(target, result);
+            return true;
+        }
+        return false;
+    }
+
     public static void AssignDateTimeIfNotNull<T>(this T target, DateTime? value, Action<T, DateTime?> setter, bool convertToUniversalTime = true)
     {
         if (value is not null)

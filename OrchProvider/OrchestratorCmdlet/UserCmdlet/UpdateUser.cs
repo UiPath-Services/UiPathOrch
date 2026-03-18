@@ -191,35 +191,25 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                         continue;
                     }
 
-                    // Sort RolesList so we can correctly check for dirty state later
-                    detailedUser.RolesList = detailedUser.RolesList?.Order().ToArray();
-
                     // The Password returned from the server may contain "*****".
-                    // Set it to null to prevent accidentally updating the password with "*****".
-                    // This also helps correctly evaluate equality.
+                    // Set it to null to prevent accidentally sending the masked value back.
                     if (detailedUser.UnattendedRobot is not null)
                     {
                         detailedUser.UnattendedRobot.Password = null;
                     }
 
                     var postingUser = OrchCollectionExtensions.DeepCopy(detailedUser);
+                    bool dirty = false;
 
-                    if (postingUser.UnattendedRobot is not null)
-                    {
-                        postingUser.UnattendedRobot.Password = null;
-                    }
+                    dirty |= postingUser.AssignStringIfNotNull(Name,    detailedUser, u => u.Name,    (u, v) => u.Name = v);
+                    dirty |= postingUser.AssignStringIfNotNull(Surname, detailedUser, u => u.Surname, (u, v) => u.Surname = v);
 
-                    //postingUser.AssignStringIfNotNull(FullName,                   (u, v) => u.FullName = v);
-
-                    postingUser.AssignStringIfNotNull(Name,    (u, v) => u.Name = v);
-                    postingUser.AssignStringIfNotNull(Surname, (u, v) => u.Surname = v);
-
-                    postingUser.AssignBoolIfNotFalse(IsExternalLicensed,          u => u.IsExternalLicensed,          (u, v) => u.IsExternalLicensed = v);
-                    postingUser.AssignBoolIfNotFalse(MayHaveUserSession,          u => u.MayHaveUserSession,          (u, v) => u.MayHaveUserSession = v);
-                    postingUser.AssignBoolIfNotFalse(MayHaveRobotSession,         u => u.MayHaveRobotSession,         (u, v) => u.MayHaveRobotSession = v);
-                    postingUser.AssignBoolIfNotFalse(MayHavePersonalWorkspace,    u => u.MayHavePersonalWorkspace,    (u, v) => u.MayHavePersonalWorkspace = v);
-                    postingUser.AssignBoolIfNotFalse(MayHaveUnattendedSession,    u => u.MayHaveUnattendedSession,    (u, v) => u.MayHaveUnattendedSession = v);
-                    postingUser.AssignBoolIfNotFalse(RestrictToPersonalWorkspace, u => u.RestrictToPersonalWorkspace, (u, v) => u.RestrictToPersonalWorkspace = v);
+                    dirty |= postingUser.AssignBoolIfNotFalse(IsExternalLicensed,          detailedUser, u => u.IsExternalLicensed,          (u, v) => u.IsExternalLicensed = v);
+                    dirty |= postingUser.AssignBoolIfNotFalse(MayHaveUserSession,          detailedUser, u => u.MayHaveUserSession,          (u, v) => u.MayHaveUserSession = v);
+                    dirty |= postingUser.AssignBoolIfNotFalse(MayHaveRobotSession,         detailedUser, u => u.MayHaveRobotSession,         (u, v) => u.MayHaveRobotSession = v);
+                    dirty |= postingUser.AssignBoolIfNotFalse(MayHavePersonalWorkspace,    detailedUser, u => u.MayHavePersonalWorkspace,    (u, v) => u.MayHavePersonalWorkspace = v);
+                    dirty |= postingUser.AssignBoolIfNotFalse(MayHaveUnattendedSession,    detailedUser, u => u.MayHaveUnattendedSession,    (u, v) => u.MayHaveUnattendedSession = v);
+                    dirty |= postingUser.AssignBoolIfNotFalse(RestrictToPersonalWorkspace, detailedUser, u => u.RestrictToPersonalWorkspace, (u, v) => u.RestrictToPersonalWorkspace = v);
 
                     #region RolesList
                     if (Roles is not null)
@@ -244,11 +234,13 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                                     .Distinct()
                                     .Order()
                                     .ToArray();
+                                dirty = true;
                             }
                         }
                         else
                         {
                             postingUser.RolesList = [];
+                            dirty = true;
                         }
                     }
                     #endregion
@@ -262,14 +254,13 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                     {
                         postingUser.UnattendedRobot ??= new();
                         postingUser.UnattendedRobot.AssignStringIfNotNull(UR_UserName,               (u, v) => u.UserName = v);
-                        postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(UR_Password,               (u, v) => u.Password = v); // Password cannot be retrieved via API, so leave as-is
-                        postingUser.UnattendedRobot.AssignStringIfNotNull(UR_CredentialExternalName, (u, v) => u.CredentialExternalName = v);
-                        postingUser.UnattendedRobot.AssignStringIfNotNull(UR_CredentialType,         (u, v) => u.CredentialType = v);
+                        postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(UR_Password,         (u, v) => u.Password = v);
+                        postingUser.UnattendedRobot.AssignStringIfNotNull(UR_CredentialExternalName,  (u, v) => u.CredentialExternalName = v);
+                        postingUser.UnattendedRobot.AssignStringIfNotNull(UR_CredentialType,          (u, v) => u.CredentialType = v);
                         postingUser.UnattendedRobot.AssignBoolIfNotFalse(UR_LimitConcurrentExecution, u => u.LimitConcurrentExecution, (u, v) => u.LimitConcurrentExecution = v);
 
                         if (!string.IsNullOrEmpty(UR_CredentialStore))
                         {
-                            //var wpCredentialStore = new WildcardPattern(UR_CredentialStore, WildcardOptions.IgnoreCase);
                             var credentialStores = drive.CredentialStores.Get();
                             var targetCredentialStore = credentialStores.FirstOrDefault(cs => string.Compare(cs.Name, UR_CredentialStore, true) == 0);
 
@@ -282,46 +273,28 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                                 postingUser.UnattendedRobot.CredentialStoreId = targetCredentialStore.Id;
                             }
                         }
+                        dirty = true;
                     }
 
-                    postingUser.AssignUpdatePolicy(UpdatePolicyType, UpdatePolicyVersion);
+                    if (!string.IsNullOrEmpty(UpdatePolicyType) || !string.IsNullOrEmpty(UpdatePolicyVersion))
+                    {
+                        postingUser.AssignUpdatePolicy(UpdatePolicyType, UpdatePolicyVersion);
+                        dirty = true;
+                    }
 
                     void UpdateExecutionSettings(ExecutionSettings executionSettings)
                     {
-                        executionSettings.AssignStringIfNotNull(
-                            ES_TracingLevel, (es, v) =>
-                            es.TracingLevel = v);
-
-                        executionSettings.AssignBoolIfNotNull(
-                            ES_StudioNotifyServer, (es, v) =>
-                            es.StudioNotifyServer = v);
-
-                        executionSettings.AssignBoolIfNotNull(
-                            ES_LoginToConsole, (es, v) =>
-                            es.LoginToConsole = v);
-
-                        executionSettings.AssignNumberIfNotNull(
-                            ES_ResolutionWidth, (es, v) =>
-                            es.ResolutionWidth = v);
-
-                        executionSettings.AssignNumberIfNotNull(
-                            ES_ResolutionHeight, (es, v) =>
-                            es.ResolutionHeight = v);
-
-                        executionSettings.AssignNumberIfNotNull(
-                            ES_ResolutionDepth, (es, v) =>
-                            es.ResolutionDepth = v);
-
-                        executionSettings.AssignBoolIfNotNull(
-                            ES_FontSmoothing, (es, v) =>
-                            es.FontSmoothing = v);
-
-                        executionSettings.AssignBoolIfNotNull(
-                            ES_AutoDownloadProcess, (es, v) =>
-                            es.AutoDownloadProcess = v);
+                        executionSettings.AssignStringIfNotNull(ES_TracingLevel,       (es, v) => es.TracingLevel = v);
+                        executionSettings.AssignBoolIfNotNull(ES_StudioNotifyServer,   (es, v) => es.StudioNotifyServer = v);
+                        executionSettings.AssignBoolIfNotNull(ES_LoginToConsole,       (es, v) => es.LoginToConsole = v);
+                        executionSettings.AssignNumberIfNotNull(ES_ResolutionWidth,    (es, v) => es.ResolutionWidth = v);
+                        executionSettings.AssignNumberIfNotNull(ES_ResolutionHeight,   (es, v) => es.ResolutionHeight = v);
+                        executionSettings.AssignNumberIfNotNull(ES_ResolutionDepth,    (es, v) => es.ResolutionDepth = v);
+                        executionSettings.AssignBoolIfNotNull(ES_FontSmoothing,        (es, v) => es.FontSmoothing = v);
+                        executionSettings.AssignBoolIfNotNull(ES_AutoDownloadProcess,  (es, v) => es.AutoDownloadProcess = v);
                     }
 
-                    if (postingUser.Type != "DirectoryExternalApplication" && (
+                    if (detailedUser.Type != "DirectoryExternalApplication" && (
                         ES_TracingLevel is not null ||
                         ES_StudioNotifyServer is not null ||
                         ES_LoginToConsole is not null ||
@@ -331,8 +304,6 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                         ES_FontSmoothing is not null ||
                         ES_AutoDownloadProcess is not null))
                     {
-                        // Updated to also apply the same changes to RobotProvision.ExecutionSettings,
-                        // in addition to UnattendedRobot.ExecutionSettings.
                         if (postingUser.RobotProvision is not null)
                         {
                             postingUser.RobotProvision.ExecutionSettings ??= new();
@@ -344,54 +315,12 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                             postingUser.UnattendedRobot.ExecutionSettings ??= new();
                             UpdateExecutionSettings(postingUser.UnattendedRobot.ExecutionSettings);
                         }
-                        //if (postingUser.type == 3) // for robots
-                        //{
-
-                        //}
+                        dirty = true;
                     }
 
-                    // Perhaps this kind of error handling should be left to the API side..
-                    //if (postingUser.UpdatePolicy is not null)
-                    //{
-                    //    if (string.IsNullOrEmpty(postingUser.UpdatePolicy.SpecificVersion) &&
-                    //        (postingUser.UpdatePolicy.Type == "LatestPatch" || postingUser.Type == "SpecificVersion"))
-                    //    {
-                    //        WriteError(new ErrorRecord(new OrchException(target, $"When UpdatePolicyType is \"{postingUser.UpdatePolicy.Type}\", you must specify UpdatePolicyVersion."), "UpdateUserError", ErrorCategory.InvalidOperation, user));
-                    //        continue;
-                    //    }
-                    //}
+                    if (!dirty) continue;
 
-
-                    //if (user.type == 3) // for robots
-                    //{
-                    //    postingUser.MayHaveUserSession = false; // prohibit 'Standard Interface'
-                    //    postingUser.MayHaveUnattendedSession = true;
-                    //    postingUser.UnattendedRobot = new()
-                    //    {
-                    //        CredentialType = "NoCredential",
-                    //        LimitConcurrentExecution = false,
-                    //    };
-                    //}
-                    //else if (user.type == 4) // for applications
-                    //{
-                    //    postingUser.MayHaveUserSession = false; // prohibit 'Standard Interface'
-                    //}
-
-                    if (postingUser.Equals(detailedUser)) continue;
-
-                    // The following properties do not seem to be POSTed from the web interface.
-                    // Should we set them to null?
-                    //postingUser.DirectoryIdentifier = null;
-                    //postingUser.Domain = null;
-                    //postingUser.Name = null;
-                    //postingUser.Surname = null;
-                    //postingUser.LastModificationTime = null;
-                    //postingUser.LastModifierUserId = null;
-                    //postingUser.LicenseType = null;
-                    //postingUser.OrganizationUnits = null;
-                    //postingUser.LoginProviders = null;
-
-                    if (ShouldProcess(target, $"Update User"))
+                    if (ShouldProcess(target, "Update User"))
                     {
                         try
                         {
