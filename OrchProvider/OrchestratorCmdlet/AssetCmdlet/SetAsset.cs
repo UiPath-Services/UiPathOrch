@@ -317,6 +317,31 @@ public class SetAssetCommand : OrchestratorPSCmdlet
         });
     }
 
+    /// <summary>
+    /// Assign a typed value to StringValue/BoolValue/IntValue properties.
+    /// Returns true if the value was changed.
+    /// </summary>
+    private static bool AssignTypedValue(
+        string? valueType, string? textValue, bool boolValue, int intValue,
+        Func<string?> getStr, Action<string?> setStr,
+        Func<bool?> getBool, Action<bool?> setBool,
+        Func<int?> getInt, Action<int?> setInt)
+    {
+        switch (valueType)
+        {
+            case "Text":
+                if (getStr() != textValue) { setStr(textValue); return true; }
+                break;
+            case "Bool":
+                if (getBool() != boolValue) { setBool(boolValue); return true; }
+                break;
+            case "Integer":
+                if (getInt() != intValue) { setInt(intValue); return true; }
+                break;
+        }
+        return false;
+    }
+
     private Asset? UpdateAssetInMemory(OrchDriveInfo drive, Folder folder, string name, SetAssetCommandParameter param,
         IEnumerable<User>? specifiedUsers,
         IEnumerable<ExtendedMachine?> specifiedMachines)
@@ -432,32 +457,13 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                     asset.ValueType = "Text";
                 }
 
-                switch (asset.ValueType)
+                if (AssignTypedValue(asset.ValueType, param.Value, boolValue, intValue,
+                    () => asset.StringValue, v => asset.StringValue = v,
+                    () => asset.BoolValue,   v => asset.BoolValue = v,
+                    () => asset.IntValue,    v => asset.IntValue = v))
                 {
-                    case "Text":
-                        if (asset.StringValue != param.Value)
-                        {
-                            isDirty = true;
-                            asset.HasDefaultValue = true;
-                            asset.StringValue = param.Value;
-                        }
-                        break;
-                    case "Bool":
-                        if (asset.BoolValue != boolValue)
-                        {
-                            isDirty = true;
-                            asset.HasDefaultValue = true;
-                            asset.BoolValue = boolValue; break;
-                        }
-                        break;
-                    case "Integer":
-                        if (asset.IntValue != intValue)
-                        {
-                            isDirty = true;
-                            asset.HasDefaultValue = true;
-                            asset.IntValue = intValue;
-                        }
-                        break;
+                    isDirty = true;
+                    asset.HasDefaultValue = true;
                 }
             }
         }
@@ -517,32 +523,13 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                         userValue!.ValueType = "Text";
                     }
 
-                    switch (asset.ValueType)
+                    if (AssignTypedValue(asset.ValueType, param.Value, boolValue, intValue,
+                        () => userValue!.StringValue, v => userValue!.StringValue = v,
+                        () => userValue!.BoolValue,   v => userValue!.BoolValue = v,
+                        () => userValue!.IntValue,    v => userValue!.IntValue = v))
                     {
-                        case "Text":
-                            if (userValue!.StringValue != param.Value)
-                            {
-                                isDirty = true;
-                                asset.ValueScope = "PerRobot";
-                                userValue.StringValue = param.Value;
-                            }
-                            break;
-                        case "Bool":
-                            if (userValue!.BoolValue != boolValue)
-                            {
-                                isDirty = true;
-                                asset.ValueScope = "PerRobot";
-                                userValue.BoolValue = boolValue;
-                            }
-                            break;
-                        case "Integer":
-                            if (userValue!.IntValue != intValue)
-                            {
-                                isDirty = true;
-                                asset.ValueScope = "PerRobot";
-                                userValue.IntValue = intValue;
-                            }
-                            break;
+                        isDirty = true;
+                        asset.ValueScope = "PerRobot";
                     }
                 }
             }
