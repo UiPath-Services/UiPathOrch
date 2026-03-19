@@ -31,7 +31,6 @@ public class SetAssetCommand : OrchestratorPSCmdlet
     private readonly List<Asset> parameterSets = [];
     
     private const string Default = "DefaultParameterSet";
-    //private const string GenerateTemplateCsv = "GenerateTemplateCsvParameterSet";
 
     public static readonly string[] ValidValueTypes = ["Text", "Integer", "Bool"];
 
@@ -65,17 +64,6 @@ public class SetAssetCommand : OrchestratorPSCmdlet
     [Parameter(ParameterSetName = Default, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
-
-    //[Parameter(ParameterSetName = GenerateTemplateCsv, Mandatory = true)]
-    //public SwitchParameter GenerateTemplateCsv { get; set; }
-
-    //[Parameter(ParameterSetName = GenerateTemplateCsv, Position = 0)]
-    //[ArgumentCompleter(typeof(EncodingCompleter))]
-    //[EncodingArgumentTransformation]
-    //public Encoding? CsvEncoding { get; set; }
-
-    //[Parameter(ParameterSetName = GenerateTemplateCsv, Position = 1)]
-    //public string? TemplateCsvPath { get; set; }
 
     // Cannot be shared because non-existent assets are displayed as "New asset name here"
     private class NameCompleter : OrchArgumentCompleter
@@ -389,14 +377,12 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                             UserId = uv.UserId,
                             UserName = uv.UserName,
                             MachineId = uv.MachineId,
-                            //MachineName { get; set; }
                             ValueType = uv.ValueType,
                             StringValue = uv.StringValue,
                             BoolValue = uv.BoolValue,
                             IntValue = uv.IntValue,
                             Value = uv.Value,
                             CredentialUsername = uv.CredentialUsername,
-                            //public string? CredentialPassword { get; set; }
                             CredentialStoreId = uv.CredentialStoreId,
                             ExternalName = uv.ExternalName,
                             KeyValueList = uv.KeyValueList,
@@ -407,8 +393,6 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                 }
                 asset = newAsset;
             }
-            // If isDirty is true at the end, call parameterSets.Add(asset). Don't do it here yet
-            //parameterSets.Add(asset);
         }
 
         if (!string.IsNullOrEmpty(param.Description) && asset.Description != param.Description)
@@ -451,7 +435,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
             {
                 if (!int.TryParse(param.Value!, out intValue))
                 {
-                    var errorRecord = new ErrorRecord(new OrchException(target, $"Value {param.Value} cannot be parsed as bool."), "SetAssetError", ErrorCategory.InvalidOperation, target);
+                    var errorRecord = new ErrorRecord(new OrchException(target, $"Value {param.Value} cannot be parsed as integer."), "SetAssetError", ErrorCategory.InvalidOperation, target);
                     WriteError(errorRecord);
                     return null;
                 }
@@ -774,7 +758,6 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                             WriteObject(createdAsset);
 
                             folderIdsThatShouldRemoveCache.Add((drive, folder.Id ?? 0));
-                            //drive._dicAssets?.TryRemove(folder.Id ?? 0, out List<Asset>? _);
                         }
                     }
                     else
@@ -812,7 +795,6 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                             }
                         }
                         folderIdsThatShouldRemoveCache.Add((drive, folder.Id ?? 0));
-                        //drive._dicAssets?.TryRemove(folder.Id ?? 0, out List<Asset>? _);
                     }
                 }
                 catch (Exception ex)
