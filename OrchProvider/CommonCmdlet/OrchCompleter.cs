@@ -861,7 +861,7 @@ internal class EventTriggerNameCompleter : FolderScopedCompleter<ApiTrigger>
 }
 internal class EventTriggerNameCompleter<T> : EventTriggerNameCompleter where T : IPositionalParameters { }
 
-internal class AssetNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class AssetNameCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -873,10 +873,10 @@ internal class AssetNameCompleter<TPositional> : OrchArgumentCompleter where TPo
         var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
         // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+        var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
 
         // Only target the ValueType selected via the parameter
-        var wpValueType = CreateWPListFromOtherParameters(commandAst, "ValueType", TPositional.Parameters);
+        var wpValueType = GetFakeBoundParameters(fakeBoundParameters, "ValueType").ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -896,8 +896,9 @@ internal class AssetNameCompleter<TPositional> : OrchArgumentCompleter where TPo
         }
     }
 }
+internal class AssetNameCompleter<T> : AssetNameCompleter where T : IPositionalParameters { }
 
-internal class AssetValueTypeCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class AssetValueTypeCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -908,8 +909,8 @@ internal class AssetValueTypeCompleter<TPositional> : OrchArgumentCompleter wher
     {
         var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-        var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
-        var wpValueType = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+        var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
+        var wpValueType = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -934,8 +935,9 @@ internal class AssetValueTypeCompleter<TPositional> : OrchArgumentCompleter wher
         }
     }
 }
+internal class AssetValueTypeCompleter<T> : AssetValueTypeCompleter where T : IPositionalParameters { }
 
-internal class BucketNameCompleter<TPositional, WritableOnly> : OrchArgumentCompleter where TPositional : IPositionalParameters where WritableOnly : IBoolParameter
+internal class BucketNameCompleter<WritableOnly> : OrchArgumentCompleter where WritableOnly : IBoolParameter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -947,7 +949,7 @@ internal class BucketNameCompleter<TPositional, WritableOnly> : OrchArgumentComp
         var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
         // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+        var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -974,8 +976,9 @@ internal class BucketNameCompleter<TPositional, WritableOnly> : OrchArgumentComp
         }
     }
 }
+internal class BucketNameCompleter<T, WritableOnly> : BucketNameCompleter<WritableOnly> where T : IPositionalParameters where WritableOnly : IBoolParameter { }
 
-internal class BucketFullPathCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class BucketFullPathCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -987,10 +990,10 @@ internal class BucketFullPathCompleter<TPositional> : OrchArgumentCompleter wher
         var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
         // Only target Names selected via the parameter
-        var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
+        var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
 
         // Exclude FullPaths already selected via the parameter
-        var wpFullPath = CreateWPListFromParameter(commandAst, "FullPath", TPositional.Parameters, wordToComplete);
+        var wpFullPath = GetFakeBoundParameters(fakeBoundParameters, "FullPath").ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1017,6 +1020,7 @@ internal class BucketFullPathCompleter<TPositional> : OrchArgumentCompleter wher
         }
     }
 }
+internal class BucketFullPathCompleter<T> : BucketFullPathCompleter where T : IPositionalParameters { }
 
 internal class CalendarNameCompleter : DriveScopedCompleter<ExtendedCalendar>
 {
@@ -1058,7 +1062,7 @@ internal class MachineNameCompleter : DriveScopedCompleter<ExtendedMachine>
 }
 internal class MachineNameCompleter<T> : MachineNameCompleter where T : IPositionalParameters { }
 
-internal class MachineRobotUsersCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class MachineRobotUsersCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -1070,7 +1074,7 @@ internal class MachineRobotUsersCompleter<TPositional> : OrchArgumentCompleter w
         var drives = ResolveOrchDrives(fakeBoundParameters);
 
         // Exclude Names already selected via the parameter
-        var wpRobotUsers = CreateWPListFromParameter(commandAst, "RobotUsers", TPositional.Parameters, wordToComplete);
+        var wpRobotUsers = GetFakeBoundParameters(fakeBoundParameters, "RobotUsers").ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1088,8 +1092,9 @@ internal class MachineRobotUsersCompleter<TPositional> : OrchArgumentCompleter w
         }
     }
 }
+internal class MachineRobotUsersCompleter<T> : MachineRobotUsersCompleter where T : IPositionalParameters { }
 
-internal class LibraryIdCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class LibraryIdCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -1102,10 +1107,10 @@ internal class LibraryIdCompleter<TPositional> : OrchArgumentCompleter where TPo
         var hostFeed = GetSwitchParameterValue(commandAst, "HostFeed");
 
         // Exclude Ids already selected via the parameter
-        var wpId = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+        var wpId = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
 
         // Only target Versions selected via the parameter
-        var wpVersion = CreateWPListFromOtherParameters(commandAst, "Version", TPositional.Parameters);
+        var wpVersion = GetFakeBoundParameters(fakeBoundParameters, "Version").ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1124,8 +1129,9 @@ internal class LibraryIdCompleter<TPositional> : OrchArgumentCompleter where TPo
         }
     }
 }
+internal class LibraryIdCompleter<T> : LibraryIdCompleter where T : IPositionalParameters { }
 
-internal class LibraryVersionCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class LibraryVersionCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -1138,10 +1144,10 @@ internal class LibraryVersionCompleter<TPositional> : OrchArgumentCompleter wher
         var hostFeed = GetSwitchParameterValue(commandAst, "HostFeed");
 
         // Exclude Ids already selected via the parameter
-        var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
+        var wpId = GetFakeBoundParameters(fakeBoundParameters, "Id").ConvertToWildcardPatternList();
 
         // Exclude Versions already selected via the parameter
-        var wpVersion = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+        var wpVersion = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1172,8 +1178,9 @@ internal class LibraryVersionCompleter<TPositional> : OrchArgumentCompleter wher
         }
     }
 }
+internal class LibraryVersionCompleter<T> : LibraryVersionCompleter where T : IPositionalParameters { }
 
-internal class PackageIdCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class PackageIdCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -1189,7 +1196,7 @@ internal class PackageIdCompleter<TPositional> : OrchArgumentCompleter where TPo
         var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse); ////////////////////////TODO★
 
         // Exclude Ids already selected via the parameter
-        var wpId = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+        var wpId = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1208,6 +1215,7 @@ internal class PackageIdCompleter<TPositional> : OrchArgumentCompleter where TPo
         }
     }
 }
+internal class PackageIdCompleter<T> : PackageIdCompleter where T : IPositionalParameters { }
 
 internal class PackageVersionCompleter<TPositional> : PackageVersionCompleter where TPositional : IPositionalParameters { }
 
@@ -1292,7 +1300,7 @@ internal class RoleNameCompleter : DriveScopedCompleter<Role>
 }
 internal class RoleNameCompleter<T> : RoleNameCompleter where T : IPositionalParameters { }
 
-public class TenantUserUserNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+public class TenantUserUserNameCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -1304,12 +1312,12 @@ public class TenantUserUserNameCompleter<TPositional> : OrchArgumentCompleter wh
         var drives = ResolveOrchDrives(fakeBoundParameters);
 
         // Exclude user names already selected via the parameter
-        var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+        var wpUserName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
 
         // Only target FullNames selected via the parameter
-        var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
+        var wpFullName = GetFakeBoundParameters(fakeBoundParameters, "FullName").ConvertToWildcardPatternList();
 
-        var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
+        var wpType = GetFakeBoundParameters(fakeBoundParameters, "Type").ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1330,8 +1338,9 @@ public class TenantUserUserNameCompleter<TPositional> : OrchArgumentCompleter wh
         }
     }
 }
+public class TenantUserUserNameCompleter<T> : TenantUserUserNameCompleter where T : IPositionalParameters { }
 
-public class TenantUserFullNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+public class TenantUserFullNameCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -1343,12 +1352,12 @@ public class TenantUserFullNameCompleter<TPositional> : OrchArgumentCompleter wh
         var drives = ResolveOrchDrives(fakeBoundParameters);
 
         // Only target UserNames selected via the parameter
-        var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
+        var wpUserName = GetFakeBoundParameters(fakeBoundParameters, "UserName").ConvertToWildcardPatternList();
 
         // Exclude user names already selected via the parameter
-        var wpFullName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+        var wpFullName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
 
-        var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
+        var wpType = GetFakeBoundParameters(fakeBoundParameters, "Type").ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1369,6 +1378,7 @@ public class TenantUserFullNameCompleter<TPositional> : OrchArgumentCompleter wh
         }
     }
 }
+public class TenantUserFullNameCompleter<T> : TenantUserFullNameCompleter where T : IPositionalParameters { }
 
 internal class TimeZoneCompleter : OrchArgumentCompleter
 {
@@ -1434,7 +1444,7 @@ internal class WebhookNameCompleter : DriveScopedCompleter<Webhook>
 }
 internal class WebhookNameCompleter<T> : WebhookNameCompleter where T : IPositionalParameters { }
 
-internal class PmDirectoryNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class PmDirectoryNameCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -1449,7 +1459,7 @@ internal class PmDirectoryNameCompleter<TPositional> : OrchArgumentCompleter whe
             yield break;
         }
 
-        var entityType = GetParameterValue(commandAst, "EntityType", TPositional.Parameters);
+        var entityType = GetFakeBoundParameter(fakeBoundParameters, "EntityType");
         string kind = entityType?.ToLower() switch
         {
             "user" => "DirectoryUser",
@@ -1459,7 +1469,7 @@ internal class PmDirectoryNameCompleter<TPositional> : OrchArgumentCompleter whe
         };
         if (kind is null) yield break;
 
-        var names = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+        var names = GetFakeBoundParameters(fakeBoundParameters, parameterName);
 
         var drives = ResolvePmDrives(fakeBoundParameters);
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1481,8 +1491,9 @@ internal class PmDirectoryNameCompleter<TPositional> : OrchArgumentCompleter whe
         }
     }
 }
+internal class PmDirectoryNameCompleter<T> : PmDirectoryNameCompleter where T : IPositionalParameters { }
 
-internal class PmDirectoryNameCompleter4Du<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class PmDirectoryNameCompleter4Du : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -1497,11 +1508,11 @@ internal class PmDirectoryNameCompleter4Du<TPositional> : OrchArgumentCompleter 
             yield break;
         }
 
-        var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
+        var wpType = GetFakeBoundParameters(fakeBoundParameters, "Type").ConvertToWildcardPatternList();
         var types = DirectoryTypes.Parameters.FilterByWildcards(p => p, wpType);
         types = types.Select(t => t == "DirectoryApplication" ? "Application" : t);
 
-        var names = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+        var names = GetFakeBoundParameters(fakeBoundParameters, parameterName);
 
         var drives = ResolveDuDrives(fakeBoundParameters);
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1524,8 +1535,9 @@ internal class PmDirectoryNameCompleter4Du<TPositional> : OrchArgumentCompleter 
         }
     }
 }
+internal class PmDirectoryNameCompleter4Du<T> : PmDirectoryNameCompleter4Du where T : IPositionalParameters { }
 
-internal class UserNameInPmGroupCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class UserNameInPmGroupCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -1537,13 +1549,13 @@ internal class UserNameInPmGroupCompleter<TPositional> : OrchArgumentCompleter w
         var drives = ResolvePmDrives(fakeBoundParameters);
 
         // Exclude UserNames already selected via the parameter
-        var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
-        var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
+        var wpUserName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpType = GetFakeBoundParameters(fakeBoundParameters, "Type").ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
         // Get existing members of the specified group
-        var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", TPositional.Parameters);
+        var wpGroupName = GetFakeBoundParameters(fakeBoundParameters, "GroupName").ConvertToWildcardPatternList();
         var existingMemberIds = GetExistingMembers(drives, wpGroupName);
 
         // Get details for each group
@@ -1580,8 +1592,9 @@ internal class UserNameInPmGroupCompleter<TPositional> : OrchArgumentCompleter w
         }
     }
 }
+internal class UserNameInPmGroupCompleter<T> : UserNameInPmGroupCompleter where T : IPositionalParameters { }
 
-internal class TypeInPmGroupCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class TypeInPmGroupCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -1593,13 +1606,13 @@ internal class TypeInPmGroupCompleter<TPositional> : OrchArgumentCompleter where
         var drives = ResolvePmDrives(fakeBoundParameters);
 
         // Exclude UserNames already selected via the parameter
-        var wpType = CreateWPListFromParameter(commandAst, "Type", TPositional.Parameters, wordToComplete);
-        var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
+        var wpType = GetFakeBoundParameters(fakeBoundParameters, "Type").ConvertToWildcardPatternList();
+        var wpUserName = GetFakeBoundParameters(fakeBoundParameters, "UserName").ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
         // Get existing members of the specified group
-        var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", TPositional.Parameters);
+        var wpGroupName = GetFakeBoundParameters(fakeBoundParameters, "GroupName").ConvertToWildcardPatternList();
         var existingMembers = GetExistingMembers(drives, wpGroupName);
 
         foreach (var member in existingMembers
@@ -1613,8 +1626,9 @@ internal class TypeInPmGroupCompleter<TPositional> : OrchArgumentCompleter where
         }
     }
 }
+internal class TypeInPmGroupCompleter<T> : TypeInPmGroupCompleter where T : IPositionalParameters { }
 
-internal class ExternalApplicationNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class ExternalApplicationNameCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -1626,7 +1640,7 @@ internal class ExternalApplicationNameCompleter<TPositional> : OrchArgumentCompl
         var drives = ResolvePmDrives(fakeBoundParameters);
 
         // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
+        var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1645,6 +1659,7 @@ internal class ExternalApplicationNameCompleter<TPositional> : OrchArgumentCompl
         }
     }
 }
+internal class ExternalApplicationNameCompleter<T> : ExternalApplicationNameCompleter where T : IPositionalParameters { }
 
 internal class TestCaseNameCompleter : FolderScopedCompleter<TestCaseDefinition>
 {
@@ -1798,7 +1813,7 @@ internal class TestCaseExecutionIdCompleter : OrchArgumentCompleter
 /// <summary>
 /// Completer that retrieves a distinct list of EntryPointPath values from the TestCaseExecution cache
 /// </summary>
-internal class TestCaseExecutionEntryPointCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class TestCaseExecutionEntryPointCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -1815,7 +1830,7 @@ internal class TestCaseExecutionEntryPointCompleter<TPositional> : OrchArgumentC
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
         // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+        var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
         var yielded = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -1844,9 +1859,10 @@ internal class TestCaseExecutionEntryPointCompleter<TPositional> : OrchArgumentC
         }
     }
 }
+internal class TestCaseExecutionEntryPointCompleter<T> : TestCaseExecutionEntryPointCompleter where T : IPositionalParameters { }
 
 #region Completers for Platform Management cmdlets
-public class PmGroupNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+public class PmGroupNameCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -1858,7 +1874,7 @@ public class PmGroupNameCompleter<TPositional> : OrchArgumentCompleter where TPo
         var drives = ResolvePmDrives(fakeBoundParameters);
 
         // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+        var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1883,8 +1899,9 @@ public class PmGroupNameCompleter<TPositional> : OrchArgumentCompleter where TPo
         }
     }
 }
+public class PmGroupNameCompleter<T> : PmGroupNameCompleter where T : IPositionalParameters { }
 
-internal class PmRobotAccountNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class PmRobotAccountNameCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -1896,7 +1913,7 @@ internal class PmRobotAccountNameCompleter<TPositional> : OrchArgumentCompleter 
         var drives = ResolvePmDrives(fakeBoundParameters);
 
         // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+        var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1916,8 +1933,9 @@ internal class PmRobotAccountNameCompleter<TPositional> : OrchArgumentCompleter 
         }
     }
 }
+internal class PmRobotAccountNameCompleter<T> : PmRobotAccountNameCompleter where T : IPositionalParameters { }
 
-internal class PmUserEmailCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class PmUserEmailCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -1929,7 +1947,7 @@ internal class PmUserEmailCompleter<TPositional> : OrchArgumentCompleter where T
         var drives = ResolvePmDrives(fakeBoundParameters);
 
         // Exclude Names already selected via the parameter
-        var wpEmail = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+        var wpEmail = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1951,8 +1969,9 @@ internal class PmUserEmailCompleter<TPositional> : OrchArgumentCompleter where T
         }
     }
 }
+internal class PmUserEmailCompleter<T> : PmUserEmailCompleter where T : IPositionalParameters { }
 
-internal class PmLicensedGroupNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class PmLicensedGroupNameCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -1964,7 +1983,7 @@ internal class PmLicensedGroupNameCompleter<TPositional> : OrchArgumentCompleter
         var drives = ResolvePmDrives(fakeBoundParameters);
 
         // Exclude Names already selected via the parameter
-        var wpGroupName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+        var wpGroupName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1983,11 +2002,12 @@ internal class PmLicensedGroupNameCompleter<TPositional> : OrchArgumentCompleter
         }
     }
 }
+internal class PmLicensedGroupNameCompleter<T> : PmLicensedGroupNameCompleter where T : IPositionalParameters { }
 
 #endregion
 
 #region Completers for Test Manager cmdlets
-internal class TmRequirementNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class TmRequirementNameCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -2003,7 +2023,7 @@ internal class TmRequirementNameCompleter<TPositional> : OrchArgumentCompleter w
         var drivesFolders = SessionState.EnumTmFolders(paramPath, recurse);
 
         // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+        var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -2022,8 +2042,9 @@ internal class TmRequirementNameCompleter<TPositional> : OrchArgumentCompleter w
         }
     }
 }
+internal class TmRequirementNameCompleter<T> : TmRequirementNameCompleter where T : IPositionalParameters { }
 
-internal class TmTestSetNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class TmTestSetNameCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -2039,7 +2060,7 @@ internal class TmTestSetNameCompleter<TPositional> : OrchArgumentCompleter where
         var drivesFolders = SessionState.EnumTmFolders(paramPath, recurse);
 
         // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+        var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -2058,8 +2079,9 @@ internal class TmTestSetNameCompleter<TPositional> : OrchArgumentCompleter where
         }
     }
 }
+internal class TmTestSetNameCompleter<T> : TmTestSetNameCompleter where T : IPositionalParameters { }
 
-internal class TmTestCaseNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class TmTestCaseNameCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -2075,7 +2097,7 @@ internal class TmTestCaseNameCompleter<TPositional> : OrchArgumentCompleter wher
         var drivesFolders = SessionState.EnumTmFolders(paramPath, recurse);
 
         // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+        var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -2094,8 +2116,9 @@ internal class TmTestCaseNameCompleter<TPositional> : OrchArgumentCompleter wher
         }
     }
 }
+internal class TmTestCaseNameCompleter<T> : TmTestCaseNameCompleter where T : IPositionalParameters { }
 
-internal class TmTestExecutionNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class TmTestExecutionNameCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -2111,7 +2134,7 @@ internal class TmTestExecutionNameCompleter<TPositional> : OrchArgumentCompleter
         var drivesFolders = SessionState.EnumTmFolders(paramPath, recurse);
 
         // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+        var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -2130,6 +2153,7 @@ internal class TmTestExecutionNameCompleter<TPositional> : OrchArgumentCompleter
         }
     }
 }
+internal class TmTestExecutionNameCompleter<T> : TmTestExecutionNameCompleter where T : IPositionalParameters { }
 
 #endregion
 
@@ -2255,7 +2279,7 @@ internal class OneWeekAfterCompleter : OrchArgumentCompleter
     }
 }
 
-public class DriveCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+public class DriveCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -2267,7 +2291,7 @@ public class DriveCompleter<TPositional> : OrchArgumentCompleter where TPosition
         var drives = SessionState.EnumAllOrchDrives();
 
         // Exclude drives already selected via the parameter
-        var wpPath = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+        var wpPath = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
 
         var matchingDrives = drives.ExcludeByWildcards(d => d?.NameColon, wpPath);
 
@@ -2283,14 +2307,10 @@ public class DriveCompleter<TPositional> : OrchArgumentCompleter where TPosition
         }
     }
 }
-
-// Drive name completer for the -Path parameter that is not a positional parameter
-public class DriveCompleter : DriveCompleter<Positional.Empty>
-{
-}
+public class DriveCompleter<T> : DriveCompleter where T : IPositionalParameters { }
 
 // Similar to DriveCompleter, but this has the ability to exclude the source drive.
-internal class DestinationDriveCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class DestinationDriveCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -2303,7 +2323,7 @@ internal class DestinationDriveCompleter<TPositional> : OrchArgumentCompleter wh
         var drives = SessionState.EnumAllOrchDrives();
 
         // Exclude drives already selected via the parameter
-        var wpDestination = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+        var wpDestination = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -2320,8 +2340,9 @@ internal class DestinationDriveCompleter<TPositional> : OrchArgumentCompleter wh
         }
     }
 }
+internal class DestinationDriveCompleter<T> : DestinationDriveCompleter where T : IPositionalParameters { }
 
-internal class TmDriveCompleter<T> : OrchArgumentCompleter where T : IPositionalParameters
+internal class TmDriveCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -2333,7 +2354,7 @@ internal class TmDriveCompleter<T> : OrchArgumentCompleter where T : IPositional
         var drives = SessionState.EnumAllTmDrives();
 
         // Exclude drives already selected via the parameter
-        var wpPath = CreateWPListFromParameter(commandAst, parameterName, T.Parameters, wordToComplete);
+        var wpPath = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
         var matchingDrives = drives.ExcludeByWildcards(d => d?.NameColon, wpPath);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -2348,8 +2369,9 @@ internal class TmDriveCompleter<T> : OrchArgumentCompleter where T : IPositional
         }
     }
 }
+internal class TmDriveCompleter<T> : TmDriveCompleter where T : IPositionalParameters { }
 
-internal class DuNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class DuNameCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -2365,7 +2387,7 @@ internal class DuNameCompleter<TPositional> : OrchArgumentCompleter where TPosit
         var drivesProjects = SessionState.EnumDuFolders(paramPath, recurse);
 
         // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
+        var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -2384,6 +2406,7 @@ internal class DuNameCompleter<TPositional> : OrchArgumentCompleter where TPosit
         }
     }
 }
+internal class DuNameCompleter<T> : DuNameCompleter where T : IPositionalParameters { }
 
 // Request from Mishima-san (KDDI): To allow specifying a User Principal Name for Add-DuUser,
 // the following would be needed, but I cannot think of a good implementation.
