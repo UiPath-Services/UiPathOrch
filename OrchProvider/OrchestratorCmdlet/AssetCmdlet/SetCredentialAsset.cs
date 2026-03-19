@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using System.Reflection.Metadata;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
@@ -28,12 +27,10 @@ class SetCredentialAssetCommandParameter
 public class SetCredentialAssetCommand : OrchestratorPSCmdlet
 {
     private readonly List<SetCredentialAssetCommandParameter> parameters = [];
-    private readonly List<Asset> parameterSets = [];
+    private readonly Dictionary<(string name, string path), Asset> pendingAssets = [];
 
     private const string Default = "DefaultParameterSet";
     private const string Plain = "SpecifyPlainPasswordParameterSet";
-    //private const string Export = "ExportTemplateParameterSet";
-
     [Parameter(ParameterSetName = Default, Position = 0, Mandatory = true)]
     [Parameter(ParameterSetName = Plain, Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NameCompleter))]
@@ -193,7 +190,6 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
         }
     }
 
-    // Can be rewritten using StaticTextCompleter
     private class CredentialUsernameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
@@ -234,8 +230,6 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
             // Only target Names already selected by the parameter
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
 
-            //var wp = CreateWPFromWordToComplete(wordToComplete);
-
             var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Assets.Get(df.folder));
 
             bool bEmpty = true;
@@ -260,36 +254,6 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
             }
         }
     }
-
-    //long FindCredentialStoreId(string target, OrchDriveInfo drive, WildcardPattern? wpCredentialStore)
-    //{
-    //    var credentialStores = drive.GetCredentialStores();
-    //    CredentialStore cs = null;
-    //    if (wpCredentialStore is not null)
-    //    {
-    //        var matchingCredentialStores = credentialStores.Where(cs => wpCredentialStore.IsMatch(cs.Name));
-    //        if (!matchingCredentialStores.Any())
-    //        {
-    //            Exception e = new Exception($"CredentialStore '{CredentialStore}' does not exist.");
-    //            WriteError(new ErrorRecord(new OrchException(target, e), "SetCredentialAssetError", ErrorCategory.InvalidOperation, target));
-    //            return 0;
-    //        }
-    //        if (matchingCredentialStores.Take(2).Count() == 2)
-    //        {
-    //            Exception e = new Exception($"CredentialStore '{CredentialStore}' resolved to multiple credential stores. Ignored.");
-    //            WriteError(new ErrorRecord(new OrchException(target, e), "SetCredentialAssetError", ErrorCategory.InvalidOperation, target));
-    //            return 0;
-    //        }
-    //        // assert(matchingCredentialStores.Couint() == 1)
-    //        cs = matchingCredentialStores.First();
-    //    }
-    //    else
-    //    {
-    //        //cs = credentialStores.Where(cs => string.Equals(cs.Name, "Orchestrator Database", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-    //        //cs ??= credentialStores.First();
-    //    }
-    //    return cs?.Id ?? 0;
-    //}
 
     protected override void ProcessRecord()
     {
@@ -330,10 +294,9 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
         Int64 credentialStoreId)
     {
         string target = System.IO.Path.Combine(folder.GetPSPath(), param.Name?[0] ?? "");
-        //string target = System.IO.Path.Combine(folder.GetPSPath(), param.Name!);
         bool isDirty = false;
 
-        var asset = parameterSets.FirstOrDefault(asset => asset.Name == name && asset.Path == folder.GetPSPath());
+        pendingAssets.TryGetValue((name, folder.GetPSPath()), out var asset);
         if (asset is null)
         {
             var assets = drive.Assets.Get(folder);
@@ -359,48 +322,9 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
             }
             else
             {
-                // Copy the existing asset and create an asset in memory
-                Asset newAsset = new()
-                {
-                    Key = asset.Key,
-                    Name = asset.Name,
-                    Description = asset.Description,
-                    ValueType = "Credential",
-                    CredentialStoreId = asset.CredentialStoreId,
-                    CredentialUsername = asset.CredentialUsername,
-                    CanBeDeleted = asset.CanBeDeleted,
-                    HasDefaultValue = asset.HasDefaultValue,
-                    Path = folder.GetPSPath(),
-                    ValueScope = asset.ValueScope,
-                    Id = asset.Id,
-                    Tags = asset.Tags,
-                };
-
-                // Copy the existing asset's UserValues into memory
-                if (asset.UserValues is not null && asset.UserValues.Count != 0)
-                {
-                    newAsset.UserValues = new List<AssetUserValue>();
-                    foreach (var uv in asset.UserValues)
-                    {
-                        AssetUserValue auv = new()
-                        {
-                            UserId = uv.UserId,
-                            UserName = uv.UserName,
-                            MachineId = uv.MachineId,
-                            ValueType = uv.ValueType,
-                            CredentialUsername = uv.CredentialUsername,
-                            CredentialStoreId = newAsset.CredentialStoreId,
-                            ExternalName = uv.ExternalName,
-                            KeyValueList = uv.KeyValueList,
-                            Id = uv.Id,
-                        };
-                        newAsset.UserValues.Add(auv);
-                    }
-                }
-                asset = newAsset;
+                asset = OrchCollectionExtensions.DeepCopy(asset);
+                asset.Path = folder.GetPSPath();
             }
-            // If isDirty is true at the end, call parameterSets.Add(asset). Don't do it here yet
-            //parameterSets.Add(asset);
         }
 
         if (asset.Description != param.Description && !string.IsNullOrEmpty(param.Description))
@@ -629,7 +553,6 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                 if (specifiedMachines is null || !specifiedMachines.Any())
                 {
                     // For processing convenience, insert a single null element
-                    //specifiedMachines = new ExtendedMachine?[] { null };
                     specifiedMachines = [null];
                 }
 
@@ -644,16 +567,16 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                         foreach (var matchingAsset in matchingAssets)
                         {
                             var asset = UpdateAssetInMemory(drive, folder, matchingAsset.Name!, param, specifiedUsers!, specifiedMachines, credentialStoreId);
-                            if (asset is not null && !parameterSets.Contains(asset))
-                                parameterSets.Add(asset);
+                            if (asset is not null)
+                                pendingAssets.TryAdd((asset.Name!, asset.Path!), asset);
                         }
                     }
                     else
                     {
                         // Create a new asset
                         var asset = UpdateAssetInMemory(drive, folder, name, param, specifiedUsers!, specifiedMachines, credentialStoreId);
-                        if (asset is not null && !parameterSets.Contains(asset))
-                            parameterSets.Add(asset);
+                        if (asset is not null)
+                            pendingAssets.TryAdd((asset.Name!, asset.Path!), asset);
                     }
                 }
             }
@@ -666,13 +589,13 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
 
         List<(OrchDriveInfo drive, Int64 id)> folderIdsThatShouldRemoveCache = [];
 
-        using var reporter = new ProgressReporter(this, 1, parameterSets.Count, "Updating credential assets");
+        using var reporter = new ProgressReporter(this, 1, pendingAssets.Count, "Updating credential assets");
 
         // Process the grouped parameter sets
         try
         {
             int index = 0;
-            foreach (var asset in parameterSets)
+            foreach (var asset in pendingAssets.Values)
             {
                 if (asset.CredentialUsername == "")
                 {
@@ -708,7 +631,6 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                             WriteObject(createdAsset);
 
                             folderIdsThatShouldRemoveCache.Add((drive, folder.Id ?? 0));
-                            //drive._dicAssets?.TryRemove(folder.Id ?? 0, out List<Asset>? _);
                         }
                     }
                     else
@@ -730,7 +652,6 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                         }
 
                         folderIdsThatShouldRemoveCache.Add((drive, folder.Id ?? 0));
-                        //drive._dicAssets?.TryRemove(folder.Id ?? 0, out List<Asset>? _);
                     }
                 }
                 catch (Exception ex)
