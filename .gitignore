@@ -381,3 +381,6 @@ NuGet.Config
 
 # Generated help XML (built from PlatyPS markdown)
 Staging/en-US/*-Help.xml
+
+# Scratch/working files
+scratch/

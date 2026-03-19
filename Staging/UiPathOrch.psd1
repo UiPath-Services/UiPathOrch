@@ -413,41 +413,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '## New Features
-- Added Set-OrchSetting cmdlet for updating tenant settings, with a Value completer that shows the current value.
-
-- Added Getting Started guide (Docs/00-GettingStarted.md).
-
-- Added CSV Export & Import guide (Docs/03-CsvExportImport.md).
-
-## Improvements
-- Entra ID warning now only fires when the tenant has Entra ID integration and the user is not signed in via Entra ID. Previously it triggered for all non-Entra ID users regardless of tenant configuration.
-
-- Improved cross-version migration compatibility: copy and create operations for processes, machines, webhooks, queues, assets, buckets, schedules, and roles now work with older API versions (including On-prem 20.10 / API v11).
-
-- Improved Update cmdlets: Update-OrchQueue, Update-OrchTrigger, and Update-OrchProcessVersion now detect changes before making API calls, skipping no-op updates.
-
-- Replaced undocumented EditRelease API with public PATCH and PutReleaseRetention endpoints.
-
-- Sort target processes by name in Update-OrchProcess.
-
-- Improved organization ID resolution by extracting it directly from the JWT token, avoiding extra API calls.
-
-## Bug Fixes
-- Fixed Entra ID warning appearing during tab completion by deferring display to cmdlet execution.
-
-- Fixed cache and retention comparison issues in Update cmdlets.
-
-- Fixed Queue ReleaseId and Webhook Name for cross-version copy.
-
-- Fixed role cache not clearing on error in CopyRoles, causing stale data.
-
-- Fixed HTTP response body stream race between caller and async logger.
-
-- Fixed minor resource disposal and thread pool issues.
-
-## Documentation
-- Reorganized documentation: renamed MigrationGuide to 04-MigrationGuide.md, added cross-version migration guidance, library feed settings, Queue SLA auto-assignment, and user investigation procedure.
+        ReleaseNotes = '
 '
 
         # Prerelease string of this module
