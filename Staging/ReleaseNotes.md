@@ -1,3 +1,24 @@
+# Version: 0.9.16.2
+## Improvements
+- Refactored Update-OrchMachine to use HTTP PATCH with minimal payloads instead of DeepCopy + PUT. Only specified parameters are sent. Machine slots (UnattendedSlots, NonProductionSlots, TestAutomationSlots) can now be set to 0.
+
+- Refactored Update-OrchUser to use per-property dirty flags instead of IEquatable comparison.
+
+- Refactored Set-OrchAsset and Set-OrchCredentialAsset: extracted helper methods, replaced manual DeepCopy with shared utility, and improved PerRobot value lookup performance with Dictionary-based indexing.
+
+- Removed unused IEquatable implementations from 14 entity types.
+
+## Bug Fixes
+- Fixed Set-OrchAsset Integer parse error message incorrectly saying "bool" instead of "integer".
+
+- Fixed Set-OrchCredentialAsset: empty CredentialPassword no longer silently deletes the Global credential value. Previously, re-importing a CSV exported by Get-OrchAsset -ExportCredentialCsv (which contains empty password fields) could destroy existing credentials. Use Remove-OrchAsset to delete credential assets instead.
+
+## Breaking Changes
+- Set-OrchCredentialAsset: `-CredentialPassword ''` no longer deletes the Global credential value. This prevents accidental credential loss when re-importing exported CSVs. PerRobot entry deletion via `-UserName <user> -CredentialPassword ''` is unchanged.
+
+- Update-OrchMachine: Machine slot parameters (UnattendedSlots, NonProductionSlots, TestAutomationSlots) now accept 0 as a valid value. Previously, 0 was treated as "not specified".
+
+
 # Version: 0.9.16.1
 ## New Features
 - Added Set-OrchSetting cmdlet for updating tenant settings, with a Value completer that shows the current value.
@@ -6,6 +27,8 @@
 
 - Added CSV Export & Import guide (Docs/03-CsvExportImport.md).
 
+- Added Pester integration tests (119 tests) covering Machine/Queue/Bucket/Asset CRUD, CSV export/import, cross-tenant copy, folder provider operations, error handling, wildcard support, and large-scale PerRobot asset operations.
+
 ## Improvements
 - Entra ID warning now only fires when the tenant has Entra ID integration and the user is not signed in via Entra ID. Previously it triggered for all non-Entra ID users regardless of tenant configuration.
 
@@ -13,14 +36,26 @@
 
 - Improved Update cmdlets: Update-OrchQueue, Update-OrchTrigger, and Update-OrchProcessVersion now detect changes before making API calls, skipping no-op updates.
 
+- Refactored Update-OrchMachine to use HTTP PATCH with minimal payloads instead of DeepCopy + PUT. Only specified parameters are sent. Machine slots (UnattendedSlots, NonProductionSlots, TestAutomationSlots) can now be set to 0.
+
+- Refactored Update-OrchUser to use per-property dirty flags instead of IEquatable comparison.
+
+- Refactored Set-OrchAsset and Set-OrchCredentialAsset: extracted helper methods, replaced manual DeepCopy with shared utility, and improved PerRobot value lookup performance with Dictionary-based indexing.
+
 - Replaced undocumented EditRelease API with public PATCH and PutReleaseRetention endpoints.
 
 - Sort target processes by name in Update-OrchProcess.
 
 - Improved organization ID resolution by extracting it directly from the JWT token, avoiding extra API calls.
 
+- Removed unused IEquatable implementations from 14 entity types.
+
 ## Bug Fixes
 - Fixed Entra ID warning appearing during tab completion by deferring display to cmdlet execution.
+
+- Fixed Set-OrchAsset Integer parse error message incorrectly saying "bool" instead of "integer".
+
+- Fixed Set-OrchCredentialAsset: empty CredentialPassword no longer silently deletes the Global credential value. Previously, re-importing a CSV exported by Get-OrchAsset -ExportCredentialCsv (which contains empty password fields) could destroy existing credentials. Use Remove-OrchAsset to delete credential assets instead.
 
 - Fixed cache and retention comparison issues in Update cmdlets.
 
@@ -31,6 +66,11 @@
 - Fixed HTTP response body stream race between caller and async logger.
 
 - Fixed minor resource disposal and thread pool issues.
+
+## Breaking Changes
+- Set-OrchCredentialAsset: `-CredentialPassword ''` no longer deletes the Global credential value. This prevents accidental credential loss when re-importing exported CSVs. PerRobot entry deletion via `-UserName <user> -CredentialPassword ''` is unchanged.
+
+- Update-OrchMachine: Machine slot parameters (UnattendedSlots, NonProductionSlots, TestAutomationSlots) now accept 0 as a valid value. Previously, 0 was treated as "not specified".
 
 ## Documentation
 - Reorganized documentation: renamed MigrationGuide to 04-MigrationGuide.md, added cross-version migration guidance, library feed settings, Queue SLA auto-assignment, and user investigation procedure.
