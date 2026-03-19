@@ -521,6 +521,19 @@ Describe 'Credential Asset CRUD' {
         $asset.CredentialStoreId | Should -Not -BeNullOrEmpty
     }
 
+    It 'Set-OrchCredentialAsset with empty CredentialPassword does not clear the credential' {
+        # Create an asset with a password
+        Set-OrchCredentialAsset -Name "${script:CredAssetName}_EmptyPass" -CredentialUsername 'keepuser' -CredentialPassword 'keeppass'
+        Clear-OrchCache
+        # Update with empty CredentialPassword — should NOT delete the Global value
+        Set-OrchCredentialAsset -Name "${script:CredAssetName}_EmptyPass" -CredentialUsername 'keepuser' -CredentialPassword ''
+        Clear-OrchCache
+        $asset = Get-OrchAsset -Name "${script:CredAssetName}_EmptyPass"
+        $asset | Should -Not -BeNullOrEmpty
+        $asset.CredentialUsername | Should -Be 'keepuser'
+        $asset.HasDefaultValue | Should -Be $true
+    }
+
     It 'Set-OrchCredentialAsset skips no-op when same username is set' {
         Set-OrchCredentialAsset -Name "${script:CredAssetName}_WithStore" -CredentialUsername 'storeuser'
         # Should not error
@@ -581,6 +594,66 @@ $($script:SharedPath),${script:CredCsvPrefix}_Multi,,,${user2},,per_user2,per_pa
         $uv.Count | Should -Be 2
         ($uv | Where-Object { $_.UserName -eq $user1 }).CredentialUsername | Should -Be 'per_user1'
         ($uv | Where-Object { $_.UserName -eq $user2 }).CredentialUsername | Should -Be 'per_user2'
+    }
+
+    It 'Import-Csv | Set-OrchCredentialAsset with multiple users x machines' {
+        $csvPath = Join-Path $script:CredCsvDir 'complex_creds.csv'
+        $user1 = 'ytsuda@gmail.com'
+        $user2 = 'ytsuda+c_c@gmail.com'
+        $machine1 = 'aiai'
+        $machine2 = 'bafu'
+        @"
+Path,Name,Description,CredentialStore,UserName,MachineName,CredentialUsername,CredentialPassword,ExternalName
+$($script:SharedPath),${script:CredCsvPrefix}_Complex,,,${user1},${machine1},u1m1,pass_u1m1,
+$($script:SharedPath),${script:CredCsvPrefix}_Complex,,,${user1},${machine2},u1m2,pass_u1m2,
+$($script:SharedPath),${script:CredCsvPrefix}_Complex,,,${user2},${machine1},u2m1,pass_u2m1,
+"@ | Set-Content -Path $csvPath -Encoding UTF8
+
+        Import-Csv $csvPath | Set-OrchCredentialAsset
+        Clear-OrchCache
+        $uv = @(Get-OrchAsset -Name "${script:CredCsvPrefix}_Complex" -ExpandUserValues)
+        $uv.Count | Should -Be 3
+        ($uv | Where-Object { $_.UserName -eq $user1 -and $_.MachineName -eq $machine1 }).CredentialUsername | Should -Be 'u1m1'
+        ($uv | Where-Object { $_.UserName -eq $user1 -and $_.MachineName -eq $machine2 }).CredentialUsername | Should -Be 'u1m2'
+        ($uv | Where-Object { $_.UserName -eq $user2 -and $_.MachineName -eq $machine1 }).CredentialUsername | Should -Be 'u2m1'
+    }
+
+    It 'Import-Csv | Set-OrchCredentialAsset with Global and PerRobot mixed' {
+        $csvPath = Join-Path $script:CredCsvDir 'mixed_creds.csv'
+        $user1 = 'ytsuda@gmail.com'
+        @"
+Path,Name,Description,CredentialStore,UserName,MachineName,CredentialUsername,CredentialPassword,ExternalName
+$($script:SharedPath),${script:CredCsvPrefix}_Mixed,Mixed cred,,,,global_user,global_pass,
+$($script:SharedPath),${script:CredCsvPrefix}_Mixed,,,${user1},,per_user,per_pass,
+"@ | Set-Content -Path $csvPath -Encoding UTF8
+
+        Import-Csv $csvPath | Set-OrchCredentialAsset
+        Clear-OrchCache
+
+        $asset = Get-OrchAsset -Name "${script:CredCsvPrefix}_Mixed"
+        $asset | Should -Not -BeNullOrEmpty
+        $asset.CredentialUsername | Should -Be 'global_user'
+
+        $uv = @(Get-OrchAsset -Name "${script:CredCsvPrefix}_Mixed" -ExpandUserValues)
+        $globalUv = $uv | Where-Object { -not $_.UserName }
+        $perUv = $uv | Where-Object { $_.UserName -eq $user1 }
+        $globalUv.CredentialUsername | Should -Be 'global_user'
+        $perUv.CredentialUsername | Should -Be 'per_user'
+    }
+
+    It 'Import-Csv | Set-OrchCredentialAsset with CredentialStore' {
+        $csvPath = Join-Path $script:CredCsvDir 'store_creds.csv'
+        @"
+Path,Name,Description,CredentialStore,UserName,MachineName,CredentialUsername,CredentialPassword,ExternalName
+$($script:SharedPath),${script:CredCsvPrefix}_Store,,Orchestrator Database,,,store_user,store_pass,
+"@ | Set-Content -Path $csvPath -Encoding UTF8
+
+        Import-Csv $csvPath | Set-OrchCredentialAsset
+        Clear-OrchCache
+        $asset = Get-OrchAsset -Name "${script:CredCsvPrefix}_Store"
+        $asset | Should -Not -BeNullOrEmpty
+        $asset.CredentialUsername | Should -Be 'store_user'
+        $asset.CredentialStoreId | Should -Not -BeNullOrEmpty
     }
 
     It 'Credential CSV round-trip: Export then re-import preserves values' {
