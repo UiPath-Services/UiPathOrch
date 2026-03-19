@@ -262,6 +262,64 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         return param.ConvertToWildcardPatternList();
     }
 
+    /// <summary>
+    /// Finds the AST text of the value currently being completed for the given parameter.
+    /// For named parameters (-Name M*,), finds the value after -Name.
+    /// For positional parameters (M*,), strips named params and finds the element containing commas.
+    /// Returns null if no comma-separated values are found.
+    /// </summary>
+    private static string? FindCurrentParameterText(CommandAst commandAst, string parameterName)
+    {
+        // First try named parameter lookup
+        var value = GetParameterValue(commandAst, parameterName);
+        if (value is not null) return value;
+
+        // Fallback for positional parameters:
+        // Strip named parameters and their values, then find an element containing commas
+        var elements = commandAst.CommandElements.Skip(1).Select(e => e.ToString()).ToList();
+        for (int i = 0; i < elements.Count; i++)
+        {
+            if (elements[i].StartsWith('-'))
+            {
+                bool isSwitchParam = GetSwitchParameterValue(commandAst, elements[i].TrimStart('-').Split(':')[0]);
+                elements.RemoveAt(i); // Remove param name
+                if (!isSwitchParam && i < elements.Count && !elements[i].StartsWith("-"))
+                    elements.RemoveAt(i); // Remove param value
+                i--;
+            }
+        }
+
+        // Among remaining positional elements, find the last one with commas
+        // (the one being completed is typically the last positional argument)
+        string? found = null;
+        foreach (var elem in elements)
+        {
+            if (elem.Contains(',')) found = elem;
+        }
+        return found;
+    }
+
+    /// <summary>
+    /// Gets already-entered comma-separated values for the parameter currently being completed.
+    /// Works for both named (-Name M*,) and positional (M*,) parameters.
+    /// </summary>
+    protected static List<WildcardPattern>? CreateSelfExclusionList(CommandAst commandAst, string parameterName, string? wordToComplete)
+    {
+        var text = FindCurrentParameterText(commandAst, parameterName);
+        if (text is null) return null;
+        return SplitCommaSeparatedText(text.RemoveEnd(wordToComplete)).ConvertToWildcardPatternList();
+    }
+
+    /// <summary>
+    /// Gets already-entered comma-separated values as strings (for Contains-based exclusion).
+    /// </summary>
+    protected static IEnumerable<string> GetSelfExclusionValues(CommandAst commandAst, string parameterName, string? wordToComplete)
+    {
+        var text = FindCurrentParameterText(commandAst, parameterName);
+        if (text is null) return [];
+        return SplitCommaSeparatedText(text.RemoveEnd(wordToComplete));
+    }
+
     protected static List<WildcardPattern>? CreateWPListFromOtherParameters(CommandAst commandAst, string parameterName, string[] positionalParams)
     {
         var param = GetParameterValues(commandAst, parameterName, positionalParams);
@@ -770,7 +828,7 @@ internal abstract class FolderScopedCompleter<TEntity> : OrchArgumentCompleter
         CommandAst commandAst, IDictionary fakeBoundParameters)
     {
         var drivesFolders = ResolveFolders(commandAst, fakeBoundParameters);
-        var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
         var results = ParallelResults3.GroupBy(drivesFolders, df => GetEntities(df.drive, df.folder));
@@ -805,7 +863,7 @@ internal abstract class DriveScopedCompleter<TEntity> : OrchArgumentCompleter
         CommandAst commandAst, IDictionary fakeBoundParameters)
     {
         var drives = ResolveOrchDrives(fakeBoundParameters);
-        var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
         var results = ParallelResults3.GroupBy(drives, drive => GetEntities(drive));
@@ -870,7 +928,7 @@ internal class AssetNameCompleter : OrchArgumentCompleter
         var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
         // Exclude Names already selected via the parameter
-        var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         // Only target the ValueType selected via the parameter
         var wpValueType = GetFakeBoundParameters(fakeBoundParameters, "ValueType").ConvertToWildcardPatternList();
@@ -906,7 +964,7 @@ internal class AssetValueTypeCompleter : OrchArgumentCompleter
         var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
         var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
-        var wpValueType = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpValueType = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -944,7 +1002,7 @@ internal class BucketNameCompleter<WritableOnly> : OrchArgumentCompleter where W
         var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
         // Exclude Names already selected via the parameter
-        var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1095,7 +1153,7 @@ internal class LibraryIdCompleter : OrchArgumentCompleter
         var hostFeed = GetSwitchParameterValue(commandAst, "HostFeed");
 
         // Exclude Ids already selected via the parameter
-        var wpId = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpId = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         // Only target Versions selected via the parameter
         var wpVersion = GetFakeBoundParameters(fakeBoundParameters, "Version").ConvertToWildcardPatternList();
@@ -1134,7 +1192,7 @@ internal class LibraryVersionCompleter : OrchArgumentCompleter
         var wpId = GetFakeBoundParameters(fakeBoundParameters, "Id").ConvertToWildcardPatternList();
 
         // Exclude Versions already selected via the parameter
-        var wpVersion = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpVersion = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1182,7 +1240,7 @@ internal class PackageIdCompleter : OrchArgumentCompleter
         var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse); ////////////////////////TODO★
 
         // Exclude Ids already selected via the parameter
-        var wpId = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpId = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1221,7 +1279,7 @@ internal class PackageVersionCompleter : OrchArgumentCompleter
         var wpId = GetFakeBoundParameters(fakeBoundParameters, "Id").ConvertToWildcardPatternList();
 
         // Exclude Versions already selected via the parameter
-        var wpVersion = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpVersion = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1292,7 +1350,7 @@ public class TenantUserUserNameCompleter : OrchArgumentCompleter
         var drives = ResolveOrchDrives(fakeBoundParameters);
 
         // Exclude user names already selected via the parameter
-        var wpUserName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpUserName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         // Only target FullNames selected via the parameter
         var wpFullName = GetFakeBoundParameters(fakeBoundParameters, "FullName").ConvertToWildcardPatternList();
@@ -1334,7 +1392,7 @@ public class TenantUserFullNameCompleter : OrchArgumentCompleter
         var wpUserName = GetFakeBoundParameters(fakeBoundParameters, "UserName").ConvertToWildcardPatternList();
 
         // Exclude user names already selected via the parameter
-        var wpFullName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpFullName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         var wpType = GetFakeBoundParameters(fakeBoundParameters, "Type").ConvertToWildcardPatternList();
 
@@ -1445,7 +1503,7 @@ internal class PmDirectoryNameCompleter : OrchArgumentCompleter
         };
         if (kind is null) yield break;
 
-        var names = GetFakeBoundParameters(fakeBoundParameters, parameterName);
+        var names = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);
 
         var drives = ResolvePmDrives(fakeBoundParameters);
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1487,7 +1545,7 @@ internal class PmDirectoryNameCompleter4Du : OrchArgumentCompleter
         var types = DirectoryTypes.Parameters.FilterByWildcards(p => p, wpType);
         types = types.Select(t => t == "DirectoryApplication" ? "Application" : t);
 
-        var names = GetFakeBoundParameters(fakeBoundParameters, parameterName);
+        var names = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);
 
         var drives = ResolveDuDrives(fakeBoundParameters);
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1523,7 +1581,7 @@ internal class UserNameInPmGroupCompleter : OrchArgumentCompleter
         var drives = ResolvePmDrives(fakeBoundParameters);
 
         // Exclude UserNames already selected via the parameter
-        var wpUserName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpUserName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
         var wpType = GetFakeBoundParameters(fakeBoundParameters, "Type").ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -1797,7 +1855,7 @@ internal class TestCaseExecutionEntryPointCompleter : OrchArgumentCompleter
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
         // Exclude Names already selected via the parameter
-        var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
         var yielded = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -1840,7 +1898,7 @@ public class PmGroupNameCompleter : OrchArgumentCompleter
         var drives = ResolvePmDrives(fakeBoundParameters);
 
         // Exclude Names already selected via the parameter
-        var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1878,7 +1936,7 @@ internal class PmRobotAccountNameCompleter : OrchArgumentCompleter
         var drives = ResolvePmDrives(fakeBoundParameters);
 
         // Exclude Names already selected via the parameter
-        var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1911,7 +1969,7 @@ internal class PmUserEmailCompleter : OrchArgumentCompleter
         var drives = ResolvePmDrives(fakeBoundParameters);
 
         // Exclude Names already selected via the parameter
-        var wpEmail = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpEmail = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1946,7 +2004,7 @@ internal class PmLicensedGroupNameCompleter : OrchArgumentCompleter
         var drives = ResolvePmDrives(fakeBoundParameters);
 
         // Exclude Names already selected via the parameter
-        var wpGroupName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpGroupName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1985,7 +2043,7 @@ internal class TmRequirementNameCompleter : OrchArgumentCompleter
         var drivesFolders = SessionState.EnumTmFolders(paramPath, recurse);
 
         // Exclude Names already selected via the parameter
-        var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -2021,7 +2079,7 @@ internal class TmTestSetNameCompleter : OrchArgumentCompleter
         var drivesFolders = SessionState.EnumTmFolders(paramPath, recurse);
 
         // Exclude Names already selected via the parameter
-        var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -2057,7 +2115,7 @@ internal class TmTestCaseNameCompleter : OrchArgumentCompleter
         var drivesFolders = SessionState.EnumTmFolders(paramPath, recurse);
 
         // Exclude Names already selected via the parameter
-        var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -2093,7 +2151,7 @@ internal class TmTestExecutionNameCompleter : OrchArgumentCompleter
         var drivesFolders = SessionState.EnumTmFolders(paramPath, recurse);
 
         // Exclude Names already selected via the parameter
-        var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -2126,7 +2184,7 @@ internal class StaticTextsCompleter<TItems> : OrchArgumentCompleter where TItems
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var wpParam = CreateWPListFromParameter(commandAst, parameterName, null, wordToComplete);
+        var wpParam = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -2151,7 +2209,7 @@ internal class KeyOfDictionaryCompleter<TItems, TValue> : OrchArgumentCompleter 
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var wpParam = CreateWPListFromParameter(commandAst, parameterName, null, wordToComplete);
+        var wpParam = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         if (!wordToComplete?.EndsWith('?') ?? false) wordToComplete += '*';
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -2177,7 +2235,7 @@ internal class ValueOfDictionaryCompleter<TItems> : OrchArgumentCompleter where 
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var wpParam = CreateWPListFromParameter(commandAst, parameterName, null, wordToComplete);
+        var wpParam = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         if (!wordToComplete?.EndsWith('?') ?? false) wordToComplete += '*';
         var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -2249,7 +2307,7 @@ public class DriveCompleter : OrchArgumentCompleter
         var drives = SessionState.EnumAllOrchDrives();
 
         // Exclude drives already selected via the parameter
-        var wpPath = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpPath = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         var matchingDrives = drives.ExcludeByWildcards(d => d?.NameColon, wpPath);
 
@@ -2280,7 +2338,7 @@ internal class DestinationDriveCompleter : OrchArgumentCompleter
         var drives = SessionState.EnumAllOrchDrives();
 
         // Exclude drives already selected via the parameter
-        var wpDestination = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpDestination = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -2310,7 +2368,7 @@ internal class TmDriveCompleter : OrchArgumentCompleter
         var drives = SessionState.EnumAllTmDrives();
 
         // Exclude drives already selected via the parameter
-        var wpPath = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
+        var wpPath = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
         var matchingDrives = drives.ExcludeByWildcards(d => d?.NameColon, wpPath);
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
