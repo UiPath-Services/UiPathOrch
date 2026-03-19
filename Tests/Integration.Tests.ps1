@@ -866,6 +866,122 @@ $($script:SharedPath),${script:AssetCsvPrefix}_Mixed,,Text,user-val,$user1,
     }
 }
 
+Describe 'Large-Scale PerRobot Asset' {
+    BeforeAll {
+        $script:LargeAssetName = "${script:Prefix}LargePerRobot"
+        $script:LargeCsvDir = Join-Path $env:TEMP "PesterTest_LargeAsset_$(Get-Random -Maximum 9999)"
+        New-Item -Path $script:LargeCsvDir -ItemType Directory -Force | Out-Null
+        $script:SharedPath = "${script:Drive1}:\Shared"
+
+        # Get all available users and machines for the Shared folder
+        Push-Location "${script:Drive1}:\Shared"
+        $script:AllUsers = @(Get-OrchFolderUser | Where-Object { $_.UserEntity.Type -ne 'DirectoryGroup' } | ForEach-Object { $_.UserEntity.UserName })
+        $script:AllMachines = @(Get-OrchFolderMachine | ForEach-Object { $_.Name })
+        Pop-Location
+    }
+
+    AfterAll {
+        Push-Location "${script:Drive1}:\Shared"
+        Remove-OrchAsset -Name "${script:Prefix}LargePerRobot*" -Confirm:$false -ErrorAction SilentlyContinue
+        Pop-Location
+        Remove-Item $script:LargeCsvDir -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    It 'Creates a large PerRobot asset with all user x machine combinations' {
+        $csvPath = Join-Path $script:LargeCsvDir 'large_perrobot.csv'
+        $sb = [System.Text.StringBuilder]::new()
+        [void]$sb.AppendLine('Path,Name,Description,ValueType,Value,UserName,MachineName')
+        $expectedCount = 0
+        foreach ($user in $script:AllUsers) {
+            foreach ($machine in $script:AllMachines) {
+                [void]$sb.AppendLine("$($script:SharedPath),${script:LargeAssetName},,Text,val_${user}_${machine},${user},${machine}")
+                $expectedCount++
+            }
+        }
+        [System.IO.File]::WriteAllText($csvPath, $sb.ToString())
+
+        $elapsed = Measure-Command { Import-Csv $csvPath | Set-OrchAsset }
+        Clear-OrchCache
+
+        Push-Location "${script:Drive1}:\Shared"
+        $uv = @(Get-OrchAsset -Name $script:LargeAssetName -ExpandUserValues)
+        Pop-Location
+        $uv.Count | Should -Be $expectedCount
+        "Created $expectedCount PerRobot values in $($elapsed.TotalSeconds.ToString('F1'))s"
+    }
+
+    It 'Updates a subset of PerRobot values without destroying others' {
+        # Pick first 5 users and first 2 machines to update
+        $updateUsers = $script:AllUsers | Select-Object -First 5
+        $updateMachines = $script:AllMachines | Select-Object -First 2
+
+        $csvPath = Join-Path $script:LargeCsvDir 'partial_update.csv'
+        $sb = [System.Text.StringBuilder]::new()
+        [void]$sb.AppendLine('Path,Name,Description,ValueType,Value,UserName,MachineName')
+        foreach ($user in $updateUsers) {
+            foreach ($machine in $updateMachines) {
+                [void]$sb.AppendLine("$($script:SharedPath),${script:LargeAssetName},,Text,UPDATED_${user}_${machine},${user},${machine}")
+            }
+        }
+        [System.IO.File]::WriteAllText($csvPath, $sb.ToString())
+
+        Import-Csv $csvPath | Set-OrchAsset
+        Clear-OrchCache
+
+        Push-Location "${script:Drive1}:\Shared"
+        $uv = @(Get-OrchAsset -Name $script:LargeAssetName -ExpandUserValues)
+        Pop-Location
+
+        # Total count should be unchanged
+        $totalExpected = $script:AllUsers.Count * $script:AllMachines.Count
+        $uv.Count | Should -Be $totalExpected
+
+        # Updated values should have new values
+        $updatedUv = $uv | Where-Object { $_.Value -like 'UPDATED_*' }
+        $updatedUv.Count | Should -Be ($updateUsers.Count * $updateMachines.Count)
+
+        # Non-updated values should be unchanged (still start with 'val_')
+        $unchangedUv = $uv | Where-Object { $_.Value -like 'val_*' }
+        $unchangedUv.Count | Should -Be ($totalExpected - $updatedUv.Count)
+    }
+
+    It 'Deletes a subset of PerRobot values without destroying others' {
+        # Pick last 3 users and last 1 machine to delete
+        $deleteUsers = $script:AllUsers | Select-Object -Last 3
+        $deleteMachines = $script:AllMachines | Select-Object -Last 1
+        $deleteCount = $deleteUsers.Count * $deleteMachines.Count
+
+        $csvPath = Join-Path $script:LargeCsvDir 'partial_delete.csv'
+        $sb = [System.Text.StringBuilder]::new()
+        [void]$sb.AppendLine('Path,Name,Description,ValueType,Value,UserName,MachineName')
+        foreach ($user in $deleteUsers) {
+            foreach ($machine in $deleteMachines) {
+                [void]$sb.AppendLine("$($script:SharedPath),${script:LargeAssetName},,Text,,${user},${machine}")
+                # Value is empty → delete this entry
+            }
+        }
+        [System.IO.File]::WriteAllText($csvPath, $sb.ToString())
+
+        Import-Csv $csvPath | Set-OrchAsset
+        Clear-OrchCache
+
+        Push-Location "${script:Drive1}:\Shared"
+        $uv = @(Get-OrchAsset -Name $script:LargeAssetName -ExpandUserValues)
+        Pop-Location
+
+        $totalExpected = ($script:AllUsers.Count * $script:AllMachines.Count) - $deleteCount
+        $uv.Count | Should -Be $totalExpected
+
+        # Deleted entries should not exist
+        foreach ($user in $deleteUsers) {
+            foreach ($machine in $deleteMachines) {
+                $match = $uv | Where-Object { $_.UserName -eq $user -and $_.MachineName -eq $machine }
+                $match | Should -BeNullOrEmpty
+            }
+        }
+    }
+}
+
 Describe 'Folder Provider Operations (mkdir / rmdir)' {
     BeforeAll {
         $script:FolderName = "${script:Prefix}Folder"
