@@ -1,9 +1,8 @@
-﻿using System.Management.Automation;
+using System.Management.Automation;
 using System.Security;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using User = UiPath.PowerShell.Entities.User;
-using TPositional = UiPath.PowerShell.Positional.Path;
 
 namespace UiPath.PowerShell.Commands;
 

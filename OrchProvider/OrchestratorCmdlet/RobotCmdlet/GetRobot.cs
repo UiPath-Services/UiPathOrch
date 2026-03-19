@@ -1,10 +1,9 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Data;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
-using TPositional = UiPath.PowerShell.Positional.FullName_Username;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -37,8 +36,8 @@ public class GetRobotCommand : OrchestratorPSCmdlet
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            var wpFullName = CreateWPListFromParameter(commandAst, "FullName", TPositional.Parameters, wordToComplete);
-            var wpUsername = CreateWPListFromOtherParameters(commandAst, "Username", TPositional.Parameters);
+            var wpFullName = CreateSelfExclusionList(commandAst, "FullName", wordToComplete);
+            var wpUsername = GetFakeBoundParameters(fakeBoundParameters, "Username").ConvertToWildcardPatternList();
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -70,8 +69,8 @@ public class GetRobotCommand : OrchestratorPSCmdlet
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
-            var wpUsername = CreateWPListFromParameter(commandAst, "Username", TPositional.Parameters, wordToComplete);
+            var wpFullName = GetFakeBoundParameters(fakeBoundParameters, "FullName").ConvertToWildcardPatternList();
+            var wpUsername = CreateSelfExclusionList(commandAst, "Username", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

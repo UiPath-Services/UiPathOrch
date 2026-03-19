@@ -1,11 +1,9 @@
-﻿using System.Data;
+using System.Data;
 using System.Management.Automation;
 using System.Text;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.Type_Name;
 
 namespace UiPath.PowerShell.Commands;
 

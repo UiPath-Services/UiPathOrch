@@ -1,10 +1,9 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using TPositional = UiPath.PowerShell.Positional.Name_Link;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -44,7 +43,7 @@ class RemoveAssetLinkCommand : OrchestratorPSCmdlet
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
             // Exclude Names already selected by the parameter from the candidates
-            var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
+            var wpName = CreateSelfExclusionList(commandAst, "Name", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

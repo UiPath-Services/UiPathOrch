@@ -1,9 +1,8 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
-using TPositional = UiPath.PowerShell.Positional.Id_Version_Destination;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -46,10 +45,10 @@ public class ExportPackageCommand : OrchestratorPSCmdlet
             var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse);
 
             // Exclude already-selected Id values from the candidates
-            var wpId = CreateWPListFromParameter(commandAst, "Id", TPositional.Parameters, wordToComplete);
+            var wpId = CreateSelfExclusionList(commandAst, "Id", wordToComplete);
 
             // Only target the Version values selected via parameters
-            var paramVersion = GetParameterValues(commandAst, "Version", TPositional.Parameters).ToList();
+            var paramVersion = GetFakeBoundParameters(fakeBoundParameters, "Version").ToList();
             var wpVersion = paramVersion.Select(ver => new WildcardPattern(ver, WildcardOptions.IgnoreCase)).ToList();
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -87,10 +86,10 @@ public class ExportPackageCommand : OrchestratorPSCmdlet
             var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse);
 
             // Only target the Id values selected via parameters
-            var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
+            var wpId = GetFakeBoundParameters(fakeBoundParameters, "Id").ConvertToWildcardPatternList();
 
             // Exclude already-selected Version values from the candidates
-            var wpVersion = CreateWPListFromParameter(commandAst, "Version", TPositional.Parameters, wordToComplete);
+            var wpVersion = CreateSelfExclusionList(commandAst, "Version", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

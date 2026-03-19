@@ -1,10 +1,9 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using TPositional = UiPath.PowerShell.Positional.Name_Role;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -54,13 +53,13 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
             var drivesProjects = ResolveDuPath(commandAst, fakeBoundParameters);
 
             // Filter to roles assigned to users with this name
-            var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
+            var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
 
             // Filter to roles assigned to users with this name
-            //var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
+            //var wpUserName = GetFakeBoundParameters(fakeBoundParameters, "UserName").ConvertToWildcardPatternList();
 
             // Exclude already-selected Role values from completion candidates
-            var wpRole = CreateWPListFromParameter(commandAst, "Role", TPositional.Parameters, wordToComplete);
+            var wpRole = CreateSelfExclusionList(commandAst, "Role", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

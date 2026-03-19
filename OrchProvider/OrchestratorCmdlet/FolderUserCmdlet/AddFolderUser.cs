@@ -1,11 +1,10 @@
-﻿using System.Collections;
+using System.Collections;
+using UiPath.PowerShell.Positional;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.Type_UserName_Roles;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -56,7 +55,7 @@ if (string.IsNullOrEmpty(wordToComplete))
                 yield break;
             }
 
-            var paramType = GetParameterValue(commandAst, "Type", TPositional.Parameters);
+            var paramType = GetFakeBoundParameter(fakeBoundParameters, "Type");
             if (!DirectoryTypeItems.Items.TryGetValue(paramType ?? "", out var objectType))
             {
                 //yield return new CompletionResult(PathTools.EscapePSText("Invalid Type."));
@@ -70,7 +69,7 @@ if (string.IsNullOrEmpty(wordToComplete))
             // Fetch assigned users to exclude already assigned users
             //ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
 
-            var paramUserName = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var paramUserName = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);
 
             wordToComplete = RemoveEnclosingQuotes(wordToComplete);
 
@@ -111,7 +110,7 @@ if (string.IsNullOrEmpty(wordToComplete))
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
             // Exclude Roles already selected via parameter from the candidates
-            var wpRoles = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var wpRoles = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

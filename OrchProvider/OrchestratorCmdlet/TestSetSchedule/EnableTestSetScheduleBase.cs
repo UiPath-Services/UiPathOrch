@@ -1,10 +1,9 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -41,7 +40,7 @@ public class EnableTestSetScheduleCommandBase<Enable> : OrchestratorPSCmdlet whe
             var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
             // Exclude Names already selected by parameter from candidates
-            var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
+            var wpName = CreateSelfExclusionList(commandAst, "Name", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

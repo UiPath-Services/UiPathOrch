@@ -1,9 +1,8 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
-using TPositional = UiPath.PowerShell.Positional.Id_Version;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -47,10 +46,10 @@ public class RemovePackageCommand : OrchestratorPSCmdlet
             var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse);
 
             // Exclude already-selected Id values from the candidates
-            var wpId = CreateWPListFromParameter(commandAst, "Id", TPositional.Parameters, wordToComplete);
+            var wpId = CreateSelfExclusionList(commandAst, "Id", wordToComplete);
 
             // Only target the Version values selected via parameters
-            var wpVersion = CreateWPListFromOtherParameters(commandAst, "Version", TPositional.Parameters);
+            var wpVersion = GetFakeBoundParameters(fakeBoundParameters, "Version").ConvertToWildcardPatternList();
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -88,10 +87,10 @@ public class RemovePackageCommand : OrchestratorPSCmdlet
             var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse);
 
             // Only target the Id values selected via parameters
-            var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
+            var wpId = GetFakeBoundParameters(fakeBoundParameters, "Id").ConvertToWildcardPatternList();
 
             // Exclude already-selected Version values from the candidates
-            var wpVersion = CreateWPListFromParameter(commandAst, "Version", TPositional.Parameters, wordToComplete);
+            var wpVersion = CreateSelfExclusionList(commandAst, "Version", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -136,10 +135,10 @@ public class RemovePackageCommand : OrchestratorPSCmdlet
                 .Select(df => df.folder.GetPSPath());
 
             // Exclude already-selected Path values from the candidates
-            var wpPath = CreateWPListFromParameter(commandAst, "Path", TPositional.Parameters, wordToComplete);
+            var wpPath = CreateSelfExclusionList(commandAst, "Path", wordToComplete);
 
             // Also exclude already-selected Destination values from the candidates
-            var wpDestination = CreateWPListFromOtherParameters(commandAst, "Destination", TPositional.Parameters);
+            var wpDestination = GetFakeBoundParameters(fakeBoundParameters, "Destination").ConvertToWildcardPatternList();
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

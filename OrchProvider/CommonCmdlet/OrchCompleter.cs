@@ -1076,7 +1076,7 @@ internal class BucketFullPathCompleter : OrchArgumentCompleter
 internal class CalendarNameCompleter : DriveScopedCompleter<ExtendedCalendar>
 {
     protected override IEnumerable<ExtendedCalendar> GetEntities(OrchDriveInfo drive)
-        => drive.GetCalendars();
+        => drive.GetCalendars() ?? [];
     protected override string GetName(ExtendedCalendar e) => e.Name!;
     protected override string GetTipHelp(ExtendedCalendar e) => e.GetPSPath();
     protected override CompletionResultType ResultType => CompletionResultType.Text;

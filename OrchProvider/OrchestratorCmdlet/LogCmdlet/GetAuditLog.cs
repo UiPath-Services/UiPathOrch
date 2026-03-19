@@ -1,12 +1,11 @@
-﻿using System.Collections;
+using System.Collections;
+using UiPath.PowerShell.Positional;
 using System.Data;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.Last_Component_UserName_Action;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -74,7 +73,7 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
             // Exclude Ids already selected by the parameter from the candidates
-            var paramId = GetParameterValues(commandAst, "Id", TPositional.Parameters, wordToComplete);
+            var paramId = GetSelfExclusionValues(commandAst, "Id", wordToComplete);
             var wpId = paramId.ConvertToWildcardPatternList();
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -111,7 +110,7 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
             // Exclude UserNames already selected by the parameter from the candidates
-            var paramUserName = GetParameterValues(commandAst, "UserName", TPositional.Parameters, wordToComplete);
+            var paramUserName = GetSelfExclusionValues(commandAst, "UserName", wordToComplete);
             var wpUserName = paramUserName.ConvertToWildcardPatternList();
 
             var wp = CreateWPFromWordToComplete(wordToComplete);

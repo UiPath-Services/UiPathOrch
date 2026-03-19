@@ -1,11 +1,9 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.Name_SecretId;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -43,7 +41,7 @@ public class GetMachineClientSecretIdCommand : OrchestratorPSCmdlet
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
             // Exclude Names already selected via parameter from the candidates
-            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -81,10 +79,10 @@ public class GetMachineClientSecretIdCommand : OrchestratorPSCmdlet
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
+            var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
 
             // Exclude SecretIds already selected via parameter from the candidates
-            var wpSecretId = CreateWPListFromParameter(commandAst, "SecretId", TPositional.Parameters, wordToComplete);
+            var wpSecretId = CreateSelfExclusionList(commandAst, "SecretId", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

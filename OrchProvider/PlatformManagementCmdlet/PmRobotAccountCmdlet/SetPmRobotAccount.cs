@@ -1,11 +1,10 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Data;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using TPositional = UiPath.PowerShell.Positional.UserName_GroupName;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -88,7 +87,7 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
             var drives = ResolvePmDrives(fakeBoundParameters);
 
             // Exclude names already selected via parameters from candidates
-            var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
+            var wpName = CreateSelfExclusionList(commandAst, "Name", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -125,7 +124,7 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
             var drives = ResolvePmDrives(fakeBoundParameters);
 
             // Exclude names already selected via parameters from candidates
-            var wpGroupName = CreateWPListFromParameter(commandAst, "GroupName", TPositional.Parameters, wordToComplete);
+            var wpGroupName = CreateSelfExclusionList(commandAst, "GroupName", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

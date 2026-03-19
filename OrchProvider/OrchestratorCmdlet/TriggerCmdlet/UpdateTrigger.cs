@@ -1,11 +1,10 @@
-﻿using System.Collections;
+using System.Collections;
+using UiPath.PowerShell.Positional;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -162,10 +161,10 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
             // Exclude already-selected Names from candidates
-            var wpExecutorRobots = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var wpExecutorRobots = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
             // Retrieve and display ExecutorRobots for triggers matching the specified Name
-            var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
+            var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -205,7 +204,7 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
             // Exclude already-selected Names from candidates
-            var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
+            var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

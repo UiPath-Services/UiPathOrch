@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Management.Automation;
@@ -7,7 +7,6 @@ using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using Job = UiPath.PowerShell.Entities.Job;
-using TPositional = UiPath.PowerShell.Positional.Id;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -60,7 +59,7 @@ public class StopJobCommand : OrchestratorPSCmdlet
 
             // Exclude Ids that have already been selected via parameters
             // TODO: Should we support wildcards for input here?
-            var paramId = GetParameterValues(commandAst, "Id", TPositional.Parameters, wordToComplete).Select(id => Int64.Parse(id));
+            var paramId = GetSelfExclusionValues(commandAst, "Id", wordToComplete).Select(id => Int64.Parse(id));
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

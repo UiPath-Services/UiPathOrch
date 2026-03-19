@@ -1,11 +1,10 @@
-﻿using System.Collections;
+using System.Collections;
+using UiPath.PowerShell.Positional;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using System.Text;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.UserName_FullName;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -74,11 +73,11 @@ public class GetFolderUserCommand : OrchestratorPSCmdlet
             var IncludeInherited = GetFakeBoundParameterAsBool(fakeBoundParameters, "IncludeInherited");
 
             // Exclude UserNames already selected via parameter from the candidates
-            var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
+            var wpUserName = CreateSelfExclusionList(commandAst, "UserName", wordToComplete);
 
             // Only include FullNames selected via parameter
-            var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
-            var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
+            var wpFullName = GetFakeBoundParameters(fakeBoundParameters, "FullName").ConvertToWildcardPatternList();
+            var wpType = GetFakeBoundParameters(fakeBoundParameters, "Type").ConvertToWildcardPatternList();
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -119,12 +118,12 @@ public class GetFolderUserCommand : OrchestratorPSCmdlet
             var IncludeInherited = GetFakeBoundParameterAsBool(fakeBoundParameters, "IncludeInherited");
 
             // Only include UserNames selected via parameter
-            var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
+            var wpUserName = GetFakeBoundParameters(fakeBoundParameters, "UserName").ConvertToWildcardPatternList();
 
-            var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
+            var wpType = GetFakeBoundParameters(fakeBoundParameters, "Type").ConvertToWildcardPatternList();
 
             // Exclude FullNames already selected via parameter from the candidates
-            var wpFullName = CreateWPListFromParameter(commandAst, "FullName", TPositional.Parameters, wordToComplete);
+            var wpFullName = CreateSelfExclusionList(commandAst, "FullName", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

@@ -1,4 +1,4 @@
-﻿//#undef DEBUG
+//#undef DEBUG
 
 using System.Collections.ObjectModel;
 using System.Data;
@@ -13,9 +13,9 @@ using System.Text.Json;
 using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Completer;
+using UiPath.PowerShell.Positional;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Entities.JsonConverter;
-using UiPath.PowerShell.Positional;
 
 // Installation instructions
 // 1. Install PowerShell 7. Download PowerShell-7.x.x-win-x64.msi. It can be installed side by side with PowerShell 5.

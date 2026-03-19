@@ -1,10 +1,9 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using TPositional = UiPath.PowerShell.Positional.UserName_FullName;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -52,10 +51,10 @@ public class RemoveFolderUserCommand : OrchestratorPSCmdlet
             var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
             // Exclude UserNames already selected via parameter from the candidates
-            var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
+            var wpUserName = CreateSelfExclusionList(commandAst, "UserName", wordToComplete);
 
             // Only include FullNames selected via parameter
-            var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
+            var wpFullName = GetFakeBoundParameters(fakeBoundParameters, "FullName").ConvertToWildcardPatternList();
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -94,10 +93,10 @@ public class RemoveFolderUserCommand : OrchestratorPSCmdlet
             var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
             // Only include UserNames selected via parameter
-            var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
+            var wpUserName = GetFakeBoundParameters(fakeBoundParameters, "UserName").ConvertToWildcardPatternList();
 
             // Exclude FullNames already selected via parameter from the candidates
-            var wpFullName = CreateWPListFromParameter(commandAst, "FullName", TPositional.Parameters, wordToComplete);
+            var wpFullName = CreateSelfExclusionList(commandAst, "FullName", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

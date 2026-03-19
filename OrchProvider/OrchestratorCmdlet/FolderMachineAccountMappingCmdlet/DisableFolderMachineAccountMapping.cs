@@ -1,6 +1,5 @@
-﻿using System.Management.Automation;
+using System.Management.Automation;
 using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.Name_UserName;
 
 namespace UiPath.PowerShell.Commands;
 

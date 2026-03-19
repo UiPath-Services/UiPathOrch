@@ -1,9 +1,8 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
-using TPositional = UiPath.PowerShell.Positional.Name_OwnerName;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -37,8 +36,8 @@ public class RemovePersonalWorkspaceCommand : OrchestratorPSCmdlet
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
-            var wpOwnerName = CreateWPListFromOtherParameters(commandAst, "OwnerName", TPositional.Parameters);
+            var wpName = CreateSelfExclusionList(commandAst, "Name", wordToComplete);
+            var wpOwnerName = GetFakeBoundParameters(fakeBoundParameters, "OwnerName").ConvertToWildcardPatternList();
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -70,8 +69,8 @@ public class RemovePersonalWorkspaceCommand : OrchestratorPSCmdlet
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
-            var wpOwnerName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
+            var wpOwnerName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

@@ -1,9 +1,8 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
-using TPositional = UiPath.PowerShell.Positional.Name_Version;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -48,7 +47,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
             // Exclude already-selected package names from candidates
-            var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -141,10 +140,10 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
             // Target only the Name selected by parameters
-            var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
+            var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
 
             // Exclude already-selected Version from candidates
-            var wpVersion = CreateWPListFromParameter(commandAst, "Version", TPositional.Parameters, wordToComplete);
+            var wpVersion = CreateSelfExclusionList(commandAst, "Version", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

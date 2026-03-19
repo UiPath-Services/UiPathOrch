@@ -4,7 +4,6 @@ using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -65,7 +64,7 @@ public class SetSettingCommand : OrchestratorPSCmdlet
             IDictionary fakeBoundParameters)
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
-            var paramName = GetParameterValue(commandAst, "Name", TPositional.Parameters);
+            var paramName = GetFakeBoundParameter(fakeBoundParameters, "Name");
             if (string.IsNullOrEmpty(paramName)) yield break;
 
             var results = ParallelResults3.GroupBy(drives, drive => drive.Settings.Get());

@@ -1,9 +1,8 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
-using TPositional = UiPath.PowerShell.Positional.Name_ValueType;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -42,10 +41,10 @@ public class RemoveAssetCommand : OrchestratorPSCmdlet
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
             // Only target the Names selected by the parameter
-            var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
+            var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
 
             // Exclude ValueTypes already selected by the parameter from the candidates
-            var wpValueType = CreateWPListFromParameter(commandAst, "ValueType", TPositional.Parameters, wordToComplete);
+            var wpValueType = CreateSelfExclusionList(commandAst, "ValueType", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

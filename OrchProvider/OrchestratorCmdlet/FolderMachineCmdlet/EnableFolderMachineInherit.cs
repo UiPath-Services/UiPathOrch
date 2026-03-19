@@ -1,4 +1,4 @@
-﻿using System.Management.Automation;
+using System.Management.Automation;
 using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands;

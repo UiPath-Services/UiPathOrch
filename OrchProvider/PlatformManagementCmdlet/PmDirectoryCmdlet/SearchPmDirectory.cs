@@ -1,11 +1,10 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using System.Text;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -30,7 +29,7 @@ public class SearchPmDirectoryCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            string name = GetParameterValue(commandAst, parameterName, TPositional.Parameters);
+            string name = GetFakeBoundParameter(fakeBoundParameters, parameterName);
             if (string.IsNullOrEmpty(name))
             {
                 yield return new CompletionResult(PathTools.EscapePSText("Please enter at least one character to search."));

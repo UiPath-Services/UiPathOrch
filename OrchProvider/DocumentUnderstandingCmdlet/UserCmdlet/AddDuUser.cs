@@ -1,12 +1,11 @@
-﻿using System.Collections;
+using System.Collections;
+using UiPath.PowerShell.Positional;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Positional;
 using UiPath.PowerShell.Commands.CsvHelper;
-using TPositional = UiPath.PowerShell.Positional.Type_Name_Role;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -64,7 +63,7 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
     //            yield break;
     //        }
 
-    //        var paramType = GetParameterValue(commandAst, "Type", TPositional.Parameters);
+    //        var paramType = GetFakeBoundParameter(fakeBoundParameters, "Type");
     //        if (!DirectoryTypeItems.Items.TryGetValue(paramType ?? "", out var objectType))
     //        {
     //            //yield return new CompletionResult(PathTools.EscapePSText("Invalid Type."));
@@ -78,7 +77,7 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
     //        // Retrieve assigned users in order to exclude them
     //        //ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
 
-    //        var paramUserName = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+    //        var paramUserName = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);
     //        bool bFound = false;
     //        foreach (var drive in drives)
     //        {
@@ -118,10 +117,10 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
             var drivesProjects = ResolveDuPath(commandAst, fakeBoundParameters);
 
             // Exclude roles already assigned to users with this name
-            var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
+            var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
 
             // Exclude already-selected Role values from completion candidates
-            var wpRole = CreateWPListFromParameter(commandAst, "Role", TPositional.Parameters, wordToComplete);
+            var wpRole = CreateSelfExclusionList(commandAst, "Role", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

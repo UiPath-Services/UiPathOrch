@@ -1,11 +1,9 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.Email_License;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -50,7 +48,7 @@ public class AddPmLicenseToPmUserCmdlet : OrchestratorPSCmdlet
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
             // Exclude user names already selected via parameters from candidates
-            var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
+            var wpUserName = CreateSelfExclusionList(commandAst, "UserName", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -90,8 +88,8 @@ public class AddPmLicenseToPmUserCmdlet : OrchestratorPSCmdlet
         {
             var drives = ResolvePmDrives(fakeBoundParameters);
 
-            var wpEmail = CreateWPListFromOtherParameters(commandAst, "Email", TPositional.Parameters);
-            var wpLicense = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var wpEmail = GetFakeBoundParameters(fakeBoundParameters, "Email").ConvertToWildcardPatternList();
+            var wpLicense = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

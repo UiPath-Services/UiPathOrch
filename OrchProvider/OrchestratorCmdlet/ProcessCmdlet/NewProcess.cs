@@ -1,4 +1,5 @@
-﻿using System.Collections;
+using System.Collections;
+using UiPath.PowerShell.Positional;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using System.Text.Json;
@@ -6,8 +7,6 @@ using System.Text.Json.Nodes;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.Id_Version;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -168,8 +167,8 @@ public class NewProcessCommand : OrchestratorPSCmdlet
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
             // Exclude IDs already selected by other parameters from candidates
-            var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
-            var wpVersion = CreateWPListFromOtherParameters(commandAst, "Version", TPositional.Parameters);
+            var wpId = GetFakeBoundParameters(fakeBoundParameters, "Id").ConvertToWildcardPatternList();
+            var wpVersion = GetFakeBoundParameters(fakeBoundParameters, "Version").ConvertToWildcardPatternList();
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -215,9 +214,9 @@ public class NewProcessCommand : OrchestratorPSCmdlet
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
             // Exclude IDs already selected by other parameters from candidates
-            var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
-            var wpVersion = CreateWPListFromOtherParameters(commandAst, "Version", TPositional.Parameters);
-            var wpEntryPoint = CreateWPListFromOtherParameters(commandAst, "EntryPoint", TPositional.Parameters);
+            var wpId = GetFakeBoundParameters(fakeBoundParameters, "Id").ConvertToWildcardPatternList();
+            var wpVersion = GetFakeBoundParameters(fakeBoundParameters, "Version").ConvertToWildcardPatternList();
+            var wpEntryPoint = GetFakeBoundParameters(fakeBoundParameters, "EntryPoint").ConvertToWildcardPatternList();
 
             //var wp = CreateWPFromWordToComplete(wordToComplete);
 

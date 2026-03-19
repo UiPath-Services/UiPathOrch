@@ -1,10 +1,9 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Completer;
-using TPositional = UiPath.PowerShell.Positional.Name_ExcludedDate;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -39,7 +38,7 @@ public class AddCalendarDateCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var param = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var param = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);
 
             if (!DateTime.TryParse(param?.LastOrDefault(), out DateTime theLast))
             {

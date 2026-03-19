@@ -1,10 +1,9 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using TPositional = UiPath.PowerShell.Positional.Scope_DisplayName;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -43,7 +42,7 @@ public class GetExecutionSettingCommand : OrchestratorPSCmdlet
             IDictionary fakeBoundParameters)
         {
             // Exclude Scopes already selected by the parameter from the candidates
-            var wpScope = CreateWPListFromParameter(commandAst, "Scope", TPositional.Parameters, wordToComplete);
+            var wpScope = CreateSelfExclusionList(commandAst, "Scope", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -68,12 +67,12 @@ public class GetExecutionSettingCommand : OrchestratorPSCmdlet
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            var wpScope = CreateWPListFromOtherParameters(commandAst, "Scope", TPositional.Parameters);
+            var wpScope = GetFakeBoundParameters(fakeBoundParameters, "Scope").ConvertToWildcardPatternList();
 
             var specifiedScopes = scopeList.FilterByWildcards(s => s.Value, wpScope);
 
             // Exclude DisplayNames already selected by the parameter from the candidates
-            var wpDisplayName = CreateWPListFromParameter(commandAst, "DisplayName", TPositional.Parameters, wordToComplete);
+            var wpDisplayName = CreateSelfExclusionList(commandAst, "DisplayName", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

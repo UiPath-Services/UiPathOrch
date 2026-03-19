@@ -1,4 +1,5 @@
-﻿using System.Collections;
+using System.Collections;
+using UiPath.PowerShell.Positional;
 using System.Data;
 using System.Management.Automation;
 using System.Management.Automation.Language;
@@ -8,8 +9,6 @@ using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Entities.JsonConverter;
-using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.Name_ReleaseName;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -159,7 +158,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
             var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetTriggers(df.folder));
 
             // Exclude already-selected Names from candidates
-            var names = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var names = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);
 
             var entities = results.SelectMany(e => e);
             yield return new CompletionResult(GenerateNewEntityName("NewTrigger", names, entities, e => e.Name!));
@@ -180,7 +179,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
             // Exclude already-selected ExecutorRobots from candidates
-            var wpExecutorRobots = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var wpExecutorRobots = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -235,7 +234,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
             // Exclude already-selected MachineRobots from candidates
-            var wpMachineRobots = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var wpMachineRobots = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
             var usersPerFolders = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderUsersWithInherited.Get(df.folder));

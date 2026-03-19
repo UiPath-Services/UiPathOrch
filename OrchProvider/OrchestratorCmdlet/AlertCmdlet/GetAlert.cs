@@ -1,11 +1,10 @@
-﻿using System.Collections;
+using System.Collections;
+using UiPath.PowerShell.Positional;
 using System.Data;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.Last_Severity_Component;
 
 namespace UiPath.PowerShell.Commands;
 

@@ -1,9 +1,8 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
-using TPositional = UiPath.PowerShell.Positional.Id_Version;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -45,7 +44,7 @@ public class GetPackageVersionCommand : OrchestratorPSCmdlet
             int totalFolderCount = drivesFolders.Count;
 
             // Exclude already-selected Id values from the candidates
-            var wpId = CreateWPListFromParameter(commandAst, "Id", TPositional.Parameters, wordToComplete);
+            var wpId = CreateSelfExclusionList(commandAst, "Id", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -81,10 +80,10 @@ public class GetPackageVersionCommand : OrchestratorPSCmdlet
             var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse);
 
             // Only target the Id values selected via parameters
-            var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
+            var wpId = GetFakeBoundParameters(fakeBoundParameters, "Id").ConvertToWildcardPatternList();
 
             // Exclude already-selected Version values from the candidates
-            var wpVersion = CreateWPListFromParameter(commandAst, "Version", TPositional.Parameters, wordToComplete);
+            var wpVersion = CreateSelfExclusionList(commandAst, "Version", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

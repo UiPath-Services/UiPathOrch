@@ -1,10 +1,9 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using TPositional = UiPath.PowerShell.Positional.Key;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -34,7 +33,7 @@ public class GetAuthenticationSettingCommand : OrchestratorPSCmdlet
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
             // Exclude Keys already selected by the parameter from the candidates
-            var wpKey = CreateWPListFromParameter(commandAst, "Key", TPositional.Parameters, wordToComplete);
+            var wpKey = CreateSelfExclusionList(commandAst, "Key", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

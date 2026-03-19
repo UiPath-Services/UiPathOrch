@@ -1,11 +1,10 @@
-﻿using System.Collections;
+using System.Collections;
+using UiPath.PowerShell.Positional;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -76,7 +75,7 @@ public class GetTestSetExecutionCommand : OrchestratorPSCmdlet
             var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
             // Exclude Names already selected by parameter from candidates
-            var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
+            var wpName = CreateSelfExclusionList(commandAst, "Name", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -122,7 +121,7 @@ public class GetTestSetExecutionCommand : OrchestratorPSCmdlet
             IDictionary fakeBoundParameters)
         {
             // Exclude SourceType values already selected by parameter from candidates
-            var wpStatus = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var wpStatus = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -144,7 +143,7 @@ public class GetTestSetExecutionCommand : OrchestratorPSCmdlet
             IDictionary fakeBoundParameters)
         {
             // Exclude TriggerType values already selected by parameter from candidates
-            var paramStatus = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var paramStatus = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);
             var wpStatus = paramStatus.ConvertToWildcardPatternList();
 
             var wp = CreateWPFromWordToComplete(wordToComplete);

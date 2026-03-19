@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Management.Automation;
@@ -6,7 +6,6 @@ using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using Job = UiPath.PowerShell.Entities.Job;
-using TPositional = UiPath.PowerShell.Positional.Id;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -36,7 +35,7 @@ public class OpenJobCommand : OrchestratorPSCmdlet
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
             // Exclude Ids that have already been selected via parameters
-            var paramId = GetParameterValues(commandAst, "Id", TPositional.Parameters, wordToComplete);
+            var paramId = GetSelfExclusionValues(commandAst, "Id", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

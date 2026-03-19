@@ -1,12 +1,11 @@
-﻿using System.Collections;
+using System.Collections;
+using UiPath.PowerShell.Positional;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Commands.CsvHelper;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.Type_UserName_Roles;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -344,8 +343,8 @@ public class AddUserCommand : OrchestratorPSCmdlet
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
             // Exclude user names that have already been selected via parameters
-            var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
-            var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
+            var wpUserName = CreateSelfExclusionList(commandAst, "UserName", wordToComplete);
+            var wpType = GetFakeBoundParameters(fakeBoundParameters, "Type").ConvertToWildcardPatternList();
 
             var specifiedTypes = Types.SelectByWildcards(t => t.Value, wpType).Select(t => t.Key);
 
@@ -389,8 +388,8 @@ public class AddUserCommand : OrchestratorPSCmdlet
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
-            var wpRoles = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var wpUserName = GetFakeBoundParameters(fakeBoundParameters, "UserName").ConvertToWildcardPatternList();
+            var wpRoles = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

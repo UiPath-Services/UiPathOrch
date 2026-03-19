@@ -1,11 +1,10 @@
-﻿using System.Collections;
+using System.Collections;
+using UiPath.PowerShell.Positional;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -110,7 +109,7 @@ public class NewQueueCommand : OrchestratorPSCmdlet
             var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Queues.Get(df.folder));
 
             // Exclude Names already selected by the parameter from the candidates
-            var names = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var names = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);
 
             var entities = results.SelectMany(e => e);
             yield return new CompletionResult(GenerateNewEntityName("NewQueue", names, entities, e => e.Name!));

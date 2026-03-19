@@ -1,9 +1,8 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
-using TPositional = UiPath.PowerShell.Positional.Id;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -34,7 +33,7 @@ public class StopTestExecutionCommand : OrchestratorPSCmdlet
             var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath);
 
             // Exclude Ids already selected by parameter from candidates
-            var paramId = GetParameterValues(commandAst, "Id", TPositional.Parameters, wordToComplete).Select(id => long.Parse(id));
+            var paramId = GetSelfExclusionValues(commandAst, "Id", wordToComplete).Select(id => long.Parse(id));
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

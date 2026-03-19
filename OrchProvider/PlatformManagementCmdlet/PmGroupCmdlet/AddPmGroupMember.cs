@@ -1,11 +1,10 @@
-﻿using System.Collections;
+using System.Collections;
+using UiPath.PowerShell.Positional;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.GroupName_Type_UserName;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -73,9 +72,9 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
                 yield break;
             }
 
-            var wpGroupName = CreateWPListFromOtherParameters(commandAst, "GroupName", TPositional.Parameters);
-            var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
-            var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
+            var wpGroupName = GetFakeBoundParameters(fakeBoundParameters, "GroupName").ConvertToWildcardPatternList();
+            var wpUserName = CreateSelfExclusionList(commandAst, "UserName", wordToComplete);
+            var wpType = GetFakeBoundParameters(fakeBoundParameters, "Type").ConvertToWildcardPatternList();
             var wpType2 = DirectoryTypes2.Items.FilterByWildcards(d => d.Key, wpType).Select(d => d.Value).ConvertToWildcardPatternList();
 
             var drives = ResolvePmDrives(fakeBoundParameters);

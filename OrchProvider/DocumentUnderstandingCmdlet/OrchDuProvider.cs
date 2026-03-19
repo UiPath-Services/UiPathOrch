@@ -1,4 +1,4 @@
-﻿//#undef DEBUG
+//#undef DEBUG
 
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -7,9 +7,9 @@ using System.Management.Automation.Provider;
 using System.Text.Json;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Completer;
+using UiPath.PowerShell.Positional;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Entities.JsonConverter;
-using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Core;
 

@@ -1,11 +1,10 @@
-﻿using System.Collections;
+using System.Collections;
+using UiPath.PowerShell.Positional;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.ValueType_Name_Value_UserName_MachineName;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -77,10 +76,10 @@ public class SetAssetCommand : OrchestratorPSCmdlet
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
             // Only target the ValueType selected by the parameter
-            var wpValueType = CreateWPListFromOtherParameters(commandAst, "ValueType", TPositional.Parameters);
+            var wpValueType = GetFakeBoundParameters(fakeBoundParameters, "ValueType").ConvertToWildcardPatternList();
 
             // Exclude Names already selected by the parameter from the candidates
-            var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
+            var wpName = CreateSelfExclusionList(commandAst, "Name", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -117,9 +116,9 @@ public class SetAssetCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            var wpValueType = CreateWPListFromOtherParameters(commandAst, "ValueType", TPositional.Parameters);
-            var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
-            var wpDescription = CreateWPListFromParameter(commandAst, "Description", TPositional.Parameters, wordToComplete);
+            var wpValueType = GetFakeBoundParameters(fakeBoundParameters, "ValueType").ConvertToWildcardPatternList();
+            var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
+            var wpDescription = CreateSelfExclusionList(commandAst, "Description", wordToComplete);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
             var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Assets.Get(df.folder));
@@ -160,10 +159,10 @@ public class SetAssetCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            var wpValueType   = CreateWPListFromOtherParameters(commandAst, "ValueType",   TPositional.Parameters);
-            var wpName        = CreateWPListFromOtherParameters(commandAst, "Name",        TPositional.Parameters);
-            var wpUserName    = CreateWPListFromOtherParameters(commandAst, "UserName",    TPositional.Parameters);
-            var wpMachineName = CreateWPListFromOtherParameters(commandAst, "MachineName", TPositional.Parameters);
+            var wpValueType   = GetFakeBoundParameters(fakeBoundParameters, "ValueType").ConvertToWildcardPatternList();
+            var wpName        = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
+            var wpUserName    = GetFakeBoundParameters(fakeBoundParameters, "UserName").ConvertToWildcardPatternList();
+            var wpMachineName = GetFakeBoundParameters(fakeBoundParameters, "MachineName").ConvertToWildcardPatternList();
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -221,7 +220,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
             // Exclude UserNames already selected by the parameter from the candidates
-            var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
+            var wpUserName = CreateSelfExclusionList(commandAst, "UserName", wordToComplete);
 
             //// Only target Names already selected by the parameter
             //var wpName = CreateWPListFromOtherParameters(commandAst, "Name", positionalParams);
@@ -257,7 +256,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
             // Exclude MachineNames already selected by the parameter from the candidates
-            var wpMachineName = CreateWPListFromParameter(commandAst, "MachineName", TPositional.Parameters, wordToComplete);
+            var wpMachineName = CreateSelfExclusionList(commandAst, "MachineName", wordToComplete);
 
             // TODO: Exclude existing user name and machine name combinations from the candidates
             // It's complicated, so let's skip it for now..

@@ -1,12 +1,11 @@
-﻿using System.Collections;
+using System.Collections;
+using UiPath.PowerShell.Positional;
 using System.Data;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.UserName;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -131,8 +130,8 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
             var drives = SessionState.EnumOrchDrives(paramPath);
 
-            var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
-            var wpRoles = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var wpUserName = GetFakeBoundParameters(fakeBoundParameters, "UserName").ConvertToWildcardPatternList();
+            var wpRoles = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

@@ -1,10 +1,9 @@
-﻿using System.Collections;
+using System.Collections;
+using UiPath.PowerShell.Positional;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Completer;
-using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.UserName_Roles;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -48,9 +47,9 @@ public class RemoveRoleFromUserCommand : OrchestratorPSCmdlet
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
-            var wpUserName = CreateWPListFromOtherParameters(commandAst, "UserName", TPositional.Parameters);
-            var wpRoles = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var wpFullName = GetFakeBoundParameters(fakeBoundParameters, "FullName").ConvertToWildcardPatternList();
+            var wpUserName = GetFakeBoundParameters(fakeBoundParameters, "UserName").ConvertToWildcardPatternList();
+            var wpRoles = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

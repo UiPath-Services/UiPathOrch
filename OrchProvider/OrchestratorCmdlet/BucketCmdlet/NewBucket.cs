@@ -1,10 +1,9 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using TPositional = UiPath.PowerShell.Positional.Name;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -65,7 +64,7 @@ public class NewBucketCommand : OrchestratorPSCmdlet
             var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Buckets.Get(df.folder));
 
             // Exclude Names already selected by parameter from candidates
-            var names = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var names = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);
 
             var entities = results.SelectMany(e => e);
             yield return new CompletionResult(GenerateNewEntityName("NewBucket", names, entities, e => e.Name!));

@@ -1,10 +1,9 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using TPositional = UiPath.PowerShell.Positional.GroupName;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -37,7 +36,7 @@ public class AddPmGroupCommand : OrchestratorPSCmdlet
             var results = ParallelResults3.GroupBy(drives, drive => drive.PmGroups.Get());
 
             // Exclude Names already selected via parameters from candidates
-            var names = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var names = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);
 
             var entities = results.SelectMany(e => e);
             yield return new CompletionResult(GenerateNewEntityName("NewGroup", names, entities, e => e.name!));

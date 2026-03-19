@@ -1,9 +1,8 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
-using TPositional = UiPath.PowerShell.Positional.Path;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -35,7 +34,7 @@ class GetTmRoleCommand : OrchestratorPSCmdlet
             var drives = SessionState.EnumTmDrives(paramPath);
 
             // Exclude already-selected Name values from completion candidates
-            var wpname = CreateWPListFromParameter(commandAst, "name", TPositional.Parameters, wordToComplete);
+            var wpname = CreateSelfExclusionList(commandAst, "name", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

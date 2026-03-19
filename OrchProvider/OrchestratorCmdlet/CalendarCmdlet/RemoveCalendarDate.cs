@@ -1,11 +1,10 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Data;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using TPositional = UiPath.PowerShell.Positional.Name_ExcludedDate;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -39,8 +38,8 @@ public class RemoveCalendarDateCommand : OrchestratorPSCmdlet
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            var wpCalendarName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
-            var paramExcludedDate = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete)
+            var wpCalendarName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
+            var paramExcludedDate = GetSelfExclusionValues(commandAst, parameterName, wordToComplete)
                 .Select(dateStr =>
                     {
                         if (DateTime.TryParse(dateStr, out DateTime parsedDate)) { return parsedDate; }

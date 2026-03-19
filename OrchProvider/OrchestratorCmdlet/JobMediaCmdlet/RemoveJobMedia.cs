@@ -1,10 +1,9 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using TPositional = UiPath.PowerShell.Positional.JobId;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -37,7 +36,7 @@ public class RemoveJobMediaCommand : OrchestratorPSCmdlet
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
             // Exclude JobIds already selected by the parameter from the candidates
-            var paramJobId = GetParameterValues(commandAst, "JobId", TPositional.Parameters, wordToComplete).Select(s => long.Parse(s));
+            var paramJobId = GetSelfExclusionValues(commandAst, "JobId", wordToComplete).Select(s => long.Parse(s));
             //var wpJobId = paramJobId.Select(un => new WildcardPattern(un, WildcardOptions.IgnoreCase)).ToList();
 
             var wp = CreateWPFromWordToComplete(wordToComplete);

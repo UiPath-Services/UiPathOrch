@@ -1,6 +1,6 @@
-﻿using System.Management.Automation;
-using UiPath.PowerShell.Completer;
+using System.Management.Automation;
 using UiPath.PowerShell.Positional;
+using UiPath.PowerShell.Completer;
 
 namespace UiPath.PowerShell.Commands;
 

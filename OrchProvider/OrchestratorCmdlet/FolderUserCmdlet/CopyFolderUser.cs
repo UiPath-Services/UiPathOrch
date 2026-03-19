@@ -1,11 +1,10 @@
-﻿using System.Collections;
+using System.Collections;
+using UiPath.PowerShell.Positional;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.UserName_Destination;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -55,8 +54,8 @@ public class CopyFolderUserCommand : OrchestratorPSCmdlet
             var IncludeInherited = GetFakeBoundParameterAsBool(fakeBoundParameters, "IncludeInherited");
 
             // Exclude UserNames already selected via parameter from the candidates
-            var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
-            var wpType = CreateWPListFromOtherParameters(commandAst, "Type", TPositional.Parameters);
+            var wpUserName = CreateSelfExclusionList(commandAst, "UserName", wordToComplete);
+            var wpType = GetFakeBoundParameters(fakeBoundParameters, "Type").ConvertToWildcardPatternList();
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

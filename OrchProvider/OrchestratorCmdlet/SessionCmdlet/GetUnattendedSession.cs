@@ -1,10 +1,8 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
-using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.Status;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -56,7 +54,7 @@ public class GetUnattendedSessionCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var wpStatus = CreateWPListFromParameter(commandAst, "Status", TPositional.Parameters, wordToComplete);
+            var wpStatus = CreateSelfExclusionList(commandAst, "Status", wordToComplete);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
             foreach (var status in StatusList

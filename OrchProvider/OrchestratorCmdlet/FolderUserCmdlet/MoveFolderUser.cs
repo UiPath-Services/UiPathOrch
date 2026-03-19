@@ -1,10 +1,9 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using TPositional = UiPath.PowerShell.Positional.UserName_Destination;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -60,10 +59,10 @@ public class MoveFolderUserCommand : OrchestratorPSCmdlet
             var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
 
             // Exclude UserNames already selected via parameter from the candidates
-            var wpUserName = CreateWPListFromParameter(commandAst, "UserName", TPositional.Parameters, wordToComplete);
+            var wpUserName = CreateSelfExclusionList(commandAst, "UserName", wordToComplete);
 
             // Only include FullNames selected via parameter
-            var wpFullName = CreateWPListFromOtherParameters(commandAst, "FullName", TPositional.Parameters);
+            var wpFullName = GetFakeBoundParameters(fakeBoundParameters, "FullName").ConvertToWildcardPatternList();
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

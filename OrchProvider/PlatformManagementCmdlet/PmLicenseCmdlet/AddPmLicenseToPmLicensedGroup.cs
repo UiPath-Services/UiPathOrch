@@ -1,11 +1,10 @@
-﻿using System.Collections;
+using System.Collections;
+using UiPath.PowerShell.Positional;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Positional;
-using TPositional = UiPath.PowerShell.Positional.GroupName_License;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -47,7 +46,7 @@ public class AddPmLicenseToPmLicenseGroup: OrchestratorPSCmdlet
                 yield break;
             }
 
-            var wpGroupName = CreateWPListFromParameter(commandAst, "GroupName", TPositional.Parameters, wordToComplete);
+            var wpGroupName = CreateSelfExclusionList(commandAst, "GroupName", wordToComplete);
 
             var drives = ResolvePmDrives(fakeBoundParameters);
 
@@ -90,8 +89,8 @@ public class AddPmLicenseToPmLicenseGroup: OrchestratorPSCmdlet
         {
             var drives = ResolvePmDrives(fakeBoundParameters);
 
-            var groupNames = GetParameterValues(commandAst, "GroupName", TPositional.Parameters);
-            var wpLicense = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var groupNames = GetFakeBoundParameters(fakeBoundParameters, "GroupName");
+            var wpLicense = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
