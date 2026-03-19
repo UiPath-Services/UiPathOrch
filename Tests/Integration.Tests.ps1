@@ -1,0 +1,660 @@
+#Requires -Modules @{ ModuleName = 'Pester'; ModuleVersion = '5.0' }
+#Requires -Modules UiPathOrch
+
+<#
+.SYNOPSIS
+    Integration tests for UiPathOrch module.
+    Requires connected Orch1: and Orch2: drives (run Import-OrchConfig first).
+
+.DESCRIPTION
+    These tests create, update, and remove real entities on the Orchestrator.
+    They use a "PesterTest_" prefix for all created entities so they can be
+    identified and cleaned up if a test fails.
+
+.NOTES
+    Run with: Invoke-Pester -Path Tests\Integration.Tests.ps1 -Output Detailed
+#>
+
+BeforeAll {
+    $script:Drive1 = 'Orch1'
+    $script:Drive2 = 'Orch2'
+    $script:Prefix = "PesterTest_$(Get-Random -Maximum 9999)_"
+
+    # Suppress all confirmation prompts
+    $script:OriginalConfirmPreference = $ConfirmPreference
+    $global:ConfirmPreference = 'None'
+
+    # Verify drives are available
+    Get-PSDrive $script:Drive1 -ErrorAction Stop | Out-Null
+    Get-PSDrive $script:Drive2 -ErrorAction Stop | Out-Null
+
+    # Navigate into a folder on Orch1 (needed for folder-scoped cmdlets)
+    Push-Location "${script:Drive1}:\Shared"
+}
+
+AfterAll {
+    Pop-Location
+    $global:ConfirmPreference = $script:OriginalConfirmPreference
+}
+
+Describe 'Machine CRUD' {
+    BeforeAll {
+        $script:MachineName = "${script:Prefix}Machine"
+    }
+
+    AfterAll {
+        $existing = Get-OrchMachine -Name $script:MachineName -ErrorAction SilentlyContinue
+        if ($existing) {
+            Remove-OrchMachine -Name $script:MachineName -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+
+    It 'New-OrchMachine creates a machine' {
+        New-OrchMachine -Name $script:MachineName -Description 'Created by Pester'
+        Clear-OrchCache
+        $machine = Get-OrchMachine -Name $script:MachineName
+        $machine | Should -Not -BeNullOrEmpty
+        $machine.Name | Should -Be $script:MachineName
+        $machine.Description | Should -Be 'Created by Pester'
+    }
+
+    It 'Update-OrchMachine updates Description' {
+        Update-OrchMachine -Name $script:MachineName -Description 'Updated by Pester'
+        Clear-OrchCache
+        $machine = Get-OrchMachine -Name $script:MachineName
+        $machine.Description | Should -Be 'Updated by Pester'
+    }
+
+    It 'Update-OrchMachine updates UnattendedSlots' {
+        Update-OrchMachine -Name $script:MachineName -UnattendedSlots 3
+        Clear-OrchCache
+        $machine = Get-OrchMachine -Name $script:MachineName
+        $machine.UnattendedSlots | Should -Be 3
+    }
+
+    It 'Update-OrchMachine can set UnattendedSlots to 0' {
+        Update-OrchMachine -Name $script:MachineName -UnattendedSlots 0
+        Clear-OrchCache
+        $machine = Get-OrchMachine -Name $script:MachineName
+        $machine.UnattendedSlots | Should -Be 0
+    }
+
+    It 'Update-OrchMachine updates AutomationType' {
+        Update-OrchMachine -Name $script:MachineName -AutomationType 'Foreground'
+        Clear-OrchCache
+        $machine = Get-OrchMachine -Name $script:MachineName
+        $machine.AutomationType | Should -Be 'Foreground'
+    }
+
+    It 'Update-OrchMachine updates TargetFramework' {
+        Update-OrchMachine -Name $script:MachineName -TargetFramework 'Windows'
+        Clear-OrchCache
+        $machine = Get-OrchMachine -Name $script:MachineName
+        $machine.TargetFramework | Should -Be 'Windows'
+    }
+
+    It 'Update-OrchMachine updates Tags' {
+        Update-OrchMachine -Name $script:MachineName -Tags 'tagA', 'tagB'
+        Clear-OrchCache
+        $machine = Get-OrchMachine -Name $script:MachineName
+        $machine.Tags.Count | Should -Be 2
+    }
+
+    It 'Update-OrchMachine clears Tags' {
+        Update-OrchMachine -Name $script:MachineName -Tags ''
+        Clear-OrchCache
+        $machine = Get-OrchMachine -Name $script:MachineName
+        $machine.Tags.Count | Should -Be 0
+    }
+
+    It 'Update-OrchMachine skips no-op (same value)' {
+        Update-OrchMachine -Name $script:MachineName -Description 'no-op test'
+        Clear-OrchCache
+        Update-OrchMachine -Name $script:MachineName -Description 'no-op test'
+        $machine = Get-OrchMachine -Name $script:MachineName
+        $machine.Description | Should -Be 'no-op test'
+    }
+
+    It 'Update-OrchMachine with multiple properties' {
+        Update-OrchMachine -Name $script:MachineName -Description 'multi' -AutomationType 'Any' -TargetFramework 'Any'
+        Clear-OrchCache
+        $machine = Get-OrchMachine -Name $script:MachineName
+        $machine.Description | Should -Be 'multi'
+        $machine.AutomationType | Should -Be 'Any'
+        $machine.TargetFramework | Should -Be 'Any'
+    }
+
+    It 'Remove-OrchMachine removes the machine' {
+        Remove-OrchMachine -Name $script:MachineName -Confirm:$false
+        Clear-OrchCache
+        $machine = Get-OrchMachine -Name $script:MachineName -ErrorAction SilentlyContinue
+        $machine | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'Queue CRUD' {
+    BeforeAll {
+        $script:QueueName = "${script:Prefix}Queue"
+    }
+
+    AfterAll {
+        $existing = Get-OrchQueue -Name $script:QueueName -ErrorAction SilentlyContinue
+        if ($existing) {
+            Remove-OrchQueue -Name $script:QueueName -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+
+    It 'New-OrchQueue creates a queue' {
+        New-OrchQueue -Name $script:QueueName -Description 'Created by Pester'
+        Clear-OrchCache
+        $queue = Get-OrchQueue -Name $script:QueueName
+        $queue | Should -Not -BeNullOrEmpty
+        $queue.Name | Should -Be $script:QueueName
+        $queue.Description | Should -Be 'Created by Pester'
+    }
+
+    It 'Update-OrchQueue updates Description' {
+        Update-OrchQueue -Name $script:QueueName -Description 'Updated by Pester'
+        Clear-OrchCache
+        $queue = Get-OrchQueue -Name $script:QueueName
+        $queue.Description | Should -Be 'Updated by Pester'
+    }
+
+    It 'Update-OrchQueue updates MaxNumberOfRetries' {
+        Update-OrchQueue -Name $script:QueueName -MaxNumberOfRetries 5
+        Clear-OrchCache
+        $queue = Get-OrchQueue -Name $script:QueueName
+        $queue.MaxNumberOfRetries | Should -Be 5
+    }
+
+    It 'Update-OrchQueue updates AcceptAutomaticallyRetry' {
+        Update-OrchQueue -Name $script:QueueName -AcceptAutomaticallyRetry true
+        Clear-OrchCache
+        $queue = Get-OrchQueue -Name $script:QueueName
+        $queue.AcceptAutomaticallyRetry | Should -Be $true
+    }
+
+    It 'Update-OrchQueue skips no-op' {
+        Update-OrchQueue -Name $script:QueueName -Description 'Updated by Pester'
+        $queue = Get-OrchQueue -Name $script:QueueName
+        $queue.Description | Should -Be 'Updated by Pester'
+    }
+
+    It 'Remove-OrchQueue removes the queue' {
+        Remove-OrchQueue -Name $script:QueueName -Confirm:$false
+        Clear-OrchCache
+        $queue = Get-OrchQueue -Name $script:QueueName -ErrorAction SilentlyContinue
+        $queue | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'Bucket CRUD' {
+    BeforeAll {
+        $script:BucketName = "${script:Prefix}Bucket"
+    }
+
+    AfterAll {
+        $existing = Get-OrchBucket -Name $script:BucketName -ErrorAction SilentlyContinue
+        if ($existing) {
+            Remove-OrchBucket -Name $script:BucketName -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+
+    It 'New-OrchBucket creates a bucket' {
+        New-OrchBucket -Name $script:BucketName -Description 'Created by Pester'
+        Clear-OrchCache
+        $bucket = Get-OrchBucket -Name $script:BucketName
+        $bucket | Should -Not -BeNullOrEmpty
+        $bucket.Name | Should -Be $script:BucketName
+        $bucket.Description | Should -Be 'Created by Pester'
+    }
+
+    It 'Remove-OrchBucket removes the bucket' {
+        Remove-OrchBucket -Name $script:BucketName -Confirm:$false
+        Clear-OrchCache
+        $bucket = Get-OrchBucket -Name $script:BucketName -ErrorAction SilentlyContinue
+        $bucket | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'Folder Navigation' {
+    It 'Get-ChildItem lists folders at drive root' {
+        $folders = Get-ChildItem "${script:Drive1}:\"
+        $folders | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Set-Location navigates to a folder' {
+        { Set-Location "${script:Drive1}:\Shared" } | Should -Not -Throw
+        (Get-Location).Path | Should -BeLike '*Shared*'
+    }
+}
+
+Describe 'Get Cmdlets (read-only)' {
+    It 'Get-OrchUser returns users' {
+        $users = Get-OrchUser
+        $users | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Get-OrchRole returns roles' {
+        $roles = Get-OrchRole
+        $roles | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Get-OrchMachine returns machines' {
+        $machines = Get-OrchMachine
+        $machines | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Get-OrchSetting returns settings' {
+        $settings = Get-OrchSetting
+        $settings | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Get-OrchCurrentUser returns current user' {
+        $user = Get-OrchCurrentUser
+        $user | Should -Not -BeNullOrEmpty
+        $user.UserName | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Get-OrchHelp returns help text' {
+        $help = Get-OrchHelp
+        $help | Should -Not -BeNullOrEmpty
+        $help | Should -Match 'UiPathOrch'
+    }
+}
+
+Describe 'Asset CRUD' {
+    BeforeAll {
+        $script:AssetName = "${script:Prefix}Asset"
+    }
+
+    AfterAll {
+        Remove-OrchAsset -Name "${script:Prefix}*" -Confirm:$false -ErrorAction SilentlyContinue
+    }
+
+    It 'Set-OrchAsset creates a Text asset' {
+        Set-OrchAsset -ValueType Text -Name "${script:AssetName}_Text" -Value 'hello' -Description 'Text asset'
+        Clear-OrchCache
+        $asset = Get-OrchAsset -Name "${script:AssetName}_Text"
+        $asset | Should -Not -BeNullOrEmpty
+        $asset.Value | Should -Be 'hello'
+        $asset.Description | Should -Be 'Text asset'
+    }
+
+    It 'Set-OrchAsset creates an Integer asset' {
+        Set-OrchAsset -ValueType Integer -Name "${script:AssetName}_Int" -Value '42'
+        Clear-OrchCache
+        $asset = Get-OrchAsset -Name "${script:AssetName}_Int"
+        $asset | Should -Not -BeNullOrEmpty
+        $asset.Value | Should -Be '42'
+    }
+
+    It 'Set-OrchAsset creates a Bool asset' {
+        Set-OrchAsset -ValueType Bool -Name "${script:AssetName}_Bool" -Value 'true'
+        Clear-OrchCache
+        $asset = Get-OrchAsset -Name "${script:AssetName}_Bool"
+        $asset | Should -Not -BeNullOrEmpty
+        $asset.Value | Should -Be 'True'
+    }
+
+    It 'Set-OrchAsset updates the value of an existing Text asset' {
+        Set-OrchAsset -ValueType Text -Name "${script:AssetName}_Text" -Value 'updated'
+        Clear-OrchCache
+        $asset = Get-OrchAsset -Name "${script:AssetName}_Text"
+        $asset.Value | Should -Be 'updated'
+    }
+
+    It 'Set-OrchAsset updates the Description of an existing asset' {
+        Set-OrchAsset -ValueType Text -Name "${script:AssetName}_Text" -Description 'Updated description'
+        Clear-OrchCache
+        $asset = Get-OrchAsset -Name "${script:AssetName}_Text"
+        $asset.Description | Should -Be 'Updated description'
+    }
+
+    It 'Get-OrchAsset with -Name wildcard filters correctly' {
+        $assets = Get-OrchAsset -Name "${script:AssetName}_*"
+        $assets.Count | Should -BeGreaterOrEqual 3
+    }
+
+    It 'Remove-OrchAsset removes an asset by name' {
+        Remove-OrchAsset -Name "${script:AssetName}_Bool" -Confirm:$false
+        Clear-OrchCache
+        $asset = Get-OrchAsset -Name "${script:AssetName}_Bool" -ErrorAction SilentlyContinue
+        $asset | Should -BeNullOrEmpty
+    }
+
+    It 'Remove-OrchAsset with wildcard removes remaining assets' {
+        Remove-OrchAsset -Name "${script:AssetName}_*" -Confirm:$false
+        Clear-OrchCache
+        $assets = Get-OrchAsset -Name "${script:AssetName}_*" -ErrorAction SilentlyContinue
+        $assets | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'Folder Provider Operations (mkdir / rmdir)' {
+    BeforeAll {
+        $script:FolderName = "${script:Prefix}Folder"
+        $script:SubFolderName = "${script:Prefix}SubFolder"
+    }
+
+    AfterAll {
+        $parentPath = "${script:Drive1}:\${script:FolderName}"
+        if (Test-Path $parentPath) {
+            Remove-Item $parentPath -Recurse -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+
+    It 'New-Item creates a top-level folder' {
+        $folder = New-Item -Path "${script:Drive1}:\${script:FolderName}" -ItemType Directory
+        $folder | Should -Not -BeNullOrEmpty
+        Clear-OrchCache
+        $exists = Get-ChildItem "${script:Drive1}:\" | Where-Object { $_.DisplayName -eq $script:FolderName }
+        $exists | Should -Not -BeNullOrEmpty
+    }
+
+    It 'New-Item creates a subfolder' {
+        $sub = New-Item -Path "${script:Drive1}:\${script:FolderName}\${script:SubFolderName}" -ItemType Directory
+        $sub | Should -Not -BeNullOrEmpty
+        Clear-OrchCache
+        $exists = Get-ChildItem "${script:Drive1}:\${script:FolderName}" | Where-Object { $_.DisplayName -eq $script:SubFolderName }
+        $exists | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Set-Location navigates into the subfolder' {
+        { Set-Location "${script:Drive1}:\${script:FolderName}\${script:SubFolderName}" } | Should -Not -Throw
+        Set-Location "${script:Drive1}:\Shared"
+    }
+
+    It 'Remove-Item removes the subfolder' {
+        Remove-Item "${script:Drive1}:\${script:FolderName}\${script:SubFolderName}" -Recurse -Confirm:$false
+        Clear-OrchCache
+        $exists = Get-ChildItem "${script:Drive1}:\${script:FolderName}" -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -eq $script:SubFolderName }
+        $exists | Should -BeNullOrEmpty
+    }
+
+    It 'Remove-Item removes the top-level folder' {
+        Remove-Item "${script:Drive1}:\${script:FolderName}" -Recurse -Confirm:$false
+        Clear-OrchCache
+        $exists = Get-ChildItem "${script:Drive1}:\" | Where-Object { $_.DisplayName -eq $script:FolderName }
+        $exists | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'CSV Export' {
+    BeforeAll {
+        $script:CsvDir = Join-Path $env:TEMP "PesterTest_CSV_$(Get-Random -Maximum 9999)"
+        New-Item -Path $script:CsvDir -ItemType Directory -Force | Out-Null
+    }
+
+    AfterAll {
+        Remove-Item $script:CsvDir -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    It 'Get-OrchMachine -ExportCsv creates a CSV file' {
+        $csvPath = Join-Path $script:CsvDir 'machines.csv'
+        Get-OrchMachine -ExportCsv $csvPath
+        Test-Path $csvPath | Should -BeTrue
+        $header = Get-Content $csvPath -TotalCount 1
+        $header | Should -Match 'Name'
+    }
+
+    It 'Get-OrchUser -ExportCsv creates a CSV file' {
+        $csvPath = Join-Path $script:CsvDir 'users.csv'
+        Get-OrchUser -ExportCsv $csvPath
+        Test-Path $csvPath | Should -BeTrue
+        $header = Get-Content $csvPath -TotalCount 1
+        $header | Should -Match 'UserName'
+    }
+
+    It 'Get-OrchQueue -ExportCsv creates a CSV file' {
+        $csvPath = Join-Path $script:CsvDir 'queues.csv'
+        Get-OrchQueue -ExportCsv $csvPath
+        Test-Path $csvPath | Should -BeTrue
+        $header = Get-Content $csvPath -TotalCount 1
+        $header | Should -Match 'Name'
+    }
+
+    It 'Get-OrchRole -ExportCsv creates a CSV file' {
+        $csvPath = Join-Path $script:CsvDir 'roles.csv'
+        Get-OrchRole -ExportCsv $csvPath
+        Test-Path $csvPath | Should -BeTrue
+        $header = Get-Content $csvPath -TotalCount 1
+        $header | Should -Match 'Name'
+    }
+
+    It 'Get-OrchAsset -ExportCsv creates a CSV file' {
+        $csvPath = Join-Path $script:CsvDir 'assets.csv'
+        Get-OrchAsset -ExportCsv $csvPath
+        Test-Path $csvPath | Should -BeTrue
+    }
+
+    It 'Get-OrchBucket -ExportCsv creates a CSV file' {
+        $csvPath = Join-Path $script:CsvDir 'buckets.csv'
+        Get-OrchBucket -ExportCsv $csvPath
+        Test-Path $csvPath | Should -BeTrue
+    }
+
+    It 'Get-OrchFolderUser -ExportCsv creates a CSV file' {
+        $csvPath = Join-Path $script:CsvDir 'folderusers.csv'
+        Get-OrchFolderUser -ExportCsv $csvPath
+        Test-Path $csvPath | Should -BeTrue
+    }
+
+    It 'Get-OrchFolderMachine -ExportCsv creates a CSV file' {
+        $csvPath = Join-Path $script:CsvDir 'foldermachines.csv'
+        Get-OrchFolderMachine -ExportCsv $csvPath
+        Test-Path $csvPath | Should -BeTrue
+    }
+}
+
+Describe 'Get Cmdlets - Additional Read-Only' {
+    It 'Get-OrchQueue returns queues (or empty without error)' {
+        { Get-OrchQueue } | Should -Not -Throw
+    }
+
+    It 'Get-OrchAsset returns assets (or empty without error)' {
+        { Get-OrchAsset } | Should -Not -Throw
+    }
+
+    It 'Get-OrchBucket returns buckets (or empty without error)' {
+        { Get-OrchBucket } | Should -Not -Throw
+    }
+
+    It 'Get-OrchProcess returns processes (or empty without error)' {
+        { Get-OrchProcess } | Should -Not -Throw
+    }
+
+    It 'Get-OrchTrigger returns triggers (or empty without error)' {
+        { Get-OrchTrigger } | Should -Not -Throw
+    }
+
+    It 'Get-OrchFolderUser returns folder users' {
+        $users = Get-OrchFolderUser
+        $users | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Get-OrchFolderMachine returns folder machines (or empty without error)' {
+        { Get-OrchFolderMachine } | Should -Not -Throw
+    }
+
+    It 'Get-OrchWebhook returns webhooks (or empty without error)' {
+        { Get-OrchWebhook } | Should -Not -Throw
+    }
+
+    It 'Get-OrchCalendar returns calendars (or empty without error)' {
+        { Get-OrchCalendar } | Should -Not -Throw
+    }
+
+    It 'Get-OrchLibrary returns libraries (or empty without error)' {
+        { Get-OrchLibrary } | Should -Not -Throw
+    }
+
+    It 'Get-OrchPackage returns packages (or empty without error)' {
+        { Get-OrchPackage } | Should -Not -Throw
+    }
+
+    It 'Get-OrchCredentialStore returns credential stores' {
+        $stores = Get-OrchCredentialStore
+        $stores | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Get-OrchLicense returns license info' {
+        $license = Get-OrchLicense
+        $license | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Get-OrchConfigPath returns a path string' {
+        $path = Get-OrchConfigPath
+        $path | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Get-OrchPSDrive returns connected drives' {
+        $drives = Get-OrchPSDrive
+        $drives | Should -Not -BeNullOrEmpty
+    }
+}
+
+Describe 'Error Handling' {
+    It 'Get-OrchMachine -Name for non-existent returns empty' {
+        $result = Get-OrchMachine -Name 'NonExistent_99999'
+        $result | Should -BeNullOrEmpty
+    }
+
+    It 'Remove-OrchMachine for non-existent does not throw' {
+        { Remove-OrchMachine -Name 'NonExistent_99999' -Confirm:$false } | Should -Not -Throw
+    }
+
+    It 'New-OrchQueue with duplicate name writes an error' {
+        $dupName = "${script:Prefix}DupQueue"
+        New-OrchQueue -Name $dupName
+        Clear-OrchCache
+        $err = $null
+        New-OrchQueue -Name $dupName -ErrorVariable err -ErrorAction SilentlyContinue
+        $err | Should -Not -BeNullOrEmpty
+        Remove-OrchQueue -Name $dupName -Confirm:$false -ErrorAction SilentlyContinue
+    }
+
+    It 'Set-Location to non-existent folder writes an error' {
+        { Set-Location "${script:Drive1}:\NonExistent_Folder_99999" -ErrorAction Stop } | Should -Throw
+    }
+}
+
+Describe 'Wildcard Support' {
+    BeforeAll {
+        $script:WcMachineA = "${script:Prefix}WcA"
+        $script:WcMachineB = "${script:Prefix}WcB"
+        New-OrchMachine -Name $script:WcMachineA -Description 'Wildcard A'
+        New-OrchMachine -Name $script:WcMachineB -Description 'Wildcard B'
+        Clear-OrchCache
+    }
+
+    AfterAll {
+        Remove-OrchMachine -Name "${script:Prefix}Wc*" -Confirm:$false -ErrorAction SilentlyContinue
+    }
+
+    It 'Get-OrchMachine with * wildcard returns matching machines' {
+        $machines = Get-OrchMachine -Name "${script:Prefix}Wc*"
+        $machines.Count | Should -Be 2
+    }
+
+    It 'Get-OrchMachine with ? wildcard matches single character' {
+        $machines = Get-OrchMachine -Name "${script:Prefix}Wc?"
+        $machines.Count | Should -Be 2
+    }
+
+    It 'Remove-OrchMachine with wildcard removes matching machines' {
+        Remove-OrchMachine -Name "${script:Prefix}Wc*" -Confirm:$false
+        Clear-OrchCache
+        $machines = Get-OrchMachine -Name "${script:Prefix}Wc*"
+        $machines | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'Cross-Tenant Operations' {
+    BeforeAll {
+        $script:CrossMachineName = "${script:Prefix}CrossMachine"
+        $script:CrossQueueName = "${script:Prefix}CrossQueue"
+        $script:CrossAssetName = "${script:Prefix}CrossAsset"
+        $script:CrossBucketName = "${script:Prefix}CrossBucket"
+        $script:Orch1Shared = "${script:Drive1}:\Shared"
+        $script:Orch2Shared = "${script:Drive2}:\Shared"
+    }
+
+    AfterAll {
+        foreach ($drv in @($script:Drive1, $script:Drive2)) {
+            Remove-OrchMachine -Name $script:CrossMachineName -Path "${drv}:\" -Confirm:$false -ErrorAction SilentlyContinue
+            Remove-OrchQueue -Name $script:CrossQueueName -Path "${drv}:\Shared" -Confirm:$false -ErrorAction SilentlyContinue
+            Remove-OrchAsset -Name $script:CrossAssetName -Path "${drv}:\Shared" -Confirm:$false -ErrorAction SilentlyContinue
+            Remove-OrchBucket -Name $script:CrossBucketName -Path "${drv}:\Shared" -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+
+    It 'Get-OrchMachine works across multiple drives with -Path' {
+        $machines1 = Get-OrchMachine -Path "${script:Drive1}:\"
+        $machines2 = Get-OrchMachine -Path "${script:Drive2}:\"
+        $machines1 | Should -Not -BeNullOrEmpty
+        $machines2 | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Get-OrchUser works across multiple drives with -Path' {
+        $users1 = Get-OrchUser -Path "${script:Drive1}:\"
+        $users2 = Get-OrchUser -Path "${script:Drive2}:\"
+        $users1 | Should -Not -BeNullOrEmpty
+        $users2 | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Copy-OrchMachine copies a machine from Orch1 to Orch2' {
+        New-OrchMachine -Name $script:CrossMachineName -Description 'Cross-tenant test' -Path "${script:Drive1}:\"
+        Clear-OrchCache
+        Copy-OrchMachine -Name $script:CrossMachineName -Destination "${script:Drive2}:\" -Path "${script:Drive1}:\"
+        Clear-OrchCache
+        $copied = Get-OrchMachine -Name $script:CrossMachineName -Path "${script:Drive2}:\"
+        $copied | Should -Not -BeNullOrEmpty
+        $copied.Description | Should -Be 'Cross-tenant test'
+    }
+
+    It 'Copy-OrchQueue copies a queue from Orch1:\Shared to Orch2:\Shared' {
+        New-OrchQueue -Name $script:CrossQueueName -Description 'Cross-tenant queue' -Path $script:Orch1Shared
+        Clear-OrchCache
+        Copy-OrchQueue -Name $script:CrossQueueName -Destination $script:Orch2Shared -Path $script:Orch1Shared
+        Clear-OrchCache
+        $copied = Get-OrchQueue -Name $script:CrossQueueName -Path $script:Orch2Shared
+        $copied | Should -Not -BeNullOrEmpty
+        $copied.Description | Should -Be 'Cross-tenant queue'
+    }
+
+    It 'Copy-OrchAsset copies an asset from Orch1:\Shared to Orch2:\Shared' {
+        Set-OrchAsset -ValueType Text -Name $script:CrossAssetName -Value 'cross-test' -Path $script:Orch1Shared
+        Clear-OrchCache
+        Copy-OrchAsset -Name $script:CrossAssetName -Destination $script:Orch2Shared -Path $script:Orch1Shared
+        Clear-OrchCache
+        $copied = Get-OrchAsset -Name $script:CrossAssetName -Path $script:Orch2Shared
+        $copied | Should -Not -BeNullOrEmpty
+        $copied.Value | Should -Be 'cross-test'
+    }
+
+    It 'Copy-OrchBucket copies a bucket from Orch1:\Shared to Orch2:\Shared' {
+        New-OrchBucket -Name $script:CrossBucketName -Description 'Cross-tenant bucket' -Path $script:Orch1Shared
+        Clear-OrchCache
+        Copy-OrchBucket -Name $script:CrossBucketName -Destination $script:Orch2Shared -Path $script:Orch1Shared
+        Clear-OrchCache
+        $copied = Get-OrchBucket -Name $script:CrossBucketName -Path $script:Orch2Shared
+        $copied | Should -Not -BeNullOrEmpty
+        $copied.Description | Should -Be 'Cross-tenant bucket'
+    }
+
+    It 'Get-ChildItem lists folders on both drives' {
+        $folders1 = Get-ChildItem "${script:Drive1}:\"
+        $folders2 = Get-ChildItem "${script:Drive2}:\"
+        $folders1 | Should -Not -BeNullOrEmpty
+        $folders2 | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Get-OrchPSDrive lists all connected drives' {
+        $drives = Get-OrchPSDrive
+        $drives | Should -Not -BeNullOrEmpty
+        $driveNames = $drives | ForEach-Object { $_.Name }
+        $driveNames | Should -Contain $script:Drive1
+        $driveNames | Should -Contain $script:Drive2
+    }
+}
