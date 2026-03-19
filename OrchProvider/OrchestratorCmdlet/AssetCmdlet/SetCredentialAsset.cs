@@ -404,27 +404,22 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                 }
             }
 
-            // Find and update the corresponding UserValue
+            // Use Dictionary for O(1) lookup by (UserId, MachineId)
+            var uvDict = (asset.UserValues ?? []).ToDictionary(uv => (uv.UserId, uv.MachineId));
+
             foreach (var user in specifiedUsers)
             {
                 foreach (var machine in specifiedMachines!)
                 {
-                    asset.UserValues ??= [];
+                    var key = (user.Id, machine?.Id);
+                    uvDict.TryGetValue(key, out var userValue);
 
-                    AssetUserValue userValue = asset.UserValues.FirstOrDefault(uv => uv.UserId == user.Id && uv.MachineId == machine?.Id);
                     if (string.IsNullOrEmpty(param.CredentialUsername) && (param.CredentialPassword == "" || param.ExternalName == ""))
                     {
-                        // If CredentialPassword is set to "" or ExternalName is set to "",
-                        // delete this asset value
                         if (userValue is not null)
                         {
                             isDirty = true;
-                            asset.UserValues.Remove(userValue);
-                            if (!asset.UserValues.Any())
-                            {
-                                asset.ValueScope = "Global";
-                                asset.UserValues = null;
-                            }
+                            uvDict.Remove(key);
                         }
                         continue;
                     }
@@ -440,9 +435,8 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                             MachineName = machine?.Name,
                             CredentialStoreId = asset.CredentialStoreId
                         };
-
+                        uvDict[key] = userValue;
                         asset.ValueScope = "PerRobot";
-                        asset.UserValues.Add(userValue);
                     }
 
                     if (!string.IsNullOrEmpty(param.ExternalName))
@@ -466,6 +460,15 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                         }
                     }
                 }
+            }
+
+            // Write back to asset.UserValues
+            if (uvDict.Count > 0)
+                asset.UserValues = uvDict.Values.ToList();
+            else
+            {
+                asset.ValueScope = "Global";
+                asset.UserValues = null;
             }
         }
         if (isDirty)

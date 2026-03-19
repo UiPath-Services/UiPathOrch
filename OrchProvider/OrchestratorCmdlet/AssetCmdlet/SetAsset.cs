@@ -478,24 +478,23 @@ public class SetAssetCommand : OrchestratorPSCmdlet
         IEnumerable<User> specifiedUsers, IEnumerable<ExtendedMachine?> specifiedMachines)
     {
         bool isDirty = false;
+
+        // Use Dictionary for O(1) lookup by (UserId, MachineId)
+        var uvDict = (asset.UserValues ?? []).ToDictionary(uv => (uv.UserId, uv.MachineId));
+
         foreach (var user in specifiedUsers)
         {
             foreach (var machine in specifiedMachines)
             {
-                asset.UserValues ??= [];
+                var key = (user.Id, machine?.Id);
+                uvDict.TryGetValue(key, out var userValue);
 
-                var userValue = asset.UserValues.FirstOrDefault(uv => uv.UserId == user.Id && uv.MachineId == machine?.Id);
                 if (param.Value == "")
                 {
                     if (userValue is not null)
                     {
                         isDirty = true;
-                        asset.UserValues.Remove(userValue);
-                        if (!asset.UserValues.Any())
-                        {
-                            asset.ValueScope = "Global";
-                            asset.UserValues = null;
-                        }
+                        uvDict.Remove(key);
                     }
                     continue;
                 }
@@ -509,7 +508,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                         MachineId = machine?.Id,
                         MachineName = machine?.Name
                     };
-                    asset.UserValues.Add(userValue);
+                    uvDict[key] = userValue;
                 }
 
                 if ((userValue.ValueType ?? "") != asset.ValueType)
@@ -537,6 +536,16 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                 }
             }
         }
+
+        // Write back to asset.UserValues
+        if (uvDict.Count > 0)
+            asset.UserValues = uvDict.Values.ToList();
+        else
+        {
+            asset.ValueScope = "Global";
+            asset.UserValues = null;
+        }
+
         return isDirty;
     }
 
