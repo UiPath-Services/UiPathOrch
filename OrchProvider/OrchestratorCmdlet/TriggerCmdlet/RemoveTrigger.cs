@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 public class RemoveTriggerCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(TriggerNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TriggerNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

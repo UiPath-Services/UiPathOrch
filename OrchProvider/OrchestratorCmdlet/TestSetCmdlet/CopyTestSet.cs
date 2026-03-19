@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 public class CopyTestSetCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(TestSetNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TestSetNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

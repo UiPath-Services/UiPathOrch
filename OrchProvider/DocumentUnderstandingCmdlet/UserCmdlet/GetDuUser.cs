@@ -19,12 +19,12 @@ public class GetDuUserCommand : OrchestratorPSCmdlet
     // Either sacrifice performance, or add complex parameters..
     // Personally, neither option is acceptable..
     //[Parameter(ParameterSetName = UserNameSet, Position = 0, ValueFromPipelineByPropertyName = true)]
-    //[ArgumentCompleter(typeof(DuUserNameCompleter<TPositional>))]
+    //[ArgumentCompleter(typeof(DuUserNameCompleter))]
     //[SupportsWildcards]
     //public string[]? UserName { get; set; }
 
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DuNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DuNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

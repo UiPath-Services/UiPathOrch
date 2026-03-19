@@ -274,7 +274,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
     public string? UR_UserName { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(CredentialStoreNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(CredentialStoreNameCompleter))]
     //[SupportsWildcards] // Not worth the effort
     public string? UR_CredentialStore { get; set; }
 
@@ -323,7 +323,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
     public string? ES_AutoDownloadProcess { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     private class UserNameCompleter : OrchArgumentCompleter

@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 public class GetTmTestExecutionCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(TmTestExecutionNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TmTestExecutionNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

@@ -10,12 +10,12 @@ namespace UiPath.PowerShell.Commands;
 public class ExportBucketItemCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(BucketNameCompleter<TPositional, False>))]
+    [ArgumentCompleter(typeof(BucketNameCompleter<False>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
     [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(BucketFullPathCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(BucketFullPathCompleter))]
     [SupportsWildcards]
     public string[]? FullPath { get; set; }
 

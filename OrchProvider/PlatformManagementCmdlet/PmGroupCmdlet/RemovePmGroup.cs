@@ -9,13 +9,13 @@ namespace UiPath.PowerShell.Commands;
 public class RemovePmGroupCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(PmGroupNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(PmGroupNameCompleter))]
     [SupportsWildcards]
     [Alias("Name")]
     public string[]? GroupName { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     protected override void ProcessRecord()

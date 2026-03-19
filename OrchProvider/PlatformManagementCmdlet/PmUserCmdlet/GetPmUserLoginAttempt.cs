@@ -11,12 +11,12 @@ namespace UiPath.PowerShell.Commands;
 class GetPmUserLoginAttemptCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(PmUserEmailCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(PmUserEmailCompleter))]
     [SupportsWildcards]
     public string[]? Email { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     protected override void ProcessRecord()

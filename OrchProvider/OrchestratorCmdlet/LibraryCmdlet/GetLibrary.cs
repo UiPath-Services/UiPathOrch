@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 public class GetLibraryCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(LibraryIdCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(LibraryIdCompleter))]
     [SupportsWildcards]
     public string[]? Id { get; set; }
 
@@ -18,7 +18,7 @@ public class GetLibraryCommand : OrchestratorPSCmdlet
     public SwitchParameter HostFeed { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     protected override void ProcessRecord()

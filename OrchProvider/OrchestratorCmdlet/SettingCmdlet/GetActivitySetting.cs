@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 public class GetActivitySettingCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

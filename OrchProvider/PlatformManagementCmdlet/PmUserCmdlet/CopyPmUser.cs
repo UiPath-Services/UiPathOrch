@@ -13,17 +13,17 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
     Dictionary<(OrchDriveInfo drive, string[] groupIds), Dictionary<string, CsvLine>> _params = new(new DriveGroupIdsComparer());
 
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(PmUserEmailCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(PmUserEmailCompleter))]
     [SupportsWildcards]
     [Alias("UserName")]
     public string[]? Email { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DestinationDriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DestinationDriveCompleter))]
     public string[]? Destination { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string? Path { get; set; }
 
     [Parameter]

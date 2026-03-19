@@ -12,24 +12,24 @@ namespace UiPath.PowerShell.Commands;
 public class CopyLibraryCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(LibraryIdCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(LibraryIdCompleter))]
     [SupportsWildcards]
     public string[]? Id { get; set; }
 
     [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
-    [ArgumentCompleter(typeof(LibraryVersionCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(LibraryVersionCompleter))]
     public string[]? Version { get; set; }
 
     [Parameter(Position = 2, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DestinationDriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DestinationDriveCompleter))]
     public string[]? Destination { get; set; }
 
     //[Parameter]
     //public SwitchParameter HostFeed { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     [SupportsWildcards]
     public string? Path { get; set; }
 

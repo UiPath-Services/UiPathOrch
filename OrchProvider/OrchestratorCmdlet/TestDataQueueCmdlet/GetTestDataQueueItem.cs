@@ -12,7 +12,7 @@ namespace UiPath.PowerShell.Commands;
 public class GetTestDataQueueItemCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(TestDataQueueNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TestDataQueueNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

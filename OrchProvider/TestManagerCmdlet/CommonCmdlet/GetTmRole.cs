@@ -18,7 +18,7 @@ class GetTmRoleCommand : OrchestratorPSCmdlet
     //public string[]? Name { get; set; }
 
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(TmDriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TmDriveCompleter))]
     public string[]? Path { get; set; }
 
     private class TmProjectNameCompleter : OrchArgumentCompleter

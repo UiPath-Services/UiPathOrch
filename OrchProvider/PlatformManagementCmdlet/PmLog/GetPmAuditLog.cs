@@ -35,7 +35,7 @@ public class GetPmAuditLogCommand : OrchestratorPSCmdlet
     public SwitchParameter OrderAscending { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     private string? MakeFilter()

@@ -59,7 +59,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
     public string? Priority { get; set; }
 
     [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(ListReleasesCompleter<Id>))]
+    [ArgumentCompleter(typeof(ListReleasesCompleter))]
     [SupportsWildcards]
     public string[]? ReleaseName { get; set; }
 

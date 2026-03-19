@@ -18,7 +18,7 @@ public class SearchPmDirectoryBulkCommand : OrchestratorPSCmdlet
     public string? EntityType { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(PmDirectoryNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(PmDirectoryNameCompleter))]
     public string[]? Name { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]

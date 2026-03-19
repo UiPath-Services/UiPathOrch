@@ -17,7 +17,7 @@ namespace UiPath.PowerShell.Commands;
 public class UpdateProcessCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(ProcessNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(ProcessNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
@@ -72,7 +72,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
     public int? RetentionPeriod { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(BucketNameCompleter<TPositional, True>))]
+    [ArgumentCompleter(typeof(BucketNameCompleter<True>))]
     [SupportsWildcards]
     public string? RetentionBucket { get; set; }
 
@@ -86,7 +86,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
     public int? StaleRetentionPeriod { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(BucketNameCompleter<TPositional, True>))]
+    [ArgumentCompleter(typeof(BucketNameCompleter<True>))]
     [SupportsWildcards]
     public string? StaleRetentionBucket { get; set; }
 

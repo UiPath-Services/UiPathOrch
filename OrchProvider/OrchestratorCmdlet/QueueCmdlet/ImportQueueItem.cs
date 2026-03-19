@@ -23,7 +23,7 @@ public class CSVParseError(int csvRow, string errorType, string csvField, string
 public class ImportQueueItemCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(QueueNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(QueueNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

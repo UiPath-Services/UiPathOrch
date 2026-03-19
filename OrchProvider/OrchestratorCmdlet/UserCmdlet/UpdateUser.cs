@@ -14,7 +14,7 @@ namespace UiPath.PowerShell.Commands;
 public class UpdateUserCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(TenantUserUserNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TenantUserUserNameCompleter))]
     [SupportsWildcards]
     public string[]? UserName { get; set; }
 
@@ -67,7 +67,7 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
     public string? UR_UserName { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(CredentialStoreNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(CredentialStoreNameCompleter))]
     //[SupportsWildcards] // Not worth the effort
     public string? UR_CredentialStore { get; set; }
 
@@ -115,7 +115,7 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
     public string? ES_AutoDownloadProcess { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     private class RolesCompleter : OrchArgumentCompleter

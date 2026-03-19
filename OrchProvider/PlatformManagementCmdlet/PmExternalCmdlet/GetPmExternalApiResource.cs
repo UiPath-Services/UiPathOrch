@@ -17,7 +17,7 @@ public class GetPmExternalApiResourceCommand : OrchestratorPSCmdlet
     public string[]? Name { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     private class NameCompleter : OrchArgumentCompleter

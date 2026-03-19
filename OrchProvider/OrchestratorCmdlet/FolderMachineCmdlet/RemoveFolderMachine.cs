@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 public class RemoveFolderMachineCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(FolderMachineNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(FolderMachineNameCompleter))]
     public string[]? Name { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]

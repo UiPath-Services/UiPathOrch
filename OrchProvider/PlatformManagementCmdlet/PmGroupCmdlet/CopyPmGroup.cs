@@ -10,17 +10,17 @@ namespace UiPath.PowerShell.Commands;
 public class CopyPmGroupCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(PmGroupNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(PmGroupNameCompleter))]
     [SupportsWildcards]
     [Alias("Name")]
     public string[]? GroupName { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DestinationDriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DestinationDriveCompleter))]
     public string[]? Destination { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string? Path { get; set; }
 
     // objectType must be set to "user" or "application"

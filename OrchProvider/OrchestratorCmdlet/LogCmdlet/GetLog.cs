@@ -42,7 +42,7 @@ public class GetLogCommand : OrchestratorPSCmdlet
     // Ideally we would support an array with wildcards, but it doesn't work.
     // Therefore, array input is not allowed for this parameter.
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(ListReleasesCompleter<Id_Level>))]
+    [ArgumentCompleter(typeof(ListReleasesCompleter))]
     public string? ProcessName { get; set; }
 
     // For some reason, a filter joining multiple Identities with "or" works here.

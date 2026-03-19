@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 public class CopyAssetCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(AssetNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(AssetNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
@@ -19,7 +19,7 @@ public class CopyAssetCommand : OrchestratorPSCmdlet
     public string? Destination { get; set; }
 
     //[Parameter]
-    //[ArgumentCompleter(typeof(AssetValueTypeCompleter<Positional>))]
+    //[ArgumentCompleter(typeof(AssetValueTypeCompleter))]
     //[SupportsWildcards]
     //public string[]? ValueType { get; set; }
 

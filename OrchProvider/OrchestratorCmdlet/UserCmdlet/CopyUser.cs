@@ -14,12 +14,12 @@ public class CopyUserCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
-    [ArgumentCompleter(typeof(TenantUserUserNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TenantUserUserNameCompleter))]
     public string[]? UserName { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
-    [ArgumentCompleter(typeof(TenantUserFullNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TenantUserFullNameCompleter))]
     public string[]? FullName { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -29,11 +29,11 @@ public class CopyUserCommand : OrchestratorPSCmdlet
     public string[]? Type { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DestinationDriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DestinationDriveCompleter))]
     public string[]? Destination { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     [SupportsWildcards]
     public string? Path { get; set; }
 

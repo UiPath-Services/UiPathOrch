@@ -11,24 +11,24 @@ public class RemoveUserCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
-    [ArgumentCompleter(typeof(TenantUserUserNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TenantUserUserNameCompleter))]
     public string[]? UserName { get; set; }
 
     [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
-    [ArgumentCompleter(typeof(TenantUserFullNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TenantUserFullNameCompleter))]
     public string[]? FullName { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
-    [ArgumentCompleter(typeof(TenantUserFullNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TenantUserFullNameCompleter))]
     public string[]? Type { get; set; }
 
     [Parameter]
     public SwitchParameter NoMatchWarning { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<Positional.UserName_FullName>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     protected override void ProcessRecord()

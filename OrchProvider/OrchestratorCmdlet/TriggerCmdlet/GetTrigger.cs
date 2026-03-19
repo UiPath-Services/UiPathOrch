@@ -12,7 +12,7 @@ namespace UiPath.PowerShell.Commands;
 public class GetTriggerCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(TriggerNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TriggerNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

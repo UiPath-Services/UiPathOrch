@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 public class GetJobStatsCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     protected override void ProcessRecord()

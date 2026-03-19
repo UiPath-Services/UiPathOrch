@@ -29,7 +29,7 @@ public class AddPmLicenseToPmLicenseGroup: OrchestratorPSCmdlet
     public string[]? License { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     private class SearchGroupNameCompleter : OrchArgumentCompleter

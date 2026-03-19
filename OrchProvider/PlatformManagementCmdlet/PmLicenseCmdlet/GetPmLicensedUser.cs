@@ -23,7 +23,7 @@ public class GetUserLicenseUser: OrchestratorPSCmdlet
     //public SwitchParameter ExpandAllocation { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     //[Parameter]

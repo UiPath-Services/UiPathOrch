@@ -10,13 +10,13 @@ namespace UiPath.PowerShell.Commands;
 public class RemoveUserLicenseGroup: OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter))]
     [SupportsWildcards]
     [Alias("Name")]
     public string[]? GroupName { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     protected override void ProcessRecord()

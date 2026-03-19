@@ -21,7 +21,7 @@ public class AddPmGroupCommand : OrchestratorPSCmdlet
     public string[]? GroupName { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     private class NewPmGroupNameCompleter : OrchArgumentCompleter

@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 public class CopyActionCatalogCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(ActionCatalogNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(ActionCatalogNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

@@ -11,7 +11,7 @@ public class GetUserPrivilegeCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
-    [ArgumentCompleter(typeof(TenantUserUserNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TenantUserUserNameCompleter))]
     public string[]? UserName { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]

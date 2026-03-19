@@ -23,7 +23,7 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
 
     // Common parameters
     [Parameter]
-    [ArgumentCompleter(typeof(TestCaseExecutionEntryPointCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TestCaseExecutionEntryPointCompleter))]
     [SupportsWildcards]
     [Alias("EntryPointPath")]
     public string[]? Name { get; set; }

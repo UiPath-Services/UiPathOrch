@@ -19,13 +19,13 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
     // Either sacrifice performance, or add complex parameters..
     // Personally, neither option is acceptable..
     //[Parameter(ParameterSetName = UserNameSet, Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true)]
-    //[ArgumentCompleter(typeof(DuUserNameCompleter<TPositional>))]
+    //[ArgumentCompleter(typeof(DuUserNameCompleter))]
     //[SupportsWildcards]
     //public string[]? UserName { get; set; }
 
     // Ideally, we would not list users who have no non-inherited roles.
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DuNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DuNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

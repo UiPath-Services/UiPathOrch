@@ -12,12 +12,12 @@ namespace UiPath.PowerShell.Commands;
 public class CopyPackageCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(PackageIdCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(PackageIdCompleter))]
     [SupportsWildcards]
     public string[]? Id { get; set; }
 
     [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(PackageVersionCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(PackageVersionCompleter))]
     [SupportsWildcards]
     public string[]? Version { get; set; }
 

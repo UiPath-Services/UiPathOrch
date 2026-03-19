@@ -10,17 +10,17 @@ namespace UiPath.PowerShell.Commands;
 public class RemoveLibraryCommand : OrchestratorPSCmdlet//, IDynamicParameters
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(LibraryIdCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(LibraryIdCompleter))]
     [SupportsWildcards]
     public string[]? Id { get; set; }
 
     [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(LibraryVersionCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(LibraryVersionCompleter))]
     [SupportsWildcards]
     public string[]? Version { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     // This was never multi-threaded to begin with

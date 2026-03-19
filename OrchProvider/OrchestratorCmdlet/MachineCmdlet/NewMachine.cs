@@ -48,7 +48,7 @@ public class NewMachineCommand : OrchestratorPSCmdlet
     public string? TargetFramework { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(MachineRobotUsersCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(MachineRobotUsersCompleter))]
     [SupportsWildcards]
     public string[]? RobotUsers { get; set; }
 
@@ -56,7 +56,7 @@ public class NewMachineCommand : OrchestratorPSCmdlet
     public string[]? Tags { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     private class NewMachineNameCompleter : OrchArgumentCompleter

@@ -9,12 +9,12 @@ namespace UiPath.PowerShell.Commands;
 public class RemoveMachineCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(MachineNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(MachineNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     // TODO: This can be made multi-threaded.

@@ -12,7 +12,7 @@ namespace UiPath.PowerShell.Commands;
 public class GetQueueCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(QueueNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(QueueNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

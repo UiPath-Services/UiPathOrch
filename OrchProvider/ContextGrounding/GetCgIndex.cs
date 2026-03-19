@@ -13,7 +13,7 @@ namespace UiPath.PowerShell.Commands;
 class GetCgIndexCommand : OrchestratorPSCmdlet
 {
     //[Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    //[ArgumentCompleter(typeof(BucketNameCompleter<TPositional>))]
+    //[ArgumentCompleter(typeof(BucketNameCompleter))]
     //[SupportsWildcards]
     //public string[]? Name { get; set; }
 

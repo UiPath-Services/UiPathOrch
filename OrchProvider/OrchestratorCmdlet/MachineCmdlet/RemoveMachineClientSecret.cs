@@ -13,7 +13,7 @@ namespace UiPath.PowerShell.Commands;
 public class RemoveMachineClientSecretCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(MachineNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(MachineNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
@@ -23,14 +23,14 @@ public class RemoveMachineClientSecretCommand : OrchestratorPSCmdlet
     public string[]? SecretId { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     // This completer cannot be shared because it excludes machines with Scope "PersonalWorkspace" and "AutomationCloudRobot".
     // It would be better to parameterize the excluded Scopes and share the logic, but that's a bit cumbersome...
     // Actually, we could introduce a class that parameterizes the enumeration and filtering parts
     // to generalize this more broadly.
-    private class MachineNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    private class MachineNameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
             string commandName,

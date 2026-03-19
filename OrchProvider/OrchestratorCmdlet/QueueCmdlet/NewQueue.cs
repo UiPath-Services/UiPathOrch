@@ -40,7 +40,7 @@ public class NewQueueCommand : OrchestratorPSCmdlet
     public string? Encrypted { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(ProcessNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(ProcessNameCompleter))]
     [SupportsWildcards]
     public string? Release { get; set; }
 
@@ -67,7 +67,7 @@ public class NewQueueCommand : OrchestratorPSCmdlet
     public int? RetentionPeriod { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(BucketNameCompleter<TPositional, True>))]
+    [ArgumentCompleter(typeof(BucketNameCompleter<True>))]
     [SupportsWildcards]
     public string? RetentionBucket { get; set; }
 
@@ -80,7 +80,7 @@ public class NewQueueCommand : OrchestratorPSCmdlet
     public int? StaleRetentionPeriod { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(BucketNameCompleter<TPositional, True>))]
+    [ArgumentCompleter(typeof(BucketNameCompleter<True>))]
     [SupportsWildcards]
     public string? StaleRetentionBucket { get; set; }
 

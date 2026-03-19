@@ -14,7 +14,7 @@ namespace UiPath.PowerShell.Commands;
 public class UpdateTriggerCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(TriggerNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TriggerNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
@@ -81,7 +81,7 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
     public string? IsConnected { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(CalendarNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(CalendarNameCompleter))]
     [SupportsWildcards]
     public string? CalendarName { get; set; }
 
@@ -106,13 +106,13 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
     public string? StartProcessCron { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(ProcessNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(ProcessNameCompleter))]
     [SupportsWildcards]
     public string? ReleaseName { get; set; }
 
     //QueueDefinitionId
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(QueueNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(QueueNameCompleter))]
     [SupportsWildcards]
     public string? QueueDefinitionName { get; set; }
 
@@ -130,7 +130,7 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
     public DateTime? StopProcessDate { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(ExecutorRobotsCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(ExecutorRobotsCompleter))]
     public string[]? ExecutorRobots { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -150,7 +150,7 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
     // Display user names currently configured on the trigger as candidates. Implementation for Update-OrchTrigger.
     // For New-OrchTrigger, showing all available users would be more user-friendly, so this implementation is not shared.
     // TODO: Actually, listing all configurable values might be more user-friendly...
-    private class ExecutorRobotsCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    private class ExecutorRobotsCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
             string commandName,

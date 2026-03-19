@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 public class UpdatePmUserCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(PmUserEmailCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(PmUserEmailCompleter))]
     [SupportsWildcards]
     [Alias("UserName")]
     public string[]? Email { get; set; }
@@ -53,7 +53,7 @@ public class UpdatePmUserCommand : OrchestratorPSCmdlet
     //public string[]? extensionUserAttributesToRemove { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     protected override void ProcessRecord()

@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 public class RemoveTmRequirementCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(TmRequirementNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TmRequirementNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

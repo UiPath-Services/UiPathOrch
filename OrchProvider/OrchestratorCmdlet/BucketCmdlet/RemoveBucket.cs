@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 public class RemoveBucketCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(BucketNameCompleter<TPositional, False>))]
+    [ArgumentCompleter(typeof(BucketNameCompleter<False>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

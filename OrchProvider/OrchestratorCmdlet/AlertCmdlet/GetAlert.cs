@@ -43,7 +43,7 @@ public class GetAlertCommand : OrchestratorPSCmdlet
     public ulong? First { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     // TODO: Rewrite using StaticTextCompleter

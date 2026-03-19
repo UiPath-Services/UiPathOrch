@@ -15,7 +15,7 @@ public class RedoQueueItemCommand : OrchestratorPSCmdlet
     private Dictionary<(OrchDriveInfo Drive, Folder Folder, QueueDefinition Queue), HashSet<Int64>>? _csvLines = null;
 
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(QueueNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(QueueNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

@@ -23,7 +23,7 @@ public class GetRobotCommand : OrchestratorPSCmdlet
     public string[]? Username { get; set; } // Capitalization follows the Entities.Robot definition
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     private class FullNameCompleter : OrchArgumentCompleter

@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 public class RemoveTestCaseCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(TestCaseNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TestCaseNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

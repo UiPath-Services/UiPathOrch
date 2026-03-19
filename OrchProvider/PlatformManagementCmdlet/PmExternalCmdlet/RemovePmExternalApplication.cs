@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 public class RemovePmExternalApplicationCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(ExternalApplicationNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(ExternalApplicationNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
@@ -18,7 +18,7 @@ public class RemovePmExternalApplicationCommand : OrchestratorPSCmdlet
     public SwitchParameter Force { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     protected override void ProcessRecord()

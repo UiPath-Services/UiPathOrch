@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 class GetConnectionCommand : OrchestratorPSCmdlet
 {
     //[Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    //[ArgumentCompleter(typeof(BucketNameCompleter<TPositional, False>))]
+    //[ArgumentCompleter(typeof(BucketNameCompleter<False>))]
     //[SupportsWildcards]
     //public string[]? Name { get; set; }
 

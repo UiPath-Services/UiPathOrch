@@ -18,7 +18,7 @@ public class GetSettingCommand : OrchestratorPSCmdlet
     public string[]? Name { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

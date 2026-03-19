@@ -30,7 +30,7 @@ class UpdatePmUserSettingCommand : OrchestratorPSCmdlet
     ];
 
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(PmUserEmailCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(PmUserEmailCompleter))]
     [SupportsWildcards]
     [Alias("UserName")]
     public string[]? Email { get; set; }
@@ -41,7 +41,7 @@ class UpdatePmUserSettingCommand : OrchestratorPSCmdlet
     public string? Language { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     internal class LanguageCompleter : OrchArgumentCompleter

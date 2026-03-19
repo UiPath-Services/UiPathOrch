@@ -16,7 +16,7 @@ public class GetLicenseNamedUserCommand : OrchestratorPSCmdlet
     public string[]? RobotType { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     protected override void ProcessRecord()

@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 public class CopyQueueCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(QueueNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(QueueNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

@@ -15,7 +15,7 @@ public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
     public string[]? Source { get; set; }
 
     [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(BucketNameCompleter<TPositional, True>))]
+    [ArgumentCompleter(typeof(BucketNameCompleter<True>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

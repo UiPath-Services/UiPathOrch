@@ -71,7 +71,7 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
     #endregion
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     private static readonly char[] separator = [','];

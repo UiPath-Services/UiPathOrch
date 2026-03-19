@@ -71,7 +71,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
 
     [Parameter(ParameterSetName = Default)]
     [Parameter(ParameterSetName = Plain, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(CredentialStoreNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(CredentialStoreNameCompleter))]
     [SupportsWildcards]
     public string? CredentialStore { get; set; }
 

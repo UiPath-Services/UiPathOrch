@@ -13,7 +13,7 @@ public class ImportLibraryCommand : OrchestratorPSCmdlet
     public string[]? Source { get; set; }
 
     [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     private static bool LibraryExists(OrchDriveInfo drive, string fullPath)

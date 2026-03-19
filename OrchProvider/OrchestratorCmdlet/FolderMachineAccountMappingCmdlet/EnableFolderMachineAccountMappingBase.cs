@@ -25,7 +25,7 @@ public class EnableFolderMachineAccountMappingCommandBase<Enable> : Orchestrator
     public uint Depth { get; set; }
 
     // Only enumerate folder machines that are not PropagateToSubFolders
-    internal class FolderMachineNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    internal class FolderMachineNameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
             string commandName,
@@ -37,7 +37,7 @@ public class EnableFolderMachineAccountMappingCommandBase<Enable> : Orchestrator
             var drivesFolders = ResolvePathWithoutPersonalWorkspace(commandAst, fakeBoundParameters);
 
             // Exclude Names already selected via parameter from the candidates
-            var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
+            var wpName = CreateWPListFromParameter(commandAst, "Name", null, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -57,7 +57,7 @@ public class EnableFolderMachineAccountMappingCommandBase<Enable> : Orchestrator
         }
     }
 
-    internal class UserNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    internal class UserNameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
             string commandName,
@@ -68,9 +68,9 @@ public class EnableFolderMachineAccountMappingCommandBase<Enable> : Orchestrator
         {
             var drivesFolders = ResolvePathWithoutPersonalWorkspace(commandAst, fakeBoundParameters);
 
-            var wpName = CreateWPListFromOtherParameters(commandAst, "Name", TPositional.Parameters);
+            var wpName = CreateWPListFromOtherParameters(commandAst, "Name", []);
 
-            var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+            var wpUserName = CreateWPListFromParameter(commandAst, parameterName, null, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

@@ -15,7 +15,7 @@ public class GetFolderMachineCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
-    [ArgumentCompleter(typeof(FolderMachineNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(FolderMachineNameCompleter))]
     public string[]? Name { get; set; }
 
     // Adding this would be a lot of work...

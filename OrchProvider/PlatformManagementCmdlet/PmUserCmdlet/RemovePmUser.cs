@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 public class RemovePmUserCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(PmUserEmailCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(PmUserEmailCompleter))]
     [SupportsWildcards]
     [Alias("UserName")]
     public string[]? Email { get; set; }
@@ -19,7 +19,7 @@ public class RemovePmUserCommand : OrchestratorPSCmdlet
     public SwitchParameter NoMatchWarning { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     protected override void ProcessRecord()

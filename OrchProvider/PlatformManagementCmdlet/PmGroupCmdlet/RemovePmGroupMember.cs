@@ -33,18 +33,18 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
     }
 
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(PmGroupNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(PmGroupNameCompleter))]
     [SupportsWildcards]
     [Alias("Name")]
     public string[]? GroupName { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(TypeInPmGroupCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TypeInPmGroupCompleter))]
     [SupportsWildcards]
     public string[]? Type { get; set; }
 
     [Parameter(Position = 2, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(UserNameInPmGroupCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(UserNameInPmGroupCompleter))]
     [SupportsWildcards]
     public string[]? UserName { get; set; }
 
@@ -52,7 +52,7 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
     public SwitchParameter NoMatchWarning { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     protected override void ProcessRecord()

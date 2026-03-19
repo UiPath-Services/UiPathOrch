@@ -29,7 +29,7 @@ public class AddPmLicenseToPmUserCmdlet : OrchestratorPSCmdlet
     public string[]? License { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     private class UserNameCompleter : OrchArgumentCompleter

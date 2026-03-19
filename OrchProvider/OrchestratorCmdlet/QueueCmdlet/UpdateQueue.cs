@@ -14,7 +14,7 @@ namespace UiPath.PowerShell.Commands;
 public class UpdateQueueCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(QueueNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(QueueNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
@@ -38,7 +38,7 @@ public class UpdateQueueCommand : OrchestratorPSCmdlet
     //ProcessScheduleId": null,
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(ProcessNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(ProcessNameCompleter))]
     [SupportsWildcards]
     public string? Release { get; set; }
 
@@ -65,7 +65,7 @@ public class UpdateQueueCommand : OrchestratorPSCmdlet
     public int? RetentionPeriod { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(BucketNameCompleter<TPositional, True>))]
+    [ArgumentCompleter(typeof(BucketNameCompleter<True>))]
     [SupportsWildcards]
     public string? RetentionBucket { get; set; }
 
@@ -77,7 +77,7 @@ public class UpdateQueueCommand : OrchestratorPSCmdlet
     public int? StaleRetentionPeriod { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(BucketNameCompleter<TPositional, True>))]
+    [ArgumentCompleter(typeof(BucketNameCompleter<True>))]
     [SupportsWildcards]
     public string? StaleRetentionBucket { get; set; }
 

@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 public class RemoveAssetCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(AssetNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(AssetNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

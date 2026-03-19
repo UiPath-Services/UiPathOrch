@@ -30,7 +30,7 @@ public class GetUserSessionCommand : OrchestratorPSCmdlet
     public ulong? First { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     private string? MakeFilter()

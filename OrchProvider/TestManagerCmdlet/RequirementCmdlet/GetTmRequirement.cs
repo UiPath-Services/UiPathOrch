@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 public class GetTmRequirementCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(TmRequirementNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TmRequirementNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

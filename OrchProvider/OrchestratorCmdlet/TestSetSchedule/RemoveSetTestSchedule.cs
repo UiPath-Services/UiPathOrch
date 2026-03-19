@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 public class RemoveTestSetScheduleCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(TestScheduleNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TestScheduleNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

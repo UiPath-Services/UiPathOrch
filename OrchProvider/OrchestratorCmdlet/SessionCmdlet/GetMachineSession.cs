@@ -42,7 +42,7 @@ public class GetMachineSessionCommand : OrchestratorPSCmdlet
     //public ulong? First { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<Last>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     [Parameter]

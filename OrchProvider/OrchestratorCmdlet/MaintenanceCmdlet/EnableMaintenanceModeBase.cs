@@ -19,7 +19,7 @@ public class EnableMaintenanceModeCommandBase<Enable> : OrchestratorPSCmdlet whe
     public SwitchParameter Force { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     private static string _propValue = Enable.Value ? "Default" : "Enabled";

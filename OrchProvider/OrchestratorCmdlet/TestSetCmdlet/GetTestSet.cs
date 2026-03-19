@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 public class GetTestSetCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(TestSetNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TestSetNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

@@ -31,7 +31,7 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
     public string[]? Type { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(PmDirectoryNameCompleter4Du<TPositional>))]
+    [ArgumentCompleter(typeof(PmDirectoryNameCompleter4Du))]
     public string[]? Name { get; set; }
 
     [Parameter(Position = 2, Mandatory = true, ValueFromPipelineByPropertyName = true)]

@@ -22,7 +22,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
     public string[]? Name { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(ProcessNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(ProcessNameCompleter))]
     [SupportsWildcards]
     public string? ReleaseName { get; set; }
 
@@ -85,7 +85,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
     public string? IsConnected { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(CalendarNameCompleter<Name>))]
+    [ArgumentCompleter(typeof(CalendarNameCompleter))]
     [SupportsWildcards]
     public string? CalendarName { get; set; }
 
@@ -111,7 +111,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
 
     //QueueDefinitionId
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(QueueNameCompleter<Name>))]
+    [ArgumentCompleter(typeof(QueueNameCompleter))]
     [SupportsWildcards]
     public string? QueueDefinitionName { get; set; }
 
@@ -129,7 +129,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
     public DateTime? StopProcessDate { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(ExecutorRobotsCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(ExecutorRobotsCompleter))]
     public string[]? ExecutorRobots { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -168,7 +168,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
 
     // Display a list of available user names as candidates. Implementation for New-OrchTrigger.
     // For Update-OrchTrigger, displaying the current values would be more user-friendly, so this implementation is not shared.
-    private class ExecutorRobotsCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    private class ExecutorRobotsCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
             string commandName,

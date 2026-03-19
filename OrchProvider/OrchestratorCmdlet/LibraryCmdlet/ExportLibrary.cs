@@ -12,12 +12,12 @@ public class ExportLibraryCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
-    [ArgumentCompleter(typeof(LibraryIdCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(LibraryIdCompleter))]
     public string[]? Id { get; set; }
 
     [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
-    [ArgumentCompleter(typeof(LibraryVersionCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(LibraryVersionCompleter))]
     public string[]? Version { get; set; }
 
     [Parameter(Position = 2, ValueFromPipelineByPropertyName = true)]
@@ -28,7 +28,7 @@ public class ExportLibraryCommand : OrchestratorPSCmdlet
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     protected override void ProcessRecord()

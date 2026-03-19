@@ -13,15 +13,15 @@ namespace UiPath.PowerShell.Commands;
 public class GetPmAccessAllowedMemberCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(NameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(NameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
-    internal class NameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    internal class NameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
             string commandName, 

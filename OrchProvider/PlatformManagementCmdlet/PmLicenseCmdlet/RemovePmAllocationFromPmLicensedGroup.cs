@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 public class RemoveAllocationFromUserLicenseGroup: OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter))]
     [SupportsWildcards]
     [Alias("Name")]
     public string[]? GroupName { get; set; }
@@ -25,7 +25,7 @@ public class RemoveAllocationFromUserLicenseGroup: OrchestratorPSCmdlet
     public SwitchParameter NoMatchWarning { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     private class UserNameCompleter : OrchArgumentCompleter

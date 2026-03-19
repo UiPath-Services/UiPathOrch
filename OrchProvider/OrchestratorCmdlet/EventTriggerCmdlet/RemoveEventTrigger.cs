@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 public class RemoveEventTriggerCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(EventTriggerNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(EventTriggerNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

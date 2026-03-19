@@ -9,11 +9,11 @@ public class DisableFolderMachineAccountMappingCommand : EnableFolderMachineAcco
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
-    [ArgumentCompleter(typeof(FolderMachineNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(FolderMachineNameCompleter))]
     public override string[]? Name { get; set; }
 
     [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
-    [ArgumentCompleter(typeof(UserNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(UserNameCompleter))]
     public override string[]? UserName { get; set; }
 }

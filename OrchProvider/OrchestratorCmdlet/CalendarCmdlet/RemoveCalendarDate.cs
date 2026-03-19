@@ -15,7 +15,7 @@ public class RemoveCalendarDateCommand : OrchestratorPSCmdlet
     private Dictionary<(OrchDriveInfo drive, string calendarName), (ExtendedCalendar calendar, List<DateTime> excludedDates)> _parameters = [];
 
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(CalendarNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(CalendarNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
@@ -24,7 +24,7 @@ public class RemoveCalendarDateCommand : OrchestratorPSCmdlet
     public DateTime[]? ExcludedDate { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     [SupportsWildcards]
     public string[]? Path { get; set; }
 

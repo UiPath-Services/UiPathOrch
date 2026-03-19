@@ -11,16 +11,16 @@ namespace UiPath.PowerShell.Commands;
 public class CopyMachineCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(MachineNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(MachineNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DestinationDriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DestinationDriveCompleter))]
     public string[]? Destination { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     [SupportsWildcards]
     public string? Path { get; set; }
 

@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 class MountLibraryFeedCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0)]
-    [ArgumentCompleter(typeof(DriveCompleter<Positional.Path>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     protected override void ProcessRecord()

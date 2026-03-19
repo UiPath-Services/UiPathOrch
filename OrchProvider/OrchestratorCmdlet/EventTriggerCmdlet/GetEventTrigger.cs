@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 public class GetEventTriggerCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(EventTriggerNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(EventTriggerNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

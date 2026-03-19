@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 public class CopyFolderMachineCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(FolderMachineNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(FolderMachineNameCompleter))]
     public string[]? Name { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]

@@ -12,12 +12,12 @@ namespace UiPath.PowerShell.Commands;
 public class GetPmExternalApplicationCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(ExternalApplicationNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(ExternalApplicationNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     protected override void ProcessRecord()

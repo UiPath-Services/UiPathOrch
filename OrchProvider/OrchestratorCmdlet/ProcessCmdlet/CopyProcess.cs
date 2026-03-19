@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 public class CopyProcessCommand : OrchestratorPSCmdlet
 {
     [Parameter (Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(ProcessNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(ProcessNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

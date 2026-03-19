@@ -14,12 +14,12 @@ public class GetUserCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
-    [ArgumentCompleter(typeof(TenantUserUserNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TenantUserUserNameCompleter))]
     public string[]? UserName { get; set; }
 
     [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
-    [ArgumentCompleter(typeof(TenantUserFullNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(TenantUserFullNameCompleter))]
     public string[]? FullName { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]

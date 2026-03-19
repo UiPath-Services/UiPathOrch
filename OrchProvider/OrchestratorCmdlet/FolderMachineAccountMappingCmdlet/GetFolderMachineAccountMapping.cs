@@ -15,7 +15,7 @@ public class GetFolderMachineAccountMappingCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
-    [ArgumentCompleter(typeof(FolderMachineNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(FolderMachineNameCompleter))]
     public string[]? Name { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -29,7 +29,7 @@ public class GetFolderMachineAccountMappingCommand : OrchestratorPSCmdlet
     public uint Depth { get; set; }
 
     // Only enumerate folder machines that are not PropagateToSubFolders
-    internal class FolderMachineNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+    internal class FolderMachineNameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
             string commandName, 

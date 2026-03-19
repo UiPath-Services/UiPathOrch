@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 public class CopyApiTriggerCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(ApiTriggerNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(ApiTriggerNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

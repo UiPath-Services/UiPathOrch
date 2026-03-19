@@ -11,18 +11,18 @@ namespace UiPath.PowerShell.Commands;
 public class MoveOrchPmGroupMemberCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(PmGroupNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(PmGroupNameCompleter))]
     [SupportsWildcards]
     [Alias("Name")]
     public string? GroupName { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(UserNameInPmGroupCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(UserNameInPmGroupCompleter))]
     [SupportsWildcards]
     public string[]? UserName { get; set; }
 
     [Parameter(Position = 2, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(PmGroupNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(PmGroupNameCompleter))]
     [SupportsWildcards]
     public string[]? Destination { get; set; }
 
@@ -31,7 +31,7 @@ public class MoveOrchPmGroupMemberCommand : OrchestratorPSCmdlet
     public string? KeepSource { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<Positional.GroupName_Type_UserName>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     // key: groupName

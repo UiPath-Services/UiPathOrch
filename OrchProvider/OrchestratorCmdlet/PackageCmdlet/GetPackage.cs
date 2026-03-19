@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 public class GetPackageCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(PackageIdCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(PackageIdCompleter))]
     [SupportsWildcards]
     public string[]? Id { get; set; }
 

@@ -16,7 +16,7 @@ namespace UiPath.PowerShell.Commands;
 public class UpdateMachineCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(MachineNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(MachineNameCompleter))]
     public string[]? Name { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -48,7 +48,7 @@ public class UpdateMachineCommand : OrchestratorPSCmdlet
     public string? TargetFramework { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(MachineRobotUsersCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(MachineRobotUsersCompleter))]
     [SupportsWildcards]
     public string[]? RobotUsers { get; set; }
 
@@ -84,7 +84,7 @@ public class UpdateMachineCommand : OrchestratorPSCmdlet
     public string[]? Tags { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
     // Dedicated to machine Tags

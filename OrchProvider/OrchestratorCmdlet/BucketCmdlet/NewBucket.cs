@@ -27,11 +27,11 @@ public class NewBucketCommand : OrchestratorPSCmdlet
     public string? StorageParameters { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(CredentialStoreNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(CredentialStoreNameCompleter))]
     public string? StorageContainer { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(CredentialStoreNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(CredentialStoreNameCompleter))]
     [SupportsWildcards]
     public string? CredentialStore { get; set; }
 

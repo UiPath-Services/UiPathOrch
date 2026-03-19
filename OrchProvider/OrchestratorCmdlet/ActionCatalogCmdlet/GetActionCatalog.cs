@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 public class GetActionCatalogCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(ActionCatalogNameCompleter<TPositional>))]
+    [ArgumentCompleter(typeof(ActionCatalogNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

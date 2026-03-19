@@ -839,7 +839,6 @@ internal class ActionCatalogNameCompleter : FolderScopedCompleter<TaskCatalog>
     protected override string GetTipHelp(TaskCatalog e) => e.GetPSPath();
     protected override CompletionResultType ResultType => CompletionResultType.Text;
 }
-internal class ActionCatalogNameCompleter<T> : ActionCatalogNameCompleter where T : IPositionalParameters { }
 
 internal class ApiTriggerNameCompleter : FolderScopedCompleter<HttpTrigger>
 {
@@ -849,7 +848,6 @@ internal class ApiTriggerNameCompleter : FolderScopedCompleter<HttpTrigger>
     protected override string GetTipHelp(HttpTrigger e) => e.GetPSPath();
     protected override CompletionResultType ResultType => CompletionResultType.Text;
 }
-internal class ApiTriggerNameCompleter<T> : ApiTriggerNameCompleter where T : IPositionalParameters { }
 
 internal class EventTriggerNameCompleter : FolderScopedCompleter<ApiTrigger>
 {
@@ -859,7 +857,6 @@ internal class EventTriggerNameCompleter : FolderScopedCompleter<ApiTrigger>
     protected override string GetTipHelp(ApiTrigger e) => e.GetPSPath();
     protected override CompletionResultType ResultType => CompletionResultType.Text;
 }
-internal class EventTriggerNameCompleter<T> : EventTriggerNameCompleter where T : IPositionalParameters { }
 
 internal class AssetNameCompleter : OrchArgumentCompleter
 {
@@ -896,7 +893,6 @@ internal class AssetNameCompleter : OrchArgumentCompleter
         }
     }
 }
-internal class AssetNameCompleter<T> : AssetNameCompleter where T : IPositionalParameters { }
 
 internal class AssetValueTypeCompleter : OrchArgumentCompleter
 {
@@ -935,7 +931,6 @@ internal class AssetValueTypeCompleter : OrchArgumentCompleter
         }
     }
 }
-internal class AssetValueTypeCompleter<T> : AssetValueTypeCompleter where T : IPositionalParameters { }
 
 internal class BucketNameCompleter<WritableOnly> : OrchArgumentCompleter where WritableOnly : IBoolParameter
 {
@@ -976,7 +971,6 @@ internal class BucketNameCompleter<WritableOnly> : OrchArgumentCompleter where W
         }
     }
 }
-internal class BucketNameCompleter<T, WritableOnly> : BucketNameCompleter<WritableOnly> where T : IPositionalParameters where WritableOnly : IBoolParameter { }
 
 internal class BucketFullPathCompleter : OrchArgumentCompleter
 {
@@ -1020,7 +1014,6 @@ internal class BucketFullPathCompleter : OrchArgumentCompleter
         }
     }
 }
-internal class BucketFullPathCompleter<T> : BucketFullPathCompleter where T : IPositionalParameters { }
 
 internal class CalendarNameCompleter : DriveScopedCompleter<ExtendedCalendar>
 {
@@ -1031,7 +1024,6 @@ internal class CalendarNameCompleter : DriveScopedCompleter<ExtendedCalendar>
     protected override CompletionResultType ResultType => CompletionResultType.Text;
     protected override string? NotFoundMessage => "No calendars found for";
 }
-internal class CalendarNameCompleter<T> : CalendarNameCompleter where T : IPositionalParameters { }
 
 internal class CredentialStoreNameCompleter : DriveScopedCompleter<CredentialStore>
 {
@@ -1041,7 +1033,6 @@ internal class CredentialStoreNameCompleter : DriveScopedCompleter<CredentialSto
     protected override string GetTipHelp(CredentialStore e) => TipHelp(e);
     protected override string? NotFoundMessage => "No credential stores found for";
 }
-internal class CredentialStoreNameCompleter<T> : CredentialStoreNameCompleter where T : IPositionalParameters { }
 
 internal class FolderMachineNameCompleter : FolderScopedCompleter<MachineFolder>
 {
@@ -1050,7 +1041,6 @@ internal class FolderMachineNameCompleter : FolderScopedCompleter<MachineFolder>
     protected override string GetName(MachineFolder e) => e.Name!;
     protected override string GetTipHelp(MachineFolder e) => TipHelp(e);
 }
-internal class FolderMachineNameCompleter<T> : FolderMachineNameCompleter where T : IPositionalParameters { }
 
 internal class MachineNameCompleter : DriveScopedCompleter<ExtendedMachine>
 {
@@ -1060,7 +1050,6 @@ internal class MachineNameCompleter : DriveScopedCompleter<ExtendedMachine>
     protected override string GetTipHelp(ExtendedMachine e) => TipHelp(e);
     protected override string? NotFoundMessage => "No machines found for";
 }
-internal class MachineNameCompleter<T> : MachineNameCompleter where T : IPositionalParameters { }
 
 internal class MachineRobotUsersCompleter : OrchArgumentCompleter
 {
@@ -1092,7 +1081,6 @@ internal class MachineRobotUsersCompleter : OrchArgumentCompleter
         }
     }
 }
-internal class MachineRobotUsersCompleter<T> : MachineRobotUsersCompleter where T : IPositionalParameters { }
 
 internal class LibraryIdCompleter : OrchArgumentCompleter
 {
@@ -1129,7 +1117,6 @@ internal class LibraryIdCompleter : OrchArgumentCompleter
         }
     }
 }
-internal class LibraryIdCompleter<T> : LibraryIdCompleter where T : IPositionalParameters { }
 
 internal class LibraryVersionCompleter : OrchArgumentCompleter
 {
@@ -1178,7 +1165,6 @@ internal class LibraryVersionCompleter : OrchArgumentCompleter
         }
     }
 }
-internal class LibraryVersionCompleter<T> : LibraryVersionCompleter where T : IPositionalParameters { }
 
 internal class PackageIdCompleter : OrchArgumentCompleter
 {
@@ -1215,9 +1201,7 @@ internal class PackageIdCompleter : OrchArgumentCompleter
         }
     }
 }
-internal class PackageIdCompleter<T> : PackageIdCompleter where T : IPositionalParameters { }
 
-internal class PackageVersionCompleter<TPositional> : PackageVersionCompleter where TPositional : IPositionalParameters { }
 
 internal class PackageVersionCompleter : OrchArgumentCompleter
 {
@@ -1270,7 +1254,6 @@ internal class ProcessNameCompleter : FolderScopedCompleter<Release>
     protected override string GetName(Release e) => e.Name!;
     protected override string GetTipHelp(Release e) => TipHelp(e);
 }
-internal class ProcessNameCompleter<T> : ProcessNameCompleter where T : IPositionalParameters { }
 
 internal class QueueNameCompleter : FolderScopedCompleter<QueueDefinition>
 {
@@ -1279,7 +1262,6 @@ internal class QueueNameCompleter : FolderScopedCompleter<QueueDefinition>
     protected override string GetName(QueueDefinition e) => e.Name!;
     protected override string GetTipHelp(QueueDefinition e) => TipHelp(e);
 }
-internal class QueueNameCompleter<T> : QueueNameCompleter where T : IPositionalParameters { }
 
 internal class ListReleasesCompleter : FolderScopedCompleter<Release>
 {
@@ -1289,7 +1271,6 @@ internal class ListReleasesCompleter : FolderScopedCompleter<Release>
     protected override string GetTipHelp(Release e) => TipHelp(e);
     protected override CompletionResultType ResultType => CompletionResultType.Text;
 }
-internal class ListReleasesCompleter<T> : ListReleasesCompleter where T : IPositionalParameters { }
 
 internal class RoleNameCompleter : DriveScopedCompleter<Role>
 {
@@ -1298,7 +1279,6 @@ internal class RoleNameCompleter : DriveScopedCompleter<Role>
     protected override string GetName(Role e) => e.Name!;
     protected override string GetTipHelp(Role e) => TipHelp(e);
 }
-internal class RoleNameCompleter<T> : RoleNameCompleter where T : IPositionalParameters { }
 
 public class TenantUserUserNameCompleter : OrchArgumentCompleter
 {
@@ -1338,7 +1318,6 @@ public class TenantUserUserNameCompleter : OrchArgumentCompleter
         }
     }
 }
-public class TenantUserUserNameCompleter<T> : TenantUserUserNameCompleter where T : IPositionalParameters { }
 
 public class TenantUserFullNameCompleter : OrchArgumentCompleter
 {
@@ -1378,7 +1357,6 @@ public class TenantUserFullNameCompleter : OrchArgumentCompleter
         }
     }
 }
-public class TenantUserFullNameCompleter<T> : TenantUserFullNameCompleter where T : IPositionalParameters { }
 
 internal class TimeZoneCompleter : OrchArgumentCompleter
 {
@@ -1408,7 +1386,6 @@ internal class TriggerNameCompleter : FolderScopedCompleter<ProcessSchedule>
     protected override string GetTipHelp(ProcessSchedule e) => TipHelp(e);
     protected override CompletionResultType ResultType => CompletionResultType.Text;
 }
-internal class TriggerNameCompleter<T> : TriggerNameCompleter where T : IPositionalParameters { }
 
 internal class UpdatePolicyVersionCompleter : OrchArgumentCompleter
 {
@@ -1442,7 +1419,6 @@ internal class WebhookNameCompleter : DriveScopedCompleter<Webhook>
     protected override string GetName(Webhook e) => e.Name!;
     protected override string GetTipHelp(Webhook e) => TipHelp(e);
 }
-internal class WebhookNameCompleter<T> : WebhookNameCompleter where T : IPositionalParameters { }
 
 internal class PmDirectoryNameCompleter : OrchArgumentCompleter
 {
@@ -1491,7 +1467,6 @@ internal class PmDirectoryNameCompleter : OrchArgumentCompleter
         }
     }
 }
-internal class PmDirectoryNameCompleter<T> : PmDirectoryNameCompleter where T : IPositionalParameters { }
 
 internal class PmDirectoryNameCompleter4Du : OrchArgumentCompleter
 {
@@ -1535,7 +1510,6 @@ internal class PmDirectoryNameCompleter4Du : OrchArgumentCompleter
         }
     }
 }
-internal class PmDirectoryNameCompleter4Du<T> : PmDirectoryNameCompleter4Du where T : IPositionalParameters { }
 
 internal class UserNameInPmGroupCompleter : OrchArgumentCompleter
 {
@@ -1592,7 +1566,6 @@ internal class UserNameInPmGroupCompleter : OrchArgumentCompleter
         }
     }
 }
-internal class UserNameInPmGroupCompleter<T> : UserNameInPmGroupCompleter where T : IPositionalParameters { }
 
 internal class TypeInPmGroupCompleter : OrchArgumentCompleter
 {
@@ -1626,7 +1599,6 @@ internal class TypeInPmGroupCompleter : OrchArgumentCompleter
         }
     }
 }
-internal class TypeInPmGroupCompleter<T> : TypeInPmGroupCompleter where T : IPositionalParameters { }
 
 internal class ExternalApplicationNameCompleter : OrchArgumentCompleter
 {
@@ -1659,7 +1631,6 @@ internal class ExternalApplicationNameCompleter : OrchArgumentCompleter
         }
     }
 }
-internal class ExternalApplicationNameCompleter<T> : ExternalApplicationNameCompleter where T : IPositionalParameters { }
 
 internal class TestCaseNameCompleter : FolderScopedCompleter<TestCaseDefinition>
 {
@@ -1671,7 +1642,6 @@ internal class TestCaseNameCompleter : FolderScopedCompleter<TestCaseDefinition>
     protected override string GetName(TestCaseDefinition e) => e.Name!;
     protected override string GetTipHelp(TestCaseDefinition e) => TipHelp(e);
 }
-internal class TestCaseNameCompleter<T> : TestCaseNameCompleter where T : IPositionalParameters { }
 
 internal class TestDataQueueNameCompleter : FolderScopedCompleter<TestDataQueue>
 {
@@ -1683,7 +1653,6 @@ internal class TestDataQueueNameCompleter : FolderScopedCompleter<TestDataQueue>
     protected override string GetName(TestDataQueue e) => e.Name!;
     protected override string GetTipHelp(TestDataQueue e) => TipHelp(e);
 }
-internal class TestDataQueueNameCompleter<T> : TestDataQueueNameCompleter where T : IPositionalParameters { }
 
 internal class TestScheduleNameCompleter : FolderScopedCompleter<TestSetSchedule>
 {
@@ -1695,7 +1664,6 @@ internal class TestScheduleNameCompleter : FolderScopedCompleter<TestSetSchedule
     protected override string GetName(TestSetSchedule e) => e.Name!;
     protected override string GetTipHelp(TestSetSchedule e) => TipHelp(e);
 }
-internal class TestScheduleNameCompleter<T> : TestScheduleNameCompleter where T : IPositionalParameters { }
 
 internal class TestSetNameCompleter : FolderScopedCompleter<TestSet>
 {
@@ -1707,7 +1675,6 @@ internal class TestSetNameCompleter : FolderScopedCompleter<TestSet>
     protected override string GetName(TestSet e) => e.Name!;
     protected override string GetTipHelp(TestSet e) => TipHelp(e);
 }
-internal class TestSetNameCompleter<T> : TestSetNameCompleter where T : IPositionalParameters { }
 
 /// <summary>
 /// Completer that retrieves name list from the TestSetExecution cache
@@ -1859,7 +1826,6 @@ internal class TestCaseExecutionEntryPointCompleter : OrchArgumentCompleter
         }
     }
 }
-internal class TestCaseExecutionEntryPointCompleter<T> : TestCaseExecutionEntryPointCompleter where T : IPositionalParameters { }
 
 #region Completers for Platform Management cmdlets
 public class PmGroupNameCompleter : OrchArgumentCompleter
@@ -1899,7 +1865,6 @@ public class PmGroupNameCompleter : OrchArgumentCompleter
         }
     }
 }
-public class PmGroupNameCompleter<T> : PmGroupNameCompleter where T : IPositionalParameters { }
 
 internal class PmRobotAccountNameCompleter : OrchArgumentCompleter
 {
@@ -1933,7 +1898,6 @@ internal class PmRobotAccountNameCompleter : OrchArgumentCompleter
         }
     }
 }
-internal class PmRobotAccountNameCompleter<T> : PmRobotAccountNameCompleter where T : IPositionalParameters { }
 
 internal class PmUserEmailCompleter : OrchArgumentCompleter
 {
@@ -1969,7 +1933,6 @@ internal class PmUserEmailCompleter : OrchArgumentCompleter
         }
     }
 }
-internal class PmUserEmailCompleter<T> : PmUserEmailCompleter where T : IPositionalParameters { }
 
 internal class PmLicensedGroupNameCompleter : OrchArgumentCompleter
 {
@@ -2002,7 +1965,6 @@ internal class PmLicensedGroupNameCompleter : OrchArgumentCompleter
         }
     }
 }
-internal class PmLicensedGroupNameCompleter<T> : PmLicensedGroupNameCompleter where T : IPositionalParameters { }
 
 #endregion
 
@@ -2042,7 +2004,6 @@ internal class TmRequirementNameCompleter : OrchArgumentCompleter
         }
     }
 }
-internal class TmRequirementNameCompleter<T> : TmRequirementNameCompleter where T : IPositionalParameters { }
 
 internal class TmTestSetNameCompleter : OrchArgumentCompleter
 {
@@ -2079,7 +2040,6 @@ internal class TmTestSetNameCompleter : OrchArgumentCompleter
         }
     }
 }
-internal class TmTestSetNameCompleter<T> : TmTestSetNameCompleter where T : IPositionalParameters { }
 
 internal class TmTestCaseNameCompleter : OrchArgumentCompleter
 {
@@ -2116,7 +2076,6 @@ internal class TmTestCaseNameCompleter : OrchArgumentCompleter
         }
     }
 }
-internal class TmTestCaseNameCompleter<T> : TmTestCaseNameCompleter where T : IPositionalParameters { }
 
 internal class TmTestExecutionNameCompleter : OrchArgumentCompleter
 {
@@ -2153,7 +2112,6 @@ internal class TmTestExecutionNameCompleter : OrchArgumentCompleter
         }
     }
 }
-internal class TmTestExecutionNameCompleter<T> : TmTestExecutionNameCompleter where T : IPositionalParameters { }
 
 #endregion
 
@@ -2307,7 +2265,6 @@ public class DriveCompleter : OrchArgumentCompleter
         }
     }
 }
-public class DriveCompleter<T> : DriveCompleter where T : IPositionalParameters { }
 
 // Similar to DriveCompleter, but this has the ability to exclude the source drive.
 internal class DestinationDriveCompleter : OrchArgumentCompleter
@@ -2340,7 +2297,6 @@ internal class DestinationDriveCompleter : OrchArgumentCompleter
         }
     }
 }
-internal class DestinationDriveCompleter<T> : DestinationDriveCompleter where T : IPositionalParameters { }
 
 internal class TmDriveCompleter : OrchArgumentCompleter
 {
@@ -2369,7 +2325,6 @@ internal class TmDriveCompleter : OrchArgumentCompleter
         }
     }
 }
-internal class TmDriveCompleter<T> : TmDriveCompleter where T : IPositionalParameters { }
 
 internal class DuNameCompleter : OrchArgumentCompleter
 {
@@ -2406,7 +2361,6 @@ internal class DuNameCompleter : OrchArgumentCompleter
         }
     }
 }
-internal class DuNameCompleter<T> : DuNameCompleter where T : IPositionalParameters { }
 
 // Request from Mishima-san (KDDI): To allow specifying a User Principal Name for Add-DuUser,
 // the following would be needed, but I cannot think of a good implementation.
