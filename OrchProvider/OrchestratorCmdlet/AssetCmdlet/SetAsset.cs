@@ -26,9 +26,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
 {
     private readonly List<SetAssetCommandParameter> parameters = [];
 
-    // The current implementation is slow when processing CSVs with a large number of rows.
-    // Would like to switch to a Dictionary, but it's a bit of a hassle..
-    private readonly List<Asset> parameterSets = [];
+    private readonly Dictionary<(string name, string path), Asset> pendingAssets = [];
     
     private const string Default = "DefaultParameterSet";
 
@@ -349,7 +347,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
         string target = System.IO.Path.Combine(folder.GetPSPath(), param.Name![0]);
         bool isDirty = false;
 
-        var asset = parameterSets.FirstOrDefault(asset => asset.Name == name && asset.Path == folder.GetPSPath());
+        pendingAssets.TryGetValue((name, folder.GetPSPath()), out var asset);
         if (asset is null)
         {
             var assets = drive.Assets.Get(folder);
@@ -637,8 +635,8 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                         foreach (var matchingAsset in matchingAssets)
                         {
                             var asset = UpdateAssetInMemory(drive, folder, matchingAsset.Name!, param, specifiedUsers!, specifiedMachines);
-                            if (asset is not null && !parameterSets.Contains(asset))
-                                parameterSets.Add(asset);
+                            if (asset is not null)
+                                pendingAssets.TryAdd((asset.Name!, asset.Path!), asset);
                         }
                     }
                     else if (WildcardPattern.ContainsWildcardCharacters(name))
@@ -649,8 +647,8 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                     {
                         // Create a new asset
                         var asset = UpdateAssetInMemory(drive, folder, WildcardPattern.Unescape(name), param, specifiedUsers!, specifiedMachines);
-                        if (asset is not null && !parameterSets.Contains(asset))
-                            parameterSets.Add(asset);
+                        if (asset is not null)
+                            pendingAssets.TryAdd((asset.Name!, asset.Path!), asset);
                     }
                 }
             }
@@ -663,14 +661,14 @@ public class SetAssetCommand : OrchestratorPSCmdlet
 
         List<(OrchDriveInfo drive, Int64 id)> folderIdsThatShouldRemoveCache = [];
 
-        using var reporter = new ProgressReporter(this, 1, parameterSets.Count, "Updating Assets");
+        using var reporter = new ProgressReporter(this, 1, pendingAssets.Count, "Updating Assets");
 
         // Process the grouped parameter sets
         try
         {
             int index = 0;
             using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var asset in parameterSets)
+            foreach (var asset in pendingAssets.Values)
             {
                 cancelHandler.Token.ThrowIfCancellationRequested();
 
