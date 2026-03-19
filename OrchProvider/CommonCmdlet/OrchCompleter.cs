@@ -1299,7 +1299,9 @@ internal class PackageIdCompleter<TPositional> : OrchArgumentCompleter where TPo
     }
 }
 
-internal class PackageVersionCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class PackageVersionCompleter<TPositional> : PackageVersionCompleter where TPositional : IPositionalParameters { }
+
+internal class PackageVersionCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -1310,21 +1312,20 @@ internal class PackageVersionCompleter<TPositional> : OrchArgumentCompleter wher
     {
         var recurse = GetSwitchParameterValue(commandAst, "Recurse");
 
-        // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse);
 
         // Only target Ids selected via the parameter
-        var wpId = CreateWPListFromOtherParameters(commandAst, "Id", TPositional.Parameters);
+        var wpId = GetFakeBoundParameters(fakeBoundParameters, "Id").ConvertToWildcardPatternList();
 
         // Exclude Versions already selected via the parameter
-        var wpVersion = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+        var wpVersion = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
         var results = ParallelResults3.GroupBy(drivesFolders, df =>
         {
-            var packages = df.drive.GetPackages(df.folder).FilterByWildcards(p => p?.Id, wpId); ;
+            var packages = df.drive.GetPackages(df.folder).FilterByWildcards(p => p?.Id, wpId);
             return ParallelResults3.GroupBy(packages, package => df.drive.GetPackageVersions(df.folder, package.Id!));
         });
 
@@ -1335,7 +1336,6 @@ internal class PackageVersionCompleter<TPositional> : OrchArgumentCompleter wher
                 foreach (var version in versions
                     .Where(v => wp.IsMatch(v.Version))
                     .ExcludeByWildcards(v => v?.Version, wpVersion))
-                    //.OrderBy(v => v.Item.Item.Version!, VersionComparer.Instance))
                 {
                     string tiphelp = TipHelp(version);
                     yield return new CompletionResult(PathTools.EscapePSText(version.Version), version.Version, CompletionResultType.ParameterValue, tiphelp);
