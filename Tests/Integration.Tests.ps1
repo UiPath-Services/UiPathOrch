@@ -331,6 +331,119 @@ Describe 'Asset CRUD' {
     }
 }
 
+Describe 'Asset Advanced' {
+    BeforeAll {
+        $script:AssetAdv = "${script:Prefix}AssetAdv"
+        $script:TestUser = 'ytsuda@gmail.com'
+        $script:TestMachine = 'aiai'
+    }
+
+    AfterAll {
+        Remove-OrchAsset -Name "${script:Prefix}AssetAdv*" -Confirm:$false -ErrorAction SilentlyContinue
+    }
+
+    It 'Set-OrchAsset with invalid ValueType writes an error' {
+        $err = $null
+        Set-OrchAsset -ValueType 'InvalidType' -Name "${script:AssetAdv}_Err" -Value 'x' -ErrorVariable err -ErrorAction SilentlyContinue
+        $err | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Set-OrchAsset with non-parseable Bool value writes an error' {
+        $err = $null
+        Set-OrchAsset -ValueType Bool -Name "${script:AssetAdv}_BoolErr" -Value 'notabool' -ErrorVariable err -ErrorAction SilentlyContinue
+        $err | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Set-OrchAsset with non-parseable Integer value writes an error' {
+        $err = $null
+        Set-OrchAsset -ValueType Integer -Name "${script:AssetAdv}_IntErr" -Value 'notanumber' -ErrorVariable err -ErrorAction SilentlyContinue
+        $err | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Set-OrchAsset does not overwrite existing ValueType' {
+        Set-OrchAsset -ValueType Integer -Name "${script:AssetAdv}_TypeKeep" -Value '10'
+        Clear-OrchCache
+        # Update value without specifying ValueType
+        Set-OrchAsset -Name "${script:AssetAdv}_TypeKeep" -Value '20'
+        Clear-OrchCache
+        $asset = Get-OrchAsset -Name "${script:AssetAdv}_TypeKeep"
+        $asset.ValueType | Should -Be 'Integer'
+        $asset.Value | Should -Be '20'
+    }
+
+    It 'Set-OrchAsset with wildcard name updates multiple assets' {
+        Set-OrchAsset -ValueType Text -Name "${script:AssetAdv}_WcA" -Value 'before'
+        Set-OrchAsset -ValueType Text -Name "${script:AssetAdv}_WcB" -Value 'before'
+        Clear-OrchCache
+        Set-OrchAsset -Name "${script:AssetAdv}_Wc*" -Value 'after'
+        Clear-OrchCache
+        $assets = Get-OrchAsset -Name "${script:AssetAdv}_Wc*"
+        $assets | ForEach-Object { $_.Value | Should -Be 'after' }
+    }
+
+    It 'Set-OrchAsset creates a PerRobot value with -UserName' {
+        Set-OrchAsset -ValueType Text -Name "${script:AssetAdv}_PerRobot" -Value 'user-val' -UserName $script:TestUser
+        Clear-OrchCache
+        # -ExpandUserValues outputs AssetUserValue objects directly to the pipeline
+        $userValues = @(Get-OrchAsset -Name "${script:AssetAdv}_PerRobot" -ExpandUserValues)
+        $uv = $userValues | Where-Object { $_.UserName -eq $script:TestUser }
+        $uv | Should -Not -BeNullOrEmpty
+        $uv.Value | Should -Be 'user-val'
+    }
+
+    It 'Set-OrchAsset updates a PerRobot value' {
+        Set-OrchAsset -Name "${script:AssetAdv}_PerRobot" -Value 'user-val-updated' -UserName $script:TestUser
+        Clear-OrchCache
+        $userValues = @(Get-OrchAsset -Name "${script:AssetAdv}_PerRobot" -ExpandUserValues)
+        $uv = $userValues | Where-Object { $_.UserName -eq $script:TestUser }
+        $uv.Value | Should -Be 'user-val-updated'
+    }
+
+    It 'Set-OrchAsset creates a PerRobot value with -UserName and -MachineName' {
+        Set-OrchAsset -ValueType Text -Name "${script:AssetAdv}_PerRobotMachine" -Value 'machine-val' -UserName $script:TestUser -MachineName $script:TestMachine
+        Clear-OrchCache
+        $userValues = @(Get-OrchAsset -Name "${script:AssetAdv}_PerRobotMachine" -ExpandUserValues)
+        $uv = $userValues | Where-Object { $_.UserName -eq $script:TestUser -and $_.MachineName -eq $script:TestMachine }
+        $uv | Should -Not -BeNullOrEmpty
+        $uv.Value | Should -Be 'machine-val'
+    }
+
+    It 'Set-OrchAsset with empty Value deletes PerRobot value' {
+        Set-OrchAsset -Name "${script:AssetAdv}_PerRobot" -Value '' -UserName $script:TestUser
+        Clear-OrchCache
+        $userValues = @(Get-OrchAsset -Name "${script:AssetAdv}_PerRobot" -ExpandUserValues)
+        $uv = $userValues | Where-Object { $_.UserName -eq $script:TestUser }
+        $uv | Should -BeNullOrEmpty
+    }
+
+    It 'Set-OrchAsset with Global value then empty Value removes the asset' {
+        Set-OrchAsset -ValueType Text -Name "${script:AssetAdv}_ClearGlobal" -Value 'has-value'
+        Clear-OrchCache
+        Set-OrchAsset -Name "${script:AssetAdv}_ClearGlobal" -Value ''
+        Clear-OrchCache
+        # When Global value is cleared and no PerRobot values exist, the asset is deleted
+        $asset = Get-OrchAsset -Name "${script:AssetAdv}_ClearGlobal" -ErrorAction SilentlyContinue
+        if ($asset) {
+            $asset.HasDefaultValue | Should -Be $false
+        }
+    }
+
+    It 'Set-OrchAsset skips no-op when same value is set' {
+        Set-OrchAsset -ValueType Text -Name "${script:AssetAdv}_NoOp" -Value 'same'
+        Clear-OrchCache
+        # Second call with same value should not error
+        Set-OrchAsset -Name "${script:AssetAdv}_NoOp" -Value 'same'
+        $asset = Get-OrchAsset -Name "${script:AssetAdv}_NoOp"
+        $asset.Value | Should -Be 'same'
+    }
+
+    It 'Set-OrchAsset with -MachineName but no -UserName writes a warning' {
+        $err = $null
+        Set-OrchAsset -ValueType Text -Name "${script:AssetAdv}_MachineOnly" -Value 'test' -MachineName $script:TestMachine -ErrorVariable err -ErrorAction SilentlyContinue
+        $err | Should -Not -BeNullOrEmpty
+    }
+}
+
 Describe 'Folder Provider Operations (mkdir / rmdir)' {
     BeforeAll {
         $script:FolderName = "${script:Prefix}Folder"
