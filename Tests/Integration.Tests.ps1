@@ -444,6 +444,104 @@ Describe 'Asset Advanced' {
     }
 }
 
+Describe 'Asset CSV Import' {
+    BeforeAll {
+        $script:AssetCsvPrefix = "${script:Prefix}CsvAsset"
+        $script:CsvImportDir = Join-Path $env:TEMP "PesterTest_CsvImport_$(Get-Random -Maximum 9999)"
+        New-Item -Path $script:CsvImportDir -ItemType Directory -Force | Out-Null
+        $script:SharedPath = "${script:Drive1}:\Shared"
+    }
+
+    AfterAll {
+        Remove-OrchAsset -Name "${script:Prefix}CsvAsset*" -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-Item $script:CsvImportDir -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    It 'Import-Csv | Set-OrchAsset creates multiple assets from CSV' {
+        $csvPath = Join-Path $script:CsvImportDir 'new_assets.csv'
+        @"
+Path,Name,Description,ValueType,Value,UserName,MachineName
+$($script:SharedPath),${script:AssetCsvPrefix}_A,Desc A,Text,ValueA,,
+$($script:SharedPath),${script:AssetCsvPrefix}_B,Desc B,Integer,42,,
+$($script:SharedPath),${script:AssetCsvPrefix}_C,Desc C,Bool,true,,
+"@ | Set-Content -Path $csvPath -Encoding UTF8
+
+        Import-Csv $csvPath | Set-OrchAsset
+        Clear-OrchCache
+        $assets = Get-OrchAsset -Name "${script:AssetCsvPrefix}_*"
+        $assets.Count | Should -Be 3
+    }
+
+    It 'CSV-created assets have correct values' {
+        $a = Get-OrchAsset -Name "${script:AssetCsvPrefix}_A"
+        $a.Value | Should -Be 'ValueA'
+        $a.Description | Should -Be 'Desc A'
+        $a.ValueType | Should -Be 'Text'
+
+        $b = Get-OrchAsset -Name "${script:AssetCsvPrefix}_B"
+        $b.Value | Should -Be '42'
+        $b.ValueType | Should -Be 'Integer'
+
+        $c = Get-OrchAsset -Name "${script:AssetCsvPrefix}_C"
+        $c.Value | Should -Be 'True'
+        $c.ValueType | Should -Be 'Bool'
+    }
+
+    It 'Import-Csv | Set-OrchAsset updates existing assets from CSV' {
+        $csvPath = Join-Path $script:CsvImportDir 'update_assets.csv'
+        @"
+Path,Name,Description,ValueType,Value,UserName,MachineName
+$($script:SharedPath),${script:AssetCsvPrefix}_A,Updated Desc,Text,UpdatedValue,,
+$($script:SharedPath),${script:AssetCsvPrefix}_B,,Integer,99,,
+"@ | Set-Content -Path $csvPath -Encoding UTF8
+
+        Import-Csv $csvPath | Set-OrchAsset
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name "${script:AssetCsvPrefix}_A"
+        $a.Value | Should -Be 'UpdatedValue'
+        $a.Description | Should -Be 'Updated Desc'
+
+        $b = Get-OrchAsset -Name "${script:AssetCsvPrefix}_B"
+        $b.Value | Should -Be '99'
+    }
+
+    It 'Import-Csv | Set-OrchAsset aggregates PerRobot rows for the same asset' {
+        $csvPath = Join-Path $script:CsvImportDir 'perrobot_assets.csv'
+        $testUser1 = 'ytsuda@gmail.com'
+        $testUser2 = 'yoko.2013note.cha@gmail.com'
+        @"
+Path,Name,Description,ValueType,Value,UserName,MachineName
+$($script:SharedPath),${script:AssetCsvPrefix}_PerRobot,,Text,val1,$testUser1,
+$($script:SharedPath),${script:AssetCsvPrefix}_PerRobot,,Text,val2,$testUser2,
+"@ | Set-Content -Path $csvPath -Encoding UTF8
+
+        Import-Csv $csvPath | Set-OrchAsset
+        Clear-OrchCache
+        $userValues = @(Get-OrchAsset -Name "${script:AssetCsvPrefix}_PerRobot" -ExpandUserValues)
+        $userValues.Count | Should -Be 2
+        ($userValues | Where-Object { $_.UserName -eq $testUser1 }).Value | Should -Be 'val1'
+        ($userValues | Where-Object { $_.UserName -eq $testUser2 }).Value | Should -Be 'val2'
+    }
+
+    It 'Export then re-import round-trip preserves asset values' {
+        $exportPath = Join-Path $script:CsvImportDir 'roundtrip_export.csv'
+        Get-OrchAsset -Name "${script:AssetCsvPrefix}_A" -ExportCsv $exportPath
+        Clear-OrchCache
+
+        # Delete the asset
+        Remove-OrchAsset -Name "${script:AssetCsvPrefix}_A" -Confirm:$false
+        Clear-OrchCache
+        Get-OrchAsset -Name "${script:AssetCsvPrefix}_A" | Should -BeNullOrEmpty
+
+        # Re-import from the exported CSV
+        Import-Csv $exportPath | Set-OrchAsset
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name "${script:AssetCsvPrefix}_A"
+        $a | Should -Not -BeNullOrEmpty
+        $a.Value | Should -Be 'UpdatedValue'
+    }
+}
+
 Describe 'Folder Provider Operations (mkdir / rmdir)' {
     BeforeAll {
         $script:FolderName = "${script:Prefix}Folder"
