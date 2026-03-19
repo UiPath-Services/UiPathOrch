@@ -761,11 +761,15 @@ internal abstract class FolderScopedCompleter<TEntity> : OrchArgumentCompleter
     protected virtual string GetTipHelp(TEntity entity) => GetName(entity);
     protected virtual CompletionResultType ResultType => CompletionResultType.ParameterValue;
 
+    protected virtual List<(OrchDriveInfo drive, Folder folder)> ResolveFolders(
+        CommandAst commandAst, IDictionary fakeBoundParameters)
+        => ResolvePath(commandAst, fakeBoundParameters);
+
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName, string parameterName, string wordToComplete,
         CommandAst commandAst, IDictionary fakeBoundParameters)
     {
-        var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+        var drivesFolders = ResolveFolders(commandAst, fakeBoundParameters);
         var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1035,36 +1039,14 @@ internal class CredentialStoreNameCompleter : DriveScopedCompleter<CredentialSto
 }
 internal class CredentialStoreNameCompleter<T> : CredentialStoreNameCompleter where T : IPositionalParameters { }
 
-internal class FolderMachineNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class FolderMachineNameCompleter : FolderScopedCompleter<MachineFolder>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-
-        // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, "Name", TPositional.Parameters, wordToComplete);
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
-
-        foreach (var result in results)
-        {
-            foreach (var machine in result
-                .Where(m => wp.IsMatch(m.Name))
-                .ExcludeByWildcards(m => m?.Name, wpName)
-                .OrderBy(m => m.Name))
-            {
-                yield return new CompletionResult(PathTools.EscapePSText(machine.Name), machine.Name, CompletionResultType.ParameterValue, TipHelp(machine));
-            }
-        }
-    }
+    protected override IEnumerable<MachineFolder> GetEntities(OrchDriveInfo drive, Folder folder)
+        => drive.FolderMachinesAssigned.Get(folder);
+    protected override string GetName(MachineFolder e) => e.Name!;
+    protected override string GetTipHelp(MachineFolder e) => TipHelp(e);
 }
+internal class FolderMachineNameCompleter<T> : FolderMachineNameCompleter where T : IPositionalParameters { }
 
 internal class MachineNameCompleter : DriveScopedCompleter<ExtendedMachine>
 {
@@ -1664,157 +1646,53 @@ internal class ExternalApplicationNameCompleter<TPositional> : OrchArgumentCompl
     }
 }
 
-internal class TestCaseNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class TestCaseNameCompleter : FolderScopedCompleter<TestCaseDefinition>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
-        var paramDepth = GetParameterValue(commandAst, "Depth");
-        uint.TryParse(paramDepth, out uint depth);
-
-        // Extract path from the parameter. If not specified, target the current directory.
-        var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth); ///////// ★TODO
-        
-        // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.TestCases.Get(df.folder));
-
-        foreach (var result in results)
-        {
-            foreach (var testCase in result
-                .Where(tc => wp.IsMatch(tc.Name!))
-                .ExcludeByWildcards(tc => tc?.Name, wpName)
-                .OrderBy(tc => tc.Name))
-            {
-                string tiphelp = TipHelp(testCase);
-                yield return new CompletionResult(PathTools.EscapePSText(testCase.Name), testCase.Name, CompletionResultType.ParameterValue, tiphelp);
-            }
-        }
-    }
+    protected override List<(OrchDriveInfo drive, Folder folder)> ResolveFolders(
+        CommandAst commandAst, IDictionary fakeBoundParameters)
+        => ResolvePathWithoutPersonalWorkspace(commandAst, fakeBoundParameters);
+    protected override IEnumerable<TestCaseDefinition> GetEntities(OrchDriveInfo drive, Folder folder)
+        => drive.TestCases.Get(folder);
+    protected override string GetName(TestCaseDefinition e) => e.Name!;
+    protected override string GetTipHelp(TestCaseDefinition e) => TipHelp(e);
 }
+internal class TestCaseNameCompleter<T> : TestCaseNameCompleter where T : IPositionalParameters { }
 
-internal class TestDataQueueNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class TestDataQueueNameCompleter : FolderScopedCompleter<TestDataQueue>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
-        var paramDepth = GetParameterValue(commandAst, "Depth");
-        uint.TryParse(paramDepth, out uint depth);
-
-        // Extract path from the parameter. If not specified, target the current directory.
-        var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
-
-        // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.TestDataQueues.Get(df.folder));
-
-        foreach (var result in results)
-        {
-            foreach (var testDataQueue in result
-                .Where(e => wp.IsMatch(e.Name!))
-                .ExcludeByWildcards(e => e?.Name, wpName)
-                .OrderBy(e => e.Name))
-            {
-                string tiphelp = TipHelp(testDataQueue);
-                yield return new CompletionResult(PathTools.EscapePSText(testDataQueue.Name), testDataQueue.Name, CompletionResultType.ParameterValue, tiphelp);
-            }
-        }
-    }
+    protected override List<(OrchDriveInfo drive, Folder folder)> ResolveFolders(
+        CommandAst commandAst, IDictionary fakeBoundParameters)
+        => ResolvePathWithoutPersonalWorkspace(commandAst, fakeBoundParameters);
+    protected override IEnumerable<TestDataQueue> GetEntities(OrchDriveInfo drive, Folder folder)
+        => drive.TestDataQueues.Get(folder);
+    protected override string GetName(TestDataQueue e) => e.Name!;
+    protected override string GetTipHelp(TestDataQueue e) => TipHelp(e);
 }
+internal class TestDataQueueNameCompleter<T> : TestDataQueueNameCompleter where T : IPositionalParameters { }
 
-internal class TestScheduleNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class TestScheduleNameCompleter : FolderScopedCompleter<TestSetSchedule>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
-        var paramDepth = GetParameterValue(commandAst, "Depth");
-        uint.TryParse(paramDepth, out uint depth);
-
-        // Extract path from the parameter. If not specified, target the current directory.
-        var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
-
-        // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.TestSetSchedules.Get(df.folder));
-
-        foreach (var result in results)
-        {
-            foreach (var testSet in result
-                .Where(tc => wp.IsMatch(tc.Name!))
-                .ExcludeByWildcards(tc => tc?.Name, wpName)
-                .OrderBy(tc => tc.Name))
-            {
-                string tiphelp = TipHelp(testSet);
-                yield return new CompletionResult(PathTools.EscapePSText(testSet.Name), testSet.Name, CompletionResultType.ParameterValue, tiphelp);
-            }
-        }
-    }
+    protected override List<(OrchDriveInfo drive, Folder folder)> ResolveFolders(
+        CommandAst commandAst, IDictionary fakeBoundParameters)
+        => ResolvePathWithoutPersonalWorkspace(commandAst, fakeBoundParameters);
+    protected override IEnumerable<TestSetSchedule> GetEntities(OrchDriveInfo drive, Folder folder)
+        => drive.TestSetSchedules.Get(folder);
+    protected override string GetName(TestSetSchedule e) => e.Name!;
+    protected override string GetTipHelp(TestSetSchedule e) => TipHelp(e);
 }
+internal class TestScheduleNameCompleter<T> : TestScheduleNameCompleter where T : IPositionalParameters { }
 
-internal class TestSetNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class TestSetNameCompleter : FolderScopedCompleter<TestSet>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
-        var paramDepth = GetParameterValue(commandAst, "Depth");
-        uint.TryParse(paramDepth, out uint depth);
-
-        // Extract path from the parameter. If not specified, target the current directory.
-        var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
-
-        // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.TestSets.Get(df.folder));
-
-        foreach (var result in results)
-        {
-            foreach (var testSet in result
-                .Where(te => wp.IsMatch(te.Name!))
-                .ExcludeByWildcards(te => te?.Name, wpName)
-                .OrderBy(te => te.Name))
-            {
-                string tiphelp = TipHelp(testSet);
-                yield return new CompletionResult(PathTools.EscapePSText(testSet!.Name), testSet.Name, CompletionResultType.ParameterValue, tiphelp);
-            }
-        }
-    }
+    protected override List<(OrchDriveInfo drive, Folder folder)> ResolveFolders(
+        CommandAst commandAst, IDictionary fakeBoundParameters)
+        => ResolvePathWithoutPersonalWorkspace(commandAst, fakeBoundParameters);
+    protected override IEnumerable<TestSet> GetEntities(OrchDriveInfo drive, Folder folder)
+        => drive.TestSets.Get(folder);
+    protected override string GetName(TestSet e) => e.Name!;
+    protected override string GetTipHelp(TestSet e) => TipHelp(e);
 }
+internal class TestSetNameCompleter<T> : TestSetNameCompleter where T : IPositionalParameters { }
 
 /// <summary>
 /// Completer that retrieves name list from the TestSetExecution cache

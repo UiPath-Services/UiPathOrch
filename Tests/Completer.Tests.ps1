@@ -100,6 +100,26 @@ Describe 'FolderScoped completers match baseline' {
     It 'ListReleasesCompleter: Start-OrchJob -Name' {
         Assert-MatchesBaseline 'Start-OrchJob -Name' 'Start-OrchJob -Name '
     }
+
+    It 'FolderMachineNameCompleter: Get-OrchFolderMachine -Name' {
+        Assert-MatchesBaseline 'Get-OrchFolderMachine -Name' 'Get-OrchFolderMachine -Name '
+    }
+
+    It 'TestCaseNameCompleter: Get-OrchTestCase -Name' {
+        Assert-MatchesBaseline 'Get-OrchTestCase -Name' 'Get-OrchTestCase -Name '
+    }
+
+    It 'TestDataQueueNameCompleter: Get-OrchTestDataQueue -Name' {
+        Assert-MatchesBaseline 'Get-OrchTestDataQueue -Name' 'Get-OrchTestDataQueue -Name '
+    }
+
+    It 'TestScheduleNameCompleter: Get-OrchTestSetSchedule -Name' {
+        Assert-MatchesBaseline 'Get-OrchTestSetSchedule -Name' 'Get-OrchTestSetSchedule -Name '
+    }
+
+    It 'TestSetNameCompleter: Get-OrchTestSet -Name' {
+        Assert-MatchesBaseline 'Get-OrchTestSet -Name' 'Get-OrchTestSet -Name '
+    }
 }
 
 # ============================================================================
@@ -157,9 +177,5 @@ Describe 'Non-migrated completers match baseline' {
 
     It 'BucketNameCompleter: Get-OrchBucket -Name' {
         Assert-MatchesBaseline 'Get-OrchBucket -Name' 'Get-OrchBucket -Name '
-    }
-
-    It 'FolderMachineNameCompleter: Get-OrchFolderMachine -Name' {
-        Assert-MatchesBaseline 'Get-OrchFolderMachine -Name' 'Get-OrchFolderMachine -Name '
     }
 }

@@ -63,10 +63,16 @@ $baseline['Get-OrchQueue (positional)']    = Capture-Completer 'Get-OrchQueue '
 $baseline['Get-OrchMachine (positional)']  = Capture-Completer 'Get-OrchMachine '
 $baseline['Get-OrchRole (positional)']     = Capture-Completer 'Get-OrchRole '
 
+# FolderScoped with ResolvePathWithoutPersonalWorkspace (migrated)
+$baseline['Get-OrchTestCase -Name']        = Capture-Completer 'Get-OrchTestCase -Name '
+$baseline['Get-OrchTestDataQueue -Name']   = Capture-Completer 'Get-OrchTestDataQueue -Name '
+$baseline['Get-OrchTestSetSchedule -Name'] = Capture-Completer 'Get-OrchTestSetSchedule -Name '
+$baseline['Get-OrchTestSet -Name']         = Capture-Completer 'Get-OrchTestSet -Name '
+$baseline['Get-OrchFolderMachine -Name']   = Capture-Completer 'Get-OrchFolderMachine -Name '
+
 # Non-migrated (should be unchanged)
 $baseline['Get-OrchAsset -Name']           = Capture-Completer 'Get-OrchAsset -Name '
 $baseline['Get-OrchBucket -Name']          = Capture-Completer 'Get-OrchBucket -Name '
-$baseline['Get-OrchFolderMachine -Name']   = Capture-Completer 'Get-OrchFolderMachine -Name '
 
 Pop-Location
 
