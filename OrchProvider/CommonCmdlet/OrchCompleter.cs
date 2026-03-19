@@ -751,99 +751,111 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
     private static partial Regex MyRegex();
 }
 
-internal class ActionCatalogNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+/// <summary>
+/// Base class for completers that resolve entities within folder scope (ResolvePath).
+/// </summary>
+internal abstract class FolderScopedCompleter<TEntity> : OrchArgumentCompleter
 {
+    protected abstract IEnumerable<TEntity> GetEntities(OrchDriveInfo drive, Folder folder);
+    protected abstract string GetName(TEntity entity);
+    protected virtual string GetTipHelp(TEntity entity) => GetName(entity);
+    protected virtual CompletionResultType ResultType => CompletionResultType.ParameterValue;
+
     public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
+        string commandName, string parameterName, string wordToComplete,
+        CommandAst commandAst, IDictionary fakeBoundParameters)
     {
         var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-
-        // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
-
+        var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.ActionCatalogs.Get(df.folder));
+        var results = ParallelResults3.GroupBy(drivesFolders, df => GetEntities(df.drive, df.folder));
 
         foreach (var result in results)
         {
-            foreach (var catalog in result
-                .Where(b => wp.IsMatch(b.Name))
-                .ExcludeByWildcards(e => e?.Name, wpName)
-                .OrderBy(e => e.Name))
+            foreach (var entity in result
+                .Where(e => wp.IsMatch(GetName(e)))
+                .ExcludeByWildcards(e => GetName(e!), wpName)
+                .OrderBy(e => GetName(e)))
             {
-                string tooltip = catalog.GetPSPath();
-                yield return new CompletionResult(PathTools.EscapePSText(catalog.Name), catalog.Name, CompletionResultType.Text, tooltip);
+                string name = GetName(entity);
+                yield return new CompletionResult(PathTools.EscapePSText(name), name, ResultType, GetTipHelp(entity));
             }
         }
     }
 }
 
-internal class ApiTriggerNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+/// <summary>
+/// Base class for completers that resolve entities within drive scope (ResolveOrchDrives).
+/// </summary>
+internal abstract class DriveScopedCompleter<TEntity> : OrchArgumentCompleter
 {
+    protected abstract IEnumerable<TEntity> GetEntities(OrchDriveInfo drive);
+    protected abstract string GetName(TEntity entity);
+    protected virtual string GetTipHelp(TEntity entity) => GetName(entity);
+    protected virtual CompletionResultType ResultType => CompletionResultType.ParameterValue;
+    protected virtual string? NotFoundMessage => null;
+
     public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
+        string commandName, string parameterName, string wordToComplete,
+        CommandAst commandAst, IDictionary fakeBoundParameters)
     {
-        var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-
-        // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
-
+        var drives = ResolveOrchDrives(fakeBoundParameters);
+        var wpName = GetFakeBoundParameters(fakeBoundParameters, parameterName).ConvertToWildcardPatternList();
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.ApiTriggers.Get(df.folder));
+        var results = ParallelResults3.GroupBy(drives, drive => GetEntities(drive));
 
+        bool bFound = false;
         foreach (var result in results)
         {
-            foreach (var trigger in result
-                .Where(t => wp.IsMatch(t.Name))
-                .ExcludeByWildcards(t => t?.Name, wpName))
+            foreach (var entity in result
+                .Where(e => wp.IsMatch(GetName(e)))
+                .ExcludeByWildcards(e => GetName(e!), wpName)
+                .OrderBy(e => GetName(e)))
             {
-                string tooltip = trigger.GetPSPath();
-                yield return new CompletionResult(PathTools.EscapePSText(trigger.Name), trigger.Name, CompletionResultType.Text, tooltip);
+                bFound = true;
+                string name = GetName(entity);
+                yield return new CompletionResult(PathTools.EscapePSText(name), name, ResultType, GetTipHelp(entity));
             }
+        }
+
+        if (!bFound && NotFoundMessage is not null)
+        {
+            yield return new CompletionResult($@"""({NotFoundMessage} '{RemoveEnclosingQuotes(wordToComplete)}')""");
         }
     }
 }
 
-internal class EventTriggerNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class ActionCatalogNameCompleter : FolderScopedCompleter<TaskCatalog>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-
-        // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.EventTriggers.Get(df.folder));
-
-        foreach (var result in results)
-        {
-            foreach (var trigger in result
-                .Where(t => wp.IsMatch(t.Name))
-                .ExcludeByWildcards(t => t?.Name, wpName))
-            {
-                string tooltip = trigger.GetPSPath();
-                yield return new CompletionResult(PathTools.EscapePSText(trigger.Name), trigger.Name, CompletionResultType.Text, tooltip);
-            }
-        }
-    }
+    protected override IEnumerable<TaskCatalog> GetEntities(OrchDriveInfo drive, Folder folder)
+        => drive.ActionCatalogs.Get(folder);
+    protected override string GetName(TaskCatalog e) => e.Name!;
+    protected override string GetTipHelp(TaskCatalog e) => e.GetPSPath();
+    protected override CompletionResultType ResultType => CompletionResultType.Text;
 }
+internal class ActionCatalogNameCompleter<T> : ActionCatalogNameCompleter where T : IPositionalParameters { }
+
+internal class ApiTriggerNameCompleter : FolderScopedCompleter<HttpTrigger>
+{
+    protected override IEnumerable<HttpTrigger> GetEntities(OrchDriveInfo drive, Folder folder)
+        => drive.ApiTriggers.Get(folder);
+    protected override string GetName(HttpTrigger e) => e.Name!;
+    protected override string GetTipHelp(HttpTrigger e) => e.GetPSPath();
+    protected override CompletionResultType ResultType => CompletionResultType.Text;
+}
+internal class ApiTriggerNameCompleter<T> : ApiTriggerNameCompleter where T : IPositionalParameters { }
+
+internal class EventTriggerNameCompleter : FolderScopedCompleter<ApiTrigger>
+{
+    protected override IEnumerable<ApiTrigger> GetEntities(OrchDriveInfo drive, Folder folder)
+        => drive.EventTriggers.Get(folder);
+    protected override string GetName(ApiTrigger e) => e.Name!;
+    protected override string GetTipHelp(ApiTrigger e) => e.GetPSPath();
+    protected override CompletionResultType ResultType => CompletionResultType.Text;
+}
+internal class EventTriggerNameCompleter<T> : EventTriggerNameCompleter where T : IPositionalParameters { }
 
 internal class AssetNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
 {
@@ -1002,82 +1014,26 @@ internal class BucketFullPathCompleter<TPositional> : OrchArgumentCompleter wher
     }
 }
 
-internal class CalendarNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class CalendarNameCompleter : DriveScopedCompleter<ExtendedCalendar>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        // Extract path from the parameter. If not specified, target the current directory.
-        var drives = ResolveOrchDrives(fakeBoundParameters);
-
-        // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults3.GroupBy(drives, drive => drive.GetCalendars());
-
-        bool bFound = false;
-        foreach (var result in results)
-        {
-            foreach (var calendar in result
-                .Where(c => wp.IsMatch(c.Name))
-                .ExcludeByWildcards(c => c?.Name, wpName)
-                .OrderBy(b => b.Name))
-            {
-                bFound = true;
-                string tooltip = calendar.GetPSPath();
-                yield return new CompletionResult(PathTools.EscapePSText(calendar.Name), calendar.Name, CompletionResultType.Text, tooltip);
-            }
-        }
-        if (!bFound)
-        {
-            yield return new CompletionResult($@"""(No calendars found for '{RemoveEnclosingQuotes(wordToComplete)}')""");
-        }
-    }
+    protected override IEnumerable<ExtendedCalendar> GetEntities(OrchDriveInfo drive)
+        => drive.GetCalendars();
+    protected override string GetName(ExtendedCalendar e) => e.Name!;
+    protected override string GetTipHelp(ExtendedCalendar e) => e.GetPSPath();
+    protected override CompletionResultType ResultType => CompletionResultType.Text;
+    protected override string? NotFoundMessage => "No calendars found for";
 }
+internal class CalendarNameCompleter<T> : CalendarNameCompleter where T : IPositionalParameters { }
 
-internal class CredentialStoreNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class CredentialStoreNameCompleter : DriveScopedCompleter<CredentialStore>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        var drives = ResolveOrchDrives(fakeBoundParameters);
-
-        // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults3.GroupBy(drives, drive => drive.CredentialStores.Get());
-
-        bool bFound = false;
-        foreach (var result in results)
-        {
-            foreach (var credentialStore in result
-                .Where(c => wp.IsMatch(c.Name))
-                .ExcludeByWildcards(c => c?.Name, wpName)
-                .OrderBy(c => c.Name!))
-            {
-                bFound = true;
-                string tiphelp = TipHelp(credentialStore);
-                yield return new CompletionResult(PathTools.EscapePSText(credentialStore.Name), credentialStore.Name, CompletionResultType.ParameterValue, tiphelp);
-            }
-        }
-        if (!bFound)
-        {
-            yield return new CompletionResult($@"""(No credential stores found for '{RemoveEnclosingQuotes(wordToComplete)}')""");
-        }
-    }
+    protected override IEnumerable<CredentialStore> GetEntities(OrchDriveInfo drive)
+        => drive.CredentialStores.Get();
+    protected override string GetName(CredentialStore e) => e.Name!;
+    protected override string GetTipHelp(CredentialStore e) => TipHelp(e);
+    protected override string? NotFoundMessage => "No credential stores found for";
 }
+internal class CredentialStoreNameCompleter<T> : CredentialStoreNameCompleter where T : IPositionalParameters { }
 
 internal class FolderMachineNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
 {
@@ -1110,43 +1066,15 @@ internal class FolderMachineNameCompleter<TPositional> : OrchArgumentCompleter w
     }
 }
 
-internal class MachineNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class MachineNameCompleter : DriveScopedCompleter<ExtendedMachine>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        var drives = ResolveOrchDrives(fakeBoundParameters);
-
-        // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults3.GroupBy(drives, drive => drive.Machines.Get());
-
-        bool bFound = false;
-        foreach (var result in results)
-        {
-            foreach (var machine in result
-                .Where(m => wp.IsMatch(m.Name))
-                .ExcludeByWildcards(m => m?.Name, wpName)
-                .OrderBy(m => m.Name!))
-            {
-                bFound = true;
-                string tiphelp = TipHelp(machine);
-                yield return new CompletionResult(PathTools.EscapePSText(machine.Name), machine.Name, CompletionResultType.ParameterValue, tiphelp);
-            }
-        }
-        if (!bFound)
-        {
-            yield return new CompletionResult($@"""(No machines found for '{RemoveEnclosingQuotes(wordToComplete)}')""");
-        }
-    }
+    protected override IEnumerable<ExtendedMachine> GetEntities(OrchDriveInfo drive)
+        => drive.Machines.Get();
+    protected override string GetName(ExtendedMachine e) => e.Name!;
+    protected override string GetTipHelp(ExtendedMachine e) => TipHelp(e);
+    protected override string? NotFoundMessage => "No machines found for";
 }
+internal class MachineNameCompleter<T> : MachineNameCompleter where T : IPositionalParameters { }
 
 internal class MachineRobotUsersCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
 {
@@ -1345,140 +1273,42 @@ internal class PackageVersionCompleter : OrchArgumentCompleter
     }
 }
 
-internal class ProcessNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class ProcessNameCompleter : FolderScopedCompleter<Release>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-
-        // Exclude library names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder));
-
-        foreach (var result in results)
-        {
-            foreach (var release in result
-                .Where(p => wp.IsMatch(p.Name))
-                .ExcludeByWildcards(p => p?.Name, wpName)
-                .OrderBy(p => p.Name))
-            {
-                string tiphelp = TipHelp(release);
-                yield return new CompletionResult(PathTools.EscapePSText(release.Name), release.Name, CompletionResultType.ParameterValue, tiphelp);
-            }
-        }
-    }
+    protected override IEnumerable<Release> GetEntities(OrchDriveInfo drive, Folder folder)
+        => drive.GetReleases(folder);
+    protected override string GetName(Release e) => e.Name!;
+    protected override string GetTipHelp(Release e) => TipHelp(e);
 }
+internal class ProcessNameCompleter<T> : ProcessNameCompleter where T : IPositionalParameters { }
 
-internal class QueueNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class QueueNameCompleter : FolderScopedCompleter<QueueDefinition>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-
-        // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Queues.Get(df.folder));
-
-        foreach (var result in results)
-        {
-            foreach (var queue in result
-                .Where(q => wp.IsMatch(q.Name))
-                .ExcludeByWildcards(q => q?.Name, wpName)
-                .OrderBy(q => q.Name))
-            {
-                string tiphelp = TipHelp(queue);
-                yield return new CompletionResult(PathTools.EscapePSText(queue.Name), queue.Name, CompletionResultType.ParameterValue, tiphelp);
-            }
-        }
-    }
+    protected override IEnumerable<QueueDefinition> GetEntities(OrchDriveInfo drive, Folder folder)
+        => drive.Queues.Get(folder);
+    protected override string GetName(QueueDefinition e) => e.Name!;
+    protected override string GetTipHelp(QueueDefinition e) => TipHelp(e);
 }
+internal class QueueNameCompleter<T> : QueueNameCompleter where T : IPositionalParameters { }
 
-internal class ListReleasesCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class ListReleasesCompleter : FolderScopedCompleter<Release>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-
-        // Exclude Processes already selected via the parameter
-        var paramName = GetParameterValues(commandAst, parameterName, TPositional.Parameters, wordToComplete);
-        var wpName = paramName.ConvertToWildcardPatternList();
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-
-        // ListReleases appears to be a private API, so using GetReleases is probably better.
-        // ListReleases did not work when ApiVersion == 13.
-        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder));
-
-        // This might have less load on Orchestrator or be faster to process.
-        // var results = ParallelResults.ForEach(drivesFolders, df => df.drive.ListReleases(df.folder));
-
-        foreach (var result in results)
-        {
-            foreach (var release in result
-                .Where(r => wp.IsMatch(r.Name))
-                .ExcludeByWildcards(r => r?.Name, wpName)
-                .OrderBy(r => r.Name))
-            {
-                string tooltip = TipHelp(release);
-                yield return new CompletionResult(PathTools.EscapePSText(release.Name), release.Name, CompletionResultType.Text, tooltip);
-            }
-        }
-    }
+    protected override IEnumerable<Release> GetEntities(OrchDriveInfo drive, Folder folder)
+        => drive.GetReleases(folder);
+    protected override string GetName(Release e) => e.Name!;
+    protected override string GetTipHelp(Release e) => TipHelp(e);
+    protected override CompletionResultType ResultType => CompletionResultType.Text;
 }
+internal class ListReleasesCompleter<T> : ListReleasesCompleter where T : IPositionalParameters { }
 
-internal class RoleNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class RoleNameCompleter : DriveScopedCompleter<Role>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        var drives = ResolveOrchDrives(fakeBoundParameters);
-
-        // Exclude library names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults3.GroupBy(drives, drive => drive.Roles.Get());
-
-        foreach (var result in results)
-        {
-            foreach (var role in result
-                .Where(r => wp.IsMatch(r.Name))
-                .ExcludeByWildcards(r => r?.Name, wpName)
-                .OrderBy(role => role.Name))
-            {
-                string tiphelp = TipHelp(role);
-                yield return new CompletionResult(PathTools.EscapePSText(role.Name), role.Name, CompletionResultType.ParameterValue, tiphelp);
-            }
-        }
-    }
+    protected override IEnumerable<Role> GetEntities(OrchDriveInfo drive)
+        => drive.Roles.Get();
+    protected override string GetName(Role e) => e.Name!;
+    protected override string GetTipHelp(Role e) => TipHelp(e);
 }
+internal class RoleNameCompleter<T> : RoleNameCompleter where T : IPositionalParameters { }
 
 public class TenantUserUserNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
 {
@@ -1578,37 +1408,15 @@ internal class TimeZoneCompleter : OrchArgumentCompleter
     }
 }
 
-internal class TriggerNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class TriggerNameCompleter : FolderScopedCompleter<ProcessSchedule>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-
-        // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetTriggers(df.folder));
-
-        foreach (var result in results)
-        {
-            foreach (var trigger in result
-                .Where(t => wp.IsMatch(t.Name))
-                .ExcludeByWildcards(t => t?.Name, wpName)
-                .OrderBy(t => t.Name))
-            {
-                string tiphelp = TipHelp(trigger);
-                yield return new CompletionResult(PathTools.EscapePSText(trigger.Name), trigger.Name, CompletionResultType.Text, tiphelp);
-            }
-        }
-    }
+    protected override IEnumerable<ProcessSchedule> GetEntities(OrchDriveInfo drive, Folder folder)
+        => drive.GetTriggers(folder);
+    protected override string GetName(ProcessSchedule e) => e.Name!;
+    protected override string GetTipHelp(ProcessSchedule e) => TipHelp(e);
+    protected override CompletionResultType ResultType => CompletionResultType.Text;
 }
+internal class TriggerNameCompleter<T> : TriggerNameCompleter where T : IPositionalParameters { }
 
 internal class UpdatePolicyVersionCompleter : OrchArgumentCompleter
 {
@@ -1635,37 +1443,14 @@ internal class UpdatePolicyVersionCompleter : OrchArgumentCompleter
     }
 }
 
-internal class WebhookNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+internal class WebhookNameCompleter : DriveScopedCompleter<Webhook>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        var drives = ResolveOrchDrives(fakeBoundParameters);
-
-        // Exclude Names already selected via the parameter
-        var wpName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults3.GroupBy(drives, drive => drive.Webhooks.Get());
-
-        foreach (var result in results)
-        {
-            foreach (var webhook in result
-                .Where(e => wp.IsMatch(e.Name))
-                .ExcludeByWildcards(e => e?.Name, wpName)
-                .OrderBy(e => e.Name!))
-            {
-                string tiphelp = TipHelp(webhook);
-                yield return new CompletionResult(PathTools.EscapePSText(webhook.Name), webhook.Name, CompletionResultType.ParameterValue, tiphelp);
-            }
-        }
-    }
+    protected override IEnumerable<Webhook> GetEntities(OrchDriveInfo drive)
+        => drive.Webhooks.Get();
+    protected override string GetName(Webhook e) => e.Name!;
+    protected override string GetTipHelp(Webhook e) => TipHelp(e);
 }
+internal class WebhookNameCompleter<T> : WebhookNameCompleter where T : IPositionalParameters { }
 
 internal class PmDirectoryNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
 {

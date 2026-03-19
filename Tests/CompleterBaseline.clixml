@@ -1,0 +1,2526 @@
+<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04">
+  <Obj RefId="0">
+    <TN RefId="0">
+      <T>System.Collections.Hashtable</T>
+      <T>System.Object</T>
+    </TN>
+    <DCT>
+      <En>
+        <S N="Key">Get-OrchTrigger -Name</S>
+        <Obj N="Value" RefId="1">
+          <TN RefId="1">
+            <T>System.Management.Automation.PSObject[]</T>
+            <T>System.Array</T>
+            <T>System.Object</T>
+          </TN>
+          <LST />
+        </Obj>
+      </En>
+      <En>
+        <S N="Key">Get-OrchActionCatalog -Name</S>
+        <Obj N="Value" RefId="2">
+          <TNRef RefId="1" />
+          <LST>
+            <Obj RefId="3">
+              <TN RefId="2">
+                <T>System.Management.Automation.PSCustomObject</T>
+                <T>System.Object</T>
+              </TN>
+              <MS>
+                <S N="CompletionText">'xxx catalog'</S>
+                <S N="ListItemText">xxx catalog</S>
+                <S N="ResultType">Text</S>
+                <S N="ToolTip">Orch1:\Shared\xxx catalog</S>
+              </MS>
+            </Obj>
+          </LST>
+        </Obj>
+      </En>
+      <En>
+        <S N="Key">Get-OrchCalendar -Name</S>
+        <Obj N="Value" RefId="4">
+          <TNRef RefId="1" />
+          <LST>
+            <Obj RefId="5">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">MyCalendar1</S>
+                <S N="ListItemText">MyCalendar1</S>
+                <S N="ResultType">Text</S>
+                <S N="ToolTip">Orch1:\MyCalendar1</S>
+              </MS>
+            </Obj>
+            <Obj RefId="6">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">MyCalendar2</S>
+                <S N="ListItemText">MyCalendar2</S>
+                <S N="ResultType">Text</S>
+                <S N="ToolTip">Orch1:\MyCalendar2</S>
+              </MS>
+            </Obj>
+            <Obj RefId="7">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">MyCalendar3</S>
+                <S N="ListItemText">MyCalendar3</S>
+                <S N="ResultType">Text</S>
+                <S N="ToolTip">Orch1:\MyCalendar3</S>
+              </MS>
+            </Obj>
+          </LST>
+        </Obj>
+      </En>
+      <En>
+        <S N="Key">Get-OrchFolderMachine -Name</S>
+        <Obj N="Value" RefId="8">
+          <TNRef RefId="1" />
+          <LST>
+            <Obj RefId="9">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">aiai</S>
+                <S N="ListItemText">aiai</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\aiai</S>
+              </MS>
+            </Obj>
+            <Obj RefId="10">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">bafu</S>
+                <S N="ListItemText">bafu</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\bafu</S>
+              </MS>
+            </Obj>
+            <Obj RefId="11">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">newmachines</S>
+                <S N="ListItemText">newmachines</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\newmachines</S>
+              </MS>
+            </Obj>
+            <Obj RefId="12">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_1</S>
+                <S N="ListItemText">PerfTestMachine_1</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\PerfTestMachine_1</S>
+              </MS>
+            </Obj>
+            <Obj RefId="13">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_10</S>
+                <S N="ListItemText">PerfTestMachine_10</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\PerfTestMachine_10</S>
+              </MS>
+            </Obj>
+            <Obj RefId="14">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_11</S>
+                <S N="ListItemText">PerfTestMachine_11</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\PerfTestMachine_11</S>
+              </MS>
+            </Obj>
+            <Obj RefId="15">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_12</S>
+                <S N="ListItemText">PerfTestMachine_12</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\PerfTestMachine_12</S>
+              </MS>
+            </Obj>
+            <Obj RefId="16">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_13</S>
+                <S N="ListItemText">PerfTestMachine_13</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\PerfTestMachine_13</S>
+              </MS>
+            </Obj>
+            <Obj RefId="17">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_14</S>
+                <S N="ListItemText">PerfTestMachine_14</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\PerfTestMachine_14</S>
+              </MS>
+            </Obj>
+            <Obj RefId="18">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_15</S>
+                <S N="ListItemText">PerfTestMachine_15</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\PerfTestMachine_15</S>
+              </MS>
+            </Obj>
+            <Obj RefId="19">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_16</S>
+                <S N="ListItemText">PerfTestMachine_16</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\PerfTestMachine_16</S>
+              </MS>
+            </Obj>
+            <Obj RefId="20">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_17</S>
+                <S N="ListItemText">PerfTestMachine_17</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\PerfTestMachine_17</S>
+              </MS>
+            </Obj>
+            <Obj RefId="21">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_18</S>
+                <S N="ListItemText">PerfTestMachine_18</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\PerfTestMachine_18</S>
+              </MS>
+            </Obj>
+            <Obj RefId="22">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_19</S>
+                <S N="ListItemText">PerfTestMachine_19</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\PerfTestMachine_19</S>
+              </MS>
+            </Obj>
+            <Obj RefId="23">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_2</S>
+                <S N="ListItemText">PerfTestMachine_2</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\PerfTestMachine_2</S>
+              </MS>
+            </Obj>
+            <Obj RefId="24">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_20</S>
+                <S N="ListItemText">PerfTestMachine_20</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\PerfTestMachine_20</S>
+              </MS>
+            </Obj>
+            <Obj RefId="25">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_3</S>
+                <S N="ListItemText">PerfTestMachine_3</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\PerfTestMachine_3</S>
+              </MS>
+            </Obj>
+            <Obj RefId="26">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_4</S>
+                <S N="ListItemText">PerfTestMachine_4</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\PerfTestMachine_4</S>
+              </MS>
+            </Obj>
+            <Obj RefId="27">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_5</S>
+                <S N="ListItemText">PerfTestMachine_5</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\PerfTestMachine_5</S>
+              </MS>
+            </Obj>
+            <Obj RefId="28">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_6</S>
+                <S N="ListItemText">PerfTestMachine_6</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\PerfTestMachine_6</S>
+              </MS>
+            </Obj>
+            <Obj RefId="29">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_7</S>
+                <S N="ListItemText">PerfTestMachine_7</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\PerfTestMachine_7</S>
+              </MS>
+            </Obj>
+            <Obj RefId="30">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_8</S>
+                <S N="ListItemText">PerfTestMachine_8</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\PerfTestMachine_8</S>
+              </MS>
+            </Obj>
+            <Obj RefId="31">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_9</S>
+                <S N="ListItemText">PerfTestMachine_9</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\PerfTestMachine_9</S>
+              </MS>
+            </Obj>
+            <Obj RefId="32">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'ytsuda@gmail.com''s workspace machine'</S>
+                <S N="ListItemText">ytsuda@gmail.com's workspace machine</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\ytsuda@gmail.com's workspace machine</S>
+              </MS>
+            </Obj>
+          </LST>
+        </Obj>
+      </En>
+      <En>
+        <S N="Key">Get-OrchRole -Name</S>
+        <Obj N="Value" RefId="33">
+          <TNRef RefId="1" />
+          <LST>
+            <Obj RefId="34">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Allow to be Automation Developer'</S>
+                <S N="ListItemText">Allow to be Automation Developer</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Allow to be Automation Developer</S>
+              </MS>
+            </Obj>
+            <Obj RefId="35">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Allow to be Automation Publisher'</S>
+                <S N="ListItemText">Allow to be Automation Publisher</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Allow to be Automation Publisher</S>
+              </MS>
+            </Obj>
+            <Obj RefId="36">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Allow to be Automation User'</S>
+                <S N="ListItemText">Allow to be Automation User</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Allow to be Automation User</S>
+              </MS>
+            </Obj>
+            <Obj RefId="37">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Allow to be Folder Administrator'</S>
+                <S N="ListItemText">Allow to be Folder Administrator</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Allow to be Folder Administrator</S>
+              </MS>
+            </Obj>
+            <Obj RefId="38">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Automation Developer'</S>
+                <S N="ListItemText">Automation Developer</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Automation Developer</S>
+              </MS>
+            </Obj>
+            <Obj RefId="39">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Automation Publisher'</S>
+                <S N="ListItemText">Automation Publisher</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Automation Publisher</S>
+              </MS>
+            </Obj>
+            <Obj RefId="40">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Automation User'</S>
+                <S N="ListItemText">Automation User</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Automation User</S>
+              </MS>
+            </Obj>
+            <Obj RefId="41">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Automation User - Custom'</S>
+                <S N="ListItemText">Automation User - Custom</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Automation User - Custom</S>
+              </MS>
+            </Obj>
+            <Obj RefId="42">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Folder Administrator'</S>
+                <S N="ListItemText">Folder Administrator</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Folder Administrator</S>
+              </MS>
+            </Obj>
+            <Obj RefId="43">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">hoehoe</S>
+                <S N="ListItemText">hoehoe</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\hoehoe</S>
+              </MS>
+            </Obj>
+            <Obj RefId="44">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'new tenant role'</S>
+                <S N="ListItemText">new tenant role</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\new tenant role</S>
+              </MS>
+            </Obj>
+            <Obj RefId="45">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">new2</S>
+                <S N="ListItemText">new2</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\new2</S>
+              </MS>
+            </Obj>
+            <Obj RefId="46">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Orchestrator Administrator'</S>
+                <S N="ListItemText">Orchestrator Administrator</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Orchestrator Administrator</S>
+              </MS>
+            </Obj>
+            <Obj RefId="47">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Orchestrator Administrator - Custom'</S>
+                <S N="ListItemText">Orchestrator Administrator - Custom</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Orchestrator Administrator - Custom</S>
+              </MS>
+            </Obj>
+            <Obj RefId="48">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Personal Workspace Administrator'</S>
+                <S N="ListItemText">Personal Workspace Administrator</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Personal Workspace Administrator</S>
+              </MS>
+            </Obj>
+            <Obj RefId="49">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Pipelines folder role'</S>
+                <S N="ListItemText">Pipelines folder role</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Pipelines folder role</S>
+              </MS>
+            </Obj>
+            <Obj RefId="50">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Pipelines tenant role'</S>
+                <S N="ListItemText">Pipelines tenant role</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Pipelines tenant role</S>
+              </MS>
+            </Obj>
+            <Obj RefId="51">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">Robot-FolderScopedOnly</S>
+                <S N="ListItemText">Robot-FolderScopedOnly</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Robot-FolderScopedOnly</S>
+              </MS>
+            </Obj>
+            <Obj RefId="52">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">Robot-TenantScopedOnly</S>
+                <S N="ListItemText">Robot-TenantScopedOnly</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Robot-TenantScopedOnly</S>
+              </MS>
+            </Obj>
+            <Obj RefId="53">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Solutions Administrator'</S>
+                <S N="ListItemText">Solutions Administrator</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Solutions Administrator</S>
+              </MS>
+            </Obj>
+            <Obj RefId="54">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Solutions Contributor'</S>
+                <S N="ListItemText">Solutions Contributor</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Solutions Contributor</S>
+              </MS>
+            </Obj>
+            <Obj RefId="55">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">あかんテナントロール</S>
+                <S N="ListItemText">あかんテナントロール</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\あかんテナントロール</S>
+              </MS>
+            </Obj>
+            <Obj RefId="56">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'アスタリスクとか `* ハテナ `? とか `[`] とかのロール。'</S>
+                <S N="ListItemText">アスタリスクとか * ハテナ ? とか [] とかのロール。</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\アスタリスクとか * ハテナ ? とか [] とかのロール。</S>
+              </MS>
+            </Obj>
+            <Obj RefId="57">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'カンマ , と空白文字入りロールです。'</S>
+                <S N="ListItemText">カンマ , と空白文字入りロールです。</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\カンマ , と空白文字入りロールです。</S>
+              </MS>
+            </Obj>
+            <Obj RefId="58">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">てなんとロール</S>
+                <S N="ListItemText">てなんとロール</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\てなんとロール</S>
+              </MS>
+            </Obj>
+            <Obj RefId="59">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">プロセス作成</S>
+                <S N="ListItemText">プロセス作成</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\プロセス作成</S>
+              </MS>
+            </Obj>
+            <Obj RefId="60">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">ほえほえフォルダーロール</S>
+                <S N="ListItemText">ほえほえフォルダーロール</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\ほえほえフォルダーロール</S>
+              </MS>
+            </Obj>
+            <Obj RefId="61">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">新しいテナントロール</S>
+                <S N="ListItemText">新しいテナントロール</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\新しいテナントロール</S>
+              </MS>
+            </Obj>
+          </LST>
+        </Obj>
+      </En>
+      <En>
+        <S N="Key">Start-OrchJob -Name</S>
+        <Obj N="Value" RefId="62">
+          <TNRef RefId="1" />
+          <LST>
+            <Obj RefId="63">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">' BGほえほえ'</S>
+                <S N="ListItemText"> BGほえほえ</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\ BGほえほえ</S>
+              </MS>
+            </Obj>
+            <Obj RefId="64">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">' 複数ほえほえ'</S>
+                <S N="ListItemText"> 複数ほえほえ</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\ 複数ほえほえ</S>
+              </MS>
+            </Obj>
+            <Obj RefId="65">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">1万行のログ</S>
+                <S N="ListItemText">1万行のログ</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\1万行のログ</S>
+              </MS>
+            </Obj>
+            <Obj RefId="66">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">BlankProcess19</S>
+                <S N="ListItemText">BlankProcess19</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess19</S>
+              </MS>
+            </Obj>
+            <Obj RefId="67">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">BlankProcess19-2</S>
+                <S N="ListItemText">BlankProcess19-2</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess19-2</S>
+              </MS>
+            </Obj>
+            <Obj RefId="68">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">BlankProcess27</S>
+                <S N="ListItemText">BlankProcess27</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess27</S>
+              </MS>
+            </Obj>
+            <Obj RefId="69">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">BlankProcess29</S>
+                <S N="ListItemText">BlankProcess29</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess29</S>
+              </MS>
+            </Obj>
+            <Obj RefId="70">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">BlankProcess33</S>
+                <S N="ListItemText">BlankProcess33</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess33</S>
+              </MS>
+            </Obj>
+            <Obj RefId="71">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">BlankProcess34</S>
+                <S N="ListItemText">BlankProcess34</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess34</S>
+              </MS>
+            </Obj>
+            <Obj RefId="72">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">BlankProcess35</S>
+                <S N="ListItemText">BlankProcess35</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess35</S>
+              </MS>
+            </Obj>
+            <Obj RefId="73">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">DataExtraction</S>
+                <S N="ListItemText">DataExtraction</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\DataExtraction</S>
+              </MS>
+            </Obj>
+            <Obj RefId="74">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">EmailProcessor</S>
+                <S N="ListItemText">EmailProcessor</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\EmailProcessor</S>
+              </MS>
+            </Obj>
+            <Obj RefId="75">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">ExplorerをKill</S>
+                <S N="ListItemText">ExplorerをKill</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\ExplorerをKill</S>
+              </MS>
+            </Obj>
+            <Obj RefId="76">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">InvoiceProcess</S>
+                <S N="ListItemText">InvoiceProcess</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\InvoiceProcess</S>
+              </MS>
+            </Obj>
+            <Obj RefId="77">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">Msgbox</S>
+                <S N="ListItemText">Msgbox</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\Msgbox</S>
+              </MS>
+            </Obj>
+            <Obj RefId="78">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">MsgBox2</S>
+                <S N="ListItemText">MsgBox2</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\MsgBox2</S>
+              </MS>
+            </Obj>
+            <Obj RefId="79">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">My1stAgent</S>
+                <S N="ListItemText">My1stAgent</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\My1stAgent</S>
+              </MS>
+            </Obj>
+            <Obj RefId="80">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">My1stApps</S>
+                <S N="ListItemText">My1stApps</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\My1stApps</S>
+              </MS>
+            </Obj>
+            <Obj RefId="81">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">My2ndApps</S>
+                <S N="ListItemText">My2ndApps</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\My2ndApps</S>
+              </MS>
+            </Obj>
+            <Obj RefId="82">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">My3rdApps</S>
+                <S N="ListItemText">My3rdApps</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\My3rdApps</S>
+              </MS>
+            </Obj>
+            <Obj RefId="83">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">ReportGeneration</S>
+                <S N="ListItemText">ReportGeneration</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\ReportGeneration</S>
+              </MS>
+            </Obj>
+            <Obj RefId="84">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">例外</S>
+                <S N="ListItemText">例外</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\例外</S>
+              </MS>
+            </Obj>
+            <Obj RefId="85">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">例外2</S>
+                <S N="ListItemText">例外2</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\例外2</S>
+              </MS>
+            </Obj>
+          </LST>
+        </Obj>
+      </En>
+      <En>
+        <S N="Key">Copy-OrchCredentialStore -Name</S>
+        <Obj N="Value" RefId="86">
+          <TNRef RefId="1" />
+          <LST>
+            <Obj RefId="87">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">aa</S>
+                <S N="ListItemText">aa</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\aa</S>
+              </MS>
+            </Obj>
+            <Obj RefId="88">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">ab</S>
+                <S N="ListItemText">ab</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\ab</S>
+              </MS>
+            </Obj>
+            <Obj RefId="89">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Orchestrator Database'</S>
+                <S N="ListItemText">Orchestrator Database</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Orchestrator Database</S>
+              </MS>
+            </Obj>
+          </LST>
+        </Obj>
+      </En>
+      <En>
+        <S N="Key">Get-OrchMachine (positional)</S>
+        <Obj N="Value" RefId="90">
+          <TNRef RefId="1" />
+          <LST>
+            <Obj RefId="91">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'`[Default`] Cloud Robots - Serverless'</S>
+                <S N="ListItemText">[Default] Cloud Robots - Serverless</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\[Default] Cloud Robots - Serverless</S>
+              </MS>
+            </Obj>
+            <Obj RefId="92">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">aiai</S>
+                <S N="ListItemText">aiai</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\aiai</S>
+              </MS>
+            </Obj>
+            <Obj RefId="93">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">bafu</S>
+                <S N="ListItemText">bafu</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\bafu</S>
+              </MS>
+            </Obj>
+            <Obj RefId="94">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">ffff2</S>
+                <S N="ListItemText">ffff2</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\ffff2</S>
+              </MS>
+            </Obj>
+            <Obj RefId="95">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">fffff</S>
+                <S N="ListItemText">fffff</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\fffff</S>
+              </MS>
+            </Obj>
+            <Obj RefId="96">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">fuga</S>
+                <S N="ListItemText">fuga</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\fuga</S>
+              </MS>
+            </Obj>
+            <Obj RefId="97">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">hogehogeMachine</S>
+                <S N="ListItemText">hogehogeMachine</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\hogehogeMachine</S>
+              </MS>
+            </Obj>
+            <Obj RefId="98">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">m1</S>
+                <S N="ListItemText">m1</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\m1</S>
+              </MS>
+            </Obj>
+            <Obj RefId="99">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">m2</S>
+                <S N="ListItemText">m2</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Standard (UA3 NP5 TA4) Orch1:\m2</S>
+              </MS>
+            </Obj>
+            <Obj RefId="100">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">m3</S>
+                <S N="ListItemText">m3</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Standard (UA1 NP0 TA0) Orch1:\m3</S>
+              </MS>
+            </Obj>
+            <Obj RefId="101">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">m4</S>
+                <S N="ListItemText">m4</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\m4</S>
+              </MS>
+            </Obj>
+            <Obj RefId="102">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">machine1</S>
+                <S N="ListItemText">machine1</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA1 NP0 TA0) Orch1:\machine1</S>
+              </MS>
+            </Obj>
+            <Obj RefId="103">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">machine2</S>
+                <S N="ListItemText">machine2</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA1 NP0 TA0) Orch1:\machine2</S>
+              </MS>
+            </Obj>
+            <Obj RefId="104">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">MachineTemp1</S>
+                <S N="ListItemText">MachineTemp1</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\MachineTemp1</S>
+              </MS>
+            </Obj>
+            <Obj RefId="105">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">myNewPP</S>
+                <S N="ListItemText">myNewPP</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\myNewPP</S>
+              </MS>
+            </Obj>
+            <Obj RefId="106">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">newmachines</S>
+                <S N="ListItemText">newmachines</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA1 NP1 TA1) Orch1:\newmachines</S>
+              </MS>
+            </Obj>
+            <Obj RefId="107">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_1</S>
+                <S N="ListItemText">PerfTestMachine_1</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_1</S>
+              </MS>
+            </Obj>
+            <Obj RefId="108">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_10</S>
+                <S N="ListItemText">PerfTestMachine_10</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_10</S>
+              </MS>
+            </Obj>
+            <Obj RefId="109">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_11</S>
+                <S N="ListItemText">PerfTestMachine_11</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_11</S>
+              </MS>
+            </Obj>
+            <Obj RefId="110">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_12</S>
+                <S N="ListItemText">PerfTestMachine_12</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_12</S>
+              </MS>
+            </Obj>
+            <Obj RefId="111">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_13</S>
+                <S N="ListItemText">PerfTestMachine_13</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_13</S>
+              </MS>
+            </Obj>
+            <Obj RefId="112">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_14</S>
+                <S N="ListItemText">PerfTestMachine_14</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_14</S>
+              </MS>
+            </Obj>
+            <Obj RefId="113">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_15</S>
+                <S N="ListItemText">PerfTestMachine_15</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_15</S>
+              </MS>
+            </Obj>
+            <Obj RefId="114">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_16</S>
+                <S N="ListItemText">PerfTestMachine_16</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_16</S>
+              </MS>
+            </Obj>
+            <Obj RefId="115">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_17</S>
+                <S N="ListItemText">PerfTestMachine_17</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_17</S>
+              </MS>
+            </Obj>
+            <Obj RefId="116">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_18</S>
+                <S N="ListItemText">PerfTestMachine_18</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_18</S>
+              </MS>
+            </Obj>
+            <Obj RefId="117">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_19</S>
+                <S N="ListItemText">PerfTestMachine_19</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_19</S>
+              </MS>
+            </Obj>
+            <Obj RefId="118">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_2</S>
+                <S N="ListItemText">PerfTestMachine_2</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_2</S>
+              </MS>
+            </Obj>
+            <Obj RefId="119">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_20</S>
+                <S N="ListItemText">PerfTestMachine_20</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_20</S>
+              </MS>
+            </Obj>
+            <Obj RefId="120">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_3</S>
+                <S N="ListItemText">PerfTestMachine_3</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_3</S>
+              </MS>
+            </Obj>
+            <Obj RefId="121">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_4</S>
+                <S N="ListItemText">PerfTestMachine_4</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_4</S>
+              </MS>
+            </Obj>
+            <Obj RefId="122">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_5</S>
+                <S N="ListItemText">PerfTestMachine_5</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_5</S>
+              </MS>
+            </Obj>
+            <Obj RefId="123">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_6</S>
+                <S N="ListItemText">PerfTestMachine_6</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_6</S>
+              </MS>
+            </Obj>
+            <Obj RefId="124">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_7</S>
+                <S N="ListItemText">PerfTestMachine_7</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_7</S>
+              </MS>
+            </Obj>
+            <Obj RefId="125">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_8</S>
+                <S N="ListItemText">PerfTestMachine_8</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_8</S>
+              </MS>
+            </Obj>
+            <Obj RefId="126">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_9</S>
+                <S N="ListItemText">PerfTestMachine_9</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_9</S>
+              </MS>
+            </Obj>
+            <Obj RefId="127">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">pool</S>
+                <S N="ListItemText">pool</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\pool</S>
+              </MS>
+            </Obj>
+            <Obj RefId="128">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">serverless</S>
+                <S N="ListItemText">serverless</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\serverless</S>
+              </MS>
+            </Obj>
+            <Obj RefId="129">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'serverless tepmlate'</S>
+                <S N="ListItemText">serverless tepmlate</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\serverless tepmlate</S>
+              </MS>
+            </Obj>
+            <Obj RefId="130">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">temp</S>
+                <S N="ListItemText">temp</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\temp</S>
+              </MS>
+            </Obj>
+            <Obj RefId="131">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">TestMachine2024</S>
+                <S N="ListItemText">TestMachine2024</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA2 NP1 TA0) Orch1:\TestMachine2024</S>
+              </MS>
+            </Obj>
+            <Obj RefId="132">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'wenqi.li@uipath.com''s workspace machine'</S>
+                <S N="ListItemText">wenqi.li@uipath.com's workspace machine</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\wenqi.li@uipath.com's workspace machine</S>
+              </MS>
+            </Obj>
+            <Obj RefId="133">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">xxx</S>
+                <S N="ListItemText">xxx</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA1 NP2 TA3) Orch1:\xxx</S>
+              </MS>
+            </Obj>
+            <Obj RefId="134">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'yoko.2013note.cha@gmail.com''s workspace machine'</S>
+                <S N="ListItemText">yoko.2013note.cha@gmail.com's workspace machine</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\yoko.2013note.cha@gmail.com's workspace machine</S>
+              </MS>
+            </Obj>
+            <Obj RefId="135">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'yoshifumi.tsuda_uipath.com#ext#@kzsai.onmicrosoft.com''s workspace machine'</S>
+                <S N="ListItemText">yoshifumi.tsuda_uipath.com#ext#@kzsai.onmicrosoft.com's workspace machine</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\yoshifumi.tsuda_uipath.com#ext#@kzsai.onmicrosoft.com's workspace machine</S>
+              </MS>
+            </Obj>
+            <Obj RefId="136">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'yoshifumi.tsuda@uipath.com''s workspace machine'</S>
+                <S N="ListItemText">yoshifumi.tsuda@uipath.com's workspace machine</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA1 NP1 TA1) Orch1:\yoshifumi.tsuda@uipath.com's workspace machine</S>
+              </MS>
+            </Obj>
+            <Obj RefId="137">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'ytsuda UR'</S>
+                <S N="ListItemText">ytsuda UR</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA1 NP0 TA0) Orch1:\ytsuda UR</S>
+              </MS>
+            </Obj>
+            <Obj RefId="138">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'ytsuda@gmail.com''s workspace machine'</S>
+                <S N="ListItemText">ytsuda@gmail.com's workspace machine</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA1 NP2 TA3) Orch1:\ytsuda@gmail.com's workspace machine</S>
+              </MS>
+            </Obj>
+            <Obj RefId="139">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'ytsuda+c_c@gmail.com''s workspace machine'</S>
+                <S N="ListItemText">ytsuda+c_c@gmail.com's workspace machine</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\ytsuda+c_c@gmail.com's workspace machine</S>
+              </MS>
+            </Obj>
+            <Obj RefId="140">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">あうあう</S>
+                <S N="ListItemText">あうあう</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\あうあう</S>
+              </MS>
+            </Obj>
+            <Obj RefId="141">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">クラウドロボット</S>
+                <S N="ListItemText">クラウドロボット</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\クラウドロボット</S>
+              </MS>
+            </Obj>
+            <Obj RefId="142">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">ふがふがマシーン</S>
+                <S N="ListItemText">ふがふがマシーン</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\ふがふがマシーン</S>
+              </MS>
+            </Obj>
+            <Obj RefId="143">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">ほえほえマシン</S>
+                <S N="ListItemText">ほえほえマシン</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\ほえほえマシン</S>
+              </MS>
+            </Obj>
+          </LST>
+        </Obj>
+      </En>
+      <En>
+        <S N="Key">Get-OrchAsset -Name</S>
+        <Obj N="Value" RefId="144">
+          <TNRef RefId="1" />
+          <LST>
+            <Obj RefId="145">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">DatabaseConnection</S>
+                <S N="ListItemText">DatabaseConnection</S>
+                <S N="ResultType">Text</S>
+                <S N="ToolTip">Orch1:\Shared\DatabaseConnection</S>
+              </MS>
+            </Obj>
+            <Obj RefId="146">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">DemoAsset_20250806_111824</S>
+                <S N="ListItemText">DemoAsset_20250806_111824</S>
+                <S N="ResultType">Text</S>
+                <S N="ToolTip">Orch1:\Shared\DemoAsset_20250806_111824</S>
+              </MS>
+            </Obj>
+            <Obj RefId="147">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">TestAsset1</S>
+                <S N="ListItemText">TestAsset1</S>
+                <S N="ResultType">Text</S>
+                <S N="ToolTip">Orch1:\Shared\TestAsset1</S>
+              </MS>
+            </Obj>
+            <Obj RefId="148">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">TestAsset2024</S>
+                <S N="ListItemText">TestAsset2024</S>
+                <S N="ResultType">Text</S>
+                <S N="ToolTip">Orch1:\Shared\TestAsset2024</S>
+              </MS>
+            </Obj>
+            <Obj RefId="149">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">TestCredential1</S>
+                <S N="ListItemText">TestCredential1</S>
+                <S N="ResultType">Text</S>
+                <S N="ToolTip">Orch1:\Shared\TestCredential1</S>
+              </MS>
+            </Obj>
+            <Obj RefId="150">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">クレクレ2</S>
+                <S N="ListItemText">クレクレ2</S>
+                <S N="ResultType">Text</S>
+                <S N="ToolTip">Orch1:\Shared\クレクレ2</S>
+              </MS>
+            </Obj>
+            <Obj RefId="151">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">たまご6</S>
+                <S N="ListItemText">たまご6</S>
+                <S N="ResultType">Text</S>
+                <S N="ToolTip">Orch1:\Shared\たまご6</S>
+              </MS>
+            </Obj>
+            <Obj RefId="152">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">ブル</S>
+                <S N="ListItemText">ブル</S>
+                <S N="ResultType">Text</S>
+                <S N="ToolTip">Orch1:\Shared\ブル</S>
+              </MS>
+            </Obj>
+            <Obj RefId="153">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">ブルブル</S>
+                <S N="ListItemText">ブルブル</S>
+                <S N="ResultType">Text</S>
+                <S N="ToolTip">Orch1:\Shared\ブルブル</S>
+              </MS>
+            </Obj>
+          </LST>
+        </Obj>
+      </En>
+      <En>
+        <S N="Key">Get-OrchQueue (positional)</S>
+        <Obj N="Value" RefId="154">
+          <TNRef RefId="1" />
+          <LST>
+            <Obj RefId="155">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">TestQueue123</S>
+                <S N="ListItemText">TestQueue123</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\TestQueue123</S>
+              </MS>
+            </Obj>
+            <Obj RefId="156">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">TestQueue2</S>
+                <S N="ListItemText">TestQueue2</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\TestQueue2</S>
+              </MS>
+            </Obj>
+            <Obj RefId="157">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">ふがふがキュー</S>
+                <S N="ListItemText">ふがふがキュー</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\ふがふがキュー</S>
+              </MS>
+            </Obj>
+            <Obj RefId="158">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">ほえほえ</S>
+                <S N="ListItemText">ほえほえ</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\ほえほえ</S>
+              </MS>
+            </Obj>
+            <Obj RefId="159">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">わたしのキュー</S>
+                <S N="ListItemText">わたしのキュー</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\わたしのキュー</S>
+              </MS>
+            </Obj>
+          </LST>
+        </Obj>
+      </En>
+      <En>
+        <S N="Key">Get-OrchRole (positional)</S>
+        <Obj N="Value" RefId="160">
+          <TNRef RefId="1" />
+          <LST>
+            <Obj RefId="161">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Allow to be Automation Developer'</S>
+                <S N="ListItemText">Allow to be Automation Developer</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Allow to be Automation Developer</S>
+              </MS>
+            </Obj>
+            <Obj RefId="162">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Allow to be Automation Publisher'</S>
+                <S N="ListItemText">Allow to be Automation Publisher</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Allow to be Automation Publisher</S>
+              </MS>
+            </Obj>
+            <Obj RefId="163">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Allow to be Automation User'</S>
+                <S N="ListItemText">Allow to be Automation User</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Allow to be Automation User</S>
+              </MS>
+            </Obj>
+            <Obj RefId="164">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Allow to be Folder Administrator'</S>
+                <S N="ListItemText">Allow to be Folder Administrator</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Allow to be Folder Administrator</S>
+              </MS>
+            </Obj>
+            <Obj RefId="165">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Automation Developer'</S>
+                <S N="ListItemText">Automation Developer</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Automation Developer</S>
+              </MS>
+            </Obj>
+            <Obj RefId="166">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Automation Publisher'</S>
+                <S N="ListItemText">Automation Publisher</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Automation Publisher</S>
+              </MS>
+            </Obj>
+            <Obj RefId="167">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Automation User'</S>
+                <S N="ListItemText">Automation User</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Automation User</S>
+              </MS>
+            </Obj>
+            <Obj RefId="168">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Automation User - Custom'</S>
+                <S N="ListItemText">Automation User - Custom</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Automation User - Custom</S>
+              </MS>
+            </Obj>
+            <Obj RefId="169">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Folder Administrator'</S>
+                <S N="ListItemText">Folder Administrator</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Folder Administrator</S>
+              </MS>
+            </Obj>
+            <Obj RefId="170">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">hoehoe</S>
+                <S N="ListItemText">hoehoe</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\hoehoe</S>
+              </MS>
+            </Obj>
+            <Obj RefId="171">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'new tenant role'</S>
+                <S N="ListItemText">new tenant role</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\new tenant role</S>
+              </MS>
+            </Obj>
+            <Obj RefId="172">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">new2</S>
+                <S N="ListItemText">new2</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\new2</S>
+              </MS>
+            </Obj>
+            <Obj RefId="173">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Orchestrator Administrator'</S>
+                <S N="ListItemText">Orchestrator Administrator</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Orchestrator Administrator</S>
+              </MS>
+            </Obj>
+            <Obj RefId="174">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Orchestrator Administrator - Custom'</S>
+                <S N="ListItemText">Orchestrator Administrator - Custom</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Orchestrator Administrator - Custom</S>
+              </MS>
+            </Obj>
+            <Obj RefId="175">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Personal Workspace Administrator'</S>
+                <S N="ListItemText">Personal Workspace Administrator</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Personal Workspace Administrator</S>
+              </MS>
+            </Obj>
+            <Obj RefId="176">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Pipelines folder role'</S>
+                <S N="ListItemText">Pipelines folder role</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Pipelines folder role</S>
+              </MS>
+            </Obj>
+            <Obj RefId="177">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Pipelines tenant role'</S>
+                <S N="ListItemText">Pipelines tenant role</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Pipelines tenant role</S>
+              </MS>
+            </Obj>
+            <Obj RefId="178">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">Robot-FolderScopedOnly</S>
+                <S N="ListItemText">Robot-FolderScopedOnly</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Robot-FolderScopedOnly</S>
+              </MS>
+            </Obj>
+            <Obj RefId="179">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">Robot-TenantScopedOnly</S>
+                <S N="ListItemText">Robot-TenantScopedOnly</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Robot-TenantScopedOnly</S>
+              </MS>
+            </Obj>
+            <Obj RefId="180">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Solutions Administrator'</S>
+                <S N="ListItemText">Solutions Administrator</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Solutions Administrator</S>
+              </MS>
+            </Obj>
+            <Obj RefId="181">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'Solutions Contributor'</S>
+                <S N="ListItemText">Solutions Contributor</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Solutions Contributor</S>
+              </MS>
+            </Obj>
+            <Obj RefId="182">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">あかんテナントロール</S>
+                <S N="ListItemText">あかんテナントロール</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\あかんテナントロール</S>
+              </MS>
+            </Obj>
+            <Obj RefId="183">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'アスタリスクとか `* ハテナ `? とか `[`] とかのロール。'</S>
+                <S N="ListItemText">アスタリスクとか * ハテナ ? とか [] とかのロール。</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\アスタリスクとか * ハテナ ? とか [] とかのロール。</S>
+              </MS>
+            </Obj>
+            <Obj RefId="184">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'カンマ , と空白文字入りロールです。'</S>
+                <S N="ListItemText">カンマ , と空白文字入りロールです。</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\カンマ , と空白文字入りロールです。</S>
+              </MS>
+            </Obj>
+            <Obj RefId="185">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">てなんとロール</S>
+                <S N="ListItemText">てなんとロール</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\てなんとロール</S>
+              </MS>
+            </Obj>
+            <Obj RefId="186">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">プロセス作成</S>
+                <S N="ListItemText">プロセス作成</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\プロセス作成</S>
+              </MS>
+            </Obj>
+            <Obj RefId="187">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">ほえほえフォルダーロール</S>
+                <S N="ListItemText">ほえほえフォルダーロール</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\ほえほえフォルダーロール</S>
+              </MS>
+            </Obj>
+            <Obj RefId="188">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">新しいテナントロール</S>
+                <S N="ListItemText">新しいテナントロール</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\新しいテナントロール</S>
+              </MS>
+            </Obj>
+          </LST>
+        </Obj>
+      </En>
+      <En>
+        <S N="Key">Get-OrchQueue -Name</S>
+        <Obj N="Value" RefId="189">
+          <TNRef RefId="1" />
+          <LST>
+            <Obj RefId="190">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">TestQueue123</S>
+                <S N="ListItemText">TestQueue123</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\TestQueue123</S>
+              </MS>
+            </Obj>
+            <Obj RefId="191">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">TestQueue2</S>
+                <S N="ListItemText">TestQueue2</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\TestQueue2</S>
+              </MS>
+            </Obj>
+            <Obj RefId="192">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">ふがふがキュー</S>
+                <S N="ListItemText">ふがふがキュー</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\ふがふがキュー</S>
+              </MS>
+            </Obj>
+            <Obj RefId="193">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">ほえほえ</S>
+                <S N="ListItemText">ほえほえ</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\ほえほえ</S>
+              </MS>
+            </Obj>
+            <Obj RefId="194">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">わたしのキュー</S>
+                <S N="ListItemText">わたしのキュー</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\わたしのキュー</S>
+              </MS>
+            </Obj>
+          </LST>
+        </Obj>
+      </En>
+      <En>
+        <S N="Key">Get-OrchProcess -Name</S>
+        <Obj N="Value" RefId="195">
+          <TNRef RefId="1" />
+          <LST>
+            <Obj RefId="196">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">' BGほえほえ'</S>
+                <S N="ListItemText"> BGほえほえ</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\ BGほえほえ</S>
+              </MS>
+            </Obj>
+            <Obj RefId="197">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">' 複数ほえほえ'</S>
+                <S N="ListItemText"> 複数ほえほえ</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\ 複数ほえほえ</S>
+              </MS>
+            </Obj>
+            <Obj RefId="198">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">1万行のログ</S>
+                <S N="ListItemText">1万行のログ</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\1万行のログ</S>
+              </MS>
+            </Obj>
+            <Obj RefId="199">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">BlankProcess19</S>
+                <S N="ListItemText">BlankProcess19</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess19</S>
+              </MS>
+            </Obj>
+            <Obj RefId="200">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">BlankProcess19-2</S>
+                <S N="ListItemText">BlankProcess19-2</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess19-2</S>
+              </MS>
+            </Obj>
+            <Obj RefId="201">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">BlankProcess27</S>
+                <S N="ListItemText">BlankProcess27</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess27</S>
+              </MS>
+            </Obj>
+            <Obj RefId="202">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">BlankProcess29</S>
+                <S N="ListItemText">BlankProcess29</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess29</S>
+              </MS>
+            </Obj>
+            <Obj RefId="203">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">BlankProcess33</S>
+                <S N="ListItemText">BlankProcess33</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess33</S>
+              </MS>
+            </Obj>
+            <Obj RefId="204">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">BlankProcess34</S>
+                <S N="ListItemText">BlankProcess34</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess34</S>
+              </MS>
+            </Obj>
+            <Obj RefId="205">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">BlankProcess35</S>
+                <S N="ListItemText">BlankProcess35</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess35</S>
+              </MS>
+            </Obj>
+            <Obj RefId="206">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">DataExtraction</S>
+                <S N="ListItemText">DataExtraction</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\DataExtraction</S>
+              </MS>
+            </Obj>
+            <Obj RefId="207">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">EmailProcessor</S>
+                <S N="ListItemText">EmailProcessor</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\EmailProcessor</S>
+              </MS>
+            </Obj>
+            <Obj RefId="208">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">ExplorerをKill</S>
+                <S N="ListItemText">ExplorerをKill</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\ExplorerをKill</S>
+              </MS>
+            </Obj>
+            <Obj RefId="209">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">InvoiceProcess</S>
+                <S N="ListItemText">InvoiceProcess</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\InvoiceProcess</S>
+              </MS>
+            </Obj>
+            <Obj RefId="210">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">Msgbox</S>
+                <S N="ListItemText">Msgbox</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\Msgbox</S>
+              </MS>
+            </Obj>
+            <Obj RefId="211">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">MsgBox2</S>
+                <S N="ListItemText">MsgBox2</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\MsgBox2</S>
+              </MS>
+            </Obj>
+            <Obj RefId="212">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">My1stAgent</S>
+                <S N="ListItemText">My1stAgent</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\My1stAgent</S>
+              </MS>
+            </Obj>
+            <Obj RefId="213">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">My1stApps</S>
+                <S N="ListItemText">My1stApps</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\My1stApps</S>
+              </MS>
+            </Obj>
+            <Obj RefId="214">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">My2ndApps</S>
+                <S N="ListItemText">My2ndApps</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\My2ndApps</S>
+              </MS>
+            </Obj>
+            <Obj RefId="215">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">My3rdApps</S>
+                <S N="ListItemText">My3rdApps</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\My3rdApps</S>
+              </MS>
+            </Obj>
+            <Obj RefId="216">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">ReportGeneration</S>
+                <S N="ListItemText">ReportGeneration</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\ReportGeneration</S>
+              </MS>
+            </Obj>
+            <Obj RefId="217">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">例外</S>
+                <S N="ListItemText">例外</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\例外</S>
+              </MS>
+            </Obj>
+            <Obj RefId="218">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">例外2</S>
+                <S N="ListItemText">例外2</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\例外2</S>
+              </MS>
+            </Obj>
+          </LST>
+        </Obj>
+      </En>
+      <En>
+        <S N="Key">Get-OrchBucket -Name</S>
+        <Obj N="Value" RefId="219">
+          <TNRef RefId="1" />
+          <LST>
+            <Obj RefId="220">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">NewBucket1</S>
+                <S N="ListItemText">NewBucket1</S>
+                <S N="ResultType">Text</S>
+                <S N="ToolTip">Orch1:\Shared\NewBucket1</S>
+              </MS>
+            </Obj>
+            <Obj RefId="221">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">TestBucket2</S>
+                <S N="ListItemText">TestBucket2</S>
+                <S N="ResultType">Text</S>
+                <S N="ToolTip">Orch1:\Shared\TestBucket2</S>
+              </MS>
+            </Obj>
+            <Obj RefId="222">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">バケットよ</S>
+                <S N="ListItemText">バケットよ</S>
+                <S N="ResultType">Text</S>
+                <S N="ToolTip">Orch1:\Shared\バケットよ</S>
+              </MS>
+            </Obj>
+          </LST>
+        </Obj>
+      </En>
+      <En>
+        <S N="Key">Get-OrchWebhook -Name</S>
+        <Obj N="Value" RefId="223">
+          <TNRef RefId="1" />
+          <LST>
+            <Obj RefId="224">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">mywebhook</S>
+                <S N="ListItemText">mywebhook</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\mywebhook</S>
+              </MS>
+            </Obj>
+          </LST>
+        </Obj>
+      </En>
+      <En>
+        <S N="Key">Get-OrchEventTrigger -Name</S>
+        <Obj N="Value" RefId="225">
+          <TNRef RefId="1" />
+          <LST>
+            <Obj RefId="226">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">aaaa</S>
+                <S N="ListItemText">aaaa</S>
+                <S N="ResultType">Text</S>
+                <S N="ToolTip">Orch1:\Shared\aaaa</S>
+              </MS>
+            </Obj>
+          </LST>
+        </Obj>
+      </En>
+      <En>
+        <S N="Key">Get-OrchApiTrigger -Name</S>
+        <Obj N="Value" RefId="227">
+          <TNRef RefId="1" />
+          <LST />
+        </Obj>
+      </En>
+      <En>
+        <S N="Key">Get-OrchMachine -Name</S>
+        <Obj N="Value" RefId="228">
+          <TNRef RefId="1" />
+          <LST>
+            <Obj RefId="229">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'`[Default`] Cloud Robots - Serverless'</S>
+                <S N="ListItemText">[Default] Cloud Robots - Serverless</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\[Default] Cloud Robots - Serverless</S>
+              </MS>
+            </Obj>
+            <Obj RefId="230">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">aiai</S>
+                <S N="ListItemText">aiai</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\aiai</S>
+              </MS>
+            </Obj>
+            <Obj RefId="231">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">bafu</S>
+                <S N="ListItemText">bafu</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\bafu</S>
+              </MS>
+            </Obj>
+            <Obj RefId="232">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">ffff2</S>
+                <S N="ListItemText">ffff2</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\ffff2</S>
+              </MS>
+            </Obj>
+            <Obj RefId="233">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">fffff</S>
+                <S N="ListItemText">fffff</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\fffff</S>
+              </MS>
+            </Obj>
+            <Obj RefId="234">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">fuga</S>
+                <S N="ListItemText">fuga</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\fuga</S>
+              </MS>
+            </Obj>
+            <Obj RefId="235">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">hogehogeMachine</S>
+                <S N="ListItemText">hogehogeMachine</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\hogehogeMachine</S>
+              </MS>
+            </Obj>
+            <Obj RefId="236">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">m1</S>
+                <S N="ListItemText">m1</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\m1</S>
+              </MS>
+            </Obj>
+            <Obj RefId="237">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">m2</S>
+                <S N="ListItemText">m2</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Standard (UA3 NP5 TA4) Orch1:\m2</S>
+              </MS>
+            </Obj>
+            <Obj RefId="238">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">m3</S>
+                <S N="ListItemText">m3</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Standard (UA1 NP0 TA0) Orch1:\m3</S>
+              </MS>
+            </Obj>
+            <Obj RefId="239">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">m4</S>
+                <S N="ListItemText">m4</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\m4</S>
+              </MS>
+            </Obj>
+            <Obj RefId="240">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">machine1</S>
+                <S N="ListItemText">machine1</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA1 NP0 TA0) Orch1:\machine1</S>
+              </MS>
+            </Obj>
+            <Obj RefId="241">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">machine2</S>
+                <S N="ListItemText">machine2</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA1 NP0 TA0) Orch1:\machine2</S>
+              </MS>
+            </Obj>
+            <Obj RefId="242">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">MachineTemp1</S>
+                <S N="ListItemText">MachineTemp1</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\MachineTemp1</S>
+              </MS>
+            </Obj>
+            <Obj RefId="243">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">myNewPP</S>
+                <S N="ListItemText">myNewPP</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\myNewPP</S>
+              </MS>
+            </Obj>
+            <Obj RefId="244">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">newmachines</S>
+                <S N="ListItemText">newmachines</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA1 NP1 TA1) Orch1:\newmachines</S>
+              </MS>
+            </Obj>
+            <Obj RefId="245">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_1</S>
+                <S N="ListItemText">PerfTestMachine_1</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_1</S>
+              </MS>
+            </Obj>
+            <Obj RefId="246">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_10</S>
+                <S N="ListItemText">PerfTestMachine_10</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_10</S>
+              </MS>
+            </Obj>
+            <Obj RefId="247">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_11</S>
+                <S N="ListItemText">PerfTestMachine_11</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_11</S>
+              </MS>
+            </Obj>
+            <Obj RefId="248">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_12</S>
+                <S N="ListItemText">PerfTestMachine_12</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_12</S>
+              </MS>
+            </Obj>
+            <Obj RefId="249">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_13</S>
+                <S N="ListItemText">PerfTestMachine_13</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_13</S>
+              </MS>
+            </Obj>
+            <Obj RefId="250">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_14</S>
+                <S N="ListItemText">PerfTestMachine_14</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_14</S>
+              </MS>
+            </Obj>
+            <Obj RefId="251">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_15</S>
+                <S N="ListItemText">PerfTestMachine_15</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_15</S>
+              </MS>
+            </Obj>
+            <Obj RefId="252">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_16</S>
+                <S N="ListItemText">PerfTestMachine_16</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_16</S>
+              </MS>
+            </Obj>
+            <Obj RefId="253">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_17</S>
+                <S N="ListItemText">PerfTestMachine_17</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_17</S>
+              </MS>
+            </Obj>
+            <Obj RefId="254">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_18</S>
+                <S N="ListItemText">PerfTestMachine_18</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_18</S>
+              </MS>
+            </Obj>
+            <Obj RefId="255">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_19</S>
+                <S N="ListItemText">PerfTestMachine_19</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_19</S>
+              </MS>
+            </Obj>
+            <Obj RefId="256">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_2</S>
+                <S N="ListItemText">PerfTestMachine_2</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_2</S>
+              </MS>
+            </Obj>
+            <Obj RefId="257">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_20</S>
+                <S N="ListItemText">PerfTestMachine_20</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_20</S>
+              </MS>
+            </Obj>
+            <Obj RefId="258">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_3</S>
+                <S N="ListItemText">PerfTestMachine_3</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_3</S>
+              </MS>
+            </Obj>
+            <Obj RefId="259">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_4</S>
+                <S N="ListItemText">PerfTestMachine_4</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_4</S>
+              </MS>
+            </Obj>
+            <Obj RefId="260">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_5</S>
+                <S N="ListItemText">PerfTestMachine_5</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_5</S>
+              </MS>
+            </Obj>
+            <Obj RefId="261">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_6</S>
+                <S N="ListItemText">PerfTestMachine_6</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_6</S>
+              </MS>
+            </Obj>
+            <Obj RefId="262">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_7</S>
+                <S N="ListItemText">PerfTestMachine_7</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_7</S>
+              </MS>
+            </Obj>
+            <Obj RefId="263">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_8</S>
+                <S N="ListItemText">PerfTestMachine_8</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_8</S>
+              </MS>
+            </Obj>
+            <Obj RefId="264">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">PerfTestMachine_9</S>
+                <S N="ListItemText">PerfTestMachine_9</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_9</S>
+              </MS>
+            </Obj>
+            <Obj RefId="265">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">pool</S>
+                <S N="ListItemText">pool</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\pool</S>
+              </MS>
+            </Obj>
+            <Obj RefId="266">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">serverless</S>
+                <S N="ListItemText">serverless</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\serverless</S>
+              </MS>
+            </Obj>
+            <Obj RefId="267">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'serverless tepmlate'</S>
+                <S N="ListItemText">serverless tepmlate</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\serverless tepmlate</S>
+              </MS>
+            </Obj>
+            <Obj RefId="268">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">temp</S>
+                <S N="ListItemText">temp</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\temp</S>
+              </MS>
+            </Obj>
+            <Obj RefId="269">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">TestMachine2024</S>
+                <S N="ListItemText">TestMachine2024</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA2 NP1 TA0) Orch1:\TestMachine2024</S>
+              </MS>
+            </Obj>
+            <Obj RefId="270">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'wenqi.li@uipath.com''s workspace machine'</S>
+                <S N="ListItemText">wenqi.li@uipath.com's workspace machine</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\wenqi.li@uipath.com's workspace machine</S>
+              </MS>
+            </Obj>
+            <Obj RefId="271">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">xxx</S>
+                <S N="ListItemText">xxx</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA1 NP2 TA3) Orch1:\xxx</S>
+              </MS>
+            </Obj>
+            <Obj RefId="272">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'yoko.2013note.cha@gmail.com''s workspace machine'</S>
+                <S N="ListItemText">yoko.2013note.cha@gmail.com's workspace machine</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\yoko.2013note.cha@gmail.com's workspace machine</S>
+              </MS>
+            </Obj>
+            <Obj RefId="273">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'yoshifumi.tsuda_uipath.com#ext#@kzsai.onmicrosoft.com''s workspace machine'</S>
+                <S N="ListItemText">yoshifumi.tsuda_uipath.com#ext#@kzsai.onmicrosoft.com's workspace machine</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\yoshifumi.tsuda_uipath.com#ext#@kzsai.onmicrosoft.com's workspace machine</S>
+              </MS>
+            </Obj>
+            <Obj RefId="274">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'yoshifumi.tsuda@uipath.com''s workspace machine'</S>
+                <S N="ListItemText">yoshifumi.tsuda@uipath.com's workspace machine</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA1 NP1 TA1) Orch1:\yoshifumi.tsuda@uipath.com's workspace machine</S>
+              </MS>
+            </Obj>
+            <Obj RefId="275">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'ytsuda UR'</S>
+                <S N="ListItemText">ytsuda UR</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA1 NP0 TA0) Orch1:\ytsuda UR</S>
+              </MS>
+            </Obj>
+            <Obj RefId="276">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'ytsuda@gmail.com''s workspace machine'</S>
+                <S N="ListItemText">ytsuda@gmail.com's workspace machine</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA1 NP2 TA3) Orch1:\ytsuda@gmail.com's workspace machine</S>
+              </MS>
+            </Obj>
+            <Obj RefId="277">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">'ytsuda+c_c@gmail.com''s workspace machine'</S>
+                <S N="ListItemText">ytsuda+c_c@gmail.com's workspace machine</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\ytsuda+c_c@gmail.com's workspace machine</S>
+              </MS>
+            </Obj>
+            <Obj RefId="278">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">あうあう</S>
+                <S N="ListItemText">あうあう</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\あうあう</S>
+              </MS>
+            </Obj>
+            <Obj RefId="279">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">クラウドロボット</S>
+                <S N="ListItemText">クラウドロボット</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\クラウドロボット</S>
+              </MS>
+            </Obj>
+            <Obj RefId="280">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">ふがふがマシーン</S>
+                <S N="ListItemText">ふがふがマシーン</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\ふがふがマシーン</S>
+              </MS>
+            </Obj>
+            <Obj RefId="281">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">ほえほえマシン</S>
+                <S N="ListItemText">ほえほえマシン</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\ほえほえマシン</S>
+              </MS>
+            </Obj>
+          </LST>
+        </Obj>
+      </En>
+    </DCT>
+  </Obj>
+</Objs>
