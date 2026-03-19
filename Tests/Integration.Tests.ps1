@@ -504,13 +504,13 @@ Describe 'Credential Asset CRUD' {
         $match | Should -BeNullOrEmpty
     }
 
-    It 'Set-OrchCredentialAsset with empty CredentialPassword clears Global value' {
+    It 'Set-OrchCredentialAsset with empty CredentialPassword does not clear Global value' {
         Set-OrchCredentialAsset -Name "${script:CredAssetName}_Basic" -CredentialPassword ''
         Clear-OrchCache
         $asset = Get-OrchAsset -Name "${script:CredAssetName}_Basic"
-        if ($asset) {
-            $asset.HasDefaultValue | Should -Be $false
-        }
+        $asset | Should -Not -BeNullOrEmpty
+        $asset.HasDefaultValue | Should -Be $true
+        $asset.CredentialUsername | Should -Be 'updateduser'
     }
 
     It 'Set-OrchCredentialAsset with -CredentialStore sets the credential store' {
@@ -519,6 +519,19 @@ Describe 'Credential Asset CRUD' {
         $asset = Get-OrchAsset -Name "${script:CredAssetName}_WithStore"
         $asset | Should -Not -BeNullOrEmpty
         $asset.CredentialStoreId | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Set-OrchCredentialAsset with empty CredentialPassword from CSV does not destroy existing password' {
+        # Simulate Export -> Import round-trip: CSV has CredentialUsername but empty CredentialPassword
+        Set-OrchCredentialAsset -Name "${script:CredAssetName}_CsvSafe" -CredentialUsername 'csvuser' -CredentialPassword 'csvpass'
+        Clear-OrchCache
+        # Import with empty password (as exported CSV would have)
+        Set-OrchCredentialAsset -Name "${script:CredAssetName}_CsvSafe" -CredentialUsername 'csvuser' -CredentialPassword ''
+        Clear-OrchCache
+        $asset = Get-OrchAsset -Name "${script:CredAssetName}_CsvSafe"
+        $asset | Should -Not -BeNullOrEmpty
+        $asset.HasDefaultValue | Should -Be $true
+        $asset.CredentialUsername | Should -Be 'csvuser'
     }
 
     It 'Set-OrchCredentialAsset with empty CredentialPassword does not clear the credential' {

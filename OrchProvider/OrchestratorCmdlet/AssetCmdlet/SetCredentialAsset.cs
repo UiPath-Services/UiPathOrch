@@ -379,16 +379,9 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                     asset.CredentialUsername = param.CredentialUsername;
                 }
 
-                if ((asset.CredentialUsername != param.CredentialUsername || string.IsNullOrEmpty(param.CredentialUsername)) && param.CredentialPassword == "") // If "" is specified, delete the Global value
-                {
-                    isDirty = true;
-                    asset.ValueScope = "PerRobot";
-                    asset.HasDefaultValue = false;
-                    asset.CredentialUsername = "";
-                    asset.CredentialPassword = null;
-                    asset.CredentialStoreId = null;
-                }
-                else if (!string.IsNullOrEmpty(param.CredentialPassword)) // Only update this when CredentialPassword has a value specified
+                // Only update password when a non-empty value is explicitly specified.
+                // Empty string "" means "not specified" (e.g., from CSV export where passwords are masked).
+                if (!string.IsNullOrEmpty(param.CredentialPassword))
                 {
                     isDirty = true;
                     asset.CredentialPassword = param.CredentialPassword;
