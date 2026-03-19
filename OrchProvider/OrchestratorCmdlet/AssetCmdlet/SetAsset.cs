@@ -350,48 +350,8 @@ public class SetAssetCommand : OrchestratorPSCmdlet
             }
             else
             {
-                Asset newAsset = new()
-                {
-                    Key = asset.Key,
-                    Name = asset.Name,
-                    Description = asset.Description,
-                    ValueType = asset.ValueType,
-                    CanBeDeleted = asset.CanBeDeleted,
-                    HasDefaultValue = asset.HasDefaultValue,
-                    Path = folder.GetPSPath(),
-                    ValueScope = asset.ValueScope,
-                    Value = asset.Value,
-                    StringValue = asset.StringValue,
-                    BoolValue = asset.BoolValue,
-                    IntValue = asset.IntValue,
-                    Id = asset.Id,
-                    Tags = asset.Tags,
-                };
-                if (asset.UserValues is not null && asset.UserValues.Any())
-                {
-                    newAsset.UserValues = new List<AssetUserValue>();
-                    foreach (var uv in asset.UserValues)
-                    {
-                        AssetUserValue auv = new()
-                        {
-                            UserId = uv.UserId,
-                            UserName = uv.UserName,
-                            MachineId = uv.MachineId,
-                            ValueType = uv.ValueType,
-                            StringValue = uv.StringValue,
-                            BoolValue = uv.BoolValue,
-                            IntValue = uv.IntValue,
-                            Value = uv.Value,
-                            CredentialUsername = uv.CredentialUsername,
-                            CredentialStoreId = uv.CredentialStoreId,
-                            ExternalName = uv.ExternalName,
-                            KeyValueList = uv.KeyValueList,
-                            Id = uv.Id,
-                        };
-                        newAsset.UserValues.Add(auv);
-                    }
-                }
-                asset = newAsset;
+                asset = OrchCollectionExtensions.DeepCopy(asset);
+                asset.Path = folder.GetPSPath();
             }
         }
 
