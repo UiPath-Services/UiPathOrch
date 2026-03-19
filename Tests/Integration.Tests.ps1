@@ -523,6 +523,81 @@ $($script:SharedPath),${script:AssetCsvPrefix}_PerRobot,,Text,val2,$testUser2,
         ($userValues | Where-Object { $_.UserName -eq $testUser2 }).Value | Should -Be 'val2'
     }
 
+    It 'Import-Csv | Set-OrchAsset aggregates multiple users x machines for multiple assets' {
+        $csvPath = Join-Path $script:CsvImportDir 'complex_perrobot.csv'
+        $user1 = 'ytsuda@gmail.com'
+        $user2 = 'ytsuda+c_c@gmail.com'
+        $machine1 = 'aiai'
+        $machine2 = 'bafu'
+        @"
+Path,Name,Description,ValueType,Value,UserName,MachineName
+$($script:SharedPath),${script:AssetCsvPrefix}_Multi1,,Text,u1m1,$user1,$machine1
+$($script:SharedPath),${script:AssetCsvPrefix}_Multi1,,Text,u1m2,$user1,$machine2
+$($script:SharedPath),${script:AssetCsvPrefix}_Multi1,,Text,u2m1,$user2,$machine1
+$($script:SharedPath),${script:AssetCsvPrefix}_Multi2,,Integer,10,$user1,
+$($script:SharedPath),${script:AssetCsvPrefix}_Multi2,,Integer,20,$user2,
+"@ | Set-Content -Path $csvPath -Encoding UTF8
+
+        Import-Csv $csvPath | Set-OrchAsset
+        Clear-OrchCache
+
+        # Multi1: 3 user-machine combinations
+        $uv1 = @(Get-OrchAsset -Name "${script:AssetCsvPrefix}_Multi1" -ExpandUserValues)
+        $uv1.Count | Should -Be 3
+        ($uv1 | Where-Object { $_.UserName -eq $user1 -and $_.MachineName -eq $machine1 }).Value | Should -Be 'u1m1'
+        ($uv1 | Where-Object { $_.UserName -eq $user1 -and $_.MachineName -eq $machine2 }).Value | Should -Be 'u1m2'
+        ($uv1 | Where-Object { $_.UserName -eq $user2 -and $_.MachineName -eq $machine1 }).Value | Should -Be 'u2m1'
+
+        # Multi2: 2 user values (no machine)
+        $uv2 = @(Get-OrchAsset -Name "${script:AssetCsvPrefix}_Multi2" -ExpandUserValues)
+        $uv2.Count | Should -Be 2
+        ($uv2 | Where-Object { $_.UserName -eq $user1 }).Value | Should -Be '10'
+        ($uv2 | Where-Object { $_.UserName -eq $user2 }).Value | Should -Be '20'
+    }
+
+    It 'Import-Csv | Set-OrchAsset handles Global and PerRobot rows in same CSV' {
+        $csvPath = Join-Path $script:CsvImportDir 'mixed_global_perrobot.csv'
+        $user1 = 'ytsuda@gmail.com'
+        @"
+Path,Name,Description,ValueType,Value,UserName,MachineName
+$($script:SharedPath),${script:AssetCsvPrefix}_Mixed,Mixed asset,Text,global-val,,
+$($script:SharedPath),${script:AssetCsvPrefix}_Mixed,,Text,user-val,$user1,
+"@ | Set-Content -Path $csvPath -Encoding UTF8
+
+        Import-Csv $csvPath | Set-OrchAsset
+        Clear-OrchCache
+
+        # Check global value
+        $asset = Get-OrchAsset -Name "${script:AssetCsvPrefix}_Mixed"
+        $asset | Should -Not -BeNullOrEmpty
+        $asset.Description | Should -Be 'Mixed asset'
+        $asset.Value | Should -Be 'global-val'
+
+        # Check PerRobot value
+        $uv = @(Get-OrchAsset -Name "${script:AssetCsvPrefix}_Mixed" -ExpandUserValues)
+        $globalUv = $uv | Where-Object { -not $_.UserName }
+        $userUv = $uv | Where-Object { $_.UserName -eq $user1 }
+        $globalUv.Value | Should -Be 'global-val'
+        $userUv.Value | Should -Be 'user-val'
+    }
+
+    It 'PerRobot CSV round-trip: Export then re-import preserves user values' {
+        $exportPath = Join-Path $script:CsvImportDir 'perrobot_roundtrip.csv'
+        Get-OrchAsset -Name "${script:AssetCsvPrefix}_Multi1" -ExportCsv $exportPath
+        Clear-OrchCache
+
+        # Delete and re-import
+        Remove-OrchAsset -Name "${script:AssetCsvPrefix}_Multi1" -Confirm:$false
+        Clear-OrchCache
+        Get-OrchAsset -Name "${script:AssetCsvPrefix}_Multi1" | Should -BeNullOrEmpty
+
+        Import-Csv $exportPath | Set-OrchAsset
+        Clear-OrchCache
+
+        $uv = @(Get-OrchAsset -Name "${script:AssetCsvPrefix}_Multi1" -ExpandUserValues)
+        $uv.Count | Should -Be 3
+    }
+
     It 'Export then re-import round-trip preserves asset values' {
         $exportPath = Join-Path $script:CsvImportDir 'roundtrip_export.csv'
         Get-OrchAsset -Name "${script:AssetCsvPrefix}_A" -ExportCsv $exportPath
