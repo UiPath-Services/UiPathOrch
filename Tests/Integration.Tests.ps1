@@ -552,9 +552,9 @@ Describe 'Credential Asset CSV Import' {
     It 'Import-Csv | Set-OrchCredentialAsset creates multiple credential assets' {
         $csvPath = Join-Path $script:CredCsvDir 'new_creds.csv'
         @"
-Path,Name,UserName,MachineName,CredentialUsername,CredentialPassword
-$($script:SharedPath),${script:CredCsvPrefix}_A,,,cred_user_a,cred_pass_a
-$($script:SharedPath),${script:CredCsvPrefix}_B,,,cred_user_b,cred_pass_b
+Path,Name,Description,CredentialStore,UserName,MachineName,CredentialUsername,CredentialPassword,ExternalName
+$($script:SharedPath),${script:CredCsvPrefix}_A,Desc A,,,,cred_user_a,cred_pass_a,
+$($script:SharedPath),${script:CredCsvPrefix}_B,Desc B,,,,cred_user_b,cred_pass_b,
 "@ | Set-Content -Path $csvPath -Encoding UTF8
 
         Import-Csv $csvPath | Set-OrchCredentialAsset
@@ -570,9 +570,9 @@ $($script:SharedPath),${script:CredCsvPrefix}_B,,,cred_user_b,cred_pass_b
         $user1 = 'ytsuda@gmail.com'
         $user2 = 'ytsuda+c_c@gmail.com'
         @"
-Path,Name,UserName,MachineName,CredentialUsername,CredentialPassword
-$($script:SharedPath),${script:CredCsvPrefix}_Multi,$user1,,per_user1,per_pass1
-$($script:SharedPath),${script:CredCsvPrefix}_Multi,$user2,,per_user2,per_pass2
+Path,Name,Description,CredentialStore,UserName,MachineName,CredentialUsername,CredentialPassword,ExternalName
+$($script:SharedPath),${script:CredCsvPrefix}_Multi,,,${user1},,per_user1,per_pass1,
+$($script:SharedPath),${script:CredCsvPrefix}_Multi,,,${user2},,per_user2,per_pass2,
 "@ | Set-Content -Path $csvPath -Encoding UTF8
 
         Import-Csv $csvPath | Set-OrchCredentialAsset
@@ -581,6 +581,29 @@ $($script:SharedPath),${script:CredCsvPrefix}_Multi,$user2,,per_user2,per_pass2
         $uv.Count | Should -Be 2
         ($uv | Where-Object { $_.UserName -eq $user1 }).CredentialUsername | Should -Be 'per_user1'
         ($uv | Where-Object { $_.UserName -eq $user2 }).CredentialUsername | Should -Be 'per_user2'
+    }
+
+    It 'Credential CSV round-trip: Export then re-import preserves values' {
+        # Create a fresh asset for round-trip
+        Set-OrchCredentialAsset -Name "${script:CredCsvPrefix}_RT" -CredentialUsername 'rt_user' -CredentialPassword 'rt_pass'
+        Clear-OrchCache
+
+        $exportPath = Join-Path $script:CredCsvDir 'cred_roundtrip.csv'
+        Get-OrchAsset -Name "${script:CredCsvPrefix}_RT" -ExportCredentialCsv $exportPath
+        Clear-OrchCache
+
+        Remove-OrchAsset -Name "${script:CredCsvPrefix}_RT" -ValueType Credential -Confirm:$false
+        Clear-OrchCache
+        Get-OrchAsset -Name "${script:CredCsvPrefix}_RT" | Should -BeNullOrEmpty
+
+        # Re-import — note: password is not exported, so we need to add it
+        $csv = Import-Csv $exportPath
+        $csv | ForEach-Object { $_.CredentialPassword = 'rt_pass' }
+        $csv | Set-OrchCredentialAsset
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name "${script:CredCsvPrefix}_RT"
+        $a | Should -Not -BeNullOrEmpty
+        $a.CredentialUsername | Should -Be 'rt_user'
     }
 }
 
