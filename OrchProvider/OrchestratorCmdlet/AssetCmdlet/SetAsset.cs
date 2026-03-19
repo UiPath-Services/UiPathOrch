@@ -427,118 +427,119 @@ public class SetAssetCommand : OrchestratorPSCmdlet
             }
         }
 
-        // Update Global value
         if (specifiedUsers is null)
+            isDirty |= UpdateGlobalValue(asset, param, target, boolValue, intValue, specifiedMachines);
+        else
+            isDirty |= UpdatePerRobotValues(asset, param, target, boolValue, intValue, specifiedUsers, specifiedMachines!);
+
+        return isDirty ? asset : null;
+    }
+
+    private bool UpdateGlobalValue(Asset asset, SetAssetCommandParameter param, string target,
+        bool boolValue, int intValue, IEnumerable<ExtendedMachine?> specifiedMachines)
+    {
+        if (specifiedMachines is not null && specifiedMachines.Any(m => m is not null))
         {
-            if (specifiedMachines is not null && specifiedMachines.Any(m => m is not null))
+            string strMachineNames = string.Join(", ", param.MachineName!);
+            var errorRecord = new ErrorRecord(new OrchException(target, $"UserName was not specified. MachineName '{strMachineNames}' ignored."), "SetAssetError", ErrorCategory.InvalidOperation, target);
+            WriteError(errorRecord);
+        }
+
+        if (param.Value == "" && !string.IsNullOrEmpty(asset.Value))
+        {
+            asset.ValueScope = "PerRobot";
+            asset.HasDefaultValue = false;
+            asset.StringValue = null;
+            asset.BoolValue = null;
+            asset.IntValue = null;
+            return true;
+        }
+
+        if (param.Value is not null)
+        {
+            if (string.IsNullOrEmpty(asset.ValueType))
             {
-                // Warning that machines will be ignored
-                string strMachineNames = string.Join(", ", param.MachineName!);
-                var errorRecord = new ErrorRecord(new OrchException(target, $"UserName was not specified. MachineName '{strMachineNames}' ignored."), "SetAssetError", ErrorCategory.InvalidOperation, target);
-                WriteError(errorRecord);
+                WriteError(new ErrorRecord(new OrchException(target, "ValueType was not specified. It will be assumed as 'Text'."), "SetAssetError", ErrorCategory.InvalidOperation, target));
+                asset.ValueType = "Text";
             }
 
-            if (param.Value == "" && !string.IsNullOrEmpty(asset.Value)) // If "" is specified, delete the Global value
+            if (AssignTypedValue(asset.ValueType, param.Value, boolValue, intValue,
+                () => asset.StringValue, v => asset.StringValue = v,
+                () => asset.BoolValue,   v => asset.BoolValue = v,
+                () => asset.IntValue,    v => asset.IntValue = v))
             {
-                isDirty = true;
-                asset.ValueScope = "PerRobot";
-                asset.HasDefaultValue = false;
-                asset.StringValue = null;
-                asset.BoolValue = null;
-                asset.IntValue = null;
+                asset.HasDefaultValue = true;
+                return true;
             }
-            else if (param.Value is not null)
+        }
+        return false;
+    }
+
+    private bool UpdatePerRobotValues(Asset asset, SetAssetCommandParameter param, string target,
+        bool boolValue, int intValue,
+        IEnumerable<User> specifiedUsers, IEnumerable<ExtendedMachine?> specifiedMachines)
+    {
+        bool isDirty = false;
+        foreach (var user in specifiedUsers)
+        {
+            foreach (var machine in specifiedMachines)
             {
+                asset.UserValues ??= [];
+
+                var userValue = asset.UserValues.FirstOrDefault(uv => uv.UserId == user.Id && uv.MachineId == machine?.Id);
+                if (param.Value == "")
+                {
+                    if (userValue is not null)
+                    {
+                        isDirty = true;
+                        asset.UserValues.Remove(userValue);
+                        if (!asset.UserValues.Any())
+                        {
+                            asset.ValueScope = "Global";
+                            asset.UserValues = null;
+                        }
+                    }
+                    continue;
+                }
+                if (userValue is null)
+                {
+                    isDirty = true;
+                    userValue = new AssetUserValue
+                    {
+                        UserId = user.Id,
+                        UserName = user.UserName,
+                        MachineId = machine?.Id,
+                        MachineName = machine?.Name
+                    };
+                    asset.UserValues.Add(userValue);
+                }
+
+                if ((userValue.ValueType ?? "") != asset.ValueType)
+                {
+                    isDirty = true;
+                    userValue!.ValueType = asset.ValueType;
+                }
+                if (string.IsNullOrEmpty(asset.ValueType))
+                    asset.ValueType = userValue?.ValueType;
+
                 if (string.IsNullOrEmpty(asset.ValueType))
                 {
-                    Exception e = new Exception($"ValueType was not specified. It will be assumed as 'Text'.");
-                    var errorRecord = new ErrorRecord(new OrchException(target, e), "SetAssetError", ErrorCategory.InvalidOperation, target);
-                    WriteError(errorRecord);
+                    WriteError(new ErrorRecord(new OrchException(target, "ValueType was not specified. It will be assumed as 'Text'."), "SetAssetError", ErrorCategory.InvalidOperation, target));
                     asset.ValueType = "Text";
+                    userValue!.ValueType = "Text";
                 }
 
                 if (AssignTypedValue(asset.ValueType, param.Value, boolValue, intValue,
-                    () => asset.StringValue, v => asset.StringValue = v,
-                    () => asset.BoolValue,   v => asset.BoolValue = v,
-                    () => asset.IntValue,    v => asset.IntValue = v))
+                    () => userValue!.StringValue, v => userValue!.StringValue = v,
+                    () => userValue!.BoolValue,   v => userValue!.BoolValue = v,
+                    () => userValue!.IntValue,    v => userValue!.IntValue = v))
                 {
                     isDirty = true;
-                    asset.HasDefaultValue = true;
+                    asset.ValueScope = "PerRobot";
                 }
             }
         }
-        else // Update PerRobot value
-        {
-            foreach (var user in specifiedUsers)
-            {
-                foreach (var machine in specifiedMachines!)
-                {
-                    if (asset.UserValues is null)
-                    {
-                        asset.UserValues = [];
-                    }
-
-                    AssetUserValue userValue = asset.UserValues.FirstOrDefault(uv => uv.UserId == user.Id && uv.MachineId == machine?.Id);
-                    if (param.Value == "")
-                    {
-                        if (userValue is not null)
-                        {
-                            isDirty = true;
-                            asset.UserValues.Remove(userValue);
-                            if (!asset.UserValues.Any())
-                            {
-                                asset.ValueScope = "Global";
-                                asset.UserValues = null;
-                            }
-                        }
-                        continue;
-                    }
-                    if (userValue is null)
-                    {
-                        isDirty = true;
-                        userValue = new AssetUserValue
-                        {
-                            UserId = user.Id,
-                            UserName = user.UserName,
-                            MachineId = machine?.Id,
-                            MachineName = machine?.Name
-                        };
-                        asset.UserValues.Add(userValue);
-                    }
-
-                    if ((userValue.ValueType ?? "") != asset.ValueType)
-                    {
-                        isDirty = true;
-                        userValue!.ValueType = asset.ValueType;
-                    }
-                    if (string.IsNullOrEmpty(asset.ValueType))
-                        asset.ValueType = userValue?.ValueType;
-
-                    if (string.IsNullOrEmpty(asset.ValueType))
-                    {
-                        Exception e = new($"ValueType was not specified. It will be assumed as 'Text'.");
-                        var errorRecord = new ErrorRecord(new OrchException(target, e), "SetAssetError", ErrorCategory.InvalidOperation, target);
-                        WriteError(errorRecord);
-                        asset.ValueType = "Text";
-                        userValue!.ValueType = "Text";
-                    }
-
-                    if (AssignTypedValue(asset.ValueType, param.Value, boolValue, intValue,
-                        () => userValue!.StringValue, v => userValue!.StringValue = v,
-                        () => userValue!.BoolValue,   v => userValue!.BoolValue = v,
-                        () => userValue!.IntValue,    v => userValue!.IntValue = v))
-                    {
-                        isDirty = true;
-                        asset.ValueScope = "PerRobot";
-                    }
-                }
-            }
-        }
-
-        if (isDirty)
-            return asset;
-        else
-            return null;
+        return isDirty;
     }
 
     protected void BuildAssetDataFromParameterSets()
