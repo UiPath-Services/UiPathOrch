@@ -444,6 +444,146 @@ Describe 'Asset Advanced' {
     }
 }
 
+Describe 'Credential Asset CRUD' {
+    BeforeAll {
+        $script:CredAssetName = "${script:Prefix}CredAsset"
+        $script:TestUser = 'ytsuda@gmail.com'
+        $script:TestMachine = 'aiai'
+    }
+
+    AfterAll {
+        Remove-OrchAsset -Name "${script:Prefix}CredAsset*" -ValueType Credential -Confirm:$false -ErrorAction SilentlyContinue
+    }
+
+    It 'Set-OrchCredentialAsset creates a credential asset' {
+        Set-OrchCredentialAsset -Name "${script:CredAssetName}_Basic" -CredentialUsername 'testuser' -CredentialPassword 'testpass'
+        Clear-OrchCache
+        $asset = Get-OrchAsset -Name "${script:CredAssetName}_Basic"
+        $asset | Should -Not -BeNullOrEmpty
+        $asset.ValueType | Should -Be 'Credential'
+        $asset.CredentialUsername | Should -Be 'testuser'
+    }
+
+    It 'Set-OrchCredentialAsset updates CredentialUsername' {
+        Set-OrchCredentialAsset -Name "${script:CredAssetName}_Basic" -CredentialUsername 'updateduser' -CredentialPassword 'updatedpass'
+        Clear-OrchCache
+        $asset = Get-OrchAsset -Name "${script:CredAssetName}_Basic"
+        $asset.CredentialUsername | Should -Be 'updateduser'
+    }
+
+    It 'Set-OrchCredentialAsset updates Description' {
+        Set-OrchCredentialAsset -Name "${script:CredAssetName}_Basic" -Description 'Cred description' -CredentialUsername 'updateduser' -CredentialPassword 'updatedpass'
+        Clear-OrchCache
+        $asset = Get-OrchAsset -Name "${script:CredAssetName}_Basic"
+        $asset.Description | Should -Be 'Cred description'
+    }
+
+    It 'Set-OrchCredentialAsset creates a PerRobot credential with -UserName' {
+        Set-OrchCredentialAsset -Name "${script:CredAssetName}_PerRobot" -UserName $script:TestUser -CredentialUsername 'peruser' -CredentialPassword 'perpass'
+        Clear-OrchCache
+        $uv = @(Get-OrchAsset -Name "${script:CredAssetName}_PerRobot" -ExpandUserValues)
+        $match = $uv | Where-Object { $_.UserName -eq $script:TestUser }
+        $match | Should -Not -BeNullOrEmpty
+        $match.CredentialUsername | Should -Be 'peruser'
+    }
+
+    It 'Set-OrchCredentialAsset creates a PerRobot credential with -UserName and -MachineName' {
+        Set-OrchCredentialAsset -Name "${script:CredAssetName}_PerRobotMachine" -UserName $script:TestUser -MachineName $script:TestMachine -CredentialUsername 'machuser' -CredentialPassword 'machpass'
+        Clear-OrchCache
+        $uv = @(Get-OrchAsset -Name "${script:CredAssetName}_PerRobotMachine" -ExpandUserValues)
+        $match = $uv | Where-Object { $_.UserName -eq $script:TestUser -and $_.MachineName -eq $script:TestMachine }
+        $match | Should -Not -BeNullOrEmpty
+        $match.CredentialUsername | Should -Be 'machuser'
+    }
+
+    It 'Set-OrchCredentialAsset with empty CredentialPassword deletes PerRobot value' {
+        Set-OrchCredentialAsset -Name "${script:CredAssetName}_PerRobot" -UserName $script:TestUser -CredentialPassword ''
+        Clear-OrchCache
+        $uv = @(Get-OrchAsset -Name "${script:CredAssetName}_PerRobot" -ExpandUserValues)
+        $match = $uv | Where-Object { $_.UserName -eq $script:TestUser }
+        $match | Should -BeNullOrEmpty
+    }
+
+    It 'Set-OrchCredentialAsset with empty CredentialPassword clears Global value' {
+        Set-OrchCredentialAsset -Name "${script:CredAssetName}_Basic" -CredentialPassword ''
+        Clear-OrchCache
+        $asset = Get-OrchAsset -Name "${script:CredAssetName}_Basic"
+        if ($asset) {
+            $asset.HasDefaultValue | Should -Be $false
+        }
+    }
+
+    It 'Set-OrchCredentialAsset with -CredentialStore sets the credential store' {
+        Set-OrchCredentialAsset -Name "${script:CredAssetName}_WithStore" -CredentialUsername 'storeuser' -CredentialPassword 'storepass' -CredentialStore 'Orchestrator Database'
+        Clear-OrchCache
+        $asset = Get-OrchAsset -Name "${script:CredAssetName}_WithStore"
+        $asset | Should -Not -BeNullOrEmpty
+        $asset.CredentialStoreId | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Set-OrchCredentialAsset skips no-op when same username is set' {
+        Set-OrchCredentialAsset -Name "${script:CredAssetName}_WithStore" -CredentialUsername 'storeuser'
+        # Should not error
+        $asset = Get-OrchAsset -Name "${script:CredAssetName}_WithStore"
+        $asset.CredentialUsername | Should -Be 'storeuser'
+    }
+
+    It 'Remove-OrchAsset removes credential assets' {
+        Remove-OrchAsset -Name "${script:CredAssetName}_*" -ValueType Credential -Confirm:$false
+        Clear-OrchCache
+        $assets = Get-OrchAsset -Name "${script:CredAssetName}_*"
+        $assets | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'Credential Asset CSV Import' {
+    BeforeAll {
+        $script:CredCsvPrefix = "${script:Prefix}CredCsv"
+        $script:CredCsvDir = Join-Path $env:TEMP "PesterTest_CredCsv_$(Get-Random -Maximum 9999)"
+        New-Item -Path $script:CredCsvDir -ItemType Directory -Force | Out-Null
+        $script:SharedPath = "${script:Drive1}:\Shared"
+    }
+
+    AfterAll {
+        Remove-OrchAsset -Name "${script:Prefix}CredCsv*" -ValueType Credential -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-Item $script:CredCsvDir -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    It 'Import-Csv | Set-OrchCredentialAsset creates multiple credential assets' {
+        $csvPath = Join-Path $script:CredCsvDir 'new_creds.csv'
+        @"
+Path,Name,UserName,MachineName,CredentialUsername,CredentialPassword
+$($script:SharedPath),${script:CredCsvPrefix}_A,,,cred_user_a,cred_pass_a
+$($script:SharedPath),${script:CredCsvPrefix}_B,,,cred_user_b,cred_pass_b
+"@ | Set-Content -Path $csvPath -Encoding UTF8
+
+        Import-Csv $csvPath | Set-OrchCredentialAsset
+        Clear-OrchCache
+        $assets = Get-OrchAsset -Name "${script:CredCsvPrefix}_*"
+        $assets.Count | Should -Be 2
+        ($assets | Where-Object { $_.Name -like '*_A' }).CredentialUsername | Should -Be 'cred_user_a'
+        ($assets | Where-Object { $_.Name -like '*_B' }).CredentialUsername | Should -Be 'cred_user_b'
+    }
+
+    It 'Import-Csv | Set-OrchCredentialAsset aggregates PerRobot rows for same asset' {
+        $csvPath = Join-Path $script:CredCsvDir 'perrobot_creds.csv'
+        $user1 = 'ytsuda@gmail.com'
+        $user2 = 'ytsuda+c_c@gmail.com'
+        @"
+Path,Name,UserName,MachineName,CredentialUsername,CredentialPassword
+$($script:SharedPath),${script:CredCsvPrefix}_Multi,$user1,,per_user1,per_pass1
+$($script:SharedPath),${script:CredCsvPrefix}_Multi,$user2,,per_user2,per_pass2
+"@ | Set-Content -Path $csvPath -Encoding UTF8
+
+        Import-Csv $csvPath | Set-OrchCredentialAsset
+        Clear-OrchCache
+        $uv = @(Get-OrchAsset -Name "${script:CredCsvPrefix}_Multi" -ExpandUserValues)
+        $uv.Count | Should -Be 2
+        ($uv | Where-Object { $_.UserName -eq $user1 }).CredentialUsername | Should -Be 'per_user1'
+        ($uv | Where-Object { $_.UserName -eq $user2 }).CredentialUsername | Should -Be 'per_user2'
+    }
+}
+
 Describe 'Asset CSV Import' {
     BeforeAll {
         $script:AssetCsvPrefix = "${script:Prefix}CsvAsset"
