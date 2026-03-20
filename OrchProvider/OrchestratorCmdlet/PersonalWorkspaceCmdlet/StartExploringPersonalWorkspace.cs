@@ -31,7 +31,7 @@ class StartExploringPersonalWorkspaceCommand : OrchestratorPSCmdlet
     //        var drives = ResolveDrives(fakeBoundParameters);
 
     //        // Exclude Names already selected by the parameter from the candidates
-    //        var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Items, wordToComplete);
+    //        var wpName = CreateWPListFromParameter(commandAst, "Name", ["Name"], wordToComplete);
 
     //        var wp = CreateWPFromWordToComplete(wordToComplete);
 

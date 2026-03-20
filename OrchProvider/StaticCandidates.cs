@@ -368,11 +368,6 @@ internal class SoftStop_Kill : IStaticCandidates
     public static string[] Items { get; } = ["SoftStop", "Kill"];
 }
 
-internal class Id_Version : IStaticCandidates
-{
-    public static string[] Items { get; } = ["Id", "Version"];
-}
-
 internal class Any_Foreground_Background : IStaticCandidates
 {
     public static string[] Items { get; } = ["Any", "Foreground", "Background"];
@@ -401,11 +396,6 @@ internal class Processes_FolderHierarchy : IStaticCandidates
 internal class DescriptionHere : IStaticCandidates
 {
     public static string[] Items { get; } = ["'Description here'"];
-}
-
-internal class Name : IStaticCandidates
-{
-    public static string[] Items { get; } = ["Name"];
 }
 
 internal class Modern_Classic : IStaticCandidates
