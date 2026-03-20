@@ -990,44 +990,14 @@ internal class AssetValueTypeCompleter : OrchArgumentCompleter
     }
 }
 
-internal class BucketNameCompleter<WritableOnly> : OrchArgumentCompleter where WritableOnly : IBoolParameter
+internal class BucketNameCompleter<WritableOnly> : FolderScopedCompleter<Bucket> where WritableOnly : IBoolParameter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-
-        // Exclude Names already selected via the parameter
-        var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Buckets.Get(df.folder));
-
-        bool bFound = false;
-        foreach (var result in results)
-        {
-            foreach (var bucket in result
-                .Where(b => !WritableOnly.Value || !(b.Options?.Contains("ReadOnly") ?? false))
-                .Where(b => wp.IsMatch(b.Name))
-                .ExcludeByWildcards(b => b?.Name, wpName)
-                .OrderBy(b => b.Name))
-            {
-                bFound = true;
-                string tooltip = bucket.GetPSPath();
-                yield return new CompletionResult(PathTools.EscapePSText(bucket.Name), bucket.Name, CompletionResultType.Text, tooltip);
-            }
-        }
-
-        if (!bFound)
-        {
-            yield return new CompletionResult($@"""(No buckets found for '{RemoveEnclosingQuotes(wordToComplete)}')""");
-        }
-    }
+    protected override IEnumerable<Bucket> GetEntities(OrchDriveInfo drive, Folder folder)
+        => drive.Buckets.Get(folder)
+            .Where(b => !WritableOnly.Value || !(b.Options?.Contains("ReadOnly") ?? false));
+    protected override string GetName(Bucket e) => e.Name!;
+    protected override string GetTipHelp(Bucket e) => e.GetPSPath();
+    protected override CompletionResultType ResultType => CompletionResultType.Text;
 }
 
 internal class BucketFullPathCompleter : OrchArgumentCompleter
@@ -1076,7 +1046,7 @@ internal class BucketFullPathCompleter : OrchArgumentCompleter
 internal class CalendarNameCompleter : DriveScopedCompleter<ExtendedCalendar>
 {
     protected override IEnumerable<ExtendedCalendar> GetEntities(OrchDriveInfo drive)
-        => drive.GetCalendars() ?? [];
+        => drive.GetCalendars();
     protected override string GetName(ExtendedCalendar e) => e.Name!;
     protected override string GetTipHelp(ExtendedCalendar e) => e.GetPSPath();
     protected override CompletionResultType ResultType => CompletionResultType.Text;

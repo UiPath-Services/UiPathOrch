@@ -1574,7 +1574,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     // Key: calenderId
     internal ConcurrentDictionary<long, ExtendedCalendar>? _dicCalendars = null;
     internal readonly ExceptionCachePerTenant _dicCalendars_Exceptions = new();
-    public ICollection<ExtendedCalendar>? GetCalendars()
+    public ICollection<ExtendedCalendar> GetCalendars()
     {
         _dicCalendars_Exceptions.ThrowCachedExceptionIfAny();
 
@@ -1605,7 +1605,7 @@ public partial class OrchDriveInfo : PSDriveInfo
                 }
             }
         }
-        return _dicCalendars?.Values;
+        return _dicCalendars?.Values ?? [];
     }
 
     // Caching exceptions here probably isn't necessary
