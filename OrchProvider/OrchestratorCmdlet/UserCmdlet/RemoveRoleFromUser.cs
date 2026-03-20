@@ -53,7 +53,7 @@ public class RemoveRoleFromUserCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.GetUsers());
+            var results = ParallelResults.GroupBy(drives, drive => drive.GetUsers());
 
             foreach (var result in results)
             {

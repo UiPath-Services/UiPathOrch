@@ -35,7 +35,7 @@ public class GetPmAccessAllowedMemberCmdlet : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.PmAccessAllowedMember.Get());
+            var results = ParallelResults.GroupBy(drives, drive => drive.PmAccessAllowedMember.Get());
 
             foreach (var result in results)
             {

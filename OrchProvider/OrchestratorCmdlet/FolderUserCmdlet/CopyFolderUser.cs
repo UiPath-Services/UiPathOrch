@@ -59,7 +59,7 @@ public class CopyFolderUserCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesFolders, df => {
+            var results = ParallelResults.GroupBy(drivesFolders, df => {
                 return IncludeInherited
                     ? df.drive.FolderUsersWithInherited.Get(df.folder)
                     : df.drive.FolderUsersWithNoInherited.Get(df.folder);

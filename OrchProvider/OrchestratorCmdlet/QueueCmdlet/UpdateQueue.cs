@@ -109,7 +109,7 @@ public class UpdateQueueCommand : OrchestratorPSCmdlet
             // Exclude Names already selected by the parameter from the candidates
             var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
 
-            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Queues.Get(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.Queues.Get(df.folder));
 
             foreach (var result in results)
             {

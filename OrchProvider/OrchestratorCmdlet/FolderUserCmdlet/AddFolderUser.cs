@@ -114,7 +114,7 @@ if (string.IsNullOrEmpty(wordToComplete))
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.Roles.Get());
+            var results = ParallelResults.GroupBy(drives, drive => drive.Roles.Get());
 
             foreach (var result in results)
             {

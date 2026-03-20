@@ -40,7 +40,7 @@ public class AddMachineClientSecretCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.Machines.Get());
+            var results = ParallelResults.GroupBy(drives, drive => drive.Machines.Get());
 
             bool bFound = false;
             foreach (var result in results)

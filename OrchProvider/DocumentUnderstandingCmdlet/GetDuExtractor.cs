@@ -45,7 +45,7 @@ public class GetDuExtractorCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesProjects, dp => dp.drive.GetDuDocumentTypes(dp.project));
+            var results = ParallelResults.GroupBy(drivesProjects, dp => dp.drive.GetDuDocumentTypes(dp.project));
 
             foreach (var result in results)
             {

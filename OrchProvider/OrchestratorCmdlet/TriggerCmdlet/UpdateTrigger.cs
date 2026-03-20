@@ -174,7 +174,7 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
                     .FilterByWildcards(t => t?.Name, wpName)
                     .OrderBy(t => t.Name);
 
-                var results = ParallelResults3.ForEach(triggers, trigger => drive.GetTrigger(folder, trigger));
+                var results = ParallelResults.ForEach(triggers, trigger => drive.GetTrigger(folder, trigger));
 
                 foreach (var result in results)
                 {
@@ -208,7 +208,7 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetTriggers(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.GetTriggers(df.folder));
 
             bool bExists = false;
             foreach (var group in results)

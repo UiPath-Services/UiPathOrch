@@ -2335,7 +2335,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         CredentialStores = new(this, () =>
             {
                 var stores = OrchAPISession.GetCredentialStores();
-                var results = ParallelResults3.ForEach(stores, store => OrchAPISession.GetCredentialStore(store.Id!.Value));
+                var results = ParallelResults.ForEach(stores, store => OrchAPISession.GetCredentialStore(store.Id!.Value));
                 return results.Select(r => r.Item).ToList();
             },
             store => store.Path = NameColonSeparator

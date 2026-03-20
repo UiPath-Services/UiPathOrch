@@ -63,7 +63,7 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesProjects, dp => dp.drive.GetDuUsers(dp.project));
+            var results = ParallelResults.GroupBy(drivesProjects, dp => dp.drive.GetDuUsers(dp.project));
 
             foreach (var result in results)
             {

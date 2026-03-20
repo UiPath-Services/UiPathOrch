@@ -174,7 +174,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder).FilterByWildcards(p => p?.Name, wpName));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder).FilterByWildcards(p => p?.Name, wpName));
 
             foreach (var result in results)
             {
@@ -245,7 +245,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
             // Exclude IDs already selected by other parameters from candidates
             var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Positional.Name.Parameters);
 
-            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder));
 
             foreach (var result in results)
             {
@@ -292,7 +292,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
             // Exclude IDs already selected by other parameters from candidates
             var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
 
-            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder));
 
             foreach (var result in results)
             {

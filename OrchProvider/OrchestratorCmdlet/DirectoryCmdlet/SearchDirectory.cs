@@ -37,7 +37,7 @@ public class SearchDirectoryCommand : OrchestratorPSCmdlet
 
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.SearchDirectory(wordToComplete));
+            var results = ParallelResults.GroupBy(drives, drive => drive.SearchDirectory(wordToComplete));
 
             bool bFound = false;
             foreach (var result in results)

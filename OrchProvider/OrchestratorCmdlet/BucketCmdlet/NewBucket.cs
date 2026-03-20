@@ -61,7 +61,7 @@ public class NewBucketCommand : OrchestratorPSCmdlet
             IDictionary fakeBoundParameters)
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Buckets.Get(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.Buckets.Get(df.folder));
 
             // Exclude Names already selected by parameter from candidates
             var names = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);

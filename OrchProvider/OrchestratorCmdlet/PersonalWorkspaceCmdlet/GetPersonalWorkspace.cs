@@ -36,7 +36,7 @@ public class GetPersonalWorkspaceCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.PersonalWorkspaces.Get());
+            var results = ParallelResults.GroupBy(drives, drive => drive.PersonalWorkspaces.Get());
 
             foreach (var result in results)
             {

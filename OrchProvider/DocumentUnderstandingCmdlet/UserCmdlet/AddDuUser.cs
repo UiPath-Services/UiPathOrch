@@ -124,7 +124,7 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesProjects, dp => dp.drive.GetDuRoles());
+            var results = ParallelResults.GroupBy(drivesProjects, dp => dp.drive.GetDuRoles());
 
             foreach (var result in results)
             {

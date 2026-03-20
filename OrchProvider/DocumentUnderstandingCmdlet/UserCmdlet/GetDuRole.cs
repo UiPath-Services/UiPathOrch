@@ -35,7 +35,7 @@ public class GetDuRoleCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.GetDuRoles());
+            var results = ParallelResults.GroupBy(drives, drive => drive.GetDuRoles());
 
             foreach (var result in results)
             {

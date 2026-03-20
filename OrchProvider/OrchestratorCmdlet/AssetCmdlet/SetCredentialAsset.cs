@@ -96,7 +96,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Assets.Get(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.Assets.Get(df.folder));
 
             foreach (var result in results)
             {
@@ -137,7 +137,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.FolderUsersWithInherited.Get(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.FolderUsersWithInherited.Get(df.folder));
 
             foreach (var result in results)
             {
@@ -173,7 +173,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
 
             foreach (var result in results)
             {
@@ -229,7 +229,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
             // Only target Names already selected by the parameter
             var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
 
-            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Assets.Get(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.Assets.Get(df.folder));
 
             bool bEmpty = true;
             foreach (var result in results)
@@ -274,12 +274,12 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
     protected void RetrieveAllAssets()
     {
         // Retrieve Assets for the target folders asynchronously in bulk
-        ParallelResults3.GroupBy(parameters, param =>
+        ParallelResults.GroupBy(parameters, param =>
         {
             var drivesFolders = SessionState.EnumFolders(param.Path);
 
             // Since the path is already resolved, only one folder should be expanded, but iterate just in case
-            return ParallelResults3.GroupBy(drivesFolders, driveFolder =>
+            return ParallelResults.GroupBy(drivesFolders, driveFolder =>
             {
                 var (drive, folder) = driveFolder;
                 return drive.Assets.Get(folder);

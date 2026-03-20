@@ -33,7 +33,7 @@ public class AddPmGroupCommand : OrchestratorPSCmdlet
             IDictionary fakeBoundParameters)
         {
             var drives = ResolvePmDrives(fakeBoundParameters);
-            var results = ParallelResults3.GroupBy(drives, drive => drive.PmGroups.Get());
+            var results = ParallelResults.GroupBy(drives, drive => drive.PmGroups.Get());
 
             // Exclude Names already selected via parameters from candidates
             var names = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);

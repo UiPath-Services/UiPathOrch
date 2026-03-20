@@ -68,7 +68,7 @@ public class NewMachineCommand : OrchestratorPSCmdlet
             IDictionary fakeBoundParameters)
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
-            var results = ParallelResults3.GroupBy(drives, drive => drive.Machines.Get());
+            var results = ParallelResults.GroupBy(drives, drive => drive.Machines.Get());
 
             // Exclude Names already selected via parameter from the candidates
             var names = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);

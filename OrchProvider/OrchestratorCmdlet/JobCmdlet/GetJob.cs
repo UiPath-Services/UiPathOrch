@@ -187,7 +187,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.Robots.Get());
+            var results = ParallelResults.GroupBy(drives, drive => drive.Robots.Get());
 
             foreach (var result in results)
             {

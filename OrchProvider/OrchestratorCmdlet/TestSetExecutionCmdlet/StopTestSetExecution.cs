@@ -37,7 +37,7 @@ public class StopTestExecutionCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesFolders, df =>
+            var results = ParallelResults.GroupBy(drivesFolders, df =>
             {
                 return df.drive.GetTestSetExecutions(df.folder, "&$filter=(((Status%20eq%20%270%27)%20or%20(Status%20eq%20%271%27)))");
             });

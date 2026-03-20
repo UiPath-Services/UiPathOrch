@@ -37,7 +37,7 @@ public class GetAuthenticationSettingCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.AuthenticationSettings.Get());
+            var results = ParallelResults.GroupBy(drives, drive => drive.AuthenticationSettings.Get());
 
             foreach (var result in results)
             {

@@ -155,7 +155,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
             IDictionary fakeBoundParameters)
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetTriggers(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.GetTriggers(df.folder));
 
             // Exclude already-selected Names from candidates
             var names = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);
@@ -183,7 +183,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.RobotsFromFolder.Get(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.RobotsFromFolder.Get(df.folder));
 
             foreach (var result in results)
             {
@@ -237,9 +237,9 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
             var wpMachineRobots = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var usersPerFolders = ParallelResults3.GroupBy(drivesFolders, df => df.drive.FolderUsersWithInherited.Get(df.folder));
-            var robotsPerFolders = ParallelResults3.GroupBy(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
-            var sessionsPerFolders = ParallelResults3.GroupBy(drivesFolders, df => df.drive.MachineSessionRuntimesByFolder.Get(df.folder));
+            var usersPerFolders = ParallelResults.GroupBy(drivesFolders, df => df.drive.FolderUsersWithInherited.Get(df.folder));
+            var robotsPerFolders = ParallelResults.GroupBy(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
+            var sessionsPerFolders = ParallelResults.GroupBy(drivesFolders, df => df.drive.MachineSessionRuntimesByFolder.Get(df.folder));
 
             List<UserRoles> users = [null];
             users.AddRange(usersPerFolders.SelectMany(g => g));

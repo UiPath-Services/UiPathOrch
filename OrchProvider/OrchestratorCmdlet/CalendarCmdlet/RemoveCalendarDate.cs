@@ -49,13 +49,13 @@ public class RemoveCalendarDateCommand : OrchestratorPSCmdlet
                 .Select(date => date!.Value)
                 .ToList();
 
-            var calendarsResults = ParallelResults3.GroupBy(drives, drive => drive.GetCalendars());
+            var calendarsResults = ParallelResults.GroupBy(drives, drive => drive.GetCalendars());
 
             foreach (var calendarsResult in calendarsResults)
             {
                 var drive = calendarsResult.Source;
 
-                var detailedCalendarResults = ParallelResults3.ForEach(calendarsResult
+                var detailedCalendarResults = ParallelResults.ForEach(calendarsResult
                     .FilterByWildcards(c => c?.Name, wpCalendarName), calendar => drive.GetCalendar(calendar));
 
                 foreach (var (calendar, calendarDetailed) in detailedCalendarResults)

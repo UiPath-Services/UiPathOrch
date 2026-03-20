@@ -37,7 +37,7 @@ public class EnableApiTriggerCommandBase<Enable> : OrchestratorPSCmdlet where En
             var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Parameters, wordToComplete);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.ApiTriggers.Get(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.ApiTriggers.Get(df.folder));
 
             foreach (var result in results)
             {

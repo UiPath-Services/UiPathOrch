@@ -65,7 +65,7 @@ public class GetUserLicenseUser: OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.PmLicensedUsers.Get());
+            var results = ParallelResults.GroupBy(drives, drive => drive.PmLicensedUsers.Get());
 
             foreach (var result in results)
             {
@@ -100,7 +100,7 @@ public class GetUserLicenseUser: OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.PmLicensedUsers.Get());
+            var results = ParallelResults.GroupBy(drives, drive => drive.PmLicensedUsers.Get());
 
             foreach (var result in results)
             {

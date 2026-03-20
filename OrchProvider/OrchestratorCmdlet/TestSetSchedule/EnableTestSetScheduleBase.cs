@@ -44,7 +44,7 @@ public class EnableTestSetScheduleCommandBase<Enable> : OrchestratorPSCmdlet whe
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.TestSetSchedules.Get(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.TestSetSchedules.Get(df.folder));
 
             foreach (var result in results)
             {

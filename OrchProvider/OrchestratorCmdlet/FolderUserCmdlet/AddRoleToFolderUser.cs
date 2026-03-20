@@ -64,7 +64,7 @@ public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
             // Only show users already assigned to this folder
-            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
             foreach (var result in results)
             {
@@ -105,7 +105,7 @@ public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
             // Only show users already assigned to this folder
-            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
             foreach (var result in results)
             {
@@ -146,9 +146,9 @@ public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            ParallelResults3.GroupBy(drives, drive => drive.Roles.Get());
+            ParallelResults.GroupBy(drives, drive => drive.Roles.Get());
 
-            ParallelResults3.GroupBy(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
+            ParallelResults.GroupBy(drivesFolders, df => df.drive.FolderUsersWithNoInherited.Get(df.folder));
 
             foreach (var (drive, folder) in drivesFolders)
             {

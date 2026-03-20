@@ -51,7 +51,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesFolders, df =>
+            var results = ParallelResults.GroupBy(drivesFolders, df =>
             {
                 var (drive, folder) = df;
                 var releases = drive.GetReleases(folder)
@@ -62,7 +62,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
                     .ToList();
 
                 // Retrieve packages from the feed corresponding to the target releases
-                return ParallelResults3.GroupBy(releases, release => drive.GetPackageVersions(folder, release.Name!));
+                return ParallelResults.GroupBy(releases, release => drive.GetPackageVersions(folder, release.Name!));
             });
 
             foreach (var releases in results)
@@ -98,7 +98,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesFolders, df =>
+            var results = ParallelResults.GroupBy(drivesFolders, df =>
             {
                 var (drive, folder) = df;
                 var releases = drive.GetReleases(folder)
@@ -109,7 +109,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
                     .ToList();
 
                 // Retrieve packages from the feed corresponding to the target releases
-                return ParallelResults3.GroupBy(releases, release => drive.GetPackageVersions(folder, release.Name!));
+                return ParallelResults.GroupBy(releases, release => drive.GetPackageVersions(folder, release.Name!));
             });
 
             foreach (var releases in results)
@@ -147,7 +147,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesFolders, df =>
+            var results = ParallelResults.GroupBy(drivesFolders, df =>
             {
                 var (drive, folder) = df;
                 var releases = drive.GetReleases(folder)
@@ -158,7 +158,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
                     .ToList();
 
                 // Retrieve packages from the feed corresponding to the target releases
-                return ParallelResults3.GroupBy(releases, release => drive.GetPackageVersions(folder, release.Name!)
+                return ParallelResults.GroupBy(releases, release => drive.GetPackageVersions(folder, release.Name!)
                     .Where(version => version.Version != release.CurrentVersion!.VersionNumber)
                 );
             });

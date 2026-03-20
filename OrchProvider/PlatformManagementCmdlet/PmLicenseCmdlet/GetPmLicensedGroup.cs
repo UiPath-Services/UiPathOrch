@@ -86,7 +86,7 @@ public class GetUserLicenseGroup: OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.PmLicensedGroups.Get());
+            var results = ParallelResults.GroupBy(drives, drive => drive.PmLicensedGroups.Get());
 
             foreach (var result in results)
             {

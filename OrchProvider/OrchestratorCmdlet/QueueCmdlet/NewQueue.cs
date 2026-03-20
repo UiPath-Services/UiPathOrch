@@ -106,7 +106,7 @@ public class NewQueueCommand : OrchestratorPSCmdlet
             IDictionary fakeBoundParameters)
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.Queues.Get(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.Queues.Get(df.folder));
 
             // Exclude Names already selected by the parameter from the candidates
             var names = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);

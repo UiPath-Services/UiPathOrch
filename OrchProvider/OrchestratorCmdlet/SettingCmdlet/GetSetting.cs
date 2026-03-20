@@ -37,7 +37,7 @@ public class GetSettingCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.Settings.Get());
+            var results = ParallelResults.GroupBy(drives, drive => drive.Settings.Get());
 
             foreach (var result in results)
             {

@@ -39,7 +39,7 @@ public class SearchPmDirectoryCommand : OrchestratorPSCmdlet
             var drives = ResolvePmDrives(fakeBoundParameters);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.SearchPmDirectory(name));
+            var results = ParallelResults.GroupBy(drives, drive => drive.SearchPmDirectory(name));
 
             foreach (var result in results)
             {

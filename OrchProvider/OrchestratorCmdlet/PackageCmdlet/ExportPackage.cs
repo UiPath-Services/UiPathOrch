@@ -53,7 +53,7 @@ public class ExportPackageCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetPackages(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.GetPackages(df.folder));
 
             foreach (var result in results)
             {
@@ -93,12 +93,12 @@ public class ExportPackageCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesFolders, driveFolder =>
+            var results = ParallelResults.GroupBy(drivesFolders, driveFolder =>
             {
                 var (drive, folder) = driveFolder;
                 var packages = drive.GetPackages(folder)
                     .FilterByWildcards(p => p?.Id, wpId);
-                return ParallelResults3.GroupBy(packages, package =>
+                return ParallelResults.GroupBy(packages, package =>
                     drive.GetPackageVersions(folder, package.Id!));
             });
 

@@ -37,7 +37,7 @@ public class EnableEventTriggerCommandBase<Enable> : OrchestratorPSCmdlet where 
             var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Parameters, wordToComplete);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.EventTriggers.Get(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.EventTriggers.Get(df.folder));
 
             foreach (var result in results)
             {

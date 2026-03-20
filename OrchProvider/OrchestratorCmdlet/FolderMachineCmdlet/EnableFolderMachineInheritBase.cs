@@ -31,7 +31,7 @@ public class EnableFolderMachineInheritCommandBase<EnableInherit> : Orchestrator
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
 
             foreach (var result in results)
             {

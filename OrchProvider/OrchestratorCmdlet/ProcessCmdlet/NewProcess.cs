@@ -172,7 +172,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesFolders, df =>
+            var results = ParallelResults.GroupBy(drivesFolders, df =>
             {
                 var feedId = df.drive.FolderFeedId.Get(df.folder);
                 return df.drive.GetPackages(df.folder).FilterByWildcards(p => p?.Id, wpId);
@@ -220,7 +220,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
 
             //var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesFolders, df =>
+            var results = ParallelResults.GroupBy(drivesFolders, df =>
             {
                 var packages = df.drive.GetPackages(df.folder)
                     .FilterByWildcards(p => p?.Id, wpId)
@@ -228,7 +228,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
 
                 var feedId = df.drive.FolderFeedId.Get(df.folder);
 
-                var r2 = ParallelResults3.GroupBy(packages, package =>
+                var r2 = ParallelResults.GroupBy(packages, package =>
                 {
                     return df.drive.GetPackageEntryPoints(feedId, package.Id!, package.Version!);
                 });

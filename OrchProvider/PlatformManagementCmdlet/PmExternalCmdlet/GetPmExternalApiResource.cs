@@ -35,7 +35,7 @@ public class GetPmExternalApiResourceCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.PmExternalApiResources.Get());
+            var results = ParallelResults.GroupBy(drives, drive => drive.PmExternalApiResources.Get());
 
             foreach (var result in results)
             {

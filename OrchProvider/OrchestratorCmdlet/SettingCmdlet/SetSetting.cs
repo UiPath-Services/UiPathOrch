@@ -39,7 +39,7 @@ public class SetSettingCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.Settings.Get());
+            var results = ParallelResults.GroupBy(drives, drive => drive.Settings.Get());
 
             foreach (var result in results)
             {
@@ -67,7 +67,7 @@ public class SetSettingCommand : OrchestratorPSCmdlet
             var paramName = GetFakeBoundParameter(fakeBoundParameters, "Name");
             if (string.IsNullOrEmpty(paramName)) yield break;
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.Settings.Get());
+            var results = ParallelResults.GroupBy(drives, drive => drive.Settings.Get());
 
             foreach (var result in results)
             {

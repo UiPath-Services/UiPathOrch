@@ -91,7 +91,7 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.PmRobotAccounts.Get());
+            var results = ParallelResults.GroupBy(drives, drive => drive.PmRobotAccounts.Get());
 
             foreach (var result in results)
             {
@@ -128,7 +128,7 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.PmGroups.Get());
+            var results = ParallelResults.GroupBy(drives, drive => drive.PmGroups.Get());
 
             foreach (var result in results)
             {

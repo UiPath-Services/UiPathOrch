@@ -101,7 +101,7 @@ public class UpdateMachineCommand : OrchestratorPSCmdlet
             // Exclude Names already selected via parameter from the candidates
             var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.Machines.Get());
+            var results = ParallelResults.GroupBy(drives, drive => drive.Machines.Get());
 
             foreach (var result in results)
             {

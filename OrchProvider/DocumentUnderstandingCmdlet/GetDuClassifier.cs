@@ -42,7 +42,7 @@ public class GetDuClassifierCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drivesProjects, dp => dp.drive.GetDuClassifiers(dp.project));
+            var results = ParallelResults.GroupBy(drivesProjects, dp => dp.drive.GetDuClassifiers(dp.project));
 
             foreach (var result in results)
             {

@@ -76,7 +76,7 @@ public class GetExecutionSettingCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drives, drive =>
+            var results = ParallelResults.GroupBy(drives, drive =>
             {
                 List<string> existingDisplayNames = [];
 

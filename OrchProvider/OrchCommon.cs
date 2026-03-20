@@ -388,7 +388,7 @@ public sealed class SourceGroup<TSource, TItem> : IEnumerable<TItem>
 /// <summary>
 /// Utility that executes in parallel for each source and returns results grouped by source.
 /// </summary>
-public static class ParallelResults3
+public static class ParallelResults
 {
     public static IEnumerable<SourceGroup<TSource, TItem>> GroupBy<TSource, TItem>(
         IEnumerable<TSource> sources,

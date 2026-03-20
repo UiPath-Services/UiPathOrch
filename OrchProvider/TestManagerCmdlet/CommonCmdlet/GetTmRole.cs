@@ -38,7 +38,7 @@ class GetTmRoleCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults3.GroupBy(drives, drive => drive.GetTmProjects());
+            var results = ParallelResults.GroupBy(drives, drive => drive.GetTmProjects());
 
             foreach (var result in results)
             {
