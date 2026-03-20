@@ -74,6 +74,18 @@ $baseline['Get-OrchFolderMachine -Name']   = Capture-Completer 'Get-OrchFolderMa
 $baseline['Get-OrchAsset -Name']           = Capture-Completer 'Get-OrchAsset -Name '
 $baseline['Get-OrchBucket -Name']          = Capture-Completer 'Get-OrchBucket -Name '
 
+# StaticTextsCompleter (each distinct IPositionalParameters type in OrchPositionalParams.cs)
+$baseline['Set-OrchAsset -ValueType']            = Capture-Completer 'Set-OrchAsset -ValueType '
+$baseline['New-OrchTrigger -StopStrategy']       = Capture-Completer 'New-OrchTrigger -Name x -ReleaseName x -StopStrategy '
+$baseline['New-OrchTrigger -Priority']           = Capture-Completer 'New-OrchTrigger -Name x -ReleaseName x -Priority '
+$baseline['New-OrchTrigger -RuntimeType']        = Capture-Completer 'New-OrchTrigger -Name x -ReleaseName x -RuntimeType '
+$baseline['New-OrchMachine -Type']               = Capture-Completer 'New-OrchMachine -Name x -Type '
+$baseline['New-OrchMachine -Scope']              = Capture-Completer 'New-OrchMachine -Name x -Scope '
+$baseline['New-OrchMachine -AutomationType']     = Capture-Completer 'New-OrchMachine -Name x -AutomationType '
+$baseline['New-OrchMachine -TargetFramework']    = Capture-Completer 'New-OrchMachine -Name x -TargetFramework '
+$baseline['Add-PmGroupMember -Type']             = Capture-Completer 'Add-PmGroupMember -PmGroup x -Type '
+$baseline['Add-DuUser -Type']                    = Capture-Completer 'Add-DuUser -Type '
+
 Pop-Location
 
 $baseline | Export-Clixml -Path $OutputPath -Depth 5

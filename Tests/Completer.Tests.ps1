@@ -179,3 +179,49 @@ Describe 'Non-migrated completers match baseline' {
         Assert-MatchesBaseline 'Get-OrchBucket -Name' 'Get-OrchBucket -Name '
     }
 }
+
+# ============================================================================
+# StaticTextsCompleter (IPositionalParameters types in OrchPositionalParams.cs)
+# ============================================================================
+
+Describe 'StaticTextsCompleter match baseline' {
+    It 'AssetTypeItems: Set-OrchAsset -ValueType' {
+        Assert-MatchesBaseline 'Set-OrchAsset -ValueType' 'Set-OrchAsset -ValueType '
+    }
+
+    It 'SoftStop_Kill: New-OrchTrigger -StopStrategy' {
+        Assert-MatchesBaseline 'New-OrchTrigger -StopStrategy' 'New-OrchTrigger -Name x -ReleaseName x -StopStrategy '
+    }
+
+    It 'JobPriorityItems: New-OrchTrigger -Priority' {
+        Assert-MatchesBaseline 'New-OrchTrigger -Priority' 'New-OrchTrigger -Name x -ReleaseName x -Priority '
+    }
+
+    It 'RuntimeTypes: New-OrchTrigger -RuntimeType' {
+        Assert-MatchesBaseline 'New-OrchTrigger -RuntimeType' 'New-OrchTrigger -Name x -ReleaseName x -RuntimeType '
+    }
+
+    It 'Template_Standard_Serverless: New-OrchMachine -Type' {
+        Assert-MatchesBaseline 'New-OrchMachine -Type' 'New-OrchMachine -Name x -Type '
+    }
+
+    It 'Default_Serverless_AutomationCloudRobot: New-OrchMachine -Scope' {
+        Assert-MatchesBaseline 'New-OrchMachine -Scope' 'New-OrchMachine -Name x -Scope '
+    }
+
+    It 'Any_Foreground_Background: New-OrchMachine -AutomationType' {
+        Assert-MatchesBaseline 'New-OrchMachine -AutomationType' 'New-OrchMachine -Name x -AutomationType '
+    }
+
+    It 'Any_Windows_Portable: New-OrchMachine -TargetFramework' {
+        Assert-MatchesBaseline 'New-OrchMachine -TargetFramework' 'New-OrchMachine -Name x -TargetFramework '
+    }
+
+    It 'DirectoryTypes: Add-PmGroupMember -Type' {
+        Assert-MatchesBaseline 'Add-PmGroupMember -Type' 'Add-PmGroupMember -PmGroup x -Type '
+    }
+
+    It 'DirectoryTypes: Add-DuUser -Type' {
+        Assert-MatchesBaseline 'Add-DuUser -Type' 'Add-DuUser -Type '
+    }
+}
