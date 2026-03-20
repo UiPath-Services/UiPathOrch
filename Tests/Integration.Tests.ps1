@@ -1341,3 +1341,44 @@ Describe 'Tab Completion - ParallelResults3 migration' {
         $results | Should -Not -Be $null
     }
 }
+
+# ============================================================================
+# IdentityUrl auto-generation from Root
+# ============================================================================
+
+Describe 'IdentityUrl is derived from Root' {
+    BeforeAll {
+        $script:allDrives = Get-OrchPSDrive
+    }
+
+    It 'Cloud drive IdentityUrl is {org}/identity_' {
+        # Cloud: Root = https://{host}/{org}/{tenant} → IdentityUrl = https://{host}/{org}/identity_
+        $cloudDrives = $script:allDrives | Where-Object { $_.Root -match 'uipath\.com' }
+        $cloudDrives | Should -Not -BeNullOrEmpty -Because 'at least one cloud drive should be connected'
+
+        foreach ($d in $cloudDrives) {
+            $rootTrimmed = $d.Root.TrimEnd('/')
+            $orgBase = $rootTrimmed.Substring(0, $rootTrimmed.LastIndexOf('/'))
+            $expected = "$orgBase/identity_"
+            $d.IdentityUrl | Should -Be $expected -Because "drive '$($d.Name)' Root=$($d.Root)"
+        }
+    }
+
+    It 'On-prem drive IdentityUrl is {authority}/identity' {
+        # On-prem: Root = https://{host}/{tenant} or https://{host} → IdentityUrl = https://{host}/identity
+        $onpremDrives = $script:allDrives | Where-Object { $_.Root -notmatch 'uipath\.com' }
+        if (-not $onpremDrives) { Set-ItResult -Skipped -Because 'no on-prem drives connected'; return }
+
+        foreach ($d in $onpremDrives) {
+            $uri = [Uri]$d.Root.TrimEnd('/')
+            $expected = "$($uri.Scheme)://$($uri.Authority)/identity"
+            $d.IdentityUrl | Should -Be $expected -Because "drive '$($d.Name)' Root=$($d.Root)"
+        }
+    }
+
+    It 'IdentityUrl is not null or empty for any drive' {
+        foreach ($d in $script:allDrives) {
+            $d.IdentityUrl | Should -Not -BeNullOrEmpty -Because "drive '$($d.Name)' should have IdentityUrl"
+        }
+    }
+}
