@@ -154,13 +154,20 @@ public class PSDrive
             HttpListener = $"{redirectUri.Scheme}://{redirectUri.Host}:{redirectUri.Port}{redirectUri.AbsolutePath}/";
         }
 
-        // I'd like to auto-generate the IdentityUrl here, but it got confusing...
-        //if (string.IsNullOrEmpty(IdentityUrl))
-        //{
-        //    IdentityUrl = IsCloud ?
-        //        _baseUrl + "/identity_/connect/token" :
-        //        _baseUrl + "/identity/connect/token";
-        //}
+        // Auto-generate IdentityUrl from Root if not explicitly set
+        // Cloud:   "https://cloud.uipath.com/{org}/{tenant}" → strip tenant → /{org}/identity_
+        // On-prem: "https://server/{tenant}"                 → strip tenant → /identity
+        // On-prem: "https://server"                          → no tenant    → /identity
+        if (string.IsNullOrEmpty(IdentityUrl) && !string.IsNullOrEmpty(Root)
+            && Uri.TryCreate(Root.TrimEnd('/'), UriKind.Absolute, out var uri))
+        {
+            // Strip the last path segment (tenant) to get the base URL
+            var segments = uri.AbsolutePath.TrimEnd('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+            string basePath = segments.Length > 1
+                ? "/" + string.Join("/", segments.Take(segments.Length - 1))
+                : "";
+            IdentityUrl = $"{uri.Scheme}://{uri.Authority}{basePath}" + (IsCloud ? "/identity_" : "/identity");
+        }
 
         if (Proxy == null)
         {
