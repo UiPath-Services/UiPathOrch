@@ -144,7 +144,7 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
 
             foreach (var group in filteredGroups)
             {
-                foreach (var type in DirectoryTypes.Parameters.FilterByWildcards(v => v, wpType))
+                foreach (var type in DirectoryTypes.Items.FilterByWildcards(v => v, wpType))
                 {
                     foreach (var userName in UserName!)
                     {

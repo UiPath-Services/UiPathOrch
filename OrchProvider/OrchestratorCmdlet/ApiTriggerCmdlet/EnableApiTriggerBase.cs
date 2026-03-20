@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Core;
@@ -34,7 +34,7 @@ public class EnableApiTriggerCommandBase<Enable> : OrchestratorPSCmdlet where En
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
             // Exclude already-selected Names from candidates
-            var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Parameters, wordToComplete);
+            var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Items, wordToComplete);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
             var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.ApiTriggers.Get(df.folder));

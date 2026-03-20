@@ -55,11 +55,11 @@ internal class ValidateDictionaryKeyAttribute<TProvider, TValue> : ValidateArgum
 }
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Parameter)]
-public class ValidatePositionalParameterAttribute<T> : ValidateArgumentsAttribute
-    where T : IPositionalParameters
+public class ValidateStaticCandidateAttribute<T> : ValidateArgumentsAttribute
+    where T : IStaticCandidates
 {
     private static readonly HashSet<string> _validValues = new(
-        T.Parameters,
+        T.Items,
         StringComparer.OrdinalIgnoreCase
     );
 

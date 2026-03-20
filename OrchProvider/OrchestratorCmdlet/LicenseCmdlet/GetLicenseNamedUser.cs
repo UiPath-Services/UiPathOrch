@@ -23,7 +23,7 @@ public class GetLicenseNamedUserCommand : OrchestratorPSCmdlet
         var drives = SessionState.EnumOrchDrives(Path);
         var wpRobotType = RobotType.ConvertToWildcardPatternList();
 
-        var specifiedRobotType = Positional.LicenseRobotTypeItems.Parameters
+        var specifiedRobotType = Positional.LicenseRobotTypeItems.Items
             .FilterByWildcards(rt => rt, wpRobotType)
             .OrderBy(rt => rt)
             .ToList();

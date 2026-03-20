@@ -38,7 +38,7 @@ public class EnableLicenseRuntimeCommandBase<Enable> : OrchestratorPSCmdlet wher
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var specifiedRobotTypes = LicenseRobotTypeItems.Parameters
+            var specifiedRobotTypes = LicenseRobotTypeItems.Items
                 .FilterByWildcards(rt => rt, wpRobotTypes)
                 // .OrderBy(rt => rt);
                 .ToList();
@@ -96,7 +96,7 @@ public class EnableLicenseRuntimeCommandBase<Enable> : OrchestratorPSCmdlet wher
         var wpRobotType = RobotType.ConvertToWildcardPatternList();
         var wpKey = Key.ConvertToWildcardPatternList();
 
-        var specifiedRobotType = LicenseRobotTypeItems.Parameters
+        var specifiedRobotType = LicenseRobotTypeItems.Items
             .FilterByWildcards(rt => rt, wpRobotType)
             .OrderBy(rt => rt)
             .ToList();

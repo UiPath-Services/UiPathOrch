@@ -1,4 +1,4 @@
-﻿using System.Management.Automation;
+using System.Management.Automation;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -31,7 +31,7 @@ class StartExploringPersonalWorkspaceCommand : OrchestratorPSCmdlet
     //        var drives = ResolveDrives(fakeBoundParameters);
 
     //        // Exclude Names already selected by the parameter from the candidates
-    //        var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Parameters, wordToComplete);
+    //        var wpName = CreateWPListFromParameter(commandAst, "Name", Positional.Name.Items, wordToComplete);
 
     //        var wp = CreateWPFromWordToComplete(wordToComplete);
 

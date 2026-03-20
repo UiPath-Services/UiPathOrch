@@ -16,7 +16,7 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>))]
-    [ValidatePositionalParameter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>]
+    [ValidateStaticCandidate<Hour_Day_Week_Month_3Month_6Month_Year_3Year>]
     public string? Last { get; set; }
 
     [Parameter(Position = 1, ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
@@ -173,7 +173,7 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
         {
             var components = new List<string>();
             var wpComponent = Component.ConvertToWildcardPatternList();
-            foreach (var component in AuditLogComponentItems.Parameters.FilterByWildcards(st => st, wpComponent))
+            foreach (var component in AuditLogComponentItems.Items.FilterByWildcards(st => st, wpComponent))
             {
                 components.Add($"(Component%20eq%20%27{component}%27)");
             }
@@ -208,7 +208,7 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
         {
             var actions = new List<string>();
             var wpAction = Action.ConvertToWildcardPatternList();
-            foreach (var action in AuditLogActionItems.Parameters.FilterByWildcards(st => st, wpAction))
+            foreach (var action in AuditLogActionItems.Items.FilterByWildcards(st => st, wpAction))
             {
                 actions.Add($"(Action%20eq%20%27{action}%27)");
             }

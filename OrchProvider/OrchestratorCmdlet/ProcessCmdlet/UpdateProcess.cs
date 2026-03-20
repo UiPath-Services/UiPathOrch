@@ -243,7 +243,7 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
             // Exclude IDs already selected by other parameters from candidates
-            var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Positional.Name.Parameters);
+            var wpName = CreateWPListFromOtherParameters(commandAst, "Name", Positional.Name.Items);
 
             var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder));
 

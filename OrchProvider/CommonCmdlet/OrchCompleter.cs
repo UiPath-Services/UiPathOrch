@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Data;
 using System.Management.Automation;
 using System.Management.Automation.Language;
@@ -1512,7 +1512,7 @@ internal class PmDirectoryNameCompleter4Du : OrchArgumentCompleter
         }
 
         var wpType = GetFakeBoundParameters(fakeBoundParameters, "Type").ConvertToWildcardPatternList();
-        var types = DirectoryTypes.Parameters.FilterByWildcards(p => p, wpType);
+        var types = DirectoryTypes.Items.FilterByWildcards(p => p, wpType);
         types = types.Select(t => t == "DirectoryApplication" ? "Application" : t);
 
         var names = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);
@@ -2145,7 +2145,7 @@ internal class TmTestExecutionNameCompleter : OrchArgumentCompleter
 
 // This parameter only accepts a single value, so there is no need to consider positional parameters.
 
-internal class StaticTextsCompleter<TItems> : OrchArgumentCompleter where TItems : IPositionalParameters
+internal class StaticTextsCompleter<TItems> : OrchArgumentCompleter where TItems : IStaticCandidates
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
@@ -2158,7 +2158,7 @@ internal class StaticTextsCompleter<TItems> : OrchArgumentCompleter where TItems
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        foreach (var candidate in TItems.Parameters
+        foreach (var candidate in TItems.Items
             .Where(c => wp.IsMatch(c))
             .ExcludeByWildcards(c => c, wpParam))
         {
@@ -2394,7 +2394,7 @@ internal class DuNameCompleter : OrchArgumentCompleter
 // the following would be needed, but I cannot think of a good implementation.
 // Either sacrifice performance or add complex parameters.
 // Personally, neither option is acceptable.
-//internal class DuUserNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IPositionalParameters
+//internal class DuUserNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IStaticCandidates
 //{
 //    public override IEnumerable<CompletionResult> CompleteArgument(
 //        string commandName,
@@ -2410,7 +2410,7 @@ internal class DuNameCompleter : OrchArgumentCompleter
 //        var drivesProjects = OrchDuDriveInfo.EnumFolders(paramPath, recurse);
 
 //        // Exclude Names already selected via the parameter
-//        var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Parameters, wordToComplete);
+//        var wpUserName = CreateWPListFromParameter(commandAst, parameterName, TPositional.Items, wordToComplete);
 
 //        var wp = CreateWPFromWordToComplete(wordToComplete);
 

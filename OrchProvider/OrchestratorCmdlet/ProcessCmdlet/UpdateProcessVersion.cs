@@ -94,7 +94,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
 
             // Exclude already-selected package names from candidates
             // Note that positional parameters differ because the parameter set is different
-            var wpId = CreateWPListFromParameter(commandAst, parameterName, Positional.Id_Version.Parameters, wordToComplete);
+            var wpId = CreateWPListFromParameter(commandAst, parameterName, Positional.Id_Version.Items, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

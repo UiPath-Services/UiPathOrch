@@ -12,7 +12,7 @@ class GetSessionStatsCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Day_Week_Month_3Month_6Month_Year_3Year>))]
-    [ValidatePositionalParameter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>]
+    [ValidateStaticCandidate<Hour_Day_Week_Month_3Month_6Month_Year_3Year>]
     public string? Last { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]

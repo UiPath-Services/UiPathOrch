@@ -18,7 +18,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
 
     [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>))]
-    [ValidatePositionalParameter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>]
+    [ValidateStaticCandidate<Hour_Day_Week_Month_3Month_6Month_Year_3Year>]
     public string? Last { get; set; }
 
     [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
@@ -361,7 +361,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
         if (drive.OrchAPISession.ApiVersion >= 12)
         {
             var processType = ProcessType ?? ["Process"];
-            filter.AddIfNotNull(JobProcessTypeItems.Parameters
+            filter.AddIfNotNull(JobProcessTypeItems.Items
                 .SelectByWildcards(i => i, processType)
                 .CreateOrFilter(i => $"ProcessType eq '{i}'"));
         }

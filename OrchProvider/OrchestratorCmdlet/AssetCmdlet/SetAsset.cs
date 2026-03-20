@@ -311,7 +311,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                 var (drive, folder) = driveFolder;
                 return drive.Assets.Get(folder);
             }).SelectMany(g => g);
-        }).ToList();
+        });
     }
 
     /// <summary>
