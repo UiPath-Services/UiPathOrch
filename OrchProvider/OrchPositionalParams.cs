@@ -70,11 +70,6 @@ internal class DirectoryTypes : IPositionalParameters
     ];
 }
 
-internal class TestSetExecutionName : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["TestSetExecutionName"];
-}
-
 internal class AssetTypeItems : IPositionalParameters
 {
     public static string[] Parameters { get; } = ["Text", "Integer", "Bool"];
@@ -373,79 +368,9 @@ internal class SoftStop_Kill : IPositionalParameters
     public static string[] Parameters { get; } = ["SoftStop", "Kill"];
 }
 
-public class Empty : IPositionalParameters
-{
-    public static string[] Parameters { get; } = [];
-}
-
-internal class GroupName : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["GroupName"];
-}
-
-internal class GroupName_Destination : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["GroupName", "Destination"];
-}
-
-internal class GroupName_License : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["GroupName", "License"];
-}
-
-internal class Email_License : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Email", "License"];
-}
-
-internal class GroupName_UserName : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["GroupName", "UserName"];
-}
-
-internal class GroupName_Type_UserName : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["GroupName", "Type", "UserName"];
-}
-
-internal class GroupName_UserName_Destination : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["GroupName", "UserName", "Destination"];
-}
-
-internal class Id : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Id"];
-}
-
-internal class Id_Level : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Id", "Level"];
-}
-
 internal class Id_Version : IPositionalParameters
 {
     public static string[] Parameters { get; } = ["Id", "Version"];
-}
-
-internal class PackageId_Version : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["PackageId", "Version"];
-}
-
-internal class Id_Version_Destination : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Id", "Version", "Destination"];
-}
-
-internal class JobId : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["JobId"];
-}
-
-internal class JobId_Destination : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["JobId", "Destination"];
 }
 
 internal class Any_Foreground_Background : IPositionalParameters
@@ -458,16 +383,6 @@ internal class Any_Windows_Portable : IPositionalParameters
     public static string[] Parameters { get; } = ["Any", "Windows", "Portable"];
 }
 
-internal class Key : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Key"];
-}
-
-internal class Last : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Last"];
-}
-
 internal class Template_Standard_Serverless : IPositionalParameters
 {
     public static string[] Parameters { get; } = ["Template", "Standard", "Serverless"];
@@ -476,36 +391,6 @@ internal class Template_Standard_Serverless : IPositionalParameters
 internal class Default_Serverless_AutomationCloudRobot : IPositionalParameters
 {
     public static string[] Parameters { get; } = ["Default", "Serverless", "AutomationCloudRobot"];
-}
-
-internal class Last_Component_UserName_Action : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Last", "Component", "UserName", "Action"];
-}
-
-internal class Last_Severity_Component : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Last", "Severity", "Component"];
-}
-
-internal class MachineName_HostMachineName_ServiceUserName_SessionId : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["MachineName", "HostMachineName", "ServiceUserName", "SessionId"];
-}
-
-internal class Name_Email : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Name", "Email"];
-}
-
-internal class Name_FullPath_Destination : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Name", "FullPath", "Destination"];
-}
-
-internal class Name_UserName_MachineName_CredentialUsername_CredentialPassword : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Name", "UserName", "MachineName", "CredentialUsername", "CredentialPassword"];
 }
 
 internal class Processes_FolderHierarchy : IPositionalParameters
@@ -518,220 +403,10 @@ internal class DescriptionHere : IPositionalParameters
     public static string[] Parameters { get; } = ["'Description here'"];
 }
 
-internal class EntityType_Name : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["EntityType", "Name"];
-}
-
-internal class Type_Name : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Type", "Name"];
-}
-
-internal class Type_Name_Role : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Type", "Name", "Role"];
-}
-
 internal class Name : IPositionalParameters
 {
     public static string[] Parameters { get; } = ["Name"];
 }
-
-internal class Source_Name : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Source", "Name"];
-}
-
-internal class Name_ExcludedDate : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Name", "ExcludedDate"];
-}
-
-internal class Name_ImportCsv_CsvEncoding_CommitType : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Name", "ImportCsv", "CsvEncoding", "CommitType"];
-}
-
-internal class Name_Destination : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Name", "Destination"];
-}
-
-internal class Name_Id_RowVersion : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Name", "Id", "RowVersion"];
-}
-
-internal class Name_DirectoryUserMember : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Name", "DirectoryUserMember"];
-}
-
-internal class Name_FullPath : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Name", "FullPath"];
-}
-
-internal class Name_GroupName : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Name", "GroupName"];
-}
-
-internal class Name_Link : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Name", "Link"];
-}
-
-internal class Name_OwnerName : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Name", "OwnerName"];
-}
-
-internal class Name_PropagateToSubFolders : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Name", "PropagateToSubFolders"];
-}
-
-internal class Name_ReleaseName: IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Name", "ReleaseName"];
-}
-
-internal class Name_Role : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Name", "Role"];
-}
-
-internal class Name_RuntimeType_JobsCount : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Name", "RuntimeType", "JobsCount"];
-}
-
-internal class Name_SecretId : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Name", "SecretId"];
-}
-
-internal class Name_UserName : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Name", "UserName"];
-}
-
-internal class FullName_Username : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["FullName", "Username"];
-}
-
-internal class Name_Id : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Name", "Id"];
-}
-
-internal class Name_ValueType : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Name", "ValueType"];
-}
-
-internal class Name_Version : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Name", "Version"];
-}
-
-internal class Path : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Path"];
-}
-
-internal class RobotType : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["RobotType"];
-}
-
-internal class RobotType_Key : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["RobotType", "Key"];
-}
-
-internal class Scope_DisplayName : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Scope", "DisplayName"];
-}
-
-internal class Source_Path: IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Source", "Path"];
-}
-
-public class SourceGroupName_UserName_DestinationGroupName : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["SourceGroupName", "UserName", "DestinationGroupName"];
-}
-
-public class Status : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Status"];
-}
-
-internal class Type_UserName_Roles : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Type", "UserName", "Roles"];
-}
-
-internal class Type_UserName : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Type", "UserName"];
-}
-
-public class Email : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Email"];
-}
-
-public class Email_Destination : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Email", "Destination"];
-}
-
-public class UserName : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["UserName"];
-}
-
-internal class UserName_Destination : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["UserName", "Destination"];
-}
-
-internal class UserName_FullName : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["UserName", "FullName"];
-}
-
-internal class UserName_FullName_Type : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["UserName", "FullName", "Type"];
-}
-
-internal class Email_Language : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["Email", "Language"];
-}
-
-internal class UserName_GroupName : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["UserName", "GroupName"];
-}
-
-internal class UserName_Roles : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["UserName", "Roles"];
-}
-
-internal class ValueType_Name_Value_UserName_MachineName : IPositionalParameters
-{
-    public static string[] Parameters { get; } = ["ValueType", "Name", "Value", "UserName", "MachineName"];
-};
 
 internal class Modern_Classic : IPositionalParameters
 {
