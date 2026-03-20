@@ -12,7 +12,7 @@
 RootModule = 'UiPath.PowerShell.OrchProvider.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.16.1'
+ModuleVersion = '0.9.16.2'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -413,7 +413,31 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '
+        ReleaseNotes = '## New Features
+- Get-OrchPSDrive: IdentityUrl is now automatically derived from Root when not explicitly configured, so it is always available in Get-OrchPSDrive output. Previously it was null unless specified in the settings file.
+
+- Get-OrchPSDrive: Added Claims property containing decoded JWT access token claims as a PSObject. Access individual claims via `$drive.Claims.prt_id`, `$drive.Claims.email`, etc. Timestamp claims (exp, iat, nbf, auth_time) are converted to local DateTime.
+
+## Improvements
+- Refactored Update-OrchMachine to use HTTP PATCH with minimal payloads instead of DeepCopy + PUT. Only specified parameters are sent. Machine slots (UnattendedSlots, NonProductionSlots, TestAutomationSlots) can now be set to 0.
+
+- Refactored Update-OrchUser to use per-property dirty flags instead of IEquatable comparison.
+
+- Refactored Set-OrchAsset and Set-OrchCredentialAsset: extracted helper methods, replaced manual DeepCopy with shared utility, and improved PerRobot value lookup performance with Dictionary-based indexing.
+
+- Removed IEquatable implementations from 14 entity types, no longer needed after the Update cmdlet refactoring.
+
+- Major internal refactoring of the tab completion engine and parallel execution infrastructure.
+
+## Bug Fixes
+- Fixed Set-OrchAsset Integer parse error message incorrectly saying "bool" instead of "integer".
+
+- Fixed Set-OrchCredentialAsset: empty CredentialPassword no longer silently deletes the Global credential value. Previously, re-importing a CSV exported by Get-OrchAsset -ExportCredentialCsv (which contains empty password fields) could destroy existing credentials. Use Remove-OrchAsset to delete credential assets instead.
+
+## Breaking Changes
+- Set-OrchCredentialAsset: `-CredentialPassword ''` no longer deletes the Global credential value. This prevents accidental credential loss when re-importing exported CSVs. PerRobot entry deletion via `-UserName <user> -CredentialPassword ''` is unchanged.
+
+- Update-OrchMachine: Machine slot parameters (UnattendedSlots, NonProductionSlots, TestAutomationSlots) now accept 0 as a valid value. Previously, 0 was treated as "not specified".
 '
 
         # Prerelease string of this module

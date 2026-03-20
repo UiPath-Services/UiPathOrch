@@ -1,6 +1,6 @@
 # Version: 0.9.16.2
 ## New Features
-- Get-OrchPSDrive: IdentityUrl is now resolved at drive mount time, so it is always available in Get-OrchPSDrive output without requiring an API connection. Previously it was only set after the first authentication.
+- Get-OrchPSDrive: IdentityUrl is now automatically derived from Root when not explicitly configured, so it is always available in Get-OrchPSDrive output. Previously it was null unless specified in the settings file.
 
 - Get-OrchPSDrive: Added Claims property containing decoded JWT access token claims as a PSObject. Access individual claims via `$drive.Claims.prt_id`, `$drive.Claims.email`, etc. Timestamp claims (exp, iat, nbf, auth_time) are converted to local DateTime.
 
@@ -11,7 +11,7 @@
 
 - Refactored Set-OrchAsset and Set-OrchCredentialAsset: extracted helper methods, replaced manual DeepCopy with shared utility, and improved PerRobot value lookup performance with Dictionary-based indexing.
 
-- Removed unused IEquatable implementations from 14 entity types.
+- Removed IEquatable implementations from 14 entity types, no longer needed after the Update cmdlet refactoring.
 
 - Major internal refactoring of the tab completion engine and parallel execution infrastructure.
 
