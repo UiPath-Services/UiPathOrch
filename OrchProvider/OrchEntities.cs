@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Management.Automation;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -51,11 +52,11 @@ public class OrchPSDrive
     public int? TenantId { get; set; }
     public string? TenantKey { get; set; }
     public string? AccessToken { get; set; }
-    public Dictionary<string, object>? Claims { get; set; }
+    public PSObject? Claims { get; set; }
 
     private static readonly HashSet<string> _unixTimestampClaims = ["exp", "iat", "nbf", "auth_time"];
 
-    private static Dictionary<string, object>? ParseJwtClaims(string? token)
+    private static PSObject? ParseJwtClaims(string? token)
     {
         if (string.IsNullOrEmpty(token)) return null;
 
@@ -70,10 +71,10 @@ public class OrchPSDrive
             var json = Encoding.UTF8.GetString(Convert.FromBase64String(payload));
 
             using var doc = JsonDocument.Parse(json);
-            var claims = new Dictionary<string, object>();
+            var claims = new PSObject();
             foreach (var prop in doc.RootElement.EnumerateObject())
             {
-                claims[prop.Name] = prop.Value.ValueKind switch
+                object value = prop.Value.ValueKind switch
                 {
                     JsonValueKind.String => prop.Value.GetString()!,
                     JsonValueKind.Number when _unixTimestampClaims.Contains(prop.Name)
@@ -84,6 +85,7 @@ public class OrchPSDrive
                     JsonValueKind.Array => prop.Value.EnumerateArray().Select(e => e.ToString()).ToArray(),
                     _ => prop.Value.ToString()
                 };
+                claims.Properties.Add(new PSNoteProperty(prop.Name, value));
             }
             return claims;
         }
