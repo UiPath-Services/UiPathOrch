@@ -225,3 +225,25 @@ Describe 'StaticTextsCompleter match baseline' {
         Assert-MatchesBaseline 'Add-DuUser -Type' 'Add-DuUser -Type '
     }
 }
+
+# ============================================================================
+# Completers using CreateWPListFromParameter (positional param elimination)
+# ============================================================================
+
+Describe 'Positional param completers match baseline' {
+    It 'Enable-OrchApiTrigger -Name' {
+        Assert-MatchesBaseline 'Enable-OrchApiTrigger -Name' 'Enable-OrchApiTrigger -Name '
+    }
+
+    It 'Enable-OrchEventTrigger -Name' {
+        Assert-MatchesBaseline 'Enable-OrchEventTrigger -Name' 'Enable-OrchEventTrigger -Name '
+    }
+
+    It 'Update-OrchProcess -Name' {
+        Assert-MatchesBaseline 'Update-OrchProcess -Name' 'Update-OrchProcess -Name '
+    }
+
+    It 'Update-OrchProcessVersion -Id' {
+        Assert-MatchesBaseline 'Update-OrchProcessVersion -Id' 'Update-OrchProcessVersion -Id '
+    }
+}

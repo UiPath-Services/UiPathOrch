@@ -37,7 +37,7 @@ public class EnableFolderMachineAccountMappingCommandBase<Enable> : Orchestrator
             var drivesFolders = ResolvePathWithoutPersonalWorkspace(commandAst, fakeBoundParameters);
 
             // Exclude Names already selected via parameter from the candidates
-            var wpName = CreateWPListFromParameter(commandAst, "Name", null, wordToComplete);
+            var wpName = CreateSelfExclusionList(commandAst, "Name", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -68,9 +68,9 @@ public class EnableFolderMachineAccountMappingCommandBase<Enable> : Orchestrator
         {
             var drivesFolders = ResolvePathWithoutPersonalWorkspace(commandAst, fakeBoundParameters);
 
-            var wpName = CreateWPListFromOtherParameters(commandAst, "Name", []);
+            var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
 
-            var wpUserName = CreateWPListFromParameter(commandAst, parameterName, null, wordToComplete);
+            var wpUserName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

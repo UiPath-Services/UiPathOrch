@@ -86,6 +86,12 @@ $baseline['New-OrchMachine -TargetFramework']    = Capture-Completer 'New-OrchMa
 $baseline['Add-PmGroupMember -Type']             = Capture-Completer 'Add-PmGroupMember -PmGroup x -Type '
 $baseline['Add-DuUser -Type']                    = Capture-Completer 'Add-DuUser -Type '
 
+# Completers using CreateWPListFromParameter with positional param names
+$baseline['Enable-OrchApiTrigger -Name']         = Capture-Completer 'Enable-OrchApiTrigger -Name '
+$baseline['Enable-OrchEventTrigger -Name']       = Capture-Completer 'Enable-OrchEventTrigger -Name '
+$baseline['Update-OrchProcess -Name']            = Capture-Completer 'Update-OrchProcess -Name '
+$baseline['Update-OrchProcessVersion -Id']       = Capture-Completer 'Update-OrchProcessVersion -Id '
+
 Pop-Location
 
 $baseline | Export-Clixml -Path $OutputPath -Depth 5

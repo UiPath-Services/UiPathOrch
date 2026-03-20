@@ -93,8 +93,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
             // Exclude already-selected package names from candidates
-            // Note that positional parameters differ because the parameter set is different
-            var wpId = CreateWPListFromParameter(commandAst, parameterName, ["Id", "Version"], wordToComplete);
+            var wpId = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

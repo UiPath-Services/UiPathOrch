@@ -6,7 +6,7 @@
     </TN>
     <DCT>
       <En>
-        <S N="Key">Get-OrchTestCase -Name</S>
+        <S N="Key">Enable-OrchEventTrigger -Name</S>
         <Obj N="Value" RefId="1">
           <TN RefId="1">
             <T>System.Management.Automation.PSObject[]</T>
@@ -20,46 +20,43 @@
                 <T>System.Object</T>
               </TN>
               <MS>
+                <S N="CompletionText">aaaa</S>
+                <S N="ListItemText">aaaa</S>
+                <S N="ResultType">Text</S>
+                <S N="ToolTip">Orch1:\Shared\aaaa</S>
+              </MS>
+            </Obj>
+          </LST>
+        </Obj>
+      </En>
+      <En>
+        <S N="Key">Enable-OrchApiTrigger -Name</S>
+        <Obj N="Value" RefId="3">
+          <TNRef RefId="1" />
+          <LST />
+        </Obj>
+      </En>
+      <En>
+        <S N="Key">Get-OrchTestCase -Name</S>
+        <Obj N="Value" RefId="4">
+          <TNRef RefId="1" />
+          <LST>
+            <Obj RefId="5">
+              <TNRef RefId="2" />
+              <MS>
                 <S N="CompletionText">'Main のテストケース.xaml'</S>
                 <S N="ListItemText">Main のテストケース.xaml</S>
                 <S N="ResultType">ParameterValue</S>
                 <S N="ToolTip">Orch1:\Shared\Main のテストケース.xaml</S>
               </MS>
             </Obj>
-            <Obj RefId="3">
+            <Obj RefId="6">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Main のテストケース2.xaml'</S>
                 <S N="ListItemText">Main のテストケース2.xaml</S>
                 <S N="ResultType">ParameterValue</S>
                 <S N="ToolTip">Orch1:\Shared\Main のテストケース2.xaml</S>
-              </MS>
-            </Obj>
-            <Obj RefId="4">
-              <TNRef RefId="2" />
-              <MS>
-                <S N="CompletionText">TestCase.xaml</S>
-                <S N="ListItemText">TestCase.xaml</S>
-                <S N="ResultType">ParameterValue</S>
-                <S N="ToolTip">Orch1:\Shared\TestCase.xaml</S>
-              </MS>
-            </Obj>
-            <Obj RefId="5">
-              <TNRef RefId="2" />
-              <MS>
-                <S N="CompletionText">TestCase.xaml</S>
-                <S N="ListItemText">TestCase.xaml</S>
-                <S N="ResultType">ParameterValue</S>
-                <S N="ToolTip">Orch1:\Shared\TestCase.xaml</S>
-              </MS>
-            </Obj>
-            <Obj RefId="6">
-              <TNRef RefId="2" />
-              <MS>
-                <S N="CompletionText">TestCase.xaml</S>
-                <S N="ListItemText">TestCase.xaml</S>
-                <S N="ResultType">ParameterValue</S>
-                <S N="ToolTip">Orch1:\Shared\TestCase.xaml</S>
               </MS>
             </Obj>
             <Obj RefId="7">
@@ -83,37 +80,37 @@
             <Obj RefId="9">
               <TNRef RefId="2" />
               <MS>
-                <S N="CompletionText">'テスト\テストケースその2.xaml'</S>
-                <S N="ListItemText">テスト\テストケースその2.xaml</S>
+                <S N="CompletionText">TestCase.xaml</S>
+                <S N="ListItemText">TestCase.xaml</S>
                 <S N="ResultType">ParameterValue</S>
-                <S N="ToolTip">Orch1:\Shared\テスト\テストケースその2.xaml</S>
+                <S N="ToolTip">Orch1:\Shared\TestCase.xaml</S>
               </MS>
             </Obj>
             <Obj RefId="10">
               <TNRef RefId="2" />
               <MS>
-                <S N="CompletionText">テストケース.xaml</S>
-                <S N="ListItemText">テストケース.xaml</S>
+                <S N="CompletionText">TestCase.xaml</S>
+                <S N="ListItemText">TestCase.xaml</S>
                 <S N="ResultType">ParameterValue</S>
-                <S N="ToolTip">Orch1:\Shared\テストケース.xaml</S>
+                <S N="ToolTip">Orch1:\Shared\TestCase.xaml</S>
               </MS>
             </Obj>
             <Obj RefId="11">
               <TNRef RefId="2" />
               <MS>
-                <S N="CompletionText">テストケース.xaml</S>
-                <S N="ListItemText">テストケース.xaml</S>
+                <S N="CompletionText">TestCase.xaml</S>
+                <S N="ListItemText">TestCase.xaml</S>
                 <S N="ResultType">ParameterValue</S>
-                <S N="ToolTip">Orch1:\Shared\テストケース.xaml</S>
+                <S N="ToolTip">Orch1:\Shared\TestCase.xaml</S>
               </MS>
             </Obj>
             <Obj RefId="12">
               <TNRef RefId="2" />
               <MS>
-                <S N="CompletionText">テストケース.xaml</S>
-                <S N="ListItemText">テストケース.xaml</S>
+                <S N="CompletionText">'テスト\テストケースその2.xaml'</S>
+                <S N="ListItemText">テスト\テストケースその2.xaml</S>
                 <S N="ResultType">ParameterValue</S>
-                <S N="ToolTip">Orch1:\Shared\テストケース.xaml</S>
+                <S N="ToolTip">Orch1:\Shared\テスト\テストケースその2.xaml</S>
               </MS>
             </Obj>
             <Obj RefId="13">
@@ -128,13 +125,40 @@
             <Obj RefId="14">
               <TNRef RefId="2" />
               <MS>
+                <S N="CompletionText">テストケース.xaml</S>
+                <S N="ListItemText">テストケース.xaml</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\テストケース.xaml</S>
+              </MS>
+            </Obj>
+            <Obj RefId="15">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">テストケース.xaml</S>
+                <S N="ListItemText">テストケース.xaml</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\テストケース.xaml</S>
+              </MS>
+            </Obj>
+            <Obj RefId="16">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">テストケース.xaml</S>
+                <S N="ListItemText">テストケース.xaml</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\テストケース.xaml</S>
+              </MS>
+            </Obj>
+            <Obj RefId="17">
+              <TNRef RefId="2" />
+              <MS>
                 <S N="CompletionText">テストケース1.xaml</S>
                 <S N="ListItemText">テストケース1.xaml</S>
                 <S N="ResultType">ParameterValue</S>
                 <S N="ToolTip">Orch1:\Shared\テストケース1.xaml</S>
               </MS>
             </Obj>
-            <Obj RefId="15">
+            <Obj RefId="18">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">三角形でないテストケース.xaml</S>
@@ -143,7 +167,7 @@
                 <S N="ToolTip">Orch1:\Shared\三角形でないテストケース.xaml</S>
               </MS>
             </Obj>
-            <Obj RefId="16">
+            <Obj RefId="19">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">手動と自動の両方があるケース.xaml</S>
@@ -152,7 +176,7 @@
                 <S N="ToolTip">Orch1:\Shared\手動と自動の両方があるケース.xaml</S>
               </MS>
             </Obj>
-            <Obj RefId="17">
+            <Obj RefId="20">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">不等辺三角形のテストケース.xaml</S>
@@ -166,10 +190,10 @@
       </En>
       <En>
         <S N="Key">New-OrchMachine -Type</S>
-        <Obj N="Value" RefId="18">
+        <Obj N="Value" RefId="21">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="19">
+            <Obj RefId="22">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Template</S>
@@ -178,7 +202,7 @@
                 <S N="ToolTip">Template</S>
               </MS>
             </Obj>
-            <Obj RefId="20">
+            <Obj RefId="23">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Standard</S>
@@ -187,7 +211,7 @@
                 <S N="ToolTip">Standard</S>
               </MS>
             </Obj>
-            <Obj RefId="21">
+            <Obj RefId="24">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Serverless</S>
@@ -201,10 +225,10 @@
       </En>
       <En>
         <S N="Key">Get-OrchMachine -Name</S>
-        <Obj N="Value" RefId="22">
+        <Obj N="Value" RefId="25">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="23">
+            <Obj RefId="26">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'`[Default`] Cloud Robots - Serverless'</S>
@@ -213,7 +237,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\[Default] Cloud Robots - Serverless</S>
               </MS>
             </Obj>
-            <Obj RefId="24">
+            <Obj RefId="27">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">aiai</S>
@@ -222,7 +246,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\aiai</S>
               </MS>
             </Obj>
-            <Obj RefId="25">
+            <Obj RefId="28">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">bafu</S>
@@ -231,7 +255,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\bafu</S>
               </MS>
             </Obj>
-            <Obj RefId="26">
+            <Obj RefId="29">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">ffff2</S>
@@ -240,7 +264,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\ffff2</S>
               </MS>
             </Obj>
-            <Obj RefId="27">
+            <Obj RefId="30">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">fffff</S>
@@ -249,7 +273,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\fffff</S>
               </MS>
             </Obj>
-            <Obj RefId="28">
+            <Obj RefId="31">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">fuga</S>
@@ -258,7 +282,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\fuga</S>
               </MS>
             </Obj>
-            <Obj RefId="29">
+            <Obj RefId="32">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">hogehogeMachine</S>
@@ -267,7 +291,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\hogehogeMachine</S>
               </MS>
             </Obj>
-            <Obj RefId="30">
+            <Obj RefId="33">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">m1</S>
@@ -276,7 +300,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\m1</S>
               </MS>
             </Obj>
-            <Obj RefId="31">
+            <Obj RefId="34">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">m2</S>
@@ -285,7 +309,7 @@
                 <S N="ToolTip">Standard (UA3 NP5 TA4) Orch1:\m2</S>
               </MS>
             </Obj>
-            <Obj RefId="32">
+            <Obj RefId="35">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">m3</S>
@@ -294,7 +318,7 @@
                 <S N="ToolTip">Standard (UA1 NP0 TA0) Orch1:\m3</S>
               </MS>
             </Obj>
-            <Obj RefId="33">
+            <Obj RefId="36">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">m4</S>
@@ -303,7 +327,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\m4</S>
               </MS>
             </Obj>
-            <Obj RefId="34">
+            <Obj RefId="37">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">machine1</S>
@@ -312,7 +336,7 @@
                 <S N="ToolTip">Template (UA1 NP0 TA0) Orch1:\machine1</S>
               </MS>
             </Obj>
-            <Obj RefId="35">
+            <Obj RefId="38">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">machine2</S>
@@ -321,7 +345,7 @@
                 <S N="ToolTip">Template (UA1 NP0 TA0) Orch1:\machine2</S>
               </MS>
             </Obj>
-            <Obj RefId="36">
+            <Obj RefId="39">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">MachineTemp1</S>
@@ -330,7 +354,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\MachineTemp1</S>
               </MS>
             </Obj>
-            <Obj RefId="37">
+            <Obj RefId="40">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">myNewPP</S>
@@ -339,7 +363,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\myNewPP</S>
               </MS>
             </Obj>
-            <Obj RefId="38">
+            <Obj RefId="41">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">newmachines</S>
@@ -348,7 +372,7 @@
                 <S N="ToolTip">Template (UA1 NP1 TA1) Orch1:\newmachines</S>
               </MS>
             </Obj>
-            <Obj RefId="39">
+            <Obj RefId="42">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_1</S>
@@ -357,7 +381,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_1</S>
               </MS>
             </Obj>
-            <Obj RefId="40">
+            <Obj RefId="43">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_10</S>
@@ -366,7 +390,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_10</S>
               </MS>
             </Obj>
-            <Obj RefId="41">
+            <Obj RefId="44">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_11</S>
@@ -375,7 +399,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_11</S>
               </MS>
             </Obj>
-            <Obj RefId="42">
+            <Obj RefId="45">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_12</S>
@@ -384,7 +408,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_12</S>
               </MS>
             </Obj>
-            <Obj RefId="43">
+            <Obj RefId="46">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_13</S>
@@ -393,7 +417,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_13</S>
               </MS>
             </Obj>
-            <Obj RefId="44">
+            <Obj RefId="47">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_14</S>
@@ -402,7 +426,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_14</S>
               </MS>
             </Obj>
-            <Obj RefId="45">
+            <Obj RefId="48">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_15</S>
@@ -411,7 +435,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_15</S>
               </MS>
             </Obj>
-            <Obj RefId="46">
+            <Obj RefId="49">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_16</S>
@@ -420,7 +444,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_16</S>
               </MS>
             </Obj>
-            <Obj RefId="47">
+            <Obj RefId="50">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_17</S>
@@ -429,7 +453,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_17</S>
               </MS>
             </Obj>
-            <Obj RefId="48">
+            <Obj RefId="51">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_18</S>
@@ -438,7 +462,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_18</S>
               </MS>
             </Obj>
-            <Obj RefId="49">
+            <Obj RefId="52">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_19</S>
@@ -447,7 +471,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_19</S>
               </MS>
             </Obj>
-            <Obj RefId="50">
+            <Obj RefId="53">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_2</S>
@@ -456,7 +480,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_2</S>
               </MS>
             </Obj>
-            <Obj RefId="51">
+            <Obj RefId="54">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_20</S>
@@ -465,7 +489,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_20</S>
               </MS>
             </Obj>
-            <Obj RefId="52">
+            <Obj RefId="55">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_3</S>
@@ -474,7 +498,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_3</S>
               </MS>
             </Obj>
-            <Obj RefId="53">
+            <Obj RefId="56">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_4</S>
@@ -483,7 +507,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_4</S>
               </MS>
             </Obj>
-            <Obj RefId="54">
+            <Obj RefId="57">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_5</S>
@@ -492,7 +516,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_5</S>
               </MS>
             </Obj>
-            <Obj RefId="55">
+            <Obj RefId="58">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_6</S>
@@ -501,7 +525,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_6</S>
               </MS>
             </Obj>
-            <Obj RefId="56">
+            <Obj RefId="59">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_7</S>
@@ -510,7 +534,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_7</S>
               </MS>
             </Obj>
-            <Obj RefId="57">
+            <Obj RefId="60">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_8</S>
@@ -519,7 +543,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_8</S>
               </MS>
             </Obj>
-            <Obj RefId="58">
+            <Obj RefId="61">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_9</S>
@@ -528,7 +552,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_9</S>
               </MS>
             </Obj>
-            <Obj RefId="59">
+            <Obj RefId="62">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">pool</S>
@@ -537,7 +561,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\pool</S>
               </MS>
             </Obj>
-            <Obj RefId="60">
+            <Obj RefId="63">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">serverless</S>
@@ -546,7 +570,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\serverless</S>
               </MS>
             </Obj>
-            <Obj RefId="61">
+            <Obj RefId="64">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'serverless tepmlate'</S>
@@ -555,7 +579,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\serverless tepmlate</S>
               </MS>
             </Obj>
-            <Obj RefId="62">
+            <Obj RefId="65">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">temp</S>
@@ -564,7 +588,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\temp</S>
               </MS>
             </Obj>
-            <Obj RefId="63">
+            <Obj RefId="66">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">TestMachine2024</S>
@@ -573,7 +597,7 @@
                 <S N="ToolTip">Template (UA2 NP1 TA0) Orch1:\TestMachine2024</S>
               </MS>
             </Obj>
-            <Obj RefId="64">
+            <Obj RefId="67">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'wenqi.li@uipath.com''s workspace machine'</S>
@@ -582,7 +606,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\wenqi.li@uipath.com's workspace machine</S>
               </MS>
             </Obj>
-            <Obj RefId="65">
+            <Obj RefId="68">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">xxx</S>
@@ -591,7 +615,7 @@
                 <S N="ToolTip">Template (UA1 NP2 TA3) Orch1:\xxx</S>
               </MS>
             </Obj>
-            <Obj RefId="66">
+            <Obj RefId="69">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'yoko.2013note.cha@gmail.com''s workspace machine'</S>
@@ -600,7 +624,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\yoko.2013note.cha@gmail.com's workspace machine</S>
               </MS>
             </Obj>
-            <Obj RefId="67">
+            <Obj RefId="70">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'yoshifumi.tsuda_uipath.com#ext#@kzsai.onmicrosoft.com''s workspace machine'</S>
@@ -609,7 +633,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\yoshifumi.tsuda_uipath.com#ext#@kzsai.onmicrosoft.com's workspace machine</S>
               </MS>
             </Obj>
-            <Obj RefId="68">
+            <Obj RefId="71">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'yoshifumi.tsuda@uipath.com''s workspace machine'</S>
@@ -618,7 +642,7 @@
                 <S N="ToolTip">Template (UA1 NP1 TA1) Orch1:\yoshifumi.tsuda@uipath.com's workspace machine</S>
               </MS>
             </Obj>
-            <Obj RefId="69">
+            <Obj RefId="72">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'ytsuda UR'</S>
@@ -627,7 +651,7 @@
                 <S N="ToolTip">Template (UA1 NP0 TA0) Orch1:\ytsuda UR</S>
               </MS>
             </Obj>
-            <Obj RefId="70">
+            <Obj RefId="73">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'ytsuda@gmail.com''s workspace machine'</S>
@@ -636,7 +660,7 @@
                 <S N="ToolTip">Template (UA1 NP2 TA3) Orch1:\ytsuda@gmail.com's workspace machine</S>
               </MS>
             </Obj>
-            <Obj RefId="71">
+            <Obj RefId="74">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'ytsuda+c_c@gmail.com''s workspace machine'</S>
@@ -645,7 +669,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\ytsuda+c_c@gmail.com's workspace machine</S>
               </MS>
             </Obj>
-            <Obj RefId="72">
+            <Obj RefId="75">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">あうあう</S>
@@ -654,7 +678,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\あうあう</S>
               </MS>
             </Obj>
-            <Obj RefId="73">
+            <Obj RefId="76">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">クラウドロボット</S>
@@ -663,7 +687,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\クラウドロボット</S>
               </MS>
             </Obj>
-            <Obj RefId="74">
+            <Obj RefId="77">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">ふがふがマシーン</S>
@@ -672,7 +696,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\ふがふがマシーン</S>
               </MS>
             </Obj>
-            <Obj RefId="75">
+            <Obj RefId="78">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">ほえほえマシン</S>
@@ -686,10 +710,10 @@
       </En>
       <En>
         <S N="Key">Get-OrchActionCatalog -Name</S>
-        <Obj N="Value" RefId="76">
+        <Obj N="Value" RefId="79">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="77">
+            <Obj RefId="80">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'xxx catalog'</S>
@@ -703,10 +727,10 @@
       </En>
       <En>
         <S N="Key">Get-OrchBucket -Name</S>
-        <Obj N="Value" RefId="78">
+        <Obj N="Value" RefId="81">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="79">
+            <Obj RefId="82">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">NewBucket1</S>
@@ -715,7 +739,7 @@
                 <S N="ToolTip">Orch1:\Shared\NewBucket1</S>
               </MS>
             </Obj>
-            <Obj RefId="80">
+            <Obj RefId="83">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">TestBucket2</S>
@@ -724,7 +748,7 @@
                 <S N="ToolTip">Orch1:\Shared\TestBucket2</S>
               </MS>
             </Obj>
-            <Obj RefId="81">
+            <Obj RefId="84">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">バケットよ</S>
@@ -738,24 +762,24 @@
       </En>
       <En>
         <S N="Key">Get-OrchTestSetSchedule -Name</S>
-        <Obj N="Value" RefId="82">
+        <Obj N="Value" RefId="85">
           <TNRef RefId="1" />
           <LST />
         </Obj>
       </En>
       <En>
         <S N="Key">Get-OrchTestSet -Name</S>
-        <Obj N="Value" RefId="83">
+        <Obj N="Value" RefId="86">
           <TNRef RefId="1" />
           <LST />
         </Obj>
       </En>
       <En>
         <S N="Key">Get-OrchRole (positional)</S>
-        <Obj N="Value" RefId="84">
+        <Obj N="Value" RefId="87">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="85">
+            <Obj RefId="88">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Allow to be Automation Developer'</S>
@@ -764,7 +788,7 @@
                 <S N="ToolTip">Orch1:\Allow to be Automation Developer</S>
               </MS>
             </Obj>
-            <Obj RefId="86">
+            <Obj RefId="89">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Allow to be Automation Publisher'</S>
@@ -773,7 +797,7 @@
                 <S N="ToolTip">Orch1:\Allow to be Automation Publisher</S>
               </MS>
             </Obj>
-            <Obj RefId="87">
+            <Obj RefId="90">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Allow to be Automation User'</S>
@@ -782,7 +806,7 @@
                 <S N="ToolTip">Orch1:\Allow to be Automation User</S>
               </MS>
             </Obj>
-            <Obj RefId="88">
+            <Obj RefId="91">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Allow to be Folder Administrator'</S>
@@ -791,7 +815,7 @@
                 <S N="ToolTip">Orch1:\Allow to be Folder Administrator</S>
               </MS>
             </Obj>
-            <Obj RefId="89">
+            <Obj RefId="92">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Automation Developer'</S>
@@ -800,7 +824,7 @@
                 <S N="ToolTip">Orch1:\Automation Developer</S>
               </MS>
             </Obj>
-            <Obj RefId="90">
+            <Obj RefId="93">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Automation Publisher'</S>
@@ -809,7 +833,7 @@
                 <S N="ToolTip">Orch1:\Automation Publisher</S>
               </MS>
             </Obj>
-            <Obj RefId="91">
+            <Obj RefId="94">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Automation User'</S>
@@ -818,7 +842,7 @@
                 <S N="ToolTip">Orch1:\Automation User</S>
               </MS>
             </Obj>
-            <Obj RefId="92">
+            <Obj RefId="95">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Automation User - Custom'</S>
@@ -827,7 +851,7 @@
                 <S N="ToolTip">Orch1:\Automation User - Custom</S>
               </MS>
             </Obj>
-            <Obj RefId="93">
+            <Obj RefId="96">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Folder Administrator'</S>
@@ -836,7 +860,7 @@
                 <S N="ToolTip">Orch1:\Folder Administrator</S>
               </MS>
             </Obj>
-            <Obj RefId="94">
+            <Obj RefId="97">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">hoehoe</S>
@@ -845,7 +869,7 @@
                 <S N="ToolTip">Orch1:\hoehoe</S>
               </MS>
             </Obj>
-            <Obj RefId="95">
+            <Obj RefId="98">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'new tenant role'</S>
@@ -854,7 +878,7 @@
                 <S N="ToolTip">Orch1:\new tenant role</S>
               </MS>
             </Obj>
-            <Obj RefId="96">
+            <Obj RefId="99">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">new2</S>
@@ -863,7 +887,7 @@
                 <S N="ToolTip">Orch1:\new2</S>
               </MS>
             </Obj>
-            <Obj RefId="97">
+            <Obj RefId="100">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Orchestrator Administrator'</S>
@@ -872,7 +896,7 @@
                 <S N="ToolTip">Orch1:\Orchestrator Administrator</S>
               </MS>
             </Obj>
-            <Obj RefId="98">
+            <Obj RefId="101">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Orchestrator Administrator - Custom'</S>
@@ -881,7 +905,7 @@
                 <S N="ToolTip">Orch1:\Orchestrator Administrator - Custom</S>
               </MS>
             </Obj>
-            <Obj RefId="99">
+            <Obj RefId="102">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Personal Workspace Administrator'</S>
@@ -890,7 +914,7 @@
                 <S N="ToolTip">Orch1:\Personal Workspace Administrator</S>
               </MS>
             </Obj>
-            <Obj RefId="100">
+            <Obj RefId="103">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Pipelines folder role'</S>
@@ -899,7 +923,7 @@
                 <S N="ToolTip">Orch1:\Pipelines folder role</S>
               </MS>
             </Obj>
-            <Obj RefId="101">
+            <Obj RefId="104">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Pipelines tenant role'</S>
@@ -908,7 +932,7 @@
                 <S N="ToolTip">Orch1:\Pipelines tenant role</S>
               </MS>
             </Obj>
-            <Obj RefId="102">
+            <Obj RefId="105">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Robot-FolderScopedOnly</S>
@@ -917,7 +941,7 @@
                 <S N="ToolTip">Orch1:\Robot-FolderScopedOnly</S>
               </MS>
             </Obj>
-            <Obj RefId="103">
+            <Obj RefId="106">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Robot-TenantScopedOnly</S>
@@ -926,7 +950,7 @@
                 <S N="ToolTip">Orch1:\Robot-TenantScopedOnly</S>
               </MS>
             </Obj>
-            <Obj RefId="104">
+            <Obj RefId="107">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Solutions Administrator'</S>
@@ -935,7 +959,7 @@
                 <S N="ToolTip">Orch1:\Solutions Administrator</S>
               </MS>
             </Obj>
-            <Obj RefId="105">
+            <Obj RefId="108">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Solutions Contributor'</S>
@@ -944,7 +968,7 @@
                 <S N="ToolTip">Orch1:\Solutions Contributor</S>
               </MS>
             </Obj>
-            <Obj RefId="106">
+            <Obj RefId="109">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">あかんテナントロール</S>
@@ -953,7 +977,7 @@
                 <S N="ToolTip">Orch1:\あかんテナントロール</S>
               </MS>
             </Obj>
-            <Obj RefId="107">
+            <Obj RefId="110">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'アスタリスクとか `* ハテナ `? とか `[`] とかのロール。'</S>
@@ -962,7 +986,7 @@
                 <S N="ToolTip">Orch1:\アスタリスクとか * ハテナ ? とか [] とかのロール。</S>
               </MS>
             </Obj>
-            <Obj RefId="108">
+            <Obj RefId="111">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'カンマ , と空白文字入りロールです。'</S>
@@ -971,7 +995,7 @@
                 <S N="ToolTip">Orch1:\カンマ , と空白文字入りロールです。</S>
               </MS>
             </Obj>
-            <Obj RefId="109">
+            <Obj RefId="112">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">てなんとロール</S>
@@ -980,7 +1004,7 @@
                 <S N="ToolTip">Orch1:\てなんとロール</S>
               </MS>
             </Obj>
-            <Obj RefId="110">
+            <Obj RefId="113">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">プロセス作成</S>
@@ -989,7 +1013,7 @@
                 <S N="ToolTip">Orch1:\プロセス作成</S>
               </MS>
             </Obj>
-            <Obj RefId="111">
+            <Obj RefId="114">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">ほえほえフォルダーロール</S>
@@ -998,7 +1022,7 @@
                 <S N="ToolTip">Orch1:\ほえほえフォルダーロール</S>
               </MS>
             </Obj>
-            <Obj RefId="112">
+            <Obj RefId="115">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">新しいテナントロール</S>
@@ -1011,11 +1035,100 @@
         </Obj>
       </En>
       <En>
-        <S N="Key">New-OrchTrigger -StopStrategy</S>
-        <Obj N="Value" RefId="113">
+        <S N="Key">Update-OrchProcessVersion -Id</S>
+        <Obj N="Value" RefId="116">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="114">
+            <Obj RefId="117">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">399851</S>
+                <S N="ListItemText">399851</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\1万行のログ</S>
+              </MS>
+            </Obj>
+            <Obj RefId="118">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">302712</S>
+                <S N="ListItemText">302712</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess19</S>
+              </MS>
+            </Obj>
+            <Obj RefId="119">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">389436</S>
+                <S N="ListItemText">389436</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess27</S>
+              </MS>
+            </Obj>
+            <Obj RefId="120">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">390800</S>
+                <S N="ListItemText">390800</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess34</S>
+              </MS>
+            </Obj>
+            <Obj RefId="121">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">390801</S>
+                <S N="ListItemText">390801</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess35</S>
+              </MS>
+            </Obj>
+            <Obj RefId="122">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">288167</S>
+                <S N="ListItemText">288167</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\Msgbox</S>
+              </MS>
+            </Obj>
+            <Obj RefId="123">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">331156</S>
+                <S N="ListItemText">331156</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\My2ndApps</S>
+              </MS>
+            </Obj>
+            <Obj RefId="124">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">332694</S>
+                <S N="ListItemText">332694</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\My3rdApps</S>
+              </MS>
+            </Obj>
+            <Obj RefId="125">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">261671</S>
+                <S N="ListItemText">261671</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\例外</S>
+              </MS>
+            </Obj>
+          </LST>
+        </Obj>
+      </En>
+      <En>
+        <S N="Key">New-OrchTrigger -StopStrategy</S>
+        <Obj N="Value" RefId="126">
+          <TNRef RefId="1" />
+          <LST>
+            <Obj RefId="127">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">SoftStop</S>
@@ -1024,7 +1137,7 @@
                 <S N="ToolTip">SoftStop</S>
               </MS>
             </Obj>
-            <Obj RefId="115">
+            <Obj RefId="128">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Kill</S>
@@ -1038,10 +1151,10 @@
       </En>
       <En>
         <S N="Key">Get-OrchCalendar -Name</S>
-        <Obj N="Value" RefId="116">
+        <Obj N="Value" RefId="129">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="117">
+            <Obj RefId="130">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">MyCalendar1</S>
@@ -1050,7 +1163,7 @@
                 <S N="ToolTip">Orch1:\MyCalendar1</S>
               </MS>
             </Obj>
-            <Obj RefId="118">
+            <Obj RefId="131">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">MyCalendar2</S>
@@ -1059,7 +1172,7 @@
                 <S N="ToolTip">Orch1:\MyCalendar2</S>
               </MS>
             </Obj>
-            <Obj RefId="119">
+            <Obj RefId="132">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">MyCalendar3</S>
@@ -1073,10 +1186,10 @@
       </En>
       <En>
         <S N="Key">Get-OrchProcess -Name</S>
-        <Obj N="Value" RefId="120">
+        <Obj N="Value" RefId="133">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="121">
+            <Obj RefId="134">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">' 複数ほえほえ'</S>
@@ -1085,7 +1198,7 @@
                 <S N="ToolTip">Orch1:\Shared\ 複数ほえほえ</S>
               </MS>
             </Obj>
-            <Obj RefId="122">
+            <Obj RefId="135">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">1万行のログ</S>
@@ -1094,7 +1207,7 @@
                 <S N="ToolTip">Orch1:\Shared\1万行のログ</S>
               </MS>
             </Obj>
-            <Obj RefId="123">
+            <Obj RefId="136">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">BGほえほえ</S>
@@ -1103,7 +1216,7 @@
                 <S N="ToolTip">Orch1:\Shared\BGほえほえ</S>
               </MS>
             </Obj>
-            <Obj RefId="124">
+            <Obj RefId="137">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">BlankProcess19</S>
@@ -1112,7 +1225,7 @@
                 <S N="ToolTip">Orch1:\Shared\BlankProcess19</S>
               </MS>
             </Obj>
-            <Obj RefId="125">
+            <Obj RefId="138">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">BlankProcess19-2</S>
@@ -1121,7 +1234,7 @@
                 <S N="ToolTip">Orch1:\Shared\BlankProcess19-2</S>
               </MS>
             </Obj>
-            <Obj RefId="126">
+            <Obj RefId="139">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">BlankProcess27</S>
@@ -1130,7 +1243,7 @@
                 <S N="ToolTip">Orch1:\Shared\BlankProcess27</S>
               </MS>
             </Obj>
-            <Obj RefId="127">
+            <Obj RefId="140">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">BlankProcess29</S>
@@ -1139,7 +1252,7 @@
                 <S N="ToolTip">Orch1:\Shared\BlankProcess29</S>
               </MS>
             </Obj>
-            <Obj RefId="128">
+            <Obj RefId="141">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">BlankProcess33</S>
@@ -1148,7 +1261,7 @@
                 <S N="ToolTip">Orch1:\Shared\BlankProcess33</S>
               </MS>
             </Obj>
-            <Obj RefId="129">
+            <Obj RefId="142">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">BlankProcess34</S>
@@ -1157,7 +1270,7 @@
                 <S N="ToolTip">Orch1:\Shared\BlankProcess34</S>
               </MS>
             </Obj>
-            <Obj RefId="130">
+            <Obj RefId="143">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">BlankProcess35</S>
@@ -1166,7 +1279,7 @@
                 <S N="ToolTip">Orch1:\Shared\BlankProcess35</S>
               </MS>
             </Obj>
-            <Obj RefId="131">
+            <Obj RefId="144">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">DataExtraction</S>
@@ -1175,7 +1288,7 @@
                 <S N="ToolTip">Orch1:\Shared\DataExtraction</S>
               </MS>
             </Obj>
-            <Obj RefId="132">
+            <Obj RefId="145">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">EmailProcessor</S>
@@ -1184,7 +1297,7 @@
                 <S N="ToolTip">Orch1:\Shared\EmailProcessor</S>
               </MS>
             </Obj>
-            <Obj RefId="133">
+            <Obj RefId="146">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">ExplorerをKill</S>
@@ -1193,7 +1306,7 @@
                 <S N="ToolTip">Orch1:\Shared\ExplorerをKill</S>
               </MS>
             </Obj>
-            <Obj RefId="134">
+            <Obj RefId="147">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">InvoiceProcess</S>
@@ -1202,7 +1315,7 @@
                 <S N="ToolTip">Orch1:\Shared\InvoiceProcess</S>
               </MS>
             </Obj>
-            <Obj RefId="135">
+            <Obj RefId="148">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Msgbox</S>
@@ -1211,7 +1324,7 @@
                 <S N="ToolTip">Orch1:\Shared\Msgbox</S>
               </MS>
             </Obj>
-            <Obj RefId="136">
+            <Obj RefId="149">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">MsgBox2</S>
@@ -1220,7 +1333,7 @@
                 <S N="ToolTip">Orch1:\Shared\MsgBox2</S>
               </MS>
             </Obj>
-            <Obj RefId="137">
+            <Obj RefId="150">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">My1stAgent</S>
@@ -1229,7 +1342,7 @@
                 <S N="ToolTip">Orch1:\Shared\My1stAgent</S>
               </MS>
             </Obj>
-            <Obj RefId="138">
+            <Obj RefId="151">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">My1stApps</S>
@@ -1238,7 +1351,7 @@
                 <S N="ToolTip">Orch1:\Shared\My1stApps</S>
               </MS>
             </Obj>
-            <Obj RefId="139">
+            <Obj RefId="152">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">My2ndApps</S>
@@ -1247,7 +1360,7 @@
                 <S N="ToolTip">Orch1:\Shared\My2ndApps</S>
               </MS>
             </Obj>
-            <Obj RefId="140">
+            <Obj RefId="153">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">My3rdApps</S>
@@ -1256,7 +1369,7 @@
                 <S N="ToolTip">Orch1:\Shared\My3rdApps</S>
               </MS>
             </Obj>
-            <Obj RefId="141">
+            <Obj RefId="154">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">ReportGeneration</S>
@@ -1265,7 +1378,7 @@
                 <S N="ToolTip">Orch1:\Shared\ReportGeneration</S>
               </MS>
             </Obj>
-            <Obj RefId="142">
+            <Obj RefId="155">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">例外</S>
@@ -1274,7 +1387,7 @@
                 <S N="ToolTip">Orch1:\Shared\例外</S>
               </MS>
             </Obj>
-            <Obj RefId="143">
+            <Obj RefId="156">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">例外2</S>
@@ -1288,10 +1401,10 @@
       </En>
       <En>
         <S N="Key">New-OrchMachine -AutomationType</S>
-        <Obj N="Value" RefId="144">
+        <Obj N="Value" RefId="157">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="145">
+            <Obj RefId="158">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Any</S>
@@ -1300,7 +1413,7 @@
                 <S N="ToolTip">Any</S>
               </MS>
             </Obj>
-            <Obj RefId="146">
+            <Obj RefId="159">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Foreground</S>
@@ -1309,7 +1422,7 @@
                 <S N="ToolTip">Foreground</S>
               </MS>
             </Obj>
-            <Obj RefId="147">
+            <Obj RefId="160">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Background</S>
@@ -1323,10 +1436,10 @@
       </En>
       <En>
         <S N="Key">Get-OrchMachine (positional)</S>
-        <Obj N="Value" RefId="148">
+        <Obj N="Value" RefId="161">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="149">
+            <Obj RefId="162">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'`[Default`] Cloud Robots - Serverless'</S>
@@ -1335,7 +1448,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\[Default] Cloud Robots - Serverless</S>
               </MS>
             </Obj>
-            <Obj RefId="150">
+            <Obj RefId="163">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">aiai</S>
@@ -1344,7 +1457,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\aiai</S>
               </MS>
             </Obj>
-            <Obj RefId="151">
+            <Obj RefId="164">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">bafu</S>
@@ -1353,7 +1466,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\bafu</S>
               </MS>
             </Obj>
-            <Obj RefId="152">
+            <Obj RefId="165">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">ffff2</S>
@@ -1362,7 +1475,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\ffff2</S>
               </MS>
             </Obj>
-            <Obj RefId="153">
+            <Obj RefId="166">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">fffff</S>
@@ -1371,7 +1484,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\fffff</S>
               </MS>
             </Obj>
-            <Obj RefId="154">
+            <Obj RefId="167">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">fuga</S>
@@ -1380,7 +1493,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\fuga</S>
               </MS>
             </Obj>
-            <Obj RefId="155">
+            <Obj RefId="168">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">hogehogeMachine</S>
@@ -1389,7 +1502,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\hogehogeMachine</S>
               </MS>
             </Obj>
-            <Obj RefId="156">
+            <Obj RefId="169">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">m1</S>
@@ -1398,7 +1511,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\m1</S>
               </MS>
             </Obj>
-            <Obj RefId="157">
+            <Obj RefId="170">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">m2</S>
@@ -1407,7 +1520,7 @@
                 <S N="ToolTip">Standard (UA3 NP5 TA4) Orch1:\m2</S>
               </MS>
             </Obj>
-            <Obj RefId="158">
+            <Obj RefId="171">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">m3</S>
@@ -1416,7 +1529,7 @@
                 <S N="ToolTip">Standard (UA1 NP0 TA0) Orch1:\m3</S>
               </MS>
             </Obj>
-            <Obj RefId="159">
+            <Obj RefId="172">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">m4</S>
@@ -1425,7 +1538,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\m4</S>
               </MS>
             </Obj>
-            <Obj RefId="160">
+            <Obj RefId="173">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">machine1</S>
@@ -1434,7 +1547,7 @@
                 <S N="ToolTip">Template (UA1 NP0 TA0) Orch1:\machine1</S>
               </MS>
             </Obj>
-            <Obj RefId="161">
+            <Obj RefId="174">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">machine2</S>
@@ -1443,7 +1556,7 @@
                 <S N="ToolTip">Template (UA1 NP0 TA0) Orch1:\machine2</S>
               </MS>
             </Obj>
-            <Obj RefId="162">
+            <Obj RefId="175">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">MachineTemp1</S>
@@ -1452,7 +1565,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\MachineTemp1</S>
               </MS>
             </Obj>
-            <Obj RefId="163">
+            <Obj RefId="176">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">myNewPP</S>
@@ -1461,7 +1574,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\myNewPP</S>
               </MS>
             </Obj>
-            <Obj RefId="164">
+            <Obj RefId="177">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">newmachines</S>
@@ -1470,7 +1583,7 @@
                 <S N="ToolTip">Template (UA1 NP1 TA1) Orch1:\newmachines</S>
               </MS>
             </Obj>
-            <Obj RefId="165">
+            <Obj RefId="178">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_1</S>
@@ -1479,7 +1592,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_1</S>
               </MS>
             </Obj>
-            <Obj RefId="166">
+            <Obj RefId="179">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_10</S>
@@ -1488,7 +1601,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_10</S>
               </MS>
             </Obj>
-            <Obj RefId="167">
+            <Obj RefId="180">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_11</S>
@@ -1497,7 +1610,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_11</S>
               </MS>
             </Obj>
-            <Obj RefId="168">
+            <Obj RefId="181">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_12</S>
@@ -1506,7 +1619,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_12</S>
               </MS>
             </Obj>
-            <Obj RefId="169">
+            <Obj RefId="182">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_13</S>
@@ -1515,7 +1628,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_13</S>
               </MS>
             </Obj>
-            <Obj RefId="170">
+            <Obj RefId="183">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_14</S>
@@ -1524,7 +1637,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_14</S>
               </MS>
             </Obj>
-            <Obj RefId="171">
+            <Obj RefId="184">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_15</S>
@@ -1533,7 +1646,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_15</S>
               </MS>
             </Obj>
-            <Obj RefId="172">
+            <Obj RefId="185">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_16</S>
@@ -1542,7 +1655,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_16</S>
               </MS>
             </Obj>
-            <Obj RefId="173">
+            <Obj RefId="186">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_17</S>
@@ -1551,7 +1664,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_17</S>
               </MS>
             </Obj>
-            <Obj RefId="174">
+            <Obj RefId="187">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_18</S>
@@ -1560,7 +1673,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_18</S>
               </MS>
             </Obj>
-            <Obj RefId="175">
+            <Obj RefId="188">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_19</S>
@@ -1569,7 +1682,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_19</S>
               </MS>
             </Obj>
-            <Obj RefId="176">
+            <Obj RefId="189">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_2</S>
@@ -1578,7 +1691,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_2</S>
               </MS>
             </Obj>
-            <Obj RefId="177">
+            <Obj RefId="190">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_20</S>
@@ -1587,7 +1700,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_20</S>
               </MS>
             </Obj>
-            <Obj RefId="178">
+            <Obj RefId="191">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_3</S>
@@ -1596,7 +1709,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_3</S>
               </MS>
             </Obj>
-            <Obj RefId="179">
+            <Obj RefId="192">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_4</S>
@@ -1605,7 +1718,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_4</S>
               </MS>
             </Obj>
-            <Obj RefId="180">
+            <Obj RefId="193">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_5</S>
@@ -1614,7 +1727,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_5</S>
               </MS>
             </Obj>
-            <Obj RefId="181">
+            <Obj RefId="194">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_6</S>
@@ -1623,7 +1736,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_6</S>
               </MS>
             </Obj>
-            <Obj RefId="182">
+            <Obj RefId="195">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_7</S>
@@ -1632,7 +1745,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_7</S>
               </MS>
             </Obj>
-            <Obj RefId="183">
+            <Obj RefId="196">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_8</S>
@@ -1641,7 +1754,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_8</S>
               </MS>
             </Obj>
-            <Obj RefId="184">
+            <Obj RefId="197">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_9</S>
@@ -1650,7 +1763,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\PerfTestMachine_9</S>
               </MS>
             </Obj>
-            <Obj RefId="185">
+            <Obj RefId="198">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">pool</S>
@@ -1659,7 +1772,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\pool</S>
               </MS>
             </Obj>
-            <Obj RefId="186">
+            <Obj RefId="199">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">serverless</S>
@@ -1668,7 +1781,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\serverless</S>
               </MS>
             </Obj>
-            <Obj RefId="187">
+            <Obj RefId="200">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'serverless tepmlate'</S>
@@ -1677,7 +1790,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\serverless tepmlate</S>
               </MS>
             </Obj>
-            <Obj RefId="188">
+            <Obj RefId="201">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">temp</S>
@@ -1686,7 +1799,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\temp</S>
               </MS>
             </Obj>
-            <Obj RefId="189">
+            <Obj RefId="202">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">TestMachine2024</S>
@@ -1695,7 +1808,7 @@
                 <S N="ToolTip">Template (UA2 NP1 TA0) Orch1:\TestMachine2024</S>
               </MS>
             </Obj>
-            <Obj RefId="190">
+            <Obj RefId="203">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'wenqi.li@uipath.com''s workspace machine'</S>
@@ -1704,7 +1817,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\wenqi.li@uipath.com's workspace machine</S>
               </MS>
             </Obj>
-            <Obj RefId="191">
+            <Obj RefId="204">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">xxx</S>
@@ -1713,7 +1826,7 @@
                 <S N="ToolTip">Template (UA1 NP2 TA3) Orch1:\xxx</S>
               </MS>
             </Obj>
-            <Obj RefId="192">
+            <Obj RefId="205">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'yoko.2013note.cha@gmail.com''s workspace machine'</S>
@@ -1722,7 +1835,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\yoko.2013note.cha@gmail.com's workspace machine</S>
               </MS>
             </Obj>
-            <Obj RefId="193">
+            <Obj RefId="206">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'yoshifumi.tsuda_uipath.com#ext#@kzsai.onmicrosoft.com''s workspace machine'</S>
@@ -1731,7 +1844,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\yoshifumi.tsuda_uipath.com#ext#@kzsai.onmicrosoft.com's workspace machine</S>
               </MS>
             </Obj>
-            <Obj RefId="194">
+            <Obj RefId="207">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'yoshifumi.tsuda@uipath.com''s workspace machine'</S>
@@ -1740,7 +1853,7 @@
                 <S N="ToolTip">Template (UA1 NP1 TA1) Orch1:\yoshifumi.tsuda@uipath.com's workspace machine</S>
               </MS>
             </Obj>
-            <Obj RefId="195">
+            <Obj RefId="208">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'ytsuda UR'</S>
@@ -1749,7 +1862,7 @@
                 <S N="ToolTip">Template (UA1 NP0 TA0) Orch1:\ytsuda UR</S>
               </MS>
             </Obj>
-            <Obj RefId="196">
+            <Obj RefId="209">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'ytsuda@gmail.com''s workspace machine'</S>
@@ -1758,7 +1871,7 @@
                 <S N="ToolTip">Template (UA1 NP2 TA3) Orch1:\ytsuda@gmail.com's workspace machine</S>
               </MS>
             </Obj>
-            <Obj RefId="197">
+            <Obj RefId="210">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'ytsuda+c_c@gmail.com''s workspace machine'</S>
@@ -1767,7 +1880,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\ytsuda+c_c@gmail.com's workspace machine</S>
               </MS>
             </Obj>
-            <Obj RefId="198">
+            <Obj RefId="211">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">あうあう</S>
@@ -1776,7 +1889,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\あうあう</S>
               </MS>
             </Obj>
-            <Obj RefId="199">
+            <Obj RefId="212">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">クラウドロボット</S>
@@ -1785,7 +1898,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\クラウドロボット</S>
               </MS>
             </Obj>
-            <Obj RefId="200">
+            <Obj RefId="213">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">ふがふがマシーン</S>
@@ -1794,7 +1907,7 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\ふがふがマシーン</S>
               </MS>
             </Obj>
-            <Obj RefId="201">
+            <Obj RefId="214">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">ほえほえマシン</S>
@@ -1808,10 +1921,10 @@
       </En>
       <En>
         <S N="Key">Get-OrchQueue -Name</S>
-        <Obj N="Value" RefId="202">
+        <Obj N="Value" RefId="215">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="203">
+            <Obj RefId="216">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">TestQueue123</S>
@@ -1820,7 +1933,7 @@
                 <S N="ToolTip">Orch1:\Shared\TestQueue123</S>
               </MS>
             </Obj>
-            <Obj RefId="204">
+            <Obj RefId="217">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">TestQueue2</S>
@@ -1829,7 +1942,7 @@
                 <S N="ToolTip">Orch1:\Shared\TestQueue2</S>
               </MS>
             </Obj>
-            <Obj RefId="205">
+            <Obj RefId="218">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">ふがふがキュー</S>
@@ -1838,7 +1951,7 @@
                 <S N="ToolTip">Orch1:\Shared\ふがふがキュー</S>
               </MS>
             </Obj>
-            <Obj RefId="206">
+            <Obj RefId="219">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">ほえほえ</S>
@@ -1847,7 +1960,7 @@
                 <S N="ToolTip">Orch1:\Shared\ほえほえ</S>
               </MS>
             </Obj>
-            <Obj RefId="207">
+            <Obj RefId="220">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">わたしのキュー</S>
@@ -1861,10 +1974,10 @@
       </En>
       <En>
         <S N="Key">Set-OrchAsset -ValueType</S>
-        <Obj N="Value" RefId="208">
+        <Obj N="Value" RefId="221">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="209">
+            <Obj RefId="222">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Text</S>
@@ -1873,7 +1986,7 @@
                 <S N="ToolTip">Text</S>
               </MS>
             </Obj>
-            <Obj RefId="210">
+            <Obj RefId="223">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Integer</S>
@@ -1882,7 +1995,7 @@
                 <S N="ToolTip">Integer</S>
               </MS>
             </Obj>
-            <Obj RefId="211">
+            <Obj RefId="224">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Bool</S>
@@ -1896,10 +2009,10 @@
       </En>
       <En>
         <S N="Key">New-OrchMachine -Scope</S>
-        <Obj N="Value" RefId="212">
+        <Obj N="Value" RefId="225">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="213">
+            <Obj RefId="226">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Default</S>
@@ -1908,7 +2021,7 @@
                 <S N="ToolTip">Default</S>
               </MS>
             </Obj>
-            <Obj RefId="214">
+            <Obj RefId="227">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Serverless</S>
@@ -1917,7 +2030,7 @@
                 <S N="ToolTip">Serverless</S>
               </MS>
             </Obj>
-            <Obj RefId="215">
+            <Obj RefId="228">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">AutomationCloudRobot</S>
@@ -1931,10 +2044,10 @@
       </En>
       <En>
         <S N="Key">Start-OrchJob -Name</S>
-        <Obj N="Value" RefId="216">
+        <Obj N="Value" RefId="229">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="217">
+            <Obj RefId="230">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">' 複数ほえほえ'</S>
@@ -1943,7 +2056,7 @@
                 <S N="ToolTip">Orch1:\Shared\ 複数ほえほえ</S>
               </MS>
             </Obj>
-            <Obj RefId="218">
+            <Obj RefId="231">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">1万行のログ</S>
@@ -1952,7 +2065,7 @@
                 <S N="ToolTip">Orch1:\Shared\1万行のログ</S>
               </MS>
             </Obj>
-            <Obj RefId="219">
+            <Obj RefId="232">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">BGほえほえ</S>
@@ -1961,7 +2074,7 @@
                 <S N="ToolTip">Orch1:\Shared\BGほえほえ</S>
               </MS>
             </Obj>
-            <Obj RefId="220">
+            <Obj RefId="233">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">BlankProcess19</S>
@@ -1970,7 +2083,7 @@
                 <S N="ToolTip">Orch1:\Shared\BlankProcess19</S>
               </MS>
             </Obj>
-            <Obj RefId="221">
+            <Obj RefId="234">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">BlankProcess19-2</S>
@@ -1979,7 +2092,7 @@
                 <S N="ToolTip">Orch1:\Shared\BlankProcess19-2</S>
               </MS>
             </Obj>
-            <Obj RefId="222">
+            <Obj RefId="235">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">BlankProcess27</S>
@@ -1988,7 +2101,7 @@
                 <S N="ToolTip">Orch1:\Shared\BlankProcess27</S>
               </MS>
             </Obj>
-            <Obj RefId="223">
+            <Obj RefId="236">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">BlankProcess29</S>
@@ -1997,7 +2110,7 @@
                 <S N="ToolTip">Orch1:\Shared\BlankProcess29</S>
               </MS>
             </Obj>
-            <Obj RefId="224">
+            <Obj RefId="237">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">BlankProcess33</S>
@@ -2006,7 +2119,7 @@
                 <S N="ToolTip">Orch1:\Shared\BlankProcess33</S>
               </MS>
             </Obj>
-            <Obj RefId="225">
+            <Obj RefId="238">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">BlankProcess34</S>
@@ -2015,7 +2128,7 @@
                 <S N="ToolTip">Orch1:\Shared\BlankProcess34</S>
               </MS>
             </Obj>
-            <Obj RefId="226">
+            <Obj RefId="239">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">BlankProcess35</S>
@@ -2024,7 +2137,7 @@
                 <S N="ToolTip">Orch1:\Shared\BlankProcess35</S>
               </MS>
             </Obj>
-            <Obj RefId="227">
+            <Obj RefId="240">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">DataExtraction</S>
@@ -2033,7 +2146,7 @@
                 <S N="ToolTip">Orch1:\Shared\DataExtraction</S>
               </MS>
             </Obj>
-            <Obj RefId="228">
+            <Obj RefId="241">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">EmailProcessor</S>
@@ -2042,7 +2155,7 @@
                 <S N="ToolTip">Orch1:\Shared\EmailProcessor</S>
               </MS>
             </Obj>
-            <Obj RefId="229">
+            <Obj RefId="242">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">ExplorerをKill</S>
@@ -2051,7 +2164,7 @@
                 <S N="ToolTip">Orch1:\Shared\ExplorerをKill</S>
               </MS>
             </Obj>
-            <Obj RefId="230">
+            <Obj RefId="243">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">InvoiceProcess</S>
@@ -2060,7 +2173,7 @@
                 <S N="ToolTip">Orch1:\Shared\InvoiceProcess</S>
               </MS>
             </Obj>
-            <Obj RefId="231">
+            <Obj RefId="244">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Msgbox</S>
@@ -2069,7 +2182,7 @@
                 <S N="ToolTip">Orch1:\Shared\Msgbox</S>
               </MS>
             </Obj>
-            <Obj RefId="232">
+            <Obj RefId="245">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">MsgBox2</S>
@@ -2078,7 +2191,7 @@
                 <S N="ToolTip">Orch1:\Shared\MsgBox2</S>
               </MS>
             </Obj>
-            <Obj RefId="233">
+            <Obj RefId="246">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">My1stAgent</S>
@@ -2087,7 +2200,7 @@
                 <S N="ToolTip">Orch1:\Shared\My1stAgent</S>
               </MS>
             </Obj>
-            <Obj RefId="234">
+            <Obj RefId="247">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">My1stApps</S>
@@ -2096,7 +2209,7 @@
                 <S N="ToolTip">Orch1:\Shared\My1stApps</S>
               </MS>
             </Obj>
-            <Obj RefId="235">
+            <Obj RefId="248">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">My2ndApps</S>
@@ -2105,7 +2218,7 @@
                 <S N="ToolTip">Orch1:\Shared\My2ndApps</S>
               </MS>
             </Obj>
-            <Obj RefId="236">
+            <Obj RefId="249">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">My3rdApps</S>
@@ -2114,7 +2227,7 @@
                 <S N="ToolTip">Orch1:\Shared\My3rdApps</S>
               </MS>
             </Obj>
-            <Obj RefId="237">
+            <Obj RefId="250">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">ReportGeneration</S>
@@ -2123,7 +2236,7 @@
                 <S N="ToolTip">Orch1:\Shared\ReportGeneration</S>
               </MS>
             </Obj>
-            <Obj RefId="238">
+            <Obj RefId="251">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">例外</S>
@@ -2132,7 +2245,7 @@
                 <S N="ToolTip">Orch1:\Shared\例外</S>
               </MS>
             </Obj>
-            <Obj RefId="239">
+            <Obj RefId="252">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">例外2</S>
@@ -2146,10 +2259,10 @@
       </En>
       <En>
         <S N="Key">New-OrchTrigger -Priority</S>
-        <Obj N="Value" RefId="240">
+        <Obj N="Value" RefId="253">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="241">
+            <Obj RefId="254">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Critical</S>
@@ -2158,7 +2271,7 @@
                 <S N="ToolTip">Critical</S>
               </MS>
             </Obj>
-            <Obj RefId="242">
+            <Obj RefId="255">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Highest</S>
@@ -2167,7 +2280,7 @@
                 <S N="ToolTip">Highest</S>
               </MS>
             </Obj>
-            <Obj RefId="243">
+            <Obj RefId="256">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">VeryHigh</S>
@@ -2176,7 +2289,7 @@
                 <S N="ToolTip">VeryHigh</S>
               </MS>
             </Obj>
-            <Obj RefId="244">
+            <Obj RefId="257">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">High</S>
@@ -2185,7 +2298,7 @@
                 <S N="ToolTip">High</S>
               </MS>
             </Obj>
-            <Obj RefId="245">
+            <Obj RefId="258">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">MediumHigh</S>
@@ -2194,7 +2307,7 @@
                 <S N="ToolTip">MediumHigh</S>
               </MS>
             </Obj>
-            <Obj RefId="246">
+            <Obj RefId="259">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Medium</S>
@@ -2203,7 +2316,7 @@
                 <S N="ToolTip">Medium</S>
               </MS>
             </Obj>
-            <Obj RefId="247">
+            <Obj RefId="260">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">MediumLow</S>
@@ -2212,7 +2325,7 @@
                 <S N="ToolTip">MediumLow</S>
               </MS>
             </Obj>
-            <Obj RefId="248">
+            <Obj RefId="261">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Low</S>
@@ -2221,7 +2334,7 @@
                 <S N="ToolTip">Low</S>
               </MS>
             </Obj>
-            <Obj RefId="249">
+            <Obj RefId="262">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">VeryLow</S>
@@ -2230,7 +2343,7 @@
                 <S N="ToolTip">VeryLow</S>
               </MS>
             </Obj>
-            <Obj RefId="250">
+            <Obj RefId="263">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Lowest</S>
@@ -2244,10 +2357,10 @@
       </En>
       <En>
         <S N="Key">New-OrchTrigger -RuntimeType</S>
-        <Obj N="Value" RefId="251">
+        <Obj N="Value" RefId="264">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="252">
+            <Obj RefId="265">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">NonProduction</S>
@@ -2256,7 +2369,7 @@
                 <S N="ToolTip">NonProduction</S>
               </MS>
             </Obj>
-            <Obj RefId="253">
+            <Obj RefId="266">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Attended</S>
@@ -2265,7 +2378,7 @@
                 <S N="ToolTip">Attended</S>
               </MS>
             </Obj>
-            <Obj RefId="254">
+            <Obj RefId="267">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Unattended</S>
@@ -2274,7 +2387,7 @@
                 <S N="ToolTip">Unattended</S>
               </MS>
             </Obj>
-            <Obj RefId="255">
+            <Obj RefId="268">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Development</S>
@@ -2283,7 +2396,7 @@
                 <S N="ToolTip">Development</S>
               </MS>
             </Obj>
-            <Obj RefId="256">
+            <Obj RefId="269">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Studio</S>
@@ -2292,7 +2405,7 @@
                 <S N="ToolTip">Studio</S>
               </MS>
             </Obj>
-            <Obj RefId="257">
+            <Obj RefId="270">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">RpaDeveloper</S>
@@ -2301,7 +2414,7 @@
                 <S N="ToolTip">RpaDeveloper</S>
               </MS>
             </Obj>
-            <Obj RefId="258">
+            <Obj RefId="271">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">StudioX</S>
@@ -2310,7 +2423,7 @@
                 <S N="ToolTip">StudioX</S>
               </MS>
             </Obj>
-            <Obj RefId="259">
+            <Obj RefId="272">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">CitizenDeveloper</S>
@@ -2319,7 +2432,7 @@
                 <S N="ToolTip">CitizenDeveloper</S>
               </MS>
             </Obj>
-            <Obj RefId="260">
+            <Obj RefId="273">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Headless</S>
@@ -2328,7 +2441,7 @@
                 <S N="ToolTip">Headless</S>
               </MS>
             </Obj>
-            <Obj RefId="261">
+            <Obj RefId="274">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">StudioPro</S>
@@ -2337,7 +2450,7 @@
                 <S N="ToolTip">StudioPro</S>
               </MS>
             </Obj>
-            <Obj RefId="262">
+            <Obj RefId="275">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">RpaDeveloperPro</S>
@@ -2346,7 +2459,7 @@
                 <S N="ToolTip">RpaDeveloperPro</S>
               </MS>
             </Obj>
-            <Obj RefId="263">
+            <Obj RefId="276">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">TestAutomation</S>
@@ -2355,7 +2468,7 @@
                 <S N="ToolTip">TestAutomation</S>
               </MS>
             </Obj>
-            <Obj RefId="264">
+            <Obj RefId="277">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">AutomationCloud</S>
@@ -2364,7 +2477,7 @@
                 <S N="ToolTip">AutomationCloud</S>
               </MS>
             </Obj>
-            <Obj RefId="265">
+            <Obj RefId="278">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Serverless</S>
@@ -2373,7 +2486,7 @@
                 <S N="ToolTip">Serverless</S>
               </MS>
             </Obj>
-            <Obj RefId="266">
+            <Obj RefId="279">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">AutomationKit</S>
@@ -2382,7 +2495,7 @@
                 <S N="ToolTip">AutomationKit</S>
               </MS>
             </Obj>
-            <Obj RefId="267">
+            <Obj RefId="280">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">ServerlessTestAutomation</S>
@@ -2391,7 +2504,7 @@
                 <S N="ToolTip">ServerlessTestAutomation</S>
               </MS>
             </Obj>
-            <Obj RefId="268">
+            <Obj RefId="281">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">AutomationCloudTestAutomation</S>
@@ -2400,7 +2513,7 @@
                 <S N="ToolTip">AutomationCloudTestAutomation</S>
               </MS>
             </Obj>
-            <Obj RefId="269">
+            <Obj RefId="282">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">AttendedStudioWeb</S>
@@ -2409,7 +2522,7 @@
                 <S N="ToolTip">AttendedStudioWeb</S>
               </MS>
             </Obj>
-            <Obj RefId="270">
+            <Obj RefId="283">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Hosting</S>
@@ -2418,7 +2531,7 @@
                 <S N="ToolTip">Hosting</S>
               </MS>
             </Obj>
-            <Obj RefId="271">
+            <Obj RefId="284">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">AssistantWeb</S>
@@ -2427,7 +2540,7 @@
                 <S N="ToolTip">AssistantWeb</S>
               </MS>
             </Obj>
-            <Obj RefId="272">
+            <Obj RefId="285">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">ProcessOrchestration</S>
@@ -2436,7 +2549,7 @@
                 <S N="ToolTip">ProcessOrchestration</S>
               </MS>
             </Obj>
-            <Obj RefId="273">
+            <Obj RefId="286">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">AgentService</S>
@@ -2445,7 +2558,7 @@
                 <S N="ToolTip">AgentService</S>
               </MS>
             </Obj>
-            <Obj RefId="274">
+            <Obj RefId="287">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">AppTest</S>
@@ -2459,10 +2572,10 @@
       </En>
       <En>
         <S N="Key">Get-OrchQueue (positional)</S>
-        <Obj N="Value" RefId="275">
+        <Obj N="Value" RefId="288">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="276">
+            <Obj RefId="289">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">TestQueue123</S>
@@ -2471,7 +2584,7 @@
                 <S N="ToolTip">Orch1:\Shared\TestQueue123</S>
               </MS>
             </Obj>
-            <Obj RefId="277">
+            <Obj RefId="290">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">TestQueue2</S>
@@ -2480,7 +2593,7 @@
                 <S N="ToolTip">Orch1:\Shared\TestQueue2</S>
               </MS>
             </Obj>
-            <Obj RefId="278">
+            <Obj RefId="291">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">ふがふがキュー</S>
@@ -2489,7 +2602,7 @@
                 <S N="ToolTip">Orch1:\Shared\ふがふがキュー</S>
               </MS>
             </Obj>
-            <Obj RefId="279">
+            <Obj RefId="292">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">ほえほえ</S>
@@ -2498,7 +2611,7 @@
                 <S N="ToolTip">Orch1:\Shared\ほえほえ</S>
               </MS>
             </Obj>
-            <Obj RefId="280">
+            <Obj RefId="293">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">わたしのキュー</S>
@@ -2512,17 +2625,17 @@
       </En>
       <En>
         <S N="Key">Get-OrchTrigger -Name</S>
-        <Obj N="Value" RefId="281">
+        <Obj N="Value" RefId="294">
           <TNRef RefId="1" />
           <LST />
         </Obj>
       </En>
       <En>
         <S N="Key">Get-OrchEventTrigger -Name</S>
-        <Obj N="Value" RefId="282">
+        <Obj N="Value" RefId="295">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="283">
+            <Obj RefId="296">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">aaaa</S>
@@ -2536,10 +2649,10 @@
       </En>
       <En>
         <S N="Key">Get-OrchFolderMachine -Name</S>
-        <Obj N="Value" RefId="284">
+        <Obj N="Value" RefId="297">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="285">
+            <Obj RefId="298">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">aiai</S>
@@ -2548,7 +2661,7 @@
                 <S N="ToolTip">Orch1:\Shared\aiai</S>
               </MS>
             </Obj>
-            <Obj RefId="286">
+            <Obj RefId="299">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">bafu</S>
@@ -2557,7 +2670,7 @@
                 <S N="ToolTip">Orch1:\Shared\bafu</S>
               </MS>
             </Obj>
-            <Obj RefId="287">
+            <Obj RefId="300">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">newmachines</S>
@@ -2566,7 +2679,7 @@
                 <S N="ToolTip">Orch1:\Shared\newmachines</S>
               </MS>
             </Obj>
-            <Obj RefId="288">
+            <Obj RefId="301">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_1</S>
@@ -2575,7 +2688,7 @@
                 <S N="ToolTip">Orch1:\Shared\PerfTestMachine_1</S>
               </MS>
             </Obj>
-            <Obj RefId="289">
+            <Obj RefId="302">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_10</S>
@@ -2584,7 +2697,7 @@
                 <S N="ToolTip">Orch1:\Shared\PerfTestMachine_10</S>
               </MS>
             </Obj>
-            <Obj RefId="290">
+            <Obj RefId="303">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_11</S>
@@ -2593,7 +2706,7 @@
                 <S N="ToolTip">Orch1:\Shared\PerfTestMachine_11</S>
               </MS>
             </Obj>
-            <Obj RefId="291">
+            <Obj RefId="304">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_12</S>
@@ -2602,7 +2715,7 @@
                 <S N="ToolTip">Orch1:\Shared\PerfTestMachine_12</S>
               </MS>
             </Obj>
-            <Obj RefId="292">
+            <Obj RefId="305">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_13</S>
@@ -2611,7 +2724,7 @@
                 <S N="ToolTip">Orch1:\Shared\PerfTestMachine_13</S>
               </MS>
             </Obj>
-            <Obj RefId="293">
+            <Obj RefId="306">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_14</S>
@@ -2620,7 +2733,7 @@
                 <S N="ToolTip">Orch1:\Shared\PerfTestMachine_14</S>
               </MS>
             </Obj>
-            <Obj RefId="294">
+            <Obj RefId="307">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_15</S>
@@ -2629,7 +2742,7 @@
                 <S N="ToolTip">Orch1:\Shared\PerfTestMachine_15</S>
               </MS>
             </Obj>
-            <Obj RefId="295">
+            <Obj RefId="308">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_16</S>
@@ -2638,7 +2751,7 @@
                 <S N="ToolTip">Orch1:\Shared\PerfTestMachine_16</S>
               </MS>
             </Obj>
-            <Obj RefId="296">
+            <Obj RefId="309">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_17</S>
@@ -2647,7 +2760,7 @@
                 <S N="ToolTip">Orch1:\Shared\PerfTestMachine_17</S>
               </MS>
             </Obj>
-            <Obj RefId="297">
+            <Obj RefId="310">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_18</S>
@@ -2656,7 +2769,7 @@
                 <S N="ToolTip">Orch1:\Shared\PerfTestMachine_18</S>
               </MS>
             </Obj>
-            <Obj RefId="298">
+            <Obj RefId="311">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_19</S>
@@ -2665,7 +2778,7 @@
                 <S N="ToolTip">Orch1:\Shared\PerfTestMachine_19</S>
               </MS>
             </Obj>
-            <Obj RefId="299">
+            <Obj RefId="312">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_2</S>
@@ -2674,7 +2787,7 @@
                 <S N="ToolTip">Orch1:\Shared\PerfTestMachine_2</S>
               </MS>
             </Obj>
-            <Obj RefId="300">
+            <Obj RefId="313">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_20</S>
@@ -2683,7 +2796,7 @@
                 <S N="ToolTip">Orch1:\Shared\PerfTestMachine_20</S>
               </MS>
             </Obj>
-            <Obj RefId="301">
+            <Obj RefId="314">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_3</S>
@@ -2692,7 +2805,7 @@
                 <S N="ToolTip">Orch1:\Shared\PerfTestMachine_3</S>
               </MS>
             </Obj>
-            <Obj RefId="302">
+            <Obj RefId="315">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_4</S>
@@ -2701,7 +2814,7 @@
                 <S N="ToolTip">Orch1:\Shared\PerfTestMachine_4</S>
               </MS>
             </Obj>
-            <Obj RefId="303">
+            <Obj RefId="316">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_5</S>
@@ -2710,7 +2823,7 @@
                 <S N="ToolTip">Orch1:\Shared\PerfTestMachine_5</S>
               </MS>
             </Obj>
-            <Obj RefId="304">
+            <Obj RefId="317">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_6</S>
@@ -2719,7 +2832,7 @@
                 <S N="ToolTip">Orch1:\Shared\PerfTestMachine_6</S>
               </MS>
             </Obj>
-            <Obj RefId="305">
+            <Obj RefId="318">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_7</S>
@@ -2728,7 +2841,7 @@
                 <S N="ToolTip">Orch1:\Shared\PerfTestMachine_7</S>
               </MS>
             </Obj>
-            <Obj RefId="306">
+            <Obj RefId="319">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_8</S>
@@ -2737,7 +2850,7 @@
                 <S N="ToolTip">Orch1:\Shared\PerfTestMachine_8</S>
               </MS>
             </Obj>
-            <Obj RefId="307">
+            <Obj RefId="320">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">PerfTestMachine_9</S>
@@ -2746,7 +2859,7 @@
                 <S N="ToolTip">Orch1:\Shared\PerfTestMachine_9</S>
               </MS>
             </Obj>
-            <Obj RefId="308">
+            <Obj RefId="321">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'ytsuda@gmail.com''s workspace machine'</S>
@@ -2760,24 +2873,24 @@
       </En>
       <En>
         <S N="Key">Get-OrchTestDataQueue -Name</S>
-        <Obj N="Value" RefId="309">
+        <Obj N="Value" RefId="322">
           <TNRef RefId="1" />
           <LST />
         </Obj>
       </En>
       <En>
         <S N="Key">Get-OrchApiTrigger -Name</S>
-        <Obj N="Value" RefId="310">
+        <Obj N="Value" RefId="323">
           <TNRef RefId="1" />
           <LST />
         </Obj>
       </En>
       <En>
         <S N="Key">Add-DuUser -Type</S>
-        <Obj N="Value" RefId="311">
+        <Obj N="Value" RefId="324">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="312">
+            <Obj RefId="325">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">DirectoryUser</S>
@@ -2786,7 +2899,7 @@
                 <S N="ToolTip">DirectoryUser</S>
               </MS>
             </Obj>
-            <Obj RefId="313">
+            <Obj RefId="326">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">DirectoryGroup</S>
@@ -2795,7 +2908,7 @@
                 <S N="ToolTip">DirectoryGroup</S>
               </MS>
             </Obj>
-            <Obj RefId="314">
+            <Obj RefId="327">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">DirectoryRobotUser</S>
@@ -2804,7 +2917,7 @@
                 <S N="ToolTip">DirectoryRobotUser</S>
               </MS>
             </Obj>
-            <Obj RefId="315">
+            <Obj RefId="328">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">DirectoryApplication</S>
@@ -2817,11 +2930,226 @@
         </Obj>
       </En>
       <En>
-        <S N="Key">Get-OrchAsset -Name</S>
-        <Obj N="Value" RefId="316">
+        <S N="Key">Update-OrchProcess -Name</S>
+        <Obj N="Value" RefId="329">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="317">
+            <Obj RefId="330">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">' 複数ほえほえ'</S>
+                <S N="ListItemText"> 複数ほえほえ</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\ 複数ほえほえ</S>
+              </MS>
+            </Obj>
+            <Obj RefId="331">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">1万行のログ</S>
+                <S N="ListItemText">1万行のログ</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\1万行のログ</S>
+              </MS>
+            </Obj>
+            <Obj RefId="332">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">BGほえほえ</S>
+                <S N="ListItemText">BGほえほえ</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BGほえほえ</S>
+              </MS>
+            </Obj>
+            <Obj RefId="333">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">BlankProcess19</S>
+                <S N="ListItemText">BlankProcess19</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess19</S>
+              </MS>
+            </Obj>
+            <Obj RefId="334">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">BlankProcess19-2</S>
+                <S N="ListItemText">BlankProcess19-2</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess19-2</S>
+              </MS>
+            </Obj>
+            <Obj RefId="335">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">BlankProcess27</S>
+                <S N="ListItemText">BlankProcess27</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess27</S>
+              </MS>
+            </Obj>
+            <Obj RefId="336">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">BlankProcess29</S>
+                <S N="ListItemText">BlankProcess29</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess29</S>
+              </MS>
+            </Obj>
+            <Obj RefId="337">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">BlankProcess33</S>
+                <S N="ListItemText">BlankProcess33</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess33</S>
+              </MS>
+            </Obj>
+            <Obj RefId="338">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">BlankProcess34</S>
+                <S N="ListItemText">BlankProcess34</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess34</S>
+              </MS>
+            </Obj>
+            <Obj RefId="339">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">BlankProcess35</S>
+                <S N="ListItemText">BlankProcess35</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\BlankProcess35</S>
+              </MS>
+            </Obj>
+            <Obj RefId="340">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">DataExtraction</S>
+                <S N="ListItemText">DataExtraction</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\DataExtraction</S>
+              </MS>
+            </Obj>
+            <Obj RefId="341">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">EmailProcessor</S>
+                <S N="ListItemText">EmailProcessor</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\EmailProcessor</S>
+              </MS>
+            </Obj>
+            <Obj RefId="342">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">ExplorerをKill</S>
+                <S N="ListItemText">ExplorerをKill</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\ExplorerをKill</S>
+              </MS>
+            </Obj>
+            <Obj RefId="343">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">InvoiceProcess</S>
+                <S N="ListItemText">InvoiceProcess</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\InvoiceProcess</S>
+              </MS>
+            </Obj>
+            <Obj RefId="344">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">Msgbox</S>
+                <S N="ListItemText">Msgbox</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\Msgbox</S>
+              </MS>
+            </Obj>
+            <Obj RefId="345">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">MsgBox2</S>
+                <S N="ListItemText">MsgBox2</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\MsgBox2</S>
+              </MS>
+            </Obj>
+            <Obj RefId="346">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">My1stAgent</S>
+                <S N="ListItemText">My1stAgent</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\My1stAgent</S>
+              </MS>
+            </Obj>
+            <Obj RefId="347">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">My1stApps</S>
+                <S N="ListItemText">My1stApps</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\My1stApps</S>
+              </MS>
+            </Obj>
+            <Obj RefId="348">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">My2ndApps</S>
+                <S N="ListItemText">My2ndApps</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\My2ndApps</S>
+              </MS>
+            </Obj>
+            <Obj RefId="349">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">My3rdApps</S>
+                <S N="ListItemText">My3rdApps</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\My3rdApps</S>
+              </MS>
+            </Obj>
+            <Obj RefId="350">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">ReportGeneration</S>
+                <S N="ListItemText">ReportGeneration</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\ReportGeneration</S>
+              </MS>
+            </Obj>
+            <Obj RefId="351">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">例外</S>
+                <S N="ListItemText">例外</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\例外</S>
+              </MS>
+            </Obj>
+            <Obj RefId="352">
+              <TNRef RefId="2" />
+              <MS>
+                <S N="CompletionText">例外2</S>
+                <S N="ListItemText">例外2</S>
+                <S N="ResultType">ParameterValue</S>
+                <S N="ToolTip">Orch1:\Shared\例外2</S>
+              </MS>
+            </Obj>
+          </LST>
+        </Obj>
+      </En>
+      <En>
+        <S N="Key">Get-OrchAsset -Name</S>
+        <Obj N="Value" RefId="353">
+          <TNRef RefId="1" />
+          <LST>
+            <Obj RefId="354">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">DatabaseConnection</S>
@@ -2830,7 +3158,7 @@
                 <S N="ToolTip">Orch1:\Shared\DatabaseConnection</S>
               </MS>
             </Obj>
-            <Obj RefId="318">
+            <Obj RefId="355">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">DemoAsset_20250806_111824</S>
@@ -2839,7 +3167,7 @@
                 <S N="ToolTip">Orch1:\Shared\DemoAsset_20250806_111824</S>
               </MS>
             </Obj>
-            <Obj RefId="319">
+            <Obj RefId="356">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">TestAsset1</S>
@@ -2848,7 +3176,7 @@
                 <S N="ToolTip">Orch1:\Shared\TestAsset1</S>
               </MS>
             </Obj>
-            <Obj RefId="320">
+            <Obj RefId="357">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">TestAsset2024</S>
@@ -2857,7 +3185,7 @@
                 <S N="ToolTip">Orch1:\Shared\TestAsset2024</S>
               </MS>
             </Obj>
-            <Obj RefId="321">
+            <Obj RefId="358">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">TestCredential1</S>
@@ -2866,7 +3194,7 @@
                 <S N="ToolTip">Orch1:\Shared\TestCredential1</S>
               </MS>
             </Obj>
-            <Obj RefId="322">
+            <Obj RefId="359">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">クレクレ2</S>
@@ -2875,7 +3203,7 @@
                 <S N="ToolTip">Orch1:\Shared\クレクレ2</S>
               </MS>
             </Obj>
-            <Obj RefId="323">
+            <Obj RefId="360">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">たまご6</S>
@@ -2884,7 +3212,7 @@
                 <S N="ToolTip">Orch1:\Shared\たまご6</S>
               </MS>
             </Obj>
-            <Obj RefId="324">
+            <Obj RefId="361">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">ブル</S>
@@ -2893,7 +3221,7 @@
                 <S N="ToolTip">Orch1:\Shared\ブル</S>
               </MS>
             </Obj>
-            <Obj RefId="325">
+            <Obj RefId="362">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">ブルブル</S>
@@ -2907,10 +3235,10 @@
       </En>
       <En>
         <S N="Key">Copy-OrchCredentialStore -Name</S>
-        <Obj N="Value" RefId="326">
+        <Obj N="Value" RefId="363">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="327">
+            <Obj RefId="364">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">aa</S>
@@ -2919,7 +3247,7 @@
                 <S N="ToolTip">Orch1:\aa</S>
               </MS>
             </Obj>
-            <Obj RefId="328">
+            <Obj RefId="365">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">ab</S>
@@ -2928,7 +3256,7 @@
                 <S N="ToolTip">Orch1:\ab</S>
               </MS>
             </Obj>
-            <Obj RefId="329">
+            <Obj RefId="366">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Orchestrator Database'</S>
@@ -2942,10 +3270,10 @@
       </En>
       <En>
         <S N="Key">Add-PmGroupMember -Type</S>
-        <Obj N="Value" RefId="330">
+        <Obj N="Value" RefId="367">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="331">
+            <Obj RefId="368">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">DirectoryUser</S>
@@ -2954,7 +3282,7 @@
                 <S N="ToolTip">DirectoryUser</S>
               </MS>
             </Obj>
-            <Obj RefId="332">
+            <Obj RefId="369">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">DirectoryGroup</S>
@@ -2963,7 +3291,7 @@
                 <S N="ToolTip">DirectoryGroup</S>
               </MS>
             </Obj>
-            <Obj RefId="333">
+            <Obj RefId="370">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">DirectoryRobotUser</S>
@@ -2972,7 +3300,7 @@
                 <S N="ToolTip">DirectoryRobotUser</S>
               </MS>
             </Obj>
-            <Obj RefId="334">
+            <Obj RefId="371">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">DirectoryApplication</S>
@@ -2986,10 +3314,10 @@
       </En>
       <En>
         <S N="Key">Get-OrchRole -Name</S>
-        <Obj N="Value" RefId="335">
+        <Obj N="Value" RefId="372">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="336">
+            <Obj RefId="373">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Allow to be Automation Developer'</S>
@@ -2998,7 +3326,7 @@
                 <S N="ToolTip">Orch1:\Allow to be Automation Developer</S>
               </MS>
             </Obj>
-            <Obj RefId="337">
+            <Obj RefId="374">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Allow to be Automation Publisher'</S>
@@ -3007,7 +3335,7 @@
                 <S N="ToolTip">Orch1:\Allow to be Automation Publisher</S>
               </MS>
             </Obj>
-            <Obj RefId="338">
+            <Obj RefId="375">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Allow to be Automation User'</S>
@@ -3016,7 +3344,7 @@
                 <S N="ToolTip">Orch1:\Allow to be Automation User</S>
               </MS>
             </Obj>
-            <Obj RefId="339">
+            <Obj RefId="376">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Allow to be Folder Administrator'</S>
@@ -3025,7 +3353,7 @@
                 <S N="ToolTip">Orch1:\Allow to be Folder Administrator</S>
               </MS>
             </Obj>
-            <Obj RefId="340">
+            <Obj RefId="377">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Automation Developer'</S>
@@ -3034,7 +3362,7 @@
                 <S N="ToolTip">Orch1:\Automation Developer</S>
               </MS>
             </Obj>
-            <Obj RefId="341">
+            <Obj RefId="378">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Automation Publisher'</S>
@@ -3043,7 +3371,7 @@
                 <S N="ToolTip">Orch1:\Automation Publisher</S>
               </MS>
             </Obj>
-            <Obj RefId="342">
+            <Obj RefId="379">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Automation User'</S>
@@ -3052,7 +3380,7 @@
                 <S N="ToolTip">Orch1:\Automation User</S>
               </MS>
             </Obj>
-            <Obj RefId="343">
+            <Obj RefId="380">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Automation User - Custom'</S>
@@ -3061,7 +3389,7 @@
                 <S N="ToolTip">Orch1:\Automation User - Custom</S>
               </MS>
             </Obj>
-            <Obj RefId="344">
+            <Obj RefId="381">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Folder Administrator'</S>
@@ -3070,7 +3398,7 @@
                 <S N="ToolTip">Orch1:\Folder Administrator</S>
               </MS>
             </Obj>
-            <Obj RefId="345">
+            <Obj RefId="382">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">hoehoe</S>
@@ -3079,7 +3407,7 @@
                 <S N="ToolTip">Orch1:\hoehoe</S>
               </MS>
             </Obj>
-            <Obj RefId="346">
+            <Obj RefId="383">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'new tenant role'</S>
@@ -3088,7 +3416,7 @@
                 <S N="ToolTip">Orch1:\new tenant role</S>
               </MS>
             </Obj>
-            <Obj RefId="347">
+            <Obj RefId="384">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">new2</S>
@@ -3097,7 +3425,7 @@
                 <S N="ToolTip">Orch1:\new2</S>
               </MS>
             </Obj>
-            <Obj RefId="348">
+            <Obj RefId="385">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Orchestrator Administrator'</S>
@@ -3106,7 +3434,7 @@
                 <S N="ToolTip">Orch1:\Orchestrator Administrator</S>
               </MS>
             </Obj>
-            <Obj RefId="349">
+            <Obj RefId="386">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Orchestrator Administrator - Custom'</S>
@@ -3115,7 +3443,7 @@
                 <S N="ToolTip">Orch1:\Orchestrator Administrator - Custom</S>
               </MS>
             </Obj>
-            <Obj RefId="350">
+            <Obj RefId="387">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Personal Workspace Administrator'</S>
@@ -3124,7 +3452,7 @@
                 <S N="ToolTip">Orch1:\Personal Workspace Administrator</S>
               </MS>
             </Obj>
-            <Obj RefId="351">
+            <Obj RefId="388">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Pipelines folder role'</S>
@@ -3133,7 +3461,7 @@
                 <S N="ToolTip">Orch1:\Pipelines folder role</S>
               </MS>
             </Obj>
-            <Obj RefId="352">
+            <Obj RefId="389">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Pipelines tenant role'</S>
@@ -3142,7 +3470,7 @@
                 <S N="ToolTip">Orch1:\Pipelines tenant role</S>
               </MS>
             </Obj>
-            <Obj RefId="353">
+            <Obj RefId="390">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Robot-FolderScopedOnly</S>
@@ -3151,7 +3479,7 @@
                 <S N="ToolTip">Orch1:\Robot-FolderScopedOnly</S>
               </MS>
             </Obj>
-            <Obj RefId="354">
+            <Obj RefId="391">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Robot-TenantScopedOnly</S>
@@ -3160,7 +3488,7 @@
                 <S N="ToolTip">Orch1:\Robot-TenantScopedOnly</S>
               </MS>
             </Obj>
-            <Obj RefId="355">
+            <Obj RefId="392">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Solutions Administrator'</S>
@@ -3169,7 +3497,7 @@
                 <S N="ToolTip">Orch1:\Solutions Administrator</S>
               </MS>
             </Obj>
-            <Obj RefId="356">
+            <Obj RefId="393">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'Solutions Contributor'</S>
@@ -3178,7 +3506,7 @@
                 <S N="ToolTip">Orch1:\Solutions Contributor</S>
               </MS>
             </Obj>
-            <Obj RefId="357">
+            <Obj RefId="394">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">あかんテナントロール</S>
@@ -3187,7 +3515,7 @@
                 <S N="ToolTip">Orch1:\あかんテナントロール</S>
               </MS>
             </Obj>
-            <Obj RefId="358">
+            <Obj RefId="395">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'アスタリスクとか `* ハテナ `? とか `[`] とかのロール。'</S>
@@ -3196,7 +3524,7 @@
                 <S N="ToolTip">Orch1:\アスタリスクとか * ハテナ ? とか [] とかのロール。</S>
               </MS>
             </Obj>
-            <Obj RefId="359">
+            <Obj RefId="396">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">'カンマ , と空白文字入りロールです。'</S>
@@ -3205,7 +3533,7 @@
                 <S N="ToolTip">Orch1:\カンマ , と空白文字入りロールです。</S>
               </MS>
             </Obj>
-            <Obj RefId="360">
+            <Obj RefId="397">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">てなんとロール</S>
@@ -3214,7 +3542,7 @@
                 <S N="ToolTip">Orch1:\てなんとロール</S>
               </MS>
             </Obj>
-            <Obj RefId="361">
+            <Obj RefId="398">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">プロセス作成</S>
@@ -3223,7 +3551,7 @@
                 <S N="ToolTip">Orch1:\プロセス作成</S>
               </MS>
             </Obj>
-            <Obj RefId="362">
+            <Obj RefId="399">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">ほえほえフォルダーロール</S>
@@ -3232,7 +3560,7 @@
                 <S N="ToolTip">Orch1:\ほえほえフォルダーロール</S>
               </MS>
             </Obj>
-            <Obj RefId="363">
+            <Obj RefId="400">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">新しいテナントロール</S>
@@ -3246,10 +3574,10 @@
       </En>
       <En>
         <S N="Key">New-OrchMachine -TargetFramework</S>
-        <Obj N="Value" RefId="364">
+        <Obj N="Value" RefId="401">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="365">
+            <Obj RefId="402">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Any</S>
@@ -3258,7 +3586,7 @@
                 <S N="ToolTip">Any</S>
               </MS>
             </Obj>
-            <Obj RefId="366">
+            <Obj RefId="403">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Windows</S>
@@ -3267,7 +3595,7 @@
                 <S N="ToolTip">Windows</S>
               </MS>
             </Obj>
-            <Obj RefId="367">
+            <Obj RefId="404">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">Portable</S>
@@ -3281,10 +3609,10 @@
       </En>
       <En>
         <S N="Key">Get-OrchWebhook -Name</S>
-        <Obj N="Value" RefId="368">
+        <Obj N="Value" RefId="405">
           <TNRef RefId="1" />
           <LST>
-            <Obj RefId="369">
+            <Obj RefId="406">
               <TNRef RefId="2" />
               <MS>
                 <S N="CompletionText">mywebhook</S>

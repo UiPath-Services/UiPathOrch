@@ -196,14 +196,6 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         return null;
     }
 
-    public static IEnumerable<string> GetParameterValues(CommandAst commandAst, string paramName, string[]? precedingPositionalParameterNames = null, string? wordToComplete = null)
-    {
-        string value = GetParameterValue(commandAst, paramName, precedingPositionalParameterNames);
-        foreach (var i in SplitCommaSeparatedText(value?.RemoveEnd(wordToComplete)))
-        {
-            yield return i;
-        }
-    }
 
     protected static List<OrchDriveInfo> ResolvePmDrives(IDictionary fakeBoundParameters)
     {
@@ -254,12 +246,6 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
 
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         return SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
-    }
-
-    protected static List<WildcardPattern>? CreateWPListFromParameter(CommandAst commandAst, string parameterName, string[]? positionalParams, string? wordToComplete)
-    {
-        var param = GetParameterValues(commandAst, parameterName, positionalParams, wordToComplete);
-        return param.ConvertToWildcardPatternList();
     }
 
     /// <summary>
@@ -318,12 +304,6 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         var text = FindCurrentParameterText(commandAst, parameterName);
         if (text is null) return [];
         return SplitCommaSeparatedText(text.RemoveEnd(wordToComplete));
-    }
-
-    protected static List<WildcardPattern>? CreateWPListFromOtherParameters(CommandAst commandAst, string parameterName, string[] positionalParams)
-    {
-        var param = GetParameterValues(commandAst, parameterName, positionalParams);
-        return param.ConvertToWildcardPatternList();
     }
 
     static internal string RemoveEnclosingQuotes(string? str)
