@@ -77,6 +77,28 @@ PS C:\> Get-OrchPSDrive Orch1:,Orch2:
 
 Gets information about the Orch1: and Orch2: drives by specifying multiple drive names.
 
+### Example 5: Access JWT claims
+
+```powershell
+PS C:\> $drive = Get-OrchPSDrive Orch1: -Force
+PS C:\> $drive.Claims.prt_id
+baa40998-d374-4814-b765-77d7b0551ae7
+PS C:\> $drive.Claims.email
+ytsuda@gmail.com
+PS C:\> $drive.Claims.exp
+2026/03/20 18:13:21
+```
+
+When -Force is used and the drive is authenticated, the Claims property contains the decoded JWT access token claims as a PSObject. Each JWT claim is available as a property. Timestamp claims (exp, iat, nbf, auth_time) are automatically converted to local DateTime.
+
+### Example 6: Select specific JWT claims
+
+```powershell
+PS C:\> Get-OrchPSDrive Orch1: -Force | Select-Object -ExpandProperty Claims | Select-Object prt_id, email, exp, ext_idp_disp_name
+```
+
+Use Select-Object -ExpandProperty to extract claims, then select specific properties.
+
 ## PARAMETERS
 
 ### -Path
@@ -136,6 +158,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ### UiPath.PowerShell.Entities.OrchPSDrive
 
 Returns OrchPSDrive objects containing drive information such as drive name, root, description, and connection details.
+
+Key properties include:
+
+- **IdentityUrl** — The Identity Server URL, automatically derived from Root at drive mount time. Cloud drives use `/{org}/identity_`, on-premises drives use `/identity`. Can be explicitly overridden in the configuration file.
+- **Claims** — A PSObject containing decoded JWT access token claims. Available when the drive has an active access token (use -Force to ensure authentication). Timestamp claims (exp, iat, nbf, auth_time) are converted to local DateTime. Array claims (scope, aud, amr) are stored as string arrays. Access individual claims via `$drive.Claims.prt_id`, `$drive.Claims.email`, etc.
 
 ## NOTES
 
