@@ -241,13 +241,13 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
             var robotsPerFolders = ParallelResults.GroupBy(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
             var sessionsPerFolders = ParallelResults.GroupBy(drivesFolders, df => df.drive.MachineSessionRuntimesByFolder.Get(df.folder));
 
-            List<UserRoles> users = [null];
+            List<UserRoles?> users = [null];
             users.AddRange(usersPerFolders.SelectMany(g => g));
 
-            List<MachineFolder> machines = [null];
+            List<MachineFolder?> machines = [null];
             machines.AddRange(robotsPerFolders.SelectMany(g => g));
 
-            List<MachineSessionRuntime> sessions = [null];
+            List<MachineSessionRuntime?> sessions = [null];
             sessions.AddRange(sessionsPerFolders.SelectMany(g => g));
 
             // Generate and process all combinations

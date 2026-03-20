@@ -1086,7 +1086,7 @@ internal static class SessionStateExtentios
 
     public static List<(OrchDriveInfo drive, Folder folder)> EnumFoldersWithoutPersonalWorkspace(this SessionState? sessionState, string? path, bool recurse = false, uint depth = 0, bool includeRoot = false)
     {
-        return sessionState.EnumFoldersWithoutPersonalWorkspace([path], recurse, depth, includeRoot);
+        return sessionState.EnumFoldersWithoutPersonalWorkspace(path is null ? null : [path], recurse, depth, includeRoot);
     }
 
     public static OrchDriveInfo GetOrchDrive(this SessionState? sessionState, string? path = null)

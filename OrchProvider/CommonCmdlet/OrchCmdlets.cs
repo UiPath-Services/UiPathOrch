@@ -437,8 +437,8 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
                 if ((users is null || users.Count == 0) && (machines is null || machines.Count == 0)) continue;
 
                 // For convenience, insert a single null element as a placeholder
-                if (users is null || users.Count == 0) users = [null];
-                if (machines is null || machines.Count == 0) machines = [null];
+                if (users is null || users.Count == 0) users = [null!];
+                if (machines is null || machines.Count == 0) machines = [null!];
 
                 // Resolve SessionName to the appropriate Id
                 // Multiple Sessions may match because wildcards are supported
@@ -467,7 +467,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
                     }
                 }
                 // For convenience, insert a single null element as a placeholder
-                if (sessions is null || sessions.Count == 0) sessions = [null];
+                if (sessions is null || sessions.Count == 0) sessions = [null!];
 
                 // Generate and process all combinations
                 var combinations = users

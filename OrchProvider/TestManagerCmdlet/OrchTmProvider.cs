@@ -67,6 +67,7 @@ public class OrchTmProvider : NavigationCmdletProvider
                 {
                     if (drive.Scope?.Contains("TM.") ?? false)
                     {
+                        if (drive.Root is null) continue;
                         string root = drive.Root.TrimEnd('/') + "/testmanager_";
 
                         var tmProvider = SessionState.Provider.GetOne("UiPathOrchTm");
