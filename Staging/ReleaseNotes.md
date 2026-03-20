@@ -1,6 +1,6 @@
 # Version: 0.9.16.2
 ## New Features
-- Get-OrchPSDrive: IdentityUrl is now automatically derived from Root at drive mount time. Cloud drives get `/{org}/identity_`, on-premises drives get `/identity`. Explicitly configured IdentityUrl in the settings file takes precedence.
+- Get-OrchPSDrive: IdentityUrl is now resolved at drive mount time, so it is always available in Get-OrchPSDrive output without requiring an API connection. Previously it was only set after the first authentication.
 
 - Get-OrchPSDrive: Added Claims property containing decoded JWT access token claims as a PSObject. Access individual claims via `$drive.Claims.prt_id`, `$drive.Claims.email`, etc. Timestamp claims (exp, iat, nbf, auth_time) are converted to local DateTime.
 
