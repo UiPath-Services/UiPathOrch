@@ -2414,7 +2414,7 @@ internal class DuNameCompleter : OrchArgumentCompleter
 
 //        var wp = CreateWPFromWordToComplete(wordToComplete);
 
-//        var results = ParallelResults.ForEach(drivesProjects, dp => dp.drive.GetDuUsers(dp.project));
+//        var results = ParallelResults3.GroupBy(drivesProjects, dp => dp.drive.GetDuUsers(dp.project));
 
 //        foreach (var result in results)
 //        {

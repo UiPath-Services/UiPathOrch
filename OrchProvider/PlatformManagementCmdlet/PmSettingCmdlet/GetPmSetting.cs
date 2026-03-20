@@ -37,7 +37,7 @@ class GetPmSettingCommand : OrchestratorPSCmdlet
 
     //        var wp = CreateWPFromWordToComplete(wordToComplete);
 
-    //        var results = ParallelResults.ForEach(drives, drive => drive.GetIdentityUsers());
+    //        var results = ParallelResults3.GroupBy(drives, drive => drive.GetIdentityUsers());
 
     //        foreach (var drive in drives)
     //        {

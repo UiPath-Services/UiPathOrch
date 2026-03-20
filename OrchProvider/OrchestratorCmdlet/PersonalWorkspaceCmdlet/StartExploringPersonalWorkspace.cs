@@ -35,7 +35,7 @@ class StartExploringPersonalWorkspaceCommand : OrchestratorPSCmdlet
 
     //        var wp = CreateWPFromWordToComplete(wordToComplete);
 
-    //        var results = ParallelResults.ForEach(drives, drive => drive.GetPersonalWorkspaces());
+    //        var results = ParallelResults3.GroupBy(drives, drive => drive.GetPersonalWorkspaces());
 
     //        foreach (var result in results)
     //        {

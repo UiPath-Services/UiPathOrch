@@ -75,7 +75,7 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
     //        // Excluding users already assigned to the folder is not implemented for now
     //        //var existingMemberIds = GetExistingMemberIds(drives, wpName);
     //        // Retrieve assigned users in order to exclude them
-    //        //ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
+    //        //ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
 
     //        var paramUserName = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);
     //        bool bFound = false;

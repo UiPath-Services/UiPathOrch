@@ -208,16 +208,14 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetTriggers(df.folder));
+            var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetTriggers(df.folder));
 
             bool bExists = false;
-            foreach (var result in results)
+            foreach (var group in results)
             {
-                if (result.Result is null) continue;
+                var (drive, folder) = group.Source;
 
-                var (drive, folder) = result.Source;
-
-                foreach (var trigger in result.Result
+                foreach (var trigger in group
                     .Where(t => t.MachineRobots is not null)
                     .FilterByWildcards(e => e?.Name, wpName)
                     .Where(e => e?.MachineRobots is not null)

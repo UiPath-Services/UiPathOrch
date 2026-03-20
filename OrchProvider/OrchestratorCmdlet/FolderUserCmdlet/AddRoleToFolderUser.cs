@@ -209,7 +209,7 @@ public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
         var wpRoles = Roles.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
 
         // Fetch roles for the target drives asynchronously in bulk
-        // ParallelResults.ForEach(drives, drive => drive.Roles.Get());
+        // ParallelResults3.GroupBy(drives, drive => drive.Roles.Get());
 
         using var results = OrchThreadPool.RunForEach(drivesFolders,
             df => df.folder.GetPSPath(),

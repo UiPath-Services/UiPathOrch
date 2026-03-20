@@ -237,30 +237,18 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
             var wpMachineRobots = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var usersPerFolders = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderUsersWithInherited.Get(df.folder));
-            var robotsPerFolders = ParallelResults.ForEach(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
-            var sessionsPerFolders = ParallelResults.ForEach(drivesFolders, df => df.drive.MachineSessionRuntimesByFolder.Get(df.folder));
+            var usersPerFolders = ParallelResults3.GroupBy(drivesFolders, df => df.drive.FolderUsersWithInherited.Get(df.folder));
+            var robotsPerFolders = ParallelResults3.GroupBy(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
+            var sessionsPerFolders = ParallelResults3.GroupBy(drivesFolders, df => df.drive.MachineSessionRuntimesByFolder.Get(df.folder));
 
             List<UserRoles> users = [null];
-            foreach (var usersPerFolder in usersPerFolders)
-            {
-                if (usersPerFolder.Result is null) continue;
-                users.AddRange(usersPerFolder.Result);
-            }
+            users.AddRange(usersPerFolders.SelectMany(g => g));
 
             List<MachineFolder> machines = [null];
-            foreach (var robotsPerFolder in robotsPerFolders)
-            {
-                if (robotsPerFolder.Result is null) continue;
-                machines.AddRange(robotsPerFolder.Result);
-            }
+            machines.AddRange(robotsPerFolders.SelectMany(g => g));
 
             List<MachineSessionRuntime> sessions = [null];
-            foreach (var sessionsPerFolder in sessionsPerFolders)
-            {
-                if (sessionsPerFolder.Result is null) continue;
-                sessions.AddRange(sessionsPerFolder.Result);
-            }
+            sessions.AddRange(sessionsPerFolders.SelectMany(g => g));
 
             // Generate and process all combinations
             var combinations = users

@@ -301,17 +301,17 @@ public class SetAssetCommand : OrchestratorPSCmdlet
     protected void RetrieveAllAssets()
     {
         // Retrieve Assets for the target folders asynchronously in bulk
-        var _ = ParallelResults.ForEach(parameters, param =>
+        ParallelResults3.GroupBy(parameters, param =>
         {
             var drivesFolders = SessionState.EnumFolders(param.Path);
 
             // Since the path is already resolved, only one folder should be expanded, but iterate just in case
-            return ParallelResults.ForEach(drivesFolders, driveFolder =>
+            return ParallelResults3.GroupBy(drivesFolders, driveFolder =>
             {
                 var (drive, folder) = driveFolder;
                 return drive.Assets.Get(folder);
-            });
-        });
+            }).SelectMany(g => g);
+        }).ToList();
     }
 
     /// <summary>

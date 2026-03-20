@@ -36,13 +36,13 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
 
     private static void CacheExistingMemberIds(List<OrchDriveInfo> drives, List<WildcardPattern>? wpGroupName)
     {
-        var results = ParallelResults.ForEach(drives, drive =>
+        ParallelResults3.GroupBy(drives, drive =>
         {
             var groups = drive.PmGroups.Get()
                 .FilterByWildcards(g => g?.name!, wpGroupName)
                 .OrderBy(g => g?.name);
-            return ParallelResults.ForEach(groups, group => drive.PmGroups.Get(group?.id));
-        });
+            return ParallelResults3.ForEach(groups, group => drive.PmGroups.Get(group?.id));
+        }).ToList();
     }
 
     private class PmUserNameCompleter : OrchArgumentCompleter

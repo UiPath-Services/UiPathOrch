@@ -81,7 +81,7 @@ public class GetTestSetExecutionCommand : OrchestratorPSCmdlet
 
             // GetTestSetExecutions() fetches from the API every time even if a cache exists.
             // Therefore, it is not suitable to call this from a completer.
-            // var results = ParallelResults.ForEach(drivesFolders, df => df.drive.GetTestSetExecutions(df.folder));
+            // var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetTestSetExecutions(df.folder));
 
             // Only call GetTestSetExecutions() when there is no cache.
             // If a cache exists, use it.

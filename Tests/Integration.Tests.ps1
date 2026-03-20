@@ -1309,3 +1309,35 @@ Describe 'Cross-Tenant Operations' {
         $driveNames | Should -Contain $script:Drive2
     }
 }
+
+# ============================================================================
+# Tab Completion Smoke Tests (ParallelResults3 migration)
+# ============================================================================
+
+Describe 'Tab Completion - ParallelResults3 migration' {
+    BeforeAll {
+        function Complete-Parameter {
+            param([string]$InputScript)
+            $result = [System.Management.Automation.CommandCompletion]::CompleteInput(
+                $InputScript, $InputScript.Length, $null)
+            return $result.CompletionMatches
+        }
+    }
+
+    It 'Update-OrchTrigger -MachineRobots completes without error' {
+        $results = Complete-Parameter 'Update-OrchTrigger -Name * -MachineRobots '
+        # MachineRobots completer may return 0 candidates if no triggers have MachineRobots,
+        # but it must not throw.
+        $results | Should -Not -Be $null
+    }
+
+    It 'New-OrchTrigger -MachineRobots completes without error' {
+        $results = Complete-Parameter 'New-OrchTrigger -Name test -ReleaseName test -MachineRobots '
+        $results | Should -Not -Be $null
+    }
+
+    It 'Add-PmGroupMember -UserName completes without error' {
+        $results = Complete-Parameter 'Add-PmGroupMember -PmGroup * -Type DirectoryUser -UserName '
+        $results | Should -Not -Be $null
+    }
+}

@@ -333,53 +333,6 @@ public static class OrchThreadPool
     }
 }
 
-// planned to be deprecated
-public static class ParallelResults
-{
-    public static ParallelResult<TSource, TResult>[] ForEach<TSource, TResult>(IEnumerable<TSource> sources, Func<TSource, TResult> forEachBody)
-    {
-        var srcList = sources as IList<TSource> ?? sources.ToList();
-        var resultsArray = new ParallelResult<TSource, TResult>[srcList.Count];
-        using var cancelHandler = new ConsoleCancelHandler();
-
-        // Limit the maximum number of concurrent threads to 4
-        using var semaphore = new SemaphoreSlim(4);
-
-        var tasks = srcList.Select((source, index) => Task.Run(async () =>
-        {
-            await semaphore.WaitAsync(cancelHandler.Token);
-            try
-            {
-                var result = forEachBody(source);
-                resultsArray[index] = new ParallelResult<TSource, TResult>(source, result, null);
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                resultsArray[index] = new ParallelResult<TSource, TResult>(source, default, ex);
-            }
-            finally
-            {
-                semaphore.Release();
-            }
-        }, cancelHandler.Token)).ToArray();
-
-        try
-        {
-            Task.WhenAll(tasks).Wait(cancelHandler.Token); // This will throw an exception if the task is canceled.
-        }
-        catch (AggregateException ae)
-        {
-            ae.Handle(e => e is OperationCanceledException); // Handle the cancellation exception
-            throw new OperationCanceledException("The operation was canceled.", ae);
-        }
-
-        return resultsArray;
-    }
-}
 
 /// <summary>
 /// Holds a <typeparamref name="TItem"/> and its associated <typeparamref name="TSource"/>.<br/>
@@ -413,25 +366,6 @@ public sealed class WithSource<TSource, TItem>
     }
 
     public override string ToString() => Item?.ToString() ?? string.Empty;
-}
-
-/// <summary>
-/// Result container used internally by ForEach. Not exposed externally, but can be public if needed.
-/// planned to be deprecated
-/// Should be refactored to use ParallelResult3.
-/// </summary>
-public sealed class ParallelResult<TSource, TResult>
-{
-    public TSource Source { get; }
-    public TResult? Result { get; }
-    public Exception? Error { get; }
-
-    public ParallelResult(TSource source, TResult? result, Exception? error)
-    {
-        Source = source;
-        Result = result;
-        Error = error;
-    }
 }
 
 public sealed class SourceGroup<TSource, TItem> : IEnumerable<TItem>

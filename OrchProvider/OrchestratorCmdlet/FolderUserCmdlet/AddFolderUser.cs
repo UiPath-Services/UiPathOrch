@@ -67,7 +67,7 @@ if (string.IsNullOrEmpty(wordToComplete))
             // Excluding users already assigned to the folder from candidates is not implemented for now.
             //var existingMemberIds = GetExistingMemberIds(drives, wpName);
             // Fetch assigned users to exclude already assigned users
-            //ParallelResults.ForEach(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
+            //ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetUsersForFolder(df.folder, false));
 
             var paramUserName = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);
 
@@ -367,7 +367,7 @@ if (string.IsNullOrEmpty(wordToComplete))
         var wpRoles = Roles.ConvertToWildcardPatternList();
 
         // Maybe this isn't needed...
-        //ParallelResults.ForEach(drives, drive => drive.Roles.Get());
+        //ParallelResults3.GroupBy(drives, drive => drive.Roles.Get());
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
