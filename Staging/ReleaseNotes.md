@@ -1,4 +1,9 @@
 # Version: 0.9.16.2
+## New Features
+- Get-OrchPSDrive: IdentityUrl is now automatically derived from Root at drive mount time. Cloud drives get `/{org}/identity_`, on-premises drives get `/identity`. Explicitly configured IdentityUrl in the settings file takes precedence.
+
+- Get-OrchPSDrive: Added Claims property containing decoded JWT access token claims as a PSObject. Access individual claims via `$drive.Claims.prt_id`, `$drive.Claims.email`, etc. Timestamp claims (exp, iat, nbf, auth_time) are converted to local DateTime.
+
 ## Improvements
 - Refactored Update-OrchMachine to use HTTP PATCH with minimal payloads instead of DeepCopy + PUT. Only specified parameters are sent. Machine slots (UnattendedSlots, NonProductionSlots, TestAutomationSlots) can now be set to 0.
 
@@ -7,6 +12,8 @@
 - Refactored Set-OrchAsset and Set-OrchCredentialAsset: extracted helper methods, replaced manual DeepCopy with shared utility, and improved PerRobot value lookup performance with Dictionary-based indexing.
 
 - Removed unused IEquatable implementations from 14 entity types.
+
+- Major internal refactoring of the tab completion engine and parallel execution infrastructure.
 
 ## Bug Fixes
 - Fixed Set-OrchAsset Integer parse error message incorrectly saying "bool" instead of "integer".
