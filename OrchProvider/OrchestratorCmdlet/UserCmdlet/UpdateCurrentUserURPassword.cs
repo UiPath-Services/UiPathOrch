@@ -43,7 +43,7 @@ public class UpdateUserURCommand : OrchestratorPSCmdlet
                         string password = ConvertToUnsecureString(Password!);
                         string confirmation = ConvertToUnsecureString(Confirmation!);
                         if (password != confirmation)
-                            throw new Exception("Password does not match.");
+                            throw new ArgumentException("Password and Confirmation do not match.");
                         drive.OrchAPISession.UpdateCurrentUserURPassword(user.Id ?? 0, password);
                     }
                     catch (Exception ex)

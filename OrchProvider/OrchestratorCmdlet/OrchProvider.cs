@@ -148,7 +148,7 @@ public partial class OrchProvider : NavigationCmdletProvider
         int colonIndex = path.IndexOf(':');
         if (colonIndex == -1)
         {
-            throw new Exception("something wrong.");
+            throw new ArgumentException($"Invalid path format: '{path}'. Expected a drive-qualified path (e.g., 'DriveName:\\Path').", nameof(path));
         }
         string orchPath = OrchDriveInfo.PSPathToOrchPath(path.Substring(colonIndex + 1));
         Folder folder = drive.GetFolder(orchPath);

@@ -42,7 +42,7 @@ public class ImportPackageCommand : OrchestratorPSCmdlet
         var drivesFolders = SessionState.EnumPackageFeedFolders(Path);
         if (Recurse && drivesFolders.Any(df => df.folder != df.drive.RootFolder))
         {
-            throw new Exception("The -Recurse parameter can only be specified for the tenant's root folder.");
+            throw new ArgumentException("The -Recurse parameter can only be specified for the tenant's root folder.");
         }
 
         Source = Source?.Select(s => SessionState.Path.GetUnresolvedProviderPathFromPSPath(s)).ToArray();

@@ -89,7 +89,7 @@ public class CopyRoleCommand : OrchestratorPSCmdlet
 
         var srcDrive = SessionState.GetOrchDrive(Path!);
         if (srcDrive is null)
-            throw new Exception("Path is not OrchDrive.");
+            throw new InvalidOperationException($"'{Path}' is not a valid UiPathOrch drive.");
 
         var dstDrives = SessionState.EnumDestinationDrives(Destination!);
 

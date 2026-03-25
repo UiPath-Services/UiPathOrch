@@ -93,7 +93,7 @@ public class CopyWebhookCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var srcDrive = SessionState.GetOrchDrive(Path!) ?? throw new Exception("Path is not OrchDrive.");
+        var srcDrive = SessionState.GetOrchDrive(Path!) ?? throw new InvalidOperationException($"'{Path}' is not a valid UiPathOrch drive.");
         var dstDrives = SessionState.EnumDestinationDrives(Destination!);
 
         var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();

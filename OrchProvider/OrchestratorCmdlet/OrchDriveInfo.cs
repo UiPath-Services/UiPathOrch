@@ -564,7 +564,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     {
         if (OrchAPISession.AuthManager.IsConfidentialApp)
         {
-            throw new Exception("This operation is not supported in a Confidential app. Please switch to a Non-Confidential setting to connect your tenant with `Edit-OrchConfig` cmdlet.");
+            throw new InvalidOperationException("This operation is not supported in a Confidential app. Please switch to a Non-Confidential setting to connect your tenant with `Edit-OrchConfig` cmdlet.");
         }
 
         _dicCurrentUser_Exception.ThrowCachedExceptionIfAny();

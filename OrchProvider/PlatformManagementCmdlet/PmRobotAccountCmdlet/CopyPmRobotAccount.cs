@@ -23,7 +23,7 @@ public class CopyPmRobotAccountCommand : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         // TODO: Shouldn't this exception be thrown from inside GetOrchDrive()?
-        var srcDrive = SessionState.GetPmDrive(Path!) ?? throw new Exception("Path is not OrchDrive.");
+        var srcDrive = SessionState.GetPmDrive(Path!) ?? throw new InvalidOperationException($"'{Path}' is not a valid UiPathOrch drive.");
 
         var dstDrives = SessionState.EnumDestinationDrives(Destination!);
         var wpDisplayName = Name.ConvertToWildcardPatternList();

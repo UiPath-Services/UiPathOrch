@@ -70,12 +70,12 @@ public class SetOrchLocationCommand : OrchestratorPSCmdlet
 
         if (targets.Count == 0)
         {
-            throw new Exception("Not found.");
+            throw new InvalidOperationException($"Module '{ModuleName}' not found among loaded PowerShell modules.");
         }
 
         if (targets.Count > 1)
         {
-            throw new Exception("multiple resolved.");
+            throw new InvalidOperationException($"Multiple modules matched '{ModuleName}'. Specify a more precise name.");
         }
 
         var target = targets.First();

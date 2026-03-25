@@ -2374,7 +2374,7 @@ public partial class OrchAPISession : IDisposable
         {
             return HttpRequest<User>(HttpMethod.Get, "/odata/Users/UiPath.Server.Configuration.OData.GetCurrentUser");
         }
-        throw new Exception("User not found");
+        throw new InvalidOperationException("Cannot retrieve the current user in a Confidential app. Use a Non-Confidential app or specify an AccessToken.");
     }
 
     public ExtendedUser? GetCurrentUserExtended()

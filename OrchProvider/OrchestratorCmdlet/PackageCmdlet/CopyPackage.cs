@@ -338,7 +338,7 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
 
         if (srcRootFolder != srcDrive.RootFolder && Recurse.IsPresent)
         {
-            throw new Exception("The -Recurse can only be used when the source folder is the root folder.");
+            throw new ArgumentException("The -Recurse parameter can only be used when the source folder is the root folder.");
         }
 
         using var cancelHandler = new ConsoleCancelHandler();
