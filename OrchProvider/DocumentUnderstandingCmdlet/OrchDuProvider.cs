@@ -117,7 +117,12 @@ public class OrchDuProvider : NavigationCmdletProvider
 
     protected override void GetItem(string path)
     {
-        WriteItemObject(GetProject(path), path, true);
+        var project = GetProject(path);
+        if (project is not null)
+        {
+            WriteItemObject(project, path, true);
+        }
+        // Root path or non-existent path: output nothing (no error)
     }
 
     protected override void InvokeDefaultAction(string path)
@@ -172,6 +177,7 @@ public class OrchDuProvider : NavigationCmdletProvider
         var projects = OrchDuDriveInfo.GetDuProjects();
         foreach (var project in projects!)
         {
+            if (Stopping) return;
             string psPathEscaped = OrchDuDriveInfo.NameColonSeparator + project.name;
             //string psPathEscaped = PathTools.EscapePSText2(psPath);
             WriteItemObject(project, psPathEscaped, true);
@@ -179,15 +185,16 @@ public class OrchDuProvider : NavigationCmdletProvider
     }
 
     // GetChildNames must call WriteItemObject with just the name string, not the object.
-    // This method is invoked when running Get-ChildItem -Name.
+    // This method is invoked when running Get-ChildItem -Name and wildcard resolution (cd t*, rmdir *).
+    // The first argument (name string) is matched against the wildcard pattern by LocationGlobber.
     protected override void GetChildNames(string path, ReturnContainers returnContainers)
     {
         var projects = OrchDuDriveInfo.GetDuProjects();
         foreach (var project in projects!)
         {
-            string psPathEscaped = OrchDuDriveInfo.NameColonSeparator + project.name;
-            //string psPathEscaped = PathTools.EscapePSText2(psPath);
-            WriteItemObject(psPathEscaped, psPathEscaped, false);
+            if (Stopping) return;
+            string fullPath = OrchDuDriveInfo.NameColonSeparator + project.name;
+            WriteItemObject(project.name, fullPath, true);
         }
     }
 
@@ -256,14 +263,16 @@ public class OrchDuProvider : NavigationCmdletProvider
                 payload.ocrUrl ??= ""; // TODO
 
                 drive.OrchAPISession.CreateDuProjects(payload);
-                //if (f is not null)
-                //{
-                //    if (parentPath == drive.NameColon) parentPath = drive.NameColonSeparator;
-                //    f.Path = parentPath;
-                //    WriteItemObject(f, path, true);
-                //}
-                //drive._dicFolders = null;
-                //drive._dicFoldersForEnumFolders = null;
+                drive._dicDuProjects = null;
+
+                // Re-fetch to get the created project and output it
+                var projects = drive.GetDuProjects();
+                var created = projects?.FirstOrDefault(p =>
+                    string.Equals(p.name, projectName, StringComparison.OrdinalIgnoreCase));
+                if (created is not null)
+                {
+                    WriteItemObject(created, path, true);
+                }
             }
             catch (Exception ex)
             {
@@ -275,14 +284,6 @@ public class OrchDuProvider : NavigationCmdletProvider
     protected override object NewItemDynamicParameters(string path, string itemTypeName, object newItemValue)
     {
         return new NewItem_DynamicParameters();
-    }
-
-    protected override void RenameItem(string path, string newName)
-    {
-    }
-
-    protected override void RemoveItem(string path, bool recurse)
-    {
     }
 
     #endregion

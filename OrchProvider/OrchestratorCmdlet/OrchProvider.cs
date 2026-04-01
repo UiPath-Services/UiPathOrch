@@ -810,6 +810,7 @@ public partial class OrchProvider : NavigationCmdletProvider
             {
                 foreach (var folder in drive.GetFolders())
                 {
+                    if (Stopping) return;
                     uint folderDepth = FolderDepth(folder.FullyQualifiedName!);
 
                     if (folderDepth - (currentDepth + 1) <= depth)
@@ -847,6 +848,7 @@ public partial class OrchProvider : NavigationCmdletProvider
 
                 foreach (var folder in drive!.GetFolders())
                 {
+                    if (Stopping) return;
                     if (!folder.FullyQualifiedName!.StartsWith(orchPathStart, StringComparison.OrdinalIgnoreCase))
                         continue;
 
@@ -934,7 +936,9 @@ public partial class OrchProvider : NavigationCmdletProvider
         {
             foreach (var folder in drive.GetFolders().Where(f => !f.ParentId.HasValue))// || f.FolderType == "Personal"))
             {
-                WriteItemObject(folder.DisplayName!, folder.DisplayName!, true); // ★★★
+                if (Stopping) return;
+                string fullPath = drive.NameColon + OrchDriveInfo.OrchProviderPathToPSPath(folder.DisplayName!);
+                WriteItemObject(folder.DisplayName!, fullPath, true);
             }
         }
         else
@@ -944,7 +948,9 @@ public partial class OrchProvider : NavigationCmdletProvider
 
             foreach (var folder in drive.GetFolders().Where(f => f.ParentId == parentFolderId))
             {
-                WriteItemObject(folder.DisplayName!, folder.DisplayName!, true);
+                if (Stopping) return;
+                string fullPath = drive.NameColon + OrchDriveInfo.OrchProviderPathToPSPath(folder.FullyQualifiedName!);
+                WriteItemObject(folder.DisplayName!, fullPath, true);
             }
         }
     }

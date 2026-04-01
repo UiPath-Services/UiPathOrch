@@ -5,6 +5,7 @@ using UiPath.PowerShell.Core;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "TmTestSet", SupportsShouldProcess = true)]
+[OutputType(typeof(void))]
 public class RemoveTmTestSetCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]

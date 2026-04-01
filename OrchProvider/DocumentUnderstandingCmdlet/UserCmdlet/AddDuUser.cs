@@ -10,6 +10,7 @@ using UiPath.PowerShell.Commands.CsvHelper;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Add, "DuUser", SupportsShouldProcess = true)]
+[OutputType(typeof(void))]
 public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
 {
     Dictionary<((OrchDuDriveInfo drive, DuProject), string type, string name), CsvLine>? _csvLines = null;

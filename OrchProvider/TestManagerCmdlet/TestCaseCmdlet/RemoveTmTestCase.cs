@@ -5,7 +5,7 @@ using UiPath.PowerShell.Core;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "TmTestCase", SupportsShouldProcess = true)]
-//[OutputType(typeof(Entities.TmTestCase))]
+[OutputType(typeof(void))]
 public class RemoveTmTestCaseCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]

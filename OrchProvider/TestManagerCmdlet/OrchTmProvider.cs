@@ -111,9 +111,11 @@ public class OrchTmProvider : NavigationCmdletProvider
         var psPath = Path.GetFileName(path);
         if (psPath == "") return;
 
-        var projects = OrchTmDriveInfo.GetTmProjects();
-        var project = projects?.FirstOrDefault(p => string.Compare(p.projectPrefix, psPath, StringComparison.OrdinalIgnoreCase) == 0);
-        WriteItemObject(project, path, true);
+        var project = GetProject(path);
+        if (project is not null)
+        {
+            WriteItemObject(project, path, true);
+        }
     }
 
     protected override void InvokeDefaultAction(string path)
@@ -169,6 +171,7 @@ public class OrchTmProvider : NavigationCmdletProvider
         var projects = OrchTmDriveInfo.GetTmProjects();
         foreach (var project in projects!.OrderBy(p => p.projectPrefix))
         {
+            if (Stopping) return;
             string psPathEscaped = OrchTmDriveInfo.NameColonSeparator + project.projectPrefix;
             //string psPathEscaped = PathTools.EscapePSText2(psPath);
             WriteItemObject(project, psPathEscaped, true);
@@ -176,20 +179,23 @@ public class OrchTmProvider : NavigationCmdletProvider
     }
 
     // GetChildNames must call WriteItemObject with just the name string, not the object.
-    // This method is invoked when running Get-ChildItem -Name.
+    // This method is invoked when running Get-ChildItem -Name and wildcard resolution (cd t*, rmdir *).
+    // The first argument (name string) is matched against the wildcard pattern by LocationGlobber.
     protected override void GetChildNames(string path, ReturnContainers returnContainers)
     {
         var projects = OrchTmDriveInfo.GetTmProjects();
-        foreach (var project in projects!.OrderBy(p => p.name))
+        foreach (var project in projects!.OrderBy(p => p.projectPrefix))
         {
-            string psPathEscaped = OrchTmDriveInfo.NameColonSeparator + project.name;
-            //string psPathEscaped = PathTools.EscapePSText2(psPath);
-            WriteItemObject(psPathEscaped, psPathEscaped, false);
+            if (Stopping) return;
+            string fullPath = OrchTmDriveInfo.NameColonSeparator + project.projectPrefix;
+            WriteItemObject(project.projectPrefix, fullPath, true);
         }
     }
 
     protected override bool HasChildItems(string path)
     {
+        if (path == OrchTmDriveInfo.NameColonSeparator)
+            return true;
         return false;
     }
 
