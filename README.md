@@ -32,23 +32,23 @@ Facilitate tenant migrations by copying various entities between tenants efficie
 
 ### Prerequisites
 - PowerShell 7.4.2 or later
-- UiPath Orchestrator access with appropriate API credentials
+- UiPath Orchestrator API access with appropriate OAuth scopes
 
 ### Install from PowerShell Gallery
 
 ```powershell
-Install-Module UiPathOrch
-Import-Module UiPathOrch
+Install-PSResource UiPathOrch
+Import-OrchConfig
 ```
 
-For detailed installation steps, refer to the documentation.
+Run `Get-OrchHelp` for a getting started guide, or see the `Docs` folder in the module directory.
 
 ## Quick Start
 
 ### Basic Navigation
 
 ```powershell
-# Mount Orchestrator as a drive
+# Navigate to an Orchestrator drive
 cd Orch1:\
 
 # List folders
@@ -83,29 +83,13 @@ Get-Help Get-OrchAsset -Full
 
 ## Documentation
 
-- **Manual:** Comprehensive documentation is available in the module installation directory
+- **Manual:** Run `Get-OrchHelp` or browse the `Docs` folder in the module directory
 - **Marketplace:** [UiPathOrch on UiPath Marketplace](https://marketplace.uipath.com/listings/uipathorch)
 - **Cmdlet Help:** Use `Get-Help <cmdlet-name>` to view OAuth scopes and usage details
 
-## Requirements
+## AI Agent Integration
 
-- PowerShell 7.4.2+
-- UiPath Orchestrator API access
-- Appropriate OAuth scopes configured for the cmdlets you wish to use
-
-## Features in Detail
-
-### Supported Operations
-- Library and package management
-- Asset management
-- Queue and queue item operations
-- Job execution and monitoring
-- Process and schedule management
-- Machine and robot configuration
-- User and group management
-- Trigger and webhook configuration
-- Test set execution
-- Document Understanding workflows
+UiPathOrch works with AI agents through [PowerShell.MCP](https://www.powershellgallery.com/packages/PowerShell.MCP), which exposes a PowerShell console as an MCP server. Agents can navigate Orchestrator folders, manage entities, and use tab completion programmatically via `TabExpansion2`. The `Docs` folder in the module directory includes documentation written for both human users and AI agents.
 
 ## License
 
@@ -113,7 +97,7 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit issues and pull requests.
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## Support
 
@@ -132,4 +116,4 @@ Internal Labs - UiPath
 
 ---
 
-**Caution:** This module is under active development. Please test thoroughly in non-production environments before use in production.
+**Note:** Please test in non-production environments before use in production.

@@ -50,24 +50,24 @@ We welcome suggestions for new features or improvements:
 ### Prerequisites
 
 - PowerShell 7.4.2 or later
-- .NET SDK (for C# development)
+- .NET SDK 8.0 or later
 - UiPath Orchestrator access for testing
 
 ### Building the Project
 
 ```powershell
-# Navigate to the project directory
-cd OrchProvider
-
-# Build the project
-dotnet build
+.\Build-Deploy.ps1 -BuildOnly   # Build only
+.\Build-Deploy.ps1              # Build and deploy to module directory
 ```
 
 ### Running Tests
 
+Tests require connected Orchestrator drives (`OrchTest:` and `Orch1:`).
+
 ```powershell
-# Run tests (if available)
-# TODO: Add test instructions when test suite is available
+Import-OrchConfig
+Invoke-Pester -Path Tests\SelfContained.Tests.ps1 -Output Detailed
+Invoke-Pester -Path Tests\Completer.Tests.ps1 -Output Detailed
 ```
 
 ## Coding Guidelines
