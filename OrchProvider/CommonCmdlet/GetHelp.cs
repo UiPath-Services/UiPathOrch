@@ -41,6 +41,7 @@ Essential Commands:
   Get-OrchCurrentUser             Verify connection
   Clear-OrchCache                 Reset on errors
   Get-Help <CmdletName> -Examples Cmdlet usage examples
+  TabExpansion2 '<partial cmd>'   Get parameter value completions programmatically
 ");
         }
 

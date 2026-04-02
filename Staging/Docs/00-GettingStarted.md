@@ -36,6 +36,31 @@ Get-Help UiPathOrch             # List all UiPathOrch cmdlets
 Get-OrchHelp                    # Module documentation summary
 ```
 
+### Sharing Documentation with Users
+
+To display documentation from this Docs folder to the user, use the
+[MarkdownPointer](https://www.powershellgallery.com/packages/MarkdownPointer)
+module. Install once:
+
+```powershell
+Install-Module MarkdownPointer
+```
+
+Then open any Markdown file:
+
+```powershell
+mdp <path to .md file>
+```
+
+To register as an MCP server (once):
+
+```powershell
+Register-MdpToClaudeCode       # Claude Code
+Register-MdpToClaudeDesktop    # Claude Desktop
+```
+
+If the MCP server is available, use `show_markdown` instead of `mdp`.
+
 ## Installation
 
 ### Prerequisites
@@ -86,7 +111,7 @@ Steps for a non-confidential application:
    Access**, and click **Save**.
 6. Click **Add scope**, select all **User scopes** in **Platform Management
    API Access**, and click **Save**.
-7. In **Redirect URL**, enter: `http://localhost/Temporary_Listen_Addresses`
+7. In **Redirect URL**, enter: `http://localhost:8085/Temporary_Listen_Addresses`
 8. Click **Add**. Copy the displayed application ID.
 
 ### Step 4: Configure UiPathOrch
@@ -110,6 +135,74 @@ Steps for a non-confidential application:
 
 `Import-OrchConfig` can be run repeatedly. If the configuration file has
 been updated, it remounts the drives. If unchanged, it does nothing.
+
+### AI-Assisted Configuration
+
+AI agents can read and edit the configuration file directly. Get the
+file path with:
+
+```powershell
+Get-OrchConfigPath
+```
+
+The configuration file is JSON with comments (JSONC). It contains sample
+entries for all authentication patterns. The structure is:
+
+```jsonc
+{
+  // Global settings (shared across all PSDrives)
+  "RedirectUrl": "http://localhost:8085/Temporary_Listen_Addresses",
+  "Scope": "OR.Folders.Read OR.Settings.Read",
+  "Logging": { "Level": "Verbose", "Enabled": true },
+  "IgnoreSslErrors": false,
+  "Proxy": { ... },
+
+  "PSDrives": [
+    // Non-Confidential App (recommended)
+    {
+      "Name": "MyTenant",
+      "Root": "https://cloud.uipath.com/YOUR_ORG/YOUR_TENANT",
+      "AppId": "YOUR_APP_ID",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": true
+    },
+    // Confidential App (for unattended scripts)
+    {
+      "Name": "MyTenant",
+      "Root": "https://cloud.uipath.com/YOUR_ORG/YOUR_TENANT",
+      "AppId": "YOUR_APP_ID",
+      "AppSecret": "YOUR_APP_SECRET",
+      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Enabled": true
+    },
+    // On-premises with Identity Server
+    {
+      "Name": "MyOnPrem",
+      "Root": "https://orchestrator.example.com/TENANT",
+      "IdentityUrl": "https://identity.example.com/identity",
+      "AppId": "YOUR_APP_ID",
+      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Enabled": true
+    },
+    // Legacy username/password (pre-21.4 on-premises only)
+    {
+      "Name": "OldOnPrem",
+      "Root": "https://orchestrator.example.com/TENANT",
+      "Username": "USERNAME",
+      "Password": "PASSWORD",
+      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Enabled": false
+    }
+  ]
+}
+```
+
+Key points for AI:
+- Ask the user for their Orchestrator URL, App ID, and authentication
+  type. Do not guess these values.
+- Set `"Enabled": false` for sample entries to prevent connection errors.
+- Per-drive `Scope` overrides the global `Scope`.
+- After editing, run `Import-OrchConfig` to reload.
 
 **Tip**: To auto-load UiPathOrch at startup, add to your profile
 (`notepad $profile`):

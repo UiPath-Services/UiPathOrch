@@ -306,6 +306,29 @@ Get-OrchTrigger -Path Orch1:\ -Recurse | Select-Object Path, Name, Enabled, Rele
 Get-OrchUser -Path Orch1: | Select-Object Path, UserName, FullName
 ```
 
+### Parameter Value Completion
+
+AI agents cannot use interactive tab completion. Use `TabExpansion2` to
+programmatically retrieve parameter value candidates:
+
+```powershell
+(TabExpansion2 'Get-OrchAsset -Path Orch2:\ -Name ').CompletionMatches | Select-Object CompletionText
+```
+
+This works for all UiPathOrch parameters that support completion (folder
+names, user names, asset names, machine names, etc.).
+
+**Important**: Specify `-Path` and `-Recurse` before the parameter you
+want to complete. The completer uses these to determine the folder context:
+
+```powershell
+# Good: -Path first, then complete -Name
+(TabExpansion2 'Get-OrchAsset -Path Orch2:\Finance -Name ').CompletionMatches
+
+# Bad: completer doesn't know which folder to look in
+(TabExpansion2 'Get-OrchAsset -Name ').CompletionMatches
+```
+
 ### Permission Verification
 
 ```powershell
@@ -329,7 +352,7 @@ Get-OrchFolderUser               # Folder access assignments
 ### Best Practice Approach
 1. **ALWAYS start with**: Get-Help [CmdletName] -Examples
 2. **Check cmdlet help BEFORE** creating custom procedures
-3. **Use 01-Essentials.txt** only for:
+3. **Use 01-Essentials.md** only for:
    - Environment verification (Get-OrchPSDrive)
    - Error handling protocols
    - Safety procedures (-WhatIf usage)
