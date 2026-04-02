@@ -27,7 +27,7 @@ Author = 'Yoshifumi Tsuda'
 CompanyName = 'UiPath'
 
 # Copyright statement for this module
-Copyright = '(c) UiPath All rights reserved.'
+Copyright = 'Copyright 2023-2026 UiPath'
 
 # Description of the functionality provided by this module
 Description = 'PSDrives and cmdlets for UiPath Orchestrator. 💡 First time? Run: Get-OrchHelp'
