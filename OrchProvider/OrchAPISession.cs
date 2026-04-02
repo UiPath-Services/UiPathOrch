@@ -679,7 +679,11 @@ public partial class OrchAPISession : IDisposable
 
     public T? HttpRequest<T>(HttpMethod method, string endPoint, Int64? folderId = null, object? query = null)
     {
-        string body = HttpRequest(method, endPoint, folderId, query);
+        // When query is already a string, call the string overload directly
+        // to avoid double-serialization via JsonSerializer.Serialize(string).
+        string body = query is string strQuery
+            ? HttpRequest(method, endPoint, folderId, strQuery)
+            : HttpRequest(method, endPoint, folderId, query);
         if (string.IsNullOrEmpty(body)) return default;
         return JsonSerializer.Deserialize<T>(body);
     }
