@@ -766,4 +766,345 @@ Describe 'Read-Only Cmdlets' {
         $drv | Should -Not -BeNullOrEmpty
         $drv.Root | Should -Not -BeNullOrEmpty
     }
+
+    It 'Get-OrchQueue does not throw' {
+        { Get-OrchQueue -Path "${script:Drive}:\Shared" } | Should -Not -Throw
+    }
+
+    It 'Get-OrchAsset does not throw' {
+        { Get-OrchAsset -Path "${script:Drive}:\Shared" } | Should -Not -Throw
+    }
+
+    It 'Get-OrchBucket does not throw' {
+        { Get-OrchBucket -Path "${script:Drive}:\Shared" } | Should -Not -Throw
+    }
+
+    It 'Get-OrchProcess does not throw' {
+        { Get-OrchProcess -Path "${script:Drive}:\Shared" } | Should -Not -Throw
+    }
+
+    It 'Get-OrchTrigger does not throw' {
+        { Get-OrchTrigger -Path "${script:Drive}:\Shared" } | Should -Not -Throw
+    }
+
+    It 'Get-OrchWebhook does not throw' {
+        { Get-OrchWebhook -Path "${script:Drive}:\" } | Should -Not -Throw
+    }
+
+    It 'Get-OrchCalendar does not throw' {
+        { Get-OrchCalendar -Path "${script:Drive}:\" } | Should -Not -Throw
+    }
+
+    It 'Get-OrchLibrary does not throw' {
+        { Get-OrchLibrary -Path "${script:Drive}:\" } | Should -Not -Throw
+    }
+
+    It 'Get-OrchPackage does not throw' {
+        { Get-OrchPackage -Path "${script:Drive}:\" } | Should -Not -Throw
+    }
+
+    It 'Get-OrchCredentialStore returns credential stores' {
+        $stores = Get-OrchCredentialStore -Path "${script:Drive}:\"
+        $stores | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Get-OrchLicense returns license info' {
+        $license = Get-OrchLicense -Path "${script:Drive}:\"
+        $license | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Get-OrchConfigPath returns a path string' {
+        $path = Get-OrchConfigPath
+        $path | Should -Not -BeNullOrEmpty
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Asset CSV Import (Create / Update / Multi-type)
+# ---------------------------------------------------------------------------
+Describe 'Asset CSV Import' {
+    BeforeAll {
+        $script:CsvAssetName = "${script:Prefix}CsvAsset"
+        Push-Location $script:RootFolder
+    }
+
+    AfterAll {
+        Remove-OrchAsset -Name "${script:Prefix}CsvAsset*" -Confirm:$false -ErrorAction SilentlyContinue
+        Pop-Location
+    }
+
+    It 'Import-Csv | Set-OrchAsset creates multiple assets from CSV' {
+        $csv = Join-Path $script:TempDir 'import_assets.csv'
+        $path = $script:RootFolder
+        "Path,Name,Description,ValueType,Value,UserName,MachineName`n${path},${script:CsvAssetName}_A,Desc A,Text,ValueA,,`n${path},${script:CsvAssetName}_B,Desc B,Integer,42,,`n${path},${script:CsvAssetName}_C,Desc C,Bool,true,," |
+            Set-Content -Path $csv -Encoding UTF8 -NoNewline
+
+        Import-Csv $csv | Set-OrchAsset
+        Clear-OrchCache
+        $assets = Get-OrchAsset -Name "${script:CsvAssetName}_*"
+        $assets.Count | Should -Be 3
+    }
+
+    It 'CSV-created assets have correct types and values' {
+        $a = Get-OrchAsset -Name "${script:CsvAssetName}_A"
+        $a.ValueType | Should -Be 'Text'
+        $a.Value | Should -Be 'ValueA'
+        $a.Description | Should -Be 'Desc A'
+
+        $b = Get-OrchAsset -Name "${script:CsvAssetName}_B"
+        $b.ValueType | Should -Be 'Integer'
+        $b.Value | Should -Be '42'
+
+        $c = Get-OrchAsset -Name "${script:CsvAssetName}_C"
+        $c.ValueType | Should -Be 'Bool'
+        $c.Value | Should -Be 'True'
+    }
+
+    It 'Import-Csv | Set-OrchAsset updates existing assets from CSV' {
+        $csv = Join-Path $script:TempDir 'update_assets.csv'
+        $path = $script:RootFolder
+        "Path,Name,Description,ValueType,Value,UserName,MachineName`n${path},${script:CsvAssetName}_A,Updated Desc,Text,UpdatedValue,,`n${path},${script:CsvAssetName}_B,,Integer,99,," |
+            Set-Content -Path $csv -Encoding UTF8 -NoNewline
+
+        Import-Csv $csv | Set-OrchAsset
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name "${script:CsvAssetName}_A"
+        $a.Value | Should -Be 'UpdatedValue'
+        $a.Description | Should -Be 'Updated Desc'
+
+        $b = Get-OrchAsset -Name "${script:CsvAssetName}_B"
+        $b.Value | Should -Be '99'
+    }
+
+    It 'Export then delete then re-import round-trip' {
+        $csv = Join-Path $script:TempDir 'asset_full_roundtrip.csv'
+        Get-OrchAsset -Name "${script:CsvAssetName}_A" -ExportCsv $csv
+        Clear-OrchCache
+
+        Remove-OrchAsset -Name "${script:CsvAssetName}_A" -Confirm:$false
+        Clear-OrchCache
+        Get-OrchAsset -Name "${script:CsvAssetName}_A" | Should -BeNullOrEmpty
+
+        Import-Csv $csv | Set-OrchAsset
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name "${script:CsvAssetName}_A"
+        $a | Should -Not -BeNullOrEmpty
+        $a.Value | Should -Be 'UpdatedValue'
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Credential CSV Complex Patterns
+# ---------------------------------------------------------------------------
+Describe 'Credential CSV Complex' {
+    BeforeAll {
+        $script:CredCsvName = "${script:Prefix}CredCsv"
+        Push-Location $script:RootFolder
+    }
+
+    AfterAll {
+        Remove-OrchAsset -Name "${script:Prefix}CredCsv*" -ValueType Credential -Confirm:$false -ErrorAction SilentlyContinue
+        Pop-Location
+    }
+
+    It 'Credential CSV round-trip: Export, delete, re-import' {
+        Set-OrchCredentialAsset -Name "${script:CredCsvName}_RT" -CredentialUsername 'rt_user' -CredentialPassword 'rt_pass'
+        Clear-OrchCache
+
+        $csv = Join-Path $script:TempDir 'cred_full_roundtrip.csv'
+        Get-OrchAsset -Name "${script:CredCsvName}_RT" -ExportCredentialCsv $csv
+        Clear-OrchCache
+
+        Remove-OrchAsset -Name "${script:CredCsvName}_RT" -ValueType Credential -Confirm:$false
+        Clear-OrchCache
+        Get-OrchAsset -Name "${script:CredCsvName}_RT" | Should -BeNullOrEmpty
+
+        # Re-import — password is not exported, so add it
+        $rows = Import-Csv $csv
+        $rows | ForEach-Object { $_.CredentialPassword = 'rt_pass' }
+        $rows | Set-OrchCredentialAsset
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name "${script:CredCsvName}_RT"
+        $a | Should -Not -BeNullOrEmpty
+        $a.CredentialUsername | Should -Be 'rt_user'
+    }
+
+    It 'Credential CSV with CredentialStore' {
+        $csv = Join-Path $script:TempDir 'cred_store.csv'
+        $path = $script:RootFolder
+        "Path,Name,Description,CredentialStore,UserName,MachineName,CredentialUsername,CredentialPassword,ExternalName`n${path},${script:CredCsvName}_Store,,Orchestrator Database,,,store_user,store_pass," |
+            Set-Content -Path $csv -Encoding UTF8 -NoNewline
+
+        Import-Csv $csv | Set-OrchCredentialAsset
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name "${script:CredCsvName}_Store"
+        $a | Should -Not -BeNullOrEmpty
+        $a.CredentialUsername | Should -Be 'store_user'
+        $a.CredentialStoreId | Should -Not -BeNullOrEmpty
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Additional CSV Export Types
+# ---------------------------------------------------------------------------
+Describe 'CSV Export Additional Types' {
+    BeforeAll {
+        Push-Location $script:RootFolder
+    }
+
+    AfterAll {
+        Pop-Location
+    }
+
+    It 'Get-OrchUser -ExportCsv creates a CSV file' {
+        $csv = Join-Path $script:TempDir 'users.csv'
+        Get-OrchUser -Path "${script:Drive}:\" -ExportCsv $csv
+        $csv | Should -Exist
+        $header = Get-Content $csv -TotalCount 1
+        $header | Should -Match 'UserName'
+    }
+
+    It 'Get-OrchRole -ExportCsv creates a CSV file' {
+        $csv = Join-Path $script:TempDir 'roles.csv'
+        Get-OrchRole -Path "${script:Drive}:\" -ExportCsv $csv
+        $csv | Should -Exist
+        $header = Get-Content $csv -TotalCount 1
+        $header | Should -Match 'Name'
+    }
+
+    It 'Get-OrchFolderUser -ExportCsv creates a CSV file' {
+        $csv = Join-Path $script:TempDir 'folderusers.csv'
+        Get-OrchFolderUser -ExportCsv $csv
+        $csv | Should -Exist
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Error Handling
+# ---------------------------------------------------------------------------
+Describe 'Error Handling' {
+    It 'Get-OrchMachine for non-existent returns empty' {
+        $result = Get-OrchMachine -Name 'NonExistent_99999' -Path "${script:Drive}:\"
+        $result | Should -BeNullOrEmpty
+    }
+
+    It 'Remove-OrchMachine for non-existent does not throw' {
+        { Remove-OrchMachine -Name 'NonExistent_99999' -Path "${script:Drive}:\" -Confirm:$false } | Should -Not -Throw
+    }
+
+    It 'New-OrchQueue with duplicate name writes an error' {
+        $dupName = "${script:Prefix}DupQueue"
+        Push-Location $script:RootFolder
+        New-OrchQueue -Name $dupName
+        Clear-OrchCache
+        $err = $null
+        New-OrchQueue -Name $dupName -ErrorVariable err -ErrorAction SilentlyContinue
+        $err | Should -Not -BeNullOrEmpty
+        Remove-OrchQueue -Name $dupName -Confirm:$false -ErrorAction SilentlyContinue
+        Pop-Location
+    }
+
+    It 'Set-Location to non-existent folder writes an error' {
+        { Set-Location "${script:Drive}:\NonExistent_Folder_99999" -ErrorAction Stop } | Should -Throw
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Wildcard Support
+# ---------------------------------------------------------------------------
+Describe 'Wildcard Support' {
+    BeforeAll {
+        $script:WcA = "${script:Prefix}WcA"
+        $script:WcB = "${script:Prefix}WcB"
+        New-OrchMachine -Name $script:WcA -Path "${script:Drive}:\" -Description 'Wildcard A'
+        New-OrchMachine -Name $script:WcB -Path "${script:Drive}:\" -Description 'Wildcard B'
+        Clear-OrchCache
+    }
+
+    AfterAll {
+        Remove-OrchMachine -Name "${script:Prefix}Wc*" -Path "${script:Drive}:\" -Confirm:$false -ErrorAction SilentlyContinue
+    }
+
+    It 'Get-OrchMachine with * wildcard returns matching machines' {
+        $machines = Get-OrchMachine -Name "${script:Prefix}Wc*" -Path "${script:Drive}:\"
+        $machines.Count | Should -Be 2
+    }
+
+    It 'Get-OrchMachine with ? wildcard matches single character' {
+        $machines = Get-OrchMachine -Name "${script:Prefix}Wc?" -Path "${script:Drive}:\"
+        $machines.Count | Should -Be 2
+    }
+
+    It 'Remove-OrchMachine with wildcard removes matching machines' {
+        Remove-OrchMachine -Name "${script:Prefix}Wc*" -Path "${script:Drive}:\" -Confirm:$false
+        Clear-OrchCache
+        Get-OrchMachine -Name "${script:Prefix}Wc*" -Path "${script:Drive}:\" | Should -BeNullOrEmpty
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Tab Completion Smoke Tests
+# ---------------------------------------------------------------------------
+Describe 'Tab Completion' {
+    BeforeAll {
+        function Complete-Parameter {
+            param([string]$InputScript)
+            $result = [System.Management.Automation.CommandCompletion]::CompleteInput(
+                $InputScript, $InputScript.Length, $null)
+            return $result.CompletionMatches
+        }
+    }
+
+    It 'Update-OrchTrigger -MachineRobots completes without error' {
+        $results = Complete-Parameter 'Update-OrchTrigger -Name * -MachineRobots '
+        $results | Should -Not -Be $null
+    }
+
+    It 'New-OrchTrigger -MachineRobots completes without error' {
+        $results = Complete-Parameter 'New-OrchTrigger -Name test -ReleaseName test -MachineRobots '
+        $results | Should -Not -Be $null
+    }
+
+    It 'Add-PmGroupMember -UserName completes without error' {
+        $results = Complete-Parameter 'Add-PmGroupMember -PmGroup * -Type DirectoryUser -UserName '
+        $results | Should -Not -Be $null
+    }
+}
+
+# ---------------------------------------------------------------------------
+# IdentityUrl Derivation
+# ---------------------------------------------------------------------------
+Describe 'IdentityUrl Derivation' {
+    BeforeAll {
+        $script:allDrives = Get-OrchPSDrive
+    }
+
+    It 'Cloud drive IdentityUrl is {org}/identity_' {
+        $cloudDrives = $script:allDrives | Where-Object { $_.Root -match 'uipath\.com' }
+        $cloudDrives | Should -Not -BeNullOrEmpty -Because 'at least one cloud drive should be connected'
+
+        foreach ($d in $cloudDrives) {
+            $rootTrimmed = $d.Root.TrimEnd('/')
+            $orgBase = $rootTrimmed.Substring(0, $rootTrimmed.LastIndexOf('/'))
+            $expected = "$orgBase/identity_"
+            $d.IdentityUrl | Should -Be $expected -Because "drive '$($d.Name)' Root=$($d.Root)"
+        }
+    }
+
+    It 'On-prem drive IdentityUrl is {authority}/identity' {
+        $onpremDrives = $script:allDrives | Where-Object { $_.Root -notmatch 'uipath\.com' }
+        if (-not $onpremDrives) { Set-ItResult -Skipped -Because 'no on-prem drives connected'; return }
+
+        foreach ($d in $onpremDrives) {
+            $uri = [Uri]$d.Root.TrimEnd('/')
+            $expected = "$($uri.Scheme)://$($uri.Authority)/identity"
+            $d.IdentityUrl | Should -Be $expected -Because "drive '$($d.Name)' Root=$($d.Root)"
+        }
+    }
+
+    It 'IdentityUrl is not null or empty for any drive' {
+        foreach ($d in $script:allDrives) {
+            $d.IdentityUrl | Should -Not -BeNullOrEmpty -Because "drive '$($d.Name)' should have IdentityUrl"
+        }
+    }
 }
