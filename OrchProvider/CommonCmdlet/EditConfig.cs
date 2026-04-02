@@ -13,9 +13,12 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsData.Edit, "OrchConfig")]
 public class EditConfigCommand : PSCmdlet
 {
-    [Parameter(Position = 0)]
+    [Parameter]
+    public SwitchParameter UseDefaultEditor { get; set; }
+
+    [Parameter(Position = 0, DontShow = true)]
+    [Obsolete("Use -UseDefaultEditor instead.")]
     [ArgumentCompleter(typeof(EditorTypeCompleter))]
-    //[ValidateSet("Default", "Notepad", "XdgOpen", "Vi", "Nano", IgnoreCase = true)]
     public string? EditorType { get; set; }
 
     internal class EditorTypeCompleter : OrchArgumentCompleter
@@ -108,14 +111,15 @@ public class EditConfigCommand : PSCmdlet
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            string candidate = string.IsNullOrEmpty(EditorType) ? "notepad" : EditorType.ToLowerInvariant();
-            if (candidate == "notepad")
+            bool useDefault = UseDefaultEditor.IsPresent
+                || string.Equals(EditorType, "Default", StringComparison.OrdinalIgnoreCase);
+            if (useDefault)
             {
-                candidates = ["notepad.exe", null];
+                candidates = [null, "notepad.exe"];
             }
             else
             {
-                candidates = [null, "notepad.exe"];
+                candidates = ["notepad.exe", null];
             }
             var ex = TryLaunchEditors(candidates, configFilePath);
 
