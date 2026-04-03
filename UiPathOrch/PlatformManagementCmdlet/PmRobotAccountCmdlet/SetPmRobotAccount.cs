@@ -173,8 +173,8 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
         {
             groupNames =
             [
-                .. groupNames,
-                .. new[]
+                ..groupNames,
+                ..new[]
                 {
                     GroupName0,
                     GroupName1,

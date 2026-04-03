@@ -405,7 +405,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 UserName = currentUser.UserName,
                 DirectoryIdentifier = currentUser.Key,
                 UserType = currentUser.Type,
-                RolesPerFolder = [new FolderRoles() {
+                RolesPerFolder = [new FolderRoles()
+                {
                     FolderId = folder.Id ?? 0,
                     RoleIds = [folderAdministratorRole.Id ?? 0]
                 }]
