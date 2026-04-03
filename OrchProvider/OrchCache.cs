@@ -647,7 +647,6 @@ public class ListCachePerFolder<T> : IFolderCacheClearable
 }
 
 // Currently, only Int64 is supported as the index type. This type might benefit from parameterization.
-// TODO: Would it be good to implement GetById()?
 // TIndexEntity: Entity containing the index
 // getIndex(TIndexEntity): Func to get the Int64 index value from TIndexEntity
 // TEntity: Entity to retrieve and cache

@@ -510,7 +510,6 @@ internal static class OrchStringExtensions
     // Use this for members that accept zero.
     // Note that when a CSV empty column is specified, zero is passed to the parameter.
     // If the existing value is unknown, remove that column from the CSV. Then null will be passed to the int parameter.
-    // TODO: All int parameters on cmdlets should be changed to string?.
     public static void AssignNumberIfNotNull<T, N>(this T target, N? value, Action<T, N?> setter) where N : struct, IComparable
     {
         if (value.HasValue)
@@ -1016,7 +1015,6 @@ internal static class SessionStateExtentios
         }
     }
 
-    // TODO: Want to add IWritableHost as an argument to interpret paths one by one.
     public static List<(OrchDriveInfo drive, Folder folder)> EnumFolders(this SessionState? sessionState, IEnumerable<string?>? path, bool recurse = false, uint depth = 0, bool includeRoot = false)
     {
         OrchDriveInfo.SessionState = sessionState;
@@ -1131,7 +1129,6 @@ internal static class SessionStateExtentios
         return sessionState.EnumFolders([path], recurse, depth, includeRoot);
     }
 
-    // TODO: This needs to be generalized.
     public static (OrchDriveInfo drive, Folder folder) ResolveToSingleFolder(this SessionState? sessionState, string? path)
     {
         var ret = sessionState.EnumFolders(path, false, 0, true);
@@ -1206,7 +1203,6 @@ internal static class SessionStateExtentios
         }
     }
 
-    // TODO: All completers referencing this method can be cleanly rewritten
     public static List<(OrchDriveInfo drive, Folder folder)> EnumPackageFeedFolders(this SessionState? sessionState, IEnumerable<string?>? path, bool recurse = false)
     {
         var paths = sessionState.ResolveOrchDrivePaths(path);

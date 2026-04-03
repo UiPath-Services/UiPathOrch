@@ -16,7 +16,6 @@ public class CopyFolderUserCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? UserName { get; set; }
 
-    // TODO: Could this be changed to string[]?
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string? Destination { get; set; }

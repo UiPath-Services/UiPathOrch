@@ -45,7 +45,6 @@ public class GetAlertCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
-    // TODO: Rewrite using StaticTextCompleter
     private class SeverityCompleter : OrchArgumentCompleter
     {
         private static readonly Dictionary<string, string> candidates = new()

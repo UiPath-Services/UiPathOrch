@@ -19,7 +19,6 @@ class CsvLine(string? name, string? surname, string? displayName, string? type, 
     public bool? invitationAccepted { get; set; } = invitationAccepted.ToNullableBool();
 }
 
-// TODO: This should probably be moved to OrchComparer.cs.
 internal class DriveGroupIdsComparer : IEqualityComparer<(OrchDriveInfo drive, string[] groupIds)>
 {
     public bool Equals((OrchDriveInfo drive, string[] groupIds) x, (OrchDriveInfo drive, string[] groupIds) y)

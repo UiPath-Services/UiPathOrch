@@ -54,7 +54,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
     public DateTime? ResumeTimeBefore { get; set; }
 
     [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(PriorityCompleter))]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<JobPriority>))]
     public string? Priority { get; set; }
 
     [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
@@ -137,40 +137,6 @@ public class GetJobCommand : OrchestratorPSCmdlet
             }
         }
     }
-
-    // TODO: Rewrite using StaticTextCompleter
-    // or alternatively use KeyOfDictionaryCompleter.
-    private class PriorityCompleter : OrchArgumentCompleter
-    {
-        public override IEnumerable<CompletionResult> CompleteArgument(
-            string commandName,
-            string parameterName,
-            string wordToComplete,
-            CommandAst commandAst,
-            IDictionary fakeBoundParameters)
-        {
-            var wp = CreateWPFromWordToComplete(wordToComplete);
-
-            string[] candidates = {
-                "Critical",
-                "Highest",
-                "VeryHigh",
-                "High",
-                "MediumHigh",
-                "Medium",
-                "MediumLow",
-                "Low",
-                "VeryLow",
-                "Lowest",
-            };
-
-            foreach (var candidate in candidates.Where(c => wp.IsMatch(c)))
-            {
-                yield return new CompletionResult(candidate);
-            }
-        }
-    }
-
 
     private class RobotCompleter : OrchArgumentCompleter
     {

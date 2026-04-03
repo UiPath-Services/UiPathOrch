@@ -258,17 +258,15 @@ public partial class OrchDriveInfo : PSDriveInfo
             cache.ClearCache(folder);
         }
 
-        //_dicAssetLinks = null; // TODO: Would like to clear only the necessary parts more intelligently, but it's too much effort
+        _dicAssetLinks = null;
         _dicJobsHavingExecutionMedia?.TryRemove(folderId, out _);
         _dicTriggers?.TryRemove(folderId, out _);
         _dicQueueLinks = null;
         _dicReleases?.TryRemove(folderId, out _);
-        //_dicReleaseList?.TryRemove(folderId, out _);
         _dicTestSetExecutions?.TryRemove(folderId, out _);
 
         _dicPackages_Exceptions?.ClearCache();
         _dicTriggers_Exceptions?.ClearCache();
-        //_dicReleaseList_Exceptions?.ClearCache();
     }
 
     //public void ClearFolderCacheRecurse(Folder folder)

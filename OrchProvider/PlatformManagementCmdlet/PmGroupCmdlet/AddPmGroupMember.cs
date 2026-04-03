@@ -136,7 +136,6 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
 
         // To query user information in bulk, users would need to be grouped by Type.
         // Actually, just aggregating the CSV information here is sufficient.
-        // TODO: Should probably warn when a wildcard doesn't match any group names, but that's a bit tedious.
         foreach (var drive in drives)
         {
             var groups = drive.PmGroups.Get();

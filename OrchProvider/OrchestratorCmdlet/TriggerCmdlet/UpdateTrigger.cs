@@ -148,7 +148,6 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
 
     // Display user names currently configured on the trigger as candidates. Implementation for Update-OrchTrigger.
     // For New-OrchTrigger, showing all available users would be more user-friendly, so this implementation is not shared.
-    // TODO: Actually, listing all configurable values might be more user-friendly...
     private class ExecutorRobotsCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(

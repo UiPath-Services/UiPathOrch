@@ -18,7 +18,7 @@ public class GetTestSetExecutionCommand : OrchestratorPSCmdlet
     public string[]? Name { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(StatusCompleter))]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<TestSetExecutionStatusNames>))]
     [SupportsWildcards]
     public string[]? Status { get; set; }
 
@@ -36,7 +36,7 @@ public class GetTestSetExecutionCommand : OrchestratorPSCmdlet
     public DateTime? StartTimeBefore { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(TriggerTypeCompleter))]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<TestSetExecutionTriggerTypeNames>))]
     [SupportsWildcards]
     public string[]? TriggerType { get; set; }
 
@@ -106,51 +106,6 @@ public class GetTestSetExecutionCommand : OrchestratorPSCmdlet
                     string tiphelp = TipHelp(e);
                     yield return new CompletionResult(PathTools.EscapePSText(e!.Name), e.Name, CompletionResultType.ParameterValue, tiphelp);
                 }
-            }
-        }
-    }
-
-    // TODO: Rewrite using StaticTextCompleter
-    private class StatusCompleter : OrchArgumentCompleter
-    {
-        public override IEnumerable<CompletionResult> CompleteArgument(
-            string commandName,
-            string parameterName,
-            string wordToComplete,
-            CommandAst commandAst,
-            IDictionary fakeBoundParameters)
-        {
-            // Exclude SourceType values already selected by parameter from candidates
-            var wpStatus = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
-
-            var wp = CreateWPFromWordToComplete(wordToComplete);
-
-            foreach (var state in Enum.GetNames(typeof(TestSetExecutionStatus)).ExcludeByWildcards(st => st, wpStatus).Where(st => wp.IsMatch(st)))
-            {
-                yield return new CompletionResult(state);
-            }
-        }
-    }
-
-    // TODO: Rewrite using StaticTextCompleter
-    private class TriggerTypeCompleter : OrchArgumentCompleter
-    {
-        public override IEnumerable<CompletionResult> CompleteArgument(
-            string commandName,
-            string parameterName,
-            string wordToComplete,
-            CommandAst commandAst,
-            IDictionary fakeBoundParameters)
-        {
-            // Exclude TriggerType values already selected by parameter from candidates
-            var paramStatus = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);
-            var wpStatus = paramStatus.ConvertToWildcardPatternList();
-
-            var wp = CreateWPFromWordToComplete(wordToComplete);
-
-            foreach (var state in Enum.GetNames(typeof(TestSetExecutionTriggerType)).ExcludeByWildcards(st => st, wpStatus).Where(st => wp.IsMatch(st)))
-            {
-                yield return new CompletionResult(state);
             }
         }
     }

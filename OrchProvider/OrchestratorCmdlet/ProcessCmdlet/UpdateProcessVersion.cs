@@ -34,7 +34,6 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
-    // TODO: Generalize as ResettableProcessNameCompleter
     private class NameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(

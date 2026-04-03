@@ -194,7 +194,6 @@ public class UpdateMachineCommand : OrchestratorPSCmdlet
                     patch.MaintenanceWindow.AssignNumberIfNotNullOrZero(MaintenanceDuration, (m, v) => m.Duration = v);
                     patch.MaintenanceWindow.AssignBoolIfNotNull(MaintenanceEnabled, (m, v) => m.Enabled = v);
 
-                    // TODO: The same logic exists in AddTrigger.cs. Should be refactored into shared code.
                     #region Convert TimeZone to TimeZoneId
                     patch.MaintenanceWindow.AssignStringIfNotNull(MaintenanceTimeZoneId, (m, v) => m.TimezoneId = v);
 

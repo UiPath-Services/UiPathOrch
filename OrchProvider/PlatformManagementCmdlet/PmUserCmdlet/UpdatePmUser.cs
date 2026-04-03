@@ -33,10 +33,6 @@ public class UpdatePmUserCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(BoolCompleter))]
     public string? BypassBasicAuthRestriction { get; set; }
 
-    // TODO: Would it be useful to also allow specifying group membership?
-    // We would need to include groupIDsToAdd and groupIDsToRemove in the payload, which is a bit tedious.
-    // Since this can be done with other cmdlets, leaving it for now.
-
     // The following do not need to be included in the payload
 
     //[Parameter(ValueFromPipelineByPropertyName = true)]

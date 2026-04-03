@@ -402,3 +402,18 @@ internal class Modern_Classic : IStaticCandidates
 {
     public static string[] Items { get; } = ["Modern", "Classic"];
 };
+
+internal class JobPriority : IStaticCandidates
+{
+    public static string[] Items { get; } = ["Critical", "Highest", "VeryHigh", "High", "MediumHigh", "Medium", "MediumLow", "Low", "VeryLow", "Lowest"];
+};
+
+internal class TestSetExecutionStatusNames : IStaticCandidates
+{
+    public static string[] Items { get; } = Enum.GetNames(typeof(UiPath.PowerShell.Entities.TestSetExecutionStatus));
+};
+
+internal class TestSetExecutionTriggerTypeNames : IStaticCandidates
+{
+    public static string[] Items { get; } = Enum.GetNames(typeof(UiPath.PowerShell.Entities.TestSetExecutionTriggerType));
+};

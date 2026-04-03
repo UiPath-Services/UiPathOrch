@@ -42,7 +42,6 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
-    // TODO: I think this can be shared/refactored into common code
     private class FolderUserUserNameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(

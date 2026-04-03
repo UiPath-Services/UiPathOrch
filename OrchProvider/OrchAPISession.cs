@@ -901,22 +901,20 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Post, "/odata/QueueDefinitions/UiPath.Server.Configuration.OData.ShareToFolders", folderId, foldersShare);
     }
 
-    // TODO: Rewrite cleanly
+
     public void AddQueueItem(Int64 folderId, string queueName, Dictionary<string, object> specificContent, QueuePriority priority = QueuePriority.Normal)
     {
-        var itemData = new Dictionary<string, object>()
+        var payload = new
         {
+            itemData = new QueueItemData
             {
-                "itemData",
-                new Dictionary<string, object>() {
-                    { "Name", $"{queueName}" },
-                    { "Priority", priority.ToString() },
-                    { "SpecificContent", specificContent },
-                }
+                Name = queueName,
+                Priority = priority.ToString(),
+                SpecificContent = specificContent,
             }
         };
 
-        HttpRequest(HttpMethod.Post, "/odata/Queues/UiPathODataSvc.AddQueueItem", folderId, itemData);
+        HttpRequest(HttpMethod.Post, "/odata/Queues/UiPathODataSvc.AddQueueItem", folderId, payload);
     }
 
     // filter must be passed in the format "&$filter=()"
@@ -1393,16 +1391,11 @@ public partial class OrchAPISession : IDisposable
 
     public void StopJobs(Int64 folderId, IEnumerable<Int64> jobIds, bool force = false)
     {
-        var payload = new Dictionary<string, object>
-        {
-            ["strategy"] = force ? "2" : "1",
-            ["jobIds"] = jobIds
-        };
+        var payload = new { strategy = force ? "2" : "1", jobIds };
 
         HttpRequest(HttpMethod.Post, "/odata/Jobs/UiPath.Server.Configuration.OData.StopJobs", folderId, payload);
     }
 
-    // TODO: Not using this, but would like to clean up the implementation.
     //public string? StartRemoteControl(Int64 folderId, string jobKey)
     //{
     //    var payload = new Dictionary<string, string>();
@@ -1475,12 +1468,8 @@ public partial class OrchAPISession : IDisposable
 
     public void RemoveMachines(IEnumerable<Int64> machineIds)
     {
-        var payload = new Dictionary<string, object>
-        {
-            ["machineIds"] = machineIds
-        };
         // POST is correct for some reason.
-        HttpRequest(HttpMethod.Post, $"/odata/Machines/UiPath.Server.Configuration.OData.DeleteBulk", null, payload);
+        HttpRequest(HttpMethod.Post, $"/odata/Machines/UiPath.Server.Configuration.OData.DeleteBulk", null, new { machineIds });
     }
 
     #endregion
@@ -1524,7 +1513,6 @@ public partial class OrchAPISession : IDisposable
     {
         if (ApiVersion < 12) return null; // Confirmed it returns Not Found on 11.1. TODO: What about 12+? Verify with New-OrchProcess.
 
-        // TODO: Colons should probably be encoded too, but...
         //string endPoint = $"/odata/Processes/UiPath.Server.Configuration.OData.GetPackageMainEntryPoint(key='{HttpUtility.UrlEncode(packageId)}:{packageVersion}')";
 
         string key = $"{packageId}:{packageVersion}";
@@ -1844,11 +1832,7 @@ public partial class OrchAPISession : IDisposable
 
     public void UpdateReleaseToLatestVersionBulk(Int64 folderId, IEnumerable<Int64> processIds)
     {
-        var payload = new Dictionary<string, object>()
-        {
-            { "releaseIds", processIds },
-            { "mergePackageTags", false }
-        };
+        var payload = new { releaseIds = processIds, mergePackageTags = false };
 
         HttpRequest(HttpMethod.Post, "/odata/Releases/UiPath.Server.Configuration.OData.UpdateToLatestPackageVersionBulk", folderId, payload);
     }
@@ -1860,12 +1844,7 @@ public partial class OrchAPISession : IDisposable
 
     public void UpdateReleaseToSpecificVersion(Int64 folderId, Int64 processId, string version)
     {
-        var payload = new Dictionary<string, object>()
-        {
-            { "packageVersion", version },
-        };
-
-        HttpRequest(HttpMethod.Post, $"/odata/Releases({processId})/UiPath.Server.Configuration.OData.UpdateToSpecificPackageVersion", folderId, payload);
+        HttpRequest(HttpMethod.Post, $"/odata/Releases({processId})/UiPath.Server.Configuration.OData.UpdateToSpecificPackageVersion", folderId, new { packageVersion = version });
     }
 
     public void RollbackReleaseVersion(Int64 folderId, Int64 processIds)
@@ -1875,17 +1854,14 @@ public partial class OrchAPISession : IDisposable
 
     public void CreateRelease(Int64 folderId, Package package, Int64? entryPointId = null)
     {
-        var payload = new Dictionary<string, object>()
+        var payload = new
         {
-            { "Name", package.Id! },
-            { "Description", package.Description! },
-            { "ProcessKey", package.Id! },
-            { "ProcessVersion", package.Version! },
+            Name = package.Id!,
+            Description = package.Description!,
+            ProcessKey = package.Id!,
+            ProcessVersion = package.Version!,
+            EntryPointId = entryPointId,
         };
-        if (entryPointId.HasValue)
-        {
-            payload["EntryPointId"] = entryPointId;
-        }
         HttpRequest(HttpMethod.Post, "/odata/Releases/UiPath.Server.Configuration.OData.CreateRelease", folderId, payload);
     }
 
@@ -2178,7 +2154,6 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<HttpTrigger>("/odata/HttpTriggers", folderId);
     }
 
-    // TODO: This is not used anywhere. Is that a problem?
     public HttpTrigger? GetHttpTrigger(Int64 folderId, string triggerId)
     {
         return HttpRequest<HttpTrigger>(HttpMethod.Get, $"/odata/HttpTriggers({triggerId})", folderId);
@@ -3489,7 +3464,6 @@ public partial class OrchAPISession : IDisposable
     //    return GetEnumerableIdentity<int>($"/Client");
     //}
 
-    // TODO: Could create a Get-OrchIdDirectoryConfiguration cmdlet.
     // The completer could use the return value of GetIdentityAvailableDirectoryTypes().
     // But what would it be useful for...
     // identifier needs to be a directory adapter.
