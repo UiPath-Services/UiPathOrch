@@ -624,15 +624,6 @@
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\yoko.2013note.cha@gmail.com's workspace machine</S>
               </MS>
             </Obj>
-            <Obj RefId="70">
-              <TNRef RefId="2" />
-              <MS>
-                <S N="CompletionText">'yoshifumi.tsuda_uipath.com#ext#@kzsai.onmicrosoft.com''s workspace machine'</S>
-                <S N="ListItemText">yoshifumi.tsuda_uipath.com#ext#@kzsai.onmicrosoft.com's workspace machine</S>
-                <S N="ResultType">ParameterValue</S>
-                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\yoshifumi.tsuda_uipath.com#ext#@kzsai.onmicrosoft.com's workspace machine</S>
-              </MS>
-            </Obj>
             <Obj RefId="71">
               <TNRef RefId="2" />
               <MS>
@@ -1833,15 +1824,6 @@
                 <S N="ListItemText">yoko.2013note.cha@gmail.com's workspace machine</S>
                 <S N="ResultType">ParameterValue</S>
                 <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\yoko.2013note.cha@gmail.com's workspace machine</S>
-              </MS>
-            </Obj>
-            <Obj RefId="206">
-              <TNRef RefId="2" />
-              <MS>
-                <S N="CompletionText">'yoshifumi.tsuda_uipath.com#ext#@kzsai.onmicrosoft.com''s workspace machine'</S>
-                <S N="ListItemText">yoshifumi.tsuda_uipath.com#ext#@kzsai.onmicrosoft.com's workspace machine</S>
-                <S N="ResultType">ParameterValue</S>
-                <S N="ToolTip">Template (UA0 NP0 TA0) Orch1:\yoshifumi.tsuda_uipath.com#ext#@kzsai.onmicrosoft.com's workspace machine</S>
               </MS>
             </Obj>
             <Obj RefId="207">
