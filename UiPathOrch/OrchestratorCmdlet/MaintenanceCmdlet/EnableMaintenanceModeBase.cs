@@ -34,10 +34,10 @@ public class EnableMaintenanceModeCommandBase<Enable> : OrchestratorPSCmdlet whe
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            var wpMachineName     = CreateSelfExclusionList(commandAst, "MachineName", wordToComplete);
+            var wpMachineName = CreateSelfExclusionList(commandAst, "MachineName", wordToComplete);
             var wpHostMachineName = GetFakeBoundParameters(fakeBoundParameters, "HostMachineName").ConvertToWildcardPatternList();
             var wpServiceUserName = GetFakeBoundParameters(fakeBoundParameters, "ServiceUserName").ConvertToWildcardPatternList();
-            var wpSessionId       = GetFakeBoundParameters(fakeBoundParameters, "SessionId").ConvertToWildcardPatternList();
+            var wpSessionId = GetFakeBoundParameters(fakeBoundParameters, "SessionId").ConvertToWildcardPatternList();
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -77,10 +77,10 @@ public class EnableMaintenanceModeCommandBase<Enable> : OrchestratorPSCmdlet whe
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            var wpMachineName     = GetFakeBoundParameters(fakeBoundParameters, "MachineName").ConvertToWildcardPatternList();
+            var wpMachineName = GetFakeBoundParameters(fakeBoundParameters, "MachineName").ConvertToWildcardPatternList();
             var wpHostMachineName = CreateSelfExclusionList(commandAst, "HostMachineName", wordToComplete);
             var wpServiceUserName = GetFakeBoundParameters(fakeBoundParameters, "ServiceUserName").ConvertToWildcardPatternList();
-            var wpSessionId       = GetFakeBoundParameters(fakeBoundParameters, "SessionId").ConvertToWildcardPatternList();
+            var wpSessionId = GetFakeBoundParameters(fakeBoundParameters, "SessionId").ConvertToWildcardPatternList();
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -120,10 +120,10 @@ public class EnableMaintenanceModeCommandBase<Enable> : OrchestratorPSCmdlet whe
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            var wpMachineName     = GetFakeBoundParameters(fakeBoundParameters, "MachineName").ConvertToWildcardPatternList();
+            var wpMachineName = GetFakeBoundParameters(fakeBoundParameters, "MachineName").ConvertToWildcardPatternList();
             var wpHostMachineName = GetFakeBoundParameters(fakeBoundParameters, "HostMachineName").ConvertToWildcardPatternList();
             var wpServiceUserName = CreateSelfExclusionList(commandAst, "ServiceUserName", wordToComplete);
-            var wpSessionId       = GetFakeBoundParameters(fakeBoundParameters, "SessionId").ConvertToWildcardPatternList();
+            var wpSessionId = GetFakeBoundParameters(fakeBoundParameters, "SessionId").ConvertToWildcardPatternList();
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -163,10 +163,10 @@ public class EnableMaintenanceModeCommandBase<Enable> : OrchestratorPSCmdlet whe
         {
             var drives = ResolveOrchDrives(fakeBoundParameters);
 
-            var wpMachineName     = GetFakeBoundParameters(fakeBoundParameters, "MachineName").ConvertToWildcardPatternList();
+            var wpMachineName = GetFakeBoundParameters(fakeBoundParameters, "MachineName").ConvertToWildcardPatternList();
             var wpHostMachineName = GetFakeBoundParameters(fakeBoundParameters, "HostMachineName").ConvertToWildcardPatternList();
             var wpServiceUserName = GetFakeBoundParameters(fakeBoundParameters, "ServiceUserName").ConvertToWildcardPatternList();
-            var wpSessionId       = CreateSelfExclusionList(commandAst, "SessionId", wordToComplete);
+            var wpSessionId = CreateSelfExclusionList(commandAst, "SessionId", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 

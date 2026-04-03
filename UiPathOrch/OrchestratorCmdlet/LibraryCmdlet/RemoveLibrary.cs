@@ -44,7 +44,7 @@ public class RemoveLibraryCommand : OrchestratorPSCmdlet//, IDynamicParameters
                     {
                         var matchingVersions = drive.GetLibraryVersions(library.Id!)
                             .FilterByWildcards(v => v?.Version, wpVersion);
-                            //.OrderBy(v => v.Version!, VersionComparer.Instance);
+                        //.OrderBy(v => v.Version!, VersionComparer.Instance);
 
                         foreach (var matchingVersion in matchingVersions)
                         {

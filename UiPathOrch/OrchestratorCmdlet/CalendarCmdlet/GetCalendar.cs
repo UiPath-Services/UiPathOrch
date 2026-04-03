@@ -101,7 +101,7 @@ public class GetCalendarCommand : OrchestratorPSCmdlet
                                     };
 
                                     if (writer is not null) { WriteCsvContent(writer, output); }
-                                    else                    { WriteObject(output); }
+                                    else { WriteObject(output); }
                                 }
                             }
                         }

@@ -200,14 +200,14 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                     var postingUser = OrchCollectionExtensions.DeepCopy(detailedUser);
                     bool dirty = false;
 
-                    dirty |= postingUser.AssignStringIfNotNull(Name,    detailedUser, u => u.Name,    (u, v) => u.Name = v);
+                    dirty |= postingUser.AssignStringIfNotNull(Name, detailedUser, u => u.Name, (u, v) => u.Name = v);
                     dirty |= postingUser.AssignStringIfNotNull(Surname, detailedUser, u => u.Surname, (u, v) => u.Surname = v);
 
-                    dirty |= postingUser.AssignBoolIfNotFalse(IsExternalLicensed,          detailedUser, u => u.IsExternalLicensed,          (u, v) => u.IsExternalLicensed = v);
-                    dirty |= postingUser.AssignBoolIfNotFalse(MayHaveUserSession,          detailedUser, u => u.MayHaveUserSession,          (u, v) => u.MayHaveUserSession = v);
-                    dirty |= postingUser.AssignBoolIfNotFalse(MayHaveRobotSession,         detailedUser, u => u.MayHaveRobotSession,         (u, v) => u.MayHaveRobotSession = v);
-                    dirty |= postingUser.AssignBoolIfNotFalse(MayHavePersonalWorkspace,    detailedUser, u => u.MayHavePersonalWorkspace,    (u, v) => u.MayHavePersonalWorkspace = v);
-                    dirty |= postingUser.AssignBoolIfNotFalse(MayHaveUnattendedSession,    detailedUser, u => u.MayHaveUnattendedSession,    (u, v) => u.MayHaveUnattendedSession = v);
+                    dirty |= postingUser.AssignBoolIfNotFalse(IsExternalLicensed, detailedUser, u => u.IsExternalLicensed, (u, v) => u.IsExternalLicensed = v);
+                    dirty |= postingUser.AssignBoolIfNotFalse(MayHaveUserSession, detailedUser, u => u.MayHaveUserSession, (u, v) => u.MayHaveUserSession = v);
+                    dirty |= postingUser.AssignBoolIfNotFalse(MayHaveRobotSession, detailedUser, u => u.MayHaveRobotSession, (u, v) => u.MayHaveRobotSession = v);
+                    dirty |= postingUser.AssignBoolIfNotFalse(MayHavePersonalWorkspace, detailedUser, u => u.MayHavePersonalWorkspace, (u, v) => u.MayHavePersonalWorkspace = v);
+                    dirty |= postingUser.AssignBoolIfNotFalse(MayHaveUnattendedSession, detailedUser, u => u.MayHaveUnattendedSession, (u, v) => u.MayHaveUnattendedSession = v);
                     dirty |= postingUser.AssignBoolIfNotFalse(RestrictToPersonalWorkspace, detailedUser, u => u.RestrictToPersonalWorkspace, (u, v) => u.RestrictToPersonalWorkspace = v);
 
                     #region RolesList
@@ -252,10 +252,10 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                         !string.IsNullOrEmpty(UR_LimitConcurrentExecution))
                     {
                         postingUser.UnattendedRobot ??= new();
-                        postingUser.UnattendedRobot.AssignStringIfNotNull(UR_UserName,               (u, v) => u.UserName = v);
-                        postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(UR_Password,         (u, v) => u.Password = v);
-                        postingUser.UnattendedRobot.AssignStringIfNotNull(UR_CredentialExternalName,  (u, v) => u.CredentialExternalName = v);
-                        postingUser.UnattendedRobot.AssignStringIfNotNull(UR_CredentialType,          (u, v) => u.CredentialType = v);
+                        postingUser.UnattendedRobot.AssignStringIfNotNull(UR_UserName, (u, v) => u.UserName = v);
+                        postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(UR_Password, (u, v) => u.Password = v);
+                        postingUser.UnattendedRobot.AssignStringIfNotNull(UR_CredentialExternalName, (u, v) => u.CredentialExternalName = v);
+                        postingUser.UnattendedRobot.AssignStringIfNotNull(UR_CredentialType, (u, v) => u.CredentialType = v);
                         postingUser.UnattendedRobot.AssignBoolIfNotFalse(UR_LimitConcurrentExecution, u => u.LimitConcurrentExecution, (u, v) => u.LimitConcurrentExecution = v);
 
                         if (!string.IsNullOrEmpty(UR_CredentialStore))
@@ -283,14 +283,14 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
 
                     void UpdateExecutionSettings(ExecutionSettings executionSettings)
                     {
-                        executionSettings.AssignStringIfNotNull(ES_TracingLevel,       (es, v) => es.TracingLevel = v);
-                        executionSettings.AssignBoolIfNotNull(ES_StudioNotifyServer,   (es, v) => es.StudioNotifyServer = v);
-                        executionSettings.AssignBoolIfNotNull(ES_LoginToConsole,       (es, v) => es.LoginToConsole = v);
-                        executionSettings.AssignNumberIfNotNull(ES_ResolutionWidth,    (es, v) => es.ResolutionWidth = v);
-                        executionSettings.AssignNumberIfNotNull(ES_ResolutionHeight,   (es, v) => es.ResolutionHeight = v);
-                        executionSettings.AssignNumberIfNotNull(ES_ResolutionDepth,    (es, v) => es.ResolutionDepth = v);
-                        executionSettings.AssignBoolIfNotNull(ES_FontSmoothing,        (es, v) => es.FontSmoothing = v);
-                        executionSettings.AssignBoolIfNotNull(ES_AutoDownloadProcess,  (es, v) => es.AutoDownloadProcess = v);
+                        executionSettings.AssignStringIfNotNull(ES_TracingLevel, (es, v) => es.TracingLevel = v);
+                        executionSettings.AssignBoolIfNotNull(ES_StudioNotifyServer, (es, v) => es.StudioNotifyServer = v);
+                        executionSettings.AssignBoolIfNotNull(ES_LoginToConsole, (es, v) => es.LoginToConsole = v);
+                        executionSettings.AssignNumberIfNotNull(ES_ResolutionWidth, (es, v) => es.ResolutionWidth = v);
+                        executionSettings.AssignNumberIfNotNull(ES_ResolutionHeight, (es, v) => es.ResolutionHeight = v);
+                        executionSettings.AssignNumberIfNotNull(ES_ResolutionDepth, (es, v) => es.ResolutionDepth = v);
+                        executionSettings.AssignBoolIfNotNull(ES_FontSmoothing, (es, v) => es.FontSmoothing = v);
+                        executionSettings.AssignBoolIfNotNull(ES_AutoDownloadProcess, (es, v) => es.AutoDownloadProcess = v);
                     }
 
                     if (detailedUser.Type != "DirectoryExternalApplication" && (

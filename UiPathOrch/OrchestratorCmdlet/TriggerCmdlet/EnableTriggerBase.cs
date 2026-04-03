@@ -73,7 +73,7 @@ public class EnableTriggerCommandBase<Enable> : OrchestratorPSCmdlet where Enabl
                 foreach (var trigger in schedules
                     .Where(t => Enable.Value
                         ? !t.Enabled.GetValueOrDefault()
-                        :  t.Enabled.GetValueOrDefault())
+                        : t.Enabled.GetValueOrDefault())
                     .FilterByWildcards(t => t?.Name, wpName)
                     .OrderBy(t => t.Name))
                 {

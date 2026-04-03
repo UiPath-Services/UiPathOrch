@@ -88,7 +88,7 @@ public class GetDuDocumentTypeCommand : OrchestratorPSCmdlet
         {
             try
             {
-                var entities= result.GetResult(cancelHandler.Token);
+                var entities = result.GetResult(cancelHandler.Token);
                 if (entities is null) continue;
 
                 WriteObject(entities!

@@ -49,7 +49,7 @@ public class AddFolderUserCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-if (string.IsNullOrEmpty(wordToComplete))
+            if (string.IsNullOrEmpty(wordToComplete))
             {
                 yield return new CompletionResult(PathTools.EscapePSText("Please enter at least one character to search."));
                 yield break;
@@ -230,7 +230,7 @@ if (string.IsNullOrEmpty(wordToComplete))
                         // 3 refers to Robot. See DirectoryTypeItems
                         member = ResolveDirectoryName(this, drive, userName, 3);
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         string t = drive.NameColonSeparator + userName;
                         WriteError(new ErrorRecord(new OrchException(t, ex), "ResolveDirectoryNameError", ErrorCategory.InvalidOperation, folder));

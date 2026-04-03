@@ -35,42 +35,42 @@ internal static class FolderExtensions
 
     public static string GetPSPath(this Folder entity) => Path.Combine(entity?.Path ?? "", entity?.DisplayName ?? "");
 
-    public static string GetPSPath(this Entities.Environment entity)   => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this Library entity)                => Path.Combine(entity?.Path ?? "", entity?.Id ?? "");
-    public static string GetPSPath(this LibraryVersion entity)         => Path.Combine(entity?.Path ?? "", entity?.Id ?? "");
-    public static string GetPSPath(this Package entity)                => Path.Combine(entity?.Path ?? "", entity?.Id ?? "");
-    public static string GetPSPath(this User entity)                   => Path.Combine(entity?.Path ?? "", entity?.UserName ?? "");
-    public static string GetPSPath(this UserRoles entity)              => Path.Combine(entity?.Path ?? "", entity?.UserEntity?.UserName ?? "");
-    public static string GetPSPath(this Role entity)                   => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this Webhook entity)                => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this Robot entity)                  => Path.Combine(entity?.Path ?? "", entity?.User?.Name ?? "");
-    public static string GetPSPath(this ExtendedRobot entity)          => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this RobotsFromFolderModel entity)  => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this ExtendedCalendar entity)       => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this MachineFolder entity)          => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this ExtendedMachine entity)        => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this CredentialStore entity)        => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this QueueDefinition entity)        => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this QueueItem entity)              => Path.Combine(entity?.PathName ?? "", entity?.Id.ToString() ?? "");
-    public static string GetPSPath(this Asset entity)                  => Path.Combine(entity?.Path ?? "", WildcardPattern.Escape(entity?.Name ?? ""));
-    public static string GetPSPath(this Release entity)                => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this PersonalWorkspace entity)      => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this ProcessSchedule entity)        => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this HttpTrigger entity)            => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this ApiTrigger entity)             => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this Session entity)                => Path.Combine(entity?.Path ?? "", entity?.Robot?.Name ?? "");
-    public static string GetPSPath(this TestSet entity)                => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this TestCaseDefinition entity)     => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this TestSetExecution entity)       => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this TestSetSchedule entity)        => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this TestDataQueue entity)          => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this TaskCatalog entity)            => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this Settings entity)               => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this Bucket entity)                 => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
-    public static string GetPSPath(this BlobFile entity)               => Path.Combine(entity?.PathBucket ?? "", entity?.FullPath ?? "");
+    public static string GetPSPath(this Entities.Environment entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this Library entity) => Path.Combine(entity?.Path ?? "", entity?.Id ?? "");
+    public static string GetPSPath(this LibraryVersion entity) => Path.Combine(entity?.Path ?? "", entity?.Id ?? "");
+    public static string GetPSPath(this Package entity) => Path.Combine(entity?.Path ?? "", entity?.Id ?? "");
+    public static string GetPSPath(this User entity) => Path.Combine(entity?.Path ?? "", entity?.UserName ?? "");
+    public static string GetPSPath(this UserRoles entity) => Path.Combine(entity?.Path ?? "", entity?.UserEntity?.UserName ?? "");
+    public static string GetPSPath(this Role entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this Webhook entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this Robot entity) => Path.Combine(entity?.Path ?? "", entity?.User?.Name ?? "");
+    public static string GetPSPath(this ExtendedRobot entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this RobotsFromFolderModel entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this ExtendedCalendar entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this MachineFolder entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this ExtendedMachine entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this CredentialStore entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this QueueDefinition entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this QueueItem entity) => Path.Combine(entity?.PathName ?? "", entity?.Id.ToString() ?? "");
+    public static string GetPSPath(this Asset entity) => Path.Combine(entity?.Path ?? "", WildcardPattern.Escape(entity?.Name ?? ""));
+    public static string GetPSPath(this Release entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this PersonalWorkspace entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this ProcessSchedule entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this HttpTrigger entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this ApiTrigger entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this Session entity) => Path.Combine(entity?.Path ?? "", entity?.Robot?.Name ?? "");
+    public static string GetPSPath(this TestSet entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this TestCaseDefinition entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this TestSetExecution entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this TestSetSchedule entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this TestDataQueue entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this TaskCatalog entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this Settings entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this Bucket entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this BlobFile entity) => Path.Combine(entity?.PathBucket ?? "", entity?.FullPath ?? "");
     public static string GetPSPath(this ResponseDictionaryItem entity) => Path.Combine(entity?.Path ?? "", entity?.Key ?? "");
-    public static string GetPSPath(this AuditLog entity)               => Path.Combine(entity?.Path ?? "", entity?.Id.ToString() ?? "");
-    public static string GetPSPath(this Entities.Job entity)           => Path.Combine(entity?.Path ?? "", entity?.Id.ToString() ?? "");
+    public static string GetPSPath(this AuditLog entity) => Path.Combine(entity?.Path ?? "", entity?.Id.ToString() ?? "");
+    public static string GetPSPath(this Entities.Job entity) => Path.Combine(entity?.Path ?? "", entity?.Id.ToString() ?? "");
 
     /// <summary>
     /// Formats job information as a string for tooltips.
@@ -90,37 +90,37 @@ internal static class FolderExtensions
         return tiphelp;
     }
 
-    public static string GetPSPath(this PmUser entity)                => Path.Combine(entity?.Path ?? "", entity?.userName ?? "");
-    public static string GetPSPath(this PmRobotAccount entity)        => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-    public static string GetPSPath(this PmGroup entity)               => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-    public static string GetPSPath(this PmGroupMember entity)         => Path.Combine(entity?.Path ?? "", entity?.groupName ?? "", entity?.name ?? "");
+    public static string GetPSPath(this PmUser entity) => Path.Combine(entity?.Path ?? "", entity?.userName ?? "");
+    public static string GetPSPath(this PmRobotAccount entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    public static string GetPSPath(this PmGroup entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    public static string GetPSPath(this PmGroupMember entity) => Path.Combine(entity?.Path ?? "", entity?.groupName ?? "", entity?.name ?? "");
     public static string GetPSPath(this PmDirectoryEntityInfo entity) => Path.Combine(entity?.Path ?? "", entity?.identityName ?? "");
-    public static string GetPSPath(this ExternalResource entity)      => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-    public static string GetPSPath(this ExternalClient entity)        => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-    public static string GetPSPath(this NuLicensedGroup entity)       => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    public static string GetPSPath(this ExternalResource entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    public static string GetPSPath(this ExternalClient entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    public static string GetPSPath(this NuLicensedGroup entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
     public static string GetPSPath(this NuLicensedGroupMember entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-    public static string GetPSPath(this AccessAllowedMember entity)   => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    public static string GetPSPath(this AccessAllowedMember entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
 
-    public static string GetPSPath(this DirectoryUser entity)        => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-    public static string GetPSPath(this DirectoryRobotUser entity)   => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    public static string GetPSPath(this DirectoryUser entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    public static string GetPSPath(this DirectoryRobotUser entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
     public static string GetPSPath(this DirectoryApplication entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
 
-    public static string GetPSPath(this DuProject entity)      => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-    public static string GetPSPath(this DuRole entity)         => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-    public static string GetPSPath(this DuUser entity)         => Path.Combine(entity?.Path ?? "", entity?.displayName ?? "");
+    public static string GetPSPath(this DuProject entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    public static string GetPSPath(this DuRole entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    public static string GetPSPath(this DuUser entity) => Path.Combine(entity?.Path ?? "", entity?.displayName ?? "");
     public static string GetPSPath(this DuDocumentType entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-    public static string GetPSPath(this DuClassifier entity)   => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    public static string GetPSPath(this DuClassifier entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
 
-    public static string GetPSPath(this TmProject entity)       => Path.Combine(entity?.Path ?? "", entity?.projectPrefix ?? "");
-    public static string GetPSPath(this TmRequirement entity)   => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-    public static string GetPSPath(this TmTestCase entity)      => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-    public static string GetPSPath(this TmTestSet entity)       => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    public static string GetPSPath(this TmProject entity) => Path.Combine(entity?.Path ?? "", entity?.projectPrefix ?? "");
+    public static string GetPSPath(this TmRequirement entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    public static string GetPSPath(this TmTestCase entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    public static string GetPSPath(this TmTestSet entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
     public static string GetPSPath(this TmTestExecution entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
 
-    public static string TipHelp(this PmGroupMember? entity)         => $"{entity?.name}{(string.IsNullOrEmpty(entity?.displayName) ? "" : $" ({entity.displayName})")}";
+    public static string TipHelp(this PmGroupMember? entity) => $"{entity?.name}{(string.IsNullOrEmpty(entity?.displayName) ? "" : $" ({entity.displayName})")}";
     public static string TipHelp(this PmDirectoryEntityInfo? entity) => $"{entity?.GetPSPath()}{(string.IsNullOrEmpty(entity?.displayName) ? "" : $" ({entity.displayName})")}";
-    public static string TipHelp(this ExtendedRobot entity)          => $"{entity?.GetPSPath()}{(string.IsNullOrEmpty(entity?.Username) ? "" : $" ({entity.Username})")}";
-    public static string TipHelp(this Library? entity)               => $"{entity?.GetPSPath()}";
+    public static string TipHelp(this ExtendedRobot entity) => $"{entity?.GetPSPath()}{(string.IsNullOrEmpty(entity?.Username) ? "" : $" ({entity.Username})")}";
+    public static string TipHelp(this Library? entity) => $"{entity?.GetPSPath()}";
 }
 
 internal static class OrchCollectionExtensions

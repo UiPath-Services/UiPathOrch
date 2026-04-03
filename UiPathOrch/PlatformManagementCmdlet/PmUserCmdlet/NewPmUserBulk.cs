@@ -103,7 +103,7 @@ public class NewPmUserCommand : OrchestratorPSCmdlet
             var groups = drive.PmGroups.Get();
             // Case sensitivity doesn't matter for existing group names, but we need to ignore case for newly created group names.
             HashSet<string> groupNames = new(StringComparer.OrdinalIgnoreCase);
-            
+
             foreach (var groupName in groupNameEnum ?? [])
             {
                 // If the group name contains wildcards, expand them; otherwise keep it as-is.
@@ -191,12 +191,12 @@ public class NewPmUserCommand : OrchestratorPSCmdlet
                 };
 
                 // Set the email value in both userName and email fields
-                user.AssignStringIfNotNullOrEmpty(email,            (u, v) => u.userName = v);
-                user.AssignStringIfNotNullOrEmpty(email,            (u, v) => u.email = v);
-                user.AssignStringIfNotNullOrEmpty(line.name,        (u, v) => u.name = v);
-                user.AssignStringIfNotNullOrEmpty(line.surname,     (u, v) => u.surname = v);
+                user.AssignStringIfNotNullOrEmpty(email, (u, v) => u.userName = v);
+                user.AssignStringIfNotNullOrEmpty(email, (u, v) => u.email = v);
+                user.AssignStringIfNotNullOrEmpty(line.name, (u, v) => u.name = v);
+                user.AssignStringIfNotNullOrEmpty(line.surname, (u, v) => u.surname = v);
                 user.AssignStringIfNotNullOrEmpty(line.displayName, (u, v) => u.displayName = v);
-                user.AssignStringIfNotNullOrEmpty(line.type,        (u, v) => u.type = v);
+                user.AssignStringIfNotNullOrEmpty(line.type, (u, v) => u.type = v);
 
                 payload.users.Add(user);
             }

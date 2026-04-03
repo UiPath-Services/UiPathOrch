@@ -14,8 +14,8 @@ public class SetRoleCommand : OrchestratorPSCmdlet
     {
         // PermissionName is managed as a dictionary key
         public string? Scope { get; set; } = scope;
-        public bool? View   { get; set; } = view.ToNullableBool();
-        public bool? Edit   { get; set; } = edit.ToNullableBool();
+        public bool? View { get; set; } = view.ToNullableBool();
+        public bool? Edit { get; set; } = edit.ToNullableBool();
         public bool? Create { get; set; } = create.ToNullableBool();
         public bool? Delete { get; set; } = delete.ToNullableBool();
     }
@@ -226,8 +226,8 @@ public class SetRoleCommand : OrchestratorPSCmdlet
                     {
                         // Even if isDirty is already true, we still need to call SetPermission(),
                         // so we must not use the short-circuit OR operator || here
-                        isDirty = isDirty | SetPermission(target, postingRole, permissionName + ".View",   permission, permission.View);
-                        isDirty = isDirty | SetPermission(target, postingRole, permissionName + ".Edit",   permission, permission.Edit);
+                        isDirty = isDirty | SetPermission(target, postingRole, permissionName + ".View", permission, permission.View);
+                        isDirty = isDirty | SetPermission(target, postingRole, permissionName + ".Edit", permission, permission.Edit);
                         isDirty = isDirty | SetPermission(target, postingRole, permissionName + ".Create", permission, permission.Create);
                         isDirty = isDirty | SetPermission(target, postingRole, permissionName + ".Delete", permission, permission.Delete);
                     }

@@ -43,7 +43,7 @@ public class RemoveCalendarDateCommand : OrchestratorPSCmdlet
                 .Select(dateStr =>
                     {
                         if (DateTime.TryParse(dateStr, out DateTime parsedDate)) { return parsedDate; }
-                        else                                                     { return (DateTime?)null; }
+                        else { return (DateTime?)null; }
                     })
                 .Where(date => date.HasValue)
                 .Select(date => date!.Value)

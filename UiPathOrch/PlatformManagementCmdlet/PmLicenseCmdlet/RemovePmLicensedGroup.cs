@@ -6,7 +6,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "PmLicensedGroup", SupportsShouldProcess = true)]
-public class RemoveUserLicenseGroup: OrchestratorPSCmdlet
+public class RemoveUserLicenseGroup : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter))]

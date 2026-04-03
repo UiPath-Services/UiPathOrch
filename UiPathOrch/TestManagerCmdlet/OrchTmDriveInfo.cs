@@ -10,16 +10,16 @@ public class OrchTmDriveInfo : PSDriveInfo
 {
     // Test tenant entities
     // The number indicates the parameter count of the getter method (in OrchAPISession.cs)
-    public TestSingleCachePerTenant0<TmServerInfo>      TmServerInformation = null!;
-    public TestSingleCachePerTenant0<TmConfig>          TmConfiguration     = null!;
-    public TestSingleCachePerTenant1<TmProjectSettings> TmProjectSetting    = null!;
+    public TestSingleCachePerTenant0<TmServerInfo> TmServerInformation = null!;
+    public TestSingleCachePerTenant0<TmConfig> TmConfiguration = null!;
+    public TestSingleCachePerTenant1<TmProjectSettings> TmProjectSetting = null!;
 
     // Test list entities
     //public TestListCachePerTenant0<TmProject>           TmProjects           = null!;
-    public TestListCachePerTenant1<TmTestCase>          TmTestCases          = null!;
-    public TestListCachePerTenant1<TmTestSet>           TmTestSets           = null!;
-    public TestListCachePerTenant1<TmTestExecution>     TmTestExecutions     = null!;
-    public TestListCachePerTenant1<TmRequirement>       TmRequirements       = null!;
+    public TestListCachePerTenant1<TmTestCase> TmTestCases = null!;
+    public TestListCachePerTenant1<TmTestSet> TmTestSets = null!;
+    public TestListCachePerTenant1<TmTestExecution> TmTestExecutions = null!;
+    public TestListCachePerTenant1<TmRequirement> TmRequirements = null!;
     public TestListCachePerTenant1<TmProjectPermission> TmProjectPermissions = null!;
     // Incremental cache
     public IncrementalCachePerProject<string, TmTestExecutionResult> TmTestExecutionResults = null!;
@@ -46,16 +46,16 @@ public class OrchTmDriveInfo : PSDriveInfo
             //    e.FullName = NameColonSeparator + e.projectPrefix;
             //});
 
-            TmServerInformation = new(this, OrchAPISession.GetTmServerInfo,    e => e.Path = NameColonSeparator);
-            TmConfiguration     = new(this, OrchAPISession.GetTmConfiguration, e => e.Path = NameColonSeparator);
-            TmProjectSetting    = new(this, project => OrchAPISession.GetTmProjectSettings(project.id!),
+            TmServerInformation = new(this, OrchAPISession.GetTmServerInfo, e => e.Path = NameColonSeparator);
+            TmConfiguration = new(this, OrchAPISession.GetTmConfiguration, e => e.Path = NameColonSeparator);
+            TmProjectSetting = new(this, project => OrchAPISession.GetTmProjectSettings(project.id!),
                 (e, project) =>
                 {
                     e.Path = NameColonSeparator + e.projectPrefix;
                 });
 
             TmTestCases = new(this, project => OrchAPISession.GetTmTestCases(project.id!), (e, project) => e.Path = project.GetPSPath());
-            TmTestSets  = new(this, project => OrchAPISession.GetTmTestSets(project.id!),  (e, project) => e.Path = project.GetPSPath());
+            TmTestSets = new(this, project => OrchAPISession.GetTmTestSets(project.id!), (e, project) => e.Path = project.GetPSPath());
             TmTestExecutions = new(this, project => OrchAPISession.GetTmTestExecutions(project.id!), (e, project) => e.Path = project.GetPSPath());
             TmRequirements = new(this, project => OrchAPISession.GetTmRequirements(project.id!), (e, project) => e.Path = project.GetPSPath());
 

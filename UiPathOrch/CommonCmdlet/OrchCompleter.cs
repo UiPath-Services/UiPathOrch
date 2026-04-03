@@ -614,7 +614,7 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         //}
         return tiphelp;
     }
-    
+
     protected static string TipHelp(Role role)
     {
         string tiphelp = role.GetPSPath();
@@ -1164,7 +1164,7 @@ internal class LibraryVersionCompleter : OrchArgumentCompleter
                 foreach (var version in library
                     .Where(v => wp.IsMatch(v.Version))
                     .ExcludeByWildcards(v => v?.Version, wpVersion))
-                    //.OrderBy(v => v.Item.Item.Version!, VersionComparer.Instance))
+                //.OrderBy(v => v.Item.Item.Version!, VersionComparer.Instance))
                 {
                     string tiphelp = TipHelp(version);
                     yield return new CompletionResult(PathTools.EscapePSText(version.Version), version.Version, CompletionResultType.ParameterValue, tiphelp);

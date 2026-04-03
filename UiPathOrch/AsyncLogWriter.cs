@@ -43,7 +43,7 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
 
         _logQueue = Channel.CreateBounded<LogEntry>(options);
         _writer = _logQueue.Writer;
-        
+
         // Start the background processing task
         _processingTask = ProcessLogEntriesAsync(_shutdownCts.Token);
     }
@@ -57,7 +57,7 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
             return;
 
         var entry = new LogEntry(DateTime.UtcNow, logContent);
-        
+
         try
         {
             await _writer.WriteAsync(entry, cancellationToken);
@@ -83,7 +83,7 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
     //        return;
 
     //    var entry = new LogEntry(DateTime.UtcNow, logContent);
-        
+
     //    if (!_writer.TryWrite(entry))
     //    {
     //        // Queue is full or has been closed
@@ -167,7 +167,7 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
             }
 
             await File.AppendAllTextAsync(_logFilePath, stringBuilder.ToString(), cancellationToken);
-            
+
             // Update metrics
             _metrics.RecordBatchWritten(buffer.Count, totalBytes);
         }

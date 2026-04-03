@@ -65,7 +65,7 @@ public class ExportBucketItemCmdlet : OrchestratorPSCmdlet
                 var entities = result.GetResult(cancelHandler.Token);
                 if (entities is null) continue;
 
-                var(_, folder) = result.Source;
+                var (_, folder) = result.Source;
 
                 foreach (var bucket in entities
                     .FilterByWildcards(e => e?.Name, wpName)

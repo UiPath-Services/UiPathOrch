@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsCommon.Get, "PmLicensedGroup")]
 [OutputType(typeof(Entities.NuLicensedGroup))]
 [OutputType(typeof(Entities.NuLicensedGroupMember))]
-public class GetUserLicenseGroup: OrchestratorPSCmdlet
+public class GetUserLicenseGroup : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter))]

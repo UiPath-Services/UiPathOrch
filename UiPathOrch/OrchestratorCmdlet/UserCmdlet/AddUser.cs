@@ -34,7 +34,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
         }
     }
 
-    Dictionary<(OrchDriveInfo drive, int  type, string userName), CsvLine>? _csvLines = null;
+    Dictionary<(OrchDriveInfo drive, int type, string userName), CsvLine>? _csvLines = null;
 
     private class CsvLine : CsvLineBase
     {

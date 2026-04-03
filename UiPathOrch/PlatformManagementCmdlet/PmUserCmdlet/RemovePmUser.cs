@@ -57,7 +57,7 @@ public class RemovePmUserCommand : OrchestratorPSCmdlet
                 {
                     cancelHandler.Token.ThrowIfCancellationRequested();
 
-                    if (user.id == currentUser?.Key) continue;                    
+                    if (user.id == currentUser?.Key) continue;
 
                     string target = user.GetPSPath();
                     if (ShouldProcess(target, "Remove PmUser"))

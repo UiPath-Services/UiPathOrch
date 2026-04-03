@@ -74,9 +74,9 @@ public static class MimeTypeHelper
             return "application/octet-stream";
 
         var extension = Path.GetExtension(fileName);
-        
-        return MimeTypes.TryGetValue(extension, out var mimeType) 
-            ? mimeType 
+
+        return MimeTypes.TryGetValue(extension, out var mimeType)
+            ? mimeType
             : "application/octet-stream";
     }
 }

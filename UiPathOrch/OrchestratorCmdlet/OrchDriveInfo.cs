@@ -206,7 +206,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         _dicReleases = null;
         _dicReleases_Exceptions?.ClearCache();
-                
+
         _dicReleasesDetailed = null;
         _dicReleasesDetailed_Exceptions.ClearCache();
 
@@ -344,7 +344,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         foreach (var d in log.Details ?? [])
         {
             d.Path = NameColonSeparator;
-            d.PathId  = NameColonSeparator + log.Id.ToString();
+            d.PathId = NameColonSeparator + log.Id.ToString();
             d.CustomDataExpanded = JsonTools.JsonToDictionary(d.CustomData);
         }
         return true;
@@ -384,7 +384,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     {
         if (_dicRobotLogs is null)
         {
-            lock(this)
+            lock (this)
             {
                 _dicRobotLogs = [];
             }
@@ -755,16 +755,16 @@ public partial class OrchDriveInfo : PSDriveInfo
             }
         }
         // LicenseRuntime is not cached; query each time
-//            if (!_dicRuntimeLicense.TryGetValue(robotType, out var ret))
-//            {
-            List<LicenseRuntime> ret = OrchAPISession.GetLicensesRuntime(robotType).ToList();
-            foreach (var license in ret)
-            {
-                license.RobotType = robotType;
-                license.Path = NameColonSeparator + robotType;
-            }
-            _dicLicenseRuntime[robotType] = ret;
-//           }
+        //            if (!_dicRuntimeLicense.TryGetValue(robotType, out var ret))
+        //            {
+        List<LicenseRuntime> ret = OrchAPISession.GetLicensesRuntime(robotType).ToList();
+        foreach (var license in ret)
+        {
+            license.RobotType = robotType;
+            license.Path = NameColonSeparator + robotType;
+        }
+        _dicLicenseRuntime[robotType] = ret;
+        //           }
         return ret.AsReadOnly();
     }
     #endregion
@@ -1749,7 +1749,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     internal ConcurrentDictionary<(string, string), PmGroupMember?>? _dicPmBulkResolveByName = null;
     internal readonly ExceptionCachePerTenant _dicPmBulkResolveByName_Exception = new();
     public Dictionary<string, PmGroupMember?> PmBulkResolveByName<T>(
-        string kind, IEnumerable<T> users, 
+        string kind, IEnumerable<T> users,
         Func<T, string> getSearchKeyFunc,
         List<T>? unresolvedList = null)
     {
@@ -1849,7 +1849,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     // key: name
     internal ConcurrentDictionary<string, DirectoryObject[]?>? _dicSearchDirectory = null;
-    internal readonly ExceptionsCachePer<string>_dicSearchDirectory_Exception = new();
+    internal readonly ExceptionsCachePer<string> _dicSearchDirectory_Exception = new();
     public IEnumerable<DirectoryObject> SearchDirectory(string name)
     {
         // This API cannot search for user names containing '+'.
@@ -2211,8 +2211,8 @@ public partial class OrchDriveInfo : PSDriveInfo
         // Initialize caches
 
         // Organization list entities
-        PmUsers                = new(this, OrchAPISession.GetPmUsers,                 e => e.Path = NameColonSeparator);
-        PmGroups               = new(this, OrchAPISession.GetPmGroups,                e =>
+        PmUsers = new(this, OrchAPISession.GetPmUsers, e => e.Path = NameColonSeparator);
+        PmGroups = new(this, OrchAPISession.GetPmGroups, e =>
             {
                 e.Path = NameColonSeparator;
                 foreach (var m in e.members ?? [])
@@ -2224,9 +2224,9 @@ public partial class OrchDriveInfo : PSDriveInfo
             },
                                 e => e.id, OrchAPISession.GetPmGroup);
 
-        PmRobotAccounts        = new(this, OrchAPISession.GetPmRobotAccounts,         e => e.Path = NameColonSeparator);
-        PmExternalClients      = new(this, OrchAPISession.GetPmExternalClients,       e => e.Path = NameColonSeparator);
-        PmExternalApiResources = new(this, OrchAPISession.GetPmExternalApiResource,   e => e.Path = NameColonSeparator);
+        PmRobotAccounts = new(this, OrchAPISession.GetPmRobotAccounts, e => e.Path = NameColonSeparator);
+        PmExternalClients = new(this, OrchAPISession.GetPmExternalClients, e => e.Path = NameColonSeparator);
+        PmExternalApiResources = new(this, OrchAPISession.GetPmExternalApiResource, e => e.Path = NameColonSeparator);
 
         PmLicensedGroups = new(this,
             OrchAPISession.GetPmLicensedGroups,
@@ -2275,24 +2275,24 @@ public partial class OrchDriveInfo : PSDriveInfo
         );
 
         // Non-indexed tenant entities
-        ActivitySettings       = new(this, OrchAPISession.GetActivitySettings,        e => e.Path = NameColonSeparator);
-        ConnectionString       = new(this, OrchAPISession.GetConnectionString,        e => e.Path = NameColonSeparator);
-        LicenseSettings        = new(this, OrchAPISession.GetLicenseSettings,         e => e.Path = NameColonSeparator);
-        MachineSessionRuntimes = new(this, OrchAPISession.GetMachineSessionRuntimes,  e => e.Path = NameColonSeparator);
+        ActivitySettings = new(this, OrchAPISession.GetActivitySettings, e => e.Path = NameColonSeparator);
+        ConnectionString = new(this, OrchAPISession.GetConnectionString, e => e.Path = NameColonSeparator);
+        LicenseSettings = new(this, OrchAPISession.GetLicenseSettings, e => e.Path = NameColonSeparator);
+        MachineSessionRuntimes = new(this, OrchAPISession.GetMachineSessionRuntimes, e => e.Path = NameColonSeparator);
 
-        RuntimesForFolder      = new(this, OrchAPISession.GetRuntimesForFolder);
+        RuntimesForFolder = new(this, OrchAPISession.GetRuntimesForFolder);
         AllRobotsAcrossFolders = new(this, OrchAPISession.FindAllRobotsAcrossFolders, e => e.Path = NameColonSeparator);
-        PersonalWorkspaces     = new(this, OrchAPISession.GetPersonalWorkspaces,      e => e.Path = NameColonSeparator);
-        Roles                  = new(this, OrchAPISession.GetRoles,                   e => e.Path = NameColonSeparator);
+        PersonalWorkspaces = new(this, OrchAPISession.GetPersonalWorkspaces, e => e.Path = NameColonSeparator);
+        Roles = new(this, OrchAPISession.GetRoles, e => e.Path = NameColonSeparator);
 
-        LibrariesInTenant      = new(this, () => OrchAPISession.GetLibraries(null),   e => e.Path = NameColonSeparator);
-        LibrariesInHost        = new(this, () => OrchAPISession.GetLibraries(LibraryHostFeedId), e => e.Path = NameColonSeparator);
+        LibrariesInTenant = new(this, () => OrchAPISession.GetLibraries(null), e => e.Path = NameColonSeparator);
+        LibrariesInHost = new(this, () => OrchAPISession.GetLibraries(LibraryHostFeedId), e => e.Path = NameColonSeparator);
 
-        Settings               = new(this, OrchAPISession.GetSettings,                e => e.Path = NameColonSeparator);
-        UpdateSettings         = new(this, OrchAPISession.GetUpdateSettings,          e => e.Path = NameColonSeparator);
-        Webhooks               = new(this, OrchAPISession.GetWebhooks,                e => e.Path = NameColonSeparator);
+        Settings = new(this, OrchAPISession.GetSettings, e => e.Path = NameColonSeparator);
+        UpdateSettings = new(this, OrchAPISession.GetUpdateSettings, e => e.Path = NameColonSeparator);
+        Webhooks = new(this, OrchAPISession.GetWebhooks, e => e.Path = NameColonSeparator);
 
-        LibraryFeeds           = new(this, OrchAPISession.GetLibraryFeeds, null);
+        LibraryFeeds = new(this, OrchAPISession.GetLibraryFeeds, null);
 
         Robots = new(this, () =>
             {
@@ -2386,8 +2386,8 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         // Indexed tenant entities
         UserPrivileges = new(this, OrchAPISession.GetUserPrivilege, e => e.Id!.Value, e => e.UserName!,
-            (e, userName) => 
-            { 
+            (e, userName) =>
+            {
                 e.Path = NameColonSeparator;
                 e.UserName = userName;
             }
@@ -2395,25 +2395,25 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         // Non-indexed folder entities
         // Confirmed that the below returns an error in 11.1. TODO: How do we get feedId? How does this work in version 12 and later?
-        EntitiesSummary                = new(this, fid => OrchAPISession.GetEntitiesSummary(fid!.Value), (e, folderPath) => e.Path = folderPath);
-        FolderFeedId                   = new(this, OrchAPISession.GetFolderFeedId, null, 12);
-        ActionCatalogs                 = new(this, OrchAPISession.GetTaskCatalogs,       (e, folderPath) => e.Path = folderPath, 16); // Confirmed no error is returned in v16
-        ApiTriggers                    = new(this, OrchAPISession.GetHttpTriggers,       (e, folderPath) => e.Path = folderPath, 18); // Confirmed not present in the v17 web interface (executing in v17 does not return an error, though)
-        EventTriggers                  = new(this, OrchAPISession.GetEventTriggers,      (e, folderPath) => e.Path = folderPath, 18);
-        Buckets                        = new(this, OrchAPISession.GetBuckets,            (e, folderPath) => e.Path = folderPath);
-        Environments                   = new(this, OrchAPISession.GetEnvironments,       (e, folderPath) => e.Path = folderPath);
-        FolderUsersWithNoInherited     = new(this, fid => OrchAPISession.GetUsersForFolder(fid, false), (e, folderPath) => e.Path = folderPath);
-        FolderUsersWithInherited       = new(this, fid => OrchAPISession.GetUsersForFolder(fid, true),  (e, folderPath) => e.Path = folderPath);
+        EntitiesSummary = new(this, fid => OrchAPISession.GetEntitiesSummary(fid!.Value), (e, folderPath) => e.Path = folderPath);
+        FolderFeedId = new(this, OrchAPISession.GetFolderFeedId, null, 12);
+        ActionCatalogs = new(this, OrchAPISession.GetTaskCatalogs, (e, folderPath) => e.Path = folderPath, 16); // Confirmed no error is returned in v16
+        ApiTriggers = new(this, OrchAPISession.GetHttpTriggers, (e, folderPath) => e.Path = folderPath, 18); // Confirmed not present in the v17 web interface (executing in v17 does not return an error, though)
+        EventTriggers = new(this, OrchAPISession.GetEventTriggers, (e, folderPath) => e.Path = folderPath, 18);
+        Buckets = new(this, OrchAPISession.GetBuckets, (e, folderPath) => e.Path = folderPath);
+        Environments = new(this, OrchAPISession.GetEnvironments, (e, folderPath) => e.Path = folderPath);
+        FolderUsersWithNoInherited = new(this, fid => OrchAPISession.GetUsersForFolder(fid, false), (e, folderPath) => e.Path = folderPath);
+        FolderUsersWithInherited = new(this, fid => OrchAPISession.GetUsersForFolder(fid, true), (e, folderPath) => e.Path = folderPath);
         MachineSessionRuntimesByFolder = new(this, fid => OrchAPISession.GetMachineSessionRuntimesByFolderId(fid), (e, folderPath) => e.Path = folderPath);
-        Queues                         = new(this, OrchAPISession.GetQueues,             (e, folderPath) => e.Path = folderPath);
-        Reviewers                      = new(this, OrchAPISession.GetReviewers);
-        RobotsFromFolder               = new(this, OrchAPISession.GetRobotsFromFolder,   (e, folderPath) => e.Path = folderPath);
-        Sessions                       = new(this, OrchAPISession.GetSessions,           (e, folderPath) => e.Path = folderPath);
-        TestCases                      = new(this, OrchAPISession.GetTestCases,          (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
-        TestDataQueues                 = new(this, OrchAPISession.GetTestDataQueues,     (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
-        TestSets                       = new(this, OrchAPISession.GetTestSets,           (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
-        TestSetSchedules               = new(this, OrchAPISession.GetTestSetSchedules,   (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
-        UserRobots                     = new(this, OrchAPISession.GetUserRobots);
+        Queues = new(this, OrchAPISession.GetQueues, (e, folderPath) => e.Path = folderPath);
+        Reviewers = new(this, OrchAPISession.GetReviewers);
+        RobotsFromFolder = new(this, OrchAPISession.GetRobotsFromFolder, (e, folderPath) => e.Path = folderPath);
+        Sessions = new(this, OrchAPISession.GetSessions, (e, folderPath) => e.Path = folderPath);
+        TestCases = new(this, OrchAPISession.GetTestCases, (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
+        TestDataQueues = new(this, OrchAPISession.GetTestDataQueues, (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
+        TestSets = new(this, OrchAPISession.GetTestSets, (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
+        TestSetSchedules = new(this, OrchAPISession.GetTestSetSchedules, (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
+        UserRobots = new(this, OrchAPISession.GetUserRobots);
 
         Assets = new(this, OrchAPISession.GetAssets, (e, folderPath) =>
         {
@@ -2556,7 +2556,7 @@ public partial class OrchDriveInfo : PSDriveInfo
                 folders = OrchAPISession.GetFolders().ToList();
             }));
 
-            Task.WaitAll([..tasks]);
+            Task.WaitAll([.. tasks]);
 
             // Process the current user result
             string personalWorkspaceName = "";
@@ -2580,11 +2580,11 @@ public partial class OrchDriveInfo : PSDriveInfo
                 foreach (var ws in personalWorkspaces
                     .Where(ws => ws.Name != personalWorkspaceName && // Exclude My Workspace since it was already added in the current user processing above
                         (user is not null && ws.ExploringUserIds is not null && ws.ExploringUserIds.Any(id => id == user?.Id)))
-                    .OrderBy(ws => ws.Name)) 
+                    .OrderBy(ws => ws.Name))
                 {
                     // Add other users' workspaces that we are currently exploring
                     // (Workspaces we are not exploring are inaccessible due to lack of permissions)
-//                        if (user is not null && ws.ExploringUserIds is not null && ws.ExploringUserIds.Any(id => id == user?.Id))
+                    //                        if (user is not null && ws.ExploringUserIds is not null && ws.ExploringUserIds.Any(id => id == user?.Id))
                     {
                         var pwFolder = new Folder()
                         {

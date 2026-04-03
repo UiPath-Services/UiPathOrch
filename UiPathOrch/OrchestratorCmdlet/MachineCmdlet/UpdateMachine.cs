@@ -149,12 +149,12 @@ public class UpdateMachineCommand : OrchestratorPSCmdlet
                 var patch = new ExtendedMachine { Id = machine.Id };
                 bool dirty = false;
 
-                dirty |= patch.AssignStringIfNotNull(Description,         machine, m => m.Description,         (m, v) => m.Description = v);
-                dirty |= patch.AssignNumberIfNotNull(UnattendedSlots,     machine, m => m.UnattendedSlots,     (m, v) => m.UnattendedSlots = v);
-                dirty |= patch.AssignNumberIfNotNull(NonProductionSlots,  machine, m => m.NonProductionSlots,  (m, v) => m.NonProductionSlots = v);
+                dirty |= patch.AssignStringIfNotNull(Description, machine, m => m.Description, (m, v) => m.Description = v);
+                dirty |= patch.AssignNumberIfNotNull(UnattendedSlots, machine, m => m.UnattendedSlots, (m, v) => m.UnattendedSlots = v);
+                dirty |= patch.AssignNumberIfNotNull(NonProductionSlots, machine, m => m.NonProductionSlots, (m, v) => m.NonProductionSlots = v);
                 dirty |= patch.AssignNumberIfNotNull(TestAutomationSlots, machine, m => m.TestAutomationSlots, (m, v) => m.TestAutomationSlots = v);
-                dirty |= patch.AssignStringIfNotNull(AutomationType,      machine, m => m.AutomationType,  (m, v) => m.AutomationType = v);
-                dirty |= patch.AssignStringIfNotNull(TargetFramework,     machine, m => m.TargetFramework, (m, v) => m.TargetFramework = v);
+                dirty |= patch.AssignStringIfNotNull(AutomationType, machine, m => m.AutomationType, (m, v) => m.AutomationType = v);
+                dirty |= patch.AssignStringIfNotNull(TargetFramework, machine, m => m.TargetFramework, (m, v) => m.TargetFramework = v);
 
                 if (RobotUsers is not null)
                 {

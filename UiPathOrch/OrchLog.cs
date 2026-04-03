@@ -147,7 +147,7 @@ public partial class OrchAPISession : IDisposable
                     // Normal case: original processing (no timeout)
                     reqBody = message.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                 }
-                
+
                 if (!string.IsNullOrEmpty(reqBody))
                 {
                     sb.Append("  REQ BODY ");
@@ -223,7 +223,7 @@ public partial class OrchAPISession : IDisposable
                             // Normal case: original processing (no timeout)
                             resBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                         }
-                        
+
                         if (!string.IsNullOrEmpty(resBody))
                         {
                             sb.Append("  RES BODY ");
@@ -316,7 +316,7 @@ public partial class OrchAPISession : IDisposable
 
     private async ValueTask WriteLogBlockAsync(string? logBlock, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(logBlock)) 
+        if (string.IsNullOrEmpty(logBlock))
             return;
 
         await GetAsyncLogWriter().WriteAsync(logBlock, cancellationToken);

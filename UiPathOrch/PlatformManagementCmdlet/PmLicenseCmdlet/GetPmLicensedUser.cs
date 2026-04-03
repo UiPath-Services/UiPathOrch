@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "PmLicensedUser")]
 [OutputType(typeof(Entities.NuLicensedUser))]
-public class GetUserLicenseUser: OrchestratorPSCmdlet
+public class GetUserLicenseUser : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NameCompleter))]

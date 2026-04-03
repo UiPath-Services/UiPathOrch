@@ -30,10 +30,10 @@ public class GetFolderMachineAccountMappingCommand : OrchestratorPSCmdlet
     internal class FolderMachineNameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
-            string commandName, 
-            string parameterName, 
-            string wordToComplete, 
-            CommandAst commandAst, 
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);

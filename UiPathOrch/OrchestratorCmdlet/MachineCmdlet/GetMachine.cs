@@ -61,7 +61,8 @@ public class GetMachineCommand : OrchestratorPSCmdlet
             if (machine.RobotUsers is not null)
             {
                 var allRobots = drive.AllRobotsAcrossFolders.Get();
-                robotUsers = machine.RobotUsers?.Select(r => {
+                robotUsers = machine.RobotUsers?.Select(r =>
+                {
                     var robot = allRobots.FirstOrDefault(all => all.Id == r.RobotId);
                     return robot?.User?.FullName;
                 })

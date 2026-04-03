@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsData.Update, "OrchProcessVersion", SupportsShouldProcess = true, DefaultParameterSetName = "ReleaseName")]
 public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
 {
-    [Parameter (ParameterSetName = "ReleaseName", Position = 0, ValueFromPipelineByPropertyName = true)]
+    [Parameter(ParameterSetName = "ReleaseName", Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
@@ -168,7 +168,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
                     foreach (var version in versions
                         .Where(v => wp.IsMatch(v.Version))
                         .ExcludeByWildcards(v => v?.Version, wpVersion))
-                        //.OrderBy(v => v.Version!, VersionComparer.Instance))
+                    //.OrderBy(v => v.Version!, VersionComparer.Instance))
                     {
                         string tiphelp = TipHelp(version);
                         yield return new CompletionResult(PathTools.EscapePSText(version.Version), version.Version, CompletionResultType.ParameterValue, tiphelp);

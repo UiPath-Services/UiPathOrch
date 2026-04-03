@@ -27,14 +27,14 @@ class GetTestCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-//           var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
-    //    var drives = OrchDriveInfo.EnumOrchDrives(Path);
+        //           var drivesFolders = OrchDriveInfo.EnumFolders(Path, Recurse.IsPresent, Depth);
+        //    var drives = OrchDriveInfo.EnumOrchDrives(Path);
 
-    //    foreach (var drive in drives)
-    //    {
-    //        var feeds = drive.LibraryFeeds.Get();
-    //        WriteObject(feeds, true);
-    //    }
+        //    foreach (var drive in drives)
+        //    {
+        //        var feeds = drive.LibraryFeeds.Get();
+        //        WriteObject(feeds, true);
+        //    }
     }
 
     protected override void EndProcessing()

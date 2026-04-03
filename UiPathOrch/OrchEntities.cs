@@ -418,7 +418,7 @@ public class Library
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
     public string? Id { get; set; }
-    [JsonConverter(typeof(LocalDateTimeConverter))] 
+    [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? Created { get; set; }
     [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastUpdated { get; set; }
@@ -1225,7 +1225,7 @@ public class SimpleRelease
     public string? Name { get; set; }
     public long? EnvironmentId { get; set; }
     public string? EnvironmentName { get; set; }
-    public Environment?  Environment { get; set; }
+    public Environment? Environment { get; set; }
     public long? EntryPointId { get; set; }
     public string? EntryPointPath { get; set; }
     public EntryPoint? EntryPoint { get; set; }
@@ -2524,7 +2524,7 @@ public class BulkOperationResponseOfInt64
 // QueueItemCommentDto
 public class QueueItemComment
 {
-//    public Int64 Id { get; set; }
+    //    public Int64 Id { get; set; }
     public string? Text { get; set; }
     public Int64? QueueItemId { get; set; }
     //public DateTime? CreationTime { get; set; } // deprecated
@@ -3635,7 +3635,7 @@ public class ExternalClient
 
 // Used as the return value of Copy-PmExternalApplication.
 // Needed to change the default view.
-public class ExternalClientCreated: ExternalClient
+public class ExternalClientCreated : ExternalClient
 {
 }
 

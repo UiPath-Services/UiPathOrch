@@ -157,14 +157,14 @@ public class CopyQueueItemCommand : OrchestratorPSCmdlet
 
                                 var failedItems = dstDrive.OrchAPISession.BulkAddQueueItem(dstFolder.Id ?? 0, payload);
                                 Dictionary<Int64, QueueItem> copiedSrcItems = srcItems.ToDictionary(i => i.Id!.Value);
-#endregion
+                                #endregion
 
                                 #region Output items that failed to copy and display warnings on screen
                                 HashSet<Int64> failedSrcItemIds = [];
                                 foreach (var failedDstItem in failedItems?.FailedItems ?? [])
                                 {
                                     if (failedDstItem.Ordinal is null) continue;
-                                    var failedPayloadItem = payload.queueItems[failedDstItem.Ordinal.Value-1]; // Ordinal appears to be 1-based
+                                    var failedPayloadItem = payload.queueItems[failedDstItem.Ordinal.Value - 1]; // Ordinal appears to be 1-based
                                     if (failedSrcItemIds.Add(failedPayloadItem.Id!.Value))
                                     {
                                         string warning = $"'{srcQueue.GetPSPath()}': Add item failed: {failedDstItem.ErrorMessage} Id: {failedPayloadItem.Id} Key: '{failedPayloadItem.Key}'";
@@ -191,7 +191,7 @@ public class CopyQueueItemCommand : OrchestratorPSCmdlet
                                     catch { } // Let's skip error handling for now..
                                 }
 #endif
-#endregion
+                                #endregion
                             }
                             catch (Exception ex)
                             {

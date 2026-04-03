@@ -26,7 +26,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
     private readonly List<SetAssetCommandParameter> parameters = [];
 
     private readonly Dictionary<(string name, string path), Asset> pendingAssets = [];
-    
+
     private const string Default = "DefaultParameterSet";
 
     public static readonly string[] ValidValueTypes = ["Text", "Integer", "Bool"];
@@ -159,9 +159,9 @@ public class SetAssetCommand : OrchestratorPSCmdlet
         {
             var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
 
-            var wpValueType   = GetFakeBoundParameters(fakeBoundParameters, "ValueType").ConvertToWildcardPatternList();
-            var wpName        = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
-            var wpUserName    = GetFakeBoundParameters(fakeBoundParameters, "UserName").ConvertToWildcardPatternList();
+            var wpValueType = GetFakeBoundParameters(fakeBoundParameters, "ValueType").ConvertToWildcardPatternList();
+            var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
+            var wpUserName = GetFakeBoundParameters(fakeBoundParameters, "UserName").ConvertToWildcardPatternList();
             var wpMachineName = GetFakeBoundParameters(fakeBoundParameters, "MachineName").ConvertToWildcardPatternList();
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
@@ -462,8 +462,8 @@ public class SetAssetCommand : OrchestratorPSCmdlet
 
             if (AssignTypedValue(asset.ValueType, param.Value, boolValue, intValue,
                 () => asset.StringValue, v => asset.StringValue = v,
-                () => asset.BoolValue,   v => asset.BoolValue = v,
-                () => asset.IntValue,    v => asset.IntValue = v))
+                () => asset.BoolValue, v => asset.BoolValue = v,
+                () => asset.IntValue, v => asset.IntValue = v))
             {
                 asset.HasDefaultValue = true;
                 return true;
@@ -527,8 +527,8 @@ public class SetAssetCommand : OrchestratorPSCmdlet
 
                 if (AssignTypedValue(asset.ValueType, param.Value, boolValue, intValue,
                     () => userValue!.StringValue, v => userValue!.StringValue = v,
-                    () => userValue!.BoolValue,   v => userValue!.BoolValue = v,
-                    () => userValue!.IntValue,    v => userValue!.IntValue = v))
+                    () => userValue!.BoolValue, v => userValue!.BoolValue = v,
+                    () => userValue!.IntValue, v => userValue!.IntValue = v))
                 {
                     isDirty = true;
                     asset.ValueScope = "PerRobot";

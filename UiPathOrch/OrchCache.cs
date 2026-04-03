@@ -328,11 +328,11 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
 {
     private readonly object _lock = new();
     private readonly OrchDriveInfo _drive;
-    
+
     // Cache per organization (static = shared across all drive instances)
     private static readonly ConcurrentDictionary<string, T> _cache = [];
     private static readonly ExceptionsCachePer<string> _exception = new();
-    
+
     // getter: takes partitionGlobalId as argument and returns T
     private readonly Func<string, T?> _getter;
     private readonly Action<T>? _initializer;
@@ -383,7 +383,7 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
             // Execute initializer even when cached (e.g., setting Path)
             _initializer(entity);
         }
-        
+
         return entity;
     }
 

@@ -134,7 +134,8 @@ public partial class OrchAPISession : IDisposable
             if (logEnabled)
             {
                 // Handle errors safely and asynchronously; also execute BuildCombinedLogBlock asynchronously
-                _ = Task.Run(async () => {
+                _ = Task.Run(async () =>
+                {
                     try
                     {
                         string? combinedLogBlock;
@@ -148,7 +149,7 @@ public partial class OrchAPISession : IDisposable
                             // Normal log generation for successful requests
                             combinedLogBlock = BuildCombinedLogBlock(reqTime, message, resTime, ret, callId, logging?.InternalLogLevel);
                         }
-                        
+
                         if (!string.IsNullOrEmpty(combinedLogBlock))
                         {
                             await WriteLogBlockAsync(combinedLogBlock, CancellationToken.None);
@@ -333,7 +334,7 @@ public partial class OrchAPISession : IDisposable
                                 ApiVersion = version;
                             }
                         }
-                        catch {} // Swallow this exception
+                        catch { } // Swallow this exception
                     }
                 }
             }
@@ -408,7 +409,7 @@ public partial class OrchAPISession : IDisposable
                 // Dispose managed resources
                 _httpClient?.Dispose();
                 limiter?.Dispose();
-                
+
                 // Dispose the async log writer
                 DisposeAsyncLogWriter();
             }
@@ -1306,7 +1307,7 @@ public partial class OrchAPISession : IDisposable
 
     public PersonalWorkspace? GetPersonalWorkspace()
     {
-        return  HttpRequest<PersonalWorkspace>(HttpMethod.Get, "/odata/PersonalWorkspaces/UiPath.Server.Configuration.OData.GetPersonalWorkspace");
+        return HttpRequest<PersonalWorkspace>(HttpMethod.Get, "/odata/PersonalWorkspaces/UiPath.Server.Configuration.OData.GetPersonalWorkspace");
     }
 
     public IEnumerable<PersonalWorkspace> GetPersonalWorkspaces()
@@ -1694,7 +1695,7 @@ public partial class OrchAPISession : IDisposable
         var responseBytes = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
         return (ret, responseBytes);
     }
-    
+
     #endregion
 
     #region Process
@@ -1729,7 +1730,7 @@ public partial class OrchAPISession : IDisposable
 
     public Release? PostRelease(Int64 folderId, Release release)
     {
-        if (release.RetentionPeriod      == 0) release.RetentionPeriod      = null;
+        if (release.RetentionPeriod == 0) release.RetentionPeriod = null;
         if (release.StaleRetentionPeriod == 0) release.StaleRetentionPeriod = null;
 
         // Strip properties not supported by older API versions.
@@ -1785,9 +1786,9 @@ public partial class OrchAPISession : IDisposable
             // TODO: What about 14 and later?
             if (ApiVersion < 14 && release.SpecificPriorityValue is not null)
             {
-                if      (release.SpecificPriorityValue >= 61) release.JobPriority = "High";
+                if (release.SpecificPriorityValue >= 61) release.JobPriority = "High";
                 else if (release.SpecificPriorityValue <= 30) release.JobPriority = "Low";
-                else                                          release.JobPriority = "Normal";
+                else release.JobPriority = "Normal";
                 release.SpecificPriorityValue = null;
             }
             release.VideoRecordingSettings = null;
@@ -2030,7 +2031,7 @@ public partial class OrchAPISession : IDisposable
     {
         // Check CancellationToken
         cancellationToken.ThrowIfCancellationRequested();
-        
+
         if (access == null || string.IsNullOrWhiteSpace(access.Verb) || string.IsNullOrWhiteSpace(access.Uri))
             return;
 
@@ -2386,7 +2387,7 @@ public partial class OrchAPISession : IDisposable
 
     // The quota for this API is 300 calls per 5 minutes.
     // https://uipath-japan.slack.com/archives/C0175DZP4PQ/p1751336407409919?thread_ts=1751275792.210139&cid=C0175DZP4PQ
-    private DateTime        _lastSearchDirectory = DateTime.MinValue;
+    private DateTime _lastSearchDirectory = DateTime.MinValue;
     private readonly object _lockSearchDirectory = new object();
     public DirectoryObject[]? SearchDirectory(string prefix)
     {

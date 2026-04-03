@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsData.Edit, "OrchProcess")]
 public class EditProcessCommand : OrchestratorPSCmdlet
 {
-    [Parameter (Position = 0, ValueFromPipelineByPropertyName = true)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ProcessNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }

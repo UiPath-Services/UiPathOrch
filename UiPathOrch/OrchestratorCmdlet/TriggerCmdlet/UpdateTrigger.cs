@@ -269,30 +269,30 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
 
                 #region Apply user-specified parameters with dirty detection
                 bool dirty = false;
-                dirty |= postTrigger.AssignStringIfNotNull(NewName,                        trigger, s => s.Name,                    (s, v) => s.Name = v);
-                dirty |= postTrigger.AssignBoolIfNotNull(Enabled,                          trigger, s => s.Enabled,                 (s, v) => s.Enabled = v);
-                dirty |= postTrigger.AssignNumberIfNotNullOrZero(StartStrategy,            trigger, s => s.StartStrategy,           (s, v) => s.StartStrategy = v);
-                dirty |= postTrigger.AssignStringIfNotNull(StopStrategy,                   trigger, s => s.StopStrategy,            (s, v) => s.StopStrategy = v);
-                dirty |= postTrigger.AssignStringIfNotNull(StopProcessExpression,          trigger, s => s.StopProcessExpression,   (s, v) => s.StopProcessExpression = v);
-                dirty |= postTrigger.AssignStringIfNotNull(KillProcessExpression,          trigger, s => s.KillProcessExpression,   (s, v) => s.KillProcessExpression = v);
-                dirty |= postTrigger.AssignStringIfNotNull(AlertPendingExpression,         trigger, s => s.AlertPendingExpression,  (s, v) => s.AlertPendingExpression = v);
-                dirty |= postTrigger.AssignStringIfNotNull(AlertRunningExpression,         trigger, s => s.AlertRunningExpression,  (s, v) => s.AlertRunningExpression = v);
+                dirty |= postTrigger.AssignStringIfNotNull(NewName, trigger, s => s.Name, (s, v) => s.Name = v);
+                dirty |= postTrigger.AssignBoolIfNotNull(Enabled, trigger, s => s.Enabled, (s, v) => s.Enabled = v);
+                dirty |= postTrigger.AssignNumberIfNotNullOrZero(StartStrategy, trigger, s => s.StartStrategy, (s, v) => s.StartStrategy = v);
+                dirty |= postTrigger.AssignStringIfNotNull(StopStrategy, trigger, s => s.StopStrategy, (s, v) => s.StopStrategy = v);
+                dirty |= postTrigger.AssignStringIfNotNull(StopProcessExpression, trigger, s => s.StopProcessExpression, (s, v) => s.StopProcessExpression = v);
+                dirty |= postTrigger.AssignStringIfNotNull(KillProcessExpression, trigger, s => s.KillProcessExpression, (s, v) => s.KillProcessExpression = v);
+                dirty |= postTrigger.AssignStringIfNotNull(AlertPendingExpression, trigger, s => s.AlertPendingExpression, (s, v) => s.AlertPendingExpression = v);
+                dirty |= postTrigger.AssignStringIfNotNull(AlertRunningExpression, trigger, s => s.AlertRunningExpression, (s, v) => s.AlertRunningExpression = v);
                 dirty |= postTrigger.AssignNumberIfNotNullOrZero(ConsecutiveJobFailuresThreshold, trigger, s => s.ConsecutiveJobFailuresThreshold, (s, v) => s.ConsecutiveJobFailuresThreshold = v);
-                dirty |= postTrigger.AssignNumberIfNotNullOrZero(JobFailuresGracePeriodInHours,   trigger, s => s.JobFailuresGracePeriodInHours,   (s, v) => s.JobFailuresGracePeriodInHours = v);
-                dirty |= postTrigger.AssignStringIfNotNull(RuntimeType,                    trigger, s => s.RuntimeType,             (s, v) => s.RuntimeType = v);
-                dirty |= postTrigger.AssignStringIfNotNull(InputArguments,                 trigger, s => s.InputArguments,          (s, v) => s.InputArguments = v);
-                dirty |= postTrigger.AssignBoolIfNotNull(ResumeOnSameContext,              trigger, s => s.ResumeOnSameContext,     (s, v) => s.ResumeOnSameContext = v);
-                dirty |= postTrigger.AssignBoolIfNotNull(RunAsMe,                          trigger, s => s.RunAsMe,                (s, v) => s.RunAsMe = v);
-                dirty |= postTrigger.AssignBoolIfNotNull(IsConnected,                      trigger, s => s.IsConnected,            (s, v) => s.IsConnected = v);
-                dirty |= postTrigger.AssignBoolIfNotNull(ActivateOnJobComplete,            trigger, s => s.ActivateOnJobComplete,  (s, v) => s.ActivateOnJobComplete = v);
-                dirty |= postTrigger.AssignNumberIfNotNullOrZero(ItemsActivationThreshold,    trigger, s => s.ItemsActivationThreshold,    (s, v) => s.ItemsActivationThreshold = v);
+                dirty |= postTrigger.AssignNumberIfNotNullOrZero(JobFailuresGracePeriodInHours, trigger, s => s.JobFailuresGracePeriodInHours, (s, v) => s.JobFailuresGracePeriodInHours = v);
+                dirty |= postTrigger.AssignStringIfNotNull(RuntimeType, trigger, s => s.RuntimeType, (s, v) => s.RuntimeType = v);
+                dirty |= postTrigger.AssignStringIfNotNull(InputArguments, trigger, s => s.InputArguments, (s, v) => s.InputArguments = v);
+                dirty |= postTrigger.AssignBoolIfNotNull(ResumeOnSameContext, trigger, s => s.ResumeOnSameContext, (s, v) => s.ResumeOnSameContext = v);
+                dirty |= postTrigger.AssignBoolIfNotNull(RunAsMe, trigger, s => s.RunAsMe, (s, v) => s.RunAsMe = v);
+                dirty |= postTrigger.AssignBoolIfNotNull(IsConnected, trigger, s => s.IsConnected, (s, v) => s.IsConnected = v);
+                dirty |= postTrigger.AssignBoolIfNotNull(ActivateOnJobComplete, trigger, s => s.ActivateOnJobComplete, (s, v) => s.ActivateOnJobComplete = v);
+                dirty |= postTrigger.AssignNumberIfNotNullOrZero(ItemsActivationThreshold, trigger, s => s.ItemsActivationThreshold, (s, v) => s.ItemsActivationThreshold = v);
                 dirty |= postTrigger.AssignNumberIfNotNullOrZero(ItemsPerJobActivationTarget, trigger, s => s.ItemsPerJobActivationTarget, (s, v) => s.ItemsPerJobActivationTarget = v);
-                dirty |= postTrigger.AssignNumberIfNotNullOrZero(MaxJobsForActivation,        trigger, s => s.MaxJobsForActivation,        (s, v) => s.MaxJobsForActivation = v);
-                dirty |= postTrigger.AssignStringIfNotNull(StartProcessCron,               trigger, s => s.StartProcessCron,       (s, v) => s.StartProcessCron = v);
-                dirty |= postTrigger.AssignStringIfNotNull(StartProcessCronDetails,        trigger, s => s.StartProcessCronDetails,(s, v) => s.StartProcessCronDetails = v);
-                dirty |= postTrigger.AssignNumberIfNotNullOrZero(SpecificPriorityValue,    trigger, s => s.SpecificPriorityValue,  (s, v) => s.SpecificPriorityValue = v);
-                dirty |= postTrigger.AssignNumberIfNotNullOrZero(specificPriorityValue,    trigger, s => s.SpecificPriorityValue,  (s, v) => s.SpecificPriorityValue = v);
-                dirty |= postTrigger.AssignStringIfNotNull(TimeZoneId,                     trigger, s => s.TimeZoneId,             (s, v) => s.TimeZoneId = v);
+                dirty |= postTrigger.AssignNumberIfNotNullOrZero(MaxJobsForActivation, trigger, s => s.MaxJobsForActivation, (s, v) => s.MaxJobsForActivation = v);
+                dirty |= postTrigger.AssignStringIfNotNull(StartProcessCron, trigger, s => s.StartProcessCron, (s, v) => s.StartProcessCron = v);
+                dirty |= postTrigger.AssignStringIfNotNull(StartProcessCronDetails, trigger, s => s.StartProcessCronDetails, (s, v) => s.StartProcessCronDetails = v);
+                dirty |= postTrigger.AssignNumberIfNotNullOrZero(SpecificPriorityValue, trigger, s => s.SpecificPriorityValue, (s, v) => s.SpecificPriorityValue = v);
+                dirty |= postTrigger.AssignNumberIfNotNullOrZero(specificPriorityValue, trigger, s => s.SpecificPriorityValue, (s, v) => s.SpecificPriorityValue = v);
+                dirty |= postTrigger.AssignStringIfNotNull(TimeZoneId, trigger, s => s.TimeZoneId, (s, v) => s.TimeZoneId = v);
 
                 #region // Convert CalendarName to CalendarId
                 postTrigger.AssignIdFromName(

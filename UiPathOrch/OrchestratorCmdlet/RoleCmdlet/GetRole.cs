@@ -106,7 +106,7 @@ public class GetRoleCommand : OrchestratorPSCmdlet
                 {
                     var p = role.Permissions;
                     IEnumerable<Permission> q = null;
-                         if (role.Type == "Tenant") { q = p!.Where(p => p.Scope != "Folder"); }
+                    if (role.Type == "Tenant") { q = p!.Where(p => p.Scope != "Folder"); }
                     else if (role.Type == "Folder") { q = p!.Where(p => p.Scope != "Global"); }
                     else { q = p; }
 
@@ -141,8 +141,8 @@ public class GetRoleCommand : OrchestratorPSCmdlet
                         foreach (var s in item)
                         {
                             if (string.IsNullOrEmpty(s.Name)) continue;
-                                 if (s.Name.Contains(".View"))   { expanded.View = s.IsGranted; }
-                            else if (s.Name.Contains(".Edit"))   { expanded.Edit = s.IsGranted; }
+                            if (s.Name.Contains(".View")) { expanded.View = s.IsGranted; }
+                            else if (s.Name.Contains(".Edit")) { expanded.Edit = s.IsGranted; }
                             else if (s.Name.Contains(".Create")) { expanded.Create = s.IsGranted; }
                             else if (s.Name.Contains(".Delete")) { expanded.Delete = s.IsGranted; }
                         }

@@ -61,7 +61,7 @@ public class NewUserMappingCsvCommand : OrchestratorPSCmdlet
     }
 
     private void EnumeratePmGroupMembers(
-        OrchDriveInfo srcDrive, 
+        OrchDriveInfo srcDrive,
         Dictionary<string, MappingCsvLine> userMappings,
         ProgressReporter reporter, CancellationToken cancelToken)
     {

@@ -11,7 +11,7 @@ public static class PathTools
     // Use this when displaying candidates in a cmdlet completer.
     public static string EscapePSText(string? input)
     {
-//            return "'" + WildcardPattern.Escape(input) + "'";
+        //            return "'" + WildcardPattern.Escape(input) + "'";
         if (string.IsNullOrEmpty(input))
         {
             return "";

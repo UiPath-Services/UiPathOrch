@@ -109,7 +109,7 @@ public class RemovePackageCommand : OrchestratorPSCmdlet
                     foreach (var version in package
                         .Where(v => wp.IsMatch(v.Version!))
                         .ExcludeByWildcards(v => v?.Version, wpVersion))
-                        //.OrderBy(v => v.Version!, VersionComparer.Instance))
+                    //.OrderBy(v => v.Version!, VersionComparer.Instance))
                     {
                         string tiphelp = TipHelp(version);
                         yield return new CompletionResult(PathTools.EscapePSText(version.Version), version.Version, CompletionResultType.ParameterValue, tiphelp);
@@ -176,7 +176,7 @@ public class RemovePackageCommand : OrchestratorPSCmdlet
 
                         foreach (var version in versions
                             .FilterByWildcards(v => v?.Version, wpVersion))
-                            //.OrderBy(v => v.Version!, VersionComparer.Instance))
+                        //.OrderBy(v => v.Version!, VersionComparer.Instance))
                         {
                             cancelHandler.Token.ThrowIfCancellationRequested();
 

@@ -93,12 +93,12 @@ public class NewBucketCommand : OrchestratorPSCmdlet
                             Name = WildcardPattern.Unescape(name),
                             Identifier = Guid.NewGuid().ToString(),
                         };
-                        postingBucket.AssignStringIfNotNullOrEmpty(Description,       (b, v) => b.Description = v);
-                        postingBucket.AssignStringIfNotNullOrEmpty(StorageProvider,   (b, v) => b.StorageProvider = v);
-                        postingBucket.AssignStringIfNotNullOrEmpty(StorageContainer,  (b, v) => b.StorageContainer = v);
+                        postingBucket.AssignStringIfNotNullOrEmpty(Description, (b, v) => b.Description = v);
+                        postingBucket.AssignStringIfNotNullOrEmpty(StorageProvider, (b, v) => b.StorageProvider = v);
+                        postingBucket.AssignStringIfNotNullOrEmpty(StorageContainer, (b, v) => b.StorageContainer = v);
                         postingBucket.AssignStringIfNotNullOrEmpty(StorageParameters, (b, v) => b.StorageParameters = v);
-                        postingBucket.AssignStringIfNotNullOrEmpty(Password,          (b, v) => b.Password = v);
-                        postingBucket.AssignStringIfNotNullOrEmpty(ExternalName,      (b, v) => b.ExternalName = v);
+                        postingBucket.AssignStringIfNotNullOrEmpty(Password, (b, v) => b.Password = v);
+                        postingBucket.AssignStringIfNotNullOrEmpty(ExternalName, (b, v) => b.ExternalName = v);
                         postingBucket.AssignStringIfNotNullOrEmpty(string.Join(",", Options ?? []), (b, v) => b.Options = v);
                         postingBucket.AssignTags(Tags, (b, v) => b.Tags = v);
 

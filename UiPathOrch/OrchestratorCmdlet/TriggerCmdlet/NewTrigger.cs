@@ -310,32 +310,32 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
                 schedule.AssignNumberIfNotNullOrZero(StartStrategy, (s, v) => s.StartStrategy = v);
                 schedule.StartStrategy ??= 1;
 
-                schedule.AssignStringIfNotNullOrEmpty(StopStrategy,                    (s, v) => s.StopStrategy = v);
-                schedule.AssignStringIfNotNullOrEmpty(StopProcessExpression,           (s, v) => s.StopProcessExpression = v);
-                schedule.AssignStringIfNotNullOrEmpty(KillProcessExpression,           (s, v) => s.KillProcessExpression = v);
-                schedule.AssignStringIfNotNullOrEmpty(AlertPendingExpression,          (s, v) => s.AlertPendingExpression = v);
-                schedule.AssignStringIfNotNullOrEmpty(AlertRunningExpression,          (s, v) => s.AlertRunningExpression = v);
+                schedule.AssignStringIfNotNullOrEmpty(StopStrategy, (s, v) => s.StopStrategy = v);
+                schedule.AssignStringIfNotNullOrEmpty(StopProcessExpression, (s, v) => s.StopProcessExpression = v);
+                schedule.AssignStringIfNotNullOrEmpty(KillProcessExpression, (s, v) => s.KillProcessExpression = v);
+                schedule.AssignStringIfNotNullOrEmpty(AlertPendingExpression, (s, v) => s.AlertPendingExpression = v);
+                schedule.AssignStringIfNotNullOrEmpty(AlertRunningExpression, (s, v) => s.AlertRunningExpression = v);
                 schedule.AssignNumberIfNotNullOrZero(ConsecutiveJobFailuresThreshold, (s, v) => s.ConsecutiveJobFailuresThreshold = v);
-                schedule.AssignNumberIfNotNullOrZero(JobFailuresGracePeriodInHours,   (s, v) => s.JobFailuresGracePeriodInHours = v);
+                schedule.AssignNumberIfNotNullOrZero(JobFailuresGracePeriodInHours, (s, v) => s.JobFailuresGracePeriodInHours = v);
 
                 #region SpecificPriorityValue
                 // Apply SpecificPriorityValue first, then override with specificPriorityValue if non-null
-                schedule.AssignNumberIfNotNullOrZero(SpecificPriorityValue,           (s, v) => s.SpecificPriorityValue = v);
-                schedule.AssignNumberIfNotNullOrZero(specificPriorityValue,           (s, v) => s.SpecificPriorityValue = v);
+                schedule.AssignNumberIfNotNullOrZero(SpecificPriorityValue, (s, v) => s.SpecificPriorityValue = v);
+                schedule.AssignNumberIfNotNullOrZero(specificPriorityValue, (s, v) => s.SpecificPriorityValue = v);
                 #endregion
 
-                schedule.AssignStringIfNotNullOrEmpty(RuntimeType,       (s, v) => s.RuntimeType = v);
+                schedule.AssignStringIfNotNullOrEmpty(RuntimeType, (s, v) => s.RuntimeType = v);
                 schedule.RuntimeType ??= "Unattended";
 
-                schedule.AssignStringIfNotNullOrEmpty(InputArguments,    (s, v) => schedule.InputArguments = v);
+                schedule.AssignStringIfNotNullOrEmpty(InputArguments, (s, v) => schedule.InputArguments = v);
 
                 schedule.AssignBoolIfNotNull(ResumeOnSameContext, (s, v) => s.ResumeOnSameContext = v);
                 schedule.ResumeOnSameContext ??= false;
 
-                schedule.AssignBoolIfNotNull(RunAsMe,             (s, v) => s.RunAsMe = v);
+                schedule.AssignBoolIfNotNull(RunAsMe, (s, v) => s.RunAsMe = v);
                 schedule.RunAsMe ??= false;
 
-                schedule.AssignBoolIfNotNull(IsConnected,         (s, v) => s.IsConnected = v);
+                schedule.AssignBoolIfNotNull(IsConnected, (s, v) => s.IsConnected = v);
 
                 #region // Convert CalendarName to CalendarId
                 schedule.AssignIdFromName(
@@ -349,15 +349,15 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
                 schedule.UseCalendar = (schedule.CalendarId is not null);
                 #endregion
 
-                schedule.AssignNumberIfNotNullOrZero(ItemsActivationThreshold,    (s, v) => s.ItemsActivationThreshold = v);
+                schedule.AssignNumberIfNotNullOrZero(ItemsActivationThreshold, (s, v) => s.ItemsActivationThreshold = v);
                 schedule.AssignNumberIfNotNullOrZero(ItemsPerJobActivationTarget, (s, v) => s.ItemsPerJobActivationTarget = v);
-                schedule.AssignNumberIfNotNullOrZero(MaxJobsForActivation,        (s, v) => s.MaxJobsForActivation = v);
-                schedule.AssignBoolIfNotNull(ActivateOnJobComplete,         (s, v) => s.ActivateOnJobComplete = v);
+                schedule.AssignNumberIfNotNullOrZero(MaxJobsForActivation, (s, v) => s.MaxJobsForActivation = v);
+                schedule.AssignBoolIfNotNull(ActivateOnJobComplete, (s, v) => s.ActivateOnJobComplete = v);
 
-                schedule.AssignStringIfNotNullOrEmpty(StartProcessCron,            (s, v) => s.StartProcessCron = v);
+                schedule.AssignStringIfNotNullOrEmpty(StartProcessCron, (s, v) => s.StartProcessCron = v);
                 schedule.StartProcessCron ??= "0 0/1 * 1/1 * ? *";
 
-                schedule.AssignStringIfNotNullOrEmpty(StartProcessCronDetails,     (s, v) => s.StartProcessCronDetails = v);
+                schedule.AssignStringIfNotNullOrEmpty(StartProcessCronDetails, (s, v) => s.StartProcessCronDetails = v);
                 schedule.StartProcessCronDetails ??= $"{{\"advancedCron\":\"{schedule.StartProcessCron}\"}}";
 
                 #region Convert ReleaseName to ReleaseId

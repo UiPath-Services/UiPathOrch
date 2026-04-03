@@ -359,12 +359,12 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                 #region Set values specified by parameters
 
                 bool releaseDirty = false;
-                releaseDirty |= newRelease.AssignStringIfNotNull(NewName,                      process, r => r.Name,                  (r, v) => r.Name = v);
-                releaseDirty |= newRelease.AssignStringIfNotNull(Description,                  process, r => r.Description,           (r, v) => r.Description = v);
-                releaseDirty |= newRelease.AssignStringIfNotNull(InputArguments,               process, r => r.InputArguments,        (r, v) => r.InputArguments = v);
-                releaseDirty |= newRelease.AssignNumberIfNotNullOrZero(SpecificPriorityValue,  process, r => r.SpecificPriorityValue, (r, v) => r.SpecificPriorityValue = v);
-                releaseDirty |= newRelease.AssignBoolIfNotNull(HiddenForAttendedUser,          process, r => r.HiddenForAttendedUser, (r, v) => r.HiddenForAttendedUser = v);
-                releaseDirty |= newRelease.AssignStringIfNotNull(RemoteControlAccess,          process, r => r.RemoteControlAccess,   (r, v) => r.RemoteControlAccess = v);
+                releaseDirty |= newRelease.AssignStringIfNotNull(NewName, process, r => r.Name, (r, v) => r.Name = v);
+                releaseDirty |= newRelease.AssignStringIfNotNull(Description, process, r => r.Description, (r, v) => r.Description = v);
+                releaseDirty |= newRelease.AssignStringIfNotNull(InputArguments, process, r => r.InputArguments, (r, v) => r.InputArguments = v);
+                releaseDirty |= newRelease.AssignNumberIfNotNullOrZero(SpecificPriorityValue, process, r => r.SpecificPriorityValue, (r, v) => r.SpecificPriorityValue = v);
+                releaseDirty |= newRelease.AssignBoolIfNotNull(HiddenForAttendedUser, process, r => r.HiddenForAttendedUser, (r, v) => r.HiddenForAttendedUser = v);
+                releaseDirty |= newRelease.AssignStringIfNotNull(RemoteControlAccess, process, r => r.RemoteControlAccess, (r, v) => r.RemoteControlAccess = v);
                 #region Retention (uses separate PutReleaseRetention API)
                 ReleaseRetentionSetting? retentionUpdate = null;
                 {
@@ -425,16 +425,16 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                     var psSource = process.ProcessSettings ?? new();
                     bool psDirty = false;
                     psDirty |= ps.AssignBoolIfNotNull(ErrorRecordingEnabled, psSource, r => r.ErrorRecordingEnabled, (r, v) => r.ErrorRecordingEnabled = v);
-                    psDirty |= ps.AssignNumberIfNotNullOrZero(Duration,      psSource, r => r.Duration,              (r, v) => r.Duration = v);
-                    psDirty |= ps.AssignNumberIfNotNullOrZero(Frequency,     psSource, r => r.Frequency,             (r, v) => r.Frequency = v);
-                    psDirty |= ps.AssignNumberIfNotNullOrZero(Quality,       psSource, r => r.Quality,               (r, v) => r.Quality = v);
-                    psDirty |= ps.AssignBoolIfNotNull(AutoStartProcess,      psSource, r => r.AutoStartProcess,      (r, v) => r.AutoStartProcess = v);
-                    psDirty |= ps.AssignBoolIfNotNull(AlwaysRunning,         psSource, r => r.AlwaysRunning,         (r, v) => r.AlwaysRunning = v);
+                    psDirty |= ps.AssignNumberIfNotNullOrZero(Duration, psSource, r => r.Duration, (r, v) => r.Duration = v);
+                    psDirty |= ps.AssignNumberIfNotNullOrZero(Frequency, psSource, r => r.Frequency, (r, v) => r.Frequency = v);
+                    psDirty |= ps.AssignNumberIfNotNullOrZero(Quality, psSource, r => r.Quality, (r, v) => r.Quality = v);
+                    psDirty |= ps.AssignBoolIfNotNull(AutoStartProcess, psSource, r => r.AutoStartProcess, (r, v) => r.AutoStartProcess = v);
+                    psDirty |= ps.AssignBoolIfNotNull(AlwaysRunning, psSource, r => r.AlwaysRunning, (r, v) => r.AlwaysRunning = v);
 
                     var a4r = new AutopilotForRobotsSettings();
                     var a4rSource = psSource.AutopilotForRobots ?? new();
                     bool a4rDirty = false;
-                    a4rDirty |= a4r.AssignBoolIfNotNull(A4R_Enabled,        a4rSource, r => r.Enabled,        (r, v) => r.Enabled = v);
+                    a4rDirty |= a4r.AssignBoolIfNotNull(A4R_Enabled, a4rSource, r => r.Enabled, (r, v) => r.Enabled = v);
                     a4rDirty |= a4r.AssignBoolIfNotNull(A4R_HealingEnabled, a4rSource, r => r.HealingEnabled, (r, v) => r.HealingEnabled = v);
                     if (a4rDirty) { ps.AutopilotForRobots = a4r; psDirty = true; }
 
@@ -447,9 +447,9 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                     var vrs = new VideoRecordingSettings();
                     var vrsSource = process.VideoRecordingSettings ?? new();
                     bool vrsDirty = false;
-                    vrsDirty |= vrs.AssignStringIfNotNull(VideoRecordingType,          vrsSource, r => r.VideoRecordingType,          (r, v) => r.VideoRecordingType = v);
+                    vrsDirty |= vrs.AssignStringIfNotNull(VideoRecordingType, vrsSource, r => r.VideoRecordingType, (r, v) => r.VideoRecordingType = v);
                     vrsDirty |= vrs.AssignStringIfNotNull(QueueItemVideoRecordingType, vrsSource, r => r.QueueItemVideoRecordingType, (r, v) => r.QueueItemVideoRecordingType = v);
-                    vrsDirty |= vrs.AssignNumberIfNotNullOrZero(MaxDurationSeconds,    vrsSource, r => r.MaxDurationSeconds,          (r, v) => r.MaxDurationSeconds = v);
+                    vrsDirty |= vrs.AssignNumberIfNotNullOrZero(MaxDurationSeconds, vrsSource, r => r.MaxDurationSeconds, (r, v) => r.MaxDurationSeconds = v);
 
                     if (vrsDirty) { newRelease.VideoRecordingSettings = vrs; releaseDirty = true; }
                 }

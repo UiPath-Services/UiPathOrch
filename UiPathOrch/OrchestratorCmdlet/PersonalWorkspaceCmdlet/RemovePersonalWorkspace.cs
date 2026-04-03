@@ -95,7 +95,7 @@ public class RemovePersonalWorkspaceCommand : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumOrchDrives(Path);
 
-        if (Name?.Length == 0      || string.IsNullOrEmpty(Name?[0])) Name = null;
+        if (Name?.Length == 0 || string.IsNullOrEmpty(Name?[0])) Name = null;
         if (OwnerName?.Length == 0 || string.IsNullOrEmpty(OwnerName?[0])) OwnerName = null;
 
         if (Name is null && OwnerName is null)

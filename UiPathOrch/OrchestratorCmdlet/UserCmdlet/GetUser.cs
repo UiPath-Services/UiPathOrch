@@ -25,7 +25,7 @@ public class GetUserCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<DirectoryTypeItems, int>))]
     [ValidateDictionaryKey<DirectoryTypeItems, int>(AllowWildcard = true)]
-    public string[]? Type{ get; set; }
+    public string[]? Type { get; set; }
 
     [Parameter]
     public SwitchParameter ExpandDetails { get; set; }

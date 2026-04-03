@@ -75,7 +75,7 @@ public class GetFolderUsageCommand : OrchestratorPSCmdlet
 
         foreach (var p in _inputParameters)
         {
-            string ? target = p.folder?.GetPSPath();
+            string? target = p.folder?.GetPSPath();
             try
             {
                 var ret = p.drive!.EntitiesSummary.Get(p.folder!);

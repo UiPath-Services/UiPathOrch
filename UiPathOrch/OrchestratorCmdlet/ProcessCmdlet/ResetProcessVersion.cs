@@ -7,9 +7,9 @@ using UiPath.PowerShell.Core;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Reset, "OrchProcessVersion", SupportsShouldProcess = true)]
-public class ResetProcessVersionCommand: OrchestratorPSCmdlet
+public class ResetProcessVersionCommand : OrchestratorPSCmdlet
 {
-    [Parameter (Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }

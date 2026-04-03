@@ -52,7 +52,7 @@ public class MoveFolderUserCommand : OrchestratorPSCmdlet
         {
             var recurse = GetSwitchParameterValue(commandAst, "Recurse");
             var paramDepth = GetParameterValue(commandAst, "Depth");
-            _= uint.TryParse(paramDepth, out uint depth);
+            _ = uint.TryParse(paramDepth, out uint depth);
 
             // Extract path from parameter. If not specified, target the current directory.
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");

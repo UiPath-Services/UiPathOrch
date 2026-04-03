@@ -34,7 +34,7 @@ public class RemoveTestSetCommand : OrchestratorPSCmdlet
             try
             {
                 var testSets = drive.TestSets.Get(folder);
-         
+
                 foreach (var testSet in testSets
                     .FilterByWildcards(ts => ts?.Name, wpName)
                     .OrderBy(ts => ts.Name))

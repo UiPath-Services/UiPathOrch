@@ -34,7 +34,7 @@ public class GetPmRobotAccountCommand : OrchestratorPSCmdlet
     public Encoding? CsvEncoding { get; set; }
 
     private static readonly string DefaultCsvName = "ExportedPmRobotAccounts.csv";
-    private static readonly string[] CsvHeaders = 
+    private static readonly string[] CsvHeaders =
         ["Path", "UserName", "GroupName0", "GroupName1", "GroupName2", "GroupName3", "GroupName4", "GroupName5", "GroupName6", "GroupName7", "GroupName8", "GroupName9"];
 
     //private static void WriteCsvContent(StreamWriter writer, IEnumerable<PmRobotAccount> robotAccounts, ConcurrentDictionary<string, PmGroup> groups)

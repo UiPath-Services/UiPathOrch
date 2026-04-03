@@ -158,7 +158,7 @@ public class MoveOrchPmGroupMemberCommand : OrchestratorPSCmdlet
             List<string> existingMemberIds = group.members?.Select(m => m.identifier!).ToList();
 
             // Remove ids that are already in the group from the add list
-            if (command.directoryUserIDsToAdd is not null && existingMemberIds  is not null)
+            if (command.directoryUserIDsToAdd is not null && existingMemberIds is not null)
             {
                 command.directoryUserIDsToAdd.RemoveAll(m => existingMemberIds.Contains(m));
             }
@@ -170,11 +170,11 @@ public class MoveOrchPmGroupMemberCommand : OrchestratorPSCmdlet
             }
 
             // Set empty lists to null
-            if (command.directoryUserIDsToAdd   ?.Count == 0) command.directoryUserIDsToAdd    = null;
+            if (command.directoryUserIDsToAdd?.Count == 0) command.directoryUserIDsToAdd = null;
             if (command.directoryUserIDsToRemove?.Count == 0) command.directoryUserIDsToRemove = null;
 
             // If both are null, no API call is needed
-            if (command.directoryUserIDsToAdd    is null &&
+            if (command.directoryUserIDsToAdd is null &&
                 command.directoryUserIDsToRemove is null)
             {
                 continue;

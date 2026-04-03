@@ -83,8 +83,8 @@ public class NewMachineCommand : OrchestratorPSCmdlet
         var drives = SessionState.EnumOrchDrives(Path);
         var processedRobotUsers = RobotUsers?.Split1stValueByUnescapedCommas();
 
-        if (string.IsNullOrEmpty(Type))            { Type = "Template"; }
-        if (string.IsNullOrEmpty(AutomationType))  { AutomationType = null; }
+        if (string.IsNullOrEmpty(Type)) { Type = "Template"; }
+        if (string.IsNullOrEmpty(AutomationType)) { AutomationType = null; }
         if (string.IsNullOrEmpty(TargetFramework)) { TargetFramework = null; }
 
         using var cancelHandler = new ConsoleCancelHandler();
@@ -103,9 +103,9 @@ public class NewMachineCommand : OrchestratorPSCmdlet
                 string target = System.IO.Path.Combine(drive.NameColonSeparator, name);
                 if (ShouldProcess(target, "New Machine"))
                 {
-                   List<RobotUser>? lstRobotUsers = null;
-                   if (processedRobotUsers is not null)
-                   {
+                    List<RobotUser>? lstRobotUsers = null;
+                    if (processedRobotUsers is not null)
+                    {
                         var robots = drive.AllRobotsAcrossFolders.Get();
                         var wpRobotUsers = processedRobotUsers.ConvertToWildcardPatternList();
                         var targetRobots = robots.FilterByWildcards(r => r?.User?.FullName, wpRobotUsers);

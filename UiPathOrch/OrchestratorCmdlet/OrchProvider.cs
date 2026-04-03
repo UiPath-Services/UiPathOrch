@@ -780,7 +780,7 @@ public partial class OrchProvider : NavigationCmdletProvider
                     drive.OrchAPISession.EntraIdWarningChecked = true;
                 }
             }
-            catch {} // Swallow - don't block navigation for a warning
+            catch { } // Swallow - don't block navigation for a warning
         }
 
         var parameters = DynamicParameters as GetChildItems_Parameters;
@@ -1239,7 +1239,7 @@ public partial class OrchProvider : NavigationCmdletProvider
     protected override string MakePath(string parent, string child)
     {
         string retNew = base.MakePath(parent, child);
-        if (retNew.EndsWith(System.IO.Path.DirectorySeparatorChar) && retNew.Length > 1 && retNew[retNew.Length-2] != ':')
+        if (retNew.EndsWith(System.IO.Path.DirectorySeparatorChar) && retNew.Length > 1 && retNew[retNew.Length - 2] != ':')
         {
             retNew = retNew.Substring(0, retNew.Length - 1);
         }

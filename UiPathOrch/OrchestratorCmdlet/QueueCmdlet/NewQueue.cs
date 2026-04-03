@@ -134,15 +134,15 @@ public class NewQueueCommand : OrchestratorPSCmdlet
                     Name = WildcardPattern.Unescape(name),
                 };
 
-                newQueue.AssignStringIfNotNull(Description,        (q, v) => q.Description = v);
-                newQueue.AssignBoolIfNotNull(AcceptAutomaticallyRetry,  (q, v) => q.AcceptAutomaticallyRetry = v);
-                newQueue.AssignBoolIfNotNull(RetryAbandonedItems,       (q, v) => q.RetryAbandonedItems = v);
-                newQueue.AssignNumberIfNotNullOrZero(MaxNumberOfRetries,      (q, v) => q.MaxNumberOfRetries = v);
-                newQueue.AssignBoolIfNotNull(EnforceUniqueReference,    (q, v) => q.EnforceUniqueReference = v);
-                newQueue.AssignBoolIfNotNull(Encrypted,                 (q, v) => q.Encrypted = v);
+                newQueue.AssignStringIfNotNull(Description, (q, v) => q.Description = v);
+                newQueue.AssignBoolIfNotNull(AcceptAutomaticallyRetry, (q, v) => q.AcceptAutomaticallyRetry = v);
+                newQueue.AssignBoolIfNotNull(RetryAbandonedItems, (q, v) => q.RetryAbandonedItems = v);
+                newQueue.AssignNumberIfNotNullOrZero(MaxNumberOfRetries, (q, v) => q.MaxNumberOfRetries = v);
+                newQueue.AssignBoolIfNotNull(EnforceUniqueReference, (q, v) => q.EnforceUniqueReference = v);
+                newQueue.AssignBoolIfNotNull(Encrypted, (q, v) => q.Encrypted = v);
                 //newQueue.assig  ProcessScheduleId": null,
-                newQueue.AssignStringIfNotNullOrEmpty(SpecificDataJsonSchema,  (q, v) => q.SpecificDataJsonSchema = v);
-                newQueue.AssignStringIfNotNullOrEmpty(OutputDataJsonSchema,    (q, v) => q.OutputDataJsonSchema = v);
+                newQueue.AssignStringIfNotNullOrEmpty(SpecificDataJsonSchema, (q, v) => q.SpecificDataJsonSchema = v);
+                newQueue.AssignStringIfNotNullOrEmpty(OutputDataJsonSchema, (q, v) => q.OutputDataJsonSchema = v);
                 newQueue.AssignStringIfNotNullOrEmpty(AnalyticsDataJsonSchema, (q, v) => q.AnalyticsDataJsonSchema = v);
 
                 #region Convert Release to ReleaseId
@@ -155,7 +155,7 @@ public class NewQueueCommand : OrchestratorPSCmdlet
                     this, target, "Release");
                 #endregion
 
-                newQueue.AssignNumberIfNotNullOrZero(SlaInMinutes,     (q, v) => q.SlaInMinutes = v);
+                newQueue.AssignNumberIfNotNullOrZero(SlaInMinutes, (q, v) => q.SlaInMinutes = v);
                 newQueue.AssignNumberIfNotNullOrZero(RiskSlaInMinutes, (q, v) => q.RiskSlaInMinutes = v);
                 newQueue.AssignTags(Tags, (q, v) => q.Tags = v);
 

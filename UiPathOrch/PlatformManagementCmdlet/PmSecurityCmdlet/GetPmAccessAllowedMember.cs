@@ -22,10 +22,10 @@ public class GetPmAccessAllowedMemberCmdlet : OrchestratorPSCmdlet
     internal class NameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgument(
-            string commandName, 
-            string parameterName, 
-            string wordToComplete, 
-            CommandAst commandAst, 
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
             System.Collections.IDictionary fakeBoundParameters)
         {
             var drives = ResolvePmDrives(fakeBoundParameters);

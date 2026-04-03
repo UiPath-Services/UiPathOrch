@@ -34,7 +34,8 @@ public class GetLibraryVersionCommand : OrchestratorPSCmdlet
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,
             drive => drive,
-            drive => {
+            drive =>
+            {
                 if (HostFeed)
                 {
                     var librariesInHost = drive.LibrariesInHost.Get();

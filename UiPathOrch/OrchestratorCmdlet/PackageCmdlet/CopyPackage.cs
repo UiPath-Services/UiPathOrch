@@ -149,7 +149,7 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
         }
     }
 
-    private class NoCorrespondDestinatoinFolderException : Exception {}
+    private class NoCorrespondDestinatoinFolderException : Exception { }
 
     private static bool PackageExists(OrchDriveInfo drive, Folder folder, Package version)
     {

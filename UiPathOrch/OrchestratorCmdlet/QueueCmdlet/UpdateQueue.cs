@@ -158,16 +158,16 @@ public class UpdateQueueCommand : OrchestratorPSCmdlet
                 QueueDefinition newQueue = OrchCollectionExtensions.DeepCopy<QueueDefinition>(queue);
 
                 bool queueDirty = false;
-                queueDirty |= newQueue.AssignStringIfNotNull(NewName,                      queue, q => q.Name,                    (q, v) => q.Name = v);
-                queueDirty |= newQueue.AssignStringIfNotNull(Description,                  queue, q => q.Description,             (q, v) => q.Description = v);
-                queueDirty |= newQueue.AssignBoolIfNotNull(AcceptAutomaticallyRetry,        queue, q => q.AcceptAutomaticallyRetry, (q, v) => q.AcceptAutomaticallyRetry = v);
-                queueDirty |= newQueue.AssignBoolIfNotNull(RetryAbandonedItems,             queue, q => q.RetryAbandonedItems,      (q, v) => q.RetryAbandonedItems = v);
-                queueDirty |= newQueue.AssignNumberIfNotNullOrZero(MaxNumberOfRetries,      queue, q => q.MaxNumberOfRetries,       (q, v) => q.MaxNumberOfRetries = v);
-                queueDirty |= newQueue.AssignStringIfNotNull(SpecificDataJsonSchema,        queue, q => q.SpecificDataJsonSchema,   (q, v) => q.SpecificDataJsonSchema = v);
-                queueDirty |= newQueue.AssignStringIfNotNull(OutputDataJsonSchema,          queue, q => q.OutputDataJsonSchema,     (q, v) => q.OutputDataJsonSchema = v);
-                queueDirty |= newQueue.AssignStringIfNotNull(AnalyticsDataJsonSchema,       queue, q => q.AnalyticsDataJsonSchema,  (q, v) => q.AnalyticsDataJsonSchema = v);
-                queueDirty |= newQueue.AssignNumberIfNotNullOrZero(SlaInMinutes,            queue, q => q.SlaInMinutes,             (q, v) => q.SlaInMinutes = v);
-                queueDirty |= newQueue.AssignNumberIfNotNullOrZero(RiskSlaInMinutes,        queue, q => q.RiskSlaInMinutes,         (q, v) => q.RiskSlaInMinutes = v);
+                queueDirty |= newQueue.AssignStringIfNotNull(NewName, queue, q => q.Name, (q, v) => q.Name = v);
+                queueDirty |= newQueue.AssignStringIfNotNull(Description, queue, q => q.Description, (q, v) => q.Description = v);
+                queueDirty |= newQueue.AssignBoolIfNotNull(AcceptAutomaticallyRetry, queue, q => q.AcceptAutomaticallyRetry, (q, v) => q.AcceptAutomaticallyRetry = v);
+                queueDirty |= newQueue.AssignBoolIfNotNull(RetryAbandonedItems, queue, q => q.RetryAbandonedItems, (q, v) => q.RetryAbandonedItems = v);
+                queueDirty |= newQueue.AssignNumberIfNotNullOrZero(MaxNumberOfRetries, queue, q => q.MaxNumberOfRetries, (q, v) => q.MaxNumberOfRetries = v);
+                queueDirty |= newQueue.AssignStringIfNotNull(SpecificDataJsonSchema, queue, q => q.SpecificDataJsonSchema, (q, v) => q.SpecificDataJsonSchema = v);
+                queueDirty |= newQueue.AssignStringIfNotNull(OutputDataJsonSchema, queue, q => q.OutputDataJsonSchema, (q, v) => q.OutputDataJsonSchema = v);
+                queueDirty |= newQueue.AssignStringIfNotNull(AnalyticsDataJsonSchema, queue, q => q.AnalyticsDataJsonSchema, (q, v) => q.AnalyticsDataJsonSchema = v);
+                queueDirty |= newQueue.AssignNumberIfNotNullOrZero(SlaInMinutes, queue, q => q.SlaInMinutes, (q, v) => q.SlaInMinutes = v);
+                queueDirty |= newQueue.AssignNumberIfNotNullOrZero(RiskSlaInMinutes, queue, q => q.RiskSlaInMinutes, (q, v) => q.RiskSlaInMinutes = v);
 
                 #region Convert Release to ReleaseId
                 newQueue.AssignIdFromName(

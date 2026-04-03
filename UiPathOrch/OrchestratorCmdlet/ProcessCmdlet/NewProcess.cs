@@ -49,7 +49,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(StaticTextsCompleter<JobPriorityItems>))]
     public string? Priority { get; set; }
 
-     // Hide process for attended users
+    // Hide process for attended users
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BoolCompleter))]
     public string? HiddenForAttendedUser { get; set; }
@@ -342,9 +342,9 @@ public class NewProcessCommand : OrchestratorPSCmdlet
                 var desc = string.IsNullOrEmpty(Description) ? version?.Description : Description;
                 release.AssignStringIfNotNull(desc, (r, v) => r.Description = v);
 
-                release.AssignBoolIfNotNull(HiddenForAttendedUser,   (r, v) => r.HiddenForAttendedUser = v);
-                release.AssignStringIfNotNullOrEmpty(RemoteControlAccess,   (r, v) => r.RemoteControlAccess = v);
-                release.AssignStringIfNotNullOrEmpty(InputArguments,        (r, v) => r.InputArguments = v);
+                release.AssignBoolIfNotNull(HiddenForAttendedUser, (r, v) => r.HiddenForAttendedUser = v);
+                release.AssignStringIfNotNullOrEmpty(RemoteControlAccess, (r, v) => r.RemoteControlAccess = v);
+                release.AssignStringIfNotNullOrEmpty(InputArguments, (r, v) => r.InputArguments = v);
                 release.AssignNumberIfNotNullOrZero(SpecificPriorityValue, (r, v) => r.SpecificPriorityValue = v);
                 release.AssignTags(Tags, (r, v) => r.Tags = v);
 
@@ -385,7 +385,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
                 release.ProcessSettings.AssignNumberIfNotNullOrZero(Duration, (p, v) => p.Duration = v);
 
                 release.ProcessSettings.AutopilotForRobots = new();
-                release.ProcessSettings.AssignBoolIfNotNull(A4R_Enabled,        (p, v) => p.AutopilotForRobots!.Enabled = v);
+                release.ProcessSettings.AssignBoolIfNotNull(A4R_Enabled, (p, v) => p.AutopilotForRobots!.Enabled = v);
                 release.ProcessSettings.AssignBoolIfNotNull(A4R_HealingEnabled, (p, v) => p.AutopilotForRobots!.HealingEnabled = v);
 
                 //release.ProcessSettings.ErrorRecordingEnabled ??= false;

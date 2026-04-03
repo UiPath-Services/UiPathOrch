@@ -71,24 +71,24 @@ public class EditConfigCommand : PSCmdlet
                 //}
                 //else
                 //{
-                    //string folder = System.IO.Path.GetDirectoryName(configFilePath);
-                    //string fileName = Path.GetFileName(configFilePath);
+                //string folder = System.IO.Path.GetDirectoryName(configFilePath);
+                //string fileName = Path.GetFileName(configFilePath);
 
-                    //if (candidate == "xdg-open")
-                    //{
-                    //    Process.Start(new ProcessStartInfo(candidate, configFilePath)
-                    //    {
-                    //        UseShellExecute = true
-                    //    });
-                    //}
-                    //else
-                    //{
-                    //    Process.Start(new ProcessStartInfo("/usr/bin/script")
-                    //    {
-                    //        UseShellExecute = true,
-                    //        ArgumentList = { "-q", "-c", $"env TERM=xterm {candidate} {configFilePath}", "/dev/null" }
-                    //    });
-                    //}
+                //if (candidate == "xdg-open")
+                //{
+                //    Process.Start(new ProcessStartInfo(candidate, configFilePath)
+                //    {
+                //        UseShellExecute = true
+                //    });
+                //}
+                //else
+                //{
+                //    Process.Start(new ProcessStartInfo("/usr/bin/script")
+                //    {
+                //        UseShellExecute = true,
+                //        ArgumentList = { "-q", "-c", $"env TERM=xterm {candidate} {configFilePath}", "/dev/null" }
+                //    });
+                //}
                 //}
 
                 return null;

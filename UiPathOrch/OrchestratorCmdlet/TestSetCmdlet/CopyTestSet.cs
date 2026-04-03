@@ -66,7 +66,7 @@ public class CopyTestSetCommand : OrchestratorPSCmdlet
             {
                 Core.OrchProvider.CopyTestSets(this,
                     srcDrive, srcFolder, wpName,
-                    dstDrive, dstFolder, reporterTestSets, 
+                    dstDrive, dstFolder, reporterTestSets,
                     false, cancelHandler.Token);
                 dstDrive.TestSets.ClearCache(dstFolder);
             }

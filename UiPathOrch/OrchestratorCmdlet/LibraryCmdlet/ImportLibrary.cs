@@ -41,7 +41,7 @@ public class ImportLibraryCommand : OrchestratorPSCmdlet
 
         // This implementation should be fine as is.
         var importTasks = drives
-            .SelectMany(drive => pkgFilePaths, (drive, pkgFilePath) => 
+            .SelectMany(drive => pkgFilePaths, (drive, pkgFilePath) =>
                 (drive, pkgFilePath.FullPath, pkgFilePath.RelativePath))
             .ToList();
 

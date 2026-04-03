@@ -182,16 +182,16 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
                 physicalPath = resolvedPath.ProviderPath;
                 break;
             //case 0: // This should not happen because GetResolvedPSPathFromPSPath() would throw an exception
-                //var parentFolder = Path.GetDirectoryName(paramExportCsv);
-                //var fileName = Path.GetFileName(paramExportCsv);
-                //resolvedPaths = state.Path.GetResolvedPSPathFromPSPath(parentFolder);
-                //physicalPath = resolvedPaths.Count switch
-                //{
-                //    1 => Path.Combine(resolvedPaths.First().ProviderPath, fileName),
-                //    0 => throw new FileNotFoundException($"The specified path '{paramExportCsv}' does not exist."),
-                //    _ => throw new InvalidOperationException($"The specified path '{paramExportCsv}' resolves to multiple locations."),
-                //};
-                //break;
+            //var parentFolder = Path.GetDirectoryName(paramExportCsv);
+            //var fileName = Path.GetFileName(paramExportCsv);
+            //resolvedPaths = state.Path.GetResolvedPSPathFromPSPath(parentFolder);
+            //physicalPath = resolvedPaths.Count switch
+            //{
+            //    1 => Path.Combine(resolvedPaths.First().ProviderPath, fileName),
+            //    0 => throw new FileNotFoundException($"The specified path '{paramExportCsv}' does not exist."),
+            //    _ => throw new InvalidOperationException($"The specified path '{paramExportCsv}' resolves to multiple locations."),
+            //};
+            //break;
             default:
                 throw new InvalidOperationException($"The specified path '{paramExportCsv}' resolves to multiple locations.");
         }

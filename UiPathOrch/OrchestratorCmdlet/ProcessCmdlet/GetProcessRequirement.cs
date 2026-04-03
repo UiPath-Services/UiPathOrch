@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(SubtypedPackageResource))]
 public class GetProcessRequirementCmdlet : OrchestratorPSCmdlet
 {
-    [Parameter (Position = 0, ValueFromPipelineByPropertyName = true)]
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ProcessNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }

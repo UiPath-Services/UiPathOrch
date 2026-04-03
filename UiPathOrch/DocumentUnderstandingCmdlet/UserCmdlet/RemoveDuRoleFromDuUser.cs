@@ -99,7 +99,7 @@ public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
             dp => dp.project.GetPSPath(),
             dp => dp.project,
             dp => dp.drive.GetDuUsers(dp.project));
- 
+
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)
         {

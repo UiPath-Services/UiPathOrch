@@ -128,7 +128,7 @@ public class ExportPackageCommand : OrchestratorPSCmdlet
         {
             Destination = SessionState.Path.CurrentFileSystemLocation.Path;
         }
-        
+
         // Convert the PSDrive path to the actual file system path
         Destination = SessionState.Path.GetUnresolvedProviderPathFromPSPath(Destination);
 

@@ -124,7 +124,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
     private Folder? CopyFolder(
-        OrchDriveInfo srcDrive, Folder srcFolder, 
+        OrchDriveInfo srcDrive, Folder srcFolder,
         OrchDriveInfo dstDrive, Folder dstFolder, string feedType,
         CancellationToken cancelToken)
     {
@@ -236,7 +236,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
     internal static void CopyFolderUsers(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder,  List<WildcardPattern>? wpUserName, List<WildcardPattern>? wpType,
+        OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpUserName, List<WildcardPattern>? wpType,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken,
         Dictionary<string, string>? userMapping = null)
@@ -350,7 +350,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         //    srcUserEmail = srcDirectoryUser?.email;
                         //}
 
-                        if (!string.IsNullOrEmpty(srcUserEmail) && srcUserEmail!= userName)
+                        if (!string.IsNullOrEmpty(srcUserEmail) && srcUserEmail != userName)
                         {
                             resolved = dstDrive.SearchDirectory(srcUserEmail)?
                                 .Where(u => u.type == type)
@@ -501,7 +501,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
 
         if (machinesToBeAdded.Count == 0) return;
-        
+
         reporter.TotalNum = machinesToBeAdded.Count;
         reporter.WriteProgress(machinesToBeAdded.Count);
         try
@@ -538,7 +538,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
     internal static void CopyPackages(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder, 
+        OrchDriveInfo srcDrive, Folder srcFolder,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter, CancellationToken cancelToken)
     {
         // Do nothing unless both srcFolder and dstFolder are root-level folders with feeds
@@ -710,7 +710,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         foreach (var process in processes.OrderBy(p => p.Name))
         {
             cancelToken.ThrowIfCancellationRequested();
-            
+
             string target = $"Item: '{process.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'";
             if (shouldProcess || _this.ShouldProcess(target, "Copy Process"))
             {
@@ -1158,7 +1158,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             // For classic robots, no matching robot name can be found
 
             var dstRobots = dstDrive.RobotsFromFolder.Get(dstFolder);
-            var dstRobot = dstRobots?.FirstOrDefault(r => 
+            var dstRobot = dstRobots?.FirstOrDefault(r =>
                 r.Type == srcRobot_Type && // This srcRobot.Type should always be "Unattended"..
                 string.Compare(r.Username, srcRobot_Username, StringComparison.OrdinalIgnoreCase) == 0);
             if (dstRobot is null)
@@ -1472,7 +1472,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
     internal static bool LinkAsset(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder, 
+        OrchDriveInfo srcDrive, Folder srcFolder,
         OrchDriveInfo dstDrive, Folder newFolder, Asset asset, string msg)
     {
         // TODO: Is this version number correct? There likely aren't any Orchestrators older than v12 anymore.
@@ -1694,7 +1694,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
     internal static bool LinkQueue(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder, 
+        OrchDriveInfo srcDrive, Folder srcFolder,
         OrchDriveInfo dstDrive, Folder newFolder, QueueDefinition queue)
     {
         // TODO: Is this version number correct? There likely aren't any Orchestrators older than v12 anymore.
@@ -1760,7 +1760,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
     internal static void CopyQueueItem(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder, QueueDefinition srcQueue, 
+        OrchDriveInfo srcDrive, Folder srcFolder, QueueDefinition srcQueue,
         OrchDriveInfo dstDrive, Folder newFolder, QueueDefinition dstQueue, ProgressReporter reporter)
     {
         // to be implemented
@@ -2210,7 +2210,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
     internal static bool LinkBucket(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder, 
+        OrchDriveInfo srcDrive, Folder srcFolder,
         OrchDriveInfo dstDrive, Folder newFolder, Bucket bucket)
     {
         if (srcDrive.OrchAPISession.ApiVersion < 12) return false;
@@ -2728,7 +2728,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                 if (postingTaskCatalog.RetentionBucketId is not null)
                 {
-                    var destinationBucket = FindDstBucket(_this, 
+                    var destinationBucket = FindDstBucket(_this,
                         srcDrive, srcFolder, postingTaskCatalog.RetentionBucketId,
                         dstDrive, newFolder, "Copy ActionCatalog", msg);
                     postingTaskCatalog.RetentionBucketId = destinationBucket?.Id;
@@ -3053,10 +3053,10 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         WriteWarning($"Subfolders of \"{srcFolder.GetPSPath()}\" cannot be copied into a personal workspace. Skipping {subfolders.Count} subfolder(s).");
                     }
                     else foreach (var subfolder in subfolders)
-                    {
-                        CopyItemRecurse(srcDrive, subfolder, dstDrive, newFolder, true, cancelToken, userMapping);
-                        cancelToken.ThrowIfCancellationRequested();
-                    }
+                        {
+                            CopyItemRecurse(srcDrive, subfolder, dstDrive, newFolder, true, cancelToken, userMapping);
+                            cancelToken.ThrowIfCancellationRequested();
+                        }
                 }
 
                 // If the current user is not assigned to the source folder,
