@@ -45594,7 +45594,7 @@ PS Orch1:\Shared&gt; Set-OrchCredentialAsset -Name AdminCred -Credential $cred
       <command:noun>OrchLocation</command:noun>
     </command:details>
     <maml:description>
-      <maml:para>The Set-OrchLocation cmdlet changes the current location (working directory) to the directory where the specified PowerShell module is installed. By default, it navigates to the UiPath.PowerShell.OrchProvider module directory.</maml:para>
+      <maml:para>The Set-OrchLocation cmdlet changes the current location (working directory) to the directory where the specified PowerShell module is installed. By default, it navigates to the UiPathOrch module directory.</maml:para>
       <maml:para>This is useful for quickly navigating to the module's files, documentation, and configuration resources.</maml:para>
       <maml:para>The -ModuleName parameter supports tab completion. Press [Ctrl+Space] or [Tab] to see available loaded PowerShell modules. Wildcard patterns are supported to match module names.</maml:para>
       <maml:para>Primary Endpoint: (none)</maml:para>
@@ -45607,7 +45607,7 @@ PS Orch1:\Shared&gt; Set-OrchCredentialAsset -Name AdminCred -Credential $cred
         <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="0" aliases="none">
           <maml:name>ModuleName</maml:name>
           <maml:description>
-            <maml:para>Specifies the name of the module whose installation directory to navigate to. Defaults to "UiPath.PowerShell.OrchProvider". Accepts wildcard patterns.</maml:para>
+            <maml:para>Specifies the name of the module whose installation directory to navigate to. Defaults to "UiPathOrch". Accepts wildcard patterns.</maml:para>
           </maml:description>
           <command:parameterValue required="false" variableLength="true">System.String</command:parameterValue>
         </command:parameter>
@@ -45617,7 +45617,7 @@ PS Orch1:\Shared&gt; Set-OrchCredentialAsset -Name AdminCred -Credential $cred
       <command:parameter required="false" variableLength="false" globbing="true" pipelineInput="false" position="0" aliases="none">
         <maml:name>ModuleName</maml:name>
         <maml:description>
-          <maml:para>Specifies the name of the module whose installation directory to navigate to. Defaults to "UiPath.PowerShell.OrchProvider". Accepts wildcard patterns.</maml:para>
+          <maml:para>Specifies the name of the module whose installation directory to navigate to. Defaults to "UiPathOrch". Accepts wildcard patterns.</maml:para>
         </maml:description>
         <command:parameterValue required="false" variableLength="true">System.String</command:parameterValue>
       </command:parameter>
@@ -45655,7 +45655,7 @@ PS C:\&gt; Set-OrchLocation
         <maml:title>--------- Example 2: Navigate to a specific module directory ---------</maml:title>
         <maml:introduction>
           <maml:para>```powershell
-PS C:\&gt; Set-OrchLocation UiPath.PowerShell.OrchProvider
+PS C:\&gt; Set-OrchLocation UiPathOrch
 ```</maml:para>
           <maml:para>&#x80;</maml:para>
           <maml:para>You can specify the module name explicitly. The cmdlet navigates to the directory where the specified module DLL is located.</maml:para>

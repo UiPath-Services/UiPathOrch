@@ -1,6 +1,6 @@
 ---
 document type: cmdlet
-external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
+external help file: UiPathOrch.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: UiPathOrch

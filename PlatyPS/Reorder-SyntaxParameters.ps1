@@ -19,7 +19,7 @@
     Shows what changes would be made without actually modifying the file.
 
 .EXAMPLE
-    .\Reorder-SyntaxParameters.ps1 ..\Staging\en-US\UiPath.PowerShell.OrchProvider.dll-Help.xml
+    .\Reorder-SyntaxParameters.ps1 ..\Staging\en-US\UiPathOrch.dll-Help.xml
     .\Reorder-SyntaxParameters.ps1 ..\Staging\en-US\UiPathOrch-Help.xml
 #>
 [CmdletBinding(SupportsShouldProcess)]

@@ -14,7 +14,7 @@ OrchProvider/
 │   ├── Reorder-SyntaxParameters.ps1  # パラメータ並び替え
 │   └── help-build-procedure.md    # この手順書
 ├── Staging/en-US/                 # ビルド出力先 (XML)
-│   ├── UiPath.PowerShell.OrchProvider.dll-Help.xml  # C# cmdlet ヘルプ
+│   ├── UiPathOrch.dll-Help.xml  # C# cmdlet ヘルプ
 │   └── UiPathOrch-Help.xml        # PS1 関数ヘルプ
 ```
 
@@ -77,7 +77,7 @@ Remove-Item ..\Staging\en-US\temp -Recurse -Force
 ### Step 3: パラメータ並び替え
 
 ```powershell
-.\Reorder-SyntaxParameters.ps1 ..\Staging\en-US\UiPath.PowerShell.OrchProvider.dll-Help.xml
+.\Reorder-SyntaxParameters.ps1 ..\Staging\en-US\UiPathOrch.dll-Help.xml
 .\Reorder-SyntaxParameters.ps1 ..\Staging\en-US\UiPathOrch-Help.xml
 ```
 
@@ -87,7 +87,7 @@ Remove-Item ..\Staging\en-US\temp -Recurse -Force
 
 ```powershell
 $dest = 'C:\Program Files\PowerShell\7\Modules\UiPathOrch\en-US'
-Copy-Item ..\Staging\en-US\UiPath.PowerShell.OrchProvider.dll-Help.xml $dest -Force
+Copy-Item ..\Staging\en-US\UiPathOrch.dll-Help.xml $dest -Force
 Copy-Item ..\Staging\en-US\UiPathOrch-Help.xml $dest -Force
 ```
 
@@ -124,7 +124,7 @@ if ($errors) { $errors }
 
 | ファイル | 対象 | マークダウンの `external help file` |
 |----------|------|-------------------------------------|
-| `UiPath.PowerShell.OrchProvider.dll-Help.xml` | C# cmdlet (231 個) | `UiPath.PowerShell.OrchProvider.dll-Help.xml` |
+| `UiPathOrch.dll-Help.xml` | C# cmdlet (231 個) | `UiPathOrch.dll-Help.xml` |
 | `UiPathOrch-Help.xml` | PS1 関数 (7 個) | `UiPathOrch-Help.xml` |
 
 PS1 関数 (7 個):

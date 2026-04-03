@@ -42291,7 +42291,7 @@
       </command:example>
       <command:example>
         <maml:title>-------------------------- Example 2 --------------------------</maml:title>
-        <dev:code>PS C:\&gt; Set-OrchLocation UiPath.PowerShell.OrchProvider</dev:code>
+        <dev:code>PS C:\&gt; Set-OrchLocation UiPathOrch</dev:code>
         <dev:remarks>
           <maml:para>モジュール名を明示することもできます。</maml:para>
         </dev:remarks>

@@ -13,7 +13,7 @@ public class SetOrchLocationCommand : OrchestratorPSCmdlet
     [Parameter(Position = 0)]
     [ArgumentCompleter(typeof(ModuleNameCompleter))]
     [SupportsWildcards]
-    public string ModuleName { get; set; } = "UiPath.PowerShell.OrchProvider";
+    public string ModuleName { get; set; } = "UiPathOrch";
 
     private class ModuleNameCompleter : OrchArgumentCompleter
     {

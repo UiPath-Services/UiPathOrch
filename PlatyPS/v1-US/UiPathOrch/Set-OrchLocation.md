@@ -1,6 +1,6 @@
 ---
 document type: cmdlet
-external help file: UiPath.PowerShell.OrchProvider.dll-Help.xml
+external help file: UiPathOrch.dll-Help.xml
 HelpUri: ''
 Locale: en-US
 Module Name: UiPathOrch
@@ -27,7 +27,7 @@ Set-OrchLocation [[-ModuleName] <string>] [<CommonParameters>]
 
 ## DESCRIPTION
 
-The Set-OrchLocation cmdlet changes the current location (working directory) to the directory where the specified PowerShell module is installed. By default, it navigates to the UiPath.PowerShell.OrchProvider module directory.
+The Set-OrchLocation cmdlet changes the current location (working directory) to the directory where the specified PowerShell module is installed. By default, it navigates to the UiPathOrch module directory.
 
 This is useful for quickly navigating to the module's files, documentation, and configuration resources.
 
@@ -52,7 +52,7 @@ Sets the current location to the installation directory of the UiPathOrch module
 ### Example 2: Navigate to a specific module directory
 
 ```powershell
-PS C:\> Set-OrchLocation UiPath.PowerShell.OrchProvider
+PS C:\> Set-OrchLocation UiPathOrch
 ```
 
 You can specify the module name explicitly. The cmdlet navigates to the directory where the specified module DLL is located.
@@ -61,7 +61,7 @@ You can specify the module name explicitly. The cmdlet navigates to the director
 
 ### -ModuleName
 
-Specifies the name of the module whose installation directory to navigate to. Defaults to "UiPath.PowerShell.OrchProvider". Accepts wildcard patterns.
+Specifies the name of the module whose installation directory to navigate to. Defaults to "UiPathOrch". Accepts wildcard patterns.
 
 ```yaml
 Type: System.String

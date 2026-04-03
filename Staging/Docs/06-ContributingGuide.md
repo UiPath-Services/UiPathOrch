@@ -169,7 +169,7 @@ cd UiPathOrch
 .\Build-Deploy.ps1 -BuildOnly
 ```
 
-The build output is placed in `OrchProvider\bin\Release\net8.0`.
+The build output is placed in `UiPathOrch\bin\Release\net8.0`.
 
 ### Deploy to a Dev Directory
 
@@ -184,8 +184,8 @@ $devDir = "$HOME\UiPathOrch-dev"
 mkdir $devDir -Force
 
 # Copy build output and module files
-Copy-Item OrchProvider\bin\Release\net8.0\UiPath.PowerShell.OrchProvider.dll $devDir -Force
-Copy-Item Staging\UiPathOrch.psd1, Staging\UiPathOrch.psm1, Staging\OrchProvider.Format.ps1xml $devDir -Force
+Copy-Item UiPathOrch\bin\Release\net8.0\UiPathOrch.dll $devDir -Force
+Copy-Item Staging\UiPathOrch.psd1, Staging\UiPathOrch.psm1, Staging\UiPathOrch.Format.ps1xml $devDir -Force
 Copy-Item Staging\Functions $devDir\Functions -Recurse -Force
 Copy-Item Staging\Docs $devDir\Docs -Recurse -Force
 

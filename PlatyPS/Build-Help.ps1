@@ -10,7 +10,7 @@
       4. Deploy XML files to the module installation directory
 
     The script handles two separate help files:
-      - UiPath.PowerShell.OrchProvider.dll-Help.xml (C# cmdlets, ~230 cmdlets)
+      - UiPathOrch.dll-Help.xml (C# cmdlets, ~230 cmdlets)
       - UiPathOrch-Help.xml (PS1 function cmdlets, 7 functions)
 
 .PARAMETER DeployPath

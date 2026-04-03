@@ -1,9 +1,9 @@
 {
   "profiles": {
-    "OrchProvider": {
+    "UiPathOrch": {
       "commandName": "Executable",
       "executablePath": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
-      "commandLineArgs": "-noexit -command \"[reflection.assembly]::loadFrom('UiPath.PowerShell.OrchProvider.dll') | import-module"
+      "commandLineArgs": "-noexit -command \"[reflection.assembly]::loadFrom('UiPathOrch.dll') | import-module"
     }
   }
 }
