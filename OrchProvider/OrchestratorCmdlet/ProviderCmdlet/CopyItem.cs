@@ -2460,7 +2460,6 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                                     dstDrive, newFolder, tc.ReleaseId, msg)?.Id;
                             }
 
-                            // TODO: Replace placeholder with an appropriate message
                             postingTestSet.RobotId = FindDstRobot(_this,
                                 srcDrive, dstDrive, newFolder, postingTestSet.RobotId, "Migrating test set robot")?.Id;
 

@@ -1,8 +1,7 @@
-using System.Collections;
 using System.Management.Automation;
-using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -23,12 +22,8 @@ public class GetUnattendedSessionCommand : OrchestratorPSCmdlet
     //[ArgumentCompleter(typeof(TimeBeforeCompleter))]
     //public DateTime? ReportingTimeBefore { get; set; }
 
-    static readonly string[] StatusList = [
-        "Available", "Busy", "Disconnected", "Unknown"
-    ];
-
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(StatusCompleter))]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<UnattendedSessionStatus>))]
     [SupportsWildcards]
     public string[]? Status { get; set; }
 
@@ -42,29 +37,6 @@ public class GetUnattendedSessionCommand : OrchestratorPSCmdlet
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
-
-    // TODO: It would be better to only show existing statuses as candidates
-    // TODO: If keeping this as is, it should be rewritten using StaticTextCompleter.
-    private class StatusCompleter : OrchArgumentCompleter
-    {
-        public override IEnumerable<CompletionResult> CompleteArgument(
-            string commandName,
-            string parameterName,
-            string wordToComplete,
-            CommandAst commandAst,
-            IDictionary fakeBoundParameters)
-        {
-            var wpStatus = CreateSelfExclusionList(commandAst, "Status", wordToComplete);
-            var wp = CreateWPFromWordToComplete(wordToComplete);
-
-            foreach (var status in StatusList
-                .Where(s => wp.IsMatch(s))
-                .ExcludeByWildcards(s => s, wpStatus))
-            {
-                yield return new CompletionResult(status);
-            }
-        }
-    }
 
     protected override void ProcessRecord()
     {

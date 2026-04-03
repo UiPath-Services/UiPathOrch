@@ -417,3 +417,8 @@ internal class TestSetExecutionTriggerTypeNames : IStaticCandidates
 {
     public static string[] Items { get; } = Enum.GetNames(typeof(UiPath.PowerShell.Entities.TestSetExecutionTriggerType));
 };
+
+internal class UnattendedSessionStatus : IStaticCandidates
+{
+    public static string[] Items { get; } = ["Available", "Busy", "Disconnected", "Unknown"];
+};

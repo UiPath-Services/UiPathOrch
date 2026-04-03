@@ -3703,7 +3703,7 @@ public partial class OrchAPISession : IDisposable
                     if (total == first)
                         break;
                 }
-                if (total == first) // TODO: Is this correct?
+                if (total == first)
                     break;
             }
             else

@@ -1187,7 +1187,7 @@ internal class PackageIdCompleter : OrchArgumentCompleter
 
         // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-        var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse); ////////////////////////TODO★
+        var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse);
 
         // Exclude Ids already selected via the parameter
         var wpId = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
