@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <BaseOutputPath></BaseOutputPath>
-    <AssemblyName>UiPath.PowerShell.OrchProvider</AssemblyName>
+    <AssemblyName>UiPathOrch</AssemblyName>
     <Version>0.9.16.2</Version>
     <GenerateDocumentationFile>False</GenerateDocumentationFile>
   </PropertyGroup>
@@ -41,7 +41,7 @@
     <None Update="OCProvider.psd1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="OrchProvider.Format.ps1xml">
+    <None Update="UiPathOrch.Format.ps1xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
