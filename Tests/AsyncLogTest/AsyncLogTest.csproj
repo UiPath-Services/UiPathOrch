@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\OrchProvider\UiPathOrch.csproj" />
+    <ProjectReference Include="..\..\UiPathOrch\UiPathOrch.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
