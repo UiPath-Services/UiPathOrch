@@ -217,7 +217,7 @@ public partial class OrchProvider : NavigationCmdletProvider
             string lang = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
             if (!configFileLanguages.Contains(lang)) lang = "en";
 
-            SaveResourceToFile($"OrchProvider.Resources.{lang}.UiPathOrchConfig.json", configFilePath);
+            SaveResourceToFile($"UiPathOrch.Resources.{lang}.UiPathOrchConfig.json", configFilePath);
         }
     }
 

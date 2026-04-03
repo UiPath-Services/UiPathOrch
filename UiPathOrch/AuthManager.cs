@@ -258,7 +258,7 @@ internal class OrchestratorAuthManager
         int index = random.Next(resourceNames.Count);
         string selectedResource = resourceNames[index];
 
-        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("OrchProvider.bot." + selectedResource);
+        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("UiPathOrch.bot." + selectedResource);
         if (stream is null) return "";
 
         // Convert the stream to a byte array
@@ -354,7 +354,7 @@ internal class OrchestratorAuthManager
                         if (!string.IsNullOrEmpty(authorizationCode))
                         {
                             // Send a response back to the browser
-                            using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("OrchProvider.Resources.en.MountSuccessNotification.html");
+                            using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("UiPathOrch.Resources.en.MountSuccessNotification.html");
                             using StreamReader reader = new(stream!);
                             string htmlTemplate = await reader.ReadToEndAsync();
 
