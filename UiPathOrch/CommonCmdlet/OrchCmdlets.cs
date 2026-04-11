@@ -571,4 +571,21 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
             WriteObject($"CSV has been exported as '{filePath}'.");
         }
     }
+
+    // When Select-Object -First N (or similar) stops the pipeline, PowerShell throws
+    // PipelineStoppedException from WriteObject(). Our catch (Exception ex) blocks wrap
+    // it in OrchException and call WriteError(), which surfaces it as a spurious error.
+    // By re-throwing PipelineStoppedException here, we let PowerShell handle pipeline
+    // termination cleanly without showing an error message to the user.
+    protected new void WriteError(ErrorRecord errorRecord)
+    {
+        var ex = errorRecord.Exception;
+        while (ex is not null)
+        {
+            if (ex is PipelineStoppedException pse)
+                throw pse;
+            ex = ex.InnerException;
+        }
+        base.WriteError(errorRecord);
+    }
 }
