@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <BaseOutputPath></BaseOutputPath>
     <AssemblyName>UiPathOrch</AssemblyName>
-    <Version>0.9.16.3-rc1</Version>
+    <Version>0.9.16.3</Version>
     <GenerateDocumentationFile>False</GenerateDocumentationFile>
   </PropertyGroup>
 

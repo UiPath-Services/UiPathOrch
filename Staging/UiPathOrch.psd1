@@ -415,7 +415,7 @@ PrivateData = @{
 
         # ReleaseNotes of this module
         ReleaseNotes = '## New Features
-- Get-PmLicense: New cmdlet that returns tenant-level license inventory (allocated / total per UserBundle). Parameters: -License / -Code (wildcards, tab completion), -Path, -HasCapacity (allocated < total). Includes a formatted view with a usage bar.
+- Get-PmLicense: New cmdlet that returns tenant-level license inventory (allocated / inUse / total per UserBundle). Parameters: -License / -Code (wildcards, tab completion), -Path, -HasCapacity (allocated < total). Includes a formatted view with a usage bar.
 
 ## Improvements
 - Rewrote about_UiPathOrch help topic to reflect the current feature set.
@@ -434,7 +434,7 @@ PrivateData = @{
 '
 
         # Prerelease string of this module
-        Prerelease = 'rc1'
+        # Prerelease = ''
 
         # Flag to indicate whether the module requires explicit user acceptance for install/update/save
         # RequireLicenseAcceptance = $false
