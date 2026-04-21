@@ -2122,6 +2122,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerOrganization<PmRobotAccount> PmRobotAccounts;
     public readonly ListCachePerOrganization<ExternalClient> PmExternalClients;
     public readonly ListCachePerOrganization<ExternalResource> PmExternalApiResources;
+    public readonly ListCachePerOrganization<AvailableUserBundle> PmLicenses;
     public readonly ListCachePerOrganization<NuLicensedGroup> PmLicensedGroups;
     public readonly ListCachePerOrganization<NuLicensedUser> PmLicensedUsers;
     public readonly ListCachePerOrganization<AccessAllowedMember> PmAccessAllowedMember;
@@ -2227,6 +2228,16 @@ public partial class OrchDriveInfo : PSDriveInfo
         PmRobotAccounts = new(this, OrchAPISession.GetPmRobotAccounts, e => e.Path = NameColonSeparator);
         PmExternalClients = new(this, OrchAPISession.GetPmExternalClients, e => e.Path = NameColonSeparator);
         PmExternalApiResources = new(this, OrchAPISession.GetPmExternalApiResource, e => e.Path = NameColonSeparator);
+
+        PmLicenses = new(this,
+            OrchAPISession.GetPmLicenses,
+            e =>
+            {
+                e.Path = NameColonSeparator;
+                if (e.code is not null && AvailableUserBundlesItems.Items.TryGetValue(e.code, out var name))
+                    e.name = name;
+            }
+        );
 
         PmLicensedGroups = new(this,
             OrchAPISession.GetPmLicensedGroups,

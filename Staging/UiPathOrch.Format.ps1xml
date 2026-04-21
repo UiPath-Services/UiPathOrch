@@ -4295,6 +4295,75 @@
     </View>
 
     <View>
+      <Name>AvailableUserBundle</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.AvailableUserBundle</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>License</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Code</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Allocated</Label>
+            <Alignment>Right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Total</Label>
+            <Alignment>Right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Available</Label>
+            <Alignment>Right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Usage</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>name</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>code</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>allocated</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>total</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.total -ne $null -and $_.allocated -ne $null) { $_.total - $_.allocated } else { '' }
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.total -ne $null -and $_.allocated -ne $null -and $_.total -gt 0) {
+                    $pct = [int](($_.allocated / $_.total) * 100)
+                    $filled = [Math]::Round(($_.allocated / $_.total) * 10)
+                    $bar = ('#' * $filled) + ('.' * (10 - $filled))
+                    "[$bar] $pct%"
+                  } else { '' }
+                </ScriptBlock>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
       <Name>UpdateLicensedGroupResponse</Name>
       <ViewSelectedBy>
         <TypeName>UiPath.PowerShell.Entities.UpdateLicensedGroupResponse</TypeName>

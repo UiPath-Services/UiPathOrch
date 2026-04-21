@@ -3293,10 +3293,11 @@ public partial class OrchAPISession : IDisposable
     }
 
     // This is an undocumented API.
-    //public AvailableUserBundle[] GetPmLicensedUsersAvailableLicenses()
-    //{
-    //    return HttpRequestPortal<AvailableUserBundle[]>(HttpMethod.Get, $"/api/license/accountant/UserLicense") ?? [];
-    //}
+    // partitionGlobalId is not needed for some reason, but the parameter is added to integrate with the cache.
+    public IEnumerable<AvailableUserBundle> GetPmLicenses(string? partitionGlobalId)
+    {
+        return HttpRequestPortal<AvailableUserBundle[]>(HttpMethod.Get, "/api/license/accountant/UserLicense") ?? [];
+    }
 
     // This is an undocumented API.
     public AvailableUserBundles? GetPmLicensedGroupsAvailableLicenses(string? groupId)

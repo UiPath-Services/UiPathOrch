@@ -3439,6 +3439,8 @@ public class NuLicensedGroupMember : NuLicensedUser
 // added by UiPathOrch
 public class AvailableUserBundle // The proper class name is unknown.
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
     public string? code { get; set; }
     public string? name { get; set; } // added by UiPathOrch
     public int? allocated { get; set; }
