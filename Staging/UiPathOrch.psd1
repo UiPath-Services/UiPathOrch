@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.16.2'
+ModuleVersion = '0.9.16.3'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -402,47 +402,39 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        # Tags = @()
+        Tags = @('UiPath', 'Orchestrator', 'RPA', 'Automation', 'PSDrive', 'PSProvider', 'Cloud', 'OnPremises')
 
         # A URL to the license for this module.
-        # LicenseUri = ''
+        LicenseUri = 'https://github.com/UiPath-Services/UiPathOrch/blob/master/LICENSE'
 
         # A URL to the main website for this project.
-        # ProjectUri = ''
+        ProjectUri = 'https://github.com/UiPath-Services/UiPathOrch'
 
         # A URL to an icon representing this module.
         # IconUri = ''
 
         # ReleaseNotes of this module
         ReleaseNotes = '## New Features
-- Get-OrchPSDrive: IdentityUrl is now automatically derived from Root when not explicitly configured, so it is always available in Get-OrchPSDrive output. Previously it was null unless specified in the settings file.
-
-- Get-OrchPSDrive: Added Claims property containing decoded JWT access token claims as a PSObject. Access individual claims via `$drive.Claims.prt_id`, `$drive.Claims.email`, etc. Timestamp claims (exp, iat, nbf, auth_time) are converted to local DateTime.
+- Get-PmLicense: New cmdlet that returns tenant-level license inventory (allocated / total per UserBundle). Parameters: -License / -Code (wildcards, tab completion), -Path, -HasCapacity (allocated < total). Includes a formatted view with a usage bar.
 
 ## Improvements
-- Refactored Update-OrchMachine to use HTTP PATCH with minimal payloads instead of DeepCopy + PUT. Only specified parameters are sent. Machine slots (UnattendedSlots, NonProductionSlots, TestAutomationSlots) can now be set to 0.
+- Rewrote about_UiPathOrch help topic to reflect the current feature set.
 
-- Refactored Update-OrchUser to use per-property dirty flags instead of IEquatable comparison.
-
-- Refactored Set-OrchAsset and Set-OrchCredentialAsset: extracted helper methods, replaced manual DeepCopy with shared utility, and improved PerRobot value lookup performance with Dictionary-based indexing.
-
-- Removed IEquatable implementations from 14 entity types, no longer needed after the Update cmdlet refactoring.
-
-- Major internal refactoring of the tab completion engine and parallel execution infrastructure.
+- Added -UseDefaultEditor switch to Edit-OrchConfig.
 
 ## Bug Fixes
-- Fixed Set-OrchAsset Integer parse error message incorrectly saying "bool" instead of "integer".
+- Suppress spurious PipelineStoppedException in WriteError when using Select-Object -First.
 
-- Fixed Set-OrchCredentialAsset: empty CredentialPassword no longer silently deletes the Global credential value. Previously, re-importing a CSV exported by Get-OrchAsset -ExportCredentialCsv (which contains empty password fields) could destroy existing credentials. Use Remove-OrchAsset to delete credential assets instead.
+- Fixed Import-OrchQueueItem double-serialization bug.
 
-## Breaking Changes
-- Set-OrchCredentialAsset: `-CredentialPassword ''` no longer deletes the Global credential value. This prevents accidental credential loss when re-importing exported CSVs. PerRobot entry deletion via `-UserName <user> -CredentialPassword ''` is unchanged.
+- NavigationCmdletProvider review fixes: GetChildNames now writes the correct name / full-path / isContainer values, GetChildItems / GetChildNames honor Stopping mid-loop, GetItem has null guards, empty RenameItem / RemoveItem overrides were removed so the base class throws PSNotSupportedException, and several cmdlets gained [OutputType(typeof(void))].
 
-- Update-OrchMachine: Machine slot parameters (UnattendedSlots, NonProductionSlots, TestAutomationSlots) now accept 0 as a valid value. Previously, 0 was treated as "not specified".
+## Internal
+- Pinned .NET SDK to 8 via global.json.
 '
 
         # Prerelease string of this module
-        # Prerelease = ''
+        Prerelease = 'rc1'
 
         # Flag to indicate whether the module requires explicit user acceptance for install/update/save
         # RequireLicenseAcceptance = $false

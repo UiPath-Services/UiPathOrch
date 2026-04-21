@@ -1,3 +1,23 @@
+# Version: 0.9.16.3-rc1
+## New Features
+- Get-PmLicense: New cmdlet that returns tenant-level license inventory (allocated / total per UserBundle). Parameters: -License / -Code (wildcards, tab completion), -Path, -HasCapacity (allocated < total). Includes a formatted view with a usage bar.
+
+## Improvements
+- Rewrote about_UiPathOrch help topic to reflect the current feature set.
+
+- Added -UseDefaultEditor switch to Edit-OrchConfig.
+
+## Bug Fixes
+- Suppress spurious PipelineStoppedException in WriteError when using Select-Object -First.
+
+- Fixed Import-OrchQueueItem double-serialization bug.
+
+- NavigationCmdletProvider review fixes: GetChildNames now writes the correct name / full-path / isContainer values, GetChildItems / GetChildNames honor Stopping mid-loop, GetItem has null guards, empty RenameItem / RemoveItem overrides were removed so the base class throws PSNotSupportedException, and several cmdlets gained [OutputType(typeof(void))].
+
+## Internal
+- Pinned .NET SDK to 8 via global.json.
+
+
 # Version: 0.9.16.2
 ## New Features
 - Get-OrchPSDrive: IdentityUrl is now automatically derived from Root when not explicitly configured, so it is always available in Get-OrchPSDrive output. Previously it was null unless specified in the settings file.
