@@ -3445,6 +3445,7 @@ public class AvailableUserBundle // The proper class name is unknown.
     public string? name { get; set; } // added by UiPathOrch
     public int? allocated { get; set; }
     public int? total { get; set; }
+    public int? inUse { get; set; }
 }
 
 // added by UiPathOrch

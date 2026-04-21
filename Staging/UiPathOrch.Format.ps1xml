@@ -4316,6 +4316,10 @@
             <Alignment>Right</Alignment>
           </TableColumnHeader>
           <TableColumnHeader>
+            <Label>InUse</Label>
+            <Alignment>Right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
             <Label>Total</Label>
             <Alignment>Right</Alignment>
           </TableColumnHeader>
@@ -4338,6 +4342,9 @@
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>allocated</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>inUse</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>total</PropertyName>
