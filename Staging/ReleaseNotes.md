@@ -248,6 +248,7 @@
 # Version: 0.9.14.11
 - Added the Export-OrchBucketItem cmdlet. This cmdlet exports files contained in storage buckets to a local folder.
 
+  ```powershell
   # Exports all files from all buckets in the current folder to the current directory on drive c:
   Export-OrchBucketItem
 
@@ -259,6 +260,7 @@
 
   # Exports all files from all buckets across the tenant to the specified local folder
   Export-OrchBucketItem -Path Orch1:\ -Recurse -Destination c:\tmp
+  ```
 
 
 # Version: 0.9.14.10
@@ -366,6 +368,7 @@
 # Version: 0.9.13.5
 - The Export-OrchLibrary cmdlet did not correctly resolve the current location when only a drive name was specified for the -Destination parameter. The following usage is now supported:
 
+  ```powershell
   # Exports to the current location of the C: drive:
   Export-OrchLibrary -Path Orch1: YourLibrary 1.0.1 c:
 
@@ -374,6 +377,7 @@
 
   # If -Destination is omitted, exports to the current location of the last-used FileSystem drive:
   Export-OrchLibrary -Path Orch1: YourLibrary 1.0.1
+  ```
 
   Note: This issue had already been addressed for Export-OrchPackage in version 0.9.9.1, but the fix for Export-OrchLibrary had been unintentionally omitted until now.
 
@@ -1531,20 +1535,31 @@ to:
 
 # Version: 0.9.6.22
 - Like with other cmdlets, item names in the output of the Get-Item and Get-ChildItem cmdlets can now be displayed using auto-completion.
-PS Orch1:\> dir | select FullName,FeedType,[press ctrl+space]
-Note: dir is an alias for Get-ChildItem, and select is an alias for Select-Object.
+
+  ```powershell
+  PS Orch1:\> dir | select FullName,FeedType,[press ctrl+space]
+  ```
+
+  Note: dir is an alias for Get-ChildItem, and select is an alias for Select-Object.
 
 - In the UiPathOrchDu and UiPathOrchTm providers, the FullName property has been added to DuProject and TmProject. By specifying this in the -Path parameter, you can easily write PowerShell scripts to perform actions on all projects.
-dir Orch1Du:\ | % {
-    # $_ contains the project entity
-    $doctype = Get-DuDocumentType -Path $_.FullName
 
-    # Additional complex processing...
-}
-Note: % is an alias for ForEach-Object cmdlet.
+  ```powershell
+  dir Orch1Du:\ | % {
+      # $_ contains the project entity
+      $doctype = Get-DuDocumentType -Path $_.FullName
+
+      # Additional complex processing...
+  }
+  ```
+
+  Note: % is an alias for ForEach-Object cmdlet.
 
 - The Find-OrchFolderNoUserAssigned.ps1 script, which was located in the Examples folder, has been promoted to a function. This function lists all folders that have no users assigned to them. To output the paths of the relevant folders concisely, use the following command:
-PS> Find-OrchFolderNoUserAssigned Orch1:\ -IncludeInherited | select -ExpandProperty FullName
+
+  ```powershell
+  PS> Find-OrchFolderNoUserAssigned Orch1:\ -IncludeInherited | select -ExpandProperty FullName
+  ```
 
 - The following cmdlets previously failed when a package with the same name already existed in the destination. They have been modified to skip the API call when a package with the same name is found. This significantly improves processing speed when many packages with the same name already exist:
   - Copy-OrchLibrary
