@@ -1,73 +1,174 @@
-﻿TOPIC
-    about_uipathorch
+TOPIC
+    about_UiPathOrch
 
 SHORT DESCRIPTION
-    UiPathOrch is a PowerShell provider for managing UiPath Orchestrator
-    entities via cmdlets.
+    PSDrives and cmdlets for managing UiPath Orchestrator from PowerShell.
 
 LONG DESCRIPTION
-    UiPathOrch mounts multiple Orchestrator tenants as PSDrives, enabling you to
-    navigate their folders using familiar commands such as dir, cd, mkdir,
-    rmdir, ren, and copy. It manages a wide range of Orchestrator entities,
-    including libraries, packages, processes, jobs, assets, queues, triggers,
-    among others. This allows for easy management of Orchestrator through
-    command line and scripting.
+    UiPathOrch mounts Orchestrator tenants as PSDrives, enabling you to
+    navigate folders, manage entities, and perform bulk operations using
+    familiar PowerShell commands.
 
-Operate multi-tenants simultaenously
-    You can mount multiple tenants as PSDrives simultaneously. Use
-    `Edit-OrchConfig` to open the config file. To confirm the PSDrives, use
-    `Get-PSDrive`.
+    239 cmdlets cover four API systems:
 
-Available cmdlets
-    Use `Get-Command -Module UiPathOrch` to list all cmdlets in the module. The
-    nouns in the names of all cmdlets start with `Orch`.
+        Orch   Orchestrator OData API (189 cmdlets)
+        Pm     Platform Management / Identity Server API (32 cmdlets)
+        Du     Document Understanding API (7 cmdlets)
+        Tm     Test Manager API (11 cmdlets)
 
-Target multi-folders simultaneously
-    Specify the target tenants and folders with the -Path, -Recurse and -Depth
-    parameters. To ensure proper functioning of the autocomplete for subsequent
-    parameters, specify these parameters first on each cmdlet. Please specify a
-    comma-separated path string that includes wildcards for the -Path parameter.
-    If these parameters are not specified, the current folder will be the target
-    of the operation.
+KEY FEATURES
+    - Mount multiple tenants simultaneously, each as a separate drive.
+    - Navigate Orchestrator folder hierarchy with cd, dir, mkdir, rmdir.
+    - Supports Automation Cloud and on-premises Orchestrator.
+    - Bulk operations with wildcards and comma-separated values.
+    - Cross-folder operations with -Path, -Recurse, and -Depth.
+    - Tab completion for all parameter values (folder names, user names,
+      asset names, etc.) via [Tab] or [Ctrl+Space].
+    - Parallel requests and in-memory caching for fast execution.
+    - -WhatIf and -Confirm for safe destructive operations.
+    - CSV export/import for bulk provisioning workflows.
 
-Autocomplete function
-    The cmdlets names, parameter names, and parameter values can be
-    auto-completed with pressing [Ctrl+Space] or [Tab]. To make this feature
-    work, import the PSReadLine module.
+GETTING STARTED
+    Step 1: Install the module
 
-Operate multi-entities simultaneously
-    You can specify multiple entities' names with wildcards and commas in
-    parameter values.
+        Install-PSResource UiPathOrch
 
-Upgrade the module
-    Please run `Update-Module UiPathOrch` occasionally to download the latest
-    version of the module.
+    Step 2: Set up credentials for your Orchestrator
+
+        Register an external application (non-confidential or confidential)
+        in the Orchestrator admin page, or prepare a Personal Access Token
+        or username/password for older on-premises instances.
+        See AUTHENTICATION TYPES below for details.
+
+    Step 3: Configure
+
+        Import-OrchConfig
+
+        On first run the configuration file opens in Notepad. Fill in the
+        drive name, Orchestrator URL, and authentication credentials.
+        Save and run Import-OrchConfig again to mount the drive.
+
+    Step 4: Connect
+
+        cd Orch1:
+        dir
+
+    For full setup instructions, run:
+
+        Get-OrchHelp
+
+AUTHENTICATION TYPES
+    Non-Confidential App   Interactive login required, no app secret.
+                           Recommended for interactive use.
+    Confidential App       App secret required, no interactive login.
+                           For unattended scripts. Some user-info
+                           commands (e.g. Get-OrchCurrentUser) are
+                           not available.
+    Personal Access Token  Token-based authentication without OAuth
+                           app registration.
+    On-Premises            Supports Identity Server and legacy
+                           username/password authentication.
+
+NAVIGATING PSDRIVE
+    UiPathOrch is a PowerShell provider. Orchestrator folders appear as a
+    file system.
+
+        cd Orch1:\              Go to root folder
+        cd Shared               Go to subfolder
+        cd ..                   Go to parent folder
+        dir                     List subfolders
+        dir -Recurse            List all subfolders recursively
+        ii .                    Open current folder in browser
+
+    Tenant-level entities (users, machines, libraries) appear in the root
+    folder. Folder-level entities (processes, jobs, assets, queues,
+    triggers) appear in each folder.
+
+FOLDER SCOPE PARAMETERS
+    Most cmdlets accept these parameters to target specific folders:
+
+        -Path       Target folder (wildcards and comma-separated values)
+        -Recurse    Include all subfolders
+        -Depth      Limit subfolder depth
+
+    Specify these BEFORE other parameters so that tab completion for
+    subsequent parameters uses the correct folder context.
+
+WILDCARD AND BULK OPERATIONS
+    You can target multiple entities using wildcards and comma-separated
+    names in positional parameters:
+
+        Get-OrchAsset Config*
+        Get-OrchUser a*,y*
+        Remove-OrchAsset old_* -WhatIf
+
+CACHE BEHAVIOR
+    Standard cmdlets cache results after the first call. Subsequent calls
+    return cached data instantly. Volume cmdlets (Get-OrchJob,
+    Get-OrchQueueItem, Get-OrchLog) query the server when filter parameters
+    are specified.
+
+    To force a refresh:
+
+        Clear-OrchCache
+
+ESSENTIAL COMMANDS
+    Import-OrchConfig              Load configuration and mount drives
+    Edit-OrchConfig                Open configuration file in editor
+    Get-OrchPSDrive                Show connected drives and scopes
+    Get-OrchCurrentUser            Verify authenticated user
+    Clear-OrchCache                Clear cached data
+    Get-OrchHelp                   Show documentation summary
+    Switch-OrchCurrentUser         Sign in with a different account
+
+    Get-Help <CmdletName> -Full       Detailed cmdlet help
+    Get-Help <CmdletName> -Examples   Usage examples
+    Get-Command -Module UiPathOrch    List all cmdlets
 
 EXAMPLES
-Example 1
-    PS Orch1:\> cd Shared
+    Example 1: List assets across all folders
 
-    The `cd` command (`Set-Location` cmdlet) changes the current location.
-    [Ctrl+Space] displays a list of navigable folder names.
+        PS Orch1:\> Get-OrchAsset -Recurse | Select-Object Path, Name, Value
 
-Example 2
-    PS Orch1:\Shared> cd ..
+    Example 2: Start a job with preview
 
-    The `..` represents the parent folder. The `.` represents the current
-    folder.
+        PS Orch1:\Shared> Start-OrchJob MyProcess -WhatIf
 
-Example 3
-    PS Orch1:\> dir -Recurse
+    Example 3: Export users to CSV
 
-    The `-Recurse` parameter specifies that the current folder and all its
-    subfolders are to be targeted. Almost all cmdlets included in this module
-    accept the `-Recurse` parameter.
+        PS Orch1:\> Get-OrchUser | Export-Csv c:\users.csv
+
+    Example 4: Work across multiple tenants
+
+        PS> $drives = (Get-PSDrive -PSProvider UiPathOrch).Name |
+                ForEach-Object { "$_`:\" }
+        PS> Get-OrchProcess -Recurse -Path $drives
+
+    Example 5: Programmatic tab completion (for scripts and AI agents)
+
+        PS> (TabExpansion2 'Get-OrchAsset -Path Orch1:\ -Name ').CompletionMatches
+
+TROUBLESHOOTING
+    Connection issues         Clear-OrchCache; retry the operation.
+    Permission errors         Check Get-OrchUserPrivilege and
+                              Get-OrchFolderUser.
+    Drive mount issues        Edit-OrchConfig; then Import-OrchConfig.
+    Confidential app errors   Normal for user-info commands. Use
+                              Get-OrchPSDrive to verify connection.
+    Entra ID warning          Use Switch-OrchCurrentUser to sign in
+                              via Entra ID.
 
 NOTE
-TROUBLESHOOTING NOTE
-Changes to entities made via the Orchestrator web interface or other external applications are not reflected
-    Execute the `Clear-OrchCache` cmdlet to clear the cache that this module
-    holds in memory.
+    PowerShell 7.x is required. UiPath Assistant is not required.
+
+    For comprehensive documentation including migration guides,
+    CSV workflows, and troubleshooting details, run Get-OrchHelp and
+    refer to the Docs folder.
 
 SEE ALSO
+    Get-OrchHelp
+    https://marketplace.uipath.com/listings/uipathorch
+    https://www.powershellgallery.com/packages/UiPathOrch
+
 KEYWORDS
+    UiPath Orchestrator PSDrive Automation

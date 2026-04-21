@@ -127,6 +127,16 @@ if (-not $SkipDeploy) {
         }
     }
 
+    # Deploy about_ help topic
+    $aboutFile = Join-Path $stagingDir 'about_UiPathOrch.help.txt'
+    if (Test-Path $aboutFile) {
+        $dest = Join-Path $enUSDir (Split-Path $aboutFile -Leaf)
+        if ($PSCmdlet.ShouldProcess($dest, "Copy about_UiPathOrch.help.txt")) {
+            Copy-Item $aboutFile $dest -Force
+            Write-Host "  Deployed: about_UiPathOrch.help.txt ($((Get-Item $aboutFile).Length) bytes)" -ForegroundColor Green
+        }
+    }
+
     # Reload module to pick up new help
     Write-Host "`n=== Step 5: Reload module ===" -ForegroundColor Cyan
     if ($PSCmdlet.ShouldProcess('UiPathOrch', 'Import-Module -Force')) {
