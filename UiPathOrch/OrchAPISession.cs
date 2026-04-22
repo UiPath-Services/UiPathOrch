@@ -3299,6 +3299,80 @@ public partial class OrchAPISession : IDisposable
         return HttpRequestPortal<AvailableUserBundle[]>(HttpMethod.Get, "/api/license/accountant/UserLicense") ?? [];
     }
 
+    // Some Portal license-management endpoints return 415 Unsupported Media Type when
+    // invoked without Content-Type (HttpClient omits it on GET by default). Attaching an
+    // empty JSON body forces Content-Type: application/json on the request line.
+    private T? HttpGetPortalWithJsonContentType<T>(string endPoint)
+    {
+        string url = _base_url_portal + endPoint;
+        var request = new HttpRequestMessage(HttpMethod.Get, url)
+        {
+            Content = new StringContent("", Encoding.UTF8, "application/json")
+        };
+        var response = HttpClient_Send(request);
+        EnsureSuccessStatusCode(response);
+        var body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+        return string.IsNullOrEmpty(body) ? default : JsonSerializer.Deserialize<T>(body);
+    }
+
+    // Extracts the JWT `sub` claim, which the Portal API uses as `accountUserId`.
+    private string? GetAccountUserIdFromToken()
+    {
+        var token = _authManager.AccessToken;
+        if (string.IsNullOrEmpty(token)) return null;
+        var parts = token.Split('.');
+        if (parts.Length != 3) return null;
+        try
+        {
+            var payload = parts[1];
+            payload = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
+            payload = payload.Replace('-', '+').Replace('_', '/');
+            var json = Encoding.UTF8.GetString(Convert.FromBase64String(payload));
+            using var doc = JsonDocument.Parse(json);
+            return doc.RootElement.TryGetProperty("sub", out var sub) ? sub.GetString() : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    // This is an undocumented API.
+    // Returns per-tenant license allocations for an organization (Robots & Services tab).
+    public IEnumerable<TenantAllocation> GetPmLicenseAllocations(string? partitionGlobalId)
+    {
+        if (string.IsNullOrEmpty(partitionGlobalId)) return [];
+        return HttpRequestPortal<TenantAllocation[]>(HttpMethod.Get, $"/api/licensing/tenantAllocations?accountGlobalId={partitionGlobalId}") ?? [];
+    }
+
+    // This is an undocumented API.
+    // Returns the organization-level license inventory dashboard
+    // (product allocations + user bundle usage + entitlement pool usage + service catalog).
+    // Requires Content-Type header — use the WithJsonContentType helper.
+    public LicenseInventory? GetPmLicenseInventory(string? partitionGlobalId)
+    {
+        if (string.IsNullOrEmpty(partitionGlobalId)) return null;
+        var accountUserId = GetAccountUserIdFromToken();
+        if (string.IsNullOrEmpty(accountUserId)) return null;
+        return HttpGetPortalWithJsonContentType<LicenseInventory>(
+            $"/api/license/management/account/available?accountUserId={accountUserId}&accountGlobalId={partitionGlobalId}");
+    }
+
+    // This is an undocumented API.
+    // Returns the full organization license contract (products, entitlements, templates, subscription).
+    // Requires Content-Type header — use the WithJsonContentType helper.
+    public AccountLicense? GetPmLicenseContract(string? partitionGlobalId)
+    {
+        if (string.IsNullOrEmpty(partitionGlobalId)) return null;
+        var accountUserId = GetAccountUserIdFromToken();
+        if (string.IsNullOrEmpty(accountUserId)) return null;
+        var resp = HttpGetPortalWithJsonContentType<AccountLicenseResponse>(
+            $"/api/license/management/account?accountUserId={accountUserId}&accountGlobalId={partitionGlobalId}");
+        if (resp?.accountLicense is null) return null;
+        resp.accountLicense.mlKeys = resp.mlKeys;
+        return resp.accountLicense;
+    }
+
     // This is an undocumented API.
     public AvailableUserBundles? GetPmLicensedGroupsAvailableLicenses(string? groupId)
     {

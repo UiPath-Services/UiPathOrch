@@ -143,6 +143,9 @@ CmdletsToExport = @(
 'Get-PmAuthenticationSetting',
 
 'Get-PmLicense',
+'Get-PmLicenseAllocation',
+'Get-PmLicenseInventory',
+'Get-PmLicenseContract',
 'Get-PmLicensedUser',
 
 'Get-PmLicensedGroup',

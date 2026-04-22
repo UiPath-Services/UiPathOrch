@@ -2123,6 +2123,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerOrganization<ExternalClient> PmExternalClients;
     public readonly ListCachePerOrganization<ExternalResource> PmExternalApiResources;
     public readonly ListCachePerOrganization<AvailableUserBundle> PmLicenses;
+    public readonly ListCachePerOrganization<TenantAllocation> PmLicenseAllocations;
     public readonly ListCachePerOrganization<NuLicensedGroup> PmLicensedGroups;
     public readonly ListCachePerOrganization<NuLicensedUser> PmLicensedUsers;
     public readonly ListCachePerOrganization<AccessAllowedMember> PmAccessAllowedMember;
@@ -2130,6 +2131,8 @@ public partial class OrchDriveInfo : PSDriveInfo
     // Non-indexed organization entities
     // These should not be fetched in multi-threaded contexts. Path assignment will break.
     public readonly SingleCachePerOrganization<PmAuthenticationRoot> PmAuthenticationSetting;
+    public readonly SingleCachePerOrganization<LicenseInventory> PmLicenseInventory;
+    public readonly SingleCachePerOrganization<AccountLicense> PmLicenseContract;
 
     // These must be kept per drive, so they cannot be static members of the Cache class
     internal readonly List<ITenantCacheClearable> _allTenantCache = [];
@@ -2239,6 +2242,11 @@ public partial class OrchDriveInfo : PSDriveInfo
             }
         );
 
+        PmLicenseAllocations = new(this,
+            OrchAPISession.GetPmLicenseAllocations,
+            e => e.Path = NameColonSeparator
+        );
+
         PmLicensedGroups = new(this,
             OrchAPISession.GetPmLicensedGroups,
             e =>
@@ -2283,6 +2291,16 @@ public partial class OrchDriveInfo : PSDriveInfo
                     }
                 }
             }
+        );
+
+        PmLicenseInventory = new(this,
+            OrchAPISession.GetPmLicenseInventory,
+            e => e.Path = NameColonSeparator
+        );
+
+        PmLicenseContract = new(this,
+            OrchAPISession.GetPmLicenseContract,
+            e => e.Path = NameColonSeparator
         );
 
         // Non-indexed tenant entities

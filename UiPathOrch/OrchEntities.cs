@@ -3492,6 +3492,220 @@ public class UpdateLicensedGroupResponse // The proper class name is unknown.
     public string[]? userBundleLicenseNames { get; set; } // added by UiPathOrch
 }
 
+// added by UiPathOrch — TenantAllocation response (per-tenant license allocation).
+// Endpoint: GET /api/licensing/tenantAllocations?accountGlobalId={org}
+public class TenantAllocation
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    public TenantAllocationTenant? tenant { get; set; }
+    public string[]? services { get; set; }
+    public int? unattendedRobot { get; set; }
+    public int? unattendedHostingRobot { get; set; }
+    public int? nonProductionRobot { get; set; }
+    public int? testingRobot { get; set; }
+    public int? appTestRobot { get; set; }
+    public int? aiRobot { get; set; }
+    public int? gpus { get; set; }
+    public int? dataServiceUnit { get; set; }
+    public int? robotUnits { get; set; }
+    public int? aiUnits { get; set; }
+    public int? agentUnits { get; set; }
+    public int? platformUnits { get; set; }
+    public int? performanceTesting { get; set; }
+    public int? heals { get; set; }
+    public int? testHeals { get; set; }
+    public int? medicalRecordSummarizationUnits { get; set; }
+    public int? lendingUnits { get; set; }
+}
+
+// added by UiPathOrch — nested tenant object inside TenantAllocation
+public class TenantAllocationTenant
+{
+    public string? name { get; set; }
+    public string? id { get; set; } // Guid
+    public string? color { get; set; }
+    public string? region { get; set; }
+    public object[]? tenantServiceInstances { get; set; } // unknown inner shape; structure preserved via JsonElement
+    public string? status { get; set; }
+    public string? tenantUrl { get; set; }
+    public string? tenant_url { get; set; } // duplicate of tenantUrl in API payload; preserved verbatim
+    public string? createdBy { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? createdOn { get; set; }
+    public string? updatedBy { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? updatedOn { get; set; }
+    public bool? isCanaryTenant { get; set; }
+    public string? environment { get; set; }
+    public string? operationId { get; set; }
+}
+
+// added by UiPathOrch — product allocation row (per-SKU Total / Allocated).
+// One entry of /api/license/management/account/available → productAllocations[].
+public class ProductAllocation
+{
+    public string? code { get; set; }
+    public int? total { get; set; }
+    public int? allocated { get; set; }
+    public bool? isConsumable { get; set; }
+    public long? startDate { get; set; } // Unix epoch seconds
+    public long? endDate { get; set; } // Unix epoch seconds
+}
+
+// added by UiPathOrch — full /api/license/management/account/available response
+// (the Robots & Services tab dashboard: product totals + entitlement usage + service catalog).
+public class LicenseInventory
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    public ProductAllocation[]? productAllocations { get; set; }
+    public AvailableUserBundle[]? userLicensingBundles { get; set; }
+    public EntitlementUsage[]? entitlementUsages { get; set; }
+    public AvailableService[]? availableServices { get; set; }
+    public MlKey[]? mlKeys { get; set; }
+}
+
+// added by UiPathOrch — entitlement pool usage entry inside LicenseInventory
+public class EntitlementUsage
+{
+    public string? entitlement { get; set; }
+    public EntitlementPoolSummary[]? poolSummary { get; set; }
+}
+
+// added by UiPathOrch — pool usage detail inside EntitlementUsage
+public class EntitlementPoolSummary
+{
+    public string? poolName { get; set; }
+    public long? totalQuantity { get; set; }
+    public long? consumedQuantity { get; set; }
+    public long? startTime { get; set; } // Unix epoch seconds
+    public long? endTime { get; set; } // Unix epoch seconds
+    public string? refreshType { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? hasNextAvailable { get; set; }
+}
+
+// added by UiPathOrch — service catalog entry inside LicenseInventory
+public class AvailableService
+{
+    public string? id { get; set; }
+    public string? name { get; set; }
+    public string? serviceLicenseStatus { get; set; }
+    public string? provisioningMode { get; set; }
+    public string[]? supportedRegions { get; set; }
+    public string? defaultRegion { get; set; }
+    public string? entitlement { get; set; }
+    public bool? isVisible { get; set; }
+    public bool? isAlwaysProvision { get; set; }
+}
+
+// added by UiPathOrch — account-level license contract.
+// Endpoint: GET /api/license/management/account?accountGlobalId={org}&accountUserId={sub}
+// The wrapper response holds {mlKeys, accountLicense}; mlKeys is promoted here so that
+// a single object carries the complete response.
+public class AccountLicense
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    public MlKey[]? mlKeys { get; set; } // promoted from wrapper response root
+
+    public string? accountId { get; set; } // Guid
+    public string? bundleCode { get; set; }
+    public long? endDate { get; set; } // Unix epoch seconds
+    public int? gracePeriod { get; set; }
+    public string? licenseCode { get; set; }
+    public string? licenseStatus { get; set; }
+    public AccountLicenseProduct[]? products { get; set; }
+    public AccountLicenseTemplate[]? templates { get; set; }
+    public AccountLicenseEntitlement[]? entitlements { get; set; }
+    public object[]? entitlementOverrides { get; set; } // always empty in observed responses; shape unknown
+    public long? startDate { get; set; } // Unix epoch seconds
+    public string? subscriptionCode { get; set; }
+    public string? subscriptionPlan { get; set; }
+    public string? payload { get; set; } // embedded JSON string mirroring other fields; preserved verbatim
+    public string? type { get; set; }
+    public string? parentLicenseCode { get; set; }
+    public string? activationVersion { get; set; }
+    public bool? needsLicenseReactivation { get; set; }
+    public bool? enableMigration { get; set; }
+    public int? migrationDeadlineDays { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? migrationStartedAt { get; set; }
+    public string? accountType { get; set; }
+}
+
+// added by UiPathOrch — wrapper for /api/license/management/account response
+internal class AccountLicenseResponse
+{
+    public MlKey[]? mlKeys { get; set; }
+    public AccountLicense? accountLicense { get; set; }
+}
+
+// added by UiPathOrch — nested product entry inside AccountLicense
+public class AccountLicenseProduct
+{
+    public string? code { get; set; }
+    public long? quantity { get; set; }
+    public string? type { get; set; }
+    public ProductFeature[]? features { get; set; }
+    public ProductConsumptionDistribution[]? consumptionDistributions { get; set; }
+}
+
+// added by UiPathOrch — feature flag entry inside AccountLicenseProduct.features
+public class ProductFeature
+{
+    public string? code { get; set; }
+    public string? type { get; set; }
+    public string? value { get; set; }
+}
+
+// added by UiPathOrch — consumption interval entry inside AccountLicenseProduct.consumptionDistributions
+public class ProductConsumptionDistribution
+{
+    public long? startDate { get; set; } // Unix epoch seconds
+    public long? endDate { get; set; } // Unix epoch seconds
+    public long? quantity { get; set; }
+    public bool? isIntervalFromTrial { get; set; }
+}
+
+// added by UiPathOrch — nested template entry inside AccountLicense
+public class AccountLicenseTemplate
+{
+    public string? productCode { get; set; }
+    public AccountLicenseTemplateProduct[]? products { get; set; }
+}
+
+// added by UiPathOrch — nested product inside AccountLicenseTemplate
+public class AccountLicenseTemplateProduct
+{
+    public string? code { get; set; }
+    public string? type { get; set; }
+}
+
+// added by UiPathOrch — nested entitlement entry inside AccountLicense
+public class AccountLicenseEntitlement
+{
+    public string? id { get; set; }
+    public string? name { get; set; }
+    public string? value { get; set; }
+    public string? type { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? startsOn { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? endsOn { get; set; }
+}
+
+// added by UiPathOrch — nested ML service key
+public class MlKey
+{
+    public string? licenseType { get; set; }
+    public string? mlServiceKey { get; set; }
+}
+
 // GroupDto
 public class PmGroup
 {

@@ -4371,6 +4371,255 @@
     </View>
 
     <View>
+      <Name>TenantAllocation</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.TenantAllocation</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Tenant</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Unatt</Label>
+            <Alignment>Right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>NonPr</Label>
+            <Alignment>Right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Test</Label>
+            <Alignment>Right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>AppTest</Label>
+            <Alignment>Right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>DSU</Label>
+            <Alignment>Right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Region</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Status</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <ScriptBlock>$_.tenant.name</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>unattendedRobot</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>nonProductionRobot</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>testingRobot</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>appTestRobot</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>dataServiceUnit</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>$_.tenant.region</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>$_.tenant.status</ScriptBlock>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>ProductAllocation</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.ProductAllocation</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Code</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Allocated</Label>
+            <Alignment>Right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Total</Label>
+            <Alignment>Right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Available</Label>
+            <Alignment>Right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Consumable</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Usage</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>code</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>allocated</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>total</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.total -ne $null -and $_.allocated -ne $null) { $_.total - $_.allocated } else { '' }
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>isConsumable</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.total -ne $null -and $_.allocated -ne $null -and $_.total -gt 0) {
+                    $pct = [int](($_.allocated / $_.total) * 100)
+                    $filled = [Math]::Round(($_.allocated / $_.total) * 10)
+                    $bar = ('#' * $filled) + ('.' * (10 - $filled))
+                    "[$bar] $pct%"
+                  } else { '' }
+                </ScriptBlock>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>LicenseInventory</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.LicenseInventory</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem>
+                <Label>ProductAllocations</Label>
+                <ScriptBlock>"$($_.productAllocations.Count) item(s) — use `$_.productAllocations | Format-Table"</ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>UserLicensingBundles</Label>
+                <ScriptBlock>"$($_.userLicensingBundles.Count) item(s)"</ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>EntitlementUsages</Label>
+                <ScriptBlock>"$($_.entitlementUsages.Count) item(s)"</ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>AvailableServices</Label>
+                <ScriptBlock>"$($_.availableServices.Count) item(s)"</ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>MlKeys</Label>
+                <ScriptBlock>"$($_.mlKeys.Count) item(s)"</ScriptBlock>
+              </ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+
+    <View>
+      <Name>AccountLicense</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.AccountLicense</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem>
+                <Label>BundleCode</Label>
+                <PropertyName>bundleCode</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>LicenseCode</Label>
+                <PropertyName>licenseCode</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>LicenseStatus</Label>
+                <PropertyName>licenseStatus</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>SubscriptionCode</Label>
+                <PropertyName>subscriptionCode</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>SubscriptionPlan</Label>
+                <PropertyName>subscriptionPlan</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>AccountType</Label>
+                <PropertyName>accountType</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>StartDate</Label>
+                <ScriptBlock>if ($_.startDate) { [DateTimeOffset]::FromUnixTimeSeconds([int64]$_.startDate).LocalDateTime } else { '' }</ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>EndDate</Label>
+                <ScriptBlock>if ($_.endDate) { [DateTimeOffset]::FromUnixTimeSeconds([int64]$_.endDate).LocalDateTime } else { '' }</ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>GracePeriod</Label>
+                <PropertyName>gracePeriod</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Products</Label>
+                <ScriptBlock>"$($_.products.Count) item(s) — use `$_.products | Format-Table"</ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>Templates</Label>
+                <ScriptBlock>"$($_.templates.Count) item(s)"</ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>Entitlements</Label>
+                <ScriptBlock>"$($_.entitlements.Count) item(s)"</ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>MlKeys</Label>
+                <ScriptBlock>"$($_.mlKeys.Count) item(s)"</ScriptBlock>
+              </ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+
+    <View>
       <Name>UpdateLicensedGroupResponse</Name>
       <ViewSelectedBy>
         <TypeName>UiPath.PowerShell.Entities.UpdateLicensedGroupResponse</TypeName>
