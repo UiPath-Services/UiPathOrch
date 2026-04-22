@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.16.3'
+ModuleVersion = '0.9.16.4'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -418,22 +418,14 @@ PrivateData = @{
 
         # ReleaseNotes of this module
         ReleaseNotes = '## New Features
-- Get-PmLicense: New cmdlet that returns tenant-level license inventory (allocated / inUse / total per UserBundle). Parameters: -License / -Code (wildcards, tab completion), -Path, -HasCapacity (allocated < total). Includes a formatted view with a usage bar.
+- Get-PmLicenseAllocation: New cmdlet that returns per-tenant robot / runtime license allocations for a UiPath Automation Cloud organization (Robots & Services tab of Admin / Licenses). Parameters: -Tenant (wildcards, tab completion), -Path. Organization-scoped; Automation Cloud only.
+
+- Get-PmLicenseInventory: New cmdlet that returns the organization-level license inventory dashboard, bundling five collections into one object: productAllocations, userLicensingBundles, entitlementUsages, availableServices, mlKeys. Parameters: -Path. Organization-scoped; Automation Cloud only.
+
+- Get-PmLicenseContract: New cmdlet that returns the full license contract for an organization including purchased products, bundle templates, entitlements, ML service keys, and the embedded license payload (preserved verbatim). Parameters: -Path. Organization-scoped; Automation Cloud only.
 
 ## Improvements
-- Rewrote about_UiPathOrch help topic to reflect the current feature set.
-
-- Added -UseDefaultEditor switch to Edit-OrchConfig.
-
-## Bug Fixes
-- Suppress spurious PipelineStoppedException in WriteError when using Select-Object -First.
-
-- Fixed Import-OrchQueueItem double-serialization bug.
-
-- NavigationCmdletProvider review fixes: GetChildNames now writes the correct name / full-path / isContainer values, GetChildItems / GetChildNames honor Stopping mid-loop, GetItem has null guards, empty RenameItem / RemoveItem overrides were removed so the base class throws PSNotSupportedException, and several cmdlets gained [OutputType(typeof(void))].
-
-## Internal
-- Pinned .NET SDK to 8 via global.json.
+- Added Get-Help documentation for Get-PmLicense and the three new Pm license cmdlets.
 '
 
         # Prerelease string of this module

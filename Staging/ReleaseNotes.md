@@ -1,3 +1,15 @@
+# Version: 0.9.16.4
+## New Features
+- Get-PmLicenseAllocation: New cmdlet that returns per-tenant robot / runtime license allocations for a UiPath Automation Cloud organization (Robots & Services tab of Admin / Licenses). Parameters: -Tenant (wildcards, tab completion), -Path. Organization-scoped; Automation Cloud only.
+
+- Get-PmLicenseInventory: New cmdlet that returns the organization-level license inventory dashboard, bundling five collections into one object: productAllocations, userLicensingBundles, entitlementUsages, availableServices, mlKeys. Parameters: -Path. Organization-scoped; Automation Cloud only.
+
+- Get-PmLicenseContract: New cmdlet that returns the full license contract for an organization including purchased products, bundle templates, entitlements, ML service keys, and the embedded license payload (preserved verbatim). Parameters: -Path. Organization-scoped; Automation Cloud only.
+
+## Improvements
+- Added Get-Help documentation for Get-PmLicense and the three new Pm license cmdlets.
+
+
 # Version: 0.9.16.3
 ## New Features
 - Get-PmLicense: New cmdlet that returns tenant-level license inventory (allocated / inUse / total per UserBundle). Parameters: -License / -Code (wildcards, tab completion), -Path, -HasCapacity (allocated < total). Includes a formatted view with a usage bar.
