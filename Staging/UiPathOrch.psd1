@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.16.4'
+ModuleVersion = '0.9.16.5'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()

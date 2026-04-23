@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.9.16.5] - 2026-04-23
+### Fixed
+- Get-PmLicenseInventory: JSON deserialization failed on tenants with consumable SKUs that report fractional allocation (e.g. AIU `allocated: 1451.8`). Widened `ProductAllocation.total` / `.allocated` from `int?` to `double?`.
+
+### Changed
+- Get-PmLicenseInventory / Get-PmLicenseContract: the list-view hint for nested collections no longer suggests `| Format-Table` — e.g. `ProductAllocations : 51 item(s) — use $_.productAllocations` and `Products : N item(s) — use $_.products`.
+
 ## [0.9.16.4] - 2026-04-22
 ### Added
 - Get-PmLicenseAllocation: New cmdlet that returns per-tenant robot / runtime license allocations for a UiPath Automation Cloud organization (Robots & Services tab of Admin / Licenses). Parameters: -Tenant (wildcards, tab completion), -Path. Organization-scoped; Automation Cloud only.
