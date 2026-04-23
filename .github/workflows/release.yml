@@ -89,10 +89,18 @@ jobs:
           ) + (Get-ChildItem "$stage/Functions/*.ps1" | ForEach-Object FullName)
           Set-AuthenticodeSignature -FilePath $files -Certificate $cert `
               -TimestampServer http://timestamp.digicert.com
-          $bad = Get-AuthenticodeSignature $files | Where-Object Status -ne 'Valid'
+          # Self-signed certs yield Status=UnknownError on machines where the cert is
+          # not in the trust store (runners don't trust it). That's expected — the
+          # signature itself is correct, only chain validation needs the cert installed
+          # on the end-user machine. Verify thumbprint matches + reject tamper / missing.
+          $expected = $cert.Thumbprint
+          $bad = Get-AuthenticodeSignature $files | Where-Object {
+            $_.SignerCertificate.Thumbprint -ne $expected -or
+            $_.Status -notin @('Valid','UnknownError')
+          }
           if ($bad) {
-            $bad | Format-Table Status, Path
-            throw 'One or more signatures are not Valid.'
+            $bad | Format-Table Status, StatusMessage, Path
+            throw 'One or more signatures are missing, tampered, or signed by the wrong cert.'
           }
 
       - name: Publish to PSGallery
