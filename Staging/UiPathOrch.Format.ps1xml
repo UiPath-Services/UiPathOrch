@@ -4524,7 +4524,7 @@
             <ListItems>
               <ListItem>
                 <Label>ProductAllocations</Label>
-                <ScriptBlock>"$($_.productAllocations.Count) item(s) — use `$_.productAllocations | Format-Table"</ScriptBlock>
+                <ScriptBlock>"$($_.productAllocations.Count) item(s) — use `$_.productAllocations"</ScriptBlock>
               </ListItem>
               <ListItem>
                 <Label>UserLicensingBundles</Label>
@@ -4599,7 +4599,7 @@
               </ListItem>
               <ListItem>
                 <Label>Products</Label>
-                <ScriptBlock>"$($_.products.Count) item(s) — use `$_.products | Format-Table"</ScriptBlock>
+                <ScriptBlock>"$($_.products.Count) item(s) — use `$_.products"</ScriptBlock>
               </ListItem>
               <ListItem>
                 <Label>Templates</Label>

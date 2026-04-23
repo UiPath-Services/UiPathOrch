@@ -3547,8 +3547,10 @@ public class TenantAllocationTenant
 public class ProductAllocation
 {
     public string? code { get; set; }
-    public int? total { get; set; }
-    public int? allocated { get; set; }
+    // total / allocated are double? because consumable SKUs (AIU/AGU/RU/FCCU/HEAL/LU/MRSU/PLTU/SPR/TEU)
+    // can return fractional usage, e.g. AIU allocated=1451.8.
+    public double? total { get; set; }
+    public double? allocated { get; set; }
     public bool? isConsumable { get; set; }
     public long? startDate { get; set; } // Unix epoch seconds
     public long? endDate { get; set; } // Unix epoch seconds
