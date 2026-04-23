@@ -36,10 +36,10 @@ jobs:
       - name: Verify manifest matches tag
         shell: pwsh
         run: |
-          $man = Test-ModuleManifest Staging/UiPathOrch.psd1
+          $data = Import-PowerShellDataFile Staging/UiPathOrch.psd1
           $expected = '${{ steps.ver.outputs.version }}'
-          if ($man.Version.ToString() -ne $expected) {
-            throw "Manifest version $($man.Version) does not match tag v$expected"
+          if ($data.ModuleVersion -ne $expected) {
+            throw "Manifest ModuleVersion $($data.ModuleVersion) does not match tag v$expected"
           }
 
       - name: Assemble module directory
