@@ -272,11 +272,6 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
         return $"&$filter={ret}";
     }
 
-    private void WriteQueryUnavailableWarning(QueueDefinition queue, string fieldName)
-    {
-        WriteWarning($"{queue.GetPSPath()}: The {fieldName} of the last queue item is null, so subsequent queue items cannot be retrieved.");
-    }
-
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
@@ -428,11 +423,15 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
                                     foreach (var item in items) allItems.Add(item);
                                 else
                                     WriteObject(items, true);
-                                Thread.Sleep(600); // Wait to avoid API call rate limit
 
+                                // Final-page short-circuit: no more API calls, so skip the rate-limit wait.
                                 if (items.Count < 100) break;
                                 localSkip += items.Count;
                                 localFirst -= first2;
+
+                                // Rate-limit wait before the next page. Cancellable: WaitOne returns early
+                                // if the token is signaled, so Ctrl+C isn't blocked for up to 600ms.
+                                cancelHandler.Token.WaitHandle.WaitOne(600);
                             }
                         }
                     }
@@ -455,58 +454,5 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
                 }
             }
         }
-
-
-        // Multi-threaded implementation. Since there is a rate limit, it's better to use single thread with waits.
-        //using var cancelHandler = new ConsoleCancelHandler();
-        //foreach (var (drive, folder) in drivesFolders)
-        //{
-        //    IEnumerable<QueueDefinition> queues = null;
-        //    try
-        //    {
-        //        queues = drive.GetQueues(folder);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "GetQueueError", ErrorCategory.InvalidOperation, folder));
-        //        continue;
-        //    }
-
-        //    if (bOutCache)
-        //    {
-        //        foreach (var queue in queues)
-        //        {
-        //            if (drive._dicQueueItems?.TryGetValue(queue.Id!.Value, out var cachedItems) ?? false)
-        //            {
-        //                WriteObject(cachedItems.Values.OrderBy(i => i.Id), true);
-        //            }
-        //        }
-        //        continue;
-        //    }
-
-        //    using var items = OrchThreadPool.RunForEach(queues.FilterByWildcards(q => q?.Name, Name).OrderBy(q => q.Name),
-        //        queue => folder.GetPSPath(),
-        //        queue => folder,
-        //        queue => drive.GetQueueItems(folder, queue, MakeFilter(drive, folder, queue), skip, first));
-
-        //    foreach (var item in items)
-        //    {
-        //        try
-        //        {
-        //            var queueItems = item.GetResult(cancelHandler.Token);
-        //            if (queueItems is null) continue;
-
-        //            // Cmdlets that support Skip and First must not OrderBy
-        //            foreach (var queueItem in queueItems)
-        //            {
-        //                WriteObject(queueItem);
-        //            }
-        //        }
-        //        catch (OrchException ex)
-        //        {
-        //            WriteError(new ErrorRecord(ex, "GetQueueItemError", ErrorCategory.InvalidOperation, ex.Target));
-        //        }
-        //    }
-        //}
     }
 }
