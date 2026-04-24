@@ -115,6 +115,15 @@ public class PSDrive
     private bool? _isCloud;
     internal bool IsCloud => _isCloud.GetValueOrDefault();
 
+    // Top-level scope prefixes whose parent 2-part form is not a valid Identity scope,
+    // so collapsing Read+Write (or an explicit 2-part input) would yield an audience-invalid token.
+    // DataFabric exposes only DataFabric.Schema.Read / DataFabric.Data.Read / DataFabric.Data.Write;
+    // DataFabric.Data and DataFabric.Schema are not accepted as scopes on their own.
+    private static readonly HashSet<string> _nonCollapsibleTopLevelPrefixes = new(StringComparer.Ordinal)
+    {
+        "DataFabric",
+    };
+
     internal static string? ShortenScope(string? scope)
     {
         if (scope is null) return null;
@@ -123,9 +132,20 @@ public class PSDrive
             .Distinct()
             .Select(p => p.Split('.'))
             .GroupBy(parts => string.Join(".", parts.Take(2)))
-            .Select(g => g.Any(p => p.Length == 2) || (g.Any(p => p.Length > 2 && p[2] == "Read") && g.Any(p => p.Length > 2 && p[2] == "Write"))
-                ? g.Key
-                : string.Join(" ", g.Where(p => !g.Any(q => q.Length == 2)).Select(p => string.Join(".", p))))
+            .Select(g =>
+            {
+                if (_nonCollapsibleTopLevelPrefixes.Contains(g.First()[0]))
+                {
+                    return string.Join(" ", g.Select(p => string.Join(".", p)));
+                }
+
+                bool canCollapse = g.Any(p => p.Length == 2)
+                    || (g.Any(p => p.Length > 2 && p[2] == "Read") && g.Any(p => p.Length > 2 && p[2] == "Write"));
+
+                return canCollapse
+                    ? g.Key
+                    : string.Join(" ", g.Where(p => !g.Any(q => q.Length == 2)).Select(p => string.Join(".", p)));
+            })
             .Order());
     }
 
