@@ -1582,9 +1582,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 target = newFolder.GetPSPath();
 
                 bool bCredentialWarningNeeded = false;
-                bool bCredentialWarningDone = false;
                 bool bSecretWarningNeeded = false;
-                bool bSecretWarningDone = false;
                 try
                 {
                     Asset postingAsset = OrchCollectionExtensions.DeepCopy(asset);
@@ -1605,19 +1603,27 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         postingAsset.IntValue = null;
                         postingAsset.BoolValue = null;
                         postingAsset.StringValue = null;
-                        postingAsset.CredentialPassword = "!!!PLEASE UPDATE!!!";
-                        bCredentialWarningNeeded = true;
+                        // ExternalName (vault reference) takes priority — don't clobber it with a placeholder.
+                        if (string.IsNullOrEmpty(postingAsset.ExternalName))
+                        {
+                            postingAsset.CredentialPassword = "!!!PLEASE UPDATE!!!";
+                            bCredentialWarningNeeded = true;
+                        }
                     }
                     else if (postingAsset.ValueType == "Secret")
                     {
                         // The server masks SecretValue on GET (always ""), so copying would POST an empty
                         // secret which the server rejects with "asset secret value cannot be null".
-                        // Use a placeholder and warn so the operator rotates it.
+                        // Use a placeholder and warn so the operator rotates it — unless ExternalName
+                        // (vault reference) is set, in which case preserve it and no placeholder is needed.
                         postingAsset.IntValue = null;
                         postingAsset.BoolValue = null;
                         postingAsset.StringValue = null;
-                        postingAsset.SecretValue = "!!!PLEASE UPDATE!!!";
-                        bSecretWarningNeeded = true;
+                        if (string.IsNullOrEmpty(postingAsset.ExternalName))
+                        {
+                            postingAsset.SecretValue = "!!!PLEASE UPDATE!!!";
+                            bSecretWarningNeeded = true;
+                        }
                     }
 
                     if (postingAsset.UserValues is not null && postingAsset.UserValues.Count == 0)
@@ -1641,9 +1647,11 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                                 userValue.MachineId = FindDstMachine(_this,
                                     srcDrive, srcFolder,
                                     dstDrive, newFolder, userValue.MachineId, msg)?.Id;
+                                // FindDstMachine already emits a WriteWarning when the machine is not
+                                // assigned to the destination folder. Skip this UserValue silently here
+                                // to avoid a duplicate warning+error pair.
                                 if (userValue.MachineId is null || userValue.MachineId == 0)
                                 {
-                                    _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: The machine {userValue.MachineName} is not assigned to the folder."), "CopyAssetError", ErrorCategory.InvalidOperation, target));
                                     continue;
                                 }
                             }
@@ -1661,15 +1669,22 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                                 userValue.IntValue = null;
                                 userValue.BoolValue = null;
                                 userValue.StringValue = null;
-                                userValue.CredentialPassword = "!!!PLEASE UPDATE!!!";
+                                if (string.IsNullOrEmpty(userValue.ExternalName))
+                                {
+                                    userValue.CredentialPassword = "!!!PLEASE UPDATE!!!";
+                                    bCredentialWarningNeeded = true;
+                                }
                             }
                             else if (userValue.ValueType == "Secret")
                             {
                                 userValue.IntValue = null;
                                 userValue.BoolValue = null;
                                 userValue.StringValue = null;
-                                userValue.SecretValue = "!!!PLEASE UPDATE!!!";
-                                bSecretWarningNeeded = true;
+                                if (string.IsNullOrEmpty(userValue.ExternalName))
+                                {
+                                    userValue.SecretValue = "!!!PLEASE UPDATE!!!";
+                                    bSecretWarningNeeded = true;
+                                }
                             }
                             migratedUserValues ??= [];
                             migratedUserValues.Add(userValue);
@@ -1696,18 +1711,16 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     //    _this.WriteObject(created);
                     //}
 
-                    if (bCredentialWarningNeeded && !bCredentialWarningDone)
+                    if (bCredentialWarningNeeded)
                     {
                         target = System.IO.Path.Combine(newFolder.GetPSPath(), created?.Name ?? "");
                         _this.WriteWarning($"'{target}': Please update credential asset passwords with Set-OrchCredentialAsset cmdlet.");
-                        bCredentialWarningDone = true;
                     }
 
-                    if (bSecretWarningNeeded && !bSecretWarningDone)
+                    if (bSecretWarningNeeded)
                     {
                         target = System.IO.Path.Combine(newFolder.GetPSPath(), created?.Name ?? "");
                         _this.WriteWarning($"'{target}': Please update Secret asset values with Set-OrchSecretAsset cmdlet.");
-                        bSecretWarningDone = true;
                     }
 
                     // Decided to clear the cache in each Copy-OrchXxx. Not doing it here.
