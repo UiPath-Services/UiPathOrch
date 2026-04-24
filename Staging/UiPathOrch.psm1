@@ -23,3 +23,22 @@ Set-Alias -Name !Show-OrchGuide -Value Get-OrchHelp
 . $PSScriptRoot\Functions\Find-OrchFolderNoUserAssigned.ps1
 
 . $PSScriptRoot\Functions\Get-OrchJobVideo.ps1
+
+. $PSScriptRoot\Functions\Format-OrchQueueItemTable.ps1
+
+# Extend QueueItem with an Expanded property that flattens SpecificContent keys into a PSCustomObject.
+# (SpecificContent is the Dictionary form; SpecificData is the same content serialized as JSON string.)
+# Use: Get-OrchQueueItem ... | ForEach-Object Expanded | Format-Table
+# For mixed-queue output, pipe to Format-OrchQueueItemTable to group by QueueDefinitionId first.
+Update-TypeData -TypeName UiPath.PowerShell.Entities.QueueItem `
+    -MemberName Expanded -MemberType ScriptProperty -Force -Value {
+        $p = [ordered]@{}
+        'Id','Reference','Status','Priority','DeferDate','DueDate','StartProcessing','EndProcessing' |
+            ForEach-Object { $p[$_] = $this.$_ }
+        if ($this.SpecificContent) {
+            foreach ($k in ($this.SpecificContent.Keys | Sort-Object)) {
+                $p[$k] = $this.SpecificContent[$k]
+            }
+        }
+        [pscustomobject]$p
+    }
