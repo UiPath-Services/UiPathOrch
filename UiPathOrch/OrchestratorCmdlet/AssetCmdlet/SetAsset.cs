@@ -127,7 +127,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
             foreach (var result in results)
             {
                 foreach (var asset in result
-                    .Where(a => a.ValueType != "Credential")
+                    .Where(a => a.ValueType != "Credential" && a.ValueType != "Secret")
                     .Where(a => wp.IsMatch(a.Description))
                     .FilterByWildcards(a => a?.ValueType, wpValueType)
                     .FilterByWildcards(a => a?.Name, wpName)
@@ -172,7 +172,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
             foreach (var result in results)
             {
                 foreach (var asset in result
-                    .Where(a => a.ValueType != "Credential")
+                    .Where(a => a.ValueType != "Credential" && a.ValueType != "Secret")
                     .FilterByWildcards(a => a?.ValueType, wpValueType)
                     .FilterByWildcards(a => a?.Name, wpName))
                 {
@@ -282,7 +282,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         // check ValueType
-        if (ValueType == "Credential")
+        if (ValueType == "Credential" || ValueType == "Secret")
             return;
 
         SetAssetCommandParameter parameter = new()
@@ -631,7 +631,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                     specifiedMachines = [null];
                 }
 
-                var existingAssets = drive.Assets.Get(folder).Where(a => a.ValueType != "Credential");
+                var existingAssets = drive.Assets.Get(folder).Where(a => a.ValueType != "Credential" && a.ValueType != "Secret");
 
                 foreach (var name in param.Name!)
                 {

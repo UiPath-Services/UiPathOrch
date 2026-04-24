@@ -2114,6 +2114,7 @@ public class AssetUserValue
     public string? Value { get; set; }
     public string? CredentialUsername { get; set; }
     public string? CredentialPassword { get; set; }
+    public string? SecretValue { get; set; } // v20+ — populated only when ValueType == "Secret"
     public Int64? CredentialStoreId { get; set; }
     public string? ExternalName { get; set; }
     public CustomKeyValuePair[]? KeyValueList { get; set; }
@@ -2161,10 +2162,12 @@ public class Asset
     public int? IntValue { get; set; }
     public string? CredentialUsername { get; set; }
     public string? CredentialPassword { get; set; }
+    public string? SecretValue { get; set; } // v20+ — populated only when ValueType == "Secret"
     public string? ExternalName { get; set; }
     public Int64? CredentialStoreId { get; set; }
     public CustomKeyValuePair[]? KeyValueList { get; set; }
     public bool? HasDefaultValue { get; set; }
+    public bool? AllowDirectApiAccess { get; set; } // v20+
     public string? Description { get; set; }
     public AssetRobotValue[]? RobotValues { get; set; } // deprecated since v19.0
     //public AssetUserValue[]? UserValues { get; set; }

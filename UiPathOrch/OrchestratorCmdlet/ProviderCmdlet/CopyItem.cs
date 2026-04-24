@@ -1583,6 +1583,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                 bool bCredentialWarningNeeded = false;
                 bool bCredentialWarningDone = false;
+                bool bSecretWarningNeeded = false;
+                bool bSecretWarningDone = false;
                 try
                 {
                     Asset postingAsset = OrchCollectionExtensions.DeepCopy(asset);
@@ -1605,6 +1607,17 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         postingAsset.StringValue = null;
                         postingAsset.CredentialPassword = "!!!PLEASE UPDATE!!!";
                         bCredentialWarningNeeded = true;
+                    }
+                    else if (postingAsset.ValueType == "Secret")
+                    {
+                        // The server masks SecretValue on GET (always ""), so copying would POST an empty
+                        // secret which the server rejects with "asset secret value cannot be null".
+                        // Use a placeholder and warn so the operator rotates it.
+                        postingAsset.IntValue = null;
+                        postingAsset.BoolValue = null;
+                        postingAsset.StringValue = null;
+                        postingAsset.SecretValue = "!!!PLEASE UPDATE!!!";
+                        bSecretWarningNeeded = true;
                     }
 
                     if (postingAsset.UserValues is not null && postingAsset.UserValues.Count == 0)
@@ -1650,6 +1663,14 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                                 userValue.StringValue = null;
                                 userValue.CredentialPassword = "!!!PLEASE UPDATE!!!";
                             }
+                            else if (userValue.ValueType == "Secret")
+                            {
+                                userValue.IntValue = null;
+                                userValue.BoolValue = null;
+                                userValue.StringValue = null;
+                                userValue.SecretValue = "!!!PLEASE UPDATE!!!";
+                                bSecretWarningNeeded = true;
+                            }
                             migratedUserValues ??= [];
                             migratedUserValues.Add(userValue);
                         }
@@ -1680,6 +1701,13 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         target = System.IO.Path.Combine(newFolder.GetPSPath(), created?.Name ?? "");
                         _this.WriteWarning($"'{target}': Please update credential asset passwords with Set-OrchCredentialAsset cmdlet.");
                         bCredentialWarningDone = true;
+                    }
+
+                    if (bSecretWarningNeeded && !bSecretWarningDone)
+                    {
+                        target = System.IO.Path.Combine(newFolder.GetPSPath(), created?.Name ?? "");
+                        _this.WriteWarning($"'{target}': Please update Secret asset values with Set-OrchSecretAsset cmdlet.");
+                        bSecretWarningDone = true;
                     }
 
                     // Decided to clear the cache in each Copy-OrchXxx. Not doing it here.

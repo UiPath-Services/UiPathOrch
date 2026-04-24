@@ -191,7 +191,9 @@ HelpMessage: ''
 
 ### -ExpandUserValues
 
-Expands user-specific values for per-robot assets, showing actual values assigned to each user/machine combination instead of a single summary row.
+Expands user-specific values for per-robot assets, showing actual values assigned to each user/machine combination instead of a single summary row. Use this when you need Global and PerRobot entries flattened into one uniform stream.
+
+Alternative for PerRobot-only access: pipe the Asset object and use `$_.UserValues` — this is the PowerShell-native pattern when the Global row is not needed. Example: `Get-OrchAsset Foo | ForEach-Object UserValues`.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter

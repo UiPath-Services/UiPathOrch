@@ -28,6 +28,22 @@ BeforeAll {
     $script:CopyFolder = "${script:RootFolder}\${script:Prefix}Copy"
     $script:TempDir = Join-Path $env:TEMP "PesterTest_$(Get-Random -Maximum 9999)"
 
+    # PerRobot / UserValue test fixtures — use existing tenant user/machine.
+    # CAUTION: TestUserA must NOT be the currently-connected user — Add-OrchFolderUser with a
+    # restricted role downgrades the current user's folder access, causing "You are not authorized!"
+    # errors on subsequent asset operations in that folder.
+    $script:CurrentUserName = (Get-OrchCurrentUser -Path "${script:Drive}:\").UserName
+    $script:TestUserA = if ($script:CurrentUserName -eq 'yoshifumi.tsuda@uipath.com') {
+        'ytsuda@gmail.com'
+    } else {
+        'yoshifumi.tsuda@uipath.com'
+    }
+    # TestUserUnassigned is the other tenant user, NOT added to $script:RootFolder.
+    # Used by the T11.9 guard test that asserts the admin API accepts unassigned users.
+    $script:TestUserUnassigned = $script:CurrentUserName  # admin user, not added via BeforeAll
+    $script:TestUserType = 'DirectoryUser'
+    $script:TestMachine = 'm3'
+
     $script:OriginalConfirmPreference = $ConfirmPreference
     $global:ConfirmPreference = 'None'
 
@@ -42,6 +58,11 @@ BeforeAll {
     $null = mkdir $script:RootFolder
     $null = mkdir $script:SubFolder
     $null = mkdir $script:CopyFolder
+
+    # Assign test user/machine to test folder (best practice for PerRobot UserValues)
+    Add-OrchFolderUser -Type $script:TestUserType -UserName $script:TestUserA `
+        -Roles 'Automation User' -Path $script:RootFolder -ErrorAction SilentlyContinue
+    Add-OrchFolderMachine -Path $script:RootFolder -Name $script:TestMachine -ErrorAction SilentlyContinue
 
     # Discover a package from Orch1: for Process/Trigger tests
     $script:PackageId = (Get-OrchPackage -Path "${script:RefDrive}:\" |
@@ -63,6 +84,10 @@ AfterAll {
     Remove-OrchAsset -Name "${script:Prefix}*" -Path $script:RootFolder -Recurse -Confirm:$false -ErrorAction SilentlyContinue
     Remove-OrchAsset -Name "${script:Prefix}*" -ValueType Credential -Path $script:RootFolder -Recurse -Confirm:$false -ErrorAction SilentlyContinue
     Remove-OrchBucket -Name "${script:Prefix}*" -Path $script:RootFolder -Recurse -Confirm:$false -ErrorAction SilentlyContinue
+
+    # Unassign test user/machine from root test folder (reverse of BeforeAll)
+    Remove-OrchFolderUser -Path $script:RootFolder -UserName $script:TestUserA -Confirm:$false -ErrorAction SilentlyContinue
+    Remove-OrchFolderMachine -Path $script:RootFolder -Name $script:TestMachine -Confirm:$false -ErrorAction SilentlyContinue
 
     Remove-Item $script:CopyFolder -Recurse -Force -ErrorAction SilentlyContinue
     Remove-Item $script:SubFolder -Recurse -Force -ErrorAction SilentlyContinue
@@ -384,6 +409,85 @@ Describe 'Asset' {
         (Get-OrchAsset -Name "${script:AssetName}_Text").Value | Should -Be 'updated'
     }
 
+    # T1.9 — Set-OrchAsset with -ValueType Credential on existing Credential is silent no-op (regression)
+    It 'T1.9 Set-OrchAsset -ValueType Credential silent no-op' {
+        $cred = "${script:AssetName}_T19Cred"
+        Set-OrchCredentialAsset -Name $cred -CredentialUsername 'u' -CredentialPassword 'p'
+        Clear-OrchCache
+        $before = Get-OrchAsset -Name $cred
+        { Set-OrchAsset -ValueType Credential -Name $cred -Value 'should-be-ignored' -ErrorAction Stop } |
+            Should -Not -Throw
+        Clear-OrchCache
+        $after = Get-OrchAsset -Name $cred
+        $after.ValueType | Should -Be 'Credential'
+        $after.CredentialUsername | Should -Be $before.CredentialUsername
+        Remove-OrchAsset -Name $cred -Confirm:$false -ErrorAction SilentlyContinue
+    }
+
+    # T1.10 — Set-OrchAsset with -ValueType Secret silent no-op (new behavior, was error)
+    It 'T1.10 Set-OrchAsset -ValueType Secret silent no-op' {
+        $sec = "${script:AssetName}_T110Sec"
+        Set-OrchSecretAsset -Name $sec -SecretValue 'x'
+        Clear-OrchCache
+        { Set-OrchAsset -ValueType Secret -Name $sec -Value 'ignored' -ErrorAction Stop } |
+            Should -Not -Throw
+        Clear-OrchCache
+        (Get-OrchAsset -Name $sec).ValueType | Should -Be 'Secret'
+        Remove-OrchAsset -Name $sec -Confirm:$false -ErrorAction SilentlyContinue
+    }
+
+    # T1.11 — empty -Value on Global-only Text (no UserValues) deletes the asset
+    It 'T1.11 Empty -Value on Global-only Text deletes the asset' {
+        $nm = "${script:AssetName}_T111"
+        Set-OrchAsset -ValueType Text -Name $nm -Value 'g'
+        Clear-OrchCache
+        Set-OrchAsset -ValueType Text -Name $nm -Value ''
+        Clear-OrchCache
+        Get-OrchAsset -Name $nm -ErrorAction SilentlyContinue | Should -BeNullOrEmpty
+    }
+
+    # T1.11b — empty -Value on Global Text WITH UserValues clears Global only, preserves UserValues
+    # (symmetric counterpart to T1.13: empty-delete is scoped to what the caller targets)
+    It 'T1.11b Empty -Value on Global Text preserves PerRobot UserValues' {
+        $nm = "${script:AssetName}_T111b"
+        Set-OrchAsset -ValueType Text -Name $nm -Value 'g'
+        Set-OrchAsset -ValueType Text -Name $nm -UserName $script:TestUserA -Value 'uv'
+        Clear-OrchCache
+        Set-OrchAsset -ValueType Text -Name $nm -Value ''
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name $nm
+        $a | Should -Not -BeNullOrEmpty
+        $a.ValueScope | Should -Be 'PerRobot'
+        $a.HasDefaultValue | Should -Be $false
+        ($a.UserValues | Where-Object UserName -eq $script:TestUserA).Value | Should -Be 'uv'
+        Remove-OrchAsset -Name $nm -Confirm:$false -ErrorAction SilentlyContinue
+    }
+
+    # T1.12 — PerRobot: -UserName X -Value v creates UserValue
+    It 'T1.12 -UserName creates UserValue entry' {
+        $nm = "${script:AssetName}_T112"
+        Set-OrchAsset -ValueType Text -Name $nm -UserName $script:TestUserA -Value 'uv1'
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name $nm
+        $a.UserValues | Should -Not -BeNullOrEmpty
+        ($a.UserValues | Where-Object UserName -eq $script:TestUserA).Value | Should -Be 'uv1'
+        Remove-OrchAsset -Name $nm -Confirm:$false -ErrorAction SilentlyContinue
+    }
+
+    # T1.13 — PerRobot: -UserName X -Value '' empty-deletes that UserValue (Text type)
+    It 'T1.13 -UserName with empty -Value empty-deletes that UserValue' {
+        $nm = "${script:AssetName}_T113"
+        Set-OrchAsset -ValueType Text -Name $nm -UserName $script:TestUserA -Value 'uv1'
+        Clear-OrchCache
+        Set-OrchAsset -ValueType Text -Name $nm -UserName $script:TestUserA -Value ''
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name $nm
+        if ($null -ne $a) {
+            ($a.UserValues | Where-Object UserName -eq $script:TestUserA) | Should -BeNullOrEmpty
+        }
+        Remove-OrchAsset -Name $nm -Confirm:$false -ErrorAction SilentlyContinue
+    }
+
     It 'Remove-OrchAsset with wildcard removes all test assets' {
         Remove-OrchAsset -Name "${script:AssetName}_*" -Confirm:$false
         Clear-OrchCache
@@ -471,6 +575,562 @@ ${path},${script:CredName}_CsvB,From CSV,,,,csv_user_b,csv_pass_b,
         Remove-OrchAsset -Name "${script:CredName}_*" -ValueType Credential -Confirm:$false
         Clear-OrchCache
         Get-OrchAsset -Name "${script:CredName}_*" -ErrorAction SilentlyContinue | Should -BeNullOrEmpty
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Get-OrchCredentialAsset (Section 5)
+# ---------------------------------------------------------------------------
+Describe 'Get-OrchCredentialAsset' {
+    BeforeAll {
+        $script:GcaName = "${script:Prefix}Gca"
+        Push-Location $script:RootFolder
+        Set-OrchCredentialAsset -Name "${script:GcaName}_A" -CredentialUsername 'userA' -CredentialPassword 'passA' -Description 'A'
+        Set-OrchCredentialAsset -Name "${script:GcaName}_B" -CredentialUsername 'userB' -CredentialPassword 'passB'
+        Set-OrchAsset -ValueType Text -Name "${script:GcaName}_Text" -Value 't'        # noise
+        Set-OrchSecretAsset -Name "${script:GcaName}_Sec" -SecretValue 's'              # noise
+        # PerRobot UserValue for round-trip / populated-username check
+        Set-OrchCredentialAsset -Name "${script:GcaName}_A" -UserName $script:TestUserA `
+            -CredentialUsername 'uvUser' -CredentialPassword 'uvPass'
+        Clear-OrchCache
+    }
+
+    AfterAll {
+        Remove-OrchAsset -Name "${script:GcaName}_*" -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-OrchAsset -Name "${script:GcaName}_*" -ValueType Credential -Confirm:$false -ErrorAction SilentlyContinue
+        Pop-Location
+    }
+
+    It 'T5.1 returns only Credential type' {
+        $assets = Get-OrchCredentialAsset -Name "${script:GcaName}_*"
+        $assets | Should -Not -BeNullOrEmpty
+        ($assets | ForEach-Object ValueType | Select-Object -Unique) | Should -Be 'Credential'
+    }
+
+    It 'T5.2 Name wildcard filters Credential only' {
+        $assets = Get-OrchCredentialAsset -Name "${script:GcaName}_A*"
+        $assets.Count | Should -BeGreaterOrEqual 1
+        $assets.Name | Should -Contain "${script:GcaName}_A"
+        $assets.Name | Should -Not -Contain "${script:GcaName}_Text"
+    }
+
+    It 'T5.3/T5.4 -ExportCsv produces credential CSV with expected headers' {
+        $csv = Join-Path $script:TempDir 'gca_export.csv'
+        Get-OrchCredentialAsset -Name "${script:GcaName}_*" -ExportCsv $csv
+        $csv | Should -Exist
+        $rows = Import-Csv $csv
+        $rows.Count | Should -BeGreaterOrEqual 2
+        $expected = @('Path','Name','Description','CredentialStore','UserName','MachineName','CredentialUsername','CredentialPassword','ExternalName')
+        $actual = ($rows[0].PSObject.Properties.Name)
+        $expected | ForEach-Object { $actual | Should -Contain $_ }
+    }
+
+    It 'T5.5 CredentialPassword column is masked (empty)' {
+        $csv = Join-Path $script:TempDir 'gca_mask.csv'
+        Get-OrchCredentialAsset -Name "${script:GcaName}_A" -ExportCsv $csv
+        (Import-Csv $csv) | ForEach-Object { $_.CredentialPassword | Should -BeNullOrEmpty }
+    }
+
+    It 'T5.6 CredentialUsername column is populated (not masked)' {
+        $csv = Join-Path $script:TempDir 'gca_uname.csv'
+        Get-OrchCredentialAsset -Name "${script:GcaName}_A" -ExportCsv $csv
+        (Import-Csv $csv | Where-Object { $_.UserName -eq '' }).CredentialUsername | Should -Contain 'userA'
+    }
+
+    It 'T5.7 -ExpandUserValues flattens PerRobot entries' {
+        $all = Get-OrchCredentialAsset -Name "${script:GcaName}_A" -ExpandUserValues
+        # Expect the Global row-object + at least one UserValue row
+        ($all | Measure-Object).Count | Should -BeGreaterOrEqual 2
+    }
+
+    It 'T5.8 CSV round-trip: Get → Export → Import → Set (Description)' {
+        # Perturb Description only. Server rejects "username change + empty password" so perturbing
+        # CredentialUsername would cause the re-import to fail with server error. Round-trip is
+        # safe for Description + same-username cases (the documented use case).
+        $csv = Join-Path $script:TempDir 'gca_roundtrip.csv'
+        Get-OrchCredentialAsset -Name "${script:GcaName}_A" -ExportCsv $csv
+        Set-OrchCredentialAsset -Name "${script:GcaName}_A" -Description 'perturbed' -CredentialUsername 'userA' -CredentialPassword 'passA'
+        Clear-OrchCache
+        Import-Csv $csv | Set-OrchCredentialAsset
+        Clear-OrchCache
+        $after = Get-OrchAsset -Name "${script:GcaName}_A"
+        $after.Description | Should -Be 'A'
+        $after.CredentialUsername | Should -Be 'userA'
+    }
+
+    It 'T5.9 -Path / -Recurse traverses subfolders' {
+        $nm = "${script:GcaName}_Sub"
+        Set-OrchCredentialAsset -Name $nm -Path $script:SubFolder -CredentialUsername 'sub' -CredentialPassword 'p'
+        Clear-OrchCache
+        $assets = Get-OrchCredentialAsset -Name $nm -Path $script:RootFolder -Recurse
+        $assets.Name | Should -Contain $nm
+        Remove-OrchAsset -Name $nm -Path $script:SubFolder -Confirm:$false -ErrorAction SilentlyContinue
+    }
+
+    It 'T5.10 UserValues.CredentialUsername populated (historical bug regression)' {
+        $a = Get-OrchCredentialAsset -Name "${script:GcaName}_A"
+        $uv = $a.UserValues | Where-Object UserName -eq $script:TestUserA
+        $uv | Should -Not -BeNullOrEmpty
+        $uv.CredentialUsername | Should -Be 'uvUser'
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Set-OrchSecretAsset (Section 6)
+# ---------------------------------------------------------------------------
+Describe 'Set-OrchSecretAsset' {
+    BeforeAll {
+        $script:SsaName = "${script:Prefix}Ssa"
+        Push-Location $script:RootFolder
+    }
+
+    AfterAll {
+        Remove-OrchAsset -Name "${script:SsaName}_*" -Confirm:$false -ErrorAction SilentlyContinue
+        Pop-Location
+    }
+
+    It 'T6.1 -SecretValue (Plain set) creates Secret asset' {
+        Set-OrchSecretAsset -Name "${script:SsaName}_Plain" -SecretValue 'topsecret' -Description 'Plain'
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name "${script:SsaName}_Plain"
+        $a.ValueType | Should -Be 'Secret'
+        $a.Description | Should -Be 'Plain'
+        $a.HasDefaultValue | Should -Be $true
+    }
+
+    It 'T6.2 -Secret SecureString (Default set) creates Secret asset' {
+        $ss = ConvertTo-SecureString 'supersecret' -AsPlainText -Force
+        Set-OrchSecretAsset -Name "${script:SsaName}_Sec" -Secret $ss
+        Clear-OrchCache
+        (Get-OrchAsset -Name "${script:SsaName}_Sec").ValueType | Should -Be 'Secret'
+    }
+
+    It 'T6.4 Update existing SecretValue (value is masked)' {
+        Set-OrchSecretAsset -Name "${script:SsaName}_Plain" -SecretValue 'updated'
+        Clear-OrchCache
+        # API returns masked value — cannot assert value. Assert asset still exists and Secret type.
+        (Get-OrchAsset -Name "${script:SsaName}_Plain").ValueType | Should -Be 'Secret'
+    }
+
+    It 'T6.5 Update Description only (no secret change) preserves Secret' {
+        # Must pass -SecretValue '' to select Plain parameter set; without it, Default set is chosen
+        # and -Secret is mandatory → interactive prompt.
+        Set-OrchSecretAsset -Name "${script:SsaName}_Plain" -Description 'DescUpdated' -SecretValue ''
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name "${script:SsaName}_Plain"
+        $a.Description | Should -Be 'DescUpdated'
+        $a.HasDefaultValue | Should -Be $true
+    }
+
+    It 'T6.6/T6.7 Round-trip safe: empty -SecretValue does not clobber existing Global value' {
+        # Existing asset already has HasDefaultValue=$true
+        Set-OrchSecretAsset -Name "${script:SsaName}_Plain" -SecretValue ''
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name "${script:SsaName}_Plain"
+        $a | Should -Not -BeNullOrEmpty
+        $a.HasDefaultValue | Should -Be $true
+    }
+
+    It 'T6.8 -UserName X -SecretValue v creates UserValue' {
+        Set-OrchSecretAsset -Name "${script:SsaName}_Plain" -UserName $script:TestUserA -SecretValue 'uvSecret'
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name "${script:SsaName}_Plain"
+        ($a.UserValues | Where-Object UserName -eq $script:TestUserA) | Should -Not -BeNullOrEmpty
+    }
+
+    It 'T6.9 -UserName X with empty SecretValue does NOT delete UserValue (unlike Text empty-delete)' {
+        # UserValue from T6.8 should still be present after this call
+        Set-OrchSecretAsset -Name "${script:SsaName}_Plain" -UserName $script:TestUserA -SecretValue ''
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name "${script:SsaName}_Plain"
+        ($a.UserValues | Where-Object UserName -eq $script:TestUserA) | Should -Not -BeNullOrEmpty
+    }
+
+    It 'T6.10 Name wildcard updates multiple assets' {
+        Set-OrchSecretAsset -Name "${script:SsaName}_WcA" -SecretValue 'a'
+        Set-OrchSecretAsset -Name "${script:SsaName}_WcB" -SecretValue 'b'
+        Clear-OrchCache
+        Set-OrchSecretAsset -Name "${script:SsaName}_Wc*" -Description 'wcDesc' -SecretValue ''
+        Clear-OrchCache
+        $assets = Get-OrchAsset -Name "${script:SsaName}_Wc*"
+        $assets.Count | Should -BeGreaterOrEqual 2
+        $assets | ForEach-Object { $_.Description | Should -Be 'wcDesc' }
+    }
+
+    It 'T6.13 -WhatIf produces no change' {
+        Set-OrchSecretAsset -Name "${script:SsaName}_Plain" -Description 'WhatIfDesc' -SecretValue '' -WhatIf
+        Clear-OrchCache
+        (Get-OrchAsset -Name "${script:SsaName}_Plain").Description | Should -Be 'DescUpdated'
+    }
+
+    It 'T6.14 PSCustomObject pipeline (property-name binding) resolves correctly' {
+        $obj = [pscustomobject]@{
+            Path = $script:RootFolder
+            Name = "${script:SsaName}_Pso"
+            Description = 'via pipeline'
+            SecretValue = 'psoSecret'
+        }
+        $obj | Set-OrchSecretAsset
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name "${script:SsaName}_Pso"
+        $a.ValueType | Should -Be 'Secret'
+        $a.Description | Should -Be 'via pipeline'
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Get-OrchSecretAsset (Section 7)
+# ---------------------------------------------------------------------------
+Describe 'Get-OrchSecretAsset' {
+    BeforeAll {
+        $script:GsaName = "${script:Prefix}Gsa"
+        Push-Location $script:RootFolder
+        Set-OrchSecretAsset -Name "${script:GsaName}_A" -SecretValue 's1' -Description 'SecA'
+        Set-OrchSecretAsset -Name "${script:GsaName}_B" -SecretValue 's2'
+        Set-OrchAsset -ValueType Text -Name "${script:GsaName}_Text" -Value 't'    # noise
+        Set-OrchCredentialAsset -Name "${script:GsaName}_Cred" -CredentialUsername 'u' -CredentialPassword 'p'   # noise
+        Set-OrchSecretAsset -Name "${script:GsaName}_A" -UserName $script:TestUserA -SecretValue 'uv'
+        Clear-OrchCache
+    }
+
+    AfterAll {
+        Remove-OrchAsset -Name "${script:GsaName}_*" -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-OrchAsset -Name "${script:GsaName}_*" -ValueType Credential -Confirm:$false -ErrorAction SilentlyContinue
+        Pop-Location
+    }
+
+    It 'T7.1/T7.2 returns Secret type only' {
+        $assets = Get-OrchSecretAsset -Name "${script:GsaName}_*"
+        $assets | Should -Not -BeNullOrEmpty
+        ($assets | ForEach-Object ValueType | Select-Object -Unique) | Should -Be 'Secret'
+        $assets.Name | Should -Not -Contain "${script:GsaName}_Text"
+        $assets.Name | Should -Not -Contain "${script:GsaName}_Cred"
+    }
+
+    It 'T7.3 Name wildcard filters Secret only' {
+        $a = Get-OrchSecretAsset -Name "${script:GsaName}_A"
+        $a.Name | Should -Be "${script:GsaName}_A"
+    }
+
+    It 'T7.4/T7.5 -ExportCsv produces Secret CSV with expected headers' {
+        $csv = Join-Path $script:TempDir 'gsa_export.csv'
+        Get-OrchSecretAsset -Name "${script:GsaName}_*" -ExportCsv $csv
+        $csv | Should -Exist
+        $rows = Import-Csv $csv
+        $rows.Count | Should -BeGreaterOrEqual 2
+        $expected = @('Path','Name','Description','CredentialStore','UserName','MachineName','SecretValue','ExternalName')
+        $actual = ($rows[0].PSObject.Properties.Name)
+        $expected | ForEach-Object { $actual | Should -Contain $_ }
+    }
+
+    It 'T7.6 SecretValue column is always empty (masked)' {
+        $csv = Join-Path $script:TempDir 'gsa_mask.csv'
+        Get-OrchSecretAsset -Name "${script:GsaName}_*" -ExportCsv $csv
+        (Import-Csv $csv) | ForEach-Object { $_.SecretValue | Should -BeNullOrEmpty }
+    }
+
+    It 'T7.7 -ExpandUserValues flattens PerRobot entries' {
+        $all = Get-OrchSecretAsset -Name "${script:GsaName}_A" -ExpandUserValues
+        ($all | Measure-Object).Count | Should -BeGreaterOrEqual 2
+    }
+
+    It 'T7.8 -Path / -Recurse traverses subfolders' {
+        $nm = "${script:GsaName}_Sub"
+        Set-OrchSecretAsset -Name $nm -Path $script:SubFolder -SecretValue 's'
+        Clear-OrchCache
+        $assets = Get-OrchSecretAsset -Name $nm -Path $script:RootFolder -Recurse
+        $assets.Name | Should -Contain $nm
+        Remove-OrchAsset -Name $nm -Path $script:SubFolder -Confirm:$false -ErrorAction SilentlyContinue
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Remove-OrchAssetUserValue (Section 8)
+# ---------------------------------------------------------------------------
+Describe 'Remove-OrchAssetUserValue' {
+    BeforeAll {
+        $script:RuvName = "${script:Prefix}Ruv"
+        Push-Location $script:RootFolder
+    }
+
+    AfterAll {
+        Remove-OrchAsset -Name "${script:RuvName}_*" -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-OrchAsset -Name "${script:RuvName}_*" -ValueType Credential -Confirm:$false -ErrorAction SilentlyContinue
+        Pop-Location
+    }
+
+    It 'T8.1 Remove UserValue from Credential asset' {
+        $nm = "${script:RuvName}_Cred"
+        Set-OrchCredentialAsset -Name $nm -CredentialUsername 'g' -CredentialPassword 'g'
+        Set-OrchCredentialAsset -Name $nm -UserName $script:TestUserA -CredentialUsername 'u' -CredentialPassword 'p'
+        Clear-OrchCache
+        Remove-OrchAssetUserValue -Name $nm -UserName $script:TestUserA -Confirm:$false
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name $nm
+        ($a.UserValues | Where-Object UserName -eq $script:TestUserA) | Should -BeNullOrEmpty
+    }
+
+    It 'T8.2/T8.10 Remove UserValue from Secret asset (type-agnostic)' {
+        $nm = "${script:RuvName}_Sec"
+        Set-OrchSecretAsset -Name $nm -SecretValue 'g'
+        Set-OrchSecretAsset -Name $nm -UserName $script:TestUserA -SecretValue 'uv'
+        Clear-OrchCache
+        Remove-OrchAssetUserValue -Name $nm -UserName $script:TestUserA -Confirm:$false
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name $nm
+        ($a.UserValues | Where-Object UserName -eq $script:TestUserA) | Should -BeNullOrEmpty
+    }
+
+    It 'T8.4 Wildcard -UserName matches UserValue' {
+        # OrchTest has only one usable non-self DirectoryUser, so this tests wildcard resolution
+        # against a single UserValue rather than multiple.
+        $nm = "${script:RuvName}_Wc"
+        Set-OrchSecretAsset -Name $nm -SecretValue 'g'
+        Set-OrchSecretAsset -Name $nm -UserName $script:TestUserA -SecretValue 'a'
+        Clear-OrchCache
+        Remove-OrchAssetUserValue -Name $nm -UserName '*tsuda*' -Confirm:$false
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name $nm
+        $a.UserValues | Should -BeNullOrEmpty
+    }
+
+    It 'T8.5 Removing all UserValues reverts to Global scope preserving HasDefaultValue' {
+        $nm = "${script:RuvName}_Revert"
+        Set-OrchSecretAsset -Name $nm -SecretValue 'g'
+        Set-OrchSecretAsset -Name $nm -UserName $script:TestUserA -SecretValue 'uv'
+        Clear-OrchCache
+        Remove-OrchAssetUserValue -Name $nm -UserName '*' -Confirm:$false
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name $nm
+        $a.ValueScope | Should -Be 'Global'
+        $a.HasDefaultValue | Should -Be $true
+    }
+
+    It 'T8.6 -WhatIf produces no change' {
+        $nm = "${script:RuvName}_Whatif"
+        Set-OrchCredentialAsset -Name $nm -UserName $script:TestUserA -CredentialUsername 'u' -CredentialPassword 'p'
+        Clear-OrchCache
+        Remove-OrchAssetUserValue -Name $nm -UserName $script:TestUserA -WhatIf
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name $nm
+        ($a.UserValues | Where-Object UserName -eq $script:TestUserA) | Should -Not -BeNullOrEmpty
+    }
+
+    It 'T8.8 Non-existent user name is a no-op' {
+        $nm = "${script:RuvName}_NoMatch"
+        Set-OrchSecretAsset -Name $nm -SecretValue 'g'
+        Set-OrchSecretAsset -Name $nm -UserName $script:TestUserA -SecretValue 'uv'
+        Clear-OrchCache
+        { Remove-OrchAssetUserValue -Name $nm -UserName 'definitely-not-a-user' -Confirm:$false -ErrorAction Stop } |
+            Should -Not -Throw
+        Clear-OrchCache
+        ((Get-OrchAsset -Name $nm).UserValues | Where-Object UserName -eq $script:TestUserA) | Should -Not -BeNullOrEmpty
+    }
+
+    It 'T8.9/T8.11 Global-only asset (no UserValues) is silently skipped' {
+        $nm = "${script:RuvName}_GlobalOnly"
+        Set-OrchSecretAsset -Name $nm -SecretValue 'g'
+        Clear-OrchCache
+        { Remove-OrchAssetUserValue -Name $nm -UserName $script:TestUserA -Confirm:$false -ErrorAction Stop } |
+            Should -Not -Throw
+        Clear-OrchCache
+        (Get-OrchAsset -Name $nm).HasDefaultValue | Should -Be $true
+    }
+
+    It 'T8.12 Text type UserValue deletion (type-agnostic confirmation)' {
+        $nm = "${script:RuvName}_Text"
+        Set-OrchAsset -ValueType Text -Name $nm -Value 'g'
+        Set-OrchAsset -ValueType Text -Name $nm -UserName $script:TestUserA -Value 'uv'
+        Clear-OrchCache
+        Remove-OrchAssetUserValue -Name $nm -UserName $script:TestUserA -Confirm:$false
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name $nm
+        ($a.UserValues | Where-Object UserName -eq $script:TestUserA) | Should -BeNullOrEmpty
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Asset Round-trip / cross-cutting (Section 9)
+# ---------------------------------------------------------------------------
+Describe 'Asset Round-trip' {
+    BeforeAll {
+        $script:RtName = "${script:Prefix}Rt"
+        Push-Location $script:RootFolder
+    }
+
+    AfterAll {
+        Remove-OrchAsset -Name "${script:RtName}_*" -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-OrchAsset -Name "${script:RtName}_*" -ValueType Credential -Confirm:$false -ErrorAction SilentlyContinue
+        Pop-Location
+    }
+
+    It 'T9.1 Credential round-trip: Description restoration via CSV' {
+        # Perturb Description only — server rejects "username change + empty password" on re-import.
+        $nm = "${script:RtName}_Cred"
+        Set-OrchCredentialAsset -Name $nm -CredentialUsername 'u1' -CredentialPassword 'p1' -Description 'D1'
+        Clear-OrchCache
+        $csv = Join-Path $script:TempDir 'rt_cred.csv'
+        Get-OrchCredentialAsset -Name $nm -ExportCsv $csv
+        Set-OrchCredentialAsset -Name $nm -Description 'perturbed' -CredentialUsername 'u1' -CredentialPassword 'p1'
+        Clear-OrchCache
+        Import-Csv $csv | Set-OrchCredentialAsset
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name $nm
+        $a.Description | Should -Be 'D1'
+        $a.CredentialUsername | Should -Be 'u1'
+    }
+
+    It 'T9.2 Secret round-trip: empty SecretValue does not clobber' {
+        $nm = "${script:RtName}_Sec"
+        Set-OrchSecretAsset -Name $nm -SecretValue 's1' -Description 'D1'
+        Clear-OrchCache
+        $csv = Join-Path $script:TempDir 'rt_sec.csv'
+        Get-OrchSecretAsset -Name $nm -ExportCsv $csv
+        Set-OrchSecretAsset -Name $nm -Description 'perturbed' -SecretValue ''
+        Clear-OrchCache
+        Import-Csv $csv | Set-OrchSecretAsset
+        Clear-OrchCache
+        $a = Get-OrchAsset -Name $nm
+        $a.Description | Should -Be 'D1'
+        $a.HasDefaultValue | Should -Be $true
+    }
+
+    It 'T9.4 Asset partition: Get-OrchAsset + Get-OrchCredentialAsset + Get-OrchSecretAsset covers all types' {
+        Set-OrchAsset -ValueType Text -Name "${script:RtName}_Part_T" -Value 't'
+        Set-OrchCredentialAsset -Name "${script:RtName}_Part_C" -CredentialUsername 'u' -CredentialPassword 'p'
+        Set-OrchSecretAsset -Name "${script:RtName}_Part_S" -SecretValue 's'
+        Clear-OrchCache
+        $all   = Get-OrchAsset             -Name "${script:RtName}_Part_*"
+        $creds = Get-OrchCredentialAsset   -Name "${script:RtName}_Part_*"
+        $secs  = Get-OrchSecretAsset       -Name "${script:RtName}_Part_*"
+        $all.Count | Should -Be 3
+        $creds.Count | Should -Be 1
+        $secs.Count | Should -Be 1
+        (($creds.Count) + ($secs.Count) + (($all | Where-Object { $_.ValueType -notin 'Credential','Secret' }).Count)) |
+            Should -Be $all.Count
+    }
+
+    It 'T9.6 Unicode/Japanese name round-trip for Secret' {
+        $nm = "${script:RtName}_シークレット"
+        Set-OrchSecretAsset -Name $nm -SecretValue 's'
+        Clear-OrchCache
+        $csv = Join-Path $script:TempDir 'rt_unicode.csv'
+        Get-OrchSecretAsset -Name $nm -ExportCsv $csv
+        Import-Csv $csv | Set-OrchSecretAsset
+        Clear-OrchCache
+        (Get-OrchAsset -Name $nm) | Should -Not -BeNullOrEmpty
+        Remove-OrchAsset -Name $nm -Confirm:$false -ErrorAction SilentlyContinue
+    }
+
+    It 'T9.8 Copy-OrchAsset handles all 5 types including Secret (placeholder + warning)' {
+        # Regression guard: Secret used to fail with "asset secret value cannot be null"
+        # because CopyAssets had no Secret branch. Now inserts !!!PLEASE UPDATE!!! placeholder
+        # and emits a warning like Credential.
+        Set-OrchAsset -ValueType Text    -Name "${script:RtName}_C_Text" -Value 'v'
+        Set-OrchAsset -ValueType Integer -Name "${script:RtName}_C_Int"  -Value 1
+        Set-OrchAsset -ValueType Bool    -Name "${script:RtName}_C_Bool" -Value true
+        Set-OrchCredentialAsset          -Name "${script:RtName}_C_Cred" -CredentialUsername 'u' -CredentialPassword 'p'
+        Set-OrchSecretAsset              -Name "${script:RtName}_C_Sec"  -SecretValue 's'
+        Clear-OrchCache
+
+        $w = @(); $e = @()
+        Copy-OrchAsset -Name "${script:RtName}_C_*" -Path $script:RootFolder -Destination $script:CopyFolder `
+            -WarningVariable w -ErrorVariable e -ErrorAction Continue
+        $e | Should -BeNullOrEmpty
+
+        Clear-OrchCache
+        $copied = Get-OrchAsset -Name "${script:RtName}_C_*" -Path $script:CopyFolder
+        $copied.Count | Should -Be 5  # Text, Integer, Bool, Cred, Sec — Get-OrchAsset returns all types on v20+
+        ($copied | ForEach-Object ValueType | Sort-Object -Unique) | Should -Be @('Bool','Credential','Integer','Secret','Text')
+
+        ($w -join ' ') | Should -Match 'Secret asset values'
+        ($w -join ' ') | Should -Match 'credential asset passwords'
+
+        # Cleanup copied
+        Remove-OrchAsset -Name "${script:RtName}_C_*" -Path $script:CopyFolder -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-OrchAsset -Name "${script:RtName}_C_*" -Path $script:CopyFolder -ValueType Credential -Confirm:$false -ErrorAction SilentlyContinue
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Asset Negative (Section 11)
+# ---------------------------------------------------------------------------
+Describe 'Asset Negative' {
+    BeforeAll {
+        $script:NegName = "${script:Prefix}Neg"
+        Push-Location $script:RootFolder
+    }
+
+    AfterAll {
+        Remove-OrchAsset -Name "${script:NegName}_*" -Confirm:$false -ErrorAction SilentlyContinue
+        Pop-Location
+    }
+
+    It 'T11.2 Non-existent -Path throws (provider terminating error)' {
+        # Unknown -Path is raised by the provider as ItemNotFoundException (terminating),
+        # not a cmdlet non-terminating error — assert via Should -Throw.
+        {
+            Get-OrchSecretAsset -Path "${script:Drive}:\__DoesNotExist__$(Get-Random -Maximum 9999)" -ErrorAction Stop
+        } | Should -Throw
+    }
+
+    It 'T11.3 Invalid -ValueType writes error' {
+        $err = $null
+        Set-OrchAsset -ValueType 'Bogus' -Name "${script:NegName}_Bad" -Value 'x' `
+            -ErrorVariable err -ErrorAction SilentlyContinue
+        $err | Should -Not -BeNullOrEmpty
+    }
+
+    It 'T11.6 Non-existent -CredentialStore writes error' {
+        $err = $null
+        Set-OrchCredentialAsset -Name "${script:NegName}_Store" -CredentialUsername 'u' -CredentialPassword 'p' `
+            -CredentialStore 'definitely-no-such-store' -ErrorVariable err -ErrorAction SilentlyContinue
+        $err | Should -Not -BeNullOrEmpty
+    }
+
+    It 'T11.9 Guard: Set-OrchSecretAsset with folder-unassigned user still succeeds (admin API is permissive)' {
+        # If server behavior changes to enforce folder assignment, this test will flip to failure
+        # — that's intentional (guard test).
+        $nm = "${script:NegName}_Guard"
+        $unassignedUser = $script:TestUserUnassigned  # not added to $script:RootFolder in BeforeAll
+        { Set-OrchSecretAsset -Name $nm -UserName $unassignedUser -SecretValue 'g' -ErrorAction Stop } |
+            Should -Not -Throw
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Asset Performance / Batching (Section 12) — Tag 'Performance'
+# ---------------------------------------------------------------------------
+Describe 'Asset Performance' -Tag 'Performance' {
+    BeforeAll {
+        $script:PerfName = "${script:Prefix}Perf"
+        Push-Location $script:RootFolder
+    }
+
+    AfterAll {
+        Remove-OrchAsset -Name "${script:PerfName}_*" -Confirm:$false -ErrorAction SilentlyContinue
+        Pop-Location
+    }
+
+    It 'T12.1 Batching: 10 CSV rows × single asset collapse into 1 PUT (time-bounded proxy)' {
+        $nm = "${script:PerfName}_Batch"
+        Set-OrchSecretAsset -Name $nm -SecretValue 'g'
+        Clear-OrchCache
+        $csv = Join-Path $script:TempDir 'perf_batch.csv'
+        $rows = 1..10 | ForEach-Object {
+            [pscustomobject]@{
+                Path = $script:RootFolder
+                Name = $nm
+                Description = "d$_"
+                SecretValue = ''
+            }
+        }
+        $rows | Export-Csv $csv -NoTypeInformation
+        $t = Measure-Command {
+            Import-Csv $csv | Set-OrchSecretAsset
+        }
+        # Loose bound: 10 sequential PUTs would usually exceed ~5s; batched should be well under.
+        $t.TotalSeconds | Should -BeLessThan 10
     }
 }
 

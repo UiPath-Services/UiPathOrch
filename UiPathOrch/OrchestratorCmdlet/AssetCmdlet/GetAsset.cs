@@ -54,7 +54,7 @@ public class GetAssetCommand : OrchestratorPSCmdlet
     private static void WriteCsvContent(StreamWriter writer, IEnumerable<Asset> output)
     {
         // Write data rows for each asset
-        foreach (var asset in output.Where(a => a.ValueType != "Credential"))
+        foreach (var asset in output.Where(a => a.ValueType != "Credential" && a.ValueType != "Secret"))
         {
             bool isDescriptionOut = false;
 

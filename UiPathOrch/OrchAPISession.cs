@@ -2483,9 +2483,19 @@ public partial class OrchAPISession : IDisposable
 
     public IEnumerable<Asset> GetAssets(Int64 folderId)
     {
-        // For some reason, UserValues.CredentialUsername is returned empty. Is this a bug?
-        //return GetEnumerable<Asset>("/odata/Assets/UiPath.Server.Configuration.OData.GetFiltered", folderId, "&$expand=UserValues");
-        return GetEnumerable<Asset>("/odata/Assets", folderId, "&$expand=UserValues");
+        // On v20+ servers neither endpoint alone is sufficient:
+        //   /odata/Assets silently drops Secret-typed assets, but returns CredentialUsername.
+        //   GetFiltered   includes Secret, but returns CredentialUsername="" for Credential assets.
+        // Merge: non-Secret from /odata/Assets + Secret-only from GetFiltered.
+        var assets = GetEnumerable<Asset>("/odata/Assets", folderId, "&$expand=UserValues");
+        if (ApiVersion < 20)
+            return assets;
+
+        var secrets = GetEnumerable<Asset>(
+            "/odata/Assets/UiPath.Server.Configuration.OData.GetFiltered",
+            folderId,
+            "&$expand=UserValues&$filter=ValueType eq 'Secret'");
+        return assets.Concat(secrets);
     }
 
     public Asset? GetAsset(Int64 folderId, Int64 assetId)

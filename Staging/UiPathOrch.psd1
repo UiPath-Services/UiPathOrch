@@ -218,6 +218,12 @@ CmdletsToExport = @(
 'Remove-OrchAsset',
 
 'Set-OrchCredentialAsset',
+'Get-OrchCredentialAsset',
+
+'Set-OrchSecretAsset',
+'Get-OrchSecretAsset',
+
+'Remove-OrchAssetUserValue',
 
 'Get-OrchCredentialStore',
 'Copy-OrchCredentialStore',
