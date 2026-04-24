@@ -388,3 +388,6 @@ docs/
 
 # Scratch/working files
 scratch/
+
+# Local hotfix .nupkg artifacts for hand-delivery
+/dist/

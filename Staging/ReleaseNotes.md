@@ -1,3 +1,8 @@
+# Version: 0.9.16.6
+## Bug Fixes
+- Install-Module of 0.9.16.5 failed with "authenticode signature of the file 'UiPathOrch.psd1' is not valid" on any machine where the self-signed code-signing certificate was not pre-trusted. Root cause: 0.9.16.5 signed `UiPathOrch.psd1` / `.psm1` / `.ps1xml` / `Functions/*.ps1` in addition to the DLL, and Install-Module verifies Authenticode signatures on script files. Fixed by narrowing the signing scope to `UiPathOrch.dll` only; script files are published unsigned. No functional change.
+
+
 # Version: 0.9.16.5
 ## Bug Fixes
 - Get-PmLicenseInventory: JSON deserialization failed on tenants with consumable SKUs that report fractional allocation (e.g. AIU `allocated: 1451.8`). Widened `ProductAllocation.total` / `.allocated` from `int?` to `double?`.

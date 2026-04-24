@@ -81,12 +81,12 @@ jobs:
           $pw = ConvertTo-SecureString $env:PFX_PW -AsPlainText -Force
           $cert = Get-PfxCertificate -FilePath $pfx -Password $pw
           $stage = '${{ steps.stage.outputs.stage }}'
-          $files = @(
-            "$stage/UiPathOrch.dll",
-            "$stage/UiPathOrch.psd1",
-            "$stage/UiPathOrch.psm1",
-            "$stage/UiPathOrch.Format.ps1xml"
-          ) + (Get-ChildItem "$stage/Functions/*.ps1" | ForEach-Object FullName)
+          # Sign ONLY the native binary. Script files (.psd1 / .psm1 / .ps1xml /
+          # Functions/*.ps1) are left unsigned on purpose: Install-Module verifies
+          # Authenticode signatures on script files but not on .dll, so a self-
+          # signed script signature fails on any end-user PC where the cert is
+          # not pre-trusted. WDAC / AppLocker only gate native binaries anyway.
+          $files = @("$stage/UiPathOrch.dll")
           Set-AuthenticodeSignature -FilePath $files -Certificate $cert `
               -TimestampServer http://timestamp.digicert.com
           # Self-signed certs yield Status=UnknownError on machines where the cert is
