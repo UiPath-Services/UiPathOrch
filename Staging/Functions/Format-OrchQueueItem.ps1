@@ -1,4 +1,4 @@
-function Format-OrchQueueItemTable {
+function Format-OrchQueueItem {
     <#
     .SYNOPSIS
         Formats Get-OrchQueueItem output as one table per queue, flattening SpecificContent keys into columns.
@@ -14,10 +14,10 @@ function Format-OrchQueueItemTable {
         first queue's schema. Grouping first avoids that problem.
 
     .EXAMPLE
-        Get-OrchQueueItem -Name OrderQueue -First 20 | Format-OrchQueueItemTable
+        Get-OrchQueueItem -Name OrderQueue -First 20 | Format-OrchQueueItem
 
     .EXAMPLE
-        Get-OrchQueueItem -Name 'Order*' -Status New | Format-OrchQueueItemTable
+        Get-OrchQueueItem -Name 'Order*' -Status New | Format-OrchQueueItem
     #>
     [CmdletBinding()]
     Param(

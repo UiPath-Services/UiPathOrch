@@ -76,6 +76,14 @@ PS C:\> Get-OrchTestDataQueueItem -Path Orch1:\root
 
 Gets all items from all test data queues in the root folder on Orch1.
 
+### Example 5: View items as a flat table with JSON columns
+
+```powershell
+PS Orch1:\root> Get-OrchTestDataQueueItem -Recurse | Format-OrchTestDataQueueItem
+```
+
+Pipes items to Format-OrchTestDataQueueItem, which groups by queue and renders each queue's ContentJson as a table with one column per top-level JSON property. Needed because Format-Table alone locks columns on the first object, so multi-queue output with different schemas would hide later keys.
+
 ## PARAMETERS
 
 ### -Path
@@ -185,12 +193,12 @@ Returns TestDataQueueItem objects with properties including Id, IsConsumed, and 
 
 The cmdlet uses multi-threaded processing at both the folder and queue levels for improved performance.
 
-Use Get-OrchTestDataQueueItemTable for a formatted table view that expands the JSON content into columns.
+Pipe to Format-OrchTestDataQueueItem for a table view that groups by queue and flattens each item's ContentJson into columns.
 
 ## RELATED LINKS
 
 Get-OrchTestDataQueue
 
-Get-OrchTestDataQueueItemTable
+Format-OrchTestDataQueueItem
 
 Reset-OrchTestDataQueueItem

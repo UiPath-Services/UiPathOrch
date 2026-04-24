@@ -6,10 +6,10 @@ Locale: en-US
 Module Name: UiPathOrch
 ms.date: 04/24/2026
 PlatyPS schema version: 2024-05-01
-title: Format-OrchQueueItemTable
+title: Format-OrchQueueItem
 ---
 
-# Format-OrchQueueItemTable
+# Format-OrchQueueItem
 
 ## SYNOPSIS
 
@@ -20,7 +20,7 @@ Formats Get-OrchQueueItem output as one table per queue, flattening SpecificCont
 ### __AllParameterSets
 
 ```
-Format-OrchQueueItemTable [[-InputObject] <Object>] [<CommonParameters>]
+Format-OrchQueueItem [[-InputObject] <Object>] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -46,7 +46,7 @@ For a single queue the Expanded ScriptProperty alone is enough — Format-Table 
 ### Example 2: Format across multiple queues
 
 ```powershell
-PS Orch1:\Shared> Get-OrchQueueItem -Name 'Order*' -Status New | Format-OrchQueueItemTable
+PS Orch1:\Shared> Get-OrchQueueItem -Name 'Order*' -Status New | Format-OrchQueueItem
 ```
 
 Emits one Format-Table block per queue. Each block uses that queue's specific columns (OrderId, Customer, etc. for OrderQueue; a different set for a different queue) without leaking schemas across queues.
@@ -54,7 +54,7 @@ Emits one Format-Table block per queue. Each block uses that queue's specific co
 ### Example 3: Combine with wildcards and filters
 
 ```powershell
-PS Orch1:\> Get-OrchQueueItem -Path Orch1:\ -Recurse -Name '*' -Status Failed | Format-OrchQueueItemTable
+PS Orch1:\> Get-OrchQueueItem -Path Orch1:\ -Recurse -Name '*' -Status Failed | Format-OrchQueueItem
 ```
 
 Surveys all failed items across every queue in every folder, grouped per queue.

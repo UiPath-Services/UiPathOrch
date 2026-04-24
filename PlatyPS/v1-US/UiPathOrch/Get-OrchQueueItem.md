@@ -43,6 +43,11 @@ The -Name parameter supports tab completion. Press [Ctrl+Space] or [Tab] to see 
 
 When specifying the -Path, -Recurse, and -Depth parameters, place them immediately after the cmdlet name. This placement ensures that autocomplete for subsequent parameters functions correctly.
 
+Queue-specific payload lives in the SpecificContent dictionary (and its JSON-string twin SpecificData), so the default table view cannot column the per-item keys. Two conveniences are provided to work around this:
+
+- Each QueueItem has an Expanded ScriptProperty (attached by the module via Update-TypeData). It returns a PSCustomObject whose leading columns are Id, Reference, Status, Priority, DeferDate, DueDate, StartProcessing, EndProcessing, followed by SpecificContent keys in sorted order. Pipe `| ForEach-Object Expanded | Format-Table` to view a single queue's items as a flat table.
+- Format-OrchQueueItem handles mixed-queue output. It groups piped items by QueueDefinitionId and emits one Format-Table per queue, so each block uses that queue's specific columns without leaking schemas across queues. Format-Table by itself locks columns on the first object seen and would silently hide keys unique to later queues.
+
 Primary Endpoint: GET /odata/QueueItems?$filter=(QueueDefinitionId eq {queueId})&$expand=Robot,ReviewerUser&orderby=Id
 
 OAuth required scopes: OR.Queues or OR.Queues.Read
@@ -106,6 +111,22 @@ PS Orch1:\> Get-OrchQueueItem -Recurse -Status Failed -First 20
 ```
 
 Gets the first 20 failed queue items from all queues across all folders recursively.
+
+### Example 8: Flatten a single queue into a table with SpecificContent columns
+
+```powershell
+PS Orch1:\Shared> Get-OrchQueueItem OrderQueue -First 20 | ForEach-Object Expanded | Format-Table
+```
+
+Uses the Expanded ScriptProperty to promote SpecificContent keys into top-level columns. Format-Table then renders one row per item with columns for Id, Reference, Status, Priority, the standard dates, and the queue's specific payload keys (e.g., OrderId, Customer, Amount).
+
+### Example 9: Render multiple queues with per-queue schemas
+
+```powershell
+PS Orch1:\Shared> Get-OrchQueueItem -Name 'Order*' -Status New | Format-OrchQueueItem
+```
+
+Groups items by QueueDefinitionId and emits one Format-Table block per queue. Needed when the matched queues have different SpecificContent schemas — a plain `| Format-Table` would column-lock on the first queue and hide later queues' keys.
 
 ## PARAMETERS
 
@@ -600,6 +621,8 @@ When no filter parameters are specified, the cmdlet returns cached items and dis
 
 The default sort order is by DeferDate in descending order. Use -OrderBy and -OrderAscending to customize sorting.
 
+For viewing items as a flat table, use the Expanded ScriptProperty (single queue) or Format-OrchQueueItem (multiple queues). See the Description and Examples 8-9.
+
 ## RELATED LINKS
 
 Get-OrchQueue
@@ -611,3 +634,5 @@ Import-OrchQueueItem
 Redo-OrchQueueItem
 
 Remove-OrchQueueItem
+
+Format-OrchQueueItem

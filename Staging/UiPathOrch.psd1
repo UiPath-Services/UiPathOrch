@@ -70,14 +70,14 @@ NestedModules = @('UiPathOrch.psm1')
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 FunctionsToExport = @(
-'Get-OrchTestDataQueueItemTable',
 'Enable-OrchUserAttended',
 'Disable-OrchUserAttended',
 'Enable-OrchPersonalWorkspace',
 'Disable-OrchPersonalWorkspace',
 'Find-OrchFolderNoUserAssigned',
 'Get-OrchJobVideo',
-'Format-OrchQueueItemTable'
+'Format-OrchQueueItem',
+'Format-OrchTestDataQueueItem'
 )
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.

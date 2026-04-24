@@ -12,8 +12,6 @@
 
 Set-Alias -Name !Show-OrchGuide -Value Get-OrchHelp
 
-. $PSScriptRoot\Functions\Get-OrchTestDataQueueItemTable.ps1
-
 . $PSScriptRoot\Functions\Enable-OrchUserAttended.ps1
 . $PSScriptRoot\Functions\Disable-OrchUserAttended.ps1
 
@@ -24,12 +22,13 @@ Set-Alias -Name !Show-OrchGuide -Value Get-OrchHelp
 
 . $PSScriptRoot\Functions\Get-OrchJobVideo.ps1
 
-. $PSScriptRoot\Functions\Format-OrchQueueItemTable.ps1
+. $PSScriptRoot\Functions\Format-OrchQueueItem.ps1
+. $PSScriptRoot\Functions\Format-OrchTestDataQueueItem.ps1
 
 # Extend QueueItem with an Expanded property that flattens SpecificContent keys into a PSCustomObject.
 # (SpecificContent is the Dictionary form; SpecificData is the same content serialized as JSON string.)
 # Use: Get-OrchQueueItem ... | ForEach-Object Expanded | Format-Table
-# For mixed-queue output, pipe to Format-OrchQueueItemTable to group by QueueDefinitionId first.
+# For mixed-queue output, pipe to Format-OrchQueueItem to group by QueueDefinitionId first.
 Update-TypeData -TypeName UiPath.PowerShell.Entities.QueueItem `
     -MemberName Expanded -MemberType ScriptProperty -Force -Value {
         $p = [ordered]@{}
