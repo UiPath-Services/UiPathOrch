@@ -236,6 +236,8 @@ CmdletsToExport = @(
 'Add-OrchAssetLink',
 
 'Get-OrchBusinessRule',
+'New-OrchBusinessRule',
+'Update-OrchBusinessRule',
 'Remove-OrchBusinessRule',
 
 'Get-OrchTrigger',

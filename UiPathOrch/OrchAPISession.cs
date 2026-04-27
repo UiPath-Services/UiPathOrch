@@ -1089,6 +1089,47 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Delete, $"/odata/BusinessRules({businessRuleKey})", folderId);
     }
 
+    public BusinessRule? CreateBusinessRule(Int64 folderId, BusinessRule businessRule, string fileName, byte[] file)
+    {
+        // Browser HAR shows POST /odata/BusinessRules with multipart/form-data:
+        //   businessRule (text)  : JSON-serialized BusinessRuleDto (PascalCase fields)
+        //   file (binary)        : the rule definition file (.dmn), Content-Type application/octet-stream
+        // X-UIPATH-OrganizationUnitId carries the folder context.
+        return PostMultipartBusinessRule(HttpMethod.Post, "/odata/BusinessRules", folderId, businessRule, fileName, file);
+    }
+
+    public void UpdateBusinessRule(Int64 folderId, string businessRuleId, BusinessRule businessRule, string? fileName = null, byte[]? file = null)
+    {
+        // PUT /odata/BusinessRules({id}). Same multipart shape as POST, but `file` is optional —
+        // omitting it preserves the existing rule definition while updating metadata only.
+        PostMultipartBusinessRule(HttpMethod.Put, $"/odata/BusinessRules({businessRuleId})", folderId, businessRule, fileName, file);
+    }
+
+    private BusinessRule? PostMultipartBusinessRule(HttpMethod method, string endpoint, Int64 folderId, BusinessRule businessRule, string? fileName, byte[]? file)
+    {
+        using var content = new MultipartFormDataContent("----UiPathOrchBoundary");
+
+        string brJson = JsonSerializer.Serialize(businessRule, JsonTools.jsoWhenWritingNull);
+        content.Add(new StringContent(brJson), "businessRule");
+
+        if (file is not null)
+        {
+            var fileContent = new ByteArrayContent(file);
+            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+            content.Add(fileContent, "file", fileName ?? "rule.dmn");
+        }
+
+        var request = new HttpRequestMessage(method, _base_url + endpoint) { Content = content };
+        request.Headers.Add("X-UIPATH-OrganizationUnitId", folderId.ToString());
+
+        var response = HttpClient_Send(request);
+        EnsureSuccessStatusCode(response);
+
+        string body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+        if (string.IsNullOrEmpty(body)) return null;
+        return JsonSerializer.Deserialize<BusinessRule>(body);
+    }
+
     #endregion
 
     #region Environent

@@ -1414,6 +1414,29 @@ Describe 'BusinessRule' {
         { Remove-OrchBusinessRule -Path "${script:Drive}:\Shared" -Name 'definitely-not-a-rule' -Confirm:$false -ErrorAction SilentlyContinue } |
             Should -Not -Throw
     }
+
+    It 'BR4 New-OrchBusinessRule with -WhatIf does not invoke API' {
+        $tmp = Join-Path $script:TempDir 'br4.dmn'
+        Set-Content -Path $tmp -Value '<?xml version="1.0"?><definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" id="d1" name="d1"/>' -Encoding UTF8
+        try {
+            { New-OrchBusinessRule -Path "${script:Drive}:\Shared" -Name "${script:Prefix}Br4" -Source $tmp -WhatIf } | Should -Not -Throw
+        } finally {
+            Remove-Item $tmp -ErrorAction SilentlyContinue
+        }
+    }
+
+    It 'BR5 New-OrchBusinessRule with missing -Source emits non-fatal error' {
+        $err = $null
+        New-OrchBusinessRule -Path "${script:Drive}:\Shared" -Name "${script:Prefix}Br5" `
+            -Source 'C:\definitely-not-here.dmn' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable err
+        $err | Should -Not -BeNullOrEmpty
+        $err[0].FullyQualifiedErrorId | Should -Match 'NewBusinessRuleSourceNotFound'
+    }
+
+    It 'BR6 Update-OrchBusinessRule with -WhatIf on non-matching name is a no-op' {
+        { Update-OrchBusinessRule -Path "${script:Drive}:\Shared" -Name 'definitely-not-a-rule' -Description 'x' -WhatIf -ErrorAction SilentlyContinue } |
+            Should -Not -Throw
+    }
 }
 
 # ---------------------------------------------------------------------------
