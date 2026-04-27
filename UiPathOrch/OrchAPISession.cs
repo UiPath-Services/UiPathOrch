@@ -2850,6 +2850,15 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<Session>("/odata/Sessions", folderId, "&$expand=Robot($expand=License)");
     }
 
+    // Bulk delete inactive (disconnected / unresponsive) unattended sessions by id.
+    // Returns 204 No Content. Tenant-level operation (no X-UIPATH-OrganizationUnitId
+    // per the v20 swagger: parameters block only carries the body).
+    public void DeleteInactiveSessions(IEnumerable<Int64> sessionIds)
+    {
+        var payload = new { sessionIds };
+        HttpRequest(HttpMethod.Post, "/odata/Sessions/UiPath.Server.Configuration.OData.DeleteInactiveUnattendedSessions", null, payload);
+    }
+
     // Enable/disable classic folder robots
     public void ToggleEnabledStatus(Int64 folderId, Int64 robotId, bool enabled)
     {

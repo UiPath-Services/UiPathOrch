@@ -163,6 +163,7 @@ CmdletsToExport = @(
 'Get-OrchUserSession',
 'Get-OrchMachineSession',
 'Get-OrchUnattendedSession',
+'Clear-OrchInactiveSession',
 
 'Enable-OrchMaintenanceMode',
 'Disable-OrchMaintenanceMode',

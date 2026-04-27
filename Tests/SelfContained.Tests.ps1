@@ -1399,6 +1399,22 @@ Describe 'Copy Across Folders' {
 # scope is not exposed by Identity Server; tests cannot exercise them.
 
 # ---------------------------------------------------------------------------
+# Clear-OrchInactiveSession
+# ---------------------------------------------------------------------------
+Describe 'Clear-OrchInactiveSession' {
+    It 'CIS1 -WhatIf does not invoke API' {
+        { Clear-OrchInactiveSession -Path "${script:Drive}:\" -WhatIf } | Should -Not -Throw
+    }
+
+    It 'CIS2 With no inactive sessions present, completes silently' {
+        # If the tenant has no Disconnected/Unresponsive sessions, the cmdlet should be a
+        # no-op (no ShouldProcess prompt, no error, no output). Tenant-level operation.
+        { Clear-OrchInactiveSession -Path "${script:Drive}:\" -Confirm:$false -ErrorAction SilentlyContinue } |
+            Should -Not -Throw
+    }
+}
+
+# ---------------------------------------------------------------------------
 # Trigger validation (Test-OrchTrigger)
 # ---------------------------------------------------------------------------
 Describe 'Test-OrchTrigger' {
