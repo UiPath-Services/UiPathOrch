@@ -62,8 +62,8 @@ public class RemoveAssetUserValueCommand : OrchestratorPSCmdlet
                 {
                     if (asset.UserValues is null) continue;
                     foreach (var uv in asset.UserValues
-                        .Where(uv => uv.UserName is not null && wp.IsMatch(uv.UserName))
-                        .ExcludeByWildcards(uv => uv.UserName, wpUserName))
+                        .Where(uv => uv.UserName is { } un && wp.IsMatch(un))
+                        .ExcludeByWildcards(uv => uv?.UserName, wpUserName))
                     {
                         if (!seen.Add(uv.UserName!)) continue;
                         yield return new CompletionResult(
@@ -100,9 +100,9 @@ public class RemoveAssetUserValueCommand : OrchestratorPSCmdlet
                 {
                     if (asset.UserValues is null) continue;
                     foreach (var uv in asset.UserValues
-                        .FilterByWildcards(uv => uv.UserName, wpUserName)
-                        .Where(uv => uv.MachineName is not null && wp.IsMatch(uv.MachineName))
-                        .ExcludeByWildcards(uv => uv.MachineName, wpMachineName))
+                        .FilterByWildcards(uv => uv?.UserName, wpUserName)
+                        .Where(uv => uv.MachineName is { } mn && wp.IsMatch(mn))
+                        .ExcludeByWildcards(uv => uv?.MachineName, wpMachineName))
                     {
                         if (!seen.Add(uv.MachineName!)) continue;
                         yield return new CompletionResult(
@@ -146,7 +146,11 @@ public class RemoveAssetUserValueCommand : OrchestratorPSCmdlet
 
                 foreach (var uv in copy.UserValues!)
                 {
-                    bool userMatch = wpUserName.Any(p => p.IsMatch(uv.UserName ?? ""));
+                    // wpUserName comes from a Mandatory parameter so PowerShell guarantees it is
+                    // populated by the time we reach ProcessRecord; the null guard satisfies the
+                    // compiler (CS8604) without changing observable behavior.
+                    bool userMatch = wpUserName is not null
+                        && wpUserName.Any(p => p.IsMatch(uv.UserName ?? ""));
                     bool machineMatch = wpMachineName is null
                         || wpMachineName.Any(p => p.IsMatch(uv.MachineName ?? ""));
 
