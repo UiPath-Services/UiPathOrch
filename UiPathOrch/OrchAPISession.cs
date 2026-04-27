@@ -3055,11 +3055,46 @@ public partial class OrchAPISession : IDisposable
 
     #region Integration Service
 
-    // Unfortunately, this does not seem to work from an OAuth app.
-    //public void GetConnections(Int64 folderId)
-    //{
-    //    var ret = HttpRequestImpl(HttpMethod.Get, _base_url, "/connections_/api/v1/Connections", folderId);
-    //}
+    // Connection Service v1 endpoint: /connections_/api/v1/Connections
+    // - Folder context is supplied via the X-UIPATH-FolderKey header (the folder GUID Key,
+    //   NOT the Int64 Id used by Orchestrator OData's X-UIPATH-OrganizationUnitId).
+    //   Confirmed via browser HAR capture against the live tenant.
+    // - Response is a flat JSON array (not wrapped in {value:...} or {results:...}).
+    // - Pagination uses pageIndex/pageSize (default page size 1000).
+    public IEnumerable<Connection> GetConnections(Int64 folderId)
+    {
+        string? folderKey = _drive.GetFolders().FirstOrDefault(f => f.Id == folderId)?.Key;
+        if (string.IsNullOrEmpty(folderKey))
+            yield break;
+
+        const int pageSize = 1000;
+        int pageIndex = 0;
+
+        while (true)
+        {
+            string url = $"{_base_url}/connections_/api/v1/Connections?pageIndex={pageIndex}&pageSize={pageSize}";
+
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Add("X-UIPATH-FolderKey", folderKey);
+
+            var response = HttpClient_Send(request);
+            EnsureSuccessStatusCode(response);
+
+            string strBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            Connection[]? body = JsonSerializer.Deserialize<Connection[]>(strBody);
+
+            if (body is null || body.Length == 0)
+                yield break;
+
+            foreach (var c in body)
+                yield return c;
+
+            if (body.Length < pageSize)
+                yield break;
+
+            ++pageIndex;
+        }
+    }
 
     #endregion
 

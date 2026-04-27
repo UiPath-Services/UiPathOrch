@@ -2163,6 +2163,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerTenant<Settings> Settings;
     public readonly ListCachePerTenant<Webhook> Webhooks;
     public readonly ListCachePerTenant<ResponseDictionaryItem> WebSettings;
+    public readonly ListCachePerFolder<DfEntity> DfEntities;
 
     // Non-indexed folder entities
     public readonly SingleCachePerFolder<EntitiesSummary> EntitiesSummary;
@@ -2170,6 +2171,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     public readonly ListCachePerFolder<TaskCatalog> ActionCatalogs;
     public readonly ListCachePerFolder<HttpTrigger> ApiTriggers;
+    public readonly ListCachePerFolder<Connection> Connections;
     public readonly ListCachePerFolder<ApiTrigger> EventTriggers;
     public readonly ListCachePerFolder<Asset> Assets;
     public readonly ListCachePerFolder<Bucket> Buckets;
@@ -2321,6 +2323,10 @@ public partial class OrchDriveInfo : PSDriveInfo
         UpdateSettings = new(this, OrchAPISession.GetUpdateSettings, e => e.Path = NameColonSeparator);
         Webhooks = new(this, OrchAPISession.GetWebhooks, e => e.Path = NameColonSeparator);
 
+        // ListCachePerFolder keys by folder.Id ?? 0; translate the sentinel back to null so the
+        // legacy tenant-wide query (no X-UIPATH-OrganizationUnitId header) is issued for root.
+        DfEntities = new(this, folderId => OrchAPISession.GetDfEntities(folderId == 0 ? null : (Int64?)folderId) ?? []);
+
         LibraryFeeds = new(this, OrchAPISession.GetLibraryFeeds, null);
 
         Robots = new(this, () =>
@@ -2428,6 +2434,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         FolderFeedId = new(this, OrchAPISession.GetFolderFeedId, null, 12);
         ActionCatalogs = new(this, OrchAPISession.GetTaskCatalogs, (e, folderPath) => e.Path = folderPath, 16); // Confirmed no error is returned in v16
         ApiTriggers = new(this, OrchAPISession.GetHttpTriggers, (e, folderPath) => e.Path = folderPath, 18); // Confirmed not present in the v17 web interface (executing in v17 does not return an error, though)
+        Connections = new(this, OrchAPISession.GetConnections, (e, folderPath) => e.Path = folderPath, 20); // Connection Service v1 (Integration Service); gated at API v20
         EventTriggers = new(this, OrchAPISession.GetEventTriggers, (e, folderPath) => e.Path = folderPath, 18);
         Buckets = new(this, OrchAPISession.GetBuckets, (e, folderPath) => e.Path = folderPath);
         Environments = new(this, OrchAPISession.GetEnvironments, (e, folderPath) => e.Path = folderPath);

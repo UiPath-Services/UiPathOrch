@@ -2757,6 +2757,86 @@ public class EnableHttpTrigger
 }
 #endregion
 
+#region Connection
+
+// GetConnectionResponse from Connection Service v1 (/connections_/api/v1/Connections)
+public class Connection
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch (folder context)
+
+    public string? id { get; set; } // uuid
+    public string? name { get; set; }
+    public string? owner { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? createTime { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? updateTime { get; set; }
+    // Live API returns the enum as a string ("Enabled", ...), not the int from the swagger spec.
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public ConnectionState? state { get; set; }
+    public string? apiBaseUri { get; set; }
+    public Int64? elementInstanceId { get; set; }
+    public Connector? connector { get; set; }
+    public bool? isDefault { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? lastUsedTime { get; set; }
+    public string? connectionIdentity { get; set; }
+    public int? pollingIntervalInMinutes { get; set; }
+    public ConnectionFolder? folder { get; set; }
+    public string? elementVersion { get; set; }
+    public string? disabledReason { get; set; }
+    public bool? byoaConnection { get; set; }
+    public Dictionary<string, string?>? configuration { get; set; }
+}
+
+public enum ConnectionState
+{
+    Enabled = 1,
+    Disabled = 2,
+    Expired = 3,
+    Failed = 4
+}
+
+// GetConnectorResponse from Connection Service v1
+public class Connector
+{
+    public Int64? id { get; set; }
+    public string? key { get; set; }
+    public string? name { get; set; }
+    public string? description { get; set; }
+    public bool? isPrivate { get; set; }
+    public bool? hasEvents { get; set; }
+    public string[]? eventTypes { get; set; }
+    public string? lifeCycleStage { get; set; }
+    public string? tags { get; set; }
+    public string? type { get; set; }
+    public string? tier { get; set; }
+    public Dictionary<string, bool?>? flags { get; set; }
+    public bool? enabled { get; set; }
+    public int? connectionCount { get; set; }
+    public string? documentationUrl { get; set; }
+    public Int64? customConnectorId { get; set; }
+    public bool? isOwner { get; set; }
+    public string[]? categories { get; set; }
+    public string? disabledReason { get; set; }
+}
+
+// Folder schema from Connection Service v1.
+// Renamed to ConnectionFolder to avoid collision with Orchestrator's Folder class.
+public class ConnectionFolder
+{
+    public string? key { get; set; }
+    public string[]? permissions { get; set; }
+    public bool? personalWorkspace { get; set; }
+    public string? name { get; set; }
+    public string? path { get; set; }
+    public string? folderPathAsGuid { get; set; }
+    public string? folderType { get; set; }
+}
+
+#endregion
+
 #region TestCaseDefinitionDto
 
 // TestEnvironmentDto
