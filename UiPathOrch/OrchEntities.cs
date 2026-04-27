@@ -376,6 +376,37 @@ public class WebhookEventType
     public string? Group { get; set; }
 }
 
+// BusinessRuleDto
+public class BusinessRule
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+    public string? Id { get; set; } // uuid
+    public string? Name { get; set; }
+    public string? Description { get; set; }
+    public BusinessRuleVersion? CurrentVersion { get; set; }
+    public int? FoldersCount { get; set; }
+    public Tag[]? Tags { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? LastModificationTime { get; set; }
+    public Int64? LastModifierUserId { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? CreationTime { get; set; }
+    public Int64? CreatorUserId { get; set; }
+}
+
+// BusinessRuleVersionDto
+public class BusinessRuleVersion
+{
+    public string? BusinessRuleKey { get; set; } // uuid
+    public string? VersionNumber { get; set; }
+    public Int64? CreatorUserId { get; set; }
+    public bool? IsActive { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? CreationTime { get; set; }
+    public string? Id { get; set; } // uuid
+}
+
 // PingEventDto (response of POST /odata/Webhooks({key})/UiPath.Server.Configuration.OData.Ping)
 public class WebhookPingResult
 {

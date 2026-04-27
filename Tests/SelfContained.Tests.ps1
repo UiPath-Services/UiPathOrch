@@ -1396,6 +1396,27 @@ Describe 'Copy Across Folders' {
 }
 
 # ---------------------------------------------------------------------------
+# BusinessRule (Section BR)
+# ---------------------------------------------------------------------------
+Describe 'BusinessRule' {
+    It 'BR1 Get-OrchBusinessRule does not throw' {
+        { Get-OrchBusinessRule -Path "${script:Drive}:\Shared" } | Should -Not -Throw
+    }
+
+    It 'BR2 Get-OrchBusinessRule with -Name wildcard does not throw' {
+        { Get-OrchBusinessRule -Path "${script:Drive}:\Shared" -Name 'NonExistent*' } | Should -Not -Throw
+    }
+
+    It 'BR3 Remove-OrchBusinessRule on non-matching name is a no-op' {
+        # ErrorAction SilentlyContinue: a non-fatal auth/permission failure on the underlying
+        # Get call should not bubble up as a script-block exception. The script block must
+        # complete normally even when the tenant denies access.
+        { Remove-OrchBusinessRule -Path "${script:Drive}:\Shared" -Name 'definitely-not-a-rule' -Confirm:$false -ErrorAction SilentlyContinue } |
+            Should -Not -Throw
+    }
+}
+
+# ---------------------------------------------------------------------------
 # Job lifecycle (Restart / Resume)
 # ---------------------------------------------------------------------------
 Describe 'Job lifecycle' {

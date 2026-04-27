@@ -2172,6 +2172,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     public readonly ListCachePerFolder<TaskCatalog> ActionCatalogs;
     public readonly ListCachePerFolder<HttpTrigger> ApiTriggers;
+    public readonly ListCachePerFolder<BusinessRule> BusinessRules;
     public readonly ListCachePerFolder<Connection> Connections;
     public readonly ListCachePerFolder<ApiTrigger> EventTriggers;
     public readonly ListCachePerFolder<Asset> Assets;
@@ -2436,6 +2437,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         FolderFeedId = new(this, OrchAPISession.GetFolderFeedId, null, 12);
         ActionCatalogs = new(this, OrchAPISession.GetTaskCatalogs, (e, folderPath) => e.Path = folderPath, 16); // Confirmed no error is returned in v16
         ApiTriggers = new(this, OrchAPISession.GetHttpTriggers, (e, folderPath) => e.Path = folderPath, 18); // Confirmed not present in the v17 web interface (executing in v17 does not return an error, though)
+        BusinessRules = new(this, OrchAPISession.GetBusinessRules, (e, folderPath) => e.Path = folderPath);
         Connections = new(this, OrchAPISession.GetConnections, (e, folderPath) => e.Path = folderPath, 20); // Connection Service v1 (Integration Service); gated at API v20
         EventTriggers = new(this, OrchAPISession.GetEventTriggers, (e, folderPath) => e.Path = folderPath, 18);
         Buckets = new(this, OrchAPISession.GetBuckets, (e, folderPath) => e.Path = folderPath);

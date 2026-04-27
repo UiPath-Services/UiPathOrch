@@ -1072,6 +1072,25 @@ public partial class OrchAPISession : IDisposable
     }
     #endregion
 
+    #region BusinessRules
+
+    public IEnumerable<BusinessRule> GetBusinessRules(Int64 folderId)
+    {
+        return GetEnumerable<BusinessRule>("/odata/BusinessRules", folderId);
+    }
+
+    public BusinessRule? GetBusinessRule(Int64 folderId, string businessRuleKey)
+    {
+        return HttpRequest<BusinessRule>(HttpMethod.Get, $"/odata/BusinessRules({businessRuleKey})", folderId);
+    }
+
+    public void RemoveBusinessRule(Int64 folderId, string businessRuleKey)
+    {
+        HttpRequest(HttpMethod.Delete, $"/odata/BusinessRules({businessRuleKey})", folderId);
+    }
+
+    #endregion
+
     #region Environent
     public IEnumerable<PowerShell.Entities.Environment> GetEnvironments(Int64 folderId)
     {
