@@ -1,0 +1,48 @@
+using System.Management.Automation;
+using UiPath.PowerShell.Completer;
+using UiPath.PowerShell.Core;
+
+namespace UiPath.PowerShell.Commands;
+
+[Cmdlet(VerbsCommon.Get, "OrchWebhookEventType")]
+[OutputType(typeof(Entities.WebhookEventType))]
+public class GetWebhookEventTypeCommand : OrchestratorPSCmdlet
+{
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
+    [SupportsWildcards]
+    public string[]? Name { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(DriveCompleter))]
+    public string[]? Path { get; set; }
+
+    protected override void ProcessRecord()
+    {
+        var drives = SessionState.EnumOrchDrives(Path);
+        var wpName = Name?.Select(n => new WildcardPattern(PathTools.UnescapePSText(n), WildcardOptions.IgnoreCase)).ToList();
+
+        using var results = OrchThreadPool.RunForEach(drives,
+            drive => drive.NameColonSeparator,
+            drive => drive,
+            drive => drive.WebhookEventTypes.Get());
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
+        {
+            try
+            {
+                var eventTypes = result.GetResult(cancelHandler.Token);
+                if (eventTypes is null) continue;
+
+                WriteObject(eventTypes
+                    .FilterByWildcards(e => e?.Name, wpName)
+                    .OrderBy(e => e.Group).ThenBy(e => e.Name),
+                    true);
+            }
+            catch (OrchException ex)
+            {
+                WriteError(new ErrorRecord(ex, "GetWebhookEventTypeError", ErrorCategory.InvalidOperation, ex.Target));
+            }
+        }
+    }
+}

@@ -369,6 +369,28 @@ public class Webhook
     public string? EventType { get; set; }
 }
 
+// WebhookEventTypeDto
+public class WebhookEventType
+{
+    public string? Name { get; set; }
+    public string? Group { get; set; }
+}
+
+// PingEventDto (response of POST /odata/Webhooks({key})/UiPath.Server.Configuration.OData.Ping)
+public class WebhookPingResult
+{
+    public string? Type { get; set; }
+    public string? EventId { get; set; }
+    public string? EntityKey { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? Timestamp { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? EventTime { get; set; }
+    public Int64? EventSourceId { get; set; }
+    public int? TenantId { get; set; }
+    public Int64? OrganizationUnitId { get; set; }
+}
+
 //public enum AlertSeverity
 //{
 //    Info = 0,

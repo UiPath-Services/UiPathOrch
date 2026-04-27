@@ -2162,6 +2162,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerTenant<PersonalWorkspace> PersonalWorkspaces;
     public readonly ListCachePerTenant<Settings> Settings;
     public readonly ListCachePerTenant<Webhook> Webhooks;
+    public readonly ListCachePerTenant<WebhookEventType> WebhookEventTypes;
     public readonly ListCachePerTenant<ResponseDictionaryItem> WebSettings;
     public readonly ListCachePerFolder<DfEntity> DfEntities;
 
@@ -2322,6 +2323,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         Settings = new(this, OrchAPISession.GetSettings, e => e.Path = NameColonSeparator);
         UpdateSettings = new(this, OrchAPISession.GetUpdateSettings, e => e.Path = NameColonSeparator);
         Webhooks = new(this, OrchAPISession.GetWebhooks, e => e.Path = NameColonSeparator);
+        WebhookEventTypes = new(this, OrchAPISession.GetWebhookEventTypes, null);
 
         // ListCachePerFolder keys by folder.Id ?? 0; translate the sentinel back to null so the
         // legacy tenant-wide query (no X-UIPATH-OrganizationUnitId header) is issued for root.

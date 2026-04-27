@@ -1060,6 +1060,16 @@ public partial class OrchAPISession : IDisposable
     {
         return HttpRequest<Webhook>(HttpMethod.Patch, $"/odata/Webhooks({webhookId})", null, webhook);
     }
+
+    public IEnumerable<WebhookEventType> GetWebhookEventTypes()
+    {
+        return GetEnumerable<WebhookEventType>("/odata/Webhooks/UiPath.Server.Configuration.OData.GetEventTypes");
+    }
+
+    public WebhookPingResult? PingWebhook(Int64 webhookId)
+    {
+        return HttpRequest<WebhookPingResult>(HttpMethod.Post, $"/odata/Webhooks({webhookId})/UiPath.Server.Configuration.OData.Ping");
+    }
     #endregion
 
     #region Environent

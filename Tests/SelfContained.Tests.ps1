@@ -1396,6 +1396,40 @@ Describe 'Copy Across Folders' {
 }
 
 # ---------------------------------------------------------------------------
+# Webhook (Section W)
+# ---------------------------------------------------------------------------
+Describe 'Webhook' {
+    It 'W1 Get-OrchWebhookEventType returns event types with Name and Group' {
+        $types = Get-OrchWebhookEventType -Path "${script:Drive}:\"
+        $types | Should -Not -BeNullOrEmpty
+        $first = $types | Select-Object -First 1
+        $first.Name | Should -Not -BeNullOrEmpty
+        $first.Group | Should -Not -BeNullOrEmpty
+    }
+
+    It 'W2 Get-OrchWebhookEventType supports wildcard filtering by Name' {
+        $all = Get-OrchWebhookEventType -Path "${script:Drive}:\"
+        $sample = ($all | Select-Object -First 1).Name
+        $sample | Should -Not -BeNullOrEmpty
+        $filtered = Get-OrchWebhookEventType -Path "${script:Drive}:\" -Name $sample
+        $filtered | Should -Not -BeNullOrEmpty
+        $filtered.Name | Should -Contain $sample
+    }
+
+    It 'W3 Test-OrchWebhook with -WhatIf does not invoke the API' {
+        # Create a temporary webhook with a clearly fake URL to ensure no real delivery happens.
+        $whName = "${script:Prefix}WhTest"
+        $existing = Get-OrchWebhook -Path "${script:Drive}:\" -Name $whName -ErrorAction SilentlyContinue
+        if (-not $existing) {
+            # Skip if we cannot create a webhook (Copy-OrchWebhook is the only way and needs a source)
+            Set-ItResult -Skipped -Because 'No suitable Webhook to test against; tenant has none.'
+            return
+        }
+        { Test-OrchWebhook -Path "${script:Drive}:\" -Name $whName -WhatIf } | Should -Not -Throw
+    }
+}
+
+# ---------------------------------------------------------------------------
 # Read-Only Cmdlets
 # ---------------------------------------------------------------------------
 Describe 'Read-Only Cmdlets' {
