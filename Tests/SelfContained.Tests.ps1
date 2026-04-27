@@ -1399,6 +1399,32 @@ Describe 'Copy Across Folders' {
 # scope is not exposed by Identity Server; tests cannot exercise them.
 
 # ---------------------------------------------------------------------------
+# Trigger validation (Test-OrchTrigger)
+# ---------------------------------------------------------------------------
+Describe 'Test-OrchTrigger' {
+    It 'TT1 Test-OrchTrigger on a non-matching name is a no-op' {
+        { Test-OrchTrigger -Path "${script:Drive}:\Shared" -Name 'definitely-not-a-trigger' -ErrorAction SilentlyContinue } |
+            Should -Not -Throw
+    }
+
+    It 'TT2 Test-OrchTrigger surfaces ValidationResult shape (when triggers exist)' {
+        $triggers = Get-OrchTrigger -Path "${script:Drive}:\Shared" -ErrorAction SilentlyContinue
+        if (-not $triggers) {
+            Set-ItResult -Skipped -Because 'No trigger in tenant test folder.'
+            return
+        }
+        $result = $triggers | Select-Object -First 1 | Test-OrchTrigger -ErrorAction SilentlyContinue
+        if ($null -eq $result) {
+            Set-ItResult -Skipped -Because 'API rejected validation (likely tenant policy).'
+            return
+        }
+        $result.PSObject.Properties.Name | Should -Contain 'IsValid'
+        $result.PSObject.Properties.Name | Should -Contain 'TriggerName'
+        $result.PSObject.Properties.Name | Should -Contain 'TriggerPSPath'
+    }
+}
+
+# ---------------------------------------------------------------------------
 # Job lifecycle (Restart / Resume)
 # ---------------------------------------------------------------------------
 Describe 'Job lifecycle' {

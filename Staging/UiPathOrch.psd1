@@ -242,6 +242,7 @@ CmdletsToExport = @(
 'Copy-OrchTrigger',
 'Enable-OrchTrigger',
 'Disable-OrchTrigger',
+'Test-OrchTrigger',
 
 'Get-OrchApiTrigger',
 'Remove-OrchApiTrigger',

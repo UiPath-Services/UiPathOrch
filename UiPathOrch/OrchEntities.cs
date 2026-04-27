@@ -395,6 +395,14 @@ public class BusinessRule
     public Int64? CreatorUserId { get; set; }
 }
 
+// ValidationResultDto (response of /odata/ProcessSchedules/.../ValidateProcessSchedule)
+public class ValidationResult
+{
+    public bool? IsValid { get; set; }
+    public string[]? Errors { get; set; }
+    public string[]? ErrorCodes { get; set; }
+}
+
 // BusinessRuleVersionDto
 public class BusinessRuleVersion
 {

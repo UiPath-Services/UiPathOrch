@@ -2020,6 +2020,14 @@ public partial class OrchAPISession : IDisposable
         return ret?.value;
     }
 
+    // Server-side validation of a ProcessSchedule's executability (robot/template/license checks)
+    // without committing changes. Returns IsValid + Errors + ErrorCodes.
+    public ValidationResult? ValidateProcessSchedule(Int64 folderId, ProcessSchedule schedule)
+    {
+        var payload = new { processSchedule = schedule };
+        return HttpRequest<ValidationResult>(HttpMethod.Post, "/odata/ProcessSchedules/UiPath.Server.Configuration.OData.ValidateProcessSchedule", folderId, payload);
+    }
+
     #endregion
 
     #region Buckets
