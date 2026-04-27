@@ -1407,6 +1407,18 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Post, "/odata/Jobs/UiPath.Server.Configuration.OData.StopJobs", folderId, payload);
     }
 
+    public Job? RestartJob(Int64 folderId, Int64 jobId)
+    {
+        var payload = new { jobId };
+        return HttpRequest<Job>(HttpMethod.Post, "/odata/Jobs/UiPath.Server.Configuration.OData.RestartJob", folderId, payload);
+    }
+
+    public Job? ResumeJob(Int64 folderId, string jobKey)
+    {
+        var payload = new { jobKey };
+        return HttpRequest<Job>(HttpMethod.Post, "/odata/Jobs/UiPath.Server.Configuration.OData.ResumeJob", folderId, payload);
+    }
+
     //public string? StartRemoteControl(Int64 folderId, string jobKey)
     //{
     //    var payload = new Dictionary<string, string>();

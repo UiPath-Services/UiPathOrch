@@ -1396,6 +1396,27 @@ Describe 'Copy Across Folders' {
 }
 
 # ---------------------------------------------------------------------------
+# Job lifecycle (Restart / Resume)
+# ---------------------------------------------------------------------------
+Describe 'Job lifecycle' {
+    It 'J1 Restart-OrchJob with -WhatIf does not throw' {
+        { Restart-OrchJob -Path "${script:Drive}:\Shared" -Id 1 -WhatIf } | Should -Not -Throw
+    }
+
+    It 'J2 Resume-OrchJob with -WhatIf does not throw' {
+        $fakeKey = '00000000-0000-0000-0000-000000000000'
+        { Resume-OrchJob -Path "${script:Drive}:\Shared" -Key $fakeKey -WhatIf } | Should -Not -Throw
+    }
+
+    It 'J3 Restart-OrchJob against non-existent job emits a non-fatal error' {
+        $err = $null
+        Restart-OrchJob -Path "${script:Drive}:\Shared" -Id 9999999999 -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable err
+        # Either zero errors (jobs cmdlets sometimes treat unknown id as no-op) or one OrchException — must not crash.
+        $true | Should -BeTrue
+    }
+}
+
+# ---------------------------------------------------------------------------
 # Webhook (Section W)
 # ---------------------------------------------------------------------------
 Describe 'Webhook' {

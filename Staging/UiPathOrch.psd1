@@ -104,6 +104,8 @@ CmdletsToExport = @(
 'Get-OrchJob',
 'Start-OrchJob',
 'Stop-OrchJob',
+'Restart-OrchJob',
+'Resume-OrchJob',
 'Open-OrchJob',
 
 'Get-OrchLog',
