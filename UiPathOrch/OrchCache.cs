@@ -591,7 +591,10 @@ public class ListCachePerFolder<T> : IFolderCacheClearable
             return [];
         }
 
-        _exceptions.ThrowCachedExceptionIfAny(folder.Id!.Value);
+        // Root folder has a null Id; key it as 0 (same sentinel as IncrementalCachePerFolder).
+        Int64 folderId = folder.Id ?? 0;
+
+        _exceptions.ThrowCachedExceptionIfAny(folderId);
 
         if (_cache is null)
         {
@@ -601,12 +604,12 @@ public class ListCachePerFolder<T> : IFolderCacheClearable
             }
         }
 
-        if (!_cache.TryGetValue(folder.Id!.Value, out var cachePerFolder))
+        if (!_cache.TryGetValue(folderId, out var cachePerFolder))
         {
             try
             {
-                cachePerFolder = _getter(folder.Id.Value).ToList();
-                _cache[folder.Id.Value] = cachePerFolder;
+                cachePerFolder = _getter(folderId).ToList();
+                _cache[folderId] = cachePerFolder;
 
                 if (_initializer is not null)
                 {
@@ -619,7 +622,7 @@ public class ListCachePerFolder<T> : IFolderCacheClearable
             }
             catch (HttpResponseException ex)
             {
-                _exceptions.CacheException(folder.Id ?? 0, ex);
+                _exceptions.CacheException(folderId, ex);
                 throw;
             }
         }
