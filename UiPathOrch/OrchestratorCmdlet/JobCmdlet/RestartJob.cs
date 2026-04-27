@@ -1,4 +1,9 @@
+using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 using System.Management.Automation;
+using System.Management.Automation.Language;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using Job = UiPath.PowerShell.Entities.Job;
 
@@ -9,6 +14,7 @@ namespace UiPath.PowerShell.Commands;
 public class RestartJobCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true, ParameterSetName = "FromCommandLine")]
+    [ArgumentCompleter(typeof(IdCompleter))]
     public Int64[]? Id { get; set; }
 
     [Parameter(DontShow = true, ValueFromPipeline = true, ParameterSetName = "FromPipeline")]
@@ -23,6 +29,52 @@ public class RestartJobCommand : OrchestratorPSCmdlet
 
     [Parameter]
     public uint Depth { get; set; }
+
+    // Tab-completion of -Id offers Faulted jobs in the current/target folder context.
+    // Restart only succeeds against Faulted jobs, so showing other states would just
+    // suggest invalid choices.
+    private class IdCompleter : OrchArgumentCompleter
+    {
+        public override IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+            var paramId = GetSelfExclusionValues(commandAst, "Id", wordToComplete).Select(id => Int64.Parse(id));
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            var results = new ConcurrentBag<ReadOnlyCollection<Job>?>();
+            Parallel.ForEach(drivesFolders, driveFolder =>
+            {
+                var (drive, folder) = driveFolder;
+                try
+                {
+                    var folderJobs = drive.Jobs.GetCache(folder);
+                    if (folderJobs is not null)
+                    {
+                        results.Add(folderJobs.Values.ToList().AsReadOnly());
+                    }
+                    else
+                    {
+                        results.Add(drive.Jobs.Fetch(folder, "&$filter=(State%20eq%20%27Faulted%27)"));
+                    }
+                }
+                catch { }
+            });
+
+            foreach (var job in results
+                .SelectMany(te => te!)
+                .Where(job => wp.IsMatch(job.Id.ToString()))
+                .Where(job => string.Equals(job.State, "Faulted", StringComparison.OrdinalIgnoreCase))
+                .ExcludeByStructValues(job => job!.Id.GetValueOrDefault(), paramId))
+            {
+                yield return new CompletionResult(job.Id.ToString(), job.Id.ToString(), CompletionResultType.ParameterValue, job.FormatTooltip());
+            }
+        }
+    }
 
     protected override void ProcessRecord()
     {

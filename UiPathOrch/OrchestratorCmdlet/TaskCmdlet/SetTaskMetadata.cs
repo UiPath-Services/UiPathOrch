@@ -1,4 +1,5 @@
 using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 
@@ -16,6 +17,7 @@ namespace UiPath.PowerShell.Commands;
 public class SetTaskMetadataCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(TaskIdCompleter))]
     public Int64[]? Id { get; set; }
 
     [Parameter(DontShow = true, ValueFromPipeline = true)]
@@ -32,6 +34,7 @@ public class SetTaskMetadataCommand : OrchestratorPSCmdlet
     public string? NoteText { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(ActionCatalogNameCompleter))]
     public string? TaskCatalog { get; set; }
 
     [Parameter]

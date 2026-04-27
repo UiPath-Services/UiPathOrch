@@ -1428,6 +1428,23 @@ internal class WebhookNameCompleter : DriveScopedCompleter<Webhook>
     protected override string GetTipHelp(Webhook e) => TipHelp(e);
 }
 
+internal class WebhookEventTypeNameCompleter : DriveScopedCompleter<WebhookEventType>
+{
+    protected override IEnumerable<WebhookEventType> GetEntities(OrchDriveInfo drive)
+        => drive.WebhookEventTypes.Get();
+    protected override string GetName(WebhookEventType e) => e.Name!;
+    protected override string GetTipHelp(WebhookEventType e) => $"{e.Group}: {e.Name}";
+}
+
+internal class TaskIdCompleter : FolderScopedCompleter<OrchTask>
+{
+    protected override IEnumerable<OrchTask> GetEntities(OrchDriveInfo drive, Folder folder)
+        => drive.Tasks.Get(folder);
+    protected override string GetName(OrchTask e) => (e.Id ?? 0).ToString();
+    protected override string GetTipHelp(OrchTask e) => $"[{e.Status}/{e.Priority}] {e.Title}";
+    protected override CompletionResultType ResultType => CompletionResultType.ParameterValue;
+}
+
 internal class PmDirectoryNameCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(

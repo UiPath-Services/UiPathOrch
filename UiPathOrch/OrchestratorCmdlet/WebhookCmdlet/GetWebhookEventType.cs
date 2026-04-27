@@ -9,6 +9,7 @@ namespace UiPath.PowerShell.Commands;
 public class GetWebhookEventTypeCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(WebhookEventTypeNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
