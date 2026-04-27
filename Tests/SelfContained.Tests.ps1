@@ -1399,6 +1399,31 @@ Describe 'Copy Across Folders' {
 # scope is not exposed by Identity Server; tests cannot exercise them.
 
 # ---------------------------------------------------------------------------
+# Task (Get-OrchTask / Get-OrchTaskAcrossFolder / Set-OrchTaskMetadata / Remove-OrchTask)
+# ---------------------------------------------------------------------------
+Describe 'OrchTask' {
+    It 'TK1 Get-OrchTask does not throw' {
+        { Get-OrchTask -Path "${script:Drive}:\Shared" -ErrorAction SilentlyContinue } | Should -Not -Throw
+    }
+
+    It 'TK2 Get-OrchTask -Status Pending does not throw' {
+        { Get-OrchTask -Path "${script:Drive}:\Shared" -Status Pending -ErrorAction SilentlyContinue } | Should -Not -Throw
+    }
+
+    It 'TK3 Get-OrchTaskAcrossFolder does not throw' {
+        { Get-OrchTaskAcrossFolder -Path "${script:Drive}:\" -ErrorAction SilentlyContinue } | Should -Not -Throw
+    }
+
+    It 'TK4 Set-OrchTaskMetadata -WhatIf does not throw' {
+        { Set-OrchTaskMetadata -Path "${script:Drive}:\Shared" -Id 1 -Title 'x' -WhatIf } | Should -Not -Throw
+    }
+
+    It 'TK5 Remove-OrchTask -WhatIf does not throw' {
+        { Remove-OrchTask -Path "${script:Drive}:\Shared" -Id 1 -WhatIf } | Should -Not -Throw
+    }
+}
+
+# ---------------------------------------------------------------------------
 # Clear-OrchInactiveSession
 # ---------------------------------------------------------------------------
 Describe 'Clear-OrchInactiveSession' {

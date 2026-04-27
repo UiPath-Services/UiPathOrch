@@ -165,6 +165,11 @@ CmdletsToExport = @(
 'Get-OrchUnattendedSession',
 'Clear-OrchInactiveSession',
 
+'Get-OrchTask',
+'Get-OrchTaskAcrossFolder',
+'Set-OrchTaskMetadata',
+'Remove-OrchTask',
+
 'Enable-OrchMaintenanceMode',
 'Disable-OrchMaintenanceMode',
 

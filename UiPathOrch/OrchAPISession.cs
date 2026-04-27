@@ -2845,6 +2845,35 @@ public partial class OrchAPISession : IDisposable
     #region Session
 
     // Get classic folder robots
+    #region Tasks
+
+    public IEnumerable<OrchTask> GetTasks(Int64 folderId)
+    {
+        return GetEnumerable<OrchTask>("/odata/Tasks", folderId);
+    }
+
+    public IEnumerable<OrchTask> GetTasksAcrossFolders()
+    {
+        return GetEnumerable<OrchTask>("/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFolders");
+    }
+
+    public OrchTask? GetTask(Int64 folderId, Int64 taskId)
+    {
+        return HttpRequest<OrchTask>(HttpMethod.Get, $"/odata/Tasks({taskId})", folderId);
+    }
+
+    public void RemoveTask(Int64 folderId, Int64 taskId)
+    {
+        HttpRequest(HttpMethod.Delete, $"/odata/Tasks({taskId})", folderId);
+    }
+
+    public void EditTaskMetadata(Int64 folderId, EditTaskMetadataRequest request)
+    {
+        HttpRequest(HttpMethod.Post, "/odata/Tasks/UiPath.Server.Configuration.OData.EditTaskMetadata", folderId, request);
+    }
+
+    #endregion
+
     public IEnumerable<Session> GetSessions(Int64 folderId)
     {
         return GetEnumerable<Session>("/odata/Sessions", folderId, "&$expand=Robot($expand=License)");

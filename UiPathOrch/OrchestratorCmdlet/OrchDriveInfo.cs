@@ -2188,6 +2188,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerFolder<QueueDefinition> Queues;
     public readonly ListCachePerFolder<RobotsFromFolderModel> RobotsFromFolder;
     public readonly ListCachePerFolder<Session> Sessions;
+    public readonly ListCachePerFolder<OrchTask> Tasks;
     public readonly ListCachePerFolder<TestCaseDefinition> TestCases;
     public readonly ListCachePerFolder<TestDataQueue> TestDataQueues;
     //public readonly ListCachePerFolder<TestDataQueueItem> TestDataQueueItems;
@@ -2449,6 +2450,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         Reviewers = new(this, OrchAPISession.GetReviewers);
         RobotsFromFolder = new(this, OrchAPISession.GetRobotsFromFolder, (e, folderPath) => e.Path = folderPath);
         Sessions = new(this, OrchAPISession.GetSessions, (e, folderPath) => e.Path = folderPath);
+        Tasks = new(this, OrchAPISession.GetTasks, (e, folderPath) => e.Path = folderPath);
         TestCases = new(this, OrchAPISession.GetTestCases, (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
         TestDataQueues = new(this, OrchAPISession.GetTestDataQueues, (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
         TestSets = new(this, OrchAPISession.GetTestSets, (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version

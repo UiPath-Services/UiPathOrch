@@ -395,6 +395,62 @@ public class BusinessRule
     public Int64? CreatorUserId { get; set; }
 }
 
+// TaskDto (subset — drop UserLoginInfoDto / TaskActivity / TaskAssignment / TaskSlaDetail
+// nested types for now; System.Text.Json ignores unknown JSON properties by default).
+// Class name is OrchTask (not Task) to avoid clash with System.Threading.Tasks.Task across
+// the codebase; the cmdlet noun remains "OrchTask".
+public class OrchTask
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+    public Int64? Id { get; set; }
+    public string? Key { get; set; } // uuid
+    public string? Title { get; set; }
+    public string? Type { get; set; }            // FormTask / ExternalTask / DocumentValidationTask / ...
+    public string? Priority { get; set; }        // Low / Medium / High / Critical
+    public string? Status { get; set; }          // Unassigned / Pending / Completed
+    public string? Action { get; set; }
+    public Int64? AssignedToUserId { get; set; }
+    public string? TaskAssigneeName { get; set; }
+    public string? TaskCatalogName { get; set; }
+    public string? TaskAssignmentCriteria { get; set; }
+    public Int64? OrganizationUnitId { get; set; }
+    public string? ExternalTag { get; set; }
+    public string? CreatorJobKey { get; set; }
+    public string? WaitJobKey { get; set; }
+    public string? ParentOperationId { get; set; }
+    public bool? IsCompleted { get; set; }
+    public bool? IsDeleted { get; set; }
+    public bool? Encrypted { get; set; }
+    public Int64? FormLayoutId { get; set; }
+    public Int64? BulkFormLayoutId { get; set; }
+    public Tag[]? Tags { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? CreationTime { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? LastModificationTime { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? CompletionTime { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? LastAssignedTime { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? DeletionTime { get; set; }
+    public Int64? CreatorUserId { get; set; }
+    public Int64? LastModifierUserId { get; set; }
+    public Int64? DeleterUserId { get; set; }
+}
+
+// EditTaskMetadataRequest body for POST /odata/Tasks/.../EditTaskMetadata
+public class EditTaskMetadataRequest
+{
+    public Int64? TaskId { get; set; }
+    public string? Title { get; set; }
+    public Int64? TaskCatalogId { get; set; }
+    public bool? UnsetTaskCatalog { get; set; }
+    public string? Priority { get; set; }
+    public string? NoteText { get; set; }
+}
+
 // ValidationResultDto (response of /odata/ProcessSchedules/.../ValidateProcessSchedule)
 public class ValidationResult
 {

@@ -72,6 +72,7 @@ internal static class FolderExtensions
     public static string GetPSPath(this AuditLog entity) => Path.Combine(entity?.Path ?? "", entity?.Id.ToString() ?? "");
     public static string GetPSPath(this Entities.Job entity) => Path.Combine(entity?.Path ?? "", entity?.Id.ToString() ?? "");
     public static string GetPSPath(this BusinessRule entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
+    public static string GetPSPath(this OrchTask entity) => Path.Combine(entity?.Path ?? "", entity?.Id.ToString() ?? "");
 
     /// <summary>
     /// Formats job information as a string for tooltips.
