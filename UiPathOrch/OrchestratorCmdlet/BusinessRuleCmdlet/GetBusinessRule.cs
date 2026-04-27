@@ -3,9 +3,13 @@ using UiPath.PowerShell.Core;
 
 namespace UiPath.PowerShell.Commands;
 
+// Shelved: BusinessRules require OR.BusinessRules / OR.BusinessRules.Read scope, which is
+// not exposed by Identity Server scopes_supported and is absent from the External Application
+// resource dropdown. Same limitation as Connection Service. Verified 2026-04-27.
+// Re-enable by switching to `public` and adding the name to UiPathOrch.psd1 once the scope ships.
 [Cmdlet(VerbsCommon.Get, "OrchBusinessRule")]
 [OutputType(typeof(Entities.BusinessRule))]
-public class GetBusinessRuleCommand : OrchestratorPSCmdlet
+class GetBusinessRuleCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]

@@ -3,8 +3,10 @@ using UiPath.PowerShell.Core;
 
 namespace UiPath.PowerShell.Commands;
 
+// Shelved: see GetBusinessRule.cs for rationale (OR.BusinessRules scope not available
+// to External Applications or Personal Access Tokens).
 [Cmdlet(VerbsCommon.Remove, "OrchBusinessRule", SupportsShouldProcess = true)]
-public class RemoveBusinessRuleCommand : OrchestratorPSCmdlet
+class RemoveBusinessRuleCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]

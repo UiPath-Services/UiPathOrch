@@ -4,9 +4,11 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
+// Shelved: see GetBusinessRule.cs for rationale (OR.BusinessRules scope not available
+// to External Applications or Personal Access Tokens).
 [Cmdlet(VerbsData.Update, "OrchBusinessRule", SupportsShouldProcess = true)]
 [OutputType(typeof(BusinessRule))]
-public class UpdateBusinessRuleCommand : OrchestratorPSCmdlet
+class UpdateBusinessRuleCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]

@@ -1395,49 +1395,8 @@ Describe 'Copy Across Folders' {
     }
 }
 
-# ---------------------------------------------------------------------------
-# BusinessRule (Section BR)
-# ---------------------------------------------------------------------------
-Describe 'BusinessRule' {
-    It 'BR1 Get-OrchBusinessRule does not throw' {
-        { Get-OrchBusinessRule -Path "${script:Drive}:\Shared" } | Should -Not -Throw
-    }
-
-    It 'BR2 Get-OrchBusinessRule with -Name wildcard does not throw' {
-        { Get-OrchBusinessRule -Path "${script:Drive}:\Shared" -Name 'NonExistent*' } | Should -Not -Throw
-    }
-
-    It 'BR3 Remove-OrchBusinessRule on non-matching name is a no-op' {
-        # ErrorAction SilentlyContinue: a non-fatal auth/permission failure on the underlying
-        # Get call should not bubble up as a script-block exception. The script block must
-        # complete normally even when the tenant denies access.
-        { Remove-OrchBusinessRule -Path "${script:Drive}:\Shared" -Name 'definitely-not-a-rule' -Confirm:$false -ErrorAction SilentlyContinue } |
-            Should -Not -Throw
-    }
-
-    It 'BR4 New-OrchBusinessRule with -WhatIf does not invoke API' {
-        $tmp = Join-Path $script:TempDir 'br4.dmn'
-        Set-Content -Path $tmp -Value '<?xml version="1.0"?><definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" id="d1" name="d1"/>' -Encoding UTF8
-        try {
-            { New-OrchBusinessRule -Path "${script:Drive}:\Shared" -Name "${script:Prefix}Br4" -Source $tmp -WhatIf } | Should -Not -Throw
-        } finally {
-            Remove-Item $tmp -ErrorAction SilentlyContinue
-        }
-    }
-
-    It 'BR5 New-OrchBusinessRule with missing -Source emits non-fatal error' {
-        $err = $null
-        New-OrchBusinessRule -Path "${script:Drive}:\Shared" -Name "${script:Prefix}Br5" `
-            -Source 'C:\definitely-not-here.dmn' -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable err
-        $err | Should -Not -BeNullOrEmpty
-        $err[0].FullyQualifiedErrorId | Should -Match 'NewBusinessRuleSourceNotFound'
-    }
-
-    It 'BR6 Update-OrchBusinessRule with -WhatIf on non-matching name is a no-op' {
-        { Update-OrchBusinessRule -Path "${script:Drive}:\Shared" -Name 'definitely-not-a-rule' -Description 'x' -WhatIf -ErrorAction SilentlyContinue } |
-            Should -Not -Throw
-    }
-}
+# BusinessRule cmdlets are shelved (non-public, not in psd1) because OR.BusinessRules
+# scope is not exposed by Identity Server; tests cannot exercise them.
 
 # ---------------------------------------------------------------------------
 # Job lifecycle (Restart / Resume)
