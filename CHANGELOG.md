@@ -25,6 +25,43 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `Import-OrchLibrary` / `Import-OrchPackage`: empty or malformed server responses now return null instead of throwing a NullReferenceException.
 - Removed two unreachable Format views.
 
+## [0.9.17.0] - 2026-04-25
+### Added
+- Secret-typed assets (Orchestrator v20+): added `Set-OrchSecretAsset`, `Get-OrchSecretAsset`, and a type-agnostic `Remove-OrchAssetUserValue`. `Set-OrchSecretAsset` treats an empty `-SecretValue` as a silent no-op so CSV round-trip is safe (the API masks `SecretValue` on GET). Removing a per-robot entry on a Secret uses `Remove-OrchAssetUserValue` (the empty-delete convention from Text/Bool/Integer does not apply to Secret).
+
+- `Get-OrchCredentialAsset`: new cmdlet returning only Credential-type assets, with its own `-ExportCsv`. The existing `Get-OrchAsset -ExportCredentialCsv` is unchanged.
+
+- `Format-OrchQueueItem`: new pipeline formatter that groups queue items by `QueueDefinitionId` and emits one `Format-Table` per queue, flattening each item's `SpecificContent` keys into columns. Needed because `Format-Table` locks columns on the first object, silently hiding keys unique to later queues. Paired with a new `Expanded` ScriptProperty (ETS) on `QueueItem` — `Get-OrchQueueItem Q | ForEach-Object Expanded | Format-Table` is the single-queue shortcut.
+
+- `Format-OrchTestDataQueueItem`: new pipeline formatter for test data queues, parsing `ContentJson` and promoting its top-level properties to columns. Groups by queue path; malformed JSON falls back to a raw column rather than aborting.
+
+### Changed
+- `Set-OrchAsset`: `-ValueType Credential` and `-ValueType Secret` are now silently skipped (previously `Credential` was skipped but `Secret` would error). Use the type-specific `Set-OrchCredentialAsset` / `Set-OrchSecretAsset`.
+
+- `Get-OrchAsset -ExportCsv`: excludes `Credential` and `Secret` assets (same policy as before, extended to Secret).
+
+- `Copy-OrchAsset`: now supports all five asset types. Secret was previously rejected by the server with "asset secret value cannot be null"; the copy now inserts a `!!!PLEASE UPDATE!!!` placeholder and emits a warning (same pattern as Credential). When the source asset has an `ExternalName` (vault reference), the placeholder is skipped so the vault link is preserved verbatim. This applies to both Global and per-robot UserValue paths.
+
+- `Get-OrchQueueItem`: the 600ms inter-page rate-limit wait is now cancellable (`Ctrl+C` no longer blocks up to 600ms per iteration) and is skipped on the final page (a partial short page means no further API call is coming). Removed 60 lines of commented-out multi-threaded implementation and an unused `WriteQueryUnavailableWarning` method.
+
+- `Get-OrchQueueItem` help: added examples and notes for the `Expanded` ScriptProperty and `Format-OrchQueueItem`.
+
+### Fixed
+- v20+ asset retrieval: `/odata/Assets` silently drops Secret-typed assets, while `/odata/Assets/.../GetFiltered` returns `CredentialUsername` as empty for Credential assets. Neither endpoint alone is sufficient. `GetAssets` now merges non-Secret from `/odata/Assets` with Secret-only from `GetFiltered?$filter=ValueType eq 'Secret'` on v20+ servers.
+
+- `Get-OrchSecretAsset -ExpandUserValues`: the Global row was being filtered by `!string.IsNullOrEmpty(asset.Value)` but Secret's `Value` is always null (server masks it), so Global-scope Secret assets were never emitted in the expanded view. Switched the check to `HasDefaultValue`.
+
+- `Copy-OrchAsset` UserValue Credential: the "Please update credential asset passwords" warning only fired for Global-level Credential copies. PerRobot-only Credential copies silently left `!!!PLEASE UPDATE!!!` without any indication. Now warns consistently for both scopes.
+
+- `Copy-OrchAsset` UserValue machine-not-assigned: replaced the duplicate warning + error pair with a single warning (matching other `FindDstMachine` call sites).
+
+### Removed
+- Retired `Get-OrchTestDataQueueItemTable`. Use `Get-OrchTestDataQueueItem | Format-OrchTestDataQueueItem` instead. The old function misused the `Get-` verb (emitted format records, not data). Assumed unused; no aliases provided.
+
+## [0.9.16.6] - 2026-04-24
+### Fixed
+- Install-Module of 0.9.16.5 failed with "authenticode signature of the file 'UiPathOrch.psd1' is not valid" on any machine where the self-signed code-signing certificate was not pre-trusted. Root cause: 0.9.16.5 signed `UiPathOrch.psd1` / `.psm1` / `.ps1xml` / `Functions/*.ps1` in addition to the DLL, and Install-Module verifies Authenticode signatures on script files. Fixed by narrowing the signing scope to `UiPathOrch.dll` only; script files are published unsigned. No functional change.
+
 ## [0.9.16.5] - 2026-04-23
 ### Fixed
 - Get-PmLicenseInventory: JSON deserialization failed on tenants with consumable SKUs that report fractional allocation (e.g. AIU `allocated: 1451.8`). Widened `ProductAllocation.total` / `.allocated` from `int?` to `double?`.
