@@ -7,8 +7,8 @@
 - Tasks (action center): `Get-OrchTask`, `Get-OrchTaskAcrossFolder`, `Set-OrchTask`, and `Remove-OrchTask`. `Get-OrchTaskAcrossFolder` resolves each task's actual folder PSPath so the pipeline routes correctly into per-folder cmdlets.
 
 ## Improvements
-- Parallelized `Get-OrchTaskAcrossFolder`, `Get-OrchUserSession`, and `Get-OrchRole` across drives/folders (matches the existing `Get-OrchTask` / `Get-OrchBucket` pattern).
-- Job tab completion: `Restart-OrchJob` / `Resume-OrchJob` / `Stop-OrchJob` now have separate state-scoped caches (Faulted / Suspended / Stoppable) so they no longer compete on a shared filter. Job tooltip leads with `Id`, then DateTimes, State, and the full PSPath so `-Recurse` Tab disambiguates folder.
+- Parallelized `Get-OrchTaskAcrossFolder`, `Get-OrchUserSession`, and `Get-OrchRole` across drives/folders.
+- Job tab completion: `Restart-OrchJob` / `Resume-OrchJob` / `Stop-OrchJob` now have separate state-scoped caches (Faulted / Suspended / Stoppable) so they no longer compete on a shared filter. Job tooltip leads with `Id`, then DateTimes, State, and the folder + process name (e.g. `Orch1:\Shared\InvoiceProcess`) so `-Recurse` Tab disambiguates folder.
 - `dir -Recurse`: each Directory section stays contiguous (parent-grouped). Personal-workspace-first ordering at the drive root is preserved.
 - `Test-OrchTrigger`: 4xx responses (e.g. server-side validation failures) surface as `IsValid=false` rows instead of red errors so iteration stays uniform.
 - `Set-OrchSetting`: added previously-missing PlatyPS help.
