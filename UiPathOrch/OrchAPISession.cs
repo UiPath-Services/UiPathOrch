@@ -1661,8 +1661,8 @@ public partial class OrchAPISession : IDisposable
         EnsureSuccessStatusCode(response);
 
         string body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-        var objBody = JsonSerializer.Deserialize<HttpBodyValues<BulkItemDtoOfString>>(body)!;
-        return objBody.value?[0];
+        var objBody = JsonSerializer.Deserialize<HttpBodyValues<BulkItemDtoOfString>>(body);
+        return objBody?.value?[0];
     }
 
     public BulkItemDtoOfString? UploadLibrary(string libraryFilePath)
@@ -1696,8 +1696,8 @@ public partial class OrchAPISession : IDisposable
 
         // Read the response content
         string body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-        var objBody = JsonSerializer.Deserialize<HttpBodyValues<BulkItemDtoOfString>>(body)!;
-        return objBody.value?[0];
+        var objBody = JsonSerializer.Deserialize<HttpBodyValues<BulkItemDtoOfString>>(body);
+        return objBody?.value?[0];
     }
 
     public BulkItemDtoOfString? UploadPackage(string? feedId, string packageFilePath)
