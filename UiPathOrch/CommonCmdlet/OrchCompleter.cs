@@ -1445,6 +1445,15 @@ internal class TaskIdCompleter : FolderScopedCompleter<OrchTask>
     protected override CompletionResultType ResultType => CompletionResultType.ParameterValue;
 }
 
+internal class TaskTitleCompleter : FolderScopedCompleter<OrchTask>
+{
+    protected override IEnumerable<OrchTask> GetEntities(OrchDriveInfo drive, Folder folder)
+        => drive.Tasks.Get(folder).Where(t => !string.IsNullOrEmpty(t.Title));
+    protected override string GetName(OrchTask e) => e.Title!;
+    protected override string GetTipHelp(OrchTask e) => $"{e.Id} [{e.Status}/{e.Priority}] {e.GetPSPath()}";
+    protected override CompletionResultType ResultType => CompletionResultType.Text;
+}
+
 internal class PmDirectoryNameCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgument(
