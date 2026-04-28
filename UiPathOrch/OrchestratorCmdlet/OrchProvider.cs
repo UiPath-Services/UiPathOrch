@@ -804,21 +804,22 @@ public partial class OrchProvider : NavigationCmdletProvider
 
         List<Folder> csvOutput = null;
 
-        // Splits a FullyQualifiedName into (parent, leaf) so we can sort children by parent
-        // path first, then by leaf name. Sorting by FullyQualifiedName alone interleaves
-        // grandchildren between siblings (e.g., "A/sub/x" sorts between "A/sub" and "A/x")
-        // which makes Format-Table's GroupBy break the parent into multiple sections under
-        // -Recurse.
-        static (string parent, string leaf) SplitParentLeaf(string fqn)
+        // Returns the parent portion of a FullyQualifiedName ("A/B/C" -> "A/B", "X" -> "").
+        // Used to group siblings together so Format-Table's GroupBy keeps each Directory
+        // section contiguous under -Recurse, instead of interleaving grandchildren between
+        // sibling folders the way a flat alphabetical sort does.
+        static string ParentOf(string fqn)
         {
             int idx = fqn.LastIndexOf('/');
-            return idx < 0 ? ("", fqn) : (fqn[..idx], fqn[(idx + 1)..]);
+            return idx < 0 ? "" : fqn[..idx];
         }
 
         try
         {
-            // Collect matching folders first, then emit in parent-grouped order so -Recurse
-            // output keeps each Directory section contiguous.
+            // Collect matching folders first, then re-emit grouped by parent. Sort is stable
+            // and only on parent path — sibling order within each parent comes from the
+            // original _dicFolders sequence, which intentionally puts personal workspaces
+            // before regular folders to match the Orchestrator web UI.
             var matched = new List<Folder>();
             string? orchPathStart = orchPath == "" ? null : orchPath + "/";
 
@@ -836,16 +837,8 @@ public partial class OrchProvider : NavigationCmdletProvider
                 }
             }
 
-            foreach (var folder in matched.OrderBy(f =>
-                {
-                    var (parent, _) = SplitParentLeaf(f.FullyQualifiedName!);
-                    return parent;
-                }, StringComparer.OrdinalIgnoreCase)
-                .ThenBy(f =>
-                {
-                    var (_, leaf) = SplitParentLeaf(f.FullyQualifiedName!);
-                    return leaf;
-                }, StringComparer.OrdinalIgnoreCase))
+            foreach (var folder in matched.OrderBy(
+                f => ParentOf(f.FullyQualifiedName!), StringComparer.OrdinalIgnoreCase))
             {
                 if (Stopping) return;
 
