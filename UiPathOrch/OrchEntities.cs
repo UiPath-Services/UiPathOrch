@@ -372,6 +372,8 @@ public class Webhook
 // WebhookEventTypeDto
 public class WebhookEventType
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
     public string? Name { get; set; }
     public string? Group { get; set; }
 }
@@ -454,6 +456,10 @@ public class EditTaskMetadataRequest
 // ValidationResultDto (response of /odata/ProcessSchedules/.../ValidateProcessSchedule)
 public class ValidationResult
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch — folder PSPath of the validated trigger
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Name { get; set; } // added by UiPathOrch — trigger name (binds to -Name via pipeline)
     public bool? IsValid { get; set; }
     public string[]? Errors { get; set; }
     public string[]? ErrorCodes { get; set; }
@@ -474,6 +480,8 @@ public class BusinessRuleVersion
 // PingEventDto (response of POST /odata/Webhooks({key})/UiPath.Server.Configuration.OData.Ping)
 public class WebhookPingResult
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
     public string? Type { get; set; }
     public string? EventId { get; set; }
     public string? EntityKey { get; set; }

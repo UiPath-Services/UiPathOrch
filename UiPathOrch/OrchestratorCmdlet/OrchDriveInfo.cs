@@ -2209,6 +2209,22 @@ public partial class OrchDriveInfo : PSDriveInfo
     // Incremental cache for folder entities
     public readonly IncrementalCachePerFolder<Int64, Job> Jobs;
 
+    // Completer-only state-scoped Job caches. Each holds only jobs in the named state(s),
+    // so a Tab on Restart-OrchJob never collides with one on Resume-OrchJob.
+    public readonly ListCachePerFolder<Job> FaultedJobs;
+    public readonly ListCachePerFolder<Job> SuspendedJobs;
+    public readonly ListCachePerFolder<Job> StoppableJobs;
+
+    // Conservative invalidation: state transitions during Job mutations are non-trivial
+    // (Restart can yield Pending→Running→Faulted, Stop can yield Stopping→Successful/Faulted),
+    // so clear all completer Job caches together.
+    public void ClearJobCompleterCaches(Folder folder)
+    {
+        FaultedJobs.ClearCache(folder);
+        SuspendedJobs.ClearCache(folder);
+        StoppableJobs.ClearCache(folder);
+    }
+
     // At the time this constructor runs, NameColonSeparator is not yet available
     public OrchDriveInfo(ProviderInfo provider, PSDrive drive) :
         base(drive.Name, provider, drive.Name + ':' + Path.DirectorySeparatorChar, drive.Description, null, drive.Root)
@@ -2325,7 +2341,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         Settings = new(this, OrchAPISession.GetSettings, e => e.Path = NameColonSeparator);
         UpdateSettings = new(this, OrchAPISession.GetUpdateSettings, e => e.Path = NameColonSeparator);
         Webhooks = new(this, OrchAPISession.GetWebhooks, e => e.Path = NameColonSeparator);
-        WebhookEventTypes = new(this, OrchAPISession.GetWebhookEventTypes, null);
+        WebhookEventTypes = new(this, OrchAPISession.GetWebhookEventTypes, e => e.Path = NameColonSeparator);
 
         // ListCachePerFolder keys by folder.Id ?? 0; translate the sentinel back to null so the
         // legacy tenant-wide query (no X-UIPATH-OrganizationUnitId header) is issued for root.
@@ -2557,6 +2573,27 @@ public partial class OrchDriveInfo : PSDriveInfo
             //(folderId, query, skip, first, orderBy, orderAsc) => OrchAPISession.GetJobs(folderId, query, skip, first, orderBy, orderAsc),
             OrchAPISession.GetJobs,
             job => job.Id!.Value,
+            (job, folderPath) => job.Path = folderPath
+        );
+
+        // Completer-only state-scoped Job caches.
+        FaultedJobs = new ListCachePerFolder<Job>(
+            this,
+            folderId => OrchAPISession.GetJobs(folderId,
+                "&$filter=(State%20eq%20%27Faulted%27)", 0, ulong.MaxValue, null, false),
+            (job, folderPath) => job.Path = folderPath
+        );
+        SuspendedJobs = new ListCachePerFolder<Job>(
+            this,
+            folderId => OrchAPISession.GetJobs(folderId,
+                "&$filter=(State%20eq%20%27Suspended%27)", 0, ulong.MaxValue, null, false),
+            (job, folderPath) => job.Path = folderPath
+        );
+        StoppableJobs = new ListCachePerFolder<Job>(
+            this,
+            folderId => OrchAPISession.GetJobs(folderId,
+                "&$filter=((ProcessType%20eq%20%27Process%27)%20and%20((State%20eq%20%27Pending%27)%20or%20(State%20eq%20%27Running%27)%20or%20(State%20eq%20%27Stopping%27)%20or%20(State%20eq%20%27Suspended%27)%20or%20(State%20eq%20%27Resumed%27)))",
+                0, ulong.MaxValue, null, false),
             (job, folderPath) => job.Path = folderPath
         );
     }

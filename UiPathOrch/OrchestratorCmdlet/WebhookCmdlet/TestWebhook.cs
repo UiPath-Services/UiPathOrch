@@ -42,6 +42,7 @@ public class TestWebhookCommand : OrchestratorPSCmdlet
                             var result = drive.OrchAPISession.PingWebhook(webhook.Id ?? 0);
                             if (result is not null)
                             {
+                                result.Path = drive.NameColonSeparator;
                                 WriteObject(result);
                             }
                         }

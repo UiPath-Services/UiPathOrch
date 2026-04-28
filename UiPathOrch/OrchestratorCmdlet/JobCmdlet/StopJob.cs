@@ -63,31 +63,20 @@ public class StopJobCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = new ConcurrentBag<ReadOnlyCollection<Job>?>();
+            var results = new ConcurrentBag<List<Job>>();
             Parallel.ForEach(drivesFolders, driveFolder =>
             {
                 var (drive, folder) = driveFolder;
-
                 try
                 {
-                    // Use the cache if it still exists
-                    var folderJobs = drive.Jobs.GetCache(folder);
-                    if (folderJobs is not null)
-                    {
-                        results.Add(folderJobs.Values.ToList().AsReadOnly());
-                    }
-                    else // If no cache exists, fetch from the API
-                    {
-                        results.Add(drive.Jobs.Fetch(folder, "&$filter=((ProcessType%20eq%20%27Process%27)%20and%20((State%20eq%20%27Pending%27)%20or%20(State%20eq%20%27Running%27)%20or%20(State%20eq%20%27Stopping%27)%20or%20(State%20eq%20%27Suspended%27)%20or%20(State%20eq%20%27Resumed%27)))"));
-                    }
+                    results.Add(drive.StoppableJobs.Get(folder));
                 }
                 catch { }
             });
 
             foreach (var job in results
-                .SelectMany(te => te!)
+                .SelectMany(te => te)
                 .Where(job => wp.IsMatch(job.Id.ToString()))
-                .Where(job => !alreadyStoppedStates.Contains(job.State))
                 .ExcludeByStructValues(job => job!.Id.GetValueOrDefault(), paramId))
             {
                 yield return new CompletionResult(job.Id.ToString(), job.Id.ToString(), CompletionResultType.ParameterValue, job.FormatTooltip());
@@ -180,6 +169,7 @@ public class StopJobCommand : OrchestratorPSCmdlet
                     drive!.OrchAPISession.StopJobs(group.Key!.Id ?? 0, jobsToStop, Force);
                     //WriteObject(jobsToStop.Select(id => new StopJobOutput(folder?.GetPSPath(), id)), true);
                     drive.Jobs.ClearCache(folder!);
+                    drive.ClearJobCompleterCaches(folder!);
                 }
                 catch (OperationCanceledException)
                 {

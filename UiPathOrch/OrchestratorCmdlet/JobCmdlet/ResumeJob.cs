@@ -45,30 +45,21 @@ public class ResumeJobCommand : OrchestratorPSCmdlet
             var paramKey = GetSelfExclusionValues(commandAst, "Key", wordToComplete);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = new ConcurrentBag<ReadOnlyCollection<Job>?>();
+            var results = new ConcurrentBag<List<Job>>();
             Parallel.ForEach(drivesFolders, driveFolder =>
             {
                 var (drive, folder) = driveFolder;
                 try
                 {
-                    var folderJobs = drive.Jobs.GetCache(folder);
-                    if (folderJobs is not null)
-                    {
-                        results.Add(folderJobs.Values.ToList().AsReadOnly());
-                    }
-                    else
-                    {
-                        results.Add(drive.Jobs.Fetch(folder, "&$filter=(State%20eq%20%27Suspended%27)"));
-                    }
+                    results.Add(drive.SuspendedJobs.Get(folder));
                 }
                 catch { }
             });
 
             foreach (var job in results
-                .SelectMany(te => te!)
+                .SelectMany(te => te)
                 .Where(job => !string.IsNullOrEmpty(job.Key))
                 .Where(job => wp.IsMatch(job.Key))
-                .Where(job => string.Equals(job.State, "Suspended", StringComparison.OrdinalIgnoreCase))
                 .ExcludeByClassValues(job => job!.Key, paramKey))
             {
                 yield return new CompletionResult(job.Key!, job.Key!, CompletionResultType.ParameterValue, job.FormatTooltip());
@@ -111,6 +102,7 @@ public class ResumeJobCommand : OrchestratorPSCmdlet
         {
             var resumed = drive.OrchAPISession.ResumeJob(folder.Id ?? 0, jobKey);
             drive.Jobs.ClearCache(folder);
+            drive.ClearJobCompleterCaches(folder);
             if (resumed is not null)
             {
                 resumed.Path = folder.GetPSPath();

@@ -79,7 +79,7 @@ internal static class FolderExtensions
     /// </summary>
     public static string FormatTooltip(this Entities.Job job)
     {
-        string tiphelp = $"{job.Id} C{job.CreationTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")}";
+        string tiphelp = $"{job.Id,10} C{job.CreationTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")}";
         if (job.StartTime is not null)
             tiphelp += $"  S{job.StartTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")}";
         else
@@ -88,7 +88,7 @@ internal static class FolderExtensions
             tiphelp += $"  E{job.EndTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm:ss")}";
         else
             tiphelp += "                      ";
-        tiphelp += $" {job.State,11} {job.ReleaseName}";
+        tiphelp += $" {job.State,11} {job.Path}\\{job.ReleaseName}";
         return tiphelp;
     }
 

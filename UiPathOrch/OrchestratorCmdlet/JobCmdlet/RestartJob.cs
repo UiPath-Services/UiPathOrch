@@ -46,29 +46,20 @@ public class RestartJobCommand : OrchestratorPSCmdlet
             var paramId = GetSelfExclusionValues(commandAst, "Id", wordToComplete).Select(id => Int64.Parse(id));
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = new ConcurrentBag<ReadOnlyCollection<Job>?>();
+            var results = new ConcurrentBag<List<Job>>();
             Parallel.ForEach(drivesFolders, driveFolder =>
             {
                 var (drive, folder) = driveFolder;
                 try
                 {
-                    var folderJobs = drive.Jobs.GetCache(folder);
-                    if (folderJobs is not null)
-                    {
-                        results.Add(folderJobs.Values.ToList().AsReadOnly());
-                    }
-                    else
-                    {
-                        results.Add(drive.Jobs.Fetch(folder, "&$filter=(State%20eq%20%27Faulted%27)"));
-                    }
+                    results.Add(drive.FaultedJobs.Get(folder));
                 }
                 catch { }
             });
 
             foreach (var job in results
-                .SelectMany(te => te!)
+                .SelectMany(te => te)
                 .Where(job => wp.IsMatch(job.Id.ToString()))
-                .Where(job => string.Equals(job.State, "Faulted", StringComparison.OrdinalIgnoreCase))
                 .ExcludeByStructValues(job => job!.Id.GetValueOrDefault(), paramId))
             {
                 yield return new CompletionResult(job.Id.ToString(), job.Id.ToString(), CompletionResultType.ParameterValue, job.FormatTooltip());
@@ -112,6 +103,7 @@ public class RestartJobCommand : OrchestratorPSCmdlet
         {
             var restarted = drive.OrchAPISession.RestartJob(folder.Id ?? 0, jobId);
             drive.Jobs.ClearCache(folder);
+            drive.ClearJobCompleterCaches(folder);
             if (restarted is not null)
             {
                 restarted.Path = folder.GetPSPath();

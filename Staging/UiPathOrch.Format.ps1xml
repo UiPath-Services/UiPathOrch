@@ -389,6 +389,71 @@
     </View>
 
     <View>
+      <Name>OrchTask</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.OrchTask</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Id</Label>
+            <Alignment>right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Status</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Priority</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Type</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Assignee</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>CreationTime</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Title</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>Id</PropertyName>
+                <Alignment>right</Alignment>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Status</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Priority</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Type</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>TaskAssigneeName</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>CreationTime</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Title</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
       <Name>Log</Name>
       <ViewSelectedBy>
         <TypeName>UiPath.PowerShell.Entities.Log</TypeName>
@@ -2040,6 +2105,131 @@
     </View>
 
     <View>
+      <Name>WebhookEventType</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.WebhookEventType</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Group</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Name</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>Group</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Name</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>WebhookPingResult</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.WebhookPingResult</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Type</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Timestamp</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>TenantId</Label>
+            <Alignment>right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>EventId</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>Type</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Timestamp</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>TenantId</PropertyName>
+                <Alignment>right</Alignment>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>EventId</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>ValidationResult</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.ValidationResult</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Name</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>IsValid</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>ErrorCodes</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Errors</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>Name</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>IsValid</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>$_.ErrorCodes -join ', '</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>$_.Errors -join '; '</ScriptBlock>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
       <Name>Trigger</Name>
       <ViewSelectedBy>
         <TypeName>UiPath.PowerShell.Entities.ProcessSchedule</TypeName>
@@ -3672,39 +3862,6 @@
     </View>
 
     <View>
-      <Name>ResponseDictionaryItem</Name>
-      <ViewSelectedBy>
-        <TypeName>UiPath.PowerShell.Entities.ResponseDictionaryItem</TypeName>
-      </ViewSelectedBy>
-      <GroupBy>
-        <Label>Directory</Label>
-        <PropertyName>Path</PropertyName>
-      </GroupBy>
-      <TableControl>
-        <TableHeaders>
-          <TableColumnHeader>
-            <Label>Key</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>Value</Label>
-          </TableColumnHeader>
-        </TableHeaders>
-        <TableRowEntries>
-          <TableRowEntry>
-            <TableColumnItems>
-              <TableColumnItem>
-                <PropertyName>Key</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>Value</PropertyName>
-              </TableColumnItem>
-            </TableColumnItems>
-          </TableRowEntry>
-        </TableRowEntries>
-      </TableControl>
-    </View>
-
-    <View>
       <Name>ODataValueOfString</Name>
       <ViewSelectedBy>
         <TypeName>UiPath.PowerShell.Entities.ODataValueOfString</TypeName>
@@ -4089,57 +4246,6 @@
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>source</PropertyName>
-              </TableColumnItem>
-            </TableColumnItems>
-          </TableRowEntry>
-        </TableRowEntries>
-      </TableControl>
-    </View>
-
-    <View>
-      <Name>DirectoryObject</Name>
-      <ViewSelectedBy>
-        <TypeName>UiPath.PowerShell.Entities.PmGroupMember</TypeName>
-      </ViewSelectedBy>
-      <GroupBy>
-        <Label>Directory</Label>
-        <PropertyName>Path</PropertyName>
-      </GroupBy>
-      <TableControl>
-        <TableHeaders>
-          <TableColumnHeader>
-            <Label>source</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>name</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>displayName</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>objectType</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>email</Label>
-          </TableColumnHeader>
-        </TableHeaders>
-        <TableRowEntries>
-          <TableRowEntry>
-            <TableColumnItems>
-              <TableColumnItem>
-                <PropertyName>source</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>name</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>displayName</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>objectType</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>email</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>

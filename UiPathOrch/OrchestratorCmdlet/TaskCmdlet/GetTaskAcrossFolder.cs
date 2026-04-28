@@ -36,17 +36,34 @@ public class GetTaskAcrossFolderCommand : OrchestratorPSCmdlet
         var wpStatus = Status.ConvertToWildcardPatternList();
         var wpPriority = Priority.ConvertToWildcardPatternList();
 
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
-        {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-            try
+        using var results = OrchThreadPool.RunForEach(drives,
+            drive => drive.NameColonSeparator,
+            drive => drive,
+            drive =>
             {
                 var tasks = drive.OrchAPISession.GetTasksAcrossFolders().ToList();
+
+                // Resolve each task's actual folder path so Path reflects where the task lives,
+                // not the aggregation drive root. Falls back to drive root for orphans.
+                var folderById = drive.GetFolders()
+                    .Where(f => f.Id is not null)
+                    .ToDictionary(f => f.Id!.Value);
                 foreach (var task in tasks)
                 {
-                    task.Path = drive.NameColonSeparator;
+                    task.Path = (task.OrganizationUnitId is long fid && folderById.TryGetValue(fid, out var folder))
+                        ? folder.GetPSPath()
+                        : drive.NameColonSeparator;
                 }
+                return tasks;
+            });
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
+        {
+            try
+            {
+                var tasks = result.GetResult(cancelHandler.Token);
+                if (tasks is null) continue;
 
                 WriteObject(tasks
                     .FilterByWildcards(t => t?.Title, wpTitle)
@@ -55,9 +72,9 @@ public class GetTaskAcrossFolderCommand : OrchestratorPSCmdlet
                     .OrderByDescending(t => t.CreationTime),
                     true);
             }
-            catch (Exception ex)
+            catch (OrchException ex)
             {
-                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetTaskAcrossFolderError", ErrorCategory.InvalidOperation, drive));
+                WriteError(new ErrorRecord(ex, "GetTaskAcrossFolderError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }
