@@ -434,8 +434,12 @@ PrivateData = @{
         # A URL to an icon representing this module.
         # IconUri = ''
 
-        # ReleaseNotes of this module
-        ReleaseNotes = '## New Features
+        # ReleaseNotes of this module.
+        # Single-quoted here-string (@'...'@) so apostrophes (e.g. "task's") inside the
+        # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
+        # whitespace) — that's the only termination rule.
+        ReleaseNotes = @'
+## New Features
 - Webhooks: `Get-OrchWebhookEventType` (lists tenant event types) and `Test-OrchWebhook` (sends a Ping by name).
 - Jobs: `Restart-OrchJob` (Faulted-only) and `Resume-OrchJob` (Suspended-only). Tab completion lists only the actionable jobs.
 - Triggers: `Test-OrchTrigger` runs the server-side `ValidateProcessSchedule` pre-flight check and returns `IsValid` + `Errors` per trigger.
@@ -452,7 +456,7 @@ PrivateData = @{
 - Fixed two concurrency races in tab-completion / cache code that could lose entries or corrupt internal state under parallel use.
 - `Import-OrchLibrary` / `Import-OrchPackage`: empty or malformed server responses now return null instead of throwing a NullReferenceException.
 - Removed two unreachable Format views.
-'
+'@
 
         # Prerelease string of this module
         # Prerelease = ''
