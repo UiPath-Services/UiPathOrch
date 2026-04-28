@@ -20,7 +20,8 @@ Sets a general setting value on Orchestrator.
 ### __AllParameterSets
 
 ```
-Set-OrchSetting [-Name] <string> [-Value] <string> [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Set-OrchSetting [-Name] <string> [-Value] <string> [-Path <string[]>] [-WhatIf] [-Confirm]
+ [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -84,69 +85,6 @@ Shows what would be set without sending the API call.
 
 ## PARAMETERS
 
-### -Name
-
-Setting key to update. Supports tab completion against existing Setting names.
-
-```yaml
-Type: System.String
-DefaultValue: None
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: 0
-  IsRequired: true
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: true
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -Value
-
-New value for the setting. Tab completion offers the current value as a starting point.
-
-```yaml
-Type: System.String
-DefaultValue: None
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: 1
-  IsRequired: true
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: true
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -Path
-
-Specifies the target drive name(s). If not specified, the current drive is targeted.
-
-```yaml
-Type: System.String[]
-DefaultValue: None
-SupportsWildcards: true
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: true
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
 ### -Confirm
 
 Prompts you for confirmation before running the cmdlet.
@@ -163,6 +101,69 @@ ParameterSets:
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Name
+
+Setting key to update. Supports tab completion against existing Setting names.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 0
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Path
+
+Specifies the target drive name(s). If not specified, the current drive is targeted.
+
+```yaml
+Type: System.String[]
+DefaultValue: ''
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Value
+
+New value for the setting. Tab completion offers the current value as a starting point.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 1
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
   ValueFromRemainingArguments: false
 DontShow: false
 AcceptedValues: []
@@ -217,3 +218,4 @@ Updates are batched per drive: regardless of how many settings flow through the 
 ## RELATED LINKS
 
 Get-OrchSetting
+
