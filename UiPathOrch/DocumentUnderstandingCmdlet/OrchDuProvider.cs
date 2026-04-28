@@ -40,15 +40,6 @@ public class OrchDuProvider : NavigationCmdletProvider
         return projects?.FirstOrDefault(p => string.Compare(p.name, psPath, StringComparison.OrdinalIgnoreCase) == 0);
     }
 
-    #region CmdletProvider overrides
-
-    //protected override ProviderInfo Start(ProviderInfo providerInfo)
-    //{
-    //    return base.Start(providerInfo);
-    //}
-
-    #endregion CmdletProvider overrides
-
     #region DriveCmdletProvider overrides
 
     protected override Collection<PSDriveInfo>? InitializeDefaultDrives()

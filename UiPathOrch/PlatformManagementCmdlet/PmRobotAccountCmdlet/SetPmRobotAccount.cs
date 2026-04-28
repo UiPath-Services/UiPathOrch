@@ -146,15 +146,6 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
     }
 
     // This approach cannot properly clear the cache. It can only process the Path from the first row.
-    //protected override void BeginProcessing()
-    //{
-    //    var drives = OrchDriveInfo.EnumOrchDrives(Path);
-    //    foreach (var drive in drives)
-    //    {
-    //        drive._dicPmRobotAccounts = null;
-    //        drive._dicPmGroups = null;
-    //    }
-    //}
 
     protected override void ProcessRecord()
     {

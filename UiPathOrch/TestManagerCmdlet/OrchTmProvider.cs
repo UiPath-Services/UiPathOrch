@@ -1,4 +1,4 @@
-﻿//#undef DEBUG
+//#undef DEBUG
 
 using System.Collections.ObjectModel;
 using System.Data;
@@ -30,15 +30,6 @@ public class OrchTmProvider : NavigationCmdletProvider
         var projects = OrchTmDriveInfo.GetTmProjects();
         return projects?.FirstOrDefault(p => string.Compare(p.projectPrefix, psPath, StringComparison.OrdinalIgnoreCase) == 0);
     }
-
-    #region CmdletProvider overrides
-
-    //protected override ProviderInfo Start(ProviderInfo providerInfo)
-    //{
-    //    return base.Start(providerInfo);
-    //}
-
-    #endregion CmdletProvider overrides
 
     #region DriveCmdletProvider overrides
 

@@ -583,115 +583,7 @@ public partial class OrchProvider : NavigationCmdletProvider
             return folder is not null;
         }
     }
-
-    //protected override void SetItem(string path, object value)
-    //{
-    //    if (ShouldProcess(path, "Set Folder"))
-    //    {
-    //        try
-    //        {
-    //            if (DynamicParameters is RuntimeDefinedParameterDictionary parameters)
-    //            {
-    //                string orchPath = OrchDriveInfo.PSPathToOrchPath(path);
-    //                Folder? folder = OrchDriveInfo?.GetFolder(orchPath);
-    //                if (folder is null)
-    //                    return;
-
-    //                string name = parameters["Name"].Value as string;
-    //                string description = parameters["Description"].Value as string;
-    //                if (folder.DisplayName == name && folder.Description == description)
-    //                    return;
-
-    //                if (name is null)
-    //                    name = folder.DisplayName;
-    //                if (description is null)
-    //                    description = folder.Description;
-
-    //                OrchDriveInfo!.OrchAPI.EditFolder(folder, name!, description!);
-    //                OrchDriveInfo._folderListCache = null;
-    //            }
-    //        }
-    //        catch (Exception ex)
-    //        {
-    //            var errorRecord = new ErrorRecord(ex, "SetFolderError", ErrorCategory.InvalidOperation, null);
-    //            WriteError(errorRecord);
-    //        }
-    //    }
-    //}
-
-    //public class FolderCompleter : OrchArgumentCompleter
-    //{
-    //    public override IEnumerable<CompletionResult> CompleteArgument(string commandName, string parameterName, string wordToComplete, CommandAst commandAst, System.Collections.IDictionary fakeBoundParameters)
-    //    {
-    //        //if (OrchProvider._this is null)
-    //        //    yield break;
-
-    //        if (!fakeBoundParameters.Contains("Path"))
-    //            yield break;
-
-    //        string path = fakeBoundParameters["Path"]?.ToString();
-    //        if (string.IsNullOrEmpty(path))
-    //            yield break;
-
-    //        string parentPath = "\\" + OrchProvider._this.OrchDriveInfo!.CurrentLocation;
-    //        string targetPath = OrchProvider._this.MakePath(parentPath, path);
-    //        string normalizedPath = OrchProvider._this.NormalizeRelativePath(targetPath, "\\");
-
-    //        if (normalizedPath.StartsWith(OrchProvider._this.OrchDriveInfo.NameColon))
-    //        {
-    //            normalizedPath = normalizedPath.Substring(OrchProvider._this.OrchDriveInfo.Name.Length + 1);
-    //        }
-
-    //        string orchPath = OrchDriveInfo.PSPathToOrchPath(normalizedPath);
-
-    //        Folder? folder = OrchProvider._this.OrchDriveInfo?.GetFolder(orchPath);
-    //        if (folder is null || folder.Id == 0)
-    //            yield break;
-
-    //        switch (parameterName)
-    //        {
-    //            case "Name":
-    //                yield return new CompletionResult(PathTools.EscapePSText(folder.DisplayName!));
-    //                break;
-    //            case "Description":
-    //                if (!string.IsNullOrEmpty(folder.Description))
-    //                    yield return new CompletionResult(PathTools.EscapePSText(folder.Description));
-    //                else
-    //                    yield break;
-    //                break;
-    //            default:
-    //                yield break;
-    //        }
-    //    }
-    //}
-
     // TODO: Implementation to update the folder's Description. Want to move this to SetItemProperty. Commented out for now.
-    //protected override object SetItemDynamicParameters(string path, object value)
-    //{
-    //_this = this;
-
-    //var runtimeDefinedParameterDictionary = new RuntimeDefinedParameterDictionary();
-
-    //#region create Name parameter
-    //var attrName = new Collection<Attribute>
-    //{
-    //    new ParameterAttribute { HelpMessage = "New Name." },
-    //    new ArgumentCompleterAttribute(typeof(FolderCompleter))
-    //};
-    //runtimeDefinedParameterDictionary.Add("Name", new RuntimeDefinedParameter("Name", typeof(string), attrName));
-    //#endregion
-
-    //#region create Description parameter
-    //var attrDescription = new Collection<Attribute>
-    //{
-    //    new ParameterAttribute { HelpMessage = "Description." },
-    //    new ArgumentCompleterAttribute(typeof(FolderCompleter))
-    //};
-    //runtimeDefinedParameterDictionary.Add("Description", new RuntimeDefinedParameter("Description", typeof(string), attrDescription));
-    //#endregion
-
-    //return runtimeDefinedParameterDictionary;
-    //}
 
     #endregion ItemCmdletProvider overrides
 
@@ -1105,25 +997,6 @@ public partial class OrchProvider : NavigationCmdletProvider
     }
 
     // TODO: Changing Description via Rename-Item is unnatural, so removing this.
-    //protected override object RenameItemDynamicParameters(string path, string newName)
-    //{
-    //    _this = this;
-
-    //    #region create Description parameter
-    //    var attrDescription = new Collection<Attribute>
-    //    {
-    //        new ParameterAttribute { HelpMessage = "Description." },
-    //        new ArgumentCompleterAttribute(typeof(FolderCompleter))
-    //    };
-
-    //    var runtimeDefinedParameterDictionary = new RuntimeDefinedParameterDictionary
-    //    {
-    //        { "Description", new RuntimeDefinedParameter("Description", typeof(string), attrDescription) }
-    //    };
-    //    #endregion
-
-    //    return runtimeDefinedParameterDictionary;
-    //}
 
     protected override void RemoveItem(string path, bool recurse)
     {
