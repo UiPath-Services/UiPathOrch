@@ -5,9 +5,13 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
+// Shelved: kept internal so PowerShell module loader does not register the cmdlet.
+// The Data Fabric REST surface is preview / internal-only and we don't want to
+// surface it to module users yet. Re-enable by switching `class` to `public class`
+// and adding `Get-OrchDfEntity` to UiPathOrch.psd1 CmdletsToExport.
 [Cmdlet(VerbsCommon.Get, "OrchDfEntity")]
 [OutputType(typeof(DfEntity))]
-public class GetDfEntityCommand : OrchestratorPSCmdlet
+class GetDfEntityCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DfEntityNameCompleter))]

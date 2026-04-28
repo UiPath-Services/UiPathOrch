@@ -6,9 +6,12 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
+// Shelved: kept internal so PowerShell module loader does not register the cmdlet.
+// See GetDfEntity.cs for the full reasoning. Re-enable by switching `class` to
+// `public class` and adding `Get-OrchDfRecord` to UiPathOrch.psd1 CmdletsToExport.
 [Cmdlet(VerbsCommon.Get, "OrchDfRecord", DefaultParameterSetName = "All")]
 [OutputType(typeof(PSObject))]
-public class GetDfRecordCommand : OrchestratorPSCmdlet
+class GetDfRecordCommand : OrchestratorPSCmdlet
 {
     [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DfEntityNameCompleter))]

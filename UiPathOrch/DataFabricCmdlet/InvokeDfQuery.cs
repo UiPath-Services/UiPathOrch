@@ -6,9 +6,12 @@ using UiPath.PowerShell.Core;
 
 namespace UiPath.PowerShell.Commands;
 
+// Shelved: kept internal so PowerShell module loader does not register the cmdlet.
+// See GetDfEntity.cs for the full reasoning. Re-enable by switching `class` to
+// `public class` and adding `Invoke-OrchDfQuery` to UiPathOrch.psd1 CmdletsToExport.
 [Cmdlet(VerbsLifecycle.Invoke, "OrchDfQuery")]
 [OutputType(typeof(PSObject))]
-public class InvokeDfQueryCommand : OrchestratorPSCmdlet
+class InvokeDfQueryCommand : OrchestratorPSCmdlet
 {
     [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DfEntityNameCompleter))]
