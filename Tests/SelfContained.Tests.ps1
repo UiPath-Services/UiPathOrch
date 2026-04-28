@@ -1460,8 +1460,8 @@ Describe 'Test-OrchTrigger' {
             return
         }
         $result.PSObject.Properties.Name | Should -Contain 'IsValid'
-        $result.PSObject.Properties.Name | Should -Contain 'TriggerName'
-        $result.PSObject.Properties.Name | Should -Contain 'TriggerPSPath'
+        $result.PSObject.Properties.Name | Should -Contain 'Name'
+        $result.PSObject.Properties.Name | Should -Contain 'Path'
     }
 }
 
