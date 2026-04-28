@@ -408,6 +408,7 @@ public partial class OrchAPISession : IDisposable
             {
                 // Dispose managed resources
                 _httpClient?.Dispose();
+                _httpClientForBucketItem?.Dispose();
                 limiter?.Dispose();
 
                 // Dispose the async log writer
