@@ -1,3 +1,56 @@
+# Version: 0.9.18.0
+## New Features
+- DataFabric: added `Get-OrchDfEntity` and `Get-OrchDfRecord` for browsing the Data Fabric entity catalog and querying records by Id or with paging. Both cmdlets are folder-scoped and parallelize across folders under `-Recurse`.
+
+- Webhooks: added `Get-OrchWebhookEventType` (lists tenant-available webhook event types, grouped output) and `Test-OrchWebhook` (sends a Ping event to a webhook by name and returns the resulting `WebhookPingResult`).
+
+- Jobs: added `Restart-OrchJob` (Faulted-only, with state-keyed completer that lists Faulted jobs in the current folder context) and `Resume-OrchJob` (Suspended-only, completer lists Suspended jobs by Key). Both clear the relevant Job completer caches after the API call so subsequent Tab completion reflects the new state.
+
+- Triggers: added `Test-OrchTrigger` for server-side `ValidateProcessSchedule` pre-flight checking. Returns `ValidationResult` (IsValid + Errors + ErrorCodes) per trigger and surfaces ASP.NET model-binding 400s as `IsValid=false` rows so iteration with `-Recurse` is uniform.
+
+- Sessions: added `Clear-OrchInactiveSession` for tenant-wide bulk cleanup of Disconnected and Unresponsive unattended sessions.
+
+- Tasks (action center): added `Get-OrchTask`, `Get-OrchTaskAcrossFolder`, `Set-OrchTask`, and `Remove-OrchTask`. `Get-OrchTaskAcrossFolder` resolves each task's actual folder PSPath via `OrganizationUnitId` so the pipeline can route per-folder cmdlets correctly. `Set-OrchTask` accepts pipeline input and tab-completes `-Id` (TaskIdCompleter), `-Title` (TaskTitleCompleter, new), `-TaskCatalog` (ActionCatalogNameCompleter), `-Priority` (ValidateSet).
+
+- Format views: added grouped tables for `OrchTask`, `WebhookEventType`, `WebhookPingResult`, and `ValidationResult`. All group by `Path` so `dir -Recurse`-style iteration produces clean per-folder sections.
+
+## Improvements
+- Job completer caches: split `drive.Jobs` into three state-scoped caches — `FaultedJobs`, `SuspendedJobs`, `StoppableJobs`. Restart / Resume / Stop completers now read their dedicated cache instead of competing on a shared filter, eliminating the case where running one completer warms the cache with a filter that hides candidates the next completer needs. Mutations clear all three together via `OrchDriveInfo.ClearJobCompleterCaches`.
+
+- Job tooltip: lead with right-padded `Id`, then DateTimes, State, and the trigger PSPath (folder + ReleaseName) so `-Recurse` Tab completion disambiguates which folder a job belongs to without scanning the candidate list.
+
+- `dir -Recurse` output: `OrchProvider.GetChildItems` now collects matching folders, then re-emits them grouped by parent path (stable sort, leaf order from `_dicFolders` is preserved). Prior behaviour interleaved grandchildren between siblings, which made `Format-Table`'s GroupBy split each parent into multiple Directory sections. The personal-workspace-first ordering at the drive root is intact (the underlying `_dicFolders` still puts `user.PersonalWorkspace` at index 0, with other Exploring workspaces sorted by Name afterwards).
+
+- Parallelized 5 cmdlets: `Get-OrchTaskAcrossFolder`, `Get-OrchUserSession`, `Get-OrchRole`, `Get-OrchDfEntity`, `Get-OrchDfRecord` now use `OrchThreadPool.RunForEach` for cross-drive / cross-folder fanout, matching `Get-OrchTask` / `Get-OrchBucket`. Pm-prefixed cmdlets are intentionally left sequential because they share per-organization caches.
+
+- `Test-OrchTrigger`: returns the API's own `ValidationResult` directly instead of a `PSObject` wrapper. Adds `Path` and `Name` fields ([JsonIgnore]) so downstream pipelines can re-bind to `-Name` / `-Path` parameters of other Trigger cmdlets.
+
+- Set-* / Get-* on tenant-level entities now populate Path so Format views can `GroupBy Path`: `WebhookEventType`, `WebhookPingResult`, `ValidationResult` gain `Path` properties.
+
+- Renamed `Set-OrchTaskMetadata` to `Set-OrchTask` for symmetry with `Get-OrchTask` / `Remove-OrchTask`. (No alias; the previous name was added in the same development cycle and never shipped.)
+
+- Renamed three internal cache classes for clarity: `TestListCachePerTenant1` / `TestSingleCachePerTenant0` / `TestSingleCachePerTenant1` → `TmListCachePerTenant1` / `TmSingleCachePerTenant0` / `TmSingleCachePerTenant1`. These are TestManager production caches, not test mocks; the `Tm` prefix matches `TmProject` / `TmTestCase` / etc.
+
+- Set-OrchSetting: added previously-missing PlatyPS help (synopsis, description, four examples, parameter reference, NOTES on bulk batching and cache invalidation).
+
+## Bug Fixes
+- `HttpResponseMessage` was not disposed at any of the 17 `HttpClient_Send` / `SendAsync` callsites in `OrchAPISession`. Each followed the `var response = HttpClient_Send(...); ... ReadAsStringAsync; Deserialize` shape — the response is consumed once and never leaves the method, so adding `using` is mechanically safe at every site, including the iterator (`yield return`) variants where each loop iteration disposes its own response, and the streaming-download path that already wraps `response.Content.ReadAsStream()` in `using`. Also added `_httpClientForBucketItem?.Dispose()` to `OrchAPISession.Dispose(bool)` (was leaking the secondary HttpClient on drive teardown).
+
+- Two thread-safety races in `OrchDriveInfo` caches:
+  - Package version cache: `TryGetValue + new + index-set` raced when concurrent threads (e.g., `Parallel.ForEach` folder iteration or simultaneous tab-completion) both missed the same `feedId`. Replaced with `ConcurrentDictionary.GetOrAdd`.
+  - Robot log accumulation: `_dicRobotLogs` held `HashSet<Log>` values and added concurrently across simultaneous `Get-OrchLog` calls on the same folder, which corrupted the set. Switched to `ConcurrentBag<Log>` (per-Id dedup wasn't actually working anyway since the API returns `Log.Id = 0`).
+
+- Dropped a `null!` (null-forgiving) on `JsonSerializer.Deserialize<...>(body)` in `UploadLibrary` and `UploadPackage`. The two helpers' return types are already nullable; chaining `objBody?.value?[0]` returns null on empty / malformed server responses instead of an unhelpful `NullReferenceException` on the next member access.
+
+- `Test-OrchTrigger`: a 4xx response (typical when the schedule itself is mis-shaped — e.g., out-of-range `MaxJobsForActivation`) now produces a `ValidationResult{IsValid=false, Errors=[...]}` row rather than a red `WriteError`. Parses both ASP.NET model-binding `errors` objects and the API's own `ValidationResult` shape; falls back to `OrchException.ExtractMessage` for plain or unknown bodies.
+
+- `Get-OrchTaskAcrossFolder` output: each task's `Path` was the drive root (e.g., `Orch1:\`) regardless of where the task actually lived. Now resolves the actual folder via `OrganizationUnitId` lookup, so downstream `Set-OrchTask` / `Remove-OrchTask` pick up correct folder context from the pipeline.
+
+- Removed a duplicate-format-name `<View>` entry for `ResponseDictionaryItem` (two views with the same name and same TypeName — only the first was ever selected) and a dead `DirectoryObject` view aliased onto `PmGroupMember` (unreachable; only callable via `Format-Table -View DirectoryObject`, which no caller does).
+
+- Removed a vestigial `//, IDynamicParameters` comment in `Remove-OrchLibrary`'s class declaration; the interface was never implemented.
+
+
 # Version: 0.9.17.0
 ## New Features
 - Secret-typed assets (Orchestrator v20+): added `Set-OrchSecretAsset`, `Get-OrchSecretAsset`, and a type-agnostic `Remove-OrchAssetUserValue`. `Set-OrchSecretAsset` treats an empty `-SecretValue` as a silent no-op so CSV round-trip is safe (the API masks `SecretValue` on GET). Removing a per-robot entry on a Secret uses `Remove-OrchAssetUserValue` (the empty-delete convention from Text/Bool/Integer does not apply to Secret).

@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.17.0'
+ModuleVersion = '0.9.18.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -436,14 +436,22 @@ PrivateData = @{
 
         # ReleaseNotes of this module
         ReleaseNotes = '## New Features
-- Get-PmLicenseAllocation: New cmdlet that returns per-tenant robot / runtime license allocations for a UiPath Automation Cloud organization (Robots & Services tab of Admin / Licenses). Parameters: -Tenant (wildcards, tab completion), -Path. Organization-scoped; Automation Cloud only.
-
-- Get-PmLicenseInventory: New cmdlet that returns the organization-level license inventory dashboard, bundling five collections into one object: productAllocations, userLicensingBundles, entitlementUsages, availableServices, mlKeys. Parameters: -Path. Organization-scoped; Automation Cloud only.
-
-- Get-PmLicenseContract: New cmdlet that returns the full license contract for an organization including purchased products, bundle templates, entitlements, ML service keys, and the embedded license payload (preserved verbatim). Parameters: -Path. Organization-scoped; Automation Cloud only.
+- Webhooks: `Get-OrchWebhookEventType` (lists tenant event types) and `Test-OrchWebhook` (sends a Ping by name).
+- Jobs: `Restart-OrchJob` (Faulted-only) and `Resume-OrchJob` (Suspended-only). Tab completion lists only the actionable jobs.
+- Triggers: `Test-OrchTrigger` runs the server-side `ValidateProcessSchedule` pre-flight check and returns `IsValid` + `Errors` per trigger.
+- Sessions: `Clear-OrchInactiveSession` bulk-deletes Disconnected / Unresponsive unattended sessions tenant-wide.
+- Tasks (action center): `Get-OrchTask`, `Get-OrchTaskAcrossFolder`, `Set-OrchTask`, and `Remove-OrchTask`. `Get-OrchTaskAcrossFolder` resolves each task's actual folder PSPath so the pipeline routes correctly into per-folder cmdlets.
 
 ## Improvements
-- Added Get-Help documentation for Get-PmLicense and the three new Pm license cmdlets.
+- Parallelized `Get-OrchTaskAcrossFolder`, `Get-OrchUserSession`, and `Get-OrchRole` across drives/folders.
+- Job tab completion: `Restart-OrchJob` / `Resume-OrchJob` / `Stop-OrchJob` now have separate state-scoped caches (Faulted / Suspended / Stoppable) so they no longer compete on a shared filter. Job tooltip leads with `Id`, then DateTimes, State, and the folder + process name (e.g. `Orch1:\Shared\InvoiceProcess`) so `-Recurse` Tab disambiguates folder.
+- `dir -Recurse`: each Directory section stays contiguous (parent-grouped). Personal-workspace-first ordering at the drive root is preserved.
+
+## Bug Fixes
+- HTTP response and HTTP client handles are now released properly. Long-running sessions no longer leak connection-pool resources.
+- Fixed two concurrency races in tab-completion / cache code that could lose entries or corrupt internal state under parallel use.
+- `Import-OrchLibrary` / `Import-OrchPackage`: empty or malformed server responses now return null instead of throwing a NullReferenceException.
+- Removed two unreachable Format views.
 '
 
         # Prerelease string of this module
