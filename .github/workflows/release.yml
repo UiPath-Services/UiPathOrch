@@ -52,6 +52,17 @@ jobs:
             throw "csproj Version $csprojVersion does not match tag v$expected"
           }
 
+      - name: Build PlatyPS help (MAML)
+        # Generate Staging/en-US/UiPathOrch.dll-Help.xml and UiPathOrch-help.xml from
+        # the PlatyPS v1 markdown sources. These XML files are .gitignored (regenerated
+        # per release) and are required for Get-Help in PSGallery-installed module to
+        # show synopses, descriptions, and examples — without this step the published
+        # module ships with bare auto-generated stubs only.
+        shell: pwsh
+        run: |
+          Install-Module Microsoft.PowerShell.PlatyPS -Scope CurrentUser -Force -AllowClobber
+          ./PlatyPS/Build-Help.ps1 -SkipDeploy
+
       - name: Assemble module directory
         id: stage
         shell: pwsh
@@ -60,6 +71,8 @@ jobs:
           New-Item -ItemType Directory -Path $stage -Force | Out-Null
           New-Item -ItemType Directory -Path (Join-Path $stage 'Functions') -Force | Out-Null
           New-Item -ItemType Directory -Path (Join-Path $stage 'Docs') -Force | Out-Null
+          $enUS = Join-Path $stage 'en-US'
+          New-Item -ItemType Directory -Path $enUS -Force | Out-Null
 
           Copy-Item 'UiPathOrch/bin/Release/net8.0/UiPathOrch.dll' $stage
           foreach ($f in 'UiPathOrch.psd1','UiPathOrch.psm1','UiPathOrch.Format.ps1xml','ReleaseNotes.md') {
@@ -67,6 +80,12 @@ jobs:
           }
           Get-ChildItem 'Staging/Functions/*.ps1' | Copy-Item -Destination (Join-Path $stage 'Functions')
           Get-ChildItem 'Staging/Docs/*.md'       | Copy-Item -Destination (Join-Path $stage 'Docs')
+
+          # MAML help (built in the previous step) + about_ topic (tracked in git).
+          # All three must be under the module's en-US/ subdirectory for Get-Help to find them.
+          Copy-Item 'Staging/en-US/UiPathOrch.dll-Help.xml' $enUS
+          Copy-Item 'Staging/en-US/UiPathOrch-help.xml'     $enUS
+          Copy-Item 'Staging/en-US/about_UiPathOrch.help.txt' $enUS
 
           "stage=$stage" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
