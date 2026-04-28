@@ -81,11 +81,12 @@ jobs:
           Get-ChildItem 'Staging/Functions/*.ps1' | Copy-Item -Destination (Join-Path $stage 'Functions')
           Get-ChildItem 'Staging/Docs/*.md'       | Copy-Item -Destination (Join-Path $stage 'Docs')
 
-          # MAML help (built in the previous step) + about_ topic (tracked in git).
-          # All three must be under the module's en-US/ subdirectory for Get-Help to find them.
-          Copy-Item 'Staging/en-US/UiPathOrch.dll-Help.xml' $enUS
-          Copy-Item 'Staging/en-US/UiPathOrch-help.xml'     $enUS
-          Copy-Item 'Staging/en-US/about_UiPathOrch.help.txt' $enUS
+          # Mirror Build-Help.ps1's Step 4 (deploy) verbatim — iterate every XML file
+          # actually generated rather than hardcoding names, so case (Help.xml vs
+          # help.xml) and any future-added MAML files are handled automatically.
+          Get-ChildItem 'Staging/en-US/*.xml' | Copy-Item -Destination $enUS
+          $aboutFile = 'Staging/en-US/about_UiPathOrch.help.txt'
+          if (Test-Path $aboutFile) { Copy-Item $aboutFile $enUS }
 
           "stage=$stage" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
