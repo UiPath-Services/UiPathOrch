@@ -10,14 +10,12 @@
 - Parallelized `Get-OrchTaskAcrossFolder`, `Get-OrchUserSession`, and `Get-OrchRole` across drives/folders.
 - Job tab completion: `Restart-OrchJob` / `Resume-OrchJob` / `Stop-OrchJob` now have separate state-scoped caches (Faulted / Suspended / Stoppable) so they no longer compete on a shared filter. Job tooltip leads with `Id`, then DateTimes, State, and the folder + process name (e.g. `Orch1:\Shared\InvoiceProcess`) so `-Recurse` Tab disambiguates folder.
 - `dir -Recurse`: each Directory section stays contiguous (parent-grouped). Personal-workspace-first ordering at the drive root is preserved.
-- `Test-OrchTrigger`: 4xx responses (e.g. server-side validation failures) surface as `IsValid=false` rows instead of red errors so iteration stays uniform.
-- `Set-OrchSetting`: added previously-missing PlatyPS help.
 
 ## Bug Fixes
-- `HttpResponseMessage` is now disposed at all 17 `HttpClient_Send` / `SendAsync` callsites in `OrchAPISession`. Also disposed `_httpClientForBucketItem` in `Dispose(bool)` (was leaking the secondary HttpClient on drive teardown).
-- Two thread-safety races in `OrchDriveInfo` caches: package-version cache TOCTOU (now `GetOrAdd`) and `HashSet<Log>` race in `_dicRobotLogs` (now `ConcurrentBag<Log>`).
-- `UploadLibrary` / `UploadPackage`: dropped `null!` on `Deserialize` so empty / malformed responses return null instead of NRE.
-- Removed two unreachable `<View>` entries from the format file (duplicate `ResponseDictionaryItem`; dead `DirectoryObject` view aliased on `PmGroupMember`).
+- HTTP response and HTTP client handles are now released properly. Long-running sessions no longer leak connection-pool resources.
+- Fixed two concurrency races in tab-completion / cache code that could lose entries or corrupt internal state under parallel use.
+- `Import-OrchLibrary` / `Import-OrchPackage`: empty or malformed server responses now return null instead of throwing a NullReferenceException.
+- Removed two unreachable Format views.
 
 
 # Version: 0.9.17.0
