@@ -804,81 +804,71 @@ public partial class OrchProvider : NavigationCmdletProvider
 
         List<Folder> csvOutput = null;
 
+        // Splits a FullyQualifiedName into (parent, leaf) so we can sort children by parent
+        // path first, then by leaf name. Sorting by FullyQualifiedName alone interleaves
+        // grandchildren between siblings (e.g., "A/sub/x" sorts between "A/sub" and "A/x")
+        // which makes Format-Table's GroupBy break the parent into multiple sections under
+        // -Recurse.
+        static (string parent, string leaf) SplitParentLeaf(string fqn)
+        {
+            int idx = fqn.LastIndexOf('/');
+            return idx < 0 ? ("", fqn) : (fqn[..idx], fqn[(idx + 1)..]);
+        }
+
         try
         {
-            if (orchPath == "")
+            // Collect matching folders first, then emit in parent-grouped order so -Recurse
+            // output keeps each Directory section contiguous.
+            var matched = new List<Folder>();
+            string? orchPathStart = orchPath == "" ? null : orchPath + "/";
+
+            foreach (var folder in drive.GetFolders())
             {
-                foreach (var folder in drive.GetFolders())
+                if (Stopping) return;
+                if (orchPathStart is not null &&
+                    !folder.FullyQualifiedName!.StartsWith(orchPathStart, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                uint folderDepth = FolderDepth(folder.FullyQualifiedName!);
+                if (folderDepth - (currentDepth + 1) <= depth)
                 {
-                    if (Stopping) return;
-                    uint folderDepth = FolderDepth(folder.FullyQualifiedName!);
-
-                    if (folderDepth - (currentDepth + 1) <= depth)
-                    {
-                        string psPath = OrchDriveInfo.OrchProviderPathToPSPath(folder.FullyQualifiedName!);
-                        string psPathEscaped = drive.NameColon + PathTools.EscapePSText2(psPath);
-                        //string psPathEscaped = drive.NameColon + WildcardPattern.Escape(psPath);
-                        //string psPathEscaped = PathTools.EscapePSText2(psPath);
-
-                        if (string.IsNullOrEmpty(parameters?.ExportCsv))
-                        {
-                            // A folder with the same name as a personal workspace may exist
-                            // To ensure auto-completion works properly, avoid outputting multiple folders with the same name
-                            if (dupCheck.Add(psPathEscaped))
-                            {
-                                WriteItemObject(folder, psPathEscaped, true);
-                            }
-                            else
-                            {
-                                WriteWarning($"The folder name '{folder.GetPSPath()}' (Id = {folder.Id}) is duplicated. This folder won't be listed.");
-                            }
-                        }
-                        else
-                        {
-                            csvOutput ??= [];
-                            csvOutput.Add(folder);
-                        }
-                    }
+                    matched.Add(folder);
                 }
             }
-            else
-            {
-                string orchPathStart = orchPath + "/";
-                //string orchPathEnd   = orchPath + "/\uffff";// the max value of Unicode
 
-                foreach (var folder in drive!.GetFolders())
+            foreach (var folder in matched.OrderBy(f =>
                 {
-                    if (Stopping) return;
-                    if (!folder.FullyQualifiedName!.StartsWith(orchPathStart, StringComparison.OrdinalIgnoreCase))
-                        continue;
+                    var (parent, _) = SplitParentLeaf(f.FullyQualifiedName!);
+                    return parent;
+                }, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(f =>
+                {
+                    var (_, leaf) = SplitParentLeaf(f.FullyQualifiedName!);
+                    return leaf;
+                }, StringComparer.OrdinalIgnoreCase))
+            {
+                if (Stopping) return;
 
-                    uint folderDepth = FolderDepth(folder.FullyQualifiedName!);
+                string psPath = OrchDriveInfo.OrchProviderPathToPSPath(folder.FullyQualifiedName!);
+                string psPathEscaped = drive.NameColon + PathTools.EscapePSText2(psPath);
 
-                    if (folderDepth - (currentDepth + 1) <= depth)
+                if (string.IsNullOrEmpty(parameters?.ExportCsv))
+                {
+                    // A folder with the same name as a personal workspace may exist; to keep
+                    // tab-completion and dir output predictable, suppress duplicate names.
+                    if (dupCheck.Add(psPathEscaped))
                     {
-                        string psPath = OrchDriveInfo.OrchProviderPathToPSPath(folder.FullyQualifiedName!);
-                        string psPathEscaped = drive.NameColon + PathTools.EscapePSText2(psPath);
-                        //string psPathEscaped = PathTools.EscapePSText2(psPath);
-
-                        // It is possible to create a folder with the same name as a personal workspace
-                        // To ensure auto-completion works properly, avoid outputting multiple folders with the same name
-                        if (string.IsNullOrEmpty(parameters?.ExportCsv))
-                        {
-                            if (dupCheck.Add(psPathEscaped))
-                            {
-                                WriteItemObject(folder, psPathEscaped, true);
-                            }
-                            else
-                            {
-                                WriteWarning($"The folder name '{folder.GetPSPath()}' (Id = {folder.Id}) is duplicated. This folder won't be listed.");
-                            }
-                        }
-                        else
-                        {
-                            csvOutput ??= [];
-                            csvOutput.Add(folder);
-                        }
+                        WriteItemObject(folder, psPathEscaped, true);
                     }
+                    else
+                    {
+                        WriteWarning($"The folder name '{folder.GetPSPath()}' (Id = {folder.Id}) is duplicated. This folder won't be listed.");
+                    }
+                }
+                else
+                {
+                    csvOutput ??= [];
+                    csvOutput.Add(folder);
                 }
             }
         }
