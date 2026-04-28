@@ -1399,7 +1399,7 @@ Describe 'Copy Across Folders' {
 # scope is not exposed by Identity Server; tests cannot exercise them.
 
 # ---------------------------------------------------------------------------
-# Task (Get-OrchTask / Get-OrchTaskAcrossFolder / Set-OrchTaskMetadata / Remove-OrchTask)
+# Task (Get-OrchTask / Get-OrchTaskAcrossFolder / Set-OrchTask / Remove-OrchTask)
 # ---------------------------------------------------------------------------
 Describe 'OrchTask' {
     It 'TK1 Get-OrchTask does not throw' {
@@ -1414,8 +1414,8 @@ Describe 'OrchTask' {
         { Get-OrchTaskAcrossFolder -Path "${script:Drive}:\" -ErrorAction SilentlyContinue } | Should -Not -Throw
     }
 
-    It 'TK4 Set-OrchTaskMetadata -WhatIf does not throw' {
-        { Set-OrchTaskMetadata -Path "${script:Drive}:\Shared" -Id 1 -Title 'x' -WhatIf } | Should -Not -Throw
+    It 'TK4 Set-OrchTask -WhatIf does not throw' {
+        { Set-OrchTask -Path "${script:Drive}:\Shared" -Id 1 -Title 'x' -WhatIf } | Should -Not -Throw
     }
 
     It 'TK5 Remove-OrchTask -WhatIf does not throw' {

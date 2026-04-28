@@ -6,10 +6,10 @@ Locale: en-US
 Module Name: UiPathOrch
 ms.date: 04/28/2026
 PlatyPS schema version: 2024-05-01
-title: Set-OrchTaskMetadata
+title: Set-OrchTask
 ---
 
-# Set-OrchTaskMetadata
+# Set-OrchTask
 
 ## SYNOPSIS
 
@@ -20,7 +20,7 @@ Updates Title, Priority, Note, or TaskCatalog association on existing tasks.
 ### __AllParameterSets
 
 ```
-Set-OrchTaskMetadata [-Id] <long[]> [-Task <OrchTask>] [-Title <string>] [-Priority <string>]
+Set-OrchTask [-Id] <long[]> [-Task <OrchTask>] [-Title <string>] [-Priority <string>]
  [-NoteText <string>] [-TaskCatalog <string>] [-UnsetTaskCatalog] [-Path <string[]>] [-WhatIf]
  [-Confirm] [<CommonParameters>]
 ```
@@ -32,7 +32,7 @@ Set-OrchTaskMetadata [-Id] <long[]> [-Task <OrchTask>] [-Title <string>] [-Prior
 Edits the metadata of one or more existing action-center tasks. Only the fields you specify are updated; omitted fields are left untouched. Pipeline-friendly with Get-OrchTask:
 
 ```powershell
-Get-OrchTask -Status Pending -Title 'Invoice*' | Set-OrchTaskMetadata -Priority High
+Get-OrchTask -Status Pending -Title 'Invoice*' | Set-OrchTask -Priority High
 ```
 
 The -Id parameter supports tab completion (Press [Ctrl+Space] or [Tab] to see Task Ids in the current folder, with Status/Priority/Title shown as a tooltip). The -TaskCatalog parameter also tab-completes against catalog names in the current folder.
@@ -50,7 +50,7 @@ Required permissions: Tasks.Edit
 ### Example 1: Bump priority on a single task
 
 ```powershell
-PS Orch1:\Shared> Set-OrchTaskMetadata -Id 8144232 -Priority High
+PS Orch1:\Shared> Set-OrchTask -Id 8144232 -Priority High
 ```
 
 Sets the task's Priority to High; Title, NoteText, and TaskCatalog are unchanged.
@@ -58,7 +58,7 @@ Sets the task's Priority to High; Title, NoteText, and TaskCatalog are unchanged
 ### Example 2: Rename and add a note in one call
 
 ```powershell
-PS Orch1:\Shared> Set-OrchTaskMetadata -Id 8144232 -Title 'Invoice approval (urgent)' -NoteText 'Escalated by finance.'
+PS Orch1:\Shared> Set-OrchTask -Id 8144232 -Title 'Invoice approval (urgent)' -NoteText 'Escalated by finance.'
 ```
 
 Renames the task and attaches a note describing the change.
@@ -67,15 +67,15 @@ Renames the task and attaches a note describing the change.
 
 ```powershell
 PS Orch1:\> Get-OrchTaskAcrossFolder -Status Pending |
-              Set-OrchTaskMetadata -Priority High -Confirm:$false
+              Set-OrchTask -Priority High -Confirm:$false
 ```
 
-Pipes every Pending task in the tenant into Set-OrchTaskMetadata.
+Pipes every Pending task in the tenant into Set-OrchTask.
 
 ### Example 4: Disassociate a catalog
 
 ```powershell
-PS Orch1:\Shared> Set-OrchTaskMetadata -Id 8144232 -UnsetTaskCatalog
+PS Orch1:\Shared> Set-OrchTask -Id 8144232 -UnsetTaskCatalog
 ```
 
 Clears the task's TaskCatalog association.

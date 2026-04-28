@@ -228,6 +228,6 @@ The /odata/Tasks endpoint returns only tasks the caller can see within the folde
 
 Get-OrchTaskAcrossFolder
 
-Set-OrchTaskMetadata
+Set-OrchTask
 
 Remove-OrchTask

@@ -178,12 +178,12 @@ Returns OrchTask objects with the same shape as Get-OrchTask. The Path property 
 
 ## NOTES
 
-Because Path is the drive root rather than a folder path, downstream cmdlets that need folder context (e.g., Set-OrchTaskMetadata, Remove-OrchTask) must be given an explicit -Path or rely on each task's OrganizationUnitId rather than the pipeline-bound Path.
+Because Path is the drive root rather than a folder path, downstream cmdlets that need folder context (e.g., Set-OrchTask, Remove-OrchTask) must be given an explicit -Path or rely on each task's OrganizationUnitId rather than the pipeline-bound Path.
 
 ## RELATED LINKS
 
 Get-OrchTask
 
-Set-OrchTaskMetadata
+Set-OrchTask
 
 Remove-OrchTask

@@ -216,4 +216,4 @@ Get-OrchTask
 
 Get-OrchTaskAcrossFolder
 
-Set-OrchTaskMetadata
+Set-OrchTask

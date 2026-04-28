@@ -9,12 +9,12 @@ namespace UiPath.PowerShell.Commands;
 // task catalog association on existing tasks identified by their Int64 Id.
 //
 // Pipeline-friendly: accepts Task objects via ValueFromPipeline so common patterns work:
-//   Get-OrchTask -Status Pending | Set-OrchTaskMetadata -Priority High
+//   Get-OrchTask -Status Pending | Set-OrchTask -Priority High
 //
 // Catalog handling: -TaskCatalog accepts a catalog name and resolves it to TaskCatalogId
 // via ActionCatalogs cache. Pass -UnsetTaskCatalog to disassociate any existing catalog.
-[Cmdlet(VerbsCommon.Set, "OrchTaskMetadata", SupportsShouldProcess = true)]
-public class SetTaskMetadataCommand : OrchestratorPSCmdlet
+[Cmdlet(VerbsCommon.Set, "OrchTask", SupportsShouldProcess = true)]
+public class SetTaskCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TaskIdCompleter))]
@@ -84,7 +84,7 @@ public class SetTaskMetadataCommand : OrchestratorPSCmdlet
             {
                 WriteError(new ErrorRecord(
                     new ItemNotFoundException($"Action catalog '{TaskCatalog}' not found in folder '{folder.GetPSPath()}'."),
-                    "SetTaskMetadataCatalogNotFound", ErrorCategory.ObjectNotFound, TaskCatalog));
+                    "SetTaskCatalogNotFound", ErrorCategory.ObjectNotFound, TaskCatalog));
                 return;
             }
             catalogId = match.Id;
@@ -107,7 +107,7 @@ public class SetTaskMetadataCommand : OrchestratorPSCmdlet
         }
         catch (Exception ex)
         {
-            WriteError(new ErrorRecord(new OrchException(target, ex), "SetTaskMetadataError", ErrorCategory.InvalidOperation, taskId));
+            WriteError(new ErrorRecord(new OrchException(target, ex), "SetTaskError", ErrorCategory.InvalidOperation, taskId));
         }
     }
 }

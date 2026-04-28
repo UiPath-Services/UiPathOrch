@@ -167,7 +167,7 @@ CmdletsToExport = @(
 
 'Get-OrchTask',
 'Get-OrchTaskAcrossFolder',
-'Set-OrchTaskMetadata',
+'Set-OrchTask',
 'Remove-OrchTask',
 
 'Enable-OrchMaintenanceMode',
