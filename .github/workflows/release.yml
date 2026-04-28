@@ -33,13 +33,23 @@ jobs:
       - name: Build
         run: dotnet build UiPathOrch/UiPathOrch.csproj --no-restore --configuration Release
 
-      - name: Verify manifest matches tag
+      - name: Verify manifest and csproj match tag
         shell: pwsh
         run: |
-          $data = Import-PowerShellDataFile Staging/UiPathOrch.psd1
           $expected = '${{ steps.ver.outputs.version }}'
+
+          $data = Import-PowerShellDataFile Staging/UiPathOrch.psd1
           if ($data.ModuleVersion -ne $expected) {
             throw "Manifest ModuleVersion $($data.ModuleVersion) does not match tag v$expected"
+          }
+
+          # csproj <Version> is what gets stamped into UiPathOrch.dll's AssemblyVersion /
+          # FileVersion / InformationalVersion. It must match too, otherwise the DLL ships
+          # with a stale internal version (0.9.16.6 / 0.9.17.0 had this drift).
+          $csproj = [xml](Get-Content UiPathOrch/UiPathOrch.csproj -Raw)
+          $csprojVersion = $csproj.Project.PropertyGroup.Version
+          if ($csprojVersion -ne $expected) {
+            throw "csproj Version $csprojVersion does not match tag v$expected"
           }
 
       - name: Assemble module directory
