@@ -127,17 +127,6 @@ public class CopyQueueItemCommand : OrchestratorPSCmdlet
                                 int index = 0;
                                 foreach (var srcItem in srcItems)
                                 {
-#if false // Should we append source item info to the destination item's SpecificContent? It might be reassuring to have it, but
-                                    srcItem.SpecificContent ??= [];
-
-                                    if (srcDrive._psDrive.Root != dstDrive._psDrive.Root)
-                                    {
-                                        srcItem.SpecificContent.TryAdd("UiPathOrch_SourceTenant", srcDrive._psDrive.Root ?? "");
-                                    }
-                                    srcItem.SpecificContent.TryAdd("UiPathOrch_SourceFolder", srcFolder.FullyQualifiedName ?? "");
-                                    srcItem.SpecificContent.TryAdd("UiPathOrch_SourceQueue", srcQueue.Name ?? "");
-                                    srcItem.SpecificContent.TryAdd("UiPathOrch_SourceItemKey", srcItem.Key ?? "");
-#endif
                                     payload.queueItems[index++] = new QueueItemData()
                                     {
                                         Name = dstQueue.Name,
@@ -179,19 +168,6 @@ public class CopyQueueItemCommand : OrchestratorPSCmdlet
                                 // Output the items from srcQueue that were successfully copied
                                 WriteObject(copiedSrcItems.Values, true);
 
-                                #region Add the same comment to all successfully copied items in srcQueue
-                                // The processing is a bit slow. Maybe not needed..
-#if false
-                                foreach (var srcItem in copiedSrcItems.Values)
-                                {
-                                    try
-                                    {
-                                        srcDrive.OrchAPISession.PostQueueItemComments(srcFolder.Id!.Value, srcItem.Id!.Value, comment);
-                                    }
-                                    catch { } // Let's skip error handling for now..
-                                }
-#endif
-                                #endregion
                             }
                             catch (Exception ex)
                             {

@@ -79,55 +79,5 @@ public class GetLibraryVersionCommand : OrchestratorPSCmdlet
                 WriteError(new ErrorRecord(ex, "GetLibraryError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
-
-
-#if false
-        using var results = OrchThreadPool.RunForEach(drives,
-            drive => drive.NameColonSeparator,
-            drive => drive,
-            drive => drive.GetLibraries());
-
-        foreach (var result in results)
-        {
-            try
-            {
-                var libraries = result.GetResult();
-                if (libraries is null) continue;
-
-                var drive = result.Source;
-
-                var matchedLibraries = libraries
-                    .FilterByWildcards(p => p.Id!, wpId)
-                    .OrderBy(l => l.Id!.ToLower()).ToList();
-
-                using var results2 = OrchThreadPool.RunForEach(matchedLibraries,
-                    ml => drive.NameColonSeparator,
-                    ml => drive,
-                    ml => drive.GetLibraryVersions(ml.Id!));
-
-                foreach (var result2 in results2)
-                {
-                    try
-                    {
-                        var versions = result2.GetResult();
-                        if (versions is null) continue;
-
-                        WriteObject(versions
-                            .FilterByWildcards(p => p.Version!, wpVersion)
-                            .OrderBy(p => p.Version!, new VersionComparer()),
-                            true);
-                    }
-                    catch (OrchException ex)
-                    {
-                        WriteError(new ErrorRecord(ex, "GetLibraryVersionError", ErrorCategory.InvalidOperation, ex.Target));
-                    }
-                }
-            }
-            catch (OrchException ex)
-            {
-                WriteError(new ErrorRecord(ex, "GetLibraryError", ErrorCategory.InvalidOperation, ex.Target));
-            }
-        }
-#endif
     }
 }

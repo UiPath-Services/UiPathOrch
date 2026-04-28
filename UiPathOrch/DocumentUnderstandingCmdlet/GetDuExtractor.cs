@@ -66,18 +66,6 @@ public class GetDuExtractorCommand : OrchestratorPSCmdlet
         var drivesProjects = SessionState.EnumDuFolders(Path, Recurse);
         var wpName = Name.ConvertToWildcardPatternList();
 
-        // Synchronous version
-        //foreach (var driveProject in drivesProjects)
-        //{
-        //    var (drive, project) = driveProject;
-
-        //    WriteObject(drive.GetDuExtractors(project)?
-        //        .FilterByWildcards(u => u.name!, wpName)
-        //        .OrderBy(e => e.name),
-        //        true);
-        //}
-
-        // Asynchronous version
         using var results = OrchThreadPool.RunForEach(drivesProjects,
             dp => dp.project.GetPSPath(),
             dp => dp.project,

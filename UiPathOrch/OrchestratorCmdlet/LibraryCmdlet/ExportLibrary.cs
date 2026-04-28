@@ -49,77 +49,6 @@ public class ExportLibraryCommand : OrchestratorPSCmdlet
             throw new DirectoryNotFoundException($"A directory '{Destination}' does not exist.");
         }
 
-        // Version that makes all API calls asynchronously upfront
-        // It works correctly, but might result in too many API calls.
-#if false
-        using var results = OrchThreadPool.RunForEach(drives,
-            drive => drive.NameColonSeparator,
-            drive => drive,
-            drive => {
-                var libraries = drive.GetLibraries();
-                return OrchThreadPool.RunForEach(libraries
-                        .FilterByWildcards(l => l.Id!, wpId)
-                        .Select(library => (drive, library)),
-                    dl => dl.library.GetPSPath(),
-                    dl => dl.library,
-                    dl => drive.GetLibraryVersions(dl.library.Id!)
-                        .FilterByWildcards(l => l.Version!, wpVersion)
-                        .OrderBy(l => l.Version!, new VersionComparer()));
-            });
-
-        using var reporter = new ProgressReporter(this, 1, 100, "Export Library", "Export Library");
-        foreach (var result in results)
-        {
-            try
-            {
-                using var threads = result.GetResult();
-
-                foreach (var thread in threads!)
-                {
-                    try
-                    {
-                        var versions = thread.GetResult();
-                        var (drive, library) = thread.Source;
-
-                        int index = 0;
-                        int totalNum = versions!.Count();
-
-                        reporter.TotalNum = totalNum;
-                        foreach (var version in versions!)
-                        {
-                            reporter.WriteProgress(++index, $"{index:D}/{totalNum} {version.Id}:{version.Version}");
-                            if (ShouldProcess(version.GetPSPath(), "Export Library"))
-                            {
-                                try
-                                {
-                                    var (fileName, fileContent) = drive.OrchAPISession.DownloadLibrary(version.Id!, version.Version!);
-                                    string filePath = System.IO.Path.Combine(Destination, fileName!);
-                                    File.WriteAllBytes(filePath, fileContent);
-                                }
-                                catch (Exception ex)
-                                {
-                                    WriteError(new ErrorRecord(new OrchException(version.GetPSPath(), ex), "ExportLibraryError", ErrorCategory.InvalidOperation, version));
-                                }
-                            }
-                        }
-                    }
-                    catch (OrchException ex)
-                    {
-                        WriteError(new ErrorRecord(ex, "GetLibraryVersionError", ErrorCategory.InvalidOperation, ex.Target));
-                    }
-                }
-            }
-            catch (OrchException ex)
-            {
-                WriteError(new ErrorRecord(ex, "GetLibraryError", ErrorCategory.InvalidOperation, ex.Target));
-            }
-        }
-#endif
-        // Version that only runs the initial GetLibrary() asynchronously.
-        // GetLibraryVersion() is called just before download.
-        // This is probably a better balance.
-        // GetLibraryVersion() execution time is not that long anyway.
-#if true
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,
             drive => drive,
@@ -189,7 +118,5 @@ public class ExportLibraryCommand : OrchestratorPSCmdlet
                 WriteError(new ErrorRecord(ex, "GetLibraryError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
-
-#endif
     }
 }

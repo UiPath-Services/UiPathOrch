@@ -25,19 +25,6 @@ public class GetTmTestCaseCommand : OrchestratorPSCmdlet
         var drivesProjects = SessionState.EnumTmFolders(Path, Recurse.IsPresent);
         var wpName = Name.ConvertToWildcardPatternList();
 
-        //foreach (var driveProject in drivesProjects)
-        //{
-        //    var (drive, project) = driveProject;
-        //    try
-        //    {
-        //        WriteObject(drive.GetTmTestCases(project), true);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        throw new OrchException(project.GetPSPath(), ex);
-        //    }
-        //}
-
         using var results = OrchThreadPool.RunForEach(drivesProjects,
             dp => dp.project.GetPSPath(),
             dp => dp.project,
