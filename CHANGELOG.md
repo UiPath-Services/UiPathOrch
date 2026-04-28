@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.9.18.0] - 2026-04-28
+### Added
+- Webhooks: `Get-OrchWebhookEventType` (lists tenant event types) and `Test-OrchWebhook` (sends a Ping by name).
+- Jobs: `Restart-OrchJob` (Faulted-only) and `Resume-OrchJob` (Suspended-only). Tab completion lists only the actionable jobs.
+- Triggers: `Test-OrchTrigger` runs the server-side `ValidateProcessSchedule` pre-flight check and returns `IsValid` + `Errors` per trigger.
+- Sessions: `Clear-OrchInactiveSession` bulk-deletes Disconnected / Unresponsive unattended sessions tenant-wide.
+- Tasks (action center): `Get-OrchTask`, `Get-OrchTaskAcrossFolder`, `Set-OrchTask`, and `Remove-OrchTask`. `Get-OrchTaskAcrossFolder` resolves each task's actual folder PSPath so the pipeline routes correctly into per-folder cmdlets.
+
+### Changed
+- Parallelized `Get-OrchTaskAcrossFolder`, `Get-OrchUserSession`, and `Get-OrchRole` across drives/folders.
+- Job tab completion: `Restart-OrchJob` / `Resume-OrchJob` / `Stop-OrchJob` now have separate state-scoped caches (Faulted / Suspended / Stoppable) so they no longer compete on a shared filter. Job tooltip leads with `Id`, then DateTimes, State, and the folder + process name (e.g. `Orch1:\Shared\InvoiceProcess`) so `-Recurse` Tab disambiguates folder.
+- `dir -Recurse`: each Directory section stays contiguous (parent-grouped). Personal-workspace-first ordering at the drive root is preserved.
+
+### Fixed
+- HTTP response and HTTP client handles are now released properly. Long-running sessions no longer leak connection-pool resources.
+- Fixed two concurrency races in tab-completion / cache code that could lose entries or corrupt internal state under parallel use.
+- `Import-OrchLibrary` / `Import-OrchPackage`: empty or malformed server responses now return null instead of throwing a NullReferenceException.
+- Removed two unreachable Format views.
+
 ## [0.9.16.5] - 2026-04-23
 ### Fixed
 - Get-PmLicenseInventory: JSON deserialization failed on tenants with consumable SKUs that report fractional allocation (e.g. AIU `allocated: 1451.8`). Widened `ProductAllocation.total` / `.allocated` from `int?` to `double?`.
