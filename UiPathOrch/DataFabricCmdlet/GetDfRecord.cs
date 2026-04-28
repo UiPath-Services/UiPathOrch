@@ -40,15 +40,18 @@ public class GetDfRecordCommand : OrchestratorPSCmdlet
     {
         var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth, includeRoot: true);
 
-        foreach (var (drive, folder) in drivesFolders)
-        {
-            try
+        using var results = OrchThreadPool.RunForEach(drivesFolders,
+            df => df.folder.GetPSPath(),
+            df => df.folder,
+            df =>
             {
+                var (drive, folder) = df;
+                var records = new List<PSObject>();
                 if (Id is not null)
                 {
                     string body = drive.OrchAPISession.GetDfRecord(Entity, Id, folder.Id);
                     using var doc = JsonDocument.Parse(body);
-                    WriteObject(DfJsonTools.RecordToPSObject(doc.RootElement));
+                    records.Add(DfJsonTools.RecordToPSObject(doc.RootElement));
                 }
                 else
                 {
@@ -70,17 +73,29 @@ public class GetDfRecordCommand : OrchestratorPSCmdlet
 
                     string body = drive.OrchAPISession.QueryDfEntity(Entity, payload, folder.Id);
                     using var doc = JsonDocument.Parse(body);
-                    if (!doc.RootElement.TryGetProperty("value", out var value)) continue;
-
-                    foreach (var rec in value.EnumerateArray())
+                    if (doc.RootElement.TryGetProperty("value", out var value))
                     {
-                        WriteObject(DfJsonTools.RecordToPSObject(rec));
+                        foreach (var rec in value.EnumerateArray())
+                        {
+                            records.Add(DfJsonTools.RecordToPSObject(rec));
+                        }
                     }
                 }
-            }
-            catch (System.Exception ex)
+                return records;
+            });
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
+        {
+            try
             {
-                WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "GetDfRecordError", ErrorCategory.InvalidOperation, folder));
+                var records = result.GetResult(cancelHandler.Token);
+                if (records is null) continue;
+                WriteObject(records, true);
+            }
+            catch (OrchException ex)
+            {
+                WriteError(new ErrorRecord(ex, "GetDfRecordError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }

@@ -29,11 +29,17 @@ public class GetDfEntityCommand : OrchestratorPSCmdlet
         var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth, includeRoot: true);
         var wpName = Name.ConvertToWildcardPatternList();
 
-        foreach (var (drive, folder) in drivesFolders)
+        using var results = OrchThreadPool.RunForEach(drivesFolders,
+            df => df.folder.GetPSPath(),
+            df => df.folder,
+            df => df.drive.DfEntities.Get(df.folder));
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
         {
             try
             {
-                var entities = drive.DfEntities.Get(folder);
+                var entities = result.GetResult(cancelHandler.Token);
                 if (entities is null) continue;
 
                 WriteObject(entities
@@ -41,9 +47,9 @@ public class GetDfEntityCommand : OrchestratorPSCmdlet
                     .OrderBy(e => e.name),
                     enumerateCollection: true);
             }
-            catch (System.Exception ex)
+            catch (OrchException ex)
             {
-                WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "GetDfEntityError", ErrorCategory.InvalidOperation, folder));
+                WriteError(new ErrorRecord(ex, "GetDfEntityError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }

@@ -78,24 +78,35 @@ public class GetUserSessionCommand : OrchestratorPSCmdlet
     {
         ulong skip = Skip ?? 0;
         ulong first = First ?? ulong.MaxValue;
+        string query = "&$expand=Robot($expand=License,User),UpdateInfo" + MakeFilter() + MakeOrderBy();
 
         var drives = SessionState.EnumOrchDrives(Path);
 
-        foreach (var drive in drives)
-        {
-            string query = "&$expand=Robot($expand=License,User),UpdateInfo" + MakeFilter() + MakeOrderBy();
-            try
+        using var results = OrchThreadPool.RunForEach(drives,
+            drive => drive.NameColonSeparator,
+            drive => drive,
+            drive =>
             {
-                var sessions = drive.OrchAPISession.GetGlobalSessions(query, skip, first);
+                var sessions = drive.OrchAPISession.GetGlobalSessions(query, skip, first).ToList();
                 foreach (var session in sessions)
                 {
                     session.Path = drive.NameColonSeparator;
-                    WriteObject(session);
                 }
-            }
-            catch (Exception ex)
+                return sessions;
+            });
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
+        {
+            try
             {
-                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetUserSessionError", ErrorCategory.InvalidOperation, drive));
+                var sessions = result.GetResult(cancelHandler.Token);
+                if (sessions is null) continue;
+                WriteObject(sessions, true);
+            }
+            catch (OrchException ex)
+            {
+                WriteError(new ErrorRecord(ex, "GetUserSessionError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }

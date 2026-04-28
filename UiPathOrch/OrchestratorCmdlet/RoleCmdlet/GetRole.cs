@@ -72,48 +72,54 @@ public class GetRoleCommand : OrchestratorPSCmdlet
 
         if (!ExpandPermission.IsPresent && writer is null)
         {
-            foreach (var drive in drives)
+            using var simpleResults = OrchThreadPool.RunForEach(drives,
+                drive => drive.NameColonSeparator,
+                drive => drive,
+                drive => drive.Roles.Get()
+                    .FilterByWildcards(role => role?.Name, wpName)
+                    .OrderByDescending(role => role.Type)
+                    .ThenBy(role => role.Name)
+                    .ToList());
+
+            using var simpleCancel = new ConsoleCancelHandler();
+            foreach (var result in simpleResults)
             {
                 try
                 {
-                    var targetRoles = drive!.Roles.Get()
-                        .FilterByWildcards(role => role?.Name, wpName)
-                        .OrderByDescending(role => role.Type)
-                        .ThenBy(role => role.Name);
-
-                    WriteObject(targetRoles, true);
+                    var roles = result.GetResult(simpleCancel.Token);
+                    if (roles is null) continue;
+                    WriteObject(roles, true);
                 }
-                catch (Exception ex)
+                catch (OrchException ex)
                 {
-                    WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetRoleError", ErrorCategory.InvalidOperation, drive));
+                    WriteError(new ErrorRecord(ex, "GetRoleError", ErrorCategory.InvalidOperation, ex.Target));
                 }
             }
             return;
         }
 
-        // ExpandPermission.IsPresent == true
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
-        {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
-            try
+        // ExpandPermission.IsPresent == true (or CSV export). Worker expands per-drive into
+        // a list of OrchRolePermissionExpanded; main thread emits or writes CSV.
+        using var expandedResults = OrchThreadPool.RunForEach(drives,
+            drive => drive.NameColonSeparator,
+            drive => drive,
+            drive =>
             {
-                foreach (var role in drive!.Roles.Get()
+                var output = new List<OrchRolePermissionExpanded>();
+                foreach (var role in drive.Roles.Get()
                     .FilterByWildcards(role => role?.Name, wpName)
                     .OrderByDescending(role => role.Type)
                     .ThenBy(role => role.Name))
                 {
                     var p = role.Permissions;
-                    IEnumerable<Permission> q = null;
+                    IEnumerable<Permission> q;
                     if (role.Type == "Tenant") { q = p!.Where(p => p.Scope != "Folder"); }
                     else if (role.Type == "Folder") { q = p!.Where(p => p.Scope != "Global"); }
-                    else { q = p; }
+                    else { q = p!; }
 
-                    var groupByPermissions = q!.GroupBy(q =>
+                    var groupByPermissions = q.GroupBy(q =>
                     {
                         var splitName = q.Name?.Split('.') ?? [];
-
                         if (splitName.Length > 1)
                         {
                             return (q.Scope, Name: splitName[0]);
@@ -124,12 +130,10 @@ public class GetRoleCommand : OrchestratorPSCmdlet
                         }
                     });
 
-                    var output = new List<OrchRolePermissionExpanded>();
                     foreach (var item in groupByPermissions)
                     {
                         var expanded = new OrchRolePermissionExpanded
                         {
-                            //expanded.Name = role.DisplayName;
                             PermissionName = item.Key.Name,
                             Type = role.Type,
                             IsEditable = role.IsEditable,
@@ -148,20 +152,30 @@ public class GetRoleCommand : OrchestratorPSCmdlet
                         }
                         output.Add(expanded);
                     }
+                }
+                return output.OrderBy(p => p.PermissionName).ThenByDescending(p => p.Scope).ToList();
+            });
 
-                    if (writer is not null)
-                    {
-                        WriteCsvContent(writer, output.OrderBy(p => p.PermissionName).ThenByDescending(p => p.Scope));
-                    }
-                    else
-                    {
-                        WriteObject(output.OrderBy(p => p.PermissionName).ThenByDescending(p => p.Scope), true);
-                    }
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in expandedResults)
+        {
+            try
+            {
+                var permissions = result.GetResult(cancelHandler.Token);
+                if (permissions is null) continue;
+
+                if (writer is not null)
+                {
+                    WriteCsvContent(writer, permissions);
+                }
+                else
+                {
+                    WriteObject(permissions, true);
                 }
             }
-            catch (Exception ex)
+            catch (OrchException ex)
             {
-                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetRoleError", ErrorCategory.InvalidOperation, drive));
+                WriteError(new ErrorRecord(ex, "GetRoleError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
 
