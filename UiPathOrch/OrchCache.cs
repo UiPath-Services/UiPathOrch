@@ -1231,7 +1231,7 @@ public class IncrementalCachePerProject<TKey, TEntity> : ITenantCacheClearable
 #region Cache classes for TestManager
 
 // fetchFunc: Func that takes a TmProject and returns Enumerable<T>
-public class TestListCachePerTenant1<T> : ITenantCacheClearable
+public class TmListCachePerTenant1<T> : ITenantCacheClearable
 {
     private readonly object _lock = new();
     private readonly OrchTmDriveInfo _drive;
@@ -1241,7 +1241,7 @@ public class TestListCachePerTenant1<T> : ITenantCacheClearable
     private readonly Action<T, TmProject>? _initializer;
     private readonly int? _supportedApiVersionFrom;
 
-    public TestListCachePerTenant1(
+    public TmListCachePerTenant1(
         OrchTmDriveInfo drive,
         Func<TmProject, IEnumerable<T>> fetchFunc,
         Action<T, TmProject>? initializer = null,
@@ -1323,7 +1323,7 @@ public class TestListCachePerTenant1<T> : ITenantCacheClearable
     /// </summary>
     public static OrchThreadPoolImpl<(OrchTmDriveInfo drive, TmProject project), List<T>> RunForEach(
         IEnumerable<(OrchTmDriveInfo drive, TmProject project)> sources,
-        Func<OrchTmDriveInfo, TestListCachePerTenant1<T>> getCacheFunc,
+        Func<OrchTmDriveInfo, TmListCachePerTenant1<T>> getCacheFunc,
         int maxDegreeOfParallelism = 4)
     {
         var sourceList = sources.ToList();
@@ -1383,7 +1383,7 @@ public class TestListCachePerTenant1<T> : ITenantCacheClearable
 }
 
 // getFunc: Func with no arguments that returns T
-public class TestSingleCachePerTenant0<T> : ITenantCacheClearable
+public class TmSingleCachePerTenant0<T> : ITenantCacheClearable
 {
     private readonly OrchTmDriveInfo _drive;
     private T? _cache = default;
@@ -1392,7 +1392,7 @@ public class TestSingleCachePerTenant0<T> : ITenantCacheClearable
     private readonly Action<T>? _initializer;
     private readonly int? _supportedApiVersionFrom;
 
-    public TestSingleCachePerTenant0(
+    public TmSingleCachePerTenant0(
         OrchTmDriveInfo drive,
         Func<T?> getFunc,
         Action<T>? initializer = null,
@@ -1442,7 +1442,7 @@ public class TestSingleCachePerTenant0<T> : ITenantCacheClearable
 }
 
 // getFunc: Func that takes a TmProject and returns T
-public class TestSingleCachePerTenant1<T> : ITenantCacheClearable
+public class TmSingleCachePerTenant1<T> : ITenantCacheClearable
 {
     private readonly object _lock = new();
     private readonly OrchTmDriveInfo _drive;
@@ -1452,7 +1452,7 @@ public class TestSingleCachePerTenant1<T> : ITenantCacheClearable
     private readonly Action<T, TmProject>? _initializer;
     private readonly int? _supportedApiVersionFrom;
 
-    public TestSingleCachePerTenant1(
+    public TmSingleCachePerTenant1(
         OrchTmDriveInfo drive,
         Func<TmProject, T?> getFunc,
         Action<T, TmProject>? initializer = null,

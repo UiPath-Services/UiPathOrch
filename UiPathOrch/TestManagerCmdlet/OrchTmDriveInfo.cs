@@ -10,17 +10,17 @@ public class OrchTmDriveInfo : PSDriveInfo
 {
     // Test tenant entities
     // The number indicates the parameter count of the getter method (in OrchAPISession.cs)
-    public TestSingleCachePerTenant0<TmServerInfo> TmServerInformation = null!;
-    public TestSingleCachePerTenant0<TmConfig> TmConfiguration = null!;
-    public TestSingleCachePerTenant1<TmProjectSettings> TmProjectSetting = null!;
+    public TmSingleCachePerTenant0<TmServerInfo> TmServerInformation = null!;
+    public TmSingleCachePerTenant0<TmConfig> TmConfiguration = null!;
+    public TmSingleCachePerTenant1<TmProjectSettings> TmProjectSetting = null!;
 
     // Test list entities
-    //public TestListCachePerTenant0<TmProject>           TmProjects           = null!;
-    public TestListCachePerTenant1<TmTestCase> TmTestCases = null!;
-    public TestListCachePerTenant1<TmTestSet> TmTestSets = null!;
-    public TestListCachePerTenant1<TmTestExecution> TmTestExecutions = null!;
-    public TestListCachePerTenant1<TmRequirement> TmRequirements = null!;
-    public TestListCachePerTenant1<TmProjectPermission> TmProjectPermissions = null!;
+    //public TmListCachePerTenant0<TmProject>           TmProjects           = null!;
+    public TmListCachePerTenant1<TmTestCase> TmTestCases = null!;
+    public TmListCachePerTenant1<TmTestSet> TmTestSets = null!;
+    public TmListCachePerTenant1<TmTestExecution> TmTestExecutions = null!;
+    public TmListCachePerTenant1<TmRequirement> TmRequirements = null!;
+    public TmListCachePerTenant1<TmProjectPermission> TmProjectPermissions = null!;
     // Incremental cache
     public IncrementalCachePerProject<string, TmTestExecutionResult> TmTestExecutionResults = null!;
 
