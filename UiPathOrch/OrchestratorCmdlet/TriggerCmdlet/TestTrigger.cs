@@ -95,17 +95,13 @@ public class TestTriggerCommand : OrchestratorPSCmdlet
     //   2. ASP.NET model-binding errors object:  { "errors": { "FieldName": ["msg1", ...], ... } }
     //   3. Single-message envelopes:             { "message": "msg1; msg2; ..." } (also "error", "errorMessage", "title")
     //   4. Plain text body
-    // Returns null only if no body can be obtained at all.
+    // Returns null only if no body text is present.
     private static ValidationResult? TryBuildValidationResultFromError(HttpResponseException hex)
     {
-        // HttpResponseException is constructed with the body as its message in OrchAPISession,
-        // so prefer hex.Message; fall back to re-reading the response stream.
+        // HttpResponseException is constructed with the body string as its message in
+        // OrchAPISession.EnsureSuccessStatusCode, so hex.Message already carries the body.
+        // Don't re-read hex.Response.Content — the response is disposed by the caller's `using`.
         string body = hex.Message ?? "";
-        if (string.IsNullOrEmpty(body))
-        {
-            try { body = hex.Response.Content.ReadAsStringAsync().GetAwaiter().GetResult() ?? ""; }
-            catch { body = ""; }
-        }
         if (string.IsNullOrEmpty(body)) return null;
 
         // Try structured JSON shapes first.

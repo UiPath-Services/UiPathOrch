@@ -465,7 +465,7 @@ public partial class OrchAPISession : IDisposable
                 request.Headers.Add("X-UIPATH-OrganizationUnitId", folderId.ToString());
             }
 
-            var response = HttpClient_Send(request);
+            using var response = HttpClient_Send(request);
             EnsureSuccessStatusCode(response);
 
             string strBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
@@ -511,7 +511,7 @@ public partial class OrchAPISession : IDisposable
                 request.Headers.Add("X-UIPATH-OrganizationUnitId", folderId.ToString());
             }
 
-            var response = HttpClient_Send(request);
+            using var response = HttpClient_Send(request);
             EnsureSuccessStatusCode(response);
 
             string strBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
@@ -563,7 +563,7 @@ public partial class OrchAPISession : IDisposable
                 request.Headers.Add("X-UIPATH-OrganizationUnitId", folderId.ToString());
             }
 
-            var response = HttpClient_Send(request);
+            using var response = HttpClient_Send(request);
             EnsureSuccessStatusCode(response);
 
             string strBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
@@ -601,7 +601,7 @@ public partial class OrchAPISession : IDisposable
             request.Headers.Add("X-UIPATH-OrganizationUnitId", folderId.ToString());
         }
 
-        var response = HttpClient_Send(request);
+        using var response = HttpClient_Send(request);
         EnsureSuccessStatusCode(response);
 
         string strBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
@@ -633,7 +633,7 @@ public partial class OrchAPISession : IDisposable
             request.Headers.Add("X-UIPATH-OrganizationUnitId", folderId.ToString());
         }
 
-        var response = HttpClient_Send(request);
+        using var response = HttpClient_Send(request);
         EnsureSuccessStatusCode(response);
         var body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
         return body;
@@ -1122,7 +1122,7 @@ public partial class OrchAPISession : IDisposable
         var request = new HttpRequestMessage(method, _base_url + endpoint) { Content = content };
         request.Headers.Add("X-UIPATH-OrganizationUnitId", folderId.ToString());
 
-        var response = HttpClient_Send(request);
+        using var response = HttpClient_Send(request);
         EnsureSuccessStatusCode(response);
 
         string body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
@@ -1657,7 +1657,7 @@ public partial class OrchAPISession : IDisposable
         };
 
         // Send the HTTP POST request and get the response
-        var response = HttpClient_Send(request);
+        using var response = HttpClient_Send(request);
         EnsureSuccessStatusCode(response);
 
         string body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
@@ -1691,7 +1691,7 @@ public partial class OrchAPISession : IDisposable
         };
 
         // Send the HTTP POST request and get the response
-        var response = HttpClient_Send(request);
+        using var response = HttpClient_Send(request);
         EnsureSuccessStatusCode(response);
 
         // Read the response content
@@ -1712,7 +1712,7 @@ public partial class OrchAPISession : IDisposable
         string url = _base_url + $"/odata/Libraries/UiPath.Server.Configuration.OData.DownloadPackage(key='{HttpUtility.UrlEncode(libraryId)}:{libraryVersion}')";
         var request = new HttpRequestMessage(HttpMethod.Get, url);
 
-        var response = HttpClient_Send(request);
+        using var response = HttpClient_Send(request);
         EnsureSuccessStatusCode(response);
 
         var contentDisposition = response.Content.Headers.ContentDisposition;
@@ -1750,7 +1750,7 @@ public partial class OrchAPISession : IDisposable
         }
         var request = new HttpRequestMessage(HttpMethod.Get, url);
 
-        var response = HttpClient_Send(request);
+        using var response = HttpClient_Send(request);
         EnsureSuccessStatusCode(response);
 
         var contentDisposition = response.Content.Headers.ContentDisposition;
@@ -2811,7 +2811,7 @@ public partial class OrchAPISession : IDisposable
         var request = new HttpRequestMessage(HttpMethod.Get, endPoint);
         request.Headers.Add("X-UIPATH-OrganizationUnitId", folderId.ToString());
 
-        var response = await _httpClient.SendAsync(request);
+        using var response = await _httpClient.SendAsync(request);
         EnsureSuccessStatusCode(response);
 
         var contentDisposition = response.Content.Headers.ContentDisposition;
@@ -2949,7 +2949,7 @@ public partial class OrchAPISession : IDisposable
         string url = _base_url + $"/api/TestAutomation/GetAssertionScreenshot?testCaseAssertionId={assertionId}&organizationUnitId={folderId}";
         var request = new HttpRequestMessage(HttpMethod.Get, url);
 
-        var response = HttpClient_Send(request, _httpClient, cancellationToken);
+        using var response = HttpClient_Send(request, _httpClient, cancellationToken);
         EnsureSuccessStatusCode(response);
 
         cancellationToken.ThrowIfCancellationRequested();
@@ -3205,7 +3205,7 @@ public partial class OrchAPISession : IDisposable
             var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Add("X-UIPATH-FolderKey", folderKey);
 
-            var response = HttpClient_Send(request);
+            using var response = HttpClient_Send(request);
             EnsureSuccessStatusCode(response);
 
             string strBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
@@ -3268,7 +3268,7 @@ public partial class OrchAPISession : IDisposable
     //            request.Headers.Add("X-UIPATH-OrganizationUnitId", folderId.ToString());
     //        }
 
-    //        var response = HttpClient_Send(request);
+    //        using var response = HttpClient_Send(request);
     //        EnsureSuccessStatusCode(response);
 
     //        string strBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
@@ -3482,7 +3482,7 @@ public partial class OrchAPISession : IDisposable
         {
             Content = new StringContent("", Encoding.UTF8, "application/json")
         };
-        var response = HttpClient_Send(request);
+        using var response = HttpClient_Send(request);
         EnsureSuccessStatusCode(response);
         var body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
         return string.IsNullOrEmpty(body) ? default : JsonSerializer.Deserialize<T>(body);
@@ -3872,7 +3872,7 @@ public partial class OrchAPISession : IDisposable
 
             var request = new HttpRequestMessage(HttpMethod.Get, url);
 
-            var response = HttpClient_Send(request);
+            using var response = HttpClient_Send(request);
             EnsureSuccessStatusCode(response);
 
             string strBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
@@ -3905,7 +3905,7 @@ public partial class OrchAPISession : IDisposable
 
             var request = new HttpRequestMessage(HttpMethod.Get, url);
 
-            var response = HttpClient_Send(request);
+            using var response = HttpClient_Send(request);
             EnsureSuccessStatusCode(response);
 
             string strBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
@@ -3938,7 +3938,7 @@ public partial class OrchAPISession : IDisposable
 
             var request = new HttpRequestMessage(HttpMethod.Get, url);
 
-            var response = HttpClient_Send(request);
+            using var response = HttpClient_Send(request);
             EnsureSuccessStatusCode(response);
 
             string strBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
