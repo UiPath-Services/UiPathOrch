@@ -376,24 +376,21 @@ public partial class OrchDriveInfo : PSDriveInfo
         return job;
     }
 
-    // key: folderId, hash
-    // The Log's Id always returns zero, so it cannot be cached properly
-    // As a workaround, create a dictionary using hash values.
-    internal ConcurrentDictionary<Int64, HashSet<Log>>? _dicRobotLogs = null;
+    // key: folderId.
+    // Log.Id always returns zero from the API, so per-Id dedup isn't possible; we accumulate
+    // logs across calls in a ConcurrentBag so concurrent Get-OrchLog invocations on the same
+    // folder don't corrupt the collection (HashSet<Log>.Add is not thread-safe).
+    internal ConcurrentDictionary<Int64, ConcurrentBag<Log>>? _dicRobotLogs = null;
     public ReadOnlyCollection<Log> GetRobotLogs(Folder folder, string? query, ulong skip, ulong first, string? orderBy = null, bool orderAscending = false)
     {
         if (_dicRobotLogs is null)
         {
             lock (this)
             {
-                _dicRobotLogs = [];
+                _dicRobotLogs ??= new();
             }
         }
-        if (!_dicRobotLogs.TryGetValue(folder.Id ?? 0, out var folderLogs))
-        {
-            folderLogs = [];
-            _dicRobotLogs[folder.Id ?? 0] = folderLogs;
-        }
+        var folderLogs = _dicRobotLogs.GetOrAdd(folder.Id ?? 0, _ => new ConcurrentBag<Log>());
 
         // Always query the API
         var logs = OrchAPISession.GetRobotLogs(folder.Id ?? 0, query, skip, first, orderBy, orderAscending).ToList();
@@ -402,10 +399,6 @@ public partial class OrchDriveInfo : PSDriveInfo
         {
             log.Path = folderPath;
             folderLogs.Add(log);
-            //if (log.Id.HasValue)
-            //{
-            //    //folderLogs[log.Id.Value] = log;
-            //}
         }
 
         return logs.AsReadOnly();
@@ -1125,11 +1118,11 @@ public partial class OrchDriveInfo : PSDriveInfo
                 _dicPackageVersions ??= new ConcurrentDictionary<string, ConcurrentDictionary<string, List<Package>>>();
             }
         }
-        if (!_dicPackageVersions.TryGetValue(feedId, out ConcurrentDictionary<string, List<Package>> packageVersionsByProcId))
-        {
-            packageVersionsByProcId = new ConcurrentDictionary<string, List<Package>>();
-            _dicPackageVersions[feedId] = packageVersionsByProcId;
-        }
+        // GetOrAdd is atomic; the previous TryGetValue + new + index-set pattern raced when
+        // two threads (e.g., Parallel.ForEach folder iterations) both missed for the same
+        // feedId and overwrote each other's inner dictionary, dropping cached package lists.
+        var packageVersionsByProcId = _dicPackageVersions.GetOrAdd(
+            feedId, _ => new ConcurrentDictionary<string, List<Package>>());
 
         if (!packageVersionsByProcId.TryGetValue(processId, out List<Package> packageVersions))
         {
