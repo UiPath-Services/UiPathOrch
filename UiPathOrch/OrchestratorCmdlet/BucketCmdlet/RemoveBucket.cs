@@ -2,68 +2,29 @@ using System.Management.Automation;
 using UiPath.PowerShell.Positional;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchBucket", SupportsShouldProcess = true)]
-public class RemoveBucketCommand : OrchestratorPSCmdlet
+public class RemoveBucketCommand : RemoveFolderEntityCmdletBase<Bucket>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BucketNameCompleter<False>))]
     [SupportsWildcards]
-    public string[]? Name { get; set; }
+    public override string[]? Name { get; set; }
 
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    [SupportsWildcards]
-    public string[]? Path { get; set; }
+    protected override string EntityNoun => "Bucket";
+    protected override Func<Bucket?, string?> GetName => b => b?.Name;
+    protected override Func<Bucket, string> GetPSPath => b => b.GetPSPath();
 
-    [Parameter]
-    public SwitchParameter Recurse { get; set; }
+    protected override IEnumerable<Bucket> GetEntities(OrchDriveInfo drive, Folder folder)
+        => drive.Buckets.Get(folder);
 
-    [Parameter]
-    public uint Depth { get; set; }
-
-    protected override void ProcessRecord()
+    protected override void Remove(OrchDriveInfo drive, Folder folder, Bucket bucket)
     {
-        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
-
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (drive, folder) in drivesFolders)
-        {
-            try
-            {
-                var entities = drive.Buckets.Get(folder);
-
-                foreach (var bucket in entities
-                    .FilterByWildcards(b => b?.Name, wpName)
-                    .OrderBy(b => b.Name))
-                {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
-                    if (ShouldProcess(bucket.GetPSPath(), "Remove Bucket"))
-                    {
-                        try
-                        {
-                            drive.OrchAPISession.DeleteBucket(folder.Id ?? 0, bucket.Id ?? 0);
-                            drive.Buckets.ClearCache(folder);
-                            drive._dicBucketLinks = null;
-                        }
-                        catch (Exception ex)
-                        {
-                            WriteError(new ErrorRecord(new OrchException(bucket.GetPSPath(), ex), "RemoveBucketError", ErrorCategory.InvalidOperation, bucket));
-                        }
-                    }
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "GetBucketError", ErrorCategory.InvalidOperation, folder));
-            }
-        }
+        drive.OrchAPISession.DeleteBucket(folder.Id ?? 0, bucket.Id ?? 0);
+        drive.Buckets.ClearCache(folder);
+        drive._dicBucketLinks = null;
     }
 }

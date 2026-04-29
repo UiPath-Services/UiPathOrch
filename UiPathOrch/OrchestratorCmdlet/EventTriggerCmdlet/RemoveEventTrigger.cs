@@ -1,67 +1,29 @@
 using System.Management.Automation;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchEventTrigger", SupportsShouldProcess = true)]
-public class RemoveEventTriggerCmdlet : OrchestratorPSCmdlet
+public class RemoveEventTriggerCmdlet : RemoveFolderEntityCmdletBase<ApiTrigger>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(EventTriggerNameCompleter))]
     [SupportsWildcards]
-    public string[]? Name { get; set; }
+    public override string[]? Name { get; set; }
 
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    [SupportsWildcards]
-    public string[]? Path { get; set; }
+    protected override string EntityNoun => "EventTrigger";
+    protected override Func<ApiTrigger?, string?> GetName => t => t?.Name;
+    protected override Func<ApiTrigger, string> GetPSPath => t => t.GetPSPath();
+    protected override ErrorCategory ErrorCategory => ErrorCategory.NotSpecified;
 
-    [Parameter]
-    public SwitchParameter Recurse { get; set; }
+    protected override IEnumerable<ApiTrigger> GetEntities(OrchDriveInfo drive, Folder folder)
+        => drive.EventTriggers.Get(folder);
 
-    [Parameter]
-    public uint Depth { get; set; }
-
-    protected override void ProcessRecord()
+    protected override void Remove(OrchDriveInfo drive, Folder folder, ApiTrigger trigger)
     {
-        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
-
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (drive, folder) in drivesFolders)
-        {
-            try
-            {
-                var triggers = drive.EventTriggers.Get(folder);
-
-                foreach (var trigger in triggers
-                    .FilterByWildcards(t => t?.Name, wpName)
-                    .OrderBy(t => t.Name))
-                {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
-                    if (ShouldProcess(trigger.GetPSPath(), "Remove EventTrigger"))
-                    {
-                        try
-                        {
-                            drive.OrchAPISession.RemoveEventTrigger(folder.Id ?? 0, trigger.Id!);
-                            drive.EventTriggers.ClearCache(folder);
-                        }
-                        catch (Exception ex)
-                        {
-                            WriteError(new ErrorRecord(new OrchException(trigger.GetPSPath(), ex), "RemoveEventTriggerError", ErrorCategory.NotSpecified, trigger));
-                        }
-                    }
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "RemoveEventTriggerError", ErrorCategory.NotSpecified, folder));
-            }
-        }
+        drive.OrchAPISession.RemoveEventTrigger(folder.Id ?? 0, trigger.Id!);
+        drive.EventTriggers.ClearCache(folder);
     }
 }

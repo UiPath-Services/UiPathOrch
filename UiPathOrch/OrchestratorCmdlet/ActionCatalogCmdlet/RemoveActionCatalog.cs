@@ -6,61 +6,23 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchActionCatalog", SupportsShouldProcess = true)]
-public class RemoveActionCatalogCommand : OrchestratorPSCmdlet
+public class RemoveActionCatalogCommand : RemoveFolderEntityCmdletBase<TaskCatalog>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ActionCatalogNameCompleter))]
     [SupportsWildcards]
-    public string[]? Name { get; set; }
+    public override string[]? Name { get; set; }
 
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    [SupportsWildcards]
-    public string[]? Path { get; set; }
+    protected override string EntityNoun => "ActionCatalog";
+    protected override Func<TaskCatalog?, string?> GetName => c => c?.Name;
+    protected override Func<TaskCatalog, string> GetPSPath => c => c.GetPSPath();
 
-    [Parameter]
-    public SwitchParameter Recurse { get; set; }
+    protected override IEnumerable<TaskCatalog> GetEntities(OrchDriveInfo drive, Folder folder)
+        => drive.ActionCatalogs.Get(folder);
 
-    [Parameter]
-    public uint Depth { get; set; }
-
-    protected override void ProcessRecord()
+    protected override void Remove(OrchDriveInfo drive, Folder folder, TaskCatalog catalog)
     {
-        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
-
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (drive, folder) in drivesFolders)
-        {
-            try
-            {
-                var entities = drive.ActionCatalogs.Get(folder);
-
-                foreach (var catalog in entities
-                    .FilterByWildcards(s => s?.Name, wpName)
-                    .OrderBy(s => s.Name))
-                {
-                    if (ShouldProcess(catalog.GetPSPath(), "Remove ActionCatalog"))
-                    {
-                        try
-                        {
-                            drive!.OrchAPISession.RemoveTaskCatalog(folder.Id ?? 0, catalog.Id ?? 0);
-                            drive.ActionCatalogs.ClearCache(folder);
-                        }
-                        catch (Exception ex)
-                        {
-                            WriteError(new ErrorRecord(new OrchException(catalog.GetPSPath(), ex), "RemoveActionCatalogError", ErrorCategory.InvalidOperation, catalog));
-                        }
-                    }
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "GetActionCatalogError", ErrorCategory.InvalidOperation, folder));
-            }
-        }
+        drive.OrchAPISession.RemoveTaskCatalog(folder.Id ?? 0, catalog.Id ?? 0);
+        drive.ActionCatalogs.ClearCache(folder);
     }
 }

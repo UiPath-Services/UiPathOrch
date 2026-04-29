@@ -3,31 +3,22 @@ using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchAsset", SupportsShouldProcess = true)]
-public class RemoveAssetCommand : OrchestratorPSCmdlet
+public class RemoveAssetCommand : RemoveFolderEntityCmdletBase<Asset>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(AssetNameCompleter))]
     [SupportsWildcards]
-    public string[]? Name { get; set; }
+    public override string[]? Name { get; set; }
 
     [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ValueTypeCompleter))]
     [SupportsWildcards]
     public string[]? ValueType { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    [SupportsWildcards]
-    public string[]? Path { get; set; }
-
-    [Parameter]
-    public SwitchParameter Recurse { get; set; }
-
-    [Parameter]
-    public uint Depth { get; set; }
 
     private class ValueTypeCompleter : OrchArgumentCompleter
     {
@@ -65,48 +56,18 @@ public class RemoveAssetCommand : OrchestratorPSCmdlet
         }
     }
 
-    protected override void ProcessRecord()
+    protected override string EntityNoun => "Asset";
+    protected override Func<Asset?, string?> GetName => a => a?.Name;
+    protected override Func<Asset, string> GetPSPath => a => a.GetPSPath();
+    protected override Func<IEnumerable<Asset>, IEnumerable<Asset>>? PreFilter
+        => assets => assets.FilterByWildcards(a => a?.ValueType, ValueType.ConvertToWildcardPatternList());
+
+    protected override IEnumerable<Asset> GetEntities(OrchDriveInfo drive, Folder folder)
+        => drive.Assets.Get(folder);
+
+    protected override void Remove(OrchDriveInfo drive, Folder folder, Asset asset)
     {
-        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
-        var wpValueType = ValueType.ConvertToWildcardPatternList();
-        var wpName = Name.ConvertToWildcardPatternList();
-
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (drive, folder) in drivesFolders)
-        {
-            try
-            {
-                var assets = drive.Assets.Get(folder);
-
-                foreach (var asset in assets
-                    .FilterByWildcards(asset => asset?.ValueType, wpValueType)
-                    .FilterByWildcards(asset => asset?.Name, wpName)
-                    .OrderBy(asset => asset.Name))
-                {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
-                    try
-                    {
-                        if (ShouldProcess(asset.GetPSPath(), "Remove Asset"))
-                        {
-                            drive.OrchAPISession.RemoveAsset(folder.Id ?? 0, asset.Id ?? 0);
-                            drive.Assets.ClearCache(folder);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        WriteError(new ErrorRecord(new OrchException(asset.GetPSPath(), ex), "RemoveAssetError", ErrorCategory.InvalidOperation, asset));
-                    }
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "GetAssetError", ErrorCategory.InvalidOperation, folder));
-            }
-        }
+        drive.OrchAPISession.RemoveAsset(folder.Id ?? 0, asset.Id ?? 0);
+        drive.Assets.ClearCache(folder);
     }
 }

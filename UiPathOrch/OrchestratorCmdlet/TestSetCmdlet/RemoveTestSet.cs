@@ -6,63 +6,24 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchTestSet", SupportsShouldProcess = true)]
-public class RemoveTestSetCommand : OrchestratorPSCmdlet
+public class RemoveTestSetCommand : RemoveFolderEntityCmdletBase<TestSet>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TestSetNameCompleter))]
     [SupportsWildcards]
-    public string[]? Name { get; set; }
+    public override string[]? Name { get; set; }
 
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    [SupportsWildcards]
-    public string[]? Path { get; set; }
+    protected override string EntityNoun => "TestSet";
+    protected override Func<TestSet?, string?> GetName => t => t?.Name;
+    protected override Func<TestSet, string> GetPSPath => t => t.GetPSPath();
+    protected override bool ExcludePersonalWorkspace => true;
 
-    [Parameter]
-    public SwitchParameter Recurse { get; set; }
+    protected override IEnumerable<TestSet> GetEntities(OrchDriveInfo drive, Folder folder)
+        => drive.TestSets.Get(folder);
 
-    [Parameter]
-    public uint Depth { get; set; }
-
-    protected override void ProcessRecord()
+    protected override void Remove(OrchDriveInfo drive, Folder folder, TestSet testSet)
     {
-        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
-
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (drive, folder) in drivesFolders)
-        {
-            try
-            {
-                var testSets = drive.TestSets.Get(folder);
-
-                foreach (var testSet in testSets
-                    .FilterByWildcards(ts => ts?.Name, wpName)
-                    .OrderBy(ts => ts.Name))
-                {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
-                    if (ShouldProcess(testSet.GetPSPath(), "Remove TestSet"))
-                    {
-                        try
-                        {
-                            drive.OrchAPISession.RemoveTestSet(folder.Id ?? 0, testSet.Id ?? 0);
-                            drive.TestSets.ClearCache(folder);
-                        }
-                        catch (Exception ex)
-                        {
-                            WriteError(new ErrorRecord(new OrchException(testSet.GetPSPath(), ex), "RemoveTestSetError", ErrorCategory.InvalidOperation, testSet));
-                        }
-                    }
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "GetTestSetError", ErrorCategory.InvalidOperation, folder));
-            }
-        }
+        drive.OrchAPISession.RemoveTestSet(folder.Id ?? 0, testSet.Id ?? 0);
+        drive.TestSets.ClearCache(folder);
     }
 }
