@@ -364,8 +364,9 @@ public partial class OrchAPISession : IDisposable
         catch (Exception ex)
         {
             _isAuthenticated = false;
-            Console.WriteLine($"renew token failed on {_drive.NameColonSeparator}.");
-            Console.WriteLine(ex.Message);
+            // Diagnostic only — the exception is rethrown so the caller surfaces it via WriteError.
+            // Console.WriteLine here would bypass PowerShell's structured streams and corrupt pipeline output.
+            System.Diagnostics.Debug.WriteLine($"renew token failed on {_drive.NameColonSeparator}: {ex.Message}");
             throw;
         }
     }
