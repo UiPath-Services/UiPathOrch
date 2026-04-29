@@ -97,6 +97,7 @@ public partial class OrchAPISession : IDisposable
         var logging = _drive._psDrive.Logging;
         bool logEnabled = logging?.Enabled.GetValueOrDefault() ?? false;
         if (logEnabled) EnsureLoggingWarningEmitted();
+        if (_drive._psDrive.IgnoreSslErrors.GetValueOrDefault()) EnsureSslWarningEmitted();
 
         try
         {
@@ -188,6 +189,25 @@ public partial class OrchAPISession : IDisposable
 
     // Whether the Entra ID warning check has been performed
     internal bool EntraIdWarningChecked { get; set; }
+
+    // Emitted once per session via PendingWarning when IgnoreSslErrors is set, so users
+    // are reminded that MITM attacks would go undetected on this drive's connections.
+    private bool _sslWarningEmitted;
+
+    private void EnsureSslWarningEmitted()
+    {
+        if (_sslWarningEmitted) return;
+        _sslWarningEmitted = true;
+
+        string warning =
+            $"TLS certificate validation is disabled for '{_drive.NameColonSeparator}' " +
+            "(IgnoreSslErrors = true). Man-in-the-middle attacks on this connection would " +
+            "not be detected. Use only on trusted networks (VPN / internal LAN).";
+
+        PendingWarning = string.IsNullOrEmpty(PendingWarning)
+            ? warning
+            : PendingWarning + "\n\n" + warning;
+    }
 
     #region Authentication
 
