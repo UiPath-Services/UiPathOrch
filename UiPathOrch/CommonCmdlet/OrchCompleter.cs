@@ -787,21 +787,24 @@ internal abstract class FolderScopedCompleter<TEntity> : OrchArgumentCompleter
 }
 
 /// <summary>
-/// Base class for completers that resolve entities within drive scope (ResolveOrchDrives).
+/// Base class for completers that resolve entities within drive scope (ResolveOrchDrives by default).
+/// Override <see cref="ResolveDrives"/> to switch to a different drive resolver (e.g. ResolvePmDrives).
 /// </summary>
-internal abstract class DriveScopedCompleter<TEntity> : OrchArgumentCompleter
+public abstract class DriveScopedCompleter<TEntity> : OrchArgumentCompleter
 {
     protected abstract IEnumerable<TEntity> GetEntities(OrchDriveInfo drive);
     protected abstract string GetName(TEntity entity);
     protected virtual string GetTipHelp(TEntity entity) => GetName(entity);
     protected virtual CompletionResultType ResultType => CompletionResultType.ParameterValue;
     protected virtual string? NotFoundMessage => null;
+    protected virtual List<OrchDriveInfo> ResolveDrives(IDictionary fakeBoundParameters)
+        => ResolveOrchDrives(fakeBoundParameters);
 
     public override IEnumerable<CompletionResult> CompleteArgument(
         string commandName, string parameterName, string wordToComplete,
         CommandAst commandAst, IDictionary fakeBoundParameters)
     {
-        var drives = ResolveOrchDrives(fakeBoundParameters);
+        var drives = ResolveDrives(fakeBoundParameters);
         var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -1842,289 +1845,124 @@ internal class TestCaseExecutionEntryPointCompleter : OrchArgumentCompleter
 }
 
 #region Completers for Platform Management cmdlets
-public class PmGroupNameCompleter : OrchArgumentCompleter
+public class PmGroupNameCompleter : DriveScopedCompleter<PmGroup>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        var drives = ResolvePmDrives(fakeBoundParameters);
-
-        // Exclude Names already selected via the parameter
-        var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults.GroupBy(drives, drive => drive.PmGroups.Get());
-
-        bool bFound = false;
-        foreach (var result in results)
-        {
-            foreach (var pmGroup in result
-                .Where(g => wp.IsMatch(g.name))
-                .ExcludeByWildcards(g => g?.name, wpName)
-                .OrderBy(g => g.name))
-            {
-                bFound = true;
-                string tiphelp = pmGroup.GetPSPath();
-                yield return new CompletionResult(PathTools.EscapePSText(pmGroup?.name), pmGroup?.name, CompletionResultType.Text, tiphelp);
-            }
-        }
-        if (!bFound)
-        {
-            yield return new CompletionResult($@"""(No groups found for '{RemoveEnclosingQuotes(wordToComplete)}')""");
-        }
-    }
+    protected override List<OrchDriveInfo> ResolveDrives(IDictionary fbp) => ResolvePmDrives(fbp);
+    protected override IEnumerable<PmGroup> GetEntities(OrchDriveInfo drive) => drive.PmGroups.Get();
+    protected override string GetName(PmGroup e) => e.name!;
+    protected override string GetTipHelp(PmGroup e) => e.GetPSPath();
+    protected override CompletionResultType ResultType => CompletionResultType.Text;
+    protected override string? NotFoundMessage => "No groups found for";
 }
 
-internal class PmRobotAccountNameCompleter : OrchArgumentCompleter
+internal class PmRobotAccountNameCompleter : DriveScopedCompleter<PmRobotAccount>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        var drives = ResolvePmDrives(fakeBoundParameters);
-
-        // Exclude Names already selected via the parameter
-        var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults.GroupBy(drives, drive => drive.PmRobotAccounts.Get());
-
-        foreach (var result in results)
-        {
-            foreach (var pmRobotAccount in result
-                .Where(r => r is not null)
-                .Where(r => wp.IsMatch(r!.name!))
-                .ExcludeByWildcards(r => r!.name!, wpName)
-                .OrderBy(r => r!.name))
-            {
-                string tiphelp = pmRobotAccount.GetPSPath();
-                yield return new CompletionResult(PathTools.EscapePSText(pmRobotAccount.name), pmRobotAccount.name, CompletionResultType.Text, tiphelp);
-            }
-        }
-    }
+    protected override List<OrchDriveInfo> ResolveDrives(IDictionary fbp) => ResolvePmDrives(fbp);
+    protected override IEnumerable<PmRobotAccount> GetEntities(OrchDriveInfo drive)
+        => drive.PmRobotAccounts.Get().Where(r => r is not null)!;
+    protected override string GetName(PmRobotAccount e) => e.name!;
+    protected override string GetTipHelp(PmRobotAccount e) => e.GetPSPath();
+    protected override CompletionResultType ResultType => CompletionResultType.Text;
 }
 
-internal class PmUserEmailCompleter : OrchArgumentCompleter
+internal class PmUserEmailCompleter : DriveScopedCompleter<PmUser>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
+    protected override List<OrchDriveInfo> ResolveDrives(IDictionary fbp) => ResolvePmDrives(fbp);
+    protected override IEnumerable<PmUser> GetEntities(OrchDriveInfo drive)
+        => drive.PmUsers.Get().Where(u => !string.IsNullOrEmpty(u.email));
+    protected override string GetName(PmUser e) => e.email!;
+    protected override string GetTipHelp(PmUser e)
     {
-        var drives = ResolvePmDrives(fakeBoundParameters);
-
-        // Exclude Names already selected via the parameter
-        var wpEmail = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults.GroupBy(drives, drive => drive.PmUsers.Get());
-
-        foreach (var result in results)
-        {
-            foreach (var user in result
-                .Where(g => !string.IsNullOrEmpty(g.email))
-                .Where(g => wp.IsMatch(g.email))
-                .ExcludeByWildcards(u => u?.email!, wpEmail)
-                .OrderBy(u => u?.email))
-            {
-                string tooltip = user.GetPSPath();
-                if (!string.IsNullOrEmpty(user.displayName))
-                    tooltip += $" ({user.displayName})";
-                yield return new CompletionResult(PathTools.EscapePSText(user?.email), user?.email, CompletionResultType.Text, tooltip);
-            }
-        }
+        var tip = e.GetPSPath();
+        if (!string.IsNullOrEmpty(e.displayName))
+            tip += $" ({e.displayName})";
+        return tip;
     }
+    protected override CompletionResultType ResultType => CompletionResultType.Text;
 }
 
-internal class PmLicensedGroupNameCompleter : OrchArgumentCompleter
+internal class PmLicensedGroupNameCompleter : DriveScopedCompleter<NuLicensedGroup>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        var drives = ResolvePmDrives(fakeBoundParameters);
-
-        // Exclude Names already selected via the parameter
-        var wpGroupName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults.GroupBy(drives, drive => drive.PmLicensedGroups.Get());
-
-        foreach (var result in results)
-        {
-            foreach (var licensedGroup in result
-                .Where(g => wp.IsMatch(g?.name))
-                .ExcludeByWildcards(g => g?.name!, wpGroupName)
-                .OrderBy(g => g?.name))
-            {
-                string tiphelp = licensedGroup?.GetPSPath();
-                yield return new CompletionResult(PathTools.EscapePSText(licensedGroup?.name), licensedGroup?.name, CompletionResultType.Text, tiphelp);
-            }
-        }
-    }
+    protected override List<OrchDriveInfo> ResolveDrives(IDictionary fbp) => ResolvePmDrives(fbp);
+    protected override IEnumerable<NuLicensedGroup> GetEntities(OrchDriveInfo drive)
+        => drive.PmLicensedGroups.Get().Where(g => g is not null)!;
+    protected override string GetName(NuLicensedGroup e) => e.name!;
+    protected override string GetTipHelp(NuLicensedGroup e) => e.GetPSPath();
+    protected override CompletionResultType ResultType => CompletionResultType.Text;
 }
 
 #endregion
 
 #region Completers for Test Manager cmdlets
-internal class TmRequirementNameCompleter : OrchArgumentCompleter
+
+/// <summary>
+/// Base class for Test Manager completers that resolve entities within (drive, project) scope.
+/// Uses <c>EnumTmFolders</c> to honor the -Path / -Recurse parameters.
+/// </summary>
+internal abstract class TmProjectScopedCompleter<TEntity> : OrchArgumentCompleter
 {
+    protected abstract IEnumerable<TEntity> GetEntities(OrchTmDriveInfo drive, TmProject project);
+    protected abstract string GetName(TEntity entity);
+    protected virtual string GetTipHelp(TEntity entity) => GetName(entity);
+    protected virtual CompletionResultType ResultType => CompletionResultType.Text;
+
     public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
+        string commandName, string parameterName, string wordToComplete,
+        CommandAst commandAst, IDictionary fakeBoundParameters)
     {
         var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
-
-        // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-        var drivesFolders = SessionState.EnumTmFolders(paramPath, recurse);
+        var drivesProjects = SessionState.EnumTmFolders(paramPath, recurse);
 
-        // Exclude Names already selected via the parameter
         var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
-
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var results = ParallelResults.GroupBy(drivesFolders, dp => dp.drive.TmRequirements.Get(dp.project));
+        var results = ParallelResults.GroupBy(drivesProjects, dp => GetEntities(dp.drive, dp.project));
 
         foreach (var result in results)
         {
-            foreach (var requirement in result
-                .Where(e => wp.IsMatch(e.name))
-                .ExcludeByWildcards(e => e?.name, wpName)
-                .OrderBy(e => e.name))
+            foreach (var entity in result
+                .Where(e => wp.IsMatch(GetName(e)))
+                .ExcludeByWildcards(e => GetName(e!), wpName)
+                .OrderBy(e => GetName(e)))
             {
-                string tooltip = requirement.GetPSPath();
-                yield return new CompletionResult(PathTools.EscapePSText(requirement.name), requirement.name, CompletionResultType.Text, tooltip);
+                string name = GetName(entity);
+                yield return new CompletionResult(PathTools.EscapePSText(name), name, ResultType, GetTipHelp(entity));
             }
         }
     }
 }
 
-internal class TmTestSetNameCompleter : OrchArgumentCompleter
+internal class TmRequirementNameCompleter : TmProjectScopedCompleter<TmRequirement>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
-
-        // Extract path from the parameter. If not specified, target the current directory.
-        var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-        var drivesFolders = SessionState.EnumTmFolders(paramPath, recurse);
-
-        // Exclude Names already selected via the parameter
-        var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults.GroupBy(drivesFolders, dp => dp.drive.TmTestSets.Get(dp.project));
-
-        foreach (var result in results)
-        {
-            foreach (var testSet in result
-                .Where(e => wp.IsMatch(e.name))
-                .ExcludeByWildcards(e => e?.name, wpName)
-                .OrderBy(e => e.name))
-            {
-                string tooltip = testSet.GetPSPath();
-                yield return new CompletionResult(PathTools.EscapePSText(testSet.name), testSet.name, CompletionResultType.Text, tooltip);
-            }
-        }
-    }
+    protected override IEnumerable<TmRequirement> GetEntities(OrchTmDriveInfo drive, TmProject project)
+        => drive.TmRequirements.Get(project);
+    protected override string GetName(TmRequirement e) => e.name!;
+    protected override string GetTipHelp(TmRequirement e) => e.GetPSPath();
 }
 
-internal class TmTestCaseNameCompleter : OrchArgumentCompleter
+internal class TmTestSetNameCompleter : TmProjectScopedCompleter<TmTestSet>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
-
-        // Extract path from the parameter. If not specified, target the current directory.
-        var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-        var drivesFolders = SessionState.EnumTmFolders(paramPath, recurse);
-
-        // Exclude Names already selected via the parameter
-        var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults.GroupBy(drivesFolders, dp => dp.drive.TmTestCases.Get(dp.project));
-
-        foreach (var result in results)
-        {
-            foreach (var testCase in result
-                .Where(e => wp.IsMatch(e.name))
-                .ExcludeByWildcards(e => e?.name, wpName)
-                .OrderBy(e => e.name))
-            {
-                string tooltip = testCase.GetPSPath();
-                yield return new CompletionResult(PathTools.EscapePSText(testCase.name), testCase.name, CompletionResultType.Text, tooltip);
-            }
-        }
-    }
+    protected override IEnumerable<TmTestSet> GetEntities(OrchTmDriveInfo drive, TmProject project)
+        => drive.TmTestSets.Get(project);
+    protected override string GetName(TmTestSet e) => e.name!;
+    protected override string GetTipHelp(TmTestSet e) => e.GetPSPath();
 }
 
-internal class TmTestExecutionNameCompleter : OrchArgumentCompleter
+internal class TmTestCaseNameCompleter : TmProjectScopedCompleter<TmTestCase>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
+    protected override IEnumerable<TmTestCase> GetEntities(OrchTmDriveInfo drive, TmProject project)
+        => drive.TmTestCases.Get(project);
+    protected override string GetName(TmTestCase e) => e.name!;
+    protected override string GetTipHelp(TmTestCase e) => e.GetPSPath();
+}
 
-        // Extract path from the parameter. If not specified, target the current directory.
-        var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-        var drivesFolders = SessionState.EnumTmFolders(paramPath, recurse);
-
-        // Exclude Names already selected via the parameter
-        var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults.GroupBy(drivesFolders, dp => dp.drive.TmTestExecutions.Get(dp.project));
-
-        foreach (var result in results)
-        {
-            foreach (var testExecution in result
-                .Where(e => wp.IsMatch(e.name))
-                .ExcludeByWildcards(e => e?.name, wpName)
-                .OrderBy(e => e.name))
-            {
-                string tooltip = testExecution.GetPSPath();
-                yield return new CompletionResult(PathTools.EscapePSText(testExecution.name), testExecution.name, CompletionResultType.Text, tooltip);
-            }
-        }
-    }
+internal class TmTestExecutionNameCompleter : TmProjectScopedCompleter<TmTestExecution>
+{
+    protected override IEnumerable<TmTestExecution> GetEntities(OrchTmDriveInfo drive, TmProject project)
+        => drive.TmTestExecutions.Get(project);
+    protected override string GetName(TmTestExecution e) => e.name!;
+    protected override string GetTipHelp(TmTestExecution e) => e.GetPSPath();
 }
 
 #endregion
