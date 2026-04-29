@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Entities;
@@ -20,7 +20,9 @@ public class SingleCachePerTenant<T> : ITenantCacheClearable where T : class
 {
     private readonly object _lock = new();
     private readonly OrchDriveInfo _drive;
-    private T? _cache = null;
+    // volatile + publish-after-init: ensures readers on weakly-ordered CPUs (e.g. ARM/Apple Silicon)
+    // never observe a non-null _cache that points at a partially-initialized object.
+    private volatile T? _cache = null;
     private readonly ExceptionCachePerTenant _exception = new();
     private readonly Func<T?> getter;
     private readonly Action<T>? initializer;
@@ -45,11 +47,12 @@ public class SingleCachePerTenant<T> : ITenantCacheClearable where T : class
                 {
                     if (_cache is null)
                     {
-                        _cache = getter();
-                        if (_cache is not null && initializer is not null)
+                        var temp = getter();
+                        if (temp is not null && initializer is not null)
                         {
-                            initializer(_cache);
+                            initializer(temp);
                         }
+                        _cache = temp;
                     }
                 }
             }
@@ -73,7 +76,7 @@ public class ListCachePerTenant<T> : ITenantCacheClearable
 {
     private readonly object _lock = new();
     private readonly OrchDriveInfo _drive;
-    private List<T>? _cache = null;
+    private volatile List<T>? _cache = null;
     private readonly ExceptionCachePerTenant _exception = new();
     private readonly Func<IEnumerable<T>> getter;
     private readonly Action<T>? initializer;
@@ -98,14 +101,15 @@ public class ListCachePerTenant<T> : ITenantCacheClearable
                 {
                     if (_cache is null)
                     {
-                        _cache = getter().ToList();
+                        var temp = getter().ToList();
                         if (initializer is not null)
                         {
-                            foreach (var entity in _cache)
+                            foreach (var entity in temp)
                             {
                                 initializer(entity);
                             }
                         }
+                        _cache = temp;
                     }
                 }
             }
@@ -140,7 +144,7 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
     // The following is also needed for entities that support -ExpandDetail
     private readonly Func<T, string?>? _getterId;
     // Detailed cache of organization entities keyed by (partitionGlobalId, id)
-    private static ConcurrentDictionary<(string partitionGlobalId, string id), T?>? _cacheDetailed = null;
+    private static volatile ConcurrentDictionary<(string partitionGlobalId, string id), T?>? _cacheDetailed = null;
     private readonly Func<string, string, T?>? _getterDetailed;
     // Exception cache for detailed organization entity retrieval keyed by (partitionGlobalId, id)
     private static readonly ExceptionsCachePer<(string partitionGlobalId, string id)> _exceptionDetailed = new(); // Holds per (org, id) exceptions
@@ -366,8 +370,10 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
                         entity = _getter(partitionGlobalId);
                         if (entity is not null)
                         {
-                            _cache[partitionGlobalId] = entity;
+                            // Run initializer before publishing to the dictionary so concurrent readers
+                            // never observe an entity whose initialization is still in progress.
                             _initializer?.Invoke(entity);
+                            _cache[partitionGlobalId] = entity;
                         }
                     }
                     catch (HttpResponseException ex)
@@ -407,7 +413,7 @@ public class IndexedCachePerTenant<TIndexEntity, TEntity> : ITenantCacheClearabl
     private readonly OrchDriveInfo _drive;
 
     // key: TIndexEntity.Id
-    private ConcurrentDictionary<Int64, TEntity?>? _cache = null;
+    private volatile ConcurrentDictionary<Int64, TEntity?>? _cache = null;
     private readonly ExceptionsCachePer<Int64> _exceptions = new();
     private readonly Func<Int64, TEntity?> _fetchFunc; // Passes an index and returns TEntity
     private readonly Func<TIndexEntity, Int64> _getIdFunc;
@@ -456,13 +462,15 @@ public class IndexedCachePerTenant<TIndexEntity, TEntity> : ITenantCacheClearabl
             try
             {
                 entity = _fetchFunc(index);
-                _cache[index] = entity;
 
                 if (entity is not null && _initializer is not null)
                 {
                     string indexName = _getNameFunc(indexEntity);
                     _initializer(entity, indexName);
                 }
+                // Publish to the cache only after initialization, so concurrent readers
+                // never observe a partially-initialized entity.
+                _cache[index] = entity;
             }
             catch (HttpResponseException ex)
             {
@@ -485,7 +493,7 @@ public class SingleCachePerFolder<T> : IFolderCacheClearable
 {
     private readonly object _lock = new();
     private readonly OrchDriveInfo _drive;
-    private ConcurrentDictionary<Int64, T?>? _cache = null;
+    private volatile ConcurrentDictionary<Int64, T?>? _cache = null;
     private readonly ExceptionsCachePer<Int64> _exceptions = new();
     private readonly Func<Int64?, T?> _getter;
     private readonly Action<T, string>? _initializer;
@@ -525,13 +533,14 @@ public class SingleCachePerFolder<T> : IFolderCacheClearable
             try
             {
                 cachePerFolder = _getter(folder.Id.Value);
-                _cache[folder.Id.Value] = cachePerFolder;
 
                 if (cachePerFolder is not null && _initializer is not null)
                 {
                     string folderPath = folder.GetPSPath();
                     _initializer(cachePerFolder, folderPath);
                 }
+                // Publish after init.
+                _cache[folder.Id.Value] = cachePerFolder;
             }
             catch (HttpResponseException ex)
             {
@@ -565,7 +574,7 @@ public class ListCachePerFolder<T> : IFolderCacheClearable
 {
     private readonly object _lock = new();
     private readonly OrchDriveInfo _drive;
-    private ConcurrentDictionary<Int64, List<T>>? _cache = null;
+    private volatile ConcurrentDictionary<Int64, List<T>>? _cache = null;
     private readonly ExceptionsCachePer<Int64> _exceptions = new();
     private readonly Func<Int64, IEnumerable<T>> _getter;
     private readonly Action<T, string>? _initializer;
@@ -609,7 +618,6 @@ public class ListCachePerFolder<T> : IFolderCacheClearable
             try
             {
                 cachePerFolder = _getter(folderId).ToList();
-                _cache[folderId] = cachePerFolder;
 
                 if (_initializer is not null)
                 {
@@ -619,6 +627,8 @@ public class ListCachePerFolder<T> : IFolderCacheClearable
                         _initializer(entity, folderPath);
                     }
                 }
+                // Publish after init.
+                _cache[folderId] = cachePerFolder;
             }
             catch (HttpResponseException ex)
             {
@@ -660,7 +670,7 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
 
     // 1st key: folderId
     // 2nd key: TIndexEntity.Id
-    private ConcurrentDictionary<Int64, Dictionary<Int64, List<TEntity>>>? _cache = null;
+    private volatile ConcurrentDictionary<Int64, Dictionary<Int64, List<TEntity>>>? _cache = null;
     // The exception cache functionality is not great... It would be nice to be able to clear the cache per folder.
     private readonly ExceptionsCachePer<(Int64, Int64)> _exceptions = new();
     private readonly Func<Int64, TIndexEntity, IEnumerable<TEntity>> _fetchFunc; // Passes folderId and index, returns an enumeration of TEntity
@@ -721,7 +731,6 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
             try
             {
                 entities = _fetchFunc(folderId, indexEntity).ToList();
-                cachePerFolder[index] = entities;
 
                 if (_initializer is not null)
                 {
@@ -733,6 +742,8 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
                         _initializer(entity, folderPath, indexName, entityPath);
                     }
                 }
+                // Publish after init.
+                cachePerFolder[index] = entities;
             }
             catch (HttpResponseException ex)
             {
@@ -786,7 +797,7 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
     private readonly OrchDriveInfo _drive;
 
     // 1st key: folderId, 2nd key: entityKey
-    private ConcurrentDictionary<Int64, ConcurrentDictionary<TKey, TEntity>>? _cache = null;
+    private volatile ConcurrentDictionary<Int64, ConcurrentDictionary<TKey, TEntity>>? _cache = null;
     private readonly ExceptionsCachePer<Int64> _exceptions = new();
 
     // API call function
@@ -949,7 +960,7 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
     private readonly object _lock = new();
     private readonly OrchDriveInfo _drive;
 
-    private ConcurrentDictionary<TKey, TEntity>? _cache = null;
+    private volatile ConcurrentDictionary<TKey, TEntity>? _cache = null;
     private readonly ExceptionCachePerTenant _exception = new();
 
     // API call function
@@ -1082,7 +1093,7 @@ public class IncrementalCachePerProject<TKey, TEntity> : ITenantCacheClearable
     private readonly OrchTmDriveInfo _drive;
 
     // 1st key: projectId, 2nd key: entityKey
-    private ConcurrentDictionary<string, ConcurrentDictionary<TKey, TEntity>>? _cache = null;
+    private volatile ConcurrentDictionary<string, ConcurrentDictionary<TKey, TEntity>>? _cache = null;
     private readonly ExceptionsCachePer<string> _exceptions = new();
 
     // API call function
@@ -1235,7 +1246,7 @@ public class TmListCachePerTenant1<T> : ITenantCacheClearable
 {
     private readonly object _lock = new();
     private readonly OrchTmDriveInfo _drive;
-    internal ConcurrentDictionary<string, List<T>>? _cache = null;
+    internal volatile ConcurrentDictionary<string, List<T>>? _cache = null;
     private readonly ExceptionsCachePer<string> _exceptions = new();
     private readonly Func<TmProject, IEnumerable<T>> _fetchFunc;
     private readonly Action<T, TmProject>? _initializer;
@@ -1284,7 +1295,6 @@ public class TmListCachePerTenant1<T> : ITenantCacheClearable
             try
             {
                 cachePerFolder = _fetchFunc(project).ToList();
-                _cache[project.id!] = cachePerFolder;
 
                 if (_initializer is not null)
                 {
@@ -1294,6 +1304,8 @@ public class TmListCachePerTenant1<T> : ITenantCacheClearable
                         _initializer(entity, project);
                     }
                 }
+                // Publish after init.
+                _cache[project.id!] = cachePerFolder;
             }
             catch (HttpResponseException ex)
             {
@@ -1383,10 +1395,10 @@ public class TmListCachePerTenant1<T> : ITenantCacheClearable
 }
 
 // getFunc: Func with no arguments that returns T
-public class TmSingleCachePerTenant0<T> : ITenantCacheClearable
+public class TmSingleCachePerTenant0<T> : ITenantCacheClearable where T : class
 {
     private readonly OrchTmDriveInfo _drive;
-    private T? _cache = default;
+    private volatile T? _cache = null;
     private readonly ExceptionCachePerTenant _exception = new();
     private readonly Func<T?> _getFunc;
     private readonly Action<T>? _initializer;
@@ -1418,12 +1430,16 @@ public class TmSingleCachePerTenant0<T> : ITenantCacheClearable
         {
             try
             {
-                _cache = _getFunc();
+                var temp = _getFunc();
 
-                if (_initializer is not null && _cache is not null)
+                if (_initializer is not null && temp is not null)
                 {
-                    _initializer(_cache);
+                    _initializer(temp);
                 }
+                // Publish after init. Note: this class has no lock so two concurrent first
+                // callers could each fetch and overwrite, but neither will publish a partially
+                // initialized object. The duplicate fetch is a separate concern.
+                _cache = temp;
             }
             catch (HttpResponseException ex)
             {
@@ -1436,7 +1452,7 @@ public class TmSingleCachePerTenant0<T> : ITenantCacheClearable
 
     public void ClearCache()
     {
-        _cache = default;
+        _cache = null;
         _exception.ClearCache();
     }
 }
@@ -1446,7 +1462,7 @@ public class TmSingleCachePerTenant1<T> : ITenantCacheClearable
 {
     private readonly object _lock = new();
     private readonly OrchTmDriveInfo _drive;
-    private ConcurrentDictionary<string, T?>? _cache = null;
+    private volatile ConcurrentDictionary<string, T?>? _cache = null;
     private readonly ExceptionsCachePer<string> _exceptions = new();
     private readonly Func<TmProject, T?> _getFunc;
     private readonly Action<T, TmProject>? _initializer;
@@ -1487,13 +1503,14 @@ public class TmSingleCachePerTenant1<T> : ITenantCacheClearable
             try
             {
                 cachePerProject = _getFunc(project);
-                _cache[project.id!] = cachePerProject;
 
                 if (_initializer is not null && cachePerProject is not null)
                 {
                     string projectPath = project.GetPSPath();
                     _initializer(cachePerProject, project);
                 }
+                // Publish after init.
+                _cache[project.id!] = cachePerProject;
             }
             catch (HttpResponseException ex)
             {
