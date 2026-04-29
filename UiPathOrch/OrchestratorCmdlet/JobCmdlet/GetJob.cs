@@ -54,7 +54,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
     public DateTime? ResumeTimeBefore { get; set; }
 
     [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(StaticTextsCompleter<JobPriority>))]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<JobPriorityItems>))]
     public string? Priority { get; set; }
 
     [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]

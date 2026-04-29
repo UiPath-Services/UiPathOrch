@@ -23,7 +23,7 @@ public class GetUnattendedSessionCommand : OrchestratorPSCmdlet
     //public DateTime? ReportingTimeBefore { get; set; }
 
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(StaticTextsCompleter<UnattendedSessionStatus>))]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<MachineSessionStatusItems>))]
     [SupportsWildcards]
     public string[]? Status { get; set; }
 
