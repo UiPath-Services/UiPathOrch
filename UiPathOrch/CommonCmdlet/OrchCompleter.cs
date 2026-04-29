@@ -2,6 +2,7 @@ using System.Collections;
 using System.Data;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using UiPath.PowerShell.Core;
@@ -122,38 +123,67 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         };
     }
 
+    // Auto-discovered map of switch parameters per cmdlet, built once via reflection over
+    // this assembly's [Cmdlet]-attributed types. Replaces the hand-maintained whitelist that
+    // silently broke whenever a new SwitchParameter was added without registration.
+    private static readonly Lazy<Dictionary<string, HashSet<string>>> _switchParametersByCmdlet =
+        new(BuildSwitchParameterMap);
+
+    private static Dictionary<string, HashSet<string>> BuildSwitchParameterMap()
+    {
+        var map = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var type in typeof(OrchArgumentCompleter).Assembly.GetTypes())
+        {
+            var cmdletAttr = type.GetCustomAttribute<CmdletAttribute>();
+            if (cmdletAttr is null) continue;
+
+            string cmdletName = $"{cmdletAttr.VerbName}-{cmdletAttr.NounName}";
+            var switches = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                if (!prop.GetCustomAttributes<ParameterAttribute>().Any()) continue;
+                if (prop.PropertyType != typeof(SwitchParameter)) continue;
+
+                switches.Add(prop.Name);
+                var aliasAttr = prop.GetCustomAttribute<AliasAttribute>();
+                if (aliasAttr is not null)
+                {
+                    foreach (var alias in aliasAttr.AliasNames)
+                    {
+                        switches.Add(alias);
+                    }
+                }
+            }
+
+            // Last writer wins; cmdlet name collisions across the assembly aren't expected.
+            map[cmdletName] = switches;
+        }
+        return map;
+    }
+
+    // PowerShell auto-adds these as switches whenever the cmdlet declares the matching
+    // common-parameter support; reflection on the cmdlet type doesn't see them, so they're
+    // listed explicitly here.
+    private static readonly HashSet<string> CommonSwitchParameters = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Verbose", "Debug", "WhatIf", "Confirm",
+    };
+
+    private static bool IsKnownSwitchParameterName(CommandAst commandAst, string parameterName)
+    {
+        if (CommonSwitchParameters.Contains(parameterName)) return true;
+
+        string? cmdletName = commandAst.GetCommandName();
+        if (cmdletName is null) return false;
+
+        return _switchParametersByCmdlet.Value.TryGetValue(cmdletName, out var switches)
+            && switches.Contains(parameterName);
+    }
+
     public static bool GetSwitchParameterValue(CommandAst commandAst, string parameterName)
     {
-        string[] knownSwitchParameters = {
-            "AllDrives",
-            "ExcludeEntities",
-            "ExpandAllocation",
-            "ExpandDetails",
-            "Expanded",
-            "ExpandEntity",
-            "ExpandExcludedDate",
-            "ExpandGroup",
-            "ExpandPermission",
-            "ExpandRobotUser",
-            "ExpandUserValues",
-            "Force",
-            "GenerateTemplateCsv",
-            "HostFeed",
-            "IncludeInherited",
-            "IncludePastDate",
-            "IsConsumed",
-            "License",
-            "NoMatchWarning",
-            "OrderAscending",
-            "Recurse",
-            "Reload",
-            "WarnOnNoMatch",
-            "Verbose",
-            "Confirm",
-            "WhatIf"
-        };
-
-        if (!knownSwitchParameters.Contains(parameterName))
+        if (!IsKnownSwitchParameterName(commandAst, parameterName))
         {
             return false;
         }
