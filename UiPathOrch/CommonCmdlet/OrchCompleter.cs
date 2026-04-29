@@ -1199,6 +1199,41 @@ internal class QueueNameCompleter : FolderScopedCompleter<QueueDefinition>
     protected override string GetTipHelp(QueueDefinition e) => TipHelp(e);
 }
 
+// Job Id completer shared by Get-OrchJob and Open-OrchJob (both surface the full Jobs cache).
+// Stop-OrchJob uses StoppableJobs and Restart-OrchJob uses FaultedJobs, so they keep their own
+// nested completers.
+internal class JobIdCompleter : OrchArgumentCompleter
+{
+    public override IEnumerable<CompletionResult> CompleteArgument(
+        string commandName,
+        string parameterName,
+        string wordToComplete,
+        CommandAst commandAst,
+        IDictionary fakeBoundParameters)
+    {
+        var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+        // Exclude Ids that have already been selected via parameters
+        var paramId = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);
+
+        var wp = CreateWPFromWordToComplete(wordToComplete);
+
+        foreach (var (drive, folder) in drivesFolders)
+        {
+            var jobs = drive.Jobs.GetCache(folder);
+            if (jobs is null) continue;
+
+            foreach (var job in jobs.Values.ExcludeByClassValues(j => (j?.Id ?? 0).ToString(), paramId))
+            {
+                if (!wp.IsMatch((job.Id ?? 0).ToString()))
+                    continue;
+
+                yield return new CompletionResult(job.Id.ToString(), job.Id.ToString(), CompletionResultType.ParameterValue, job.FormatTooltip());
+            }
+        }
+    }
+}
+
 internal class ListReleasesCompleter : FolderScopedCompleter<Release>
 {
     protected override IEnumerable<Release> GetEntities(OrchDriveInfo drive, Folder folder)

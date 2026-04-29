@@ -13,7 +13,7 @@ namespace UiPath.PowerShell.Commands;
 public class GetJobCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ParameterSetName = "JobId", ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(IdCompleter))]
+    [ArgumentCompleter(typeof(JobIdCompleter))]
     public Int64[]? Id { get; set; }
 
     [Parameter(ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
@@ -105,38 +105,6 @@ public class GetJobCommand : OrchestratorPSCmdlet
 
     [Parameter]
     public uint Depth { get; set; }
-
-    private class IdCompleter : OrchArgumentCompleter
-    {
-        public override IEnumerable<CompletionResult> CompleteArgument(
-            string commandName,
-            string parameterName,
-            string wordToComplete,
-            CommandAst commandAst,
-            IDictionary fakeBoundParameters)
-        {
-            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-
-            // Exclude Ids that have already been selected via parameters
-            var paramId = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);
-
-            var wp = CreateWPFromWordToComplete(wordToComplete);
-
-            foreach (var (drive, folder) in drivesFolders)
-            {
-                var jobs = drive.Jobs.GetCache(folder);
-                if (jobs is null) continue;
-
-                foreach (var job in jobs.Values.ExcludeByClassValues(j => (j?.Id ?? 0).ToString(), paramId))
-                {
-                    if (!wp.IsMatch((job.Id ?? 0).ToString()))
-                        continue;
-
-                    yield return new CompletionResult(job.Id.ToString(), job.Id.ToString(), CompletionResultType.ParameterValue, job.FormatTooltip());
-                }
-            }
-        }
-    }
 
     private class RobotCompleter : OrchArgumentCompleter
     {

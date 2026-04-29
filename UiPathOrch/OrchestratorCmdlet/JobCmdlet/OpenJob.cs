@@ -1,8 +1,5 @@
-using System.Collections;
-using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Management.Automation;
-using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using Job = UiPath.PowerShell.Entities.Job;
@@ -13,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 public class OpenJobCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(IdCompleter))]
+    [ArgumentCompleter(typeof(JobIdCompleter))]
     public Int64[]? Id { get; set; }
 
     //[Parameter]
@@ -22,38 +19,6 @@ public class OpenJobCommand : OrchestratorPSCmdlet
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
-
-    private class IdCompleter : OrchArgumentCompleter
-    {
-        public override IEnumerable<CompletionResult> CompleteArgument(
-            string commandName,
-            string parameterName,
-            string wordToComplete,
-            CommandAst commandAst,
-            IDictionary fakeBoundParameters)
-        {
-            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-
-            // Exclude Ids that have already been selected via parameters
-            var paramId = GetSelfExclusionValues(commandAst, "Id", wordToComplete);
-
-            var wp = CreateWPFromWordToComplete(wordToComplete);
-
-            foreach (var (drive, folder) in drivesFolders)
-            {
-                var dicJobs = drive.Jobs.GetCache(folder);
-                if (dicJobs is null) continue;
-
-                foreach (var job in dicJobs.Values.ExcludeByClassValues(j => (j?.Id ?? 0).ToString(), paramId))
-                {
-                    if (!wp.IsMatch((job.Id ?? 0).ToString()))
-                        continue;
-
-                    yield return new CompletionResult(job.Id.ToString(), job.Id.ToString(), CompletionResultType.ParameterValue, job.FormatTooltip());
-                }
-            }
-        }
-    }
 
     protected override void ProcessRecord()
     {
