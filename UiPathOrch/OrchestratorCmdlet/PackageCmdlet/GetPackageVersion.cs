@@ -1,6 +1,4 @@
-using System.Collections;
 using System.Management.Automation;
-using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 
@@ -11,11 +9,11 @@ namespace UiPath.PowerShell.Commands;
 public class GetPackageVersionCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(IdCompleter))]
+    [ArgumentCompleter(typeof(PackageIdCompleter))]
     public string[]? Id { get; set; }
 
     [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(VersionCompleter))]
+    [ArgumentCompleter(typeof(PackageVersionCompleter))]
     public string[]? Version { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -24,93 +22,6 @@ public class GetPackageVersionCommand : OrchestratorPSCmdlet
 
     [Parameter]
     public SwitchParameter Recurse { get; set; }
-
-    private class IdCompleter : OrchArgumentCompleter
-    {
-        public override IEnumerable<CompletionResult> CompleteArgument(
-            string commandName,
-            string parameterName,
-            string wordToComplete,
-            CommandAst commandAst,
-            IDictionary fakeBoundParameters)
-        {
-            var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
-            var depth = ResolveDepth(fakeBoundParameters);
-
-            // Extract the path from parameters. If not specified, target the current directory
-            var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-            var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse);
-            int totalFolderCount = drivesFolders.Count;
-
-            // Exclude already-selected Id values from the candidates
-            var wpId = CreateSelfExclusionList(commandAst, "Id", wordToComplete);
-
-            var wp = CreateWPFromWordToComplete(wordToComplete);
-
-            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.GetPackages(df.folder));
-
-            foreach (var result in results)
-            {
-                foreach (var package in result
-                    .Where(m => wp.IsMatch(m.Id))
-                    .ExcludeByWildcards(p => p?.Id, wpId)
-                    .OrderBy(l => l.Id))
-                {
-                    string tiphelp = TipHelp(package);
-                    yield return new CompletionResult(PathTools.EscapePSText(package.Id), package.Id, CompletionResultType.ParameterValue, tiphelp);
-                }
-            }
-        }
-    }
-
-    private class VersionCompleter : OrchArgumentCompleter
-    {
-        public override IEnumerable<CompletionResult> CompleteArgument(
-            string commandName,
-            string parameterName,
-            string wordToComplete,
-            CommandAst commandAst,
-            IDictionary fakeBoundParameters)
-        {
-            var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
-
-            // Extract the path from parameters. If not specified, target the current directory
-            var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
-            var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse);
-
-            // Only target the Id values selected via parameters
-            var wpId = GetFakeBoundParameters(fakeBoundParameters, "Id").ConvertToWildcardPatternList();
-
-            // Exclude already-selected Version values from the candidates
-            var wpVersion = CreateSelfExclusionList(commandAst, "Version", wordToComplete);
-
-            var wp = CreateWPFromWordToComplete(wordToComplete);
-
-            var results = ParallelResults.GroupBy(drivesFolders, driveFolder =>
-            {
-                var (drive, folder) = driveFolder;
-                var packages = drive.GetPackages(folder)
-                    .FilterByWildcards(p => p?.Id, wpId);
-                return ParallelResults.GroupBy(packages, package =>
-                    drive.GetPackageVersions(folder, package.Id!));
-            });
-
-            foreach (var result in results)
-            {
-                foreach (var package in result)
-                {
-                    foreach (var version in package
-                        .Where(v => wp.IsMatch(v.Version!))
-                        .ExcludeByWildcards(v => v?.Version, wpVersion))
-                    //.OrderBy(v => v.Version!, VersionComparer.Instance))
-                    {
-                        string tiphelp = TipHelp(version);
-                        yield return new CompletionResult(PathTools.EscapePSText(version.Version), version.Version, CompletionResultType.ParameterValue, tiphelp);
-                    }
-                }
-            }
-        }
-    }
 
     protected override void ProcessRecord()
     {
