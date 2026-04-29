@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -219,8 +219,23 @@ internal class OrchestratorAuthManager
 
         if (!response.IsSuccessStatusCode)
         {
-            //return ("", "");
-            throw new Exception(body);
+            // Don't dump the raw response body into the exception message — it can land in
+            // Start-Transcript / CI logs and may carry PII or short-lived tokens. The standard
+            // OAuth2 error envelope is safe to display; fall back to status code otherwise.
+            string summary = $"Token request failed: {(int)response.StatusCode} {response.StatusCode}";
+            try
+            {
+                using var errDoc = JsonDocument.Parse(body);
+                var errRoot = errDoc.RootElement;
+                if (errRoot.TryGetProperty("error", out var err))
+                {
+                    summary += $" — {err.GetString()}";
+                    if (errRoot.TryGetProperty("error_description", out var desc))
+                        summary += $": {desc.GetString()}";
+                }
+            }
+            catch { /* body wasn't JSON; status code alone is enough */ }
+            throw new Exception(summary);
         }
 
         using JsonDocument doc = JsonDocument.Parse(body);
