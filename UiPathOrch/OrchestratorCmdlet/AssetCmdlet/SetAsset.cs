@@ -456,7 +456,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
         {
             if (string.IsNullOrEmpty(asset.ValueType))
             {
-                WriteError(new ErrorRecord(new OrchException(target, "ValueType was not specified. It will be assumed as 'Text'."), "SetAssetError", ErrorCategory.InvalidOperation, target));
+                WriteWarning($"\"{target}\": ValueType was not specified. It will be assumed as 'Text'.");
                 asset.ValueType = "Text";
             }
 
@@ -520,7 +520,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
 
                 if (string.IsNullOrEmpty(asset.ValueType))
                 {
-                    WriteError(new ErrorRecord(new OrchException(target, "ValueType was not specified. It will be assumed as 'Text'."), "SetAssetError", ErrorCategory.InvalidOperation, target));
+                    WriteWarning($"\"{target}\": ValueType was not specified. It will be assumed as 'Text'.");
                     asset.ValueType = "Text";
                     userValue!.ValueType = "Text";
                 }
