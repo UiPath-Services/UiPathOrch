@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -35,6 +35,10 @@
 
   <ItemGroup>
     <PackageReference Include="System.Management.Automation" Version="7.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="UnitTests" />
   </ItemGroup>
 
   <ItemGroup>
