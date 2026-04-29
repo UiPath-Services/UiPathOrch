@@ -34,7 +34,7 @@ public class GetDuExtractorCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+            var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
 
             // Extract path from parameters. If not specified, target the current directory
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");

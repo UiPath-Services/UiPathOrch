@@ -83,6 +83,45 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         return ret.Trim().TrimEnd(',');
     }
 
+    /// <summary>
+    /// Resolves the bound value of a uint Depth parameter from fakeBoundParameters.
+    /// Returns 0 if the dictionary is null, the key is missing, the value is null, or unparsable.
+    /// Replaces the older AST-walking GetParameterValue(commandAst, "Depth") + uint.TryParse pattern,
+    /// which is no longer needed: PowerShell populates fakeBoundParameters even for positional values.
+    /// </summary>
+    public static uint ResolveDepth(IDictionary? fakeBoundParameters)
+    {
+        if (fakeBoundParameters is null || !fakeBoundParameters.Contains("Depth")) return 0;
+        object? value = fakeBoundParameters["Depth"];
+        return value switch
+        {
+            null => 0,
+            uint u => u,
+            int i when i >= 0 => (uint)i,
+            _ => uint.TryParse(value.ToString(), out var parsed) ? parsed : 0u,
+        };
+    }
+
+    /// <summary>
+    /// Resolves the bound value of a SwitchParameter from fakeBoundParameters.
+    /// Returns false if the dictionary is null, the key is missing, the value is null, or non-truthy.
+    /// Accepts SwitchParameter, bool, and the literal strings "true"/"false" (case-insensitive).
+    /// Replaces the older AST-walking ResolveSwitchParameter(fakeBoundParameters, name), which depended on a
+    /// hand-maintained list of switch parameter names and silently broke when a new switch was added.
+    /// </summary>
+    public static bool ResolveSwitchParameter(IDictionary? fakeBoundParameters, string parameterName)
+    {
+        if (fakeBoundParameters is null || !fakeBoundParameters.Contains(parameterName)) return false;
+        object? value = fakeBoundParameters[parameterName];
+        return value switch
+        {
+            null => false,
+            SwitchParameter sp => sp.IsPresent,
+            bool b => b,
+            _ => bool.TryParse(value.ToString(), out var b) && b,
+        };
+    }
+
     public static bool GetSwitchParameterValue(CommandAst commandAst, string parameterName)
     {
         string[] knownSwitchParameters = {
@@ -222,9 +261,8 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
 
     protected static List<(OrchDriveInfo drive, Folder folder)> ResolvePath(CommandAst commandAst, IDictionary fakeBoundParameters, bool includeRoot = false)
     {
-        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
-        var paramDepth = GetParameterValue(commandAst, "Depth");
-        _ = uint.TryParse(paramDepth, out uint depth);
+        var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
+        var depth = ResolveDepth(fakeBoundParameters);
 
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         return SessionState.EnumFolders(paramPath, recurse, depth, includeRoot);
@@ -232,7 +270,7 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
 
     protected static List<(OrchDuDriveInfo drive, DuProject project)> ResolveDuPath(CommandAst commandAst, IDictionary fakeBoundParameters) //, bool includeRoot = false)
     {
-        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+        var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
 
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         return SessionState.EnumDuFolders(paramPath, recurse);
@@ -240,9 +278,8 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
 
     protected static List<(OrchDriveInfo drive, Folder folder)> ResolvePathWithoutPersonalWorkspace(CommandAst commandAst, IDictionary fakeBoundParameters)
     {
-        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
-        var paramDepth = GetParameterValue(commandAst, "Depth");
-        _ = uint.TryParse(paramDepth, out uint depth);
+        var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
+        var depth = ResolveDepth(fakeBoundParameters);
 
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         return SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
@@ -991,7 +1028,7 @@ internal class LibraryIdCompleter : OrchArgumentCompleter
         IDictionary fakeBoundParameters)
     {
         var drives = ResolveOrchDrives(fakeBoundParameters);
-        var hostFeed = GetSwitchParameterValue(commandAst, "HostFeed");
+        var hostFeed = ResolveSwitchParameter(fakeBoundParameters, "HostFeed");
 
         // Exclude Ids already selected via the parameter
         var wpId = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
@@ -1027,7 +1064,7 @@ internal class LibraryVersionCompleter : OrchArgumentCompleter
         IDictionary fakeBoundParameters)
     {
         var drives = ResolveOrchDrives(fakeBoundParameters);
-        var hostFeed = GetSwitchParameterValue(commandAst, "HostFeed");
+        var hostFeed = ResolveSwitchParameter(fakeBoundParameters, "HostFeed");
 
         // Exclude Ids already selected via the parameter
         var wpId = GetFakeBoundParameters(fakeBoundParameters, "Id").ConvertToWildcardPatternList();
@@ -1074,7 +1111,7 @@ internal class PackageIdCompleter : OrchArgumentCompleter
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+        var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
 
         // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
@@ -1111,7 +1148,7 @@ internal class PackageVersionCompleter : OrchArgumentCompleter
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+        var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
 
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         var drivesFolders = SessionState.EnumPackageFeedFolders(paramPath, recurse);
@@ -1613,9 +1650,8 @@ internal class TestSetExecutionNameCompleter : OrchArgumentCompleter
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
-        var paramDepth = GetParameterValue(commandAst, "Depth");
-        uint.TryParse(paramDepth, out uint depth);
+        var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
+        var depth = ResolveDepth(fakeBoundParameters);
 
         // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
@@ -1653,9 +1689,8 @@ internal class TestCaseExecutionIdCompleter : OrchArgumentCompleter
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
-        var paramDepth = GetParameterValue(commandAst, "Depth");
-        uint.TryParse(paramDepth, out uint depth);
+        var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
+        var depth = ResolveDepth(fakeBoundParameters);
 
         // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
@@ -1714,9 +1749,8 @@ internal class TestCaseExecutionEntryPointCompleter : OrchArgumentCompleter
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
-        var paramDepth = GetParameterValue(commandAst, "Depth");
-        uint.TryParse(paramDepth, out uint depth);
+        var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
+        var depth = ResolveDepth(fakeBoundParameters);
 
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(paramPath, recurse, depth);
@@ -1903,7 +1937,7 @@ internal class TmRequirementNameCompleter : OrchArgumentCompleter
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+        var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
 
         // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
@@ -1939,7 +1973,7 @@ internal class TmTestSetNameCompleter : OrchArgumentCompleter
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+        var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
 
         // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
@@ -1975,7 +2009,7 @@ internal class TmTestCaseNameCompleter : OrchArgumentCompleter
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+        var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
 
         // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
@@ -2011,7 +2045,7 @@ internal class TmTestExecutionNameCompleter : OrchArgumentCompleter
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+        var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
 
         // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
@@ -2260,7 +2294,7 @@ internal class DuNameCompleter : OrchArgumentCompleter
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+        var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
 
         // Extract path from the parameter. If not specified, target the current directory.
         var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
@@ -2300,7 +2334,7 @@ internal class DuNameCompleter : OrchArgumentCompleter
 //        CommandAst commandAst,
 //        IDictionary fakeBoundParameters)
 //    {
-//        var recurse = GetSwitchParameterValue(commandAst, "Recurse");
+//        var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
 
 //        // Extract path from the parameter. If not specified, target the current directory.
 //        var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");

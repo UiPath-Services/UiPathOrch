@@ -51,9 +51,8 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var recurse = GetSwitchParameterValue(commandAst, "Recurse");
-            var paramDepth = GetParameterValue(commandAst, "Depth");
-            uint.TryParse(paramDepth, out uint depth);
+            var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
+            var depth = ResolveDepth(fakeBoundParameters);
 
             // Extract path from parameter. If not specified, target the current directory.
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
@@ -97,9 +96,8 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var recurse = GetSwitchParameterValue(commandAst, "Recurse");
-            var paramDepth = GetParameterValue(commandAst, "Depth");
-            uint.TryParse(paramDepth, out uint depth);
+            var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
+            var depth = ResolveDepth(fakeBoundParameters);
 
             // Extract path from parameter. If not specified, target the current directory.
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
@@ -143,9 +141,8 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var recurse = GetSwitchParameterValue(commandAst, "Recurse");
-            var paramDepth = GetParameterValue(commandAst, "Depth");
-            uint.TryParse(paramDepth, out uint depth);
+            var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
+            var depth = ResolveDepth(fakeBoundParameters);
 
             // Extract path from parameter. If not specified, target the current directory.
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
