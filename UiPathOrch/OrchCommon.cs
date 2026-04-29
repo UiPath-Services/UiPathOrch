@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Data;
 using System.Management.Automation;
 using System.Text.RegularExpressions;
@@ -497,7 +497,7 @@ public class ProgressReporter(IWritableHost provider, int id, int totalNum, stri
 
     public void WriteProgress(int index, string? statusDescription = null, string? activity = null)
     {
-        progressRecord.PercentComplete = (index * 100) / this.totalNum;
+        progressRecord.PercentComplete = totalNum > 0 ? (index * 100) / totalNum : 0;
         if (!string.IsNullOrEmpty(activity))
         {
             progressRecord.Activity = activity;
