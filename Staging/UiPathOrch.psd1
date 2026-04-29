@@ -15,7 +15,7 @@ RootModule = 'UiPathOrch.dll'
 ModuleVersion = '0.9.18.0'
 
 # Supported PSEditions
-# CompatiblePSEditions = @()
+CompatiblePSEditions = @('Core')
 
 # ID used to uniquely identify this module
 GUID = '7098583d-d092-4fe9-bf36-a652e7a51efb'
@@ -403,7 +403,7 @@ CmdletsToExport = @(
 )
 
 # Variables to export from this module
-VariablesToExport = '*'
+VariablesToExport = @()
 
 # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
 AliasesToExport = @('!Show-OrchGuide')
