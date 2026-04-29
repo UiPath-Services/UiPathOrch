@@ -1,61 +1,28 @@
 using System.Management.Automation;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchWebhook", SupportsShouldProcess = true)]
-public class RemoveWebhookCommand : OrchestratorPSCmdlet
+public class RemoveWebhookCommand : RemoveDriveEntityCmdletBase<Webhook>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(WebhookNameCompleter))]
     [SupportsWildcards]
-    public string[]? Name { get; set; }
+    public override string[]? Name { get; set; }
 
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter))]
-    public string[]? Path { get; set; }
+    protected override string EntityNoun => "Webhook";
+    protected override Func<Webhook?, string?> GetName => w => w?.Name;
+    protected override Func<Webhook, string> GetPSPath => w => w.GetPSPath();
 
-    protected override void ProcessRecord()
+    protected override IEnumerable<Webhook> GetEntities(OrchDriveInfo drive)
+        => drive.Webhooks.Get();
+
+    protected override void Remove(OrchDriveInfo drive, Webhook webhook)
     {
-        var drives = SessionState.EnumOrchDrives(Path);
-        var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();
-
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
-        {
-            try
-            {
-                var entities = drive.Webhooks.Get();
-
-                foreach (var webhook in entities
-                    .FilterByWildcards(wh => wh?.Name, wpName)
-                    .OrderBy(wh => wh.Name))
-                {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
-                    if (ShouldProcess(webhook.GetPSPath(), "Remove Webhook"))
-                    {
-                        try
-                        {
-                            drive.OrchAPISession.RemoveWebhooks(webhook.Id ?? 0);
-                            drive.Webhooks.ClearCache();
-                        }
-                        catch (Exception ex)
-                        {
-                            WriteError(new ErrorRecord(new OrchException(webhook.GetPSPath(), ex), "RemoveWebhookError", ErrorCategory.InvalidOperation, webhook));
-                        }
-                    }
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetWebhookError", ErrorCategory.InvalidOperation, drive));
-            }
-        }
+        drive.OrchAPISession.RemoveWebhooks(webhook.Id ?? 0);
+        drive.Webhooks.ClearCache();
     }
 }

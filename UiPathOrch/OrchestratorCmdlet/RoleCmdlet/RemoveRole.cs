@@ -1,62 +1,30 @@
 using System.Management.Automation;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchRole", SupportsShouldProcess = true)]
-public class RemoveRoleCommand : OrchestratorPSCmdlet
+public class RemoveRoleCommand : RemoveDriveEntityCmdletBase<Role>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [SupportsWildcards]
     [ArgumentCompleter(typeof(RoleNameCompleter))]
-    public string[]? Name { get; set; }
+    [SupportsWildcards]
+    public override string[]? Name { get; set; }
 
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter))]
-    public string[]? Path { get; set; }
+    protected override string EntityNoun => "Role";
+    protected override Func<Role?, string?> GetName => r => r?.Name;
+    protected override Func<Role, string> GetPSPath => r => r.GetPSPath();
+    protected override Func<IEnumerable<Role>, IEnumerable<Role>>? PreFilter
+        => roles => roles.Where(r => !r.IsStatic.GetValueOrDefault());
 
-    protected override void ProcessRecord()
+    protected override IEnumerable<Role> GetEntities(OrchDriveInfo drive)
+        => drive.Roles.Get();
+
+    protected override void Remove(OrchDriveInfo drive, Role role)
     {
-        var drives = SessionState.EnumOrchDrives(Path);
-        var wpName = Name.ConvertToWildcardPatternList();
-
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
-        {
-            try
-            {
-                var roles = drive.Roles.Get();
-                foreach (var role in roles
-                    .Where(r => !r.IsStatic.GetValueOrDefault())
-                    .FilterByWildcards(role => role?.Name, wpName)
-                    .OrderBy(r => r.Name))
-                {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
-                    string target = role.GetPSPath();
-                    if (ShouldProcess(target, "Remove Role"))
-                    {
-                        try
-                        {
-                            drive.OrchAPISession.DeleteRole(role.Id ?? 0);
-                            drive.Roles.ClearCache();
-                        }
-                        catch (Exception ex)
-                        {
-                            WriteError(new ErrorRecord(new OrchException(target, ex), "RemoveRoleError", ErrorCategory.InvalidOperation, role));
-                        }
-                    }
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetRoleError", ErrorCategory.InvalidOperation, drive));
-            }
-        }
+        drive.OrchAPISession.DeleteRole(role.Id ?? 0);
+        drive.Roles.ClearCache();
     }
 }
