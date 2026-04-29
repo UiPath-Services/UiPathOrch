@@ -262,6 +262,31 @@ public partial class OrchAPISession : IDisposable
         return driveName;
     }
 
+    // Emitted once per session via PendingWarning (next BeginProcessing flushes it as
+    // WriteWarning) so users who opt into logging are reminded which cmdlets put
+    // credentials/secrets in HTTP bodies and would land in any log they share.
+    private bool _loggingWarningEmitted;
+
+    private void EnsureLoggingWarningEmitted()
+    {
+        if (_loggingWarningEmitted) return;
+        _loggingWarningEmitted = true;
+
+        string warning =
+            $"Logging is enabled for '{_drive.NameColonSeparator}'. HTTP request/response " +
+            "bodies are recorded at Trace/Verbose levels and on any error response. " +
+            "To produce a shareable log, avoid these cmdlets in this session: " +
+            "Set-OrchCredentialAsset, Set-OrchSecretAsset, " +
+            "Update-OrchCurrentUserURPassword, Update-OrchUser (-UR_Password), " +
+            "Update-PmUser (-Password), New-PmUser (with passwords), " +
+            "New-OrchBucket (-Password), Add-OrchMachineClientSecret, " +
+            "Copy-OrchCredentialStore.";
+
+        PendingWarning = string.IsNullOrEmpty(PendingWarning)
+            ? warning
+            : PendingWarning + "\n\n" + warning;
+    }
+
     private string? _logFolderPath = null;
     public string GetLogFolderPath()
     {

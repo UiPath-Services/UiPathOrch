@@ -96,6 +96,7 @@ public partial class OrchAPISession : IDisposable
         bool hasException = false;
         var logging = _drive._psDrive.Logging;
         bool logEnabled = logging?.Enabled.GetValueOrDefault() ?? false;
+        if (logEnabled) EnsureLoggingWarningEmitted();
 
         try
         {
