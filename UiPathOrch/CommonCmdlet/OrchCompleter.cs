@@ -1282,9 +1282,18 @@ internal class RoleNameCompleter : DriveScopedCompleter<Role>
     protected override string GetTipHelp(Role e) => TipHelp(e);
 }
 
-public class TenantUserUserNameCompleter : OrchArgumentCompleter
+// Common base for the symmetric pair of completers that suggest values from the
+// tenant user list. UserName and FullName completers differ only in which field
+// is "self" (the parameter being completed, used for self-exclusion + display)
+// and which is the "other" side (already-selected values used as a positive filter).
+public abstract class TenantUserDualFieldCompleterBase : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    protected abstract string SelfFieldName { get; }    // e.g. "UserName" — same as parameterName, also the matching field
+    protected abstract string OtherFieldName { get; }   // e.g. "FullName" — sister parameter for cross-filter
+    protected abstract Func<User, string?> SelfField { get; }
+    protected abstract Func<User, string?> OtherField { get; }
+
+    public sealed override IEnumerable<CompletionResult> CompleteArgument(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -1293,71 +1302,51 @@ public class TenantUserUserNameCompleter : OrchArgumentCompleter
     {
         var drives = ResolveOrchDrives(fakeBoundParameters);
 
-        // Exclude user names already selected via the parameter
-        var wpUserName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
+        // Exclude self-field values already selected via the parameter
+        var wpSelf = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
-        // Only target FullNames selected via the parameter
-        var wpFullName = GetFakeBoundParameters(fakeBoundParameters, "FullName").ConvertToWildcardPatternList();
+        // Only target other-field values selected via the sister parameter
+        var wpOther = GetFakeBoundParameters(fakeBoundParameters, OtherFieldName).ConvertToWildcardPatternList();
 
         var wpType = GetFakeBoundParameters(fakeBoundParameters, "Type").ConvertToWildcardPatternList();
 
         var wp = CreateWPFromWordToComplete(wordToComplete);
+        var selfField = SelfField;
+        var otherField = OtherField;
 
         var results = ParallelResults.GroupBy(drives, drive => drive.GetUsers());
 
         foreach (var result in results)
         {
             foreach (var user in result
-                .Where(u => wp.IsMatch(u.UserName))
-                .ExcludeByWildcards(u => u?.UserName, wpUserName)
-                .FilterByWildcards(u => u?.FullName, wpFullName)
+                .Where(u => wp.IsMatch(selfField(u)))
+                .ExcludeByWildcards(u => u is null ? null : selfField(u), wpSelf)
+                .FilterByWildcards(u => u is null ? null : otherField(u), wpOther)
                 .FilterByWildcards(u => u?.Type, wpType)
-                .OrderBy(u => u.UserName))
+                .OrderBy(u => selfField(u)))
             {
                 string tiphelp = TipHelp2(user);
-                yield return new CompletionResult(PathTools.EscapePSText(user.UserName), user.UserName, CompletionResultType.ParameterValue, tiphelp);
+                string value = selfField(user) ?? "";
+                yield return new CompletionResult(PathTools.EscapePSText(value), value, CompletionResultType.ParameterValue, tiphelp);
             }
         }
     }
 }
 
-public class TenantUserFullNameCompleter : OrchArgumentCompleter
+public class TenantUserUserNameCompleter : TenantUserDualFieldCompleterBase
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
-    {
-        var drives = ResolveOrchDrives(fakeBoundParameters);
+    protected override string SelfFieldName => "UserName";
+    protected override string OtherFieldName => "FullName";
+    protected override Func<User, string?> SelfField => u => u.UserName;
+    protected override Func<User, string?> OtherField => u => u.FullName;
+}
 
-        // Only target UserNames selected via the parameter
-        var wpUserName = GetFakeBoundParameters(fakeBoundParameters, "UserName").ConvertToWildcardPatternList();
-
-        // Exclude user names already selected via the parameter
-        var wpFullName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
-
-        var wpType = GetFakeBoundParameters(fakeBoundParameters, "Type").ConvertToWildcardPatternList();
-
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults.GroupBy(drives, drive => drive.GetUsers());
-
-        foreach (var result in results)
-        {
-            foreach (var e in result
-                .Where(u => wp.IsMatch(u.FullName))
-                .FilterByWildcards(u => u?.UserName, wpUserName)
-                .ExcludeByWildcards(u => u?.FullName, wpFullName)
-                .FilterByWildcards(u => u?.Type, wpType)
-                .OrderBy(u => u.FullName))
-            {
-                string tiphelp = TipHelp2(e);
-                yield return new CompletionResult(PathTools.EscapePSText(e.FullName), e.FullName, CompletionResultType.ParameterValue, tiphelp);
-            }
-        }
-    }
+public class TenantUserFullNameCompleter : TenantUserDualFieldCompleterBase
+{
+    protected override string SelfFieldName => "FullName";
+    protected override string OtherFieldName => "UserName";
+    protected override Func<User, string?> SelfField => u => u.FullName;
+    protected override Func<User, string?> OtherField => u => u.UserName;
 }
 
 internal class TimeZoneCompleter : OrchArgumentCompleter
