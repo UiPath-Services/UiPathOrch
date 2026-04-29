@@ -61,7 +61,7 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         if (input is null)
             yield break;
 
-        var matches = MyRegex().Matches(input);
+        var matches = CommaSeparatedTokenRegex().Matches(input);
         foreach (Match match in matches.Cast<Match>())
         {
             string value = match.Value.Trim();
@@ -713,8 +713,9 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         return tiphelp;
     }
 
+    // Matches comma-separated tokens, where single-quoted segments preserve embedded commas.
     [GeneratedRegex(@"(?:[^',]+|'[^']*')+")]
-    private static partial Regex MyRegex();
+    private static partial Regex CommaSeparatedTokenRegex();
 }
 
 /// <summary>
