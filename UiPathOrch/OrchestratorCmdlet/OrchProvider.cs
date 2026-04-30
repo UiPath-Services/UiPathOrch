@@ -583,7 +583,6 @@ public partial class OrchProvider : NavigationCmdletProvider
             return folder is not null;
         }
     }
-    // TODO: Implementation to update the folder's Description. Want to move this to SetItemProperty. Commented out for now.
 
     #endregion ItemCmdletProvider overrides
 
@@ -995,8 +994,6 @@ public partial class OrchProvider : NavigationCmdletProvider
             }
         }
     }
-
-    // TODO: Changing Description via Rename-Item is unnatural, so removing this.
 
     protected override void RemoveItem(string path, bool recurse)
     {
