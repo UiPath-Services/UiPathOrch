@@ -94,7 +94,7 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
     /// Resolves the bound value of a SwitchParameter from fakeBoundParameters.
     /// Returns false if the dictionary is null, the key is missing, the value is null, or non-truthy.
     /// Accepts SwitchParameter, bool, and the literal strings "true"/"false" (case-insensitive).
-    /// Replaces the older AST-walking ResolveSwitchParameter(fakeBoundParameters, name), which depended on a
+    /// Replaces the older AST-walking GetSwitchParameterValue(commandAst, name), which depended on a
     /// hand-maintained list of switch parameter names and silently broke when a new switch was added.
     /// </summary>
     public static bool ResolveSwitchParameter(IDictionary? fakeBoundParameters, string parameterName)
