@@ -130,15 +130,21 @@ internal class OrchestratorAuthManager
             string codeVerifier = RandomString(80);
             string authorizationCode = GetAuthorizationCode(codeVerifier);
 
-            (_access_token, _refresh_token) = GetAccessToken(new Dictionary<string, string>
+            // GetAuthorizationCode performs the token exchange inline so the success page
+            // can display the authenticated user's name. Skip the redundant exchange when
+            // it already succeeded.
+            if (string.IsNullOrEmpty(_access_token))
             {
-                { "grant_type", "authorization_code" },
-                { "code", authorizationCode },
-                { "redirect_uri", _drive._psDrive.RedirectUrl! },
-                { "client_id", _drive._psDrive.AppId! },
-                { "code_verifier", codeVerifier }
-            });
-            return _access_token;
+                (_access_token, _refresh_token) = GetAccessToken(new Dictionary<string, string>
+                {
+                    { "grant_type", "authorization_code" },
+                    { "code", authorizationCode },
+                    { "redirect_uri", _drive._psDrive.RedirectUrl! },
+                    { "client_id", _drive._psDrive.AppId! },
+                    { "code_verifier", codeVerifier }
+                });
+            }
+            return _access_token!;
         }
         else // user/pass auth
         {
@@ -368,14 +374,56 @@ internal class OrchestratorAuthManager
                         authorizationCode = context.Request.QueryString["code"];
                         if (!string.IsNullOrEmpty(authorizationCode))
                         {
+                            // Exchange the auth code for tokens inline so we can display
+                            // the authenticated user's name on the success page. The
+                            // caller (RequestToken) will skip its own exchange when
+                            // _access_token is already set. If exchange fails here, we
+                            // continue to render the page without a username and let the
+                            // caller's retry surface the error through the normal path.
+                            string userName = "";
+                            if (!string.IsNullOrEmpty(codeVerifier))
+                            {
+                                try
+                                {
+                                    (_access_token, _refresh_token) = GetAccessToken(new Dictionary<string, string>
+                                    {
+                                        { "grant_type", "authorization_code" },
+                                        { "code", authorizationCode },
+                                        { "redirect_uri", _drive._psDrive.RedirectUrl! },
+                                        { "client_id", _drive._psDrive.AppId! },
+                                        { "code_verifier", codeVerifier }
+                                    });
+
+                                    try
+                                    {
+                                        using JsonDocument doc = ParseJwtPayload();
+                                        if (doc.RootElement.TryGetProperty("preferred_username", out var puElement))
+                                            userName = puElement.GetString() ?? "";
+                                        else if (doc.RootElement.TryGetProperty("name", out var nameElement))
+                                            userName = nameElement.GetString() ?? "";
+                                    }
+                                    catch { /* JWT unparseable; fall through to generic display */ }
+                                }
+                                catch
+                                {
+                                    // Reset so caller's retry path runs the exchange and surfaces the real error.
+                                    _access_token = null;
+                                    _refresh_token = null;
+                                }
+                            }
+
                             // Send a response back to the browser
                             using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("UiPathOrch.Resources.en.MountSuccessNotification.html");
                             using StreamReader reader = new(stream!);
                             string htmlTemplate = await reader.ReadToEndAsync();
 
+                            string userBlock = string.IsNullOrEmpty(userName)
+                                ? ""
+                                : $"<p class=\"row\">Signed in as <strong>{System.Net.WebUtility.HtmlEncode(userName)}</strong></p>";
+
                             // Embed image and version information
                             var version = Assembly.GetExecutingAssembly().GetName().Version;
-                            string responseString = string.Format(htmlTemplate, _drive._psDrive.Root, _drive.NameColon, version, LoadBotImageRandomly());
+                            string responseString = string.Format(htmlTemplate, _drive._psDrive.Root, _drive.NameColon, version, LoadBotImageRandomly(), userBlock);
 
                             byte[] buffer = Encoding.UTF8.GetBytes(responseString);
                             context.Response.ContentLength64 = buffer.Length;
