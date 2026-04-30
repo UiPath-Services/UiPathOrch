@@ -71,19 +71,6 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         }
     }
 
-    public static string ExtractValueFromCommandElement(CommandElementAst element)
-    {
-        string ret = element switch
-        {
-            StringConstantExpressionAst stringAst => stringAst.Value,
-            VariableExpressionAst variableAst => variableAst.VariablePath.UserPath,
-            ErrorExpressionAst errorAst => errorAst.ToString(),// For ErrorExpressionAst, retrieve appropriate info or return an error message
-            _ => element.ToString(),// For unknown CommandElementAst subtypes, retrieve info or
-                                    // define appropriate default behavior.
-        };
-        return ret.Trim().TrimEnd(',');
-    }
-
     /// <summary>
     /// Resolves the bound value of a uint Depth parameter from fakeBoundParameters.
     /// Returns 0 if the dictionary is null, the key is missing, the value is null, or unparsable.
