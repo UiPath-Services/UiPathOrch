@@ -107,13 +107,20 @@ public class OrchPSDrive
         RedirectUrl = drive._psDrive.RedirectUrl;
         HttpListener = drive._psDrive.HttpListener;
         ApiVersion = drive.OrchAPISession.ApiVersion;
-        CurrentUser = drive.OrchAPISession.AuthManager.IsConfidentialApp ? "N/A" : drive._dicCurrentUser?.UserName;
         CurrentLocation = drive.CurrentLocation;
         PartitionGlobalId = drive._dicPartitionGlobalId;
         TenantId = drive._dicTenantId;
         TenantKey = drive._dicTenantKey;
         AccessToken = drive.OrchAPISession.AuthManager.AccessToken;
         Claims = ParseJwtClaims(AccessToken);
+        // Derive CurrentUser from JWT (free) so it populates immediately after auth for both
+        // Conf and Non-Conf apps. Falls back to _dicCurrentUser?.UserName for Non-Conf tenants
+        // whose Identity Server doesn't emit preferred_username/name claims (older deployments).
+        CurrentUser = drive.OrchAPISession.AuthManager.IsConfidentialApp
+            ? "N/A"
+            : (Claims?.Properties["preferred_username"]?.Value as string)
+                ?? (Claims?.Properties["name"]?.Value as string)
+                ?? drive._dicCurrentUser?.UserName;
         if (drive._psDrive.Proxy is not null)
         {
             ProxySettings = new()
