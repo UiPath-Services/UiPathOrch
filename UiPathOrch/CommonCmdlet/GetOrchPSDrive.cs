@@ -39,10 +39,15 @@ public class GetOrchPSDriveCommand : OrchestratorPSCmdlet
             {
                 drive.OrchAPISession.EnsureAuthenticated();
                 drive.GetPartitionGlobalId();
+                // Confidential apps skip GetCurrentUser(), so _dicTenantId / _dicTenantKey
+                // are not populated as a side effect of authentication. Trigger the
+                // /odata/Users + /odata/Users(id) fallback explicitly so -Force returns
+                // a fully populated OrchPSDrive for both Conf and Non-Conf apps.
+                drive.GetTenantId();
             }
             catch (Exception ex)
             {
-                WriteError(new ErrorRecord(new OrchException(drive.NameColon, ex), "GetActivitySettingsError", ErrorCategory.InvalidOperation, drive));
+                WriteError(new ErrorRecord(new OrchException(drive.NameColon, ex), "GetOrchPSDriveError", ErrorCategory.InvalidOperation, drive));
             }
         }
     }
