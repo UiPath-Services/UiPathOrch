@@ -1,5 +1,11 @@
 # UiPathOrch
 
+[![PowerShell](https://img.shields.io/badge/PowerShell-7.4+-blue.svg)](https://github.com/PowerShell/PowerShell)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-brightgreen.svg)](#prerequisites)
+[![PowerShell Gallery](https://img.shields.io/powershellgallery/v/UiPathOrch)](https://www.powershellgallery.com/packages/UiPathOrch)
+[![PowerShell Gallery](https://img.shields.io/powershellgallery/dt/UiPathOrch)](https://www.powershellgallery.com/packages/UiPathOrch)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-yellow.svg)](LICENSE)
+
 PowerShell Drive and Cmdlets for managing UiPath Orchestrator.
 
 ## Overview
