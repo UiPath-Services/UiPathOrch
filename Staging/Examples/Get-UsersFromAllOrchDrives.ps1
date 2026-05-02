@@ -1,5 +1,9 @@
-# Retrieve all jobs information from all mounted UiPathOrch drives
-# and save it to a single CSV file.
+# Retrieve all tenant users from all mounted UiPathOrch drives and save
+# them to a single CSV file, flattening RolesList into a semicolon-
+# delimited column.
+#
+# Drive names cannot be wildcarded in -Path, so this script enumerates
+# all mounted UiPathOrch drives and passes the comma-separated list.
 
 
 $OutputDir = "c:\tmp"
@@ -12,15 +16,15 @@ if (-not (Test-Path -Path $OutputDir)) {
 }
 
 # Retrieve a list of UiPathOrch provider drive names and store them in a variable
-$drivePaths = (Get-PSDrive -PSProvider UiPathOrch) | % { "$($_.Name):\" }
+$drivePaths = Get-PSDrive -PSProvider UiPathOrch | ForEach-Object { "$($_.Name):\" }
 
 # Retrieve users from each drive, display them in the console, and store in a variable
-Get-OrchUser -Path $drivePaths | 
-    select *,@{Name='RolesListExpanded'; Expression={$_.RolesList -join ';'}} |
+Get-OrchUser -Path $drivePaths |
+    Select-Object *, @{Name = 'RolesListExpanded'; Expression = { $_.RolesList -join ';' }} |
     Tee-Object -Variable output
 
 # Export the contents of the array to a CSV file
 $output | Export-Csv -Path $OutputCsv -Encoding $CsvEncoding -NoTypeInformation
 
-# Invoke Excel
-ii $OutputCsv
+# Open the CSV in the default application (typically Excel)
+Invoke-Item $OutputCsv

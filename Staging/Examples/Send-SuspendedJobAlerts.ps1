@@ -1,66 +1,55 @@
-# Monitor the jobs in Orch1:\Shared every 15 minutes, and
-# if there are any jobs that have been Suspended for more than 1 hour, notify via email.
+# Monitor jobs in Orch1:\Shared every 15 minutes and notify via Outlook
+# whenever any job is in the Suspended state. Notifications are sent
+# every cycle for as long as a job remains suspended.
+#
+# Outlook COM is Windows-only and requires a configured Outlook profile.
+# Adapt Send-Notification for Teams / Slack webhook / SMTP as needed.
 
 $outlook = New-Object -ComObject Outlook.Application
 
 function Write-TimestampedMessage {
     param(
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$Message
     )
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
     Write-Host "[$timestamp] $Message"
 }
 
-# Function to send email notifications for stuck jobs
 function Send-Notification {
     param($Jobs, $Subject, $BodyPrefix)
     $mail = $outlook.CreateItem(0)
-    $mail.To = "you@example.com"
+    $mail.To = 'you@example.com'
     $mail.Subject = $Subject
     $mail.Body = "$BodyPrefix`n" + ($Jobs | Out-String)
     $mail.Send()
 }
 
-# Dictionary to store the time when each job was found Suspended
-$suspendedJobs = @{}
-
 try {
     while ($true) {
-        Write-TimestampedMessage "Retrieving Jobs from Orchestrator..."
+        Write-TimestampedMessage 'Retrieving Jobs from Orchestrator...'
 
-        # Retrieve jobs in Suspended state
         $jobs = Get-OrchJob -Path Orch1:\Shared -State Suspended
 
-        # Update dictionary with current Suspended jobs
-        foreach ($job in $jobs) {
-            $key = ($job.Path, $job.Id)
-            if (-not $suspendedJobs.ContainsKey($key)) {
-                $suspendedJobs[$key] = Get-Date
-            }
+        if ($jobs) {
+            Write-TimestampedMessage "Found $($jobs.Count) suspended job(s). Sending notification..."
+            Send-Notification `
+                -Jobs $jobs `
+                -Subject 'UiPathOrch Alert: Suspended job(s) detected' `
+                -BodyPrefix 'The following job(s) are currently suspended:'
+        }
+        else {
+            Write-TimestampedMessage 'No suspended jobs.'
         }
 
-        # Notify for jobs that have been Suspended for over an hour
-        $jobsToNotify = $suspendedJobs.GetEnumerator() | Where-Object {
-             ($_.Value).AddHours(1) -le (Get-Date)
-        }
-
-        if ($jobsToNotify) {
-            Send-Notification -Jobs $jobsToNotify -Subject "Notification: Jobs Suspended Over An Hour" -BodyPrefix "The following jobs have been suspended for more than an hour:"
-        }
-
-        # Check all jobs and remove any that are no longer Suspended
-        $currentJobKeys = $jobs | ForEach-Object { ($_.Path, $_.Id) }
-        $suspendedJobs.Keys | Where-Object { $_ -notin $currentJobKeys } | ForEach-Object {
-            $suspendedJobs.Remove($_)
-        }
-
-        Write-TimestampedMessage "Waiting for 15 minutes before the next check..."
+        Write-TimestampedMessage 'Waiting 15 minutes before the next check...'
         Start-Sleep -Seconds 900
     }
-} catch {
+}
+catch {
     Write-TimestampedMessage "An error occurred: $($_.Exception.Message)"
-} finally {
+}
+finally {
     [System.Runtime.InteropServices.Marshal]::ReleaseComObject($outlook) | Out-Null
     [GC]::Collect()
     [GC]::WaitForPendingFinalizers()

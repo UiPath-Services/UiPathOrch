@@ -104,6 +104,17 @@ will be major-version bumps per SemVer.
   `VariablesToExport`.
 - Release workflow's Assemble step mirrors `Build-Help.ps1` Step 4
   so MAML help is consistent between local and CI builds.
+- `Staging/Examples/` is now packaged with the module (release
+  workflow previously omitted the folder). The 11 retained scripts
+  were also reviewed and refreshed: cmdlet renames from the `OrchPm*`
+  → `Pm*` migration applied to `Remove-TenantUsersFromCsv.ps1`;
+  `Send-PendingJobAlerts.ps1` and `Send-SuspendedJobAlerts.ps1` no
+  longer track in-script state (so they survive a restart and
+  cannot fall into a "miss the first mail, miss it forever" hole);
+  `StartJob-WhenJobFailed.ps1` passes a real `[DateTime]` to
+  `-CreationTimeAfter`. The broken `Add-TenantUser.ps1` (column
+  schema mismatch + dead `Add-OrchPmMemberToPmGroup`) was removed
+  rather than rewritten.
 
 ## [0.9.18.0] - 2026-04-28
 ### Added

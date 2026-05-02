@@ -1,5 +1,9 @@
-# Retrieve all jobs information from all mounted UiPathOrch drives
-# and save it to a single CSV file.
+# Retrieve folder-user assignments from all mounted UiPathOrch drives
+# and save them to a single CSV file. Nested user properties are
+# flattened with calculated columns.
+#
+# Drive names cannot be wildcarded in -Path, so this script enumerates
+# all mounted UiPathOrch drives and passes the comma-separated list.
 
 
 $OutputDir = "c:\tmp"
@@ -12,7 +16,7 @@ if (-not (Test-Path -Path $OutputDir)) {
 }
 
 # Retrieve a list of UiPathOrch provider drive names and store them in a variable
-$drivePaths = (Get-PSDrive -PSProvider UiPathOrch) | % { "$($_.Name):\" }
+$drivePaths = Get-PSDrive -PSProvider UiPathOrch | ForEach-Object { "$($_.Name):\" }
 
 # Retrieve users from each drive, display them in the console, and store in a variable
 Get-OrchFolderUser -Recurse -Path $drivePaths | 
@@ -28,5 +32,5 @@ Get-OrchFolderUser -Recurse -Path $drivePaths |
 # Export the contents of the array to a CSV file
 $output | Export-Csv -Path $OutputCsv -Encoding $CsvEncoding -NoTypeInformation
 
-# Invoke Excel
-ii $OutputCsv
+# Open the CSV in the default application (typically Excel)
+Invoke-Item $OutputCsv

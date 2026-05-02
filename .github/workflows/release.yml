@@ -70,7 +70,8 @@ jobs:
           $stage = Join-Path $env:RUNNER_TEMP 'UiPathOrch'
           New-Item -ItemType Directory -Path $stage -Force | Out-Null
           New-Item -ItemType Directory -Path (Join-Path $stage 'Functions') -Force | Out-Null
-          New-Item -ItemType Directory -Path (Join-Path $stage 'Docs') -Force | Out-Null
+          New-Item -ItemType Directory -Path (Join-Path $stage 'Docs')      -Force | Out-Null
+          New-Item -ItemType Directory -Path (Join-Path $stage 'Examples')  -Force | Out-Null
           $enUS = Join-Path $stage 'en-US'
           New-Item -ItemType Directory -Path $enUS -Force | Out-Null
 
@@ -80,6 +81,7 @@ jobs:
           }
           Get-ChildItem 'Staging/Functions/*.ps1' | Copy-Item -Destination (Join-Path $stage 'Functions')
           Get-ChildItem 'Staging/Docs/*.md'       | Copy-Item -Destination (Join-Path $stage 'Docs')
+          Get-ChildItem 'Staging/Examples/*.ps1'  | Copy-Item -Destination (Join-Path $stage 'Examples')
 
           # Mirror Build-Help.ps1's Step 4 (deploy) verbatim — iterate every XML file
           # actually generated rather than hardcoding names, so case (Help.xml vs

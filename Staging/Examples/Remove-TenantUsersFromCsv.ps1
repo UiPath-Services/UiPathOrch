@@ -55,12 +55,12 @@ try {
         Write-Output "Remove-OrchUser and Remove-OrchPersonalWorkspace executed successfully."
         Write-Output ""
 
-        $data | Remove-OrchPmMemberFromPmGroup -GroupName * -Verbose
-        Write-Output "Remove-OrchPmMemberFromPmGroup executed successfully."
+        $data | Remove-PmGroupMember -GroupName * -Verbose
+        Write-Output "Remove-PmGroupMember executed successfully."
         Write-Output ""
 
-        $data | Remove-OrchPmUser -Verbose
-        Write-Output "Remove-OrchPmUser executed successfully."
+        $data | Remove-PmUser -Verbose
+        Write-Output "Remove-PmUser executed successfully."
         Write-Output ""
     } catch {
         Write-Error "An error occurred while executing cmdlets: $_"

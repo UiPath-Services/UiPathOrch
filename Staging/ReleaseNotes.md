@@ -40,6 +40,7 @@ This release marks API maturity. Going forward, breaking changes will be major-v
 - `Build-Deploy.ps1` now tracked in repo.
 - psd1 hygiene: declare `CompatiblePSEditions`, empty `VariablesToExport`.
 - Release workflow's Assemble step mirrors `Build-Help.ps1` Step 4 so MAML help is consistent between local and CI builds.
+- `Staging/Examples/` is now packaged with the module (the release workflow previously omitted the folder). The 11 retained scripts were also reviewed and refreshed: `OrchPm*` → `Pm*` cmdlet renames applied to `Remove-TenantUsersFromCsv.ps1`; `Send-PendingJobAlerts.ps1` and `Send-SuspendedJobAlerts.ps1` no longer track in-script state (so they survive a restart and cannot fall into a "miss the first mail, miss it forever" hole); `StartJob-WhenJobFailed.ps1` passes a real `[DateTime]` to `-CreationTimeAfter`. The broken `Add-TenantUser.ps1` was removed rather than rewritten.
 
 
 # Version: 0.9.18.0

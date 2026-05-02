@@ -1,46 +1,53 @@
-# Start a specified process when any job fails in the current folder
+# Monitor the current folder every 15 minutes for jobs that have entered
+# the Faulted state since the script started, and start a recovery process
+# for each one.
+#
+# A HashSet tracks the IDs already acted on so the recovery process is
+# launched at most once per faulted job (unlike the alert scripts in this
+# folder, where re-emailing every cycle is acceptable, starting a job
+# multiple times is not).
 
-# HashSet to store the IDs of jobs that have already been processed
+# Set this to the process you want to start in response to a faulted job.
+$RecoveryProcessName = 'YourProcessName'
+
+$startTime = Get-Date
 $processedJobIds = [System.Collections.Generic.HashSet[string]]::new()
 
-# Store the script start time
-$startTime = Get-Date -Format "yyyy/MM/dd HH:mm"
-Write-Host "Script started at $startTime."
+Write-Host "Script started at $($startTime.ToString('yyyy-MM-dd HH:mm'))."
 
 while ($true) {
-    Write-Host "Retrieving Jobs from Orchestrator..."
+    Write-Host 'Retrieving Jobs from Orchestrator...'
 
     try {
-        # You can specify the folders you want to monitor with the Path parameter
+        # Adjust -Path / -Recurse to match the folders you want to monitor.
         $jobs = Get-OrchJob -State Faulted -CreationTimeAfter $startTime
 
-        # Filter jobs that are faulted and not yet processed
         $faultedJobs = $jobs | Where-Object {
-            -not $processedJobIds.Contains($_.Id)
+            -not $processedJobIds.Contains($_.Id.ToString())
         }
 
         if ($faultedJobs) {
-            Write-Host "Starting processes for faulted job(s)..."
-            $faultedJobs | ForEach-Object {
+            Write-Host "Starting recovery process for $($faultedJobs.Count) faulted job(s)..."
+            foreach ($job in $faultedJobs) {
                 try {
-                    $inputArguments = @{
-                        argument1 = $_.Id
-                    } | ConvertTo-Json -Compress
-
-                    Start-OrchJob "YourProcessName" -InputArguments $inputArguments # Change "YourProcessName" to the name of the process you want to start
-                    $null = $processedJobIds.Add($_.Id)
-                    Write-Host "Started process for job ID: $($_.Id)"
-                } catch {
-                    Write-Host "Failed to start process for job ID: $($_.Id). Error: $($_.Exception.Message)"
+                    $inputArguments = @{ argument1 = $job.Id } | ConvertTo-Json -Compress
+                    Start-OrchJob $RecoveryProcessName -InputArguments $inputArguments
+                    $null = $processedJobIds.Add($job.Id.ToString())
+                    Write-Host "Started recovery for job ID: $($job.Id)"
+                }
+                catch {
+                    Write-Host "Failed to start recovery for job ID $($job.Id): $($_.Exception.Message)"
                 }
             }
-        } else {
-            Write-Host "No faulted jobs to process."
+        }
+        else {
+            Write-Host 'No new faulted jobs.'
         }
 
-        Write-Host "Waiting for 15 minutes before the next check..."
+        Write-Host 'Waiting 15 minutes before the next check...'
         Start-Sleep -Seconds 900
-    } catch {
+    }
+    catch {
         Write-Host "An error occurred: $($_.Exception.Message)"
     }
 }

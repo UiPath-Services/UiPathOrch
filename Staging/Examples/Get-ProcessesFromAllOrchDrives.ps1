@@ -1,5 +1,8 @@
-# Retrieve all processes information from all mounted UiPathOrch drives
-# and save it to a single CSV file.
+# Retrieve all processes from all mounted UiPathOrch drives and save
+# them to a single CSV file.
+#
+# Drive names cannot be wildcarded in -Path, so this script enumerates
+# all mounted UiPathOrch drives and passes the comma-separated list.
 
 
 $OutputDir = "c:\tmp"
@@ -20,5 +23,5 @@ Get-OrchProcess -Recurse -Path $drivePaths | Tee-Object -Variable output
 # Export the contents of the array to a CSV file
 $output | Export-Csv -Path $OutputCsv -Encoding $CsvEncoding -NoTypeInformation
 
-# Invoke Excel
-ii $OutputCsv
+# Open the CSV in the default application (typically Excel)
+Invoke-Item $OutputCsv

@@ -9,4 +9,5 @@
 # To inspect this nested structure, execute Get-OrchMachine | ConvertTo-Json.
 
 
-Get-OrchMachine -Path Orch1: | select Name, @{Name='Version';Expression={$_.RobotVersions.Version -join '; '}}
+Get-OrchMachine -Path Orch1: |
+    Select-Object Name, @{Name = 'Version'; Expression = { $_.RobotVersions.Version -join '; ' }}
