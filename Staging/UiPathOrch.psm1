@@ -41,3 +41,10 @@ Update-TypeData -TypeName UiPath.PowerShell.Entities.QueueItem `
         }
         [pscustomobject]$p
     }
+
+# Surface ReleaseName as ProcessName: ReleaseName is the API-correct name (a Release
+# is the deployed version of a process), but users typing Format-Table ProcessName
+# expect a column to appear. The alias makes both work without changing the
+# underlying property.
+Update-TypeData -TypeName UiPath.PowerShell.Entities.Job `
+    -MemberName ProcessName -MemberType ScriptProperty -Force -Value { $this.ReleaseName }

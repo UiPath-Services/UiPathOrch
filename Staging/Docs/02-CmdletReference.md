@@ -1,4 +1,4 @@
-# UiPathOrch Module - Cmdlet Reference (239)
+# UiPathOrch Module - Cmdlet Reference (256)
 
 1. [Utility & Configuration (10)](#1-utility--configuration-10-cmdlets)
 2. [User Management (19)](#2-user-management-19-cmdlets)
@@ -27,7 +27,7 @@
 25. [Test Manager (11)](#25-test-manager-11-cmdlets)
 26. [Bulk Copy Shortcut](#bulk-copy-shortcut)
 
-This document provides a systematically categorized reference of all 239
+This document provides a systematically categorized reference of all 256
 cmdlets in the UiPathOrch module. Use Get-Help <CmdletName> -Examples for
 detailed usage of each cmdlet.
 
@@ -573,4 +573,4 @@ For cross-organization migration with username mapping:
 See Get-Help Copy-Item for details on -WhatIf, -ExcludeEntities, and
 other parameters specific to UiPathOrch drives.
 
-Version: 1.0 | Last Updated: March 2026 | Total Cmdlets: 239
+Version: 1.0 | Last Updated: March 2026 | Total Cmdlets: 256

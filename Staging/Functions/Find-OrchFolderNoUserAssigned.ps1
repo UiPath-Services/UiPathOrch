@@ -32,9 +32,18 @@ function Find-OrchFolderNoUserAssigned {
         [switch]$IncludeInherited
     )
 
-    dir $Path -Recurse | % {
-        if (-not (Get-OrchFolderUser -Path $_.FullName -IncludeInherited:$IncludeInherited.IsPresent)) {
-            $_
+    # Personal workspaces and Solution-type folders own their own user model
+    # and don't accept the standard Get-OrchFolderUser query, so they're
+    # filtered out rather than allowed to surface an EnumFolders error.
+    Get-ChildItem $Path -Recurse |
+        Where-Object { $_.FolderType -ne 'Personal' -and $_.FeedType -ne 'PersonalWorkspace' } |
+        ForEach-Object {
+            try {
+                $users = Get-OrchFolderUser -Path $_.FullName -IncludeInherited:$IncludeInherited.IsPresent -ErrorAction Stop
+                if (-not $users) { $_ }
+            }
+            catch {
+                # Folder couldn't be resolved (e.g. exotic FeedType); skip silently.
+            }
         }
-    }
 }

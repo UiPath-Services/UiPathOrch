@@ -756,6 +756,13 @@ public partial class OrchProvider : NavigationCmdletProvider
                 }
             }
         }
+        catch (PipelineStoppedException)
+        {
+            // `dir | Select -First N`, Ctrl+C, etc. PowerShell stops the upstream
+            // by throwing this; surfacing it as an ErrorRecord would emit a stray
+            // "pipeline has been stopped" message after the data the caller wanted.
+            throw;
+        }
         catch (Exception ex)
         {
             var errorRecord = new ErrorRecord(new OrchException(path, ex), "GetChildItemsError", ErrorCategory.InvalidOperation, path);

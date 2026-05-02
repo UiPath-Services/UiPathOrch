@@ -9,10 +9,10 @@ LONG DESCRIPTION
     navigate folders, manage entities, and perform bulk operations using
     familiar PowerShell commands.
 
-    239 cmdlets cover four API systems:
+    256 cmdlets cover four API systems:
 
-        Orch   Orchestrator OData API (189 cmdlets)
-        Pm     Platform Management / Identity Server API (32 cmdlets)
+        Orch   Orchestrator OData API (202 cmdlets)
+        Pm     Platform Management / Identity Server API (36 cmdlets)
         Du     Document Understanding API (7 cmdlets)
         Tm     Test Manager API (11 cmdlets)
 
