@@ -129,9 +129,9 @@ public class InvokeOrchApiCommand : OrchestratorPSCmdlet
         }
 
         string baseUrl;
-        if (Identity.IsPresent)      baseUrl = drive.OrchAPISession._base_url_identity;
-        else if (Portal.IsPresent)   baseUrl = drive.OrchAPISession._base_url_portal;
-        else                         baseUrl = drive.OrchAPISession._base_url;
+        if (Identity.IsPresent) baseUrl = drive.OrchAPISession._base_url_identity;
+        else if (Portal.IsPresent) baseUrl = drive.OrchAPISession._base_url_portal;
+        else baseUrl = drive.OrchAPISession._base_url;
 
         string url;
         if (ApiPath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
@@ -413,7 +413,7 @@ public class InvokeOrchApiCommand : OrchestratorPSCmdlet
                 if (el.TryGetDouble(out double dv)) return dv;
                 return el.GetDecimal();
 
-            case JsonValueKind.True:  return true;
+            case JsonValueKind.True: return true;
             case JsonValueKind.False: return false;
             case JsonValueKind.Null:
             case JsonValueKind.Undefined:
