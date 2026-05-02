@@ -110,7 +110,7 @@ Example log entry:
 
 ```
 23:23:24.171 #0001 GET https://cloud.uipath.com/org/tenant/odata/Folders
-  REQ HEAD {"User-Agent":"UiPathOrch/0.9.18.0","Authorization":"Bearer ***"}
+  REQ HEAD {"User-Agent":"UiPathOrch/1.0.0.0","Authorization":"Bearer ***"}
   RSP 200 OK (0.234s)
   RSP HEAD {"Content-Type":"application/json; odata.metadata=minimal"}
   RSP BODY {"@odata.context":"...","@odata.count":5,"value":[...]}

@@ -48,21 +48,6 @@ FOR DESTRUCTIVE OPERATIONS:
 2. SHOW results to user and ask: 'Should I proceed with this operation?'
 3. IF user confirms: Execute without -WhatIf
 
-### Capturing -WhatIf Output
-
-When using PowerShell.MCP, -WhatIf output (ShouldProcess messages) is not visible
-to AI. Stream redirection (`*>&1`), `-WarningVariable`, and `-InformationVariable`
-cannot capture it either. Use `Start-Transcript` instead.
-
-```powershell
-Start-Transcript -Path C:\temp\whatif.txt -Force
-Start-OrchJob Report* -WhatIf
-Stop-Transcript
-Show-TextFiles C:\temp\whatif.txt
-```
-
-Lines beginning with `What if:` in the transcript file are the -WhatIf output.
-
 ## PATH PROPERTY - CRITICAL FOR CONTEXT
 
 ### UiPathOrch vs Standard PowerShell Properties

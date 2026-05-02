@@ -170,28 +170,6 @@ Without Entra ID login, UiPathOrch will fail to search for AD/Entra ID users
 (e.g., `Search-OrchDirectory`, `New-OrchUserMappingCsv`, and copy cmdlets
 that resolve directory users).
 
-### How to Capture -WhatIf Output
-
-Copy cmdlets support the `-WhatIf` switch parameter, which outputs logs
-without actually performing the copy. However, when running via PowerShell.MCP,
-`-WhatIf` output cannot be captured using stream redirection (`*>`). Use
-`Start-Transcript` instead.
-
-```powershell
-Start-Transcript -Path C:\temp\migration-whatif.txt -Force
-copy -Recurse Source:\ Destination:\ -WhatIf
-Stop-Transcript
-```
-
-Review the output file:
-
-```powershell
-Show-TextFiles C:\temp\migration-whatif.txt
-```
-
-After confirming that the `-WhatIf` output shows no issues, remove `-WhatIf`
-and run the actual copy.
-
 ---
 
 ## Phase 3: Migration Execution

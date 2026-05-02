@@ -1,3 +1,47 @@
+# Version: 1.0.0.0
+
+This release marks API maturity. Going forward, breaking changes will be major-version bumps per SemVer.
+
+## New Features
+- **`Invoke-OrchApi`** — diagnostic / raw API cmdlet that uses the drive's authenticated session, folder context (`X-UIPATH-OrganizationUnitId`), and ApiVersion. Parameter set is a superset of Invoke-RestMethod's diagnostic-relevant options (`-Method`, `-Body`, `-Headers`, `-OutFile`, `-InFile`, `-StatusCodeVariable`, `-ResponseHeadersVariable`, `-SkipHttpErrorCheck`); auth / proxy / cert parameters are dropped because the drive owns them. Adds `-Identity` / `-Portal` for the alternate base URLs and `-Raw` to keep the OData envelope. JSON responses become PSObject; OData `value` arrays are unwrapped and each item gets a `Path` property. The default Format view groups by Path (PSTypeName `UiPathOrch.ApiResponseItem`). Non-GET methods call `ShouldProcess` so `-WhatIf` / `-Confirm` apply. The bearer token never leaves the module.
+- xUnit coverage for `OrchExtensions` wildcard / value-set helpers.
+
+## Improvements
+- `Get-OrchPSDrive`: `Claims`, `CurrentUser`, `TenantId`, and `TenantKey` are now populated immediately for both Confidential and Non-Confidential apps. `CurrentUser` derives from the JWT `preferred_username` claim with fallbacks for older Identity Server deployments.
+- Mount success page shows the authenticated user's name and refreshed visual design.
+- `Set-OrchAsset`: "ValueType assumed as Text" is now emitted via `WriteWarning` rather than `WriteError`.
+- **Authorization header is redacted to `***` in HTTP log files** (Trace / Verbose levels). Verbose logs are now safe to attach to GitHub issues without leaking active tokens.
+- The first-connect logging warning is trimmed from a 9-cmdlet paragraph to a single line; the full credential-cmdlet list lives in `Docs/05-Troubleshooting.md`.
+- `Docs/05-Troubleshooting.md` rewritten to lead with `Invoke-OrchApi` recipes; raw-token extraction demoted to a Last Resort section.
+- README: status badges added; new "Headless / CI" section covering `UIPATHORCH_SUPPRESS_CONFIG_CREATION`, confidential-app guidance, and `Invoke-OrchApi` for ad-hoc CI calls without token leakage.
+- AI-agent docs (`01-Essentials.md`, `04-MigrationGuide.md`, `06-ContributingGuide.md`): removed the "use `Start-Transcript` to capture `-Verbose` / `-WhatIf` output" sections. Recent PowerShell.MCP versions surface every PowerShell stream (Verbose, Debug, Warning, Information, ShouldProcess) directly, so the workaround is no longer needed.
+- TLS validation disabled: emit once per session when a drive has `IgnoreSslErrors = true` so users are reminded that MITM goes undetected on that connection.
+- Logging on: emit once per session when `Logging.Enabled = true` so users know HTTP bodies hit disk.
+
+## Bug Fixes
+- `ProgressReporter.WriteProgress` no longer throws `DivideByZeroException` when `totalNum` is 0.
+- Token-endpoint failures no longer dump the raw response body into the exception message; only the OAuth2 error envelope is surfaced.
+- `RenewAccessToken`'s catch block no longer pollutes pipeline output.
+
+## Internal
+- Removed 1595 lines of dead multithreaded variants and orphan stubs.
+- Removed 792 lines of `#if false` / commented-out alternative blocks.
+- Extracted `RemoveDriveEntityCmdletBase<T>` / `RemoveFolderEntityCmdletBase<T>` for tenant- and folder-scoped `Remove-*` cmdlets.
+- Extracted `DriveScopedCompleter<T>` and `TmProjectScopedCompleter<T>` base classes.
+- Symmetric self / other base class for tenant-user completers.
+- Added `ResolveDepth` / `ResolveSwitchParameter` helpers and migrated completer call sites.
+- Replaced the `knownSwitchParameters` whitelist with reflection-based switch-parameter detection.
+- Consolidated duplicate `StaticCandidate` classes.
+- Shared `JobIdCompleter` between `Get-OrchJob` and `Open-OrchJob`.
+- `OrchCache`: `volatile` + publish-after-init for race-free reads on weak memory models.
+- Renamed `MyRegex` → `CommaSeparatedTokenRegex`.
+
+## Build / Release
+- `Build-Deploy.ps1` now tracked in repo.
+- psd1 hygiene: declare `CompatiblePSEditions`, empty `VariablesToExport`.
+- Release workflow's Assemble step mirrors `Build-Help.ps1` Step 4 so MAML help is consistent between local and CI builds.
+
+
 # Version: 0.9.18.0
 ## New Features
 - Webhooks: `Get-OrchWebhookEventType` (lists tenant event types) and `Test-OrchWebhook` (sends a Ping by name).

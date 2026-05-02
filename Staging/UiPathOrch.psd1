@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '0.9.18.0'
+ModuleVersion = '1.0.0.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -108,6 +108,9 @@ CmdletsToExport = @(
 'Restart-OrchJob',
 'Resume-OrchJob',
 'Open-OrchJob',
+
+'Get-OrchMoInstance',
+'Get-OrchMoProcess',
 
 'Get-OrchLog',
 'Get-OrchAuditLog',

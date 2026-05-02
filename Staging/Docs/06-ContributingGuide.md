@@ -119,16 +119,6 @@ your report:
 Get-OrchAsset -Name 'MyAsset' -Verbose
 ```
 
-To save verbose output to a file, use `Start-Transcript`. PowerShell.MCP
-cannot capture verbose and debug streams via stream redirection (`*>`),
-so `Start-Transcript` is the reliable method:
-
-```powershell
-Start-Transcript -Path C:\temp\verbose-output.txt -Force
-Get-OrchAsset -Name 'MyAsset' -Verbose
-Stop-Transcript
-```
-
 ### Privacy
 
 **Do not include** sensitive information in bug reports:
