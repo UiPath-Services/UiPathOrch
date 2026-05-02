@@ -49,40 +49,6 @@ Import-OrchConfig
 
 Run `Get-OrchHelp` for a getting started guide, or see the `Docs` folder in the module directory.
 
-### Headless / CI Use
-
-In non-interactive environments (GitHub Actions, other CI runners, containers, scheduled jobs), the default first-import behavior — creating a template config file and opening it in Notepad — is undesirable. Set the `UIPATHORCH_SUPPRESS_CONFIG_CREATION` environment variable to `1` to skip both, then mount drives directly with `New-OrchPSDrive` so no config file is needed.
-
-```yaml
-# GitHub Actions example
-- shell: pwsh
-  env:
-    UIPATHORCH_SUPPRESS_CONFIG_CREATION: 1
-    ORCH_URL:    ${{ secrets.ORCH_URL }}        # https://cloud.uipath.com/<org>/<tenant>
-    ORCH_APPID:  ${{ secrets.ORCH_APPID }}
-    ORCH_SECRET: ${{ secrets.ORCH_APPSECRET }}
-  run: |
-    Install-PSResource UiPathOrch -TrustRepository
-    Import-Module UiPathOrch
-    New-OrchPSDrive -Name Orch -Root $env:ORCH_URL `
-      -AppId $env:ORCH_APPID -AppSecret $env:ORCH_SECRET `
-      -OAuthScope 'OR.Folders OR.Assets OR.Settings'
-    Get-OrchAsset -Path Orch:\Shared
-```
-
-Notes:
-
-- A **confidential application** (`-AppId` + `-AppSecret`, OAuth `client_credentials` grant) is the recommended auth for CI. PKCE requires an interactive browser and cannot be used headlessly. Personal Access Tokens (`-AccessToken`) work but tie the pipeline to an individual user and inherit that user's full permission set, so prefer a confidential app per pipeline with the minimum OAuth scopes required.
-- Pass secrets via `env:` rather than inline command arguments so GitHub Actions log masking covers them and they don't appear in command echoes.
-- For on-premises Orchestrator that isn't reachable from GitHub-hosted runners, use a self-hosted runner inside the network where Orchestrator is accessible.
-- For ad-hoc API calls in CI (e.g., calling an endpoint with no dedicated cmdlet), use `Invoke-OrchApi` rather than extracting the bearer token. It reuses the drive's authenticated session, so the access token never leaves the module — no risk of leaking a live token into pipeline logs:
-
-  ```powershell
-  Invoke-OrchApi -Path Orch: -Uri '/odata/Folders?$select=Id,DisplayName'
-  ```
-
-- **Avoid piping `Get-OrchPSDrive` output to logs in CI.** Its output exposes a live `AccessToken` property as a documented diagnostic feature (see `Docs/05-Troubleshooting.md`); commands like `Get-OrchPSDrive | Format-List *` or `ConvertTo-Json` would emit it. GitHub Actions log masking covers only the registered `AppSecret`, not derived tokens. `Invoke-OrchApi` removes the need for this pattern in nearly all cases.
-
 ## Quick Start
 
 ### Basic Navigation
@@ -130,6 +96,40 @@ Get-Help Get-OrchAsset -Full
 ## AI Agent Integration
 
 UiPathOrch works with AI agents through [PowerShell.MCP](https://www.powershellgallery.com/packages/PowerShell.MCP), which exposes a PowerShell console as an MCP server. Agents can navigate Orchestrator folders, manage entities, and use tab completion programmatically via `TabExpansion2`. The `Docs` folder in the module directory includes documentation written for both human users and AI agents.
+
+## Headless / CI Use
+
+In non-interactive environments (GitHub Actions, other CI runners, containers, scheduled jobs), the default first-import behavior — creating a template config file and opening it in Notepad — is undesirable. Set the `UIPATHORCH_SUPPRESS_CONFIG_CREATION` environment variable to `1` to skip both, then mount drives directly with `New-OrchPSDrive` so no config file is needed.
+
+```yaml
+# GitHub Actions example
+- shell: pwsh
+  env:
+    UIPATHORCH_SUPPRESS_CONFIG_CREATION: 1
+    ORCH_URL:    ${{ secrets.ORCH_URL }}        # https://cloud.uipath.com/<org>/<tenant>
+    ORCH_APPID:  ${{ secrets.ORCH_APPID }}
+    ORCH_SECRET: ${{ secrets.ORCH_APPSECRET }}
+  run: |
+    Install-PSResource UiPathOrch -TrustRepository
+    Import-Module UiPathOrch
+    New-OrchPSDrive -Name Orch -Root $env:ORCH_URL `
+      -AppId $env:ORCH_APPID -AppSecret $env:ORCH_SECRET `
+      -OAuthScope 'OR.Folders OR.Assets OR.Settings'
+    Get-OrchAsset -Path Orch:\Shared
+```
+
+Notes:
+
+- A **confidential application** (`-AppId` + `-AppSecret`, OAuth `client_credentials` grant) is the recommended auth for CI. PKCE requires an interactive browser and cannot be used headlessly. Personal Access Tokens (`-AccessToken`) work but tie the pipeline to an individual user and inherit that user's full permission set, so prefer a confidential app per pipeline with the minimum OAuth scopes required.
+- Pass secrets via `env:` rather than inline command arguments so GitHub Actions log masking covers them and they don't appear in command echoes.
+- For on-premises Orchestrator that isn't reachable from GitHub-hosted runners, use a self-hosted runner inside the network where Orchestrator is accessible.
+- For ad-hoc API calls in CI (e.g., calling an endpoint with no dedicated cmdlet), use `Invoke-OrchApi` rather than extracting the bearer token. It reuses the drive's authenticated session, so the access token never leaves the module — no risk of leaking a live token into pipeline logs:
+
+  ```powershell
+  Invoke-OrchApi -Path Orch: -Uri '/odata/Folders?$select=Id,DisplayName'
+  ```
+
+- **Avoid piping `Get-OrchPSDrive` output to logs in CI.** Its output exposes a live `AccessToken` property as a documented diagnostic feature (see `Docs/05-Troubleshooting.md`); commands like `Get-OrchPSDrive | Format-List *` or `ConvertTo-Json` would emit it. GitHub Actions log masking covers only the registered `AppSecret`, not derived tokens. `Invoke-OrchApi` removes the need for this pattern in nearly all cases.
 
 ## License
 
