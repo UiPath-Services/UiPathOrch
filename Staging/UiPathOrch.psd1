@@ -84,6 +84,7 @@ FunctionsToExport = @(
 CmdletsToExport = @(
 'Import-OrchConfig',
 'New-OrchPSDrive',
+'Invoke-OrchApi',
 'Switch-OrchCurrentUser',
 'Get-OrchPSDrive',
 

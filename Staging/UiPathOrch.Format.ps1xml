@@ -3,6 +3,43 @@
 
   <ViewDefinitions>
 
+    <!--
+      Default view for Invoke-OrchApi output: render every property of the record
+      as a Name : Value list, grouped by Path (drive context where the call was
+      issued). Each element is tagged with PSTypeName "UiPathOrch.ApiResponseItem"
+      by InvokeOrchApiCommand. Endpoints expose arbitrary shapes, so a ScriptBlock
+      enumerates the property bag at format time — Path is omitted from the body
+      because GroupBy already surfaces it.
+    -->
+    <View>
+      <Name>UiPathOrch.ApiResponseItem</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPathOrch.ApiResponseItem</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <PropertyName>Path</PropertyName>
+        <Label>Path</Label>
+      </GroupBy>
+      <CustomControl>
+        <CustomEntries>
+          <CustomEntry>
+            <CustomItem>
+              <ExpressionBinding>
+                <ScriptBlock>
+                  $obj = $_
+                  $props = $obj.PSObject.Properties | Where-Object { $_.Name -ne 'Path' }
+                  if (-not $props) { return '' }
+                  $w = ($props.Name | Measure-Object Length -Maximum).Maximum
+                  ($props | ForEach-Object { '{0} : {1}' -f $_.Name.PadRight($w), $_.Value }) -join [Environment]::NewLine
+                </ScriptBlock>
+              </ExpressionBinding>
+              <NewLine/>
+            </CustomItem>
+          </CustomEntry>
+        </CustomEntries>
+      </CustomControl>
+    </View>
+
     <View>
       <Name>OrchPSDrive</Name>
       <ViewSelectedBy>

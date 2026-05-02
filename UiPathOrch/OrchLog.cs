@@ -7,11 +7,24 @@ namespace UiPath.OrchAPI;
 
 public partial class OrchAPISession : IDisposable
 {
+    // Headers whose values are masked in log output regardless of log level. The bearer
+    // token in particular has no diagnostic value (it'd be the same for every request
+    // in a session) and would otherwise force users to scrub logs before sharing.
+    // Use Invoke-OrchApi or Get-OrchPSDrive .AccessToken to obtain a token when needed.
+    private static readonly HashSet<string> RedactedHeaders = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Authorization",
+    };
+
+    private const string RedactedHeaderValue = "***";
+
     private static string ConvertHeadersToOneLine(Dictionary<string, List<string>> headers)
     {
         var singleValueHeaders = headers.ToDictionary(
             kvp => kvp.Key,
-            kvp => string.Join(", ", kvp.Value)
+            kvp => RedactedHeaders.Contains(kvp.Key)
+                ? RedactedHeaderValue
+                : string.Join(", ", kvp.Value)
         );
         return JsonSerializer.Serialize(singleValueHeaders, JsonTools.jsoOneLine);
     }
@@ -263,8 +276,10 @@ public partial class OrchAPISession : IDisposable
     }
 
     // Emitted once per session via PendingWarning (next BeginProcessing flushes it as
-    // WriteWarning) so users who opt into logging are reminded which cmdlets put
-    // credentials/secrets in HTTP bodies and would land in any log they share.
+    // WriteWarning) so users who opt into logging know that HTTP bodies hit disk.
+    // The Authorization header is masked (see ConvertHeadersToOneLine), so logs are
+    // safe to share unless a cmdlet submits a credential in the body — that detail
+    // is in Docs/05-Troubleshooting.md rather than this single-line warning.
     private bool _loggingWarningEmitted;
 
     private void EnsureLoggingWarningEmitted()
@@ -273,14 +288,9 @@ public partial class OrchAPISession : IDisposable
         _loggingWarningEmitted = true;
 
         string warning =
-            $"Logging is enabled for '{_drive.NameColonSeparator}'. HTTP request/response " +
-            "bodies are recorded at Trace/Verbose levels and on any error response. " +
-            "To produce a shareable log, avoid these cmdlets in this session: " +
-            "Set-OrchCredentialAsset, Set-OrchSecretAsset, " +
-            "Update-OrchCurrentUserURPassword, Update-OrchUser (-UR_Password), " +
-            "Update-PmUser (-Password), New-PmUser (with passwords), " +
-            "New-OrchBucket (-Password), Add-OrchMachineClientSecret, " +
-            "Copy-OrchCredentialStore.";
+            $"Logging is enabled for '{_drive.NameColonSeparator}'. " +
+            "HTTP bodies are recorded at Trace/Verbose levels and on errors; " +
+            "cmdlets that submit credentials write them to the log file.";
 
         PendingWarning = string.IsNullOrEmpty(PendingWarning)
             ? warning

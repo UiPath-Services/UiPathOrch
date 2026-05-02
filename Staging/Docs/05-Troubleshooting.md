@@ -4,17 +4,25 @@
 - [Connection Issues](#connection-issues)
 - [Enable Verbose Logging](#enable-verbose-logging)
 - [Reading Logs](#reading-logs)
-- [Getting Access Tokens](#getting-access-tokens)
-- [API Reference](#api-reference)
 - [Calling Endpoints Directly](#calling-endpoints-directly)
+- [API Reference](#api-reference)
 - [Common Investigation Workflow](#common-investigation-workflow)
+- [Last Resort: Extracting the Access Token](#last-resort-extracting-the-access-token)
 
 ## Overview
 
 This document is primarily intended for AI agents investigating issues
-with UiPathOrch. It covers how to enable logging, read HTTP logs, extract
-access tokens, and call Orchestrator API endpoints directly to isolate
-whether a problem is in UiPathOrch or in the Orchestrator API itself.
+with UiPathOrch. It covers how to enable logging, read HTTP logs, and
+call Orchestrator API endpoints directly to isolate whether a problem
+is in UiPathOrch or in the Orchestrator API itself.
+
+The recommended diagnostic flow uses `Invoke-OrchApi`, which sends
+requests through the same authenticated, folder-aware HTTP session as
+the cmdlets. This eliminates the need to extract a bearer token into
+user space — useful both for security (logs, screenshots, AI agent
+contexts) and for accuracy (folder context, OData headers, and
+ApiVersion are applied identically to cmdlet calls, so the comparison
+isolates only the response-processing layer).
 
 ## Connection Issues
 
@@ -75,6 +83,10 @@ Available log levels:
 | `Trace` | Adds request/response headers |
 | `Verbose` | Adds request/response bodies (most detailed) |
 
+The `Authorization: Bearer ...` request header is masked in the log
+file regardless of log level, so verbose logs are safe to attach to
+GitHub issues without leaking active tokens.
+
 ## Reading Logs
 
 Get the log folder path for the current drive:
@@ -88,7 +100,7 @@ entry contains:
 
 - Timestamp and sequence number
 - HTTP method and URL
-- Request headers (including Authorization token)
+- Request headers (Authorization is masked)
 - Request body (for POST/PUT/PATCH)
 - Response status code
 - Response headers
@@ -98,7 +110,7 @@ Example log entry:
 
 ```
 23:23:24.171 #0001 GET https://cloud.uipath.com/org/tenant/odata/Folders
-  REQ HEAD {"User-Agent":"UiPathOrch/0.9.16.2","Authorization":"Bearer eyJ..."}
+  REQ HEAD {"User-Agent":"UiPathOrch/0.9.18.0","Authorization":"Bearer ***"}
   RSP 200 OK (0.234s)
   RSP HEAD {"Content-Type":"application/json; odata.metadata=minimal"}
   RSP BODY {"@odata.context":"...","@odata.count":5,"value":[...]}
@@ -114,147 +126,134 @@ Show-TextFiles $latest.FullName -Contains 'RSP 5'    # 5xx errors
 Show-TextFiles $latest.FullName -Contains 'EXCEPTION' # Exceptions
 ```
 
-## Getting Access Tokens
+## Calling Endpoints Directly
 
-Extract the current access token from a PSDrive:
+When a cmdlet produces an unexpected result, reproduce the call with
+`Invoke-OrchApi` to determine whether the issue is in UiPathOrch or
+in the Orchestrator API. `Invoke-OrchApi` reuses the drive's
+authenticated session, the OAuth scopes, the folder context header
+(`X-UIPATH-OrganizationUnitId`), and the ApiVersion the cmdlets use,
+so a difference between cmdlet and direct call isolates the
+response-processing layer rather than the request setup.
+
+### Step 1: Get the endpoint URL from the log
+
+Find the relevant request in the log. Note the HTTP method, URL path,
+and any request body.
+
+### Step 2: Call the endpoint
+
+The relative path goes to `-Uri`. The drive in `-Path` selects the
+tenant; subfolders inject the folder context header automatically.
+
+**List folders** (equivalent to `dir`):
 
 ```powershell
-Get-OrchPSDrive Orch2: | Select-Object -ExpandProperty AccessToken
+Invoke-OrchApi -Path Orch2: -Uri '/odata/Folders?$select=DisplayName,FolderType'
 ```
 
-The token is a JWT issued by the UiPath Identity Server. It can be used
-with `Invoke-RestMethod` to call Orchestrator endpoints directly.
-
-To inspect the token claims (e.g., scopes, expiry):
+**Get assets in a folder** (equivalent to `Get-OrchAsset`):
 
 ```powershell
-$token = Get-OrchPSDrive Orch2: | Select-Object -ExpandProperty AccessToken
-$payload = $token.Split('.')[1]
-# Pad Base64 if needed
-$padded = $payload + ('=' * (4 - $payload.Length % 4) % 4)
-[System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($padded)) | ConvertFrom-Json
+# Folder path on the drive supplies X-UIPATH-OrganizationUnitId automatically.
+Invoke-OrchApi -Path Orch2:\Shared -Uri '/odata/Assets'
+```
+
+**Get users** (equivalent to `Get-OrchUser`):
+
+```powershell
+Invoke-OrchApi -Path Orch2: -Uri '/odata/Users?$select=UserName,Type'
+```
+
+**Get machines** (equivalent to `Get-OrchMachine`):
+
+```powershell
+Invoke-OrchApi -Path Orch2: -Uri '/odata/Machines?$select=Name,Type'
+```
+
+**Create an asset** (equivalent to `New-OrchAsset`):
+
+```powershell
+Invoke-OrchApi -Path Orch2:\Shared -Uri '/odata/Assets' -Method Post -Body @{
+    Name        = 'TestAsset'
+    ValueScope  = 'Global'
+    ValueType   = 'Text'
+    StringValue = 'hello'
+}
+```
+
+`Invoke-OrchApi` honors `-WhatIf` and `-Confirm` for non-GET methods,
+so you can preview a destructive call without executing it. Pass
+`-Confirm:$false` to bypass the prompt in scripts.
+
+### Step 3: Compare results
+
+Compare the direct API response with what the cmdlet returned. If the
+two match, the issue is in Orchestrator. If they differ, the issue
+may be in UiPathOrch's processing of the response.
+
+### Useful flags for diagnostics
+
+| Flag | Use |
+|---|---|
+| `-SkipHttpErrorCheck` | Capture the parsed body of a 4xx / 5xx response instead of throwing. Pair with `-StatusCodeVariable` and `-ResponseHeadersVariable` |
+| `-Raw` | Return the raw JSON string without parsing — preserves `@odata.context`, `@odata.nextLink`, and the OData wrapper |
+| `-Identity` / `-Portal` | Switch the base URL to the Identity Server / Portal endpoints respectively (used by `Pm` cmdlets and undocumented APIs) |
+| `-SkipFolderContext` | Suppress automatic `X-UIPATH-OrganizationUnitId` injection (rare; needed when calling tenant-scope endpoints from a folder context) |
+| `-Headers` | Add custom headers. `Authorization` is silently dropped — the drive owns auth |
+
+Example — capture a 404 body for inspection:
+
+```powershell
+$body = Invoke-OrchApi -Path Orch2: -Uri '/odata/Folders(99999)' `
+    -SkipHttpErrorCheck -StatusCodeVariable sc -ResponseHeadersVariable rh
+"$sc"; $body
 ```
 
 ## API Reference
 
 To look up available endpoints, parameters, and response schemas,
-fetch the Swagger JSON directly. First, set up authentication variables
-(these are reused in subsequent sections):
-
-```powershell
-$token = Get-OrchPSDrive Orch2: | Select-Object -ExpandProperty AccessToken
-$root = (Get-OrchPSDrive Orch2:).Root
-$headers = @{ Authorization = "Bearer $token" }
-```
+fetch the Swagger JSON via `Invoke-OrchApi` (no token plumbing
+required).
 
 Orchestrator API (used by `Orch` cmdlets):
 
 ```powershell
-$swagger = Invoke-RestMethod -Uri "$root/swagger/v20.0/swagger.json" -Headers $headers
+$swagger = Invoke-OrchApi -Path Orch2: -Uri '/swagger/v20.0/swagger.json' -Raw | ConvertFrom-Json
 $swagger.paths.PSObject.Properties.Name | Where-Object { $_ -like '*Asset*' }
-$swagger.paths.'/odata/Assets'.get  # Inspect a specific endpoint
+$swagger.paths.'/odata/Assets'.get
 ```
 
 Identity Server API (used by `Pm` cmdlets):
 
 ```powershell
-$idSwagger = Invoke-RestMethod -Uri 'https://cloud.uipath.com/identity_/swagger/internal/swagger.json' -Headers $headers
+$idSwagger = Invoke-OrchApi -Path Orch2: -Identity -Uri '/swagger/internal/swagger.json' -Raw | ConvertFrom-Json
 $idSwagger.paths.PSObject.Properties.Name | Where-Object { $_ -like '*User*' }
 ```
 
 Test Manager API (used by `Tm` cmdlets):
 
 ```powershell
-$tmSwagger = Invoke-RestMethod -Uri "$root/testmanager_/swagger/v2/swagger.json" -Headers $headers
+$tmSwagger = Invoke-OrchApi -Path Orch2: -Uri '/testmanager_/swagger/v2/swagger.json' -Raw | ConvertFrom-Json
 $tmSwagger.paths.PSObject.Properties.Name | Where-Object { $_ -like '*TestSet*' }
 ```
 
 Document Understanding API (used by `Du` cmdlets):
 
 ```powershell
-$duSwagger = Invoke-RestMethod -Uri "$root/du_/api/documentmanager/swagger_dm.json" -Headers $headers
+$duSwagger = Invoke-OrchApi -Path Orch2: -Uri '/du_/api/documentmanager/swagger_dm.json' -Raw | ConvertFrom-Json
 $duSwagger.paths.PSObject.Properties.Name
 ```
-
-For on-premises or Automation Suite, replace the host with the
-`IdentityUrl` from the drive configuration.
 
 To open the Swagger UI in the user's browser:
 
 ```powershell
+$root = (Get-OrchPSDrive Orch2:).Root
 Start-Process "$root/swagger"
 ```
 
 Official documentation:
 [UiPath Orchestrator API Reference](https://docs.uipath.com/orchestrator/reference)
-
-## Calling Endpoints Directly
-
-When a cmdlet produces an unexpected result, reproduce the call using
-`Invoke-RestMethod` to determine whether the issue is in UiPathOrch or
-in the Orchestrator API.
-
-### Step 1: Get the endpoint URL from the log
-
-Find the relevant request in the log. Note the HTTP method, URL, and
-any request body.
-
-### Step 2: Call the endpoint
-
-Using `$root` and `$headers` from the [API Reference](#api-reference)
-section above:
-
-Use the URL from the log, or construct it from the root URL and the
-OData endpoint path.
-
-**List folders** (equivalent to `dir`):
-
-```powershell
-(Invoke-RestMethod -Uri "$root/odata/Folders?`$select=DisplayName,FolderType" `
-    -Headers $headers).value
-```
-
-**Get assets in a folder** (equivalent to `Get-OrchAsset`):
-
-```powershell
-# X-UIPATH-OrganizationUnitId header specifies the folder
-$folderId = 1273640  # Get from dir output or log
-$h = $headers + @{ 'X-UIPATH-OrganizationUnitId' = $folderId }
-(Invoke-RestMethod -Uri "$root/odata/Assets" -Headers $h).value
-```
-
-**Get users** (equivalent to `Get-OrchUser`):
-
-```powershell
-(Invoke-RestMethod -Uri "$root/odata/Users?`$select=UserName,Type" `
-    -Headers $headers).value
-```
-
-**Get machines** (equivalent to `Get-OrchMachine`):
-
-```powershell
-(Invoke-RestMethod -Uri "$root/odata/Machines?`$select=Name,Type" `
-    -Headers $headers).value
-```
-
-**Create an asset** (equivalent to `New-OrchAsset`):
-
-```powershell
-$body = @{
-    Name = 'TestAsset'
-    ValueScope = 'Global'
-    ValueType = 'Text'
-    StringValue = 'hello'
-} | ConvertTo-Json
-Invoke-RestMethod -Uri "$root/odata/Assets" -Method Post `
-    -Headers $headers -Body $body -ContentType 'application/json'
-```
-
-### Step 3: Compare results
-
-Compare the direct API response with what UiPathOrch returned. If the
-API response is the same, the issue is on the Orchestrator side. If it
-differs, the issue may be in UiPathOrch's processing of the response.
 
 ## Common Investigation Workflow
 
@@ -263,7 +262,8 @@ differs, the issue may be in UiPathOrch's processing of the response.
    - Look for 4xx/5xx status codes
    - Check the request URL and body for correctness
    - Check the response body for error details
-3. **Extract the token** and call the endpoint directly
+3. **Reproduce the call** with `Invoke-OrchApi` using the URL and
+   method from the log
 4. **Compare** the direct result with the cmdlet result
 5. **Read the source code** if the cause is still unclear. Clone the
    repository following the
@@ -273,5 +273,38 @@ differs, the issue may be in UiPathOrch's processing of the response.
 6. If the issue is confirmed as a UiPathOrch bug, or if you cannot
    resolve it through the steps above, file a GitHub issue following the
    [Contributing Guide](06-ContributingGuide.md). UiPathOrch is not
-   covered by UiPath Technical Support -- GitHub is the only channel
+   covered by UiPath Technical Support — GitHub is the only channel
    for getting help from the maintainers.
+
+## Last Resort: Extracting the Access Token
+
+`Invoke-OrchApi` covers nearly all diagnostic cases. The bearer token
+is still accessible through `Get-OrchPSDrive` for the rare situations
+where you must call the API from outside the PowerShell session
+(another machine, a different language runtime, a third-party tool):
+
+```powershell
+Get-OrchPSDrive Orch2: | Select-Object -ExpandProperty AccessToken
+```
+
+To inspect the token claims (e.g., scopes, expiry) without running
+the API call:
+
+```powershell
+$token = Get-OrchPSDrive Orch2: | Select-Object -ExpandProperty AccessToken
+$payload = $token.Split('.')[1]
+$padded = $payload + ('=' * (4 - $payload.Length % 4) % 4)
+[System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($padded)) | ConvertFrom-Json
+```
+
+The token is a JWT minted by the UiPath Identity Server. Treat it
+as a credential:
+
+- Do not echo it into shell history, screenshots, screen-share, or
+  AI-agent context windows. The token grants the OAuth scopes of the
+  drive for its lifetime (typically about an hour).
+- Do not paste it into bug reports or chat. The drive can be
+  re-authenticated; a leaked token cannot be revoked individually
+  before expiry.
+- Avoid this path entirely in CI / shared sessions; reach for
+  `Invoke-OrchApi` first.
