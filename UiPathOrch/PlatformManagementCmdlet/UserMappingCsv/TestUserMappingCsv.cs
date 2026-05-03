@@ -36,8 +36,8 @@ public class TestUserMappingCsvCommand : OrchestratorPSCmdlet
         if (!enumerator.MoveNext())
             throw new InvalidOperationException("The CSV file is empty.");
 
-        var headers = enumerator.Current.Split(',');
-        int Col(string name) => Array.FindIndex(headers, h => h.Trim().Trim('"').Equals(name, StringComparison.OrdinalIgnoreCase));
+        var headers = UiPath.PowerShell.Commands.CsvHelper.CsvLine.Split(enumerator.Current);
+        int Col(string name) => headers.FindIndex(h => h.Trim().Equals(name, StringComparison.OrdinalIgnoreCase));
 
         int iSource = Col("SourceUserName");
         int iDest = Col("DestinationUserName");
@@ -53,8 +53,8 @@ public class TestUserMappingCsvCommand : OrchestratorPSCmdlet
             var line = enumerator.Current;
             if (string.IsNullOrWhiteSpace(line)) continue;
 
-            var columns = line.Split(',');
-            string Val(int idx) => idx >= 0 && idx < columns.Length ? columns[idx].Trim().Trim('"') : "";
+            var columns = UiPath.PowerShell.Commands.CsvHelper.CsvLine.Split(line);
+            string Val(int idx) => idx >= 0 && idx < columns.Count ? columns[idx].Trim() : "";
 
             string sourceUserName = Val(iSource);
             if (string.IsNullOrEmpty(sourceUserName)) continue;

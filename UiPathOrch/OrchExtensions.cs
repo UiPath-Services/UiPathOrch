@@ -1314,10 +1314,10 @@ internal static class SessionStateExtentios
                 throw new InvalidOperationException("The CSV file is empty.");
 
             var headerLine = enumerator.Current;
-            var headers = headerLine.Split(',');
+            var headers = UiPath.PowerShell.Commands.CsvHelper.CsvLine.Split(headerLine);
 
-            int sourceIndex = Array.FindIndex(headers, h => h.Trim().Trim('"').Equals("SourceUserName", StringComparison.OrdinalIgnoreCase));
-            int destinationIndex = Array.FindIndex(headers, h => h.Trim().Trim('"').Equals("DestinationUserName", StringComparison.OrdinalIgnoreCase));
+            int sourceIndex = headers.FindIndex(h => h.Trim().Equals("SourceUserName", StringComparison.OrdinalIgnoreCase));
+            int destinationIndex = headers.FindIndex(h => h.Trim().Equals("DestinationUserName", StringComparison.OrdinalIgnoreCase));
 
             if (sourceIndex == -1 || destinationIndex == -1)
                 throw new InvalidOperationException("The CSV file does not contain the required columns: 'SourceUserName' and 'DestinationUserName'.");
@@ -1331,14 +1331,14 @@ internal static class SessionStateExtentios
                 if (string.IsNullOrWhiteSpace(line)) continue;
 
                 // Split the line into columns
-                var columns = line.Split(',');
+                var columns = UiPath.PowerShell.Commands.CsvHelper.CsvLine.Split(line);
 
                 // Ensure the line has enough columns
-                if (columns.Length <= Math.Max(sourceIndex, destinationIndex))
+                if (columns.Count <= Math.Max(sourceIndex, destinationIndex))
                     continue;
 
-                string sourceUserName = columns[sourceIndex].Trim().Trim('"');
-                string destinationUserName = columns[destinationIndex].Trim().Trim('"');
+                string sourceUserName = columns[sourceIndex].Trim();
+                string destinationUserName = columns[destinationIndex].Trim();
 
                 // Add to dictionary if the source username is not empty
                 if (!string.IsNullOrEmpty(sourceUserName))
