@@ -1893,3 +1893,168 @@ Describe 'IdentityUrl Derivation' {
         }
     }
 }
+
+# ---------------------------------------------------------------------------
+# Regression guards — Critical bugs found and fixed in the 2026-05 review session.
+# Each test is named after the originating bug. If any of these regress, treat as P0:
+# the same shipping bug is back. See git log around the test addition for fix commits.
+# ---------------------------------------------------------------------------
+Describe 'Regression-2026-05' -Tag 'Regression' {
+    BeforeAll {
+        Push-Location $script:RootFolder
+    }
+
+    AfterAll {
+        # Defensive: the global AfterAll covers the ${script:Prefix}* pattern, but in case a
+        # test bails in the middle, do an immediate cleanup of just our Reg_* names.
+        Remove-OrchAsset -Name "${script:Prefix}Reg_*" -Path $script:RootFolder -Recurse -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-OrchAsset -Name "${script:Prefix}Reg_*" -ValueType Credential -Path $script:RootFolder -Recurse -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-OrchQueue -Name "${script:Prefix}Reg_*" -Path $script:RootFolder -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-OrchTrigger -Name "${script:Prefix}Reg_*" -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-OrchProcess -Name "${script:Prefix}Reg_*" -Confirm:$false -ErrorAction SilentlyContinue
+        Pop-Location
+    }
+
+    It 'R1: New-OrchTrigger emits valid JSON for StartProcessCronDetails' {
+        # Bug: string interpolation produced "{advancedCron":"<cron>"} (leading " then {),
+        #      which fails JSON parsing. Same bug existed in NewTrigger, UpdateTrigger, and
+        #      OrchAPISession.PutProcessSchedule.
+        # Fix: use System.Text.Json.JsonSerializer.Serialize for the cron value and braces:
+        #      $"{{\"advancedCron\":{JsonSerializer.Serialize(cron ?? "")}}}".
+        if (-not $script:PackageId) { Set-ItResult -Skipped -Because 'No package on reference drive'; return }
+
+        $procName = "${script:Prefix}Reg_TrigProc"
+        $trigName = "${script:Prefix}Reg_Trig"
+        New-OrchProcess -Id $script:PackageId -Name $procName | Out-Null
+        Clear-OrchCache
+        try {
+            New-OrchTrigger -Name $trigName -ReleaseName $procName `
+                -StartProcessCron '0 0 0 1/1 * ? *' -Enabled false | Out-Null
+            Clear-OrchCache
+            $t = Get-OrchTrigger -Name $trigName
+            $t | Should -Not -BeNullOrEmpty
+            $t.StartProcessCronDetails | Should -Not -BeNullOrEmpty
+            { $t.StartProcessCronDetails | ConvertFrom-Json -ErrorAction Stop } |
+                Should -Not -Throw -Because 'StartProcessCronDetails must be valid JSON; broken format would have shipped before this fix'
+        } finally {
+            Remove-OrchTrigger -Name $trigName -Confirm:$false -ErrorAction SilentlyContinue
+            Remove-OrchProcess -Name $procName -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+
+    It 'R2: Open-OrchJob -Id @() fails parameter binding (no NRE)' {
+        # Bug: Id parameter lacked Mandatory=true; omitting it bypassed binder rejection and
+        #      then NREd inside ProcessRecord. The error category should be InvalidData
+        #      (PowerShell parameter binder), NOT NullReferenceException.
+        $err = $null
+        try { Open-OrchJob -Path "${script:Drive}:\" -Id @() -ErrorAction Stop } catch { $err = $_ }
+        $err | Should -Not -BeNullOrEmpty -Because 'empty Id must be rejected'
+        $err.CategoryInfo.Category | Should -Be 'InvalidData' -Because 'PowerShell parameter binder must reject empty Id; an NRE here means the Mandatory regression is back'
+    }
+
+    It 'R3: Get-DuExtractor completer returns Extractors, not DocumentTypes' {
+        # Bug: completer copy-pasted from GetDuClassifier and called GetDuDocumentTypes
+        #      instead of GetDuExtractors. Tab completion for -Name returned the wrong list.
+        # Fix: corrected the API call in the completer.
+        $duDrive = Get-PSDrive | Where-Object { $_.Provider.Name -eq 'UiPathOrchDu' -and $_.Name -eq 'Orch1Du' }
+        if (-not $duDrive) { Set-ItResult -Skipped -Because 'Orch1Du drive not connected'; return }
+
+        $extractorCount = (Get-DuExtractor -Path 'Orch1Du:\Predefined' -ErrorAction SilentlyContinue | Measure-Object).Count
+        $documentTypeCount = (Get-DuDocumentType -Path 'Orch1Du:\Predefined' -ErrorAction SilentlyContinue | Measure-Object).Count
+
+        if ($extractorCount -eq 0) { Set-ItResult -Skipped -Because 'no extractors found in Predefined project'; return }
+        if ($extractorCount -eq $documentTypeCount) {
+            Set-ItResult -Skipped -Because "cannot distinguish: extractor count ($extractorCount) equals document type count"
+            return
+        }
+
+        $line = "Get-DuExtractor -Path 'Orch1Du:\Predefined' -Name "
+        $r = [System.Management.Automation.CommandCompletion]::CompleteInput($line, $line.Length, $null)
+        $r.CompletionMatches.Count | Should -Be $extractorCount -Because "completer must enumerate $extractorCount extractors, not $documentTypeCount document types"
+    }
+
+    It 'R4: Get-OrchAuditLog -UserName for unresolved user returns 0 rows (no scope leakage)' {
+        # Bug: UserName resolution was wrapped in `try { ... } catch { }`. When the resolved
+        #      userIds set was empty (or resolution threw), no UserName filter was added to
+        #      the OData query, silently returning logs for ALL users.
+        # Fix: removed the catch; when userIds is empty, add a sentinel filter (UserId eq -1)
+        #      that matches no rows, narrowing rather than widening the result.
+        $unmatchableName = "NeverExistsUser_$([guid]::NewGuid())"
+        $rNonExistent = Get-OrchAuditLog -Path "${script:RefDrive}:\" -UserName $unmatchableName -First 5 -ErrorAction SilentlyContinue
+        $rAllUsers = Get-OrchAuditLog -Path "${script:RefDrive}:\" -First 5 -ErrorAction SilentlyContinue
+
+        ($rNonExistent | Measure-Object).Count | Should -Be 0 -Because 'a UserName that resolves to no users must NOT widen results to all users'
+        ($rAllUsers | Measure-Object).Count | Should -BeGreaterThan 0 -Because 'control: with no UserName filter, at least some audit log entries must exist'
+    }
+
+    It 'R5: Import-OrchQueueItem completes successfully (BulkAddQueueItem JSON escape)' {
+        # Bug: queue name was concatenated into JSON via $"\"queueName\":\"{queue.Name}\"\n}}"
+        #      which broke if the name contained " or \. Even safe names exercised the same
+        #      code path, so this is a regression smoke that the JsonSerializer.Serialize fix
+        #      didn't break the basic import path.
+        $qname = "${script:Prefix}Reg_Q"
+        New-OrchQueue -Name $qname | Out-Null
+        Clear-OrchCache
+        $csv = $null
+        try {
+            $csv = Join-Path $script:TempDir "${qname}.csv"
+            "Priority,Reference,CustomerName`nNormal,Reg-001,Alice`nHigh,Reg-002,Bob" | Set-Content -Path $csv -Encoding UTF8 -NoNewline
+            $r = Import-OrchQueueItem -Name $qname -ImportCsv $csv -ErrorAction Stop
+            $r.Success | Should -Be $true -Because 'BulkAddQueueItem must succeed for a normal queue name; failure here means the JSON escape fix broke the basic case'
+        } finally {
+            Remove-OrchQueue -Name $qname -Confirm:$false -ErrorAction SilentlyContinue
+            if ($csv) { Remove-Item $csv -ErrorAction SilentlyContinue }
+        }
+    }
+
+    It 'R6: /api/Stats/GetSessionsStats responds 200 (URL trailing-quote regression)' {
+        # Bug: GetSessionStats() built the URL "/api/Stats/GetSessionsStats'" with a stray
+        #      single-quote at the end, causing 404. The dev's own comment was "Returns Not
+        #      Found..." — the typo was never spotted.
+        # Fix: removed the trailing quote.
+        $sc = $null
+        $null = Invoke-OrchApi -Path "${script:RefDrive}:\" -Method GET `
+            -ApiPath '/api/Stats/GetSessionsStats' -StatusCodeVariable sc -SkipHttpErrorCheck -ErrorAction Stop
+        $sc | Should -Be 200 -Because 'on Orch1 this endpoint is supported; the trailing-quote bug caused 404'
+    }
+
+    It 'R7: Set-OrchSecretAsset -Description "" clears the existing description (single-row case)' {
+        # New behavior from the merge-aggregation refactor (resolves the Q1 spec): a single
+        # direct call with empty Description and no other rows clears the existing value.
+        # Without per-asset Description aggregation + isDirty tracking, this previously
+        # either preserved (old !IsNullOrEmpty check) or required a separate parameter.
+        $name = "${script:Prefix}Reg_Sec_Clear"
+        try {
+            Set-OrchSecretAsset -Name $name -SecretValue 's' -Description 'INITIAL' | Out-Null
+            Clear-OrchCache
+            (Get-OrchAsset -Name $name).Description | Should -Be 'INITIAL'
+
+            Set-OrchSecretAsset -Name $name -Description '' -SecretValue '' | Out-Null
+            Clear-OrchCache
+            (Get-OrchAsset -Name $name).Description | Should -BeNullOrEmpty -Because '-Description "" must clear the existing value when no other row supplies a non-empty value'
+        } finally {
+            Remove-OrchAsset -Name $name -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+
+    It 'R8: Set-OrchSecretAsset multi-row pipe: non-empty Description wins over empty cells' {
+        # Critical interaction: Get-OrchSecretAsset's CSV exporter writes Description on the
+        # first row of each asset only; subsequent UserValue rows leave it empty. The merge
+        # rule (non-empty > "" > null, last-writer-wins among non-empty) must keep the value
+        # when one row has 'NEW' and others have ''. This guards SelfContained T5.8 / T9.1.
+        $name = "${script:Prefix}Reg_Sec_Mix"
+        try {
+            Set-OrchSecretAsset -Name $name -SecretValue 's' -Description 'OLD' | Out-Null
+            Clear-OrchCache
+
+            @(
+                [pscustomobject]@{ Path = $script:RootFolder; Name = $name; Description = 'NEW'; SecretValue = '' }
+                [pscustomobject]@{ Path = $script:RootFolder; Name = $name; Description = '';    SecretValue = '' }
+            ) | Set-OrchSecretAsset
+            Clear-OrchCache
+            (Get-OrchAsset -Name $name).Description | Should -Be 'NEW' -Because 'non-empty Description must win over empty cells in the same batch'
+        } finally {
+            Remove-OrchAsset -Name $name -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+}
