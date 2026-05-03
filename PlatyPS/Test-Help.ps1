@@ -33,7 +33,7 @@ param()
 $ErrorActionPreference = 'Stop'
 
 $scriptDir = $PSScriptRoot
-$mdDir     = Join-Path $scriptDir 'v1-US\UiPathOrch'
+$mdDir     = Join-Path $scriptDir '..\docs\help\en-US'
 
 # --- Validate prerequisites ---
 

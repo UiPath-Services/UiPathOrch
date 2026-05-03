@@ -47,7 +47,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $scriptDir  = $PSScriptRoot
-$mdDir      = Join-Path $scriptDir 'v1-US\UiPathOrch'
+$mdDir      = Join-Path $scriptDir '..\docs\help\en-US'
 $stagingDir = Join-Path $scriptDir '..\Staging\en-US'
 $enUSDir    = Join-Path $DeployPath 'en-US'
 

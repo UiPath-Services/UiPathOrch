@@ -1,0 +1,456 @@
+---
+document type: cmdlet
+external help file: UiPathOrch.dll-Help.xml
+HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-PmRobotAccount.md'
+Locale: en-US
+Module Name: UiPathOrch
+ms.date: 03/06/2026
+PlatyPS schema version: 2024-05-01
+title: Set-PmRobotAccount
+---
+
+# Set-PmRobotAccount
+
+## SYNOPSIS
+
+Creates or updates a robot account in a UiPath Automation Cloud organization.
+
+## SYNTAX
+
+### ConsoleInput (Default)
+
+```
+Set-PmRobotAccount [-UserName] <string[]> [[-GroupName] <string[]>] [-Path <string[]>] [-WhatIf]
+ [-Confirm] [<CommonParameters>]
+```
+
+### CsvInput
+
+```
+Set-PmRobotAccount -UserName <string[]> [-GroupName <string[]>] [-GroupName0 <string>]
+ [-GroupName1 <string>] [-GroupName2 <string>] [-GroupName3 <string>] [-GroupName4 <string>]
+ [-GroupName5 <string>] [-GroupName6 <string>] [-GroupName7 <string>] [-GroupName8 <string>]
+ [-GroupName9 <string>] [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+```
+
+## ALIASES
+
+## DESCRIPTION
+
+Creates or updates robot accounts at the organization (platform management) level. If the specified robot account does not exist, it is created. If it already exists, its group memberships are updated to match the specified groups.
+
+The cmdlet supports two parameter sets: ConsoleInput for interactive use and CsvInput for bulk operations via CSV import. The CsvInput parameter set accepts individual GroupName0 through GroupName9 parameters, which map to columns in the CSV exported by Get-PmRobotAccount.
+
+The -UserName and -GroupName parameters support wildcards. The -Path parameter supports tab completion.
+
+Primary Endpoint: POST /api/RobotAccount, PUT /api/RobotAccount/{robotId} (Identity Server)
+
+OAuth required scopes: (Identity Server API - no per-endpoint scopes)
+
+Required permissions: (managed by Identity Server)
+
+## EXAMPLES
+
+### Example 1: Create a robot account
+
+```powershell
+PS Orch1:\> Set-PmRobotAccount MyRobot1
+```
+
+Creates a robot account named "MyRobot1" in the current organization with no group membership. Because -UserName is a positional parameter (position 0), the parameter name can be omitted.
+
+### Example 2: Create a robot account with group membership
+
+```powershell
+PS Orch1:\> Set-PmRobotAccount MyRobot1 "Automation Developers"
+```
+
+Creates a robot account named "MyRobot1" and assigns it to the ""Automation Developers"" group. Because -GroupName is a positional parameter (position 1), the parameter name can be omitted.
+
+### Example 3: Update group membership for an existing robot account
+
+```powershell
+PS Orch1:\> Set-PmRobotAccount MyRobot1 "Automation "Automation Developers"","Automation Users"
+```
+
+Updates the "MyRobot1" robot account to be a member of both the ""Automation Developers"" and "Testers" groups. If the account does not exist, it is created.
+
+### Example 4: Bulk import robot accounts from CSV
+
+```powershell
+PS Orch1:\> Import-Csv C:\temp\robots.csv | Set-PmRobotAccount
+```
+
+Imports robot accounts from a CSV file previously exported by Get-PmRobotAccount. The CsvInput parameter set is used automatically because the CSV contains GroupName0-GroupName9 columns bound via ValueFromPipelineByPropertyName.
+
+### Example 5: Preview robot account creation
+
+```powershell
+PS Orch1:\> Set-PmRobotAccount MyRobot1 "Automation Developers" -WhatIf
+```
+
+Shows what would happen without actually creating or updating the robot account.
+
+## PARAMETERS
+
+### -Path
+
+Specifies the target Pm: drives (organizations). If not specified, the current drive is targeted. Tab completion suggests available drive names.
+
+```yaml
+Type: System.String[]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -GroupName
+
+Specifies the group name(s) to assign the robot account to. Supports wildcards for pattern matching. In the ConsoleInput parameter set, this is a positional parameter at position 1. In the CsvInput parameter set, the value is bound from the pipeline by property name.
+
+```yaml
+Type: System.String[]
+DefaultValue: ''
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: ConsoleInput
+  Position: 1
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: CsvInput
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -GroupName0
+
+Specifies the first group name column from CSV input. This parameter is used internally for CSV pipeline binding and maps to the GroupName0 column in the CSV exported by Get-PmRobotAccount.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: CsvInput
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -GroupName1
+
+Specifies the second group name column from CSV input. Maps to the GroupName1 column in the CSV exported by Get-PmRobotAccount.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: CsvInput
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -GroupName2
+
+Specifies the third group name column from CSV input. Maps to the GroupName2 column in the CSV exported by Get-PmRobotAccount.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: CsvInput
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -GroupName3
+
+Specifies the fourth group name column from CSV input. Maps to the GroupName3 column in the CSV exported by Get-PmRobotAccount.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: CsvInput
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -GroupName4
+
+Specifies the fifth group name column from CSV input. Maps to the GroupName4 column in the CSV exported by Get-PmRobotAccount.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: CsvInput
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -GroupName5
+
+Specifies the sixth group name column from CSV input. Maps to the GroupName5 column in the CSV exported by Get-PmRobotAccount.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: CsvInput
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -GroupName6
+
+Specifies the seventh group name column from CSV input. Maps to the GroupName6 column in the CSV exported by Get-PmRobotAccount.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: CsvInput
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -GroupName7
+
+Specifies the eighth group name column from CSV input. Maps to the GroupName7 column in the CSV exported by Get-PmRobotAccount.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: CsvInput
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -GroupName8
+
+Specifies the ninth group name column from CSV input. Maps to the GroupName8 column in the CSV exported by Get-PmRobotAccount.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: CsvInput
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -GroupName9
+
+Specifies the tenth group name column from CSV input. Maps to the GroupName9 column in the CSV exported by Get-PmRobotAccount.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: CsvInput
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -UserName
+
+Specifies the name(s) of the robot account(s) to create or update. Supports wildcards for pattern matching. In the ConsoleInput parameter set, this is a positional parameter at position 0.
+
+```yaml
+Type: System.String[]
+DefaultValue: ''
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: ConsoleInput
+  Position: 0
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: CsvInput
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -WhatIf
+
+Runs the command in a mode that only reports what would happen without performing the actions.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases:
+- wi
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Confirm
+
+Prompts you for confirmation before running the cmdlet.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases:
+- cf
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### CommonParameters
+
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
+-InformationAction, -InformationVariable, -OutBuffer, -OutVariable, -PipelineVariable,
+-ProgressAction, -Verbose, -WarningAction, and -WarningVariable. For more information, see
+[about_CommonParameters](https://go.microsoft.com/fwlink/?LinkID=113216).
+
+## INPUTS
+
+### System.String[]
+
+You can pipe robot account data to this cmdlet via the UserName and GroupName properties (CsvInput parameter set).
+
+## OUTPUTS
+
+### UiPath.PowerShell.Entities.PmRobotAccount
+
+Returns the created or updated PmRobotAccount object.
+
+## NOTES
+
+The CsvInput parameter set is designed for use with CSV files exported by Get-PmRobotAccount. The GroupName0 through GroupName9 parameters map directly to the corresponding CSV columns.
+
+If a robot account with the specified name already exists, its group memberships are updated to match the specified groups. If it does not exist, a new robot account is created.
+
+## RELATED LINKS
+
+Get-PmRobotAccount
+
+Copy-PmRobotAccount
+
+Remove-PmRobotAccount

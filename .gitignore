@@ -385,9 +385,6 @@ NuGet.Config
 # Generated help XML (built from PlatyPS markdown)
 Staging/en-US/*-Help.xml
 
-# Internal docs (not part of the published module)
-docs/
-
 # Scratch/working files
 scratch/
 
