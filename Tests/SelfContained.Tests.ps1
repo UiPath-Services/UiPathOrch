@@ -2257,10 +2257,14 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
             $dst.HasDefaultValue | Should -Be $true -Because 'HasDefaultValue must NOT flip to false when all per-User UserValues were dropped'
             ($dst.UserValues | Measure-Object).Count | Should -Be 0 -Because 'TestUserA is not assigned to the sibling folder so the per-User UserValue is dropped'
         } finally {
+            # Remove children explicitly first; OrchProvider's Remove-Item -Recurse on a
+            # folder with asset children can still emit an interactive Y/N prompt (the
+            # provider's child-confirmation isn't suppressed by the parent's -Confirm:$false).
+            # Drain the folder by removing each known and any leftover asset before rmdir.
             Remove-OrchAsset -Name $name -Path $script:RootFolder -Confirm:$false -ErrorAction SilentlyContinue
-            # -Recurse -Force -Confirm:$false: the sibling folder may still hold the copied
-            # asset (or other state) when the test bails mid-flight; ensure non-interactive
-            # teardown so a failure here doesn't hang Pester on a Y/N prompt.
+            Remove-OrchAsset -Name $name -Path $siblingFolder -Confirm:$false -ErrorAction SilentlyContinue
+            Remove-OrchAsset -Name "${script:Prefix}Reg_*" -Path $siblingFolder -Confirm:$false -ErrorAction SilentlyContinue
+            Remove-OrchAsset -Name "${script:Prefix}Reg_*" -Path $siblingFolder -ValueType Credential -Confirm:$false -ErrorAction SilentlyContinue
             Remove-Item -LiteralPath $siblingFolder -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
         }
     }
