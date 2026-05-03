@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-## [1.0.0.0] - 2026-05-02
+## [1.0.0.0] - 2026-05-03
 
 This release marks API maturity. Going forward, breaking changes
 will be major-version bumps per SemVer.
@@ -75,8 +75,111 @@ will be major-version bumps per SemVer.
 - `RenewAccessToken`'s catch block no longer pollutes pipeline
   output.
 
+#### Critical bugs surfaced by 2026-05 review
+
+- **`Set-OrchAsset` / `Set-OrchCredentialAsset` / `Set-OrchSecretAsset`
+  silent corruption with unassigned -UserName / -MachineName.** When a
+  user or machine that existed in the tenant but was NOT assigned to
+  the target folder was passed via `-UserName` / `-MachineName`, the
+  client built a per-Robot UserValue and PUT it; the server returned
+  200 OK but **silently dropped the UserValue and wiped the asset's
+  Global Value** (`Value=""`, `ValueScope="PerRobot"`,
+  `HasDefaultValue=false`, `UserValues=[]`). The asset was effectively
+  erased while the cmdlet appeared to succeed. The candidate set is
+  now intersected with `FolderUsersWithInherited.Get(folder)` /
+  `FolderMachinesAssigned.Get(folder)` so the call is rejected up
+  front with the existing "is not assigned to the folder" error.
+  Migration: add the user / machine to the target folder first via
+  `Add-OrchFolderUser` / `Add-OrchFolderMachine`. Verified against a
+  live tenant; covered by new regression tests R9 / R13 / R14.
+- **`Copy-OrchItem` / `Copy-OrchAsset` could carry per-User UserValues
+  to a destination folder where the user has no access**, triggering
+  the same silent-corruption family as above.
+  `CopyItem.FindDstUser` resolved candidates via `dstDrive.GetUsers()`
+  tenant-wide without verifying folder access; `FindDstMachine` already
+  did the right thing via `FolderMachinesAssigned`. `FindDstUser` now
+  also intersects with `FolderUsersWithInherited.Get(dstFolder)`,
+  emits a `WriteWarning`, and returns `null` so the caller drops just
+  that UserValue (not the whole asset). Inheritance is honored — a
+  user added at a parent folder remains a legitimate per-Robot target
+  in the child. Covered by new regression test R15.
+- `Update-OrchTrigger`, `New-OrchTrigger`, and the
+  `OrchAPISession.PutProcessSchedule` fallback built
+  `StartProcessCronDetails` as `"{advancedCron":"…"}` (leading `"`
+  then `{`) which fails JSON parse — the server rejected the PUT
+  with 400. Now uses `JsonSerializer.Serialize` for the cron value
+  and proper braces.
+- `Open-OrchJob`: `-Id` lacked `Mandatory=true`, so omitting it
+  bypassed the parameter binder and crashed in `foreach (var id in Id!)`.
+  Now rejected at bind time; the catch path also `continue`s
+  rather than falling through to `job!.Key`.
+- `Get-DuExtractor`: the `-Name` tab completer copy-pasted from
+  `Get-DuClassifier` and called `GetDuDocumentTypes` instead of
+  `GetDuExtractors`, returning the wrong list.
+- `Get-OrchAuditLog`: `-UserName` resolution was wrapped in
+  `try { ... } catch { }`; on resolution failure or zero matches
+  no UserName filter was added to the OData query, **silently
+  widening results to all users**. The catch is removed and a
+  `(UserId eq -1)` sentinel narrows to nothing instead.
+- `Copy-OrchItem` action-catalog progress was reported on the
+  wrong `ProgressReporter` instance due to a stale variable name
+  copy-pasted from the prior block.
+- `Import-OrchQueueItem` (`BulkAddQueueItem` payload) and the
+  TestDataQueue payload concatenated queue names raw into JSON; a
+  name containing `"` or `\` broke the JSON. Now escaped via
+  `JsonSerializer.Serialize`.
+- `OrchAPISession.GetSessionStats` URL ended with a stray single
+  quote (`/api/Stats/GetSessionsStats'`) causing 404.
+
+#### Other fixes
+
+- `Start-OrchJob -RuntimeType` invalid no longer `throw`s; emits
+  an `ErrorRecord` (InvalidArgument category) so `-WhatIf` /
+  `-Confirm` / `-ErrorAction` apply.
+- `Add-OrchCalendarDate -ExcludedDate` no longer drops today (UTC)
+  on time zones ahead of UTC. The "drop past dates" filter compared
+  UTC-stamped values against `DateTime.Today` (local); now compares
+  against `DateTime.UtcNow.Date`.
+- `Add-OrchFolderUser`: `First()` on an empty bulk-resolve result
+  no longer throws `InvalidOperationException`; switched to
+  `FirstOrDefault` and the per-row failure now surfaces a warning
+  identifying which user couldn't be resolved.
+
+### Changed
+
+- **`Set-OrchAsset` per-row Description handling now merges across
+  pipelined input rows** with priority `non-empty > "" > null`
+  (last-writer-wins among non-empty). Practical effect:
+  `Set-OrchAsset -Description ""` with no other rows clears the
+  existing description (previously: preserved); CSV roundtrip is
+  lossless because empty cells lose to the non-empty Description on
+  the first row. The same merge rule applies to
+  `Set-OrchCredentialAsset` and `Set-OrchSecretAsset`.
+- `Invoke-OrchApi` caps the response-body read at 8 KB on HTTP
+  errors. Previously the entire body was read just to surface a
+  1024-character snippet — the user-facing error message is
+  unchanged, but multi-MB HTML error pages no longer waste memory.
+
 ### Internal
 
+- **2026-05 review pass**: surfaced the Critical bugs above plus
+  ~30 smaller items. Most have no Release-build effect (empty-catch
+  diagnostic logging via `[Conditional("DEBUG")]`,
+  `string.Compare(..., true)` → `StringComparison.OrdinalIgnoreCase`
+  semantic-equivalent rewrite for ASCII identifiers, dead-code and
+  commented-block removals, typo fixes). HTTP layer hardening:
+  `OrchAPISession.HttpClient_Send` builds the response log block
+  synchronously to avoid racing with the caller's `using` disposal
+  of `HttpResponseMessage`; `AuthManager` wraps response messages
+  in `using` and drops the unused `RequestRefreshToken`;
+  `AsyncLogWriter` shutdown coordinates the synchronous wait with
+  `DisposeAsync`'s CancelAfter window. Shared
+  `OrchCsvHelper.CsvLine.Split` (RFC 4180) replaces the per-call
+  `Split(',') + Trim('"')` in `LoadUserMappingCsv` and
+  `TestUserMappingCsv` so quoted fields with embedded commas no
+  longer split mid-field. Added `Tests\SelfContained.Tests.ps1`
+  `Describe 'Regression-2026-05'` block (R1..R14) and
+  `Tests\UnitTests\CsvLineTests.cs` (16 cases).
 - Removed 1595 lines of dead multithreaded variants and orphan
   stubs.
 - Removed 792 lines of `#if false` / commented-out alternative

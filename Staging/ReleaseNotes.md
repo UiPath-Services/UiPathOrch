@@ -19,9 +19,32 @@ This release marks API maturity. Going forward, breaking changes will be major-v
 - Logging on: emit once per session when `Logging.Enabled = true` so users know HTTP bodies hit disk.
 
 ## Bug Fixes
+
+### Critical bugs surfaced by 2026-05 review
+
+- **`Set-OrchAsset` / `Set-OrchCredentialAsset` / `Set-OrchSecretAsset` silent corruption with unassigned `-UserName` / `-MachineName`.** Previously, specifying a user or machine that exists in the tenant but is NOT assigned to the target folder caused the cmdlet to PUT a per-Robot UserValue referencing the out-of-folder Id; the server returned 200 OK but **silently dropped the UserValue and wiped the asset's Global Value**, leaving the asset effectively erased while the cmdlet appeared to succeed. The candidate set is now intersected with the folder's assigned users / machines so the call is rejected up front with the existing "is not assigned to the folder" error. **Migration:** add the user / machine to the target folder first via `Add-OrchFolderUser` / `Add-OrchFolderMachine`. Verified against a live tenant.
+- **`Copy-OrchItem` / `Copy-OrchAsset` could carry per-User UserValues to a destination folder where the user has no access** — same silent-corruption family. `CopyItem.FindDstUser` resolved candidates tenant-wide without verifying destination folder access; it now mirrors `FindDstMachine` and intersects with `FolderUsersWithInherited.Get(dstFolder)`, emits a `WriteWarning`, and drops just that UserValue (the asset is still copied with the rest of its values). Inheritance is honored, so a user added at a parent folder remains a valid per-Robot target in the child.
+- `Update-OrchTrigger` / `New-OrchTrigger` / `OrchAPISession.PutProcessSchedule` cron JSON fallback was malformed (`"{advancedCron":"…"}` — leading `"` then `{`), causing the server to reject the PUT with 400. Now uses `JsonSerializer.Serialize`.
+- `Open-OrchJob` `-Id` now `Mandatory=true`; omitting it previously bypassed the parameter binder and threw NullReferenceException in the foreach loop. The catch block also `continue`s rather than falling through to dereference a null `job`.
+- `Get-DuExtractor` `-Name` tab completion returned Document Types (the completer was copy-pasted from `Get-DuClassifier` and called the wrong API).
+- `Get-OrchAuditLog -UserName` for a name that didn't resolve (or threw during resolution) used to silently return logs for **all users**. Resolution failures now surface; zero-match resolution narrows to nothing via a `(UserId eq -1)` sentinel.
+- `Copy-OrchItem` reported action-catalog progress on the wrong `ProgressReporter` (stale variable name).
+- `Import-OrchQueueItem` and `OrchAPISession.AddTestDataQueueItems` / `SetAllTestDataQueueItemsConsumed` concatenated queue names raw into JSON; names containing `"` or `\` broke the request. Now escaped via `JsonSerializer.Serialize`.
+- `OrchAPISession.GetSessionStats` URL had a stray trailing single quote (`/api/Stats/GetSessionsStats'`) causing 404.
+
+### Other fixes
+
+- `Start-OrchJob -RuntimeType invalid` no longer `throw`s a generic Exception; emits an `ErrorRecord` (InvalidArgument) so `-WhatIf` / `-Confirm` / `-ErrorAction` apply, and lists the valid values in the message.
+- `Add-OrchCalendarDate -ExcludedDate` no longer drops today (UTC) on time zones ahead of UTC. The "drop past dates" filter now compares against `DateTime.UtcNow.Date` instead of `DateTime.Today` (local).
+- `Add-OrchFolderUser`: `First()` on an empty bulk-resolve result no longer throws `InvalidOperationException`; switched to `FirstOrDefault` and the per-row failure surfaces a warning identifying which user couldn't be resolved.
 - `ProgressReporter.WriteProgress` no longer throws `DivideByZeroException` when `totalNum` is 0.
 - Token-endpoint failures no longer dump the raw response body into the exception message; only the OAuth2 error envelope is surfaced.
 - `RenewAccessToken`'s catch block no longer pollutes pipeline output.
+
+## Behavior Changes
+
+- **`Set-OrchAsset` / `Set-OrchCredentialAsset` / `Set-OrchSecretAsset` Description handling now merges across pipelined input rows** with priority `non-empty > "" > null` (last-writer-wins among non-empty). Practical effect: `Set-OrchAsset -Description ""` with no other rows now **clears** the existing description (previously: preserved silently); CSV roundtrip stays lossless because empty cells lose to the non-empty Description on the first row.
+- `Invoke-OrchApi` caps the response-body read at 8 KB on HTTP errors. The 1024-character snippet shown to the user is unchanged; multi-MB HTML error pages no longer waste memory.
 
 ## Internal
 - Removed 1595 lines of dead multithreaded variants and orphan stubs.
