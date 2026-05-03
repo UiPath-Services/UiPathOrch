@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-## [1.0.0.0] - 2026-05-03
+## [1.0.0] - 2026-05-03
 
 This release marks API maturity. Going forward, breaking changes
 will be major-version bumps per SemVer.

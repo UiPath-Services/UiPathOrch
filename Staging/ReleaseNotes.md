@@ -1,4 +1,4 @@
-# Version: 1.0.0.0
+# Version: 1.0.0
 
 This release marks API maturity. Going forward, breaking changes will be major-version bumps per SemVer.
 
