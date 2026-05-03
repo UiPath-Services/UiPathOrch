@@ -28,6 +28,21 @@ public class SetSecretAssetCommand : OrchestratorPSCmdlet
     private readonly List<SetSecretAssetCommandParameter> parameters = [];
     private readonly Dictionary<(string name, string path), Asset> pendingAssets = [];
 
+    // See SetCredentialAsset.cs for the merge spec; same rule applies here.
+    private readonly Dictionary<(string name, string path), string> _resolvedDescriptions = [];
+
+    private void MergeDescription(string name, string folderPath, string? rowDescription)
+    {
+        if (rowDescription is null) return;
+        var key = (name, folderPath);
+        if (!_resolvedDescriptions.TryGetValue(key, out var existing)
+            || (existing.Length == 0 && rowDescription.Length > 0)
+            || (existing.Length > 0 && rowDescription.Length > 0))
+        {
+            _resolvedDescriptions[key] = rowDescription;
+        }
+    }
+
     private const string Default = "DefaultParameterSet";
     private const string Plain = "SpecifyPlainSecretParameterSet";
 
@@ -282,10 +297,11 @@ public class SetSecretAssetCommand : OrchestratorPSCmdlet
                     return null;
 
                 isDirty = true;
+                // Description is intentionally omitted here; it's resolved across all input
+                // rows via MergeDescription and applied in EndProcessing before POST.
                 asset = new Asset
                 {
                     Name = name,
-                    Description = param.Description,
                     ValueScope = "Global",
                     ValueType = "Secret",
                     CanBeDeleted = true,
@@ -300,11 +316,12 @@ public class SetSecretAssetCommand : OrchestratorPSCmdlet
             }
         }
 
-        if (asset.Description != param.Description && !string.IsNullOrEmpty(param.Description))
-        {
-            isDirty = true;
-            asset.Description = param.Description;
-        }
+        // Description is merged across all input rows in MergeDescription (priority:
+        // non-empty > "" > null) and applied to the asset in EndProcessing. We mark dirty
+        // whenever the user supplied a Description on this row, so the asset reaches POST
+        // even when Description is the only change.
+        MergeDescription(name, folder.GetPSPath(), param.Description);
+        if (param.Description is not null) isDirty = true;
 
         if (asset.CredentialStoreId != credentialStoreId && credentialStoreId != 0)
         {
@@ -508,6 +525,16 @@ public class SetSecretAssetCommand : OrchestratorPSCmdlet
     protected override void EndProcessing()
     {
         BuildAssetDataFromParameterSets();
+
+        // Apply the merged Description to each pending asset before POST.
+        foreach (var asset in pendingAssets.Values)
+        {
+            if (_resolvedDescriptions.TryGetValue((asset.Name!, asset.Path!), out var resolved)
+                && asset.Description != resolved)
+            {
+                asset.Description = resolved;
+            }
+        }
 
         List<(OrchDriveInfo drive, Int64 id)> folderIdsThatShouldRemoveCache = [];
         using var reporter = new ProgressReporter(this, 1, pendingAssets.Count, "Updating secret assets");

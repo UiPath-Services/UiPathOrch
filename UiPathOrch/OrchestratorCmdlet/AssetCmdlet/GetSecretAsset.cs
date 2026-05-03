@@ -80,6 +80,9 @@ public class GetSecretAssetCommand : OrchestratorPSCmdlet
         foreach (var asset in output)
         {
             string credentialStore = credentialStores.FirstOrDefault(cs => cs.Id == asset.CredentialStoreId)?.Name ?? "";
+            // Description is written on the first row of each asset only; subsequent rows leave
+            // the column empty. Set-OrchSecretAsset's MergeDescription tolerates this: empty
+            // cells lose to the non-empty first row, so CSV roundtrip is lossless.
             bool isDescriptionOut = false;
 
             // Secret never populates Value (always null by API). Use HasDefaultValue to detect a

@@ -78,6 +78,9 @@ public class GetCredentialAssetCommand : OrchestratorPSCmdlet
         foreach (var asset in output)
         {
             string credentialStore = credentialStores.FirstOrDefault(cs => cs.Id == asset.CredentialStoreId)?.Name ?? "";
+            // Description is written on the first row of each asset only; subsequent rows leave
+            // the column empty. Set-OrchCredentialAsset's MergeDescription tolerates this:
+            // empty cells lose to the non-empty first row, so CSV roundtrip is lossless.
             bool isDescriptionOut = false;
 
             if (!string.IsNullOrEmpty(asset.Value))

@@ -53,7 +53,10 @@ public class GetAssetCommand : OrchestratorPSCmdlet
 
     private static void WriteCsvContent(StreamWriter writer, IEnumerable<Asset> output)
     {
-        // Write data rows for each asset
+        // Write data rows for each asset. Description is written on the first row of each
+        // asset only; subsequent rows leave the column empty. Set-OrchAsset's MergeDescription
+        // tolerates this: empty cells lose to the non-empty first row, so CSV roundtrip is
+        // lossless.
         foreach (var asset in output.Where(a => a.ValueType != "Credential" && a.ValueType != "Secret"))
         {
             bool isDescriptionOut = false;
@@ -118,6 +121,8 @@ public class GetAssetCommand : OrchestratorPSCmdlet
             }
             #endregion find the name of CredentialStore
 
+            // Description is written on the first row of each asset only; subsequent rows leave
+            // the column empty. See SetCredentialAsset.MergeDescription for the importer rule.
             var line = new StringBuilder();
             bool isDescriptionOut = false;
 

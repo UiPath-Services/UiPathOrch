@@ -28,6 +28,27 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
     private readonly List<SetCredentialAssetCommandParameter> parameters = [];
     private readonly Dictionary<(string name, string path), Asset> pendingAssets = [];
 
+    // Merged Description per asset across all input rows. Treated as "best opinion seen so far"
+    // with priority: non-empty > "" > null. Among non-empty values, last-writer-wins. The merged
+    // result is applied to each pendingAssets entry in EndProcessing, before POST. This lets a
+    // single direct call (`-Description ""`) clear the field while a CSV roundtrip — where the
+    // exporter writes Description on the first row only and emits empty cells thereafter — is
+    // preserved (the lone non-empty 'A' wins over the empty cells).
+    private readonly Dictionary<(string name, string path), string> _resolvedDescriptions = [];
+
+    private void MergeDescription(string name, string folderPath, string? rowDescription)
+    {
+        if (rowDescription is null) return;
+        var key = (name, folderPath);
+        if (!_resolvedDescriptions.TryGetValue(key, out var existing)
+            || (existing.Length == 0 && rowDescription.Length > 0)
+            || (existing.Length > 0 && rowDescription.Length > 0))
+        {
+            _resolvedDescriptions[key] = rowDescription;
+        }
+        // else: existing is non-empty and incoming is "", or both are "" — keep existing.
+    }
+
     private const string Default = "DefaultParameterSet";
     private const string Plain = "SpecifyPlainPasswordParameterSet";
     [Parameter(ParameterSetName = Default, Position = 0, Mandatory = true)]
@@ -306,11 +327,12 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                     return null;
 
                 isDirty = true;
-                // Create a new asset in memory
+                // Create a new asset in memory. Description is intentionally omitted here;
+                // it's resolved across all input rows via MergeDescription and applied in
+                // EndProcessing before POST.
                 asset = new Asset
                 {
                     Name = name,
-                    Description = param.Description,
                     ValueScope = "Global",
                     ValueType = "Credential",
                     CredentialUsername = "",
@@ -326,11 +348,12 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
             }
         }
 
-        if (asset.Description != param.Description && !string.IsNullOrEmpty(param.Description))
-        {
-            isDirty = true;
-            asset.Description = param.Description;
-        }
+        // Description is merged across all input rows in MergeDescription (priority:
+        // non-empty > "" > null) and applied to the asset in EndProcessing. We mark dirty
+        // whenever the user supplied a Description on this row, so the asset reaches POST
+        // even when Description is the only change.
+        MergeDescription(name, folder.GetPSPath(), param.Description);
+        if (param.Description is not null) isDirty = true;
 
         if (asset.CredentialStoreId != credentialStoreId && credentialStoreId != 0)
         {
@@ -581,6 +604,17 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
     protected override void EndProcessing()
     {
         BuildAssetDataFromParameterSets();
+
+        // Apply the merged Description (resolved across all input rows) to each pending asset.
+        // See MergeDescription / _resolvedDescriptions for the priority rule.
+        foreach (var asset in pendingAssets.Values)
+        {
+            if (_resolvedDescriptions.TryGetValue((asset.Name!, asset.Path!), out var resolved)
+                && asset.Description != resolved)
+            {
+                asset.Description = resolved;
+            }
+        }
 
         List<(OrchDriveInfo drive, Int64 id)> folderIdsThatShouldRemoveCache = [];
 
