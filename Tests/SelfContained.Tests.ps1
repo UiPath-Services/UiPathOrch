@@ -2206,6 +2206,65 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
         }
     }
 
+    It 'R15: Copy-OrchAsset drops UserValues for users not assigned to destination folder (no silent corruption)' {
+        # The same scope-tightening fix applied to Set-OrchAsset also exists in
+        # CopyItem.FindDstUser, which previously resolved -UserName via dstDrive.GetUsers()
+        # tenant-wide (mirroring the SetAsset bug). When CopyAssets carried over a per-User
+        # UserValue and the resolved user was not assigned to the destination folder, the
+        # POST returned 200 but the server silently dropped the UserValue — same silent
+        # corruption family as R9 / R13.
+        # FindDstUser now intersects with FolderUsersWithInherited(dstFolder) and emits
+        # WriteWarning + returns null when not found, mirroring FindDstMachine. The caller
+        # then drops just that UserValue, not the whole asset.
+        #
+        # Test setup needs a destination folder where TestUserA has NO access (neither
+        # direct nor inherited). The fixture's CopyFolder is a child of RootFolder, so
+        # TestUserA inherits down to it — that wouldn't exercise the unassigned path.
+        # Create a dedicated TOP-LEVEL sibling folder for this test; clean up in finally.
+        $name = "${script:Prefix}Reg_CopyAssetUser"
+        $siblingFolder = "${script:Drive}:\${script:Prefix}Reg_Sibling"
+        try {
+            # Pre-clean in case a previous run left the sibling around.
+            Remove-Item -LiteralPath $siblingFolder -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
+            $null = mkdir $siblingFolder -ErrorAction Stop
+            Clear-OrchCache
+
+            # Confirm TestUserA is NOT inherited / assigned in the sibling folder.
+            $siblingUsers = @(Get-OrchFolderUser -Path $siblingFolder -ErrorAction SilentlyContinue |
+                ForEach-Object { $_.UserEntity.UserName })
+            if ($siblingUsers -contains $script:TestUserA) {
+                Set-ItResult -Skipped -Because "TestUserA ($script:TestUserA) is unexpectedly present in the sibling folder; cannot exercise the unassigned path"
+                return
+            }
+
+            # Source asset in RootFolder with Global value + per-User UserValue for TestUserA.
+            Set-OrchAsset -Name $name -ValueType Text -Value 'global_value' -Path $script:RootFolder | Out-Null
+            Set-OrchAsset -Name $name -ValueType Text -Value 'user_value' -UserName $script:TestUserA -Path $script:RootFolder | Out-Null
+            Clear-OrchCache
+
+            $src = Get-OrchAsset -Name $name -Path $script:RootFolder
+            $src.Value | Should -Be 'global_value' -Because 'sanity: source has Global value'
+            ($src.UserValues | Measure-Object).Count | Should -BeGreaterOrEqual 1 -Because 'sanity: source has at least one per-User UserValue'
+
+            # Copy to the sibling. FindDstUser must WriteWarning and drop the per-User
+            # UserValue rather than passing it through and corrupting the destination asset.
+            Copy-OrchAsset -Name $name -Path $script:RootFolder -Destination $siblingFolder -WarningAction SilentlyContinue
+            Clear-OrchCache
+
+            $dst = Get-OrchAsset -Name $name -Path $siblingFolder
+            $dst | Should -Not -BeNullOrEmpty -Because 'copy must succeed; only the unassigned UserValue should be dropped, not the asset itself'
+            $dst.Value | Should -Be 'global_value' -Because 'Global value must survive the copy (pre-fix bug could erase it)'
+            $dst.HasDefaultValue | Should -Be $true -Because 'HasDefaultValue must NOT flip to false when all per-User UserValues were dropped'
+            ($dst.UserValues | Measure-Object).Count | Should -Be 0 -Because 'TestUserA is not assigned to the sibling folder so the per-User UserValue is dropped'
+        } finally {
+            Remove-OrchAsset -Name $name -Path $script:RootFolder -Confirm:$false -ErrorAction SilentlyContinue
+            # -Recurse -Force -Confirm:$false: the sibling folder may still hold the copied
+            # asset (or other state) when the test bails mid-flight; ensure non-interactive
+            # teardown so a failure here doesn't hang Pester on a Y/N prompt.
+            Remove-Item -LiteralPath $siblingFolder -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+
     It 'R12: Add-OrchCalendarDate compares against UTC.Today, not local Today' {
         # Bug fix: -ExcludedDate values were stamped Kind=Utc but the "drop past dates"
         # filter compared against `DateTime.Today` (local). On a TZ ahead of UTC the local

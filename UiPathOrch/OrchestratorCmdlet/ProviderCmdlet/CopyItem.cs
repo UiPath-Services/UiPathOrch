@@ -1074,6 +1074,24 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             {
                 string target = newFolder.GetPSPath();
                 _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: {dstDrive.NameColon} does not have user with Name = '{searchName}'."), "FindUserError", ErrorCategory.InvalidOperation, target));
+                return null;
+            }
+
+            // Verify the resolved user is actually assigned to the destination folder.
+            // Without this check, the cmdlet would PUT a per-Robot UserValue with a UserId
+            // that the destination folder doesn't own; the server returns 200 but silently
+            // drops the UserValue (and can wipe the asset's Global Value as a side effect).
+            // Mirrors FindDstMachine's FolderMachinesAssigned-scoped lookup; emits a
+            // WriteWarning rather than WriteError so the surrounding caller can continue
+            // with the remaining UserValues (the per-User one is dropped, not the whole asset).
+            var assignedUserIds = dstDrive.FolderUsersWithInherited.Get(newFolder)
+                .Where(ur => ur?.UserEntity?.Id is not null)
+                .Select(ur => ur.UserEntity!.Id!.Value)
+                .ToHashSet();
+            if (dstUser.Id is null || !assignedUserIds.Contains(dstUser.Id!.Value))
+            {
+                _this.WriteWarning($"{msg}: A user with the name '{searchName}' is not assigned in '{newFolder.GetPSPath()}'.");
+                return null;
             }
             return dstUser;
         }
