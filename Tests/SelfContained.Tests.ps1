@@ -2057,4 +2057,176 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
             Remove-OrchAsset -Name $name -Confirm:$false -ErrorAction SilentlyContinue
         }
     }
+
+    It 'R9: Set-OrchAsset -MachineName for an unassigned tenant machine errors out without corrupting the asset' {
+        # Critical bug fix: SetAsset's -MachineName candidate set was drive.Machines.Get()
+        # (the entire tenant); it now intersects with drive.FolderMachinesAssigned.Get(folder).
+        #
+        # The pre-fix flow was actively destructive, not merely permissive. The client built a
+        # per-Robot UserValue referencing the out-of-folder MachineId and PUT it; the server
+        # returned 200 BUT silently dropped the UserValue and wiped the original Global Value.
+        # The asset was left at ValueScope=PerRobot with no UserValues and HasDefaultValue=false
+        # — effectively erased while appearing to succeed. Verified against Orch1 directly
+        # (PUT /odata/Assets(id) with an out-of-folder MachineId).
+        #
+        # This regression test guards two properties simultaneously:
+        #   (a) the cmdlet rejects the call up front (correct error path), and
+        #   (b) the asset's state is bit-for-bit unchanged after the failed call (no corruption).
+        # If either flips red, scripts targeting unassigned machines could silently destroy
+        # assets again.
+        $assigned = @(Get-OrchFolderMachine -Path $script:RootFolder -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
+        $allTenant = @(Get-OrchMachine -Path "${script:Drive}:\" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
+        $unassigned = $allTenant | Where-Object { $_ -and $_ -notin $assigned } | Select-Object -First 1
+        if (-not $unassigned) {
+            Set-ItResult -Skipped -Because 'no tenant machine is unassigned to the test folder; cannot exercise the path'
+            return
+        }
+
+        $name = "${script:Prefix}Reg_AssetUnassignedMach"
+        try {
+            Set-OrchAsset -Name $name -ValueType Text -Value 'init_value' | Out-Null
+            Clear-OrchCache
+            $before = Get-OrchAsset -Name $name
+            $before.Value | Should -Be 'init_value'
+            $before.ValueScope | Should -Be 'Global'
+            $before.HasDefaultValue | Should -Be $true
+
+            $err = $null
+            try {
+                Set-OrchAsset -Name $name -ValueType Text -Value 'permachine_X' -MachineName $unassigned -ErrorAction Stop
+            } catch { $err = $_ }
+            $err | Should -Not -BeNullOrEmpty -Because "machine '$unassigned' is not assigned to '$($script:RootFolder)' so the cmdlet must reject it"
+            $err.Exception.Message | Should -Match 'is not assigned to the folder'
+
+            Clear-OrchCache
+            $after = Get-OrchAsset -Name $name
+            $after.Value           | Should -Be $before.Value           -Because 'asset Value must NOT be wiped by a failed Set-OrchAsset (pre-fix bug erased Value silently)'
+            $after.ValueScope      | Should -Be $before.ValueScope      -Because 'asset ValueScope must NOT flip to PerRobot on a failed Set-OrchAsset'
+            $after.HasDefaultValue | Should -Be $before.HasDefaultValue -Because 'HasDefaultValue must NOT flip to false on a failed Set-OrchAsset'
+        } finally {
+            Remove-OrchAsset -Name $name -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+
+    It 'R11: Start-OrchJob -RuntimeType invalid emits WriteError, not throw' {
+        # Bug fix: the validity check used `throw new Exception(...)` which bypassed
+        # -WhatIf / -Confirm and surfaced as a generic Exception. It now writes a
+        # non-terminating ArgumentException with InvalidArgument category, listing the
+        # valid values, and returns gracefully.
+        $err = $null
+        try {
+            Start-OrchJob -Path $script:RootFolder -Name 'NoSuchProcessName' -RuntimeType 'NotARuntime' -ErrorAction Stop
+        } catch { $err = $_ }
+
+        $err | Should -Not -BeNullOrEmpty -Because 'an invalid -RuntimeType must be reported'
+        $err.CategoryInfo.Category | Should -Be 'InvalidArgument' -Because 'the cmdlet should fail through WriteError, not throw an unclassified Exception'
+        $err.Exception.Message | Should -Match 'Invalid RuntimeType'
+        $err.Exception.Message | Should -Match 'Valid values are'
+    }
+
+    It 'R13: Set-OrchAsset -UserName for an unassigned tenant user errors out without corrupting the asset' {
+        # Same critical bug pattern as R9, but on the User axis instead of Machine.
+        # Pre-fix: -UserName candidate set was drive.GetUsers() (entire tenant). A user that
+        # exists in the tenant but is NOT assigned to the folder PUT through with a per-User
+        # UserValue → server returned 200 → server silently dropped the UserValue AND wiped
+        # the asset's Global Value. Verified against Orch1 directly.
+        # Post-fix: candidate set intersects with drive.FolderUsersWithInherited.Get(folder).
+        $assigned = @(Get-OrchFolderUser -Path $script:RootFolder -ErrorAction SilentlyContinue |
+            ForEach-Object { $_.UserEntity.UserName })
+        $allTenant = @(Get-OrchUser -Path "${script:Drive}:\" -ErrorAction SilentlyContinue |
+            Where-Object Type -ne 'DirectoryGroup' | Select-Object -ExpandProperty UserName)
+        $unassigned = $allTenant | Where-Object { $_ -and $_ -notin $assigned } | Select-Object -First 1
+        if (-not $unassigned) {
+            Set-ItResult -Skipped -Because 'no tenant user is unassigned to the test folder; cannot exercise the path'
+            return
+        }
+
+        $name = "${script:Prefix}Reg_AssetUnassignedUser"
+        try {
+            Set-OrchAsset -Name $name -ValueType Text -Value 'init_value' | Out-Null
+            Clear-OrchCache
+            $before = Get-OrchAsset -Name $name
+            $before.Value | Should -Be 'init_value'
+            $before.ValueScope | Should -Be 'Global'
+            $before.HasDefaultValue | Should -Be $true
+
+            $err = $null
+            try {
+                Set-OrchAsset -Name $name -ValueType Text -Value 'peruser_X' -UserName $unassigned -ErrorAction Stop
+            } catch { $err = $_ }
+            $err | Should -Not -BeNullOrEmpty -Because "user '$unassigned' is not assigned to '$($script:RootFolder)' so the cmdlet must reject it"
+            $err.Exception.Message | Should -Match 'is not assigned to the folder'
+
+            Clear-OrchCache
+            $after = Get-OrchAsset -Name $name
+            $after.Value           | Should -Be $before.Value           -Because 'asset Value must NOT be wiped by a failed Set-OrchAsset (pre-fix bug erased Value silently)'
+            $after.ValueScope      | Should -Be $before.ValueScope      -Because 'asset ValueScope must NOT flip to PerRobot on a failed Set-OrchAsset'
+            $after.HasDefaultValue | Should -Be $before.HasDefaultValue -Because 'HasDefaultValue must NOT flip to false on a failed Set-OrchAsset'
+        } finally {
+            Remove-OrchAsset -Name $name -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+
+    It 'R14: Set-OrchSecretAsset -MachineName / -UserName scope tightening' {
+        # Smoke that the same scope-tightening fix is in place for SetSecretAsset; the
+        # R9 / R13 corruption-property guards are exercised on SetAsset, this just confirms
+        # the parallel cmdlets reject the call up front.
+        $assignedM = @(Get-OrchFolderMachine -Path $script:RootFolder -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
+        $allTenantM = @(Get-OrchMachine -Path "${script:Drive}:\" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
+        $unassignedM = $allTenantM | Where-Object { $_ -and $_ -notin $assignedM } | Select-Object -First 1
+
+        $assignedU = @(Get-OrchFolderUser -Path $script:RootFolder -ErrorAction SilentlyContinue | ForEach-Object { $_.UserEntity.UserName })
+        $allTenantU = @(Get-OrchUser -Path "${script:Drive}:\" -ErrorAction SilentlyContinue | Where-Object Type -ne 'DirectoryGroup' | Select-Object -ExpandProperty UserName)
+        $unassignedU = $allTenantU | Where-Object { $_ -and $_ -notin $assignedU } | Select-Object -First 1
+
+        if (-not $unassignedM -and -not $unassignedU) {
+            Set-ItResult -Skipped -Because 'no unassigned machine or user available'
+            return
+        }
+
+        $name = "${script:Prefix}Reg_SecScope"
+        try {
+            Set-OrchSecretAsset -Name $name -SecretValue 's' | Out-Null
+            Clear-OrchCache
+
+            if ($unassignedM) {
+                $err = $null
+                try { Set-OrchSecretAsset -Name $name -SecretValue 's' -MachineName $unassignedM -ErrorAction Stop } catch { $err = $_ }
+                $err | Should -Not -BeNullOrEmpty
+                $err.Exception.Message | Should -Match 'MachineName.*is not assigned to the folder'
+            }
+            if ($unassignedU) {
+                $err = $null
+                try { Set-OrchSecretAsset -Name $name -SecretValue 's' -UserName $unassignedU -ErrorAction Stop } catch { $err = $_ }
+                $err | Should -Not -BeNullOrEmpty
+                $err.Exception.Message | Should -Match 'UserName.*is not assigned to the folder'
+            }
+        } finally {
+            Remove-OrchAsset -Name $name -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+
+    It 'R12: Add-OrchCalendarDate compares against UTC.Today, not local Today' {
+        # Bug fix: -ExcludedDate values were stamped Kind=Utc but the "drop past dates"
+        # filter compared against `DateTime.Today` (local). On a TZ ahead of UTC the local
+        # date can already be tomorrow while UTC is still today — so a -ExcludedDate built
+        # from DateTime.UtcNow.Date was considered "past" (< local Today) and silently
+        # dropped. Filter now uses DateTime.UtcNow.Date so today (UTC) is preserved.
+        # (Get-OrchCalendar returns the list view without ExcludedDates; we fetch the full
+        # calendar via /odata/Calendars(id) to assert the date actually landed.)
+        $calName = "${script:Prefix}Reg_Cal"
+        try {
+            $todayUtc = [DateTime]::UtcNow.Date
+            Add-OrchCalendarDate -Name $calName -ExcludedDate $todayUtc -ErrorAction Stop | Out-Null
+            Clear-OrchCache
+
+            $cal = Get-OrchCalendar -Name $calName
+            $cal | Should -Not -BeNullOrEmpty
+            $full = Invoke-OrchApi -Method GET -ApiPath "/odata/Calendars($($cal.Id))" -SkipFolderContext
+            ($full.ExcludedDates | Measure-Object).Count | Should -BeGreaterOrEqual 1 `
+                -Because "today (UTC) must survive the past-date filter; if 0, the filter dropped it"
+        } finally {
+            Remove-OrchCalendar -Name $calName -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
 }
