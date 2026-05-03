@@ -40,22 +40,22 @@ public class GetDuExtractorCommand : OrchestratorPSCmdlet
             var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
             var drivesProjects = SessionState.EnumDuFolders(paramPath, recurse);
 
-            // Exclude already-selected DocumentTypeName values from completion candidates
+            // Exclude already-selected ExtractorName values from completion candidates
             var wpName = CreateSelfExclusionList(commandAst, "Name", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.GroupBy(drivesProjects, dp => dp.drive.GetDuDocumentTypes(dp.project));
+            var results = ParallelResults.GroupBy(drivesProjects, dp => dp.drive.GetDuExtractors(dp.project));
 
             foreach (var result in results)
             {
-                foreach (var documentType in result
+                foreach (var extractor in result
                     .Where(e => wp.IsMatch(e?.name))
                     .ExcludeByWildcards(e => e?.name!, wpName)
                     .OrderBy(e => e?.name))
                 {
-                    string tooltip = documentType.GetPSPath();
-                    yield return new CompletionResult(PathTools.EscapePSText(documentType.name), documentType.name, CompletionResultType.Text, tooltip);
+                    string tooltip = extractor.GetPSPath();
+                    yield return new CompletionResult(PathTools.EscapePSText(extractor.name), extractor.name, CompletionResultType.Text, tooltip);
                 }
             }
         }

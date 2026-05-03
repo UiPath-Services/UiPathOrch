@@ -1,6 +1,7 @@
 using System.Management.Automation;
 using UiPath.PowerShell.Positional;
 using System.Text;
+using System.Text.Json;
 using UiPath.OrchAPI;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
@@ -43,12 +44,6 @@ public class ImportQueueItemCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
-    // TODO: Not properly parsing CSVs that contain double quotes like the following..
-    /*
-    Path,Type,UserName,Roles
-    TestTenant:,DirectoryUser,LynneR@1pf2dr.onmicrosoft.com,
-    TestTenant:,DirectoryUser,MeganB@1pf2dr.onmicrosoft.com,"""Allow to be Automation Developer"",""Solutions Contributor"""
-     */
     public bool ParseCsvContent(string csvFilePath, out List<string> headers, out List<List<string>> contents, out List<CSVParseError> errorInfo)
     {
         headers = [];
@@ -239,7 +234,7 @@ public class ImportQueueItemCommand : OrchestratorPSCmdlet
 
         if (!string.IsNullOrEmpty(CommitType))
         {
-            sb.Append("\"commitType\":\"" + CommitType + "\",\n");
+            sb.Append("\"commitType\":" + JsonSerializer.Serialize(CommitType) + ",\n");
         }
 
         if (errorInfo.Any())
@@ -307,7 +302,7 @@ public class ImportQueueItemCommand : OrchestratorPSCmdlet
                         {
                             if (ShouldProcess(target, $"Import Queue Item {queueItem.csvPath} ({queueItem.Item2.rowNum} rows)"))
                             {
-                                var response = drive.OrchAPISession.BulkAddQueueItem(folder.Id ?? 0, queueItem.Item2.content + $"\"queueName\":\"{queue.Name}\"\n}}");
+                                var response = drive.OrchAPISession.BulkAddQueueItem(folder.Id ?? 0, queueItem.Item2.content + $"\"queueName\":{JsonSerializer.Serialize(queue.Name ?? "")}\n}}");
                                 if (response is not null)
                                 {
                                     if (response.Success.GetValueOrDefault())

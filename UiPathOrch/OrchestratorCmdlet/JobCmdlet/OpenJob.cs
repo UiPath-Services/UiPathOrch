@@ -6,15 +6,12 @@ using Job = UiPath.PowerShell.Entities.Job;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Open, "OrchJob")] //, SupportsPaging = true)]
+[Cmdlet(VerbsCommon.Open, "OrchJob")]
 public class OpenJobCommand : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(JobIdCompleter))]
     public Int64[]? Id { get; set; }
-
-    //[Parameter]
-    //public SwitchParameter Expanded { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -43,14 +40,11 @@ public class OpenJobCommand : OrchestratorPSCmdlet
                     {
                         string target = folder.GetPSPath();
                         WriteError(new ErrorRecord(new OrchException(target, ex), "GetJobError", ErrorCategory.InvalidOperation, target));
+                        continue;
                     }
                 }
 
                 string endPoint = $"{drive.OrchAPISession._base_url}/orchestrator_/jobs(sidepanel:sidepanel/jobs/{job!.Key}/details)?fid={folder!.Id ?? 0}";
-                //if (Expanded.IsPresent)
-                //{
-                //    endPoint += "&isExpanded=true";
-                //}
                 Process.Start(new ProcessStartInfo(endPoint) { UseShellExecute = true });
             }
         }

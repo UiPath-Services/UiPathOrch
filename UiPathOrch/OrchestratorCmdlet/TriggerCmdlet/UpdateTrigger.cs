@@ -363,7 +363,7 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
                 postTrigger.ResumeOnSameContext ??= false;
                 postTrigger.RunAsMe ??= false;
                 postTrigger.StartProcessCron ??= "0 0/1 * 1/1 * ? *";
-                postTrigger.StartProcessCronDetails ??= $"\"{{advancedCron\":\"{postTrigger.StartProcessCron}\"}}";
+                postTrigger.StartProcessCronDetails ??= $"{{\"advancedCron\":{System.Text.Json.JsonSerializer.Serialize(postTrigger.StartProcessCron ?? "")}}}";
                 postTrigger.TimeZoneId ??= TimeZoneInfo.Local.Id;
                 postTrigger.UseCalendar = (postTrigger.CalendarId is not null);
                 if (postTrigger.SpecificPriorityValue is not null)

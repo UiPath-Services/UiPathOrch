@@ -345,7 +345,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         //    // If not found among tenant users, search the directory.
                         //    var srcDirectoryUser = srcDrive.SearchPmDirectory(userName)?
                         //        .Where(u => u.type == type)
-                        //        .Where(u => string.Compare(u.identityName, userName, true) == 0)
+                        //        .Where(u => string.Compare(u.identityName, userName, StringComparison.OrdinalIgnoreCase) == 0)
                         //        .FirstOrDefault();
                         //    srcUserEmail = srcDirectoryUser?.email;
                         //}
@@ -354,7 +354,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         {
                             resolved = dstDrive.SearchDirectory(srcUserEmail)?
                                 .Where(u => u.type == type)
-                                .Where(u => string.Compare(u.identityName, srcUserEmail, true) == 0)
+                                .Where(u => string.Compare(u.identityName, srcUserEmail, StringComparison.OrdinalIgnoreCase) == 0)
                                 .FirstOrDefault();
                         }
                     }
@@ -517,7 +517,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         #region If srcMachine's PropagateToSubFolders is true, set it to true on dstMachine as well
         foreach (var dstMachine in machinesToBeAdded)
         {
-            var srcMachine = srcMachines.FirstOrDefault(m => string.Compare(m.Name, dstMachine.Name, true) == 0);
+            var srcMachine = srcMachines.FirstOrDefault(m => string.Compare(m.Name, dstMachine.Name, StringComparison.OrdinalIgnoreCase) == 0);
             if (srcMachine is null) continue; // Should never be null, but just in case
 
             if (srcMachine.PropagateToSubFolders.GetValueOrDefault())
@@ -1253,9 +1253,9 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         {
             var dstSessions = dstDrive.MachineSessionRuntimesByFolder.Get(dstFolder);
             var dstSession = dstSessions.FirstOrDefault(s =>
-                string.Compare(s.MachineName ?? "", srcMachineName, true) == 0 &&
-                string.Compare(s.HostMachineName ?? "", srcHostMachineName, true) == 0 &&
-                string.Compare(s.ServiceUserName ?? "", srcServiceUserName, true) == 0);
+                string.Compare(s.MachineName ?? "", srcMachineName, StringComparison.OrdinalIgnoreCase) == 0 &&
+                string.Compare(s.HostMachineName ?? "", srcHostMachineName, StringComparison.OrdinalIgnoreCase) == 0 &&
+                string.Compare(s.ServiceUserName ?? "", srcServiceUserName, StringComparison.OrdinalIgnoreCase) == 0);
 
             if (dstSession is null)
             {
@@ -1264,13 +1264,13 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 _this.WriteWarning($"\"{dstFolder.GetPSPath()}\": {msg}: The session not found with MachineName ='{srcMachineName}', HostMachineName = '{srcHostMachineName}' and ServiceUserName = '{srcServiceUserName}'.");
 
                 dstSession = dstSessions.FirstOrDefault(s =>
-                    string.Compare(s.MachineName, srcMachineName, true) == 0 &&
-                    string.Compare(s.HostMachineName, srcHostMachineName, true) == 0 &&
+                    string.Compare(s.MachineName, srcMachineName, StringComparison.OrdinalIgnoreCase) == 0 &&
+                    string.Compare(s.HostMachineName, srcHostMachineName, StringComparison.OrdinalIgnoreCase) == 0 &&
                     string.IsNullOrEmpty(s.ServiceUserName));
 
                 dstSession ??= dstSessions.FirstOrDefault(s =>
-                        (string.Compare(s.MachineName, srcMachineName, true) == 0 &&
-                        (string.Compare(s.HostMachineName, srcHostMachineName, true) == 0)));
+                        (string.Compare(s.MachineName, srcMachineName, StringComparison.OrdinalIgnoreCase) == 0 &&
+                        (string.Compare(s.HostMachineName, srcHostMachineName, StringComparison.OrdinalIgnoreCase) == 0)));
             }
             return dstSession;
         }
@@ -1315,7 +1315,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         QueueDefinition dstQueue = null;
         try
         {
-            dstQueue = dstDrive.Queues.Get(dstFolder)?.FirstOrDefault(q => string.Compare(q.Name, srcQueue.Name, true) == 0);
+            dstQueue = dstDrive.Queues.Get(dstFolder)?.FirstOrDefault(q => string.Compare(q.Name, srcQueue.Name, StringComparison.OrdinalIgnoreCase) == 0);
         }
         catch (Exception ex)
         {
@@ -2813,7 +2813,10 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 dstDrive.FolderUsersWithInherited.ClearCache(newFolder);
                 dstDrive.FolderUsersWithNoInherited.ClearCache(newFolder);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"UnassignUserFromFolder failed for '{newFolder.GetPSPath()}': {ex.Message}");
+            }
             return;
         }
 
@@ -3081,7 +3084,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         reporter.WriteProgress(++rootIndex);
                         using var reporterActionCatalogs = new ProgressReporter(this, 1300, Int32.MaxValue, msg);
                         //srcDrive.ActionCatalogs.ClearCache(srcFolder);
-                        CopyActionCatalogs(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestDataQueues, true, cancelToken);
+                        CopyActionCatalogs(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterActionCatalogs, true, cancelToken);
 
                         cancelToken.ThrowIfCancellationRequested();
                     }

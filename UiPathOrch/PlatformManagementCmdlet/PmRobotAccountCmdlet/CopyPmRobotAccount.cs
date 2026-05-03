@@ -51,19 +51,13 @@ public class CopyPmRobotAccountCommand : OrchestratorPSCmdlet
             {
                 foreach (var dstDrive in dstDrives)
                 {
-                    if (srcDrive.GetPartitionGlobalId() == dstDrive.GetPartitionGlobalId()) continue;
+                    var dstPartitionGlobalId = dstDrive.GetPartitionGlobalId();
+
+                    // Do nothing if source and destination are the same
+                    if (srcPartitionGlobalId == dstPartitionGlobalId) continue;
 
                     try
                     {
-                        var dstPartitionGlobalId = dstDrive.GetPartitionGlobalId();
-
-                        // Do nothing if source and destination are the same
-                        if (srcPartitionGlobalId == dstPartitionGlobalId)
-                        {
-                            index += targetRobots.Count;
-                            continue;
-                        }
-
                         reporter.WriteProgress(++index, $"{srcRobotAccount.GetPSPath()} to {dstDrive.NameColonSeparator}");
 
                         string target = $"Item: {System.IO.Path.Combine(srcDrive!.NameColon, srcRobotAccount!.displayName!)} Destination: {dstDrive.NameColonSeparator}";

@@ -185,21 +185,20 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
         #region UserName
         if (UserName is not null && UserName.Length > 0)
         {
-            try
+            var drives = SessionState.EnumOrchDrives(Path);
+            var wpUserName = UserName.ConvertToWildcardPatternList();
+            var userIds = new HashSet<Int64>();
+            foreach (var drive in drives)
             {
-                var drives = SessionState.EnumOrchDrives(Path);
-                var wpUserName = UserName.ConvertToWildcardPatternList();
-                var userIds = new HashSet<Int64>();
-                foreach (var drive in drives)
-                {
-                    userIds.UnionWith(drive.GetUsers()
-                        .FilterByWildcards(u => u?.UserName, wpUserName)
-                        .Select(u => u.Id ?? 0));
-                }
-                if (userIds.Count != 0)
-                    filter.Add("(" + string.Join("%20or%20", userIds.Select(id => $"(UserId%20eq%20{id})")) + ")");
+                userIds.UnionWith(drive.GetUsers()
+                    .FilterByWildcards(u => u?.UserName, wpUserName)
+                    .Select(u => u.Id ?? 0));
             }
-            catch { }
+            // When UserName is specified but resolves to no users, narrow the result to nothing
+            // rather than silently returning logs for all users.
+            filter.Add(userIds.Count != 0
+                ? "(" + string.Join("%20or%20", userIds.Select(id => $"(UserId%20eq%20{id})")) + ")"
+                : "(UserId%20eq%20-1)");
         }
         #endregion
 

@@ -2023,7 +2023,7 @@ public partial class OrchAPISession : IDisposable
             schedule.ResumeOnSameContext = null;
         }
         // v13 requires StartProcessCronDetails and ExternalJobKey
-        schedule.StartProcessCronDetails ??= $"{{\"advancedCron\":\"{schedule.StartProcessCron}\"}}";
+        schedule.StartProcessCronDetails ??= $"{{\"advancedCron\":{JsonSerializer.Serialize(schedule.StartProcessCron ?? "")}}}";
         schedule.ExternalJobKey ??= "";
         return HttpRequest<ProcessSchedule>(HttpMethod.Post, "/odata/ProcessSchedules", folderId, schedule);
     }
@@ -2594,7 +2594,7 @@ public partial class OrchAPISession : IDisposable
     // Returns Not Found...
     public IEnumerable<CountStats> GetSessionStats()
     {
-        var ret = HttpRequest<CountStats[]>(HttpMethod.Get, "/api/Stats/GetSessionsStats'");
+        var ret = HttpRequest<CountStats[]>(HttpMethod.Get, "/api/Stats/GetSessionsStats");
         return ret ?? [];
     }
 
@@ -3127,14 +3127,16 @@ public partial class OrchAPISession : IDisposable
     public void AddTestDataQueueItems(Int64 folderId, string testDataQueueName, string itemJsonArray)
     {
         EnsureVersionSupport(14);
-        var payload = $"{{\"queueName\": \"{testDataQueueName}\",\"items\": {itemJsonArray}}}";
+        // itemJsonArray is a pre-serialized JSON array supplied by the caller, so embed it raw;
+        // testDataQueueName is escaped via JsonSerializer to survive quotes/backslashes.
+        var payload = $"{{\"queueName\":{JsonSerializer.Serialize(testDataQueueName ?? "")},\"items\":{itemJsonArray}}}";
         HttpRequest(HttpMethod.Post, "/api/TestDataQueueActions/BulkAddItems", folderId, payload);
     }
 
     public void SetAllTestDataQueueItemsConsumed(Int64 folderId, string testDataQueueName, bool isConsumed)
     {
         EnsureVersionSupport(14);
-        var payload = $"{{\"queueName\": \"{testDataQueueName}\",\"isConsumed\": {isConsumed.ToString().ToLower()}}}";
+        var payload = $"{{\"queueName\":{JsonSerializer.Serialize(testDataQueueName ?? "")},\"isConsumed\":{(isConsumed ? "true" : "false")}}}";
         HttpRequest(HttpMethod.Post, "/api/TestDataQueueActions/SetAllItemsConsumed", folderId, payload);
     }
 

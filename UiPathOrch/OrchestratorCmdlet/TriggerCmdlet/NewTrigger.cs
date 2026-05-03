@@ -328,6 +328,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
                 schedule.RuntimeType ??= "Unattended";
 
                 schedule.AssignStringIfNotNullOrEmpty(InputArguments, (s, v) => schedule.InputArguments = v);
+                schedule.InputArguments ??= "{}";
 
                 schedule.AssignBoolIfNotNull(ResumeOnSameContext, (s, v) => s.ResumeOnSameContext = v);
                 schedule.ResumeOnSameContext ??= false;
@@ -358,7 +359,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
                 schedule.StartProcessCron ??= "0 0/1 * 1/1 * ? *";
 
                 schedule.AssignStringIfNotNullOrEmpty(StartProcessCronDetails, (s, v) => s.StartProcessCronDetails = v);
-                schedule.StartProcessCronDetails ??= $"{{\"advancedCron\":\"{schedule.StartProcessCron}\"}}";
+                schedule.StartProcessCronDetails ??= $"{{\"advancedCron\":{System.Text.Json.JsonSerializer.Serialize(schedule.StartProcessCron ?? "")}}}";
 
                 #region Convert ReleaseName to ReleaseId
                 schedule.AssignIdFromName(
