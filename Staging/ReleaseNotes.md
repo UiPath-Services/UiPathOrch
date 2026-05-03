@@ -8,7 +8,7 @@ This release marks API maturity. Going forward, breaking changes will be major-v
 
 ## Improvements
 - `Get-OrchPSDrive`: `Claims`, `CurrentUser`, `TenantId`, and `TenantKey` are now populated immediately for both Confidential and Non-Confidential apps. `CurrentUser` derives from the JWT `preferred_username` claim with fallbacks for older Identity Server deployments.
-- Mount success page shows the authenticated user's name and refreshed visual design.
+- Mount success page shows the authenticated user's name and refreshed visual design. Footer replaces "You can close this window now." with three GitHub links (Need help? · Report a bug · Ask a question, pointing to README / Issues / Discussions), translated for de/fr/ja/ko/ro/tr. Long tenant URLs stay on a single line and the card grows horizontally to accommodate them (previously `word-break: break-all` broke URLs mid-string).
 - `Set-OrchAsset`: "ValueType assumed as Text" is now emitted via `WriteWarning` rather than `WriteError`.
 - **Authorization header is redacted to `***` in HTTP log files** (Trace / Verbose levels). Verbose logs are now safe to attach to GitHub issues without leaking active tokens.
 - The first-connect logging warning is trimmed from a 9-cmdlet paragraph to a single line; the full credential-cmdlet list lives in `Docs/05-Troubleshooting.md`.
@@ -45,6 +45,7 @@ This release marks API maturity. Going forward, breaking changes will be major-v
 
 - **`Set-OrchAsset` / `Set-OrchCredentialAsset` / `Set-OrchSecretAsset` Description handling now merges across pipelined input rows** with priority `non-empty > "" > null` (last-writer-wins among non-empty). Practical effect: `Set-OrchAsset -Description ""` with no other rows now **clears** the existing description (previously: preserved silently); CSV roundtrip stays lossless because empty cells lose to the non-empty Description on the first row.
 - `Invoke-OrchApi` caps the response-body read at 8 KB on HTTP errors. The 1024-character snippet shown to the user is unchanged; multi-MB HTML error pages no longer waste memory.
+- **`Copy-OrchAsset` / `Copy-OrchItem` no longer abort the batch when destination resources are missing.** When a referenced user, machine, queue, calendar, process, bucket, etc. is not present (or not assigned to the destination folder) in the target tenant, the cmdlet now emits a Warning and skips just the affected piece — one per-User value, one referenced calendar, or one whole asset — then continues with the remainder. Cross-tenant / cross-folder copies run under `$ErrorActionPreference='Stop'` complete the rest of the batch instead of stopping at the first gap. Unexpected internal errors still surface as `WriteError`.
 
 ## Internal
 - Removed 1595 lines of dead multithreaded variants and orphan stubs.

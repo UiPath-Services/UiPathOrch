@@ -2269,6 +2269,90 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
         }
     }
 
+    It 'R16: Copy-OrchAsset emits Warning (not Error) for missing dst resources, even under $ErrorActionPreference=Stop' {
+        # Companion to R15. When Copy-OrchAsset cannot map a referenced user /
+        # machine / etc. to the destination folder, the cmdlet should warn and
+        # skip just the affected piece — never abort the whole batch. This
+        # matters in real cross-tenant copies where users / machines / queues
+        # only partially overlap, and especially under
+        # $ErrorActionPreference='Stop' where any WriteError would terminate.
+        #
+        # Three guarantees verified together:
+        #   (a) An asset that has a Global default plus a per-User value for
+        #       an unmappable user is still copied — the Global value survives
+        #       and the unmappable per-User entry is dropped with a Warning.
+        #   (b) An asset whose only value is per-User for an unmappable user
+        #       (no Global default) is skipped with a Warning — there is
+        #       nothing to POST.
+        #   (c) Under $ErrorActionPreference='Stop' the batch still processes
+        #       every source asset; no terminating exception is raised.
+        $assetGlobal = "${script:Prefix}Reg_R16_Global"
+        $assetUserOnly = "${script:Prefix}Reg_R16_UserOnly"
+        $siblingFolder = "${script:Drive}:\${script:Prefix}Reg_R16_Sibling"
+        try {
+            Remove-Item -LiteralPath $siblingFolder -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
+            $null = mkdir $siblingFolder -ErrorAction Stop
+            Clear-OrchCache
+
+            # Confirm TestUserA is NOT inherited / assigned in the sibling folder
+            # (same precondition as R15; sibling is top-level so RootFolder's
+            # user assignment does not propagate).
+            $siblingUsers = @(Get-OrchFolderUser -Path $siblingFolder -ErrorAction SilentlyContinue |
+                ForEach-Object { $_.UserEntity.UserName })
+            if ($siblingUsers -contains $script:TestUserA) {
+                Set-ItResult -Skipped -Because "TestUserA ($script:TestUserA) is unexpectedly present in the sibling folder; cannot exercise the unassigned path"
+                return
+            }
+
+            # Source assets:
+            #   $assetGlobal  : Global default + per-User UserValue for TestUserA
+            #   $assetUserOnly: per-User UserValue for TestUserA only (no Global default)
+            Set-OrchAsset -Name $assetGlobal   -ValueType Text -Value 'global_default'  -Path $script:RootFolder | Out-Null
+            Set-OrchAsset -Name $assetGlobal   -ValueType Text -Value 'user_value'      -UserName $script:TestUserA -Path $script:RootFolder | Out-Null
+            Set-OrchAsset -Name $assetUserOnly -ValueType Text -Value 'user_only_value' -UserName $script:TestUserA -Path $script:RootFolder | Out-Null
+            Clear-OrchCache
+
+            # Sanity: $assetUserOnly was created without a Global default value.
+            $srcUserOnly = Get-OrchAsset -Name $assetUserOnly -Path $script:RootFolder
+            $srcUserOnly.HasDefaultValue | Should -Be $false -Because 'fixture: per-User-only asset must have no Global default to exercise the "no applicable values" Warning path'
+
+            # === (c) batched copy under $ErrorActionPreference=Stop ===
+            $saved = $ErrorActionPreference
+            $ErrorActionPreference = 'Stop'
+            $caught = $null
+            $warnings = $null
+            $errors = $null
+            try {
+                Copy-OrchAsset -Name "${script:Prefix}Reg_R16_*" -Path $script:RootFolder -Destination $siblingFolder `
+                    -WarningVariable warnings -ErrorVariable errors -WarningAction SilentlyContinue
+            } catch {
+                $caught = $_
+            } finally {
+                $ErrorActionPreference = $saved
+            }
+
+            $caught | Should -BeNullOrEmpty -Because '$ErrorActionPreference=Stop must NOT terminate the batch when only Warnings fire'
+            ($errors | Measure-Object).Count | Should -Be 0 -Because 'missing-resource paths must emit Warning, not Error'
+            ($warnings | Measure-Object).Count | Should -BeGreaterOrEqual 2 -Because 'at least one Warning per missing-user lookup, plus the "no applicable per-user values" Warning'
+
+            Clear-OrchCache
+
+            # === (a) Asset with Global default survives ===
+            $dstGlobal = Get-OrchAsset -Name $assetGlobal -Path $siblingFolder
+            $dstGlobal | Should -Not -BeNullOrEmpty -Because 'asset with Global default must be POSTed even when its per-User UserValue is unmappable'
+            $dstGlobal.Value | Should -Be 'global_default'
+            ($dstGlobal.UserValues | Measure-Object).Count | Should -Be 0 -Because 'unassigned per-User UserValue must be dropped'
+
+            # === (b) per-User-only asset is skipped (Warning, no POST) ===
+            $dstUserOnly = Get-OrchAsset -Name $assetUserOnly -Path $siblingFolder -ErrorAction SilentlyContinue
+            $dstUserOnly | Should -BeNullOrEmpty -Because 'per-User-only asset with no mappable user and no Global default must be skipped (Warning), not POSTed'
+        } finally {
+            Remove-OrchAsset -Name "${script:Prefix}Reg_R16_*" -Path $script:RootFolder -Confirm:$false -ErrorAction SilentlyContinue
+            Remove-OrchAsset -Name "${script:Prefix}Reg_R16_*" -Path $siblingFolder -Confirm:$false -ErrorAction SilentlyContinue
+            Remove-Item -LiteralPath $siblingFolder -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+
     It 'R12: Add-OrchCalendarDate compares against UTC.Today, not local Today' {
         # Bug fix: -ExcludedDate values were stamped Kind=Utc but the "drop past dates"
         # filter compared against `DateTime.Today` (local). On a TZ ahead of UTC the local

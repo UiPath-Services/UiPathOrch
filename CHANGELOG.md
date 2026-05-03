@@ -36,7 +36,12 @@ will be major-version bumps per SemVer.
   `preferred_username` claim with fallbacks for older Identity
   Server deployments.
 - Mount success page shows the authenticated user's name and
-  refreshed visual design.
+  refreshed visual design. Footer replaces "You can close this
+  window now." with three GitHub links (Need help? · Report a bug ·
+  Ask a question, pointing to README / Issues / Discussions),
+  translated for de/fr/ja/ko/ro/tr. Long tenant URLs stay on a
+  single line and the card grows horizontally to accommodate them
+  (previously `word-break: break-all` broke URLs mid-string).
 - `Set-OrchAsset`: "ValueType assumed as Text" is now emitted via
   `WriteWarning` rather than `WriteError`.
 - **Authorization header is redacted to `***` in HTTP log files**
@@ -159,6 +164,17 @@ will be major-version bumps per SemVer.
   errors. Previously the entire body was read just to surface a
   1024-character snippet — the user-facing error message is
   unchanged, but multi-MB HTML error pages no longer waste memory.
+- **`Copy-OrchAsset` / `Copy-OrchItem` no longer abort the batch
+  when destination resources are missing.** When a referenced
+  user, machine, queue, calendar, process, bucket, etc. is not
+  present (or not assigned to the destination folder) in the
+  target tenant, the cmdlet now emits a Warning and skips just
+  the affected piece — one per-User value, one referenced
+  calendar, or one whole asset — then continues with the
+  remainder. Cross-tenant / cross-folder copies run under
+  `$ErrorActionPreference='Stop'` complete the rest of the batch
+  instead of stopping at the first gap. Unexpected internal
+  errors still surface as `WriteError`.
 
 ### Internal
 
