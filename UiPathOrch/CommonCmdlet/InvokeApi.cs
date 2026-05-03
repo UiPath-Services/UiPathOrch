@@ -229,12 +229,14 @@ public class InvokeOrchApiCommand : OrchestratorPSCmdlet
                 SessionState.PSVariable.Set(ResponseHeadersVariable, hdr);
             }
 
+            bool isHttpError = !response.IsSuccessStatusCode && !SkipHttpErrorCheck.IsPresent;
+
             // Binary download takes precedence — never deserialize, never inject Path.
             if (!string.IsNullOrEmpty(OutFile))
             {
-                if (!response.IsSuccessStatusCode && !SkipHttpErrorCheck.IsPresent)
+                if (isHttpError)
                 {
-                    string err = response.Content?.ReadAsStringAsync().GetAwaiter().GetResult() ?? "";
+                    string err = ReadBodyCapped(response.Content, ErrorBodyMaxBytes);
                     WriteError(BuildHttpErrorRecord(response, err, url));
                     return;
                 }
@@ -245,9 +247,13 @@ public class InvokeOrchApiCommand : OrchestratorPSCmdlet
                 return;
             }
 
-            string body = response.Content?.ReadAsStringAsync().GetAwaiter().GetResult() ?? "";
+            // For non-success responses we don't need the full body — just enough to surface
+            // the upstream error message. Avoid loading multi-MB HTML error pages.
+            string body = isHttpError
+                ? ReadBodyCapped(response.Content, ErrorBodyMaxBytes)
+                : response.Content?.ReadAsStringAsync().GetAwaiter().GetResult() ?? "";
 
-            if (!response.IsSuccessStatusCode && !SkipHttpErrorCheck.IsPresent)
+            if (isHttpError)
             {
                 WriteError(BuildHttpErrorRecord(response, body, url));
                 return;
@@ -304,6 +310,29 @@ public class InvokeOrchApiCommand : OrchestratorPSCmdlet
 
         return new StringContent(payload, Encoding.UTF8,
             string.IsNullOrEmpty(contentType) ? "application/json" : contentType);
+    }
+
+    private const int ErrorBodyMaxBytes = 8192;
+
+    private static string ReadBodyCapped(HttpContent? content, int maxBytes)
+    {
+        if (content is null) return "";
+        try
+        {
+            using var stream = content.ReadAsStream();
+            var buffer = new byte[maxBytes];
+            int read = 0;
+            int n;
+            while (read < maxBytes && (n = stream.Read(buffer, read, maxBytes - read)) > 0)
+            {
+                read += n;
+            }
+            return Encoding.UTF8.GetString(buffer, 0, read);
+        }
+        catch
+        {
+            return "";
+        }
     }
 
     private static ErrorRecord BuildHttpErrorRecord(HttpResponseMessage response, string body, string url)
