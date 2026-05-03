@@ -54,7 +54,7 @@ public class CopyRoleCommand : OrchestratorPSCmdlet
                 if (role.IsStatic.GetValueOrDefault())
                 {
                     var dstRoles = dstDrive.Roles.Get();
-                    var existingRole = dstRoles.FirstOrDefault(r => string.Compare(r.Name, role.Name, true) == 0);
+                    var existingRole = dstRoles.FirstOrDefault(r => string.Compare(r.Name, role.Name, StringComparison.OrdinalIgnoreCase) == 0);
                     if (existingRole is not null) continue;
                 }
 

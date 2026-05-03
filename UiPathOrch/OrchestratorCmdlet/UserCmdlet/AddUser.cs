@@ -493,33 +493,6 @@ public class AddUserCommand : OrchestratorPSCmdlet
         return [];
     }
 
-    //private IEnumerable<DirectoryObject> SearchUser(OrchDriveInfo drive, string userName, int type, HashSet<(OrchDriveInfo drive, string userName)> warnedNoExistingUsers)
-    //{
-    //    IEnumerable<DirectoryObject> users;
-    //    try
-    //    {
-    //        users = drive.SearchDirectory(userName);
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "SearchForUsersAndGroupsError", ErrorCategory.InvalidOperation, drive));
-    //        return [];
-    //    }
-
-    //    var targetUsers = users?.Where(u => u.type == type);
-
-    //    if (targetUsers )
-    //    if (targetUsers is null || !targetUsers.Any())
-    //    {
-    //        if (warnedNoExistingUsers.Add((drive, userName.ToLower())))
-    //        {
-    //            WriteWarning($"No match found for user '{System.IO.Path.Combine(drive.NameColonSeparator, userName)}' ({string.Join(", ", Type ?? [])}) in your organization.");
-    //        }
-    //        return [];
-    //    }
-    //    return targetUsers;
-    //}
-
     private bool UserAlreadyExists(Dictionary<OrchDriveInfo, Dictionary<string, Entities.User>> existingUsersPerDrive, OrchDriveInfo drive, string userName)
     {
         // Create the cache if it hasn't been created yet
@@ -661,7 +634,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
                     if (line.UR_CredentialStore is not null)
                     {
                         var credentialStores = drive.CredentialStores.Get();
-                        var targetStore = credentialStores.FirstOrDefault(cs => string.Compare(cs.Name, line.UR_CredentialStore, true) == 0);
+                        var targetStore = credentialStores.FirstOrDefault(cs => string.Compare(cs.Name, line.UR_CredentialStore, StringComparison.OrdinalIgnoreCase) == 0);
                         postingUser.UnattendedRobot.CredentialStoreId = targetStore?.Id;
                     }
 
@@ -669,7 +642,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
                     if (postingUser.UnattendedRobot.Password is not null && postingUser.UnattendedRobot.CredentialStoreId is null)
                     {
                         var credentialStores = drive.CredentialStores.Get();
-                        var defaultStore = credentialStores.FirstOrDefault(cs => string.Compare(cs.Name, "Orchestrator Database", true) == 0);
+                        var defaultStore = credentialStores.FirstOrDefault(cs => string.Compare(cs.Name, "Orchestrator Database", StringComparison.OrdinalIgnoreCase) == 0);
                         postingUser.UnattendedRobot.CredentialStoreId = defaultStore?.Id;
                     }
                 }

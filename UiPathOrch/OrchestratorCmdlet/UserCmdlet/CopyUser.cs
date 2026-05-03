@@ -119,7 +119,7 @@ public class CopyUserCommand : OrchestratorPSCmdlet
 
                         // If found among the organization's PmUsers, set the identifier as DirectoryIdentifier
                         var dstPmUsers = dstDrive.SearchDirectory(newUser.UserName!)
-                            .Where(u => string.Compare(u.identityName, newUser.UserName, true) == 0 && u.type == srcType)
+                            .Where(u => string.Compare(u.identityName, newUser.UserName, StringComparison.OrdinalIgnoreCase) == 0 && u.type == srcType)
                             .ToList();
                         DirectoryObject dstPmUser = null;
                         if (dstPmUsers.Count == 1) dstPmUser = dstPmUsers.First(); // Only process when exactly one match is found
@@ -128,7 +128,7 @@ public class CopyUserCommand : OrchestratorPSCmdlet
                         {
                             // If not found, also try searching by email address
                             dstPmUser = dstDrive.SearchDirectory(newUser.EmailAddress)
-                                .Where(u => string.Compare(u.identityName, newUser.EmailAddress, true) == 0 && u.type == srcType)
+                                .Where(u => string.Compare(u.identityName, newUser.EmailAddress, StringComparison.OrdinalIgnoreCase) == 0 && u.type == srcType)
                                 .FirstOrDefault();
                         }
 

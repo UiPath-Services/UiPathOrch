@@ -106,7 +106,7 @@ public class CopyMachineCommand : OrchestratorPSCmdlet
                                     }
                                     else
                                     {
-                                        var dstRobot = dstRobots.FirstOrDefault(r => string.Compare(r.Name, srcRobot.Name, true) == 0);
+                                        var dstRobot = dstRobots.FirstOrDefault(r => string.Compare(r.Name, srcRobot.Name, StringComparison.OrdinalIgnoreCase) == 0);
                                         if (dstRobot is null)
                                         {
                                             _this.WriteError(

@@ -399,7 +399,7 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         while (true)
         {
             newName = $"{newNamePrefix}{index}";
-            if ((specifiedNames?.Any(e => string.Compare(e, newName, true) == 0) ?? false) ||
+            if ((specifiedNames?.Any(e => string.Compare(e, newName, StringComparison.OrdinalIgnoreCase) == 0) ?? false) ||
                 (existingEntities?.Any(e => string.Compare(getNameFunc(e), newName, true) == 0) ?? false))
             {
                 ++index;

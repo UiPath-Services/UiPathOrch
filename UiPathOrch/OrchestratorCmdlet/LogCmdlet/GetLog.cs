@@ -215,7 +215,7 @@ public class GetLogCommand : OrchestratorPSCmdlet
         if (!string.IsNullOrEmpty(ProcessName))
         {
             var releases = drive.GetReleases(folder);
-            var targetReleases = releases.Where(r => string.Compare(r?.Name, ProcessName, true) == 0);
+            var targetReleases = releases.Where(r => string.Compare(r?.Name, ProcessName, StringComparison.OrdinalIgnoreCase) == 0);
             if (!targetReleases.Any()) return "null";
             filter.AddIfNotNull(targetReleases
                 //.SelectByWildcards(r => r?.Name, [ReleaseName])

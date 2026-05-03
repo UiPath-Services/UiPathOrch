@@ -51,7 +51,7 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
         {
             // Cannot verify correctly with identifier. Must check using identifierName.
             // Returns true if at least one matches.
-            return group.members?.Any(m => string.Compare(m.name, user.identityName, true) == 0) ?? false;
+            return group.members?.Any(m => string.Compare(m.name, user.identityName, StringComparison.OrdinalIgnoreCase) == 0) ?? false;
         }
 
         private static bool IsMemberOfAll(IEnumerable<PmGroup> groups, PmDirectoryEntityInfo user)
@@ -182,7 +182,7 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
                     {
                         var addingMember = drive.SearchPmDirectory(name.userName)?
                             .Where(t => t.objectType == type)
-                            .FirstOrDefault(t => string.Compare(t.identityName, name.userName, true) == 0);
+                            .FirstOrDefault(t => string.Compare(t.identityName, name.userName, StringComparison.OrdinalIgnoreCase) == 0);
 
                         // Display a warning if not found
                         if (addingMember is null)
@@ -227,8 +227,8 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
                     {
                         case "DirectoryRobotUser":
                             robotEntry = drive.SearchPmDirectory(name)?
-                                .Where(t => string.Compare(t.objectType, "DirectoryRobotUser", true) == 0)
-                                .FirstOrDefault(t => string.Compare(t.identityName, name, true) == 0);
+                                .Where(t => string.Compare(t.objectType, "DirectoryRobotUser", StringComparison.OrdinalIgnoreCase) == 0)
+                                .FirstOrDefault(t => string.Compare(t.identityName, name, StringComparison.OrdinalIgnoreCase) == 0);
                             if (robotEntry is not null)
                             {
                                 if (group.members?.Any(m => m.identifier == robotEntry.identifier) ?? false)

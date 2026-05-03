@@ -66,7 +66,7 @@ public class RemoveLicenseFromLicenseGroup : OrchestratorPSCmdlet
                         .OrderBy(b => b.Item2))
                     {
                         string tiphelp = $"{drive.NameColonSeparator}{bundle.bundle}";
-                        var availableUserBundle = availableUserBundles?.availableUserBundles?.FirstOrDefault(b => string.Compare(b.code, bundle.bundle, true) == 0);
+                        var availableUserBundle = availableUserBundles?.availableUserBundles?.FirstOrDefault(b => string.Compare(b.code, bundle.bundle, StringComparison.OrdinalIgnoreCase) == 0);
                         if (availableUserBundle is not null)
                         {
                             tiphelp += $"  Available: {availableUserBundle.total - availableUserBundle.allocated}";

@@ -133,7 +133,7 @@ public class AddPmLicenseToPmUserCmdlet : OrchestratorPSCmdlet
                 // call POST /portal_/api/license/accountant/UserLicense/users
 
                 var existingLicensedUsers = drive.PmLicensedUsers.Get();
-                var targetUser = existingLicensedUsers.FirstOrDefault(e => string.Compare(e.name, email, true) == 0);
+                var targetUser = existingLicensedUsers.FirstOrDefault(e => string.Compare(e.name, email, StringComparison.OrdinalIgnoreCase) == 0);
 
                 if (targetUser is null)
                 {

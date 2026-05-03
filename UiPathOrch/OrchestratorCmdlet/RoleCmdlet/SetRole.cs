@@ -105,7 +105,7 @@ public class SetRoleCommand : OrchestratorPSCmdlet
     private bool SetPermission(string target, Role postingRole, string permissionFullName, PermissionParams permission, bool? newValue)
     {
         bool isDirty = false;
-        var existingPermission = postingRole.Permissions?.FirstOrDefault(p => string.Compare(p.Name, permissionFullName, true) == 0);
+        var existingPermission = postingRole.Permissions?.FirstOrDefault(p => string.Compare(p.Name, permissionFullName, StringComparison.OrdinalIgnoreCase) == 0);
         if (existingPermission is not null)
         {
             if (existingPermission.Scope != permission.Scope)

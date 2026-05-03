@@ -51,7 +51,7 @@ public class CopyPmExternalApplicationCommand : OrchestratorPSCmdlet
                         #region Skip if an app with the same name exists in the destination organization
                         // The API doesn't return an error, so let's check just in case.
                         var dstApps = dstDrive.PmExternalClients.Get();
-                        var dstApp = dstApps.FirstOrDefault(src => string.Compare(src.name, srcApp.name, true) == 0);
+                        var dstApp = dstApps.FirstOrDefault(src => string.Compare(src.name, srcApp.name, StringComparison.OrdinalIgnoreCase) == 0);
                         if (dstApp is not null)
                         {
                             WriteWarning($"\"{srcApp.GetPSPath()}\": An external application named '{srcApp.name}' already exists in \"{dstDrive.NameColonSeparator}\".");
@@ -94,7 +94,7 @@ public class CopyPmExternalApplicationCommand : OrchestratorPSCmdlet
 
                         // Need to find and add to groups.
                         var dirEntries = dstDrive.PmBulkResolveByName("application", [newApp], app => app.name!);
-                        var newAppDirEntry = dirEntries.Values.FirstOrDefault(e => string.Compare(e?.name, newApp.name, true) == 0);
+                        var newAppDirEntry = dirEntries.Values.FirstOrDefault(e => string.Compare(e?.name, newApp.name, StringComparison.OrdinalIgnoreCase) == 0);
                         if (newAppDirEntry is null) continue;
                         var srcGroups = srcDrive.PmGroups.Get();
                         foreach (var srcGroup in srcGroups)
@@ -102,12 +102,12 @@ public class CopyPmExternalApplicationCommand : OrchestratorPSCmdlet
                             try
                             {
                                 var detailedSrcGroup = srcDrive.PmGroups.Get(srcGroup.id);
-                                if (detailedSrcGroup?.members?.Any(m => string.Compare(m.name, srcApp.name, true) == 0) ?? false)
+                                if (detailedSrcGroup?.members?.Any(m => string.Compare(m.name, srcApp.name, StringComparison.OrdinalIgnoreCase) == 0) ?? false)
                                 {
                                     // srcApp belongs to srcGroup.
                                     // Search for a group with the same name in dstDrive; if not found, create one.
                                     var dstGroups = dstDrive.PmGroups.Get();
-                                    var dstGroup = dstGroups.FirstOrDefault(g => string.Compare(g.name, srcGroup.name, true) == 0);
+                                    var dstGroup = dstGroups.FirstOrDefault(g => string.Compare(g.name, srcGroup.name, StringComparison.OrdinalIgnoreCase) == 0);
                                     if (dstGroup is null) // Create a new group in dstDrive and add newApp.id
                                     {
                                         dstGroup = dstDrive.CreatePmGroup(srcGroup.name, [newAppDirEntry.identifier!]);

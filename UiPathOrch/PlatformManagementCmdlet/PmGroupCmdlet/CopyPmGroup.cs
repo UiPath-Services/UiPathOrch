@@ -145,7 +145,7 @@ public class CopyPmGroupCommand : OrchestratorPSCmdlet
                                     {
                                         var addingMembers = dstDrive.PmRobotAccounts.Get();
                                         var addingMember = addingMembers?
-                                            .FirstOrDefault(t => string.Compare(t.name, robot.name, true) == 0);
+                                            .FirstOrDefault(t => string.Compare(t.name, robot.name, StringComparison.OrdinalIgnoreCase) == 0);
                                         if (addingMember?.id is not null)
                                         {
                                             directoryUserMemberIDs.Add(addingMember.id);
@@ -160,7 +160,7 @@ public class CopyPmGroupCommand : OrchestratorPSCmdlet
 
                         // Find a group with the same name; if found, add entries to that group.
                         var dstGroups = dstDrive.PmGroups.Get();
-                        var dstGroup = dstGroups.FirstOrDefault(g => string.Compare(srcDetailedGroup.name, g.name, true) == 0);
+                        var dstGroup = dstGroups.FirstOrDefault(g => string.Compare(srcDetailedGroup.name, g.name, StringComparison.OrdinalIgnoreCase) == 0);
 
                         PmGroup? newGroup = null;
                         if (dstGroup is null)

@@ -232,7 +232,7 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
                     {
                         var addingMember = drive.ParentDrive.SearchPmDirectory(line.Key.name)?
                             .Where(t => t.objectType == type)
-                            .FirstOrDefault(t => string.Compare(t.identityName, line.Key.name, true) == 0);
+                            .FirstOrDefault(t => string.Compare(t.identityName, line.Key.name, StringComparison.OrdinalIgnoreCase) == 0);
 
                         // Show a warning if no match is found
                         if (addingMember is null)
@@ -283,8 +283,8 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
                 {
                     case "DirectoryRobotUser":
                         var robotEntry = drive.ParentDrive.SearchPmDirectory(name)?
-                            .Where(t => string.Compare(t.objectType, "DirectoryRobotUser", true) == 0)
-                            .FirstOrDefault(t => string.Compare(t.identityName, name, true) == 0);
+                            .Where(t => string.Compare(t.objectType, "DirectoryRobotUser", StringComparison.OrdinalIgnoreCase) == 0)
+                            .FirstOrDefault(t => string.Compare(t.identityName, name, StringComparison.OrdinalIgnoreCase) == 0);
                         if (robotEntry is null) continue;
                         if (ShouldProcess($"Robot: {robotEntry.identityName} Project: {project.GetPSPath()}", "Add DuUser"))
                         {

@@ -67,7 +67,7 @@ public class CopyQueueItemCommand : OrchestratorPSCmdlet
                 foreach (var srcQueue in srcQueues.OrderBy(q => q.Name))
                 {
                     ++idxQueue;
-                    var dstQueue = dstQueues.FirstOrDefault(q => string.Compare(q.Name, srcQueue.Name, true) == 0);
+                    var dstQueue = dstQueues.FirstOrDefault(q => string.Compare(q.Name, srcQueue.Name, StringComparison.OrdinalIgnoreCase) == 0);
                     if (dstQueue is null)
                     {
                         WriteWarning($"'{srcQueue.GetPSPath()}': A queue named as '{srcQueue.Name}' doesn't exist in {dstFolder.GetPSPath()}.");

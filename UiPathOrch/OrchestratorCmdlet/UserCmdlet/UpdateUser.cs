@@ -244,6 +244,11 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                     }
                     #endregion
 
+                    // Outer guard: only materialize an UnattendedRobot section in the payload
+                    // when at least one UR_* field was actually provided. Inner Assign* helpers
+                    // do per-field null/empty checks. UR_Password uses *IfNotNullOrEmpty because
+                    // Get-OrchUser exports passwords as "" — accepting "" here would erase the
+                    // stored password on every CSV roundtrip.
                     if (!string.IsNullOrEmpty(UR_UserName) ||
                         !string.IsNullOrEmpty(UR_CredentialStore) ||
                         !string.IsNullOrEmpty(UR_Password) ||
@@ -261,7 +266,7 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                         if (!string.IsNullOrEmpty(UR_CredentialStore))
                         {
                             var credentialStores = drive.CredentialStores.Get();
-                            var targetCredentialStore = credentialStores.FirstOrDefault(cs => string.Compare(cs.Name, UR_CredentialStore, true) == 0);
+                            var targetCredentialStore = credentialStores.FirstOrDefault(cs => string.Compare(cs.Name, UR_CredentialStore, StringComparison.OrdinalIgnoreCase) == 0);
 
                             if (targetCredentialStore is null)
                             {

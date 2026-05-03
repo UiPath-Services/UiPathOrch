@@ -85,9 +85,9 @@ public class GetPmUserCommand : OrchestratorPSCmdlet
                 line = [
                     EscapeCsvValue(user.Path, true),
                     EscapeCsvValue(user.email),
-                    EscapeCsvValue(string.Compare(user.email, user.userName, true) == 0 ? user.name : user.userName),
+                    EscapeCsvValue(string.Compare(user.email, user.userName, StringComparison.OrdinalIgnoreCase) == 0 ? user.name : user.userName),
                     EscapeCsvValue(user.surname),
-                    EscapeCsvValue(string.Compare(user.email, user.userName, true) != 0 && string.IsNullOrEmpty(user.displayName) ? user.name : user.displayName),
+                    EscapeCsvValue(string.Compare(user.email, user.userName, StringComparison.OrdinalIgnoreCase) != 0 && string.IsNullOrEmpty(user.displayName) ? user.name : user.displayName),
                     EscapeCsvValue("user"),
                     EscapeCsvValue(user.bypassBasicAuthRestriction),
                     EscapeCsvValue(user.invitationAccepted),

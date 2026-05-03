@@ -80,10 +80,10 @@ public class CopyCredentialStoreCommand : OrchestratorPSCmdlet
                 reporter.WriteProgress(++index, $"{store.GetPSPath()} to {dstDrive.NameColonSeparator}");
 
                 // Skip if the source store is "Orchestrator Database" and a store with the same name exists at the destination
-                if (string.Compare(store.Name, "Orchestrator Database", true) == 0)
+                if (string.Compare(store.Name, "Orchestrator Database", StringComparison.OrdinalIgnoreCase) == 0)
                 {
                     var dstStores = dstDrive.CredentialStores.Get();
-                    var existingStore = dstStores.FirstOrDefault(s => string.Compare(s.Name, "Orchestrator Database", true) == 0);
+                    var existingStore = dstStores.FirstOrDefault(s => string.Compare(s.Name, "Orchestrator Database", StringComparison.OrdinalIgnoreCase) == 0);
                     if (existingStore is not null) continue;
                 }
 
