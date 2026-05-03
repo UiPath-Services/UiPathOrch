@@ -631,7 +631,15 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                 // expand MachineName
                 if (wpMachineName is not null)
                 {
-                    var tenantMachines = drive.Machines.Get(); // *TODO: This should be changed to FolderMachinesAssigned.Get(folder).
+                    // Restrict the candidate set to machines actually assigned to this folder
+                    // so that asset per-machine values cannot reference machines outside the
+                    // folder's scope.
+                    var assignedIds = drive.FolderMachinesAssigned.Get(folder)
+                        .Where(m => m?.Id is not null)
+                        .Select(m => m.Id!.Value)
+                        .ToHashSet();
+                    var tenantMachines = drive.Machines.Get()
+                        .Where(m => m?.Id is not null && assignedIds.Contains(m.Id!.Value));
                     specifiedMachines = tenantMachines.FilterByWildcards(m => m?.Name, wpMachineName);
                     if (!specifiedMachines.Any())
                     {
