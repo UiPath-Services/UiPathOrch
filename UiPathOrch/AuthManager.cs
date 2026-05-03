@@ -161,22 +161,10 @@ internal class OrchestratorAuthManager
             request.Content = new StringContent(strPayload, Encoding.UTF8, @"application/json");
 
             using var cts = new ConsoleCancelHandler();
-            var response = _httpClient.Send(request, cts.Token);
+            using var response = _httpClient.Send(request, cts.Token);
             var body = response.Content.ReadAsStringAsync(cts.Token).GetAwaiter().GetResult();
             return JsonSerializer.Deserialize<AjaxResponse>(body)?.result ?? "";
         }
-    }
-
-    public (string access_token, string refresh_token) RequestRefreshToken()
-    {
-        return GetAccessToken(new Dictionary<string, string>
-        {
-            { "access_token", _access_token! },
-            { "expires_in", "3600" },
-            { "token_type", "Bearer" },
-            { "refresh_token", "" },
-            { "scope", _drive._psDrive.Scope! }
-        });
     }
 
     public string? RenewAccessToken()
@@ -219,7 +207,7 @@ internal class OrchestratorAuthManager
         };
 
         using var cts = new ConsoleCancelHandler();
-        HttpResponseMessage response = _httpClient.Send(request, cts.Token);
+        using HttpResponseMessage response = _httpClient.Send(request, cts.Token);
 
         string body = response.Content.ReadAsStringAsync(cts.Token).GetAwaiter().GetResult();
 
@@ -240,7 +228,11 @@ internal class OrchestratorAuthManager
                         summary += $": {desc.GetString()}";
                 }
             }
-            catch { /* body wasn't JSON; status code alone is enough */ }
+            catch (Exception ex)
+            {
+                // body wasn't JSON; status code alone is enough for the user-facing message.
+                System.Diagnostics.Debug.WriteLine($"Token-error body was not JSON: {ex.GetType().Name}: {ex.Message}");
+            }
             throw new Exception(summary);
         }
 
@@ -402,7 +394,11 @@ internal class OrchestratorAuthManager
                                         else if (doc.RootElement.TryGetProperty("name", out var nameElement))
                                             userName = nameElement.GetString() ?? "";
                                     }
-                                    catch { /* JWT unparseable; fall through to generic display */ }
+                                    catch (Exception ex)
+                                    {
+                                        // JWT unparseable; fall through to generic display.
+                                        System.Diagnostics.Debug.WriteLine($"JWT parse failed: {ex.GetType().Name}: {ex.Message}");
+                                    }
                                 }
                                 catch
                                 {
