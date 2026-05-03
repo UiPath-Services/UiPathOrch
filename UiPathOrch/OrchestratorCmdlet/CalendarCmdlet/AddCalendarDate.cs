@@ -56,11 +56,12 @@ public class AddCalendarDateCommand : OrchestratorPSCmdlet
         // Zero out the time component of the specified dates and interpret them as UTC
         ExcludedDate = ExcludedDate?.Select(d => DateTime.SpecifyKind(d.Date, DateTimeKind.Utc)).ToArray();
 
-        // Only add dates from today onward
+        // Only add dates from today onward. ExcludedDate values were stamped as UTC above,
+        // so compare against UTC-based today to avoid an off-by-one day at TZ boundaries.
         if (!IncludePastDate.IsPresent)
         {
-            DateTime today = DateTime.Today;
-            ExcludedDate = ExcludedDate?.Where(d => d >= today).ToArray(); // Exclude dates before today
+            DateTime today = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
+            ExcludedDate = ExcludedDate?.Where(d => d >= today).ToArray();
         }
 
         foreach (var drive in drives)

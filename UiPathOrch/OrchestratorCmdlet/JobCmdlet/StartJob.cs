@@ -151,7 +151,12 @@ public class StartJobCommand : OrchestratorPSCmdlet
     {
         if (!string.IsNullOrEmpty(RuntimeType) && !validRuntimeType.Contains(RuntimeType))
         {
-            throw new Exception($"Invalid RuntimeType: {RuntimeType}.");
+            WriteError(new ErrorRecord(
+                new ArgumentException($"Invalid RuntimeType: '{RuntimeType}'. Valid values are: {string.Join(", ", validRuntimeType)}.", nameof(RuntimeType)),
+                "InvalidRuntimeType",
+                ErrorCategory.InvalidArgument,
+                RuntimeType));
+            return;
         }
 
         var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);

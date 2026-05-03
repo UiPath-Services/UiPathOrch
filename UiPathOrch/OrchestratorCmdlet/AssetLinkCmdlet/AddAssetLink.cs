@@ -21,8 +21,6 @@ public class AddAssetLinkCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
-    // TODO: This implementation can be cleaned up
-    // Should avoid using Parallel.ForEach.
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(Path);
@@ -30,6 +28,9 @@ public class AddAssetLinkCommand : OrchestratorPSCmdlet
 
         var drivesLinks = SessionState.EnumFolders(Link);
 
+        // Parallel prefetch warms the per-folder Assets cache so the sequential loop below
+        // can iterate without latency. Errors here are non-fatal — the sequential loop will
+        // re-raise them through WriteError where the per-folder context can be reported.
         Parallel.ForEach(drivesFolders, driveFolder =>
         {
             var (drive, folder) = driveFolder;
@@ -37,7 +38,10 @@ public class AddAssetLinkCommand : OrchestratorPSCmdlet
             {
                 drive.Assets.Get(folder);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"AddAssetLink prefetch failed for {folder.GetPSPath()}: {ex.Message}");
+            }
         });
 
         foreach (var (drive, folder) in drivesFolders)

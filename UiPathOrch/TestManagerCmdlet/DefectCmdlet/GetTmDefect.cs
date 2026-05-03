@@ -10,7 +10,6 @@ namespace UiPath.PowerShell.Commands;
 class GetTmDefectCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(TmRequirementNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
