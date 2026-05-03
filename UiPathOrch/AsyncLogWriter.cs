@@ -193,6 +193,12 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
         }
     }
 
+    // Shutdown budget. The background processor must finish flushing within this window;
+    // the synchronous wait is given a small extra buffer so that DisposeAsync's finally
+    // (which releases the semaphore and CTS) actually runs before Dispose() returns.
+    private static readonly TimeSpan ShutdownProcessingTimeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan SyncDisposeWait = TimeSpan.FromSeconds(12);
+
     /// <summary>
     /// Asynchronous shutdown.
     /// </summary>
@@ -209,12 +215,13 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
             _writer.Complete();
 
             // Wait for background processing to complete (with timeout)
-            _shutdownCts.CancelAfter(TimeSpan.FromSeconds(10));
+            _shutdownCts.CancelAfter(ShutdownProcessingTimeout);
             await _processingTask;
         }
         catch (OperationCanceledException)
         {
-            Debug.WriteLine("AsyncLogWriter shutdown timeout - some log entries may be lost");
+            var stats = _metrics.GetStatistics();
+            Debug.WriteLine($"AsyncLogWriter shutdown timeout - flushed {stats.TotalEntriesWritten} entries, dropped {stats.DroppedEntries}");
         }
         finally
         {
@@ -236,7 +243,8 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
             var disposeTask = DisposeAsync();
             if (!disposeTask.IsCompleted)
             {
-                disposeTask.AsTask().Wait(TimeSpan.FromSeconds(5));
+                // Wait long enough for DisposeAsync's CancelAfter window plus finally to run.
+                disposeTask.AsTask().Wait(SyncDisposeWait);
             }
         }
         catch (Exception ex)
