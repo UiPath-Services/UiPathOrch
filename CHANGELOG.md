@@ -97,7 +97,7 @@ will be major-version bumps per SemVer.
   Migration: add the user / machine to the target folder first via
   `Add-OrchFolderUser` / `Add-OrchFolderMachine`. Verified against a
   live tenant; covered by new regression tests R9 / R13 / R14.
-- **`Copy-OrchItem` / `Copy-OrchAsset` could carry per-User UserValues
+- **`Copy-Item` / `Copy-OrchAsset` could carry per-User UserValues
   to a destination folder where the user has no access**, triggering
   the same silent-corruption family as above.
   `CopyItem.FindDstUser` resolved candidates via `dstDrive.GetUsers()`
@@ -126,7 +126,7 @@ will be major-version bumps per SemVer.
   no UserName filter was added to the OData query, **silently
   widening results to all users**. The catch is removed and a
   `(UserId eq -1)` sentinel narrows to nothing instead.
-- `Copy-OrchItem` action-catalog progress was reported on the
+- `Copy-Item` action-catalog progress was reported on the
   wrong `ProgressReporter` instance due to a stale variable name
   copy-pasted from the prior block.
 - `Import-OrchQueueItem` (`BulkAddQueueItem` payload) and the
@@ -164,7 +164,7 @@ will be major-version bumps per SemVer.
   errors. Previously the entire body was read just to surface a
   1024-character snippet — the user-facing error message is
   unchanged, but multi-MB HTML error pages no longer waste memory.
-- **`Copy-OrchAsset` / `Copy-OrchItem` no longer abort the batch
+- **`Copy-OrchAsset` / `Copy-Item` no longer abort the batch
   when destination resources are missing.** When a referenced
   user, machine, queue, calendar, process, bucket, etc. is not
   present (or not assigned to the destination folder) in the

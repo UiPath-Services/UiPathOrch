@@ -421,9 +421,12 @@ internal class OrchestratorAuthManager
                             string userStyle = hasUser ? "" : "display:none";
                             string userEncoded = hasUser ? System.Net.WebUtility.HtmlEncode(userName) : "";
 
-                            // Embed image and version information
-                            var version = Assembly.GetExecutingAssembly().GetName().Version;
-                            string responseString = string.Format(htmlTemplate, _drive._psDrive.Root, _drive.NameColon, version, LoadBotImageRandomly(), userStyle, userEncoded);
+                            // Embed image and version information.
+                            // Assembly.GetName().Version is always 4 parts (Major.Minor.Build.Revision),
+                            // but the manifest / PSGallery version is 3-part SemVer — use ToString(3) so the
+                            // rendered string and the PSGallery URL match what was actually published.
+                            string versionStr = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "";
+                            string responseString = string.Format(htmlTemplate, _drive._psDrive.Root, _drive.NameColon, versionStr, LoadBotImageRandomly(), userStyle, userEncoded);
 
                             byte[] buffer = Encoding.UTF8.GetBytes(responseString);
                             context.Response.ContentLength64 = buffer.Length;
