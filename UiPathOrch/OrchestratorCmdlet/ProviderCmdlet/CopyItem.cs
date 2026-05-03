@@ -219,9 +219,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             // so display an error and continue processing
             if (roleToAdded is null)
             {
-                _this.WriteError(new ErrorRecord(
-                    new OrchException(dstDrive.NameColonSeparator,
-                    $"{msg}: {dstDrive.NameColon} does not have role with Name ='{ur.Name}'."), "CopyFolderError", ErrorCategory.InvalidOperation, dstDrive));
+                _this.WriteWarning($"{msg}: {dstDrive.NameColon} does not have role with Name = '{ur.Name}'.");
                 continue;
             }
 
@@ -656,9 +654,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         var srcBucket = srcBuckets.FirstOrDefault(b => b.Id == srcBucketId);
         if (srcBucket is null)
         {
-            _this.WriteError(new ErrorRecord(
-                new OrchException(srcDrive.NameColonSeparator,
-                $"{msg}: {srcDrive.NameColonSeparator} does not have the bucket with Id = {srcBucketId}"), action, ErrorCategory.InvalidOperation, srcDrive));
+            _this.WriteWarning($"{msg}: {srcDrive.NameColonSeparator} does not have the bucket with Id = {srcBucketId}.");
             return null;
         }
 
@@ -666,9 +662,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         var dstBucket = dstBuckets.FirstOrDefault(b => b.Name == srcBucket.Name);
         if (dstBucket is null)
         {
-            _this.WriteError(new ErrorRecord(
-                new OrchException(newFolder.GetPSPath(),
-                $"{msg}: {newFolder.GetPSPath()} does not have the bucket with Name = '{srcBucket.Name}'."), action, ErrorCategory.InvalidOperation, newFolder));
+            _this.WriteWarning($"{msg}: {newFolder.GetPSPath()} does not have the bucket with Name = '{srcBucket.Name}'.");
             return null;
         }
         return dstBucket;
@@ -979,7 +973,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             var srcPmGroup = srcPmGroups.FirstOrDefault(g => g?.id == srcPmGroupId);
             if (srcPmGroup is null)
             {
-                _this.WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, $"{msg}: {srcDrive.NameColon} does not have PmGroup with id = {srcPmGroupId}. Ignoring this id."), "GetGroupIdError", ErrorCategory.InvalidOperation, srcDrive));
+                _this.WriteWarning($"{msg}: {srcDrive.NameColon} does not have PmGroup with id = {srcPmGroupId}. Ignoring this id.");
                 continue;
             }
 
@@ -1005,16 +999,14 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             CredentialStore srcCredentialStore = srcDrive.CredentialStores.Get().FirstOrDefault(cs => (cs.Id ?? 0) == srcCredentialStoreId);
             if (srcCredentialStore is null)
             {
-                string target = $"{srcDrive.NameColonSeparator}";
-                _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: {srcDrive.NameColon} does not have credential store with Id = {srcCredentialStoreId}."), "GetCredentialStoreError", ErrorCategory.InvalidOperation, target));
+                _this.WriteWarning($"{msg}: {srcDrive.NameColon} does not have credential store with Id = {srcCredentialStoreId}.");
                 return null;
             }
 
             var dstCredentialStore = dstDrive.CredentialStores.Get().FirstOrDefault(cs => string.Compare(cs.Name, srcCredentialStore.Name, StringComparison.OrdinalIgnoreCase) == 0);
             if (dstCredentialStore is null)
             {
-                string target = dstDrive.NameColonSeparator;
-                _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: {dstDrive.NameColon} does not have credential store with Name = {srcCredentialStore.Name}."), "GetCredentialStoreError", ErrorCategory.InvalidOperation, target));
+                _this.WriteWarning($"{msg}: {dstDrive.NameColon} does not have credential store with Name = '{srcCredentialStore.Name}'.");
             }
             return dstCredentialStore;
         }
@@ -1040,8 +1032,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             var srcUser = srcDrive.GetUsers().FirstOrDefault(u => u.Id == srcUserId);
             if (srcUser is null)
             {
-                string target = srcDrive.NameColonSeparator;
-                _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: {srcDrive.NameColon} does not have user with Id = {srcUserId}."), "FindUserError", ErrorCategory.InvalidOperation, target));
+                _this.WriteWarning($"{msg}: {srcDrive.NameColon} does not have user with Id = {srcUserId}.");
                 return null;
             }
 
@@ -1072,8 +1063,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
             if (dstUser is null)
             {
-                string target = newFolder.GetPSPath();
-                _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: {dstDrive.NameColon} does not have user with Name = '{searchName}'."), "FindUserError", ErrorCategory.InvalidOperation, target));
+                _this.WriteWarning($"{msg}: {dstDrive.NameColon} does not have user with Name = '{searchName}'.");
                 return null;
             }
 
@@ -1113,7 +1103,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             var srcRobot = srcDrive.Robots.Get()?.FirstOrDefault(r => r.Id == srcRobotId);
             if (srcRobot is null)
             {
-                _this.WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, $"{msg}: {srcDrive.NameColon} does not have robot with Id = {srcRobotId}."), "MigrateRobotIdError", ErrorCategory.InvalidOperation, srcDrive));
+                _this.WriteWarning($"{msg}: {srcDrive.NameColon} does not have robot with Id = {srcRobotId}.");
                 return null;
             }
             //msg = $"Migrating id of the robot {Path.Combine(srcDrive.NameColon, srcRobot.Name!)}";
@@ -1122,8 +1112,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             var dstRobot = dstRobots?.FirstOrDefault(r => string.Compare(r.Name, srcRobot.Name, StringComparison.OrdinalIgnoreCase) == 0);
             if (dstRobot is null)
             {
-                string target = dstFolder.GetPSPath();
-                _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: {dstDrive.NameColon} does not have robot with Name = '{srcRobot.Name}' ({srcRobot.Username})."), "MigrateRobotIdError", ErrorCategory.InvalidOperation, target));
+                _this.WriteWarning($"{msg}: {dstDrive.NameColon} does not have robot with Name = '{srcRobot.Name}' ({srcRobot.Username}) in '{dstFolder.GetPSPath()}'.");
                 return null;
             }
             return dstRobot;
@@ -1152,7 +1141,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 var srcRobot = sessions.FirstOrDefault(s => s.Robot?.Id == srcRobotId);
                 if (srcRobot is null)
                 {
-                    _this.WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, $"{msg}: {srcDrive.NameColon} does not have robot with Id = {srcRobotId}."), "MigrateRobotIdError", ErrorCategory.InvalidOperation, srcDrive));
+                    _this.WriteWarning($"{msg}: {srcDrive.NameColon} does not have robot with Id = {srcRobotId}.");
                     return null;
                 }
                 srcRobot_Type = srcRobot.Robot?.Type;
@@ -1163,7 +1152,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 var srcRobot = srcDrive.Robots.Get()?.FirstOrDefault(r => r.Id == srcRobotId);
                 if (srcRobot is null)
                 {
-                    _this.WriteError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, $"{msg}: {srcDrive.NameColon} does not have robot with Id = {srcRobotId}."), "MigrateRobotIdError", ErrorCategory.InvalidOperation, srcDrive));
+                    _this.WriteWarning($"{msg}: {srcDrive.NameColon} does not have robot with Id = {srcRobotId}.");
                     return null;
                 }
                 srcRobot_Type = srcRobot.Type;
@@ -1208,8 +1197,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             var srcMachine = srcDrive.Machines.Get().FirstOrDefault(m => m.Id == srcMachineId);
             if (srcMachine is null)
             {
-                string target = srcFolder.GetPSPath();
-                _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: {srcDrive.NameColon} does not have machine with Id = {srcMachineId}."), "FindMachineError", ErrorCategory.InvalidOperation, target));
+                _this.WriteWarning($"{msg}: {srcDrive.NameColon} does not have machine with Id = {srcMachineId}.");
                 return null;
             }
             //msg = $"Migrating id of the machine {Path.Combine(srcDrive.NameColon, srcMachine.Name!)}";
@@ -1252,8 +1240,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             srcSession = srcSessions.FirstOrDefault(s => s.SessionId == srcSessionId);
             if (srcSession is null)
             {
-                //_this.WriteWarning($"{srcFolder.GetPSPath()}: {msg}: The session not found with SessionId {srcSessionId}.");
-                _this.WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), $"{msg}: The session not found with SessionId {srcSessionId}."), "MigrateSessionIdError", ErrorCategory.InvalidOperation, srcFolder));
+                _this.WriteWarning($"\"{srcFolder.GetPSPath()}\": {msg}: The session not found with SessionId {srcSessionId}.");
                 return null;
             }
         }
@@ -1343,8 +1330,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
         if (dstQueue is null)
         {
-            string target = dstFolder.GetPSPath();
-            _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: {dstFolder.GetPSPath()} does not have queue with Name = '{srcQueue.Name}'."), "MigrateQueueIdError", ErrorCategory.InvalidOperation, target));
+            _this.WriteWarning($"{msg}: {dstFolder.GetPSPath()} does not have queue with Name = '{srcQueue.Name}'.");
             return null;
         }
         return dstQueue;
@@ -1418,7 +1404,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
         if (srcRelease is null)
         {
-            _this.WriteError(new ErrorRecord(new OrchException(target, $"The process id {srcReleaseId} not found."), "MigrateProcessIdError", ErrorCategory.InvalidOperation, target));
+            _this.WriteWarning($"{msg}: The process id {srcReleaseId} not found in '{srcFolder.GetPSPath()}'.");
             return null;
         }
 
@@ -1439,7 +1425,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
         if (dstRelease is null)
         {
-            _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: {dstFolder.GetPSPath()} does not have process with Name = '{srcRelease.Name}'."), "MigrateMachineIdError", ErrorCategory.InvalidOperation, target));
+            _this.WriteWarning($"{msg}: {dstFolder.GetPSPath()} does not have process with Name = '{srcRelease.Name}'.");
             return null;
         }
         return dstRelease;
@@ -1450,13 +1436,11 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     {
         if (srcCalendarId is null || srcCalendarId == 0) return null;
 
-        string target = srcDrive.NameColonSeparator;
-
         var srcCalendars = srcDrive.GetCalendars();
         var srcCalendar = srcCalendars?.FirstOrDefault(c => c.Id == srcCalendarId);
         if (srcCalendar is null)
         {
-            _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: {srcDrive.NameColonSeparator} doesn't have calendar with Id = {srcCalendarId}."), "MigrateCalendarIdError", ErrorCategory.InvalidOperation, target));
+            _this.WriteWarning($"{msg}: {srcDrive.NameColonSeparator} doesn't have calendar with Id = {srcCalendarId}.");
             return null;
         }
 
@@ -1713,7 +1697,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                             postingAsset.UserValues = null;
                             if (!postingAsset.HasDefaultValue.GetValueOrDefault())
                             {
-                                _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: No applicable values. Skipping."), "CopyAssetError", ErrorCategory.InvalidOperation, target));
+                                _this.WriteWarning($"{msg}: No applicable per-user values for the destination folder and the asset has no global default value. Skipping.");
                                 continue;
                             }
                         }
@@ -2430,9 +2414,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         var srcTestCase = srcTestCases.FirstOrDefault(ts => ts.Id == srcDefinitionId);
         if (srcTestCase is null)
         {
-            _this.WriteError(new ErrorRecord(
-                new OrchException(srcDrive.NameColonSeparator,
-                $"{msg}: {srcFolder.GetPSPath()} does not have test case with Id = {srcDefinitionId}."), "CopyTestCaseError", ErrorCategory.InvalidOperation, dstDrive));
+            _this.WriteWarning($"{msg}: {srcFolder.GetPSPath()} does not have test case with Id = {srcDefinitionId}.");
             return null;
         }
 
@@ -2440,9 +2422,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         var dstTestCase = dstTestCases.FirstOrDefault(tc => (tc.PackageIdentifier == srcTestCase.PackageIdentifier && tc.Name == srcTestCase.Name));
         if (dstTestCase is null)
         {
-            _this.WriteError(new ErrorRecord(
-                new OrchException(srcDrive.NameColonSeparator,
-                $"{msg}: {newFolder.GetPSPath()} does not have test case with PackageIdentifier = '{srcTestCase.PackageIdentifier}' and Name = '{srcTestCase.Name}'."), "CopyTestCaseError", ErrorCategory.InvalidOperation, dstDrive));
+            _this.WriteWarning($"{msg}: {newFolder.GetPSPath()} does not have test case with PackageIdentifier = '{srcTestCase.PackageIdentifier}' and Name = '{srcTestCase.Name}'.");
         }
         return dstTestCase;
     }
@@ -2588,9 +2568,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         var srcTestSet = srcTestSets.FirstOrDefault(ts => ts.Id == srcTestSetId);
         if (srcTestSet is null)
         {
-            _this.WriteError(new ErrorRecord(
-                new OrchException(srcDrive.NameColonSeparator,
-                $"{msg}: {srcFolder.GetPSPath()} does not have test set with Id = {srcTestSetId}."), "CopyTestSetError", ErrorCategory.InvalidOperation, dstDrive));
+            _this.WriteWarning($"{msg}: {srcFolder.GetPSPath()} does not have test set with Id = {srcTestSetId}.");
             return null;
         }
 
@@ -2598,9 +2576,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         var dstTestSet = dstTestSets.FirstOrDefault(ts => (ts.Name == srcTestSet.Name));
         if (dstTestSet is null)
         {
-            _this.WriteError(new ErrorRecord(
-                new OrchException(srcDrive.NameColonSeparator,
-                $"{msg}: {newFolder.GetPSPath()} does not have test set with Name = '{srcTestSet.Name}'."), "CopyTestSetError", ErrorCategory.InvalidOperation, dstDrive));
+            _this.WriteWarning($"{msg}: {newFolder.GetPSPath()} does not have test set with Name = '{srcTestSet.Name}'.");
         }
         return dstTestSet;
     }
