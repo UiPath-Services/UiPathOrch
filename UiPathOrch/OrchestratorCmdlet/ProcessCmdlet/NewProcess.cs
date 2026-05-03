@@ -388,13 +388,6 @@ public class NewProcessCommand : OrchestratorPSCmdlet
                 release.ProcessSettings.AssignBoolIfNotNull(A4R_Enabled, (p, v) => p.AutopilotForRobots!.Enabled = v);
                 release.ProcessSettings.AssignBoolIfNotNull(A4R_HealingEnabled, (p, v) => p.AutopilotForRobots!.HealingEnabled = v);
 
-                //release.ProcessSettings.ErrorRecordingEnabled ??= false;
-                //release.ProcessSettings.Duration ??= 40;
-                //release.ProcessSettings.Frequency ??= 500;
-                //release.ProcessSettings.Quality ??= 100;
-                //release.ProcessSettings.AutoStartProcess ??= false;
-                //release.ProcessSettings.AlwaysRunning ??= false;
-
                 // Verified on OC 22.10.1 (15.0)
                 // Verified on OC 23.4.0 (16.0)
                 // Verified on OC 23.10.6 (17.0)

@@ -26,7 +26,7 @@ public class SetOrchLocationCommand : OrchestratorPSCmdlet
         {
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            IEnumerable<Assembly> assemblies = SetOrchLocationCommand.EnumAssenblies();
+            IEnumerable<Assembly> assemblies = SetOrchLocationCommand.EnumAssemblies();
 
             foreach (var module in assemblies
                 .Where(m => wp.IsMatch(m.GetName().Name)))
@@ -54,7 +54,7 @@ public class SetOrchLocationCommand : OrchestratorPSCmdlet
         }
     }
 
-    public static IEnumerable<Assembly> EnumAssenblies()
+    public static IEnumerable<Assembly> EnumAssemblies()
     {
         Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
         return assemblies.Where(IsPowerShellModule);
@@ -64,9 +64,9 @@ public class SetOrchLocationCommand : OrchestratorPSCmdlet
     {
         var wpModuleName = new WildcardPattern(ModuleName, WildcardOptions.IgnoreCase);
 
-        IEnumerable<Assembly> assenblies = EnumAssenblies();
+        IEnumerable<Assembly> assemblies = EnumAssemblies();
 
-        var targets = assenblies.Where(a => wpModuleName.IsMatch(a.GetName().Name!)).ToList();
+        var targets = assemblies.Where(a => wpModuleName.IsMatch(a.GetName().Name!)).ToList();
 
         if (targets.Count == 0)
         {
