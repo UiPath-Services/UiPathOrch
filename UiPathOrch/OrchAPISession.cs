@@ -135,34 +135,44 @@ public partial class OrchAPISession : IDisposable
         {
             if (logEnabled)
             {
-                // Handle errors safely and asynchronously; also execute BuildCombinedLogBlock asynchronously
-                _ = Task.Run(async () =>
+                // Build the log block synchronously while `ret` is still owned by us;
+                // the response body has already been buffered above via LoadIntoBufferAsync,
+                // so this does not block on additional network I/O. Only the disk write is
+                // pushed to the background, which avoids racing with the caller's `using`
+                // disposal of the HttpResponseMessage.
+                string? combinedLogBlock;
+                try
                 {
-                    try
+                    if (hasException)
                     {
-                        string? combinedLogBlock;
-                        if (hasException)
-                        {
-                            // Only simple logging on cancellation/error
-                            combinedLogBlock = $"{reqTime:HH:mm:ss.fff} #{callId:D4} {message.Method} {message.RequestUri}\n{resTime:HH:mm:ss.fff} RES Status: ERROR/CANCELLED\n\n";
-                        }
-                        else
-                        {
-                            // Normal log generation for successful requests
-                            combinedLogBlock = BuildCombinedLogBlock(reqTime, message, resTime, ret, callId, logging?.InternalLogLevel);
-                        }
+                        combinedLogBlock = $"{reqTime:HH:mm:ss.fff} #{callId:D4} {message.Method} {message.RequestUri}\n{resTime:HH:mm:ss.fff} RES Status: ERROR/CANCELLED\n\n";
+                    }
+                    else
+                    {
+                        combinedLogBlock = BuildCombinedLogBlock(reqTime, message, resTime, ret, callId, logging?.InternalLogLevel);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Log block build failed: {ex.Message}");
+                    combinedLogBlock = null;
+                }
 
-                        if (!string.IsNullOrEmpty(combinedLogBlock))
-                        {
-                            await WriteLogBlockAsync(combinedLogBlock, CancellationToken.None);
-                        }
-                    }
-                    catch (Exception ex)
+                if (!string.IsNullOrEmpty(combinedLogBlock))
+                {
+                    var blockToWrite = combinedLogBlock;
+                    _ = Task.Run(async () =>
                     {
-                        // Ignore log errors (debug output only, to prevent recursion)
-                        System.Diagnostics.Debug.WriteLine($"Async log write failed: {ex.Message}");
-                    }
-                });
+                        try
+                        {
+                            await WriteLogBlockAsync(blockToWrite, CancellationToken.None);
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Async log write failed: {ex.Message}");
+                        }
+                    });
+                }
             }
         }
     }
@@ -355,7 +365,13 @@ public partial class OrchAPISession : IDisposable
                                 ApiVersion = version;
                             }
                         }
-                        catch { } // Swallow this exception
+                        catch (Exception ex)
+                        {
+                            // ApiVersion stays null; the rest of the session falls back to a
+                            // conservative default. Surface it to Debug so it can be diagnosed
+                            // when an API behaves like an older version than expected.
+                            System.Diagnostics.Debug.WriteLine($"ApiVersion fetch failed: {ex.Message}");
+                        }
                     }
                 }
             }
@@ -2079,7 +2095,7 @@ public partial class OrchAPISession : IDisposable
 
     public void DeleteBucket(Int64 folderId, Int64 bucketId)
     {
-        string body = HttpRequest(HttpMethod.Delete, $"/odata/Buckets({bucketId})", folderId);
+        HttpRequest(HttpMethod.Delete, $"/odata/Buckets({bucketId})", folderId);
     }
 
     // Returns nothing
