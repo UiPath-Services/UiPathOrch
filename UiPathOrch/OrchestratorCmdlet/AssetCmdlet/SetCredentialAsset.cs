@@ -542,7 +542,13 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                 // expand UserName
                 if (wpUserName is not null)
                 {
-                    var tenantUsers = drive.GetUsers().Where(u => u.Type != "DirectoryGroup");
+                    // See SetAsset.cs UserName expansion — the same scope-tightening fix.
+                    var assignedUserIds = drive.FolderUsersWithInherited.Get(folder)
+                        .Where(ur => ur?.UserEntity?.Id is not null)
+                        .Select(ur => ur.UserEntity!.Id!.Value)
+                        .ToHashSet();
+                    var tenantUsers = drive.GetUsers()
+                        .Where(u => u.Type != "DirectoryGroup" && u.Id is not null && assignedUserIds.Contains(u.Id!.Value));
                     specifiedUsers = tenantUsers.FilterByWildcards(u => u?.UserName, wpUserName);
                     if (!specifiedUsers.Any())
                     {
@@ -557,7 +563,13 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                 // expand MachineName
                 if (wpMachineName is not null)
                 {
-                    var tenantMachines = drive.Machines.Get();
+                    // See SetAsset.cs MachineName expansion — the same scope-tightening fix.
+                    var assignedIds = drive.FolderMachinesAssigned.Get(folder)
+                        .Where(m => m?.Id is not null)
+                        .Select(m => m.Id!.Value)
+                        .ToHashSet();
+                    var tenantMachines = drive.Machines.Get()
+                        .Where(m => m?.Id is not null && assignedIds.Contains(m.Id!.Value));
                     specifiedMachines = tenantMachines.FilterByWildcards(m => m?.Name, wpMachineName);
                     if (!specifiedMachines.Any())
                     {

@@ -616,7 +616,18 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                 // expand UserName
                 if (wpUserName is not null)
                 {
-                    var tenantUsers = drive.GetUsers().Where(u => u.Type != "DirectoryGroup");
+                    // Restrict the candidate set to users actually assigned to this folder
+                    // (directly or via inheritance) so that asset per-User values cannot
+                    // reference users outside the folder's scope. Without this filter the
+                    // server silently dropped the per-User UserValue AND wiped the asset's
+                    // Global Value when the cmdlet PUT the result — see SetAsset.cs MachineName
+                    // expansion below for the same pattern and the regression test R9 / R13.
+                    var assignedUserIds = drive.FolderUsersWithInherited.Get(folder)
+                        .Where(ur => ur?.UserEntity?.Id is not null)
+                        .Select(ur => ur.UserEntity!.Id!.Value)
+                        .ToHashSet();
+                    var tenantUsers = drive.GetUsers()
+                        .Where(u => u.Type != "DirectoryGroup" && u.Id is not null && assignedUserIds.Contains(u.Id!.Value));
                     specifiedUsers = tenantUsers.FilterByWildcards(u => u?.UserName, wpUserName);
                     if (!specifiedUsers.Any())
                     {
