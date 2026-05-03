@@ -161,11 +161,27 @@ After CI passes and review, merge into `master`.
 ```powershell
 git switch master
 git pull
-git tag -s vX.Y.Z -m "Release vX.Y.Z"
-git push origin vX.Y.Z
+git tag vX.Y.Z              # lightweight tag — matches v0.9.x convention
+git push origin vX.Y.Z      # push triggers release.yml
 ```
 
-> Use **signed tags** (`-s`) where possible. Unsigned tags (`-a`) are acceptable if GPG is not configured.
+> **Tag style.** Past releases (v0.9.x) all use **lightweight** tags, so
+> `git tag vX.Y.Z` (no `-a`, no `-s`) is the established convention.
+> The release workflow does not depend on tag annotations or signatures —
+> only on the tag name matching the `v*.*.*` glob and the version
+> embedded in `Staging/UiPathOrch.psd1` + `UiPathOrch/UiPathOrch.csproj`
+> matching the tag (after stripping the `v`).
+>
+> Signed tags (`git tag -s …`) are fine if GPG is configured locally,
+> but require a secret key in the keyring for `user.email`. If you see
+> `gpg: skipped "<email>": No secret key`, fall back to a lightweight tag —
+> the workflow will publish identically.
+
+> **Version style.** Starting with **1.0.0**, UiPathOrch uses 3-part
+> SemVer (`MAJOR.MINOR.PATCH`). The pre-1.0 history retained 4-part
+> tags (`v0.9.18.0` etc.); the discontinuity at 1.0 is intentional.
+> The `v*.*.*` glob in `release.yml` accepts both shapes, but new
+> releases should be 3-part.
 
 ### 8. Publish to PSGallery
 
