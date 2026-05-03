@@ -413,17 +413,21 @@ internal class OrchestratorAuthManager
                             }
 
                             // Send a response back to the browser
-                            using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("UiPathOrch.Resources.en.MountSuccessNotification.html");
+                            string lang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+                            string[] supportedLangs = ["de", "en", "fr", "ja", "ko", "ro", "tr"];
+                            if (!supportedLangs.Contains(lang)) lang = "en";
+
+                            using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"UiPathOrch.Resources.{lang}.MountSuccessNotification.html");
                             using StreamReader reader = new(stream!);
                             string htmlTemplate = await reader.ReadToEndAsync();
 
-                            string userBlock = string.IsNullOrEmpty(userName)
-                                ? ""
-                                : $"<p class=\"row\">Signed in as <strong>{System.Net.WebUtility.HtmlEncode(userName)}</strong></p>";
+                            bool hasUser = !string.IsNullOrEmpty(userName);
+                            string userStyle = hasUser ? "" : "display:none";
+                            string userEncoded = hasUser ? System.Net.WebUtility.HtmlEncode(userName) : "";
 
                             // Embed image and version information
                             var version = Assembly.GetExecutingAssembly().GetName().Version;
-                            string responseString = string.Format(htmlTemplate, _drive._psDrive.Root, _drive.NameColon, version, LoadBotImageRandomly(), userBlock);
+                            string responseString = string.Format(htmlTemplate, _drive._psDrive.Root, _drive.NameColon, version, LoadBotImageRandomly(), userStyle, userEncoded);
 
                             byte[] buffer = Encoding.UTF8.GetBytes(responseString);
                             context.Response.ContentLength64 = buffer.Length;

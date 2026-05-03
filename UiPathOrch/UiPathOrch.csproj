@@ -19,7 +19,13 @@
     <EmbeddedResource Include="bot\receiving.png" />
     <EmbeddedResource Include="bot\recording.png" />
     <EmbeddedResource Include="bot\searching.png" />
+    <EmbeddedResource Include="Resources\de\MountSuccessNotification.html" />
     <EmbeddedResource Include="Resources\en\MountSuccessNotification.html" />
+    <EmbeddedResource Include="Resources\fr\MountSuccessNotification.html" />
+    <EmbeddedResource Include="Resources\ja\MountSuccessNotification.html" />
+    <EmbeddedResource Include="Resources\ko\MountSuccessNotification.html" />
+    <EmbeddedResource Include="Resources\ro\MountSuccessNotification.html" />
+    <EmbeddedResource Include="Resources\tr\MountSuccessNotification.html" />
     <EmbeddedResource Include="Resources\de\UiPathOrchConfig.json" />
     <EmbeddedResource Include="Resources\en\UiPathOrchConfig.json" />
     <EmbeddedResource Include="Resources\fr\UiPathOrchConfig.json" />

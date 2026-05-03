@@ -377,6 +377,7 @@ NuGet.Config
 
 # Analysis reports and backup files
 *.html
+!UiPathOrch/Resources/**/*.html
 *.bak
 *.xlsx
 *.csBK
