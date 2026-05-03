@@ -1,4 +1,6 @@
 <#
+.EXTERNALHELP UiPathOrch-Help.xml
+
 .SYNOPSIS
 This script lists folders that have no direct user assignments.
 

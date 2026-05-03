@@ -128,12 +128,15 @@ if ($errors) { $errors }
 | `UiPathOrch.dll-Help.xml` | C# cmdlet (231 個) | `UiPathOrch.dll-Help.xml` |
 | `UiPathOrch-Help.xml` | PS1 関数 (7 個) | `UiPathOrch-Help.xml` |
 
-PS1 関数 (7 個):
+PS1 関数 (8 個):
 - Enable-OrchPersonalWorkspace / Disable-OrchPersonalWorkspace
 - Enable-OrchUserAttended / Disable-OrchUserAttended
 - Find-OrchFolderNoUserAssigned
+- Format-OrchQueueItem
+- Format-OrchTestDataQueueItem
 - Get-OrchJobVideo
-- Get-OrchTestDataQueueItemTable
+
+各 .ps1 には MAML ヘルプを使うために `.EXTERNALHELP UiPathOrch-Help.xml` 指示が必要。詳細は下の注意点を参照。
 
 ## 既知の注意点
 
@@ -148,3 +151,11 @@ PS1 関数 (7 個):
 
 ### Get-Help の SYNTAX パラメータ順序
 Get-Help は XML の `<command:syntaxItem>` 内のパラメータ順序をそのまま使う。PlatyPS はアルファベット順で出力するため、`Reorder-SyntaxParameters.ps1` で並び替えが必要。
+
+### PS1 関数の `.EXTERNALHELP` は関数ボディの中に置く
+`Staging/Functions/*.ps1` で MAML ヘルプを使わせるには `.EXTERNALHELP UiPathOrch-Help.xml` 指示が必要。配置場所:
+
+- 既存のコメントベース help ブロックがある関数 (Find-OrchFolderNoUserAssigned, Format-OrchQueueItem, Format-OrchTestDataQueueItem) — そのブロック内に `.EXTERNALHELP UiPathOrch-Help.xml` 行を追加。
+- それ以外 — `function ... { Param(...) }` の Param ブロック直後・実コードの前に `# .EXTERNALHELP UiPathOrch-Help.xml` を入れる。
+
+**関数の外 (`function` キーワードの直前) に `<# .EXTERNALHELP ... #>` を置かないこと**。`[ArgumentCompleter([Generic[T]])]` 属性を持つ関数 (Disable/Enable-OrchPersonalWorkspace, Disable/Enable-OrchUserAttended) で `Get-Help` が "Multiple ambiguous overloads found for '.ctor'" エラーになる。関数ボディ内に置けば回避できる。

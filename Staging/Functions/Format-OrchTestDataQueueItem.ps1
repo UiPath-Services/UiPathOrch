@@ -1,5 +1,7 @@
 function Format-OrchTestDataQueueItem {
     <#
+    .EXTERNALHELP UiPathOrch-Help.xml
+
     .SYNOPSIS
         Formats Get-OrchTestDataQueueItem output as one table per test data queue, flattening ContentJson keys into columns.
 

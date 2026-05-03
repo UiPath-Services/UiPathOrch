@@ -1,5 +1,7 @@
 function Format-OrchQueueItem {
     <#
+    .EXTERNALHELP UiPathOrch-Help.xml
+
     .SYNOPSIS
         Formats Get-OrchQueueItem output as one table per queue, flattening SpecificContent keys into columns.
 
