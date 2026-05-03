@@ -54,7 +54,10 @@ public class RestartJobCommand : OrchestratorPSCmdlet
                 {
                     results.Add(drive.FaultedJobs.Get(folder));
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"FaultedJobs prefetch failed for '{folder.GetPSPath()}': {ex.Message}");
+                }
             });
 
             foreach (var job in results

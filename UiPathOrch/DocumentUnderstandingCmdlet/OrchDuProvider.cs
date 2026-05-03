@@ -97,7 +97,10 @@ public class OrchDuProvider : NavigationCmdletProvider
             var orchDrive = SessionState.Drive.Get(drive.Name.Substring(0, drive.Name.Length - 2)) as OrchDriveInfo;
             duDrive._parentDrive = orchDrive;
         }
-        catch { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"DU drive parent linking failed for '{drive.Name}': {ex.Message}");
+        }
 
         return drive;
     }

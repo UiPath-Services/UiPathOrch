@@ -2608,15 +2608,19 @@ public partial class OrchDriveInfo : PSDriveInfo
             {
                 tasks.Add(Task.Run(() =>
                 {
-                    // Swallow this exception
-                    try { user = GetCurrentUser() as ExtendedUser; } catch { }
+                    // Auxiliary fetch — the result only enriches folder enumeration with the
+                    // current user's personal workspace. Failures here (typically missing optional
+                    // scopes) are non-fatal; folders are fetched independently below.
+                    try { user = GetCurrentUser() as ExtendedUser; }
+                    catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"GetCurrentUser failed: {ex.Message}"); }
                 }));
 
                 // get personal workspaces that being explored
                 tasks.Add(Task.Run(() =>
                 {
-                    // Swallow this exception
-                    try { personalWorkspaces = PersonalWorkspaces.Get(); } catch { }
+                    // Auxiliary fetch — see comment on the GetCurrentUser task above.
+                    try { personalWorkspaces = PersonalWorkspaces.Get(); }
+                    catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"PersonalWorkspaces.Get failed: {ex.Message}"); }
                 }));
             }
 

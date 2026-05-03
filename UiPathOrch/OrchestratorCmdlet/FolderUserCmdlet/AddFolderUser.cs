@@ -248,10 +248,10 @@ public class AddFolderUserCommand : OrchestratorPSCmdlet
                     try
                     {
                         var kind = ConvertToKind(type);
-                        var kv = drive.PmBulkResolveByName(kind!, [userName], u => u).First();
+                        var kv = drive.PmBulkResolveByName(kind!, [userName], u => u).FirstOrDefault();
                         if (kv.Value is null)
                         {
-                            WriteWarning($"'{folder.GetPSPath()}': {type} '{kv.Key}' was not found.");
+                            WriteWarning($"'{folder.GetPSPath()}': {type} '{userName}' was not found.");
                             continue;
                         }
 
@@ -266,8 +266,9 @@ public class AddFolderUserCommand : OrchestratorPSCmdlet
                             foundUserName = kv.Value.displayName;
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        WriteWarning($"'{folder.GetPSPath()}': failed to resolve {type} '{userName}': {ex.Message}");
                         continue;
                     }
                 }

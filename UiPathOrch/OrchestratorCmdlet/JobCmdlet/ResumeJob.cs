@@ -53,7 +53,10 @@ public class ResumeJobCommand : OrchestratorPSCmdlet
                 {
                     results.Add(drive.SuspendedJobs.Get(folder));
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"SuspendedJobs prefetch failed for '{folder.GetPSPath()}': {ex.Message}");
+                }
             });
 
             foreach (var job in results

@@ -66,7 +66,10 @@ public class EnableLicenseRuntimeCommandBase<Enable> : OrchestratorPSCmdlet wher
                     {
                         results.Add(drive.GetLicenseRuntime(robotType));
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"GetLicenseRuntime prefetch failed for '{robotType}': {ex.Message}");
+                    }
                 });
             });
 

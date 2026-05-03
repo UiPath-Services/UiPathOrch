@@ -137,7 +137,10 @@ public class ImportOrchConfigCommand : PSCmdlet
                     var duDrive = new OrchDuDriveInfo(duProvider, psDrive.Name + "Du", psDrive.Description ?? "", root);
                     SessionState.Drive.New(duDrive, scope: "Global");
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    WriteWarning($"Failed to create DU drive '{psDrive.Name}Du': {ex.Message}");
+                }
             }
         }
 
@@ -155,7 +158,10 @@ public class ImportOrchConfigCommand : PSCmdlet
                     var tmDrive = new OrchTmDriveInfo(tmProvider, psDrive.Name + "Tm", psDrive.Description ?? "", root);
                     SessionState.Drive.New(tmDrive, scope: "Global");
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    WriteWarning($"Failed to create TM drive '{psDrive.Name}Tm': {ex.Message}");
+                }
             }
         }
 

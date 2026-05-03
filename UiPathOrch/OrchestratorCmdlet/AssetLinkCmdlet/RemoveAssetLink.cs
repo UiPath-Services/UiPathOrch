@@ -83,7 +83,10 @@ class RemoveAssetLinkCommand : OrchestratorPSCmdlet
                     drive.GetFoldersForAsset(folder, asset);
                 });
             }
-            catch { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"RemoveAssetLink prefetch failed for '{folder.GetPSPath()}': {ex.Message}");
+            }
         });
 
         using var cancelHandler = new ConsoleCancelHandler();

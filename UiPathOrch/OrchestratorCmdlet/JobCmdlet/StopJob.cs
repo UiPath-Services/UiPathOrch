@@ -22,8 +22,6 @@ public class StopJobCommand : OrchestratorPSCmdlet
 {
     private List<StopJobCommandParameter> parameters = new();
 
-    //private static readonly string[] stoppableStates = ["Pending", "Running", "Suspended", "Resumed"];
-    //private static readonly string[] killableStates = ["Pending", "Running", "Stopping", "Suspended", "Resumed"];
     private static readonly string[] alreadyStoppedStates = ["Terminating", "Faulted", "Successful", "Stopped"];
 
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
@@ -71,7 +69,10 @@ public class StopJobCommand : OrchestratorPSCmdlet
                 {
                     results.Add(drive.StoppableJobs.Get(folder));
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"StoppableJobs prefetch failed for '{folder.GetPSPath()}': {ex.Message}");
+                }
             });
 
             foreach (var job in results

@@ -163,7 +163,11 @@ public class OrchException : Exception
             // Combine the main message and the specific errors
             ret = string.Join(' ', new[] { title }.Concat(errorMessages).Distinct());
         }
-        catch { }
+        catch (Exception ex)
+        {
+            // Falls back to the original message; log so unexpected error envelopes can be diagnosed.
+            System.Diagnostics.Debug.WriteLine($"OrchException.GetReadableMessage parse failed: {ex.GetType().Name}: {ex.Message}");
+        }
 
         if (!string.IsNullOrEmpty(ret))
         {

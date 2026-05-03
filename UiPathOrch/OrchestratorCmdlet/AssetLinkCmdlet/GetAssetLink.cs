@@ -78,7 +78,10 @@ public class GetAssetLinkCommand : OrchestratorPSCmdlet
                     drive.GetFoldersForAsset(folder, asset);
                 });
             }
-            catch { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"GetAssetLink prefetch failed for '{folder.GetPSPath()}': {ex.Message}");
+            }
         });
 
         HashSet<(Int64 folderId, string assetName)> outputLink = new();

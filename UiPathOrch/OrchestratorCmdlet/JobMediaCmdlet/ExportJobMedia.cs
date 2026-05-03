@@ -96,7 +96,10 @@ public class SaveJobMediaCommand : OrchestratorPSCmdlet
             {
                 drive.GetExecutionMedia(folder);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"ExecutionMedia prefetch failed for '{folder.GetPSPath()}': {ex.Message}");
+            }
         });
         #endregion
 
