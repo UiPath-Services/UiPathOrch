@@ -184,12 +184,12 @@ This cmdlet does not modify state or fire the trigger; it only invokes the valid
 
 ## RELATED LINKS
 
-Get-OrchTrigger
+[Get-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTrigger.md)
 
-New-OrchTrigger
+[New-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-OrchTrigger.md)
 
-Update-OrchTrigger
+[Update-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-OrchTrigger.md)
 
-Enable-OrchTrigger
+[Enable-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Enable-OrchTrigger.md)
 
-Disable-OrchTrigger
+[Disable-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Disable-OrchTrigger.md)

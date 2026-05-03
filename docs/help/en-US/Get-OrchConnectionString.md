@@ -115,4 +115,4 @@ The cmdlet uses multi-threaded processing to retrieve connection strings from mu
 
 ## RELATED LINKS
 
-Get-OrchSetting
+[Get-OrchSetting](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchSetting.md)

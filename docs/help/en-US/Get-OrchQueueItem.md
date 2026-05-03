@@ -625,14 +625,14 @@ For viewing items as a flat table, use the Expanded ScriptProperty (single queue
 
 ## RELATED LINKS
 
-Get-OrchQueue
+[Get-OrchQueue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchQueue.md)
 
-Copy-OrchQueueItem
+[Copy-OrchQueueItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchQueueItem.md)
 
-Import-OrchQueueItem
+[Import-OrchQueueItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Import-OrchQueueItem.md)
 
-Redo-OrchQueueItem
+[Redo-OrchQueueItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Redo-OrchQueueItem.md)
 
-Remove-OrchQueueItem
+[Remove-OrchQueueItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchQueueItem.md)
 
-Format-OrchQueueItem
+[Format-OrchQueueItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Format-OrchQueueItem.md)

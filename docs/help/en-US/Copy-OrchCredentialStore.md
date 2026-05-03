@@ -219,6 +219,6 @@ After copying, if the credential store configuration contains masked fields (sec
 
 ## RELATED LINKS
 
-Get-OrchCredentialStore
+[Get-OrchCredentialStore](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchCredentialStore.md)
 
-Remove-OrchCredentialStore
+[Remove-OrchCredentialStore](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchCredentialStore.md)

@@ -170,10 +170,10 @@ This cmdlet enumerates Orchestrator, Document Understanding, and Test Manager dr
 
 ## RELATED LINKS
 
-Import-OrchConfig
+[Import-OrchConfig](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Import-OrchConfig.md)
 
-New-OrchPSDrive
+[New-OrchPSDrive](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-OrchPSDrive.md)
 
-Clear-OrchCache
+[Clear-OrchCache](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Clear-OrchCache.md)
 
-Get-OrchHelp
+[Get-OrchHelp](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchHelp.md)

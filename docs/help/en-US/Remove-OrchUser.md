@@ -269,10 +269,10 @@ Either -UserName or -FullName must be specified; if both are empty or null, an e
 
 ## RELATED LINKS
 
-Get-OrchUser
+[Get-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchUser.md)
 
-Add-OrchUser
+[Add-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchUser.md)
 
-Update-OrchUser
+[Update-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-OrchUser.md)
 
-Copy-OrchUser
+[Copy-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchUser.md)

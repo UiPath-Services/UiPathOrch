@@ -195,8 +195,8 @@ Users are tenant-scoped entities. Navigate to the root of an Orch: drive or use 
 
 ## RELATED LINKS
 
-Enable-OrchUserAttended
+[Enable-OrchUserAttended](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Enable-OrchUserAttended.md)
 
-Update-OrchUser
+[Update-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-OrchUser.md)
 
-Get-OrchUser
+[Get-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchUser.md)

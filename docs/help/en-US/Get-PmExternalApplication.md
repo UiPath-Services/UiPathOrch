@@ -144,8 +144,8 @@ External applications are organization-level OAuth2 clients. They can be either 
 
 ## RELATED LINKS
 
-Copy-PmExternalApplication
+[Copy-PmExternalApplication](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-PmExternalApplication.md)
 
-Remove-PmExternalApplication
+[Remove-PmExternalApplication](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmExternalApplication.md)
 
-Get-PmExternalApiResource
+[Get-PmExternalApiResource](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmExternalApiResource.md)

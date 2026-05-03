@@ -280,12 +280,12 @@ The -ExportCsv parameter produces a CSV with columns: Path, UserName, FullName, 
 
 ## RELATED LINKS
 
-Add-OrchUser
+[Add-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchUser.md)
 
-Update-OrchUser
+[Update-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-OrchUser.md)
 
-Remove-OrchUser
+[Remove-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchUser.md)
 
-Copy-OrchUser
+[Copy-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchUser.md)
 
-Get-OrchUserPrivilege
+[Get-OrchUserPrivilege](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchUserPrivilege.md)

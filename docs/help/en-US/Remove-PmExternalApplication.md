@@ -218,8 +218,8 @@ By default, the cmdlet prevents deleting the external application that is being 
 
 ## RELATED LINKS
 
-Get-PmExternalApplication
+[Get-PmExternalApplication](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmExternalApplication.md)
 
-Copy-PmExternalApplication
+[Copy-PmExternalApplication](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-PmExternalApplication.md)
 
-Get-PmExternalApiResource
+[Get-PmExternalApiResource](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmExternalApiResource.md)

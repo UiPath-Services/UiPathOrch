@@ -230,8 +230,8 @@ This cmdlet operates on the UiPathOrchDu provider PSDrive. Only directly assigne
 
 ## RELATED LINKS
 
-Get-DuUser
+[Get-DuUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-DuUser.md)
 
-Add-DuUser
+[Add-DuUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-DuUser.md)
 
-Get-DuRole
+[Get-DuRole](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-DuRole.md)

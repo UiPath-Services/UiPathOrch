@@ -158,8 +158,8 @@ This cmdlet operates on the UiPathOrchTm provider PSDrive. Results are sorted by
 
 ## RELATED LINKS
 
-Remove-TmTestCase
+[Remove-TmTestCase](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-TmTestCase.md)
 
-Get-TmRequirement
+[Get-TmRequirement](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-TmRequirement.md)
 
-Get-TmTestSet
+[Get-TmTestSet](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-TmTestSet.md)

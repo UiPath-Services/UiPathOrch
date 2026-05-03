@@ -175,6 +175,6 @@ If the Entra ID warning appeared after the initial connection, switching to an E
 
 ## RELATED LINKS
 
-Get-OrchCurrentUser
+[Get-OrchCurrentUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchCurrentUser.md)
 
-Get-OrchPSDrive
+[Get-OrchPSDrive](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchPSDrive.md)

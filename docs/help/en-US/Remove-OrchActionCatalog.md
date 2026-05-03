@@ -230,6 +230,6 @@ This cmdlet processes each matching item individually, so if one removal fails, 
 
 ## RELATED LINKS
 
-Get-OrchActionCatalog
+[Get-OrchActionCatalog](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchActionCatalog.md)
 
-Copy-OrchActionCatalog
+[Copy-OrchActionCatalog](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchActionCatalog.md)

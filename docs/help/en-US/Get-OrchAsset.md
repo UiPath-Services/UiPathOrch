@@ -325,10 +325,10 @@ The -ExportCsv parameter exports non-credential assets with columns: Path, Name,
 
 ## RELATED LINKS
 
-Set-OrchAsset
+[Set-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-OrchAsset.md)
 
-Set-OrchCredentialAsset
+[Set-OrchCredentialAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-OrchCredentialAsset.md)
 
-Add-OrchAssetLink
+[Add-OrchAssetLink](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchAssetLink.md)
 
-Remove-OrchAsset
+[Remove-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchAsset.md)

@@ -225,8 +225,8 @@ Only enabled triggers are processed. Triggers that are already disabled are sile
 
 ## RELATED LINKS
 
-Enable-OrchTrigger
+[Enable-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Enable-OrchTrigger.md)
 
-Get-OrchTrigger
+[Get-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTrigger.md)
 
-Update-OrchTrigger
+[Update-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-OrchTrigger.md)

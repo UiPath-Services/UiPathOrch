@@ -130,8 +130,8 @@ This cmdlet uses `Process.Start` with `UseShellExecute` to launch the default we
 
 ## RELATED LINKS
 
-Get-OrchJob
+[Get-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchJob.md)
 
-Start-OrchJob
+[Start-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Start-OrchJob.md)
 
-Stop-OrchJob
+[Stop-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Stop-OrchJob.md)

@@ -259,8 +259,8 @@ When using -Recurse, the relative folder hierarchy from the source is replicated
 
 ## RELATED LINKS
 
-Get-OrchFolderMachine
+[Get-OrchFolderMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchFolderMachine.md)
 
-Add-OrchFolderMachine
+[Add-OrchFolderMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchFolderMachine.md)
 
-Remove-OrchFolderMachine
+[Remove-OrchFolderMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchFolderMachine.md)

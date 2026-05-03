@@ -138,6 +138,6 @@ If multiple processes match the -Name wildcard pattern, each one opens in a sepa
 
 ## RELATED LINKS
 
-Get-OrchProcess
+[Get-OrchProcess](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchProcess.md)
 
-Update-OrchProcess
+[Update-OrchProcess](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-OrchProcess.md)

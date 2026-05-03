@@ -169,12 +169,12 @@ Libraries are tenant-scoped resources (not folder-scoped). They are NuGet packag
 
 ## RELATED LINKS
 
-Get-OrchLibraryVersion
+[Get-OrchLibraryVersion](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLibraryVersion.md)
 
-Import-OrchLibrary
+[Import-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Import-OrchLibrary.md)
 
-Export-OrchLibrary
+[Export-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Export-OrchLibrary.md)
 
-Remove-OrchLibrary
+[Remove-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchLibrary.md)
 
-Copy-OrchLibrary
+[Copy-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchLibrary.md)

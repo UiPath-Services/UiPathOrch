@@ -278,6 +278,6 @@ The cmdlet filters sessions that have runtimes (Runtimes != 0) and are currently
 
 ## RELATED LINKS
 
-Disable-OrchMaintenanceMode
+[Disable-OrchMaintenanceMode](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Disable-OrchMaintenanceMode.md)
 
-Get-OrchUnattendedSession
+[Get-OrchUnattendedSession](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchUnattendedSession.md)

@@ -235,8 +235,8 @@ Test sets are folder-scoped entities. You must navigate to a folder on the Orch:
 
 ## RELATED LINKS
 
-Get-OrchTestSet
+[Get-OrchTestSet](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestSet.md)
 
-Start-OrchTestSet
+[Start-OrchTestSet](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Start-OrchTestSet.md)
 
-Copy-OrchTestSet
+[Copy-OrchTestSet](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchTestSet.md)

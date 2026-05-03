@@ -248,10 +248,10 @@ The -UserMappingCsv parameter is only supported when exactly one destination dri
 
 ## RELATED LINKS
 
-Get-PmUser
+[Get-PmUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmUser.md)
 
-New-PmUser
+[New-PmUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-PmUser.md)
 
-Remove-PmUser
+[Remove-PmUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmUser.md)
 
-Copy-PmGroup
+[Copy-PmGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-PmGroup.md)

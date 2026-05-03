@@ -287,10 +287,10 @@ To remove a PerRobot UserValue from a Secret asset, use Remove-OrchAssetUserValu
 
 ## RELATED LINKS
 
-Set-OrchSecretAsset
+[Set-OrchSecretAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-OrchSecretAsset.md)
 
-Get-OrchAsset
+[Get-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchAsset.md)
 
-Get-OrchCredentialAsset
+[Get-OrchCredentialAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchCredentialAsset.md)
 
-Remove-OrchAssetUserValue
+[Remove-OrchAssetUserValue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchAssetUserValue.md)

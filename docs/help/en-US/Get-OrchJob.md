@@ -641,8 +641,8 @@ If no filter parameters are specified, the cmdlet outputs the contents of the lo
 
 ## RELATED LINKS
 
-Start-OrchJob
+[Start-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Start-OrchJob.md)
 
-Stop-OrchJob
+[Stop-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Stop-OrchJob.md)
 
-Open-OrchJob
+[Open-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Open-OrchJob.md)

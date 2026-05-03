@@ -115,6 +115,6 @@ Loads an ETS ScriptProperty named Expanded onto UiPath.PowerShell.Entities.Queue
 
 ## RELATED LINKS
 
-Get-OrchQueueItem
+[Get-OrchQueueItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchQueueItem.md)
 
 Get-OrchTestDataQueueItemTable

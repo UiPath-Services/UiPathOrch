@@ -268,12 +268,12 @@ The -ExportCsv parameter produces a CSV format that is compatible with Update-Or
 
 ## RELATED LINKS
 
-New-OrchTrigger
+[New-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-OrchTrigger.md)
 
-Update-OrchTrigger
+[Update-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-OrchTrigger.md)
 
-Remove-OrchTrigger
+[Remove-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchTrigger.md)
 
-Enable-OrchTrigger
+[Enable-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Enable-OrchTrigger.md)
 
-Disable-OrchTrigger
+[Disable-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Disable-OrchTrigger.md)

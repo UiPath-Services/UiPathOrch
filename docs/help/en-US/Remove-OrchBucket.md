@@ -245,8 +245,8 @@ Removing a bucket permanently deletes the bucket and all files stored within it.
 
 ## RELATED LINKS
 
-Get-OrchBucket
+[Get-OrchBucket](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchBucket.md)
 
-New-OrchBucket
+[New-OrchBucket](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-OrchBucket.md)
 
-Copy-OrchBucket
+[Copy-OrchBucket](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchBucket.md)

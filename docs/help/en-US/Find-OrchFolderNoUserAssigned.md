@@ -115,4 +115,4 @@ By default, users inherited from parent folders are ignored. If the -IncludeInhe
 
 ## RELATED LINKS
 
-Get-OrchFolderUser
+[Get-OrchFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchFolderUser.md)

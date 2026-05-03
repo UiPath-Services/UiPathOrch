@@ -444,10 +444,10 @@ The drive created by this cmdlet is not saved to the configuration file. It exis
 
 ## RELATED LINKS
 
-Import-OrchConfig
+[Import-OrchConfig](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Import-OrchConfig.md)
 
-Get-OrchPSDrive
+[Get-OrchPSDrive](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchPSDrive.md)
 
-Edit-OrchConfig
+[Edit-OrchConfig](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Edit-OrchConfig.md)
 
-Get-OrchConfigPath
+[Get-OrchConfigPath](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchConfigPath.md)

@@ -180,8 +180,8 @@ The cmdlet uses multi-threaded folder processing for improved performance when o
 
 ## RELATED LINKS
 
-Disable-OrchFolderMachineInherit
+[Disable-OrchFolderMachineInherit](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Disable-OrchFolderMachineInherit.md)
 
-Get-OrchFolderMachine
+[Get-OrchFolderMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchFolderMachine.md)
 
-Add-OrchFolderMachine
+[Add-OrchFolderMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchFolderMachine.md)

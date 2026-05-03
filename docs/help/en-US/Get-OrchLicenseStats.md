@@ -150,8 +150,8 @@ This cmdlet is tenant-scoped and supports multi-threaded processing when queryin
 
 ## RELATED LINKS
 
-Get-OrchLicense
+[Get-OrchLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLicense.md)
 
-Get-OrchLicenseNamedUser
+[Get-OrchLicenseNamedUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLicenseNamedUser.md)
 
-Get-OrchLicenseRuntime
+[Get-OrchLicenseRuntime](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLicenseRuntime.md)

@@ -195,14 +195,14 @@ Required permissions: HttpTriggers.View
 
 ## RELATED LINKS
 
-Remove-OrchApiTrigger
+[Remove-OrchApiTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchApiTrigger.md)
 
-Enable-OrchApiTrigger
+[Enable-OrchApiTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Enable-OrchApiTrigger.md)
 
-Disable-OrchApiTrigger
+[Disable-OrchApiTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Disable-OrchApiTrigger.md)
 
-Copy-OrchApiTrigger
+[Copy-OrchApiTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchApiTrigger.md)
 
-Get-OrchTrigger
+[Get-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTrigger.md)
 
-Get-OrchEventTrigger
+[Get-OrchEventTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchEventTrigger.md)

@@ -236,8 +236,8 @@ The -ExportCsv parameter generates a CSV file that can be used as input for Set-
 
 ## RELATED LINKS
 
-Set-PmRobotAccount
+[Set-PmRobotAccount](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-PmRobotAccount.md)
 
-Copy-PmRobotAccount
+[Copy-PmRobotAccount](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-PmRobotAccount.md)
 
-Remove-PmRobotAccount
+[Remove-PmRobotAccount](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmRobotAccount.md)

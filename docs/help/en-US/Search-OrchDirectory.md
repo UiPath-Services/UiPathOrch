@@ -139,6 +139,6 @@ When multiple drives are specified, searches are executed in parallel using the 
 
 ## RELATED LINKS
 
-Test-OrchUserMappingCsv
+[Test-OrchUserMappingCsv](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Test-OrchUserMappingCsv.md)
 
-New-OrchUserMappingCsv
+[New-OrchUserMappingCsv](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-OrchUserMappingCsv.md)

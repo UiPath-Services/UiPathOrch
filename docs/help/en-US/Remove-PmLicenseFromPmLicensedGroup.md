@@ -203,8 +203,8 @@ License names are resolved from internal bundle codes to human-readable names.
 
 ## RELATED LINKS
 
-Add-PmLicenseToPmLicensedGroup
+[Add-PmLicenseToPmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmLicenseToPmLicensedGroup.md)
 
-Get-PmLicensedGroup
+[Get-PmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicensedGroup.md)
 
-Remove-PmLicensedGroup
+[Remove-PmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmLicensedGroup.md)

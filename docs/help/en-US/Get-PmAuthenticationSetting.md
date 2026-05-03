@@ -115,6 +115,6 @@ The PmAuthenticationRoot object contains nested properties for each supported id
 
 ## RELATED LINKS
 
-Get-PmUser
+[Get-PmUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmUser.md)
 
-Get-PmAuditLog
+[Get-PmAuditLog](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmAuditLog.md)

@@ -70,6 +70,6 @@ The documentation files are located in the Docs subdirectory of the module insta
 
 ## RELATED LINKS
 
-Get-OrchPSDrive
+[Get-OrchPSDrive](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchPSDrive.md)
 
-Get-OrchConfigPath
+[Get-OrchConfigPath](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchConfigPath.md)

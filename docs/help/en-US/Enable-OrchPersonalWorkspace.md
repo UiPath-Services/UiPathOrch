@@ -182,8 +182,8 @@ This cmdlet sets both MayHavePersonalWorkspace and MayHaveRobotSession to True f
 
 ## RELATED LINKS
 
-Disable-OrchPersonalWorkspace
+[Disable-OrchPersonalWorkspace](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Disable-OrchPersonalWorkspace.md)
 
-Get-OrchPersonalWorkspace
+[Get-OrchPersonalWorkspace](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchPersonalWorkspace.md)
 
-Remove-OrchPersonalWorkspace
+[Remove-OrchPersonalWorkspace](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchPersonalWorkspace.md)

@@ -240,10 +240,10 @@ Multiple Orchestrator drives are queried in parallel for improved performance.
 
 ## RELATED LINKS
 
-New-OrchMachine
+[New-OrchMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-OrchMachine.md)
 
-Update-OrchMachine
+[Update-OrchMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-OrchMachine.md)
 
-Remove-OrchMachine
+[Remove-OrchMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchMachine.md)
 
-Copy-OrchMachine
+[Copy-OrchMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchMachine.md)

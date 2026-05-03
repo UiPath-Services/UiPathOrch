@@ -198,10 +198,10 @@ Test cases are folder-scoped entities. You must navigate to a folder on the Orch
 
 ## RELATED LINKS
 
-Remove-OrchTestCase
+[Remove-OrchTestCase](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchTestCase.md)
 
-Get-OrchTestCaseExecution
+[Get-OrchTestCaseExecution](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestCaseExecution.md)
 
-Get-OrchTestCaseAssertion
+[Get-OrchTestCaseAssertion](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestCaseAssertion.md)
 
-Get-OrchTestSet
+[Get-OrchTestSet](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestSet.md)

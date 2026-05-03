@@ -274,8 +274,8 @@ If a process with the same name already exists in the destination folder, the be
 
 ## RELATED LINKS
 
-Get-OrchProcess
+[Get-OrchProcess](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchProcess.md)
 
-Remove-OrchProcess
+[Remove-OrchProcess](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchProcess.md)
 
-Update-OrchProcess
+[Update-OrchProcess](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-OrchProcess.md)

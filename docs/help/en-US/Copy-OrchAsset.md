@@ -307,12 +307,12 @@ Credential asset passwords cannot be read from the source; only the credential u
 
 ## RELATED LINKS
 
-Get-OrchAsset
+[Get-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchAsset.md)
 
-Set-OrchAsset
+[Set-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-OrchAsset.md)
 
-Set-OrchCredentialAsset
+[Set-OrchCredentialAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-OrchCredentialAsset.md)
 
-Remove-OrchAsset
+[Remove-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchAsset.md)
 
-New-OrchUserMappingCsv
+[New-OrchUserMappingCsv](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-OrchUserMappingCsv.md)

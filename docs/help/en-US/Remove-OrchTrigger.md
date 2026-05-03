@@ -233,8 +233,8 @@ Removing a trigger is a permanent operation. Use -WhatIf to preview which trigge
 
 ## RELATED LINKS
 
-Get-OrchTrigger
+[Get-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTrigger.md)
 
-New-OrchTrigger
+[New-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-OrchTrigger.md)
 
-Disable-OrchTrigger
+[Disable-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Disable-OrchTrigger.md)

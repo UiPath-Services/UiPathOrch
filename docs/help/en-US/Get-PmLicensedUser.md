@@ -162,6 +162,6 @@ This cmdlet retrieves the named user license list from the organization's licens
 
 ## RELATED LINKS
 
-Get-PmLicensedGroup
+[Get-PmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicensedGroup.md)
 
-Remove-PmAllocationFromPmLicensedGroup
+[Remove-PmAllocationFromPmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmAllocationFromPmLicensedGroup.md)

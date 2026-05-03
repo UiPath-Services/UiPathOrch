@@ -267,14 +267,14 @@ Required permissions: HttpTriggers.View (source), HttpTriggers.Create (destinati
 
 ## RELATED LINKS
 
-Get-OrchApiTrigger
+[Get-OrchApiTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchApiTrigger.md)
 
-Remove-OrchApiTrigger
+[Remove-OrchApiTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchApiTrigger.md)
 
-Enable-OrchApiTrigger
+[Enable-OrchApiTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Enable-OrchApiTrigger.md)
 
-Disable-OrchApiTrigger
+[Disable-OrchApiTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Disable-OrchApiTrigger.md)
 
-Get-OrchTrigger
+[Get-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTrigger.md)
 
-Get-OrchEventTrigger
+[Get-OrchEventTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchEventTrigger.md)

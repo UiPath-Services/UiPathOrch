@@ -294,12 +294,12 @@ If a specified role pattern does not match any existing folder role, a warning i
 
 ## RELATED LINKS
 
-Get-OrchFolderUser
+[Get-OrchFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchFolderUser.md)
 
-Remove-OrchFolderUser
+[Remove-OrchFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchFolderUser.md)
 
-Copy-OrchFolderUser
+[Copy-OrchFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchFolderUser.md)
 
-Add-OrchRoleToFolderUser
+[Add-OrchRoleToFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchRoleToFolderUser.md)
 
-Remove-OrchRoleFromFolderUser
+[Remove-OrchRoleFromFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchRoleFromFolderUser.md)

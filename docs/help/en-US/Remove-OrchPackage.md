@@ -236,12 +236,12 @@ The internal package and version caches are automatically invalidated after each
 
 ## RELATED LINKS
 
-Get-OrchPackage
+[Get-OrchPackage](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchPackage.md)
 
-Get-OrchPackageVersion
+[Get-OrchPackageVersion](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchPackageVersion.md)
 
-Import-OrchPackage
+[Import-OrchPackage](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Import-OrchPackage.md)
 
-Export-OrchPackage
+[Export-OrchPackage](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Export-OrchPackage.md)
 
-Copy-OrchPackage
+[Copy-OrchPackage](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchPackage.md)

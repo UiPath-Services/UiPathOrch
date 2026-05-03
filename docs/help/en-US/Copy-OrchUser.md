@@ -308,12 +308,12 @@ The -UserMappingCsv parameter is only effective when copying to a single destina
 
 ## RELATED LINKS
 
-Get-OrchUser
+[Get-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchUser.md)
 
-Add-OrchUser
+[Add-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchUser.md)
 
-Update-OrchUser
+[Update-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-OrchUser.md)
 
-Remove-OrchUser
+[Remove-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchUser.md)
 
-New-OrchUserMappingCsv
+[New-OrchUserMappingCsv](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-OrchUserMappingCsv.md)

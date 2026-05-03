@@ -169,10 +169,10 @@ This cmdlet removes all existing UiPathOrch, UiPathOrchDu, and UiPathOrchTm driv
 
 ## RELATED LINKS
 
-Edit-OrchConfig
+[Edit-OrchConfig](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Edit-OrchConfig.md)
 
-Get-OrchConfigPath
+[Get-OrchConfigPath](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchConfigPath.md)
 
-Get-OrchPSDrive
+[Get-OrchPSDrive](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchPSDrive.md)
 
-New-OrchPSDrive
+[New-OrchPSDrive](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-OrchPSDrive.md)

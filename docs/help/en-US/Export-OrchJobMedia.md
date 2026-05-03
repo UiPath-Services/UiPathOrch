@@ -271,6 +271,6 @@ Execution media must be enabled on the Orchestrator and the process must be conf
 
 ## RELATED LINKS
 
-Get-OrchJobMedia
+[Get-OrchJobMedia](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchJobMedia.md)
 
-Remove-OrchJobMedia
+[Remove-OrchJobMedia](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchJobMedia.md)

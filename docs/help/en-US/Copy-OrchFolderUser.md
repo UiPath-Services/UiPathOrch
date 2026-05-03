@@ -317,12 +317,12 @@ For cross-instance migration, a user mapping CSV is required because user identi
 
 ## RELATED LINKS
 
-Get-OrchFolderUser
+[Get-OrchFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchFolderUser.md)
 
-Add-OrchFolderUser
+[Add-OrchFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchFolderUser.md)
 
-Move-OrchFolderUser
+[Move-OrchFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Move-OrchFolderUser.md)
 
-Remove-OrchFolderUser
+[Remove-OrchFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchFolderUser.md)
 
-New-OrchUserMappingCsv
+[New-OrchUserMappingCsv](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-OrchUserMappingCsv.md)

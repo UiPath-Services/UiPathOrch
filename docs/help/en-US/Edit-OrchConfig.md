@@ -115,6 +115,6 @@ On Windows, if the preferred editor cannot be launched, the cmdlet automatically
 
 ## RELATED LINKS
 
-Import-OrchConfig
+[Import-OrchConfig](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Import-OrchConfig.md)
 
-Get-OrchConfigPath
+[Get-OrchConfigPath](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchConfigPath.md)

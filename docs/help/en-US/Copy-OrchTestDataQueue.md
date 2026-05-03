@@ -259,6 +259,6 @@ When using -Recurse, the relative folder hierarchy from the source is replicated
 
 ## RELATED LINKS
 
-Get-OrchTestDataQueue
+[Get-OrchTestDataQueue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestDataQueue.md)
 
-Remove-OrchTestDataQueue
+[Remove-OrchTestDataQueue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchTestDataQueue.md)

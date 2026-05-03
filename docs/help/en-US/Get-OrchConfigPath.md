@@ -78,6 +78,6 @@ The configuration file is automatically created with default content if it does 
 
 ## RELATED LINKS
 
-Get-OrchPSDrive
+[Get-OrchPSDrive](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchPSDrive.md)
 
-Set-OrchLocation
+[Set-OrchLocation](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-OrchLocation.md)

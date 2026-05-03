@@ -230,6 +230,6 @@ This cmdlet processes each matching item individually, so if one removal fails, 
 
 ## RELATED LINKS
 
-Get-OrchTestSetSchedule
+[Get-OrchTestSetSchedule](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestSetSchedule.md)
 
-Copy-OrchTestSetSchedule
+[Copy-OrchTestSetSchedule](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchTestSetSchedule.md)

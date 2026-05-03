@@ -201,12 +201,12 @@ Use `Get-PmLicensedGroup` and `Get-PmLicensedUser` to enumerate the groups and u
 
 ## RELATED LINKS
 
-Get-PmLicenseAllocation
+[Get-PmLicenseAllocation](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicenseAllocation.md)
 
-Get-PmLicenseInventory
+[Get-PmLicenseInventory](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicenseInventory.md)
 
-Get-PmLicenseContract
+[Get-PmLicenseContract](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicenseContract.md)
 
-Get-PmLicensedGroup
+[Get-PmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicensedGroup.md)
 
-Get-PmLicensedUser
+[Get-PmLicensedUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicensedUser.md)

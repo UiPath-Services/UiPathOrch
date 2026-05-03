@@ -226,8 +226,8 @@ The /odata/Tasks endpoint returns only tasks the caller can see within the folde
 
 ## RELATED LINKS
 
-Get-OrchTaskAcrossFolder
+[Get-OrchTaskAcrossFolder](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTaskAcrossFolder.md)
 
-Set-OrchTask
+[Set-OrchTask](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-OrchTask.md)
 
-Remove-OrchTask
+[Remove-OrchTask](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchTask.md)

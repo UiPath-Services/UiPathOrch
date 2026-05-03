@@ -156,6 +156,6 @@ This cmdlet operates on the UiPathOrchDu provider PSDrive. Ensure the configurat
 
 ## RELATED LINKS
 
-Get-DuDocumentType
+[Get-DuDocumentType](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-DuDocumentType.md)
 
-Get-DuExtractor
+[Get-DuExtractor](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-DuExtractor.md)

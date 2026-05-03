@@ -251,10 +251,10 @@ When a calendar name that does not match any existing calendar is specified and 
 
 ## RELATED LINKS
 
-Get-OrchCalendar
+[Get-OrchCalendar](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchCalendar.md)
 
-Remove-OrchCalendarDate
+[Remove-OrchCalendarDate](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchCalendarDate.md)
 
-Remove-OrchCalendar
+[Remove-OrchCalendar](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchCalendar.md)
 
-Copy-OrchCalendar
+[Copy-OrchCalendar](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchCalendar.md)

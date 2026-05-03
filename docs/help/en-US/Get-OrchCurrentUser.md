@@ -117,6 +117,6 @@ The retrieval is performed using a thread pool for parallel execution when multi
 
 ## RELATED LINKS
 
-Get-OrchUser
+[Get-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchUser.md)
 
-Update-OrchCurrentUserURPassword
+[Update-OrchCurrentUserURPassword](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-OrchCurrentUserURPassword.md)

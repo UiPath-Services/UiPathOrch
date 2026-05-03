@@ -308,12 +308,12 @@ The admin API accepts UserValue operations for any tenant user regardless of fol
 
 ## RELATED LINKS
 
-Set-OrchAsset
+[Set-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-OrchAsset.md)
 
-Set-OrchCredentialAsset
+[Set-OrchCredentialAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-OrchCredentialAsset.md)
 
-Set-OrchSecretAsset
+[Set-OrchSecretAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-OrchSecretAsset.md)
 
-Get-OrchAsset
+[Get-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchAsset.md)
 
-Remove-OrchAsset
+[Remove-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchAsset.md)

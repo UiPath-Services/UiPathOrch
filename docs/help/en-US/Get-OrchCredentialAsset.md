@@ -279,10 +279,10 @@ Server limitation: re-importing a CSV that changes CredentialUsername without su
 
 ## RELATED LINKS
 
-Set-OrchCredentialAsset
+[Set-OrchCredentialAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-OrchCredentialAsset.md)
 
-Get-OrchAsset
+[Get-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchAsset.md)
 
-Get-OrchSecretAsset
+[Get-OrchSecretAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchSecretAsset.md)
 
-Remove-OrchAssetUserValue
+[Remove-OrchAssetUserValue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchAssetUserValue.md)

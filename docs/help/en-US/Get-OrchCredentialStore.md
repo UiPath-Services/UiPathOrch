@@ -138,6 +138,6 @@ The cmdlet uses multi-threaded processing to retrieve credential stores from mul
 
 ## RELATED LINKS
 
-Remove-OrchCredentialStore
+[Remove-OrchCredentialStore](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchCredentialStore.md)
 
-Copy-OrchCredentialStore
+[Copy-OrchCredentialStore](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchCredentialStore.md)

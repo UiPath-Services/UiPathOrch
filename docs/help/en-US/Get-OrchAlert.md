@@ -317,6 +317,6 @@ When the `-Severity` parameter is omitted, it defaults to `Success`, returning a
 
 ## RELATED LINKS
 
-Get-OrchLog
+[Get-OrchLog](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLog.md)
 
-Get-OrchAuditLog
+[Get-OrchAuditLog](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchAuditLog.md)

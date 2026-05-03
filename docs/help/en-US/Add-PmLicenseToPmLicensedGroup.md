@@ -205,8 +205,8 @@ License codes are internally mapped to human-readable names for both tab complet
 
 ## RELATED LINKS
 
-Remove-PmLicenseFromPmLicensedGroup
+[Remove-PmLicenseFromPmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmLicenseFromPmLicensedGroup.md)
 
-Get-PmLicensedGroup
+[Get-PmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicensedGroup.md)
 
-Remove-PmLicensedGroup
+[Remove-PmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmLicensedGroup.md)

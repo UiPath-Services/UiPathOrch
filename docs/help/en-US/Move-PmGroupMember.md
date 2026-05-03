@@ -266,8 +266,8 @@ Members already present in the destination group are not re-added. Members alrea
 
 ## RELATED LINKS
 
-Add-PmGroupMember
+[Add-PmGroupMember](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmGroupMember.md)
 
-Remove-PmGroupMember
+[Remove-PmGroupMember](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmGroupMember.md)
 
-Get-PmGroupMember
+[Get-PmGroupMember](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmGroupMember.md)

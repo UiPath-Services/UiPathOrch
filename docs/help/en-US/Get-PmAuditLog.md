@@ -205,6 +205,6 @@ Audit logs are read-only and reflect administrative actions performed at the org
 
 ## RELATED LINKS
 
-Get-PmUser
+[Get-PmUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmUser.md)
 
-Get-PmAuthenticationSetting
+[Get-PmAuthenticationSetting](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmAuthenticationSetting.md)

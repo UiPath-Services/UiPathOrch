@@ -232,8 +232,8 @@ The cmdlet collects all matching machines per folder and unassigns them in a sin
 
 ## RELATED LINKS
 
-Get-OrchFolderMachine
+[Get-OrchFolderMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchFolderMachine.md)
 
-Add-OrchFolderMachine
+[Add-OrchFolderMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchFolderMachine.md)
 
-Copy-OrchFolderMachine
+[Copy-OrchFolderMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchFolderMachine.md)

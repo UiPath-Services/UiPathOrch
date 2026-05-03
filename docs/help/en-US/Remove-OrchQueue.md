@@ -231,8 +231,8 @@ This cmdlet removes the queue definition, not the queue items. Errors during rem
 
 ## RELATED LINKS
 
-Get-OrchQueue
+[Get-OrchQueue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchQueue.md)
 
-New-OrchQueue
+[New-OrchQueue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-OrchQueue.md)
 
-Copy-OrchQueue
+[Copy-OrchQueue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchQueue.md)

@@ -850,10 +850,10 @@ Screenshot recording parameters (-Quality, -Frequency, -Duration) only take effe
 
 ## RELATED LINKS
 
-Get-OrchProcess
+[Get-OrchProcess](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchProcess.md)
 
-Update-OrchProcess
+[Update-OrchProcess](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-OrchProcess.md)
 
-Remove-OrchProcess
+[Remove-OrchProcess](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchProcess.md)
 
-Get-OrchPackage
+[Get-OrchPackage](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchPackage.md)

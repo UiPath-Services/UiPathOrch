@@ -226,8 +226,8 @@ When -ExpandPermission is specified, Tenant-type roles exclude Folder-scoped per
 
 ## RELATED LINKS
 
-Set-OrchRole
+[Set-OrchRole](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-OrchRole.md)
 
-Remove-OrchRole
+[Remove-OrchRole](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchRole.md)
 
-Copy-OrchRole
+[Copy-OrchRole](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchRole.md)

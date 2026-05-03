@@ -299,12 +299,12 @@ If the destination is a personal workspace folder, the process cache is also cle
 
 ## RELATED LINKS
 
-Get-OrchPackage
+[Get-OrchPackage](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchPackage.md)
 
-Get-OrchPackageVersion
+[Get-OrchPackageVersion](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchPackageVersion.md)
 
-Import-OrchPackage
+[Import-OrchPackage](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Import-OrchPackage.md)
 
-Export-OrchPackage
+[Export-OrchPackage](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Export-OrchPackage.md)
 
-Remove-OrchPackage
+[Remove-OrchPackage](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchPackage.md)

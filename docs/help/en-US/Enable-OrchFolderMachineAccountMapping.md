@@ -255,8 +255,8 @@ Personal workspace folders are automatically excluded from the operation.
 
 ## RELATED LINKS
 
-Disable-OrchFolderMachineAccountMapping
+[Disable-OrchFolderMachineAccountMapping](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Disable-OrchFolderMachineAccountMapping.md)
 
-Get-OrchFolderMachineAccountMapping
+[Get-OrchFolderMachineAccountMapping](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchFolderMachineAccountMapping.md)
 
-Get-OrchFolderMachine
+[Get-OrchFolderMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchFolderMachine.md)

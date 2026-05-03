@@ -101,6 +101,6 @@ The cmdlet only considers assemblies that reference System.Management.Automation
 
 ## RELATED LINKS
 
-Get-OrchConfigPath
+[Get-OrchConfigPath](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchConfigPath.md)
 
-Get-OrchHelp
+[Get-OrchHelp](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchHelp.md)

@@ -195,8 +195,8 @@ Only test set executions in Pending or Running status can be stopped. Executions
 
 ## RELATED LINKS
 
-Get-OrchTestSetExecution
+[Get-OrchTestSetExecution](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestSetExecution.md)
 
-Start-OrchTestSet
+[Start-OrchTestSet](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Start-OrchTestSet.md)
 
-Get-OrchTestSet
+[Get-OrchTestSet](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestSet.md)

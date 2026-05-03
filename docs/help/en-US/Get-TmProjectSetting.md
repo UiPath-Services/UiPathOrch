@@ -135,4 +135,4 @@ This cmdlet operates on the UiPathOrchTm provider PSDrive. Ensure the configurat
 
 ## RELATED LINKS
 
-Get-TmProjectPermission
+[Get-TmProjectPermission](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-TmProjectPermission.md)

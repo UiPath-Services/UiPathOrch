@@ -180,6 +180,6 @@ Credential stores are tenant-scoped entities. The -Path parameter specifies Orch
 
 ## RELATED LINKS
 
-Get-OrchCredentialStore
+[Get-OrchCredentialStore](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchCredentialStore.md)
 
-Copy-OrchCredentialStore
+[Copy-OrchCredentialStore](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchCredentialStore.md)

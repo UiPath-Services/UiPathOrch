@@ -276,6 +276,6 @@ If a queue with the same name already exists in the destination folder, an error
 
 ## RELATED LINKS
 
-Get-OrchQueue
+[Get-OrchQueue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchQueue.md)
 
-Copy-OrchQueueItem
+[Copy-OrchQueueItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchQueueItem.md)

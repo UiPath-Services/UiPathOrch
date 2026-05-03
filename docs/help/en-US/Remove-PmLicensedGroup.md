@@ -178,8 +178,8 @@ Removing a licensed group deallocates all user bundle licenses and user allocati
 
 ## RELATED LINKS
 
-Get-PmLicensedGroup
+[Get-PmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicensedGroup.md)
 
-Add-PmLicenseToPmLicensedGroup
+[Add-PmLicenseToPmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmLicenseToPmLicensedGroup.md)
 
-Remove-PmLicenseFromPmLicensedGroup
+[Remove-PmLicenseFromPmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmLicenseFromPmLicensedGroup.md)

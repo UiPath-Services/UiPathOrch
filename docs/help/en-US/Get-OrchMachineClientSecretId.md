@@ -170,8 +170,8 @@ This cmdlet uses multi-threaded processing to retrieve secrets for multiple mach
 
 ## RELATED LINKS
 
-Add-OrchMachineClientSecret
+[Add-OrchMachineClientSecret](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchMachineClientSecret.md)
 
-Remove-OrchMachineClientSecret
+[Remove-OrchMachineClientSecret](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchMachineClientSecret.md)
 
-Get-OrchMachine
+[Get-OrchMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchMachine.md)

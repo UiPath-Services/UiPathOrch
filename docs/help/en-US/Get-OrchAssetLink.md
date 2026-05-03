@@ -214,8 +214,8 @@ When the same asset is discovered from multiple source folders (e.g., with -Recu
 
 ## RELATED LINKS
 
-Add-OrchAssetLink
+[Add-OrchAssetLink](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchAssetLink.md)
 
-Get-OrchAsset
+[Get-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchAsset.md)
 
-Set-OrchAsset
+[Set-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-OrchAsset.md)

@@ -213,8 +213,8 @@ This cmdlet operates on the UiPathOrchDu provider PSDrive. Ensure the configurat
 
 ## RELATED LINKS
 
-Add-DuUser
+[Add-DuUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-DuUser.md)
 
-Remove-DuRoleFromDuUser
+[Remove-DuRoleFromDuUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-DuRoleFromDuUser.md)
 
-Get-DuRole
+[Get-DuRole](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-DuRole.md)

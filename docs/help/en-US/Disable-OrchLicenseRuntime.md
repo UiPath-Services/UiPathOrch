@@ -220,8 +220,8 @@ The cmdlet only targets runtime licenses that are currently enabled. Runtime lic
 
 ## RELATED LINKS
 
-Enable-OrchLicenseRuntime
+[Enable-OrchLicenseRuntime](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Enable-OrchLicenseRuntime.md)
 
-Get-OrchLicenseRuntime
+[Get-OrchLicenseRuntime](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLicenseRuntime.md)
 
-Get-OrchLicense
+[Get-OrchLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLicense.md)

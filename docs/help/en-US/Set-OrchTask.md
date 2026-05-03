@@ -327,8 +327,8 @@ The /odata/Tasks endpoint behaves with caller-scoped visibility, so the cache po
 
 ## RELATED LINKS
 
-Get-OrchTask
+[Get-OrchTask](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTask.md)
 
-Get-OrchTaskAcrossFolder
+[Get-OrchTaskAcrossFolder](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTaskAcrossFolder.md)
 
-Remove-OrchTask
+[Remove-OrchTask](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchTask.md)

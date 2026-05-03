@@ -195,10 +195,10 @@ This cmdlet first retrieves the list of packages (filtered by -Id), then for eac
 
 ## RELATED LINKS
 
-Get-OrchPackage
+[Get-OrchPackage](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchPackage.md)
 
-Export-OrchPackage
+[Export-OrchPackage](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Export-OrchPackage.md)
 
-Remove-OrchPackage
+[Remove-OrchPackage](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchPackage.md)
 
-Copy-OrchPackage
+[Copy-OrchPackage](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchPackage.md)

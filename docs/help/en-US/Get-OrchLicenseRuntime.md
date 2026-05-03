@@ -152,12 +152,12 @@ This cmdlet is tenant-scoped and supports multi-threaded processing when queryin
 
 ## RELATED LINKS
 
-Get-OrchLicense
+[Get-OrchLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLicense.md)
 
-Get-OrchLicenseNamedUser
+[Get-OrchLicenseNamedUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLicenseNamedUser.md)
 
-Enable-OrchLicenseRuntime
+[Enable-OrchLicenseRuntime](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Enable-OrchLicenseRuntime.md)
 
-Disable-OrchLicenseRuntime
+[Disable-OrchLicenseRuntime](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Disable-OrchLicenseRuntime.md)
 
-Get-OrchLicenseStats
+[Get-OrchLicenseStats](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLicenseStats.md)

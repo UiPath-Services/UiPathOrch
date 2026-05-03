@@ -230,6 +230,6 @@ Tab completion for the -Name parameter shows only currently enabled test set sch
 
 ## RELATED LINKS
 
-Enable-OrchTestSetSchedule
+[Enable-OrchTestSetSchedule](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Enable-OrchTestSetSchedule.md)
 
-Get-OrchTestSetSchedule
+[Get-OrchTestSetSchedule](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestSetSchedule.md)

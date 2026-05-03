@@ -140,8 +140,8 @@ PS1 関数 (7 個):
 ### external help file の大文字小文字
 マークダウンの `external help file` フィールドが PlatyPS の出力ファイル名を決める。PS1 関数の 7 ファイルは `UiPathOrch-Help.xml` (大文字 H)。Windows NTFS は case-insensitive だが、すべてのファイルで大文字小文字を統一しておくこと。
 
-### RELATED LINKS はプレーンテキスト
-`[CmdletName](CmdletName.md)` 形式のリンクは使わない。PS1 関数ヘルプで `GetUriForOnlineHelp()` エラーが発生する。プレーンテキストで cmdlet 名のみ記載する。
+### RELATED LINKS は絶対 URL のリンク
+`[CmdletName](CmdletName.md)` のような相対 .md パスは PS1 関数ヘルプで `GetUriForOnlineHelp()` エラーになる。絶対 URL なら PS1 ヘルプでも問題なく、Get-Help 出力で関連 cmdlet からも直接オンライン版へ飛べる。形式: `[CmdletName](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/CmdletName.md)`。本リポジトリに存在しない cmdlet を参照している場合は 404 になるため、そのエントリだけはプレーンテキストのまま残す。
 
 ### DESCRIPTION に `**` (太字) を使わない
 `**text**` を含む段落は Get-Help で表示されない (MAML XML 内の `<maml:para>` が丸ごとスキップされる)。

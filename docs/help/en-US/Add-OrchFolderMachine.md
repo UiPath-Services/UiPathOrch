@@ -263,8 +263,8 @@ If -PropagateToSubFolders is set to 'true', the inherit flag is set in a separat
 
 ## RELATED LINKS
 
-Get-OrchFolderMachine
+[Get-OrchFolderMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchFolderMachine.md)
 
-Remove-OrchFolderMachine
+[Remove-OrchFolderMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchFolderMachine.md)
 
-Enable-OrchFolderMachineInherit
+[Enable-OrchFolderMachineInherit](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Enable-OrchFolderMachineInherit.md)

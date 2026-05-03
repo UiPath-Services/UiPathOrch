@@ -226,10 +226,10 @@ If a bucket cannot be accessed (e.g., due to permissions), a non-terminating err
 
 ## RELATED LINKS
 
-Get-OrchBucket
+[Get-OrchBucket](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchBucket.md)
 
-Export-OrchBucketItem
+[Export-OrchBucketItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Export-OrchBucketItem.md)
 
-Import-OrchBucketItem
+[Import-OrchBucketItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Import-OrchBucketItem.md)
 
-Remove-OrchBucketItem
+[Remove-OrchBucketItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchBucketItem.md)

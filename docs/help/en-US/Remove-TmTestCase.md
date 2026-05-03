@@ -206,4 +206,4 @@ This cmdlet operates on the UiPathOrchTm provider PSDrive. Supports -WhatIf to p
 
 ## RELATED LINKS
 
-Get-TmTestCase
+[Get-TmTestCase](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-TmTestCase.md)

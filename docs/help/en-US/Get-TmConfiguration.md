@@ -103,4 +103,4 @@ This cmdlet operates on the UiPathOrchTm provider PSDrive. Ensure the configurat
 
 ## RELATED LINKS
 
-Get-TmServerInfo
+[Get-TmServerInfo](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-TmServerInfo.md)

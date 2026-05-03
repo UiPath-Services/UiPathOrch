@@ -647,8 +647,8 @@ This cmdlet supports CSV import via the pipeline. Export queues using `Get-OrchQ
 
 ## RELATED LINKS
 
-Get-OrchQueue
+[Get-OrchQueue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchQueue.md)
 
-New-OrchQueue
+[New-OrchQueue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-OrchQueue.md)
 
-Remove-OrchQueue
+[Remove-OrchQueue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchQueue.md)

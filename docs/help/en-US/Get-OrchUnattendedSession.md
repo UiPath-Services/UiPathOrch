@@ -143,6 +143,6 @@ When multiple drives are specified, queries are executed in parallel using the t
 
 ## RELATED LINKS
 
-Enable-OrchMaintenanceMode
+[Enable-OrchMaintenanceMode](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Enable-OrchMaintenanceMode.md)
 
-Disable-OrchMaintenanceMode
+[Disable-OrchMaintenanceMode](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Disable-OrchMaintenanceMode.md)

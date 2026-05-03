@@ -144,6 +144,6 @@ External API resources define the permission scopes available to external applic
 
 ## RELATED LINKS
 
-Get-PmExternalApplication
+[Get-PmExternalApplication](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmExternalApplication.md)
 
-Copy-PmExternalApplication
+[Copy-PmExternalApplication](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-PmExternalApplication.md)

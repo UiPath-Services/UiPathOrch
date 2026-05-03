@@ -156,8 +156,8 @@ Active and Available sessions are not touched — only Disconnected/Unresponsive
 
 ## RELATED LINKS
 
-Get-OrchUnattendedSession
+[Get-OrchUnattendedSession](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchUnattendedSession.md)
 
-Get-OrchMachineSession
+[Get-OrchMachineSession](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchMachineSession.md)
 
-Get-OrchUserSession
+[Get-OrchUserSession](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchUserSession.md)

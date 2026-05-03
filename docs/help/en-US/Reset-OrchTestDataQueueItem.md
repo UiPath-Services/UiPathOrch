@@ -251,6 +251,6 @@ The reset operation affects all items in each matching test data queue. There is
 
 ## RELATED LINKS
 
-Get-OrchTestDataQueueItem
+[Get-OrchTestDataQueueItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestDataQueueItem.md)
 
-Get-OrchTestDataQueue
+[Get-OrchTestDataQueue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestDataQueue.md)

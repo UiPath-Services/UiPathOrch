@@ -762,10 +762,10 @@ Execution settings (ES_ parameters) are applied to both RobotProvision (attended
 
 ## RELATED LINKS
 
-Get-OrchUser
+[Get-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchUser.md)
 
-Add-OrchUser
+[Add-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchUser.md)
 
-Remove-OrchUser
+[Remove-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchUser.md)
 
-Copy-OrchUser
+[Copy-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchUser.md)

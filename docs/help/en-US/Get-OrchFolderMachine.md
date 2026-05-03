@@ -241,12 +241,12 @@ The cmdlet uses multi-threaded folder processing for improved performance when q
 
 ## RELATED LINKS
 
-Add-OrchFolderMachine
+[Add-OrchFolderMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchFolderMachine.md)
 
-Remove-OrchFolderMachine
+[Remove-OrchFolderMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchFolderMachine.md)
 
-Copy-OrchFolderMachine
+[Copy-OrchFolderMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchFolderMachine.md)
 
-Enable-OrchFolderMachineInherit
+[Enable-OrchFolderMachineInherit](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Enable-OrchFolderMachineInherit.md)
 
-Disable-OrchFolderMachineInherit
+[Disable-OrchFolderMachineInherit](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Disable-OrchFolderMachineInherit.md)

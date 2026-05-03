@@ -212,8 +212,8 @@ Group memberships are preserved during the copy. Groups are matched by name (cas
 
 ## RELATED LINKS
 
-Get-PmRobotAccount
+[Get-PmRobotAccount](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmRobotAccount.md)
 
-Set-PmRobotAccount
+[Set-PmRobotAccount](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-PmRobotAccount.md)
 
-Remove-PmRobotAccount
+[Remove-PmRobotAccount](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmRobotAccount.md)

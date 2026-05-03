@@ -138,6 +138,6 @@ The cmdlet uses multi-threaded processing to retrieve web settings from multiple
 
 ## RELATED LINKS
 
-Get-OrchSetting
+[Get-OrchSetting](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchSetting.md)
 
-Get-OrchAuthenticationSetting
+[Get-OrchAuthenticationSetting](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchAuthenticationSetting.md)

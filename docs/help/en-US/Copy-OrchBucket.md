@@ -276,8 +276,8 @@ If a bucket with the same name already exists in the destination folder, an erro
 
 ## RELATED LINKS
 
-Get-OrchBucket
+[Get-OrchBucket](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchBucket.md)
 
-New-OrchBucket
+[New-OrchBucket](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-OrchBucket.md)
 
-Remove-OrchBucket
+[Remove-OrchBucket](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchBucket.md)

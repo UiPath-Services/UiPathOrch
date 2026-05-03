@@ -373,10 +373,10 @@ When no query parameters (TestSetExecutionName, Last, StartTimeAfter, StartTimeB
 
 ## RELATED LINKS
 
-Get-OrchTestCaseAssertion
+[Get-OrchTestCaseAssertion](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestCaseAssertion.md)
 
-Get-OrchTestSetExecution
+[Get-OrchTestSetExecution](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestSetExecution.md)
 
-Get-OrchTestCase
+[Get-OrchTestCase](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestCase.md)
 
-Get-OrchTestSet
+[Get-OrchTestSet](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestSet.md)

@@ -530,8 +530,8 @@ The Authorization header is masked in HTTP log files when logging is enabled, so
 
 ## RELATED LINKS
 
-Get-OrchPSDrive
+[Get-OrchPSDrive](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchPSDrive.md)
 
-New-OrchPSDrive
+[New-OrchPSDrive](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-OrchPSDrive.md)
 
-Get-OrchHelp
+[Get-OrchHelp](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchHelp.md)

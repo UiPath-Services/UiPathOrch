@@ -284,10 +284,10 @@ You cannot specify -Recurse (or -Depth greater than 1) and -Name at the same tim
 
 ## RELATED LINKS
 
-Get-OrchBucketItem
+[Get-OrchBucketItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchBucketItem.md)
 
-Export-OrchBucketItem
+[Export-OrchBucketItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Export-OrchBucketItem.md)
 
-Remove-OrchBucketItem
+[Remove-OrchBucketItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchBucketItem.md)
 
-Get-OrchBucket
+[Get-OrchBucket](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchBucket.md)

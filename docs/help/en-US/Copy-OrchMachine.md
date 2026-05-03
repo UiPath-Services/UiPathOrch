@@ -227,10 +227,10 @@ Robot user assignments are mapped by matching robot names (case-insensitive) bet
 
 ## RELATED LINKS
 
-Get-OrchMachine
+[Get-OrchMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchMachine.md)
 
-New-OrchMachine
+[New-OrchMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-OrchMachine.md)
 
-Update-OrchMachine
+[Update-OrchMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-OrchMachine.md)
 
-Remove-OrchMachine
+[Remove-OrchMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchMachine.md)

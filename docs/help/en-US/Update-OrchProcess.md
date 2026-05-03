@@ -840,10 +840,10 @@ Most parameters support ValueFromPipelineByPropertyName, enabling bulk updates b
 
 ## RELATED LINKS
 
-Get-OrchProcess
+[Get-OrchProcess](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchProcess.md)
 
-Update-OrchProcessVersion
+[Update-OrchProcessVersion](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-OrchProcessVersion.md)
 
-Remove-OrchProcess
+[Remove-OrchProcess](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchProcess.md)
 
-Edit-OrchProcess
+[Edit-OrchProcess](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Edit-OrchProcess.md)

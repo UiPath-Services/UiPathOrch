@@ -244,8 +244,8 @@ The CSV exported by Get-PmLicensedGroup -ExportCsv can be directly piped to this
 
 ## RELATED LINKS
 
-Get-PmLicensedGroup
+[Get-PmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicensedGroup.md)
 
-Add-PmLicenseToPmLicensedGroup
+[Add-PmLicenseToPmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmLicenseToPmLicensedGroup.md)
 
-Get-PmLicensedUser
+[Get-PmLicensedUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicensedUser.md)

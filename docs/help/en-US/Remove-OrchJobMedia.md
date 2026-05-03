@@ -233,6 +233,6 @@ This cmdlet processes each matching item individually, so if one removal fails, 
 
 ## RELATED LINKS
 
-Get-OrchJobMedia
+[Get-OrchJobMedia](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchJobMedia.md)
 
-Export-OrchJobMedia
+[Export-OrchJobMedia](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Export-OrchJobMedia.md)

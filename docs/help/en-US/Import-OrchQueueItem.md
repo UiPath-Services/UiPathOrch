@@ -279,6 +279,6 @@ Queue items are folder-scoped entities. You must navigate to a folder on the Orc
 
 ## RELATED LINKS
 
-Get-OrchQueueItem
+[Get-OrchQueueItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchQueueItem.md)
 
-Get-OrchQueue
+[Get-OrchQueue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchQueue.md)

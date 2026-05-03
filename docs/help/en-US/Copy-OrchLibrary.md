@@ -236,12 +236,12 @@ The destination tenant must have its library feed setting configured to accept t
 
 ## RELATED LINKS
 
-Get-OrchLibrary
+[Get-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLibrary.md)
 
-Get-OrchLibraryVersion
+[Get-OrchLibraryVersion](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLibraryVersion.md)
 
-Import-OrchLibrary
+[Import-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Import-OrchLibrary.md)
 
-Export-OrchLibrary
+[Export-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Export-OrchLibrary.md)
 
-Remove-OrchLibrary
+[Remove-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchLibrary.md)

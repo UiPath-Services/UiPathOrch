@@ -189,8 +189,8 @@ This cmdlet uses multi-threaded folder processing for improved performance when 
 
 ## RELATED LINKS
 
-Get-OrchMachine
+[Get-OrchMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchMachine.md)
 
-Get-OrchUnattendedSession
+[Get-OrchUnattendedSession](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchUnattendedSession.md)
 
-Get-OrchUserSession
+[Get-OrchUserSession](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchUserSession.md)

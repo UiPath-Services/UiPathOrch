@@ -211,10 +211,10 @@ This cmdlet performs two operations: (1) disables the personal workspace for the
 
 ## RELATED LINKS
 
-Get-OrchPersonalWorkspace
+[Get-OrchPersonalWorkspace](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchPersonalWorkspace.md)
 
-Enable-OrchPersonalWorkspace
+[Enable-OrchPersonalWorkspace](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Enable-OrchPersonalWorkspace.md)
 
-Disable-OrchPersonalWorkspace
+[Disable-OrchPersonalWorkspace](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Disable-OrchPersonalWorkspace.md)
 
-Get-OrchFolderUsage
+[Get-OrchFolderUsage](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchFolderUsage.md)

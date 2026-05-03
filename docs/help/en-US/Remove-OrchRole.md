@@ -181,8 +181,8 @@ Static (built-in) roles cannot be removed and are automatically excluded from wi
 
 ## RELATED LINKS
 
-Get-OrchRole
+[Get-OrchRole](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchRole.md)
 
-Set-OrchRole
+[Set-OrchRole](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-OrchRole.md)
 
-Copy-OrchRole
+[Copy-OrchRole](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchRole.md)

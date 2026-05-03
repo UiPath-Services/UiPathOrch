@@ -259,6 +259,6 @@ When using -Recurse, the relative folder hierarchy from the source is replicated
 
 ## RELATED LINKS
 
-Get-OrchActionCatalog
+[Get-OrchActionCatalog](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchActionCatalog.md)
 
-Remove-OrchActionCatalog
+[Remove-OrchActionCatalog](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchActionCatalog.md)

@@ -310,8 +310,8 @@ An error is raised if neither -Name nor -Id is specified.
 
 ## RELATED LINKS
 
-Reset-OrchProcessVersion
+[Reset-OrchProcessVersion](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Reset-OrchProcessVersion.md)
 
-Update-OrchProcess
+[Update-OrchProcess](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-OrchProcess.md)
 
-Get-OrchProcess
+[Get-OrchProcess](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchProcess.md)

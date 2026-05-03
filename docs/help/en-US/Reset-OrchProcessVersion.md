@@ -241,8 +241,8 @@ The process must have at least two versions available for rollback. If only one 
 
 ## RELATED LINKS
 
-Update-OrchProcessVersion
+[Update-OrchProcessVersion](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-OrchProcessVersion.md)
 
-Get-OrchProcess
+[Get-OrchProcess](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchProcess.md)
 
-Update-OrchProcess
+[Update-OrchProcess](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-OrchProcess.md)

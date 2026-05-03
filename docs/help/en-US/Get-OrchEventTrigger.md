@@ -195,12 +195,12 @@ Required permissions: EventTriggers.View
 
 ## RELATED LINKS
 
-Remove-OrchEventTrigger
+[Remove-OrchEventTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchEventTrigger.md)
 
-Enable-OrchEventTrigger
+[Enable-OrchEventTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Enable-OrchEventTrigger.md)
 
-Disable-OrchEventTrigger
+[Disable-OrchEventTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Disable-OrchEventTrigger.md)
 
-Get-OrchTrigger
+[Get-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTrigger.md)
 
-Get-OrchApiTrigger
+[Get-OrchApiTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchApiTrigger.md)

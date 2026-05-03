@@ -224,8 +224,8 @@ If a calendar with the same name already exists on the destination drive, an err
 
 ## RELATED LINKS
 
-Get-OrchCalendar
+[Get-OrchCalendar](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchCalendar.md)
 
-Add-OrchCalendarDate
+[Add-OrchCalendarDate](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchCalendarDate.md)
 
-Remove-OrchCalendar
+[Remove-OrchCalendar](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchCalendar.md)

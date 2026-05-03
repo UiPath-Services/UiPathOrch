@@ -200,10 +200,10 @@ The -ExportCsv parameter generates a CSV file that can be used as input for New-
 
 ## RELATED LINKS
 
-New-PmGroup
+[New-PmGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-PmGroup.md)
 
-Copy-PmGroup
+[Copy-PmGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-PmGroup.md)
 
-Remove-PmGroup
+[Remove-PmGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmGroup.md)
 
-Get-PmGroupMember
+[Get-PmGroupMember](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmGroupMember.md)

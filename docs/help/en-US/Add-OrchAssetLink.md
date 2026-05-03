@@ -216,8 +216,8 @@ If the asset is already linked to the specified folder, the operation succeeds w
 
 ## RELATED LINKS
 
-Get-OrchAssetLink
+[Get-OrchAssetLink](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchAssetLink.md)
 
-Get-OrchAsset
+[Get-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchAsset.md)
 
-Copy-OrchAsset
+[Copy-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchAsset.md)

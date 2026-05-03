@@ -449,8 +449,8 @@ If a robot account with the specified name already exists, its group memberships
 
 ## RELATED LINKS
 
-Get-PmRobotAccount
+[Get-PmRobotAccount](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmRobotAccount.md)
 
-Copy-PmRobotAccount
+[Copy-PmRobotAccount](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-PmRobotAccount.md)
 
-Remove-PmRobotAccount
+[Remove-PmRobotAccount](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmRobotAccount.md)

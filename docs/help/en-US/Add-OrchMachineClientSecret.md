@@ -184,8 +184,8 @@ The generated ClientSecret is only returned once at creation time. Make sure to 
 
 ## RELATED LINKS
 
-Get-OrchMachineClientSecretId
+[Get-OrchMachineClientSecretId](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchMachineClientSecretId.md)
 
-Remove-OrchMachineClientSecret
+[Remove-OrchMachineClientSecret](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchMachineClientSecret.md)
 
-Get-OrchMachine
+[Get-OrchMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchMachine.md)

@@ -267,8 +267,8 @@ The cmdlet updates the user by replacing the entire role list. It retrieves the 
 
 ## RELATED LINKS
 
-Get-OrchUser
+[Get-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchUser.md)
 
-Add-OrchRoleToFolderUser
+[Add-OrchRoleToFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchRoleToFolderUser.md)
 
-Remove-OrchRoleFromFolderUser
+[Remove-OrchRoleFromFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchRoleFromFolderUser.md)

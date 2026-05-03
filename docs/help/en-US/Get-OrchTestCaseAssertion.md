@@ -243,10 +243,10 @@ When -ScreenshotPath is specified, only assertions with HasScreenshot set to tru
 
 ## RELATED LINKS
 
-Get-OrchTestCaseExecution
+[Get-OrchTestCaseExecution](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestCaseExecution.md)
 
-Get-OrchTestSetExecution
+[Get-OrchTestSetExecution](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestSetExecution.md)
 
-Get-OrchTestCase
+[Get-OrchTestCase](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestCase.md)
 
-Get-OrchTestSet
+[Get-OrchTestSet](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestSet.md)

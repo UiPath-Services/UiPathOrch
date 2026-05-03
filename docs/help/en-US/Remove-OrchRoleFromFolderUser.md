@@ -310,10 +310,10 @@ The cmdlet works by reassigning the user with the remaining roles (existing role
 
 ## RELATED LINKS
 
-Get-OrchFolderUser
+[Get-OrchFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchFolderUser.md)
 
-Add-OrchRoleToFolderUser
+[Add-OrchRoleToFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchRoleToFolderUser.md)
 
-Add-OrchFolderUser
+[Add-OrchFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchFolderUser.md)
 
-Remove-OrchFolderUser
+[Remove-OrchFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchFolderUser.md)

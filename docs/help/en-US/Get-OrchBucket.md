@@ -255,10 +255,10 @@ The -ExportCsv parameter resolves CredentialStoreId values to human-readable Cre
 
 ## RELATED LINKS
 
-New-OrchBucket
+[New-OrchBucket](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-OrchBucket.md)
 
-Remove-OrchBucket
+[Remove-OrchBucket](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchBucket.md)
 
-Copy-OrchBucket
+[Copy-OrchBucket](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchBucket.md)
 
-Get-OrchBucketItem
+[Get-OrchBucketItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchBucketItem.md)

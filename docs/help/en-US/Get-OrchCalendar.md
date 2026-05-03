@@ -250,10 +250,10 @@ Calendars are tenant-scoped entities. The -Path parameter targets drives (Orches
 
 ## RELATED LINKS
 
-Add-OrchCalendarDate
+[Add-OrchCalendarDate](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchCalendarDate.md)
 
-Remove-OrchCalendarDate
+[Remove-OrchCalendarDate](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchCalendarDate.md)
 
-Remove-OrchCalendar
+[Remove-OrchCalendar](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchCalendar.md)
 
-Copy-OrchCalendar
+[Copy-OrchCalendar](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchCalendar.md)

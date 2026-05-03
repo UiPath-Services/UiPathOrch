@@ -187,8 +187,8 @@ The deletion is performed single-threaded. For large batch deletions, the operat
 
 ## RELATED LINKS
 
-Get-PmRobotAccount
+[Get-PmRobotAccount](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmRobotAccount.md)
 
-Set-PmRobotAccount
+[Set-PmRobotAccount](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-PmRobotAccount.md)
 
-Copy-PmRobotAccount
+[Copy-PmRobotAccount](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-PmRobotAccount.md)

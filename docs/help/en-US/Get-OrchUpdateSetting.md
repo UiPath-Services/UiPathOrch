@@ -115,6 +115,6 @@ The cmdlet uses multi-threaded processing to retrieve update settings from multi
 
 ## RELATED LINKS
 
-Get-OrchSetting
+[Get-OrchSetting](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchSetting.md)
 
-Get-OrchActivitySetting
+[Get-OrchActivitySetting](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchActivitySetting.md)

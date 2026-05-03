@@ -431,6 +431,6 @@ When `-ExpandDetails` is specified, the cmdlet makes additional API calls for ea
 
 ## RELATED LINKS
 
-Get-OrchLog
+[Get-OrchLog](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLog.md)
 
-Get-OrchAlert
+[Get-OrchAlert](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchAlert.md)

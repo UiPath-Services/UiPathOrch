@@ -140,8 +140,8 @@ This cmdlet retrieves the access-allowed member list from the organization's sec
 
 ## RELATED LINKS
 
-Get-PmUser
+[Get-PmUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmUser.md)
 
-Get-PmGroup
+[Get-PmGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmGroup.md)
 
-Get-PmRobotAccount
+[Get-PmRobotAccount](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmRobotAccount.md)

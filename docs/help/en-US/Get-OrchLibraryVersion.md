@@ -185,10 +185,10 @@ Libraries are tenant-scoped resources (not folder-scoped). They are NuGet packag
 
 ## RELATED LINKS
 
-Get-OrchLibrary
+[Get-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLibrary.md)
 
-Export-OrchLibrary
+[Export-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Export-OrchLibrary.md)
 
-Remove-OrchLibrary
+[Remove-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchLibrary.md)
 
-Copy-OrchLibrary
+[Copy-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchLibrary.md)

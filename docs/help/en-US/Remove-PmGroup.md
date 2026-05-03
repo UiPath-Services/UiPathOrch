@@ -191,8 +191,8 @@ After a group is deleted, the group cache and directory search caches are cleare
 
 ## RELATED LINKS
 
-Get-PmGroup
+[Get-PmGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmGroup.md)
 
-New-PmGroup
+[New-PmGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-PmGroup.md)
 
-Copy-PmGroup
+[Copy-PmGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-PmGroup.md)

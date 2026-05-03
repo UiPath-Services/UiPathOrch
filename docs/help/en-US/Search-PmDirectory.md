@@ -138,6 +138,6 @@ The -Name parameter accepts a single search string (not an array). The search be
 
 ## RELATED LINKS
 
-Resolve-PmDirectoryNameBulk
+[Resolve-PmDirectoryNameBulk](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Resolve-PmDirectoryNameBulk.md)
 
-Get-PmUser
+[Get-PmUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmUser.md)

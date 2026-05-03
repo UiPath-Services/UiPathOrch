@@ -156,6 +156,6 @@ This cmdlet queries each folder sequentially (single-threaded) to ensure stable 
 
 ## RELATED LINKS
 
-Remove-OrchPersonalWorkspace
+[Remove-OrchPersonalWorkspace](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchPersonalWorkspace.md)
 
-Get-OrchPersonalWorkspace
+[Get-OrchPersonalWorkspace](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchPersonalWorkspace.md)

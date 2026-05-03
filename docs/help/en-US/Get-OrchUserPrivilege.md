@@ -152,6 +152,6 @@ Privilege retrieval is performed in parallel using a thread pool for improved pe
 
 ## RELATED LINKS
 
-Get-OrchUser
+[Get-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchUser.md)
 
-Get-OrchRole
+[Get-OrchRole](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchRole.md)

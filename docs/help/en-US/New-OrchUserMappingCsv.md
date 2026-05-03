@@ -180,8 +180,8 @@ The cmdlet shows progress as it enumerates PmGroup members, tenant users, and fo
 
 ## RELATED LINKS
 
-Test-OrchUserMappingCsv
+[Test-OrchUserMappingCsv](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Test-OrchUserMappingCsv.md)
 
-Search-OrchDirectory
+[Search-OrchDirectory](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Search-OrchDirectory.md)
 
-Copy-OrchAsset
+[Copy-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchAsset.md)

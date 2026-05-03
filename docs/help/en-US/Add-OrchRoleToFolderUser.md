@@ -310,10 +310,10 @@ Roles that are already assigned to a user are automatically skipped. Only roles 
 
 ## RELATED LINKS
 
-Get-OrchFolderUser
+[Get-OrchFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchFolderUser.md)
 
-Remove-OrchRoleFromFolderUser
+[Remove-OrchRoleFromFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchRoleFromFolderUser.md)
 
-Add-OrchFolderUser
+[Add-OrchFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchFolderUser.md)
 
-Remove-OrchFolderUser
+[Remove-OrchFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchFolderUser.md)

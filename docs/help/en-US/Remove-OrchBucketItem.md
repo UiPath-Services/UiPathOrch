@@ -282,10 +282,10 @@ If a file cannot be deleted (e.g., due to permissions or a storage provider erro
 
 ## RELATED LINKS
 
-Get-OrchBucketItem
+[Get-OrchBucketItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchBucketItem.md)
 
-Export-OrchBucketItem
+[Export-OrchBucketItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Export-OrchBucketItem.md)
 
-Import-OrchBucketItem
+[Import-OrchBucketItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Import-OrchBucketItem.md)
 
-Get-OrchBucket
+[Get-OrchBucket](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchBucket.md)

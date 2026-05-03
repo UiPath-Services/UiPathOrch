@@ -189,8 +189,8 @@ Classic environments are a legacy concept. In modern folders, machine templates 
 
 ## RELATED LINKS
 
-Get-OrchClassicRobot
+[Get-OrchClassicRobot](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchClassicRobot.md)
 
-Get-OrchRobot
+[Get-OrchRobot](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchRobot.md)
 
-Get-OrchMachine
+[Get-OrchMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchMachine.md)

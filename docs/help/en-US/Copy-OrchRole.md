@@ -219,8 +219,8 @@ If the source and destination are the same drive, the operation is silently skip
 
 ## RELATED LINKS
 
-Get-OrchRole
+[Get-OrchRole](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchRole.md)
 
-Set-OrchRole
+[Set-OrchRole](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-OrchRole.md)
 
-Remove-OrchRole
+[Remove-OrchRole](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchRole.md)

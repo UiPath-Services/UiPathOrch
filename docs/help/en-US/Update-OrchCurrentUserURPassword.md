@@ -206,6 +206,6 @@ The SecureString values are converted to plain text internally for the API call.
 
 ## RELATED LINKS
 
-Get-OrchCurrentUser
+[Get-OrchCurrentUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchCurrentUser.md)
 
-Update-OrchUser
+[Update-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-OrchUser.md)

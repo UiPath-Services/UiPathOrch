@@ -396,8 +396,8 @@ A unique Identifier (GUID) is automatically generated for each new bucket. The -
 
 ## RELATED LINKS
 
-Get-OrchBucket
+[Get-OrchBucket](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchBucket.md)
 
-Remove-OrchBucket
+[Remove-OrchBucket](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchBucket.md)
 
-Copy-OrchBucket
+[Copy-OrchBucket](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchBucket.md)

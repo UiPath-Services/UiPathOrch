@@ -208,10 +208,10 @@ The -ExportCsv parameter generates a CSV file that can be used as input for New-
 
 ## RELATED LINKS
 
-New-PmUser
+[New-PmUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-PmUser.md)
 
-Update-PmUser
+[Update-PmUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-PmUser.md)
 
-Copy-PmUser
+[Copy-PmUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-PmUser.md)
 
-Remove-PmUser
+[Remove-PmUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmUser.md)

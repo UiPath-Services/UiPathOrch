@@ -357,10 +357,10 @@ The CSV exported by Get-PmUser can be directly piped to New-PmUser for bulk user
 
 ## RELATED LINKS
 
-Get-PmUser
+[Get-PmUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmUser.md)
 
-Update-PmUser
+[Update-PmUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-PmUser.md)
 
-Copy-PmUser
+[Copy-PmUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-PmUser.md)
 
-Remove-PmUser
+[Remove-PmUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmUser.md)

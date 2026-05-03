@@ -257,10 +257,10 @@ Server-side restart eligibility depends on the job's process type and the licens
 
 ## RELATED LINKS
 
-Get-OrchJob
+[Get-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchJob.md)
 
-Resume-OrchJob
+[Resume-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Resume-OrchJob.md)
 
-Stop-OrchJob
+[Stop-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Stop-OrchJob.md)
 
-Start-OrchJob
+[Start-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Start-OrchJob.md)

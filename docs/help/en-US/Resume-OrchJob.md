@@ -257,10 +257,10 @@ Only jobs in Suspended state can be resumed. Resumed (already-running-after-resu
 
 ## RELATED LINKS
 
-Get-OrchJob
+[Get-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchJob.md)
 
-Restart-OrchJob
+[Restart-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Restart-OrchJob.md)
 
-Stop-OrchJob
+[Stop-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Stop-OrchJob.md)
 
-Start-OrchJob
+[Start-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Start-OrchJob.md)

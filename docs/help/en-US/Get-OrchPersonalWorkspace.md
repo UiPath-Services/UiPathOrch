@@ -143,8 +143,8 @@ When multiple drives are specified, queries are executed in parallel using the t
 
 ## RELATED LINKS
 
-Enable-OrchPersonalWorkspace
+[Enable-OrchPersonalWorkspace](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Enable-OrchPersonalWorkspace.md)
 
-Disable-OrchPersonalWorkspace
+[Disable-OrchPersonalWorkspace](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Disable-OrchPersonalWorkspace.md)
 
-Remove-OrchPersonalWorkspace
+[Remove-OrchPersonalWorkspace](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchPersonalWorkspace.md)

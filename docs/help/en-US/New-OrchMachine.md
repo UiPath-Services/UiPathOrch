@@ -441,10 +441,10 @@ Machines with a Scope of "PersonalWorkspace" cannot be created with this cmdlet.
 
 ## RELATED LINKS
 
-Get-OrchMachine
+[Get-OrchMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchMachine.md)
 
-Update-OrchMachine
+[Update-OrchMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-OrchMachine.md)
 
-Remove-OrchMachine
+[Remove-OrchMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchMachine.md)
 
-Copy-OrchMachine
+[Copy-OrchMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchMachine.md)

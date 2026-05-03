@@ -217,10 +217,10 @@ DirectoryRobotUser members are resolved by matching the robot account name (case
 
 ## RELATED LINKS
 
-Get-PmGroup
+[Get-PmGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmGroup.md)
 
-New-PmGroup
+[New-PmGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-PmGroup.md)
 
-Remove-PmGroup
+[Remove-PmGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmGroup.md)
 
-Copy-PmUser
+[Copy-PmUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-PmUser.md)

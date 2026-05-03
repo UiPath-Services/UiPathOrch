@@ -247,8 +247,8 @@ Removing a test case definition does not delete the underlying package from the 
 
 ## RELATED LINKS
 
-Get-OrchTestCase
+[Get-OrchTestCase](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestCase.md)
 
-Get-OrchTestSet
+[Get-OrchTestSet](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestSet.md)
 
-Remove-OrchTestSet
+[Remove-OrchTestSet](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchTestSet.md)

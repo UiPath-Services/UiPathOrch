@@ -213,8 +213,8 @@ Machines are tenant-scoped entities. The -Path parameter specifies Orchestrator 
 
 ## RELATED LINKS
 
-Get-OrchMachineClientSecretId
+[Get-OrchMachineClientSecretId](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchMachineClientSecretId.md)
 
-Add-OrchMachineClientSecret
+[Add-OrchMachineClientSecret](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchMachineClientSecret.md)
 
-Get-OrchMachine
+[Get-OrchMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchMachine.md)

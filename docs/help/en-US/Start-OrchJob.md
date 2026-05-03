@@ -319,8 +319,8 @@ The cmdlet iterates through the target folders, matches processes by the specifi
 
 ## RELATED LINKS
 
-Get-OrchJob
+[Get-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchJob.md)
 
-Stop-OrchJob
+[Stop-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Stop-OrchJob.md)
 
-Open-OrchJob
+[Open-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Open-OrchJob.md)

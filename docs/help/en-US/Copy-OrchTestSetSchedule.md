@@ -259,6 +259,6 @@ When using -Recurse, the relative folder hierarchy from the source is replicated
 
 ## RELATED LINKS
 
-Get-OrchTestSetSchedule
+[Get-OrchTestSetSchedule](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestSetSchedule.md)
 
-Remove-OrchTestSetSchedule
+[Remove-OrchTestSetSchedule](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchTestSetSchedule.md)

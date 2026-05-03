@@ -196,10 +196,10 @@ This operation is irreversible. Once a calendar is removed, all its excluded dat
 
 ## RELATED LINKS
 
-Get-OrchCalendar
+[Get-OrchCalendar](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchCalendar.md)
 
-Remove-OrchCalendarDate
+[Remove-OrchCalendarDate](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchCalendarDate.md)
 
-Add-OrchCalendarDate
+[Add-OrchCalendarDate](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchCalendarDate.md)
 
-Copy-OrchCalendar
+[Copy-OrchCalendar](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchCalendar.md)

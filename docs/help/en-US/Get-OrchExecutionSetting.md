@@ -176,6 +176,6 @@ When no -Scope is specified, settings for both Global and Robot scopes are retur
 
 ## RELATED LINKS
 
-Get-OrchSetting
+[Get-OrchSetting](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchSetting.md)
 
-Get-OrchActivitySetting
+[Get-OrchActivitySetting](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchActivitySetting.md)

@@ -186,10 +186,10 @@ If a library with the same Id and version already exists in the target tenant fe
 
 ## RELATED LINKS
 
-Get-OrchLibrary
+[Get-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLibrary.md)
 
-Export-OrchLibrary
+[Export-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Export-OrchLibrary.md)
 
-Remove-OrchLibrary
+[Remove-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchLibrary.md)
 
-Copy-OrchLibrary
+[Copy-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchLibrary.md)

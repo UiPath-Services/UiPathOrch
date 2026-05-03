@@ -138,12 +138,12 @@ The cmdlet uses multi-threaded processing to retrieve settings from multiple dri
 
 ## RELATED LINKS
 
-Get-OrchActivitySetting
+[Get-OrchActivitySetting](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchActivitySetting.md)
 
-Get-OrchAuthenticationSetting
+[Get-OrchAuthenticationSetting](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchAuthenticationSetting.md)
 
-Get-OrchExecutionSetting
+[Get-OrchExecutionSetting](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchExecutionSetting.md)
 
-Get-OrchWebSetting
+[Get-OrchWebSetting](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchWebSetting.md)
 
-Get-OrchUpdateSetting
+[Get-OrchUpdateSetting](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchUpdateSetting.md)

@@ -182,8 +182,8 @@ This cmdlet sets MayHavePersonalWorkspace to False for the specified user. Unlik
 
 ## RELATED LINKS
 
-Enable-OrchPersonalWorkspace
+[Enable-OrchPersonalWorkspace](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Enable-OrchPersonalWorkspace.md)
 
-Get-OrchPersonalWorkspace
+[Get-OrchPersonalWorkspace](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchPersonalWorkspace.md)
 
-Remove-OrchPersonalWorkspace
+[Remove-OrchPersonalWorkspace](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchPersonalWorkspace.md)

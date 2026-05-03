@@ -244,10 +244,10 @@ The exported CSV can be used with Remove-PmAllocationFromPmLicensedGroup for bul
 
 ## RELATED LINKS
 
-Get-PmLicensedUser
+[Get-PmLicensedUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicensedUser.md)
 
-Remove-PmLicensedGroup
+[Remove-PmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmLicensedGroup.md)
 
-Add-PmLicenseToPmLicensedGroup
+[Add-PmLicenseToPmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmLicenseToPmLicensedGroup.md)
 
-Remove-PmAllocationFromPmLicensedGroup
+[Remove-PmAllocationFromPmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmAllocationFromPmLicensedGroup.md)

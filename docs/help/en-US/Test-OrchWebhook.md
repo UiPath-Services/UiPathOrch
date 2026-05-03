@@ -178,10 +178,10 @@ Pinging an Enabled webhook will fire a real HTTP delivery to the configured URL.
 
 ## RELATED LINKS
 
-Get-OrchWebhook
+[Get-OrchWebhook](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchWebhook.md)
 
-Get-OrchWebhookEventType
+[Get-OrchWebhookEventType](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchWebhookEventType.md)
 
-Enable-OrchWebhook
+[Enable-OrchWebhook](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Enable-OrchWebhook.md)
 
-Disable-OrchWebhook
+[Disable-OrchWebhook](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Disable-OrchWebhook.md)

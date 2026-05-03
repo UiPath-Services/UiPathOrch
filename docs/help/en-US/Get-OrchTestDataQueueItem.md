@@ -197,8 +197,8 @@ Pipe to Format-OrchTestDataQueueItem for a table view that groups by queue and f
 
 ## RELATED LINKS
 
-Get-OrchTestDataQueue
+[Get-OrchTestDataQueue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestDataQueue.md)
 
-Format-OrchTestDataQueueItem
+[Format-OrchTestDataQueueItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Format-OrchTestDataQueueItem.md)
 
-Reset-OrchTestDataQueueItem
+[Reset-OrchTestDataQueueItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Reset-OrchTestDataQueueItem.md)

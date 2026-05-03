@@ -180,6 +180,6 @@ The -EntityType parameter accepts exactly one of: User, Group, or Application.
 
 ## RELATED LINKS
 
-Search-PmDirectory
+[Search-PmDirectory](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Search-PmDirectory.md)
 
-Get-PmUser
+[Get-PmUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmUser.md)

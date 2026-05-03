@@ -187,6 +187,6 @@ The cmdlet uses multi-threaded folder processing for improved performance when q
 
 ## RELATED LINKS
 
-Remove-OrchActionCatalog
+[Remove-OrchActionCatalog](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchActionCatalog.md)
 
-Copy-OrchActionCatalog
+[Copy-OrchActionCatalog](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchActionCatalog.md)

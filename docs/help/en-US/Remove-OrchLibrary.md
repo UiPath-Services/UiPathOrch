@@ -209,12 +209,12 @@ This operation is irreversible. Use -WhatIf to preview which library versions wo
 
 ## RELATED LINKS
 
-Get-OrchLibrary
+[Get-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLibrary.md)
 
-Get-OrchLibraryVersion
+[Get-OrchLibraryVersion](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLibraryVersion.md)
 
-Import-OrchLibrary
+[Import-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Import-OrchLibrary.md)
 
-Export-OrchLibrary
+[Export-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Export-OrchLibrary.md)
 
-Copy-OrchLibrary
+[Copy-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchLibrary.md)

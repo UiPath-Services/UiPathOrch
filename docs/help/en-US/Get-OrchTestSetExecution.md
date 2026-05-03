@@ -371,8 +371,8 @@ When no filter parameters are specified, the cmdlet outputs cached results inste
 
 ## RELATED LINKS
 
-Start-OrchTestSet
+[Start-OrchTestSet](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Start-OrchTestSet.md)
 
-Stop-OrchTestSetExecution
+[Stop-OrchTestSetExecution](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Stop-OrchTestSetExecution.md)
 
-Get-OrchTestSet
+[Get-OrchTestSet](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestSet.md)

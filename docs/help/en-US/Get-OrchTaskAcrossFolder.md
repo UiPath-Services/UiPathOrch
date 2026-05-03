@@ -182,8 +182,8 @@ Because Path is the drive root rather than a folder path, downstream cmdlets tha
 
 ## RELATED LINKS
 
-Get-OrchTask
+[Get-OrchTask](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTask.md)
 
-Set-OrchTask
+[Set-OrchTask](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-OrchTask.md)
 
-Remove-OrchTask
+[Remove-OrchTask](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchTask.md)

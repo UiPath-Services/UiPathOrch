@@ -97,4 +97,4 @@ This cmdlet does not make any API calls. It returns the local file system path w
 
 ## RELATED LINKS
 
-Open-OrchLogLocation
+[Open-OrchLogLocation](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Open-OrchLogLocation.md)

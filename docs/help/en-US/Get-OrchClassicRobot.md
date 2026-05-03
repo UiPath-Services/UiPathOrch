@@ -233,8 +233,8 @@ For robots in modern folders, use Get-OrchRobot instead.
 
 ## RELATED LINKS
 
-Get-OrchRobot
+[Get-OrchRobot](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchRobot.md)
 
-Get-OrchClassicEnvironment
+[Get-OrchClassicEnvironment](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchClassicEnvironment.md)
 
-Get-OrchMachine
+[Get-OrchMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchMachine.md)

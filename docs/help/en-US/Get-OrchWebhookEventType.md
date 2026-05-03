@@ -132,6 +132,6 @@ The event-type catalog is tenant-scoped reference data and is cached per drive. 
 
 ## RELATED LINKS
 
-Get-OrchWebhook
+[Get-OrchWebhook](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchWebhook.md)
 
-Test-OrchWebhook
+[Test-OrchWebhook](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Test-OrchWebhook.md)

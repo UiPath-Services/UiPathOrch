@@ -214,8 +214,8 @@ Non-confidential applications are copied with their scopes and redirect URIs.
 
 ## RELATED LINKS
 
-Get-PmExternalApplication
+[Get-PmExternalApplication](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmExternalApplication.md)
 
-Remove-PmExternalApplication
+[Remove-PmExternalApplication](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmExternalApplication.md)
 
-Get-PmExternalApiResource
+[Get-PmExternalApiResource](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmExternalApiResource.md)

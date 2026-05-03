@@ -159,10 +159,10 @@ Because the Portal Licensing API returns the same data for every tenant that sha
 
 ## RELATED LINKS
 
-Get-PmLicenseInventory
+[Get-PmLicenseInventory](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicenseInventory.md)
 
-Get-PmLicenseContract
+[Get-PmLicenseContract](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicenseContract.md)
 
-Get-PmLicense
+[Get-PmLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicense.md)
 
-Get-OrchLicense
+[Get-OrchLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLicense.md)

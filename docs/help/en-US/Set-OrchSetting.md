@@ -217,5 +217,5 @@ Updates are batched per drive: regardless of how many settings flow through the 
 
 ## RELATED LINKS
 
-Get-OrchSetting
+[Get-OrchSetting](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchSetting.md)
 

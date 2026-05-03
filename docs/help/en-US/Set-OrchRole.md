@@ -371,8 +371,8 @@ If the -Type does not match the existing role's type, the update is skipped with
 
 ## RELATED LINKS
 
-Get-OrchRole
+[Get-OrchRole](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchRole.md)
 
-Remove-OrchRole
+[Remove-OrchRole](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchRole.md)
 
-Copy-OrchRole
+[Copy-OrchRole](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchRole.md)

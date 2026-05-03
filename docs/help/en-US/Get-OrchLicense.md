@@ -113,8 +113,8 @@ This cmdlet is tenant-scoped and returns license summary information including e
 
 ## RELATED LINKS
 
-Get-OrchLicenseNamedUser
+[Get-OrchLicenseNamedUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLicenseNamedUser.md)
 
-Get-OrchLicenseRuntime
+[Get-OrchLicenseRuntime](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLicenseRuntime.md)
 
-Get-OrchLicenseStats
+[Get-OrchLicenseStats](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLicenseStats.md)

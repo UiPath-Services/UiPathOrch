@@ -103,4 +103,4 @@ This cmdlet operates on the UiPathOrchTm provider PSDrive. Returns server metada
 
 ## RELATED LINKS
 
-Get-TmConfiguration
+[Get-TmConfiguration](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-TmConfiguration.md)

@@ -190,6 +190,6 @@ Removing a webhook is a permanent operation. Use -WhatIf to preview which webhoo
 
 ## RELATED LINKS
 
-Get-OrchWebhook
+[Get-OrchWebhook](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchWebhook.md)
 
-Copy-OrchWebhook
+[Copy-OrchWebhook](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchWebhook.md)

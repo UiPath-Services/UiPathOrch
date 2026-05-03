@@ -158,6 +158,6 @@ This cmdlet operates on the UiPathOrchTm provider PSDrive. Results are sorted al
 
 ## RELATED LINKS
 
-Get-TmTestSet
+[Get-TmTestSet](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-TmTestSet.md)
 
-Get-TmTestCase
+[Get-TmTestCase](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-TmTestCase.md)

@@ -212,8 +212,8 @@ Deleted tasks are typically marked IsDeleted=true on the server side rather than
 
 ## RELATED LINKS
 
-Get-OrchTask
+[Get-OrchTask](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTask.md)
 
-Get-OrchTaskAcrossFolder
+[Get-OrchTaskAcrossFolder](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTaskAcrossFolder.md)
 
-Set-OrchTask
+[Set-OrchTask](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-OrchTask.md)

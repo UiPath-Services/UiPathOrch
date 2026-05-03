@@ -134,8 +134,8 @@ This cmdlet operates on the UiPathOrchDu provider PSDrive. The returned roles ca
 
 ## RELATED LINKS
 
-Get-DuUser
+[Get-DuUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-DuUser.md)
 
-Add-DuUser
+[Add-DuUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-DuUser.md)
 
-Remove-DuRoleFromDuUser
+[Remove-DuRoleFromDuUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-DuRoleFromDuUser.md)

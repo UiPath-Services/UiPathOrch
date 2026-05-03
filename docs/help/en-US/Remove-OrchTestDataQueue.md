@@ -230,6 +230,6 @@ This cmdlet processes each matching item individually, so if one removal fails, 
 
 ## RELATED LINKS
 
-Get-OrchTestDataQueue
+[Get-OrchTestDataQueue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestDataQueue.md)
 
-Copy-OrchTestDataQueue
+[Copy-OrchTestDataQueue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchTestDataQueue.md)

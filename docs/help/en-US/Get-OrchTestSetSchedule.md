@@ -187,10 +187,10 @@ The cmdlet uses multi-threaded folder processing for improved performance when q
 
 ## RELATED LINKS
 
-Remove-OrchTestSetSchedule
+[Remove-OrchTestSetSchedule](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchTestSetSchedule.md)
 
-Copy-OrchTestSetSchedule
+[Copy-OrchTestSetSchedule](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchTestSetSchedule.md)
 
-Enable-OrchTestSetSchedule
+[Enable-OrchTestSetSchedule](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Enable-OrchTestSetSchedule.md)
 
-Disable-OrchTestSetSchedule
+[Disable-OrchTestSetSchedule](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Disable-OrchTestSetSchedule.md)

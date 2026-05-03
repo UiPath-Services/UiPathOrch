@@ -606,8 +606,8 @@ The -Name completer auto-generates unique queue names that avoid conflicts with 
 
 ## RELATED LINKS
 
-Get-OrchQueue
+[Get-OrchQueue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchQueue.md)
 
-Update-OrchQueue
+[Update-OrchQueue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-OrchQueue.md)
 
-Remove-OrchQueue
+[Remove-OrchQueue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchQueue.md)

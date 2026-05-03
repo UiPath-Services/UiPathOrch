@@ -193,8 +193,8 @@ The cmdlet uses multi-threaded folder processing for improved performance when q
 
 ## RELATED LINKS
 
-Enable-OrchFolderMachineAccountMapping
+[Enable-OrchFolderMachineAccountMapping](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Enable-OrchFolderMachineAccountMapping.md)
 
-Disable-OrchFolderMachineAccountMapping
+[Disable-OrchFolderMachineAccountMapping](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Disable-OrchFolderMachineAccountMapping.md)
 
-Get-OrchFolderMachine
+[Get-OrchFolderMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchFolderMachine.md)

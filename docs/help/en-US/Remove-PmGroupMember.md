@@ -267,10 +267,10 @@ The cmdlet supports Ctrl+C cancellation during the EndProcessing phase.
 
 ## RELATED LINKS
 
-Add-PmGroupMember
+[Add-PmGroupMember](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmGroupMember.md)
 
-Move-PmGroupMember
+[Move-PmGroupMember](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Move-PmGroupMember.md)
 
-Get-PmGroupMember
+[Get-PmGroupMember](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmGroupMember.md)
 
-Get-PmGroup
+[Get-PmGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmGroup.md)

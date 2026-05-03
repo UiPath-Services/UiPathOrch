@@ -234,8 +234,8 @@ Starting a test set creates a new test set execution. The execution runs asynchr
 
 ## RELATED LINKS
 
-Get-OrchTestSet
+[Get-OrchTestSet](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestSet.md)
 
-Get-OrchTestSetExecution
+[Get-OrchTestSetExecution](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestSetExecution.md)
 
-Stop-OrchTestSetExecution
+[Stop-OrchTestSetExecution](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Stop-OrchTestSetExecution.md)

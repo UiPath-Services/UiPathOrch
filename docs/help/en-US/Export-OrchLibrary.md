@@ -234,10 +234,10 @@ The destination directory must already exist; the cmdlet does not create it. Eac
 
 ## RELATED LINKS
 
-Get-OrchLibrary
+[Get-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLibrary.md)
 
-Get-OrchLibraryVersion
+[Get-OrchLibraryVersion](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchLibraryVersion.md)
 
-Import-OrchLibrary
+[Import-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Import-OrchLibrary.md)
 
-Copy-OrchLibrary
+[Copy-OrchLibrary](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchLibrary.md)

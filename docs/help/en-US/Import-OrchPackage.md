@@ -213,12 +213,12 @@ If a package with the same Id and version already exists in the target folder fe
 
 ## RELATED LINKS
 
-Export-OrchPackage
+[Export-OrchPackage](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Export-OrchPackage.md)
 
-Get-OrchPackage
+[Get-OrchPackage](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchPackage.md)
 
-Get-OrchPackageVersion
+[Get-OrchPackageVersion](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchPackageVersion.md)
 
-Remove-OrchPackage
+[Remove-OrchPackage](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchPackage.md)
 
-Copy-OrchPackage
+[Copy-OrchPackage](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchPackage.md)

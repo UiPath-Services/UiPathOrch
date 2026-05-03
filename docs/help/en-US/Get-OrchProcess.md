@@ -278,6 +278,6 @@ The -ExportCsv parameter automatically calls -ExpandDetails internally to popula
 
 ## RELATED LINKS
 
-Update-OrchProcess
+[Update-OrchProcess](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-OrchProcess.md)
 
-Remove-OrchProcess
+[Remove-OrchProcess](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchProcess.md)

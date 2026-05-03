@@ -175,4 +175,4 @@ This is a PowerShell function that wraps Get-OrchJob with the filters -ProcessTy
 
 ## RELATED LINKS
 
-Get-OrchJob
+[Get-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchJob.md)
