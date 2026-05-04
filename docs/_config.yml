@@ -1,0 +1,36 @@
+title: UiPathOrch
+description: PowerShell drives and cmdlets for UiPath Orchestrator
+url: https://uipath-services.github.io
+baseurl: /UiPathOrch
+
+remote_theme: just-the-docs/just-the-docs
+
+color_scheme: light
+search_enabled: true
+heading_anchors: true
+
+aux_links:
+  GitHub:
+    - https://github.com/UiPath-Services/UiPathOrch
+  PowerShell Gallery:
+    - https://www.powershellgallery.com/packages/UiPathOrch
+aux_links_new_tab: true
+
+nav_external_links:
+  - title: Report an issue
+    url: https://github.com/UiPath-Services/UiPathOrch/issues
+
+plugins:
+  - jekyll-remote-theme
+  - jekyll-seo-tag
+
+defaults:
+  - scope:
+      path: help/en-US
+    values:
+      parent: Cmdlet Reference
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor/
