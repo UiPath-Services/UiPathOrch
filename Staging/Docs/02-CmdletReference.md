@@ -1,60 +1,65 @@
-# UiPathOrch Module - Cmdlet Reference (256)
+# UiPathOrch Module - Cmdlet Reference
 
-1. [Utility & Configuration (10)](#1-utility--configuration-10-cmdlets)
-2. [User Management (19)](#2-user-management-19-cmdlets)
-3. [Role Management (7)](#3-role-management-7-cmdlets)
-4. [Folder Management (16)](#4-folder-management-16-cmdlets)
-5. [Package & Library Management (12)](#5-package--library-management-12-cmdlets)
-6. [Process Management (9)](#6-process-management-9-cmdlets)
-7. [Job Management (9)](#7-job-management-9-cmdlets)
-8. [Trigger Management (16)](#8-trigger-management-16-cmdlets)
-9. [Asset Management (10)](#9-asset-management-10-cmdlets)
-10. [Queue Management (10)](#10-queue-management-10-cmdlets)
-11. [Storage Bucket Management (8)](#11-storage-bucket-management-8-cmdlets)
-12. [Machine Management (9)](#12-machine-management-9-cmdlets)
-13. [Calendar & Webhook (10)](#13-calendar--webhook-10-cmdlets)
-14. [Action Catalog (3)](#14-action-catalog-3-cmdlets)
-15. [Testing (21)](#15-testing-21-cmdlets)
-16. [License Management (6)](#16-license-management-6-cmdlets)
-17. [Monitoring & Logs (5)](#17-monitoring--logs-5-cmdlets)
-18. [Settings (9)](#18-settings-9-cmdlets)
-19. [PM - Users (5)](#19-platform-management---users-5-cmdlets)
-20. [PM - Groups (8)](#20-platform-management---groups-8-cmdlets)
-21. [PM - Robot Accounts (4)](#21-platform-management---robot-accounts-4-cmdlets)
-22. [PM - Licenses (6)](#22-platform-management---licenses-6-cmdlets)
-23. [PM - External Apps & Other (8)](#23-platform-management---external-apps--other-8-cmdlets)
-24. [Document Understanding (7)](#24-document-understanding-7-cmdlets)
-25. [Test Manager (11)](#25-test-manager-11-cmdlets)
+1. [Utility and Configuration](#1-utility-and-configuration)
+2. [User Management](#2-user-management)
+3. [Role Management](#3-role-management)
+4. [Folder Management](#4-folder-management)
+5. [Package and Library Management](#5-package-and-library-management)
+6. [Process Management](#6-process-management)
+7. [Job Management](#7-job-management)
+8. [Trigger Management](#8-trigger-management)
+9. [Asset Management](#9-asset-management)
+10. [Queue Management](#10-queue-management)
+11. [Storage Bucket Management](#11-storage-bucket-management)
+12. [Machine Management](#12-machine-management)
+13. [Calendar and Webhook](#13-calendar-and-webhook)
+14. [Action Center](#14-action-center)
+15. [Testing](#15-testing)
+16. [License Management](#16-license-management)
+17. [Monitoring and Logs](#17-monitoring-and-logs)
+18. [Settings](#18-settings)
+19. [PM - Users](#19-platform-management-users)
+20. [PM - Groups](#20-platform-management-groups)
+21. [PM - Robot Accounts](#21-platform-management-robot-accounts)
+22. [PM - Licenses](#22-platform-management-licenses)
+23. [PM - External Apps & Other](#23-platform-management-external-apps-and-other)
+24. [Document Understanding](#24-document-understanding)
+25. [Test Manager](#25-test-manager)
 26. [Bulk Copy Shortcut](#bulk-copy-shortcut)
 
-This document provides a systematically categorized reference of all 256
-cmdlets in the UiPathOrch module. Use Get-Help <CmdletName> -Examples for
-detailed usage of each cmdlet.
+This document provides a systematically categorized reference of all
+cmdlets in the UiPathOrch module. Use Get-Help <CmdletName> -Examples
+for detailed usage of each cmdlet.
 
 API Prefixes:
-  Orch  = Orchestrator OData API (189 cmdlets)
-  Pm    = Platform Management / Identity Server API (32 cmdlets)
-  Du    = Document Understanding API (7 cmdlets)
-  Tm    = Test Manager API (11 cmdlets)
+  Orch  = Orchestrator OData API
+  Pm    = Platform Management / Identity Server API
+  Du    = Document Understanding API
+  Tm    = Test Manager API
 
-## 1. Utility & Configuration (10 cmdlets)
+<a id="1-utility-and-configuration"></a>
+## 1. Utility & Configuration
 
 Module setup, connection management, and troubleshooting.
 
 | Cmdlet | Description |
 |--------|-------------|
 | Get-OrchHelp | Show module documentation |
+| Import-OrchConfig | Import the configuration file and create PSDrives |
 | Get-OrchPSDrive | List connected drives and their scopes |
+| New-OrchPSDrive | Manually create a PSDrive |
 | Get-OrchConfigPath | Show configuration file path |
 | Edit-OrchConfig | Open configuration file in editor |
 | Clear-OrchCache | Clear cached data (force refresh) |
 | Set-OrchLocation | Set the current folder location |
 | Get-OrchCurrentUser | Get current authenticated user info |
+| Switch-OrchCurrentUser | Re-authenticate as a different user on a drive |
+| Invoke-OrchApi | Call an Orchestrator / Identity / Portal API endpoint directly |
 | Get-OrchRobot | Get robots (legacy, replaced by Machine) |
 | Get-OrchClassicEnvironment | Get classic environments (legacy) |
 | Get-OrchClassicRobot | Get classic robots (legacy) |
 
-## 2. User Management (19 cmdlets)
+## 2. User Management
 
 Tenant-level user accounts, authentication, sessions, and personal workspaces.
 
@@ -77,6 +82,7 @@ Tenant-level user accounts, authentication, sessions, and personal workspaces.
 | Get-OrchUserPrivilege | Get effective permissions of a user |
 | Get-OrchUserSession | Get active user sessions |
 | Get-OrchUnattendedSession | Get unattended robot sessions |
+| Clear-OrchInactiveSession | Bulk-delete Disconnected / Unresponsive unattended sessions |
 | Update-OrchCurrentUserURPassword | Change current user's UR password |
 
 ### Personal Workspaces
@@ -96,7 +102,7 @@ Tenant-level user accounts, authentication, sessions, and personal workspaces.
 | New-OrchUserMappingCsv | Generate user mapping CSV for migration |
 | Test-OrchUserMappingCsv | Validate a user mapping CSV |
 
-## 3. Role Management (7 cmdlets)
+## 3. Role Management
 
 Tenant-level roles and permission assignment.
 
@@ -110,7 +116,7 @@ Tenant-level roles and permission assignment.
 | Remove-OrchRoleFromFolderUser | Remove a role from a folder user assignment |
 | Remove-OrchRoleFromUser | Remove a tenant role from a user |
 
-## 4. Folder Management (16 cmdlets)
+## 4. Folder Management
 
 Folder structure, user assignments, and machine assignments.
 Folders are navigated using cd/dir (Set-Location/Get-ChildItem).
@@ -146,7 +152,8 @@ Folders are navigated using cd/dir (Set-Location/Get-ChildItem).
 | Disable-OrchFolderMachineInherit | Disable machine inheritance from parent |
 | Get-OrchFolderUsage | Get folder resource usage statistics |
 
-## 5. Package & Library Management (12 cmdlets)
+<a id="5-package-and-library-management"></a>
+## 5. Package & Library Management
 
 NuGet packages (automation projects) and libraries (shared components).
 
@@ -172,7 +179,7 @@ NuGet packages (automation projects) and libraries (shared components).
 | Export-OrchLibrary | Download a library as .nupkg file |
 | Remove-OrchLibrary | Remove a library |
 
-## 6. Process Management (9 cmdlets)
+## 6. Process Management
 
 Processes (package deployments to folders).
 
@@ -188,7 +195,7 @@ Processes (package deployments to folders).
 | Get-OrchProcessRequirement | Get process runtime requirements |
 | Remove-OrchProcess | Remove a process from a folder |
 
-## 7. Job Management (9 cmdlets)
+## 7. Job Management
 
 Job execution, monitoring, and execution media (video recordings).
 
@@ -199,6 +206,8 @@ Job execution, monitoring, and execution media (video recordings).
 | Get-OrchJob | List jobs (supports filtering) |
 | Start-OrchJob | Start a job |
 | Stop-OrchJob | Stop/kill a running job |
+| Restart-OrchJob | Restart a Faulted job |
+| Resume-OrchJob | Resume a Suspended job |
 | Open-OrchJob | Open a job in the browser |
 | Get-OrchJobStats | Get job execution statistics |
 
@@ -211,7 +220,7 @@ Job execution, monitoring, and execution media (video recordings).
 | Remove-OrchJobMedia | Remove execution media |
 | Get-OrchJobVideo | Get job video recording URL |
 
-## 8. Trigger Management (16 cmdlets)
+## 8. Trigger Management
 
 Time triggers, API triggers, and event triggers.
 
@@ -225,6 +234,7 @@ Time triggers, API triggers, and event triggers.
 | Update-OrchTrigger | Update trigger properties |
 | Enable-OrchTrigger | Enable a disabled trigger |
 | Disable-OrchTrigger | Disable a trigger |
+| Test-OrchTrigger | Validate a trigger's process schedule against the server |
 | Remove-OrchTrigger | Remove a trigger |
 
 ### API Triggers (HTTP-based)
@@ -246,7 +256,7 @@ Time triggers, API triggers, and event triggers.
 | Disable-OrchEventTrigger | Disable an event trigger |
 | Remove-OrchEventTrigger | Remove an event trigger |
 
-## 9. Asset Management (10 cmdlets)
+## 9. Asset Management
 
 Assets (key-value configuration), credential stores, and asset links.
 
@@ -257,8 +267,22 @@ Assets (key-value configuration), credential stores, and asset links.
 | Get-OrchAsset | List assets |
 | Copy-OrchAsset | Copy assets to another tenant/folder |
 | Set-OrchAsset | Update asset values |
-| Set-OrchCredentialAsset | Update credential asset values |
 | Remove-OrchAsset | Remove an asset |
+| Remove-OrchAssetUserValue | Remove per-robot (UserValue) entries from assets |
+
+### Credential Assets
+
+| Cmdlet | Description |
+|--------|-------------|
+| Get-OrchCredentialAsset | Get credential-type assets |
+| Set-OrchCredentialAsset | Create or update credential assets |
+
+### Secret Assets
+
+| Cmdlet | Description |
+|--------|-------------|
+| Get-OrchSecretAsset | Get secret-type assets |
+| Set-OrchSecretAsset | Create or update secret assets |
 
 ### Credential Stores
 
@@ -275,7 +299,7 @@ Assets (key-value configuration), credential stores, and asset links.
 | Get-OrchAssetLink | List asset links |
 | Add-OrchAssetLink | Create an asset link to share across folders |
 
-## 10. Queue Management (10 cmdlets)
+## 10. Queue Management
 
 Queues and queue items for work distribution.
 
@@ -297,9 +321,10 @@ Queues and queue items for work distribution.
 | Copy-OrchQueueItem | Copy queue items to another tenant/folder |
 | Import-OrchQueueItem | Bulk import queue items from CSV/JSON |
 | Redo-OrchQueueItem | Retry a failed queue item |
+| Format-OrchQueueItem | Format queue items as one table per queue, expanding SpecificContent |
 | Remove-OrchQueueItem | Remove a queue item |
 
-## 11. Storage Bucket Management (8 cmdlets)
+## 11. Storage Bucket Management
 
 Cloud/local storage buckets and their contents.
 
@@ -314,7 +339,7 @@ Cloud/local storage buckets and their contents.
 | Export-OrchBucketItem | Download a file from a storage bucket |
 | Remove-OrchBucketItem | Remove a file from a storage bucket |
 
-## 12. Machine Management (9 cmdlets)
+## 12. Machine Management
 
 Machine templates, sessions, and client secrets.
 
@@ -330,7 +355,8 @@ Machine templates, sessions, and client secrets.
 | Add-OrchMachineClientSecret | Add a client secret to a machine |
 | Remove-OrchMachineClientSecret | Remove a client secret from a machine |
 
-## 13. Calendar & Webhook (10 cmdlets)
+<a id="13-calendar-and-webhook"></a>
+## 13. Calendar & Webhook
 
 ### Calendars (for Trigger Scheduling)
 
@@ -350,11 +376,15 @@ Machine templates, sessions, and client secrets.
 | Copy-OrchWebhook | Copy webhooks to another tenant |
 | Enable-OrchWebhook | Enable a disabled webhook |
 | Disable-OrchWebhook | Disable a webhook |
+| Get-OrchWebhookEventType | List the event types webhooks can subscribe to |
+| Test-OrchWebhook | Send a Ping event to verify webhook connectivity |
 | Remove-OrchWebhook | Remove a webhook |
 
-## 14. Action Catalog (3 cmdlets)
+## 14. Action Center
 
-Action catalogs for long-running workflow actions.
+Long-running, human-in-the-loop workflows. Action catalogs define the form templates; tasks are the runtime instances awaiting human action.
+
+### Action Catalogs
 
 | Cmdlet | Description |
 |--------|-------------|
@@ -362,7 +392,16 @@ Action catalogs for long-running workflow actions.
 | Copy-OrchActionCatalog | Copy action catalogs |
 | Remove-OrchActionCatalog | Remove an action catalog |
 
-## 15. Testing (21 cmdlets)
+### Tasks
+
+| Cmdlet | Description |
+|--------|-------------|
+| Get-OrchTask | Get tasks from a folder |
+| Get-OrchTaskAcrossFolder | Get tasks tenant-wide via the cross-folder endpoint |
+| Set-OrchTask | Update task title, priority, note, or catalog association |
+| Remove-OrchTask | Delete tasks by Id |
+
+## 15. Testing
 
 Test automation management (Orchestrator-side).
 
@@ -403,11 +442,11 @@ Test automation management (Orchestrator-side).
 | Get-OrchTestDataQueue | List test data queues |
 | Copy-OrchTestDataQueue | Copy test data queues |
 | Get-OrchTestDataQueueItem | Get items in a test data queue |
-| Get-OrchTestDataQueueItemTable | Get test data queue items as a table |
+| Format-OrchTestDataQueueItem | Format test data queue items as one table per queue, expanding ContentJson |
 | Reset-OrchTestDataQueueItem | Reset consumed test data queue items |
 | Remove-OrchTestDataQueue | Remove a test data queue |
 
-## 16. License Management (6 cmdlets)
+## 16. License Management
 
 License allocation and usage statistics.
 
@@ -420,7 +459,8 @@ License allocation and usage statistics.
 | Disable-OrchLicenseRuntime | Disable a runtime license |
 | Get-OrchLicenseStats | Get license usage statistics |
 
-## 17. Monitoring & Logs (5 cmdlets)
+<a id="17-monitoring-and-logs"></a>
+## 17. Monitoring & Logs
 
 Logs, audit trails, and alerts.
 
@@ -432,13 +472,14 @@ Logs, audit trails, and alerts.
 | Get-OrchAuditLog | Get audit log entries (supports filtering) |
 | Get-OrchAlert | Get system alerts |
 
-## 18. Settings (9 cmdlets)
+## 18. Settings
 
 Tenant and system configuration settings.
 
 | Cmdlet | Description |
 |--------|-------------|
 | Get-OrchSetting | Get general tenant settings |
+| Set-OrchSetting | Update a general tenant setting value |
 | Get-OrchWebSetting | Get web application settings |
 | Get-OrchExecutionSetting | Get execution settings |
 | Get-OrchActivitySetting | Get activity restriction settings |
@@ -448,7 +489,8 @@ Tenant and system configuration settings.
 | Enable-OrchMaintenanceMode | Enable maintenance mode |
 | Disable-OrchMaintenanceMode | Disable maintenance mode |
 
-## 19. Platform Management - Users (5 cmdlets)
+<a id="19-platform-management-users"></a>
+## 19. Platform Management - Users
 
 Organization-level user management (Identity Server API).
 
@@ -460,7 +502,8 @@ Organization-level user management (Identity Server API).
 | Update-PmUser | Update user properties |
 | Remove-PmUser | Remove a user from the organization |
 
-## 20. Platform Management - Groups (8 cmdlets)
+<a id="20-platform-management-groups"></a>
+## 20. Platform Management - Groups
 
 Organization-level group management.
 
@@ -475,7 +518,8 @@ Organization-level group management.
 | Move-PmGroupMember | Move a member between groups |
 | Remove-PmGroupMember | Remove a member from a group |
 
-## 21. Platform Management - Robot Accounts (4 cmdlets)
+<a id="21-platform-management-robot-accounts"></a>
+## 21. Platform Management - Robot Accounts
 
 Organization-level robot account management.
 
@@ -486,12 +530,17 @@ Organization-level robot account management.
 | Set-PmRobotAccount | Update robot account properties |
 | Remove-PmRobotAccount | Remove a robot account |
 
-## 22. Platform Management - Licenses (6 cmdlets)
+<a id="22-platform-management-licenses"></a>
+## 22. Platform Management - Licenses
 
 Organization-level license group management.
 
 | Cmdlet | Description |
 |--------|-------------|
+| Get-PmLicense | List user license bundles assigned to the organization |
+| Get-PmLicenseAllocation | Get per-tenant license allocations (Robots & Services tab) |
+| Get-PmLicenseContract | Get the account-level license contract (subscription, products, ML keys) |
+| Get-PmLicenseInventory | Get the org-level license inventory dashboard summary |
 | Get-PmLicensedGroup | List licensed groups |
 | Get-PmLicensedUser | List licensed users |
 | Add-PmLicenseToPmLicensedGroup | Add a license to a licensed group |
@@ -499,7 +548,8 @@ Organization-level license group management.
 | Remove-PmAllocationFromPmLicensedGroup | Remove allocation from a licensed group |
 | Remove-PmLicensedGroup | Remove a licensed group |
 
-## 23. Platform Management - External Apps & Other (8 cmdlets)
+<a id="23-platform-management-external-apps-and-other"></a>
+## 23. Platform Management - External Apps & Other
 
 External applications, directory search, audit, and settings.
 
@@ -527,7 +577,7 @@ External applications, directory search, audit, and settings.
 | Get-PmAuthenticationSetting | Get authentication settings |
 | Get-PmAccessAllowedMember | Get access-allowed members |
 
-## 24. Document Understanding (7 cmdlets)
+## 24. Document Understanding
 
 Document Understanding project and user management (DU API).
 
@@ -541,7 +591,7 @@ Document Understanding project and user management (DU API).
 | Add-DuUser | Add a user to a DU project |
 | Remove-DuRoleFromDuUser | Remove a role from a DU user |
 
-## 25. Test Manager (11 cmdlets)
+## 25. Test Manager
 
 Test Manager project management (TM API, separate from Orchestrator testing).
 
@@ -573,4 +623,4 @@ For cross-organization migration with username mapping:
 See Get-Help Copy-Item for details on -WhatIf, -ExcludeEntities, and
 other parameters specific to UiPathOrch drives.
 
-Version: 1.0 | Last Updated: March 2026 | Total Cmdlets: 256
+Version: 1.0 | Last Updated: March 2026
