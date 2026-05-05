@@ -878,13 +878,22 @@ public partial class OrchAPISession : IDisposable
 
     public QueueDefinition? CreateQueue(Int64 folderId, QueueDefinition queue)
     {
-        // Confirmed that StaleRetention is not present in the web interface for ApiVersion = 17 
+        // Confirmed that StaleRetention is not present in the web interface for ApiVersion = 17
         if (ApiVersion < 19)
         {
             queue.StaleRetentionAction = null;
             queue.StaleRetentionPeriod = null;
             queue.StaleRetentionBucketId = null;
             queue.StaleRetentionBucketName = null;
+        }
+
+        // RetryAbandonedItems was added to QueueDefinitionDto in WebApi v18.0
+        // (per swagger v15.0-v17.0 vs v18.0-v20.0). MSI 25.10 reports ApiVersion 17.0
+        // and does not have the field; sending it triggers strict-deserialization failure
+        // with "command must not be null" / "queueDef must not be null" (HTTP 400).
+        if (ApiVersion < 18)
+        {
+            queue.RetryAbandonedItems = null;
         }
 
         // Verified on OC 22.10.1 (15.0) POST /odata/QueueDefinitions
@@ -915,12 +924,38 @@ public partial class OrchAPISession : IDisposable
 
     public void EditQueue(Int64 folderId, QueueDefinition queue)
     {
+        // Strip fields that are not in QueueDefinitionDto for the target ApiVersion;
+        // see CreateQueue for the rationale.
+        if (ApiVersion < 19)
+        {
+            queue.StaleRetentionAction = null;
+            queue.StaleRetentionPeriod = null;
+            queue.StaleRetentionBucketId = null;
+            queue.StaleRetentionBucketName = null;
+        }
+        if (ApiVersion < 18)
+        {
+            queue.RetryAbandonedItems = null;
+        }
+
         // Returns nothing
         HttpRequest(HttpMethod.Post, "/odata/QueueDefinitions/UiPath.Server.Configuration.OData.EditQueue", folderId, queue);
     }
 
     public void PutQueueDefinition(Int64 folderId, QueueDefinition queue)
     {
+        if (ApiVersion < 19)
+        {
+            queue.StaleRetentionAction = null;
+            queue.StaleRetentionPeriod = null;
+            queue.StaleRetentionBucketId = null;
+            queue.StaleRetentionBucketName = null;
+        }
+        if (ApiVersion < 18)
+        {
+            queue.RetryAbandonedItems = null;
+        }
+
         HttpRequest(HttpMethod.Put, $"/odata/QueueDefinitions({queue.Id!.Value})", folderId, queue);
     }
 
