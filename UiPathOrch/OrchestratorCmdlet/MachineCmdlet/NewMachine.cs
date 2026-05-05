@@ -82,6 +82,14 @@ public class NewMachineCommand : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumOrchDrives(Path);
         var processedRobotUsers = RobotUsers?.Split1stValueByUnescapedCommas();
+        // CSV-piped rows surface absent values as [""] (one empty string); normalise to null
+        // so we don't pointlessly hit /odata/Robots/.../FindAllAcrossFolders, which 404s on
+        // older OCs (e.g. ApiVersion 11 / OC 20.10) and is unnecessary when no users were
+        // requested.
+        if (processedRobotUsers is not null && processedRobotUsers.All(string.IsNullOrWhiteSpace))
+        {
+            processedRobotUsers = null;
+        }
 
         if (string.IsNullOrEmpty(Type)) { Type = "Template"; }
         if (string.IsNullOrEmpty(AutomationType)) { AutomationType = null; }

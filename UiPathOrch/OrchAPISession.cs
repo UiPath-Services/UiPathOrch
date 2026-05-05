@@ -1692,6 +1692,11 @@ public partial class OrchAPISession : IDisposable
 
     public IEnumerable<PackageEntryPoint> GetPackageEntryPoints(string? feedId, string packageId, string packageVersion)
     {
+        // Confirmed Not Found on 11.1 (OC 20.10); the action endpoint was added in v15.0.
+        // Mirror the GetPackageMainEntryPoint < 12 guard - callers degrade to "no entry
+        // point metadata available" instead of a hard failure.
+        if (ApiVersion < 12) return [];
+
         string endPoint = $"/odata/Processes/UiPath.Server.Configuration.OData.GetPackageEntryPoints(key='{HttpUtility.UrlEncode(packageId)}:{packageVersion}')";
         if (!string.IsNullOrEmpty(feedId))
         {
@@ -1892,18 +1897,22 @@ public partial class OrchAPISession : IDisposable
         return result?.value ?? [];
     }
 
-    public Release? PostRelease(Int64 folderId, Release release)
+    // Strip ReleaseDto fields that the target ApiVersion does not have. Sending unknown
+    // fields to /odata/Releases (or its CreateRelease action) triggers strict body
+    // deserialization and HTTP 400 ("release/command must not be null"). System.Text.Json
+    // is configured WhenWritingNull, so nulling a field excludes it from the JSON entirely.
+    //
+    // Empirical findings (OData $metadata + POST probe per OC build) drive these thresholds;
+    // ApiVersion alone is not a reliable schema indicator (22.10.1 reports v15 but its
+    // ReleaseDto already has RobotSize that the v15.0 swagger snapshot lacks).
+    private void StripReleaseFieldsForApiVersion(Release release)
     {
-        if (release.RetentionPeriod == 0) release.RetentionPeriod = null;
-        if (release.StaleRetentionPeriod == 0) release.StaleRetentionPeriod = null;
-
-        // Strip properties not supported by older API versions.
-        // EnvironmentVariables: added in v19.0
-        // HiddenForAttendedUser: added in v17.0
-        // RemoteControlAccess: added in v16.0
+        // Fields added in v19.0
         if (ApiVersion < 19)
         {
             release.EnvironmentVariables = null;
+            release.MinRequiredRobotVersion = null;
+            release.FolderKey = null;
             release.StaleRetentionPeriod = null;
             release.StaleRetentionAction = null;
             release.StaleRetentionBucketId = null;
@@ -1912,14 +1921,30 @@ public partial class OrchAPISession : IDisposable
                 release.ProcessSettings.AutopilotForRobots = null;
             }
         }
+        // Fields added in v17.0 (verified rejected by 22.10.1 / ApiVersion 15)
         if (ApiVersion < 17)
         {
             release.HiddenForAttendedUser = null;
+            release.EntryPointPath = null;
         }
+        // Fields added in v16.0 (verified rejected by 22.10.1 / ApiVersion 15).
+        // RobotSize: same v15-era split as the ProcessSchedule v16 fields - 22.10.1
+        // has it, 22.4.4 does not, both report ApiVersion 15. Bundled here under < 16.
         if (ApiVersion < 16)
         {
             release.RemoteControlAccess = null;
+            release.VideoRecordingSettings = null;
+            release.AutomationHubIdeaUrl = null;
+            release.RobotSize = null;
         }
+    }
+
+    public Release? PostRelease(Int64 folderId, Release release)
+    {
+        if (release.RetentionPeriod == 0) release.RetentionPeriod = null;
+        if (release.StaleRetentionPeriod == 0) release.StaleRetentionPeriod = null;
+
+        StripReleaseFieldsForApiVersion(release);
 
         // Verified on OC 22.10.1 (15.0) POST /odata/Releases
         // Verified on OC 23.4.0 (16.0) POST /odata/Releases
@@ -1971,6 +1996,7 @@ public partial class OrchAPISession : IDisposable
 
     public void PatchRelease(Int64 folderId, Release release)
     {
+        StripReleaseFieldsForApiVersion(release);
         HttpRequest(HttpMethod.Patch, $"/odata/Releases({release.Id!.Value})", folderId, release);
     }
 
@@ -2050,22 +2076,42 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<HttpBodyValue<Int64[]>>(HttpMethod.Get, $"/odata/ProcessSchedules/UiPath.Server.Configuration.OData.GetRobotIdsForSchedule(key={processScheduleId})", folderId)?.value;
     }
 
-    public ProcessSchedule? PostProcessSchedule(Int64 folderId, ProcessSchedule schedule)
+    // Strip ProcessScheduleDto fields per swagger v15-v20. Same WhenWritingNull rationale as
+    // StripReleaseFieldsForApiVersion. /odata/ProcessSchedules POST/PUT is strict and replies
+    // "model must not be null" (HTTP 400) when the body has unrecognised fields.
+    private void StripProcessScheduleFieldsForApiVersion(ProcessSchedule schedule)
     {
-        // Strip properties not supported by older API versions.
+        // Fields added in v19.0
         if (ApiVersion < 19)
         {
+            schedule.EntryPointPath = null;
+            // Tags is present in the swagger from v15 onward, but earlier OC builds rejected it
+            // when sent on a newly-created schedule; preserve the long-standing < 19 gating.
             schedule.Tags = null;
-            schedule.ConsecutiveJobFailuresThreshold = null;
-            schedule.JobFailuresGracePeriodInHours = null;
-            schedule.IsConnected = null;
-            schedule.RunAsMe = null;
-            schedule.AlertPendingExpression = null;
-            schedule.AlertRunningExpression = null;
         }
-        if (ApiVersion < 15)
+        // Fields added in v17.0 (verified rejected by 22.10.1 / ApiVersion 15)
+        if (ApiVersion < 17)
         {
             schedule.ActivateOnJobComplete = null;
+            schedule.ConsecutiveJobFailuresThreshold = null;
+            schedule.JobFailuresGracePeriodInHours = null;
+            schedule.CalendarKey = null;
+        }
+        // "v16" ProcessScheduleDto fields. Empirically the v15 / ApiVersion 15 era is
+        // not uniform: 22.4.4 lacks these fields while 22.10.1 has them. Both report
+        // ApiVersion 15, so the safer cut-off is < 16 — accept losing the ability to set
+        // them on 22.10.1 (still works, just stripped) in exchange for working on 22.4.4.
+        if (ApiVersion < 16)
+        {
+            schedule.AlertPendingExpression = null;
+            schedule.AlertRunningExpression = null;
+            schedule.RunAsMe = null;
+            schedule.IsConnected = null;
+        }
+
+        // ItemsActivationThreshold: original < 15 gating preserved.
+        if (ApiVersion < 15)
+        {
             schedule.ItemsActivationThreshold = null;
         }
         // ResumeOnSameContext: not accepted by v11
@@ -2073,6 +2119,11 @@ public partial class OrchAPISession : IDisposable
         {
             schedule.ResumeOnSameContext = null;
         }
+    }
+
+    public ProcessSchedule? PostProcessSchedule(Int64 folderId, ProcessSchedule schedule)
+    {
+        StripProcessScheduleFieldsForApiVersion(schedule);
         // v13 requires StartProcessCronDetails and ExternalJobKey
         schedule.StartProcessCronDetails ??= $"{{\"advancedCron\":{JsonSerializer.Serialize(schedule.StartProcessCron ?? "")}}}";
         schedule.ExternalJobKey ??= "";
@@ -2081,6 +2132,7 @@ public partial class OrchAPISession : IDisposable
 
     public void PutProcessSchedule(Int64 folderId, ProcessSchedule schedule)
     {
+        StripProcessScheduleFieldsForApiVersion(schedule);
         // Returns nothing
         HttpRequest(HttpMethod.Put, $"/odata/ProcessSchedules({schedule.Id})", folderId, schedule);
     }
@@ -2682,6 +2734,16 @@ public partial class OrchAPISession : IDisposable
         {
             asset.Key = null;
             asset.Tags = null;
+        }
+        // SecretValue was added in WebApi v20.0; AllowDirectApiAccess appears on the
+        // current Cloud schema (ApiVersion 20) but is absent from older OC builds.
+        // Sending either to a pre-v20 server triggers strict body deserialization
+        // ("assetDto must not be null", HTTP 400). This breaks Cloud → on-prem Copy-Item
+        // because DeepCopy carries the source value through.
+        if (ApiVersion < 20)
+        {
+            asset.AllowDirectApiAccess = null;
+            asset.SecretValue = null;
         }
         return HttpRequest<Asset>(HttpMethod.Post, $"/odata/Assets", folderId, asset);
     }

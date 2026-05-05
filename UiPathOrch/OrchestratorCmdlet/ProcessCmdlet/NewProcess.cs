@@ -350,31 +350,38 @@ public class NewProcessCommand : OrchestratorPSCmdlet
 
                 #region Convert EntryPoint to EntryPointId
                 var feedId = drive.FolderFeedId.Get(folder);
-                if (!release.AssignIdFromName(
-                    EntryPoint,
-                    () => drive.GetPackageEntryPoints(feedId, targetPackage.Id!, version!.Version!),
-                    e => e.Path!,
-                    e => e.Id!,
-                    (s, v) => s.EntryPointId = v,
-                    this, target, "EntryPoint"))
+                // EntryPointId on Releases is a v15+ concept. On older OCs (ApiVersion < 12)
+                // /odata/Processes/.../GetPackageEntryPoints returns 404, so skip the
+                // EntryPoint → EntryPointId resolution. Releases POSTed without
+                // EntryPointId pick up the package's main entry point server-side.
+                if (drive.OrchAPISession.ApiVersion >= 12)
                 {
-                    continue;
+                    if (!release.AssignIdFromName(
+                        EntryPoint,
+                        () => drive.GetPackageEntryPoints(feedId, targetPackage.Id!, version!.Version!),
+                        e => e.Path!,
+                        e => e.Id!,
+                        (s, v) => s.EntryPointId = v,
+                        this, target, "EntryPoint"))
+                    {
+                        continue;
+                    }
+
+                    // If EntryPoint is not specified, retrieve the default MainEntryPoint
+                    if (release.EntryPointId is null)
+                    {
+                        try
+                        {
+                            var entryPoint = drive.OrchAPISession.GetPackageMainEntryPoint(feedId, targetPackage.Id!, version!.Version!);
+                            release.EntryPointId = entryPoint?.Id;
+                        }
+                        catch (Exception ex)
+                        {
+                            WriteError(new ErrorRecord(new OrchException(target, ex), "GetMainEntryPointError", ErrorCategory.InvalidOperation, folder));
+                        }
+                    }
                 }
                 #endregion
-
-                // If EntryPoint is not specified, retrieve the default MainEntryPoint
-                if (release.EntryPointId is null)
-                {
-                    try
-                    {
-                        var entryPoint = drive.OrchAPISession.GetPackageMainEntryPoint(feedId, targetPackage.Id!, version!.Version!);
-                        release.EntryPointId = entryPoint?.Id;
-                    }
-                    catch (Exception ex)
-                    {
-                        WriteError(new ErrorRecord(new OrchException(target, ex), "GetMainEntryPointError", ErrorCategory.InvalidOperation, folder));
-                    }
-                }
 
                 release.ProcessSettings = new();
                 release.ProcessSettings.AssignBoolIfNotNull(AlwaysRunning, (p, v) => p.AlwaysRunning = v);
