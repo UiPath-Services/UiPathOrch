@@ -1156,6 +1156,32 @@ Describe 'Bucket' {
         $b.Name | Should -Be $script:BucketName
     }
 
+    It 'Update-OrchBucket updates Description' {
+        Update-OrchBucket -Name $script:BucketName -Description 'Updated by Pester'
+        Clear-OrchCache
+        (Get-OrchBucket -Name $script:BucketName).Description | Should -Be 'Updated by Pester'
+    }
+
+    It 'Update-OrchBucket updates Password without throwing' {
+        # Password is write-only on the server (GET never returns it), so we cannot
+        # read it back to assert. The migration use case is exactly this: the secret
+        # is missing after Copy- and the user re-supplies it. Verify the cmdlet
+        # accepts the parameter and the API call succeeds.
+        { Update-OrchBucket -Name $script:BucketName -Password 'pester-secret' } | Should -Not -Throw
+    }
+
+    It 'Update-OrchBucket -WhatIf does not modify the bucket' {
+        $before = (Get-OrchBucket -Name $script:BucketName).Description
+        Update-OrchBucket -Name $script:BucketName -Description 'WhatIf test' -WhatIf
+        Clear-OrchCache
+        (Get-OrchBucket -Name $script:BucketName).Description | Should -Be $before
+    }
+
+    It 'Update-OrchBucket with no updatable parameters is a no-op' {
+        # Only -Name supplied → dirty=false → no API call should fire.
+        { Update-OrchBucket -Name $script:BucketName } | Should -Not -Throw
+    }
+
     It 'Get-OrchBucket -ExportCsv exports to CSV' {
         $csv = Join-Path $script:TempDir 'buckets.csv'
         Get-OrchBucket -Name $script:BucketName -ExportCsv $csv
@@ -1517,6 +1543,98 @@ Describe 'Webhook' {
             return
         }
         { Test-OrchWebhook -Path "${script:Drive}:\" -Name $whName -WhatIf } | Should -Not -Throw
+    }
+
+    # Update-OrchWebhook tests target whichever webhook the tenant happens to have
+    # (no New-OrchWebhook cmdlet exists). Each test snapshots the current value,
+    # mutates it, asserts, then restores — so re-running the suite is idempotent.
+    It 'Update-OrchWebhook -WhatIf does not modify the webhook' {
+        $wh = Get-OrchWebhook -Path "${script:Drive}:\" | Select-Object -First 1
+        if (-not $wh) {
+            Set-ItResult -Skipped -Because 'Tenant has no webhooks.'
+            return
+        }
+        $before = $wh.Description
+        Update-OrchWebhook -Path "${script:Drive}:\" -Name $wh.Name -Description 'WhatIf test' -WhatIf
+        Clear-OrchCache
+        (Get-OrchWebhook -Path "${script:Drive}:\" -Name $wh.Name).Description | Should -Be $before
+    }
+
+    It 'Update-OrchWebhook updates Description and restores' {
+        $wh = Get-OrchWebhook -Path "${script:Drive}:\" | Select-Object -First 1
+        if (-not $wh) {
+            Set-ItResult -Skipped -Because 'Tenant has no webhooks.'
+            return
+        }
+        $original = $wh.Description
+        $marker = "Pester-${script:Prefix}desc"
+        try {
+            Update-OrchWebhook -Path "${script:Drive}:\" -Name $wh.Name -Description $marker
+            Clear-OrchCache
+            (Get-OrchWebhook -Path "${script:Drive}:\" -Name $wh.Name).Description | Should -Be $marker
+        }
+        finally {
+            # Restore the original description even if the assertion fails.
+            Update-OrchWebhook -Path "${script:Drive}:\" -Name $wh.Name -Description $original -ErrorAction SilentlyContinue
+            Clear-OrchCache
+        }
+    }
+
+    It 'Update-OrchWebhook toggles Enabled and restores' {
+        $wh = Get-OrchWebhook -Path "${script:Drive}:\" | Select-Object -First 1
+        if (-not $wh) {
+            Set-ItResult -Skipped -Because 'Tenant has no webhooks.'
+            return
+        }
+        $original = [bool]$wh.Enabled
+        $toggled = -not $original
+        try {
+            Update-OrchWebhook -Path "${script:Drive}:\" -Name $wh.Name -Enabled ([string]$toggled).ToLower()
+            Clear-OrchCache
+            (Get-OrchWebhook -Path "${script:Drive}:\" -Name $wh.Name).Enabled | Should -Be $toggled
+        }
+        finally {
+            Update-OrchWebhook -Path "${script:Drive}:\" -Name $wh.Name -Enabled ([string]$original).ToLower() -ErrorAction SilentlyContinue
+            Clear-OrchCache
+        }
+    }
+
+    It 'Update-OrchWebhook with no updatable parameters is a no-op' {
+        $wh = Get-OrchWebhook -Path "${script:Drive}:\" | Select-Object -First 1
+        if (-not $wh) {
+            Set-ItResult -Skipped -Because 'Tenant has no webhooks.'
+            return
+        }
+        { Update-OrchWebhook -Path "${script:Drive}:\" -Name $wh.Name } | Should -Not -Throw
+    }
+}
+
+# ---------------------------------------------------------------------------
+# CredentialStore Update
+# ---------------------------------------------------------------------------
+Describe 'CredentialStore Update' {
+    # No New-OrchCredentialStore exists, and overwriting AdditionalConfiguration
+    # on the default "Orchestrator Database" store could break asset resolution
+    # tenant-wide. So these tests stay non-destructive: -WhatIf and no-op only.
+    It 'Update-OrchCredentialStore -WhatIf does not modify the store' {
+        $cs = Get-OrchCredentialStore -Path "${script:Drive}:\" | Select-Object -First 1
+        if (-not $cs) {
+            Set-ItResult -Skipped -Because 'Tenant has no credential stores.'
+            return
+        }
+        $before = $cs.HostName
+        Update-OrchCredentialStore -Path "${script:Drive}:\" -Name $cs.Name -HostName 'WhatIf-test' -WhatIf
+        Clear-OrchCache
+        (Get-OrchCredentialStore -Path "${script:Drive}:\" -Name $cs.Name).HostName | Should -Be $before
+    }
+
+    It 'Update-OrchCredentialStore with no updatable parameters is a no-op' {
+        $cs = Get-OrchCredentialStore -Path "${script:Drive}:\" | Select-Object -First 1
+        if (-not $cs) {
+            Set-ItResult -Skipped -Because 'Tenant has no credential stores.'
+            return
+        }
+        { Update-OrchCredentialStore -Path "${script:Drive}:\" -Name $cs.Name } | Should -Not -Throw
     }
 }
 

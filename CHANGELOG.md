@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **`Update-OrchWebhook`** — partial-update cmdlet for webhooks. Patches any
+  combination of `Description`, `Url`, `Secret`, `Enabled`, `AllowInsecureSsl`,
+  and `SubscribeToAllEvents` via PATCH `/odata/Webhooks({id})`. Closes the
+  post-migration gap where `Copy-OrchWebhook` cannot carry the `Secret` (the
+  API never returns it).
+- **`Update-OrchBucket`** — in-place update for storage buckets via PUT
+  `/odata/Buckets({id})`. Supports `NewName`, `Description`, `StorageProvider`,
+  `StorageContainer`, `StorageParameters`, `CredentialStore`, `Password`,
+  `Options`, `ExternalName`, `Tags`. Primary use case is re-supplying the
+  bucket `Password` (S3 secret access key, Azure storage key, etc.) after
+  migration; `Password` is write-only on the server and never returned by GET.
+- **`Update-OrchCredentialStore`** — in-place update for credential stores via
+  PUT `/odata/CredentialStores({id})`. Supports `NewName`, `HostName`, and
+  `AdditionalConfiguration`. The cmdlet fetches detailed store data, strips
+  the masked `AdditionalConfiguration` from the deep copy (mirroring the
+  `Update-OrchUser` UR_Password pattern) so that PUT only carries a fresh
+  value when the user explicitly supplies one.
+
 ## [1.0.1] - 2026-05-05
 
 Compatibility-focused patch. The module now connects to and migrates

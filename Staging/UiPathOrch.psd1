@@ -237,6 +237,7 @@ CmdletsToExport = @(
 
 'Get-OrchCredentialStore',
 'Copy-OrchCredentialStore',
+'Update-OrchCredentialStore',
 'Remove-OrchCredentialStore',
 
 'Get-OrchAssetLink',
@@ -305,6 +306,7 @@ CmdletsToExport = @(
 'Get-OrchBucket',
 'New-OrchBucket',
 'Copy-OrchBucket',
+'Update-OrchBucket',
 'Remove-OrchBucket',
 
 'Get-OrchBucketItem',
@@ -314,6 +316,7 @@ CmdletsToExport = @(
 
 'Get-OrchWebhook',
 'Copy-OrchWebhook',
+'Update-OrchWebhook',
 'Remove-OrchWebhook',
 'Enable-OrchWebhook',
 'Disable-OrchWebhook',

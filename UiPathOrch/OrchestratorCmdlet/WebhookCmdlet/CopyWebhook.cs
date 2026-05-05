@@ -65,6 +65,16 @@ public class CopyWebhookCommand : OrchestratorPSCmdlet
                         newWebhook.Id = null;
                         // newWebhook.Path = null; // Not needed since it has the JsonIgnore attribute
 
+                        // The server returns Secret either masked or as-is depending on version. Either
+                        // way, POSTing it to the destination would write a broken value (the masked
+                        // string becomes the literal secret). Drop it on copy and rely on the warning
+                        // below to nudge the operator to re-supply via Update-OrchWebhook.
+                        bool bSecretExists = !string.IsNullOrEmpty(newWebhook.Secret);
+                        if (bSecretExists)
+                        {
+                            newWebhook.Secret = null;
+                        }
+
                         // Older Orchestrator versions (< v16) do not have a Name field.
                         // Generate a default name from the URL when copying to v16+.
                         if (dstDrive.OrchAPISession.ApiVersion >= 16
@@ -80,6 +90,11 @@ public class CopyWebhookCommand : OrchestratorPSCmdlet
                             dstDrive.Webhooks.ClearCache();
                             createdWebhook.Path = dstDrive.NameColonSeparator;
                             //WriteObject(createdWebhook);
+
+                            if (bSecretExists)
+                            {
+                                _this.WriteWarning($"'{createdWebhook.GetPSPath()}': Please update the webhook Secret with Update-OrchWebhook cmdlet.");
+                            }
                         }
                     }
                     catch (Exception ex)

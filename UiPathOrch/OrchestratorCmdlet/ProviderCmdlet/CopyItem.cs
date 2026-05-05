@@ -2392,7 +2392,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                     if (bPasswordExists)
                     {
-                        _this.WriteWarning($"Please manually update the password for the storage bucket \"{System.IO.Path.Combine(newFolder.GetPSPath(), bucket.Name!)}\".");
+                        _this.WriteWarning($"'{System.IO.Path.Combine(newFolder.GetPSPath(), bucket.Name!)}': Please update the storage bucket Password with Update-OrchBucket cmdlet.");
                     }
                 }
                 catch (Exception ex)

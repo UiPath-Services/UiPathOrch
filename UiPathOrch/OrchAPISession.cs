@@ -1107,6 +1107,11 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<CredentialStore>(HttpMethod.Post, "/odata/CredentialStores", null, credentialStore);
     }
 
+    public void PutCredentialStore(CredentialStore credentialStore)
+    {
+        HttpRequest(HttpMethod.Put, $"/odata/CredentialStores({credentialStore.Id!.Value})", null, credentialStore);
+    }
+
     public void RemoveCredentialStore(Int64 credentialStoreId)
     {
         HttpRequest(HttpMethod.Delete, $"/odata/CredentialStores({credentialStoreId})?forceDelete=true");
@@ -2178,6 +2183,15 @@ public partial class OrchAPISession : IDisposable
             bucket.Tags = null;
         }
         return HttpRequest<Bucket>(HttpMethod.Post, "/odata/Buckets", folderId, bucket);
+    }
+
+    public void PutBucket(Int64 folderId, Bucket bucket)
+    {
+        if (ApiVersion < 15)
+        {
+            bucket.Tags = null;
+        }
+        HttpRequest(HttpMethod.Put, $"/odata/Buckets({bucket.Id!.Value})", folderId, bucket);
     }
 
     public void DeleteBucket(Int64 folderId, Int64 bucketId)

@@ -109,7 +109,7 @@ public class CopyCredentialStoreCommand : OrchestratorPSCmdlet
                             if (!string.IsNullOrEmpty(strKeys))
                             {
                                 createdStore.Path = dstDrive.NameColonSeparator;
-                                _this.WriteWarning($"'{createdStore.GetPSPath()}': Please update '{strKeys}' manually.");
+                                _this.WriteWarning($"'{createdStore.GetPSPath()}': Please update '{strKeys}' in AdditionalConfiguration with Update-OrchCredentialStore cmdlet.");
                             }
                         }
                     }
