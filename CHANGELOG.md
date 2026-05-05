@@ -6,6 +6,86 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-05-05
+
+Compatibility-focused patch. The module now connects to and migrates
+data into older Orchestrator builds the previous release silently broke
+on. Verified end-to-end (Reset / Import-Fixture / Pester suite / Cloud →
+on-prem `Copy-Item -Recurse`) against six servers spanning ApiVersion
+11 → 20: OC 20.10.16, 21.10.4, 22.4.4, 22.10.1, 23.4.0, MSI 25.10.2, and
+Automation Cloud.
+
+### Fixed
+
+- **Queue API — `RetryAbandonedItems` strict-deserialization regression.**
+  WebApi v18.0 added `RetryAbandonedItems` to `QueueDefinitionDto`.
+  Sending the field to a pre-v18 server (incl. MSI 25.10 reporting
+  ApiVersion 17) caused the body to fail strict deserialization with
+  `"command must not be null"` / `"queueDef must not be null"` (HTTP
+  400). `New-OrchQueue`, `Set-OrchQueue`, and `Copy-Item` for queues
+  now strip the field on `ApiVersion < 18`.
+- **Release / ProcessSchedule / Asset DTO field gating.** The same
+  strict-deserialization pattern broke `New-OrchProcess`, `Set-OrchProcess`,
+  `New-OrchTrigger`, `Set-OrchTrigger`, `Set-OrchAsset`, and the
+  matching `Copy-Item` paths on older servers. Per-field thresholds
+  added based on each server's `$metadata`:
+  - `ReleaseDto`: `EnvironmentVariables` / `MinRequiredRobotVersion` /
+    `FolderKey` (< 19); `HiddenForAttendedUser` / `EntryPointPath` (< 17);
+    `RemoteControlAccess` / `VideoRecordingSettings` /
+    `AutomationHubIdeaUrl` / `RobotSize` (< 16). `Patch` and `Put` now
+    share a strip helper with `Post`.
+  - `ProcessScheduleDto`: `EntryPointPath` (< 19);
+    `ActivateOnJobComplete` / `ConsecutiveJobFailuresThreshold` /
+    `JobFailuresGracePeriodInHours` / `CalendarKey` (< 17);
+    `AlertPendingExpression` / `AlertRunningExpression` / `RunAsMe` /
+    `IsConnected` (< 16).
+  - `AssetDto`: `AllowDirectApiAccess` and `SecretValue` (< 20). The
+    former carries through `Copy-Item` from Cloud and was the headline
+    blocker for Cloud → MSI 23.4 / 25.10 asset migration.
+- **`New-OrchProcess` returned `Not Found` on ApiVersion < 12.** The
+  `GetPackageEntryPoints` action endpoint is v15+ and 404s on older
+  OCs (e.g. OC 20.10). The cmdlet now skips the EntryPoint →
+  EntryPointId resolution on `ApiVersion < 12`, and the API helper
+  returns an empty enumerable for the same threshold — mirroring the
+  existing `GetPackageMainEntryPoint < 12` guard.
+- **`New-OrchMachine` 404 from an unnecessary lookup on older OCs.**
+  CSV-piped rows surface absent values as `[""]`; the cmdlet was
+  hitting `/odata/Robots/.../FindAllAcrossFolders` for nothing, and
+  the endpoint 404s on older OCs. Empty / whitespace `RobotUsers`
+  values are now normalised to `null` so the call is skipped.
+
+### Added
+
+- New self-contained test infrastructure under `Tests/`:
+  - `Reset-Tenant.ps1` — wipes deletable entities preserving the current
+    user. Deletes queues before processes so SLA-linked queues don't
+    block process removal.
+  - `Import-Fixture.ps1` — loads the curated `TestData/Fixture/`
+    (CSVs, bucket items, packaged nupkg) into a clean tenant. Remaps
+    the source drive prefix and clears the cache after package upload.
+  - `CleanTenant.Tests.ps1` — Pester 5 suite (29 cases incl. read,
+    update, CSV round-trip, the `Export-OrchBucketItem -Recurse` repro,
+    and a Classic-folder smoke test). ~15 s end-to-end once the
+    fixture is loaded.
+  - Target drive comes from `$env:UIPATHORCH_TEST_DRIVE` (default `local`).
+
+### Documentation
+
+- Just-the-Docs site scaffolded under `docs/`. The cmdlet reference and
+  how-to pages drop drifty cmdlet counts and wire `Get-Help -Online`
+  through to the new Pages site (`docs/help/<locale>/<cmdlet>.md`).
+- PS1 functions (`Functions/*.ps1`) reference the MAML help XML via
+  `.EXTERNALHELP` so `Get-Help` returns full content for them too.
+
+### Notes
+
+22.10.1 users lose the ability to **set** the v16-era ProcessSchedule
+fields (`RunAsMe` / `IsConnected` / `AlertPendingExpression` /
+`AlertRunningExpression`) and `Release.RobotSize` via UiPathOrch. Both
+22.4.4 and 22.10.1 report `ApiVersion = 15` but expose different field
+sets, and the module cannot distinguish them without per-call metadata
+probing. Reading the existing values still works.
+
 ## [1.0.0] - 2026-05-03
 
 This release marks API maturity. Going forward, breaking changes
