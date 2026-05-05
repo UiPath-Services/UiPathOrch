@@ -1,0 +1,10 @@
+﻿Path,Name,Description,ValueType,Value,UserName,MachineName
+Orch1:\TestFixture_Base\Development,asset-env,,Text,development,,
+Orch1:\TestFixture_Base\Development,asset-port,,Integer,8080,,
+Orch1:\TestFixture_Base\Development,asset-trace,,Bool,False,,
+Orch1:\TestFixture_Base\Production,asset-debug,Test bool asset,Bool,True,,
+Orch1:\TestFixture_Base\Production,asset-host,Test text asset,Text,https://example.com,,
+Orch1:\TestFixture_Base\Production,asset-retries,Test integer asset,Integer,5,,
+Orch1:\TestFixture_Base\Production\SubA,asset-suba-text,,Text,sub-a-value,,
+Orch1:\TestFixture_Base\Production\SubB,asset-subb-int,,Integer,42,,
+Orch1:\TestFixture_Base\QA,asset-qa-flag,,Bool,True,,

@@ -1,0 +1,6 @@
+﻿Path,Name,Description,FeedType
+Orch1:\TestFixture_Base,Development,,Processes
+Orch1:\TestFixture_Base,Production,,Processes
+Orch1:\TestFixture_Base,QA,,Processes
+Orch1:\TestFixture_Base\Production,SubA,,Processes
+Orch1:\TestFixture_Base\Production,SubB,,Processes

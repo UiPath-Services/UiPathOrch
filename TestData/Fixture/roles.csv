@@ -1,0 +1,4 @@
+﻿Path,Name,Type,PermissionName,Scope,IsEditable,View,Edit,Create,Delete
+Orch1:\,TestFixture-ReadOnly,Tenant,Roles,Global,TRUE,TRUE,,,
+Orch1:\,TestFixture-ReadOnly,Tenant,Settings,Global,TRUE,TRUE,,,
+Orch1:\,TestFixture-ReadOnly,Tenant,Users,Global,TRUE,TRUE,,,

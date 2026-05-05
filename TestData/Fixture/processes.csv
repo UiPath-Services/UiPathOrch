@@ -1,0 +1,7 @@
+﻿Path,Name,Id,Version,Description,EntryPoint,InputArguments,SpecificPriorityValue,HiddenForAttendedUser,RemoteControlAccess,RetentionAction,RetentionPeriod,RetentionBucket,StaleRetentionAction,StaleRetentionPeriod,StaleRetentionBucket,ErrorRecordingEnabled,Quality,Frequency,Duration,AutoStartProcess,AlwaysRunning,A4R_Enabled,A4R_HealingEnabled,VideoRecordingType,QueueItemVideoRecordingType,MaxDurationSeconds,Tags
+Orch1:\TestFixture_Base\Development,proc-dev-1,BlankProcess19,1.0.3,Dev process 1,Main.xaml,,45,FALSE,None,Delete,30,,Delete,30,,FALSE,100,500,40,FALSE,FALSE,FALSE,FALSE,None,None,,
+Orch1:\TestFixture_Base\Development,proc-dev-2,BlankProcess19,1.0.3,Dev process 2,Main.xaml,,45,FALSE,None,Delete,30,,Delete,30,,FALSE,100,500,40,FALSE,FALSE,FALSE,FALSE,None,None,,
+Orch1:\TestFixture_Base\Production,proc-blank-1,BlankProcess19,1.0.3,Test process 1,Main.xaml,,45,FALSE,None,Delete,30,,Delete,30,,FALSE,100,500,40,FALSE,FALSE,FALSE,FALSE,None,None,,
+Orch1:\TestFixture_Base\Production,proc-blank-2,BlankProcess19,1.0.3,Test process 2,Main.xaml,,45,FALSE,None,Delete,30,,Delete,30,,FALSE,100,500,40,FALSE,FALSE,FALSE,FALSE,None,None,,
+Orch1:\TestFixture_Base\Production\SubA,proc-suba,BlankProcess19,1.0.3,Blank Process,Main.xaml,,45,FALSE,None,Delete,30,,Delete,30,,FALSE,100,500,40,FALSE,FALSE,FALSE,FALSE,None,None,,
+Orch1:\TestFixture_Base\QA,proc-qa,BlankProcess19,1.0.3,Blank Process,Main.xaml,,45,FALSE,None,Delete,30,,Delete,30,,FALSE,100,500,40,FALSE,FALSE,FALSE,FALSE,None,None,,

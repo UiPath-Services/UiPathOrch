@@ -1,0 +1,3 @@
+﻿Path,Name,Description,StorageProvider,StorageContainer,StorageParameters,CredentialStore,Password,ExternalName,Options,Tags
+Orch1:\TestFixture_Base\Development,bucket-dev,Dev bucket,,,,,,,None,
+Orch1:\TestFixture_Base\Production,bucket-files,Test bucket,,,,,,,None,

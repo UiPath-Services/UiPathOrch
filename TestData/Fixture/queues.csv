@@ -1,0 +1,8 @@
+﻿Path,Name,Description,AcceptAutomaticallyRetry,RetryAbandonedItems,MaxNumberOfRetries,EnforceUniqueReference,Encrypted,Release,SlaInMinutes,RiskSlaInMinutes,SpecificDataJsonSchema,OutputDataJsonSchema,AnalyticsDataJsonSchema,RetentionAction,RetentionPeriod,RetentionBucket,StaleRetentionAction,StaleRetentionPeriod,StaleRetentionBucket,Tags
+Orch1:\TestFixture_Base\Development,queue-dev,Dev queue,FALSE,FALSE,1,FALSE,FALSE,,0,0,,,,Delete,30,,Delete,180,,
+Orch1:\TestFixture_Base\Development,queue-staging,Staging queue,FALSE,FALSE,0,FALSE,FALSE,,0,0,,,,Delete,30,,Delete,180,,
+Orch1:\TestFixture_Base\Production,queue-emails,Test queue (emails),FALSE,FALSE,0,FALSE,FALSE,,0,0,,,,Delete,30,,Delete,180,,
+Orch1:\TestFixture_Base\Production,queue-orders,"Test queue (orders, SLA)",FALSE,FALSE,3,FALSE,FALSE,proc-blank-1,60,30,,,,Delete,30,,Delete,180,,
+Orch1:\TestFixture_Base\Production\SubA,queue-suba,,FALSE,FALSE,0,FALSE,FALSE,,0,0,,,,Delete,30,,Delete,180,,
+Orch1:\TestFixture_Base\Production\SubB,queue-subb,,FALSE,FALSE,0,FALSE,FALSE,,0,0,,,,Delete,30,,Delete,180,,
+Orch1:\TestFixture_Base\QA,queue-qa,QA queue,FALSE,FALSE,0,FALSE,FALSE,,0,0,,,,Delete,30,,Delete,180,,

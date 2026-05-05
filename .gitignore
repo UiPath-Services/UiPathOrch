@@ -200,6 +200,9 @@ PublishScripts/
 **/[Pp]ackages/*
 # except build/, which is used as an MSBuild target.
 !**/[Pp]ackages/build/
+# Test fixture seed packages must travel with the repo (Import-Fixture.ps1 uploads them).
+!TestData/Fixture/Packages/
+!TestData/Fixture/Packages/*.nupkg
 # Uncomment if necessary however generally it will be regenerated when needed
 #!**/[Pp]ackages/repositories.config
 # NuGet v3's project.json files produces more ignorable files

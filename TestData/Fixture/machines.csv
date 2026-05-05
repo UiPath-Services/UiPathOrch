@@ -1,0 +1,3 @@
+﻿Path,Name,Description,Type,Scope,UnattendedSlots,NonProductionSlots,TestAutomationSlots,AutomationType,TargetFramework,RobotUsers,UpdatePolicyType,UpdatePolicyVersion,MaintenanceCron,MaintenanceDuration,MaintenanceEnabled,MaintenanceTimezoneId,Tags
+Orch1:\,TestFixture-Standard,Test fixture standard,Standard,Default,0,0,0,Any,Any,,,,,,,,
+Orch1:\,TestFixture-Template,Test fixture template,Template,Default,1,0,0,Any,Any,,,,,,,,
