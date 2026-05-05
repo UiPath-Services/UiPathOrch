@@ -76,10 +76,15 @@ Import-Csv "$FixturePath\roles.csv" |
     ForEach-Object { $_.Path = "${TargetDrive}:\"; $_ } |
     Set-OrchRole | Out-Null
 
-# 5. Package to tenant feed
+# 5. Package to tenant feed. Tolerate "already exists" — some OC builds (e.g.
+# 20.10/ApiVer 11) won't let Remove-OrchPackage during Reset clean the
+# previous upload, but the package is otherwise the right one.
 Write-Host "[ 4/11] Packages (tenant feed)"
 Get-ChildItem "$FixturePath\Packages\*.nupkg" | ForEach-Object {
-    Import-OrchPackage -Path "${TargetDrive}:\" -Source $_.FullName | Out-Null
+    Import-OrchPackage -Path "${TargetDrive}:\" -Source $_.FullName -ErrorAction Continue 2>&1 |
+        Where-Object { $_ -isnot [System.Management.Automation.ErrorRecord] -or
+                       $_.Exception.Message -notmatch 'already exists' } |
+        Out-Null
 }
 
 # Clear cache so subsequent New-OrchProcess calls see the freshly-uploaded

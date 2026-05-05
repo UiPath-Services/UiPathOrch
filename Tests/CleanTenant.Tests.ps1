@@ -184,6 +184,21 @@ Describe 'Triggers' {
     }
 }
 
+Describe 'Classic-folder cmdlets (read-only legacy surface)' {
+    # Our fixture uses modern folders, so these cmdlets should return zero rows
+    # without erroring. Useful smoke test on older OCs (e.g. 20.10) where the
+    # classic-folder API still exists.
+    It 'Get-OrchClassicEnvironment runs without error against the fixture root' {
+        { Get-OrchClassicEnvironment -Path $script:Root -Recurse -ErrorAction Stop } |
+            Should -Not -Throw
+    }
+
+    It 'Get-OrchClassicRobot runs without error against the fixture root' {
+        { Get-OrchClassicRobot -Path $script:Root -Recurse -ErrorAction Stop } |
+            Should -Not -Throw
+    }
+}
+
 Describe 'Tenant entities' {
     It 'has the two TestFixture machines' {
         $m = Get-OrchMachine -Path "${script:Drive}:\" -Name 'TestFixture-*'
@@ -193,8 +208,10 @@ Describe 'Tenant entities' {
 
     It 'has the TestFixture-ReadOnly tenant role' {
         $r = Get-OrchRole -Path "${script:Drive}:\" -Name 'TestFixture-ReadOnly'
-        $r        | Should -Not -BeNullOrEmpty
-        $r.Type   | Should -Be 'Tenant'
+        $r | Should -Not -BeNullOrEmpty
+        # Role.Type was added in a later OC; older builds (e.g. 20.10 / ApiVer 11)
+        # don't expose it. Assert only when present.
+        if ($r.Type) { $r.Type | Should -Be 'Tenant' }
     }
 
     It 'has the BlankProcess19 v1.0.3 package in tenant feed' {
