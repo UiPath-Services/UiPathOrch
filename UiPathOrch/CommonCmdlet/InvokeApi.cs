@@ -131,7 +131,7 @@ public class InvokeOrchApiCommand : OrchestratorPSCmdlet
         string baseUrl;
         if (Identity.IsPresent) baseUrl = drive.OrchAPISession._base_url_identity;
         else if (Portal.IsPresent) baseUrl = drive.OrchAPISession._base_url_portal;
-        else baseUrl = drive.OrchAPISession._base_url;
+        else baseUrl = drive.OrchAPISession._base_url_orchestrator;
 
         string url;
         if (ApiPath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||

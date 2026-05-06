@@ -12,6 +12,17 @@
   // setați URL-ul de redirecționare la valoarea specificată mai jos.
   "RedirectUrl": "http://localhost:8085/Temporary_Listen_Addresses",
 
+  // "Edition" indică UiPathOrch cum să construiască URL-urile pentru
+  // implementarea țintă. Valori valide: "Cloud", "AutomationSuite", "OnPremises".
+  // Dacă este omis, ediția este dedusă din URL-ul Root:
+  //   - Gazda conține "uipath.com"            => Cloud
+  //   - Calea cu două segmente (/org/tenant)  => AutomationSuite
+  //   - Orice altceva                         => OnPremises
+  // Specificați-o explicit atunci când euristica greșește (de exemplu,
+  // un Orchestrator on-premises în spatele unui reverse proxy care
+  // produce o cale cu două segmente).
+  // "Edition": "AutomationSuite",
+
   // "Scope" definit aici va fi suprascris de "Scope" specificat în fiecare
   // configurație PSDrive. Pentru a utiliza acest "Scope", eliminați cheia
   // "Scope" din configurația PSDrive corespunzătoare. Pentru a verifica
@@ -137,15 +148,33 @@
       "Enabled": false
     },
 
-    /* ======= Exemplar de autentificare pentru Automation Suite ======= */
-    // În această configurație, specificați URL-ul serverului de identitate
-    // folosind cheia "IdentityUrl". Pentru setările legate de autentificare,
-    // consultați configurațiile aplicațiilor neconfidențiale sau confidențiale.
+    /* === Exemplar de autentificare pentru Orchestrator pe Azure App Service === */
+    // Pentru un Orchestrator single-tenant implementat pe Azure App Service,
+    // specificați URL-ul serverului de identitate folosind cheia "IdentityUrl".
+    // Pentru setările legate de autentificare, consultați configurațiile
+    // aplicațiilor neconfidențiale sau confidențiale.
     {
       "Name": "Orch5",
-      "Description": "Pentru AS sau Orchestrator implementat pe Azure App Service.",
+      "Description": "Pentru Orchestrator implementat pe Azure App Service.",
       "Root": "https://XXX.azurewebsites.net",
       "IdentityUrl": "https://YYY.azurewebsites.net/identity",
+      "AppId": "YOUR_APP_ID",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": false
+    },
+
+    /* ======= Exemplar de autentificare pentru Automation Suite ======= */
+    // Pentru Automation Suite auto-găzduit, URL-ul conține organizația și
+    // tenant-ul: https://YOUR_HOST/YOUR_ORGANIZATION/YOUR_TENANT
+    // Edition este detectat automat din această cale cu două segmente, dar
+    // îl puteți seta explicit pentru a fi neambiguu. UiPathOrch direcționează
+    // automat apelurile API ale Orchestrator-ului prin /orchestrator_/ pentru
+    // implementările AS.
+    {
+      "Name": "Orch7",
+      "Description": "Automation Suite (auto-găzduit, multi-tenant).",
+      "Root": "https://YOUR_AS_HOST/YOUR_ORGANIZATION/YOUR_TENANT",
+      "Edition": "AutomationSuite",
       "AppId": "YOUR_APP_ID",
       "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
       "Enabled": false

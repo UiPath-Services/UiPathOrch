@@ -11,6 +11,17 @@
   // değere ayarlayın.
   "RedirectUrl": "http://localhost:8085/Temporary_Listen_Addresses",
 
+  // "Edition", UiPathOrch'a hedef dağıtım için URL'leri nasıl oluşturacağını
+  // söyler. Geçerli değerler: "Cloud", "AutomationSuite", "OnPremises".
+  // Belirtilmezse, sürüm Root URL'sinden çıkarılır:
+  //   - Ana bilgisayar "uipath.com" içeriyorsa  => Cloud
+  //   - İki segmentli yol (/org/tenant)         => AutomationSuite
+  //   - Diğer her şey                           => OnPremises
+  // Sezgisel yöntem yanlış tahmin yaparsa (örneğin, iki segmentli bir yol
+  // üreten çok seviyeli bir reverse proxy arkasındaki şirket içi
+  // Orchestrator) açıkça belirtin.
+  // "Edition": "AutomationSuite",
+
   // Burada tanımlanan "Scope", her PSDrive yapılandırmasında belirtilen
   // "Scope" tarafından geçersiz kılınacaktır. Bu Scope'u kullanmak için
   // ilgili PSDrive yapılandırmasından Scope anahtarını kaldırın.
@@ -132,15 +143,33 @@
       "Enabled": false
     },
 
-    /* ========== Automation Suite Kimlik Doğrulama Örneği ========== */
-    // Bu yapılandırmada, "IdentityUrl" anahtarını kullanarak Kimlik Sunucusu
-    // URL'sini belirtin. Kimlik doğrulama ile ilgili ayarlar için Gizli
-    // Olmayan Uygulama veya Gizli Uygulama yapılandırmalarına bakın.
+    /* ===== Azure App Service Üzerinde Orchestrator Kimlik Doğrulama Örneği ===== */
+    // Azure App Service üzerine dağıtılan tek kiracılı bir Orchestrator için,
+    // "IdentityUrl" anahtarını kullanarak Kimlik Sunucusu URL'sini belirtin.
+    // Kimlik doğrulama ile ilgili ayarlar için Gizli Olmayan Uygulama veya
+    // Gizli Uygulama yapılandırmalarına bakın.
     {
       "Name": "Orch5",
-      "Description": "AS veya Azure App Service üzerine dağıtılmış Orchestrator için.",
+      "Description": "Azure App Service üzerine dağıtılmış Orchestrator için.",
       "Root": "https://XXX.azurewebsites.net",
       "IdentityUrl": "https://YYY.azurewebsites.net/identity",
+      "AppId": "YOUR_APP_ID",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": false
+    },
+
+    /* ========== Automation Suite Kimlik Doğrulama Örneği ========== */
+    // Self-hosted Automation Suite'de URL, kuruluşu ve kiracıyı içerir:
+    // https://YOUR_HOST/YOUR_ORGANIZATION/YOUR_TENANT
+    // Edition iki segmentli bu yoldan otomatik olarak algılanır, ancak
+    // belirsizliği önlemek için açıkça ayarlayabilirsiniz. AS dağıtımları
+    // için UiPathOrch, Orchestrator API çağrılarını otomatik olarak
+    // /orchestrator_/ üzerinden yönlendirir.
+    {
+      "Name": "Orch7",
+      "Description": "Automation Suite (self-hosted, çok kiracılı).",
+      "Root": "https://YOUR_AS_HOST/YOUR_ORGANIZATION/YOUR_TENANT",
+      "Edition": "AutomationSuite",
       "AppId": "YOUR_APP_ID",
       "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
       "Enabled": false

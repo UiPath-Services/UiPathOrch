@@ -10,6 +10,16 @@
   // リダイレクト URL には下記と同じ値を設定してください。
   "RedirectUrl": "http://localhost:8085/Temporary_Listen_Addresses",
 
+  // "Edition" は、対象環境向けに UiPathOrch がどのような URL を組み立てるかを
+  // 指示します。指定可能な値は "Cloud" / "AutomationSuite" / "OnPremises" です。
+  // 省略時には Root の URL から自動推定されます:
+  //   - ホストに "uipath.com" を含む       => Cloud
+  //   - パスが 2 セグメント (/org/tenant)  => AutomationSuite
+  //   - それ以外                           => OnPremises
+  // 自動推定が外れる場合（例: 多段リバースプロキシ配下のオンプレ
+  // Orchestrator で 2 セグメントになるケース）は、明示的に指定してください。
+  // "Edition": "AutomationSuite",
+
   // ここで定義された "Scope" は、各 PSDrive の設定で指定された "Scope" により
   // 上書きされます。この "Scope" を使用するには、該当する PSDrive の設定から
   // "Scope" キーを削除してください。各 cmdlet の実行に必要なスコープを確認
@@ -123,15 +133,33 @@
       "Enabled": false
     },
 
-    /* ============== Automation Suite 認証の設定例 =============== */
-    // この設定では、"IdentityUrl" キーに ID サーバーの URL を記載して
-    // ください。 認証に関するその他の設定については、非機密アプリまたは
-    // 機密アプリの設定を参照してください。
+    /* ====== Azure App Service 上の Orchestrator 認証の設定例 ====== */
+    // シングルテナントの Orchestrator を Azure App Service にデプロイする
+    // 場合は、"IdentityUrl" キーに ID サーバーの URL を記載してください。
+    // 認証に関するその他の設定については、非機密アプリまたは機密アプリの
+    // 設定を参照してください。
     {
       "Name": "Orch5",
-      "Description": "AS または Azure App Service にデプロイされた Orchestrator の設定。",
+      "Description": "Azure App Service にデプロイされた Orchestrator の設定。",
       "Root": "https://XXX.azurewebsites.net",
       "IdentityUrl": "https://YYY.azurewebsites.net/identity",
+      "AppId": "YOUR_APP_ID",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": false
+    },
+
+    /* ============= Automation Suite 認証の設定例 ============= */
+    // セルフホスト型の Automation Suite では、URL に組織とテナントが
+    // 含まれます: https://YOUR_HOST/YOUR_ORGANIZATION/YOUR_TENANT
+    // この 2 セグメントのパスから Edition は自動推定されますが、
+    // 明示しておくと曖昧さがなくなります。AS 環境では UiPathOrch が
+    // Orchestrator API 呼び出しを自動的に /orchestrator_/ 経由でルーティング
+    // します。
+    {
+      "Name": "Orch7",
+      "Description": "Automation Suite (セルフホスト, マルチテナント)。",
+      "Root": "https://YOUR_AS_HOST/YOUR_ORGANIZATION/YOUR_TENANT",
+      "Edition": "AutomationSuite",
       "AppId": "YOUR_APP_ID",
       "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
       "Enabled": false

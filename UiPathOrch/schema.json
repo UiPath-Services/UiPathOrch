@@ -10,6 +10,11 @@
           "Name": { "type": "string" },
           "Provider": { "type": "string" },
           "Root": { "type": "string" },
+          "Edition": {
+            "type": "string",
+            "enum": ["Cloud", "AutomationSuite", "OnPremises"],
+            "description": "Optional. Forces the deployment edition. If omitted, inferred from Root."
+          },
           "Description": { "type": "string" },
           "IsConfidential": { "type": "boolean" },
           "Credential": {

@@ -196,7 +196,8 @@ internal class OrchestratorAuthManager
         }
         else
         {
-            endPoint = BaseUrl.Contains("uipath.com", StringComparison.InvariantCultureIgnoreCase)
+            // Cloud and AS use the /identity_ suffix; on-prem uses /identity.
+            endPoint = _drive._psDrive.IsCloud
                 ? BaseUrl + "/identity_/connect/token"
                 : BaseUrl + "/identity/connect/token";
         }

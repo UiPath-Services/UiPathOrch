@@ -12,6 +12,17 @@
   // la valeur spécifiée ci-dessous.
   "RedirectUrl": "http://localhost:8085/Temporary_Listen_Addresses",
 
+  // "Edition" indique à UiPathOrch comment construire les URL pour le
+  // déploiement cible. Valeurs valides : "Cloud", "AutomationSuite",
+  // "OnPremises". Si elle est omise, l'édition est déduite de l'URL Root :
+  //   - Hôte contenant "uipath.com"           => Cloud
+  //   - Chemin à deux segments (/org/tenant)  => AutomationSuite
+  //   - Tout le reste                         => OnPremises
+  // Indiquez-la explicitement lorsque l'heuristique se trompe (par exemple,
+  // un Orchestrator on-premises derrière un reverse proxy à plusieurs
+  // niveaux qui produit un chemin à deux segments).
+  // "Edition": "AutomationSuite",
+
   // Le "Scope" défini ici sera remplacé par le "Scope" spécifié dans la
   // configuration de chaque PSDrive. Pour utiliser ce Scope, supprimez la
   // clé Scope de la configuration PSDrive correspondante.
@@ -139,16 +150,33 @@
       "Enabled": false
     },
 
-    /* ========= Exemple d'authentification pour Automation Suite ========= */
-    // Dans cette configuration, spécifiez l'URL du serveur d'identité en
-    // utilisant la clé "IdentityUrl". Pour les paramètres liés à
-    // l'authentification, référez-vous aux configurations de l'application non
-    // confidentielle ou confidentielle.
+    /* === Exemple d'authentification Orchestrator sur Azure App Service === */
+    // Pour un Orchestrator mono-locataire déployé sur Azure App Service,
+    // spécifiez l'URL du serveur d'identité en utilisant la clé "IdentityUrl".
+    // Pour les paramètres liés à l'authentification, référez-vous aux
+    // configurations de l'application non confidentielle ou confidentielle.
     {
       "Name": "Orch5",
-      "Description": "Pour AS ou Orchestrator déployé sur Azure App Service.",
+      "Description": "Pour Orchestrator déployé sur Azure App Service.",
       "Root": "https://XXX.azurewebsites.net",
       "IdentityUrl": "https://YYY.azurewebsites.net/identity",
+      "AppId": "YOUR_APP_ID",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": false
+    },
+
+    /* ========= Exemple d'authentification pour Automation Suite ========= */
+    // Pour Automation Suite auto-hébergé, l'URL contient l'organisation et
+    // le locataire : https://YOUR_HOST/YOUR_ORGANIZATION/YOUR_TENANT
+    // L'Edition est détectée automatiquement à partir de ce chemin à deux
+    // segments, mais vous pouvez la définir explicitement pour éviter toute
+    // ambiguïté. Pour les déploiements AS, UiPathOrch route automatiquement
+    // les appels API Orchestrator via /orchestrator_/.
+    {
+      "Name": "Orch7",
+      "Description": "Automation Suite (auto-hébergé, multi-locataire).",
+      "Root": "https://YOUR_AS_HOST/YOUR_ORGANIZATION/YOUR_TENANT",
+      "Edition": "AutomationSuite",
       "AppId": "YOUR_APP_ID",
       "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
       "Enabled": false

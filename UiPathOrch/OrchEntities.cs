@@ -35,6 +35,7 @@ public class OrchPSDrive
     public string? Provider { get; set; } = "UiPathOrch";
     public string? Name { get; set; }
     public string? Root { get; set; }
+    public string? Edition { get; set; }
     public string? IdentityUrl { get; set; }
     public bool? IsConfidential { get; set; }
     public string? Description { get; set; }
@@ -99,6 +100,7 @@ public class OrchPSDrive
     {
         Name = drive.Name;
         Root = drive.DisplayRoot;
+        Edition = drive._psDrive.ResolvedEdition.ToString();
         IdentityUrl = drive._psDrive.IdentityUrl;
         IsConfidential = drive.OrchAPISession.AuthManager.IsConfidentialApp;
         Description = drive.Description;

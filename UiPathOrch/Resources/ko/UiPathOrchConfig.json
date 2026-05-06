@@ -11,6 +11,16 @@
   // 해당 리디렉션 URL을 아래 지정된 값으로 설정하세요.
   "RedirectUrl": "http://localhost:8085/Temporary_Listen_Addresses",
 
+  // "Edition"은 대상 배포 환경에 맞춰 UiPathOrch가 URL을 어떻게
+  // 조립할지를 지정합니다. 유효한 값: "Cloud", "AutomationSuite",
+  // "OnPremises". 생략 시 Root URL에서 자동으로 추정됩니다:
+  //   - 호스트가 "uipath.com"을 포함      => Cloud
+  //   - 경로가 두 세그먼트 (/org/tenant)  => AutomationSuite
+  //   - 그 외                             => OnPremises
+  // 자동 추정이 어긋나는 경우(예: 다단 리버스 프록시 뒤에 두 세그먼트
+  // 경로를 갖는 온프레미스 Orchestrator)에는 명시적으로 지정하세요.
+  // "Edition": "AutomationSuite",
+
   // 여기에서 정의된 "Scope"는 각 PSDrive 구성에 지정된 "Scope"에
   // 의해 재정의됩니다.
   // 이 Scope를 사용하려면 해당 PSDrive 구성에서 Scope 키를 제거하세요.
@@ -127,15 +137,33 @@
       "Enabled": false
     },
 
-    /* ========== Automation Suite 인증 샘플 ========== */
-    // 이 구성에서 "IdentityUrl" 키를 사용하여 ID 서버 URL을 지정하세요
+    /* ===== Azure App Service의 Orchestrator 인증 샘플 ===== */
+    // Azure App Service에 배포된 단일 테넌트 Orchestrator의 경우,
+    // "IdentityUrl" 키를 사용하여 ID 서버 URL을 지정하세요.
     // 인증 관련 설정은 비기밀 애플리케이션 또는 기밀 애플리케이션 설정을
     // 참조하세요.
     {
       "Name": "Orch5",
-      "Description": "AS 또는 Azure App Service에 배포된 Orchestrator용.",
+      "Description": "Azure App Service에 배포된 Orchestrator용.",
       "Root": "https://XXX.azurewebsites.net",
       "IdentityUrl": "https://YYY.azurewebsites.net/identity",
+      "AppId": "YOUR_APP_ID",
+      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Enabled": false
+    },
+
+    /* ========== Automation Suite 인증 샘플 ========== */
+    // 자체 호스팅 Automation Suite의 URL에는 조직과 테넌트가 포함됩니다:
+    // https://YOUR_HOST/YOUR_ORGANIZATION/YOUR_TENANT
+    // 두 세그먼트 경로에서 Edition은 자동 감지되지만, 명시적으로 설정하면
+    // 모호함을 피할 수 있습니다. AS 환경에서는 UiPathOrch가
+    // Orchestrator API 호출을 자동으로 /orchestrator_/ 경로를 거쳐
+    // 라우팅합니다.
+    {
+      "Name": "Orch7",
+      "Description": "Automation Suite (자체 호스팅, 멀티 테넌트).",
+      "Root": "https://YOUR_AS_HOST/YOUR_ORGANIZATION/YOUR_TENANT",
+      "Edition": "AutomationSuite",
       "AppId": "YOUR_APP_ID",
       "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
       "Enabled": false

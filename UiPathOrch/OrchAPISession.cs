@@ -186,6 +186,11 @@ public partial class OrchAPISession : IDisposable
     }
 
     internal readonly string _base_url;
+    // Base for Orchestrator-specific API calls (/odata/..., /api/...).
+    // Cloud's gateway accepts these directly off the tenant root, but Automation Suite
+    // routes by service segment and refuses paths that don't start with /orchestrator_/.
+    // For AS this is _base_url + "/orchestrator_"; for Cloud and on-prem it equals _base_url.
+    internal readonly string _base_url_orchestrator;
     internal readonly string _base_url_identity;
     internal readonly string _base_url_portal;
     internal volatile bool _isAuthenticated = false;
@@ -326,6 +331,10 @@ public partial class OrchAPISession : IDisposable
         {
             _base_url_identity = drive._psDrive.IdentityUrl;
         }
+
+        _base_url_orchestrator = drive._psDrive.ResolvedEdition == OrchEdition.AutomationSuite
+            ? _base_url + "/orchestrator_"
+            : _base_url;
 
         _drive = drive;
     }
@@ -496,7 +505,7 @@ public partial class OrchAPISession : IDisposable
             ulong top = Math.Min(first - total, 1000);
             if (top == 0) break;
 
-            string url = $"{_base_url}{endPoint}?$top={top}&$skip={skip}{query}";
+            string url = $"{_base_url_orchestrator}{endPoint}?$top={top}&$skip={skip}{query}";
 
             var request = new HttpRequestMessage(HttpMethod.Get, url);
             if (folderId.HasValue)
@@ -649,7 +658,7 @@ public partial class OrchAPISession : IDisposable
 
     private T[]? GetEnumerableWithoutPaging<T>(string endPoint, Int64? folderId = null, string? query = null)
     {
-        var body = GetEnumerableWithoutPagingImpl<HttpBodyValues<T>>(_base_url, endPoint, folderId, query);
+        var body = GetEnumerableWithoutPagingImpl<HttpBodyValues<T>>(_base_url_orchestrator, endPoint, folderId, query);
         return body?.value;
     }
 
@@ -680,7 +689,7 @@ public partial class OrchAPISession : IDisposable
 
     public string HttpRequest(HttpMethod method, string endPoint, Int64? folderId, string payload)
     {
-        return HttpRequestImpl(method, _base_url, endPoint, folderId, payload);
+        return HttpRequestImpl(method, _base_url_orchestrator, endPoint, folderId, payload);
     }
 
     public string HttpRequestIdentity(HttpMethod method, string endPoint, Int64? folderId, string payload)
@@ -703,7 +712,7 @@ public partial class OrchAPISession : IDisposable
 
     public string HttpRequest(HttpMethod method, string endPoint, Int64? folderId = null, object? payload = null)
     {
-        return HttpRequestImpl(method, _base_url, endPoint, folderId, payload);
+        return HttpRequestImpl(method, _base_url_orchestrator, endPoint, folderId, payload);
     }
 
     public string HttpRequestIdentity(HttpMethod method, string endPoint, Int64? folderId = null, object? payload = null)
@@ -1206,7 +1215,7 @@ public partial class OrchAPISession : IDisposable
             content.Add(fileContent, "file", fileName ?? "rule.dmn");
         }
 
-        var request = new HttpRequestMessage(method, _base_url + endpoint) { Content = content };
+        var request = new HttpRequestMessage(method, _base_url_orchestrator + endpoint) { Content = content };
         request.Headers.Add("X-UIPATH-OrganizationUnitId", folderId.ToString());
 
         using var response = HttpClient_Send(request);
@@ -1743,7 +1752,7 @@ public partial class OrchAPISession : IDisposable
         content.Add(fileContent, "uploads[]", fileName);
 
         //var request = new HttpRequestMessage(HttpMethod.Post, $"/odata/Libraries/UiPath.Server.Configuration.OData.UploadPackage()?feedId={feedId}");
-        var request = new HttpRequestMessage(HttpMethod.Post, _base_url + "/odata/Libraries/UiPath.Server.Configuration.OData.UploadPackage")
+        var request = new HttpRequestMessage(HttpMethod.Post, _base_url_orchestrator + "/odata/Libraries/UiPath.Server.Configuration.OData.UploadPackage")
         {
             Content = content
         };
@@ -1777,7 +1786,7 @@ public partial class OrchAPISession : IDisposable
         // Add file contents to the content
         content.Add(fileContent, "uploads[]", fileName);
 
-        var request = new HttpRequestMessage(HttpMethod.Post, _base_url + $"/odata/Processes/UiPath.Server.Configuration.OData.UploadPackage()?feedId={feedId}")
+        var request = new HttpRequestMessage(HttpMethod.Post, _base_url_orchestrator + $"/odata/Processes/UiPath.Server.Configuration.OData.UploadPackage()?feedId={feedId}")
         {
             Content = content
         };
@@ -1801,7 +1810,7 @@ public partial class OrchAPISession : IDisposable
 
     public (string? FileName, byte[] FileContent) DownloadLibrary(string libraryId, string libraryVersion)
     {
-        string url = _base_url + $"/odata/Libraries/UiPath.Server.Configuration.OData.DownloadPackage(key='{HttpUtility.UrlEncode(libraryId)}:{libraryVersion}')";
+        string url = _base_url_orchestrator + $"/odata/Libraries/UiPath.Server.Configuration.OData.DownloadPackage(key='{HttpUtility.UrlEncode(libraryId)}:{libraryVersion}')";
         var request = new HttpRequestMessage(HttpMethod.Get, url);
 
         using var response = HttpClient_Send(request);
@@ -1835,7 +1844,7 @@ public partial class OrchAPISession : IDisposable
 
     public (string? FileName, byte[] FileContent) DownloadPackage(string feedId, string packageId, string packageVersion)
     {
-        string url = _base_url + $"/odata/Processes/UiPath.Server.Configuration.OData.DownloadPackage(key='{HttpUtility.UrlEncode(packageId)}:{packageVersion}')";
+        string url = _base_url_orchestrator + $"/odata/Processes/UiPath.Server.Configuration.OData.DownloadPackage(key='{HttpUtility.UrlEncode(packageId)}:{packageVersion}')";
         if (!string.IsNullOrEmpty(feedId))
         {
             url += $"?feedId={feedId}";
@@ -2965,7 +2974,7 @@ public partial class OrchAPISession : IDisposable
     // TODO: This endpoint seems to work even without the Authorization header?
     public async Task<(string? FileName, byte[] FileContent)> DownloadMediaByJobId(Int64 folderId, Int64 jobId)
     {
-        string endPoint = _base_url + $"/odata/ExecutionMedia/UiPath.Server.Configuration.OData.DownloadMediaByJobId(jobId={jobId})";
+        string endPoint = _base_url_orchestrator + $"/odata/ExecutionMedia/UiPath.Server.Configuration.OData.DownloadMediaByJobId(jobId={jobId})";
         var request = new HttpRequestMessage(HttpMethod.Get, endPoint);
         request.Headers.Add("X-UIPATH-OrganizationUnitId", folderId.ToString());
 
@@ -3104,7 +3113,7 @@ public partial class OrchAPISession : IDisposable
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        string url = _base_url + $"/api/TestAutomation/GetAssertionScreenshot?testCaseAssertionId={assertionId}&organizationUnitId={folderId}";
+        string url = _base_url_orchestrator + $"/api/TestAutomation/GetAssertionScreenshot?testCaseAssertionId={assertionId}&organizationUnitId={folderId}";
         var request = new HttpRequestMessage(HttpMethod.Get, url);
 
         using var response = HttpClient_Send(request, _httpClient, cancellationToken);
