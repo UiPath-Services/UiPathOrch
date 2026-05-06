@@ -244,6 +244,10 @@ CmdletsToExport = @(
 'Add-OrchAssetLink',
 'Remove-OrchAssetLink',
 
+'Get-OrchBucketLink',
+'Add-OrchBucketLink',
+'Remove-OrchBucketLink',
+
 'Get-OrchTrigger',
 'New-OrchTrigger',
 'Update-OrchTrigger',

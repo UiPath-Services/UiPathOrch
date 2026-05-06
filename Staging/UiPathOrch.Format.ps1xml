@@ -191,6 +191,39 @@
     </View>
 
     <View>
+      <Name>BucketLink</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.BucketLink</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Name</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Link</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>Name</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Link</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
       <Name>PersonalWorkspace</Name>
       <ViewSelectedBy>
         <TypeName>UiPath.PowerShell.Entities.PersonalWorkspace</TypeName>

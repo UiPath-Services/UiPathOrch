@@ -1189,6 +1189,18 @@ public class AssetLink
     public Int64? LinkFolderId { get; set; }
 }
 
+// Same shape as AssetLink but for storage buckets. Output type for
+// Get-OrchBucketLink; pipes by name into Add-/Remove-OrchBucketLink.
+public class BucketLink
+{
+    public string? Path { get; set; }
+    public string? Name { get; set; }
+    public string? Link { get; set; }
+    public Int64? BucketId { get; set; }
+    public Int64? FolderId { get; set; }
+    public Int64? LinkFolderId { get; set; }
+}
+
 public enum RoleType
 {
     Mixed, Tenant, Folder
