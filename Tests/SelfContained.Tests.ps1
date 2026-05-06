@@ -518,7 +518,7 @@ Describe 'AssetLink' {
         Get-OrchAssetLink -Path $script:RootFolder -Name $script:LinkAssetName -ErrorAction SilentlyContinue |
             Remove-OrchAssetLink -Confirm:$false -ErrorAction SilentlyContinue
         Remove-OrchAsset -Path $script:RootFolder -Name $script:LinkAssetName -Confirm:$false -ErrorAction SilentlyContinue
-        Remove-Item -Path $script:LinkSubFolder -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-Item -Path $script:LinkSubFolder -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
     }
 
     It 'Get-OrchAssetLink returns nothing for an unlinked asset' {
@@ -586,7 +586,7 @@ Describe 'AssetLink' {
         finally {
             Get-OrchAssetLink -Path $script:RootFolder -Name $script:LinkAssetName -ErrorAction SilentlyContinue |
                 Remove-OrchAssetLink -Confirm:$false -ErrorAction SilentlyContinue
-            Remove-Item -Path $second -Confirm:$false -ErrorAction SilentlyContinue
+            Remove-Item -Path $second -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
         }
     }
 }
