@@ -217,6 +217,60 @@ Describe 'Asset Links' {
     }
 }
 
+Describe 'Queue Links' {
+    # Fixture defines queue-emails (Production) → Development, QA.
+    # Other queues are unlinked, so Get-OrchQueueLink emits exactly the
+    # rows from queue-emails's Production-side enumeration.
+
+    It 'Get-OrchQueueLink emits the expected fixture links' {
+        $links = Get-OrchQueueLink -Path $script:Root -Recurse | Sort-Object Name, Link
+        $links | Should -Not -BeNullOrEmpty
+
+        $triples = $links | ForEach-Object {
+            [PSCustomObject]@{
+                Name = $_.Name
+                Path = ($_.Path -split '\\')[-1]
+                Link = ($_.Link -split '\\')[-1]
+            }
+        }
+
+        $emailsFromProd = $triples | Where-Object { $_.Name -eq 'queue-emails' -and $_.Path -eq 'Production' }
+        $emailsFromProd.Link | Sort-Object | Should -Be @('Development', 'QA')
+    }
+
+    It 'QueueLink rows carry queue name, source folder, and link folder paths' {
+        $row = Get-OrchQueueLink -Path "${script:Root}\Production" -Name 'queue-emails' | Select-Object -First 1
+        $row.Path | Should -Match 'Production$'
+        $row.Name | Should -Be 'queue-emails'
+        $row.Link | Should -Match '(Development|QA)$'
+        $row.QueueId      | Should -BeGreaterThan 0
+        $row.FolderId     | Should -BeGreaterThan 0
+        $row.LinkFolderId | Should -BeGreaterThan 0
+    }
+
+    It 'Add-OrchQueueLink + Remove-OrchQueueLink round-trip' {
+        Add-OrchQueueLink -Path "${script:Root}\Development" -Name 'queue-staging' `
+            -Link "${script:Root}\QA" -Confirm:$false
+        Clear-OrchCache -Path $script:Root
+
+        $afterAdd = Get-OrchQueueLink -Path "${script:Root}\Development" -Name 'queue-staging'
+        $afterAdd | Should -Not -BeNullOrEmpty
+        $afterAdd.Link | Should -Match 'QA$'
+
+        Get-OrchQueueLink -Path "${script:Root}\Development" -Name 'queue-staging' |
+            Remove-OrchQueueLink -Confirm:$false
+        Clear-OrchCache -Path $script:Root
+
+        Get-OrchQueueLink -Path "${script:Root}\Development" -Name 'queue-staging' |
+            Should -BeNullOrEmpty
+    }
+
+    It 'Linked queue is visible from the linked-to folder via Get-OrchQueue' {
+        $fromDev = Get-OrchQueue -Path "${script:Root}\Development" -Name 'queue-emails'
+        $fromDev | Should -Not -BeNullOrEmpty
+    }
+}
+
 Describe 'Bucket Links' {
     # Fixture defines bucket-files (Production) → Development, Production/SubA.
     # bucket-dev (Development) is unlinked, so Get-OrchBucketLink emits exactly the

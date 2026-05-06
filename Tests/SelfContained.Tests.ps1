@@ -1231,6 +1231,90 @@ Describe 'Asset Performance' -Tag 'Performance' {
 }
 
 # ---------------------------------------------------------------------------
+# Queue Link (share queue across folders)
+# ---------------------------------------------------------------------------
+Describe 'QueueLink' {
+    BeforeAll {
+        $script:LinkQueueName = "${script:Prefix}LinkQueue"
+        $script:QueueLinkSubFolder = "${script:RootFolder}\${script:Prefix}QueueLinkSub"
+
+        $null = New-Item -Path $script:QueueLinkSubFolder -ItemType Directory -ErrorAction SilentlyContinue
+
+        New-OrchQueue -Path $script:RootFolder -Name $script:LinkQueueName -Description 'QueueLink test' | Out-Null
+        Clear-OrchCache -Path $script:RootFolder
+    }
+
+    AfterAll {
+        Get-OrchQueueLink -Path $script:RootFolder -Name $script:LinkQueueName -ErrorAction SilentlyContinue |
+            Remove-OrchQueueLink -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-OrchQueue -Path $script:RootFolder -Name $script:LinkQueueName -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-Item -Path $script:QueueLinkSubFolder -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
+    }
+
+    It 'Get-OrchQueueLink returns nothing for an unlinked queue' {
+        Clear-OrchCache -Path $script:RootFolder
+        Get-OrchQueueLink -Path $script:RootFolder -Name $script:LinkQueueName |
+            Should -BeNullOrEmpty
+    }
+
+    It 'Add-OrchQueueLink shares the queue to a target folder' {
+        Add-OrchQueueLink -Path $script:RootFolder -Name $script:LinkQueueName `
+            -Link $script:QueueLinkSubFolder -Confirm:$false
+        Clear-OrchCache -Path $script:RootFolder
+
+        $links = Get-OrchQueueLink -Path $script:RootFolder -Name $script:LinkQueueName
+        $links            | Should -Not -BeNullOrEmpty
+        @($links).Count   | Should -Be 1
+        $links.Path       | Should -Be $script:RootFolder
+        $links.Name       | Should -Be $script:LinkQueueName
+        $links.Link       | Should -Be $script:QueueLinkSubFolder
+    }
+
+    It 'Linked queue is enumerable from the target folder' {
+        $fromTarget = Get-OrchQueue -Path $script:QueueLinkSubFolder -Name $script:LinkQueueName
+        $fromTarget | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Get-OrchQueueLink output pipes into Remove-OrchQueueLink' {
+        Get-OrchQueueLink -Path $script:RootFolder -Name $script:LinkQueueName |
+            Remove-OrchQueueLink -Confirm:$false
+        Clear-OrchCache -Path $script:RootFolder
+
+        Get-OrchQueueLink -Path $script:RootFolder -Name $script:LinkQueueName |
+            Should -BeNullOrEmpty
+    }
+
+    It 'Remove-OrchQueueLink requires -Link (Mandatory)' {
+        $cmd = Get-Command Remove-OrchQueueLink
+        $cmd.Parameters['Link'].Attributes |
+            Where-Object { $_ -is [Parameter] } |
+            ForEach-Object { $_.Mandatory } |
+            Should -Contain $true
+    }
+
+    It 'Add-OrchQueueLink batches multiple targets in a single call' {
+        $second = "${script:QueueLinkSubFolder}_2"
+        $null = New-Item -Path $second -ItemType Directory -ErrorAction SilentlyContinue
+        try {
+            Add-OrchQueueLink -Path $script:RootFolder -Name $script:LinkQueueName `
+                -Link $script:QueueLinkSubFolder, $second -Confirm:$false
+            Clear-OrchCache -Path $script:RootFolder
+
+            $links = Get-OrchQueueLink -Path $script:RootFolder -Name $script:LinkQueueName |
+                Sort-Object Link
+            @($links).Count | Should -Be 2
+            $links.Link     | Should -Contain $script:QueueLinkSubFolder
+            $links.Link     | Should -Contain $second
+        }
+        finally {
+            Get-OrchQueueLink -Path $script:RootFolder -Name $script:LinkQueueName -ErrorAction SilentlyContinue |
+                Remove-OrchQueueLink -Confirm:$false -ErrorAction SilentlyContinue
+            Remove-Item -Path $second -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+}
+
+# ---------------------------------------------------------------------------
 # Bucket Link (share bucket across folders)
 # ---------------------------------------------------------------------------
 Describe 'BucketLink' {
