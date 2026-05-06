@@ -29,23 +29,38 @@ isolates only the response-processing layer).
 When a drive fails to connect, verify the configuration values:
 
 ```powershell
-Get-OrchPSDrive Orch2: | Select-Object Root, AppId, Scope, RedirectUrl, IdentityUrl
+Get-OrchPSDrive Orch2: | Select-Object Root, Edition, AppId, Scope, RedirectUrl, IdentityUrl
 ```
 
 | Property | Notes |
 |---|---|
-| `Root` | Orchestrator URL (include organization and tenant for Cloud) |
+| `Root` | Orchestrator URL (include organization and tenant for Cloud / Automation Suite: `https://{host}/{org}/{tenant}`) |
+| `Edition` | Resolved deployment kind: `Cloud`, `AutomationSuite`, or `OnPremises`. Inferred from `Root` (uipath.com host → Cloud, two-segment path → AutomationSuite, otherwise OnPremises) unless pinned in the config. If this column shows the wrong value, that is the root cause — see "Edition mis-detection" below |
 | `AppId` | Must match the external application registered in Orchestrator |
 | `Scope` | Must not exceed scopes granted to the external application |
-| `RedirectUrl` | Auto-configured for Cloud and on-premises. Verify it matches the Redirect URL registered in the external application |
-| `IdentityUrl` | Auto-configured for Cloud and on-premises. Must be manually set in the config file for Automation Suite (e.g., `https://host/identity`) |
+| `RedirectUrl` | Auto-configured. Verify it matches the Redirect URL registered in the external application |
+| `IdentityUrl` | Auto-configured for all editions. For Automation Suite the canonical pattern is `https://{host}/identity_` at the host root — pin it explicitly in the config if the auto-derived value doesn't reach your AS identity service |
 
-If `IdentityUrl` is wrong or missing for Automation Suite, authentication
-will fail. Open the config file to fix it:
+### Edition mis-detection
 
-```powershell
-Get-OrchConfigPath  # Get the file path, then read and edit directly
+If `Get-OrchPSDrive` shows the wrong `Edition` for your drive, all the URL
+construction (`/orchestrator_/`, `/identity_/`, `/portal_/`, tenant
+header vs URL path) is going to be wrong. Pin the correct value
+explicitly in `UiPathOrchConfig.json`:
+
+```jsonc
+{
+  "Name": "MyDrive",
+  "Root": "https://...",
+  "Edition": "AutomationSuite",   // or "Cloud" / "OnPremises"
+  ...
+}
 ```
+
+The known false-positive case is an on-premises Orchestrator behind a
+multi-level reverse proxy that produces a two-segment path (`/dept/tenant`)
+— the heuristic mis-classifies it as Automation Suite. Pin
+`"Edition": "OnPremises"` to restore on-prem URL building.
 
 After editing, reload with `Import-OrchConfig`.
 

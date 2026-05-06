@@ -20,7 +20,7 @@ perform through the web interface.
   `dir`, `cd`, and `mkdir`.
 - Mount multiple tenants simultaneously, each as a separate drive with a
   different account.
-- Supports both Automation Cloud and on-premises Orchestrator.
+- Supports Automation Cloud, self-hosted Automation Suite, and on-premises Orchestrator.
 - Bulk operations with comma-separated values and wildcards.
 - Work across multiple tenants and folders using `-Path` and `-Recurse`.
 - Parameter completion for all parameter values (folder names, user names,

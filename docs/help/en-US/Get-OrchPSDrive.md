@@ -99,6 +99,20 @@ PS C:\> Get-OrchPSDrive Orch1: -Force | Select-Object -ExpandProperty Claims | S
 
 Use Select-Object -ExpandProperty to extract claims, then select specific properties.
 
+### Example 7: Verify the resolved deployment edition
+
+```powershell
+PS C:\> Get-OrchPSDrive | Select-Object Name, Root, Edition
+
+Name           Root                                                                  Edition
+----           ----                                                                  -------
+Orch1          https://cloud.uipath.com/myorg/mytenant                               Cloud
+AS_Default_INT https://rpa-emea-int.eu-central-1.aws.cloud.bmw/Default/Default       AutomationSuite
+local          https://orchestrator.local/default                                    OnPremises
+```
+
+The Edition column shows whether each drive is Cloud, AutomationSuite, or OnPremises. The value is taken from the explicit `Edition` field in the configuration when set, otherwise inferred from the `Root` URL. Use this to confirm the auto-detection picked the right deployment kind for each drive.
+
 ## PARAMETERS
 
 ### -Path
@@ -161,7 +175,8 @@ Returns OrchPSDrive objects containing drive information such as drive name, roo
 
 Key properties include:
 
-- **IdentityUrl** — The Identity Server URL, automatically derived from Root at drive mount time. Cloud drives use `/{org}/identity_`, on-premises drives use `/identity`. Can be explicitly overridden in the configuration file.
+- **Edition** — Resolved deployment kind: `Cloud`, `AutomationSuite`, or `OnPremises`. Taken from the explicit `Edition` field in `UiPathOrchConfig.json` when set, otherwise inferred from the `Root` URL (uipath.com host → Cloud, two-segment `/{org}/{tenant}` path → AutomationSuite, anything else → OnPremises). Determines which URL pattern the module uses for Orchestrator API calls (Cloud and AS keep the tenant in the URL path; on-premises sends it in the `X-UIPATH-TenantName` header).
+- **IdentityUrl** — The Identity Server URL, automatically derived from Root at drive mount time. Cloud and Automation Suite drives use `/{org}/identity_`, on-premises drives use `/identity`. Can be explicitly overridden in the configuration file.
 - **Claims** — A PSObject containing decoded JWT access token claims. Available when the drive has an active access token (use -Force to ensure authentication). Timestamp claims (exp, iat, nbf, auth_time) are converted to local DateTime. Array claims (scope, aud, amr) are stored as string arrays. Access individual claims via `$drive.Claims.prt_id`, `$drive.Claims.email`, etc.
 
 ## NOTES

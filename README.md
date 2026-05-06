@@ -14,6 +14,8 @@ UiPathOrch is a PowerShell module that enables you to mount multiple Orchestrato
 
 This module uses the Orchestrator API to mount modern folders as local drives, making them accessible from the PowerShell console with file system-like operations.
 
+Works against **Automation Cloud**, self-hosted **Automation Suite**, and on-premises **Standalone Orchestrator** deployments — the deployment kind is auto-detected from the drive's Root URL (or pinned explicitly via the `Edition` config field).
+
 **Note:** This module functions even in environments where Studio/Assistant is not installed.
 
 ## Key Features
@@ -85,6 +87,9 @@ Get-Command -Module UiPathOrch
 
 # Get help for a specific cmdlet
 Get-Help Get-OrchAsset -Full
+
+# Open the cmdlet's online reference page in a browser
+Get-Help Get-OrchAsset -Online
 ```
 
 ## Documentation
@@ -122,7 +127,7 @@ Notes:
 
 - A **confidential application** (`-AppId` + `-AppSecret`, OAuth `client_credentials` grant) is the recommended auth for CI. PKCE requires an interactive browser and cannot be used headlessly. Personal Access Tokens (`-AccessToken`) work but tie the pipeline to an individual user and inherit that user's full permission set, so prefer a confidential app per pipeline with the minimum OAuth scopes required.
 - Pass secrets via `env:` rather than inline command arguments so GitHub Actions log masking covers them and they don't appear in command echoes.
-- For on-premises Orchestrator that isn't reachable from GitHub-hosted runners, use a self-hosted runner inside the network where Orchestrator is accessible.
+- For on-premises Orchestrator or self-hosted Automation Suite that isn't reachable from GitHub-hosted runners, use a self-hosted runner inside the network where the deployment is accessible.
 - For ad-hoc API calls in CI (e.g., calling an endpoint with no dedicated cmdlet), use `Invoke-OrchApi` rather than extracting the bearer token. It reuses the drive's authenticated session, so the access token never leaves the module — no risk of leaking a live token into pipeline logs:
 
   ```powershell
