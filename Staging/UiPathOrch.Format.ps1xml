@@ -163,7 +163,7 @@
         <TypeName>UiPath.PowerShell.Entities.AssetLink</TypeName>
       </ViewSelectedBy>
       <GroupBy>
-        <Label>Source</Label>
+        <Label>Directory</Label>
         <PropertyName>Path</PropertyName>
       </GroupBy>
       <TableControl>
