@@ -496,6 +496,102 @@ Describe 'Asset' {
 }
 
 # ---------------------------------------------------------------------------
+# Asset Link (share asset across folders)
+# ---------------------------------------------------------------------------
+Describe 'AssetLink' {
+    BeforeAll {
+        $script:LinkAssetName = "${script:Prefix}LinkAsset"
+        $script:LinkSubFolder = "${script:RootFolder}\${script:Prefix}LinkSub"
+
+        # Dedicated folder hierarchy for the link tests so we don't entangle
+        # with the broader Asset Describe's fixtures.
+        $null = New-Item -Path $script:LinkSubFolder -ItemType Directory -ErrorAction SilentlyContinue
+
+        # Create the source asset in $script:RootFolder
+        Set-OrchAsset -Path $script:RootFolder -ValueType Text `
+            -Name $script:LinkAssetName -Value 'shared-value' | Out-Null
+        Clear-OrchCache -Path $script:RootFolder
+    }
+
+    AfterAll {
+        # Remove links first (best-effort) then the asset and folder.
+        Get-OrchAssetLink -Path $script:RootFolder -Name $script:LinkAssetName -ErrorAction SilentlyContinue |
+            Remove-OrchAssetLink -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-OrchAsset -Path $script:RootFolder -Name $script:LinkAssetName -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-Item -Path $script:LinkSubFolder -Confirm:$false -ErrorAction SilentlyContinue
+    }
+
+    It 'Get-OrchAssetLink returns nothing for an unlinked asset' {
+        Clear-OrchCache -Path $script:RootFolder
+        Get-OrchAssetLink -Path $script:RootFolder -Name $script:LinkAssetName |
+            Should -BeNullOrEmpty
+    }
+
+    It 'Add-OrchAssetLink shares the asset to a target folder' {
+        Add-OrchAssetLink -Path $script:RootFolder -Name $script:LinkAssetName `
+            -Link $script:LinkSubFolder -Confirm:$false
+        Clear-OrchCache -Path $script:RootFolder
+
+        $links = Get-OrchAssetLink -Path $script:RootFolder -Name $script:LinkAssetName
+        $links            | Should -Not -BeNullOrEmpty
+        @($links).Count   | Should -Be 1
+        $links.Path       | Should -Be $script:RootFolder
+        $links.Name       | Should -Be $script:LinkAssetName
+        $links.Link       | Should -Be $script:LinkSubFolder
+    }
+
+    It 'Linked asset is enumerable from the target folder' {
+        $fromTarget = Get-OrchAsset -Path $script:LinkSubFolder -Name $script:LinkAssetName
+        $fromTarget       | Should -Not -BeNullOrEmpty
+        $fromTarget.Value | Should -Be 'shared-value'
+    }
+
+    It 'Get-OrchAssetLink output pipes into Remove-OrchAssetLink' {
+        Get-OrchAssetLink -Path $script:RootFolder -Name $script:LinkAssetName |
+            Remove-OrchAssetLink -Confirm:$false
+        Clear-OrchCache -Path $script:RootFolder
+
+        Get-OrchAssetLink -Path $script:RootFolder -Name $script:LinkAssetName |
+            Should -BeNullOrEmpty
+    }
+
+    It 'Remove-OrchAssetLink requires -Link (Mandatory)' {
+        # Without -Link the cmdlet should not silently succeed; PowerShell binds
+        # the missing mandatory parameter as an error from the runtime, not a
+        # tenant call. Verifying via metadata avoids hitting the API entirely.
+        $cmd = Get-Command Remove-OrchAssetLink
+        $cmd.Parameters['Link'].Attributes |
+            Where-Object { $_ -is [Parameter] } |
+            ForEach-Object { $_.Mandatory } |
+            Should -Contain $true
+    }
+
+    It 'Add-OrchAssetLink batches multiple targets in a single call' {
+        # We can't observe API call counts directly, but we can assert that
+        # passing -Link with multiple folders results in the asset being
+        # accessible from all of them after one cmdlet invocation.
+        $second = "${script:LinkSubFolder}_2"
+        $null = New-Item -Path $second -ItemType Directory -ErrorAction SilentlyContinue
+        try {
+            Add-OrchAssetLink -Path $script:RootFolder -Name $script:LinkAssetName `
+                -Link $script:LinkSubFolder, $second -Confirm:$false
+            Clear-OrchCache -Path $script:RootFolder
+
+            $links = Get-OrchAssetLink -Path $script:RootFolder -Name $script:LinkAssetName |
+                Sort-Object Link
+            @($links).Count | Should -Be 2
+            $links.Link     | Should -Contain $script:LinkSubFolder
+            $links.Link     | Should -Contain $second
+        }
+        finally {
+            Get-OrchAssetLink -Path $script:RootFolder -Name $script:LinkAssetName -ErrorAction SilentlyContinue |
+                Remove-OrchAssetLink -Confirm:$false -ErrorAction SilentlyContinue
+            Remove-Item -Path $second -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+}
+
+# ---------------------------------------------------------------------------
 # Credential Asset CRUD + CSV Round-Trip
 # ---------------------------------------------------------------------------
 Describe 'Credential Asset' {

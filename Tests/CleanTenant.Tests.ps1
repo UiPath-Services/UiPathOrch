@@ -147,6 +147,76 @@ Describe 'Assets' {
     }
 }
 
+Describe 'Asset Links' {
+    # Fixture defines:
+    #   asset-host  (Production)         → Development, QA          (3 accessible folders)
+    #   asset-debug (Production)         → Production/SubA          (2 accessible folders)
+    # Other assets remain unlinked, so Get-OrchAssetLink emits exactly the rows below.
+
+    It 'Get-OrchAssetLink emits the expected fixture links' {
+        $links = Get-OrchAssetLink -Path $script:Root -Recurse | Sort-Object Name, Link
+        $links | Should -Not -BeNullOrEmpty
+
+        # Project to (Name, source-leaf, link-leaf) triples for stable matching across drive prefixes
+        $triples = $links | ForEach-Object {
+            [PSCustomObject]@{
+                Name = $_.Name
+                Path = ($_.Path -split '\\')[-1]
+                Link = ($_.Link -split '\\')[-1]
+            }
+        }
+
+        $hostFromProd  = $triples | Where-Object { $_.Name -eq 'asset-host'  -and $_.Path -eq 'Production' }
+        $hostFromProd.Link | Sort-Object | Should -Be @('Development', 'QA')
+
+        $debugFromProd = $triples | Where-Object { $_.Name -eq 'asset-debug' -and $_.Path -eq 'Production' }
+        $debugFromProd.Link | Should -Be 'SubA'
+    }
+
+    It 'AssetLink rows carry asset name, source folder, and link folder paths' {
+        $row = Get-OrchAssetLink -Path "${script:Root}\Production" -Name 'asset-host' | Select-Object -First 1
+        $row.Path | Should -Match 'Production$'
+        $row.Name | Should -Be 'asset-host'
+        $row.Link | Should -Match '(Development|QA)$'
+        $row.AssetId      | Should -BeGreaterThan 0
+        $row.FolderId     | Should -BeGreaterThan 0
+        $row.LinkFolderId | Should -BeGreaterThan 0
+    }
+
+    It 'Get-OrchAssetLink filters by asset Name' {
+        $links = Get-OrchAssetLink -Path "${script:Root}\Production" -Name 'asset-debug'
+        $links | Should -Not -BeNullOrEmpty
+        $links.Name | Sort-Object -Unique | Should -Be 'asset-debug'
+    }
+
+    It 'Add-OrchAssetLink + Remove-OrchAssetLink round-trip' {
+        # Add link: asset-retries (Production) → SubB
+        Add-OrchAssetLink -Path "${script:Root}\Production" -Name 'asset-retries' `
+            -Link "${script:Root}\Production\SubB" -Confirm:$false
+        Clear-OrchCache -Path $script:Root
+
+        $afterAdd = Get-OrchAssetLink -Path "${script:Root}\Production" -Name 'asset-retries'
+        $afterAdd | Should -Not -BeNullOrEmpty
+        $afterAdd.Link | Should -Match 'SubB$'
+
+        # Remove the link via pipeline (Get → Remove)
+        Get-OrchAssetLink -Path "${script:Root}\Production" -Name 'asset-retries' |
+            Remove-OrchAssetLink -Confirm:$false
+        Clear-OrchCache -Path $script:Root
+
+        # Should now be back to the asset existing only in Production
+        Get-OrchAssetLink -Path "${script:Root}\Production" -Name 'asset-retries' |
+            Should -BeNullOrEmpty
+    }
+
+    It 'Linked asset is visible from the linked-to folder via Get-OrchAsset' {
+        # asset-host lives in Production but is shared into Development → enumerable from Development
+        $fromDev = Get-OrchAsset -Path "${script:Root}\Development" -Name 'asset-host'
+        $fromDev | Should -Not -BeNullOrEmpty
+        $fromDev.Value | Should -Be 'https://example.com'
+    }
+}
+
 Describe 'Buckets' {
     It 'has 2 buckets across the fixture' {
         (Get-OrchBucket -Path $script:Root -Recurse).Count | Should -Be 2

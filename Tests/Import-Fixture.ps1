@@ -130,7 +130,18 @@ Get-ChildItem "$FixturePath\BucketItems" -Directory | ForEach-Object {
 }
 
 # 12. Triggers (depend on processes; all are Enabled=false to prevent firing)
-Write-Host "[11/11] Triggers"
+Write-Host "[11/12] Triggers"
 Import-Csv "$FixturePath\triggers.csv" | Remap-Path | New-OrchTrigger | Out-Null
+
+# 13. Asset links (depend on assets; share existing assets into additional folders).
+# The CSV's Link column is also a path that needs the source-prefix remap.
+Write-Host "[12/12] Asset links"
+Import-Csv "$FixturePath\asset_links.csv" |
+    ForEach-Object {
+        $_.Path = $_.Path -replace '^Orch1:', "${TargetDrive}:"
+        $_.Link = $_.Link -replace '^Orch1:', "${TargetDrive}:"
+        $_
+    } |
+    Add-OrchAssetLink -Confirm:$false | Out-Null
 
 Write-Host "Done." -ForegroundColor Green
