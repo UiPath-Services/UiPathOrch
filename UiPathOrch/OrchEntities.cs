@@ -1174,6 +1174,21 @@ public class AssetFoldersShare
     public List<Int64>? ToRemoveFolderIds { get; set; }
 }
 
+// One row of "asset X shared from folder Y is also accessible from folder Z".
+// Output type for Get-OrchAssetLink. Properties named so that the row pipes
+// directly into Add-OrchAssetLink / Remove-OrchAssetLink via
+// ValueFromPipelineByPropertyName: Path = source folder, Name = asset name,
+// Link = the linked-to folder.
+public class AssetLink
+{
+    public string? Path { get; set; }
+    public string? Name { get; set; }
+    public string? Link { get; set; }
+    public Int64? AssetId { get; set; }
+    public Int64? FolderId { get; set; }
+    public Int64? LinkFolderId { get; set; }
+}
+
 public enum RoleType
 {
     Mixed, Tenant, Folder

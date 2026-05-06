@@ -21,32 +21,33 @@ public class AddAssetLinkCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter]
+    public SwitchParameter Recurse { get; set; }
+
+    [Parameter]
+    public uint Depth { get; set; }
+
     protected override void ProcessRecord()
     {
-        var drivesFolders = SessionState.EnumFolders(Path);
+        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth).ToList();
+        var drivesLinks = SessionState.EnumFolders(Link).ToList();
         var wpName = Name.ConvertToWildcardPatternList();
 
-        var drivesLinks = SessionState.EnumFolders(Link);
-
-        // Parallel prefetch warms the per-folder Assets cache so the sequential loop below
-        // can iterate without latency. Errors here are non-fatal — the sequential loop will
-        // re-raise them through WriteError where the per-folder context can be reported.
-        Parallel.ForEach(drivesFolders, driveFolder =>
+        // Parallel prefetch warms the per-folder Assets cache.
+        Parallel.ForEach(drivesFolders, df =>
         {
-            var (drive, folder) = driveFolder;
-            try
-            {
-                drive.Assets.Get(folder);
-            }
+            try { df.drive.Assets.Get(df.folder); }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"AddAssetLink prefetch failed for {folder.GetPSPath()}: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine(
+                    $"AddAssetLink prefetch failed for '{df.folder.GetPSPath()}': {ex.Message}");
             }
         });
 
+        using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
         {
-            ICollection<Asset> assets = null;
+            ICollection<Asset> assets;
             try
             {
                 assets = drive.Assets.Get(folder);
@@ -54,34 +55,50 @@ public class AddAssetLinkCommand : OrchestratorPSCmdlet
             catch (Exception ex)
             {
                 string target = folder.GetPSPath();
-                WriteError(new ErrorRecord(new OrchException(target, ex), "GetAssetError", ErrorCategory.InvalidOperation, target));
+                WriteError(new ErrorRecord(new OrchException(target, ex), "AddAssetLinkError",
+                    ErrorCategory.InvalidOperation, target));
                 continue;
             }
 
-            var linksIdsToAdd = drivesLinks.Where(dl => dl.drive == drive);
+            // Cross-drive linking is not supported by the API; only same-drive targets apply.
+            var sameDriveLinks = drivesLinks.Where(dl => dl.drive == drive).ToList();
+            if (sameDriveLinks.Count == 0) continue;
 
             foreach (var asset in assets
                 .FilterByWildcards(a => a?.Name, wpName)
                 .OrderBy(a => a.Name))
             {
-                foreach (var linkDF in linksIdsToAdd)
+                cancelHandler.Token.ThrowIfCancellationRequested();
+
+                // Batch all targets for this (folder, asset) into a single API call.
+                // ShareAssetsToFolders accepts arrays for both the asset list and the
+                // ToAdd folder list, so 1 asset × N targets is one round-trip.
+                var toAddIds = sameDriveLinks
+                    .Select(dl => dl.folder.Id ?? 0)
+                    .Where(id => id != 0 && id != folder.Id)   // can't link to self
+                    .Distinct()
+                    .ToList();
+                if (toAddIds.Count == 0) continue;
+
+                string source = folder.GetPSPath();
+                string target = System.IO.Path.Combine(source, asset.Name!);
+                string action = $"Add AssetLink → {string.Join(", ", sameDriveLinks.Select(dl => dl.folder.GetPSPath()))}";
+
+                if (!ShouldProcess(target, action)) continue;
+
+                try
                 {
-                    string target = System.IO.Path.Combine(folder.GetPSPath(), asset.Name!);
-                    if (ShouldProcess(target, $"Add AssetLink '{linkDF.folder.GetPSPath()}'"))
-                    {
-                        try
-                        {
-                            drive.OrchAPISession.ShareAssetsToFolders(folder.Id ?? 0,
-                                [asset.Id ?? 0],
-                                [linkDF.folder.Id ?? 0],
-                                []);
-                            drive._dicAssetLinks = null;
-                        }
-                        catch (Exception ex)
-                        {
-                            WriteError(new ErrorRecord(new OrchException(target, ex), "AddAssetLinkError", ErrorCategory.InvalidOperation, target));
-                        }
-                    }
+                    drive.OrchAPISession.ShareAssetsToFolders(
+                        folder.Id ?? 0,
+                        new List<Int64> { asset.Id ?? 0 },
+                        toAddIds,
+                        new List<Int64>());
+                    drive._dicAssetLinks = null;
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(new OrchException(target, ex), "AddAssetLinkError",
+                        ErrorCategory.InvalidOperation, target));
                 }
             }
         }

@@ -1,6 +1,4 @@
-using System.Collections;
 using System.Management.Automation;
-using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
@@ -8,7 +6,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchAssetLink")]
-[OutputType(typeof(Entities.SimpleFolder))]
+[OutputType(typeof(AssetLink))]
 public class GetAssetLinkCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
@@ -26,65 +24,47 @@ public class GetAssetLinkCommand : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
-    private class NameCompleter : OrchArgumentCompleter
+    // Construct the PSPath of an accessible folder (which is a SimpleFolder, not
+    // a Folder, so it has no GetPSPath() of its own). Format: "{drive}:{sep}{full}"
+    // mirroring what Folder.GetPSPath produces.
+    private static string LinkFolderPSPath(OrchDriveInfo drive, SimpleFolder linkFolder)
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
-            string commandName,
-            string parameterName,
-            string wordToComplete,
-            CommandAst commandAst,
-            IDictionary fakeBoundParameters)
-        {
-            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-
-            // Exclude Names already selected by the parameter from the candidates
-            var wpName = CreateSelfExclusionList(commandAst, "Name", wordToComplete);
-
-            var wp = CreateWPFromWordToComplete(wordToComplete);
-
-            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.Assets.Get(df.folder));
-
-            foreach (var result in results)
-            {
-                foreach (var asset in result
-                    .Where(a => wp.IsMatch(a.Name))
-                    .Where(a => (a.UserValues is null || !a.UserValues.Any()) && a.ValueScope != "PerRobot")
-                    .ExcludeByWildcards(a => a?.Name, wpName)
-                    .OrderBy(a => a.Name))
-                {
-                    //string tooltip = System.IO.Path.Combine(asset.Path!, asset.Name!);
-                    string tooltip = asset.GetPSPath();
-                    yield return new CompletionResult(PathTools.EscapePSText(asset.Name), asset.Name, CompletionResultType.Text, tooltip);
-                }
-            }
-        }
+        var fqn = (linkFolder.FullyQualifiedName ?? "").Replace('/', System.IO.Path.DirectorySeparatorChar);
+        return drive.NameColonSeparator + fqn;
     }
 
-    // TODO: This implementation can be cleaned up
     protected override void ProcessRecord()
     {
-        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth).ToList();
         var wpName = Name.ConvertToWildcardPatternList();
 
-
-        Parallel.ForEach(drivesFolders, driveFolder =>
+        // Parallel prefetch warms Assets cache and the per-asset accessibleFolders cache.
+        // Errors here are non-fatal — the sequential loop re-raises them through
+        // WriteError where the per-folder context can be reported.
+        Parallel.ForEach(drivesFolders, df =>
         {
-            var (drive, folder) = driveFolder;
             try
             {
-                var assets = drive.Assets.Get(folder);
-                Parallel.ForEach(assets, asset =>
+                var assets = df.drive.Assets.Get(df.folder);
+                Parallel.ForEach(assets.FilterByWildcards(a => a?.Name, wpName), asset =>
                 {
-                    drive.GetFoldersForAsset(folder, asset);
+                    df.drive.GetFoldersForAsset(df.folder, asset);
                 });
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"GetAssetLink prefetch failed for '{folder.GetPSPath()}': {ex.Message}");
+                System.Diagnostics.Debug.WriteLine(
+                    $"GetAssetLink prefetch failed for '{df.folder.GetPSPath()}': {ex.Message}");
             }
         });
 
-        HashSet<(Int64 folderId, string assetName)> outputLink = new();
+        // Triple-level dedup: same (sourceFolder, asset, linkFolder) is never emitted
+        // twice. Symmetric pairs ((X, A, Y) and (Y, A, X)) are still both emitted —
+        // they describe the same link relationship from different vantage points,
+        // which is useful when the user is iterating with -Recurse over the tree.
+        var emitted = new HashSet<(Int64 srcFolderId, Int64 assetId, Int64 linkFolderId)>();
+
+        using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
         {
             ICollection<Asset> assets;
@@ -95,44 +75,52 @@ public class GetAssetLinkCommand : OrchestratorPSCmdlet
             catch (Exception ex)
             {
                 string target = folder.GetPSPath();
-                WriteError(new ErrorRecord(new OrchException(target, ex), "GetAssetLinkError", ErrorCategory.InvalidOperation, target));
+                WriteError(new ErrorRecord(new OrchException(target, ex), "GetAssetLinkError",
+                    ErrorCategory.InvalidOperation, target));
                 continue;
             }
 
             foreach (var asset in assets
-                    .FilterByWildcards(a => a?.Name, wpName)
-                    .OrderBy(a => a.Name))
+                .FilterByWildcards(a => a?.Name, wpName)
+                .OrderBy(a => a.Name))
             {
-                AccessibleFoldersDto? accessibleFolders = null;
+                cancelHandler.Token.ThrowIfCancellationRequested();
+
+                AccessibleFoldersDto? accessible;
                 try
                 {
-                    accessibleFolders = drive.GetFoldersForAsset(folder, asset);
+                    accessible = drive.GetFoldersForAsset(folder, asset);
                 }
                 catch (Exception ex)
                 {
                     string target = System.IO.Path.Combine(folder.GetPSPath(), asset.Name!);
-                    WriteError(new ErrorRecord(new OrchException(target, ex), "AddAssetLinkError", ErrorCategory.InvalidOperation, target));
+                    WriteError(new ErrorRecord(new OrchException(target, ex), "GetAssetLinkError",
+                        ErrorCategory.InvalidOperation, target));
                     continue;
                 }
 
-                if (accessibleFolders is not null &&
-                    accessibleFolders.AccessibleFolders is not null &&
-                    accessibleFolders.AccessibleFolders.Length > 1)
+                // Asset is "linked" only when accessible from more than one folder.
+                if (accessible?.AccessibleFolders is null || accessible.AccessibleFolders.Length <= 1) continue;
+
+                Int64 srcId = folder.Id ?? 0;
+                Int64 assetId = asset.Id ?? 0;
+                string sourcePath = folder.GetPSPath();
+
+                foreach (var linkFolder in accessible.AccessibleFolders.OrderBy(f => f.FullyQualifiedName))
                 {
-                    bool outputDone = false;
-                    foreach (var accessibleFolder in accessibleFolders.AccessibleFolders)
+                    Int64 linkId = linkFolder.Id ?? 0;
+                    if (linkId == srcId) continue;                                  // skip the source itself
+                    if (!emitted.Add((srcId, assetId, linkId))) continue;           // already reported
+
+                    WriteObject(new AssetLink
                     {
-                        if (!outputLink.Add((accessibleFolder.Id ?? 0, asset.Name!)))
-                        {
-                            outputDone = true;
-                        }
-                    }
-                    if (!outputDone)
-                    {
-                        WriteObject(accessibleFolders.AccessibleFolders
-                            .OrderBy(a => a.FullyQualifiedName),
-                            true);
-                    }
+                        Path = sourcePath,
+                        Name = asset.Name,
+                        Link = LinkFolderPSPath(drive, linkFolder),
+                        AssetId = assetId,
+                        FolderId = srcId,
+                        LinkFolderId = linkId,
+                    });
                 }
             }
         }
