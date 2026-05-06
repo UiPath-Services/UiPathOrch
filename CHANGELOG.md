@@ -6,8 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-05-06
+
+The headline change is **multi-tenant Automation Suite support** — earlier
+releases mis-classified AS as on-premises, stripped the tenant out of the
+URL, and broke every data cmdlet against AS.
+
 ### Added
 
+- **`Edition` configuration field** for `UiPathOrchConfig.json`. Accepts
+  `Cloud`, `AutomationSuite`, or `OnPremises`. If omitted, the edition is
+  inferred from the `Root` URL: hosts containing `uipath.com` → `Cloud`,
+  2-segment paths (`/{org}/{tenant}`) → `AutomationSuite`, anything else →
+  `OnPremises`. Three-way classification replaces the previous two-way
+  Cloud-vs-on-prem split that had no concept of AS.
+- **`Edition` property on `Get-OrchPSDrive` output.** Surfaces the resolved
+  value (explicit or auto-inferred) so users can verify the classification.
+- **AS sample (`Orch7`) in the bundled `UiPathOrchConfig.json` template** for
+  multi-tenant `https://YOUR_AS_HOST/YOUR_ORGANIZATION/YOUR_TENANT` URLs.
+  The existing `Orch5` sample is now scoped to single-tenant Orchestrator on
+  Azure App Service (which has always worked via the on-prem code path).
 - **`Update-OrchWebhook`** — partial-update cmdlet for webhooks. Patches any
   combination of `Description`, `Url`, `Secret`, `Enabled`, `AllowInsecureSsl`,
   and `SubscribeToAllEvents` via PATCH `/odata/Webhooks({id})`. Closes the
@@ -25,6 +43,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the masked `AdditionalConfiguration` from the deep copy (mirroring the
   `Update-OrchUser` UR_Password pattern) so that PUT only carries a fresh
   value when the user explicitly supplies one.
+
+### Changed
+
+- **`Copy-OrchWebhook` nulls the masked `Secret` on copy** instead of
+  forwarding it. Previously the server-masked value would be written to the
+  destination as a literal string, silently breaking signature verification.
+  A warning now points at `Update-OrchWebhook` for re-supplying the real
+  secret. The `Copy-OrchBucket` and `Copy-OrchCredentialStore` warnings were
+  also updated to name the corresponding `Update-Orch*` cmdlet, matching the
+  `Set-OrchCredentialAsset` / `Set-OrchSecretAsset` warning convention.
+
+### Fixed
+
+- **Multi-tenant Automation Suite routing.** Orchestrator API calls
+  (`/odata/...`, `/api/...`) now correctly resolve to
+  `https://{host}/{org}/{tenant}/orchestrator_/odata/...` for AS, where
+  the gateway requires the `/orchestrator_/` service prefix. Previously
+  the calls produced URLs the AS gateway misinterpreted (`tenantName=odata`),
+  returning the unregistered-portal HTML page, which then tripped the JSON
+  deserializer with `'<' is an invalid start of a value`.
+- **`Invoke-OrchApi` default base URL.** Relative paths (default base =
+  Orchestrator) now resolve through the edition-aware base, so
+  `-ApiPath /odata/Folders` works on AS without spelling out
+  `/orchestrator_/odata/Folders`.
+- **`Identity` and `Token` endpoint resolution.** AS deployments now correctly
+  build `/identity_/connect/token` and `/identity_/connect/authorize` paths
+  (matching the Cloud convention) instead of the on-prem `/identity` paths.
+
+### Internal
+
+- New regression test (`BaseUrlRoutingTests.OrchestratorApiPathsMustUseBaseUrlOrchestrator`)
+  scans the source for any new code that composes Orchestrator API URLs from
+  the raw tenant base instead of the Orchestrator-service base. Future
+  contributors get a fast-fail signal if they re-introduce the AS routing bug.
+- New regression test (`EmbeddedConfigTemplateTests.EveryLocaleTemplateParsesAndDeserializes`)
+  parses every per-locale `UiPathOrchConfig.json` template with the runtime's
+  JSON options and deserializes into `UiPathOrchConfig`, catching JSONC syntax
+  errors and shape mismatches (e.g. an `Edition` value outside the enum) at
+  CI time instead of at first Mount on a user's machine.
 
 ## [1.0.1] - 2026-05-05
 

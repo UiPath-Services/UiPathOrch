@@ -38,14 +38,29 @@ jobs:
         run: |
           $expected = '${{ steps.ver.outputs.version }}'
 
+          # Split the tag's SemVer 2.0 string into base (MAJOR.MINOR.PATCH) and optional
+          # prerelease (e.g. "rc1"). PowerShell module manifests store these in two
+          # separate fields — ModuleVersion holds only the numeric base, and the
+          # PrivateData.PSData.Prerelease field holds the prerelease label.
+          if ($expected -notmatch '^(\d+\.\d+\.\d+)(?:-(.+))?$') {
+            throw "Tag v$expected is not in MAJOR.MINOR.PATCH[-PRERELEASE] form"
+          }
+          $expectedBase       = $matches[1]
+          $expectedPrerelease = if ($matches[2]) { $matches[2] } else { '' }
+
           $data = Import-PowerShellDataFile Staging/UiPathOrch.psd1
-          if ($data.ModuleVersion -ne $expected) {
-            throw "Manifest ModuleVersion $($data.ModuleVersion) does not match tag v$expected"
+          if ($data.ModuleVersion -ne $expectedBase) {
+            throw "Manifest ModuleVersion $($data.ModuleVersion) does not match tag base $expectedBase (from v$expected)"
+          }
+          $actualPrerelease = if ($data.PrivateData.PSData.Prerelease) { $data.PrivateData.PSData.Prerelease } else { '' }
+          if ($actualPrerelease -ne $expectedPrerelease) {
+            throw "Manifest Prerelease '$actualPrerelease' does not match tag prerelease '$expectedPrerelease' (from v$expected)"
           }
 
           # csproj <Version> is what gets stamped into UiPathOrch.dll's AssemblyVersion /
-          # FileVersion / InformationalVersion. It must match too, otherwise the DLL ships
-          # with a stale internal version (0.9.16.6 / 0.9.17.0 had this drift).
+          # FileVersion / InformationalVersion. It must match the FULL tag string
+          # (including any -prerelease suffix), otherwise the DLL ships with a stale
+          # internal version (0.9.16.6 / 0.9.17.0 had this drift).
           $csproj = [xml](Get-Content UiPathOrch/UiPathOrch.csproj -Raw)
           $csprojVersion = $csproj.Project.PropertyGroup.Version
           if ($csprojVersion -ne $expected) {

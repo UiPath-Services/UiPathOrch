@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.0.1'
+ModuleVersion = '1.1.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -444,22 +444,25 @@ PrivateData = @{
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
 ## New Features
-- Webhooks: `Get-OrchWebhookEventType` (lists tenant event types) and `Test-OrchWebhook` (sends a Ping by name).
-- Jobs: `Restart-OrchJob` (Faulted-only) and `Resume-OrchJob` (Suspended-only). Tab completion lists only the actionable jobs.
-- Triggers: `Test-OrchTrigger` runs the server-side `ValidateProcessSchedule` pre-flight check and returns `IsValid` + `Errors` per trigger.
-- Sessions: `Clear-OrchInactiveSession` bulk-deletes Disconnected / Unresponsive unattended sessions tenant-wide.
-- Tasks (action center): `Get-OrchTask`, `Get-OrchTaskAcrossFolder`, `Set-OrchTask`, and `Remove-OrchTask`. `Get-OrchTaskAcrossFolder` resolves each task's actual folder PSPath so the pipeline routes correctly into per-folder cmdlets.
+- **Multi-tenant Automation Suite support.** UiPathOrch now correctly assembles `/{org}/{tenant}/orchestrator_/...` URLs for self-hosted Automation Suite deployments, where the gateway routes by service segment and rejects paths that don't begin with `/orchestrator_/`. Earlier releases mis-classified AS as on-premises, stripped the tenant out of the URL into the `X-UIPATH-TenantName` header, and produced broken paths like `/{org}/odata/...` — all data cmdlets returned HTML and tripped the JSON deserializer.
+- **`Edition` config field.** `UiPathOrchConfig.json` accepts an optional `Edition` per PSDrive: `Cloud`, `AutomationSuite`, or `OnPremises`. If omitted, the edition is auto-detected from the `Root` URL (`*.uipath.com` → Cloud, 2-segment path → AutomationSuite, otherwise OnPremises). `Get-OrchPSDrive` now exposes the resolved value so users can verify the auto-detection.
+- **Multi-tenant AS sample (`Orch7`) in the bundled config template** for `https://YOUR_AS_HOST/YOUR_ORGANIZATION/YOUR_TENANT` URLs. The existing `Orch5` sample is now scoped to single-tenant Orchestrator on Azure App Service (which has always worked via the on-prem code path).
+- **`Update-OrchWebhook` / `Update-OrchBucket` / `Update-OrchCredentialStore`** — partial-update cmdlets that close post-migration gaps. `Copy-Orch*` cannot carry write-only fields (Webhook `Secret`, Bucket `Password`, CredentialStore `AdditionalConfiguration`) because the API never returns them; the new `Update-Orch*` cmdlets let you re-supply just those fields after migration.
 
-## Improvements
-- Parallelized `Get-OrchTaskAcrossFolder`, `Get-OrchUserSession`, and `Get-OrchRole` across drives/folders.
-- Job tab completion: `Restart-OrchJob` / `Resume-OrchJob` / `Stop-OrchJob` now have separate state-scoped caches (Faulted / Suspended / Stoppable) so they no longer compete on a shared filter. Job tooltip leads with `Id`, then DateTimes, State, and the folder + process name (e.g. `Orch1:\Shared\InvoiceProcess`) so `-Recurse` Tab disambiguates folder.
-- `dir -Recurse`: each Directory section stays contiguous (parent-grouped). Personal-workspace-first ordering at the drive root is preserved.
+## Changed
+- **`Copy-OrchWebhook` nulls the masked `Secret` on copy** instead of forwarding the masked literal (which would silently break signature verification on the destination). A warning points at `Update-OrchWebhook` for re-supplying the real secret. `Copy-OrchBucket` / `Copy-OrchCredentialStore` warnings now name the corresponding `Update-Orch*` cmdlet.
+
+## Migration / Compatibility Notes
+- Existing Cloud (`*.uipath.com`) and standalone on-premises Orchestrator users: no behavioural change.
+- Existing on-premises Orchestrator behind a multi-level reverse proxy that produces a 2-segment Root path (rare): the new heuristic mis-classifies as AS. Set `"Edition": "OnPremises"` explicitly to restore previous behaviour.
 
 ## Bug Fixes
-- HTTP response and HTTP client handles are now released properly. Long-running sessions no longer leak connection-pool resources.
-- Fixed two concurrency races in tab-completion / cache code that could lose entries or corrupt internal state under parallel use.
-- `Import-OrchLibrary` / `Import-OrchPackage`: empty or malformed server responses now return null instead of throwing a NullReferenceException.
-- Removed two unreachable Format views.
+- `Invoke-OrchApi` with a relative path (default base = Orchestrator) now resolves through the edition-aware base URL, so `-ApiPath /odata/Folders` works against AS without the user having to spell out `/orchestrator_/odata/Folders`.
+- `Identity` / `Token` endpoint resolution: AS deployments now correctly build `/identity_/connect/token` and `/identity_/connect/authorize` (matching the Cloud convention) instead of the on-prem `/identity` paths.
+
+## Internal
+- New regression test (`BaseUrlRoutingTests`) scans the source for code composing Orchestrator API URLs from the raw tenant base instead of the Orchestrator-service base, so the AS routing bug cannot quietly come back.
+- New regression test (`EmbeddedConfigTemplateTests`) parses every per-locale `UiPathOrchConfig.json` template and deserializes into `UiPathOrchConfig`, catching JSONC syntax errors and shape mismatches at CI time instead of at first Mount on a user's machine.
 '@
 
         # Prerelease string of this module
