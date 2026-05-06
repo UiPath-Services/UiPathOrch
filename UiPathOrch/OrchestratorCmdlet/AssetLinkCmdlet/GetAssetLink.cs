@@ -97,7 +97,12 @@ public class GetAssetLinkCommand : OrchestratorPSCmdlet
 
         for (int i = 0; i < drivesFolders.Count; i++)
         {
-            if (token.IsCancellationRequested) return;
+            // Throw rather than swallow the cancel — OperationCanceledException
+            // propagates to PowerShell which surfaces the standard "Operation
+            // was canceled" message, matching how GetBucket and friends behave.
+            // Silently returning would leave the user wondering whether the
+            // cmdlet actually ran or just stopped early.
+            token.ThrowIfCancellationRequested();
 
             // Slide the lookahead window forward: as we begin draining
             // folder[i], queue up folder[i + window] so it can start
@@ -114,16 +119,13 @@ public class GetAssetLinkCommand : OrchestratorPSCmdlet
             {
                 // Wait(token) instead of GetAwaiter().GetResult() so Ctrl+C
                 // (signaled into ConsoleCancelHandler.Token) bails out of the
-                // wait promptly. In-flight workers may still be inside a
-                // synchronous API call — those run to completion since
-                // Assets.Get / GetFoldersForAsset don't accept a token —
+                // wait promptly with OperationCanceledException — propagated
+                // to PowerShell uncaught. In-flight workers may still be
+                // inside a synchronous API call — those run to completion
+                // since Assets.Get / GetFoldersForAsset don't accept a token —
                 // but the main thread exits without queueing more work.
                 folderTasks[i]!.Wait(token);
                 rows = folderTasks[i]!.Result;
-            }
-            catch (OperationCanceledException)
-            {
-                return;
             }
             catch (AggregateException aex) when (aex.InnerException is not null)
             {
@@ -132,7 +134,7 @@ public class GetAssetLinkCommand : OrchestratorPSCmdlet
                     ErrorCategory.InvalidOperation, target));
                 continue;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 string target = folder.GetPSPath();
                 WriteError(new ErrorRecord(new OrchException(target, ex), "GetAssetLinkError",
@@ -145,14 +147,14 @@ public class GetAssetLinkCommand : OrchestratorPSCmdlet
 
             foreach (var row in rows)
             {
-                if (token.IsCancellationRequested) return;
+                token.ThrowIfCancellationRequested();
                 if (row.Accessible?.AccessibleFolders is not { Length: > 1 }) continue;
 
                 Int64 assetId = row.Asset.Id ?? 0;
 
                 foreach (var linkFolder in row.Accessible.AccessibleFolders.OrderBy(f => f.FullyQualifiedName))
                 {
-                    if (token.IsCancellationRequested) return;
+                    token.ThrowIfCancellationRequested();
                     Int64 linkId = linkFolder.Id ?? 0;
                     if (linkId == srcId) continue;
                     if (!emitted.Add((srcId, assetId, linkId))) continue;
