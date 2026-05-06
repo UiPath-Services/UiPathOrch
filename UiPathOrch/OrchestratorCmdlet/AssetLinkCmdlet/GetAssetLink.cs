@@ -24,10 +24,6 @@ public class GetAssetLinkCommand : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
-    // Per-folder pre-computed work item: an asset and its accessible-folders snapshot.
-    // Built inside the parallel worker so the main thread only sees pre-resolved data.
-    private sealed record FolderResult(Asset Asset, AccessibleFoldersDto Accessible);
-
     // SimpleFolder has no GetPSPath() — it's a value type returned by the
     // GetFoldersFor* family. Build the PSPath as drive prefix + FullyQualifiedName,
     // mirroring Folder.GetPSPath()'s output.
@@ -42,47 +38,62 @@ public class GetAssetLinkCommand : OrchestratorPSCmdlet
         var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
 
-        // Parallel across (drive, folder) sources. The semaphore inside
-        // OrchThreadPool caps to 4 concurrent workers — well below typical
-        // server rate limits while keeping the main thread responsive.
-        // Each worker fetches the folder's assets, filters by Name, and
-        // resolves accessible folders for each match. Errors propagate as
-        // OrchException with the folder path embedded.
-        using var results = OrchThreadPool.RunForEach(drivesFolders,
+        using var cancelHandler = new ConsoleCancelHandler();
+
+        // Phase 1: parallel fetch of the assets-per-folder list. One API call
+        // per worker, typically already cached, so this drains quickly. We have
+        // to gather all (folder, asset) sources before Phase 2 can launch
+        // because OrchThreadPool needs the full source list up front to build
+        // its index-aligned thread array.
+        using var assetResults = OrchThreadPool.RunForEach(drivesFolders,
             df => df.folder.GetPSPath(),
             df => df.folder,
-            df =>
-            {
-                var assets = df.drive.Assets.Get(df.folder);
-                var rows = new List<FolderResult>();
+            df => df.drive.Assets.Get(df.folder)
+                .FilterByWildcards(a => a?.Name, wpName)
+                .OrderBy(a => a.Name)
+                .ToList());
 
-                foreach (var asset in assets
-                    .FilterByWildcards(a => a?.Name, wpName)
-                    .OrderBy(a => a.Name))
-                {
-                    var accessible = df.drive.GetFoldersForAsset(df.folder, asset);
-                    if (accessible?.AccessibleFolders is { Length: > 1 })
-                    {
-                        rows.Add(new FolderResult(asset, accessible));
-                    }
-                }
-
-                return rows;
-            });
-
-        // Triple-level dedup: same (sourceFolder, asset, linkFolder) is never emitted
-        // twice. Symmetric pairs ((X, A, Y) and (Y, A, X)) are still both emitted —
-        // they describe the same link from different vantage points and each is
-        // independently useful when iterating with -Recurse.
-        var emitted = new HashSet<(Int64 srcFolderId, Int64 assetId, Int64 linkFolderId)>();
-
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var result in results)
+        var sources = new List<(OrchDriveInfo drive, Folder folder, Asset asset)>();
+        foreach (var ar in assetResults)
         {
-            List<FolderResult>? rows;
             try
             {
-                rows = result.GetResult(cancelHandler.Token);
+                var assets = ar.GetResult(cancelHandler.Token);
+                if (assets is null) continue;
+                var (drive, folder) = ar.Source;
+                foreach (var asset in assets)
+                {
+                    sources.Add((drive, folder, asset));
+                }
+            }
+            catch (OrchException ex)
+            {
+                WriteError(new ErrorRecord(ex, "GetAssetLinkError",
+                    ErrorCategory.InvalidOperation, ex.Target));
+            }
+        }
+
+        // Phase 2: parallel GetFoldersForAsset per (folder, asset). One API call
+        // per worker, so each result becomes available very quickly. Iterating
+        // results in OrchThreadPool input order yields output in alphabetical
+        // (folder, asset) order — same shape as GetBucket's streaming output.
+        using var linkResults = OrchThreadPool.RunForEach(sources,
+            s => System.IO.Path.Combine(s.folder.GetPSPath(), s.asset.Name ?? ""),
+            s => s.asset,
+            s => s.drive.GetFoldersForAsset(s.folder, s.asset));
+
+        // Triple-level dedup just in case the same (sourceFolder, asset,
+        // linkFolder) is encountered twice (defense in depth — the source list
+        // shouldn't contain duplicates, but symmetric AccessibleFolders entries
+        // could in theory yield the same triple).
+        var emitted = new HashSet<(Int64 srcFolderId, Int64 assetId, Int64 linkFolderId)>();
+
+        foreach (var lr in linkResults)
+        {
+            AccessibleFoldersDto? accessible;
+            try
+            {
+                accessible = lr.GetResult(cancelHandler.Token);
             }
             catch (OrchException ex)
             {
@@ -90,32 +101,28 @@ public class GetAssetLinkCommand : OrchestratorPSCmdlet
                     ErrorCategory.InvalidOperation, ex.Target));
                 continue;
             }
-            if (rows is null) continue;
+            if (accessible?.AccessibleFolders is not { Length: > 1 }) continue;
 
-            var (drive, folder) = result.Source;
+            var (drive, folder, asset) = lr.Source;
             Int64 srcId = folder.Id ?? 0;
+            Int64 assetId = asset.Id ?? 0;
             string sourcePath = folder.GetPSPath();
 
-            foreach (var (asset, accessible) in rows)
+            foreach (var linkFolder in accessible.AccessibleFolders.OrderBy(f => f.FullyQualifiedName))
             {
-                Int64 assetId = asset.Id ?? 0;
+                Int64 linkId = linkFolder.Id ?? 0;
+                if (linkId == srcId) continue;
+                if (!emitted.Add((srcId, assetId, linkId))) continue;
 
-                foreach (var linkFolder in accessible.AccessibleFolders!.OrderBy(f => f.FullyQualifiedName))
+                WriteObject(new AssetLink
                 {
-                    Int64 linkId = linkFolder.Id ?? 0;
-                    if (linkId == srcId) continue;
-                    if (!emitted.Add((srcId, assetId, linkId))) continue;
-
-                    WriteObject(new AssetLink
-                    {
-                        Path = sourcePath,
-                        Name = asset.Name,
-                        Link = LinkFolderPSPath(drive, linkFolder),
-                        AssetId = assetId,
-                        FolderId = srcId,
-                        LinkFolderId = linkId,
-                    });
-                }
+                    Path = sourcePath,
+                    Name = asset.Name,
+                    Link = LinkFolderPSPath(drive, linkFolder),
+                    AssetId = assetId,
+                    FolderId = srcId,
+                    LinkFolderId = linkId,
+                });
             }
         }
     }
