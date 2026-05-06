@@ -1201,6 +1201,18 @@ public class BucketLink
     public Int64? LinkFolderId { get; set; }
 }
 
+// Same shape as AssetLink / BucketLink but for queue definitions. Output
+// type for Get-OrchQueueLink; pipes by name into Add-/Remove-OrchQueueLink.
+public class QueueLink
+{
+    public string? Path { get; set; }
+    public string? Name { get; set; }
+    public string? Link { get; set; }
+    public Int64? QueueId { get; set; }
+    public Int64? FolderId { get; set; }
+    public Int64? LinkFolderId { get; set; }
+}
+
 public enum RoleType
 {
     Mixed, Tenant, Folder
