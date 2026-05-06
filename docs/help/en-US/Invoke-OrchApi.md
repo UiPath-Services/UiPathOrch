@@ -139,7 +139,9 @@ When a cmdlet returns unexpected results, reproducing the call with `Invoke-Orch
 
 ### -ApiPath
 
-The API endpoint to invoke. Accepts either an absolute URL (`https://...`) or a relative path. Relative paths are resolved against the drive's base URL — `_base_url` (Orchestrator) by default, or `_base_url_identity` / `_base_url_portal` when `-Identity` or `-Portal` is set. Use `-Uri` as the alias when porting `Invoke-RestMethod` snippets.
+The API endpoint to invoke. Accepts either an absolute URL (`https://...`) or a relative path. Relative paths are resolved against the drive's base URL — `_base_url_orchestrator` (the Orchestrator service base) by default, or `_base_url_identity` / `_base_url_portal` when `-Identity` or `-Portal` is set. Use `-Uri` as the alias when porting `Invoke-RestMethod` snippets.
+
+For Automation Suite drives, `_base_url_orchestrator` includes the `/orchestrator_/` service prefix automatically, so `-ApiPath /odata/Folders` resolves to `https://{host}/{org}/{tenant}/orchestrator_/odata/Folders` without you having to spell the prefix out. For Cloud and on-premises drives the prefix isn't required and isn't added.
 
 ```yaml
 Type: System.String

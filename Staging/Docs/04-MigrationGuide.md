@@ -92,6 +92,23 @@ Get-OrchAsset -Path Source:\ -Recurse | where ValueType -eq Credential | Convert
 It is especially important to identify in advance which entities contain
 usernames or passwords.
 
+Verify the resolved deployment edition for both source and destination
+drives — UiPathOrch builds different URL patterns for Cloud, Automation
+Suite, and on-premises:
+
+```powershell
+Get-OrchPSDrive Source:, Destination: | Select-Object Name, Root, Edition
+```
+
+If the `Edition` column shows the wrong value for either drive (rare —
+on-premises behind a multi-level reverse proxy that produces a two-segment
+path is the known false-positive), pin it explicitly in
+`UiPathOrchConfig.json` before proceeding:
+
+```jsonc
+"Edition": "OnPremises"   // or "Cloud" / "AutomationSuite"
+```
+
 ### 1-3: Migration Plan Creation
 
 Based on the interview results, create a migration plan that includes:
