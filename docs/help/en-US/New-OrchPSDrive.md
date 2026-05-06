@@ -20,23 +20,26 @@ Creates a new UiPathOrch PSDrive with the specified parameters.
 ### AppAuth
 
 ```
-New-OrchPSDrive [-Name] <string> [-Root] <string> [-Description <string>] [-IdentityUrl <string>]
- [-AppId <string>] [-AppSecret <string>] [-RedirectUrl <string>] [-HttpListener <string>]
- [-OAuthScope <string>] [-IgnoreSslErrors <bool>] [-WhatIf] [-Confirm] [<CommonParameters>]
+New-OrchPSDrive [-Name] <string> [-Root] <string> [-Description <string>] [-Edition <string>]
+ [-IdentityUrl <string>] [-AppId <string>] [-AppSecret <string>] [-RedirectUrl <string>]
+ [-HttpListener <string>] [-OAuthScope <string>] [-IgnoreSslErrors <bool>]
+ [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ### TokenAuth
 
 ```
-New-OrchPSDrive [-Name] <string> [-Root] <string> [-Description <string>] [-OAuthScope <string>]
- [-AccessToken <string>] [-IgnoreSslErrors <bool>] [-WhatIf] [-Confirm] [<CommonParameters>]
+New-OrchPSDrive [-Name] <string> [-Root] <string> [-Description <string>] [-Edition <string>]
+ [-OAuthScope <string>] [-AccessToken <string>] [-IgnoreSslErrors <bool>]
+ [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ### UserAuth
 
 ```
-New-OrchPSDrive [-Name] <string> [-Root] <string> [-Description <string>] [-Username <string>]
- [-Password <string>] [-IgnoreSslErrors <bool>] [-WhatIf] [-Confirm] [<CommonParameters>]
+New-OrchPSDrive [-Name] <string> [-Root] <string> [-Description <string>] [-Edition <string>]
+ [-Username <string>] [-Password <string>] [-IgnoreSslErrors <bool>]
+ [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -92,6 +95,17 @@ PS C:\> New-OrchPSDrive Orch1 https://cloud.uipath.com/myorg/mytenant -AppId '12
 ```
 
 Shows what drive would be created without actually creating it.
+
+### Example 5: Mount a multi-tenant Automation Suite drive
+
+```powershell
+PS C:\> New-OrchPSDrive AS_INT https://YOUR_AS_HOST/YOUR_ORG/YOUR_TENANT `
+            -Edition AutomationSuite `
+            -AppId '12345678-abcd-1234-abcd-123456789012' -AppSecret 'mySecret' `
+            -OAuthScope 'OR.Folders.Read OR.Assets'
+```
+
+Mounts a self-hosted Automation Suite drive with the deployment edition pinned explicitly. The `-Edition` parameter is normally optional — UiPathOrch infers `AutomationSuite` from a two-segment Root path on a non-`uipath.com` host — but in CI / scripted scenarios it is good practice to pin it so the configuration is unambiguous. AS routes Orchestrator API calls through the `/orchestrator_/` service prefix automatically.
 
 ## PARAMETERS
 
@@ -155,6 +169,30 @@ ParameterSets:
   ValueFromRemainingArguments: false
 DontShow: false
 AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Edition
+
+Forces the deployment edition. Optional — when omitted, UiPathOrch infers it from `Root` (uipath.com host → Cloud, two-segment `/{org}/{tenant}` path → AutomationSuite, otherwise OnPremises). Pin it explicitly when the heuristic guesses wrong (for example, an on-premises Orchestrator behind a multi-level reverse proxy that produces a two-segment path).
+
+```yaml
+Type: System.String
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues:
+- Cloud
+- AutomationSuite
+- OnPremises
 HelpMessage: ''
 ```
 

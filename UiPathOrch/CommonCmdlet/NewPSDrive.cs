@@ -21,6 +21,15 @@ public class NewPSDriveCommand : PSCmdlet
     [Parameter]
     public string? Description { get; set; }
 
+    /// <summary>
+    /// Forces the deployment edition. Optional — when omitted, UiPathOrch infers it
+    /// from <c>Root</c> (uipath.com host → Cloud, two-segment path → AutomationSuite,
+    /// otherwise OnPremises). Pin it explicitly when the heuristic guesses wrong.
+    /// </summary>
+    [Parameter]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<OrchEditionItems>))]
+    public string? Edition { get; set; }
+
     [Parameter(ParameterSetName = "AppAuth")]
     public string? IdentityUrl { get; set; }
 
@@ -65,6 +74,7 @@ public class NewPSDriveCommand : PSCmdlet
             Name = Name,
             Root = Root,
             Description = Description,
+            Edition = Edition,
             IdentityUrl = IdentityUrl,
             AppId = AppId,
             AppSecret = AppSecret,

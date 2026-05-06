@@ -408,6 +408,11 @@ internal class TestSetExecutionStatusNames : IStaticCandidates
     public static string[] Items { get; } = Enum.GetNames(typeof(UiPath.PowerShell.Entities.TestSetExecutionStatus));
 };
 
+internal class OrchEditionItems : IStaticCandidates
+{
+    public static string[] Items { get; } = Enum.GetNames(typeof(UiPath.PowerShell.Core.OrchEdition));
+};
+
 internal class TestSetExecutionTriggerTypeNames : IStaticCandidates
 {
     public static string[] Items { get; } = Enum.GetNames(typeof(UiPath.PowerShell.Entities.TestSetExecutionTriggerType));
