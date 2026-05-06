@@ -24,8 +24,6 @@ public class GetAssetLinkCommand : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
-    private const int MaxDegreeOfParallelism = 4;
-
     // SimpleFolder has no GetPSPath() — it's a value type returned by the
     // GetFoldersFor* family. Build the PSPath as drive prefix + FullyQualifiedName,
     // mirroring Folder.GetPSPath()'s output.
@@ -35,80 +33,37 @@ public class GetAssetLinkCommand : OrchestratorPSCmdlet
         return drive.NameColonSeparator + fqn;
     }
 
-    private record FolderRow(Asset Asset, AccessibleFoldersDto? Accessible);
-
     protected override void ProcessRecord()
     {
-        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth).ToList();
+        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         var token = cancelHandler.Token;
 
-        // One semaphore caps every API round-trip — Assets.Get, GetFoldersForAsset
-        // alike — at MaxDegreeOfParallelism concurrent. The previous Phase-1 /
-        // Phase-2 split serialized through the entire Assets.Get drain before
-        // any GetFoldersForAsset could run, which made -Recurse over many
-        // folders look like "wait for everything, then dump". Here every
-        // folder's chain (Assets.Get → fan-out GetFoldersForAsset) starts the
-        // moment the semaphore lets it, so folder[0]'s output becomes
-        // available after just two round-trips' worth of latency, not after
-        // the full Assets.Get drain.
-        using var sem = new SemaphoreSlim(MaxDegreeOfParallelism);
+        // Outer folder loop: sequential. -Recurse over many folders no longer
+        // queues a global flood of Phase 1 tasks ahead of folder[0]'s Phase 2;
+        // we move on to folder[i+1] only after folder[i]'s rows are emitted.
+        // The win is predictable streaming order: folder[0]'s links emit
+        // alphabetically-by-asset before any of folder[1]'s start.
+        //
+        // Inner asset list: parallel via OrchThreadPool. Each worker resolves
+        // GetFoldersForAsset for one asset (1 API call), and the main thread
+        // drains that pool in input (Name) order — matching how GetBucket
+        // streams its per-folder output.
+        var emitted = new HashSet<(Int64 srcFolderId, Int64 assetId, Int64 linkFolderId)>();
 
-        var folderChains = drivesFolders.Select(df => Task.Run(async () =>
+        foreach (var (drive, folder) in drivesFolders)
         {
-            // Phase 1: fetch the folder's asset list.
-            await sem.WaitAsync(token);
+            token.ThrowIfCancellationRequested();
+
             List<Asset> assets;
             try
             {
-                assets = df.drive.Assets.Get(df.folder)
+                assets = drive.Assets.Get(folder)
                     .FilterByWildcards(a => a?.Name, wpName)
                     .OrderBy(a => a.Name)
                     .ToList();
-            }
-            finally
-            {
-                sem.Release();
-            }
-
-            // Phase 2: resolve accessible folders per matching asset, in
-            // parallel under the same global cap. Order is preserved by
-            // building the result array in the same shape as `assets`.
-            var perAsset = await Task.WhenAll(assets.Select(asset => Task.Run<FolderRow>(async () =>
-            {
-                await sem.WaitAsync(token);
-                try
-                {
-                    return new FolderRow(asset, df.drive.GetFoldersForAsset(df.folder, asset));
-                }
-                finally
-                {
-                    sem.Release();
-                }
-            })));
-
-            return perAsset;
-        })).ToList();
-
-        // Main thread drains folder chains in alphabetical (input) order. As
-        // soon as folder[i]'s chain completes, its rows are emitted; we don't
-        // wait for folder[i+1..N]. Within a folder, asset order matches the
-        // OrderBy(Name) in Phase 1.
-        var emitted = new HashSet<(Int64 srcFolderId, Int64 assetId, Int64 linkFolderId)>();
-
-        for (int i = 0; i < drivesFolders.Count; i++)
-        {
-            var (drive, folder) = drivesFolders[i];
-            FolderRow[] rows;
-            try
-            {
-                rows = folderChains[i].GetAwaiter().GetResult();
-            }
-            catch (OperationCanceledException)
-            {
-                return;
             }
             catch (Exception ex)
             {
@@ -117,17 +72,36 @@ public class GetAssetLinkCommand : OrchestratorPSCmdlet
                     ErrorCategory.InvalidOperation, target));
                 continue;
             }
+            if (assets.Count == 0) continue;
 
-            Int64 srcId = folder.Id ?? 0;
             string sourcePath = folder.GetPSPath();
+            Int64 srcId = folder.Id ?? 0;
 
-            foreach (var row in rows)
+            using var assetResults = OrchThreadPool.RunForEach(assets,
+                asset => System.IO.Path.Combine(sourcePath, asset.Name ?? ""),
+                asset => asset,
+                asset => drive.GetFoldersForAsset(folder, asset));
+
+            foreach (var ar in assetResults)
             {
-                if (row.Accessible?.AccessibleFolders is not { Length: > 1 }) continue;
+                AccessibleFoldersDto? accessible;
+                Asset asset;
+                try
+                {
+                    accessible = ar.GetResult(token);
+                    asset = ar.Source;
+                }
+                catch (OrchException ex)
+                {
+                    WriteError(new ErrorRecord(ex, "GetAssetLinkError",
+                        ErrorCategory.InvalidOperation, ex.Target));
+                    continue;
+                }
+                if (accessible?.AccessibleFolders is not { Length: > 1 }) continue;
 
-                Int64 assetId = row.Asset.Id ?? 0;
+                Int64 assetId = asset.Id ?? 0;
 
-                foreach (var linkFolder in row.Accessible.AccessibleFolders.OrderBy(f => f.FullyQualifiedName))
+                foreach (var linkFolder in accessible.AccessibleFolders.OrderBy(f => f.FullyQualifiedName))
                 {
                     Int64 linkId = linkFolder.Id ?? 0;
                     if (linkId == srcId) continue;
@@ -136,7 +110,7 @@ public class GetAssetLinkCommand : OrchestratorPSCmdlet
                     WriteObject(new AssetLink
                     {
                         Path = sourcePath,
-                        Name = row.Asset.Name,
+                        Name = asset.Name,
                         Link = LinkFolderPSPath(drive, linkFolder),
                         AssetId = assetId,
                         FolderId = srcId,
