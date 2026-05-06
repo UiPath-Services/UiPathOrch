@@ -169,6 +169,9 @@
       <TableControl>
         <TableHeaders>
           <TableColumnHeader>
+            <Label>LinkFolderId</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
             <Label>Name</Label>
           </TableColumnHeader>
           <TableColumnHeader>
@@ -178,6 +181,10 @@
         <TableRowEntries>
           <TableRowEntry>
             <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>LinkFolderId</PropertyName>
+                <Alignment>right</Alignment>
+              </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>Name</PropertyName>
               </TableColumnItem>
