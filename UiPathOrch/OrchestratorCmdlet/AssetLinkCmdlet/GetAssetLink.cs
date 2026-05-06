@@ -97,6 +97,8 @@ public class GetAssetLinkCommand : OrchestratorPSCmdlet
 
         for (int i = 0; i < drivesFolders.Count; i++)
         {
+            if (token.IsCancellationRequested) return;
+
             // Slide the lookahead window forward: as we begin draining
             // folder[i], queue up folder[i + window] so it can start
             // racing in the background while we emit folder[i]'s rows.
@@ -110,11 +112,25 @@ public class GetAssetLinkCommand : OrchestratorPSCmdlet
             FolderRow[] rows;
             try
             {
-                rows = folderTasks[i]!.GetAwaiter().GetResult();
+                // Wait(token) instead of GetAwaiter().GetResult() so Ctrl+C
+                // (signaled into ConsoleCancelHandler.Token) bails out of the
+                // wait promptly. In-flight workers may still be inside a
+                // synchronous API call — those run to completion since
+                // Assets.Get / GetFoldersForAsset don't accept a token —
+                // but the main thread exits without queueing more work.
+                folderTasks[i]!.Wait(token);
+                rows = folderTasks[i]!.Result;
             }
             catch (OperationCanceledException)
             {
                 return;
+            }
+            catch (AggregateException aex) when (aex.InnerException is not null)
+            {
+                string target = folder.GetPSPath();
+                WriteError(new ErrorRecord(new OrchException(target, aex.InnerException), "GetAssetLinkError",
+                    ErrorCategory.InvalidOperation, target));
+                continue;
             }
             catch (Exception ex)
             {
@@ -129,12 +145,14 @@ public class GetAssetLinkCommand : OrchestratorPSCmdlet
 
             foreach (var row in rows)
             {
+                if (token.IsCancellationRequested) return;
                 if (row.Accessible?.AccessibleFolders is not { Length: > 1 }) continue;
 
                 Int64 assetId = row.Asset.Id ?? 0;
 
                 foreach (var linkFolder in row.Accessible.AccessibleFolders.OrderBy(f => f.FullyQualifiedName))
                 {
+                    if (token.IsCancellationRequested) return;
                     Int64 linkId = linkFolder.Id ?? 0;
                     if (linkId == srcId) continue;
                     if (!emitted.Add((srcId, assetId, linkId))) continue;
