@@ -91,6 +91,11 @@ public class GetQueueLinkCommand : OrchestratorPSCmdlet
 
         for (int i = 0; i < drivesFolders.Count; i++)
         {
+            // Throw rather than swallow the cancel — OperationCanceledException
+            // propagates to PowerShell which surfaces the standard "Operation
+            // was canceled" message. See GetAssetLink for the rationale.
+            token.ThrowIfCancellationRequested();
+
             int next = i + FolderLookaheadWindow;
             if (next < folderTasks.Length && folderTasks[next] is null)
             {
@@ -101,13 +106,23 @@ public class GetQueueLinkCommand : OrchestratorPSCmdlet
             FolderRow[] rows;
             try
             {
-                rows = folderTasks[i]!.GetAwaiter().GetResult();
+                // Wait(token) instead of GetAwaiter().GetResult() so Ctrl+C
+                // bails out of the wait promptly. In-flight workers still
+                // complete their current API call (no token plumbed through
+                // OrchAPISession), but new sem.WaitAsync(token) calls bail —
+                // and per-key cache atomicity (_dicQueueLinks set only after
+                // a full successful response) keeps the cache clean either way.
+                folderTasks[i]!.Wait(token);
+                rows = folderTasks[i]!.Result;
             }
-            catch (OperationCanceledException)
+            catch (AggregateException aex) when (aex.InnerException is not null)
             {
-                return;
+                string target = folder.GetPSPath();
+                WriteError(new ErrorRecord(new OrchException(target, aex.InnerException), "GetQueueLinkError",
+                    ErrorCategory.InvalidOperation, target));
+                continue;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 string target = folder.GetPSPath();
                 WriteError(new ErrorRecord(new OrchException(target, ex), "GetQueueLinkError",
@@ -120,12 +135,14 @@ public class GetQueueLinkCommand : OrchestratorPSCmdlet
 
             foreach (var row in rows)
             {
+                token.ThrowIfCancellationRequested();
                 if (row.Accessible?.AccessibleFolders is not { Length: > 1 }) continue;
 
                 Int64 queueId = row.Queue.Id ?? 0;
 
                 foreach (var linkFolder in row.Accessible.AccessibleFolders.OrderBy(f => f.FullyQualifiedName))
                 {
+                    token.ThrowIfCancellationRequested();
                     Int64 linkId = linkFolder.Id ?? 0;
                     if (linkId == srcId) continue;
                     if (!emitted.Add((srcId, queueId, linkId))) continue;
