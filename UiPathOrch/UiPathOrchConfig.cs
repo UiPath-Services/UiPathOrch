@@ -238,6 +238,10 @@ public class PSDrive
 
         // Auto-generate IdentityUrl from Root if not explicitly set
         // Cloud:   "https://cloud.uipath.com/{org}/{tenant}" → strip tenant → /{org}/identity_
+        // AS:      "https://{host}/{org}/{tenant}"           → host root   → /identity_
+        //          (Automation Suite deploys identity as a host-level service shared across all
+        //          orgs on the cluster. Confirmed against BMW's 2023.4 deployment, where the
+        //          working IdentityUrl is /identity_ at the host root, not /{org}/identity_.)
         // On-prem: "https://server/{tenant}"                 → strip tenant → /identity
         // On-prem: "https://server"                          → no tenant    → /identity
         if (string.IsNullOrEmpty(IdentityUrl) && !string.IsNullOrEmpty(Root)
@@ -248,7 +252,12 @@ public class PSDrive
             string basePath = segments.Length > 1
                 ? "/" + string.Join("/", segments.Take(segments.Length - 1))
                 : "";
-            IdentityUrl = $"{uri.Scheme}://{uri.Authority}{basePath}" + (IsCloud ? "/identity_" : "/identity");
+            IdentityUrl = ResolvedEdition switch
+            {
+                OrchEdition.Cloud           => $"{uri.Scheme}://{uri.Authority}{basePath}/identity_",
+                OrchEdition.AutomationSuite => $"{uri.Scheme}://{uri.Authority}/identity_",
+                _                           => $"{uri.Scheme}://{uri.Authority}{basePath}/identity",
+            };
         }
 
         if (Proxy == null)
