@@ -135,7 +135,7 @@ Import-Csv "$FixturePath\triggers.csv" | Remap-Path | New-OrchTrigger | Out-Null
 
 # 13. Asset links (depend on assets; share existing assets into additional folders).
 # The CSV's Link column is also a path that needs the source-prefix remap.
-Write-Host "[12/12] Asset links"
+Write-Host "[12/13] Asset links"
 Import-Csv "$FixturePath\asset_links.csv" |
     ForEach-Object {
         $_.Path = $_.Path -replace '^Orch1:', "${TargetDrive}:"
@@ -143,5 +143,15 @@ Import-Csv "$FixturePath\asset_links.csv" |
         $_
     } |
     Add-OrchAssetLink -Confirm:$false | Out-Null
+
+# 14. Bucket links (depend on buckets; share existing buckets into additional folders).
+Write-Host "[13/13] Bucket links"
+Import-Csv "$FixturePath\bucket_links.csv" |
+    ForEach-Object {
+        $_.Path = $_.Path -replace '^Orch1:', "${TargetDrive}:"
+        $_.Link = $_.Link -replace '^Orch1:', "${TargetDrive}:"
+        $_
+    } |
+    Add-OrchBucketLink -Confirm:$false | Out-Null
 
 Write-Host "Done." -ForegroundColor Green

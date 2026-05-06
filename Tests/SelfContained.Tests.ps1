@@ -1231,6 +1231,90 @@ Describe 'Asset Performance' -Tag 'Performance' {
 }
 
 # ---------------------------------------------------------------------------
+# Bucket Link (share bucket across folders)
+# ---------------------------------------------------------------------------
+Describe 'BucketLink' {
+    BeforeAll {
+        $script:LinkBucketName = "${script:Prefix}LinkBucket"
+        $script:BucketLinkSubFolder = "${script:RootFolder}\${script:Prefix}BucketLinkSub"
+
+        $null = New-Item -Path $script:BucketLinkSubFolder -ItemType Directory -ErrorAction SilentlyContinue
+
+        New-OrchBucket -Path $script:RootFolder -Name $script:LinkBucketName -Description 'BucketLink test' | Out-Null
+        Clear-OrchCache -Path $script:RootFolder
+    }
+
+    AfterAll {
+        Get-OrchBucketLink -Path $script:RootFolder -Name $script:LinkBucketName -ErrorAction SilentlyContinue |
+            Remove-OrchBucketLink -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-OrchBucket -Path $script:RootFolder -Name $script:LinkBucketName -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-Item -Path $script:BucketLinkSubFolder -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
+    }
+
+    It 'Get-OrchBucketLink returns nothing for an unlinked bucket' {
+        Clear-OrchCache -Path $script:RootFolder
+        Get-OrchBucketLink -Path $script:RootFolder -Name $script:LinkBucketName |
+            Should -BeNullOrEmpty
+    }
+
+    It 'Add-OrchBucketLink shares the bucket to a target folder' {
+        Add-OrchBucketLink -Path $script:RootFolder -Name $script:LinkBucketName `
+            -Link $script:BucketLinkSubFolder -Confirm:$false
+        Clear-OrchCache -Path $script:RootFolder
+
+        $links = Get-OrchBucketLink -Path $script:RootFolder -Name $script:LinkBucketName
+        $links            | Should -Not -BeNullOrEmpty
+        @($links).Count   | Should -Be 1
+        $links.Path       | Should -Be $script:RootFolder
+        $links.Name       | Should -Be $script:LinkBucketName
+        $links.Link       | Should -Be $script:BucketLinkSubFolder
+    }
+
+    It 'Linked bucket is enumerable from the target folder' {
+        $fromTarget = Get-OrchBucket -Path $script:BucketLinkSubFolder -Name $script:LinkBucketName
+        $fromTarget | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Get-OrchBucketLink output pipes into Remove-OrchBucketLink' {
+        Get-OrchBucketLink -Path $script:RootFolder -Name $script:LinkBucketName |
+            Remove-OrchBucketLink -Confirm:$false
+        Clear-OrchCache -Path $script:RootFolder
+
+        Get-OrchBucketLink -Path $script:RootFolder -Name $script:LinkBucketName |
+            Should -BeNullOrEmpty
+    }
+
+    It 'Remove-OrchBucketLink requires -Link (Mandatory)' {
+        $cmd = Get-Command Remove-OrchBucketLink
+        $cmd.Parameters['Link'].Attributes |
+            Where-Object { $_ -is [Parameter] } |
+            ForEach-Object { $_.Mandatory } |
+            Should -Contain $true
+    }
+
+    It 'Add-OrchBucketLink batches multiple targets in a single call' {
+        $second = "${script:BucketLinkSubFolder}_2"
+        $null = New-Item -Path $second -ItemType Directory -ErrorAction SilentlyContinue
+        try {
+            Add-OrchBucketLink -Path $script:RootFolder -Name $script:LinkBucketName `
+                -Link $script:BucketLinkSubFolder, $second -Confirm:$false
+            Clear-OrchCache -Path $script:RootFolder
+
+            $links = Get-OrchBucketLink -Path $script:RootFolder -Name $script:LinkBucketName |
+                Sort-Object Link
+            @($links).Count | Should -Be 2
+            $links.Link     | Should -Contain $script:BucketLinkSubFolder
+            $links.Link     | Should -Contain $second
+        }
+        finally {
+            Get-OrchBucketLink -Path $script:RootFolder -Name $script:LinkBucketName -ErrorAction SilentlyContinue |
+                Remove-OrchBucketLink -Confirm:$false -ErrorAction SilentlyContinue
+            Remove-Item -Path $second -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+}
+
+# ---------------------------------------------------------------------------
 # Bucket CRUD + BucketItem Import/Export
 # ---------------------------------------------------------------------------
 Describe 'Bucket' {

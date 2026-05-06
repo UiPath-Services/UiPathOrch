@@ -217,6 +217,60 @@ Describe 'Asset Links' {
     }
 }
 
+Describe 'Bucket Links' {
+    # Fixture defines bucket-files (Production) → Development, Production/SubA.
+    # bucket-dev (Development) is unlinked, so Get-OrchBucketLink emits exactly the
+    # rows from bucket-files's Production-side enumeration.
+
+    It 'Get-OrchBucketLink emits the expected fixture links' {
+        $links = Get-OrchBucketLink -Path $script:Root -Recurse | Sort-Object Name, Link
+        $links | Should -Not -BeNullOrEmpty
+
+        $triples = $links | ForEach-Object {
+            [PSCustomObject]@{
+                Name = $_.Name
+                Path = ($_.Path -split '\\')[-1]
+                Link = ($_.Link -split '\\')[-1]
+            }
+        }
+
+        $filesFromProd = $triples | Where-Object { $_.Name -eq 'bucket-files' -and $_.Path -eq 'Production' }
+        $filesFromProd.Link | Sort-Object | Should -Be @('Development', 'SubA')
+    }
+
+    It 'BucketLink rows carry bucket name, source folder, and link folder paths' {
+        $row = Get-OrchBucketLink -Path "${script:Root}\Production" -Name 'bucket-files' | Select-Object -First 1
+        $row.Path | Should -Match 'Production$'
+        $row.Name | Should -Be 'bucket-files'
+        $row.Link | Should -Match '(Development|SubA)$'
+        $row.BucketId     | Should -BeGreaterThan 0
+        $row.FolderId     | Should -BeGreaterThan 0
+        $row.LinkFolderId | Should -BeGreaterThan 0
+    }
+
+    It 'Add-OrchBucketLink + Remove-OrchBucketLink round-trip' {
+        Add-OrchBucketLink -Path "${script:Root}\Development" -Name 'bucket-dev' `
+            -Link "${script:Root}\QA" -Confirm:$false
+        Clear-OrchCache -Path $script:Root
+
+        $afterAdd = Get-OrchBucketLink -Path "${script:Root}\Development" -Name 'bucket-dev'
+        $afterAdd | Should -Not -BeNullOrEmpty
+        $afterAdd.Link | Should -Match 'QA$'
+
+        Get-OrchBucketLink -Path "${script:Root}\Development" -Name 'bucket-dev' |
+            Remove-OrchBucketLink -Confirm:$false
+        Clear-OrchCache -Path $script:Root
+
+        Get-OrchBucketLink -Path "${script:Root}\Development" -Name 'bucket-dev' |
+            Should -BeNullOrEmpty
+    }
+
+    It 'Linked bucket is visible from the linked-to folder via Get-OrchBucket' {
+        $fromDev = Get-OrchBucket -Path "${script:Root}\Development" -Name 'bucket-files'
+        $fromDev | Should -Not -BeNullOrEmpty
+    }
+}
+
 Describe 'Buckets' {
     It 'has 2 buckets across the fixture' {
         (Get-OrchBucket -Path $script:Root -Recurse).Count | Should -Be 2
