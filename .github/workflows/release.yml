@@ -31,7 +31,25 @@ jobs:
         run: dotnet restore --source https://api.nuget.org/v3/index.json --ignore-failed-sources
 
       - name: Build
-        run: dotnet build UiPathOrch/UiPathOrch.csproj --no-restore --configuration Release
+        # Build the whole solution (not just the main csproj) so the test
+        # projects are compiled and the format / test steps below can run
+        # with --no-build. The release artifact is still UiPathOrch.dll only;
+        # the extra ~10 s for test-project compilation is the price of
+        # running the same gates as CI before publish.
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Check formatting (same gate as CI)
+        # Run the same dotnet format gate as ci.yml. Without this step a
+        # tag push to a master with stale formatting would publish to
+        # PSGallery before CI even reports failure (the two workflows race
+        # and Release usually wins).
+        run: dotnet format --verify-no-changes --verbosity diagnostic
+
+      - name: Test (same gate as CI)
+        # Same rationale: tests must pass before Publish-Module. Catches
+        # regressions in shape/integration coverage that the version bump
+        # commit might have introduced.
+        run: dotnet test --no-build --configuration Release --verbosity normal
 
       - name: Verify manifest and csproj match tag
         shell: pwsh
